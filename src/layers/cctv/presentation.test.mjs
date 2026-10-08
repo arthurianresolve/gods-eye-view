@@ -24,7 +24,9 @@ function cameraState({ feedType, projectionMode }) {
   const presentation = createPresentation({
     state: { _healthById: new Map() },
     parts: {
-      model: { isVideoFeedType: (type) => ['mp4', 'hls', 'webm'].includes(type) },
+      model: {
+        isVideoFeedType: (type) => ['mp4', 'hls', 'webm'].includes(type),
+      },
       calibration: {
         normalizeCalibration: () => ({}),
         deriveCalBadge: () => 'unknown',
