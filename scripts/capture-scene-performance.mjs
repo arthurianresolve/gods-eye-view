@@ -2,7 +2,9 @@
 /** Capture comparable scene timings from an already running app. */
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import puppeteer from 'puppeteer';
+import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -33,6 +35,27 @@ const protocolTimeoutMs = Math.max(
 );
 const out = option('--out', null);
 const hardwareRequired = args.includes('--hardware-required');
+function sourceRevision() {
+  try {
+    const runGit = (gitArgs) =>
+      execFileSync('git', gitArgs, {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+    return {
+      commit: runGit(['rev-parse', 'HEAD']) || null,
+      dirtyWorktree: Boolean(runGit(['status', '--porcelain'])),
+      reason: null,
+    };
+  } catch {
+    return {
+      commit: null,
+      dirtyWorktree: null,
+      reason: 'Git revision is unavailable outside a readable repository.',
+    };
+  }
+}
+const source = sourceRevision();
 if (
   !Number.isInteger(fixtureAircraftCount) ||
   fixtureAircraftCount < 0 ||
@@ -425,9 +448,11 @@ try {
   const populations = new Set(
     captures.map((sample) => JSON.stringify(sample.layers)),
   );
+  const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
   const report = {
     schema: 'gev-performance-capture/v1',
     capturedAt: new Date().toISOString(),
+    source,
     url: new URL(url).origin,
     environment,
     workload: {
@@ -443,6 +468,10 @@ try {
       populationStableAcrossSamples: populations.size === 1,
       note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
     },
+    motionBudget: {
+      ...motionBudget,
+      note: 'Idle rendering is intentionally sparse and is excluded from motion frame budgets.',
+    },
     captures,
   };
   const json = `${JSON.stringify(report, null, 2)}\n`;
@@ -454,10 +483,10 @@ try {
     process.stdout.write(json);
   }
   if (hardwareRequired && !environment.hardwareEligible) process.exitCode = 2;
-  if (
-    maxP95Ms > 0 &&
-    captures.some((sample) => sample.frameIntervalMs.p95 > maxP95Ms)
-  )
+  // Idle governor frames are intentionally sparse and are not a motion
+  // performance failure. Apply an explicit frame budget only to the moving
+  // workload, as required by the performance acceptance contract.
+  if (motionBudget.status === 'failed' || motionBudget.status === 'incomplete')
     process.exitCode = 1;
 } finally {
   await browser.close();

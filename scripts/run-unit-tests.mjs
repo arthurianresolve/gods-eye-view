@@ -7,6 +7,9 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
   'src/data/focusAllocations.test.mjs',
   'src/overlays/worldOverlayAllocation.test.mjs',
 ]);
+const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
+  'scripts/performance/motionBudget.test.mjs',
+]);
 
 /** Whether this runtime matches the one the allocation budgets were calibrated on. */
 export function isCalibratedAllocationRuntime(version = process.versions.node) {
@@ -72,7 +75,11 @@ function runTests(args) {
 
 export function runUnitTests() {
   const plan = buildUnitTestPlan(discoverUnitTestFiles());
-  const parallelStatus = runTests(['--test', ...plan.parallel]);
+  const parallelStatus = runTests([
+    '--test',
+    ...plan.parallel,
+    ...PERFORMANCE_HARNESS_TEST_FILES,
+  ]);
   if (parallelStatus !== 0) return parallelStatus;
 
   // The GC-bracketed budgets are calibrated on Node 24 and are meaningless on
