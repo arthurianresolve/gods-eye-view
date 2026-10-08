@@ -145,11 +145,16 @@ scope and remaining acceptance evidence appear in their rows. S08–S31 remain
 The first wave has working code and repeatable local checks for its core path.
 The first hosted `workflow_dispatch` run passed at commit
 [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/commit/c996a255c4063a93c0553fa3c3e31d09bc9d31b2),
-including Node 24/26, Windows onboarding and the browser gates. S01 still needs
-representative pull requests to both `dev` and `main` to exercise base-specific
-token checks. S04's common feed-state and snapshot contract is wired; aircraft,
-AIS vessels and propagated satellites have object-level evidence, while other
-families remain explicitly unsupported in
+including Node 24/26, Windows onboarding and the browser gates. The latest
+hosted run also passed on commit
+[`54982ba`](https://github.com/arthurianresolve/gods-eye-view/commit/54982ba)
+(run [37736662700](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37736662700)).
+S01 still needs representative pull requests to both `dev` and `main` to
+exercise base-specific token checks. S04's common feed-state and snapshot
+contract is wired; aircraft, AIS vessels and propagated satellites have
+object-level evidence. The no-coverage classifier, wind issue/valid-time labels,
+and camera still-fallback label have focused guards, while other source families
+remain unsupported or lack attached evidence as detailed in
 [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). Satellite evidence keeps the TLE
 element epoch, position evaluation time and feed snapshot time distinct. S05
 supports pinning aircraft and vessel evidence from analyst results and satellite
@@ -1269,8 +1274,11 @@ hardware captures as a release result:
 1. Verify token-base behavior through representative pull requests targeting
    `dev` and `main` for S01; the first hosted `dev` run passed at
    [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
-2. Extend S04's source adapters and fixtures to forecast, camera and static
-   families.
+2. Extend S04 evidence adapters and fixtures: attach forecast evidence to query
+   results and selected raster/model cells, add camera frame acquisition and
+   coverage metadata, and cover traffic, fire, earthquake and imported/static
+   families. Camera live-to-still fallback labeling, wind issue/valid labels and
+   no-coverage classification now have focused guards.
 3. Exercise the real analyst-result card and pinned inspector together at narrow
    and desktop widths for S05.
 4. Capture supported hardware with matched fixtures for S06; retain

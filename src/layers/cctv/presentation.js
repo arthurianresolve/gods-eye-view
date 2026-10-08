@@ -71,6 +71,9 @@ export function createPresentation({
     const refreshMs = isActive
       ? ACTIVE_FRAME_REFRESH_MS
       : IDLE_FRAME_REFRESH_MS;
+    const configuredVideo = parts.model.isVideoFeedType(camera.feedType);
+    const videoFallback =
+      configuredVideo && record.projection?.mode === 'image';
     return {
       id: camera.id,
       name: camera.name,
@@ -91,9 +94,8 @@ export function createPresentation({
       mountHeightM: camera.mountHeightM,
       active: isActive,
       feedType: camera.feedType,
-      isVideo:
-        parts.model.isVideoFeedType(camera.feedType) &&
-        record.projection?.mode !== 'image',
+      isVideo: configuredVideo && !videoFallback,
+      videoFallback,
       sourceKind:
         health?.sourceKind ||
         camera.sourceKind ||
