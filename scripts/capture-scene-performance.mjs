@@ -19,6 +19,7 @@ const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
 const qualityMode = option('--quality-mode', 'manual');
+const detectionMode = String(option('--detection-mode', 'DENSE')).toUpperCase();
 const mixedLayers = args.includes('--mixed-layers');
 const effectiveFixtureAircraftCount =
   fixtureAircraftCount || (mixedLayers ? 2500 : 0);
@@ -83,6 +84,8 @@ if (!['manual', 'auto', 'quality', 'performance'].includes(qualityMode))
   throw new Error(
     '--quality-mode must be manual, auto, quality or performance',
   );
+if (!['SPARSE', 'BALANCED', 'DENSE'].includes(detectionMode))
+  throw new Error('--detection-mode must be SPARSE, BALANCED or DENSE');
 
 const browser = await puppeteer.launch({
   headless: args.includes('--headless') ? 'new' : false,
@@ -224,16 +227,46 @@ try {
             throw new Error(
               'Auto/Quality/Performance profiles are unavailable in this app revision',
             );
+          const services = app.styleManager?.services;
+          if (
+            typeof services?.setDetectionModeByLabel !== 'function' ||
+            typeof services?.getDetectionMode !== 'function' ||
+            typeof services?.readDetectionDiagnostics !== 'function'
+          )
+            throw new Error('Detection workload controls are unavailable');
+          services.setDetectionModeByLabel(detectionMode);
+          if (services.getDetectionMode() !== detectionMode)
+            throw new Error(`Detection mode did not become ${detectionMode}`);
           return {
             id: 'synthetic-aircraft-ring-v1',
             count,
             center: { latitude: 30.2672, longitude: -97.7431 },
             seed: 1,
+            detectionMode,
           };
         },
-        { count: effectiveFixtureAircraftCount, mode: qualityMode },
+        {
+          count: effectiveFixtureAircraftCount,
+          mode: qualityMode,
+          detectionMode,
+        },
       )
     : null;
+
+  if (fixture) {
+    await page.waitForFunction(
+      () => {
+        const diagnostics =
+          window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
+        return (
+          diagnostics &&
+          diagnostics.observationCount > 0 &&
+          diagnostics.candidateCount > 0
+        );
+      },
+      { timeout: 90_000 },
+    );
+  }
 
   const mixedLayerFixture = mixedLayers
     ? await page.evaluate(async () => {
@@ -417,6 +450,8 @@ try {
               ? layer.stats.count
               : null,
           }));
+          const detectionDiagnostics =
+            window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
           observer
             ?.takeRecords?.()
             .forEach((entry) => longTasks.push(entry.duration));
@@ -458,6 +493,24 @@ try {
                 window.__godsEyeView?.styleManager?._adaptiveQuality?.policy
                   ?.lastP95Ms ?? null,
             },
+            detection: detectionDiagnostics
+              ? {
+                  mode: detectionDiagnostics.profile,
+                  densityPct: detectionDiagnostics.densityPct,
+                  observationCount: detectionDiagnostics.observationCount,
+                  candidateCount: detectionDiagnostics.candidateCount,
+                  selectedCount: detectionDiagnostics.selectedCount,
+                  visibleCount: detectionDiagnostics.visibleCount,
+                  protectedVisibleCount:
+                    detectionDiagnostics.protectedVisibleCount,
+                  labelsByLayer: detectionDiagnostics.labelsByLayer,
+                }
+              : {
+                  mode: null,
+                  observationCount: null,
+                  candidateCount: null,
+                  reason: 'detection diagnostics are unavailable',
+                },
           };
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
@@ -485,6 +538,7 @@ try {
       fixture,
       mixedLayers: mixedLayerFixture,
       qualityMode,
+      detectionMode: fixture ? detectionMode : null,
       injectedDelayMs: delayMs,
       populationStableAcrossSamples: populations.size === 1,
       note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
