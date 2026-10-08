@@ -1,6 +1,12 @@
 name: Versioned release
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'scripts/stage-release.mjs'
+      - 'scripts/verify-release.mjs'
+      - 'scripts/qa-candidate.mjs'
   push:
     tags: ['v*']
   workflow_dispatch:
@@ -25,6 +31,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     name: Build and verify release artifact
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -76,7 +83,7 @@ jobs:
 
       - name: Stage versioned manifest and checksummed files
         env:
-          RELEASE_CHANNEL: ${{ github.ref_type == 'tag' && 'stable' || inputs.channel }}
+          RELEASE_CHANNEL: ${{ github.ref_type == 'tag' && 'stable' || inputs.channel || 'dev' }}
         run: node scripts/stage-release.mjs --out release-staging --channel "$RELEASE_CHANNEL" --commit "$GITHUB_SHA"
 
       - name: Verify staged release and source commit
