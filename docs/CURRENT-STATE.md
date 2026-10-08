@@ -4,11 +4,12 @@
 
 The final local candidate matrix passes formatting, package boundaries, 6,324
 unit tests (10 skipped), the production build and six browser journeys. Its
-report, [`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json),
+report, [`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json),
 has zero local failures and five external gates pending: cross-platform install/
 upgrade, a 60-minute mixed-use soak, named-hardware captures, manual accessibility
-and participant review, and signed-release matching. The report names base `HEAD`
-(`b760599`); implementation changes remain uncommitted in the `dev` worktree.
+and participant review, and signed-release matching. It records ten passing local
+checks against implementation commit
+[`3d6b30c`](https://github.com/arthurianresolve/gods-eye-view/commit/3d6b30c8475c1dbb6a1f39eccab5a5669b1f6396).
 
 ## Evidence and performance groundwork — October 8, 2026
 

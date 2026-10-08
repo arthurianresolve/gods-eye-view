@@ -3,7 +3,9 @@
 - S31 adds a candidate matrix for formatting, package boundaries, the complete
   unit suite, production build and six browser journeys, including constrained
   WebGL rendering and resize recovery. The final local report
-  has zero failures; platform installs, a 60-minute soak, named-hardware captures,
+  [`candidate-report-20261008-final3.json`](qa-artifacts/candidate-report-20261008-final3.json)
+  records zero failures; platform installs, a 60-minute soak,
+  named-hardware captures,
   manual accessibility/participant review and signed-release matching remain
   rollout evidence.
 - S15 aligns observed weather, USGS earthquakes, and NASA FIRMS detections with

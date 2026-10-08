@@ -5,8 +5,8 @@ candidate matrix passes formatting, package boundaries, all 6,324 runnable unit
 tests (10 skipped), the production build and six browser journeys. Hardware, manual accessibility study,
 cross-platform install/upgrade, live-source retention approval and signed-release
 evidence remain external acceptance gates; see S11–S16 and S23, S30–S31. The
-report is [`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json)
-and marks the candidate `pending-evidence` with zero local failures.
+report is [`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json)
+and marks commit `3d6b30c` `pending-evidence` with zero local failures.
 
 Prepared: 2026-10-08. Repository: `arthurianresolve/gods-eye-view`.
 Integration branch: existing remote `dev`, verified to match `main` at
@@ -1312,7 +1312,7 @@ one prior supported version migration, hardware matrix and milestone demonstrati
 preserve data recovery readers and the backups created before migration.
 
 **Implementation checkpoint:** the local candidate matrix at
-[`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json)
+[`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json)
 passes formatting, package boundaries, 6,324 unit tests (10 skipped), the production build and
 the workspace, timeline/recording, evidence-panel, panel-resize and constrained-WebGL journeys.
 It reports zero local failures and remains `pending-evidence` for cross-platform
@@ -1416,12 +1416,13 @@ evidence and update the dependent slices.
 
 ## 8. Current implementation handoff
 
-Implementation code for S00–S31 is present on `dev`. The local candidate report
-is [`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json).
-It records 9 passed local checks, zero failures, and 5 pending external checks;
-the report's commit is the base `HEAD` (`b760599`) because this implementation
-remains uncommitted in the worktree. Local browser/software-renderer results do
-not replace the external acceptance evidence below:
+Implementation code for S00–S31 is present on `dev` at
+[`3d6b30c`](https://github.com/arthurianresolve/gods-eye-view/commit/3d6b30c8475c1dbb6a1f39eccab5a5669b1f6396).
+The local candidate report is
+[`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json).
+It records 10 passed local checks, zero failures, and 5 pending external checks.
+Local browser/software-renderer results do not replace the external acceptance
+evidence below:
 
 - Verify token-base behavior through representative pull requests targeting
   `dev` and `main` for S01; the first hosted `dev` run passed at
