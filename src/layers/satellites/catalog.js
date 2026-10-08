@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { twoline2satrec } from 'satellite.js';
+import { satelliteElementEpochMs } from './records.js';
 import {
   DENSE_REFRESH_FRAMES,
   DENSE_GROUP_PATH,
@@ -122,6 +123,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
             name: entry.name,
             satrec,
             group: 'dense',
+            elementEpoch: satelliteElementEpochMs(satrec),
           });
           const point = layerState._pointCollection.add({
             position: Cesium.Cartesian3.fromDegrees(

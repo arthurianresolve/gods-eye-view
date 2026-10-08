@@ -1,13 +1,22 @@
 import * as Cesium from 'cesium';
 import { satelliteClassLabel } from '../../data/satelliteClass.js';
 import { ISS_NORAD } from './policy.js';
+import { createSatelliteEvidence } from './evidence.js';
+
+/** Convert satellite.js's Julian element epoch into Unix milliseconds. */
+export function satelliteElementEpochMs(satrec) {
+  const julianDate = Number(satrec?.jdsatepoch);
+  if (!Number.isFinite(julianDate) || julianDate <= 0) return null;
+  const epochMs = Math.round((julianDate - 2_440_587.5) * 86_400_000);
+  return Number.isFinite(epochMs) && epochMs > 0 ? epochMs : null;
+}
 
 /**
  * Map one CelesTrak catalog satellite to a JSON-safe analyst record
  * (analyst query engine seam). Pure — no Cesium types. Missing/unknown
  * fields are null, never NaN/undefined. `id` is the display name (same
  * convention as vessels); `noradId` is the track_entity key.
- * @param {Object|null|undefined} raw - {noradId, name, group, lat, lon, altitudeM, speedMps}.
+ * @param {Object|null|undefined} raw - {noradId, name, group, lat, lon, altitudeM, speedMps, elementEpoch}.
  * @returns {{id: string, noradId: string|null, name: string|null,
  *   lat: number|null, lon: number|null, altitudeM: number|null,
  *   speedMps: number|null, satelliteClass: string|null, group: string|null}}
@@ -26,6 +35,7 @@ export function mapAnalystRecord(raw) {
   const name = text(raw?.name);
   const group = text(raw?.group);
   const isIss = noradNum === ISS_NORAD;
+  const elementEpoch = num(raw?.elementEpoch);
   return {
     id: name || (noradId ? `SAT-${noradId}` : 'SAT-00000'),
     noradId,
@@ -39,6 +49,7 @@ export function mapAnalystRecord(raw) {
     satelliteClass:
       noradId || group ? satelliteClassLabel(group, { isIss }) : null,
     group,
+    ...(elementEpoch == null ? {} : { elementEpoch }),
   };
 }
 
@@ -92,8 +103,17 @@ export function createRecords({ state, parts }) {
           lon: pos.lon,
           altitudeM: pos.altitudeM,
           speedMps: pos.speedMps,
+          elementEpoch: satelliteElementEpochMs(sat?.satrec),
         }),
       );
+      const row = result[result.length - 1];
+      row.evidence = createSatelliteEvidence({
+        noradId,
+        group: sat?.group,
+        displayTime: now.getTime(),
+        elementEpoch: row.elementEpoch,
+        state,
+      });
       return result.length < limit;
     };
     for (const [noradId, sat] of state._catalog) {

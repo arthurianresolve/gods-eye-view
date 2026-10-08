@@ -32,6 +32,21 @@ test('invalid and future observed/receipt times are rejected; forecast times rem
   assert.match(evidence.limitations.join(' '), /future/);
 });
 
+test('orbital element epoch stays separate from direct observation time', () => {
+  const elementEpoch = Date.parse('2008-09-20T12:25:40.104Z');
+  const displayTime = Date.parse('2026-10-08T00:00:00Z');
+  const evidence = createEvidenceEnvelope({
+    elementEpoch,
+    displayTime,
+    method: 'predicted',
+    now: displayTime,
+  });
+  assert.equal(evidence.elementEpoch, elementEpoch);
+  assert.equal(evidence.displayTime, displayTime);
+  assert.equal(evidence.observedAt, null);
+  assert.equal(evidence.method, 'predicted');
+});
+
 test('safe source links require HTTPS and strip credentials, query and fragment', () => {
   assert.equal(
     safeEvidenceUrl(

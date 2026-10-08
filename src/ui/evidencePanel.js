@@ -75,8 +75,10 @@ export class EvidencePanel {
       ['received', 'Received locally'],
       ['feed-state', 'Feed state'],
       ['display', 'Displayed position'],
+      ['element-epoch', 'Orbital element epoch'],
       ['source-record', 'Source record'],
       ['snapshot', 'Feed snapshot time'],
+      ['display-time', 'Position evaluated at'],
       ['method', 'Source method'],
       ['coverage', 'Coverage'],
       ['uncertainty', 'Uncertainty'],
@@ -99,6 +101,8 @@ export class EvidencePanel {
       ([
         'source-record',
         'snapshot',
+        'display-time',
+        'element-epoch',
         'method',
         'coverage',
         'uncertainty',
@@ -158,6 +162,8 @@ export class EvidencePanel {
     this._set('observed', formatTime(evidence.observedAt));
     this._set('age', formatAge(evidence.observedAt));
     this._set('snapshot', formatTime(evidence.snapshotAt));
+    this._set('display-time', formatTime(evidence.displayTime));
+    this._set('element-epoch', formatTime(evidence.elementEpoch));
     this._set('received', formatTime(evidence.receivedAt));
     this._set('feed-state', evidence.feedState.toUpperCase());
     this._set('method', evidence.method);

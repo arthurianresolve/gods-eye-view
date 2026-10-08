@@ -147,11 +147,14 @@ The first hosted `workflow_dispatch` run passed at commit
 [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/commit/c996a255c4063a93c0553fa3c3e31d09bc9d31b2),
 including Node 24/26, Windows onboarding and the browser gates. S01 still needs
 representative pull requests to both `dev` and `main` to exercise base-specific
-token checks. S04's common feed-state and snapshot contract is wired; aircraft
-and AIS vessels have object-level evidence, while other families remain
-explicitly unsupported in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). S05 now
-supports pinning aircraft and vessel evidence from analyst results; refreshing
-or changing the live selection leaves that snapshot fixed. S06 records
+token checks. S04's common feed-state and snapshot contract is wired; aircraft,
+AIS vessels and propagated satellites have object-level evidence, while other
+families remain explicitly unsupported in
+[EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). Satellite evidence keeps the TLE
+element epoch, position evaluation time and feed snapshot time distinct. S05
+supports pinning aircraft and vessel evidence from analyst results and satellite
+evidence from analyst results and tracked-object selections; refreshing or
+changing the live selection leaves that snapshot fixed. S06 records
 browser/renderer and workload metadata, flags changing source populations, and
 has a deterministic development-only aircraft fixture option; hardware captures
 remain. S07 changes detection-label density only and stays opt-in; the capture
@@ -191,6 +194,7 @@ rendered primitive. Proposed fields are:
 | `version`, `observationId`, `entityRef` | Envelope version; stable observation identity; existing `{layerKey, id}` entity identity. |
 | `sourceId`, `sourceRecordId`, `sourceUrl` | Registered provider, provider identity if supplied and a safe source link. |
 | `observedAt`, `receivedAt` | Provider observation time, nullable when absent; local ingestion time. Never substitute one for the other. |
+| `snapshotAt`, `displayTime`, `elementEpoch` | Local feed snapshot time; time represented by the displayed sample; orbital element epoch when applicable. Keep all three distinct from observation time. |
 | `validFrom`, `validTo`, `issuedAt` | Optional validity interval and forecast/advisory issue time. |
 | `method` | `observed`, `interpolated`, `predicted`, `simulated`, `reconstructed` or `unknown`, plus derivation references where relevant. |
 | `coverage` | Area, applicable interval, completeness, truncation and missing-source reasons. |
@@ -1265,10 +1269,10 @@ hardware captures as a release result:
 1. Verify token-base behavior through representative pull requests targeting
    `dev` and `main` for S01; the first hosted `dev` run passed at
    [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
-2. Add source-family adapters and fixtures, beginning with vessels and propagated
-satellite elements, for S04.
-3. Exercise the pinned aircraft/vessel result inspector at narrow and desktop
-   widths for S05.
+2. Extend S04's source adapters and fixtures to forecast, camera and static
+   families.
+3. Exercise the real analyst-result card and pinned inspector together at narrow
+   and desktop widths for S05.
 4. Capture supported hardware with matched fixtures for S06; retain
    software-rendered captures as behavior diagnostics only.
 5. Complete matched hardware A/B checks before considering Auto as a default for

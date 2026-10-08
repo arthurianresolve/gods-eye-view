@@ -46,6 +46,8 @@ export function createTesting({ state: layerState, services, parts, source }) {
     layerState._trackedEntity = entity;
     layerState._trackedFrameNumber = -1;
     layerState._trackedFrameGeo = null;
+    layerState._trackedFrameTimeMs = null;
+    layerState._trackedFrameTimeMs = null;
     layerState._trackedFrameNowForTest = now;
     layerState._params = {
       catalog: 'core',

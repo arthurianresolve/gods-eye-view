@@ -29,6 +29,7 @@ export function createLifecycle({
       layerState._trackedEntity = null;
       layerState._trackedFrameNumber = -1;
       layerState._trackedFrameGeo = null;
+      layerState._trackedFrameTimeMs = null;
       layerState._trackedFrameNowForTest = null;
       layerState._lastFocusUpdate = 0;
       layerState._activeFocusCount = 0;

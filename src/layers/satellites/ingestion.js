@@ -1,6 +1,7 @@
 import { twoline2satrec } from 'satellite.js';
 import * as Cesium from 'cesium';
 import { CATALOG_GROUPS, ISS_NORAD, POINT_STYLES } from './policy.js';
+import { satelliteElementEpochMs } from './records.js';
 
 export function createIngestion({
   state: layerState,
@@ -117,6 +118,7 @@ export function createIngestion({
             name: entry.name,
             satrec,
             group: entry.group,
+            elementEpoch: satelliteElementEpochMs(satrec),
           });
 
           // Propagate initial position

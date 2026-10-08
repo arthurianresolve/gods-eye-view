@@ -82,6 +82,8 @@ export function createEvidenceEnvelope(input = {}) {
   const receivedAt =
     rawReceivedAt != null && rawReceivedAt <= now ? rawReceivedAt : null;
   const snapshotAt = evidenceInstant(input.snapshotAt);
+  const displayTime = evidenceInstant(input.displayTime);
+  const elementEpoch = evidenceInstant(input.elementEpoch);
   const validFrom = evidenceInstant(input.validFrom);
   const validTo = evidenceInstant(input.validTo);
   const issuedAt = evidenceInstant(input.issuedAt);
@@ -109,6 +111,8 @@ export function createEvidenceEnvelope(input = {}) {
     observedAt,
     receivedAt,
     snapshotAt,
+    displayTime,
+    elementEpoch,
     validFrom,
     validTo,
     issuedAt,

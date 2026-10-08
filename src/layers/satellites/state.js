@@ -139,6 +139,7 @@ export function createState({ services }) {
   state._trackedFrameNumber = -1;
 
   state._trackedFrameGeo = null;
+  state._trackedFrameTimeMs = null;
   // { longitude, latitude, altitude } or null
 
   state._trackedFrameCartesian = new Cesium.Cartesian3();

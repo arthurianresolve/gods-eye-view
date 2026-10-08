@@ -8,6 +8,7 @@ import satellitesLayer, {
   _clearDenseCatalogStateForTest,
   _setTrackedSatelliteRefreshStateForTest,
 } from './satellites.js';
+import { satelliteElementEpochMs } from '../layers/satellites/records.js';
 
 const ISS_NORAD = 25544;
 
@@ -88,6 +89,12 @@ test('satellite analyst record: output is JSON-safe (no Cesium types leak)', () 
   assert.equal('satrec' in r, false);
 });
 
+test('satellite analyst mapper preserves a known orbital element epoch', () => {
+  const elementEpoch = Date.parse('2008-09-20T12:25:40.104Z');
+  const record = mapAnalystRecord({ ...FULL_RAW, elementEpoch });
+  assert.equal(record.elementEpoch, elementEpoch);
+});
+
 test('satellite getAnalystRecords: disabled or empty catalog returns []', () => {
   _clearDenseCatalogStateForTest();
   assert.deepEqual(satellitesLayer.getAnalystRecords(), []);
@@ -139,6 +146,16 @@ test('satellite getAnalystRecords: core rows beat dense extras under the cap', (
 
     const all = satellitesLayer.getAnalystRecords(10);
     assert.equal(all.length, 3);
+    const expectedEpoch = satelliteElementEpochMs(satrec);
+    assert.equal(all[0].elementEpoch, expectedEpoch);
+    assert.equal(all[0].evidence.elementEpoch, expectedEpoch);
+    assert.ok(all[0].evidence.displayTime > 0);
+    assert.equal(all[0].evidence.observedAt, null);
+    assert.equal(all[0].evidence.method, 'predicted');
+    assert.match(
+      all[0].evidence.limitations.join(' '),
+      /not a direct position observation/,
+    );
     assert.equal(all[2].noradId, '99999');
     assert.equal(all[2].satelliteClass, 'COMMS · STARLINK');
     for (const row of all) {

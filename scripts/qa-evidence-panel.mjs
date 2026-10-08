@@ -227,6 +227,60 @@ try {
     window.dispatchEvent(
       new CustomEvent('gev:awareness-subject-selected', {
         detail: {
+          layerId: 'satellites',
+          id: '25544',
+          label: 'ISS (ZARYA)',
+          evidence: {
+            entityRef: { layerKey: 'satellites', id: '25544' },
+            sourceId: 'CelesTrak',
+            sourceUrl: 'https://celestrak.org/',
+            sourceRecordId: '25544',
+            displayTime: Date.parse('2026-10-08T00:00:00Z'),
+            elementEpoch: Date.parse('2008-09-20T12:25:40.104Z'),
+            method: 'predicted',
+            displayMethod: 'predicted',
+            coverage: {
+              area: 'CelesTrak stations orbital elements',
+              completeness: 'partial',
+            },
+            limitations: [
+              'The element epoch is not a direct position observation.',
+            ],
+          },
+        },
+      }),
+    ),
+  );
+  const satellite = await page.evaluate(() => ({
+    epoch: document.querySelector('[data-evidence-value="element-epoch"]')
+      ?.textContent,
+    displayTime: document.querySelector('[data-evidence-value="display-time"]')
+      ?.textContent,
+    observed: document.querySelector('[data-evidence-value="observed"]')
+      ?.textContent,
+    method: document.querySelector('[data-evidence-value="method"]')
+      ?.textContent,
+  }));
+  assert.match(satellite.epoch, /2008-09-20T12:25:40/);
+  assert.match(satellite.displayTime, /2026-10-08T00:00:00/);
+  assert.equal(satellite.observed, 'Not provided by source');
+  assert.equal(satellite.method, 'predicted');
+  await page.setViewport({ width: 390, height: 844 });
+  const narrow = await page.$eval('#evidence-panel', (node) => {
+    const rect = node.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, width: rect.width };
+  });
+  assert.ok(narrow.left >= 0, `panel starts off-screen: ${narrow.left}`);
+  assert.ok(
+    narrow.right <= 390,
+    `panel ends off-screen: ${narrow.right} (width ${narrow.width})`,
+  );
+  await page.click('#evidence-panel-close');
+
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent('gev:awareness-subject-selected', {
+        detail: {
           layerId: 'ais-live-vessels',
           id: '367123456',
           label: 'Unsupported synthetic vessel',
@@ -240,7 +294,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: aircraft and AIS evidence, pinned result snapshot, safe source link, focus return and unsupported selection handling',
+    'PASS: aircraft, AIS and orbital-epoch evidence, pinned snapshots, narrow layout, safe source link, focus return and unsupported selection handling',
   );
 } finally {
   await browser.close();
