@@ -233,6 +233,20 @@ export function createQueries({
       return t || null;
     };
     const callsign = text(info?.callsign);
+    const provenance = {
+      sourceId: text(info?.sourceId),
+      sourceRecordId: text(info?.sourceReference),
+      positionObservedAtMs: num(info?.positionObservedAtMs),
+      receivedAtMs: num(info?.receivedAtMs),
+      sourceSnapshotObservedAtMs: num(info?.sourceSnapshotObservedAtMs),
+      sourceFreshness: text(info?.sourceFreshness),
+      sourceCoverage: text(info?.sourceCoverage),
+      sourceComplete:
+        typeof info?.sourceComplete === 'boolean' ? info.sourceComplete : null,
+    };
+    const hasProvenance = Object.values(provenance).some(
+      (value) => value !== null,
+    );
     return {
       // Display identity for the narration layer. `id` is NOT a queryable field
       // (see ANALYST_LAYERS) and follow-ups carry whole records, so this is a
@@ -255,6 +269,7 @@ export function createQueries({
       operator: text(info?.airline),
       routeOrigin: routeOk ? text(info?.route?.origin?.code) : null,
       routeDestination: routeOk ? text(info?.route?.destination?.code) : null,
+      ...(hasProvenance ? { provenance } : {}),
     };
   }
   const methods = {

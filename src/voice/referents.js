@@ -11,6 +11,7 @@
  */
 
 import { presentResult } from './resultDisplay.js';
+import { normalizeEvidence } from '../evidence/evidence.js';
 
 /** The numbered rows visible in the voice card and therefore resolvable later. */
 export const MAX_DISPLAYED_REFERENTS = 5;
@@ -31,13 +32,26 @@ function normalize(entry, index) {
     entry.label ?? entry.callsign ?? entry.name ?? entry.id ?? id ?? '',
   ).trim();
   if (!label && id === null) return null;
+  const layerId = entry.layerId ?? entry.layerKey ?? null;
+  const refId = id === null ? null : String(id);
   return {
     n: index + 1,
-    id: id === null ? null : String(id),
+    id: refId,
     label: label || String(id),
-    layerId: entry.layerId ?? entry.layerKey ?? null,
+    layerId,
     lat: finite(entry.lat ?? entry.latitude),
     lon: finite(entry.lon ?? entry.longitude),
+    ...(entry.evidence && typeof entry.evidence === 'object'
+      ? {
+          evidence: normalizeEvidence({
+            ...entry.evidence,
+            entityRef: {
+              layerKey: entry.evidence.entityRef?.layerKey || layerId,
+              id: entry.evidence.entityRef?.id || refId,
+            },
+          }),
+        }
+      : {}),
   };
 }
 

@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { isPointerFree } from '../../data/inputOwnership.js';
 import { VESSEL_OVERLAY_SOURCE_ID } from '../../data/vesselLabels.js';
+import { createVesselEvidence } from './evidence.js';
 
 export function createSelection({
   vesselState,
@@ -207,6 +208,10 @@ export function createSelection({
         layerName: 'Live AIS Vessels',
         source: aisLiveVesselsLayer.source,
         label: components.cards.displayVesselName(record),
+        evidence: createVesselEvidence(record, {
+          source: aisLiveVesselsLayer.source,
+          feed: state.feed,
+        }),
         latitude: record.lat,
         longitude: record.lon,
         properties: {

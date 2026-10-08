@@ -3440,6 +3440,54 @@ test('analyst_query counts the whole loaded set, not a 2,000-record slice', asyn
   assert.equal(result.listed, 1);
 });
 
+test('analyst aircraft results carry pinned source evidence from the query snapshot', async () => {
+  globalThis.window = globalThis.window || {
+    clearTimeout,
+    setTimeout,
+    requestIdleCallback: null,
+  };
+  const now = Date.now();
+  const flights = {
+    getStats: () => ({ count: 1, lastUpdate: now }),
+    getAnalystRecords: () => [
+      {
+        id: 'UAL123',
+        icao24: 'abc123',
+        callsign: 'UAL123',
+        lat: 30.27,
+        lon: -97.74,
+        altitudeM: 10_000,
+        onGround: false,
+        provenance: {
+          sourceId: 'OpenSky Network',
+          sourceRecordId: 'abc123',
+          positionObservedAtMs: now - 30_000,
+          receivedAtMs: now - 10_000,
+          sourceSnapshotObservedAtMs: now - 8_000,
+          sourceFreshness: 'partial',
+          sourceCoverage: 'Austin regional fallback',
+          sourceComplete: false,
+        },
+      },
+    ],
+  };
+  const { runner } = manifestRunner({ flights });
+  const result = await runner('analyst_query', {
+    layers: ['flights'],
+    scope: { kind: 'anywhere' },
+    limit: 1,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.items[0].evidence.entityRef.id, 'abc123');
+  assert.equal(result.items[0].evidence.sourceId, 'OpenSky Network');
+  assert.equal(result.items[0].evidence.sourceUrl, 'https://opensky-network.org/');
+  assert.equal(result.items[0].evidence.observedAt, now - 30_000);
+  assert.equal(result.items[0].evidence.receivedAt, now - 10_000);
+  assert.equal(result.items[0].evidence.snapshotAt, now - 8_000);
+  assert.equal(result.items[0].evidence.coverage.completeness, 'partial');
+  assert.equal(result.items[0].evidence.coverage.area, 'Austin regional fallback');
+});
+
 test('analyst_query refusals carry their code and the allowed values', async () => {
   globalThis.window = globalThis.window || { clearTimeout, setTimeout, requestIdleCallback: null };
   const earthquakes = {

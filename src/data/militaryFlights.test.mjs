@@ -76,6 +76,30 @@ test('military analyst record: full record maps every contract field', () => {
   });
 });
 
+test('military analyst record retains source timestamps and coverage for evidence pinning', () => {
+  const r = mapAnalystRecord('ae01ce', {
+    ...FULL_INFO,
+    sourceId: 'adsb.lol',
+    sourceReference: 'ae01ce',
+    positionObservedAtMs: 1_700_000_000_000,
+    receivedAtMs: 1_700_000_000_250,
+    sourceSnapshotObservedAtMs: 1_700_000_000_100,
+    sourceFreshness: 'stale',
+    sourceCoverage: 'regional',
+    sourceComplete: false,
+  });
+  assert.deepEqual(r.provenance, {
+    sourceId: 'adsb.lol',
+    sourceRecordId: 'ae01ce',
+    positionObservedAtMs: 1_700_000_000_000,
+    receivedAtMs: 1_700_000_000_250,
+    sourceSnapshotObservedAtMs: 1_700_000_000_100,
+    sourceFreshness: 'stale',
+    sourceCoverage: 'regional',
+    sourceComplete: false,
+  });
+});
+
 test('military analyst record: military is ALWAYS true, routes/country always null', () => {
   const r = mapAnalystRecord('ae01ce', undefined);
   assert.equal(r.military, true);

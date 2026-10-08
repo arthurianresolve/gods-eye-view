@@ -5,10 +5,13 @@
   added a versioned source-evidence envelope, explicit unknown observation
   times, and `PARTIAL` coverage in shared feed snapshots. Civil and military
   aircraft selections now open a safe, keyboard-accessible evidence inspector,
-  and aircraft query rows cite source time and result scope. Added repeatable
-  scene-performance JSON capture and opt-in Auto/Quality/Performance label
-  profiles. Remaining source-family coverage and hardware comparison limits are
-  listed in [EVIDENCE-SUPPORT.md](docs/EVIDENCE-SUPPORT.md) and
+  and aircraft query rows cite source time and result scope. A follow-up extends
+  provenance to live AIS vessel selections and analyst results, and lets users
+  pin an aircraft or vessel result's evidence snapshot in the inspector. AIS
+  reports are explicitly partial coverage. Added repeatable scene-performance
+  JSON capture and opt-in Auto/Quality/Performance label profiles. Remaining
+  source-family coverage and hardware comparison limits are listed in
+  [EVIDENCE-SUPPORT.md](docs/EVIDENCE-SUPPORT.md) and
   [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 - MCP setup examples use the app's default port, `4173`. Thanks to

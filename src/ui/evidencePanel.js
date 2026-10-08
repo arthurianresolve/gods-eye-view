@@ -2,6 +2,9 @@ import { safeEvidenceUrl, normalizeEvidence } from '../evidence/evidence.js';
 
 const SELECTED = 'gev:awareness-subject-selected';
 const CLEARED = 'gev:awareness-subject-cleared';
+const PINNED = 'gev:evidence-result-pinned';
+const ENTITY_SELECTED = 'gev:entity-selected';
+const ENTITY_CLEARED = 'gev:entity-selection-cleared';
 
 function formatTime(value) {
   return Number.isFinite(value)
@@ -32,16 +35,33 @@ export class EvidencePanel {
     this.hidePanel = hidePanel;
     this.windowRef = windowRef;
     this.returnFocusTarget = null;
+    this.pinned = false;
     this.rows = new Map();
     this._buildRows();
     this._onSelected = (event) => {
+      if (this.pinned) return;
       if (!event.detail?.evidence) this.clear();
       else this.show(event.detail);
     };
-    this._onCleared = () => this.clear();
+    this._onCleared = () => {
+      if (!this.pinned) this.clear();
+    };
+    this._onEntitySelected = (event) => {
+      if (this.pinned) return;
+      if (!event.detail?.evidence) this.clear();
+      else this.show(event.detail);
+    };
+    this._onPinned = (event) => {
+      if (!event.detail?.evidence) return;
+      this.returnFocusTarget = null;
+      this.show(event.detail, { pinned: true });
+    };
     this._onClose = () => this.clear({ restoreFocus: true });
     windowRef.addEventListener(SELECTED, this._onSelected);
     windowRef.addEventListener(CLEARED, this._onCleared);
+    windowRef.addEventListener(ENTITY_SELECTED, this._onEntitySelected);
+    windowRef.addEventListener(ENTITY_CLEARED, this._onCleared);
+    windowRef.addEventListener(PINNED, this._onPinned);
     closeButton?.addEventListener('click', this._onClose);
   }
 
@@ -109,10 +129,15 @@ export class EvidencePanel {
       value == null || value === '' ? 'Unknown' : String(value);
   }
 
-  show(detail = {}) {
+  show(detail = {}, { pinned = false } = {}) {
     if (!this.panel) return;
     if (!this.returnFocusTarget && !this.panel.contains(document.activeElement))
       this.returnFocusTarget = document.activeElement;
+    this.pinned = pinned;
+    this.panel.dataset.pinned = String(pinned);
+    const title = this.panel.querySelector('[data-evidence-title]');
+    if (title)
+      title.textContent = pinned ? 'PINNED RESULT EVIDENCE' : 'EVIDENCE';
     const evidence = normalizeEvidence(detail.evidence || {});
     const name = String(
       detail.label || evidence.entityRef.id || 'Selected object',
@@ -164,7 +189,12 @@ export class EvidencePanel {
   }
 
   clear({ restoreFocus = false } = {}) {
-    if (!this.panel || this.panel.hidden) return;
+    if (!this.panel) return;
+    this.pinned = false;
+    this.panel.dataset.pinned = 'false';
+    const title = this.panel.querySelector('[data-evidence-title]');
+    if (title) title.textContent = 'EVIDENCE';
+    if (this.panel.hidden) return;
     const shouldRestore = restoreFocus;
     this.panel.hidden = true;
     this.hidePanel?.();
@@ -180,6 +210,9 @@ export class EvidencePanel {
   destroy() {
     this.windowRef.removeEventListener(SELECTED, this._onSelected);
     this.windowRef.removeEventListener(CLEARED, this._onCleared);
+    this.windowRef.removeEventListener(ENTITY_SELECTED, this._onEntitySelected);
+    this.windowRef.removeEventListener(ENTITY_CLEARED, this._onCleared);
+    this.windowRef.removeEventListener(PINNED, this._onPinned);
     this.closeButton?.removeEventListener('click', this._onClose);
   }
 }

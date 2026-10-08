@@ -14,6 +14,13 @@ renderer, viewport, workload, object counts and frame-time percentiles; Auto
 quality is opt-in and adjusts detection-label density only. Other source-family
 evidence support is tracked in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
 
+The follow-up implementation extends provenance to live AIS vessel selections
+and analyst results. It preserves source observation time separately from local
+receipt time and labels received AIS positions as partial coverage. Analyst
+aircraft or vessel rows with evidence expose an accessible Inspect action; the
+inspector pins that result snapshot while live selection changes, and closing it
+returns keyboard focus to the initiating control.
+
 ## God's Eye View in conversations — October 2, 2026
 
 Tool answers that can be shown in God's Eye View include a view: camera, layers,

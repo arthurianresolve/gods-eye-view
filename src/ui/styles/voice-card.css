@@ -281,6 +281,25 @@
   counter-increment: gev-referent;
 }
 
+.gev-voice-card-referent-inspect {
+  margin-left: 0.45rem;
+  padding: 0.08rem 0.28rem;
+  color: var(--accent);
+  background: rgba(54, 220, 255, 0.06);
+  border: 1px solid rgba(54, 220, 255, 0.3);
+  border-radius: 0.16rem;
+  font: inherit;
+  font-size: 0.55rem;
+  cursor: pointer;
+}
+
+.gev-voice-card-referent-inspect:hover,
+.gev-voice-card-referent-inspect:focus-visible {
+  background: rgba(54, 220, 255, 0.15);
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .gev-voice-card-referents li::before {
   content: counter(gev-referent);
   display: inline-block;

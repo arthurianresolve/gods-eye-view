@@ -133,6 +133,14 @@ samples; rerun base and candidate with the same fixture/data population before
 comparing them. No hardware claim is made from a software renderer or a report
 with mismatched populations.
 
+For repeatable development captures, add `--fixture-aircraft 2500`. The harness
+enables the flights layer and injects the same generated Austin aircraft ring
+through its development-only layer seam, then records the fixture ID and count.
+Choose `--quality-mode manual` or `--quality-mode auto` and retain both reports
+when comparing profiles. This is a controlled workload hook, not a production
+feed, and software-rendered captures remain smoke checks rather than hardware
+performance evidence.
+
 Use the same controls before attributing a difference to the application:
 
 1. Record the exact GPU renderer and reject software-rendered or unavailable GPU

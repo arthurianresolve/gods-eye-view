@@ -920,7 +920,11 @@
       "src/layers/vessels/records.js",
       "src/layers/vessels/recordPolicy.js",
       "src/layers/vessels/snapshotRenderer.js",
-      "src/data/inputOwnership.js"
+      "src/data/inputOwnership.js",
+      "src/evidence/evidence.js",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
+      "src/data/installationFeedback.js"
     ],
     "external": ["cesium"]
   },
@@ -1390,7 +1394,8 @@
       "src/voice/narration.js",
       "src/voice/earcon.js",
       "src/voice/pointerContext.js",
-      "src/voice/pointerReticle.js"
+      "src/voice/pointerReticle.js",
+      "src/evidence/evidence.js"
     ],
     "external": []
   },
@@ -1536,6 +1541,8 @@
       "src/data/iconOrientation.js",
       "src/data/infrastructure.js",
       "src/data/installationFeedback.js",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
       "src/data/issPass.js",
       "src/data/labelArbiter.js",
       "src/data/layerState.js",
@@ -2284,6 +2291,8 @@
       "src/data/iconOrientation.js",
       "src/data/infrastructure.js",
       "src/data/installationFeedback.js",
+      "src/data/feedState.js",
+      "src/loadingFeedback.js",
       "src/data/issPass.js",
       "src/data/satellitePass.js",
       "src/data/labelArbiter.js",
@@ -2965,7 +2974,8 @@
       "src/voice/referents.js",
       "src/voice/layerManifest.js",
       "src/voice/speech.js",
-      "src/voice/pointerReticle.js"
+      "src/voice/pointerReticle.js",
+      "src/evidence/evidence.js"
     ],
     "external": []
   },

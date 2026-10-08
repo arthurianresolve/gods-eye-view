@@ -297,7 +297,11 @@ export function voiceCardView(state) {
         .slice(0, MAX_LINES),
       referents: (state.result?.referents || [])
         .slice(0, MAX_DISPLAYED_REFERENTS)
-        .map((ref) => ({ n: ref.n, label: spokenLabel(ref.label, 48) })),
+        .map((ref) => ({
+          n: ref.n,
+          label: spokenLabel(ref.label, 48),
+          ...(ref.evidence ? { evidence: ref.evidence } : {}),
+        })),
       notes,
     },
     announce: state.announce || '',

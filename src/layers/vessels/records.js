@@ -8,6 +8,14 @@ export function normalizeVessel(row) {
   const lat = Number(row.lat);
   const lon = Number(row.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const positionEpoch = finiteNumber(row.last_position_epoch);
+  const parsedUtc = Date.parse(String(row.last_position_UTC || ''));
+  const observedAtMs =
+    positionEpoch != null && positionEpoch > 0
+      ? positionEpoch * 1000
+      : Number.isFinite(parsedUtc) && parsedUtc > 0
+        ? parsedUtc
+        : null;
   return {
     lat,
     lon,
@@ -21,7 +29,8 @@ export function normalizeVessel(row) {
     course: finiteNumber(row.course),
     heading: finiteNumber(row.heading),
     lastPositionUtc: String(row.last_position_UTC || ''),
-    lastPositionEpoch: finiteNumber(row.last_position_epoch),
+    lastPositionEpoch: positionEpoch,
+    observedAtMs,
     missedRefreshes: 0,
   };
 }
@@ -76,6 +85,7 @@ export class VesselRecords {
         record.heading = next.heading;
         record.lastPositionUtc = next.lastPositionUtc;
         record.lastPositionEpoch = next.lastPositionEpoch;
+        record.observedAtMs = next.observedAtMs;
         record.missedRefreshes = 0;
 
         effects.updated(record, before);

@@ -144,13 +144,16 @@ scope and remaining acceptance evidence appear in their rows. S08–S31 remain
 
 The first wave has working code and repeatable local checks for its core path.
 S01 still needs its first successful hosted `dev` CI run. S04's common feed-state
-and snapshot contract is wired; per-family evidence beyond the aircraft adapters
-is explicitly unsupported in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). S05
-opens the inspector from civil/military selection; pinned query-result inspection
-remains. S06 records browser/renderer/workload metadata and flags changing source
-populations, but a matched fixture-injection hook and hardware captures remain.
-S07 changes detection-label density only and stays opt-in; its hardware A/B
-acceptance remains before setting it as a default.
+and snapshot contract is wired; aircraft and AIS vessels have object-level
+evidence, while other families remain explicitly unsupported in
+[EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). S05 now supports pinning aircraft and
+vessel evidence from analyst results; refreshing or changing the live selection
+leaves that snapshot fixed. S06 records browser/renderer and
+workload metadata, flags changing source populations, and has a deterministic
+development-only aircraft fixture option; hardware captures remain. S07 changes
+detection-label density only and stays opt-in; the capture tool records the
+quality profile and density, while matched hardware A/B acceptance remains before
+setting Auto as a default.
 
 The dependency table governs execution; numerical order is only a convenient
 reading order. S06 and S09 can begin after their dependencies without waiting for

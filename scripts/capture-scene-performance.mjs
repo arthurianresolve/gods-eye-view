@@ -15,8 +15,20 @@ const warmupMs = Math.max(0, Number(option('--warmup-ms', '5000')) || 0);
 const runs = Math.max(1, Math.min(10, Number(option('--runs', '3')) || 3));
 const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
+const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
+const qualityMode = option('--quality-mode', 'manual');
 const out = option('--out', null);
 const hardwareRequired = args.includes('--hardware-required');
+if (
+  !Number.isInteger(fixtureAircraftCount) ||
+  fixtureAircraftCount < 0 ||
+  fixtureAircraftCount > 20_000
+)
+  throw new Error('--fixture-aircraft must be an integer from 0 to 20000');
+if (!['manual', 'auto', 'quality', 'performance'].includes(qualityMode))
+  throw new Error(
+    '--quality-mode must be manual, auto, quality or performance',
+  );
 
 const browser = await puppeteer.launch({
   headless: args.includes('--headless') ? 'new' : false,
@@ -40,6 +52,66 @@ try {
   });
   const readyMs = Date.now() - navigationStart;
   if (warmupMs) await new Promise((resolve) => setTimeout(resolve, warmupMs));
+
+  const fixture = fixtureAircraftCount
+    ? await page.evaluate(
+        async ({ count, mode }) => {
+          const app = window.__godsEyeView;
+          const manager = app?.dataManager;
+          const entry = manager?.layers?.get('flights');
+          if (!entry)
+            throw new Error(
+              'Aircraft fixture requires the registered flights layer',
+            );
+          if (!manager.isEnabled('flights'))
+            await manager.setEnabled('flights', true);
+          const layer = manager.layers.get('flights')?.module;
+          const inject = layer?.__focusEvidence?.setAircraft;
+          if (typeof inject !== 'function')
+            throw new Error(
+              'Aircraft fixture injection is available only in a Vite development build',
+            );
+          const records = Array.from({ length: count }, (_, index) => {
+            const angle = index * 2.399963229728653;
+            const radius = Math.sqrt((index + 0.5) / count);
+            return {
+              id: (index + 1).toString(16).padStart(6, '0'),
+              callsign: `FX${String(index + 1).padStart(5, '0')}`,
+              latitude: 30.2672 + Math.sin(angle) * radius * 0.14,
+              longitude: -97.7431 + Math.cos(angle) * radius * 0.18,
+              altitudeM: 1_500 + (index % 16) * 850,
+              velocityMps: 70 + (index % 90),
+              trackDeg: index % 360,
+            };
+          });
+          const result = inject(records);
+          if (!result?.ok || result.count !== count)
+            throw new Error(
+              `Fixture injection failed: ${JSON.stringify(result)}`,
+            );
+          if (entry.intervalId != null) clearInterval(entry.intervalId);
+          entry.intervalId = null;
+          const controller = app.styleManager?._adaptiveQuality;
+          if (!controller?.setMode(mode))
+            throw new Error('Presentation quality controller is unavailable');
+          return {
+            id: 'synthetic-aircraft-ring-v1',
+            count,
+            center: { latitude: 30.2672, longitude: -97.7431 },
+            seed: 1,
+          };
+        },
+        { count: fixtureAircraftCount, mode: qualityMode },
+      )
+    : null;
+  if (!fixture) {
+    const modeSet = await page.evaluate((mode) => {
+      const controller = window.__godsEyeView?.styleManager?._adaptiveQuality;
+      return controller?.setMode(mode) || false;
+    }, qualityMode);
+    if (!modeSet)
+      throw new Error('Presentation quality controller is unavailable');
+  }
 
   await page.evaluate(() => {
     const camera = window.__godsEyeView.viewer.camera;
@@ -210,6 +282,17 @@ try {
             focused: document.hasFocus(),
             visible: !document.hidden,
             injectedDelayMs: delay || 0,
+            quality: {
+              mode:
+                window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
+                null,
+              densityPct:
+                window.__godsEyeView?.styleManager?.services?.getDetectionTuning?.()
+                  ?.densityPct ?? null,
+              p95FrameMs:
+                window.__godsEyeView?.styleManager?._adaptiveQuality?.policy
+                  ?.lastP95Ms ?? null,
+            },
           };
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
@@ -231,6 +314,8 @@ try {
       durationPerSampleMs: seconds * 1000,
       runsPerScenario: runs,
       scenarios: ['idle', 'scripted-motion'],
+      fixture,
+      qualityMode,
       injectedDelayMs: delayMs,
       populationStableAcrossSamples: populations.size === 1,
       note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',

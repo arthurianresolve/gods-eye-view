@@ -100,6 +100,7 @@ test('markup: the card nests inside the voice control with every element and a p
 });
 
 function fakeRoot() {
+  const dispatched = [];
   const make = (id) => {
     const listeners = new Map();
     const node = {
@@ -113,7 +114,7 @@ function fakeRoot() {
         listeners.set(type, handler);
         options?.signal?.addEventListener('abort', () => listeners.delete(type));
       },
-      fire: (type) => listeners.get(type)?.({}),
+      fire: (type, event = {}) => listeners.get(type)?.(event),
       listenerCount: () => listeners.size,
       replaceChildren(...nodes) {
         this.children = nodes;
@@ -121,12 +122,28 @@ function fakeRoot() {
       append(...nodes) {
         this.children.push(...nodes);
       },
+      setAttribute(name, value) {
+        this[name] = value;
+      },
       matches: () => false,
     };
     return node;
   };
   const nodes = new Map();
-  const doc = { createElement: (tag) => ({ ...make(tag), tag }) };
+  class FakeCustomEvent {
+    constructor(type, options = {}) {
+      this.type = type;
+      this.detail = options.detail;
+    }
+  }
+  const doc = {
+    createElement: (tag) => ({ ...make(tag), tag }),
+    createTextNode: (textContent) => ({ textContent }),
+    defaultView: {
+      CustomEvent: FakeCustomEvent,
+      dispatchEvent: (event) => dispatched.push(event),
+    },
+  };
   const root = {
     querySelector(selector) {
       const id = selector.slice(1);
@@ -138,7 +155,7 @@ function fakeRoot() {
       return nodes.get(id);
     },
   };
-  return { root, nodes };
+  return { root, nodes, dispatched };
 }
 
 test('controls: render, idle hide, dismiss and idempotent teardown', () => {
@@ -183,6 +200,44 @@ test('controls: render, idle hide, dismiss and idempotent teardown', () => {
 test('controls: a control without card markup is inert', () => {
   const card = new VoiceCardControls({ root: { querySelector: () => null } });
   assert.doesNotThrow(() => card.handle({ type: 'interruption' }));
+  card.destroy();
+});
+
+test('controls: evidence referents expose a keyboard accessible pin action', () => {
+  const { root, nodes, dispatched } = fakeRoot();
+  const card = new VoiceCardControls({ root });
+  card.handle({ type: 'interruption' });
+  card.handle({ type: 'action-call', name: 'find_aircraft', callId: 'find-1' });
+  card.handle({
+    type: 'action-result',
+    name: 'find_aircraft',
+    callId: 'find-1',
+    result: {
+      ok: true,
+      display: { title: 'Aircraft found' },
+      referents: [
+        {
+          id: 'abc123',
+          layerId: 'flights',
+          label: 'TEST123',
+          evidence: {
+            entityRef: { layerKey: 'flights', id: 'abc123' },
+            sourceId: 'OpenSky',
+            observedAt: 1_700_000_000_000,
+          },
+        },
+      ],
+    },
+  });
+  const row = nodes.get('gev-voice-card-referents').children[0];
+  const inspect = row.children[1];
+  assert.equal(inspect.tag, 'button');
+  assert.equal(inspect.textContent, 'Inspect evidence');
+  assert.equal(inspect['aria-label'], 'Inspect evidence for TEST123');
+  inspect.fire('click');
+  assert.equal(dispatched[0].type, 'gev:evidence-result-pinned');
+  assert.equal(dispatched[0].detail.label, 'TEST123');
+  assert.equal(dispatched[0].detail.evidence.entityRef.id, 'abc123');
   card.destroy();
 });
 

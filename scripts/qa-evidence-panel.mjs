@@ -130,6 +130,99 @@ try {
   assert.equal(closed.hidden, true);
   assert.equal(closed.focus, 'qa-evidence-focus-return');
 
+  await page.evaluate(() => {
+    const pinFocus = document.createElement('button');
+    pinFocus.id = 'qa-evidence-pin-focus';
+    pinFocus.textContent = 'Inspect result';
+    document.body.append(pinFocus);
+    pinFocus.focus();
+    window.dispatchEvent(
+      new CustomEvent('gev:evidence-result-pinned', {
+        detail: {
+          label: 'Pinned result TEST123',
+          evidence: {
+            entityRef: { layerKey: 'flights', id: 'abc123' },
+            sourceId: 'Synthetic source',
+            observedAt: Date.UTC(2026, 0, 15, 12),
+            receivedAt: Date.UTC(2026, 0, 15, 12, 0, 4),
+          },
+        },
+      }),
+    );
+  });
+  await page.waitForFunction(
+    () => document.getElementById('evidence-panel')?.dataset.pinned === 'true',
+  );
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent('gev:awareness-subject-selected', {
+        detail: {
+          label: 'New live selection',
+          evidence: {
+            entityRef: { layerKey: 'flights', id: 'def456' },
+            observedAt: Date.UTC(2026, 0, 16, 12),
+          },
+        },
+      }),
+    ),
+  );
+  const pinned = await page.evaluate(() => ({
+    title: document.querySelector('[data-evidence-title]')?.textContent,
+    subject: document.querySelector('[data-evidence-value="subject"]')
+      ?.textContent,
+    observed: document.querySelector('[data-evidence-value="observed"]')
+      ?.textContent,
+  }));
+  assert.equal(pinned.title, 'PINNED RESULT EVIDENCE');
+  assert.equal(pinned.subject, 'Pinned result TEST123');
+  assert.match(pinned.observed, /2026-01-15T12:00:00/);
+  await page.click('#evidence-panel-close');
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.id),
+    'qa-evidence-pin-focus',
+  );
+
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent('gev:entity-selected', {
+        detail: {
+          id: 'ais-367123456',
+          layerId: 'ais-live-vessels',
+          label: 'Synthetic AIS vessel',
+          evidence: {
+            entityRef: { layerKey: 'ais-live-vessels', id: '367123456' },
+            sourceId: 'AISStream',
+            sourceUrl: 'https://aisstream.io/',
+            sourceRecordId: '367123456',
+            observedAt: Date.UTC(2026, 0, 15, 12),
+            receivedAt: Date.UTC(2026, 0, 15, 12, 0, 5),
+            method: 'observed',
+            coverage: {
+              area: 'Received AIS positions',
+              completeness: 'partial',
+              reason: 'Sparse reports do not establish geographic absence.',
+            },
+            limitations: ['AIS reports are sparse.'],
+          },
+        },
+      }),
+    ),
+  );
+  await page.waitForFunction(
+    () => !document.getElementById('evidence-panel')?.hidden,
+  );
+  const vessel = await page.evaluate(() => ({
+    subject: document.querySelector('[data-evidence-value="subject"]')
+      ?.textContent,
+    layer: document.querySelector('[data-evidence-value="layer"]')?.textContent,
+    coverage: document.querySelector('[data-evidence-value="coverage"]')
+      ?.textContent,
+  }));
+  assert.equal(vessel.subject, 'Synthetic AIS vessel');
+  assert.equal(vessel.layer, 'ais-live-vessels');
+  assert.match(vessel.coverage, /partial/);
+  await page.click('#evidence-panel-close');
+
   await page.evaluate(() =>
     window.dispatchEvent(
       new CustomEvent('gev:awareness-subject-selected', {
@@ -147,7 +240,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: aircraft evidence, safe source link, refresh state, focus return and unsupported selection handling',
+    'PASS: aircraft and AIS evidence, pinned result snapshot, safe source link, focus return and unsupported selection handling',
   );
 } finally {
   await browser.close();

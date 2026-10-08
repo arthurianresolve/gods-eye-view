@@ -46,6 +46,10 @@ import { unavailablePlaceSearch } from '../search/placeSearch.js';
 import * as defaultAnnotationResolver from '../annotations/annotationResolver.js';
 import { normalizeRadioCountryInput } from '../data/radioCountry.js';
 import { TR3B_CLASS } from '../data/tr3bRegistry.js';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../evidence/evidence.js';
 
 const ALLOWED_STYLES = new Set([
   'normal',
@@ -4813,6 +4817,54 @@ function compactAnalystItem(r) {
     } else compact[key] = r[key];
   }
   if (present(r.ageHours)) compact.ageHours = r.ageHours;
+  if (r.evidence && typeof r.evidence === 'object')
+    compact.evidence = r.evidence;
+  if (
+    ['flights', 'military'].includes(r.layerKey) &&
+    present(r.icao24) &&
+    Number.isFinite(r.lat) &&
+    Number.isFinite(r.lon)
+  ) {
+    const provenance = r.provenance || {};
+    const freshness = String(provenance.sourceFreshness || '').toLowerCase();
+    const feedState =
+      {
+        fresh: 'nominal',
+        nominal: 'nominal',
+        partial: 'partial',
+        stale: 'stale',
+        degraded: 'degraded',
+        fallback: 'fallback',
+        unavailable: 'unavailable',
+        off: 'off',
+      }[freshness] || 'unknown';
+    const regional = /regional/i.test(provenance.sourceCoverage || '');
+    compact.evidence = createEvidenceEnvelope({
+      entityRef: { layerKey: r.layerKey, id: r.icao24 },
+      sourceId: provenance.sourceId,
+      sourceUrl: knownEvidenceSourceUrl(provenance.sourceId),
+      sourceRecordId: provenance.sourceRecordId || r.icao24,
+      observedAt: provenance.positionObservedAtMs,
+      receivedAt: provenance.receivedAtMs,
+      snapshotAt: provenance.sourceSnapshotObservedAtMs,
+      method: 'observed',
+      displayMethod: 'observed',
+      feedState,
+      coverage: {
+        area: provenance.sourceCoverage,
+        completeness:
+          provenance.sourceComplete === true && !regional
+            ? 'complete'
+            : freshness === 'partial' || regional
+              ? 'partial'
+              : 'unknown',
+      },
+      limitations:
+        provenance.positionObservedAtMs == null
+          ? ['The source did not provide a per-aircraft position time.']
+          : [],
+    });
+  }
   return compact;
 }
 

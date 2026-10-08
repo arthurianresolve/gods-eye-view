@@ -3,7 +3,7 @@
 // Separate file from aisLiveVessels.test.mjs (feed-status helper) by design.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapAnalystRecord } from './aisLiveVessels.js';
+import aisLiveVesselsLayer, { mapAnalystRecord } from './aisLiveVessels.js';
 
 const FULL_RECORD = {
   mmsi: '353136000',
@@ -30,6 +30,33 @@ test('ais analyst record: full record maps every contract field', () => {
     destination: 'OAKLAND',
     navStatus: null, // /api/vessels does not surface NavigationalStatus
   });
+});
+
+test('ais analyst evidence preserves MMSI, source time, receipt and sparse coverage', () => {
+  const source = aisLiveVesselsLayer.source;
+  let r;
+  try {
+    aisLiveVesselsLayer.source = 'AISStream';
+    r = mapAnalystRecord({
+      ...FULL_RECORD,
+      reference: 'ais:353136000',
+      observedAtMs: 1700000000000,
+      receivedAtMs: 1700000000250,
+    });
+  } finally {
+    aisLiveVesselsLayer.source = source;
+  }
+  assert.equal(r.evidence.entityRef.layerKey, 'ais-live-vessels');
+  assert.equal(r.evidence.entityRef.id, '353136000');
+  assert.equal(r.evidence.sourceId, 'AISStream');
+  assert.equal(r.evidence.sourceUrl, 'https://aisstream.io/');
+  assert.equal(r.evidence.sourceRecordId, 'ais:353136000');
+  assert.equal(r.evidence.observedAt, 1700000000000);
+  assert.equal(r.evidence.receivedAt, 1700000000250);
+  assert.equal(r.evidence.method, 'observed');
+  assert.equal(r.evidence.coverage.completeness, 'partial');
+  assert.match(r.evidence.coverage.reason, /sparse/);
+  assert.match(r.evidence.limitations[0], /do not prove/);
 });
 
 test('ais analyst record: nameless vessel falls back to mmsi id', () => {
