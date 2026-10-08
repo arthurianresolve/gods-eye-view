@@ -18,7 +18,7 @@ import { SETTINGS_BACKUP_VERSION } from '../src/diagnostics/portable.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXCLUDED = new Set(['gev-release-manifest.json']);
 
-export function parseReleaseArgs(args) {
+export function parseReleaseArgs(args, env = process.env) {
   const options = { out: 'release-staging', channel: 'dev', commit: 'unknown' };
   for (let index = 0; index < args.length; index++) {
     const key = args[index];
@@ -33,12 +33,11 @@ export function parseReleaseArgs(args) {
     throw new TypeError('Release channel must be stable or dev.');
   if (
     options.channel === 'stable' &&
-    !/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(
-      process.env.GITHUB_REF_NAME || '',
-    )
+    (env.GITHUB_REF_TYPE !== 'tag' ||
+      !/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(env.GITHUB_REF_NAME || ''))
   ) {
     // Local invocations may not know the ref name; the workflow supplies it.
-    if (process.env.GITHUB_ACTIONS === 'true')
+    if (env.GITHUB_ACTIONS === 'true')
       throw new TypeError('Stable builds require a semantic-version tag.');
   }
   return options;
@@ -71,6 +70,7 @@ export async function stageRelease({
   out = 'release-staging',
   channel = 'dev',
   commit = 'unknown',
+  env = process.env,
 } = {}) {
   const source = path.resolve(root);
   const destination = path.resolve(source, out);
@@ -92,11 +92,11 @@ export async function stageRelease({
   );
   if (
     channel === 'stable' &&
-    process.env.GITHUB_ACTIONS === 'true' &&
-    process.env.GITHUB_REF_NAME !== `v${pkg.version}`
+    env.GITHUB_ACTIONS === 'true' &&
+    (env.GITHUB_REF_TYPE !== 'tag' || env.GITHUB_REF_NAME !== `v${pkg.version}`)
   )
     throw new Error(
-      `Stable tag ${process.env.GITHUB_REF_NAME} must match package version v${pkg.version}.`,
+      `Stable tag ${env.GITHUB_REF_NAME} must match package version v${pkg.version}.`,
     );
   const dist = path.join(source, 'dist');
   if (!(await stat(dist).catch(() => null))?.isDirectory())

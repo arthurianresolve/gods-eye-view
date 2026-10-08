@@ -38,6 +38,11 @@ test('release staging creates a verified versioned manifest and refuses replacem
     out: 'staging',
     channel: 'stable',
     commit: 'abc123',
+    env: {
+      GITHUB_ACTIONS: 'true',
+      GITHUB_REF_TYPE: 'tag',
+      GITHUB_REF_NAME: 'v1.2.3',
+    },
   });
   assert.equal(manifest.version, '1.2.3');
   assert.equal(manifest.commit, 'abc123');
@@ -49,6 +54,34 @@ test('release staging creates a verified versioned manifest and refuses replacem
   await assert.rejects(
     stageRelease({ root, out: 'staging' }),
     /already exists/,
+  );
+});
+
+test('stable staging requires the exact version tag in CI, independently of the host workflow', async (t) => {
+  const root = await fixture(t);
+  for (const [type, name] of [
+    ['branch', 'v1.2.3'],
+    ['tag', 'v9.9.9'],
+    ['branch', '2/merge'],
+  ]) {
+    const env = {
+      GITHUB_ACTIONS: 'true',
+      GITHUB_REF_TYPE: type,
+      GITHUB_REF_NAME: name,
+    };
+    await assert.rejects(
+      stageRelease({ root, out: 'rejected', channel: 'stable', env }),
+      /Stable tag/,
+    );
+  }
+  assert.throws(
+    () =>
+      parseReleaseArgs(['--channel', 'stable'], {
+        GITHUB_ACTIONS: 'true',
+        GITHUB_REF_TYPE: 'branch',
+        GITHUB_REF_NAME: 'v1.2.3',
+      }),
+    /semantic-version tag/,
   );
 });
 
