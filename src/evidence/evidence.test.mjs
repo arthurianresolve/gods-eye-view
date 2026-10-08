@@ -6,7 +6,26 @@ import {
   safePeeringDbFacilityUrl,
   safeReferenceUrl,
   safeEvidenceUrl,
+  evidenceInstant,
+  validateEvidenceReferences,
 } from './evidence.js';
+
+test('reference dates must fit the JavaScript UTC date range before rendering', () => {
+  assert.equal(evidenceInstant(1e30), null);
+  assert.throws(
+    () =>
+      validateEvidenceReferences({
+        references: [
+          {
+            kind: 'archive',
+            url: 'https://example.test/',
+            archiveAt: 1e30,
+          },
+        ],
+      }),
+    /timestamp/,
+  );
+});
 
 test('public references reject local aliases, private literals and credentials', () => {
   for (const url of [

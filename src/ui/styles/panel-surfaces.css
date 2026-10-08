@@ -218,6 +218,10 @@ button.panel-surface-control {
   color: var(--text-secondary);
 }
 
+.evidence-panel-row[hidden] {
+  display: none;
+}
+
 .evidence-panel-row dd {
   min-width: 0;
   margin: 0;

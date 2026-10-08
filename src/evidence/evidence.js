@@ -63,7 +63,9 @@ export function knownEvidenceSourceUrl(sourceId) {
 export function evidenceInstant(value) {
   if (value == null || value === '') return null;
   const instant = typeof value === 'number' ? value : Date.parse(value);
-  return Number.isFinite(instant) && instant > 0 ? instant : null;
+  return Number.isFinite(instant) && instant > 0 && instant <= 8.64e15
+    ? instant
+    : null;
 }
 
 /** Remove URL credentials, query values and fragments before displaying a source. */
