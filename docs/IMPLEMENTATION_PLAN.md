@@ -143,17 +143,20 @@ scope and remaining acceptance evidence appear in their rows. S08–S31 remain
 | [S31](#s31) | Release candidate acceptance and rollout | A–G, S29, S30 | M | H |
 
 The first wave has working code and repeatable local checks for its core path.
-S01 still needs its first successful hosted `dev` CI run. S04's common feed-state
-and snapshot contract is wired; aircraft and AIS vessels have object-level
-evidence, while other families remain explicitly unsupported in
-[EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). S05 now supports pinning aircraft and
-vessel evidence from analyst results; refreshing or changing the live selection
-leaves that snapshot fixed. S06 records browser/renderer and
-workload metadata, flags changing source populations, and has a deterministic
-development-only aircraft fixture option; hardware captures remain. S07 changes
-detection-label density only and stays opt-in; the capture tool records the
-quality profile and density, while matched hardware A/B acceptance remains before
-setting Auto as a default.
+The first hosted `workflow_dispatch` run passed at commit
+[`c996a25`](https://github.com/arthurianresolve/gods-eye-view/commit/c996a255c4063a93c0553fa3c3e31d09bc9d31b2),
+including Node 24/26, Windows onboarding and the browser gates. S01 still needs
+representative pull requests to both `dev` and `main` to exercise base-specific
+token checks. S04's common feed-state and snapshot contract is wired; aircraft
+and AIS vessels have object-level evidence, while other families remain
+explicitly unsupported in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). S05 now
+supports pinning aircraft and vessel evidence from analyst results; refreshing
+or changing the live selection leaves that snapshot fixed. S06 records
+browser/renderer and workload metadata, flags changing source populations, and
+has a deterministic development-only aircraft fixture option; hardware captures
+remain. S07 changes detection-label density only and stays opt-in; the capture
+tool records the quality profile and density, while matched hardware A/B
+acceptance remains before setting Auto as a default.
 
 The dependency table governs execution; numerical order is only a convenient
 reading order. S06 and S09 can begin after their dependencies without waiting for
@@ -339,8 +342,10 @@ correct base; an injected browser failure makes its job fail; logs contain no
 secrets; unrelated upstream checks continue to run.
 
 **Validate:** inspect workflow expressions and run the new fixture command locally;
-verify the first actual `dev` CI run. **Rollback:** revert added triggers/jobs;
-retain all existing checks.
+the first hosted `dev` run passed at
+[`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
+Still verify token-base behavior with pull requests targeting both `dev` and
+`main`. **Rollback:** revert added triggers/jobs; retain all existing checks.
 
 <a id="s02"></a>
 
@@ -1257,14 +1262,15 @@ S00, S02 and S03 are implemented on `dev`; this wave adds working foundations
 for S01 and S04–S07. Continue in dependency order without treating missing
 hardware captures as a release result:
 
-1. Verify the first hosted `dev` CI run and a `main` pull-request base comparison
-for S01.
+1. Verify token-base behavior through representative pull requests targeting
+   `dev` and `main` for S01; the first hosted `dev` run passed at
+   [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
 2. Add source-family adapters and fixtures, beginning with vessels and propagated
 satellite elements, for S04.
-3. Pin query-result evidence in the inspector and exercise it at narrow and
-desktop widths for S05.
-4. Add matched fixture injection and capture supported hardware for S06; retain
-software-rendered captures as behavior diagnostics only.
+3. Exercise the pinned aircraft/vessel result inspector at narrow and desktop
+   widths for S05.
+4. Capture supported hardware with matched fixtures for S06; retain
+   software-rendered captures as behavior diagnostics only.
 5. Complete matched hardware A/B checks before considering Auto as a default for
 S07. It remains opt-in and only changes presentation density today.
 
