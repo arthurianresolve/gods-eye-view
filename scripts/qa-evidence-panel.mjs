@@ -386,6 +386,90 @@ try {
   );
   await page.click('#evidence-panel-close');
 
+  const recovery = await page.evaluate(() => {
+    const send = (name, detail) =>
+      window.dispatchEvent(new CustomEvent(name, { detail }));
+    const reference = {
+      kind: 'user-linked',
+      url: 'https://example.test/camera-reference',
+    };
+    const evidence = {
+      entityRef: { layerKey: 'cctv', id: 'camera-recovery' },
+      sourceId: 'Fixture agency',
+      sourceUrl: 'https://example.test/agency',
+      method: 'simulated',
+      feedState: 'fallback',
+      limitations: ['Synthetic placeholder; source unavailable.'],
+      references: [reference],
+      cameraHealth: {
+        sourceKind: 'synthetic',
+        sourceStatus: 'unavailable',
+        healthReason: 'synthetic-placeholder',
+      },
+    };
+    send('gev:entity-selected', { label: 'Fixture camera', evidence });
+    document.querySelector('.evidence-panel-technical').open = true;
+    const refs = document.querySelector('[data-evidence-value="references"]');
+    const input = refs.querySelector('input');
+    input.value = 'https://example.test/unfinished';
+    input.focus();
+    const cameraState = {
+      sourceKind: 'configured',
+      sourceStatus: 'ok',
+      healthReason: 'source-delivery',
+      decodeStatus: 'ok',
+      healthLastSuccessAt: Date.now(),
+      decodeLastSuccessAt: Date.now(),
+    };
+    const recovered = {
+      ...evidence,
+      method: 'observed',
+      feedState: 'nominal',
+      receivedAt: Date.now(),
+      observedAt: Date.now(),
+      limitations: ['Capture time supplied by this fixture.'],
+      cameraHealth: cameraState,
+      references: [],
+    };
+    send('gev:camera-health-updated', { evidence: recovered, cameraState });
+    const value = (key) =>
+      document.querySelector('[data-evidence-value="' + key + '"]').textContent;
+    const result = {
+      method: value('method'),
+      limitations: value('limitations'),
+      age: value('age'),
+      feed: value('feed-state'),
+      fallback: value('fallback'),
+      health: value('health'),
+      referencesRetained: refs.textContent.includes(reference.url),
+      focusRetained: document.activeElement === input,
+      draftRetained: input.value === 'https://example.test/unfinished',
+    };
+    send('gev:evidence-record-opened', {
+      label: 'Historical camera snapshot',
+      evidence,
+    });
+    send('gev:camera-health-updated', { evidence: recovered, cameraState });
+    result.pinnedMethod = value('method');
+    result.pinnedFallback = value('fallback');
+    return result;
+  });
+  assert.equal(recovery.method, 'observed');
+  assert.match(recovery.limitations, /Capture time supplied/);
+  assert.doesNotMatch(recovery.limitations, /Synthetic placeholder/);
+  assert.notEqual(recovery.age, 'Unknown');
+  assert.equal(recovery.feed, 'NOMINAL');
+  assert.equal(recovery.fallback, 'Source delivery');
+  assert.match(recovery.health, /source-delivery/);
+  assert.ok(
+    recovery.referencesRetained &&
+      recovery.focusRetained &&
+      recovery.draftRetained,
+  );
+  assert.equal(recovery.pinnedMethod, 'simulated');
+  assert.equal(recovery.pinnedFallback, 'Synthetic placeholder');
+  await page.click('#evidence-panel-close');
+
   await page.evaluate(() =>
     window.dispatchEvent(
       new CustomEvent('gev:awareness-subject-selected', {

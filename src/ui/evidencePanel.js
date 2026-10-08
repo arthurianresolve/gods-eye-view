@@ -88,11 +88,8 @@ export class EvidencePanel {
         ...detail,
         evidence: this.currentEvidence,
       };
-      this._showCameraHealth(detail.cameraState);
+      this._showEvidenceFacts(this.currentEvidence, detail.cameraState);
       this._publishEvidence(this.currentDetail);
-      this._set('feed-state', this.currentEvidence.feedState.toUpperCase());
-      this._set('observed', formatTime(this.currentEvidence.observedAt));
-      this._set('received', formatTime(this.currentEvidence.receivedAt));
     };
     windowRef.addEventListener(
       'gev:camera-health-updated',
@@ -241,6 +238,54 @@ export class EvidencePanel {
               : cameraState.healthLastSuccessAt
                 ? 'Source delivery'
                 : 'No verified source delivery',
+    );
+  }
+
+  _showEvidenceFacts(evidence, cameraState) {
+    const sourceUrl = safeEvidenceUrl(evidence.sourceUrl);
+    this._set(
+      'source',
+      sourceUrl
+        ? {
+            href: sourceUrl,
+            text: evidence.sourceId || new URL(sourceUrl).host,
+          }
+        : evidence.sourceId,
+    );
+    this._set('source-record', evidence.sourceRecordId);
+    this._showCameraHealth(cameraState || evidence.cameraHealth);
+    this._set('observed', formatTime(evidence.observedAt));
+    this._set('age', formatAge(evidence.observedAt));
+    this._set('snapshot', formatTime(evidence.snapshotAt));
+    this._set('issued', formatTime(evidence.issuedAt));
+    this._set('validity', formatTime(evidence.validFrom));
+    this._set('display-time', formatTime(evidence.displayTime));
+    this._set('element-epoch', formatTime(evidence.elementEpoch));
+    this._set('received', formatTime(evidence.receivedAt));
+    this._set('feed-state', evidence.feedState.toUpperCase());
+    this._set('method', evidence.method);
+    this._set('display', evidence.displayMethod);
+    this._set(
+      'coverage',
+      [
+        evidence.coverage.area,
+        evidence.coverage.completeness,
+        evidence.coverage.truncated ? 'truncated' : null,
+        evidence.coverage.reason,
+      ]
+        .filter(Boolean)
+        .join(' · ') || 'Unknown',
+    );
+    this._set(
+      'uncertainty',
+      evidence.uncertainty.value == null
+        ? 'Not provided'
+        : `${evidence.uncertainty.value} ${evidence.uncertainty.unit || ''} ${evidence.uncertainty.kind || ''}`.trim(),
+    );
+    this._set('license', evidence.licenseRef || 'Not provided');
+    this._set(
+      'limitations',
+      evidence.limitations.join(' · ') || 'No additional limitations provided',
     );
   }
 
@@ -436,7 +481,6 @@ export class EvidencePanel {
     const name = String(
       detail.label || evidence.entityRef.id || 'Selected object',
     );
-    const sourceUrl = safeEvidenceUrl(evidence.sourceUrl);
     const announcement = this.panel.querySelector('[data-evidence-status]');
     if (announcement)
       announcement.textContent =
@@ -447,51 +491,8 @@ export class EvidencePanel {
         ' public references.';
     this._set('subject', name);
     this._set('layer', evidence.entityRef.layerKey);
-    this._set(
-      'source',
-      sourceUrl
-        ? {
-            href: sourceUrl,
-            text: evidence.sourceId || new URL(sourceUrl).host,
-          }
-        : evidence.sourceId,
-    );
-    this._set('source-record', evidence.sourceRecordId);
-    this._showCameraHealth(detail.cameraState || evidence.cameraHealth);
-    this._set('observed', formatTime(evidence.observedAt));
-    this._set('age', formatAge(evidence.observedAt));
-    this._set('snapshot', formatTime(evidence.snapshotAt));
-    this._set('issued', formatTime(evidence.issuedAt));
-    this._set('validity', formatTime(evidence.validFrom));
-    this._set('display-time', formatTime(evidence.displayTime));
-    this._set('element-epoch', formatTime(evidence.elementEpoch));
-    this._set('received', formatTime(evidence.receivedAt));
-    this._set('feed-state', evidence.feedState.toUpperCase());
-    this._set('method', evidence.method);
-    this._set('display', evidence.displayMethod);
-    this._set(
-      'coverage',
-      [
-        evidence.coverage.area,
-        evidence.coverage.completeness,
-        evidence.coverage.truncated ? 'truncated' : null,
-        evidence.coverage.reason,
-      ]
-        .filter(Boolean)
-        .join(' · ') || 'Unknown',
-    );
-    this._set(
-      'uncertainty',
-      evidence.uncertainty.value == null
-        ? 'Not provided'
-        : `${evidence.uncertainty.value} ${evidence.uncertainty.unit || ''} ${evidence.uncertainty.kind || ''}`.trim(),
-    );
-    this._set('license', evidence.licenseRef || 'Not provided');
+    this._showEvidenceFacts(evidence, detail.cameraState);
     this._renderReferences(evidence);
-    this._set(
-      'limitations',
-      evidence.limitations.join(' · ') || 'No additional limitations provided',
-    );
     this.panel.hidden = false;
     this.openPanel?.();
   }
