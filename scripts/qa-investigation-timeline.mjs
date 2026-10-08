@@ -31,6 +31,7 @@ try {
       createAircraftRecordingService,
       createRecordedAircraftSource,
       createSyntheticAircraftFrames,
+      recordingBundleStream,
       createAircraftSourceRouter,
       createRecordedVesselSource,
       createVesselRecordingService,
@@ -192,6 +193,10 @@ try {
         break;
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
+    const aircraftBundle = await timeline.controller.exportSelectedBundle();
+    const aircraftBundleText = await new Response(
+      recordingBundleStream(aircraftBundle),
+    ).text();
     vesselSelect.value = vesselRecordingId;
     vesselSelect.dispatchEvent(new Event('change', { bubbles: true }));
     for (let attempt = 0; attempt < 100; attempt++) {
@@ -328,6 +333,7 @@ try {
     storage.close();
     return {
       optionCount,
+      aircraftBundleText,
       sliderPresent: Boolean(slider),
       selectedMode,
       requestedText,
@@ -389,9 +395,66 @@ try {
   assert.equal(result.vesselCaptureIngestAccepted, 1);
   assert.match(result.vesselCaptureCount, /1 fix\(es\)/);
   assert.equal(result.vesselStopped, true);
+
+  const transferContext = await browser.createBrowserContext();
+  try {
+    const transferPage = await transferContext.newPage();
+    await transferPage.goto(new URL('/src/storage/index.js', url).href, {
+      waitUntil: 'domcontentloaded',
+    });
+    await transferPage.setContent('<!doctype html><html><body></body></html>');
+    const transferDatabaseName = `gev-timeline-transfer-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const transfer = await transferPage.evaluate(
+      async ({ bundleText, name }) => {
+        const { createWorkspaceStorage } =
+          await import('/src/storage/index.js');
+        const { createRecordedAircraftSource, importRecordingBundle } =
+          await import('/src/recording/index.js');
+        const storage = createWorkspaceStorage({ name });
+        const before = await storage.listWorkspaces();
+        const imported = await importRecordingBundle(bundleText, {
+          storage,
+          idFactory: () => 'transferred-aircraft-recording',
+          now: () => 1_700_000_500_000,
+        });
+        const source = createRecordedAircraftSource({ storage });
+        const selected = await source.selectRecording(imported.id);
+        const snapshot = await source.getSnapshot();
+        const workspace = await storage.getWorkspace(imported.id);
+        const after = await storage.listWorkspaces();
+        const coverage = source.getState().coverage;
+        storage.close();
+        return {
+          beforeCount: before.length,
+          afterCount: after.length,
+          importedId: imported.id,
+          newIdentity: imported.id !== 'recording-browser-timeline',
+          policy: workspace.document.sourcePolicy,
+          selectedStatus: selected.status,
+          recordCount: selected.recordCount,
+          snapshotCount: snapshot.records.length,
+          entityId: snapshot.records[0]?.id,
+          coverage,
+        };
+      },
+      { bundleText: result.aircraftBundleText, name: transferDatabaseName },
+    );
+    assert.equal(transfer.beforeCount, 0, 'fresh browser profile starts empty');
+    assert.equal(transfer.afterCount, 1);
+    assert.equal(transfer.importedId, 'transferred-aircraft-recording');
+    assert.equal(transfer.newIdentity, true);
+    assert.equal(transfer.policy.policyId, 'synthetic-fixture-v1');
+    assert.equal(transfer.selectedStatus, 'selected');
+    assert.ok(transfer.recordCount >= 1);
+    assert.equal(transfer.snapshotCount, 1);
+    assert.equal(transfer.entityId, 'SYNTH-001');
+    assert.ok(transfer.coverage.from <= transfer.coverage.to);
+  } finally {
+    await transferContext.close();
+  }
   assert.deepEqual(pageErrors, []);
   console.log(
-    'Investigation timeline browser QA passed: aligned replay, visible gaps, source-policy denials, bounded capture controls and return to live.',
+    'Investigation timeline browser QA passed: aligned replay, visible gaps, source-policy denials, bounded capture controls, return to live and recording transfer into a fresh browser profile.',
   );
 } finally {
   await browser.close();

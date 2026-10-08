@@ -430,20 +430,50 @@ try {
   environment.hardwareEligible =
     Boolean(environment.renderer) && !softwareRenderer;
 
+  const scenarios = ['idle', 'scripted-motion'];
+  if (fixture) scenarios.push('selected-aircraft-tracking');
   const captures = [];
-  for (const scenario of ['idle', 'scripted-motion']) {
+  for (const scenario of scenarios) {
     for (let run = 1; run <= runs; run += 1) {
       process.stdout.write(`[performance] ${scenario} ${run}/${runs}\n`);
-      const sample = await page.evaluate(
-        async ({ durationMs, scenarioName, delay }) => {
-          const viewer = window.__godsEyeView.viewer;
-          const scene = viewer.scene;
+      const trackingSetup = await page.evaluate(
+        async ({ scenarioName, hasFixture }) => {
+          const app = window.__godsEyeView;
+          const viewer = app.viewer;
+          const flights = app.dataManager.layers.get('flights')?.module;
+          if (viewer.trackedEntity) flights?.stopTracking?.();
+          if (scenarioName === 'selected-aircraft-tracking') {
+            if (!hasFixture || typeof flights?.trackById !== 'function')
+              throw new Error(
+                'Selected-aircraft workload requires an injected flight fixture',
+              );
+            if (!flights.trackById('000001'))
+              throw new Error('Selected-aircraft fixture could not be tracked');
+            if (viewer.trackedEntity?.gevTrackedId !== 'flights:000001')
+              throw new Error(
+                'Selected-aircraft tracker did not claim the camera',
+              );
+            await new Promise((resolve) =>
+              requestAnimationFrame(() => requestAnimationFrame(resolve)),
+            );
+            return viewer.trackedEntity.gevTrackedId;
+          }
+          viewer.camera.cancelFlight?.();
           const home = window.__gevPerformanceHome;
           viewer.camera.setView({
             destination: home.position,
             orientation: { direction: home.direction, up: home.up },
             endTransform: home.transform,
           });
+          viewer.scene.requestRender();
+          return null;
+        },
+        { scenarioName: scenario, hasFixture: Boolean(fixture) },
+      );
+      const sample = await page.evaluate(
+        async ({ durationMs, scenarioName, delay }) => {
+          const viewer = window.__godsEyeView.viewer;
+          const scene = viewer.scene;
           const intervals = [];
           const longTasks = [];
           let previous = null;
@@ -539,6 +569,7 @@ try {
             ),
             focused: document.hasFocus(),
             visible: !document.hidden,
+            trackedAircraftId: viewer.trackedEntity?.gevTrackedId || null,
             injectedDelayMs: delay || 0,
             quality: {
               mode:
@@ -573,6 +604,14 @@ try {
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
       );
+      if (
+        scenario === 'selected-aircraft-tracking' &&
+        (trackingSetup !== 'flights:000001' ||
+          sample.trackedAircraftId !== 'flights:000001')
+      )
+        throw new Error(
+          `Selected-aircraft workload lost camera tracking: ${JSON.stringify({ trackingSetup, trackedAircraftId: sample.trackedAircraftId })}`,
+        );
       captures.push({ scenario, run, ...sample });
     }
   }
@@ -592,7 +631,7 @@ try {
       durationPerSampleMs: seconds * 1000,
       runsPerScenario: runs,
       startupRuns: startupSamples.length,
-      scenarios: ['idle', 'scripted-motion'],
+      scenarios,
       fixture,
       mixedLayers: mixedLayerFixture,
       qualityMode,

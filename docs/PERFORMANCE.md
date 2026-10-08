@@ -136,10 +136,14 @@ with mismatched populations.
 For repeatable development captures, add `--fixture-aircraft 2500`. The harness
 enables the flights layer and injects the same generated Austin aircraft ring
 through its development-only layer seam, then records the fixture ID and count.
-Choose `--quality-mode manual` or `--quality-mode auto` and retain both reports
-when comparing profiles. This is a controlled workload hook, not a production
-feed, and software-rendered captures remain smoke checks rather than hardware
-performance evidence.
+It adds a selected-aircraft tracking scenario that follows fixture `000001` for
+the same repeated window. Add `--mixed-layers` to enable the local datacenter and
+dam layers for a stable combined scene. Choose `--quality-mode manual` or
+`--quality-mode auto` and retain both reports when comparing profiles. This is a
+controlled workload hook, not a production feed, and software-rendered captures
+remain smoke checks rather than hardware performance evidence. For the weather
+history workload, use `scripts/qa-weather-perf.mjs --states history-playing
+--repeat 3 --no-idle` and retain its route report with the source timestamps.
 
 ## Matched Windows UHD 620 comparison — 8 October 2026
 
@@ -176,6 +180,36 @@ The capture now cancels any startup camera flight before fixing the synthetic
 scene camera, and reports detection and camera diagnostics if visible labels do
 not appear. This prevents a late startup animation from moving the fixture out of
 view and producing misleading zero-label samples.
+
+### Selected-aircraft tracking and weather history
+
+The capture harness also exercises the selected-flight camera follow path. The
+base and candidate each ran three 5-second samples with the same foreground
+Chrome session, 2,500 generated Austin aircraft, 4,362 datacenters, 716 dams,
+and `flights:000001` selected and tracked. Every sample reported a stable 7,578
+object population and retained the tracked aircraft identity. Raw reports:
+[base `95fa816`](../qa-artifacts/performance-baseline-selected-tracking-95fa816-3run.json)
+and [candidate `215a8d9`](../qa-artifacts/performance-candidate-selected-tracking-215a8d9-3run.json).
+
+| App commit | Tracking frame p50 by run (ms) | Tracking frame p95 by run (ms) |
+| --- | --- | --- |
+| Base `95fa816` | 105.9, 91.2, 97.6 | 288.2, 1116.9, 1171.5 |
+| Candidate `215a8d9` | 111.1, 97.9, 89.4 | 201.0, 196.5, 396.7 |
+
+The base has two very large p95 samples, so these three-run captures are useful
+for harness and regression coverage but do not establish a stable tracking-speed
+gain. They were captured on one Windows UHD 620 system and are not a hardware
+matrix.
+
+Weather history playback was separately measured with three repeated routes
+through `scripts/qa-weather-perf.mjs`. Each route measured zoom-in, close idle,
+orbit, zoom-out and globe idle while Radar, Satellite and Lightning history were
+playing. All three setups reported ready, and all weather layers reported
+playback active. The harness used the live NOAA nowCOAST feed, so the exact frame
+times and tile populations changed between repetitions; treat this as playback
+coverage and a point-in-time load sample, not a matched base/candidate weather
+comparison. Results: [JSON](../qa-artifacts/weather-perf-s06-20261008/dev/results.json)
+and [summary](../qa-artifacts/weather-perf-s06-20261008/dev/summary.md).
 
 The Manual candidate's three moving p95 samples (146.6, 153.9 and 142.4 ms)
 passed a 200 ms **test-only** ceiling. An idle sample reached 263.8 ms and was

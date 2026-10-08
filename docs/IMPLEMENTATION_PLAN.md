@@ -1,14 +1,18 @@
 # God's Eye View: sliced implementation plan for `dev`
 
-Status: implementation code for S00–S31 is present on `dev` at `fdd4d7d`. The
-refreshed local gates pass formatting, package boundaries, 6,328 unit tests (10
-skipped), the production build and six browser journeys. S06 now has a repeated
-same-machine base/candidate comparison and passing positive/negative motion-budget
-controls; the wider hardware matrix remains pending. Manual accessibility,
+Status: implementation code for S00–S31 is present on `dev` at `215a8d9`; hosted
+CI passed on that commit in [run 37798558150](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37798558150).
+Local gates also pass formatting, package boundaries, 6,328 unit tests (10
+skipped), the production build and six browser journeys. S06 now includes
+repeated same-machine base/candidate captures for selected-aircraft tracking,
+three weather-history playback route runs, and passing positive/negative
+motion-budget controls; the wider hardware matrix remains pending. S16's
+second-profile bundle transfer passes in browser QA. Manual accessibility,
 cross-platform install/upgrade, source-retention approval and signed-release
 evidence remain external acceptance gates; see S11–S16 and S23, S30–S31. The
-report is [`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json)
-and marks commit `fdd4d7d` `pending-evidence` with zero local failures.
+latest comprehensive candidate report is [`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json)
+and records 11 passed checks, zero failures and five pending external checks at
+`fdd4d7d`; see the newer S06 artifacts below for follow-up coverage.
 Prepared: 2026-10-08. Repository: `arthurianresolve/gods-eye-view`.
 Integration branch: existing remote `dev`, verified to match `main` at
 [`95fa816232456a6831172befa2f1b34b9ee73794`](https://github.com/arthurianresolve/gods-eye-view/commit/95fa816232456a6831172befa2f1b34b9ee73794).
@@ -177,10 +181,14 @@ synthetic `analyst_query` result through the application's voice card, activates
 Inspect with the keyboard, and checks the pinned inspector, narrow/desktop layout,
 focus return, safe links and teardown. S06 records browser/renderer and workload metadata, flags changing source
 populations, and has a deterministic development-only aircraft fixture. A
-three-run base/candidate/Auto comparison now uses a stable 7,578-object dense
-scene on Intel UHD 620; the motion-only 200 ms gate passed without injected delay
-and failed with a 200 ms injected delay. The measurements and limitations are in
-[PERFORMANCE.md](PERFORMANCE.md); the wider hardware matrix remains open. S07
+three-run base/candidate/Auto comparison uses a stable 7,578-object dense scene
+on Intel UHD 620; the motion-only 200 ms gate passed without injected delay and
+failed with a 200 ms injected delay. The capture harness now also measures three
+selected-aircraft tracking runs on that same base/candidate fixture; weather
+history playback is covered by three repeated route runs over the three NOAA
+weather layers. The tracking reports and playback evidence are linked from
+[PERFORMANCE.md](PERFORMANCE.md). These results cover one machine; the wider
+hardware matrix remains open. S07
 only changes detection-label density and stays opt-in: Auto lowered density to
 zero while retaining four selected labels, but its typical frame time did not
 improve consistently.
@@ -875,8 +883,10 @@ validated historical target and source mode, including a local recording ID;
 opening a recording link selects the referenced local source, while a missing
 recording is reported with an import route. The timeline exports recordings as a
 versioned, hashed, demand-streamed bundle and imports only after validating every
-chunk and the manifest. Unit coverage and the Chrome timeline journey pass. A
-second-browser transfer remains an explicit acceptance check for portability.
+chunk and the manifest. Unit coverage and the Chrome timeline journey pass. The
+browser gate now exports that recording, imports it into an isolated empty
+Chromium profile, and verifies the new identity, preserved export policy,
+coverage and replayed observation.
 
 <a id="s17"></a>
 
@@ -1312,13 +1322,16 @@ one prior supported version migration, hardware matrix and milestone demonstrati
 **Rollback:** revert default exposure or return to the prior supported release;
 preserve data recovery readers and the backups created before migration.
 
-**Implementation checkpoint:** the local candidate matrix at
-[`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json)
-passes formatting, package boundaries, 6,328 unit tests (10 skipped), the production build, six
-browser journeys and the repeated UHD 620 performance controls. It reports zero
-local failures and remains `pending-evidence` for cross-platform install/upgrade,
-the 60-minute soak, the broader named-hardware matrix, manual accessibility and
-participant review, and signed-release matching.
+**Implementation checkpoint:** hosted CI passes at `215a8d9`. The local candidate
+matrix at [`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json)
+passes formatting, package boundaries, 6,328 unit tests (10 skipped), the
+production build, six browser journeys and the repeated UHD 620 performance
+controls. Follow-up S06 selected-tracking and weather-playback runs and S16
+fresh-profile transfer also pass. It reports zero local failures and remains
+`pending-evidence` for representative pull-request events, cross-platform
+install/upgrade, the 60-minute soak, broader named-hardware coverage, manual
+accessibility and participant review, live-source retention approval, and
+signed-release matching.
 ## 6. Validation, review and definition of done
 
 ### Common implementation gates
@@ -1417,18 +1430,28 @@ evidence and update the dependent slices.
 ## 8. Current implementation handoff
 
 Implementation code for S00–S31 is present on `dev` at
-[`fdd4d7d`](https://github.com/arthurianresolve/gods-eye-view/commit/fdd4d7de245ca50d11544574d22553accc01c10f).
+[`215a8d9`](https://github.com/arthurianresolve/gods-eye-view/commit/215a8d95e2712aa84dfccafe62f87d2db1ea394c).
 The local candidate report is
 [`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json).
-It records 11 passed local checks, zero failures, and 5 pending external checks.
-The single-machine UHD 620 comparison is recorded; it does not replace the wider
-hardware matrix or other external acceptance evidence below:
+It records 11 passed local checks, zero failures, and 5 pending external checks
+at `fdd4d7d`; the follow-up tests below pass on `215a8d9` and its working tree.
+The single-machine UHD 620 comparisons do not replace the wider hardware matrix
+or other external acceptance evidence below:
 
-- Verify token-base behavior through representative pull requests targeting
-  `dev` and `main` for S01; the first hosted `dev` run passed at
-  [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
-- Complete S06 captures on the supported GPU/OS matrix. S07's matched comparison
-  is complete for one UHD 620 system; keep Auto opt-in pending broader validation.
+- The upstream `bug` issue sweep found #906 (truncated TLE groups), #905
+  (WebGL maximum texture size), #804 (stale compact Radio disclosure) and #751
+  (Alpha-5 satellite IDs) actionable; root-cause fixes and regression coverage
+  are on this branch. [#854](https://github.com/bilawalsidhu/gods-eye-view/issues/854)
+  only says camera controls fail and has no diagnostic output or discriminating
+  reproduction, so its root cause remains unidentified; do not guess at a fix.
+- Local token-base checks pass against both `fork/dev` and `fork/main`; hosted
+  pull-request events targeting both branches remain unverified for S01. The
+  latest hosted push/dispatch CI passed at
+  [run 37798558150](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37798558150).
+- S06 matched selected-tracking captures and three weather playback repetitions
+  now pass on one Windows UHD 620 system. Complete captures on the supported
+  GPU/OS matrix. Keep S07 Auto opt-in pending broader performance and visual
+  validation.
 - Obtain written retention/export approval before enabling any live aircraft or
   AIS recording. Synthetic fixtures validate the complete capture and replay path.
 - Complete S23 keyboard, screen-reader, contrast, zoom and five-participant first-
