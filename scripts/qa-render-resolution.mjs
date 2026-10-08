@@ -61,9 +61,17 @@ try {
           remove();
           clearTimeout(timeout);
           resolve();
-        } else requestAnimationFrame(() => viewer.scene.requestRender());
+        } else {
+          // Drive this framebuffer fixture explicitly: the parked application
+          // may be idle, and a vsync callback alone does not guarantee a draw.
+          setTimeout(() => {
+            viewer.scene.requestRender();
+            viewer.render();
+          }, 0);
+        }
       });
       viewer.scene.requestRender();
+      viewer.render();
     });
     const gl = viewer.scene.context._gl;
     return {
@@ -113,6 +121,7 @@ try {
         resolve();
       });
       viewer.scene.requestRender();
+      viewer.render();
     });
     return {
       width: viewer.canvas.width,
