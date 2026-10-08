@@ -74,7 +74,7 @@ test('archive lookup aborts a stalled request at the bounded timeout', async () 
 test('archive lookup responds to caller cancellation even if fetch ignores abort', async () => {
   const controller = new AbortController();
   const lookup = createArchiveLookup({
-    timeoutMs: 10_000,
+    timeoutMs: 50,
     fetchImpl: async () => new Promise(() => {}),
   });
   const pending = lookup.lookup({
@@ -83,4 +83,29 @@ test('archive lookup responds to caller cancellation even if fetch ignores abort
   });
   controller.abort();
   await assert.rejects(pending, /cancel|abort/i);
+});
+
+test('coalesced callers can cancel independently', async () => {
+  const firstController = new AbortController();
+  const secondController = new AbortController();
+  const lookup = createArchiveLookup({
+    timeoutMs: 50,
+    fetchImpl: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return new Response(JSON.stringify({ state: 'unavailable' }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+  });
+  const first = lookup.lookup({
+    url: 'https://example.test/coalesced',
+    signal: firstController.signal,
+  });
+  const second = lookup.lookup({
+    url: 'https://example.test/coalesced',
+    signal: secondController.signal,
+  });
+  firstController.abort();
+  await assert.rejects(first, /cancel|abort/i);
+  assert.deepEqual(await second, { state: 'unavailable' });
 });

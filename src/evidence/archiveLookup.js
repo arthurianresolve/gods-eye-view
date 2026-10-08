@@ -28,13 +28,82 @@ export function createArchiveLookup({
     while (active < ARCHIVE_LOOKUP_MAX_CONCURRENCY && queue.length) {
       const task = queue.shift();
       active++;
-      void task()
+      void run(task)
         .catch(() => {})
         .finally(() => {
           active--;
           pump();
         });
     }
+  }
+
+  async function run(entry) {
+    const { key, controller } = entry;
+    const timeoutError = new DOMException(
+      'Archive lookup timed out.',
+      'TimeoutError',
+    );
+    let timeoutReject;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutReject = reject;
+    });
+    const timeout = setTimeout(
+      () => {
+        controller.abort(timeoutError);
+        timeoutReject(timeoutError);
+      },
+      Math.max(1, Number(timeoutMs) || ARCHIVE_LOOKUP_TIMEOUT_MS),
+    );
+    try {
+      controller.signal.throwIfAborted();
+      const response = await Promise.race([
+        fetchImpl(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: entry.url,
+            ...(entry.timestamp ? { timestamp: entry.timestamp } : {}),
+          }),
+          signal: controller.signal,
+        }),
+        timeoutPromise,
+      ]);
+      const value = await response.json();
+      if (!response.ok) {
+        const error = new Error(value?.message || 'Archive lookup failed.');
+        error.code = value?.error || 'archive-lookup-failed';
+        throw error;
+      }
+      cache.set(key, { value, expiresAt: now() + ARCHIVE_LOOKUP_CACHE_MS });
+      entry.resolve(value);
+    } catch (error) {
+      entry.reject(error);
+    } finally {
+      clearTimeout(timeout);
+      entry.settled = true;
+      pending.delete(key);
+    }
+  }
+
+  function attach(entry, signal) {
+    if (!signal) return entry.promise;
+    if (signal.aborted) return Promise.reject(signal.reason);
+    const consumer = {};
+    entry.consumers.add(consumer);
+    let onAbort;
+    const cancellation = new Promise((_, reject) => {
+      onAbort = () => {
+        entry.consumers.delete(consumer);
+        if (!entry.consumers.size && !entry.settled)
+          entry.controller.abort(signal.reason);
+        reject(signal.reason);
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+    });
+    return Promise.race([entry.promise, cancellation]).finally(() => {
+      signal.removeEventListener('abort', onAbort);
+      entry.consumers.delete(consumer);
+    });
   }
 
   function lookup({ url, timestamp, signal } = {}) {
@@ -47,68 +116,29 @@ export function createArchiveLookup({
     const cached = cache.get(key);
     if (cached && cached.expiresAt > now())
       return Promise.resolve(cached.value);
-    if (pending.has(key)) return pending.get(key);
+    if (pending.has(key)) return attach(pending.get(key), signal);
 
-    const promise = new Promise((resolve, reject) => {
-      queue.push(async () => {
-        const controller = new AbortController();
-        const timeoutError = new DOMException(
-          'Archive lookup timed out.',
-          'TimeoutError',
-        );
-        let timeoutReject;
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutReject = reject;
-        });
-        const timeout = setTimeout(
-          () => {
-            controller.abort(timeoutError);
-            timeoutReject(timeoutError);
-          },
-          Math.max(1, Number(timeoutMs) || ARCHIVE_LOOKUP_TIMEOUT_MS),
-        );
-        const cancel = () => {
-          const reason =
-            signal?.reason ||
-            new DOMException('Archive lookup cancelled.', 'AbortError');
-          controller.abort(reason);
-          timeoutReject(reason);
-        };
-        signal?.addEventListener('abort', cancel, { once: true });
-        try {
-          signal?.throwIfAborted();
-          const response = await Promise.race([
-            fetchImpl(endpoint, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                url: safeUrl,
-                ...(safeTimestamp ? { timestamp: safeTimestamp } : {}),
-              }),
-              signal: controller.signal,
-            }),
-            timeoutPromise,
-          ]);
-          const value = await response.json();
-          if (!response.ok) {
-            const error = new Error(value?.message || 'Archive lookup failed.');
-            error.code = value?.error || 'archive-lookup-failed';
-            throw error;
-          }
-          cache.set(key, { value, expiresAt: now() + ARCHIVE_LOOKUP_CACHE_MS });
-          resolve(value);
-        } catch (error) {
-          reject(error);
-        } finally {
-          clearTimeout(timeout);
-          signal?.removeEventListener('abort', cancel);
-          pending.delete(key);
-        }
-      });
-      pump();
+    let resolve;
+    let reject;
+    const promise = new Promise((resolvePromise, rejectPromise) => {
+      resolve = resolvePromise;
+      reject = rejectPromise;
     });
-    pending.set(key, promise);
-    return promise;
+    const entry = {
+      key,
+      url: safeUrl,
+      timestamp: safeTimestamp,
+      controller: new AbortController(),
+      promise,
+      resolve,
+      reject,
+      consumers: new Set(),
+      settled: false,
+    };
+    pending.set(key, entry);
+    queue.push(entry);
+    pump();
+    return attach(entry, signal);
   }
 
   return Object.freeze({
