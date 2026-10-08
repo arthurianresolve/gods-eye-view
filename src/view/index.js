@@ -64,6 +64,11 @@ const FOLLOWABLE = Object.freeze({
 });
 
 export const VIEW_FOLLOW_KINDS = Object.freeze(Object.keys(FOLLOWABLE));
+export const VIEW_TEMPORAL_SOURCES = Object.freeze([
+  'live',
+  'provider-history',
+  'recording',
+]);
 
 /** Annotation kinds the app draws, as in its annotate_map action. */
 export const VIEW_ANNOTATION_TYPES = Object.freeze([
@@ -181,6 +186,27 @@ export const VIEW_PROPERTIES = Object.freeze({
     required: ['kind', 'id'],
     additionalProperties: false,
   }),
+  temporal: Object.freeze({
+    type: 'object',
+    description:
+      'An investigation time. Historical links preserve the requested time and source mode; recording links also refer to a local recording bundle.',
+    properties: {
+      source: { type: 'string', enum: [...VIEW_TEMPORAL_SOURCES] },
+      targetMs: {
+        type: 'integer',
+        minimum: 0,
+        description:
+          'UTC epoch milliseconds for provider history or a recording.',
+      },
+      recordingId: {
+        type: 'string',
+        maxLength: 128,
+        description: 'Local recording ID; required only for recording source.',
+      },
+    },
+    required: ['source'],
+    additionalProperties: false,
+  }),
 });
 
 const round = (value, digits) => Number(value.toFixed(digits));
@@ -239,6 +265,62 @@ function annotationOf(input) {
 }
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+function temporalOf(input) {
+  if (input == null) return null;
+  if (!VIEW_TEMPORAL_SOURCES.includes(input.source))
+    throw new TypeError('Unknown temporal source');
+  if (input.source === 'live') {
+    if (input.targetMs != null || input.recordingId != null)
+      throw new TypeError('A live view cannot carry a historical target');
+    return Object.freeze({
+      source: 'live',
+      targetMs: null,
+      recordingId: null,
+    });
+  }
+  if (
+    !Number.isSafeInteger(input.targetMs) ||
+    input.targetMs < 0 ||
+    input.targetMs > Date.now()
+  )
+    throw new RangeError('A historical view needs a finite past target');
+  const recordingId = input.recordingId ?? null;
+  if (
+    input.source === 'recording'
+      ? typeof recordingId !== 'string' ||
+        !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(recordingId)
+      : recordingId !== null
+  )
+    throw new TypeError('Recording reference does not match temporal source');
+  return Object.freeze({
+    source: input.source,
+    targetMs: input.targetMs,
+    recordingId,
+  });
+}
+
+function temporalFromParams(params) {
+  const hasTemporal = ['it', 'is', 'ir'].some((key) => params.has(key));
+  if (!hasTemporal) return { temporal: null, invalid: false };
+  try {
+    const source = params.get('is');
+    const rawTarget = params.get('it');
+    const targetMs = rawTarget === null ? null : Number(rawTarget);
+    const temporal = temporalOf({
+      source,
+      targetMs,
+      recordingId: params.get('ir'),
+    });
+    if (source === 'live' && hasTemporal && params.has('it'))
+      return { temporal: null, invalid: true };
+    if (source !== 'recording' && params.has('ir'))
+      return { temporal: null, invalid: true };
+    return { temporal, invalid: false };
+  } catch {
+    return { temporal: null, invalid: true };
+  }
+}
+
 /**
  * A complete view from its parts. `camera` needs lat and lon; the rest has
  * defaults: 800 km up, looking straight down, no layers, the recipient's own
@@ -251,6 +333,7 @@ export function createView({
   map = null,
   follow = null,
   annotations = [],
+  temporal = null,
 } = {}) {
   if (!Number.isFinite(camera?.lat) || !Number.isFinite(camera?.lon))
     throw new TypeError('A view needs a camera lat and lon');
@@ -295,6 +378,7 @@ export function createView({
         .map(annotationOf)
         .filter(Boolean),
     ),
+    temporal: temporalOf(temporal),
   });
 }
 
@@ -326,6 +410,12 @@ export function viewToParams(view) {
     const encoded = JSON.stringify(view.annotations);
     if (encoded.length <= MAX_ANNOTATION_PARAM_CHARS)
       params.set(ANNOTATION_PARAM, encoded);
+  }
+  if (view.temporal) {
+    params.set('is', view.temporal.source);
+    if (view.temporal.targetMs !== null)
+      params.set('it', String(view.temporal.targetMs));
+    if (view.temporal.recordingId) params.set('ir', view.temporal.recordingId);
   }
   return params;
 }
@@ -361,6 +451,8 @@ export function viewFromParams(params) {
       follow = { kind, id: String(id) };
   }
   const map = params.get('map');
+  const decodedTemporal = temporalFromParams(params);
+  if (decodedTemporal.invalid) return null;
   return createView({
     camera: {
       lat,
@@ -374,7 +466,13 @@ export function viewFromParams(params) {
     map: VIEW_MAPS.includes(map) ? map : null,
     follow,
     annotations: annotationsFromParams(params),
+    temporal: decodedTemporal.temporal,
   });
+}
+
+/** Decode the optional temporal contract carried by a view or share link. */
+export function temporalFromViewParams(params) {
+  return temporalFromParams(params);
 }
 
 /** The address that opens the app at a view. */

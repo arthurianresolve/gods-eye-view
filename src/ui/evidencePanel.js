@@ -3,6 +3,7 @@ import { safeEvidenceUrl, normalizeEvidence } from '../evidence/evidence.js';
 const SELECTED = 'gev:awareness-subject-selected';
 const CLEARED = 'gev:awareness-subject-cleared';
 const PINNED = 'gev:evidence-result-pinned';
+const RECORD_OPENED = 'gev:evidence-record-opened';
 const ENTITY_SELECTED = 'gev:entity-selected';
 const ENTITY_CLEARED = 'gev:entity-selection-cleared';
 
@@ -56,12 +57,17 @@ export class EvidencePanel {
       this.returnFocusTarget = null;
       this.show(event.detail, { pinned: true });
     };
+    this._onRecordOpened = (event) => {
+      if (!event.detail?.evidence) return;
+      this.show(event.detail, { pinned: true });
+    };
     this._onClose = () => this.clear({ restoreFocus: true });
     windowRef.addEventListener(SELECTED, this._onSelected);
     windowRef.addEventListener(CLEARED, this._onCleared);
     windowRef.addEventListener(ENTITY_SELECTED, this._onEntitySelected);
     windowRef.addEventListener(ENTITY_CLEARED, this._onCleared);
     windowRef.addEventListener(PINNED, this._onPinned);
+    windowRef.addEventListener(RECORD_OPENED, this._onRecordOpened);
     closeButton?.addEventListener('click', this._onClose);
   }
 
@@ -78,6 +84,8 @@ export class EvidencePanel {
       ['element-epoch', 'Orbital element epoch'],
       ['source-record', 'Source record'],
       ['snapshot', 'Feed snapshot time'],
+      ['issued', 'Forecast issued at'],
+      ['validity', 'Forecast valid from'],
       ['display-time', 'Position evaluated at'],
       ['method', 'Source method'],
       ['coverage', 'Coverage'],
@@ -101,6 +109,8 @@ export class EvidencePanel {
       ([
         'source-record',
         'snapshot',
+        'issued',
+        'validity',
         'display-time',
         'element-epoch',
         'method',
@@ -141,7 +151,12 @@ export class EvidencePanel {
     this.panel.dataset.pinned = String(pinned);
     const title = this.panel.querySelector('[data-evidence-title]');
     if (title)
-      title.textContent = pinned ? 'PINNED RESULT EVIDENCE' : 'EVIDENCE';
+      title.textContent =
+        detail.kind === 'forecast'
+          ? 'FORECAST EVIDENCE'
+          : pinned
+            ? 'PINNED RESULT EVIDENCE'
+            : 'EVIDENCE';
     const evidence = normalizeEvidence(detail.evidence || {});
     const name = String(
       detail.label || evidence.entityRef.id || 'Selected object',
@@ -162,6 +177,8 @@ export class EvidencePanel {
     this._set('observed', formatTime(evidence.observedAt));
     this._set('age', formatAge(evidence.observedAt));
     this._set('snapshot', formatTime(evidence.snapshotAt));
+    this._set('issued', formatTime(evidence.issuedAt));
+    this._set('validity', formatTime(evidence.validFrom));
     this._set('display-time', formatTime(evidence.displayTime));
     this._set('element-epoch', formatTime(evidence.elementEpoch));
     this._set('received', formatTime(evidence.receivedAt));
@@ -219,6 +236,7 @@ export class EvidencePanel {
     this.windowRef.removeEventListener(ENTITY_SELECTED, this._onEntitySelected);
     this.windowRef.removeEventListener(ENTITY_CLEARED, this._onCleared);
     this.windowRef.removeEventListener(PINNED, this._onPinned);
+    this.windowRef.removeEventListener(RECORD_OPENED, this._onRecordOpened);
     this.closeButton?.removeEventListener('click', this._onClose);
   }
 }

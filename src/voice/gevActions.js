@@ -306,6 +306,7 @@ export function createGevActionRunner({
   searchNavigation = searchAndFlyTo,
   speechBuilders = null,
   deixis = null,
+  investigationTime = null,
 }) {
   // Voice enable times and analyst follow-up memory belong to this runner.
   // Speech builders turn results into say/display envelopes; callers extend
@@ -323,6 +324,7 @@ export function createGevActionRunner({
         placeSearch,
         resolveRegionRing,
         isWarming: (layerKey) => layerIsWarming(_layerEnabledAt, layerKey),
+        investigationTime,
       }),
     ));
   installViewTargetPrewarm(viewer);
@@ -627,6 +629,7 @@ export function createGevActionRunner({
           recordLimitByLayer: { [layerId]: Number.MAX_SAFE_INTEGER },
           placeSearch,
           resolveRegionRing,
+          investigationTime,
         }),
       ).query({
         layers: [layerId],
@@ -4685,11 +4688,19 @@ function analystProviders(
         placeSearch,
       ),
     isWarming = () => false,
+    investigationTime = null,
   } = {},
 ) {
   // Per-layer truncation seen by the last getRecords call.
   const truncatedBy = new Map();
   return {
+    now: () => investigationTime?.now?.() ?? Date.now(),
+    getTemporalContext() {
+      return {
+        ...(investigationTime?.getState?.() || {}),
+        ...(investigationTime?.getTemporalContext?.() || {}),
+      };
+    },
     getRecords(layerKey) {
       truncatedBy.delete(layerKey);
       const layer = dataManager.layers.get(layerKey);
@@ -5053,6 +5064,7 @@ async function runAnalystQuery(
     // On-screen detail (scope, feed window, caveats); not for recital.
     display: result.display,
     coverage: result.coverage,
+    resultMetadata: result.resultMetadata,
     feedProvenance: result.coverage?.feedProvenance || null,
     feedState: result.coverage?.feedProvenance?.overall || null,
     // The panel's own numbers, carried so the answer can match what the

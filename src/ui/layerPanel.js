@@ -5,6 +5,7 @@ export { layerFeedState } from '../data/feedState.js';
 import { GUIDANCE_STATUSES } from '../loadingFeedback.js';
 import { keySetupRequirement } from '../keySetupCore.mjs';
 import { createWeatherPanel } from './weatherPanel.js';
+import { createInvestigationTimeline } from './investigationTimeline.js';
 const FEED_STATE_LABELS = Object.freeze({
   nominal: 'ON',
   loading: 'LOADING',
@@ -115,8 +116,24 @@ export class LayerPanel {
     subscribeRowControls,
     onHiddenRefresh = () => {},
     weatherClock,
+    investigationTime,
+    aircraftSource,
+    vesselSource,
+    timelineArbiter,
+    workspaceStorage,
+    recordingService,
+    vesselRecordingService,
+    getDataManager = () => null,
   }) {
     this.weatherClock = weatherClock;
+    this.investigationTime = investigationTime;
+    this.aircraftSource = aircraftSource;
+    this.vesselSource = vesselSource;
+    this.timelineArbiter = timelineArbiter;
+    this.workspaceStorage = workspaceStorage;
+    this.recordingService = recordingService;
+    this.vesselRecordingService = vesselRecordingService;
+    this.getDataManager = getDataManager;
     this.getAll = getLayers;
     this.isEnabled = isEnabled;
     this.setEnabled = setEnabled;
@@ -142,6 +159,22 @@ export class LayerPanel {
       container:
         container?.ownerDocument?.getElementById?.('weather-panel-body'),
       setLayerParams: this.setLayerParams,
+    });
+    this._investigationTimeline?.destroy();
+    const dataManager = this.getDataManager?.();
+    this._investigationTimeline = createInvestigationTimeline({
+      container: container?.ownerDocument?.getElementById?.(
+        'investigation-timeline-host',
+      ),
+      storage: this.workspaceStorage,
+      aircraftSource: this.aircraftSource,
+      vesselSource: this.vesselSource,
+      investigationTime: this.investigationTime,
+      timelineArbiter: this.timelineArbiter,
+      dataManager,
+      viewer: dataManager?.viewer,
+      recordingService: this.recordingService,
+      vesselRecordingService: this.vesselRecordingService,
     });
     this._mountRecentImagery();
     this._renderToggles();
@@ -182,6 +215,8 @@ export class LayerPanel {
     this._releaseBindings();
     this._weatherPanel?.destroy();
     this._weatherPanel = null;
+    this._investigationTimeline?.destroy();
+    this._investigationTimeline = null;
     this._recentImageryPanel?.destroy();
     this._recentImageryPanel = null;
     this._recentImageryFactory = null;

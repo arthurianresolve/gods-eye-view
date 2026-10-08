@@ -23,7 +23,7 @@ function readKey(file) {
 /** Serialize malformed-file repair; ordinary first creation still uses link(). */
 function repairKey(file, tmp, key) {
   const lock = `${file}.repair-lock`;
-  const deadline = Date.now() + 2000;
+  const deadline = Date.now() + 5000;
   const pause = new Int32Array(new SharedArrayBuffer(4));
   let fd;
   for (;;) {
@@ -64,7 +64,7 @@ function repairKey(file, tmp, key) {
  * Per-process keys then mismatch, and the panel refuses the request.
  * The first process to run creates the key, without replacing one
  * another process created at the same moment; the rest read it. When the file
- * cannot be read or written, or repair stays busy for two seconds, the process
+ * cannot be read or written, or repair stays busy for five seconds, the process
  * falls back to its own key, as every process did before.
  *
  * As before, the key keeps `panel_request` from clients that only list it; it

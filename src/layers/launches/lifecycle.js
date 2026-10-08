@@ -128,7 +128,7 @@ export function createLifecycle({
       layerState._updateDirty = false;
       await parts.ingestion.restoreSatelliteDependency();
       parts.panel.clearMissionRosterHover();
-      parts.replay.stopMissionReplay();
+      parts.replay.destroy();
       parts.selection.stopMissionZoomAnchor();
       parts.ingestion.clearPostTleRetry();
       if (layerState._clickHandler) layerState._clickHandler.destroy();

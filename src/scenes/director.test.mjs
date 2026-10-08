@@ -14,8 +14,10 @@ import { readShellSource } from '../testSupport/readShellSource.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import { webcrypto } from 'node:crypto';
 
 import { SceneDirector } from './director.js';
+import { createWorkspaceStorage } from '../storage/index.js';
 import { SCENE_TRACKING_PARAM_KEYS } from './scenePolicy.js';
 import { SCENE_RECIPES, getSceneAppendRecipeById } from './recipes.js';
 
@@ -724,12 +726,71 @@ function makeDirector(options = {}) {
   const dataManager = fakeDataManager(options.data);
   const director = new SceneDirector(viewer, styleManager, dataManager, {
     isMapStackAvailable: options.isMapStackAvailable,
+    workspaceStorage: options.workspaceStorage,
   });
   // Telemetry is only accumulated during a run; observable-failure assertions
   // need the accumulator without driving a whole run.
   director._activeRun = { events: [] };
   return { director, viewer, styleManager, dataManager, restore };
 }
+
+test('Director migrates its legacy project, then restores the durable revision on a fresh instance', async (t) => {
+  const storage = createWorkspaceStorage({ indexedDB: null, crypto: webcrypto });
+  t.after(() => storage.destroy());
+  const first = makeDirector({ workspaceStorage: storage });
+  try {
+    assert.equal((await first.director.restorePersistedProject()).status, 'volatile');
+    first.director._project.scenes[0].title = 'Persisted investigation';
+    first.director._saveProject();
+    await first.director._durableSaveTail;
+    assert.equal((await storage.getWorkspace('director-project-v1')).document.kind, 'director-project');
+  } finally {
+    await first.director.destroy();
+    first.restore();
+  }
+  const stale = structuredClone(PROJECT_FIXTURE);
+  stale.scenes[0].title = 'Stale local copy';
+  const savedRevision = (await storage.getWorkspace('director-project-v1'))
+    .manifest.revision;
+  const second = makeDirector({ workspaceStorage: storage, project: stale });
+  try {
+    assert.equal(second.director._project.scenes[0].title, 'Stale local copy');
+    const restored = await second.director.restorePersistedProject();
+    assert.equal(restored.status, 'restored');
+    assert.equal(second.director._project.scenes[0].title, 'Persisted investigation');
+    assert.equal(
+      (await storage.getWorkspace('director-project-v1')).manifest.revision,
+      savedRevision,
+      'legacy initialization must not overwrite the durable revision before restore',
+    );
+  } finally {
+    await second.director.destroy();
+    second.restore();
+  }
+});
+
+test('Director scene authoring undo and redo persist revisions without recording their own inverse', async () => {
+  const { director, restore } = makeDirector();
+  try {
+    const initialTitle = director._project.scenes[0].title;
+    director._project.scenes[0].title = 'First authored title';
+    director._saveProject();
+    director._project.scenes[0].title = 'Second authored title';
+    director._saveProject();
+
+    assert.equal(director.canUndoAuthoring(), true);
+    assert.equal(director.undoAuthoring(), true);
+    assert.equal(director._project.scenes[0].title, 'First authored title');
+    assert.equal(director.canRedoAuthoring(), true);
+    assert.equal(director.redoAuthoring(), true);
+    assert.equal(director._project.scenes[0].title, 'Second authored title');
+    assert.equal(director.canRedoAuthoring(), false);
+    assert.notEqual(director._project.scenes[0].title, initialTitle);
+  } finally {
+    await director.destroy();
+    restore();
+  }
+});
 
 test('only Play Shot or a scene run grants transient media authority; LOAD, Stop and replacement revoke it', async () => {
   const { director, dataManager, restore } = makeDirector();

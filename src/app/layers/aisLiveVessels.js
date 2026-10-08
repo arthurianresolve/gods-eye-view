@@ -11,10 +11,17 @@ import * as worldFocus from '../../worldFocus.js';
 import * as render from '../../renderGovernor.js';
 
 /** Construct one layer using the application scene owners and a supplied source. */
-export function createApplicationVessels({ source, options = {} }) {
+export function createApplicationVessels({
+  source,
+  options = {},
+  onAcceptedSnapshot,
+  onSourceUnavailable,
+}) {
   return createVesselLayer({
     source,
     options,
+    onAcceptedSnapshot,
+    onSourceUnavailable,
     services: {
       context,
       trails,

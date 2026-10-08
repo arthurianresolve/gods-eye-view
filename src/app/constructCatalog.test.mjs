@@ -47,6 +47,16 @@ test('catalogs construct distinct layers and classification from their supplied 
     'the hardware-local layer is never serialized into links',
   );
   assert.notEqual(first.weatherClock, second.weatherClock);
+  assert.notEqual(first.investigationTime, second.investigationTime);
+  assert.notEqual(first.timeCapabilities, second.timeCapabilities);
+  assert.ok(first.aircraftRecording);
+  assert.ok(first.vesselRecording);
+  assert.equal(first.vesselSource.getState().mode, 'live');
+  assert.ok(first.recordingRecovery instanceof Promise);
+  assert.ok(first.vesselRecordingRecovery instanceof Promise);
+  assert.equal(first.investigationTime.getState().mode, 'live');
+  assert.equal(first.timeCapabilities.snapshot().layers.length, 0);
+  assert.equal(await first.timelineArbiter.claim('director'), true);
   await first.weatherClock.setTarget('2026-09-21T12:00:00.000Z');
   assert.match(
     first.get('wind').getRowControls().info,
@@ -101,6 +111,9 @@ test('catalogs construct distinct layers and classification from their supplied 
   assert.equal(first.militaryRegistry.isMilitaryIcao('def456'), false);
   assert.equal(second.militaryRegistry.isMilitaryIcao('def456'), true);
   a.abort();
+  assert.deepEqual(first.timeCapabilities.snapshot().layers, []);
+  assert.equal(await first.timelineArbiter.claim('investigation'), false);
+  assert.throws(() => first.workspaceStorage.open(), { code: 'closed' });
   assert.equal(
     await first.weatherClock.setTarget('2026-09-21T13:00:00.000Z'),
     false,

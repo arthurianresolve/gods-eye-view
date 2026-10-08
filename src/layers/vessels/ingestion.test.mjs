@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createIngestion, createVesselFeed } from './ingestion.js';
-function setup(source) {
+function setup(source, callbacks = {}) {
   const feed = createVesselFeed();
   feed.enabled = true;
   feed.sessionId = 1;
@@ -36,6 +36,7 @@ function setup(source) {
     settleFirstConnect: (phase) => {
       feed.firstConnectPhase = phase;
     },
+    ...callbacks,
   });
   return { feed, applied, labels, ...ingestion };
 }
@@ -103,6 +104,37 @@ test('vessel ingestion converts source units once and retains warm records on a 
   assert.equal(probe.feed.error, 'No accepted positions');
   assert.equal(probe.feed.loading, false);
   assert.equal(probe.feed.abort, null);
+});
+
+test('vessel ingestion records only accepted observations and marks transport gaps', async () => {
+  const captures = [];
+  const gaps = [];
+  const probe = setup(
+    {
+      async getSnapshot() {
+        return {
+          source: 'approved-vessel-fixture',
+          records: [
+            {
+              id: '123456789',
+              latitude: 0,
+              longitude: 0,
+              observedAtMs: 1000,
+            },
+          ],
+          transportStatus: 'live',
+        };
+      },
+    },
+    {
+      onAcceptedSnapshot: async (snapshot) => captures.push(snapshot),
+      onSourceUnavailable: async (reason) => gaps.push(reason),
+    },
+  );
+  await probe.methods.update();
+  assert.equal(captures.length, 1);
+  assert.equal(captures[0].source, 'approved-vessel-fixture');
+  assert.deepEqual(gaps, []);
 });
 
 test('vessels are asked for by the area in view, and again only when the view moves away', async () => {

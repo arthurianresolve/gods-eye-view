@@ -60,6 +60,8 @@ import {
   stringifySceneDocument,
   SceneDocumentError,
 } from '../director/document.js';
+import { createDirectorPersistence } from './persistence.js';
+import { createWorkspaceHistory } from '../workspaces/history.js';
 
 /** @constant {string} localStorage key for the serialized project */
 const STORAGE_KEY = 'godsEyeView.sceneProject.v2';
@@ -86,6 +88,12 @@ export class SceneDirector {
       isMapStackAvailable = () => false,
       scenePacks = createDefaultScenePacks(),
       dataPacks = {},
+      workspaceStorage = null,
+      timelineArbiter = null,
+      confirmTimelineHandoff = ({ from, to }) =>
+        globalThis.confirm?.(
+          `${from} owns the scene timeline. Hand it to ${to}?`,
+        ) === true,
     } = {},
   ) {
     this._destroyed = false;
@@ -93,6 +101,16 @@ export class SceneDirector {
     this.viewer = viewer;
     this.styleManager = styleManager;
     this.dataManager = dataManager;
+    this._directorPersistence = workspaceStorage
+      ? createDirectorPersistence({ storage: workspaceStorage })
+      : null;
+    this._directorPersistenceStorage = workspaceStorage;
+    this._timelineArbiter = timelineArbiter;
+    this._confirmTimelineHandoff = confirmTimelineHandoff;
+    this._ownsSceneTimeline = false;
+    this._persistenceReady = false;
+    this._durableSaveTail = Promise.resolve();
+    this._durableSaveGeneration = 0;
     this._isMapStackAvailable = isMapStackAvailable;
     this._scenePacks = scenePacks;
     this._bundleAssets = createBundleAssets();
@@ -155,6 +173,16 @@ export class SceneDirector {
       onProgress: (progress) => this._setProgress(progress),
     });
     this._runIdleResolvers = new Set();
+    this._unregisterTimelineOwner = timelineArbiter?.register?.(
+      'director',
+      async () => {
+        if (!this._running) return true;
+        this.stopScene('Timeline handed to another playback');
+        if (this._running)
+          await new Promise((resolve) => this._runIdleResolvers.add(resolve));
+        return !this._running;
+      },
+    );
     this._sceneSeekGeneration = 0;
     /** @type {Object|null} Telemetry accumulator for the current run */
     this._activeRun = null;
@@ -164,6 +192,14 @@ export class SceneDirector {
     this._lastRunJson = '';
 
     this._project = this._loadProject();
+    this._authoringHistory = createWorkspaceHistory({
+      maxEntries: 64,
+      maxBytes: 8 * 1024 * 1024,
+    });
+    this._authoringHistory.bindWorkspace(
+      'director-project',
+      deepClone(this._project),
+    );
     this._selectedSceneId = this._project.scenes[0]?.id || null;
     this._selectedShotId = this._project.scenes[0]?.shots[0]?.id || null;
     /** @type {string|null} Scene whose layer state most recently landed. */
@@ -227,6 +263,8 @@ export class SceneDirector {
     if (this._destroyPromise) return this._destroyPromise;
     this._destroyed = true;
     this._sceneSeekGeneration++;
+    this._unregisterTimelineOwner?.();
+    this._unregisterTimelineOwner = null;
     this._visibilityUnsubscribe?.();
     this._cameraHandoffUnsubscribe?.();
     this._removeCameraInput?.();
@@ -244,10 +282,100 @@ export class SceneDirector {
       this.viewer.camera.cancelFlight();
       clearTimeout(this._storageToastTimer);
       await Promise.allSettled(this._pendingWork || []);
+      await this._durableSaveTail.catch(() => {});
       this._clock.destroy();
       this._cancelActiveSceneTravel();
     });
     return this._destroyPromise;
+  }
+
+  /** Restore the project and its imported bytes from revisioned browser storage. */
+  async restorePersistedProject({ signal } = {}) {
+    if (!this._directorPersistence) return { status: 'unavailable' };
+    try {
+      signal?.throwIfAborted();
+      const restored = await this._directorPersistence.load();
+      signal?.throwIfAborted();
+      if (this._destroyed) return { status: 'destroyed' };
+      if (restored) {
+        this._project = normalizeProject(restored.project);
+        this._bundleAssets.replace(restored.assets);
+        this._storageReadError = null;
+        this._persistenceReady = true;
+        this._selectedSceneId = this._project.scenes[0]?.id || null;
+        this._selectedShotId = this._project.scenes[0]?.shots[0]?.id || null;
+        this._loadedSceneId = null;
+        try {
+          localStorage.setItem(
+            STORAGE_KEY,
+            stringifySceneDocument(this._project),
+          );
+        } catch {
+          // IndexedDB remains authoritative when the legacy backup is unavailable.
+        }
+        this._renderSceneSelect();
+        this._renderShotList();
+        this._publish({ type: 'project-restored', project: this._project });
+        return {
+          status: 'restored',
+          revision: restored.revision,
+          assetCount: restored.assets.size,
+          saved: restored.saved,
+        };
+      }
+      if (this._hasLegacySavedProject) {
+        this._persistenceReady = true;
+        const migrated = await this._queueDurableSave();
+        if (migrated?.status === 'failed') return migrated;
+        return { status: 'migrated', ...migrated };
+      }
+      this._persistenceReady = true;
+      return { status: 'empty' };
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      if (!this._destroyed)
+        this._toastStorageError(
+          `Saved Director project could not be restored: ${error.message}`,
+        );
+      return { status: 'failed', error };
+    }
+  }
+
+  _queueDurableSave() {
+    if (!this._directorPersistence)
+      return Promise.resolve({ status: 'unavailable' });
+    if (!this._persistenceReady) return Promise.resolve({ status: 'deferred' });
+    const generation = ++this._durableSaveGeneration;
+    const project = deepClone(this._project);
+    const assets = this._bundleAssets.snapshot();
+    const work = this._durableSaveTail
+      .catch(() => {})
+      .then(async () => {
+        if (this._destroyed) return { status: 'destroyed' };
+        const result = await this._directorPersistence.save(project, assets);
+        if (generation === this._durableSaveGeneration && !result.saved) {
+          const detail =
+            this._directorPersistenceStorage?.getAvailability?.().message ||
+            'browser storage is session-only';
+          if (!this._volatileSaveNoticeShown) {
+            this._volatileSaveNoticeShown = true;
+            this._toastStorageError(
+              `Director assets are not saved across reloads: ${detail}`,
+            );
+          }
+          return { status: 'volatile', result };
+        }
+        return { status: 'saved', result };
+      })
+      .catch((error) => {
+        if (generation === this._durableSaveGeneration && !this._destroyed)
+          this._toastStorageError(
+            `Director project not saved: ${error.message}`,
+          );
+        return { status: 'failed', error };
+      });
+    this._durableSaveTail = work;
+    return work;
   }
 
   /**
@@ -259,6 +387,7 @@ export class SceneDirector {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return createDefaultProject();
+      this._hasLegacySavedProject = true;
       const project = normalizeProject(parseSceneDocument(raw));
       const installed = new Set(project.installedBuiltInSceneIds || []);
       let migrated = false;
@@ -311,7 +440,7 @@ export class SceneDirector {
   }
 
   /** Persist the current project state to localStorage with an updated timestamp. */
-  _saveProject() {
+  _saveProject({ recordHistory = true } = {}) {
     if (this._storageReadError) {
       this._toastStorageError(
         'Scene not saved — existing saved project could not be read. Export edits or import a valid file.',
@@ -319,9 +448,12 @@ export class SceneDirector {
       return;
     }
     this._project.updatedAt = new Date().toISOString();
+    let valid = false;
     try {
       const payload = JSON.stringify(this._project);
       parseSceneDocument(payload);
+      valid = true;
+      if (recordHistory) this._authoringHistory?.record(this._project);
       localStorage.setItem(STORAGE_KEY, payload);
     } catch (e) {
       // Private browsing / block-all-cookies / quota-exceeded throws here. The
@@ -336,6 +468,57 @@ export class SceneDirector {
           ? `Scene not saved — ${e.message}`
           : undefined,
       );
+    }
+    if (valid) this._queueDurableSave();
+  }
+
+  canUndoAuthoring() {
+    return !this._running && this._authoringHistory?.canUndo() === true;
+  }
+
+  canRedoAuthoring() {
+    return !this._running && this._authoringHistory?.canRedo() === true;
+  }
+
+  undoAuthoring() {
+    return this._travelAuthoringHistory('undo');
+  }
+
+  redoAuthoring() {
+    return this._travelAuthoringHistory('redo');
+  }
+
+  _travelAuthoringHistory(direction) {
+    if (this._destroyed || this._running) return false;
+    const priorProject = this._authoringHistory?.[direction]?.();
+    if (!priorProject) return false;
+    try {
+      const project = normalizeProject(priorProject);
+      parseSceneDocument(JSON.stringify(project));
+      this._project = project;
+      const scene =
+        project.scenes.find((item) => item.id === this._selectedSceneId) ||
+        project.scenes[0];
+      this._selectedSceneId = scene?.id || null;
+      this._selectedShotId = scene?.shots.some(
+        (shot) => shot.id === this._selectedShotId,
+      )
+        ? this._selectedShotId
+        : scene?.shots[0]?.id || null;
+      this._renderSceneSelect();
+      this._renderShotList();
+      this._publish({ type: 'project-restored', project: this._project });
+      this._saveProject({ recordHistory: false });
+      this._updateStatus(
+        `${direction === 'undo' ? 'Undid' : 'Redid'} the scene authoring change.`,
+      );
+      return true;
+    } catch (error) {
+      this._authoringHistory[direction === 'undo' ? 'redo' : 'undo']?.();
+      this._updateStatus(
+        `Could not ${direction} the scene edit: ${error.message}`,
+      );
+      return false;
     }
   }
 
@@ -1703,11 +1886,21 @@ export class SceneDirector {
       return { started: false, reason: 'no-shots' };
     }
 
+    if (this._timelineArbiter) {
+      const claimed = await this._timelineArbiter.claim('director', {
+        onConflict: this._confirmTimelineHandoff,
+      });
+      if (!claimed) return { started: false, reason: 'timeline-unavailable' };
+      this._ownsSceneTimeline = true;
+    }
+
     // Playback owns the camera for the whole run, so claim it the way every
     // other camera consumer does. Without this the follow camera keeps writing
     // the tracked contact's frame while each shot flies, and the run ends with
     // trackedEntity still set half a world from where the camera actually is.
     if (!this._claimCameraOwnership()) {
+      if (this._ownsSceneTimeline) this._timelineArbiter?.release('director');
+      this._ownsSceneTimeline = false;
       return { started: false, reason: 'camera-unavailable' };
     }
 
@@ -1996,6 +2189,7 @@ export class SceneDirector {
       )
         return false;
       this._project = project;
+      this._persistenceReady = true;
       const retainedPaths = new Set(
         project.scenes.flatMap((scene) =>
           (scene.dataPacks || [])
@@ -2400,6 +2594,8 @@ export class SceneDirector {
     }
 
     this._runToken = null;
+    if (this._ownsSceneTimeline) this._timelineArbiter?.release('director');
+    this._ownsSceneTimeline = false;
     this._setButtons(false);
     const clockSnapshot = this._clock.snapshot;
     if (clockSnapshot) {

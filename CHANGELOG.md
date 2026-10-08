@@ -1,5 +1,57 @@
 # Changelog
 
+- S31 adds a candidate matrix for formatting, package boundaries, the complete
+  unit suite, production build and six browser journeys, including constrained
+  WebGL rendering and resize recovery. The final local report
+  has zero failures; platform installs, a 60-minute soak, named-hardware captures,
+  manual accessibility/participant review and signed-release matching remain
+  rollout evidence.
+- S15 aligns observed weather, USGS earthquakes, and NASA FIRMS detections with
+  investigation time. Historical gaps do not display current events; live cyclone
+  advisories are hidden while the timeline is in the past, and forecast wind stays
+  labeled with its issue and valid time.
+- S16 adds historical-time and local-recording references to share links, plus
+  integrity-checked, bounded streaming recording bundles with import in the
+  Investigation Timeline. Missing local recordings are called out instead of
+  silently selecting a live feed.
+- S17 defines a versioned workspace document and a staged restore coordinator
+  with availability reporting, cancellation when newer navigation wins, and
+  rollback after failed application.
+- S18 persists validated Director projects and imported bundle assets in
+  revisioned browser storage, restores asset bytes by content digest on startup,
+  and reports missing or nonpersistent assets explicitly.
+
+- Upstream bug fixes on `dev`: malformed TLE groups no longer discard later
+  satellites; Alpha-5 catalog IDs remain numeric through satellite ingestion and
+  orbit lookup; the Cesium drawing buffer stays under device texture and
+  renderbuffer limits across resize; reopening Context closes a stale compact
+  Radio disclosure. Issue triage and the non-reproducible camera-controls report
+  are documented in [UPSTREAM-BUG-TRIAGE.md](docs/UPSTREAM-BUG-TRIAGE.md).
+- Adaptive quality now suspends measurement in hidden tabs, remembers explicit
+  manual density, and restores it when Auto or a preset is turned off.
+- S08 recovery work adds an accessible WebGL context-loss notice with a
+  reload action that serializes the current share-link view before reloading.
+  Retry and retained-frame behavior are covered by existing AIS and weather
+  failure tests. Context-loss behavior on named hardware remains an acceptance
+  measurement.
+- S09 adds an application-owned investigation clock, temporal layer
+  capability registry and explicit timeline owner arbiter. Analyst age now uses
+  the selected investigation time; provider deadlines and existing local clocks
+  remain independent. The investigation timeline, Director scenes and launch
+  replay require an explicit handoff and stop the previous owner before playback.
+- S10 adds revision-checked IndexedDB workspace storage with atomic manifest
+  publication, immutable chunks and assets, SHA-256 validation, quota limits,
+  migration snapshots, pin protection and an explicit unsaved memory fallback.
+  Workspace browser QA passes reload, two-tab contention, abort recovery,
+  migration, quota preservation and corruption detection.
+- S11–S15 add bounded aircraft and vessel recordings, source-isolated replay,
+  a shared aircraft/vessel timeline, and observed-weather
+  frame alignment. The timeline offers camera-centered region controls, accepted
+  snapshot capture, live-source policy denials, and fix/gap status; its own bounded
+  scroll surface keeps the Data layer list independently reachable. Chrome QA covers
+  capture, mixed-source replay and return to live; live-source recording remains
+  disabled pending written retention/export permission.
+
 - S00–S07 groundwork on `dev`: captured the inspected baseline and deterministic
   synthetic evidence fixture; enabled CI pushes and PR-base-aware token checks;
   added a versioned source-evidence envelope, explicit unknown observation
@@ -13,6 +65,16 @@
   source-family coverage and hardware comparison limits are listed in
   [EVIDENCE-SUPPORT.md](docs/EVIDENCE-SUPPORT.md) and
   [PERFORMANCE.md](docs/PERFORMANCE.md).
+
+- S04 evidence now follows NASA FIRMS acquisitions and USGS event times into
+  analyst records, and FIRMS evidence also follows selected-fire context.
+  Open-Meteo query results and wind samples carry source metadata without
+  labeling gridded model output as a direct observation; the wind inspector
+  separates model issue time, valid time and local receipt. User-imported
+  GeoJSON/CSV/KML/GPX features use the shared inspector and keep missing source
+  times and coverage unknown. Weather-map, camera-frame, traffic and built-in
+  static record evidence remain explicitly unsupported in
+  [EVIDENCE-SUPPORT.md](docs/EVIDENCE-SUPPORT.md).
 
 - MCP setup examples use the app's default port, `4173`. Thanks to
   [Huanyi Xie](https://github.com/xiehuanyi) (#934) and

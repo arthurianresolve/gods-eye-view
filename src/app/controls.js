@@ -22,6 +22,10 @@ export function createApplicationControls({
       fetchRegionalBrief: (...args) =>
         operations.requests.regional.getBrief(...args),
       ...catalogControlServices(catalog),
+      investigationTime: catalog.investigationTime,
+      workspaceStorage: catalog.workspaceStorage,
+      aircraftSource: catalog.aircraftSource,
+      vesselSource: catalog.vesselSource,
     },
     requestServices: operations.requests,
     mapStackController,

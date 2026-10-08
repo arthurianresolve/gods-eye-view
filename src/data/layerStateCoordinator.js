@@ -156,6 +156,29 @@ export class LayerStateCoordinator {
     return cloneLayerState(this._durableState);
   }
 
+  /** Restore an explicitly opened workspace's durable layer selection. */
+  restoreWorkspaceState(state) {
+    if (this._destroyed) return Promise.resolve([]);
+    for (const controller of this._restoreControllers.values())
+      controller.abort('workspace-restore');
+    this._restoreControllers.clear();
+    this._revokePendingTrackingWatch('workspace-restore');
+    this._durableState = normalizeLayerState(
+      state || createDefaultLayerState(),
+    );
+    this._source = 'workspace';
+    this._shareCreatedAtMs = this.now();
+    this.shareLinkManager?.setLayerStateProvider?.(() =>
+      this.getDurableState(),
+    );
+    this.shareLinkManager?.onLayerStateChange?.();
+    this._notifyDurableState();
+    this.restorePromise = this._restoreSelectedState(
+      LAYER_RESTORE_ORIGINS.workspace,
+    );
+    return this.restorePromise;
+  }
+
   _notifyDurableState() {
     try {
       this.onDurableStateChange?.(this.getDurableState());
@@ -381,7 +404,7 @@ export class LayerStateCoordinator {
   }
 
   _selectedShareTrackingTarget() {
-    if (this._source !== 'share') return null;
+    if (!['share', 'workspace'].includes(this._source)) return null;
     for (const [layerId, policy] of Object.entries(
       SHARE_TRACKING_RESTORE_POLICIES,
     )) {

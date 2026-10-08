@@ -14,6 +14,20 @@ import {
 } from './policy.js';
 
 export function createReplay({ state: layerState, services, parts, source }) {
+  const timelineArbiter = services.timelineArbiter;
+  const confirmTimelineHandoff = ({ from, to }) =>
+    globalThis.confirm?.(
+      `${from} owns the scene timeline. Hand it to ${to}?`,
+    ) === true;
+  let ownsTimeline = false;
+  let replayRequest = 0;
+  const unregisterTimelineOwner = timelineArbiter?.register?.(
+    'launch-replay',
+    () => {
+      stopMissionReplay();
+      return true;
+    },
+  );
   /**
    * Rotate an upright screen-space rocket so its nose follows a projected path.
    * @param {{x: number, y: number}} from Current screen point.
@@ -337,7 +351,8 @@ export function createReplay({ state: layerState, services, parts, source }) {
     return true;
   }
 
-  function stopMissionReplay() {
+  function stopMissionReplay({ release = true, cancelPending = true } = {}) {
+    if (cancelPending) replayRequest++;
     const stoppedLaunchId = layerState._replayCameraLaunchId;
     layerState._replayCameraToken++;
     if (layerState._replayCameraRemover) layerState._replayCameraRemover();
@@ -352,9 +367,13 @@ export function createReplay({ state: layerState, services, parts, source }) {
       layerState._animationStarts.set(stoppedLaunchId, Date.now());
     syncReplayButton();
     parts.overlays.syncMissionOverlayEntries();
+    if (release && ownsTimeline) {
+      timelineArbiter?.release('launch-replay');
+      ownsTimeline = false;
+    }
   }
 
-  function startMissionReplay(launchId) {
+  async function startMissionReplay(launchId) {
     const launch = layerState._launches.find((item) => item.id === launchId);
     const track = layerState._replayTracks.get(launchId);
     if (!layerState._viewer || !launch || !track) return false;
@@ -363,8 +382,28 @@ export function createReplay({ state: layerState, services, parts, source }) {
       return false;
     }
 
+    const request = ++replayRequest;
+    if (timelineArbiter) {
+      let claimed = false;
+      try {
+        claimed = await timelineArbiter.claim('launch-replay', {
+          onConflict: confirmTimelineHandoff,
+        });
+      } catch {
+        return false;
+      }
+      if (
+        !claimed ||
+        request !== replayRequest ||
+        !layerState._viewer ||
+        layerState._launches.find((item) => item.id === launchId) !== launch
+      )
+        return false;
+      ownsTimeline = true;
+    }
+
     parts.selection.stopMissionZoomAnchor();
-    stopMissionReplay();
+    stopMissionReplay({ release: false, cancelPending: false });
     layerState._replayCameraLaunchId = launchId;
     layerState._replayPaused = false;
     layerState._replayPausedAtMs = null;
@@ -537,6 +576,11 @@ export function createReplay({ state: layerState, services, parts, source }) {
     );
     return true;
   }
+
+  function destroy() {
+    stopMissionReplay();
+    unregisterTimelineOwner?.();
+  }
   return {
     replayVehicleScreenRotation,
     smoothReplayWindowPosition,
@@ -553,5 +597,6 @@ export function createReplay({ state: layerState, services, parts, source }) {
     resumeMissionReplay,
     stopMissionReplay,
     startMissionReplay,
+    destroy,
   };
 }

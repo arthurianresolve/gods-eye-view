@@ -15,6 +15,8 @@ export function createCivilFlightLayer({
   source,
   services,
   resolveAsset = (url) => url,
+  onAcceptedSnapshot,
+  onSourceUnavailable,
 } = {}) {
   const flightState = createFlightState({ source, services });
   const parts = {};
@@ -51,6 +53,8 @@ export function createCivilFlightLayer({
     },
     applyPendingTrackingRestore: () =>
       parts.tracking._applyPendingTrackingRestore(),
+    onAcceptedSnapshot,
+    onSourceUnavailable,
   });
 
   Object.assign(

@@ -96,14 +96,17 @@ export class AdaptiveQualityController {
     applyDensity,
     onState = () => {},
     storage = null,
+    now = () => globalThis.performance?.now?.(),
   }) {
     this.document = documentRef;
     this.readDensity = readDensity;
     this.applyDensity = applyDensity;
     this.onState = onState;
     this.storage = storage;
+    this.now = now;
     this.policy = new AdaptiveQualityPolicy();
     this.mode = 'manual';
+    this.manualDensity = readDensity();
     this.lastFrameAt = null;
     this._frame = () => this._onFrame();
     this._visibility = () => {
@@ -128,9 +131,14 @@ export class AdaptiveQualityController {
     return this.mode;
   }
 
-  setMode(mode, { persist = true } = {}) {
+  rememberManualDensity(densityPct = this.readDensity()) {
+    if (Number.isFinite(densityPct)) this.manualDensity = densityPct;
+  }
+
+  setMode(mode, { persist = true, userDensityOverride = false } = {}) {
     if (!['auto', 'quality', 'performance', 'manual'].includes(mode))
       return false;
+    if (userDensityOverride) this.manualDensity = this.readDensity();
     this.mode = mode;
     this.policy.reset();
     this.lastFrameAt = null;
@@ -140,7 +148,9 @@ export class AdaptiveQualityController {
       this.removeFrame();
       this.removeFrame = null;
     }
-    if (mode === 'quality') this.applyDensity(75, 'quality-profile');
+    if (mode === 'manual')
+      this.applyDensity(this.manualDensity, 'manual-profile');
+    else if (mode === 'quality') this.applyDensity(75, 'quality-profile');
     else if (mode === 'performance')
       this.applyDensity(25, 'performance-profile');
     if (persist) {
@@ -156,7 +166,7 @@ export class AdaptiveQualityController {
 
   _onFrame() {
     if (this.mode !== 'auto') return;
-    const now = globalThis.performance?.now?.();
+    const now = this.now();
     if (!Number.isFinite(now)) return;
     if (this.document.hidden) {
       this.lastFrameAt = null;

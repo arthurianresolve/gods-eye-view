@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AdaptiveQualityPolicy } from './adaptiveQuality.js';
+import {
+  AdaptiveQualityController,
+  AdaptiveQualityPolicy,
+} from './adaptiveQuality.js';
 
 function feedWindow(policy, duration, start, density = 50) {
   let result = null;
@@ -50,4 +53,110 @@ test('adaptive policy respects hysteresis, cooldown, density limits and bad samp
     cooldownMs: 0,
   });
   assert.equal(feedWindow(bounded, 12, 1, 100), null);
+});
+
+function controllerFixture(initialDensity = 50) {
+  const listeners = new Map();
+  const documentRef = {
+    hidden: false,
+    addEventListener(type, listener) {
+      listeners.set(type, listener);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
+    dispatch(type) {
+      listeners.get(type)?.();
+    },
+  };
+  let frame;
+  const viewer = {
+    scene: {
+      postRender: {
+        addEventListener(listener) {
+          frame = listener;
+          return () => {
+            frame = null;
+          };
+        },
+      },
+    },
+  };
+  let density = initialDensity;
+  let time = 0;
+  const applied = [];
+  const controller = new AdaptiveQualityController({
+    viewer,
+    documentRef,
+    readDensity: () => density,
+    applyDensity(value, reason) {
+      density = value;
+      applied.push({ value, reason });
+    },
+    storage: { getItem: () => null, setItem() {} },
+    now: () => time,
+  });
+  return {
+    applied,
+    controller,
+    documentRef,
+    get density() {
+      return density;
+    },
+    frame: (nextTime) => {
+      time = nextTime;
+      frame?.();
+    },
+    listeners,
+  };
+}
+
+test('quality presets restore the remembered manual density and accept explicit overrides', () => {
+  const f = controllerFixture(50);
+  f.controller.setMode('quality', { persist: false });
+  assert.equal(f.density, 75);
+  f.controller.setMode('performance', { persist: false });
+  assert.equal(f.density, 25);
+  f.controller.setMode('manual', { persist: false });
+  assert.equal(f.density, 50);
+
+  f.controller.setMode('performance', { persist: false });
+  f.controller.rememberManualDensity(75);
+  f.controller.setMode('manual', { persist: false });
+  assert.equal(f.density, 75);
+  f.controller.destroy();
+  assert.equal(f.listeners.size, 0);
+});
+
+test('Auto releases its frame listener and restores manual density when disabled', () => {
+  const f = controllerFixture(50);
+  f.controller.setMode('auto', { persist: false });
+  f.frame(0);
+  for (let time = 30; time <= 2_700; time += 30) f.frame(time);
+  assert.equal(f.density, 25);
+  f.controller.setMode('manual', { persist: false });
+  assert.equal(f.density, 50);
+  assert.ok(f.applied.some(({ reason }) => reason === 'auto-profile'));
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.controller.destroy();
+});
+
+test('hidden tabs suspend Auto samples and reset elapsed frame timing', () => {
+  const f = controllerFixture();
+  f.controller.setMode('auto', { persist: false });
+  f.frame(10);
+  f.frame(26);
+  assert.equal(f.controller.policy.samples.length, 1);
+  f.documentRef.hidden = true;
+  f.documentRef.dispatch('visibilitychange');
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.frame(50_000);
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.documentRef.hidden = false;
+  f.documentRef.dispatch('visibilitychange');
+  f.frame(50_016);
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.frame(50_032);
+  assert.equal(f.controller.policy.samples.length, 1);
+  f.controller.destroy();
 });

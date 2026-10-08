@@ -5,6 +5,7 @@ import {
 import * as Cesium from 'cesium';
 import { isPointerFree } from '../../data/inputOwnership.js';
 import { CONTEXT_TOP_N } from './policy.js';
+import { createFirmsEvidence } from './evidence.js';
 
 export function createSelection({
   layerState,
@@ -191,6 +192,16 @@ export function createSelection({
       layerId: id,
       layerName: name,
       source: 'NASA FIRMS',
+      evidence: createFirmsEvidence(fire, {
+        receivedAt: layerState._receivedAt,
+        snapshotAt: layerState._lastUpdate,
+        feedState: layerState._stale
+          ? 'stale'
+          : layerState._error
+            ? 'degraded'
+            : 'nominal',
+        missingSources: layerState._missingSources,
+      }),
       dataSource: layerState._dataSource,
       label: `Fire · FRP ${components.model.formatFrp(fire.frp)} MW`,
       latitude: fire.lat,

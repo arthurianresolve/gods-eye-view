@@ -126,3 +126,48 @@ test('annotations travel in the link, keeping only what the app draws', async ()
   // Too long for a link: the view keeps them, the link leaves them out.
   assert.equal(viewToParams(many).has('an'), false);
 });
+
+test('historical intent and local recording references round-trip without changing old links', () => {
+  const targetMs = Date.now() - 60_000;
+  const providerHistory = createView({
+    camera: { lat: 12, lon: 34 },
+    temporal: { source: 'provider-history', targetMs, recordingId: null },
+  });
+  const params = viewToParams(providerHistory);
+  assert.equal(params.get('is'), 'provider-history');
+  assert.equal(params.get('it'), String(targetMs));
+  assert.equal(params.has('ir'), false);
+  assert.deepEqual(viewFromParams(params), providerHistory);
+
+  const recording = createView({
+    camera: { lat: 12, lon: 34 },
+    temporal: {
+      source: 'recording',
+      targetMs,
+      recordingId: 'flight-run-2026-10-08',
+    },
+  });
+  assert.deepEqual(viewFromParams(viewToParams(recording)), recording);
+  assert.equal(
+    viewToParams(createView({ camera: { lat: 0, lon: 0 } })).has('is'),
+    false,
+  );
+  assert.equal(
+    viewFromParams(new URLSearchParams('lat=0&lon=0&is=recording&it=42')),
+    null,
+  );
+  assert.equal(
+    viewFromParams(
+      new URLSearchParams('lat=0&lon=0&is=provider-history&it=not-a-time'),
+    ),
+    null,
+  );
+  assert.throws(
+    () =>
+      createView({
+        camera: { lat: 0, lon: 0 },
+        temporal: { source: 'provider-history', targetMs: Date.now() + 60_000 },
+      }),
+    /past target/,
+  );
+});

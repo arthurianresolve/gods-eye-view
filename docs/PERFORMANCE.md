@@ -164,6 +164,35 @@ have been reviewed. A 25 ms injected-delay control with a 20 ms p95 threshold
 recorded 116.9 ms idle and 288.2 ms scripted-motion p95 values, then returned the
 expected nonzero status.
 
+### Mixed-layer Manual and Auto repeat — 8 October 2026
+
+A further matched run enabled the same 2,500-flight synthetic ring plus local
+datacenters and dams (7,578 reported objects) in both Manual and Auto. Each mode
+used three 5-second idle windows and three scripted-motion windows, with a
+5-second warmup after fixture installation. Both reports used the Intel UHD
+Graphics 620 through Direct3D 11, Chrome foregrounded at 1440 x 900 and DPR 1,
+and a stable object population. The capture artifacts are local and are not
+included in the repository.
+
+| Mode | Idle p50 / p95 by run | Motion p50 / p95 by run | Density at the six captures |
+| --- | --- | --- | --- |
+| Manual | 92.1 / 649.8, 55.3 / 997.7, 48.9 / 983.2 ms | 76.5 / 211.9, 79.8 / 130.5, 94.2 / 135.4 ms | 50% throughout |
+| Auto | 92.9 / 211.9, 52.9 / 158.6, 53.9 / 1,060.4 ms | 73.0 / 193.1, 79.7 / 151.2, 89.2 / 137.4 ms | 75%, 50%, 50%; then 25%, 25%, 0% |
+
+Frame-time tails varied sharply between windows, and both modes recorded
+occasional intervals above one second. The one-machine result is descriptive,
+not a release budget or evidence that Auto improves every scene. Auto reduced
+detection density monotonically in this workload while the reported object
+population stayed fixed. A separate 25 ms injected-delay control exceeded its
+20 ms p95 limit (905.5 ms idle and 350.1 ms motion) and exited nonzero as
+expected.
+
+The repeat also exposed that the harness warmed the app before installing its
+fixture. `--warmup-ms` now runs after fixture setup and the first GPU uploads,
+so measured windows begin after the workload has settled. The capture reports
+progress for each startup and measurement run and allows a bounded
+`--protocol-timeout-ms` override for slow hardware.
+
 Use the same controls before attributing a difference to the application:
 
 1. Record the exact GPU renderer and reject software-rendered or unavailable GPU

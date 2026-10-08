@@ -210,7 +210,8 @@ test('cyclones flatten the storm position and stay empty while off', async () =>
   layer.enable();
   await layer.update();
   const [row] = layer.getAnalystRecords();
-  assert.deepEqual(row, {
+  const { evidence, ...record } = row;
+  assert.deepEqual(record, {
     id: 'Fay',
     name: 'Fay',
     classification: 'TS',
@@ -220,6 +221,11 @@ test('cyclones flatten the storm position and stay empty while off', async () =>
     windKt: 35,
     pressureHpa: 1010,
   });
+  assert.equal(evidence.version, 1);
+  assert.equal(evidence.entityRef.layerKey, 'weather-cyclones');
+  assert.equal(evidence.issuedAt, Date.parse(storm.issuedAt));
+  assert.equal(evidence.observedAt, null, 'missing position time stays unknown');
+  assert.equal(evidence.coverage.completeness, 'partial');
   assertDeclaredFields('weather-cyclones', row);
   layer.destroy?.();
 });

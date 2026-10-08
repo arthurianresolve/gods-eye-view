@@ -2,6 +2,7 @@ import { twoline2satrec } from 'satellite.js';
 import * as Cesium from 'cesium';
 import { CATALOG_GROUPS, ISS_NORAD, POINT_STYLES } from './policy.js';
 import { satelliteElementEpochMs } from './records.js';
+import { decodeTleCatalogNumber } from '../../sources/tle.js';
 
 export function createIngestion({
   state: layerState,
@@ -109,7 +110,8 @@ export function createIngestion({
           const satrec = twoline2satrec(entry.line1, entry.line2);
           if (!satrec || satrec.error !== 0) continue;
 
-          const noradId = Number(satrec.satnum);
+          const noradId = decodeTleCatalogNumber(satrec.satnum);
+          if (noradId === null) continue;
           if (seen.has(noradId)) continue;
           seen.add(noradId);
 

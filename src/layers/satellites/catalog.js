@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { twoline2satrec } from 'satellite.js';
 import { satelliteElementEpochMs } from './records.js';
+import { decodeTleCatalogNumber } from '../../sources/tle.js';
 import {
   DENSE_REFRESH_FRAMES,
   DENSE_GROUP_PATH,
@@ -114,7 +115,8 @@ export function createCatalog({ state: layerState, services, parts, source }) {
           const entry = entries[i];
           const satrec = twoline2satrec(entry.line1, entry.line2);
           if (!satrec || satrec.error !== 0) continue;
-          const noradId = Number(satrec.satnum);
+          const noradId = decodeTleCatalogNumber(satrec.satnum);
+          if (noradId === null) continue;
           if (layerState._catalog.has(noradId)) continue; // core catalog keeps priority
           const pos = parts.orbits.propagatePosition(satrec, now);
           if (!pos) continue;

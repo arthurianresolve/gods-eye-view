@@ -2,6 +2,7 @@ import {
   CYCLONE_ACCENT,
   CYCLONE_MARKER_PX,
   CYCLONE_SELECTED_ACCENT,
+  CYCLONE_OVERLAY_SOURCE_ID,
   createCycloneLabels,
 } from './labels.js';
 
@@ -265,6 +266,11 @@ export function createCycloneRendering({ viewer, cesium: C, overlayHost }) {
       }
     },
     setSelection: select,
+    setVisible(value) {
+      const visible = Boolean(value);
+      if (source) source.show = visible;
+      overlayHost?.setVisible?.(CYCLONE_OVERLAY_SOURCE_ID, visible);
+    },
     ownsPickId(id) {
       return source !== null && typeof id === 'string' && entityIds.has(id);
     },

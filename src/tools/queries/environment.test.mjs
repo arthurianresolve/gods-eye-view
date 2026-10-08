@@ -49,6 +49,7 @@ test('weather describes current conditions at a point or place', async () => {
   );
   assert.deepEqual(result.data.weather, {
     observed_at: '2026-10-01T19:15:00.000Z',
+    valid_at: '2026-10-01T19:15:00.000Z',
     conditions: 'overcast',
     weather_code: 3,
     temperature_c: 26.3,
@@ -59,6 +60,18 @@ test('weather describes current conditions at a point or place', async () => {
     wind_direction_deg: 318,
     visibility_m: 15400,
   });
+  assert.equal(result.data.weather_evidence.sourceId, 'Open-Meteo');
+  assert.equal(result.data.weather_evidence.licenseRef, 'CC BY 4.0');
+  assert.equal(result.data.weather_evidence.observedAt, null);
+  assert.equal(
+    result.data.weather_evidence.validFrom,
+    Date.parse(conditions.observedAt),
+  );
+  assert.equal(result.data.weather_evidence.method, 'predicted');
+  assert.match(
+    result.data.weather_evidence.limitations.join(' '),
+    /not a station observation/,
+  );
   const [latitude, longitude] = weather.calls.at(-1);
   assert.ok(Math.abs(latitude - 30.31) < 1e-9 && longitude === -97.75);
 });
@@ -93,6 +106,8 @@ test('the regional brief returns place, weather and at most ten headlines', asyn
     'Edwards Plateau: overcast, 26°C, wind 5 km/h; 10 recent headlines.',
   );
   assert.equal(result.data.articles.length, 10);
+  assert.equal(result.data.weather_evidence.sourceId, 'Open-Meteo');
+  assert.equal(result.data.weather_evidence.feedState, 'unknown');
   assert.deepEqual(result.data.articles[0], {
     title: 'Story 0',
     url: 'https://news.example/0',
@@ -140,6 +155,16 @@ test('cyclones are listed strongest first and can be limited to an area', async 
     all.data.storms.map((row) => row.id),
     ['b', 'a'],
   );
+  assert.equal(all.data.storms[0].evidence.sourceId, 'NOAA NHC / CPHC');
+  assert.equal(
+    all.data.storms[0].evidence.observedAt,
+    Date.parse('2026-10-01T18:00:00.000Z'),
+  );
+  assert.equal(
+    all.data.storms[0].evidence.issuedAt,
+    Date.parse('2026-10-01T15:00:00.000Z'),
+  );
+  assert.equal(all.data.storms[0].evidence.coverage.completeness, 'partial');
   const atlantic = await catalogWith({ cyclones }).call('get_cyclones', {
     area: { bbox: [-100, 0, -10, 50] },
   });

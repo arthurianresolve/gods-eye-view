@@ -1,0 +1,18 @@
+# Upstream open bug triage
+
+Triage snapshot from the upstream repository's open issues labeled `bug`, checked
+8 October 2026. Root-cause fixes below are being carried on this fork's `dev`
+branch. The links point to the reports on upstream.
+
+| Issue                                                            | Finding                                                                                                                                                                      | Status on this branch                                                                                                                                                                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#906](https://github.com/bilawalsidhu/gods-eye-view/issues/906) | The fixed three-line parser advanced by three even when a TLE line was missing, so all following records could be mis-grouped and lost.                                      | Fixed by scanning for the next complete line-1/line-2 pair; a direct eight-set regression confirms a truncated middle record does not drop later satellites.                                                   |
+| [#751](https://github.com/bilawalsidhu/gods-eye-view/issues/751) | `Number(satrec.satnum)` returns `NaN` for Alpha-5 identifiers and corrupts catalog keys.                                                                                     | Fixed with one Alpha-5 decoder shared by catalog ingestion, dense ingestion, orbit results and query parsing; tests cover boundary IDs, skipped I/O, ordinary IDs and already-decoded values.                  |
+| [#905](https://github.com/bilawalsidhu/gods-eye-view/issues/905) | At a 2560×1440 viewport, a 2048 WebGL texture/renderbuffer limit can be exceeded by Cesium's drawing buffer.                                                                 | Fixed by capping `resolutionScale` against both limits on initial setup and resize while remembering the requested scale. A browser gate mocks both limits to 2048 and verifies rendering and resize recovery. |
+| [#804](https://github.com/bilawalsidhu/gods-eye-view/issues/804) | The compact Radio disclosure could stay open when Context was reopened after Context had already reached its expanded state.                                                 | Fixed by enforcing the disclosure invariant before `PanelChrome`'s no-op return; covered by unit and Radio browser acceptance.                                                                                 |
+| [#854](https://github.com/bilawalsidhu/gods-eye-view/issues/854) | The report says camera controls do not work but gives no actionable sequence, affected control, logs or screenshot; the maintainer requested a reproduction and diagnostics. | No safe root-cause change can be identified from the report. Await concrete steps and doctor output; no speculative camera behavior was changed.                                                               |
+
+The TLE parser and Alpha-5 changes preserve ordinary five-digit TLE behavior.
+The resolution guard changes only render resolution; it does not lower the scene's
+analytical data or selected-object evidence. Radio cleanup only closes the compact
+disclosure when Context is being opened.

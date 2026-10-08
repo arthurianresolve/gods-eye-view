@@ -89,7 +89,7 @@ async function click(label) {
   const handle = await page.evaluateHandle(
     (label) =>
       [...document.querySelectorAll('button')].find(
-        (b) => b.textContent === label,
+        (b) => b.textContent === label && b.getClientRects().length > 0,
       ),
     label,
   );
@@ -122,7 +122,7 @@ try {
   const before = await page.evaluate(() =>
     JSON.stringify(window.__godsEyeView.sceneDirector._project),
   );
-  const input = await page.$('#scene-import-file');
+  let input = await page.$('#scene-import-file');
   await input.uploadFile(file);
   await page.waitForSelector('[data-director-apply-import]');
   check(
@@ -278,7 +278,7 @@ try {
   await input.uploadFile(bundleFile);
   await page.waitForSelector('[data-director-apply-import]');
   check(
-    'bundle preview verifies bytes and explains session-only storage',
+    'bundle preview verifies bytes and explains browser storage',
     await page.evaluate(
       () =>
         document
@@ -292,6 +292,61 @@ try {
   await page.waitForFunction(
     () => !document.querySelector('[data-director-dialog]'),
   );
+  await page.waitForFunction(async () => {
+    const record = await window.__godsEyeView.workspaceStorage.getWorkspace(
+      'director-project-v1',
+    );
+    return record?.saved === true && record.document.assetRefs.length === 1;
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(
+    () =>
+      window.__godsEyeView?.sceneDirector &&
+      document.getElementById('loading-screen')?.classList.contains('hidden'),
+    { timeout: 60000 },
+  );
+  check(
+    'bundle project and bytes survive a page reload without missing-asset fallback',
+    await page.evaluate(() => {
+      const d = window.__godsEyeView.sceneDirector;
+      return (
+        d._project.scenes[0]?.title === 'Sharing fixture' &&
+        d.getSharingState().assets.count === 1
+      );
+    }),
+  );
+  check(
+    'removing one scene preserves bytes referenced by another scene',
+    await page.evaluate(async () => {
+      const d = window.__godsEyeView.sceneDirector;
+      const project = structuredClone(d._project);
+      const sharedScene = structuredClone(project.scenes[0]);
+      sharedScene.id = 'share-copy';
+      sharedScene.title = 'Shared copy';
+      project.scenes.push(sharedScene);
+      const assets = d._bundleAssets.snapshot();
+      const imported = await d.importProjectFile(
+        { name: 'shared-scenes.json' },
+        { prepared: { project, assets } },
+      );
+      if (!imported) return false;
+      await d._durableSaveTail;
+      d._project.scenes = d._project.scenes.filter(
+        (scene) => scene.id !== 'share-copy',
+      );
+      d._saveProject();
+      await d._durableSaveTail;
+      const stored = await window.__godsEyeView.workspaceStorage.getWorkspace(
+        'director-project-v1',
+      );
+      return (
+        d._project.scenes.length === 1 &&
+        stored?.document.assetRefs.length === 1 &&
+        Object.keys(stored?.assets || {}).length === 1
+      );
+    }),
+  );
+  input = await page.$('#scene-import-file');
   await page.evaluate(() =>
     window.__godsEyeView.sceneDirector.loadShot('share', 'shot', {
       flyDuration: 0.3,
@@ -365,6 +420,18 @@ try {
   );
   await page.screenshot({ path: path.join(output, 'narrow.png') });
   await page.keyboard.press('Escape');
+  await page.setViewport({ width: 1440, height: 900 });
+  await page.evaluate(() => {
+    const panel = document.getElementById('scene-panel');
+    if (panel?.classList.contains('collapsed'))
+      panel.querySelector('[data-collapse-target="scene-panel"]')?.click();
+  });
+  await page.waitForFunction(
+    () =>
+      document
+        .querySelector('#scene-panel [data-director-authoring]')
+        ?.getClientRects().length > 0,
+  );
   const pending = await page.evaluate(async () => {
     const d = window.__godsEyeView.sceneDirector;
     let finish;

@@ -219,6 +219,10 @@ async function main() {
         });
         return;
       }
+      if (url.origin === APP_ORIGIN && url.pathname === '/api/google/tiles-token') {
+        request.respond({ status: 204 });
+        return;
+      }
       if (url.origin === APP_ORIGIN && url.pathname === '/api/vessels') {
         request.respond({
           status: 200,
@@ -701,6 +705,7 @@ async function main() {
           const { radioStationIdFromPick } = await import('/src/data/radio.js');
           return new Promise((resolve) => {
             let removePostRender = null;
+            let remainingFrames = 4;
             const finish = () => {
               removePostRender?.();
               const overlay = radio.getOverlayDiagnostics();
@@ -721,8 +726,12 @@ async function main() {
                 nativeLabelCount: dataSource.entities.values.filter((entity) => Boolean(entity.label)).length,
               });
             };
-            const timeout = setTimeout(finish, 500);
+            const timeout = setTimeout(finish, 1500);
             removePostRender = viewer.scene.postRender.addEventListener(() => {
+              if (--remainingFrames > 0) {
+                requestAnimationFrame(() => viewer.scene.requestRender());
+                return;
+              }
               clearTimeout(timeout);
               finish();
             });
@@ -4498,6 +4507,24 @@ async function main() {
       'expanding Context preserves playback and the user-selected detailed Radio disclosure',
       companion.radioEnabled && companion.state === 'playing'
         && companion.radioCollapsed && !companion.contextCollapsed && companion.nested,
+    );
+
+    const reopenedContextDisclosure = await page.evaluate(() => {
+      const manager = window.__godsEyeView.styleManager;
+      manager._setRadioDisclosure(true);
+      manager.setPanelCollapsed('global-context-panel', false);
+      return {
+        contextOpen: !document.getElementById('global-context-panel').classList.contains('collapsed'),
+        disclosureOpen: manager._contextRadioDock.classList.contains('disclosure-open'),
+        compactHidden: document.getElementById('context-radio-mini').hidden,
+      };
+    });
+    check(
+      'reopening already-open Context clears compact Radio before its no-op return',
+      reopenedContextDisclosure.contextOpen
+        && !reopenedContextDisclosure.disclosureOpen
+        && reopenedContextDisclosure.compactHidden,
+      JSON.stringify(reopenedContextDisclosure),
     );
 
     const expandedContextRadioBefore = await page.evaluate(() => {

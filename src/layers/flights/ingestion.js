@@ -7,6 +7,8 @@ export function createIngestion({
   applySnapshot,
   setSourceLabel,
   applyPendingTrackingRestore,
+  onAcceptedSnapshot,
+  onSourceUnavailable,
 }) {
   const methods = {
     async update(viewer, { signal = null } = {}) {
@@ -61,6 +63,11 @@ export function createIngestion({
           source: feed._lastSource,
           coverage: feed._lastCoverage,
         };
+        try {
+          await onAcceptedSnapshot?.(snapshot);
+        } catch (error) {
+          console.warn('[Recording:Flights] Snapshot was not recorded:', error);
+        }
         console.log(`[Data:Flights] Updated: ${feed._count} aircraft`);
         applyPendingTrackingRestore();
       } catch (e) {
@@ -78,6 +85,14 @@ export function createIngestion({
         }
         feed._lastError =
           e?.name === 'LiveSourceError' ? e.message : 'Live data unavailable';
+        try {
+          await onSourceUnavailable?.(e?.status || 'provider-unavailable');
+        } catch (recordingError) {
+          console.warn(
+            '[Recording:Flights] Gap could not be recorded:',
+            recordingError,
+          );
+        }
       } finally {
         feed._activeUpdateControllers.delete(resourceController);
       }

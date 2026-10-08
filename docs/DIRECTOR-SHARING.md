@@ -79,12 +79,14 @@ asset bytes in total. Supported MIME types are JSON/GeoJSON, PNG, MP4/WebM video
 and MPEG/Ogg/WAV/WebM audio. Normal pack format and geometry checks still apply.
 There are no executable modules, request headers or credentials in the format.
 
-Imported bytes stay in memory for the current project and session. Stop releases
-rendered resources while retaining these bytes for replay. Project replacement
-or application teardown releases them. Only scene JSON is saved in browser
-storage: **reimport the bundle after reloading the app**. Missing bundle bytes
-fail explicitly, with no network fallback. This is file sharing, not a storage
-service or an offline basemap.
+Imported bytes are saved with the validated Director project in local browser
+storage when IndexedDB is available. Reload restores the project and verifies each
+bundle asset by its SHA-256 digest before making it available. If browser storage
+is unavailable or a save fails, the Director shows that the bytes will not survive
+a reload. Stop releases rendered resources while retaining verified bytes for
+replay; project replacement or application teardown releases session-owned
+resources. Missing bundle bytes fail explicitly, with no network fallback. This
+is local project storage, not a hosted service or an offline basemap.
 
 Portable helpers are exported through `gods-eye-view/director`: `parseSceneShare`,
 `readSceneShare`, `createSceneBundle`, `createBundleAssets`, `describeSceneShare`,

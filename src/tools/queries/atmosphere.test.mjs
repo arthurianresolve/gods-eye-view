@@ -143,6 +143,10 @@ test('wind is sampled from the model grid at the location', async () => {
   );
   assert.equal(result.data.speed_mps, 10);
   assert.equal(result.data.from, 'W');
+  assert.equal(result.data.evidence.sourceId, 'ECMWF IFS');
+  assert.equal(result.data.evidence.method, 'predicted');
+  assert.equal(result.data.evidence.observedAt, null);
+  assert.equal(result.data.evidence.coverage.completeness, 'unknown');
   assert.deepEqual(wind.requested, ['ifs']);
   u.fill(0);
   const calm = await catalog.call('get_wind', { location: { lat: 0, lon: 0 } });

@@ -17,6 +17,20 @@ const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
 const qualityMode = option('--quality-mode', 'manual');
+const mixedLayers = args.includes('--mixed-layers');
+const effectiveFixtureAircraftCount =
+  fixtureAircraftCount || (mixedLayers ? 2500 : 0);
+const startupRuns = Math.max(
+  1,
+  Math.min(5, Number(option('--startup-runs', String(runs))) || runs),
+);
+const protocolTimeoutMs = Math.max(
+  10_000,
+  Math.min(
+    600_000,
+    Number(option('--protocol-timeout-ms', '300000')) || 300_000,
+  ),
+);
 const out = option('--out', null);
 const hardwareRequired = args.includes('--hardware-required');
 if (
@@ -32,6 +46,7 @@ if (!['manual', 'auto', 'quality', 'performance'].includes(qualityMode))
 
 const browser = await puppeteer.launch({
   headless: args.includes('--headless') ? 'new' : false,
+  protocolTimeout: protocolTimeoutMs,
   executablePath:
     process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath()),
   defaultViewport: { width: 1440, height: 900, deviceScaleFactor: 1 },
@@ -44,16 +59,87 @@ const browser = await puppeteer.launch({
 });
 
 try {
+  const startupUrl = new URL(url);
+  startupUrl.searchParams.set('welcome', '0');
+  const startupSamples = [];
+  for (let run = 1; run <= startupRuns; run += 1) {
+    process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
+    const context = await browser.createBrowserContext();
+    const startupPage = await context.newPage();
+    await startupPage.setViewport({
+      width: 1440,
+      height: 900,
+      deviceScaleFactor: 1,
+    });
+    await startupPage.setCacheEnabled(false);
+    const startedAt = Date.now();
+    await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
+    await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
+      timeout: 90_000,
+    });
+    const appReadyMs = Date.now() - startedAt;
+    await startupPage.waitForFunction(
+      () =>
+        document.getElementById('loading-screen')?.classList.contains('hidden'),
+      { timeout: 90_000 },
+    );
+    const initialSettleMs = Date.now() - startedAt;
+    const details = await startupPage.evaluate(() => {
+      const viewer = window.__godsEyeView.viewer;
+      const gl =
+        viewer.scene.context?._gl ||
+        viewer.scene.canvas.getContext('webgl2') ||
+        viewer.scene.canvas.getContext('webgl');
+      const extension = gl?.getExtension('WEBGL_debug_renderer_info');
+      return {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        renderer: extension
+          ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
+          : gl?.getParameter(gl.RENDERER) || null,
+        viewport: {
+          width: innerWidth,
+          height: innerHeight,
+          dpr: devicePixelRatio,
+        },
+        focused: document.hasFocus(),
+        visible: !document.hidden,
+        navigationMs:
+          performance.getEntriesByType('navigation')[0]?.duration ?? null,
+        memory: performance.memory
+          ? { usedJsHeapBytes: performance.memory.usedJSHeapSize, reason: null }
+          : {
+              usedJsHeapBytes: null,
+              reason: 'performance.memory is unavailable in this browser',
+            },
+      };
+    });
+    startupSamples.push({
+      run,
+      cacheDisabled: true,
+      appReadyMs,
+      initialSettleMs,
+      ...details,
+    });
+    await context.close();
+  }
+
+  process.stdout.write('[performance] preparing measured scene\n');
   const page = await browser.newPage();
-  const navigationStart = Date.now();
+  await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
-  const readyMs = Date.now() - navigationStart;
-  if (warmupMs) await new Promise((resolve) => setTimeout(resolve, warmupMs));
+  const readyMs = Date.now();
+  await page.waitForFunction(
+    () =>
+      document.getElementById('loading-screen')?.classList.contains('hidden'),
+    { timeout: 90_000 },
+  );
+  const mainStartupElapsedMs = Date.now() - readyMs;
 
-  const fixture = fixtureAircraftCount
+  const fixture = effectiveFixtureAircraftCount
     ? await page.evaluate(
         async ({ count, mode }) => {
           const app = window.__godsEyeView;
@@ -101,9 +187,37 @@ try {
             seed: 1,
           };
         },
-        { count: fixtureAircraftCount, mode: qualityMode },
+        { count: effectiveFixtureAircraftCount, mode: qualityMode },
       )
     : null;
+
+  const mixedLayerFixture = mixedLayers
+    ? await page.evaluate(async () => {
+        const manager = window.__godsEyeView?.dataManager;
+        if (!manager)
+          throw new Error('Mixed-layer fixture needs the data manager');
+        const ids = ['local-datacenters', 'local-dams'];
+        for (const id of ids) {
+          if (!manager.layers?.has(id))
+            throw new Error(`Mixed-layer fixture is missing ${id}`);
+          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+        }
+        return ids;
+      })
+    : null;
+  if (mixedLayerFixture) {
+    await page.waitForFunction(
+      (ids) =>
+        ids.every((id) => {
+          const layer = window.__godsEyeView?.dataManager
+            ?.getAll?.()
+            ?.find((entry) => entry.id === id);
+          return Number.isFinite(layer?.stats?.count) && layer.stats.count > 0;
+        }),
+      { timeout: 90_000 },
+      mixedLayerFixture,
+    );
+  }
   if (!fixture) {
     const modeSet = await page.evaluate((mode) => {
       const controller = window.__godsEyeView?.styleManager?._adaptiveQuality;
@@ -122,6 +236,12 @@ try {
       transform: camera.transform.clone(),
     };
   });
+  if (warmupMs) {
+    await page.evaluate(() =>
+      window.__godsEyeView.viewer.scene.requestRender(),
+    );
+    await new Promise((resolve) => setTimeout(resolve, warmupMs));
+  }
 
   const environment = await page.evaluate(() => {
     const viewer = window.__godsEyeView.viewer;
@@ -155,11 +275,6 @@ try {
       },
       focused: document.hasFocus(),
       visible: !document.hidden,
-      startup: {
-        navigationMs:
-          performance.getEntriesByType('navigation')[0]?.duration ?? null,
-        appReadyMs: null,
-      },
       layers,
       totalObjects: layers.reduce(
         (total, layer) => total + (layer.count || 0),
@@ -167,7 +282,12 @@ try {
       ),
     };
   });
-  environment.startup.appReadyMs = readyMs;
+  environment.startup = {
+    runs: startupSamples,
+    runCount: startupSamples.length,
+    measurement: 'cache-disabled fresh browser contexts',
+    performancePageInitialSettleMs: mainStartupElapsedMs,
+  };
   const softwareRenderer =
     /swiftshader|software|llvmpipe|mesa offscreen|angle \(.*software/i.test(
       environment.renderer || '',
@@ -178,6 +298,7 @@ try {
   const captures = [];
   for (const scenario of ['idle', 'scripted-motion']) {
     for (let run = 1; run <= runs; run += 1) {
+      process.stdout.write(`[performance] ${scenario} ${run}/${runs}\n`);
       const sample = await page.evaluate(
         async ({ durationMs, scenarioName, delay }) => {
           const viewer = window.__godsEyeView.viewer;
@@ -313,8 +434,10 @@ try {
       warmupMs,
       durationPerSampleMs: seconds * 1000,
       runsPerScenario: runs,
+      startupRuns: startupSamples.length,
       scenarios: ['idle', 'scripted-motion'],
       fixture,
+      mixedLayers: mixedLayerFixture,
       qualityMode,
       injectedDelayMs: delayMs,
       populationStableAcrossSamples: populations.size === 1,

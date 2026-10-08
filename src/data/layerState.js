@@ -33,6 +33,7 @@ export const LAYER_STATE_STORAGE_KEY = 'gev:layer-state:v2';
 export const LAYER_RESTORE_ORIGINS = Object.freeze({
   share: 'share-restore',
   local: 'local-restore',
+  workspace: 'workspace-restore',
 });
 
 const RADIO_FILTER_CODES = Object.freeze({

@@ -48,6 +48,9 @@
     "qa:map-source-tray": "node scripts/qa-map-source-tray.mjs",
     "qa:panel-resize": "node scripts/qa-panel-resize.mjs",
     "qa:evidence-panel": "node scripts/qa-evidence-panel.mjs",
+    "qa:render-resolution": "node scripts/qa-render-resolution.mjs",
+    "qa:storage": "node scripts/qa-workspace-storage.mjs",
+    "qa:recording": "node scripts/qa-aircraft-recording.mjs",
     "qa:application": "node scripts/qa-application.mjs",
     "qa:director-sharing": "node scripts/qa-director-sharing.mjs",
     "performance:capture": "node scripts/capture-scene-performance.mjs",
@@ -55,7 +58,12 @@
     "qa:street-level:fixtures": "node scripts/qa-street-level.mjs --fixtures",
     "check:boundaries": "node scripts/check-import-directions.mjs && node scripts/check-package-boundaries.mjs",
     "qa:transit": "node scripts/qa-transit.mjs",
-    "mcp": "node server/mcp/stdio.js"
+    "mcp": "node server/mcp/stdio.js",
+    "qa:timeline": "node scripts/qa-investigation-timeline.mjs",
+    "qa:workspaces": "node scripts/qa-workspace-library.mjs",
+    "qa:candidate": "node scripts/qa-candidate.mjs",
+    "release:stage": "node scripts/stage-release.mjs",
+    "release:verify": "node scripts/verify-release.mjs"
   },
   "dependencies": {
     "@jtarrio/signals": "^0.10.0",
@@ -84,6 +92,12 @@
     "./infrastructure/lod": "./src/data/localGeojsonLod.js",
     "./application": "./src/app/application.js",
     "./application/viewer": "./src/app/viewer.js",
+    "./time": "./src/time/index.js",
+    "./storage": "./src/storage/index.js",
+    "./workspaces": "./src/workspaces/index.js",
+    "./imports": "./src/imports/index.js",
+    "./sources/adapter-starter": "./src/sources/adapterStarter.js",
+    "./recording": "./src/recording/index.js",
     "./build/vite": {
       "node": "./build/vite.js"
     },

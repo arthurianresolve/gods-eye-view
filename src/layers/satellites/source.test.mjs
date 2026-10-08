@@ -58,6 +58,34 @@ test('satellite factories keep control state separate and construct without requ
   assert.notEqual(first.getStats(), second.getStats());
 });
 
+test('Alpha-5 identifiers survive TLE propagation as numeric NORAD catalog keys', () => {
+  const source = { readGroup() {} };
+  const services = Object.fromEntries(
+    [
+      'picking',
+      'focus',
+      'readout',
+      'overlays',
+      'context',
+      'render',
+      'layerState',
+    ].map((key) => [key, {}]),
+  );
+  services.layerState.isExplicitLayerStateOrigin = () => false;
+  const layer = createSatellitesLayer({ source, services });
+  const line1 =
+    '1 A5544U 98067A   24001.50000000  .00016717  00000-0  30270-3 0  9994';
+  const line2 =
+    '2 A5544  51.6416 247.4627 0006703 130.5360 325.0288 15.50377579432414';
+  const track = layer.findSatelliteOrbitTrackInTle(
+    `ALPHA-5 DEMO\n${line1}\n${line2}`,
+    'ALPHA-5 DEMO',
+  );
+  assert.equal(track?.noradId, 105544);
+  assert.ok(track?.current);
+  assert.equal(track?.name, 'ALPHA-5 DEMO');
+});
+
 test('satellite pass prediction methods report no-tle on cold catalog and coerce IDs', () => {
   const source = { readGroup() {} };
   const services = Object.fromEntries(

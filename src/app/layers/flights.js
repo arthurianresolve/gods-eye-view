@@ -17,12 +17,16 @@ export function createApplicationFlights({
   surface,
   source,
   militaryRegistry,
+  onAcceptedSnapshot,
+  onSourceUnavailable,
   resolveAsset = (url) =>
     `${import.meta.env?.BASE_URL || '/'}${url.replace(/^\//, '')}`,
 }) {
   const { groundFloor, meshFloor, groundSnap } = surface;
   return createCivilFlightLayer({
     source,
+    onAcceptedSnapshot,
+    onSourceUnavailable,
     resolveAsset,
     services: {
       picking,

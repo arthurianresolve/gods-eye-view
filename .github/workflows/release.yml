@@ -1,0 +1,80 @@
+name: Versioned release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Artifact channel
+        type: choice
+        options: [dev]
+        default: dev
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify release artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify source
+        run: |
+          npm run format:check
+          npm run check:boundaries
+          npm test
+          npm run build
+
+      - name: Stage versioned manifest and checksummed files
+        env:
+          RELEASE_CHANNEL: ${{ github.event_name == 'push' && 'stable' || inputs.channel }}
+        run: node scripts/stage-release.mjs --out release-staging --channel "$RELEASE_CHANNEL" --commit "$GITHUB_SHA"
+
+      - name: Verify staged release
+        run: node scripts/verify-release.mjs --path release-staging
+
+      - name: Create reproducible archive and checksum
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: |
+          ARCHIVE="gods-eye-view-${RELEASE_VERSION}.tar.gz"
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -C release-staging -cf - . | gzip -n > "$ARCHIVE"
+          sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+
+      - name: Upload development or candidate artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gev-${{ github.event_name == 'push' && github.ref_name || inputs.channel }}-${{ github.sha }}
+          path: |
+            gods-eye-view-*.tar.gz
+            gods-eye-view-*.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish stable tag assets
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_VERSION" "gods-eye-view-${RELEASE_VERSION}.tar.gz" "gods-eye-view-${RELEASE_VERSION}.tar.gz.sha256" --verify-tag --generate-notes

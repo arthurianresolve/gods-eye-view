@@ -1,0 +1,163 @@
+.workspace-library {
+  margin: 0.75rem 0;
+  border: 1px solid var(--panel-border, rgb(255 255 255 / 16%));
+  border-radius: 0.5rem;
+  background: var(--panel-surface, rgb(8 15 24 / 88%));
+  color: var(--panel-text, #e8f0f6);
+  font: 0.78rem/1.45 var(--font-mono, ui-monospace, monospace);
+}
+
+.workspace-library > summary {
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.gev-first-task-guide {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.55rem 0.65rem;
+  border-left: 2px solid #5ce1e6;
+  background: rgb(92 225 230 / 7%);
+}
+
+.gev-first-task-guide > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.gev-first-task-guide ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.gev-first-task-guide li {
+  padding-left: 0.15rem;
+}
+
+.workspace-library > summary:focus-visible,
+.workspace-library button:focus-visible,
+.workspace-library select:focus-visible,
+.workspace-library input:focus-visible {
+  outline: 2px solid #5ce1e6;
+  outline-offset: 2px;
+}
+
+.workspace-library-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.workspace-library label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.workspace-library select,
+.workspace-library input,
+.workspace-library button {
+  min-height: 2.25rem;
+  border: 1px solid var(--panel-border, rgb(255 255 255 / 22%));
+  border-radius: 0.3rem;
+  background: rgb(10 20 30 / 95%);
+  color: inherit;
+  font: inherit;
+}
+
+.workspace-library select,
+.workspace-library input {
+  width: 100%;
+  padding: 0.4rem;
+}
+
+.workspace-library input[type='file'] {
+  max-width: 100%;
+}
+
+.workspace-library button {
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+.workspace-library button:hover:not(:disabled) {
+  border-color: #5ce1e6;
+}
+
+.workspace-library button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.workspace-library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.workspace-library fieldset {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.65rem;
+  border: 1px solid var(--panel-border, rgb(255 255 255 / 16%));
+  border-radius: 0.35rem;
+}
+
+.workspace-library legend {
+  padding: 0 0.35rem;
+  font-weight: 700;
+}
+
+.workspace-library p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-library [data-status][data-state='error'],
+.workspace-library [data-import-status][data-state='error'] {
+  color: #ff9a9a;
+}
+
+.workspace-library [data-status][data-state='warning'] {
+  color: #ffd37c;
+}
+
+.workspace-library [data-status][data-state='saved'] {
+  color: #8ce6b3;
+}
+
+.workspace-library table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.workspace-library th,
+.workspace-library td {
+  padding: 0.35rem;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  text-align: left;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+@media (max-width: 520px) {
+  .workspace-library-actions > button {
+    flex: 1 1 8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-library *,
+  .workspace-library *::before,
+  .workspace-library *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

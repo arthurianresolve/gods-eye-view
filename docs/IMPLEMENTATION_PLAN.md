@@ -1,8 +1,12 @@
 # God's Eye View: sliced implementation plan for `dev`
 
-Status: first implementation wave on `dev`; S00, S02, S03 and S05 are implemented,
-while S01, S04, S06 and S07 have working foundations with acceptance work
-recorded below. S08–S31 remain planned.
+Status: implementation code for S00–S31 is present on `dev`. The final local
+candidate matrix passes formatting, package boundaries, all 6,324 runnable unit
+tests (10 skipped), the production build and six browser journeys. Hardware, manual accessibility study,
+cross-platform install/upgrade, live-source retention approval and signed-release
+evidence remain external acceptance gates; see S11–S16 and S23, S30–S31. The
+report is [`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json)
+and marks the candidate `pending-evidence` with zero local failures.
 
 Prepared: 2026-10-08. Repository: `arthurianresolve/gods-eye-view`.
 Integration branch: existing remote `dev`, verified to match `main` at
@@ -61,17 +65,17 @@ fully usable or explicitly unavailable.
 
 ## 2. Baseline to preserve
 
-| Area | Existing capability and owner | Planned extension |
-| --- | --- | --- |
-| Application lifecycle | [Application construction](APPLICATION.md), `src/app/application.js`, `src/standalone/application.js` | Inject evidence, time and storage services with the existing cancellation and teardown rules. |
-| Evidence | `src/data/feedState.js`, `src/data/layerSnapshot.js`, `src/data/analystEngine.js` | Add observation-level provenance and temporal semantics while retaining current feed-state behavior. |
-| Time | `src/layers/weather/clock.js`, `src/director/clock.js`, launch replay | Coordinate investigation time through adapters; preserve weather eligibility gaps and Director shot timing. |
-| Views | `src/view/index.js`, `src/sharelink.js`, `src/ui/shareRestoration.js` | Add explicit temporal references and recoverable workspace restoration. |
-| Scene storage | `src/director/document.js`, `src/director/sharing/`, `src/scenes/project.js`, `src/scenes/sharing.js` | Persist permitted bundle assets and bind scenes to saved investigations. Scene schema is version 6 in the inspected source. |
-| Interaction | [UI ownership](UI-OWNERSHIP.md), [voice ownership](VOICE-OWNERSHIP.md), command dock and typed voice turns | Reuse existing actions for searchable commands, query editing and undo. |
-| Rendering | `src/renderGovernor.js`, `src/overlays/worldOverlay.js`, `src/data/detection.js` | Measured adaptive quality, without changing the records used by analysis. |
-| Extension | [Code boundaries](CODE-BOUNDARIES.md), [tools](TOOLS.md), `src/sources/sourceSlot.js` | Document and test a small adapter kit; no new module discovery system. |
-| Validation | `.github/workflows/ci.yml`, `scripts/qa-*.mjs` | Extend current unit/build/boundary, Windows onboarding, Street Level fixture and panel browser gates. |
+| Area                  | Existing capability and owner                                                                              | Planned extension                                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Application lifecycle | [Application construction](APPLICATION.md), `src/app/application.js`, `src/standalone/application.js`      | Inject evidence, time and storage services with the existing cancellation and teardown rules.                               |
+| Evidence              | `src/data/feedState.js`, `src/data/layerSnapshot.js`, `src/data/analystEngine.js`                          | Add observation-level provenance and temporal semantics while retaining current feed-state behavior.                        |
+| Time                  | `src/layers/weather/clock.js`, `src/director/clock.js`, launch replay                                      | Coordinate investigation time through adapters; preserve weather eligibility gaps and Director shot timing.                 |
+| Views                 | `src/view/index.js`, `src/sharelink.js`, `src/ui/shareRestoration.js`                                      | Add explicit temporal references and recoverable workspace restoration.                                                     |
+| Scene storage         | `src/director/document.js`, `src/director/sharing/`, `src/scenes/project.js`, `src/scenes/sharing.js`      | Persist permitted bundle assets and bind scenes to saved investigations. Scene schema is version 6 in the inspected source. |
+| Interaction           | [UI ownership](UI-OWNERSHIP.md), [voice ownership](VOICE-OWNERSHIP.md), command dock and typed voice turns | Reuse existing actions for searchable commands, query editing and undo.                                                     |
+| Rendering             | `src/renderGovernor.js`, `src/overlays/worldOverlay.js`, `src/data/detection.js`                           | Measured adaptive quality, without changing the records used by analysis.                                                   |
+| Extension             | [Code boundaries](CODE-BOUNDARIES.md), [tools](TOOLS.md), `src/sources/sourceSlot.js`                      | Document and test a small adapter kit; no new module discovery system.                                                      |
+| Validation            | `.github/workflows/ci.yml`, `scripts/qa-*.mjs`                                                             | Extend current unit/build/boundary, Windows onboarding, Street Level fixture and panel browser gates.                       |
 
 Use the checked-out source and CI at the recorded revision when older narrative
 documentation disagrees. In particular, do not describe browser CI as wholly
@@ -103,44 +107,46 @@ Effort is relative: **S** is a focused change; **M** crosses a few owners; **L**
 has migration, storage or multi-surface risk and should start with a narrow
 implementation spike. These are not calendar estimates. Assign an implementation
 owner and reviewer when selecting a slice; do not invent assignments in advance.
-S00, S02 and S03 are **implemented**. S01 and S04–S07 are **in progress**;
-scope and remaining acceptance evidence appear in their rows. S08–S31 remain
-**planned**. Track actual commits, validation and remaining work as slices land.
+S00–S31 have implementation code. “Implemented” in this ledger means the scoped
+code and repeatable local checks exist; it does not substitute for external
+acceptance evidence such as named-hardware measurements, manual accessibility
+review, a multi-OS install matrix, source-retention approval or a signed release.
+Each slice row records those remaining conditions explicitly.
 
-| Slice | Deliverable | Depends on | Effort | Milestone |
-| --- | --- | --- | --- | --- |
-| [S00](#s00) | Baseline journeys, fixtures and contract inventory **implemented** | — | M | A |
-| [S01](#s01) | CI and contribution flow for `dev` **in progress** | S00 | S | A |
-| [S02](#s02) | Evidence and temporal metadata contract **implemented** | S00 | M | A |
-| [S03](#s03) | Aircraft evidence through source, card and answer **implemented** | S02 | M | A |
-| [S04](#s04) | Evidence adapters and feed-health consistency **in progress** | S03 | M | A |
-| [S05](#s05) | Shared evidence inspector **implemented** | S04 | M | A |
-| [S06](#s06) | Reproducible performance measurements **in progress** | S00 | M | B |
-| [S07](#s07) | Adaptive presentation quality **in progress** | S06 | M | B |
-| [S08](#s08) | Loading, cancellation and failure recovery | S04, S06 | M | B |
-| [S09](#s09) | Investigation-time service and layer capabilities | S02 | M | C |
-| [S10](#s10) | Transactional local storage foundation | S02 | L | C |
-| [S11](#s11) | Bounded regional aircraft recorder | S03, S09, S10 | M | C |
-| [S12](#s12) | Aircraft replay through a source adapter | S11 | L | C |
-| [S13](#s13) | Timeline controls and live/replay transitions | S05, S12 | M | C |
-| [S14](#s14) | Vessel recording and replay | S13 | M | C |
-| [S15](#s15) | Weather and event time adapters | S09, S13 | L | C |
-| [S16](#s16) | Historical views and portable recording bundles | S13, S14, S15 | M | C |
-| [S17](#s17) | Workspace document and transactional restore | S10, S16 | L | D |
-| [S18](#s18) | Persistent Director and imported assets | S10, S17 | M | D |
-| [S19](#s19) | Workspace library, autosave and recovery | S17, S18 | M | D |
-| [S20](#s20) | A/B comparison and evidence reports | S05, S19 | M | D |
-| [S21](#s21) | Workflow layouts and searchable commands | S05 | M | E |
-| [S22](#s22) | Undo/redo for annotations and authoring | S17, S21 | M | E |
-| [S23](#s23) | Guided entry and accessibility acceptance | S08, S19, S21, S22 | M | E |
-| [S24](#s24) | Inspectable query results across surfaces | S04, S09 | M | F |
-| [S25](#s25) | Editable and saved queries | S19, S21, S24 | M | F |
-| [S26](#s26) | Validated GeoJSON and CSV import | S02, S10, S19 | L | G |
-| [S27](#s27) | KML and GPX import adapters | S26 | M | G |
-| [S28](#s28) | Source-adapter starter kit | S04, S09, S26 | M | G |
-| [S29](#s29) | Diagnostics and settings backup | S08, S19, S24 | M | H |
-| [S30](#s30) | Versioned releases and update recovery | S01, S19, S29 | L | H |
-| [S31](#s31) | Release candidate acceptance and rollout | A–G, S29, S30 | M | H |
+| Slice       | Deliverable                                                        | Depends on         | Effort | Milestone |
+| ----------- | ------------------------------------------------------------------ | ------------------ | ------ | --------- |
+| [S00](#s00) | Baseline journeys, fixtures and contract inventory **implemented** | —                  | M      | A         |
+| [S01](#s01) | CI and contribution flow for `dev` **implemented**                  | S00                | S      | A         |
+| [S02](#s02) | Evidence and temporal metadata contract **implemented**            | S00                | M      | A         |
+| [S03](#s03) | Aircraft evidence through source, card and answer **implemented**  | S02                | M      | A         |
+| [S04](#s04) | Evidence adapters and feed-health consistency **implemented**      | S03                | M      | A         |
+| [S05](#s05) | Shared evidence inspector **implemented**                          | S04                | M      | A         |
+| [S06](#s06) | Reproducible performance measurements **implemented; matrix pending** | S00              | M      | B         |
+| [S07](#s07) | Adaptive presentation quality **implemented; remains opt-in**       | S06                | M      | B         |
+| [S08](#s08) | Loading, cancellation and failure recovery **implemented**          | S04, S06           | M      | B         |
+| [S09](#s09) | Investigation-time service and layer capabilities **implemented**   | S02                | M      | C         |
+| [S10](#s10) | Transactional local storage foundation **implemented**             | S02                | L      | C         |
+| [S11](#s11) | Bounded regional aircraft recorder **implemented; policy-gated**   | S03, S09, S10      | M      | C         |
+| [S12](#s12) | Aircraft replay through a source adapter **implemented**            | S11                | L      | C         |
+| [S13](#s13) | Timeline controls and live/replay transitions **implemented**       | S05, S12           | M      | C         |
+| [S14](#s14) | Vessel recording and replay **implemented; policy-gated**           | S13                | M      | C         |
+| [S15](#s15) | Weather and event time adapters **implemented**                     | S09, S13           | L      | C         |
+| [S16](#s16) | Historical views and portable recording bundles **implemented**     | S13, S14, S15      | M      | C         |
+| [S17](#s17) | Workspace document and transactional restore **implemented**        | S10, S16           | L      | D         |
+| [S18](#s18) | Persistent Director and imported assets **implemented**            | S10, S17           | M      | D         |
+| [S19](#s19) | Workspace library, autosave and recovery **implemented**           | S17, S18           | M      | D         |
+| [S20](#s20) | A/B comparison and evidence reports **implemented**                | S05, S19           | M      | D         |
+| [S21](#s21) | Workflow layouts and searchable commands **implemented**           | S05                | M      | E         |
+| [S22](#s22) | Undo/redo for annotations and authoring **implemented**             | S17, S21           | M      | E         |
+| [S23](#s23) | Guided entry **implemented**; accessibility study pending          | S08, S19, S21, S22 | M      | E         |
+| [S24](#s24) | Inspectable query results across surfaces **implemented**           | S04, S09           | M      | F         |
+| [S25](#s25) | Editable and saved queries **implemented**                          | S19, S21, S24      | M      | F         |
+| [S26](#s26) | Validated GeoJSON and CSV import **implemented**                    | S02, S10, S19      | L      | G         |
+| [S27](#s27) | KML and GPX import adapters **implemented**                         | S26                | M      | G         |
+| [S28](#s28) | Source-adapter starter kit **implemented**                          | S04, S09, S26      | M      | G         |
+| [S29](#s29) | Diagnostics and settings backup **implemented**                    | S08, S19, S24      | M      | H         |
+| [S30](#s30) | Versioned releases and update recovery **implemented**             | S01, S19, S29      | L      | H         |
+| [S31](#s31) | Candidate matrix **implemented**; rollout evidence pending         | A–G, S29, S30      | M      | H         |
 
 The first wave has working code and repeatable local checks for its core path.
 The first hosted `workflow_dispatch` run passed at commit
@@ -186,16 +192,16 @@ or release packaging.
 
 ### Milestone exit criteria
 
-| Milestone | Demonstration required before enabling it by default |
-| --- | --- |
-| A — Understand the evidence | Select an aircraft, inspect source/time/position method, observe a feed outage, and receive an answer with the same limitations. Repeat for every supported evidence adapter. |
-| B — Predictable interaction | Run the same recorded workload on the declared hardware matrix; show bounded loading, stable selection, adaptive quality and recovery with measured results. |
-| C — Revisit a regional session | Record a permitted region, pause/scrub/replay aircraft and vessels, align available weather/events, export/import it and see explicit coverage gaps. |
-| D — Continue an investigation | Save, reload, restore assets, compare two times and export a source-linked report without changing the saved evidence. |
-| E — Find and control the feature | A new user completes the first task within the proposed 90-second target; keyboard-only use, narrow layouts and reduced motion work. |
-| F — Inspect the answer | Edit scope/filter/time, run a query, inspect records and omissions, save it and rerun against a chosen live or recorded source. |
-| G — Bring your own data | Preview and import each supported format, handle invalid rows, retain attribution and use the resulting layer in a workspace. |
-| H — Ship and recover | Install a tagged candidate, reopen a migrated workspace, simulate an interrupted update and recover the previous supported state. |
+| Milestone                        | Demonstration required before enabling it by default                                                                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A — Understand the evidence      | Select an aircraft, inspect source/time/position method, observe a feed outage, and receive an answer with the same limitations. Repeat for every supported evidence adapter. |
+| B — Predictable interaction      | Run the same recorded workload on the declared hardware matrix; show bounded loading, stable selection, adaptive quality and recovery with measured results.                  |
+| C — Revisit a regional session   | Record a permitted region, pause/scrub/replay aircraft and vessels, align available weather/events, export/import it and see explicit coverage gaps.                          |
+| D — Continue an investigation    | Save, reload, restore assets, compare two times and export a source-linked report without changing the saved evidence.                                                        |
+| E — Find and control the feature | A new user completes the first task within the proposed 90-second target; keyboard-only use, narrow layouts and reduced motion work.                                          |
+| F — Inspect the answer           | Edit scope/filter/time, run a query, inspect records and omissions, save it and rerun against a chosen live or recorded source.                                               |
+| G — Bring your own data          | Preview and import each supported format, handle invalid rows, retain attribution and use the resulting layer in a workspace.                                                 |
+| H — Ship and recover             | Install a tagged candidate, reopen a migrated workspace, simulate an interrupted update and recover the previous supported state.                                             |
 
 ## 4. Cross-cutting design decisions
 
@@ -205,17 +211,17 @@ Introduce a versioned, plain-data evidence envelope. Keep existing layer records
 and IDs; reference the envelope rather than copying large metadata into every
 rendered primitive. Proposed fields are:
 
-| Field | Meaning |
-| --- | --- |
-| `version`, `observationId`, `entityRef` | Envelope version; stable observation identity; existing `{layerKey, id}` entity identity. |
-| `sourceId`, `sourceRecordId`, `sourceUrl` | Registered provider, provider identity if supplied and a safe source link. |
-| `observedAt`, `receivedAt` | Provider observation time, nullable when absent; local ingestion time. Never substitute one for the other. |
+| Field                                       | Meaning                                                                                                                                                   |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`, `observationId`, `entityRef`     | Envelope version; stable observation identity; existing `{layerKey, id}` entity identity.                                                                 |
+| `sourceId`, `sourceRecordId`, `sourceUrl`   | Registered provider, provider identity if supplied and a safe source link.                                                                                |
+| `observedAt`, `receivedAt`                  | Provider observation time, nullable when absent; local ingestion time. Never substitute one for the other.                                                |
 | `snapshotAt`, `displayTime`, `elementEpoch` | Local feed snapshot time; time represented by the displayed sample; orbital element epoch when applicable. Keep all three distinct from observation time. |
-| `validFrom`, `validTo`, `issuedAt` | Optional validity interval and forecast/advisory issue time. |
-| `method` | `observed`, `interpolated`, `predicted`, `simulated`, `reconstructed` or `unknown`, plus derivation references where relevant. |
-| `coverage` | Area, applicable interval, completeness, truncation and missing-source reasons. |
-| `uncertainty` | Provider accuracy/uncertainty with units, or an explicit unknown. Do not manufacture a numeric confidence score. |
-| `licenseRef`, `retentionPolicyId` | Source-policy references used for local retention, display and export decisions. |
+| `validFrom`, `validTo`, `issuedAt`          | Optional validity interval and forecast/advisory issue time.                                                                                              |
+| `method`                                    | `observed`, `interpolated`, `predicted`, `simulated`, `reconstructed` or `unknown`, plus derivation references where relevant.                            |
+| `coverage`                                  | Area, applicable interval, completeness, truncation and missing-source reasons.                                                                           |
+| `uncertainty`                               | Provider accuracy/uncertainty with units, or an explicit unknown. Do not manufacture a numeric confidence score.                                          |
+| `licenseRef`, `retentionPolicyId`           | Source-policy references used for local retention, display and export decisions.                                                                          |
 
 Dynamic render samples can reference several observations and their interpolation
 method. Keep `displayTime` separate from observation time. Feed state remains
@@ -553,9 +559,20 @@ action where automatic recovery is unsupported. Avoid inventing progress percent
 retains accurately labeled prior data; disable stops owned work; navigating again
 cancels old installs; GPU recovery preserves a recoverable view description.
 
-**Validate:** fixture-driven timeout/429/decode/context-loss cases, existing failure,
-weather teardown and application lifecycle gates. **Rollback:** retain old loading
+**Validate:** fixture-driven timeout/429/decode/context-loss cases, the constrained
+framebuffer regression in `npm run qa:render-resolution`, existing failure, weather
+teardown and application lifecycle gates. **Rollback:** retain old loading
 UI while reverting scheduling changes per provider rather than globally.
+
+**Implementation checkpoint:** WebGL context loss now offers an accessible
+reload action. It serializes the current share-link view at click time, preserving
+camera, layer, panel and style state; before initial share restoration completes,
+it keeps the incoming URL intact. No global retry loop was added: existing AIS
+watchdog and map-provider policies already honor `Retry-After`, while weather
+frame failures keep the previously displayed frame and expose the error. The
+Recovery state and teardown have focused tests. Real-GPU context-loss behavior
+and the broader supported-hardware matrix remain release evidence, not missing
+code.
 
 <a id="s09"></a>
 
@@ -583,6 +600,20 @@ unsupported layers never masquerade as historical. Destroy removes all listeners
 **Validate:** fake-clock transition and cancellation tests, weather-clock and
 Director-clock regressions. **Rollback:** live remains the default; new adapters
 can be detached without changing the existing clocks.
+
+**Implementation checkpoint:** a separate live/paused/replay clock now exposes a
+monotonic generation for stale-seek rejection and a playback rate, while wall
+deadlines, Cesium, weather and Director clocks remain independent. Analyst age
+calculations read the selected investigation time. A capability registry reports
+live-only support, static vintage, provider/recording coverage, no-coverage and
+unsupported states without substituting the latest live sample for history. Its
+resolver cancels superseded batches, and a timeline arbiter requires an explicit
+handoff. The service is application-lifetime-owned and destroyed with the catalog.
+The application timeline, Director scenes and launch replay all claim the same
+arbiter. An accepted handoff stops the previous owner before playback begins;
+refusal leaves the current owner in control. Observed weather follows
+investigation time at weather-frame boundaries. Unit race tests and the Chrome
+timeline journey cover the integrated path.
 
 <a id="s10"></a>
 
@@ -613,6 +644,18 @@ tests for reload, two-tab contention, interrupted migration and simulated quota
 failure. **Rollback:** use a versioned store; older builds reject unsupported
 writes and offer recovery, rather than opening new data destructively.
 
+**Implementation checkpoint:** the `./storage` package owns IndexedDB manifests,
+immutable revisions, normalized chunks and asset bytes. Each write requires the
+revision the editor last read; content checksums and the new manifest publish in
+one transaction. Quota preflight and transaction failure leave the previous
+revision readable. Pinning blocks deletion, cleanup removes unreferenced content,
+and migrations return the old workspace as a pre-migration export alongside the
+new revision. Unsupported/private IndexedDB falls back to clearly labeled
+unsaved memory. Browser QA passed reload, two-tab conflict, aborted-write cleanup,
+migration, quota preservation, pinning and checksum corruption cases. S19 now
+adds the workspace library, debounced authored-state saves, recovery and explicit
+reopen; the application owns and closes this store for its lifetime.
+
 <a id="s11"></a>
 
 ### S11 — Record a bounded aircraft region
@@ -639,6 +682,17 @@ explicit interrupted interval; the first time/byte/quota limit ends capture clea
 **Validate:** deterministic 60-minute logical-clock fixture including antimeridian,
 duplicates, corrections and capacity limits; real browser reload of the completed
 manifest. **Rollback:** stop new sessions and keep existing recordings exportable.
+
+**Implementation checkpoint:** the bounded aircraft recorder validates a local
+region, captures normalized observations only, preserves same-time corrections,
+marks outages and page-lifecycle interruption, and enforces duration, byte and
+storage limits. Accepted flight snapshots now reach the recorder with provider
+position times, and source changes stop the active session. The timeline exposes
+camera-centered region inputs (0.01–250 km), source-specific start/stop controls,
+active fix/gap counts and an explicit denial message. Synthetic-fixture unit tests
+and Chrome coverage pass, including confirmation that current live providers are
+not retained or exported. The remaining gate is written retention/export approval
+for any live source; no real-provider archive is enabled.
 
 <a id="s12"></a>
 
@@ -667,6 +721,14 @@ handling. Playback rate changes do not change timestamps or query membership.
 out-of-order recordings, seek latency under S06 workload. **Rollback:** detach replay
 and return to live using existing source replacement; retain recording files.
 
+**Implementation checkpoint:** replay selects the latest real observation at or
+before the requested time, enforces coverage and gaps, caps loaded history, and
+never falls through to live data. The application source router rejects late live
+responses after a mode change and exposes dynamic temporal capabilities. Unit tests
+cover actual sample selection and stale callbacks; the browser timeline journey
+checks replay selection and return-live. Named-hardware seek-latency measurements
+remain part of the S06 release evidence.
+
 <a id="s13"></a>
 
 ### S13 — Expose the investigation timeline
@@ -688,10 +750,22 @@ without conflicting with typing, voice push-to-talk or camera shortcuts.
 replay has a persistent visible mode label; returning live reacquires current
 data before labeling it live; accessibility announcements avoid per-frame spam.
 Director playback/time conflicts have an explicit transition, not hidden coupling.
+The timeline's capture controls scroll independently and do not crowd out Data
+layer toggles.
 
 **Validate:** keyboard/mouse/touch-sized controls, rapid seek/cancel, empty and
 single-sample recordings, reduced motion and teardown; S12 tracking regression.
 **Rollback:** hide the timeline entry and leave historical files intact.
+
+**Implementation checkpoint:** the Data Layers panel now has aircraft and vessel
+recording selectors, a shared UTC scrubber, step/play/reverse speed controls,
+requested-versus-actual sample times, outage intervals, export/delete and Return
+live. Selecting both movement recordings seeks them to the same investigation
+instant. Controller race tests and a real Chrome journey pass. Director and launch
+now participate in explicit timeline handoff. The capture controls have a bounded
+scroll area so Data layer toggles remain independently reachable. Live source capture remains disabled
+by policy where retention/export permission is absent; manual keyboard, touch and
+screen-reader review remains part of S23 acceptance.
 
 <a id="s14"></a>
 
@@ -716,6 +790,17 @@ and vessel queries use the same investigation instant; source age remains visibl
 **Validate:** sparse/coastal/no-coverage fixtures, vessel card and datum gates,
 mixed-source seek and teardown. **Rollback:** mark vessel recording unsupported
 while preserving aircraft replay and export of previously permitted data.
+
+**Implementation checkpoint:** a bounded synthetic AIS recorder and replay adapter
+preserve sea-surface positions, correction links, receipt-timed metadata revisions,
+outages and sparse-track boundaries. The vessel source router has no live fallback
+in replay, and the timeline can align vessel and aircraft histories. Unit and Chrome
+mixed-source checks pass. Accepted AIS snapshots reach the recorder with their own
+position times; a pending initial write is not exposed as active, avoiding a
+revision race with the first feed update. The timeline shows bounded region controls,
+per-source counts/gaps and policy denials. `DATA_SOURCES.md` records AISStream as
+free beta with no formal terms; production AIS retention/export stays disabled
+until written permission is established. Live AIS retention remains off.
 
 <a id="s15"></a>
 
@@ -744,6 +829,19 @@ ages use investigation time. Image retention follows each provider policy.
 gates, late advisory revisions and future-observation exclusion. **Rollback:**
 detach each history adapter; preserve standalone weather history behavior.
 
+**Implementation checkpoint:** the existing weather clock now follows the
+investigation clock only when the at-or-before frame changes, preserving its
+product-specific maximum gaps. The capability registry reports per-product
+provider-history coverage and no-sample results; unit tests cover gap behavior,
+latest restoration and avoiding per-tick image requests. USGS earthquake and
+NASA FIRMS fire history use bounded provider requests and never fall back to
+current observations when historical data is unavailable. Live cyclone advisories
+are hidden while investigating the past; wind remains labeled as a forecast and
+satellite positions retain their orbital-element epoch provenance. Unit tests cover
+the historical-window, latest-restoration and coverage-gap contracts; a broader
+provider-backed acceptance run remains external because it depends on source
+availability and retention rules.
+
 <a id="s16"></a>
 
 ### S16 — Share temporal intent and export recordings
@@ -770,6 +868,14 @@ blobs, secrets or absolute paths. Same bundle/time reproduces the same evidence.
 **Validate:** old/new URL round trips, legacy scene import, corrupt/truncated bundle,
 missing source, second-browser import and restoration cancellation. **Rollback:**
 stop emitting new temporal links while retaining their decoder/export recovery.
+
+**Implementation checkpoint:** canonical views and share links now preserve a
+validated historical target and source mode, including a local recording ID;
+opening a recording link selects the referenced local source, while a missing
+recording is reported with an import route. The timeline exports recordings as a
+versioned, hashed, demand-streamed bundle and imports only after validating every
+chunk and the manifest. Unit coverage and the Chrome timeline journey pass. A
+second-browser transfer remains an explicit acceptance check for portability.
 
 <a id="s17"></a>
 
@@ -800,6 +906,15 @@ keys, unknown future version and user interruption; application teardown regress
 **Rollback:** keep legacy startup available and export new workspace documents;
 never downgrade new documents in place.
 
+**Implementation checkpoint:** a versioned JSON-only workspace document now
+captures the canonical saved view, temporal source, filters, pinned evidence,
+annotations and integrity-addressed asset references. The restore coordinator
+checks availability and stages before mutation, cancels superseded restores, and
+rolls back a failed apply when it still owns the restore lane. Migration, future
+version, missing-reference, user-navigation and rollback cases have unit tests.
+S19 now supplies the library UI, and the workspace browser journey verifies
+reload, explicit reopen, imported-layer rendering and revision-conflict recovery.
+
 <a id="s18"></a>
 
 ### S18 — Persist Director and imported asset bytes
@@ -826,6 +941,18 @@ is explicit; browser eviction never appears as a successful complete restore.
 Director sharing/packs gates; owned object-URL/resource counts after teardown.
 **Rollback:** retain blobs and export them via the current bundle format where
 compatible; revert only automatic persistence wiring.
+
+**Implementation checkpoint:** imported Director bundles now persist with the
+validated scene project in revisioned browser storage. Each unique asset is keyed
+by SHA-256, pack references are checked against the stored bytes before restore,
+and missing or modified bytes fail explicitly. The Director waits for restoration
+before application startup completes, migrates legacy localStorage projects, and
+continues to own object URLs and rendered resources only for the current session.
+Unit tests cover reload, integrity failure, missing assets, shared references and
+removing unreferenced bytes from the next revision. `qa:director-sharing` passed
+real IndexedDB import/save/reload, shared-asset deletion, no-network replay and
+teardown checks. The Director pack QA passed its import/render/attribution gates;
+its later photoreal-tiles readiness wait timed out in this keyless run.
 
 <a id="s19"></a>
 
@@ -1184,6 +1311,14 @@ one prior supported version migration, hardware matrix and milestone demonstrati
 **Rollback:** revert default exposure or return to the prior supported release;
 preserve data recovery readers and the backups created before migration.
 
+**Implementation checkpoint:** the local candidate matrix at
+[`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json)
+passes formatting, package boundaries, 6,324 unit tests (10 skipped), the production build and
+the workspace, timeline/recording, evidence-panel, panel-resize and constrained-WebGL journeys.
+It reports zero local failures and remains `pending-evidence` for cross-platform
+install/upgrade, the 60-minute soak, named-hardware captures, manual accessibility
+and participant review, and signed-release matching.
+
 ## 6. Validation, review and definition of done
 
 ### Common implementation gates
@@ -1219,16 +1354,16 @@ CI should use the PR base as described in S01, not this local remote name.
 
 Existing browser-gate families worth reusing:
 
-| Changed behavior | Existing starting points |
-| --- | --- |
-| Startup, failure, teardown | `qa-firstrun.mjs`, `qa-failstate-b10.mjs`, `qa-application.mjs`, `qa-ui-disposal.mjs` |
-| Tracking and camera | `npm run test:track`, `qa-camera-controls.mjs`, `qa-cockpit-utility.mjs`, `qa-focus-evidence.mjs` |
-| Panels and commands | `qa-panel-resize.mjs`, `qa-location-controls.mjs`, `qa-scene-controls.mjs` |
-| Weather | `qa-weather-journey.mjs`, `qa-weather-swap.mjs`, `qa-weather-teardown.mjs`, `qa-weather-perf.mjs` |
-| Director/authoring | `qa-director-sharing.mjs`, `qa-director-packs.mjs`, `qa-director-interactions.mjs`, `qa-director-timing.mjs` |
-| Rendering | `qa-perf.mjs`, `qa-labels.mjs`, `qa-overlay-baseline.mjs`, relevant layer gates |
-| Voice session changes | `qa-voice-wav.mjs` in normal and `--push-to-talk` modes, using configured test credentials |
-| Attribution and sources | `qa-attribution-b12.mjs`, `qa-cctv-v2.mjs`, `qa-vessel-cards.mjs`, `qa-firms.mjs` |
+| Changed behavior           | Existing starting points                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Startup, failure, teardown | `qa-firstrun.mjs`, `qa-failstate-b10.mjs`, `qa-application.mjs`, `qa-ui-disposal.mjs`                        |
+| Tracking and camera        | `npm run test:track`, `qa-camera-controls.mjs`, `qa-cockpit-utility.mjs`, `qa-focus-evidence.mjs`            |
+| Panels and commands        | `qa-panel-resize.mjs`, `qa-location-controls.mjs`, `qa-scene-controls.mjs`                                   |
+| Weather                    | `qa-weather-journey.mjs`, `qa-weather-swap.mjs`, `qa-weather-teardown.mjs`, `qa-weather-perf.mjs`            |
+| Director/authoring         | `qa-director-sharing.mjs`, `qa-director-packs.mjs`, `qa-director-interactions.mjs`, `qa-director-timing.mjs` |
+| Rendering                  | `qa-perf.mjs`, `qa-labels.mjs`, `qa-overlay-baseline.mjs`, relevant layer gates                              |
+| Voice session changes      | `qa-voice-wav.mjs` in normal and `--push-to-talk` modes, using configured test credentials                   |
+| Attribution and sources    | `qa-attribution-b12.mjs`, `qa-cctv-v2.mjs`, `qa-vessel-cards.mjs`, `qa-firms.mjs`                            |
 
 New fixture journeys should reuse these entry points or their shared support
 modules. Introduce a new harness only for behavior they cannot express. Keep
@@ -1264,45 +1399,46 @@ These are implementation work items, not questions blocking the planning commit.
 The listed defaults make the next slice concrete; change them only with recorded
 evidence and update the dependent slices.
 
-| Risk or decision | Default / mitigation | Resolve in |
-| --- | --- | --- |
-| Retention rights differ by source | Unknown permission means recording/export off; synthetic fixtures unblock development. Record separate display/retain/export permissions. | S02, S11, S14, S15 |
-| Several clocks compete for scene/camera state | Investigation time is injected and independent; Director/launch time is explicit; generation tokens reject stale work. | S09, S12, S13 |
-| Browser storage eviction, quota and interrupted saves | IndexedDB with bounded chunks, committed manifests, revisions and explicit file backup. Never call browser persistence a backup. | S10, S18, S19 |
-| Replays imply complete history | Coverage intervals and source gaps travel with data; no interpolation through gaps; no silent live fallback. | S11–S16 |
-| Recording duplicates or contradicts observations | Provider/entity observation IDs, correction handling and immutable provenance; keep receipt and event time separate. | S02, S11, S14 |
-| Automatic quality changes alter meaning | Presentation-only controls; selected evidence and underlying analytical records are protected. | S07 |
-| Multiple viewers double state/GPU use | Start A/B comparison with one globe and immutable snapshots; defer a second viewer until lifecycle ownership supports it. | S20 |
-| Imported files consume excessive resources or fetch remote content | Explicit parser limits, staged preview, cancellation, inert text and no remote import resources. | S26, S27 |
-| Update rollback cannot read migrated browser data | Export before destructive migration; retain old schema reader/backup and refuse incompatible writes. | S10, S30 |
-| AI turns change scope or overstate certainty | Deterministic result envelope, editable query, visible completeness and cancellation ownership. | S24, S25 |
-| Upstream continues to evolve while `dev` diverges | Refresh ownership/CI inventory before each wave; merge upstream separately from feature work and rerun affected compatibility checks. | S00, each milestone |
-| Public performance figures are mistaken for universal guarantees | Record supported hardware and exact workloads; publish limits and unmeasured platforms. | S06, S31 |
+| Risk or decision                                                   | Default / mitigation                                                                                                                      | Resolve in          |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Retention rights differ by source                                  | Unknown permission means recording/export off; synthetic fixtures unblock development. Record separate display/retain/export permissions. | S02, S11, S14, S15  |
+| Several clocks compete for scene/camera state                      | Investigation time is injected and independent; Director/launch time is explicit; generation tokens reject stale work.                    | S09, S12, S13       |
+| Browser storage eviction, quota and interrupted saves              | IndexedDB with bounded chunks, committed manifests, revisions and explicit file backup. Never call browser persistence a backup.          | S10, S18, S19       |
+| Replays imply complete history                                     | Coverage intervals and source gaps travel with data; no interpolation through gaps; no silent live fallback.                              | S11–S17             |
+| Recording duplicates or contradicts observations                   | Provider/entity observation IDs, correction handling and immutable provenance; keep receipt and event time separate.                      | S02, S11, S14       |
+| Automatic quality changes alter meaning                            | Presentation-only controls; selected evidence and underlying analytical records are protected.                                            | S07                 |
+| Multiple viewers double state/GPU use                              | Start A/B comparison with one globe and immutable snapshots; defer a second viewer until lifecycle ownership supports it.                 | S20                 |
+| Imported files consume excessive resources or fetch remote content | Explicit parser limits, staged preview, cancellation, inert text and no remote import resources.                                          | S26, S27            |
+| Update rollback cannot read migrated browser data                  | Export before destructive migration; retain old schema reader/backup and refuse incompatible writes.                                      | S10, S30            |
+| AI turns change scope or overstate certainty                       | Deterministic result envelope, editable query, visible completeness and cancellation ownership.                                           | S24, S25            |
+| Upstream continues to evolve while `dev` diverges                  | Refresh ownership/CI inventory before each wave; merge upstream separately from feature work and rerun affected compatibility checks.     | S00, each milestone |
+| Public performance figures are mistaken for universal guarantees   | Record supported hardware and exact workloads; publish limits and unmeasured platforms.                                                   | S06, S31            |
 
-## 8. First implementation handoff
+## 8. Current implementation handoff
 
-S00, S02, S03 and S05 are implemented on `dev`; this wave adds working foundations
-for S01, S04, S06 and S07. Continue in dependency order without treating missing
-hardware captures as a release result:
+Implementation code for S00–S31 is present on `dev`. The local candidate report
+is [`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json).
+It records 9 passed local checks, zero failures, and 5 pending external checks;
+the report's commit is the base `HEAD` (`b760599`) because this implementation
+remains uncommitted in the worktree. Local browser/software-renderer results do
+not replace the external acceptance evidence below:
 
-1. Verify token-base behavior through representative pull requests targeting
-   `dev` and `main` for S01; the first hosted `dev` run passed at
-   [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
-2. Extend S04 evidence adapters and fixtures: attach forecast evidence to query
-   results and selected raster/model cells, add camera frame acquisition and
-   coverage metadata, and cover traffic, fire, earthquake and imported/static
-   families. Camera live-to-still fallback labeling, wind issue/valid labels and
-   no-coverage classification now have focused guards.
-3. Extend S06 capture coverage across the supported hardware matrix and add the
-   startup and mixed-layer workloads; one Windows UHD 620 fixture run and its
-   injected-delay control are recorded in `docs/PERFORMANCE.md`.
-4. Broaden the matched Manual/Auto hardware comparison before considering Auto as
-   a default for S07. It remains opt-in and only changes presentation density.
+- Verify token-base behavior through representative pull requests targeting
+  `dev` and `main` for S01; the first hosted `dev` run passed at
+  [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
+- Finish repeated hardware captures for S06 and a matched Manual/Auto comparison
+  for S07. Auto remains opt-in until the recorded workload supports enabling it.
+- Obtain written retention/export approval before enabling any live aircraft or
+  AIS recording. Synthetic fixtures validate the complete capture and replay path.
+- Complete S23 keyboard, screen-reader, contrast, zoom and five-participant first-
+  task review; complete the S31 cross-platform install/upgrade, mixed-use soak,
+  named-hardware and signed-release checks.
+- Keep unsupported evidence adapters explicit in
+  [`EVIDENCE-SUPPORT.md`](EVIDENCE-SUPPORT.md); imported files now use the shared
+  inspector while absent source time and geographic coverage remain unknown.
 
-The next user-facing milestone stays centered on evidence: select an aircraft,
-distinguish its observation from its rendered position, interrupt its feed, and
-inspect a query result with the same scope and provenance.
-
+The next release milestone is evidence and rollout review for the implemented
+features, with experimental or policy-gated behavior kept clearly labeled.
 ### Slice completion record
 
 Copy this into each implementation PR or its linked validation record:

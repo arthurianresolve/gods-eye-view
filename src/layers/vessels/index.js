@@ -11,7 +11,13 @@ import { createTesting } from './testing.js';
 import { createEvidence } from './evidence.js';
 import { createQueries } from './queries.js';
 /** Compose one vessel layer with application-owned scene services. */
-export function createVesselLayer({ source, services, options = {} } = {}) {
+export function createVesselLayer({
+  source,
+  services,
+  options = {},
+  onAcceptedSnapshot,
+  onSourceUnavailable,
+} = {}) {
   const vesselState = createVesselState({ source, services });
   const parts = {};
   const layer = {};
@@ -50,6 +56,8 @@ export function createVesselLayer({ source, services, options = {} } = {}) {
     setSourceLabel: (source) => {
       layer.source = source;
     },
+    onAcceptedSnapshot,
+    onSourceUnavailable,
   });
   Object.assign(
     layer,

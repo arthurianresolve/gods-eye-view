@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { composeCatalog, coreTools } from '../index.js';
-import { parseTleText, tleCatalogNumber } from '../../sources/tle.js';
+import {
+  decodeTleCatalogNumber,
+  parseTleText,
+  tleCatalogNumber,
+} from '../../sources/tle.js';
 
 // Element sets published for 1 January 2024.
 const TLE = `ISS (ZARYA)
@@ -28,6 +32,46 @@ test('TLE text parses into named entries with catalog numbers', () => {
   );
   assert.equal(tleCatalogNumber(entries[0].line1), 25544);
   assert.equal(tleCatalogNumber('1 xx'), null);
+});
+
+test('a truncated TLE record does not desynchronize later catalog entries', () => {
+  const records = [
+    [
+      'SAT 0',
+      '1 10000U SAMPLE 24001.50000000  .00000000  00000-0  00000-0 0  0001',
+      '2 10000  10.0000  20.0000 0001000  30.0000  40.0000  1.00000000 00001',
+    ],
+    [
+      'SAT 1',
+      '1 10001U SAMPLE 24001.50000000  .00000000  00000-0  00000-0 0  0001',
+      '2 10001  10.0000  20.0000 0001000  30.0000  40.0000  1.00000000 00001',
+    ],
+    [
+      'SAT 2',
+      '1 10002U SAMPLE 24001.50000000  .00000000  00000-0  00000-0 0  0001',
+      '2 10002  10.0000  20.0000 0001000  30.0000  40.0000  1.00000000 00001',
+    ],
+  ];
+  const input = records
+    .flatMap(([name, line1, line2], index) =>
+      index === 1 ? [name, line1] : [name, line1, line2],
+    )
+    .join('\r\n');
+  assert.deepEqual(
+    parseTleText(input).map(({ name }) => name),
+    ['SAT 0', 'SAT 2'],
+  );
+});
+
+test('TLE catalog numbers decode decimal and Alpha-5 identifiers', () => {
+  assert.equal(tleCatalogNumber('1 25544U 98067A  ...'), 25544);
+  assert.equal(decodeTleCatalogNumber('A0000'), 100000);
+  assert.equal(decodeTleCatalogNumber('H9999'), 179999);
+  assert.equal(decodeTleCatalogNumber('J0000'), 180000);
+  assert.equal(decodeTleCatalogNumber('Z9999'), 339999);
+  assert.equal(decodeTleCatalogNumber('I0000'), null);
+  assert.equal(decodeTleCatalogNumber('O0000'), null);
+  assert.equal(decodeTleCatalogNumber('A00X0'), null);
 });
 
 test('the next pass defaults to the ISS and reports times, peak and direction', async () => {

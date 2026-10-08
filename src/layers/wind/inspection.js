@@ -79,6 +79,8 @@ export function inspectWindAtCenter(
     : null;
   return {
     position: point,
+    latitude: lat,
+    longitude: lon,
     speed,
     from,
     units,

@@ -4,6 +4,8 @@
  */
 
 import { suggestView } from '../views.js';
+import { createRegionalWeatherEvidence } from '../../evidence/regionalWeather.js';
+import { createCycloneEvidence } from '../../layers/cyclones/evidence.js';
 import { defineTool, ToolError } from '../catalog.js';
 import {
   AREA_SCHEMA,
@@ -63,7 +65,10 @@ const WEATHER_CODES = {
 function weatherRow(weather) {
   if (!weather) return null;
   return {
+    // Keep the legacy field for existing tool consumers; Open-Meteo's current
+    // value is a grid valid time, not a direct station observation.
     observed_at: weather.observedAt ?? null,
+    valid_at: weather.observedAt ?? null,
     conditions: WEATHER_CODES[weather.weatherCode] ?? null,
     weather_code: weather.weatherCode ?? null,
     temperature_c: weather.temperatureC ?? null,
@@ -107,6 +112,14 @@ export const getWeather = defineTool({
     const row = weatherRow(payload?.weather);
     // The proxy answers from its cache, marked stale, when a refresh fails.
     const stale = payload?.status === 'stale';
+    const weatherEvidence = row
+      ? createRegionalWeatherEvidence(payload.weather, {
+          latitude: point.lat,
+          longitude: point.lon,
+          receivedAt: Date.now(),
+          feedState: stale ? 'stale' : 'nominal',
+        })
+      : null;
     return {
       summary:
         `Weather at ${point.label}: ${describeWeather(row)}` +
@@ -114,6 +127,7 @@ export const getWeather = defineTool({
       data: {
         location: point,
         weather: row,
+        weather_evidence: weatherEvidence,
         stale,
         retrieved_at: payload?.retrievedAt ?? null,
       },
@@ -147,6 +161,21 @@ export const getRegionalBrief = defineTool({
       published_at: article.publishedAt ?? null,
     }));
     const weather = weatherRow(brief?.weather);
+    const weatherEvidence = weather
+      ? createRegionalWeatherEvidence(brief.weather, {
+          latitude: point.lat,
+          longitude: point.lon,
+          receivedAt: Date.now(),
+          feedState:
+            brief.weatherStatus === 'ready'
+              ? 'nominal'
+              : ['stale', 'partial', 'unavailable'].includes(
+                    brief.weatherStatus,
+                  )
+                ? brief.weatherStatus
+                : 'unknown',
+        })
+      : null;
     const label = place?.label || point.label;
     return {
       summary: `${label}: ${describeWeather(weather)}; ${countNoun(articles.length, 'recent headline')}.`,
@@ -160,6 +189,7 @@ export const getRegionalBrief = defineTool({
           kind: place.kind ?? null,
         },
         weather,
+        weather_evidence: weatherEvidence,
         news_source: brief?.newsSource ?? null,
         articles,
       },
@@ -212,6 +242,11 @@ export const getCyclones = defineTool({
         advisory: storm.advisoryNumber,
         issued_at: storm.issuedAt,
         advisory_url: storm.advisoryUrl,
+        evidence: createCycloneEvidence(storm, {
+          receivedAt: Date.now(),
+          snapshotAt: snapshot.fetchedAt,
+          feedState: snapshot.stale ? 'stale' : 'nominal',
+        }),
       }))
       .sort((a, b) => (b.wind_kt ?? 0) - (a.wind_kt ?? 0));
     const where = area ? ` in ${area.label}` : '';

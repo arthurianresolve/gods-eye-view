@@ -31,6 +31,24 @@ import { createInfrastructureLayers } from '../data/infrastructure.js';
 import { localGeoJsonServices } from './localGeojsonServices.js';
 import { createBhoteKoshiEventLayer } from '../data/bhoteKoshiEvent.js';
 import { createBhoteKoshiLocatorLayer } from '../data/bhoteKoshiLocator.js';
+import {
+  createInvestigationClock,
+  createLayerCapabilityRegistry,
+  createTimelineArbiter,
+  createInvestigationWeatherAdapter,
+} from '../time/index.js';
+import { createWorkspaceStorage } from '../storage/index.js';
+import {
+  createAircraftRecordingService,
+  createAircraftSourceRouter,
+  createRecordedAircraftSource,
+  createRecordedVesselSource,
+  createVesselRecordingService,
+  createVesselSourceRouter,
+  captureAircraftSnapshot,
+  captureVesselSnapshot,
+  markRecordingSourceUnavailable,
+} from '../recording/index.js';
 
 const SOURCE_METHODS = Object.freeze({
   flights: ['getSnapshot'],
@@ -101,18 +119,62 @@ export function createApplicationCatalog({
   }
   const militaryRegistry = createMilitaryRegistry();
   const weatherClock = createWeatherClock();
+  const investigationTime = createInvestigationClock();
+  const timeCapabilities = createLayerCapabilityRegistry();
+  const timelineArbiter = createTimelineArbiter();
+  const investigationWeatherAdapter = createInvestigationWeatherAdapter({
+    weatherClock,
+    investigationTime,
+    capabilities: timeCapabilities,
+  });
+  const workspaceStorage = createWorkspaceStorage();
+  const aircraftRecording = createAircraftRecordingService({
+    storage: workspaceStorage,
+    investigationTime,
+  });
+  const aircraftSource = createAircraftSourceRouter({
+    live: sources.flights,
+    recorded: createRecordedAircraftSource({ storage: workspaceStorage }),
+  });
+  const vesselRecording = createVesselRecordingService({
+    storage: workspaceStorage,
+    now: () => investigationTime.wallNow(),
+  });
+  const vesselSource = createVesselSourceRouter({
+    live: sources.vessels,
+    recorded: createRecordedVesselSource({ storage: workspaceStorage }),
+  });
+  const recordingRecovery = aircraftRecording
+    .recoverInterrupted()
+    .catch(() => []);
+  const vesselRecordingRecovery = vesselRecording
+    .recoverInterrupted()
+    .catch(() => []);
   const dispose = () => {
     signal.removeEventListener('abort', dispose);
+    aircraftSource.destroy();
+    vesselSource.destroy();
+    aircraftRecording.destroy();
+    vesselRecording.destroy();
     militaryRegistry.dispose();
+    investigationWeatherAdapter.destroy();
     weatherClock.destroy();
+    investigationTime.destroy();
+    timeCapabilities.destroy();
+    timelineArbiter.destroy();
+    workspaceStorage.destroy();
   };
   signal.addEventListener('abort', dispose, { once: true });
   try {
     militaryRegistry.configureSource(sources.military, { signal });
     const flights = createApplicationFlights({
       surface,
-      source: sources.flights,
+      source: aircraftSource,
       militaryRegistry,
+      onAcceptedSnapshot: (snapshot) =>
+        captureAircraftSnapshot(aircraftRecording, snapshot),
+      onSourceUnavailable: (reason) =>
+        markRecordingSourceUnavailable(aircraftRecording, reason),
       resolveAsset,
     });
     const military = createApplicationMilitary({
@@ -122,8 +184,12 @@ export function createApplicationCatalog({
       resolveAsset,
     });
     const vessels = createApplicationVessels({
-      source: sources.vessels,
+      source: vesselSource,
       options: vesselOptions,
+      onAcceptedSnapshot: (snapshot) =>
+        captureVesselSnapshot(vesselRecording, snapshot),
+      onSourceUnavailable: (reason) =>
+        markRecordingSourceUnavailable(vesselRecording, reason),
     });
     const installations = createApplicationInstallations({
       surface,
@@ -156,7 +222,11 @@ export function createApplicationCatalog({
           sources: { mapillary: sources.mapillary },
         }),
         satellites,
-        createApplicationLaunches({ source: sources.launches, satellites }),
+        createApplicationLaunches({
+          source: sources.launches,
+          satellites,
+          timelineArbiter,
+        }),
         createApplicationTraffic({ source: sources.traffic, surface }),
         createApplicationCctv({ surface, source: sources.cctv }),
         createApplicationRadio({ surface, source: sources.radio }),
@@ -207,6 +277,17 @@ export function createApplicationCatalog({
       militaryRegistry,
       surface,
       weatherClock,
+      investigationTime,
+      timeCapabilities,
+      timelineArbiter,
+      investigationWeatherAdapter,
+      workspaceStorage,
+      aircraftSource,
+      aircraftRecording,
+      recordingRecovery,
+      vesselSource,
+      vesselRecording,
+      vesselRecordingRecovery,
     });
   } catch (error) {
     dispose();

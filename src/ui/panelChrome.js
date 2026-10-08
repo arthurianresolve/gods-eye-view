@@ -489,6 +489,15 @@ export class PanelChrome {
         syncShare,
       });
     }
+    // Opening Context also owns its compact Radio disclosure. Enforce that
+    // invariant before the no-op return, since Context may already be open.
+    if (
+      !nextCollapsed &&
+      panelId === 'global-context-panel' &&
+      this._contextRadioDock?.classList.contains('disclosure-open')
+    ) {
+      this._setRadioDisclosure?.(false);
+    }
     if (
       panelEl.classList.contains('collapsed') === nextCollapsed &&
       !wasAutoCollapsed
@@ -516,13 +525,6 @@ export class PanelChrome {
       if (this._cockpitContextCollapsedForDataPanel) {
         this.cockpitView.setContextCollapsed(true);
       }
-    }
-    if (
-      !nextCollapsed &&
-      panelId === 'global-context-panel' &&
-      this._contextRadioDock?.classList.contains('disclosure-open')
-    ) {
-      this._setRadioDisclosure?.(false);
     }
     if (
       !nextCollapsed &&

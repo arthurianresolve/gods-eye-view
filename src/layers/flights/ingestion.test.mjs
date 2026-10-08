@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createIngestion } from './ingestion.js';
 
-function setup(source) {
+function setup(source, callbacks = {}) {
   const feed = {
     _source: source,
     _activeUpdateControllers: new Set(),
@@ -23,6 +23,7 @@ function setup(source) {
     },
     setSourceLabel: (label) => labels.push(label),
     applyPendingTrackingRestore: () => restores.push(true),
+    ...callbacks,
   });
   return { feed, accepted, labels, restores, update: methods.update };
 }
@@ -82,4 +83,26 @@ test('civil acquisition publishes source time and uses a replaced source on the 
   assert.equal(probe.feed._lastError, 'Source snapshot time unavailable');
   assert.deepEqual(probe.labels, ['First', 'Second']);
   assert.equal(probe.restores.length, 2);
+});
+
+test('accepted civil snapshots reach the optional recording owner after rendering', async () => {
+  const order = [];
+  const snapshot = {
+    records: [],
+    source: 'approved-fixture',
+    observedAtMs: 1234,
+    freshness: 'current',
+  };
+  const probe = setup(
+    { getSnapshot: async () => snapshot },
+    {
+      onAcceptedSnapshot: async (value) => {
+        assert.equal(value, snapshot);
+        order.push('record');
+      },
+    },
+  );
+  await probe.update(null);
+  assert.deepEqual(order, ['record']);
+  assert.equal(probe.accepted[0], snapshot);
 });

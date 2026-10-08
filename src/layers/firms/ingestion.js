@@ -13,15 +13,23 @@ export function createIngestion({
 
   /** Replace a validated snapshot while preserving source freshness and selection identity. */
 
-  async function loadHeatmap() {
+  async function loadHeatmap(targetMs = layerState._investigationTargetMs) {
     if (!layerState._dataSource || !layerState._enabled) return;
+    const historical = Number.isFinite(targetMs);
+    if (historical && layerState._historyLoadedTargetMs === targetMs) return;
     layerState.request?.abort();
     const request = new AbortController();
     layerState.request = request;
     layerState._loading = true;
+    if (historical) layerState._historyStatus = 'loading';
+    else if (layerState._needsLiveRefresh) clearHistoricalSnapshot();
 
     try {
-      const payload = await feed.getSnapshot({ signal: request.signal });
+      if (historical && typeof feed.getSnapshotAt !== 'function')
+        throw new Error('FIRMS history is unsupported by this source');
+      const payload = historical
+        ? await feed.getSnapshotAt(targetMs, { signal: request.signal })
+        : await feed.getSnapshot({ signal: request.signal });
       if (
         request.signal.aborted ||
         layerState.request !== request ||
@@ -32,11 +40,24 @@ export function createIngestion({
         layerState._keyRequired = true;
         layerState._error = null;
         layerState._stale = false;
+        if (historical) {
+          layerState._historyStatus = 'unavailable';
+          layerState._historyLoadedTargetMs = targetMs;
+          clearHistoricalSnapshot();
+        }
         return;
       }
       layerState._keyRequired = false;
       layerState._error = null;
       layerState._stale = Boolean(payload?.stale);
+      layerState._receivedAt = Date.now();
+      layerState._missingSources = Array.isArray(payload?.sources)
+        ? payload.sources
+            .filter((source) => source?.ok === false)
+            .map((source) => source.source)
+            .filter((source) => typeof source === 'string')
+            .slice(0, 8)
+        : [];
       const previousSelection = layerState._selectedFire;
       layerState._selectedFire = null;
       layerState._fires = adaptFirmsRecords(payload?.fires);
@@ -49,6 +70,13 @@ export function createIngestion({
       layerState._lastUpdate = Number.isFinite(payload?.fetchedAt)
         ? payload.fetchedAt
         : Date.now();
+      layerState._historyLoadedTargetMs = historical ? targetMs : null;
+      layerState._historyStatus = historical ? 'available' : null;
+      layerState._historyEffectiveTime = historical
+        ? (payload?.window?.to ?? targetMs)
+        : null;
+      layerState._historyWindow = historical ? (payload?.window ?? null) : null;
+      if (!historical) layerState._needsLiveRefresh = false;
       // Settle the previous selection BEFORE the LOD rebuild. renderCurrentLod
       // runs refreshContextRegistrations(), which deletes every context record
       // not in the new top-N — including the one the store still points at.
@@ -71,14 +99,37 @@ export function createIngestion({
         !layerState._enabled
       )
         return;
-      console.warn(`[Data:${id}] FIRMS live load failed:`, error);
-      layerState._error = 'live feed unavailable';
+      console.warn(
+        `[Data:${id}] FIRMS ${historical ? 'history' : 'live'} load failed:`,
+        error,
+      );
+      layerState._error = historical
+        ? 'historical data unavailable'
+        : 'live feed unavailable';
+      if (historical) {
+        layerState._historyStatus = 'unavailable';
+        layerState._historyLoadedTargetMs = targetMs;
+        clearHistoricalSnapshot();
+      }
     } finally {
       if (layerState.request === request) {
         layerState.request = null;
         layerState._loading = false;
       }
     }
+  }
+
+  function clearHistoricalSnapshot() {
+    layerState._selectedFire = null;
+    layerState._fires = [];
+    layerState._firesByFrp = [];
+    layerState._cellCacheByGrid.clear();
+    layerState._count = 0;
+    layerState._missingSources = [];
+    layerState._historyWindow = null;
+    components.selection.clearFireSelection();
+    clearSelectedEntityContextForLayer(id);
+    components.rendering.renderCurrentLod(true);
   }
 
   /**
@@ -100,8 +151,13 @@ export function createIngestion({
     async update() {
       if (layerState._destroyed || !layerState._enabled || layerState._loading)
         return;
+      if (
+        Number.isFinite(layerState._investigationTargetMs) &&
+        layerState._historyLoadedTargetMs === layerState._investigationTargetMs
+      )
+        return;
       // Scheduled 10-minute poll (and the manager's immediate first update):
-      // refetch live fires through the proxy and re-render. Viewport-driven
+      // refresh the selected live or historical window. Viewport-driven
       // re-renders between polls are handled by the LOD watcher.
       await loadHeatmap();
     },

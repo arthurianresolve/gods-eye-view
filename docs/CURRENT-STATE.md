@@ -1,5 +1,15 @@
 # God's Eye View Current State
 
+## Candidate validation — October 8, 2026
+
+The final local candidate matrix passes formatting, package boundaries, 6,324
+unit tests (10 skipped), the production build and six browser journeys. Its
+report, [`candidate-report-20261008-final2.json`](../qa-artifacts/candidate-report-20261008-final2.json),
+has zero local failures and five external gates pending: cross-platform install/
+upgrade, a 60-minute mixed-use soak, named-hardware captures, manual accessibility
+and participant review, and signed-release matching. The report names base `HEAD`
+(`b760599`); implementation changes remain uncommitted in the `dev` worktree.
+
 ## Evidence and performance groundwork — October 8, 2026
 
 Branch `dev` now includes a versioned in-memory evidence envelope and deterministic
@@ -11,7 +21,8 @@ scope. Shared feed snapshots retain `PARTIAL`, coverage, completeness, freshness
 and distinct observation versus forecast issue/valid times. Explicit no-coverage
 is partial rather than an all-clear. A new performance capture command records
 renderer, viewport, workload, object counts and frame-time percentiles; Auto
-quality is opt-in and adjusts detection-label density only. Other source-family
+quality is opt-in, adjusts detection-label density only, pauses in hidden tabs,
+and restores the saved manual density when disabled. Other source-family
 evidence support is tracked in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
 
 The follow-up implementation extends provenance to live AIS vessel selections
@@ -20,6 +31,89 @@ receipt time and labels received AIS positions as partial coverage. Analyst
 aircraft or vessel rows with evidence expose an accessible Inspect action; the
 inspector pins that result snapshot while live selection changes, and closing it
 returns keyboard focus to the initiating control.
+
+S04 follow-up adapters now carry NASA FIRMS acquisition/snapshot/receipt times
+through selected-fire context and analyst records, and USGS event/snapshot/
+receipt times through analyst records. Open-Meteo current-condition query data
+is explicitly labeled gridded model output; its valid time is not exposed as a
+direct observation. Wind samples and `get_wind` results keep forecast issue,
+valid and local receipt times separate, and the evidence inspector displays
+forecast provenance from the sampled model cell. NHC/CPHC cyclone analyst and
+tool records carry source position/issue times and partial basin coverage.
+Weather-map query evidence, camera frame acquisition evidence, traffic records
+and imported/static record evidence remain unsupported; see
+[EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
+
+Upstream issue fixes also harden TLE parsing against truncated records, decode
+Alpha-5 NORAD IDs consistently, cap Cesium render resolution to active WebGL
+limits, and close a stale compact Radio disclosure when Context is reopened. The
+investigation timeline uses a bounded internal scroll area so its capture controls
+leave Data layer toggles independently reachable.
+The constrained-WebGL browser gate and issue-by-issue status are in
+[UPSTREAM-BUG-TRIAGE.md](UPSTREAM-BUG-TRIAGE.md). The camera-controls report
+remains untriaged until it includes a reproducible action sequence.
+
+S08 implementation is present. A lost WebGL context now presents an accessible
+reload action that builds a current share-state URL, preserving the view across
+recovery. Existing AIS watchdog tests verify paced 429 retries and weather tests
+verify that failed fetch/decode/timeout refreshes keep the last frame visible.
+Recovery-state and teardown tests pass; real-GPU context-loss and the wider
+hardware matrix remain release evidence.
+
+S09 implementation is present. A separate investigation-time service supports live, paused and
+rate-controlled replay states without mutating wall-clock deadlines, Cesium time,
+weather playback or Director choreography. Analyst result ages use the selected
+investigation instant. Layer capability results distinguish current-only data,
+unsupported history, selected samples and missing coverage; stale resolution
+batches are cancelled by generation. A shared timeline arbiter requires an
+explicit owner handoff. The S13 timeline, Director and launch replay all use the
+same handoff service; accepted transitions stop the previous owner first, and
+refused transitions leave it in control.
+
+S10's storage foundation is implemented. Workspace documents, immutable
+revisions, observation chunks and binary assets share an IndexedDB transaction;
+the writer must supply its last-read revision and readers verify SHA-256
+checksums. Quota and interrupted writes preserve the previous commit, pinned
+workspaces cannot be deleted, and migration returns the previous data for export.
+Unsupported storage is labeled as temporary in-memory state. Browser acceptance
+covers reload, two-tab revision contention, abort recovery, migration, quota
+preservation, pinning and corruption detection. S19 adds the workspace library,
+debounced authored-state saves and recovery. Chrome QA covers create, duplicate,
+explicit reopen after reload, imported GeoJSON rendering, stale-write conflict,
+and the clearly marked offline synthetic demo.
+
+## Local movement history and shared time — October 8, 2026
+
+The aircraft recorder stores bounded regional observations in IndexedDB with
+source-policy checks, correction links, outage intervals and explicit interruption
+recovery. Live aircraft sources remain unavailable for recording until retention
+and export permission is documented. Replay reads actual prior observations,
+rejects requests outside coverage, and never falls through to a live source.
+
+The timeline provides camera-centered region capture controls for aircraft and
+vessels, with editable coordinates, a 0.01–250 km radius, current enabled-source
+labels, per-recorder fix/gap counts and stop/save actions. Accepted normalized feed
+snapshots reach the recorders with provider position times; provider gaps and source
+changes remain explicit. Start is not published as active until its first durable
+revision commits, preventing ingestion from racing that initial write. The UI
+reports retention/export policy denials before any unapproved live data is saved.
+
+The Data Layers panel now offers separate local aircraft and vessel recording
+selectors over one UTC timeline. It shows coverage gaps and requested versus
+sample times, supports stepping, playback, export, deletion and return to live,
+and seeks selected aircraft and vessel sources to the same instant. Real Chrome QA
+covers aligned replay, source-policy denials, bounded capture start/stop and live
+return. Vessel history stores AIS position fixes and
+separate receipt-timed metadata revisions; trails stop at long silence and provider
+outage boundaries. AISStream remains recording-disabled because the source register
+has no formal retention/export terms.
+
+Observed weather now follows investigation time at product-frame boundaries. Its
+capabilities use each product's at-or-before frame and existing maximum-gap rules,
+without requesting an image every clock tick. Bounded USGS earthquake and NASA
+FIRMS history use no current-data fallback; Director and launch playback use the
+shared timeline handoff. Named-hardware seek-latency measurements and provider
+retention approval remain external acceptance work.
 
 ## God's Eye View in conversations — October 2, 2026
 
@@ -38,7 +132,7 @@ what to show. See [tools and the MCP server](TOOLS.md).
 Stdio processes from one install share the panel key in
 `.gev-cache/mcp-panel-key`, resolved from the checkout rather than the client's
 working directory. First creation is atomic; malformed-file repairs select one
-winner and concurrent processes re-read it. A busy repair waits at most two
+winner and concurrent processes re-read it. A busy repair waits at most five
 seconds before falling back. If the cache cannot be read/written or repair remains
 busy, stderr reports the fallback to a per-process key; cross-process panels can
 still fail in that mode. An abandoned `.repair-lock` is left intact: after
@@ -3020,28 +3114,28 @@ nearby place—always use station selection. Unqualified “turn on/start the ra
 requests use Play; a qualified Play-shaped tool call is normalized to Select so
 its criteria cannot be silently ignored.
 
-| Layer                  | Source                                                                                                                                                                                          | File                                                  | Proxy                                                    | Update Interval                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Live Flights ✈️        | OpenSky Network; bounded adsb.lol regional fallback                                                                                                                                             | `src/data/flights.js`                                 | `/api/flights` (OAuth + fallback)                        | 30s                                                                               |
-| Military Flights 🎖️    | adsb.lol /v2/mil                                                                                                                                                                                | `src/data/militaryFlights.js`                         | `/api/military`                                       | 15s                                                                               |
-| Live AIS Vessels 🚢    | AISStream websocket                                                                                                                                                                             | `src/data/aisLiveVessels.js`                          | `/api/vessels`                                          | 60s (+800ms visibility pass)                                                      |
-| Mapped Installations ⌖ | OpenFreeMap military areas; optional configured Overpass names and Google Places search | `src/data/militaryInstallations.js` | OpenFreeMap tiles, `/api/military-installations`, `/api/google/text-search` | viewport-driven; transient errors back off, missing capability switches to tiles |
-| Earthquakes            | USGS                                                                                                                                                                                            | `src/data/earthquakes.js`                             | —                                                        | 60s                                                                               |
-| Satellites             | CelesTrak                                                                                                                                                                                       | `src/data/satellites.js`                              | `/api/celestrak`                                         | 120s                                                                              |
-| Space Missions (30d)   | Launch Library 2 + CelesTrak                                                                                                                                                                    | `src/data/rocketLaunches.js`                          | `/api/launches` + `/api/celestrak/active`                | 5 min                                                                             |
-| Traffic | Selectable TomTom / OpenStreetMap / Hybrid roads; optional TomTom flow (BYOK) | `src/data/traffic.js` | browser-direct OpenFreeMap tiles; `/api/tomtom` for flow | viewport-driven; capped tile cache |
-| CCTV                   | Austin + Caltrans (CA) + TfL London + Ontario 511 + Fintraffic (FI) + DriveBC (BC) + TxDOT (TX) + Estonia (Tallinn, Tarktee) + Live Traffic NSW + Open Calgary Open Data + Statens vegvesen (NO, stills + live HLS) + Street View fallback | `src/data/cctv.js`                                    | `/api/cctv`                                              | 10s (active)                                                                      |
-| Radio                  | Radio Browser (public-domain station directory)                                                                                                                                                 | `src/data/radio.js`                                   | `/api/radio/stations`, `/api/radio/click/:uuid`          | 45 min directory refresh                                                          |
-| Transit 🚌             | Operator GTFS-Realtime VehiclePositions (7 keyless regions, `src/data/transitFeeds.js`)                                                                                                         | `src/layers/transit/` via `src/app/layers/transit.js` | `/api/transit`                                           | 15s (poll + delayed playback)                                                     |
-| Bikeshare 🚲           | GBFS (Lyft + BCycle)                                                                                                                                                                            | `src/data/bikeshare.js`                               | `/api/gbfs`                                              | 60s                                                                               |
-| Directions 🧭          | OSRM on FOSSGIS servers (OpenStreetMap)                                                                                                                                                         | `src/data/directions.js`                              | `/api/route` (`steps=1`)                                 | on placement / mode change                                                        |
-| Datacenters ▣          | OSM extract (bundled)                                                                                                                                                                           | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
-| Dams ▰                 | OpenInfraMap/OSM extract (bundled)                                                                                                                                                              | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
-| Submarine Cables ◠     | TeleGeography public map (bundled)                                                                                                                                                              | `src/data/telegeographySubmarineCables.js`            | —                                                        | static                                                                            |
-| FIRMS Active Fires ▲   | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h)                                                                                                                                        | `src/data/firmsHeatmap.js`                            | `/api/firms` (`FIRMS_MAP_KEY`)                           | 10 min (proxy TTL 30 min)                                                         |
-| Street Level 📷 | Street-level imagery; Mapillary is the first provider (vector tiles, Graph API, MapillaryJS) | `src/layers/streetLevel/` via `src/app/layers/streetLevel.js` | `/api/mapillary/status`, `/api/mapillary/tiles/coverage/{z}/{x}/{y}` (`MAPILLARY_CLIENT_TOKEN`) | camera-driven (320 ms debounce, ≤9 tiles, cached 24 h) |
-| Wind 🌬                 | NOAA GFS 10 m wind (keyless, 0.25°→1° grid; animated particles)                                                                                                                                 | `src/data/wind.js`                                    | `/api/wind`                                              | 1 h (forecast cycle)                                                              |
-| Fire Perimeters 🔥 | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap); InciWeb catalog + incident page origin and update time checks for verified incident-page links | `src/layers/perimeters/` via `src/app/layers/perimeters.js` | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*` | 5 min (server caches: catalog 1 h; publication 30 min) |
+| Layer                  | Source                                                                                                                                                                                                                                     | File                                                          | Proxy                                                                                           | Update Interval                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Live Flights ✈️        | OpenSky Network; bounded adsb.lol regional fallback                                                                                                                                                                                        | `src/data/flights.js`                                         | `/api/flights` (OAuth + fallback)                                                               | 30s                                                                              |
+| Military Flights 🎖️    | adsb.lol /v2/mil                                                                                                                                                                                                                           | `src/data/militaryFlights.js`                                 | `/api/military`                                                                                 | 15s                                                                              |
+| Live AIS Vessels 🚢    | AISStream websocket                                                                                                                                                                                                                        | `src/data/aisLiveVessels.js`                                  | `/api/vessels`                                                                                  | 60s (+800ms visibility pass)                                                     |
+| Mapped Installations ⌖ | OpenFreeMap military areas; optional configured Overpass names and Google Places search                                                                                                                                                    | `src/data/militaryInstallations.js`                           | OpenFreeMap tiles, `/api/military-installations`, `/api/google/text-search`                     | viewport-driven; transient errors back off, missing capability switches to tiles |
+| Earthquakes            | USGS                                                                                                                                                                                                                                       | `src/data/earthquakes.js`                                     | —                                                                                               | 60s                                                                              |
+| Satellites             | CelesTrak                                                                                                                                                                                                                                  | `src/data/satellites.js`                                      | `/api/celestrak`                                                                                | 120s                                                                             |
+| Space Missions (30d)   | Launch Library 2 + CelesTrak                                                                                                                                                                                                               | `src/data/rocketLaunches.js`                                  | `/api/launches` + `/api/celestrak/active`                                                       | 5 min                                                                            |
+| Traffic                | Selectable TomTom / OpenStreetMap / Hybrid roads; optional TomTom flow (BYOK)                                                                                                                                                              | `src/data/traffic.js`                                         | browser-direct OpenFreeMap tiles; `/api/tomtom` for flow                                        | viewport-driven; capped tile cache                                               |
+| CCTV                   | Austin + Caltrans (CA) + TfL London + Ontario 511 + Fintraffic (FI) + DriveBC (BC) + TxDOT (TX) + Estonia (Tallinn, Tarktee) + Live Traffic NSW + Open Calgary Open Data + Statens vegvesen (NO, stills + live HLS) + Street View fallback | `src/data/cctv.js`                                            | `/api/cctv`                                                                                     | 10s (active)                                                                     |
+| Radio                  | Radio Browser (public-domain station directory)                                                                                                                                                                                            | `src/data/radio.js`                                           | `/api/radio/stations`, `/api/radio/click/:uuid`                                                 | 45 min directory refresh                                                         |
+| Transit 🚌             | Operator GTFS-Realtime VehiclePositions (7 keyless regions, `src/data/transitFeeds.js`)                                                                                                                                                    | `src/layers/transit/` via `src/app/layers/transit.js`         | `/api/transit`                                                                                  | 15s (poll + delayed playback)                                                    |
+| Bikeshare 🚲           | GBFS (Lyft + BCycle)                                                                                                                                                                                                                       | `src/data/bikeshare.js`                                       | `/api/gbfs`                                                                                     | 60s                                                                              |
+| Directions 🧭          | OSRM on FOSSGIS servers (OpenStreetMap)                                                                                                                                                                                                    | `src/data/directions.js`                                      | `/api/route` (`steps=1`)                                                                        | on placement / mode change                                                       |
+| Datacenters ▣          | OSM extract (bundled)                                                                                                                                                                                                                      | `src/data/localLayers.js`                                     | —                                                                                               | static                                                                           |
+| Dams ▰                 | OpenInfraMap/OSM extract (bundled)                                                                                                                                                                                                         | `src/data/localLayers.js`                                     | —                                                                                               | static                                                                           |
+| Submarine Cables ◠     | TeleGeography public map (bundled)                                                                                                                                                                                                         | `src/data/telegeographySubmarineCables.js`                    | —                                                                                               | static                                                                           |
+| FIRMS Active Fires ▲   | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h)                                                                                                                                                                                   | `src/data/firmsHeatmap.js`                                    | `/api/firms` (`FIRMS_MAP_KEY`)                                                                  | 10 min (proxy TTL 30 min)                                                        |
+| Street Level 📷        | Street-level imagery; Mapillary is the first provider (vector tiles, Graph API, MapillaryJS)                                                                                                                                               | `src/layers/streetLevel/` via `src/app/layers/streetLevel.js` | `/api/mapillary/status`, `/api/mapillary/tiles/coverage/{z}/{x}/{y}` (`MAPILLARY_CLIENT_TOKEN`) | camera-driven (320 ms debounce, ≤9 tiles, cached 24 h)                           |
+| Wind 🌬                 | NOAA GFS 10 m wind (keyless, 0.25°→1° grid; animated particles)                                                                                                                                                                            | `src/data/wind.js`                                            | `/api/wind`                                                                                     | 1 h (forecast cycle)                                                             |
+| Fire Perimeters 🔥     | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap); InciWeb catalog + incident page origin and update time checks for verified incident-page links                                                        | `src/layers/perimeters/` via `src/app/layers/perimeters.js`   | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*`                                       | 5 min (server caches: catalog 1 h; publication 30 min)                           |
 
 Fire Perimeters uses capped, timed server reads with stale-on-error caching and a per-client limit. Unchanged snapshots retain geometry; link checks cancel on disable or selection change, and the row legend shows reported containment.
 

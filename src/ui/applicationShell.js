@@ -8,6 +8,7 @@ import { NavigationController } from './navigationController.js';
 import { ShareRestoration } from './shareRestoration.js';
 import { DisplayBindings } from './displayBindings.js';
 import { createStateChannel } from '../app/stateChannel.js';
+import { installWebGlRecovery } from '../app/webglRecovery.js';
 import { setSplitFlapText } from '../splitFlap.js';
 import { UiLifetime } from './uiLifetime.js';
 import { RecordingControls } from './recordingControls.js';
@@ -424,12 +425,19 @@ export class StyleManager extends ShellFacade {
 
     // Share Link Manager
     this.shareLinkManager = new ShareLinkManager(viewer, {
+      investigationTime: this.services.investigationTime,
+      workspaceStorage: this.services.workspaceStorage,
+      aircraftSource: this.services.aircraftSource,
+      vesselSource: this.services.vesselSource,
       onRestore: async (state) => {
         return this._visualSettings.restoreShareState(state);
       },
       isNavigationCurrent: (generation) =>
         generation === this._navigationGeneration,
       cancelOwnedNavigation: () => this.viewer.camera.cancelFlight(),
+    });
+    this._webglRecovery = installWebGlRecovery(viewer, {
+      getRecoveryUrl: () => this.shareLinkManager?.createRecoveryUrl?.(),
     });
     this.shareLinkManager.setPanelStateProvider(() =>
       this._buildSharePanelState(),
@@ -552,9 +560,13 @@ export class StyleManager extends ShellFacade {
         _setCyberSonarEnabled: (...args) => this._setCyberSonarEnabled(...args),
         _setCyberSonarSetting: (...args) => this._setCyberSonarSetting(...args),
         _applyDetectionDensityFromUi: (...args) => {
+          const result = this._applyDetectionDensityFromUi(...args);
           if (this._adaptiveQuality?.getMode() !== 'manual')
-            this._adaptiveQuality?.setMode('manual');
-          this._applyDetectionDensityFromUi(...args);
+            this._adaptiveQuality?.setMode('manual', {
+              userDensityOverride: true,
+            });
+          else this._adaptiveQuality?.rememberManualDensity();
+          return result;
         },
         _setDetectionAllocation: (...args) =>
           this._setDetectionAllocation(...args),
@@ -1650,6 +1662,8 @@ export class StyleManager extends ShellFacade {
     this._localSdrControls?.destroy();
     this._cockpitCoordinator.stop();
     this._visualSettings.stop();
+    this._webglRecovery?.();
+    this._webglRecovery = null;
     this.shareLinkManager?.destroy();
     this._layerBindings.stop();
 

@@ -49,6 +49,26 @@ export function createFirmsState({ services, config }) {
 
   layerState._lastUpdate = null;
 
+  layerState._investigationTargetMs = null;
+
+  layerState._historyLoadedTargetMs = null;
+
+  layerState._historyStatus = null;
+
+  layerState._historyEffectiveTime = null;
+
+  layerState._historyWindow = null;
+
+  layerState._needsLiveRefresh = false;
+
+  /** Local receipt time for the last accepted proxy response. */
+
+  layerState._receivedAt = null;
+
+  /** Source products explicitly reported as unavailable in the last snapshot. */
+
+  layerState._missingSources = [];
+
   layerState._currentLodId = null;
 
   layerState._currentLodIndex = -1;

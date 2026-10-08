@@ -1,4 +1,6 @@
 import { fireDetectionKey } from '../../data/firmsLabels.js';
+import { createFirmsEvidence } from './evidence.js';
+import { FIRMS_HISTORY_MAX_AGE_MS } from './source.js';
 import { REFRESH_INTERVAL_MS } from './policy.js';
 
 export function createQueries({
@@ -27,6 +29,7 @@ export function createQueries({
         observedAt:
           Number.isFinite(fire.acqMs) && fire.acqMs > 0 ? fire.acqMs : null,
         source: fire.sensor || fire.satellite || null,
+        evidence: createFirmsEvidence(fire, evidenceOptions()),
       };
     },
 
@@ -49,6 +52,63 @@ export function createQueries({
     // not this interval — is what protects the upstream FIRMS quota).
     updateInterval: REFRESH_INTERVAL_MS,
 
+    attachInvestigationTime(clock, capabilities = null) {
+      if (!clock?.subscribe)
+        throw new TypeError('An investigation clock is required');
+      const removeCapability =
+        typeof feed.getSnapshotAt === 'function' && capabilities?.register
+          ? capabilities.register({
+              id,
+              mode: 'provider-history',
+              label: 'NASA FIRMS active-fire detections',
+              coverage: {
+                from: Date.now() - FIRMS_HISTORY_MAX_AGE_MS,
+                to: Date.now(),
+              },
+              selectAt: async ({ targetMs, signal }) => {
+                const snapshot = await feed.getSnapshotAt(targetMs, { signal });
+                if (snapshot?.keyRequired) return null;
+                return {
+                  sampleTimeMs: snapshot.window?.to,
+                  selectedTimeMs: targetMs,
+                  timeBasis: 'acquisition-time-window',
+                  window: snapshot.window,
+                  eventCount: snapshot.fires?.length ?? 0,
+                  stale: snapshot.stale === true,
+                  partial: (snapshot.sources || []).some(
+                    (entry) => entry?.ok === false,
+                  ),
+                };
+              },
+            })
+          : () => {};
+      const remove = clock.subscribe((state) => {
+        const next =
+          state.mode === 'live' || !Number.isFinite(state.timeMs)
+            ? null
+            : Math.floor(state.timeMs / 60_000) * 60_000;
+        if (next === layerState._investigationTargetMs) return;
+        const wasHistorical = Number.isFinite(
+          layerState._investigationTargetMs,
+        );
+        layerState.request?.abort();
+        layerState.request = null;
+        layerState._investigationTargetMs = next;
+        layerState._historyLoadedTargetMs = null;
+        layerState._needsLiveRefresh = next === null && wasHistorical;
+        layerState._historyStatus = next === null ? null : 'loading';
+        layerState._historyEffectiveTime =
+          next === null ? null : new Date(next).toISOString();
+        if (layerState._enabled) void components.ingestion.loadHeatmap(next);
+      });
+      return () => {
+        removeCapability();
+        remove();
+        layerState.request?.abort();
+        layerState.request = null;
+      };
+    },
+
     /**
      * Layer stats for the data panel. Degraded feed states surface through
      * `error` (established qa-failstate pattern: a dead feed must never look
@@ -62,12 +122,24 @@ export function createQueries({
         ? `STALE · cached ${components.model.formatAge(now - layerState._lastUpdate) || '<1h'}`
         : 'STALE';
       let loadingLabel = '';
-      if (layerState._loading) {
+      if (
+        Number.isFinite(layerState._investigationTargetMs) &&
+        layerState._historyStatus === 'loading'
+      ) {
+        loadingLabel = 'HISTORY · loading';
+      } else if (layerState._loading) {
         loadingLabel = layerState._fires.length
           ? 'refreshing...'
           : 'loading...';
       } else if (layerState._keyRequired) {
         loadingLabel = 'KEY REQUIRED';
+      } else if (Number.isFinite(layerState._investigationTargetMs)) {
+        loadingLabel =
+          layerState._historyStatus === 'available'
+            ? `HISTORY · ${new Date(layerState._historyEffectiveTime).toISOString()}`
+            : layerState._historyStatus === 'unavailable'
+              ? 'HISTORY · unavailable'
+              : 'HISTORY · loading';
       } else if (layerState._stale) {
         loadingLabel = staleText;
       } else if (layerState._error) {
@@ -81,11 +153,18 @@ export function createQueries({
         lastUpdate: layerState._lastUpdate,
         loading: layerState._loading,
         stale: layerState._stale,
+        partial: layerState._missingSources.length > 0,
+        source: 'NASA FIRMS',
+        receivedAt: layerState._receivedAt,
         // The machine-readable half of the keyless state, ahead of the human
         // strings below: without it "no key configured" is indistinguishable
         // from a broken feed, and the row reads as a fault instead of a step
         // the operator can take.
         keyRequired: layerState._keyRequired,
+        historyStatus: layerState._historyStatus,
+        historyTarget: layerState._investigationTargetMs,
+        historyEffectiveTime: layerState._historyEffectiveTime,
+        historyWindow: layerState._historyWindow,
         error: layerState._keyRequired
           ? 'KEY REQUIRED'
           : layerState._stale
@@ -157,7 +236,12 @@ export function createQueries({
         : 2000;
       const result = [];
       for (const fire of layerState._firesByFrp) {
-        result.push(components.model.mapAnalystRecord(fire));
+        const record = components.model.mapAnalystRecord(fire);
+        record.evidence = createFirmsEvidence(fire, {
+          ...evidenceOptions(),
+          truncated: layerState._firesByFrp.length > limit,
+        });
+        result.push(record);
         if (result.length >= limit) break;
       }
       return result;
@@ -180,6 +264,23 @@ export function createQueries({
       return layerState._clickHandler;
     },
   };
+
+  function evidenceOptions() {
+    return {
+      receivedAt: layerState._receivedAt,
+      snapshotAt: layerState._lastUpdate,
+      displayTime: layerState._historyEffectiveTime,
+      historyWindow: layerState._historyWindow,
+      feedState: layerState._keyRequired
+        ? 'unavailable'
+        : layerState._stale
+          ? 'stale'
+          : layerState._error
+            ? 'degraded'
+            : 'nominal',
+      missingSources: layerState._missingSources,
+    };
+  }
 
   return { methods };
 }

@@ -229,6 +229,68 @@ try {
     'closing pinned evidence returns focus to its Inspect evidence button',
   );
 
+  await page.evaluate(() => {
+    const trigger = document.createElement('button');
+    trigger.id = 'qa-forecast-evidence-focus-return';
+    trigger.textContent = 'Inspect forecast evidence';
+    document.body.append(trigger);
+    trigger.focus();
+    window.dispatchEvent(
+      new CustomEvent('gev:evidence-record-opened', {
+        detail: {
+          kind: 'forecast',
+          label: 'Wind forecast at 30.27N 97.74W',
+          evidence: {
+            entityRef: { layerKey: 'wind', id: 'gfs:30.27,-97.74' },
+            sourceId: 'NOAA GFS',
+            sourceUrl:
+              'https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast',
+            receivedAt: Date.UTC(2026, 0, 16, 12, 0, 5),
+            issuedAt: Date.UTC(2026, 0, 16, 6),
+            validFrom: Date.UTC(2026, 0, 16, 12),
+            displayTime: Date.UTC(2026, 0, 16, 12),
+            method: 'predicted',
+            displayMethod: 'interpolated',
+            feedState: 'nominal',
+            coverage: {
+              area: 'Global forecast grid at approximately 1° resolution',
+              completeness: 'unknown',
+            },
+            limitations: ['Forecast output, not a direct observation.'],
+          },
+        },
+      }),
+    );
+  });
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-evidence-title]')?.textContent ===
+      'FORECAST EVIDENCE',
+  );
+  const forecast = await page.evaluate(() => ({
+    subject: document.querySelector('[data-evidence-value="subject"]')
+      ?.textContent,
+    source: document.querySelector('[data-evidence-value="source"]')
+      ?.textContent,
+    observed: document.querySelector('[data-evidence-value="observed"]')
+      ?.textContent,
+    issued: document.querySelector('[data-evidence-value="issued"]')
+      ?.textContent,
+    valid: document.querySelector('[data-evidence-value="validity"]')
+      ?.textContent,
+  }));
+  assert.equal(forecast.subject, 'Wind forecast at 30.27N 97.74W');
+  assert.equal(forecast.source, 'NOAA GFS');
+  assert.equal(forecast.observed, 'Not provided by source');
+  assert.match(forecast.issued, /2026-01-16T06:00:00/);
+  assert.match(forecast.valid, /2026-01-16T12:00:00/);
+  await page.click('#evidence-panel-close');
+  assert.equal(
+    await page.$eval(':focus', (node) => node.id),
+    'qa-forecast-evidence-focus-return',
+    'closing forecast evidence restores focus to its Inspect action',
+  );
+
   await page.evaluate(() =>
     window.dispatchEvent(
       new CustomEvent('gev:entity-selected', {
@@ -362,7 +424,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: aircraft, AIS and orbital-epoch evidence, analyst-card keyboard pinning, immutable snapshots, desktop/narrow layout, safe source links, keyboard focus return, unsupported selection and teardown',
+    'PASS: aircraft, AIS, orbital-epoch and forecast evidence, analyst-card keyboard pinning, immutable snapshots, desktop/narrow layout, safe source links, keyboard focus return, unsupported selection and teardown',
   );
 } finally {
   await browser.close();

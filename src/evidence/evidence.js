@@ -31,6 +31,17 @@ const KNOWN_SOURCE_URLS = Object.freeze([
   { match: /opensky/i, url: 'https://opensky-network.org/' },
   { match: /adsb\.lol/i, url: 'https://www.adsb.lol/' },
   { match: /aisstream/i, url: 'https://aisstream.io/' },
+  { match: /usgs/i, url: 'https://earthquake.usgs.gov/' },
+  {
+    match: /nasa\s*firms|firms/i,
+    url: 'https://firms.modaps.eosdis.nasa.gov/',
+  },
+  {
+    match: /noaa\s*gfs/i,
+    url: 'https://www.ncei.noaa.gov/products/weather-climate-models/global-forecast',
+  },
+  { match: /ecmwf|ifs/i, url: 'https://www.ecmwf.int/en/forecasts' },
+  { match: /open\s*-?\s*meteo/i, url: 'https://open-meteo.com/en/docs' },
 ]);
 
 /** Homepage for a known provider label, or null when no mapping is defined. */
