@@ -147,8 +147,11 @@ The first hosted `workflow_dispatch` run passed at commit
 [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/commit/c996a255c4063a93c0553fa3c3e31d09bc9d31b2),
 including Node 24/26, Windows onboarding and the browser gates. The latest
 hosted run passed on commit
-[`41235de`](https://github.com/arthurianresolve/gods-eye-view/commit/41235ded07a5510d23a9999c7341859cce667148)
-(run [37738815921](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37738815921)).
+[`a2d158f`](https://github.com/arthurianresolve/gods-eye-view/commit/a2d158f6ed85b0cf3a5b9db12ba96f606656d3c5)
+(run [37741997092](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37741997092)),
+including the end-to-end analyst evidence card and keyboard-pinned inspector
+gate. The run passed Node 24/26, Windows onboarding, fixture, scene sharing,
+aircraft evidence panel and portable panel checks.
 The prior checkpoint at
 [`54982ba`](https://github.com/arthurianresolve/gods-eye-view/commit/54982ba)
 also passed run [37736662700](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37736662700).
