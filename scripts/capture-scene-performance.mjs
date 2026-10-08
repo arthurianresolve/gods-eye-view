@@ -184,7 +184,7 @@ try {
 
   const fixture = effectiveFixtureAircraftCount
     ? await page.evaluate(
-        async ({ count, mode }) => {
+        async ({ count, mode, detectionMode }) => {
           const app = window.__godsEyeView;
           const manager = app?.dataManager;
           const entry = manager?.layers?.get('flights');
