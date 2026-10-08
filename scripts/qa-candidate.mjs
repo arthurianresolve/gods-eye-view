@@ -51,6 +51,14 @@ export function readValidationManifest(
       'Validation manifest candidate commit does not match the report.',
     );
   const seen = new Set();
+  if (!/^[a-f0-9]{40}$/.test(candidateCommit || ''))
+    throw new Error('Validation requires a full candidate commit SHA.');
+  for (const item of raw.checks) {
+    if (seen.has(item?.id))
+      throw new Error('Duplicate validation check: ' + item.id);
+    seen.add(item?.id);
+  }
+  seen.clear();
   const checks = raw.checks.map((item) => {
     const id = String(item?.id || '').trim();
     if (!EXTERNAL_CHECK_IDS.has(id))
@@ -61,15 +69,28 @@ export function readValidationManifest(
       );
     if (seen.has(id)) throw new Error(`Duplicate validation check: ${id}`);
     seen.add(id);
+    if (
+      item.candidateCommit != null &&
+      item.candidateCommit !== candidateCommit
+    )
+      throw new Error(
+        'Validation check candidate commit does not match the report.',
+      );
     const status = item.status || item.outcome;
+    if (item.status && item.outcome && item.status !== item.outcome)
+      throw new Error('Conflicting validation outcomes for ' + id + '.');
     if (!['passed', 'failed', 'pending'].includes(status))
       throw new Error(`Invalid validation outcome for ${id}.`);
-    if (!String(item.environment || '').trim())
+    if (typeof item.environment !== 'string' || !item.environment.trim())
       throw new Error(`Validation environment is required for ${id}.`);
     const timestamp = Date.parse(item.timestamp || '');
     if (!Number.isFinite(timestamp))
       throw new Error(`Validation timestamp is required for ${id}.`);
     const artifacts = Array.isArray(item.artifacts) ? item.artifacts : [];
+    if (status === 'passed' && artifacts.length === 0)
+      throw new Error(
+        'Passed validation requires artifact evidence for ' + id + '.',
+      );
     if (artifacts.length > 8)
       throw new Error(`Too many validation artifacts for ${id}.`);
     for (const artifact of artifacts) {
@@ -79,11 +100,18 @@ export function readValidationManifest(
           : artifact?.path || artifact?.url;
       if (!ref || typeof ref !== 'string')
         throw new Error(`Invalid validation artifact for ${id}.`);
-      if (!/^https?:\/\//i.test(ref) && !existsSync(ref))
+      if (/^https?:\/\//i.test(ref)) {
+        const url = new URL(ref);
+        if (url.protocol !== 'https:' || url.username || url.password)
+          throw new Error(
+            'Validation artifact URL must be HTTPS without credentials.',
+          );
+      } else if (!existsSync(path.resolve(path.dirname(filePath), ref)))
         throw new Error(`Validation artifact does not exist for ${id}: ${ref}`);
     }
     return Object.freeze({
       id,
+      candidateCommit,
       status,
       environment: String(item.environment).trim().slice(0, 240),
       timestamp: new Date(timestamp).toISOString(),
@@ -137,6 +165,23 @@ export async function runCandidateMatrix({
   commit = gitCommit(),
 } = {}) {
   const checks = [];
+  const phase = env.GEV_VALIDATION_PHASE || 'pre-release';
+  if (!['pre-release', 'post-publication'].includes(phase))
+    throw new TypeError('Unsupported validation phase.');
+  const tree = spawnSync(
+    'git',
+    ['status', '--porcelain', '--untracked-files=no'],
+    { cwd: ROOT, encoding: 'utf8' },
+  );
+  checks.push({
+    id: 'exact-commit',
+    required: true,
+    status:
+      tree.status === 0 && !tree.stdout.trim() && commit === gitCommit()
+        ? 'passed'
+        : 'failed',
+    summary: 'Tracked files must match the reported candidate commit.',
+  });
   for (const [label, args] of [
     ['format', ['run', 'format:check']],
     ['boundaries', ['run', 'check:boundaries']],
@@ -149,6 +194,7 @@ export async function runCandidateMatrix({
   if (appUrl) {
     for (const [id, script] of [
       ['workspace-library', 'qa:workspaces'],
+      ['public-references', 'qa:references'],
       ['timeline', 'qa:timeline'],
       ['recording', 'qa:recording'],
       ['evidence-panel', 'qa:evidence-panel'],
@@ -197,7 +243,7 @@ export async function runCandidateMatrix({
     try {
       validationManifest = readValidationManifest(manifestPath, {
         candidateCommit: commit,
-        phase: env.GEV_VALIDATION_PHASE || 'pre-release',
+        phase,
       });
       const byId = new Map(
         validationManifest.checks.map((item) => [item.id, item]),
@@ -218,7 +264,11 @@ export async function runCandidateMatrix({
       });
     }
   }
-  const readiness = evaluateCandidateReadiness(checks);
+  const readiness = evaluateCandidateReadiness(
+    phase === 'post-publication'
+      ? checks
+      : checks.filter((check) => check.id !== 'release-tag-match'),
+  );
   const preReleaseReadiness = evaluateCandidateReadiness(
     checks.filter((check) => check.id !== 'release-tag-match'),
   );
@@ -229,6 +279,7 @@ export async function runCandidateMatrix({
     schemaVersion: 1,
     generatedAt: now().toISOString(),
     commit,
+    phase,
     validationManifest,
     phases: {
       preRelease: preReleaseReadiness,

@@ -5,9 +5,9 @@ import { runInstallRecoveryFixture } from './qa-install-recovery.mjs';
 test('install recovery fixture preserves workspaces, settings, assets and references', async () => {
   const result = await runInstallRecoveryFixture({ platform: 'fixture' });
   assert.deepEqual(result.checks, [
-    'clean-install',
-    'interrupted-update',
-    'rollback',
-    'reopen',
+    'verified-prior-artifact',
+    'interrupted-copy-rejected',
+    'checksum-failure-recovery',
+    'bundle-asset-reopen',
   ]);
 });

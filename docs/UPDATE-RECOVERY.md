@@ -2,23 +2,30 @@
 
 ## Release channels
 
-Stable builds are created from a `vMAJOR.MINOR.PATCH` tag matching
-`package.json`. The release workflow uses `npm ci`, runs formatting, boundary,
-unit and production-build checks, stages `dist/` with the app metadata and
-documentation, verifies every staged file's SHA-256, and publishes a
-reproducibly ordered `.tar.gz` plus its checksum. Manual workflow runs create
-development artifacts and do not publish a GitHub Release. The manifest records
-the exact commit, Node requirement and workspace/Director/settings schema
-versions.
+Version tags matching package.json create draft candidates, never automatic
+stable publication. Manual development runs produce downloadable artifacts.
+To promote a tag, run the release workflow on that tag with publish_stable enabled
+and supply its exact-commit pre-release validation manifest. Missing/failed evidence
+stops promotion.
 
-Download a stable asset and its adjacent `.sha256` file from the same GitHub
-Release. On Linux or macOS, check the archive with:
+The workflow reruns candidate gates, verifies downloaded checksums and contents,
+checks the attestation against repository/workflow/source commit, and rechecks
+the tag target. It attaches those verified bytes, downloads the draft assets for
+another verification, then promotes the draft. Existing stable assets are not
+overwritten.
 
-```sh
-sha256sum --check gods-eye-view-vX.Y.Z.tar.gz.sha256
-tar -xzf gods-eye-view-vX.Y.Z.tar.gz
-node scripts/verify-release.mjs --path .
-```
+Archive names contain the full source commit. Download the archive and checksum.
+On Linux, run sha256sum --check gods-eye-view-COMMIT.tar.gz.sha256; macOS can use
+shasum -a 256 -c. Then verify signed provenance:
+
+    gh attestation verify gods-eye-view-COMMIT.tar.gz --repo arthurianresolve/gods-eye-view --signer-workflow arthurianresolve/gods-eye-view/.github/workflows/release.yml --source-digest COMMIT --deny-self-hosted-runners
+
+Replace COMMIT with the expected full source SHA from the tested revision.
+Extract the archive, then run:
+
+    node scripts/verify-release.mjs --path .
+
+See [GitHub CLI attestation verification](https://cli.github.com/manual/gh_attestation_verify).
 
 The extracted artifact contains the checksummed production bundle and source
 metadata. Use a fresh application directory for the candidate; keep the prior
@@ -51,7 +58,9 @@ the export unchanged and reopen it with a compatible newer reader. Report the
 release tag, manifest commit, operating system and sanitized diagnostics; do not
 attach API keys, request headers or raw voice transcripts.
 
-The automated release workflow covers one Node/Linux artifact build. Windows
-and macOS clean-install, upgrade, interrupted-download and browser-storage
-rollback checks remain release-candidate acceptance work in
+CI runs the real installer and Git updater tests on Windows, macOS and Linux.
+The portable recovery fixture rejects incomplete/corrupted artifacts and reopens
+a bundle with a verified asset. The browser journey checks IndexedDB reload and
+transfer to a fresh profile. The full prior-install and browser-profile recovery
+matrix remains acceptance work in
 [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md#s30).

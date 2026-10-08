@@ -8,6 +8,49 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+test('empty artifacts, wrong per-check commits and conflicting outcomes cannot pass', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-regressions-'));
+  const file = path.join(dir, 'manifest.json');
+  const commit = 'a'.repeat(40);
+  const item = {
+    id: 'hardware-matrix',
+    outcome: 'passed',
+    environment: 'fixture',
+    timestamp: '2026-01-01T00:00:00Z',
+    artifacts: ['https://example.test/report'],
+  };
+  for (const patch of [
+    { artifacts: [] },
+    { candidateCommit: 'b'.repeat(40) },
+    { status: 'failed' },
+    { environment: {} },
+  ]) {
+    await writeFile(
+      file,
+      JSON.stringify({
+        schemaVersion: 1,
+        candidateCommit: commit,
+        checks: [{ ...item, ...patch }],
+      }),
+    );
+    assert.throws(() =>
+      readValidationManifest(file, { candidateCommit: commit }),
+    );
+  }
+  await writeFile(
+    file,
+    JSON.stringify({
+      schemaVersion: 1,
+      candidateCommit: commit,
+      checks: [{ ...item, outcome: 'failed', artifacts: [] }],
+    }),
+  );
+  assert.equal(
+    readValidationManifest(file, { candidateCommit: commit }).checks[0].status,
+    'failed',
+  );
+});
+
 test('candidate readiness distinguishes failed required gates from pending environment evidence', () => {
   assert.deepEqual(
     evaluateCandidateReadiness([{ required: true, status: 'passed' }]),
@@ -45,7 +88,7 @@ test('validation manifests require the exact candidate commit and bounded eviden
     manifestPath,
     JSON.stringify({
       schemaVersion: 1,
-      candidateCommit: 'abc123',
+      candidateCommit: 'a'.repeat(40),
       checks: [
         {
           id: 'accessibility-review',
@@ -58,7 +101,7 @@ test('validation manifests require the exact candidate commit and bounded eviden
     }),
   );
   const manifest = readValidationManifest(manifestPath, {
-    candidateCommit: 'abc123',
+    candidateCommit: 'a'.repeat(40),
   });
   assert.equal(manifest.checks[0].status, 'passed');
   assert.throws(
@@ -75,7 +118,7 @@ test('validation manifests reject duplicate, unknown, and missing artifact evide
     manifestPath,
     JSON.stringify({
       schemaVersion: 1,
-      candidateCommit: 'abc123',
+      candidateCommit: 'a'.repeat(40),
       checks: [
         {
           id: 'hardware-matrix',
@@ -85,7 +128,7 @@ test('validation manifests reject duplicate, unknown, and missing artifact evide
           artifacts: ['missing.json'],
         },
         {
-          id: 'hardware-matrix',
+          id: 'accessibility-review',
           status: 'passed',
           environment: 'macOS',
           timestamp: '2026-10-08T12:00:00Z',
@@ -94,14 +137,15 @@ test('validation manifests reject duplicate, unknown, and missing artifact evide
     }),
   );
   assert.throws(
-    () => readValidationManifest(manifestPath, { candidateCommit: 'abc123' }),
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
     /does not exist/,
   );
   await writeFile(
     manifestPath,
     JSON.stringify({
       schemaVersion: 1,
-      candidateCommit: 'abc123',
+      candidateCommit: 'a'.repeat(40),
       checks: [
         {
           id: 'hardware-matrix',
@@ -119,7 +163,8 @@ test('validation manifests reject duplicate, unknown, and missing artifact evide
     }),
   );
   assert.throws(
-    () => readValidationManifest(manifestPath, { candidateCommit: 'abc123' }),
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
     /Duplicate/,
   );
 });
@@ -132,7 +177,7 @@ test('publication verification stays separate from pre-release readiness', async
     JSON.stringify({
       schemaVersion: 1,
       phase: 'pre-release',
-      candidateCommit: 'abc123',
+      candidateCommit: 'a'.repeat(40),
       checks: [
         {
           id: 'release-tag-match',
@@ -144,7 +189,8 @@ test('publication verification stays separate from pre-release readiness', async
     }),
   );
   assert.throws(
-    () => readValidationManifest(manifestPath, { candidateCommit: 'abc123' }),
+    () =>
+      readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
     /post-publication/,
   );
 });

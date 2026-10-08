@@ -47,6 +47,7 @@
     "test:track": "node scripts/track-regression.mjs",
     "qa:map-source-tray": "node scripts/qa-map-source-tray.mjs",
     "qa:panel-resize": "node scripts/qa-panel-resize.mjs",
+    "qa:references": "node scripts/qa-evidence-references.mjs",
     "qa:evidence-panel": "node scripts/qa-evidence-panel.mjs",
     "qa:render-resolution": "node scripts/qa-render-resolution.mjs",
     "qa:storage": "node scripts/qa-workspace-storage.mjs",

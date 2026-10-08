@@ -11,6 +11,14 @@ on:
         options: [dev]
         default: dev
         required: true
+      publish_stable:
+        description: Promote a verified candidate (run on its version tag)
+        type: boolean
+        default: false
+      validation_manifest:
+        description: Exact-commit pre-release validation manifest JSON with external evidence URLs
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -19,13 +27,11 @@ jobs:
   build:
     name: Build and verify release artifact
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: write
       id-token: write
       attestations: write
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: '1'
     steps:
       - name: Check out exact source revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -48,35 +54,51 @@ jobs:
           npm test
           npm run build
 
+      - name: Require complete exact-commit acceptance before promotion
+        if: inputs.publish_stable
+        env:
+          VALIDATION_MANIFEST: ${{ inputs.validation_manifest }}
+          GEV_VALIDATION_MANIFEST: ${{ runner.temp }}/validation-manifest.json
+          GEV_CANDIDATE_URL: http://localhost:4173
+          GEV_VALIDATION_PHASE: pre-release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_TYPE" = tag
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --input-type=module -e 'import fs from "node:fs"; fs.writeFileSync(process.env.GEV_VALIDATION_MANIFEST, process.env.VALIDATION_MANIFEST)'
+          npx vite --host 127.0.0.1 --port 4173 --strictPort > "$RUNNER_TEMP/release-preview.log" 2>&1 &
+          for attempt in $(seq 1 90); do
+            curl -sf http://localhost:4173/ > /dev/null && break
+            sleep 2
+          done
+          npm run qa:candidate -- --out "$RUNNER_TEMP/candidate-readiness.json"
+
       - name: Stage versioned manifest and checksummed files
         env:
-          RELEASE_CHANNEL: ${{ github.event_name == 'push' && 'stable' || inputs.channel }}
+          RELEASE_CHANNEL: ${{ github.ref_type == 'tag' && 'stable' || inputs.channel }}
         run: node scripts/stage-release.mjs --out release-staging --channel "$RELEASE_CHANNEL" --commit "$GITHUB_SHA"
 
-      - name: Verify staged release
-        run: node scripts/verify-release.mjs --path release-staging
-
-      - name: Verify staged commit matches the workflow revision
-        shell: bash
-        run: test "$(jq -r .commit release-staging/gev-release-manifest.json)" = "$GITHUB_SHA"
+      - name: Verify staged release and source commit
+        run: |
+          node scripts/verify-release.mjs --path release-staging
+          test "$(jq -r .commit release-staging/gev-release-manifest.json)" = "$GITHUB_SHA"
 
       - name: Create reproducible archive and checksum
-        env:
-          RELEASE_VERSION: ${{ github.ref_name }}
         run: |
-          ARCHIVE="gods-eye-view-${RELEASE_VERSION}.tar.gz"
+          ARCHIVE="gods-eye-view-${GITHUB_SHA}.tar.gz"
           tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -C release-staging -cf - . | gzip -n > "$ARCHIVE"
           sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
 
       - name: Generate release artifact attestation
-        uses: actions/attest@v4
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: 'gods-eye-view-*.tar.gz'
 
       - name: Upload candidate artifact for verification
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: gev-${{ github.event_name == 'push' && github.ref_name || inputs.channel }}-${{ github.sha }}
+          name: gev-candidate-${{ github.sha }}
           path: |
             gods-eye-view-*.tar.gz
             gods-eye-view-*.tar.gz.sha256
@@ -86,27 +108,73 @@ jobs:
       - name: Download candidate artifact for verification
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: gev-${{ github.event_name == 'push' && github.ref_name || inputs.channel }}-${{ github.sha }}
+          name: gev-candidate-${{ github.sha }}
           path: downloaded-release
 
-      - name: Verify the downloaded archive before publication
+      - name: Verify downloaded archive and attestation before publication
         env:
-          RELEASE_VERSION: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          ARCHIVE_NAME="gods-eye-view-${RELEASE_VERSION}.tar.gz"
+          ARCHIVE_NAME="gods-eye-view-${GITHUB_SHA}.tar.gz"
           pushd downloaded-release >/dev/null
           sha256sum -c "${ARCHIVE_NAME}.sha256"
+          gh attestation verify "$ARCHIVE_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+            --source-digest "$GITHUB_SHA" \
+            --deny-self-hosted-runners > attestation-verification.txt
           VERIFY_DIR="$(mktemp -d)"
           tar -xzf "$ARCHIVE_NAME" -C "$VERIFY_DIR"
           popd >/dev/null
           node scripts/verify-release.mjs --path "$VERIFY_DIR"
           test "$(jq -r .commit "$VERIFY_DIR/gev-release-manifest.json")" = "$GITHUB_SHA"
 
-      - name: Publish stable tag assets
-        if: github.event_name == 'push'
+      - name: Create or update an unpublished tag candidate
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_VERSION" "gods-eye-view-${RELEASE_VERSION}.tar.gz" "gods-eye-view-${RELEASE_VERSION}.tar.gz.sha256" --verify-tag --generate-notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "refs/tags/$RELEASE_VERSION"
+          test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$GITHUB_SHA"
+          if gh release view "$RELEASE_VERSION" --json isDraft > "$RUNNER_TEMP/release-state.json"; then
+            test "$(jq -r .isDraft "$RUNNER_TEMP/release-state.json")" = true
+            gh release upload "$RELEASE_VERSION" "downloaded-release/gods-eye-view-${GITHUB_SHA}.tar.gz" "downloaded-release/gods-eye-view-${GITHUB_SHA}.tar.gz.sha256" --clobber
+          else
+            gh release create "$RELEASE_VERSION" "downloaded-release/gods-eye-view-${GITHUB_SHA}.tar.gz" "downloaded-release/gods-eye-view-${GITHUB_SHA}.tar.gz.sha256" --verify-tag --generate-notes --draft
+          fi
+
+      - name: Verify draft release download and promote only after acceptance
+        if: inputs.publish_stable && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release download "$RELEASE_VERSION" --dir published-verification --pattern "gods-eye-view-${GITHUB_SHA}.tar.gz*"
+          cd published-verification
+          sha256sum -c "gods-eye-view-${GITHUB_SHA}.tar.gz.sha256"
+          gh attestation verify "gods-eye-view-${GITHUB_SHA}.tar.gz" \
+            --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+            --source-digest "$GITHUB_SHA" --deny-self-hosted-runners
+          cmp "gods-eye-view-${GITHUB_SHA}.tar.gz" "../downloaded-release/gods-eye-view-${GITHUB_SHA}.tar.gz"
+          git fetch --no-tags origin "refs/tags/$RELEASE_VERSION"
+          test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$GITHUB_SHA"
+          gh release edit "$RELEASE_VERSION" --draft=false --latest
+
+      - name: Retain candidate validation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gev-release-evidence-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/candidate-readiness.json
+            ${{ runner.temp }}/validation-manifest.json
+            downloaded-release/attestation-verification.txt
+          if-no-files-found: ignore

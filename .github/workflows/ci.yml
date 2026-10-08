@@ -122,6 +122,14 @@ jobs:
         if: success() || failure()
         run: npm run qa:application -- --url http://localhost:4174
 
+      - name: Evidence references and browser-profile transfer
+        if: success() || failure()
+        run: npm run qa:references -- --url http://localhost:4174
+
+      - name: Mixed-use browser component smoke
+        if: success() || failure()
+        run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json
+
       - name: Scene import and sharing gate
         if: success() || failure()
         env:
@@ -208,7 +216,10 @@ jobs:
           cache: npm
 
       - name: Clean install
-        run: npm ci
+        run: node scripts/pinokio-install.mjs
 
-      - name: Exercise update interruption, rollback and reopen
+      - name: Exercise real Git update paths with disposable repositories
+        run: node --test src/pinokioUpdatePreview.test.mjs
+
+      - name: Reject incomplete artifacts and reopen portable workspaces
         run: npm run qa:install-recovery

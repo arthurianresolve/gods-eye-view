@@ -9,6 +9,11 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
 ]);
 const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/motionBudget.test.mjs',
+  'scripts/qa-candidate.test.mjs',
+  'scripts/qa-install-recovery.test.mjs',
+  'scripts/qa-mixed-use-soak.test.mjs',
+  'scripts/stage-release.test.mjs',
+  'server/providers/evidenceArchive.test.mjs',
 ]);
 
 /** Whether this runtime matches the one the allocation budgets were calibrated on. */
