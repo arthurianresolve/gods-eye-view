@@ -35,7 +35,9 @@ const protocolTimeoutMs = Math.max(
 );
 const out = option('--out', null);
 const hardwareRequired = args.includes('--hardware-required');
-function sourceRevision() {
+const appCommitOverride = option('--app-commit', null);
+const appWorktreeStateOverride = option('--app-worktree-state', null);
+function harnessSourceRevision() {
   try {
     const runGit = (gitArgs) =>
       execFileSync('git', gitArgs, {
@@ -55,7 +57,22 @@ function sourceRevision() {
     };
   }
 }
-const source = sourceRevision();
+const harnessSource = harnessSourceRevision();
+const source = {
+  harnessCommit: harnessSource.commit,
+  harnessDirtyWorktree: harnessSource.dirtyWorktree,
+  appCommit: appCommitOverride || harnessSource.commit,
+  appWorktreeState:
+    appWorktreeStateOverride ||
+    (appCommitOverride && appCommitOverride !== harnessSource.commit
+      ? 'unknown'
+      : harnessSource.dirtyWorktree == null
+        ? 'unknown'
+        : harnessSource.dirtyWorktree
+          ? 'dirty'
+          : 'clean'),
+  reason: harnessSource.reason,
+};
 if (
   !Number.isInteger(fixtureAircraftCount) ||
   fixtureAircraftCount < 0 ||
@@ -201,8 +218,12 @@ try {
           if (entry.intervalId != null) clearInterval(entry.intervalId);
           entry.intervalId = null;
           const controller = app.styleManager?._adaptiveQuality;
-          if (!controller?.setMode(mode))
+          if (controller && !controller.setMode(mode))
             throw new Error('Presentation quality controller is unavailable');
+          if (!controller && mode !== 'manual')
+            throw new Error(
+              'Auto/Quality/Performance profiles are unavailable in this app revision',
+            );
           return {
             id: 'synthetic-aircraft-ring-v1',
             count,
