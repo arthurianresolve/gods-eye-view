@@ -264,6 +264,23 @@ export async function runCandidateMatrix({
       });
     }
   }
+  const finalTree = spawnSync(
+    'git',
+    ['status', '--porcelain', '--untracked-files=no'],
+    {
+      cwd: ROOT,
+      encoding: 'utf8',
+    },
+  );
+  if (
+    finalTree.status !== 0 ||
+    finalTree.stdout.trim() ||
+    commit !== gitCommit()
+  ) {
+    const exact = checks.find((check) => check.id === 'exact-commit');
+    exact.status = 'failed';
+    exact.summary = 'Candidate source changed while validation was running.';
+  }
   const readiness = evaluateCandidateReadiness(
     phase === 'post-publication'
       ? checks
