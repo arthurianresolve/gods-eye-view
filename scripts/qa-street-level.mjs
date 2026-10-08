@@ -75,6 +75,7 @@ export const PANEL_UI_TOKEN = 't';
 /** Right-rail order once the layout controller has run. */
 export const RAIL_ORDER = Object.freeze([
   'pp-toggles',
+  'evidence-panel',
   'cctv-panel',
   'weather-panel',
   'recent-imagery-panel',
