@@ -405,6 +405,8 @@ src/
 
 See [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md) for the authoritative runtime reference.
 
+Development in this fork follows the [sliced implementation plan for `dev`](docs/IMPLEMENTATION_PLAN.md), covering evidence, replay, workspaces, usability, imports, and release reliability.
+
 ---
 
 ## 🔑 API Keys
