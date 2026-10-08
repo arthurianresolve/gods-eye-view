@@ -1,7 +1,7 @@
 # God's Eye View: sliced implementation plan for `dev`
 
-Status: first implementation wave on `dev`; S00, S02 and S03 are implemented,
-while S01, S04, S05, S06 and S07 have working foundations with acceptance work
+Status: first implementation wave on `dev`; S00, S02, S03 and S05 are implemented,
+while S01, S04, S06 and S07 have working foundations with acceptance work
 recorded below. S08–S31 remain planned.
 
 Prepared: 2026-10-08. Repository: `arthurianresolve/gods-eye-view`.
@@ -114,7 +114,7 @@ scope and remaining acceptance evidence appear in their rows. S08–S31 remain
 | [S02](#s02) | Evidence and temporal metadata contract **implemented** | S00 | M | A |
 | [S03](#s03) | Aircraft evidence through source, card and answer **implemented** | S02 | M | A |
 | [S04](#s04) | Evidence adapters and feed-health consistency **in progress** | S03 | M | A |
-| [S05](#s05) | Shared evidence inspector **in progress** | S04 | M | A |
+| [S05](#s05) | Shared evidence inspector **implemented** | S04 | M | A |
 | [S06](#s06) | Reproducible performance measurements **in progress** | S00 | M | B |
 | [S07](#s07) | Adaptive presentation quality **in progress** | S06 | M | B |
 | [S08](#s08) | Loading, cancellation and failure recovery | S04, S06 | M | B |
@@ -162,12 +162,17 @@ remain unsupported or lack attached evidence as detailed in
 element epoch, position evaluation time and feed snapshot time distinct. S05
 supports pinning aircraft and vessel evidence from analyst results and satellite
 evidence from analyst results and tracked-object selections; refreshing or
-changing the live selection leaves that snapshot fixed. S06 records
-browser/renderer and workload metadata, flags changing source populations, and
-has a deterministic development-only aircraft fixture option; hardware captures
-remain. S07 changes detection-label density only and stays opt-in; the capture
-tool records the quality profile and density, while matched hardware A/B
-acceptance remains before setting Auto as a default.
+changing the live selection leaves that snapshot fixed. Its browser gate sends a
+synthetic `analyst_query` result through the application's voice card, activates
+Inspect with the keyboard, and checks the pinned inspector, narrow/desktop layout,
+focus return, safe links and teardown. S06 records browser/renderer and workload
+metadata, flags changing source populations, and has a deterministic
+development-only aircraft fixture option. One hardware-valid Windows UHD 620
+capture records three idle and three scripted-motion samples; the broader
+hardware matrix and workload coverage remain. S07 changes detection-label density
+only and stays opt-in. A matched Manual/Auto comparison on that same device and
+fixture is recorded, but its run variance and zero-density Auto samples mean the
+profile is not ready to become a default.
 
 The dependency table governs execution; numerical order is only a convenient
 reading order. S06 and S09 can begin after their dependencies without waiting for
@@ -462,9 +467,12 @@ reference; a refreshed live entity must not rewrite a pinned result's evidence.
 refreshing does not reset its scroll or expansion state; unknown values are
 explicit; source links are safely rendered; no secret or raw request header leaks.
 
-**Validate:** unit presentation tests, panel fixture gate, selection-change and
-teardown journey at desktop/narrow sizes. **Rollback:** remove the inspector
-entry point while retaining evidence on data/query contracts.
+**Validate:** unit presentation tests and `npm run qa:evidence-panel`. The browser
+gate sends a fixture result through the application's actual voice-card controls,
+activates Inspect and Close by keyboard, changes the live selection while evidence
+is pinned, and checks desktop/narrow bounds, focus return and teardown.
+**Rollback:** remove the inspector entry point while retaining evidence on
+data/query contracts.
 
 <a id="s06"></a>
 
@@ -1270,8 +1278,8 @@ evidence and update the dependent slices.
 
 ## 8. First implementation handoff
 
-S00, S02 and S03 are implemented on `dev`; this wave adds working foundations
-for S01 and S04–S07. Continue in dependency order without treating missing
+S00, S02, S03 and S05 are implemented on `dev`; this wave adds working foundations
+for S01, S04, S06 and S07. Continue in dependency order without treating missing
 hardware captures as a release result:
 
 1. Verify token-base behavior through representative pull requests targeting
@@ -1282,12 +1290,11 @@ hardware captures as a release result:
    coverage metadata, and cover traffic, fire, earthquake and imported/static
    families. Camera live-to-still fallback labeling, wind issue/valid labels and
    no-coverage classification now have focused guards.
-3. Exercise the real analyst-result card and pinned inspector together at narrow
-   and desktop widths for S05.
-4. Capture supported hardware with matched fixtures for S06; retain
-   software-rendered captures as behavior diagnostics only.
-5. Complete matched hardware A/B checks before considering Auto as a default for
-S07. It remains opt-in and only changes presentation density today.
+3. Extend S06 capture coverage across the supported hardware matrix and add the
+   startup and mixed-layer workloads; one Windows UHD 620 fixture run and its
+   injected-delay control are recorded in `docs/PERFORMANCE.md`.
+4. Broaden the matched Manual/Auto hardware comparison before considering Auto as
+   a default for S07. It remains opt-in and only changes presentation density.
 
 The next user-facing milestone stays centered on evidence: select an aircraft,
 distinguish its observation from its rendered position, interrupt its feed, and

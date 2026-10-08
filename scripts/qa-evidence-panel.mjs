@@ -30,6 +30,10 @@ try {
       document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 60_000 },
   );
+  await page.waitForFunction(
+    () => typeof window.__gevVoiceCommands?.voiceCard?.handle === 'function',
+    { timeout: 60_000 },
+  );
   await page.evaluate(() => {
     const focus = document.createElement('button');
     focus.id = 'qa-evidence-focus-return';
@@ -131,25 +135,59 @@ try {
   assert.equal(closed.focus, 'qa-evidence-focus-return');
 
   await page.evaluate(() => {
-    const pinFocus = document.createElement('button');
-    pinFocus.id = 'qa-evidence-pin-focus';
-    pinFocus.textContent = 'Inspect result';
-    document.body.append(pinFocus);
-    pinFocus.focus();
-    window.dispatchEvent(
-      new CustomEvent('gev:evidence-result-pinned', {
-        detail: {
-          label: 'Pinned result TEST123',
-          evidence: {
-            entityRef: { layerKey: 'flights', id: 'abc123' },
-            sourceId: 'Synthetic source',
-            observedAt: Date.UTC(2026, 0, 15, 12),
-            receivedAt: Date.UTC(2026, 0, 15, 12, 0, 4),
-          },
+    const card = window.__gevVoiceCommands.voiceCard;
+    card.handle({ type: 'interruption' });
+    card.handle({
+      type: 'action-call',
+      name: 'analyst_query',
+      callId: 'qa-analyst',
+    });
+    card.handle({
+      type: 'action-result',
+      name: 'analyst_query',
+      callId: 'qa-analyst',
+      result: {
+        ok: true,
+        count: 1,
+        complete: true,
+        scopeLabel: 'in the current view',
+        coverage: {
+          layersQueried: [{ layerKey: 'flights', source: 'Synthetic source' }],
         },
-      }),
-    );
+        items: [
+          {
+            icao24: 'abc123',
+            layerKey: 'flights',
+            callsign: 'TEST123',
+            evidence: {
+              entityRef: { layerKey: 'flights', id: 'abc123' },
+              sourceId: 'Synthetic source',
+              observedAt: Date.UTC(2026, 0, 15, 12),
+              receivedAt: Date.UTC(2026, 0, 15, 12, 0, 4),
+            },
+          },
+        ],
+      },
+    });
   });
+  const analystCard = await page.evaluate(() => {
+    const card = document.getElementById('gev-voice-card');
+    const rect = card.getBoundingClientRect();
+    return {
+      visible: !card.hidden,
+      title: card.querySelector('#gev-voice-card-result-title')?.textContent,
+      left: rect.left,
+      right: rect.right,
+      inspectButtons: card.querySelectorAll('.gev-voice-card-referent-inspect')
+        .length,
+    };
+  });
+  assert.equal(analystCard.visible, true);
+  assert.equal(analystCard.title, '1 aircraft in the current view');
+  assert.equal(analystCard.inspectButtons, 1);
+  assert.ok(analystCard.left >= 0 && analystCard.right <= 1440);
+  await page.focus('#gev-voice-card .gev-voice-card-referent-inspect');
+  await page.keyboard.press('Enter');
   await page.waitForFunction(
     () => document.getElementById('evidence-panel')?.dataset.pinned === 'true',
   );
@@ -174,12 +212,21 @@ try {
       ?.textContent,
   }));
   assert.equal(pinned.title, 'PINNED RESULT EVIDENCE');
-  assert.equal(pinned.subject, 'Pinned result TEST123');
+  assert.equal(pinned.subject, 'TEST123');
   assert.match(pinned.observed, /2026-01-15T12:00:00/);
-  await page.click('#evidence-panel-close');
-  assert.equal(
-    await page.evaluate(() => document.activeElement?.id),
-    'qa-evidence-pin-focus',
+  await page.setViewport({ width: 390, height: 844 });
+  const narrowPinned = await page.$eval('#evidence-panel', (node) => {
+    const rect = node.getBoundingClientRect();
+    return { left: rect.left, right: rect.right };
+  });
+  assert.ok(narrowPinned.left >= 0 && narrowPinned.right <= 390);
+  await page.focus('#evidence-panel-close');
+  await page.keyboard.press('Enter');
+  assert.ok(
+    await page.$eval(':focus', (node) =>
+      node.classList.contains('gev-voice-card-referent-inspect'),
+    ),
+    'closing pinned evidence returns focus to its Inspect evidence button',
   );
 
   await page.evaluate(() =>
@@ -292,9 +339,30 @@ try {
     await page.$eval('#evidence-panel', (node) => node.hidden),
     true,
   );
+  await page.evaluate(async () => {
+    await window.__godsEyeView.styleManager.dispose();
+    window.dispatchEvent(
+      new CustomEvent('gev:awareness-subject-selected', {
+        detail: {
+          layerId: 'flights',
+          id: 'after-dispose',
+          label: 'Selection after teardown',
+          evidence: {
+            entityRef: { layerKey: 'flights', id: 'after-dispose' },
+            sourceId: 'Synthetic source',
+          },
+        },
+      }),
+    );
+  });
+  assert.equal(
+    await page.$eval('#evidence-panel', (node) => node.hidden),
+    true,
+    'a destroyed inspector no longer responds to selection events',
+  );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: aircraft, AIS and orbital-epoch evidence, pinned snapshots, narrow layout, safe source link, focus return and unsupported selection handling',
+    'PASS: aircraft, AIS and orbital-epoch evidence, analyst-card keyboard pinning, immutable snapshots, desktop/narrow layout, safe source links, keyboard focus return, unsupported selection and teardown',
   );
 } finally {
   await browser.close();

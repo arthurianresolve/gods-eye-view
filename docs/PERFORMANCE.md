@@ -141,6 +141,29 @@ when comparing profiles. This is a controlled workload hook, not a production
 feed, and software-rendered captures remain smoke checks rather than hardware
 performance evidence.
 
+## Windows UHD 620 diagnostic
+
+On 8 October 2026, the capture harness ran three five-second idle samples and
+three five-second scripted-motion samples with the same 2,500-contact synthetic
+aircraft ring in Manual and Auto mode. Both reports recorded a stable population,
+1440 x 900 viewport at DPR 1, focused and visible page, and a hardware-eligible
+Intel UHD Graphics 620 renderer through Direct3D 11 in HeadlessChrome 153. This
+is one machine and one candidate build; it does not represent a code-change A/B
+or a general Windows performance guarantee.
+
+| Workload | Manual p95, three runs (mean) | Auto p95, three runs (mean) | Mean p50, Manual / Auto | Auto density |
+| --- | --- | --- | --- | --- |
+| Idle | 117.9 / 117.8 / 139.1 ms (124.9 ms) | 113.3 / 121.0 / 108.3 ms (114.2 ms) | 69.7 / 58.3 ms | 75% / 50% / 25% |
+| Scripted motion | 252.3 / 144.4 / 131.1 ms (175.9 ms) | 134.0 / 113.1 / 193.6 ms (146.9 ms) | 78.8 / 72.2 ms | 0% / 0% / 0% |
+
+The Auto means were lower in both workloads, but the scripted-motion runs varied
+substantially and Auto reduced detection density to zero. Treat this as a
+diagnostic, not a release threshold; keep Auto opt-in until the same comparison
+has been repeated across the supported hardware matrix and its visual tradeoffs
+have been reviewed. A 25 ms injected-delay control with a 20 ms p95 threshold
+recorded 116.9 ms idle and 288.2 ms scripted-motion p95 values, then returned the
+expected nonzero status.
+
 Use the same controls before attributing a difference to the application:
 
 1. Record the exact GPU renderer and reject software-rendered or unavailable GPU
@@ -156,7 +179,9 @@ Use the same controls before attributing a difference to the application:
 
 ## What is not established yet
 
-- This report does not establish Windows performance.
+- The Apple baseline is not a Windows measurement. The separate Windows diagnostic
+  above covers only one Intel UHD 620 system and does not establish performance
+  across Windows devices.
 - The report does not record machine memory capacity, so it cannot support a
   minimum-memory recommendation.
 - The report does not cover other GPU renderers or viewport configurations.

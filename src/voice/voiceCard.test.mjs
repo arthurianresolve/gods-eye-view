@@ -203,23 +203,26 @@ test('controls: a control without card markup is inert', () => {
   card.destroy();
 });
 
-test('controls: evidence referents expose a keyboard accessible pin action', () => {
+test('controls: analyst evidence referents expose a keyboard accessible pin action', () => {
   const { root, nodes, dispatched } = fakeRoot();
   const card = new VoiceCardControls({ root });
   card.handle({ type: 'interruption' });
-  card.handle({ type: 'action-call', name: 'find_aircraft', callId: 'find-1' });
+  card.handle({ type: 'action-call', name: 'analyst_query', callId: 'query-1' });
   card.handle({
     type: 'action-result',
-    name: 'find_aircraft',
-    callId: 'find-1',
+    name: 'analyst_query',
+    callId: 'query-1',
     result: {
       ok: true,
-      display: { title: 'Aircraft found' },
-      referents: [
+      count: 1,
+      complete: true,
+      scopeLabel: 'in the current view',
+      coverage: { layersQueried: [{ layerKey: 'flights' }] },
+      items: [
         {
-          id: 'abc123',
-          layerId: 'flights',
-          label: 'TEST123',
+          icao24: 'abc123',
+          layerKey: 'flights',
+          callsign: 'TEST123',
           evidence: {
             entityRef: { layerKey: 'flights', id: 'abc123' },
             sourceId: 'OpenSky',
@@ -229,6 +232,7 @@ test('controls: evidence referents expose a keyboard accessible pin action', () 
       ],
     },
   });
+  assert.equal(nodes.get('gev-voice-card-result-title').textContent, '1 aircraft in the current view');
   const row = nodes.get('gev-voice-card-referents').children[0];
   const inspect = row.children[1];
   assert.equal(inspect.tag, 'button');
