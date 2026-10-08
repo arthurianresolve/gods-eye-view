@@ -34,6 +34,10 @@ const protocolTimeoutMs = Math.max(
     Number(option('--protocol-timeout-ms', '300000')) || 300_000,
   ),
 );
+const fixtureTimeoutMs = Math.max(
+  1_000,
+  Math.min(180_000, Number(option('--fixture-timeout-ms', '90000')) || 90_000),
+);
 const out = option('--out', null);
 const hardwareRequired = args.includes('--hardware-required');
 const appCommitOverride = option('--app-commit', null);
@@ -246,6 +250,7 @@ try {
               latitude: center.latitude * radians,
               height: 130_000,
             });
+          viewer.camera.cancelFlight?.();
           viewer.camera.setView({
             destination,
             orientation: {
@@ -278,21 +283,47 @@ try {
     : null;
 
   if (fixture) {
-    await page.waitForFunction(
-      () => {
-        const diagnostics =
-          window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
-        return (
-          diagnostics &&
-          diagnostics.observationCount > 0 &&
-          diagnostics.candidateCount > 0 &&
-          Object.values(diagnostics.labelsByLayer || {}).some(
-            (count) => count > 0,
-          )
-        );
-      },
-      { timeout: 90_000 },
-    );
+    try {
+      await page.waitForFunction(
+        () => {
+          const diagnostics =
+            window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
+          return (
+            diagnostics &&
+            diagnostics.observationCount > 0 &&
+            diagnostics.candidateCount > 0 &&
+            Object.values(diagnostics.labelsByLayer || {}).some(
+              (count) => count > 0,
+            )
+          );
+        },
+        { timeout: fixtureTimeoutMs },
+      );
+    } catch (error) {
+      const diagnostics = await page
+        .evaluate(() => {
+          const app = window.__godsEyeView;
+          const camera = app?.viewer?.camera;
+          const position = camera?.positionCartographic;
+          return {
+            detection:
+              app?.styleManager?.services?.readDetectionDiagnostics?.() ?? null,
+            camera: position
+              ? {
+                  latitudeDeg: (position.latitude * 180) / Math.PI,
+                  longitudeDeg: (position.longitude * 180) / Math.PI,
+                  heightM: position.height,
+                  pitchDeg: (camera.pitch * 180) / Math.PI,
+                }
+              : null,
+          };
+        })
+        .catch(() => null);
+      throw new Error(
+        `Aircraft fixture did not produce visible labels within ${fixtureTimeoutMs} ms; diagnostics=${JSON.stringify(diagnostics)}`,
+        { cause: error },
+      );
+    }
   }
 
   const mixedLayerFixture = mixedLayers
