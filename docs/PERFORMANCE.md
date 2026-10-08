@@ -141,71 +141,48 @@ when comparing profiles. This is a controlled workload hook, not a production
 feed, and software-rendered captures remain smoke checks rather than hardware
 performance evidence.
 
-## Windows UHD 620 diagnostic
+## Matched Windows UHD 620 comparison — 8 October 2026
 
-On 8 October 2026, the capture harness ran three five-second idle samples and
-three five-second scripted-motion samples with the same 2,500-contact synthetic
-aircraft ring in Manual and Auto mode. Both reports recorded a stable population,
-1440 x 900 viewport at DPR 1, focused and visible page, and a hardware-eligible
-Intel UHD Graphics 620 renderer through Direct3D 11 in HeadlessChrome 153. This
-is one machine and one candidate build; it does not represent a code-change A/B
-or a general Windows performance guarantee.
+A corrected three-run comparison used the same hardware renderer, browser,
+foreground state, 1440 x 900 viewport at DPR 1, 5-second warmup, and stable
+7,578-object scene in every build: a 2,500-aircraft Austin ring, 4,362
+local datacenters and 716 local dams. Each reported value is a five-second
+sample; p50 and p95 describe frame intervals within that sample.
 
-| Workload | Manual p95, three runs (mean) | Auto p95, three runs (mean) | Mean p50, Manual / Auto | Auto density |
+The base app was `95fa816` and the candidate app was `0171b69`; both used the
+same corrected capture harness at `fdd4d7d`. All six samples had 2,500 observations and a stable object population. Base and
+Manual reported 120 candidates and 30 selected labels in every sample. Auto
+reduced its candidate count from 80 to 64 while throttling label density.
+Raw reports: [base](../qa-artifacts/performance-baseline-main-detection-fdd4d7d-3run.json),
+[Manual](../qa-artifacts/performance-candidate-manual-fdd4d7d-3run.json), and
+[Auto](../qa-artifacts/performance-candidate-auto-fdd4d7d-3run.json). The machine
+reported an Intel UHD Graphics 620 through ANGLE Direct3D 11 in HeadlessChrome
+153 on Windows x64.
+
+| Build/profile | Idle p50 / p95 by run (ms) | Scripted-motion p50 / p95 by run (ms) | Motion mean p50 / p95 (ms) | Detection labels |
 | --- | --- | --- | --- | --- |
-| Idle | 117.9 / 117.8 / 139.1 ms (124.9 ms) | 113.3 / 121.0 / 108.3 ms (114.2 ms) | 69.7 / 58.3 ms | 75% / 50% / 25% |
-| Scripted motion | 252.3 / 144.4 / 131.1 ms (175.9 ms) | 134.0 / 113.1 / 193.6 ms (146.9 ms) | 78.8 / 72.2 ms | 0% / 0% / 0% |
+| Base `95fa816` | 67.1 / 153.3; 74.6 / 157.6; 73.9 / 160.1 | 86.5 / 120.0; 91.0 / 153.7; 89.2 / 137.8 | 88.9 / 137.2 | 30 at 75% density throughout |
+| Candidate Manual `0171b69` | 82.0 / 263.8; 72.4 / 188.0; 78.6 / 181.4 | 80.3 / 146.6; 87.9 / 153.9; 85.8 / 142.4 | 84.7 / 147.6 | 30 at 75% density throughout |
+| Candidate Auto `0171b69` | 84.5 / 222.2; 92.5 / 177.1; 89.4 / 182.2 | 92.8 / 184.0; 97.3 / 118.1; 96.7 / 117.1 | 95.6 / 139.7 | 20, 20, 10 idle; 10, 4, 4 moving |
 
-The Auto means were lower in both workloads, but the scripted-motion runs varied
-substantially and Auto reduced detection density to zero. Treat this as a
-diagnostic, not a release threshold; keep Auto opt-in until the same comparison
-has been repeated across the supported hardware matrix and its visual tradeoffs
-have been reviewed. A 25 ms injected-delay control with a 20 ms p95 threshold
-recorded 116.9 ms idle and 288.2 ms scripted-motion p95 values, then returned the
-expected nonzero status.
+Auto reduced label density from 50% to 0% during motion, while preserving four
+selected labels at the reported 0% setting. Its mean motion p95 was close to the
+base and Manual results, but its mean p50 was slower and label density fell.
+Three short samples on one GPU do not establish a reliable performance gain;
+Auto remains opt-in pending broader hardware and visual review. The results do
+not establish a general Windows or minimum-hardware guarantee.
 
-### Mixed-layer Manual and Auto repeat — 8 October 2026
+The capture now cancels any startup camera flight before fixing the synthetic
+scene camera, and reports detection and camera diagnostics if visible labels do
+not appear. This prevents a late startup animation from moving the fixture out of
+view and producing misleading zero-label samples.
 
-A further matched run enabled the same 2,500-flight synthetic ring plus local
-datacenters and dams (7,578 reported objects) in both Manual and Auto. Each mode
-used three 5-second idle windows and three scripted-motion windows, with a
-5-second warmup after fixture installation. Both reports used the Intel UHD
-Graphics 620 through Direct3D 11, Chrome foregrounded at 1440 x 900 and DPR 1,
-and a stable object population. The capture artifacts are local and are not
-included in the repository.
-
-| Mode | Idle p50 / p95 by run | Motion p50 / p95 by run | Density at the six captures |
-| --- | --- | --- | --- |
-| Manual | 92.1 / 649.8, 55.3 / 997.7, 48.9 / 983.2 ms | 76.5 / 211.9, 79.8 / 130.5, 94.2 / 135.4 ms | 50% throughout |
-| Auto | 92.9 / 211.9, 52.9 / 158.6, 53.9 / 1,060.4 ms | 73.0 / 193.1, 79.7 / 151.2, 89.2 / 137.4 ms | 75%, 50%, 50%; then 25%, 25%, 0% |
-
-Frame-time tails varied sharply between windows, and both modes recorded
-occasional intervals above one second. The one-machine result is descriptive,
-not a release budget or evidence that Auto improves every scene. Auto reduced
-detection density monotonically in this workload while the reported object
-population stayed fixed. A separate 25 ms injected-delay control exceeded its
-20 ms p95 limit (905.5 ms idle and 350.1 ms motion) and exited nonzero as
-expected.
-
-The repeat also exposed that the harness warmed the app before installing its
-fixture. `--warmup-ms` now runs after fixture setup and the first GPU uploads,
-so measured windows begin after the workload has settled. The capture reports
-progress for each startup and measurement run and allows a bounded
-`--protocol-timeout-ms` override for slow hardware.
-
-Use the same controls before attributing a difference to the application:
-
-1. Record the exact GPU renderer and reject software-rendered or unavailable GPU
-   strings.
-2. Use a 1440 x 900 viewport at device pixel ratio 1 and keep the page focused.
-3. Measure cache-disabled startup separately from cold layer activation and warm
-   option switching.
-4. Repeat startup three times and compare medians.
-5. Sample each option for 5 seconds in scripted motion and 5 seconds at rest.
-6. Record live object counts before attributing a difference to the client.
-7. Treat a live-source outage as missing coverage, not as evidence of low client
-   rendering cost.
-
+The Manual candidate's three moving p95 samples (146.6, 153.9 and 142.4 ms)
+passed a 200 ms **test-only** ceiling. An idle sample reached 263.8 ms and was
+correctly excluded from the moving-scene budget. With the same dense scene and a
+200 ms injected main-thread delay, the moving p95 reached 266.9 ms and the gate
+failed as intended: [negative-control report](../qa-artifacts/performance-delay-control-dense-fdd4d7d-1run.json).
+The 200 ms ceiling verifies the harness behavior; it is not a product target.
 ## What is not established yet
 
 - The Apple baseline is not a Windows measurement. The separate Windows diagnostic

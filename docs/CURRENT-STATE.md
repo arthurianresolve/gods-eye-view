@@ -2,14 +2,15 @@
 
 ## Candidate validation — October 8, 2026
 
-The final local candidate matrix passes formatting, package boundaries, 6,324
-unit tests (10 skipped), the production build and six browser journeys. Its
-report, [`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json),
+The refreshed local candidate matrix passes formatting, package boundaries, 6,328
+unit tests (10 skipped), the production build, six browser journeys and the
+repeated UHD 620 performance controls. Its report,
+[`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json),
 has zero local failures and five external gates pending: cross-platform install/
-upgrade, a 60-minute mixed-use soak, named-hardware captures, manual accessibility
-and participant review, and signed-release matching. It records ten passing local
-checks against implementation commit
-[`3d6b30c`](https://github.com/arthurianresolve/gods-eye-view/commit/3d6b30c8475c1dbb6a1f39eccab5a5669b1f6396).
+upgrade, a 60-minute mixed-use soak, the broader hardware matrix, manual
+accessibility and participant review, and signed-release matching. It records 11
+passing local checks against implementation commit
+[`fdd4d7d`](https://github.com/arthurianresolve/gods-eye-view/commit/fdd4d7de245ca50d11544574d22553accc01c10f).
 
 ## Evidence and performance groundwork — October 8, 2026
 
@@ -23,7 +24,7 @@ and distinct observation versus forecast issue/valid times. Explicit no-coverage
 is partial rather than an all-clear. A new performance capture command records
 renderer, viewport, workload, object counts and frame-time percentiles; Auto
 quality is opt-in, adjusts detection-label density only, pauses in hidden tabs,
-and restores the saved manual density when disabled. Other source-family
+and restores the saved manual density when disabled. A matched three-run UHD 620 comparison and passing positive/negative frame-budget controls are recorded in [PERFORMANCE.md](PERFORMANCE.md); Auto remains opt-in because it reduced labels without a consistent frame-time improvement. Other source-family
 evidence support is tracked in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
 
 The follow-up implementation extends provenance to live AIS vessel selections

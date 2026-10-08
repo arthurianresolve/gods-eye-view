@@ -1,13 +1,14 @@
 # God's Eye View: sliced implementation plan for `dev`
 
-Status: implementation code for S00–S31 is present on `dev`. The final local
-candidate matrix passes formatting, package boundaries, all 6,324 runnable unit
-tests (10 skipped), the production build and six browser journeys. Hardware, manual accessibility study,
-cross-platform install/upgrade, live-source retention approval and signed-release
+Status: implementation code for S00–S31 is present on `dev` at `fdd4d7d`. The
+refreshed local gates pass formatting, package boundaries, 6,328 unit tests (10
+skipped), the production build and six browser journeys. S06 now has a repeated
+same-machine base/candidate comparison and passing positive/negative motion-budget
+controls; the wider hardware matrix remains pending. Manual accessibility,
+cross-platform install/upgrade, source-retention approval and signed-release
 evidence remain external acceptance gates; see S11–S16 and S23, S30–S31. The
-report is [`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json)
-and marks commit `3d6b30c` `pending-evidence` with zero local failures.
-
+report is [`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json)
+and marks commit `fdd4d7d` `pending-evidence` with zero local failures.
 Prepared: 2026-10-08. Repository: `arthurianresolve/gods-eye-view`.
 Integration branch: existing remote `dev`, verified to match `main` at
 [`95fa816232456a6831172befa2f1b34b9ee73794`](https://github.com/arthurianresolve/gods-eye-view/commit/95fa816232456a6831172befa2f1b34b9ee73794).
@@ -174,15 +175,15 @@ evidence from analyst results and tracked-object selections; refreshing or
 changing the live selection leaves that snapshot fixed. Its browser gate sends a
 synthetic `analyst_query` result through the application's voice card, activates
 Inspect with the keyboard, and checks the pinned inspector, narrow/desktop layout,
-focus return, safe links and teardown. S06 records browser/renderer and workload
-metadata, flags changing source populations, and has a deterministic
-development-only aircraft fixture option. One hardware-valid Windows UHD 620
-capture records three idle and three scripted-motion samples; the broader
-hardware matrix and workload coverage remain. S07 changes detection-label density
-only and stays opt-in. A matched Manual/Auto comparison on that same device and
-fixture is recorded, but its run variance and zero-density Auto samples mean the
-profile is not ready to become a default.
-
+focus return, safe links and teardown. S06 records browser/renderer and workload metadata, flags changing source
+populations, and has a deterministic development-only aircraft fixture. A
+three-run base/candidate/Auto comparison now uses a stable 7,578-object dense
+scene on Intel UHD 620; the motion-only 200 ms gate passed without injected delay
+and failed with a 200 ms injected delay. The measurements and limitations are in
+[PERFORMANCE.md](PERFORMANCE.md); the wider hardware matrix remains open. S07
+only changes detection-label density and stays opt-in: Auto lowered density to
+zero while retaining four selected labels, but its typical frame time did not
+improve consistently.
 The dependency table governs execution; numerical order is only a convenient
 reading order. S06 and S09 can begin after their dependencies without waiting for
 all of A. S21 and S24 can also land before full replay/workspace completion.
@@ -1312,13 +1313,12 @@ one prior supported version migration, hardware matrix and milestone demonstrati
 preserve data recovery readers and the backups created before migration.
 
 **Implementation checkpoint:** the local candidate matrix at
-[`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json)
-passes formatting, package boundaries, 6,324 unit tests (10 skipped), the production build and
-the workspace, timeline/recording, evidence-panel, panel-resize and constrained-WebGL journeys.
-It reports zero local failures and remains `pending-evidence` for cross-platform
-install/upgrade, the 60-minute soak, named-hardware captures, manual accessibility
-and participant review, and signed-release matching.
-
+[`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json)
+passes formatting, package boundaries, 6,328 unit tests (10 skipped), the production build, six
+browser journeys and the repeated UHD 620 performance controls. It reports zero
+local failures and remains `pending-evidence` for cross-platform install/upgrade,
+the 60-minute soak, the broader named-hardware matrix, manual accessibility and
+participant review, and signed-release matching.
 ## 6. Validation, review and definition of done
 
 ### Common implementation gates
@@ -1417,18 +1417,18 @@ evidence and update the dependent slices.
 ## 8. Current implementation handoff
 
 Implementation code for S00–S31 is present on `dev` at
-[`3d6b30c`](https://github.com/arthurianresolve/gods-eye-view/commit/3d6b30c8475c1dbb6a1f39eccab5a5669b1f6396).
+[`fdd4d7d`](https://github.com/arthurianresolve/gods-eye-view/commit/fdd4d7de245ca50d11544574d22553accc01c10f).
 The local candidate report is
-[`candidate-report-20261008-final3.json`](../qa-artifacts/candidate-report-20261008-final3.json).
-It records 10 passed local checks, zero failures, and 5 pending external checks.
-Local browser/software-renderer results do not replace the external acceptance
-evidence below:
+[`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json).
+It records 11 passed local checks, zero failures, and 5 pending external checks.
+The single-machine UHD 620 comparison is recorded; it does not replace the wider
+hardware matrix or other external acceptance evidence below:
 
 - Verify token-base behavior through representative pull requests targeting
   `dev` and `main` for S01; the first hosted `dev` run passed at
   [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37734053904).
-- Finish repeated hardware captures for S06 and a matched Manual/Auto comparison
-  for S07. Auto remains opt-in until the recorded workload supports enabling it.
+- Complete S06 captures on the supported GPU/OS matrix. S07's matched comparison
+  is complete for one UHD 620 system; keep Auto opt-in pending broader validation.
 - Obtain written retention/export approval before enabling any live aircraft or
   AIS recording. Synthetic fixtures validate the complete capture and replay path.
 - Complete S23 keyboard, screen-reader, contrast, zoom and five-participant first-

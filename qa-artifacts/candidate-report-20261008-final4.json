@@ -1,0 +1,132 @@
+{
+    "schemaVersion":  1,
+    "generatedAt":  "2026-10-08T15:08:05.386Z",
+    "commit":  "fdd4d7de245ca50d11544574d22553accc01c10f",
+    "status":  "pending-evidence",
+    "readiness":  {
+                      "passed":  true,
+                      "releaseReady":  false,
+                      "failureCount":  0,
+                      "pendingCount":  5
+                  },
+    "checks":  [
+                   {
+                       "id":  "format",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run format:check",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 format:check\n\u003e node scripts/format.mjs --check\n\nChecked 1408 source files.\n"
+                   },
+                   {
+                       "id":  "boundaries",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run check:boundaries",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 check:boundaries\n\u003e node scripts/check-import-directions.mjs \u0026\u0026 node scripts/check-package-boundaries.mjs\n\n{\"modules\":989,\"portableEntries\":78}\nChecked infrastructure: 3 exports, 6 owned modules.\nChecked application: 1 exports, 1 owned modules.\nChecked investigation-time: 1 exports, 5 owned modules.\nChecked workspace-storage: 1 exports, 3 owned modules.\nChecked workspace-documents: 1 exports, 10 owned modules.\nChecked geographic-imports: 1 exports, 6 owned modules.\nChecked source-adapter-starter: 1 exports, 4 owned modules.\nChecked regional-recording: 1 exports, 12 owned modules.\nChecked viewer: 1 exports, 2 owned modules.\nChecked vite-build: 2 exports, 5 owned modules.\nChecked live-providers: 1 exports, 13 owned modules.\nChecked adsb-lol-source: 1 exports, 1 owned modules.\nChecked place-providers: 1 exports, 14 owned modules.\nChecked place-payloads: 1 exports, 1 owned modules.\nChecked space-providers: 1 exports, 6 owned modules.\nChecked space-requests: 1 exports, 1 owned modules.\nChecked terrain-provider: 1 exports, 2 owned modules.\nChecked terrain-source: 1 exports, 1 owned modules.\nChecked traffic-provider: 1 exports, 2 owned modules.\nChecked traffic-source: 1 exports, 1 owned modules.\nChecked firms-csv: 1 exports, 1 owned modules.\nChecked firms-provider: 1 exports, 2 owned modules.\nChecked gbfs-provider: 1 exports, 4 owned modules.\nChecked gbfs-source: 1 exports, 1 owned modules.\nChecked cctv-provider: 1 exports, 18 owned modules.\nChecked mapillary-provider: 1 exports, 11 owned modules.\nChecked radio-provider: 1 exports, 9 owned modules.\nChecked overpass-provider: 1 exports, 16 owned modules.\nChecked military-installations-provider: 1 exports, 12 owned modules.\nChecked regional-provider: 1 exports, 18 owned modules.\nChecked openai-provider: 1 exports, 24 owned modules.\nChecked standalone-key-setup: 1 exports, 6 owned modules.\nChecked place-search: 1 exports, 19 owned modules.\nChecked panel-disclosure: 1 exports, 1 owned modules.\nChecked surface-keyboard: 1 exports, 1 owned modules.\nChecked panel-rail-layout: 1 exports, 7 owned modules.\nChecked visual-input: 1 exports, 3 owned modules.\nChecked display-controls: 1 exports, 1 owned modules.\nChecked visual-effects: 2 exports, 10 owned modules.\nChecked map-source-controls: 1 exports, 5 owned modules.\nChecked layer-panel: 2 exports, 18 owned modules.\nChecked location-controls: 1 exports, 5 owned modules.\nChecked radio-controls: 1 exports, 5 owned modules.\nChecked cctv-controls: 1 exports, 7 owned modules.\nChecked context-controls: 2 exports, 12 owned modules.\nChecked cockpit-controls: 4 exports, 17 owned modules.\nChecked scene-controls: 1 exports, 3 owned modules.\nChecked ui-shell: 1 exports, 136 owned modules.\nChecked ui-styles: 1 exports, 2 owned modules.\nChecked director: 1 exports, 16 owned modules.\nChecked scenes: 1 exports, 49 owned modules.\nChecked live-observations: 1 exports, 5 owned modules.\nChecked civil-flights: 1 exports, 37 owned modules.\nChecked military-flights: 1 exports, 33 owned modules.\nChecked aircraft-mechanics: 1 exports, 20 owned modules.\nChecked vessel-layer: 1 exports, 24 owned modules.\nChecked earthquakes: 1 exports, 6 owned modules.\nChecked recent-imagery: 1 exports, 4 owned modules.\nChecked fire-layer: 1 exports, 20 owned modules.\nChecked satellites-layer: 1 exports, 24 owned modules.\nChecked launches-layer: 1 exports, 21 owned modules.\nChecked installations-layer: 1 exports, 28 owned modules.\nChecked awareness-layer: 1 exports, 21 owned modules.\nChecked traffic-layer: 1 exports, 35 owned modules.\nChecked bikeshare-layer: 1 exports, 17 owned modules.\nChecked cctv-layer: 1 exports, 35 owned modules.\nChecked street-level-layer: 3 exports, 25 owned modules.\nChecked alpr-cameras: 1 exports, 16 owned modules.\nChecked radio-layer: 1 exports, 28 owned modules.\nChecked submarine-cables: 1 exports, 11 owned modules.\nChecked bundled-cables: 1 exports, 1 owned modules.\nChecked geography: 2 exports, 4 owned modules.\nChecked maps: 6 exports, 13 owned modules.\nChecked voice-connection: 6 exports, 34 owned modules.\nChecked application-components: 16 exports, 803 owned modules.\nChecked application-catalog: 1 exports, 1 owned modules.\nChecked application-layer-construction: 1 exports, 509 owned modules.\nChecked application-operations: 1 exports, 43 owned modules.\nChecked layer-lifecycle: 1 exports, 2 owned modules.\nChecked ui-navigation: 1 exports, 4 owned modules.\nChecked ui-share-restoration: 1 exports, 9 owned modules.\nChecked ui-visual-settings: 1 exports, 22 owned modules.\nChecked ui-panel-chrome: 1 exports, 14 owned modules.\nChecked civil-flight-records: 1 exports, 5 owned modules.\nChecked civil-flight-ingestion: 1 exports, 2 owned modules.\nChecked military-flight-records: 1 exports, 5 owned modules.\nChecked military-flight-ingestion: 1 exports, 2 owned modules.\nChecked vessel-records: 1 exports, 2 owned modules.\nChecked vessel-ingestion: 1 exports, 3 owned modules.\nChecked directions-layer: 1 exports, 2 owned modules.\nChecked radio-browser-source: 1 exports, 2 owned modules.\nChecked cctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 1 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 11 owned modules.\nChecked alpr-source: 1 exports, 8 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 13 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 12 owned modules.\nChecked reference-sources: 2 exports, 6 owned modules.\nChecked nominatim-provider: 1 exports, 7 owned modules.\nChecked source-http-body: 1 exports, 1 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 5 owned modules.\nChecked transit-provider: 1 exports, 9 owned modules.\nChecked transit-source: 1 exports, 4 owned modules.\nChecked transit-standalone: 1 exports, 52 owned modules.\nChecked transit-layer: 1 exports, 24 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 8 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 6 owned modules.\nChecked perimeters-source: 1 exports, 2 owned modules.\nChecked tools: 1 exports, 49 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 60 owned modules.\nChecked view: 1 exports, 3 owned modules.\n"
+                   },
+                   {
+                       "id":  "unit",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd test — 6,328 passed, 10 skipped, 0 failed; serialized allocation gates passed (1/1 and 13/13).",
+                       "output":  "ℹ tests 6338\nℹ pass 6328\nℹ fail 0\nℹ skipped 10\nℹ duration_ms 278417.3512\nSerialized allocation gate: 1 passed; duration_ms 3634.9374\nSerialized allocation gate: 13 passed; duration_ms 126350.8746"
+                   },
+                   {
+                       "id":  "performance-harness",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "Matched three-run base, Manual and Auto hardware captures; no-delay motion gate passed and injected-delay control failed the budget as expected.",
+                       "output":  "Windows x64, HeadlessChrome 153, ANGLE Intel UHD Graphics 620 / Direct3D 11, 1440x900 DPR 1, foreground.\nBase app 95fa816; candidate app 0171b69; harness fdd4d7d. Stable workload: 2,500 synthetic aircraft + 4,362 datacenters + 716 dams = 7,578 objects.\nMotion p95 means: base 137.2 ms; candidate Manual 147.6 ms; candidate Auto 139.7 ms. Auto lowered label density to 0% but retained four selected labels and did not establish a consistent performance gain.\nManual no-delay 200 ms motion ceiling: passed, maximum of three motion p95 values 153.9 ms. Idle p95 is excluded by design.\nSame-scene 200 ms injected-delay negative control: motion p95 266.9 ms, motion budget failed as expected (capture command exit 1).\nReports: qa-artifacts/performance-baseline-main-detection-fdd4d7d-3run.json; qa-artifacts/performance-candidate-manual-fdd4d7d-3run.json; qa-artifacts/performance-candidate-auto-fdd4d7d-3run.json; qa-artifacts/performance-delay-control-dense-fdd4d7d-1run.json."
+                   },
+                   {
+                       "id":  "production-build",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run build",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 build\n\u003e vite build\n\nvite v6.4.3 building for production...\ntransforming...\n✓ 847 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/assets/alpr-marker-selected-brackets-LQ7qLcLT.png      4.73 kB\ndist/assets/alpr-marker-selected-WmayY1kQ.png              10.26 kB\ndist/assets/alpr-marker-normal-COAu686W.png                13.20 kB\ndist/assets/sdr.worker-DkgJubnS.js                         55.82 kB\ndist/index.html                                            78.21 kB │ gzip:    17.29 kB\ndist/assets/san-francisco-DAzZI0CW.json                   222.17 kB │ gzip:    54.75 kB\ndist/assets/landing-point-geo-CiAWPhfe.json               359.27 kB │ gzip:    72.57 kB\ndist/assets/marine-DXAJTUe1.json                          633.34 kB │ gzip:   223.15 kB\ndist/assets/cable-geo-i2PzBJi6.json                       728.31 kB │ gzip:   242.78 kB\ndist/assets/dams-B2lCjFgp.geojsonl                        730.28 kB\ndist/assets/countries-SEaBbd1J.json                       945.84 kB │ gzip:   359.84 kB\ndist/assets/counties-rSPaNADv.json                      1,541.46 kB │ gzip:   531.92 kB\ndist/assets/regions-B5_P_EZ3.json                       1,987.10 kB │ gzip:   683.45 kB\ndist/assets/datacenters-CtzejECr.geojsonl               2,561.98 kB\ndist/assets/states_provinces-DttMB0VZ.json              3,648.92 kB │ gzip: 1,260.07 kB\ndist/assets/names-DA56NpEe.json                         3,856.48 kB │ gzip: 1,716.21 kB\ndist/assets/mapillary-1hssAPdu.css                         84.24 kB │ gzip:    23.67 kB\ndist/assets/index-B9JPdfjv.css                            317.99 kB │ gzip:    54.95 kB\ndist/assets/services-DwLxcTEz.js                            2.27 kB │ gzip:     1.09 kB\ndist/assets/places-dpiaAJAI.js                              9.20 kB │ gzip:     3.51 kB\ndist/assets/index-CSq1uEBH.js                              83.73 kB │ gzip:    27.46 kB\ndist/assets/hls-bsuTaLC4.js                               595.07 kB │ gzip:   185.87 kB\ndist/assets/mapillary.module-CNpf_Czj.js                1,061.85 kB │ gzip:   273.75 kB\ndist/assets/egm96-universal.esm-D6y_VLZc.js             2,770.50 kB │ gzip: 1,849.99 kB\ndist/assets/index-e35E0pf9.js                           3,067.20 kB │ gzip:   942.89 kB\n✓ built in 18.78s\n\n(!) Some chunks are larger than 1500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n"
+                   },
+                   {
+                       "id":  "workspace-library",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run qa:workspaces -- --url http://127.0.0.1:4175",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 qa:workspaces\n\u003e node scripts/qa-workspace-library.mjs --url http://127.0.0.1:4175\n\nPASS workspace Save as creates a durable revision\nPASS duplicate and open restore a saved workspace\nPASS stale two-tab save is reported without overwriting\nPASS reload retains and reopens the workspace\nPASS command palette search and Escape dismissal\nPASS GeoJSON preview, explicit apply, save and reload rendering\nPASS offline demo is clearly synthetic and saved as its own workspace\nNOTE 2 browser resource errors were observed (not script exceptions)\n"
+                   },
+                   {
+                       "id":  "timeline",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run qa:timeline -- --url http://127.0.0.1:4175",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 qa:timeline\n\u003e node scripts/qa-investigation-timeline.mjs --url http://127.0.0.1:4175\n\nInvestigation timeline browser QA passed: aligned replay, visible gaps, source-policy denials, bounded capture controls and return to live.\n"
+                   },
+                   {
+                       "id":  "recording",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run qa:recording -- --url http://127.0.0.1:4175",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 qa:recording\n\u003e node scripts/qa-aircraft-recording.mjs --url http://127.0.0.1:4175\n\nAircraft recording browser QA passed: bounded antimeridian capture, 60-minute stop, durable reload and gap metadata.\n"
+                   },
+                   {
+                       "id":  "evidence-panel",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run qa:evidence-panel -- --url http://127.0.0.1:4175",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 qa:evidence-panel\n\u003e node scripts/qa-evidence-panel.mjs --url http://127.0.0.1:4175\n\nPASS: aircraft, AIS, orbital-epoch and forecast evidence, analyst-card keyboard pinning, immutable snapshots, desktop/narrow layout, safe source links, keyboard focus return, unsupported selection and teardown\n"
+                   },
+                   {
+                       "id":  "panel-resize",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run qa:panel-resize -- --url http://127.0.0.1:4175",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 qa:panel-resize\n\u003e node scripts/qa-panel-resize.mjs --url http://127.0.0.1:4175\n\nPASS: header drag lifts CCTV out of the rail\nPASS: eight resize handles keep the opposite edge pinned\nPASS: minimum size holds from both corners\nPASS: reload restores position and size\nPASS: a collapsed window keeps its height through a drag and a reload\nPASS: header double-click returns the panel to the rail\nPASS: no page errors and no render-loop errors\n"
+                   },
+                   {
+                       "id":  "render-resolution",
+                       "required":  true,
+                       "status":  "passed",
+                       "exitCode":  0,
+                       "summary":  "npm.cmd run qa:render-resolution -- --url http://127.0.0.1:4175",
+                       "output":  "\n\u003e gods-eye-view@0.2.1 qa:render-resolution\n\u003e node scripts/qa-render-resolution.mjs --url http://127.0.0.1:4175\n\nPASS: constrained WebGL cap, quality restoration, and view-preserving context-loss recovery\n"
+                   },
+                   {
+                       "id":  "platform-installs",
+                       "required":  true,
+                       "status":  "pending",
+                       "summary":  "Clean install and upgrade on Windows, macOS and Linux with a prior supported workspace."
+                   },
+                   {
+                       "id":  "mixed-use-soak",
+                       "required":  true,
+                       "status":  "pending",
+                       "summary":  "60-minute mixed-use run, repeated source toggles, replay seeks, workspace switching, imports and recovery."
+                   },
+                   {
+                       "id":  "hardware-matrix",
+                       "required":  true,
+                       "status":  "pending",
+                       "summary":  "Repeat renderer captures on named supported hardware; software rendering is not GPU evidence."
+                   },
+                   {
+                       "id":  "accessibility-review",
+                       "required":  true,
+                       "status":  "pending",
+                       "summary":  "Manual keyboard, screen reader, 200% zoom, contrast and five-participant first-task study."
+                   },
+                   {
+                       "id":  "release-tag-match",
+                       "required":  true,
+                       "status":  "pending",
+                       "summary":  "Confirm the tested commit equals the signed/tagged release commit and verify published checksums."
+                   }
+               ]
+}
