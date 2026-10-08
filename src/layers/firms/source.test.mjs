@@ -88,7 +88,9 @@ test('historical fire snapshots validate the requested time and filter future/ou
   });
 });
 
-test('historical fire selection never falls back to latest for an unsupported target or malformed window', async () => {
+test('historical fire selection never falls back to latest for an unsupported target or malformed window', async (t) => {
+  const now = Date.parse('2026-10-08T12:00:00Z');
+  t.mock.method(Date, 'now', () => now);
   let calls = 0;
   const source = createFirmsSource({
     fetchImpl: async () => {

@@ -59,7 +59,9 @@ test('USGS history selects a bounded 24-hour M2.5+ window with no future events'
   assert.equal(snapshot.snapshotAt, target - 100);
 });
 
-test('USGS refuses future or invalid history targets before making a request', async () => {
+test('USGS refuses future or invalid history targets before making a request', async (t) => {
+  const now = Date.parse('2026-10-08T12:00:00Z');
+  t.mock.method(Date, 'now', () => now);
   let calls = 0;
   const source = createUsgsEarthquakeSource({
     fetchImpl: async () => {
