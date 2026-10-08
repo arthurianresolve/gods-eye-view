@@ -1,4 +1,10 @@
-import { safeEvidenceUrl } from './evidence.js';
+import {
+  EVIDENCE_REFERENCE_KINDS,
+  MAX_EVIDENCE_REFERENCES,
+  normalizeEvidence,
+  safeEvidenceUrl,
+  safeReferenceUrl,
+} from './evidence.js';
 
 const SNAPSHOT_LIMIT = 20_000;
 const TEXT_LIMIT = 100_000;
@@ -55,7 +61,33 @@ export function createEvidenceSnapshot(input = {}) {
     const key = entityKey(record);
     if (!key || seen.has(key)) continue;
     seen.add(key);
-    normalized.push({ key, record: plain(record) });
+    const normalizedRecord = plain(record);
+    if (normalizedRecord?.evidence?.references !== undefined) {
+      try {
+        const references = normalizedRecord.evidence.references;
+        if (
+          !Array.isArray(references) ||
+          references.length > MAX_EVIDENCE_REFERENCES ||
+          references.some(
+            (reference) =>
+              !reference ||
+              !EVIDENCE_REFERENCE_KINDS.includes(reference.kind) ||
+              !safeReferenceUrl(reference.url) ||
+              (reference.originalUrl != null &&
+                !safeReferenceUrl(reference.originalUrl)),
+          )
+        )
+          throw new TypeError('unsafe reference');
+        normalizedRecord.evidence = normalizeEvidence(
+          normalizedRecord.evidence,
+        );
+      } catch (error) {
+        throw new TypeError(
+          `Evidence references are invalid: ${error.message}`,
+        );
+      }
+    }
+    normalized.push({ key, record: normalizedRecord });
   }
   const snapshot = {
     schemaVersion: 1,

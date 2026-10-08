@@ -4,6 +4,12 @@ import {
   validateWorkspaceId,
 } from '../storage/codec.js';
 import { createView } from '../view/index.js';
+import {
+  EVIDENCE_REFERENCE_KINDS,
+  MAX_EVIDENCE_REFERENCES,
+  evidenceInstant,
+  safeReferenceUrl,
+} from '../evidence/evidence.js';
 
 export const WORKSPACE_DOCUMENT_KIND = 'investigation-workspace';
 export const WORKSPACE_DOCUMENT_VERSION = 1;
@@ -64,12 +70,62 @@ function plainClone(value, label) {
   return normalized;
 }
 
+function validateEvidenceReferences(evidence) {
+  if (!evidence || typeof evidence !== 'object') return;
+  if (!Object.hasOwn(evidence, 'references')) return;
+  const references = evidence.references;
+  if (!Array.isArray(references) || references.length > MAX_EVIDENCE_REFERENCES)
+    fail('invalid-workspace', 'Evidence references must be a bounded list.');
+  for (const reference of references) {
+    if (
+      !reference ||
+      typeof reference !== 'object' ||
+      !EVIDENCE_REFERENCE_KINDS.includes(reference.kind) ||
+      !safeReferenceUrl(reference.url)
+    )
+      fail(
+        'invalid-workspace',
+        'Evidence reference has an unsafe URL or kind.',
+      );
+    if (
+      reference.originalUrl != null &&
+      !safeReferenceUrl(reference.originalUrl)
+    )
+      fail(
+        'invalid-workspace',
+        'Evidence reference has an unsafe original URL.',
+      );
+    for (const field of ['archiveAt', 'lookedUpAt']) {
+      if (reference[field] != null && evidenceInstant(reference[field]) == null)
+        fail('invalid-workspace', `Evidence reference ${field} is invalid.`);
+    }
+    if (
+      reference.title != null &&
+      (typeof reference.title !== 'string' || reference.title.length > 160)
+    )
+      fail('invalid-workspace', 'Evidence reference title is invalid.');
+  }
+}
+
+function validateNestedEvidence(value, depth = 0) {
+  if (value == null || depth > 12) return;
+  if (Array.isArray(value)) {
+    for (const entry of value) validateNestedEvidence(entry, depth + 1);
+    return;
+  }
+  if (typeof value !== 'object') return;
+  validateEvidenceReferences(value.evidence);
+  for (const entry of Object.values(value))
+    validateNestedEvidence(entry, depth + 1);
+}
+
 function normalizeEvidence(rows) {
   if (!Array.isArray(rows) || rows.length > MAX_WORKSPACE_EVIDENCE_ITEMS)
     fail('invalid-workspace', 'Pinned evidence must be a bounded list.');
   const ids = new Set();
   return rows.map((row) => {
     const entry = plainClone(row, 'Pinned evidence');
+    validateNestedEvidence(entry);
     const id = String(entry.id || '').trim();
     const sourceId = String(entry.sourceId || '').trim();
     if (!id || id.length > 256 || !sourceId || sourceId.length > 128)

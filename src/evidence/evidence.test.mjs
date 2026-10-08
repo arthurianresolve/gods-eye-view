@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   createEvidenceEnvelope,
   normalizeEvidence,
+  safePeeringDbFacilityUrl,
+  safeReferenceUrl,
   safeEvidenceUrl,
 } from './evidence.js';
 
@@ -61,6 +63,58 @@ test('safe source links require HTTPS and strip credentials, query and fragment'
   assert.equal(safeEvidenceUrl('http://example.test/path'), null);
   const evidence = normalizeEvidence({ sourceUrl: 'javascript:alert(1)' });
   assert.equal(evidence.sourceUrl, null);
+});
+
+test('references preserve public query URLs but reject private or credentialed targets', () => {
+  assert.equal(
+    safeReferenceUrl('https://www.peeringdb.com/search?q=Munich#results'),
+    'https://www.peeringdb.com/search?q=Munich',
+  );
+  const evidence = createEvidenceEnvelope({
+    references: [
+      {
+        kind: 'peeringdb',
+        url: 'https://www.peeringdb.com/search?q=Munich#results',
+        title: 'Search PeeringDB',
+      },
+      { kind: 'archive', url: 'http://127.0.0.1:4173/private' },
+      { kind: 'archive', url: 'https://user:pass@example.test/capture' },
+    ],
+  });
+  assert.deepEqual(evidence.references, [
+    {
+      kind: 'peeringdb',
+      url: 'https://www.peeringdb.com/search?q=Munich',
+      title: 'Search PeeringDB',
+      originalUrl: null,
+      archiveAt: null,
+      lookedUpAt: null,
+    },
+  ]);
+});
+
+test('references are bounded and normalized as immutable data', () => {
+  const evidence = createEvidenceEnvelope({
+    references: Array.from({ length: 12 }, (_, index) => ({
+      kind: 'user-linked',
+      url: `https://example.test/reference/${index}`,
+    })),
+  });
+  assert.equal(evidence.references.length, 8);
+  assert.equal(Object.isFrozen(evidence.references), true);
+  assert.equal(Object.isFrozen(evidence.references[0]), true);
+});
+
+test('PeeringDB facility references require a public /fac/ path', () => {
+  assert.equal(
+    safePeeringDbFacilityUrl('https://www.peeringdb.com/fac/123?x=1#details'),
+    'https://www.peeringdb.com/fac/123?x=1',
+  );
+  assert.equal(
+    safePeeringDbFacilityUrl('https://www.peeringdb.com/search?q=x'),
+    null,
+  );
+  assert.equal(safePeeringDbFacilityUrl('https://evil.example/fac/123'), null);
 });
 
 test('envelopes are immutable, bounded, and do not invent confidence values', () => {

@@ -11,7 +11,8 @@
       "src/data/localGeojsonLod.js",
       "src/data/inputOwnership.js",
       "src/data/infrastructureOverlayEntry.js",
-      "src/sources/infrastructureData.js"
+      "src/sources/infrastructureData.js",
+      "src/evidence/evidence.js"
     ],
     "external": ["cesium"]
   },
@@ -52,7 +53,8 @@
       "src/storage/codec.js",
       "src/view/index.js",
       "src/data/layerState.js",
-      "src/data/layerStateTokenReservations.json"
+      "src/data/layerStateTokenReservations.json",
+      "src/evidence/evidence.js"
     ],
     "external": []
   },
@@ -658,6 +660,7 @@
       "src/ui/evidencePanel.js",
       "src/performance/adaptiveQuality.js",
       "src/evidence/evidence.js",
+      "src/evidence/archiveLookup.js",
       "src/ui/cyberSonarControls.js",
       "src/ui/locationNavigation.js",
       "src/ui/cockpitCoordinator.js",
@@ -1271,6 +1274,7 @@
       "src/layers/cctv/ground.js",
       "src/layers/cctv/headingConfidence.js",
       "src/layers/cctv/health.js",
+      "src/layers/cctv/healthPolicy.js",
       "src/layers/cctv/hover.js",
       "src/layers/cctv/index.js",
       "src/layers/cctv/ingestion.js",
@@ -1289,7 +1293,8 @@
       "src/overlays/worldOverlayTokens.js",
       "src/data/cctvFootprint.js",
       "src/data/inputOwnership.js",
-      "src/layers/cctv/sourcePolicy.js"
+      "src/layers/cctv/sourcePolicy.js",
+      "src/evidence/evidence.js"
     ],
     "external": ["hls.js", "cesium"]
   },
@@ -1543,6 +1548,7 @@
       "src/ui/styles/workspaceLibrary.css",
       "src/ui/styles/diagnostics.css",
       "src/evidence/comparison.js",
+      "src/evidence/archiveLookup.js",
       "src/workspaces/restore.js",
       "src/workspaces/library.js",
       "src/workspaces/history.js",
@@ -1801,6 +1807,7 @@
       "src/layers/cctv/ground.js",
       "src/layers/cctv/headingConfidence.js",
       "src/layers/cctv/health.js",
+      "src/layers/cctv/healthPolicy.js",
       "src/layers/cctv/hover.js",
       "src/layers/cctv/index.js",
       "src/layers/cctv/ingestion.js",
@@ -2562,6 +2569,7 @@
       "src/layers/cctv/ground.js",
       "src/layers/cctv/headingConfidence.js",
       "src/layers/cctv/health.js",
+      "src/layers/cctv/healthPolicy.js",
       "src/layers/cctv/hover.js",
       "src/layers/cctv/index.js",
       "src/layers/cctv/ingestion.js",
@@ -3617,6 +3625,7 @@
       "src/layers/alpr/records.js",
       "src/layers/alpr/tileRecords.js",
       "src/sources/infrastructureData.js",
+      "src/evidence/evidence.js",
       "src/sources/eventPacks.js"
     ],
     "external": ["@mapbox/vector-tile", "pbf"]

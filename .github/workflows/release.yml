@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
     steps:
@@ -54,6 +56,10 @@ jobs:
       - name: Verify staged release
         run: node scripts/verify-release.mjs --path release-staging
 
+      - name: Verify staged commit matches the workflow revision
+        shell: bash
+        run: test "$(jq -r .commit release-staging/gev-release-manifest.json)" = "$GITHUB_SHA"
+
       - name: Create reproducible archive and checksum
         env:
           RELEASE_VERSION: ${{ github.ref_name }}
@@ -62,7 +68,12 @@ jobs:
           tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -C release-staging -cf - . | gzip -n > "$ARCHIVE"
           sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
 
-      - name: Upload development or candidate artifact
+      - name: Generate release artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: 'gods-eye-view-*.tar.gz'
+
+      - name: Upload candidate artifact for verification
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: gev-${{ github.event_name == 'push' && github.ref_name || inputs.channel }}-${{ github.sha }}
@@ -71,6 +82,27 @@ jobs:
             gods-eye-view-*.tar.gz.sha256
           if-no-files-found: error
           retention-days: 30
+
+      - name: Download candidate artifact for verification
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: gev-${{ github.event_name == 'push' && github.ref_name || inputs.channel }}-${{ github.sha }}
+          path: downloaded-release
+
+      - name: Verify the downloaded archive before publication
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME="gods-eye-view-${RELEASE_VERSION}.tar.gz"
+          pushd downloaded-release >/dev/null
+          sha256sum -c "${ARCHIVE_NAME}.sha256"
+          VERIFY_DIR="$(mktemp -d)"
+          tar -xzf "$ARCHIVE_NAME" -C "$VERIFY_DIR"
+          popd >/dev/null
+          node scripts/verify-release.mjs --path "$VERIFY_DIR"
+          test "$(jq -r .commit "$VERIFY_DIR/gev-release-manifest.json")" = "$GITHUB_SHA"
 
       - name: Publish stable tag assets
         if: github.event_name == 'push'

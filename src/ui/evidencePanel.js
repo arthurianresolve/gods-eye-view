@@ -1,4 +1,9 @@
-import { safeEvidenceUrl, normalizeEvidence } from '../evidence/evidence.js';
+import {
+  normalizeEvidence,
+  safeEvidenceUrl,
+  safePeeringDbFacilityUrl,
+} from '../evidence/evidence.js';
+import { createArchiveLookup } from '../evidence/archiveLookup.js';
 
 const SELECTED = 'gev:awareness-subject-selected';
 const CLEARED = 'gev:awareness-subject-cleared';
@@ -29,12 +34,16 @@ export class EvidencePanel {
     openPanel,
     hidePanel,
     windowRef = window,
+    archiveLookup = createArchiveLookup(),
   }) {
     this.panel = panel;
     this.closeButton = closeButton;
     this.openPanel = openPanel;
     this.hidePanel = hidePanel;
     this.windowRef = windowRef;
+    this.archiveLookup = archiveLookup;
+    this.currentDetail = null;
+    this.currentEvidence = null;
     this.returnFocusTarget = null;
     this.pinned = false;
     this.rows = new Map();
@@ -76,6 +85,9 @@ export class EvidencePanel {
       ['subject', 'Selected object'],
       ['layer', 'Layer'],
       ['source', 'Source'],
+      ['health', 'Camera health'],
+      ['delivery', 'Delivery and decode'],
+      ['fallback', 'Fallback state'],
       ['observed', 'Observed at'],
       ['age', 'Source age'],
       ['received', 'Received locally'],
@@ -92,6 +104,7 @@ export class EvidencePanel {
       ['uncertainty', 'Uncertainty'],
       ['license', 'License'],
       ['limitations', 'Limitations'],
+      ['references', 'Public references'],
     ];
     const primary = this.panel?.querySelector('[data-evidence-fields]');
     const technical = this.panel?.querySelector(
@@ -108,6 +121,9 @@ export class EvidencePanel {
       row.append(term, value);
       ([
         'source-record',
+        'health',
+        'delivery',
+        'fallback',
         'snapshot',
         'issued',
         'validity',
@@ -118,6 +134,7 @@ export class EvidencePanel {
         'uncertainty',
         'license',
         'limitations',
+        'references',
       ].includes(key)
         ? technical
         : primary
@@ -143,6 +160,12 @@ export class EvidencePanel {
       value == null || value === '' ? 'Unknown' : String(value);
   }
 
+  _publishEvidence(detail) {
+    const EventCtor = this.windowRef?.CustomEvent || globalThis.CustomEvent;
+    if (!EventCtor || !this.windowRef?.dispatchEvent) return;
+    this.windowRef.dispatchEvent(new EventCtor(ENTITY_SELECTED, { detail }));
+  }
+
   show(detail = {}, { pinned = false } = {}) {
     if (!this.panel) return;
     if (!this.returnFocusTarget && !this.panel.contains(document.activeElement))
@@ -158,6 +181,8 @@ export class EvidencePanel {
             ? 'PINNED RESULT EVIDENCE'
             : 'EVIDENCE';
     const evidence = normalizeEvidence(detail.evidence || {});
+    this.currentDetail = detail;
+    this.currentEvidence = evidence;
     const name = String(
       detail.label || evidence.entityRef.id || 'Selected object',
     );
@@ -174,6 +199,31 @@ export class EvidencePanel {
         : evidence.sourceId,
     );
     this._set('source-record', evidence.sourceRecordId);
+    const cameraState = detail.cameraState;
+    this._set(
+      'health',
+      cameraState
+        ? `${cameraState.healthReason || 'unknown'} (${cameraState.sourceStatus || 'unknown'})`
+        : null,
+    );
+    this._set(
+      'delivery',
+      cameraState
+        ? `attempted ${formatTime(cameraState.healthAttemptedAt)} · decoded ${cameraState.decodeStatus || 'unknown'}${cameraState.decodeLastSuccessAt != null ? ` · last decode ${formatTime(cameraState.decodeLastSuccessAt)}` : ''}`
+        : null,
+    );
+    this._set(
+      'fallback',
+      cameraState
+        ? cameraState.videoFallback
+          ? 'Still image fallback'
+          : cameraState.sourceKind === 'synthetic'
+            ? 'Synthetic placeholder'
+            : cameraState.sourceKind === 'streetview'
+              ? 'Street View fallback'
+              : 'Source delivery'
+        : null,
+    );
     this._set('observed', formatTime(evidence.observedAt));
     this._set('age', formatAge(evidence.observedAt));
     this._set('snapshot', formatTime(evidence.snapshotAt));
@@ -203,6 +253,130 @@ export class EvidencePanel {
         : `${evidence.uncertainty.value} ${evidence.uncertainty.unit || ''} ${evidence.uncertainty.kind || ''}`.trim(),
     );
     this._set('license', evidence.licenseRef || 'Not provided');
+    const references = this.rows.get('references');
+    if (references) {
+      references.replaceChildren();
+      if (!evidence.references.length) references.textContent = 'None attached';
+      for (const [index, reference] of evidence.references.entries()) {
+        if (index) references.append(document.createTextNode(' · '));
+        const link = document.createElement('a');
+        link.href = reference.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = reference.title || reference.kind;
+        references.append(link);
+        if (reference.kind === 'archive') {
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'panel-surface-control';
+          remove.textContent = 'Remove';
+          remove.setAttribute('aria-label', 'Remove archived reference');
+          remove.addEventListener('click', () => {
+            const next = normalizeEvidence({
+              ...evidence,
+              references: evidence.references.filter(
+                (_, referenceIndex) => referenceIndex !== index,
+              ),
+            });
+            this.show(
+              { ...this.currentDetail, evidence: next },
+              { pinned: this.pinned },
+            );
+            this._publishEvidence(this.currentDetail);
+          });
+          references.append(document.createTextNode(' '), remove);
+        }
+      }
+      const archiveTarget =
+        evidence.sourceUrl || evidence.references[0]?.originalUrl;
+      if (archiveTarget) {
+        if (
+          evidence.references.some((reference) => reference.kind === 'archive')
+        ) {
+          references.append(
+            document.createTextNode(' · archived copy attached'),
+          );
+        } else if (evidence.references.length < 8) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'panel-surface-control';
+          button.textContent = 'Find archived copy';
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            button.textContent = 'Looking up archive…';
+            try {
+              const result = await this.archiveLookup.lookup({
+                url: archiveTarget,
+                timestamp:
+                  evidence.observedAt || evidence.snapshotAt || undefined,
+              });
+              if (result.state === 'available' && result.reference) {
+                const next = normalizeEvidence({
+                  ...evidence,
+                  references: [...evidence.references, result.reference],
+                });
+                this.show(
+                  { ...this.currentDetail, evidence: next },
+                  { pinned: this.pinned },
+                );
+                this._publishEvidence(this.currentDetail);
+              } else {
+                button.textContent = 'No archived copy found';
+              }
+            } catch {
+              button.textContent = 'Archive lookup failed';
+            } finally {
+              button.disabled = false;
+            }
+          });
+          references.append(document.createTextNode(' · '), button);
+        }
+      }
+      if (evidence.entityRef.layerKey === 'local-datacenters') {
+        const attach = document.createElement('span');
+        attach.className = 'evidence-reference-attach';
+        const input = document.createElement('input');
+        input.type = 'url';
+        input.inputMode = 'url';
+        input.placeholder = 'https://www.peeringdb.com/fac/…';
+        input.setAttribute('aria-label', 'PeeringDB facility URL');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'panel-surface-control';
+        button.textContent = 'Attach facility';
+        const status = document.createElement('span');
+        status.setAttribute('role', 'status');
+        button.addEventListener('click', () => {
+          const url = safePeeringDbFacilityUrl(input.value);
+          if (!url) {
+            status.textContent = 'Use a public PeeringDB /fac/{id} URL.';
+            return;
+          }
+          if (evidence.references.length >= 8) {
+            status.textContent = 'Maximum of 8 references reached.';
+            return;
+          }
+          const next = normalizeEvidence({
+            ...evidence,
+            references: [
+              ...evidence.references,
+              {
+                kind: 'user-linked',
+                url,
+                title: 'PeeringDB facility (user-linked)',
+              },
+            ],
+          });
+          this.show(
+            { ...this.currentDetail, evidence: next },
+            { pinned: this.pinned },
+          );
+          this._publishEvidence(this.currentDetail);
+        });
+        attach.append(input, button, status);
+        references.append(document.createTextNode(' · '), attach);
+      }
+    }
     this._set(
       'limitations',
       evidence.limitations.join(' · ') || 'No additional limitations provided',

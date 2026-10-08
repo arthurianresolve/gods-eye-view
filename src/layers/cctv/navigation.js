@@ -1,5 +1,9 @@
 import * as Cesium from 'cesium';
 import { CCTV_FOCUS_RESULT } from './policy.js';
+import {
+  cameraHealthRank,
+  isCameraEligibleForAutoSelection,
+} from './healthPolicy.js';
 
 export function createNavigation({
   state: layerState,
@@ -18,16 +22,24 @@ export function createNavigation({
     const lat = Cesium.Math.toDegrees(carto.latitude);
     const lon = Cesium.Math.toDegrees(carto.longitude);
 
+    const now = Date.now();
     let best = null;
     for (const record of layerState._records) {
+      const health = layerState._healthById?.get(record.camera.id);
+      if (!isCameraEligibleForAutoSelection(health, now)) continue;
       const distKm = parts.model.haversineKm(
         lat,
         lon,
         record.camera.lat,
         record.camera.lon,
       );
-      if (!best || distKm < best.distKm) {
-        best = { id: record.camera.id, distKm };
+      const rank = cameraHealthRank(health, now);
+      if (
+        !best ||
+        distKm < best.distKm ||
+        (distKm === best.distKm && rank < best.rank)
+      ) {
+        best = { id: record.camera.id, distKm, rank };
       }
     }
     return best?.id || null;

@@ -37,16 +37,24 @@ const DAM_RAW = {
 
 test('infra analyst record: datacenter maps name, operator, capacity', () => {
   const r = mapAnalystRecord(DC_RAW, 'local-datacenters');
-  assert.deepEqual(r, {
-    id: 'AWS',
-    name: 'AWS',
-    lat: -52.942,
-    lon: -70.85,
-    operator: 'Amazon Web Services',
-    capacity: '27 MW',
-    river: null,
-    output: null,
-  });
+  assert.deepEqual(
+    { ...r, sourceRecordId: undefined, evidence: undefined },
+    {
+      id: 'AWS',
+      name: 'AWS',
+      lat: -52.942,
+      lon: -70.85,
+      operator: 'Amazon Web Services',
+      capacity: '27 MW',
+      river: null,
+      output: null,
+      sourceRecordId: undefined,
+      evidence: undefined,
+    },
+  );
+  assert.equal(r.sourceRecordId, '1176042553');
+  assert.equal(r.evidence.sourceId, 'OpenStreetMap contributors');
+  assert.equal(r.evidence.licenseRef, 'ODbL-1.0');
 });
 
 test('infra analyst record: dam maps name, operator, river, output; names stay unclamped', () => {

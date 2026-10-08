@@ -93,3 +93,47 @@ test('reports include UTC context, safe source links and spreadsheet-safe CSV ce
     /Unsupported/,
   );
 });
+
+test('comparison snapshots retain reference metadata in exported records', () => {
+  const snapshot = createEvidenceSnapshot({
+    id: 'archive',
+    capturedAt: 2_000,
+    records: [
+      {
+        layerKey: 'local-datacenters',
+        id: 'dc-1',
+        evidence: {
+          references: [
+            {
+              kind: 'archive',
+              url: 'https://web.archive.org/web/20260101000000/https://example.test',
+              originalUrl: 'https://example.test',
+              title: 'Internet Archive capture',
+            },
+          ],
+        },
+      },
+    ],
+  });
+  const exported = JSON.stringify(snapshot);
+  assert.match(exported, /Internet Archive capture/);
+  assert.match(exported, /web\.archive\.org/);
+});
+
+test('comparison snapshots reject unsafe evidence references', () => {
+  assert.throws(
+    () =>
+      createEvidenceSnapshot({
+        capturedAt: 1_700_000_000_000,
+        records: [
+          {
+            entityRef: { layerKey: 'cctv', id: 'cam-1' },
+            evidence: {
+              references: [{ kind: 'archive', url: 'http://127.0.0.1/' }],
+            },
+          },
+        ],
+      }),
+    /Evidence references are invalid/,
+  );
+});

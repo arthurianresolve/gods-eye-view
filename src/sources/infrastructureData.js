@@ -2,6 +2,7 @@
  * Bundled OpenStreetMap infrastructure layers (datacenters and dams): their
  * data files, line-delimited GeoJSON parsing and analyst records.
  */
+import { createEvidenceEnvelope } from '../evidence/evidence.js';
 
 // Resolved by Vite in builds and relative to this module in other consumers,
 // when read, so importing this module never needs a module URL.
@@ -95,6 +96,7 @@ export function mapAnalystRecord(raw, layerId = '') {
       : null;
   return {
     id: name || text(raw?.id) || layerTitle(layerId),
+    sourceRecordId: text(raw?.id),
     name,
     lat: num(raw?.lat),
     lon: num(raw?.lon),
@@ -102,6 +104,40 @@ export function mapAnalystRecord(raw, layerId = '') {
     capacity,
     river,
     output,
+    evidence: createEvidenceEnvelope({
+      entityRef: {
+        layerKey: layerId,
+        id: text(raw?.id) || name || layerTitle(layerId),
+      },
+      sourceId:
+        layerId === 'local-dams'
+          ? 'Open Infrastructure Map / OpenStreetMap'
+          : 'OpenStreetMap contributors',
+      sourceRecordId: text(raw?.id),
+      sourceUrl:
+        layerId === 'local-dams'
+          ? 'https://openinframap.org/'
+          : 'https://www.openstreetmap.org/',
+      method: 'unknown',
+      coverage: {
+        completeness: 'unknown',
+        reason: 'Bundled static extract; extraction date was not recorded.',
+      },
+      licenseRef: 'ODbL-1.0',
+      references:
+        layerId === 'local-datacenters' && (name || text(raw?.id))
+          ? [
+              {
+                kind: 'peeringdb',
+                url: `https://www.peeringdb.com/search?q=${encodeURIComponent(name || text(raw?.id))}`,
+                title: 'Search this facility in PeeringDB',
+              },
+            ]
+          : [],
+      limitations: [
+        'Bundled static extract; source observation and extraction times are unknown.',
+      ],
+    }),
   };
 }
 

@@ -270,6 +270,10 @@ export function createLifecycle({
       layerState._clickHandler = new Cesium.ScreenSpaceEventHandler(
         layerState._viewer.scene.canvas,
       );
+      // Keep the activation seam stable for callers and tests while ensuring
+      // user initiated world/card clicks publish the shared evidence event.
+      const setActiveCamera = (cameraId) =>
+        parts.selection.setActiveCamera(cameraId, { publish: true });
       parts.selection.bindCctvWorldClickGesture(
         layerState._clickHandler,
         (click) => {
@@ -277,10 +281,7 @@ export function createLifecycle({
           const picked = layerState._viewer.scene.pick(click.position);
           const cameraId = parts.selection.extractPickedCameraId(picked);
           if (cameraId) {
-            activateCctvCameraFromWorldClick(
-              cameraId,
-              parts.selection.setActiveCamera,
-            );
+            activateCctvCameraFromWorldClick(cameraId, setActiveCamera);
             return;
           }
           // Any identified scene object owns this click even if its layer does not
@@ -300,10 +301,7 @@ export function createLifecycle({
             { sourceId: CCTV_OVERLAY_SOURCE_ID },
           )?.entryId;
           if (cardId && layerState._recordById.has(cardId)) {
-            activateCctvCameraFromWorldClick(
-              cardId,
-              parts.selection.setActiveCamera,
-            );
+            activateCctvCameraFromWorldClick(cardId, setActiveCamera);
             return;
           }
           if (
@@ -312,7 +310,7 @@ export function createLifecycle({
               calibrationMode: layerState._calibrationMode,
             })
           ) {
-            parts.selection.deactivateActiveCamera();
+            parts.selection.deactivateActiveCamera({ publish: true });
           }
         },
         {

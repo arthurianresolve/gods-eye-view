@@ -50,6 +50,8 @@
     "qa:evidence-panel": "node scripts/qa-evidence-panel.mjs",
     "qa:render-resolution": "node scripts/qa-render-resolution.mjs",
     "qa:storage": "node scripts/qa-workspace-storage.mjs",
+    "qa:install-recovery": "node scripts/qa-install-recovery.mjs",
+    "qa:mixed-use-soak": "node scripts/qa-mixed-use-soak.mjs",
     "qa:recording": "node scripts/qa-aircraft-recording.mjs",
     "qa:application": "node scripts/qa-application.mjs",
     "qa:director-sharing": "node scripts/qa-director-sharing.mjs",

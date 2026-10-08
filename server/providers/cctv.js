@@ -20,6 +20,28 @@ import { sanitizeCctvRangeHeader } from './cctv/range.js';
 import { createHlsPuller } from './cctv/stream.js';
 import { googleServerApiKey } from './places/google-key.js';
 export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
+
+export function cctvHealthReasonCode(patch = {}) {
+  if (patch.reasonCode) return String(patch.reasonCode);
+  if (patch.sourceKind === 'synthetic') return 'synthetic-placeholder';
+  if (patch.sourceKind === 'streetview') return 'fallback-streetview';
+  if (patch.status === 'ok') return 'delivery-ok';
+  if (/timeout/i.test(patch.message || '')) return 'upstream-timeout';
+  if (/decode/i.test(patch.message || '')) return 'decode-failure';
+  if (/HTTP|upstream/i.test(patch.message || '')) return 'upstream-failure';
+  return patch.status || 'unknown';
+}
+export const CCTV_HEALTH_STALE_MS = 5 * 60_000;
+
+export function cctvHealthWithStaleness(entry, now = Date.now()) {
+  if (!entry || now - entry.updatedAt <= CCTV_HEALTH_STALE_MS) return entry;
+  return {
+    ...entry,
+    status: 'stale',
+    reasonCode: 'stale-health',
+    message: 'Health result is older than the allowed refresh window',
+  };
+}
 /**
  * Vite plugin: CCTV camera proxy with source registry, frame/media serving,
  * fallback chain (upstream -> Street View -> synthetic SVG), and health tracking.
@@ -52,18 +74,26 @@ export function cctvProxy({ sourceRoot = process.cwd() } = {}) {
       health.delete(oldest);
     }
     const prev = health.get(cameraId) || {};
+    const attemptedAt = Date.now();
+    const successful = patch.status === 'ok';
     health.set(cameraId, {
       id: cameraId,
       status: patch.status || prev.status || 'unknown',
       sourceKind: patch.sourceKind || prev.sourceKind || 'unknown',
       label: patch.label || prev.label || '',
       message: patch.message || prev.message || '',
-      updatedAt: Date.now(),
+      reasonCode:
+        patch.reasonCode || prev.reasonCode || cctvHealthReasonCode(patch),
+      attemptedAt,
+      lastSuccessAt: successful ? attemptedAt : prev.lastSuccessAt || null,
+      sourceObservedAt: patch.sourceObservedAt || prev.sourceObservedAt || null,
+      updatedAt: attemptedAt,
     });
   };
 
   /** Snapshot all camera health entries as an array. */
-  const listHealth = () => Array.from(health.values());
+  const listHealth = () =>
+    Array.from(health.values()).map((entry) => cctvHealthWithStaleness(entry));
 
   /** Build a JSON payload describing stream info (feedType, URLs) for a camera. */
   const buildStreamPayload = (source, cameraId) => {

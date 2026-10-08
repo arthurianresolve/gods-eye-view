@@ -1,6 +1,14 @@
 import { CCTV_AMBIENT_CARD_MAX } from '../../data/cctvLod.js';
 import { ACTIVE_FRAME_REFRESH_MS, IDLE_FRAME_REFRESH_MS } from './policy.js';
 import { headingHudToken, isHeadingEstimated } from './headingConfidence.js';
+import { createEvidenceEnvelope } from '../../evidence/evidence.js';
+
+function redactHealthDiagnostic(value) {
+  return String(value || '')
+    .replace(/https?:\/\/\S+/gi, '[url]')
+    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[address]')
+    .slice(0, 180);
+}
 
 export function createPresentation({
   state: layerState,
@@ -67,6 +75,7 @@ export function createPresentation({
       activeId || parts.selection.getActiveRecord()?.camera.id || null;
     const camera = record.camera;
     const health = layerState._healthById.get(camera.id) || null;
+    const healthDiagnostic = redactHealthDiagnostic(health?.message);
     const isActive = camera.id === resolvedActiveId;
     const refreshMs = isActive
       ? ACTIVE_FRAME_REFRESH_MS
@@ -74,6 +83,46 @@ export function createPresentation({
     const configuredVideo = parts.model.isVideoFeedType(camera.feedType);
     const videoFallback =
       configuredVideo && record.projection?.mode === 'image';
+    const sourceKind =
+      health?.sourceKind ||
+      camera.sourceKind ||
+      (camera.feedConfigured ? 'configured' : 'seed');
+    const feedState =
+      health?.status === 'ok'
+        ? 'nominal'
+        : health?.status === 'stale'
+          ? 'stale'
+          : health?.sourceKind === 'synthetic'
+            ? 'fallback'
+            : health?.status === 'degraded'
+              ? 'degraded'
+              : 'unknown';
+    const evidence = createEvidenceEnvelope({
+      entityRef: { layerKey: 'cctv', id: camera.id },
+      sourceId: camera.provider || sourceKind,
+      sourceUrl: camera.credit || null,
+      receivedAt: health?.lastSuccessAt,
+      observedAt: health?.sourceObservedAt,
+      feedState,
+      method:
+        sourceKind === 'synthetic'
+          ? 'simulated'
+          : sourceKind === 'streetview'
+            ? 'reconstructed'
+            : 'observed',
+      coverage: {
+        completeness: 'partial',
+        reason:
+          'Camera frame coverage is limited to the registered agency source.',
+      },
+      limitations: [
+        healthDiagnostic ||
+          'Camera capture time is not supplied by the source.',
+        sourceKind === 'synthetic'
+          ? 'Synthetic placeholder; no live camera frame was available.'
+          : null,
+      ].filter(Boolean),
+    });
     return {
       id: camera.id,
       name: camera.name,
@@ -96,13 +145,19 @@ export function createPresentation({
       feedType: camera.feedType,
       isVideo: configuredVideo && !videoFallback,
       videoFallback,
-      sourceKind:
-        health?.sourceKind ||
-        camera.sourceKind ||
-        (camera.feedConfigured ? 'configured' : 'seed'),
+      sourceKind,
       sourceStatus: health?.status || 'unknown',
-      sourceMessage: health?.message || '',
+      sourceMessage: healthDiagnostic,
       sourceLabel: health?.label || camera.provider || '',
+      healthReason: health?.reasonCode || 'unknown',
+      healthDiagnostic,
+      healthAttemptedAt: health?.attemptedAt || null,
+      healthLastSuccessAt: health?.lastSuccessAt || null,
+      decodeStatus: health?.decodeStatus || 'unknown',
+      decodeReason: health?.decodeReason || 'unknown',
+      decodeAttemptedAt: health?.decodeAttemptedAt || null,
+      decodeLastSuccessAt: health?.decodeLastSuccessAt || null,
+      evidence,
       credit: camera.credit || '',
       calibration: {
         ...parts.calibration.normalizeCalibration(camera.calibration),

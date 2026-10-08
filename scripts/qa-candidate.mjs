@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +20,88 @@ export function evaluateCandidateReadiness(checks) {
     releaseReady: pending.length === 0,
     failureCount: failures.length,
     pendingCount: pending.length,
+  });
+}
+
+const EXTERNAL_CHECK_IDS = new Set([
+  'platform-installs',
+  'mixed-use-soak',
+  'hardware-matrix',
+  'accessibility-review',
+  'release-tag-match',
+]);
+
+/** Validate an external acceptance manifest against the candidate being reported. */
+export function readValidationManifest(
+  filePath,
+  { candidateCommit, phase = 'pre-release' } = {},
+) {
+  if (!filePath) return null;
+  const raw = JSON.parse(readFileSync(filePath, 'utf8'));
+  if (!raw || raw.schemaVersion !== 1 || !Array.isArray(raw.checks))
+    throw new TypeError(
+      'Validation manifest must have schemaVersion 1 and checks.',
+    );
+  if (!['pre-release', 'post-publication'].includes(phase))
+    throw new TypeError(`Unsupported validation phase: ${phase}`);
+  if (raw.phase != null && raw.phase !== phase)
+    throw new Error('Validation manifest phase does not match the report.');
+  if (raw.candidateCommit !== candidateCommit)
+    throw new Error(
+      'Validation manifest candidate commit does not match the report.',
+    );
+  const seen = new Set();
+  const checks = raw.checks.map((item) => {
+    const id = String(item?.id || '').trim();
+    if (!EXTERNAL_CHECK_IDS.has(id))
+      throw new Error(`Unknown validation check: ${id || '(missing)'}`);
+    if (id === 'release-tag-match' && phase !== 'post-publication')
+      throw new Error(
+        'release-tag-match evidence belongs to post-publication verification.',
+      );
+    if (seen.has(id)) throw new Error(`Duplicate validation check: ${id}`);
+    seen.add(id);
+    const status = item.status || item.outcome;
+    if (!['passed', 'failed', 'pending'].includes(status))
+      throw new Error(`Invalid validation outcome for ${id}.`);
+    if (!String(item.environment || '').trim())
+      throw new Error(`Validation environment is required for ${id}.`);
+    const timestamp = Date.parse(item.timestamp || '');
+    if (!Number.isFinite(timestamp))
+      throw new Error(`Validation timestamp is required for ${id}.`);
+    const artifacts = Array.isArray(item.artifacts) ? item.artifacts : [];
+    if (artifacts.length > 8)
+      throw new Error(`Too many validation artifacts for ${id}.`);
+    for (const artifact of artifacts) {
+      const ref =
+        typeof artifact === 'string'
+          ? artifact
+          : artifact?.path || artifact?.url;
+      if (!ref || typeof ref !== 'string')
+        throw new Error(`Invalid validation artifact for ${id}.`);
+      if (!/^https?:\/\//i.test(ref) && !existsSync(ref))
+        throw new Error(`Validation artifact does not exist for ${id}: ${ref}`);
+    }
+    return Object.freeze({
+      id,
+      status,
+      environment: String(item.environment).trim().slice(0, 240),
+      timestamp: new Date(timestamp).toISOString(),
+      artifacts: Object.freeze(
+        artifacts.map((artifact) =>
+          typeof artifact === 'string'
+            ? artifact
+            : artifact.path || artifact.url,
+        ),
+      ),
+      notes: typeof item.notes === 'string' ? item.notes.slice(0, 500) : '',
+    });
+  });
+  return Object.freeze({
+    schemaVersion: 1,
+    phase,
+    candidateCommit,
+    checks: Object.freeze(checks),
   });
 }
 
@@ -51,6 +134,7 @@ function gitCommit() {
 export async function runCandidateMatrix({
   env = process.env,
   now = () => new Date(),
+  commit = gitCommit(),
 } = {}) {
   const checks = [];
   for (const [label, args] of [
@@ -107,11 +191,49 @@ export async function runCandidateMatrix({
   ])
     checks.push({ id, required: true, status: 'pending', summary });
 
+  let validationManifest = null;
+  const manifestPath = String(env.GEV_VALIDATION_MANIFEST || '').trim();
+  if (manifestPath) {
+    try {
+      validationManifest = readValidationManifest(manifestPath, {
+        candidateCommit: commit,
+        phase: env.GEV_VALIDATION_PHASE || 'pre-release',
+      });
+      const byId = new Map(
+        validationManifest.checks.map((item) => [item.id, item]),
+      );
+      for (const check of checks) {
+        const evidence = byId.get(check.id);
+        if (!evidence) continue;
+        check.status = evidence.status;
+        check.summary = `${check.summary} (${validationManifest.phase}; ${evidence.environment})`;
+        check.validation = evidence;
+      }
+    } catch (error) {
+      checks.push({
+        id: 'validation-manifest',
+        required: true,
+        status: 'failed',
+        summary: error.message,
+      });
+    }
+  }
   const readiness = evaluateCandidateReadiness(checks);
+  const preReleaseReadiness = evaluateCandidateReadiness(
+    checks.filter((check) => check.id !== 'release-tag-match'),
+  );
+  const publicationVerification = evaluateCandidateReadiness(
+    checks.filter((check) => check.id === 'release-tag-match'),
+  );
   return Object.freeze({
     schemaVersion: 1,
     generatedAt: now().toISOString(),
-    commit: gitCommit(),
+    commit,
+    validationManifest,
+    phases: {
+      preRelease: preReleaseReadiness,
+      publication: publicationVerification,
+    },
     status: readiness.releaseReady
       ? 'ready'
       : readiness.passed

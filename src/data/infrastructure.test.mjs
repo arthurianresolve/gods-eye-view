@@ -64,8 +64,16 @@ test('infrastructure factory preserves identity and creates independent state wi
   assert.deepEqual(
     first.map(({ id, name, source }) => ({ id, name, source })),
     [
-      { id: 'local-datacenters', name: 'Datacenters', source: 'Local' },
-      { id: 'local-dams', name: 'Dams', source: 'USACE' },
+      {
+        id: 'local-datacenters',
+        name: 'Datacenters',
+        source: 'OpenStreetMap contributors · ODbL-1.0',
+      },
+      {
+        id: 'local-dams',
+        name: 'Dams',
+        source: 'Open Infrastructure Map / OpenStreetMap · ODbL-1.0',
+      },
     ],
   );
   first.forEach((layer, index) => {
@@ -191,6 +199,7 @@ test('consumer build includes only infrastructure code and resolves assets under
   const entry = output.find((item) => item.type === 'chunk' && item.isEntry);
   const sources = Object.keys(entry.modules).filter((id) => id.endsWith('.js'));
   assert.deepEqual(sources.map((id) => id.split('/').at(-1)).sort(), [
+    'evidence.js',
     'infrastructure.js',
     'infrastructureData.js',
     'infrastructureOverlayEntry.js',

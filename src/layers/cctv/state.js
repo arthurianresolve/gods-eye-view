@@ -60,6 +60,11 @@ export function createState({ services }) {
 
   layerState._healthById = new Map();
 
+  // Browser-side decode observations supplement (and never overwrite) the
+  // proxy's transport/source health. They are kept across health refreshes so
+  // a late server response cannot erase a recent local failure.
+  layerState._clientHealthById = new Map();
+
   layerState._calibrationById = new Map();
 
   layerState._listeners = new Set();

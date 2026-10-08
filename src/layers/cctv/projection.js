@@ -16,6 +16,14 @@ export function createProjection({
 }) {
   const { holdContinuousRender, releaseContinuousRender } = services.render;
 
+  function reportClientHealth(cameraId, status, reasonCode) {
+    parts.health?.recordClientHealth?.(cameraId, {
+      status,
+      reasonCode,
+      attemptedAt: Date.now(),
+    });
+  }
+
   /**
    * Build the protected label associated with one active monitor plane.
    * @param {{cameraId: string, name: string, position: Cesium.Cartesian3|Function}} input
@@ -229,6 +237,7 @@ export function createProjection({
         video.height = video.videoHeight;
         runtime.planeMaterial.image = runtime.canvas;
         runtime.planeMaterial.image = video;
+        reportClientHealth(record.camera.id, 'ok', 'decode-ok');
       };
       video.addEventListener('loadedmetadata', bindVideoTexture);
       video.addEventListener('resize', bindVideoTexture);
@@ -240,6 +249,7 @@ export function createProjection({
         {
           onFailure: () => {
             if (runtime.disposed) return;
+            reportClientHealth(record.camera.id, 'failed', 'upstream-failure');
             runtime.video = null;
             runtime.mode = 'image';
             runtime.image = new Image();
@@ -248,10 +258,12 @@ export function createProjection({
               runtime.imageLoading = false;
               runtime.imageReady = true;
               runtime.imageStamp = Date.now();
+              reportClientHealth(record.camera.id, 'ok', 'decode-ok');
             };
             runtime.image.onerror = () => {
               runtime.imageLoading = false;
               runtime.imageReady = false;
+              reportClientHealth(record.camera.id, 'failed', 'decode-failure');
             };
             runtime.planeMaterial.image = runtime.canvas;
             parts.frames.refreshProjectionImage(record, true);
@@ -267,10 +279,12 @@ export function createProjection({
         runtime.imageLoading = false;
         runtime.imageReady = true;
         runtime.imageStamp = Date.now();
+        reportClientHealth(record.camera.id, 'ok', 'decode-ok');
       };
       img.onerror = () => {
         runtime.imageLoading = false;
         runtime.imageReady = false;
+        reportClientHealth(record.camera.id, 'failed', 'decode-failure');
       };
       runtime.image = img;
     }

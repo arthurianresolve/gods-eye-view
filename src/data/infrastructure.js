@@ -16,7 +16,8 @@ export function createInfrastructureLayers(services) {
       name: 'Datacenters',
       color: '#00ffff', // Cyan
       icon: '▣',
-      source: 'Local',
+      source: 'OpenStreetMap contributors · ODbL-1.0',
+      license: 'ODbL-1.0',
       osmDerived: true,
       labels: true,
       labelMax: 700,
@@ -32,7 +33,8 @@ export function createInfrastructureLayers(services) {
       name: 'Dams',
       color: '#0088ff', // Blue
       icon: '▰',
-      source: 'USACE',
+      source: 'Open Infrastructure Map / OpenStreetMap · ODbL-1.0',
+      license: 'ODbL-1.0',
       osmDerived: true,
       labels: true,
       labelMax: 900,

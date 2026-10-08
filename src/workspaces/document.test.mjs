@@ -18,7 +18,23 @@ function workspace(overrides = {}) {
         id: 'event-42',
         sourceId: 'earthquakes',
         capturedAt: 1500,
-        record: { magnitude: 4.2, latitude: 25, longitude: 121 },
+        record: {
+          magnitude: 4.2,
+          latitude: 25,
+          longitude: 121,
+          evidence: {
+            references: [
+              {
+                kind: 'archive',
+                url: 'https://web.archive.org/web/20260101000000/https://example.test',
+                originalUrl: 'https://example.test',
+                archiveAt: 1767225600000,
+                lookedUpAt: 1767225601000,
+                title: 'Internet Archive capture',
+              },
+            ],
+          },
+        },
       },
     ],
     annotations: [{ type: 'label', target: 'Taipei' }],
@@ -36,6 +52,10 @@ test('workspace documents normalize the saved view and preserve stable evidence 
   assert.deepEqual(document.view.layers, ['earthquakes', 'flights']);
   assert.deepEqual(document.annotations, [{ type: 'label', target: 'Taipei' }]);
   assert.equal(document.pinnedEvidence[0].id, 'event-42');
+  assert.equal(
+    document.pinnedEvidence[0].record.evidence.references[0].kind,
+    'archive',
+  );
   assert.equal(document.assetRefs[0].sha256, 'a'.repeat(64));
   assert.deepEqual(parseWorkspaceDocument(JSON.stringify(document)), document);
 });
@@ -73,6 +93,26 @@ test('workspace documents reject unsafe references, invalid views, future schema
         }),
       ),
     /integrity metadata/,
+  );
+  assert.throws(
+    () =>
+      createWorkspaceDocument(
+        workspace({
+          pinnedEvidence: [
+            {
+              ...workspace().pinnedEvidence[0],
+              record: {
+                evidence: {
+                  references: [
+                    { kind: 'archive', url: 'http://127.0.0.1/private' },
+                  ],
+                },
+              },
+            },
+          ],
+        }),
+      ),
+    /unsafe URL or kind/,
   );
   assert.throws(
     () =>

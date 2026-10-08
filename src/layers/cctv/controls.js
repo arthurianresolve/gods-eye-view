@@ -294,7 +294,9 @@ export function createControls({ state: layerState, services, parts, source }) {
      * @returns {boolean} True if the camera was found and selected.
      */
     selectCamera(cameraId, options = {}) {
-      const result = parts.selection.setActiveCamera(cameraId);
+      const result = parts.selection.setActiveCamera(cameraId, {
+        publish: true,
+      });
       if (result === CCTV_ACTIVATION_RESULT.NOT_FOUND) return false;
       if (options.focus) {
         parts.navigation.focusCamera(cameraId, options.durationSec || 1.8);
@@ -329,7 +331,7 @@ export function createControls({ state: layerState, services, parts, source }) {
         layerState._records.length,
       );
       const nextId = layerState._records[nextIdx].camera.id;
-      parts.selection.setActiveCamera(nextId);
+      parts.selection.setActiveCamera(nextId, { publish: true });
       if (options.focus) {
         parts.navigation.focusCamera(nextId, options.durationSec || 1.8);
       }
@@ -346,7 +348,7 @@ export function createControls({ state: layerState, services, parts, source }) {
     focusNearest(options = {}) {
       const nearest = parts.navigation.nearestCameraIdToViewer();
       if (!nearest) return null;
-      parts.selection.setActiveCamera(nearest);
+      parts.selection.setActiveCamera(nearest, { publish: true });
       if (options.focus !== false) {
         parts.navigation.focusCamera(nearest, options.durationSec || 1.8);
       }

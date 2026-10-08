@@ -26,6 +26,13 @@ export const EVIDENCE_FEED_STATES = Object.freeze([
   'off',
   'unknown',
 ]);
+export const EVIDENCE_REFERENCE_KINDS = Object.freeze([
+  'source',
+  'archive',
+  'peeringdb',
+  'user-linked',
+]);
+export const MAX_EVIDENCE_REFERENCES = 8;
 
 const KNOWN_SOURCE_URLS = Object.freeze([
   { match: /opensky/i, url: 'https://opensky-network.org/' },
@@ -71,10 +78,86 @@ export function safeEvidenceUrl(value) {
   }
 }
 
+/** Keep a public HTTPS reference while preserving harmless query parameters. */
+export function safeReferenceUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const ipv6 = host.startsWith('[') ? host.slice(1, -1) : '';
+    const mappedMatch = ipv6.match(
+      /^::ffff:(?:([\da-f]{1,4}):([\da-f]{1,4})|(\d+\.\d+\.\d+\.\d+))$/i,
+    );
+    const mappedIpv4 =
+      mappedMatch?.[3] ||
+      (mappedMatch
+        ? `${parseInt(mappedMatch[1], 16) >> 8}.${parseInt(mappedMatch[1], 16) & 255}.${parseInt(mappedMatch[2], 16) >> 8}.${parseInt(mappedMatch[2], 16) & 255}`
+        : null);
+    const privateIpv4 =
+      mappedIpv4 &&
+      (/^(127\.|10\.|192\.168\.|169\.254\.)/.test(mappedIpv4) ||
+        /^172\.(1[6-9]|2\d|3[0-1])\./.test(mappedIpv4));
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      host === 'localhost' ||
+      host.endsWith('.localhost') ||
+      host === '0.0.0.0' ||
+      /^(127\.|10\.|192\.168\.|169\.254\.)/.test(host) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
+      ipv6 === '::1' ||
+      privateIpv4 ||
+      /^(fc|fd|fe80:)/i.test(ipv6)
+    )
+      return null;
+    url.hash = '';
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Accept only a public PeeringDB facility path for an explicitly user-linked reference. */
+export function safePeeringDbFacilityUrl(value) {
+  const safe = safeReferenceUrl(value);
+  if (!safe) return null;
+  try {
+    const url = new URL(safe);
+    if (
+      url.hostname !== 'www.peeringdb.com' &&
+      url.hostname !== 'peeringdb.com'
+    )
+      return null;
+    return /^\/fac\/\d+\/?$/.test(url.pathname) ? safe : null;
+  } catch {
+    return null;
+  }
+}
+
 function optionalText(value, maxLength = 240) {
   if (typeof value !== 'string') return null;
   const clean = value.trim().slice(0, maxLength);
   return clean || null;
+}
+
+function normalizeReference(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const url = safeReferenceUrl(value.url);
+  if (!url) return null;
+  const kind = EVIDENCE_REFERENCE_KINDS.includes(value.kind)
+    ? value.kind
+    : 'user-linked';
+  const archiveAt = evidenceInstant(value.archiveAt);
+  const lookedUpAt = evidenceInstant(value.lookedUpAt);
+  return Object.freeze({
+    kind,
+    url,
+    title: optionalText(value.title, 160),
+    originalUrl: safeReferenceUrl(value.originalUrl),
+    archiveAt,
+    lookedUpAt,
+  });
 }
 
 /**
@@ -98,6 +181,12 @@ export function createEvidenceEnvelope(input = {}) {
   const validFrom = evidenceInstant(input.validFrom);
   const validTo = evidenceInstant(input.validTo);
   const issuedAt = evidenceInstant(input.issuedAt);
+  const references = Object.freeze(
+    (Array.isArray(input.references) ? input.references : [])
+      .map(normalizeReference)
+      .filter(Boolean)
+      .slice(0, MAX_EVIDENCE_REFERENCES),
+  );
   const method = EVIDENCE_METHODS.includes(input.method)
     ? input.method
     : 'unknown';
@@ -119,6 +208,7 @@ export function createEvidenceEnvelope(input = {}) {
     sourceId: optionalText(input.sourceId, 120),
     sourceRecordId: optionalText(input.sourceRecordId, 160),
     sourceUrl: safeEvidenceUrl(input.sourceUrl),
+    references,
     observedAt,
     receivedAt,
     snapshotAt,

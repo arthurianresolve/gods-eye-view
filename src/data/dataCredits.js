@@ -163,6 +163,14 @@ export const DATA_CREDITS = [
   OSM_CREDIT,
   OPENMAPTILES_CREDIT,
   {
+    key: 'internet-archive',
+    html: 'Optional archived references: <a href="https://archive.org/help/wayback_api.php" target="_blank" rel="noopener">Internet Archive Availability API</a> (links and metadata only)',
+  },
+  {
+    key: 'peeringdb',
+    html: 'Datacenter facility links: <a href="https://www.peeringdb.com/aup" target="_blank" rel="noopener">PeeringDB</a> (link-only; no facility data is ingested)',
+  },
+  {
     key: 'overture-military-names',
     html: 'Military area names: <a href="https://overturemaps.org" target="_blank" rel="noopener">Overture Maps Foundation</a> (ODbL)',
   },
