@@ -32,6 +32,7 @@ export function createLifecycle({
     layerState._records = [];
     layerState._recordById = new Map();
     layerState._healthById = new Map();
+    layerState._clientHealthById = new Map();
     layerState._count = 0;
     layerState._lastUpdate = null;
     layerState._lastHealthSyncAt = 0;

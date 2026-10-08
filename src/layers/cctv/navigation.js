@@ -128,16 +128,24 @@ export function createNavigation({
         layerState._lastHopAt = nowMs;
         return;
       }
+      if (!nearest) return;
     }
 
+    const eligible = layerState._records.filter((record) =>
+      isCameraEligibleForAutoSelection(
+        layerState._healthById?.get(record.camera.id),
+        nowMs,
+      ),
+    );
+    if (!eligible.length) return;
     const nextIdx = cctvCycleIndex(
-      layerState._records.findIndex(
+      eligible.findIndex(
         (record) => record.camera.id === layerState._activeCameraId,
       ),
       1,
-      layerState._records.length,
+      eligible.length,
     );
-    parts.selection.setActiveCamera(layerState._records[nextIdx].camera.id);
+    parts.selection.setActiveCamera(eligible[nextIdx].camera.id);
     layerState._lastHopAt = nowMs;
   }
 

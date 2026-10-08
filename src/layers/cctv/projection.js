@@ -255,12 +255,14 @@ export function createProjection({
             runtime.image = new Image();
             runtime.image.decoding = 'async';
             runtime.image.onload = () => {
+              if (runtime.disposed) return;
               runtime.imageLoading = false;
               runtime.imageReady = true;
               runtime.imageStamp = Date.now();
               reportClientHealth(record.camera.id, 'ok', 'decode-ok');
             };
             runtime.image.onerror = () => {
+              if (runtime.disposed) return;
               runtime.imageLoading = false;
               runtime.imageReady = false;
               reportClientHealth(record.camera.id, 'failed', 'decode-failure');
@@ -276,12 +278,14 @@ export function createProjection({
       img.decoding = 'async';
       img.crossOrigin = 'anonymous';
       img.onload = () => {
+        if (runtime.disposed) return;
         runtime.imageLoading = false;
         runtime.imageReady = true;
         runtime.imageStamp = Date.now();
         reportClientHealth(record.camera.id, 'ok', 'decode-ok');
       };
       img.onerror = () => {
+        if (runtime.disposed) return;
         runtime.imageLoading = false;
         runtime.imageReady = false;
         reportClientHealth(record.camera.id, 'failed', 'decode-failure');

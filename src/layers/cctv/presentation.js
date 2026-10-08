@@ -2,6 +2,7 @@ import { CCTV_AMBIENT_CARD_MAX } from '../../data/cctvLod.js';
 import { ACTIVE_FRAME_REFRESH_MS, IDLE_FRAME_REFRESH_MS } from './policy.js';
 import { headingHudToken, isHeadingEstimated } from './headingConfidence.js';
 import { createEvidenceEnvelope } from '../../evidence/evidence.js';
+import { currentCameraHealth } from './healthPolicy.js';
 
 function redactHealthDiagnostic(value) {
   return String(value || '')
@@ -74,7 +75,7 @@ export function createPresentation({
     const resolvedActiveId =
       activeId || parts.selection.getActiveRecord()?.camera.id || null;
     const camera = record.camera;
-    const health = layerState._healthById.get(camera.id) || null;
+    const health = currentCameraHealth(layerState._healthById.get(camera.id));
     const healthDiagnostic = redactHealthDiagnostic(health?.message);
     const isActive = camera.id === resolvedActiveId;
     const refreshMs = isActive
@@ -88,19 +89,41 @@ export function createPresentation({
       camera.sourceKind ||
       (camera.feedConfigured ? 'configured' : 'seed');
     const feedState =
-      health?.status === 'ok'
-        ? 'nominal'
-        : health?.status === 'stale'
-          ? 'stale'
-          : health?.sourceKind === 'synthetic'
-            ? 'fallback'
-            : health?.status === 'degraded'
-              ? 'degraded'
-              : 'unknown';
+      health?.sourceKind === 'synthetic' ||
+      health?.sourceKind === 'streetview' ||
+      videoFallback
+        ? 'fallback'
+        : health?.decodeStatus === 'failed'
+          ? 'degraded'
+          : health?.status === 'unavailable'
+            ? 'unavailable'
+            : health?.status === 'ok'
+              ? 'nominal'
+              : health?.status === 'stale'
+                ? 'stale'
+                : health?.sourceKind === 'synthetic'
+                  ? 'fallback'
+                  : health?.status === 'degraded'
+                    ? 'degraded'
+                    : 'unknown';
     const evidence = createEvidenceEnvelope({
       entityRef: { layerKey: 'cctv', id: camera.id },
       sourceId: camera.provider || sourceKind,
       sourceUrl: camera.credit || null,
+      cameraHealth: {
+        sourceStatus: health?.status || 'unknown',
+        sourceKind,
+        videoFallback,
+        healthReason: health?.reasonCode || 'unknown',
+        upstreamReasonCode: health?.upstreamReasonCode || 'unknown',
+        transportStatus: health?.transportStatus || 'unknown',
+        healthAttemptedAt: health?.attemptedAt,
+        healthLastSuccessAt: health?.lastSuccessAt,
+        decodeStatus: health?.decodeStatus || 'unknown',
+        decodeReason: health?.decodeReason || 'unknown',
+        decodeAttemptedAt: health?.decodeAttemptedAt,
+        decodeLastSuccessAt: health?.decodeLastSuccessAt,
+      },
       receivedAt: health?.lastSuccessAt,
       observedAt: health?.sourceObservedAt,
       feedState,
@@ -109,7 +132,9 @@ export function createPresentation({
           ? 'simulated'
           : sourceKind === 'streetview'
             ? 'reconstructed'
-            : 'observed',
+            : health?.lastSuccessAt
+              ? 'observed'
+              : 'unknown',
       coverage: {
         completeness: 'partial',
         reason:
@@ -150,6 +175,8 @@ export function createPresentation({
       sourceMessage: healthDiagnostic,
       sourceLabel: health?.label || camera.provider || '',
       healthReason: health?.reasonCode || 'unknown',
+      upstreamReasonCode: health?.upstreamReasonCode || 'unknown',
+      transportStatus: health?.transportStatus || 'unknown',
       healthDiagnostic,
       healthAttemptedAt: health?.attemptedAt || null,
       healthLastSuccessAt: health?.lastSuccessAt || null,

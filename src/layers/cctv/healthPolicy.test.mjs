@@ -8,9 +8,22 @@ import {
 
 const now = 1_000_000;
 
-test('camera health becomes stale after three five-minute refresh intervals', () => {
+test('declared cadence and independent decode failures guide selection until expiry', () => {
+  const health = {
+    status: 'ok',
+    updatedAt: now,
+    refreshIntervalMs: 1000,
+    decodeStatus: 'failed',
+    decodeAttemptedAt: now,
+  };
+  assert.equal(isCameraEligibleForAutoSelection(health, now + 2999), false);
+  assert.equal(isCameraEligibleForAutoSelection(health, now + 3000), true);
+  assert.equal(isFreshCameraHealth({ updatedAt: now + 1 }, now), false);
+});
+
+test('camera health becomes stale after five minutes when source cadence is unknown', () => {
   assert.equal(isFreshCameraHealth({ updatedAt: now - 299_999 }, now), true);
-  assert.equal(isFreshCameraHealth({ updatedAt: now - 300_000 }, now), true);
+  assert.equal(isFreshCameraHealth({ updatedAt: now - 300_000 }, now), false);
   assert.equal(isFreshCameraHealth({ updatedAt: now - 300_001 }, now), false);
 });
 

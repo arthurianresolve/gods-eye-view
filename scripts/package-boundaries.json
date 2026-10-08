@@ -241,6 +241,8 @@
     "exports": ["./server/providers/cctv"],
     "modules": [
       "server/providers/cctv.js",
+      "server/providers/cctv/placeholders.js",
+      "src/evidence/evidence.js",
       "server/providers/cctv/cap.js",
       "server/providers/cctv/groundHeights.js",
       "server/providers/cctv/catalog.js",

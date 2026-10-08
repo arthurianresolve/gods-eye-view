@@ -1,6 +1,23 @@
 import { HEALTH_SYNC_INTERVAL_MS, HEALTH_ENDPOINT } from './policy.js';
 
 export function createHealth({ state: layerState, services, parts, source }) {
+  function notifyInspector(id) {
+    const record = layerState._recordById?.get(id);
+    const host = globalThis.window;
+    if (
+      !record ||
+      !host?.dispatchEvent ||
+      !host.CustomEvent ||
+      !parts.presentation
+    )
+      return;
+    const cameraState = parts.presentation.getPublicCameraState(record);
+    host.dispatchEvent(
+      new host.CustomEvent('gev:camera-health-updated', {
+        detail: { evidence: cameraState.evidence, cameraState },
+      }),
+    );
+  }
   function mergeClientHealth(next) {
     for (const [id, client] of layerState._clientHealthById) {
       const server = next.get(id) || {
@@ -22,7 +39,7 @@ export function createHealth({ state: layerState, services, parts, source }) {
   /** Record a local delivery/decode observation without rewriting proxy facts. */
   function recordClientHealth(cameraId, patch = {}) {
     const id = String(cameraId || '').trim();
-    if (!id) return;
+    if (!id || patch.cancelled) return;
     const attemptedAt = Number.isFinite(patch.attemptedAt)
       ? patch.attemptedAt
       : Date.now();
@@ -40,8 +57,13 @@ export function createHealth({ state: layerState, services, parts, source }) {
           : previous.decodeLastSuccessAt || null,
     };
     layerState._clientHealthById.set(id, client);
-    const current = layerState._healthById.get(id);
-    if (current) layerState._healthById.set(id, { ...current, ...client });
+    const current = layerState._healthById.get(id) || {
+      id,
+      status: 'unknown',
+      updatedAt: null,
+    };
+    layerState._healthById.set(id, { ...current, ...client });
+    notifyInspector(id);
   }
 
   /**
@@ -77,16 +99,23 @@ export function createHealth({ state: layerState, services, parts, source }) {
           label: String(row.label || row.provider || ''),
           message: String(row.message || ''),
           reasonCode: String(row.reasonCode || '').toLowerCase() || 'unknown',
-          attemptedAt: parts.model.safeNumber(row.attemptedAt, now),
+          upstreamReasonCode: String(row.upstreamReasonCode || 'unknown'),
+          transportStatus: String(row.transportStatus || 'unknown'),
+          attemptedAt: optionalTime(row.attemptedAt),
           lastSuccessAt: optionalTime(row.lastSuccessAt),
           sourceObservedAt: optionalTime(row.sourceObservedAt),
-          updatedAt: parts.model.safeNumber(row.updatedAt, now),
+          updatedAt: optionalTime(row.updatedAt),
+          refreshIntervalMs: optionalTime(row.refreshIntervalMs),
         });
       }
       mergeClientHealth(next);
       layerState._healthById = next;
+      if (layerState._activeCameraId)
+        notifyInspector(layerState._activeCameraId);
     } catch {
       // keep previous health map
+      if (layerState._activeCameraId)
+        notifyInspector(layerState._activeCameraId);
     }
   }
   return { syncHealthState, recordClientHealth };

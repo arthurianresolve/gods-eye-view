@@ -56,6 +56,7 @@ test('camera evidence exposes redacted health and browser decode facts', () => {
     feedType: 'image',
     projectionMode: 'image',
     health: {
+      updatedAt: Date.now(),
       status: 'degraded',
       reasonCode: 'upstream-failure',
       message: 'fetch https://private.example.test/cam from 10.0.0.4 failed',
@@ -63,7 +64,7 @@ test('camera evidence exposes redacted health and browser decode facts', () => {
       lastSuccessAt: 1_000,
       decodeStatus: 'failed',
       decodeReason: 'decode-failure',
-      decodeAttemptedAt: 2_100,
+      decodeAttemptedAt: Date.now(),
       decodeLastSuccessAt: 1_100,
     },
   });
