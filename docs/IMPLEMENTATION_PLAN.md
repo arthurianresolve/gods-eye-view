@@ -146,9 +146,12 @@ The first wave has working code and repeatable local checks for its core path.
 The first hosted `workflow_dispatch` run passed at commit
 [`c996a25`](https://github.com/arthurianresolve/gods-eye-view/commit/c996a255c4063a93c0553fa3c3e31d09bc9d31b2),
 including Node 24/26, Windows onboarding and the browser gates. The latest
-hosted run also passed on commit
+hosted run passed on commit
+[`41235de`](https://github.com/arthurianresolve/gods-eye-view/commit/41235ded07a5510d23a9999c7341859cce667148)
+(run [37738815921](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37738815921)).
+The prior checkpoint at
 [`54982ba`](https://github.com/arthurianresolve/gods-eye-view/commit/54982ba)
-(run [37736662700](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37736662700)).
+also passed run [37736662700](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37736662700).
 S01 still needs representative pull requests to both `dev` and `main` to
 exercise base-specific token checks. S04's common feed-state and snapshot
 contract is wired; aircraft, AIS vessels and propagated satellites have
