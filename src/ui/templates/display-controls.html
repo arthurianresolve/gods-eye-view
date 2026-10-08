@@ -60,6 +60,14 @@
         <label class="pp-slider-mini-label" for="detection-density-slider">Density</label>
         <input type="range" class="pp-slider" id="detection-density-slider" min="0" max="100" step="25" value="50" aria-label="Detection label density" />
         <span class="pp-slider-value" id="detection-density-value">50%</span>
+        <label class="pp-slider-mini-label" for="presentation-quality-mode">Quality</label>
+        <select id="presentation-quality-mode" class="pp-mode-select" aria-label="Presentation quality profile">
+          <option value="manual">Manual</option>
+          <option value="auto">Auto</option>
+          <option value="quality">Quality</option>
+          <option value="performance">Performance</option>
+        </select>
+        <span id="presentation-quality-status" role="status" aria-live="polite">MANUAL · 50%</span>
       </div>
       <div class="pp-slider-row detection-allocation-row" id="detection-allocation-row">
         <span class="pp-slider-mini-label">Allocation</span>

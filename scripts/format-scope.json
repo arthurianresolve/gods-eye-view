@@ -964,5 +964,10 @@
   "src/tools/views.test.mjs",
   "src/app/embed.test.mjs",
   "src/tools/globePanel.test.mjs",
-  "src/costEndpointThrottle.test.mjs"
+  "src/costEndpointThrottle.test.mjs",
+  "scripts/capture-scene-performance.mjs",
+  "scripts/qa-evidence-panel.mjs",
+  "src/evidence/evidence.test.mjs",
+  "src/performance/adaptiveQuality.test.mjs",
+  "src/data/fixtures/evidence-s00.test.mjs"
 ]

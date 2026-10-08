@@ -18,7 +18,15 @@ export class MilitaryFlightRecords {
   }
   receive(
     aircraft,
-    { observedAtMs, floorWarmPoints: _floorWarmPoints, modelOwnsVisual },
+    {
+      observedAtMs,
+      sourceId = null,
+      sourceCoverage = null,
+      sourceFreshness = null,
+      sourceComplete = null,
+      floorWarmPoints: _floorWarmPoints,
+      modelOwnsVisual,
+    },
   ) {
     const { geoidHeight, cachedGroundFloor, floorAltitudeM } = this.services;
     const { id: icao24, longitude: lon, latitude: lat } = aircraft;
@@ -128,9 +136,23 @@ export class MilitaryFlightRecords {
     // Sticky merge — adsb.lol intermittently drops flight/t/r/ownOp; hold
     // last-known-good (bounded by the layer's eviction, which deletes the entry).
     const stickyType = stickyText(type, prevMeta?.type);
+    const receivedAtMs = Date.now();
+    const positionObservedAtMs =
+      Number.isFinite(aircraft.positionTimeMs) && aircraft.positionTimeMs > 0
+        ? aircraft.positionTimeMs
+        : null;
     const meta = {
       sourceReference: aircraft.reference,
-      observedReceiptMs: Date.now(),
+      observedReceiptMs: receivedAtMs,
+      receivedAtMs,
+      positionObservedAtMs,
+      sourceSnapshotObservedAtMs:
+        Number.isFinite(observedAtMs) && observedAtMs > 0 ? observedAtMs : null,
+      sourceId: sourceId || null,
+      sourceCoverage: sourceCoverage || null,
+      sourceFreshness: sourceFreshness || null,
+      sourceComplete:
+        typeof sourceComplete === 'boolean' ? sourceComplete : null,
       callsign: stickyText(callsign, prevMeta?.callsign),
       type: stickyType,
       // Type outranks category automatically inside classifyAircraft.
@@ -175,7 +197,7 @@ export class MilitaryFlightRecords {
       prevMeta,
       meta,
       groundFlipped,
-      fixEpochMs: aircraft.positionTimeMs ?? observedAtMs,
+      fixEpochMs: positionObservedAtMs ?? observedAtMs ?? receivedAtMs,
     };
   }
   absence(id, { complete, likelyLanded }) {

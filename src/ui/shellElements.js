@@ -2,6 +2,8 @@
 export function readShellElements(document = globalThis.document) {
   return {
     _rightPanelStack: document.getElementById('right-context-rail'),
+    _evidencePanel: document.getElementById('evidence-panel'),
+    _evidenceCloseBtn: document.getElementById('evidence-panel-close'),
     _styleIndicator: document.getElementById('active-style-name'),
     _sliderPanel: document.getElementById('param-slider-panel'),
     _sliderContainer: document.getElementById('param-sliders'),
@@ -37,6 +39,12 @@ export function readShellElements(document = globalThis.document) {
       'detection-density-slider',
     ),
     _detectionDensityValue: document.getElementById('detection-density-value'),
+    _presentationQualityMode: document.getElementById(
+      'presentation-quality-mode',
+    ),
+    _presentationQualityStatus: document.getElementById(
+      'presentation-quality-status',
+    ),
     _detectionAllocationRow: document.getElementById(
       'detection-allocation-row',
     ),

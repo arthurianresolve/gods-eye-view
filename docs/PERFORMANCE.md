@@ -3,8 +3,9 @@
 This page records one hardware-rendered Apple M5 comparison captured on 22
 August 2026 in Chrome 150 at 1440 x 900. It is not a minimum hardware
 specification and should not be used to predict performance on untested systems.
-The original capture artifacts are not included here, so this page records
-results rather than defining a runnable benchmark.
+The original capture artifacts are not included here. The capture command below
+now produces a portable JSON report; the existing point-in-time results remain
+unchanged.
 
 ## Test context
 
@@ -115,6 +116,22 @@ These populations change continuously. A future comparison must record the
 live counts again and match the focus conditions.
 
 ## Controls for a future capture
+
+Start the app at `localhost:4173`, foreground its browser window, then run:
+
+```sh
+npm run performance:capture -- --url http://localhost:4173 --runs 3 --seconds 5 --out qa-artifacts/performance.json
+```
+
+The JSON includes renderer, browser, viewport, device pixel ratio, tab visibility,
+startup timing, per-layer counts, JavaScript heap where supported, long tasks,
+frame interval percentiles, and repeated idle/scripted-camera windows. Use
+`--hardware-required` to reject software renderers or `--max-p95-ms N` for a
+local threshold. `--inject-delay-ms N` is a diagnostic negative control and must
+not be used for a baseline. A report flags changing layer populations across
+samples; rerun base and candidate with the same fixture/data population before
+comparing them. No hardware claim is made from a software renderer or a report
+with mismatched populations.
 
 Use the same controls before attributing a difference to the application:
 

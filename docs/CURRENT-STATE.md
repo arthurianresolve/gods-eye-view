@@ -1,5 +1,19 @@
 # God's Eye View Current State
 
+## Evidence and performance groundwork — October 8, 2026
+
+Branch `dev` now includes a versioned in-memory evidence envelope and deterministic
+synthetic fixture. Civil and military aircraft keep per-position source time,
+feed-snapshot time and local receipt separate; selection opens an inspector that
+labels smoothed/dead-reckoned display positions and safely renders known HTTPS
+provider links. Aircraft area/search query rows include evidence references and
+scope. Shared feed snapshots retain `PARTIAL`, coverage, completeness, freshness,
+and distinct observation versus forecast issue/valid times. Explicit no-coverage
+is partial rather than an all-clear. A new performance capture command records
+renderer, viewport, workload, object counts and frame-time percentiles; Auto
+quality is opt-in and adjusts detection-label density only. Other source-family
+evidence support is tracked in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
+
 ## God's Eye View in conversations — October 2, 2026
 
 Tool answers that can be shown in God's Eye View include a view: camera, layers,

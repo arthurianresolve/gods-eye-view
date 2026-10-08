@@ -617,7 +617,10 @@ test('CI runs the gates hermetically against a production build, strict, with ev
     gate,
     /MAPILLARY_CLIENT_TOKEN: 'MLY\|0\|qa-fixture'\s+run: \|\s+npx vite preview --port 4173 --strictPort/,
   );
-  assert.doesNotMatch(gate, /npx vite --port/);
+  assert.match(
+    gate,
+    /npx vite --host 127\.0\.0\.1 --port 4174 --strictPort[\s\S]*npm run qa:application -- --url http:\/\/localhost:4174/,
+  );
   assert.equal(
     (gate.match(/MAPILLARY_CLIENT_TOKEN: 'MLY\|0\|qa-fixture'/g) || []).length,
     2,
@@ -627,7 +630,10 @@ test('CI runs the gates hermetically against a production build, strict, with ev
     gate,
     /if: failure\(\)[\s\S]*actions\/upload-artifact@[0-9a-f]{40}/,
   );
-  assert.match(gate, /path: qa-artifacts\//);
+  assert.match(
+    gate,
+    /path:\s+\|\s+qa-artifacts\/[\s\S]*qa-shots\/director-sharing\//,
+  );
   assert.match(
     gate,
     /QA_FAIL_ON_RETRY: '1'/,

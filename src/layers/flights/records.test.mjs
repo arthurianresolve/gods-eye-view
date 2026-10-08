@@ -38,6 +38,7 @@ test('civil records keep aviation units separate from render height and survive 
   assert.equal(first.meta.altitude, 1000);
   assert.equal(first.meta.renderAltitudeM, 1040);
   assert.equal(first.fixEpochMs, 1700000000000);
+  assert.equal(first.meta.positionObservedAtMs, 1700000000000);
   first.meta.typeCode = 'B738';
   const second = store.receive(
     observation({
@@ -57,6 +58,14 @@ test('civil records keep aviation units separate from render height and survive 
   assert.equal(second.meta.typeCode, 'B738');
   assert.equal(Object.hasOwn(second.meta, 'cullPosition'), false);
   assert.deepEqual(JSON.parse(JSON.stringify(second.meta)), second.meta);
+});
+
+test('civil rendering can use receipt time without claiming it as a source fix time', () => {
+  const store = records();
+  const result = store.receive(observation({ positionTimeMs: null }), view());
+  assert.equal(result.meta.positionObservedAtMs, null);
+  assert.equal(result.meta.receivedAtMs, result.meta.observedReceiptMs);
+  assert.equal(result.fixEpochMs, result.meta.receivedAtMs);
 });
 
 test('civil record owners isolate state and preserve partial, missing-poll and landed retention', () => {

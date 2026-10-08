@@ -1,5 +1,16 @@
 # Changelog
 
+- S00–S07 groundwork on `dev`: captured the inspected baseline and deterministic
+  synthetic evidence fixture; enabled CI pushes and PR-base-aware token checks;
+  added a versioned source-evidence envelope, explicit unknown observation
+  times, and `PARTIAL` coverage in shared feed snapshots. Civil and military
+  aircraft selections now open a safe, keyboard-accessible evidence inspector,
+  and aircraft query rows cite source time and result scope. Added repeatable
+  scene-performance JSON capture and opt-in Auto/Quality/Performance label
+  profiles. Remaining source-family coverage and hardware comparison limits are
+  listed in [EVIDENCE-SUPPORT.md](docs/EVIDENCE-SUPPORT.md) and
+  [PERFORMANCE.md](docs/PERFORMANCE.md).
+
 - MCP setup examples use the app's default port, `4173`. Thanks to
   [Huanyi Xie](https://github.com/xiehuanyi) (#934) and
   [shirunjies8-png](https://github.com/shirunjies8-png) (#959) for the same fix.

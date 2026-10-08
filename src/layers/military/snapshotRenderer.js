@@ -46,6 +46,10 @@ export function createMilitarySnapshotRenderer({
         aircraft,
         {
           observedAtMs: receiptNowMs,
+          sourceId: snapshot.source,
+          sourceCoverage: snapshot.coverage,
+          sourceFreshness: snapshot.freshness,
+          sourceComplete: snapshot.complete,
           floorWarmPoints: _floorWarmPoints,
           modelOwnsVisual: aircraft.onGround
             ? rendering._modelOwnsVisual(icao24)

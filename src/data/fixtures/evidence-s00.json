@@ -1,0 +1,33 @@
+{
+  "schema": "gev-fixture/evidence-s00-v1",
+  "description": "Synthetic, credential-free evidence and gap scenarios. Test use only.",
+  "epoch": "2026-01-15T12:00:00.000Z",
+  "aircraft": {
+    "source": "Synthetic ADS-B",
+    "coverage": "Austin, Texas · 40 km radius",
+    "completeness": "partial",
+    "records": [
+      { "id": "abc123", "positionTimeMs": 1768478400000, "lat": 30.2672, "lon": -97.7431, "speedMps": 82, "courseDeg": 14 },
+      { "id": "abc123", "positionTimeMs": 1768478400000, "lat": 30.2672, "lon": -97.7431, "speedMps": 82, "courseDeg": 14, "case": "duplicate" },
+      { "id": "abc123", "positionTimeMs": 1768478395000, "lat": 30.266, "lon": -97.7438, "speedMps": 80, "courseDeg": 12, "case": "out-of-order" },
+      { "id": "def456", "positionTimeMs": null, "lat": 30.31, "lon": -97.71, "speedMps": 0, "courseDeg": null, "case": "unknown-position-time" }
+    ]
+  },
+  "vessels": {
+    "source": "Synthetic AIS",
+    "coverage": "fixture polygon only",
+    "completeness": "partial",
+    "records": [
+      { "id": "367123456", "positionTimeMs": 1768478400000, "lat": 30.25, "lon": -97.75, "speedKnots": 8 },
+      { "id": "367123456", "positionTimeMs": 1768478430000, "lat": 30.252, "lon": -97.748, "speedKnots": 8.2 }
+    ]
+  },
+  "weather": {
+    "source": "Synthetic weather frames",
+    "frames": [
+      { "validAt": "2026-01-15T11:55:00.000Z", "available": true },
+      { "validAt": "2026-01-15T12:00:00.000Z", "available": false, "reason": "fixture gap" },
+      { "validAt": "2026-01-15T12:05:00.000Z", "available": true }
+    ]
+  }
+}

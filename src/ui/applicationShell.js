@@ -34,6 +34,8 @@ import * as Cesium from 'cesium';
 import { aircraftTrackingTarget } from '../cockpitTracking.js';
 
 import { ShellFeedback } from './shellFeedback.js';
+import { EvidencePanel } from './evidencePanel.js';
+import { AdaptiveQualityController } from '../performance/adaptiveQuality.js';
 
 import { runCctvLayerEnableTransition } from '../cctvFocusPolicy.js';
 
@@ -119,6 +121,18 @@ export class StyleManager extends ShellFacade {
     });
     this._feedback = new ShellFeedback({
       readLayers: () => this._dataManager?.getAll?.() || [],
+    });
+    this._evidencePanelView = new EvidencePanel({
+      panel: this._evidencePanel,
+      closeButton: this._evidenceCloseBtn,
+      openPanel: () => {
+        this.setPanelCollapsed('evidence-panel', false, {
+          persist: false,
+          syncShare: false,
+        });
+        this._scheduleRightPanelLayout();
+      },
+      hidePanel: () => this._scheduleRightPanelLayout(),
     });
     this.viewer = viewer;
     this.mapStackController = mapStackController;
@@ -537,8 +551,11 @@ export class StyleManager extends ShellFacade {
         _setHudVariant: (...args) => this._setHudVariant(...args),
         _setCyberSonarEnabled: (...args) => this._setCyberSonarEnabled(...args),
         _setCyberSonarSetting: (...args) => this._setCyberSonarSetting(...args),
-        _applyDetectionDensityFromUi: (...args) =>
-          this._applyDetectionDensityFromUi(...args),
+        _applyDetectionDensityFromUi: (...args) => {
+          if (this._adaptiveQuality?.getMode() !== 'manual')
+            this._adaptiveQuality?.setMode('manual');
+          this._applyDetectionDensityFromUi(...args);
+        },
         _setDetectionAllocation: (...args) =>
           this._setDetectionAllocation(...args),
         _applyDetectionFadeFromUi: (...args) =>
@@ -565,6 +582,7 @@ export class StyleManager extends ShellFacade {
       },
     });
     this._initUI();
+    this._initAdaptiveQuality();
     this._initMapStackControl();
     this._initPanelChrome();
     this._initLeftPanelAdaptiveLayout();
@@ -607,6 +625,45 @@ export class StyleManager extends ShellFacade {
   }
 
   // Compatibility reads for existing controls, scene snapshots and Cockpit.
+
+  _initAdaptiveQuality() {
+    const {
+      getDetectionTuning,
+      getDetectionMode,
+      setDetectionTuning,
+      governorRequestRender,
+    } = this.services;
+    if (!this._presentationQualityMode) return;
+    const readDensity = () => getDetectionTuning?.()?.densityPct ?? 50;
+    this._adaptiveQuality = new AdaptiveQualityController({
+      viewer: this.viewer,
+      documentRef: document,
+      readDensity,
+      applyDensity: (densityPct) => {
+        setDetectionTuning?.({ densityPct });
+        if (this._detectionDensitySlider)
+          this._detectionDensitySlider.value = String(densityPct);
+        if (this._detectionDensityValue)
+          this._detectionDensityValue.textContent = `${densityPct}%`;
+        governorRequestRender?.('quality-profile');
+        this._updateDetectionButton?.(getDetectionMode?.());
+      },
+      onState: ({ mode, densityPct, p95FrameMs, change }) => {
+        this._presentationQualityMode.value = mode;
+        const measurement =
+          mode === 'auto' && Number.isFinite(p95FrameMs)
+            ? ` · p95 ${p95FrameMs.toFixed(1)} ms`
+            : '';
+        const reason = change
+          ? ` · ${change.reason === 'frame-time-high' ? 'reduced for frame time' : 'headroom detected'}`
+          : '';
+        this._presentationQualityStatus.textContent = `${mode.toUpperCase()} · ${densityPct}%${measurement}${reason}`;
+      },
+    });
+    this._lifetime.listen(this._presentationQualityMode, 'change', (event) => {
+      this._adaptiveQuality.setMode(event.currentTarget.value);
+    });
+  }
 
   /** Advance camera authority and settle any older search UI immediately. */
   _stampNavigation({
@@ -1569,6 +1626,8 @@ export class StyleManager extends ShellFacade {
       this.services;
     if (this._disposed) return;
     this._shareRestoration.destroy();
+    this._evidencePanelView.destroy();
+    this._adaptiveQuality?.destroy();
     this._feedback._globalStatusNotice = null;
     if (this._globalLoadingStatus) this._globalLoadingStatus.hidden = true;
     this._disposed = true;

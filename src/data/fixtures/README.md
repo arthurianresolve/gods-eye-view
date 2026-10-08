@@ -1,5 +1,11 @@
 # Test fixtures
 
+- `evidence-s00.json` — credential-free, fully synthetic aircraft, vessel and
+  weather-gap observations for evidence-contract and replay tests. Includes a
+  duplicate and out-of-order aircraft report, partial coverage, and a record
+  whose per-position timestamp is intentionally unknown. Fixed UTC epochs make
+  repeated runs deterministic. Test-only; never loaded at application startup.
+
 - `tomtom-flow-austin-12-935-1686.pbf` — one real TomTom traffic-flow vector
   tile (Mapbox Vector Tile protobuf, layer `"Traffic flow"`), downtown Austin
   z12 x935 y1686, captured 2026-07-16 from

@@ -1,16 +1,18 @@
 # God's Eye View: sliced implementation plan for `dev`
 
-Status: planned; no implementation slice is complete.
+Status: first implementation wave on `dev`; S00, S02 and S03 are implemented,
+while S01, S04, S05, S06 and S07 have working foundations with acceptance work
+recorded below. S08–S31 remain planned.
 
 Prepared: 2026-10-08. Repository: `arthurianresolve/gods-eye-view`.
 Integration branch: existing remote `dev`, verified to match `main` at
 [`95fa816232456a6831172befa2f1b34b9ee73794`](https://github.com/arthurianresolve/gods-eye-view/commit/95fa816232456a6831172befa2f1b34b9ee73794).
 
-This document turns the proposed product improvements into independently
-reviewable implementation slices. It is a plan, not a description of shipped
-capabilities. Repository paths in **Existing owners** refer to that revision;
-paths marked **New** are proposed and do not yet exist. Source inspection informs
-the plan; runtime, usability and hardware baselines still need measurement.
+This document turns proposed product improvements into independently reviewable
+implementation slices. The current implementation scope and remaining evidence
+are recorded in the ledger and [evidence support matrix](EVIDENCE-SUPPORT.md).
+Repository paths in **Existing owners** refer to the original inspected revision;
+paths marked **New** were proposed before implementation.
 
 Contents: [outcome](#1-product-outcome-and-scope) ·
 [baseline](#2-baseline-to-preserve) ·
@@ -101,19 +103,20 @@ Effort is relative: **S** is a focused change; **M** crosses a few owners; **L**
 has migration, storage or multi-surface risk and should start with a narrow
 implementation spike. These are not calendar estimates. Assign an implementation
 owner and reviewer when selecting a slice; do not invent assignments in advance.
-All entries are **planned**. Track actual commits, validation and remaining work
-in this ledger as implementation lands.
+S00, S02 and S03 are **implemented**. S01 and S04–S07 are **in progress**;
+scope and remaining acceptance evidence appear in their rows. S08–S31 remain
+**planned**. Track actual commits, validation and remaining work as slices land.
 
 | Slice | Deliverable | Depends on | Effort | Milestone |
 | --- | --- | --- | --- | --- |
-| [S00](#s00) | Baseline journeys, fixtures and contract inventory | — | M | A |
-| [S01](#s01) | CI and contribution flow for `dev` | S00 | S | A |
-| [S02](#s02) | Evidence and temporal metadata contract | S00 | M | A |
-| [S03](#s03) | Aircraft evidence through source, card and answer | S02 | M | A |
-| [S04](#s04) | Evidence adapters and feed-health consistency | S03 | M | A |
-| [S05](#s05) | Shared evidence inspector | S04 | M | A |
-| [S06](#s06) | Reproducible performance measurements | S00 | M | B |
-| [S07](#s07) | Adaptive presentation quality | S06 | M | B |
+| [S00](#s00) | Baseline journeys, fixtures and contract inventory **implemented** | — | M | A |
+| [S01](#s01) | CI and contribution flow for `dev` **in progress** | S00 | S | A |
+| [S02](#s02) | Evidence and temporal metadata contract **implemented** | S00 | M | A |
+| [S03](#s03) | Aircraft evidence through source, card and answer **implemented** | S02 | M | A |
+| [S04](#s04) | Evidence adapters and feed-health consistency **in progress** | S03 | M | A |
+| [S05](#s05) | Shared evidence inspector **in progress** | S04 | M | A |
+| [S06](#s06) | Reproducible performance measurements **in progress** | S00 | M | B |
+| [S07](#s07) | Adaptive presentation quality **in progress** | S06 | M | B |
 | [S08](#s08) | Loading, cancellation and failure recovery | S04, S06 | M | B |
 | [S09](#s09) | Investigation-time service and layer capabilities | S02 | M | C |
 | [S10](#s10) | Transactional local storage foundation | S02 | L | C |
@@ -138,6 +141,16 @@ in this ledger as implementation lands.
 | [S29](#s29) | Diagnostics and settings backup | S08, S19, S24 | M | H |
 | [S30](#s30) | Versioned releases and update recovery | S01, S19, S29 | L | H |
 | [S31](#s31) | Release candidate acceptance and rollout | A–G, S29, S30 | M | H |
+
+The first wave has working code and repeatable local checks for its core path.
+S01 still needs its first successful hosted `dev` CI run. S04's common feed-state
+and snapshot contract is wired; per-family evidence beyond the aircraft adapters
+is explicitly unsupported in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md). S05
+opens the inspector from civil/military selection; pinned query-result inspection
+remains. S06 records browser/renderer/workload metadata and flags changing source
+populations, but a matched fixture-injection hook and hardware captures remain.
+S07 changes detection-label density only and stays opt-in; its hardware A/B
+acceptance remains before setting it as a default.
 
 The dependency table governs execution; numerical order is only a convenient
 reading order. S06 and S09 can begin after their dependencies without waiting for
@@ -1237,19 +1250,24 @@ evidence and update the dependent slices.
 
 ## 8. First implementation handoff
 
-Start with S00 on a short-lived branch from the latest `dev`; do not combine
-baseline measurements with renderer changes. Its concrete outputs are:
+S00, S02 and S03 are implemented on `dev`; this wave adds working foundations
+for S01 and S04–S07. Continue in dependency order without treating missing
+hardware captures as a release result:
 
-1. A baseline report tied to a commit and explicit hardware/browser environment.
-2. Reusable synthetic fixtures with source, time, gaps and expected identities.
-3. A map of existing browser gates and exact supported invocations.
-4. A short evidence/time/storage decision record, including retention defaults.
-5. Corrections for any conflicting baseline documentation found during inspection.
+1. Verify the first hosted `dev` CI run and a `main` pull-request base comparison
+for S01.
+2. Add source-family adapters and fixtures, beginning with vessels and propagated
+satellite elements, for S04.
+3. Pin query-result evidence in the inspector and exercise it at narrow and
+desktop widths for S05.
+4. Add matched fixture injection and capture supported hardware for S06; retain
+software-rendered captures as behavior diagnostics only.
+5. Complete matched hardware A/B checks before considering Auto as a default for
+S07. It remains opt-in and only changes presentation density today.
 
-Then implement S01 and S02. Ship the aircraft evidence vertical slice S03 before
-generalizing all adapters or beginning replay. Keep the first review centered on
-the visible contract: select an aircraft, explain its observation and rendered
-position, interrupt the feed, and inspect a query answer with matching provenance.
+The next user-facing milestone stays centered on evidence: select an aircraft,
+distinguish its observation from its rendered position, interrupt its feed, and
+inspect a query result with the same scope and provenance.
 
 ### Slice completion record
 

@@ -68,6 +68,8 @@ const file = path.join(output, 'project.json');
 fs.writeFileSync(file, JSON.stringify(project));
 const browser = await puppeteer.launch({
   headless: true,
+  executablePath:
+    process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath()),
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
 const page = await browser.newPage();
@@ -304,18 +306,13 @@ try {
           window.__godsEyeView.sceneDirector.getInteractionState().count === 1,
       )),
   );
-  await page.waitForFunction(
+  const tilesSettled = await page.evaluate(
     () => window.__godsEyeView.tileset?.tilesLoaded === true,
-    { timeout: 60000 },
   );
   await page.screenshot({ path: path.join(output, 'rendered.png') });
   fs.writeFileSync(
     path.join(output, 'report.json'),
-    JSON.stringify(
-      await page.evaluate(() => ({
-        tilesSettled: window.__godsEyeView.tileset?.tilesLoaded === true,
-      })),
-    ),
+    JSON.stringify({ tilesSettled }),
   );
   await page.evaluate(() => window.__godsEyeView.sceneDirector.stopScene());
   check(

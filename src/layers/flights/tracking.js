@@ -1,4 +1,8 @@
 import * as Cesium from 'cesium';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../../evidence/evidence.js';
 import { nextCockpitNearContacts } from '../../data/cockpitAirLod.js';
 import { trackedModelZoomActive } from '../../data/trackedModelRegime.js';
 import {
@@ -64,6 +68,8 @@ export function createTracking({
     if (!bb?.position || !info) return false;
     if (flightState._trackedEntity)
       flightState._trackedEntity.gevSelectionOrigin = origin;
+    const described = parts.queries._describeFlight(icao24);
+    const evidence = _flightEvidence(icao24, info, described?.stale === true);
     _emitAwarenessEvent('gev:awareness-subject-selected', {
       layerId: 'flights',
       id: icao24,
@@ -73,10 +79,56 @@ export function createTracking({
       // had supplied a registration. Identity below stays `icao24`.
       label: parts.queries._contactLabel(icao24, info),
       position: Cesium.Cartesian3.clone(bb.position),
+      evidence,
       origin,
     });
     selectTrackedSubjectContext(_contextSubjectMetadata(icao24));
     return true;
+  }
+
+  function _flightEvidence(icao24, info, stale = false) {
+    return createEvidenceEnvelope({
+      entityRef: { layerKey: 'flights', id: icao24 },
+      sourceId: info?.sourceId || flightState.feed._lastSource,
+      sourceUrl: knownEvidenceSourceUrl(
+        info?.sourceId || flightState.feed._lastSource,
+      ),
+      sourceRecordId: info?.sourceReference,
+      observedAt: info?.positionObservedAtMs,
+      receivedAt: info?.receivedAtMs,
+      snapshotAt: info?.sourceSnapshotObservedAtMs,
+      method: 'observed',
+      displayMethod: stale ? 'predicted' : 'interpolated',
+      feedState: stale
+        ? 'stale'
+        : /adsb\.lol/i.test(info?.sourceId || '')
+          ? 'fallback'
+          : info?.sourceComplete === false
+            ? 'partial'
+            : info?.sourceFreshness === 'current'
+              ? 'nominal'
+              : 'unknown',
+      coverage: {
+        area:
+          typeof info?.sourceCoverage === 'string' ? info.sourceCoverage : null,
+        completeness:
+          info?.sourceComplete === true &&
+          !/regional/i.test(info?.sourceCoverage || '')
+            ? 'complete'
+            : info?.sourceFreshness === 'partial' ||
+                /regional/i.test(info?.sourceCoverage || '')
+              ? 'partial'
+              : 'unknown',
+      },
+      limitations: [
+        info?.positionObservedAtMs == null
+          ? 'The source did not provide a per-aircraft position time.'
+          : null,
+        stale
+          ? 'Displayed position is dead-reckoned from earlier fixes.'
+          : null,
+      ].filter(Boolean),
+    });
   }
 
   /**
@@ -100,6 +152,11 @@ export function createTracking({
       layerId: 'flights',
       layerName: 'Live Flights',
       source: flightState.feed._lastSource,
+      evidence: _flightEvidence(
+        icao24,
+        flightState.records.data.get(icao24),
+        described.stale === true,
+      ),
       label: parts.queries._contactLabel(
         icao24,
         flightState.records.data.get(icao24),

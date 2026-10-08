@@ -195,6 +195,39 @@ button.panel-surface-control {
   border-color: var(--panel-surface-error);
 }
 
+.evidence-panel-fields {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.evidence-panel-technical > summary {
+  padding: 6px 0;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.evidence-panel-row {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.7fr) minmax(0, 1.3fr);
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+
+.evidence-panel-row dt {
+  color: var(--text-secondary);
+}
+
+.evidence-panel-row dd {
+  min-width: 0;
+  margin: 0;
+}
+
+.evidence-panel-row a {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
 [data-panel-popup] {
   position: absolute;
   z-index: 5;

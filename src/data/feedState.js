@@ -10,6 +10,10 @@ export function layerFeedState(stats = {}) {
   const status =
     typeof state.status === 'string' ? state.status.toLowerCase() : '';
   const source = `${state.source || ''} ${state.coverage || ''}`;
+  const explicitNoCoverage =
+    state.noCoverage === true ||
+    status === 'no-coverage' ||
+    /^(?:none|no coverage)$/i.test(String(state.coverage || '').trim());
   const hasExplicitFallback = typeof state.fallback === 'boolean';
   const hasPriorData = Number(state.count) > 0 || Boolean(state.lastUpdate);
   const presentedError =
@@ -26,6 +30,9 @@ export function layerFeedState(stats = {}) {
     return 'unavailable';
   }
   if (state.loading) return 'loading';
+  // A source explicitly reporting no geographic coverage is not a successful
+  // empty observation and must not be narrated as an all-clear.
+  if (explicitNoCoverage) return 'partial';
   // Guidance states ask the user to act (zoom in, run a search) — normal
   // operation, not feed faults. One honesty carve-out: layers keep their
   // rendered records through the guidance state, so a genuinely stale cache
@@ -50,6 +57,6 @@ export function layerFeedState(stats = {}) {
     state.available === false
   )
     return 'degraded';
-  if (state.partial === true) return 'partial';
+  if (state.partial === true || status === 'partial') return 'partial';
   return 'nominal';
 }

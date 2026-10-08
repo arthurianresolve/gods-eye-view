@@ -1,6 +1,10 @@
 /** Aviation queries over the live aircraft sources (src/sources/live). */
 
 import { suggestView } from '../views.js';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../../evidence/evidence.js';
 import { defineTool, ToolError } from '../catalog.js';
 import {
   AREA_SCHEMA,
@@ -37,8 +41,32 @@ const round = (value, digits) =>
   Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
 
 /** The common row for an aircraft record from any live aircraft source. */
-function aircraftRow(record, from) {
+function aircraftRow(record, from, snapshot = null, layerKey = 'flights') {
   const point = { lat: record.latitude, lon: record.longitude };
+  const evidence = createEvidenceEnvelope({
+    entityRef: { layerKey, id: record.id },
+    sourceId: snapshot?.source || null,
+    sourceUrl: knownEvidenceSourceUrl(snapshot?.source),
+    sourceRecordId: record.reference || record.id,
+    observedAt: record.positionTimeMs,
+    receivedAt: Date.now(),
+    method: 'observed',
+    coverage: {
+      area: snapshot?.coverage || null,
+      completeness:
+        snapshot?.complete === true &&
+        !/regional/i.test(snapshot?.coverage || '')
+          ? 'complete'
+          : snapshot?.freshness === 'partial' ||
+              /regional/i.test(snapshot?.coverage || '')
+            ? 'partial'
+            : 'unknown',
+    },
+    limitations:
+      record.positionTimeMs == null
+        ? ['The source did not provide a per-aircraft position time.']
+        : [],
+  });
   return {
     id: record.id,
     callsign: record.callsign || null,
@@ -54,6 +82,14 @@ function aircraftRow(record, from) {
     operator: record.operator || null,
     origin_country: record.originCountry || null,
     last_contact: isoTime(record.contactTimeMs ?? record.positionTimeMs),
+    evidence_ref: {
+      observation_id: evidence.observationId,
+      source: evidence.sourceId,
+      source_url: evidence.sourceUrl,
+      observed_at: evidence.observedAt,
+      received_at: evidence.receivedAt,
+      method: evidence.method,
+    },
     ...(from ? { distance_km: round(distanceKm(from, point), 1) } : {}),
   };
 }
@@ -116,7 +152,14 @@ export const aircraftInArea = defineTool({
           (args.max_altitude_m == null ||
             altitude(record) <= args.max_altitude_m),
       )
-      .map((record) => aircraftRow(record, center))
+      .map((record) =>
+        aircraftRow(
+          record,
+          center,
+          snapshot,
+          args.military ? 'military' : 'flights',
+        ),
+      )
       .sort((a, b) => a.distance_km - b.distance_km);
     const kind = args.military ? 'military aircraft' : 'aircraft';
     // A regional fallback feed covers only part of the world around the
@@ -137,6 +180,19 @@ export const aircraftInArea = defineTool({
         }),
         ...capRows(rows, args.limit),
         ...snapshotInfo(snapshot),
+        evidence_scope: {
+          layer: args.military ? 'military' : 'flights',
+          area: area.label,
+          count: rows.length,
+          sourceSnapshotCount: snapshot.records.length,
+          completeness: regional
+            ? 'partial'
+            : snapshot.complete
+              ? 'complete'
+              : 'unknown',
+          truncated: rows.length > (args.limit ?? rows.length),
+          note: 'Count is limited to the returned source snapshot and query area.',
+        },
       },
     };
   },
@@ -204,6 +260,7 @@ export const findAircraft = defineTool({
           ? result.value.records.map((record) => ({
               record,
               feed: feeds[index].name,
+              snapshot: result.value,
             }))
           : [],
       )
@@ -214,7 +271,14 @@ export const findAircraft = defineTool({
             .toUpperCase() === wanted,
       )
       .filter(({ record }) => !seen.has(record.id) && seen.add(record.id));
-    const rows = matches.map(({ record }) => aircraftRow(record));
+    const rows = matches.map(({ record, feed, snapshot }) =>
+      aircraftRow(
+        record,
+        null,
+        snapshot,
+        feed === 'military' ? 'military' : 'flights',
+      ),
+    );
     // One match is shown followed; several are not framed.
     const only = matches.length === 1 ? matches[0] : null;
     // Each feed that answered, with its own freshness and coverage.

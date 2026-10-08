@@ -1,4 +1,8 @@
 import * as Cesium from 'cesium';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../../evidence/evidence.js';
 import { nextCockpitNearContacts } from '../../data/cockpitAirLod.js';
 import { aircraftIcon, TRACKED_ICON_PX } from '../../data/aircraftIcons.js';
 import { trackedModelZoomActive } from '../../data/trackedModelRegime.js';
@@ -65,6 +69,8 @@ export function createTracking({
     if (!bb?.position || !info) return false;
     if (flightState._trackedEntity)
       flightState._trackedEntity.gevSelectionOrigin = origin;
+    const described = parts.queries._describeFlight(icao24);
+    const evidence = _militaryEvidence(icao24, info, described?.stale === true);
     _emitAwarenessEvent('gev:awareness-subject-selected', {
       layerId: 'military',
       id: icao24,
@@ -73,10 +79,56 @@ export function createTracking({
         parts.queries._toCleanText(info.registration) ||
         icao24,
       position: Cesium.Cartesian3.clone(bb.position),
+      evidence,
       origin,
     });
     selectTrackedSubjectContext(_contextSubjectMetadata(icao24));
     return true;
+  }
+
+  function _militaryEvidence(icao24, info, stale = false) {
+    return createEvidenceEnvelope({
+      entityRef: { layerKey: 'military', id: icao24 },
+      sourceId: info?.sourceId || flightState.feed._lastSource,
+      sourceUrl: knownEvidenceSourceUrl(
+        info?.sourceId || flightState.feed._lastSource,
+      ),
+      sourceRecordId: info?.sourceReference,
+      observedAt: info?.positionObservedAtMs,
+      receivedAt: info?.receivedAtMs,
+      snapshotAt: info?.sourceSnapshotObservedAtMs,
+      method: 'observed',
+      displayMethod: stale ? 'predicted' : 'interpolated',
+      feedState: stale
+        ? 'stale'
+        : /adsb\.lol/i.test(info?.sourceId || '')
+          ? 'fallback'
+          : info?.sourceComplete === false
+            ? 'partial'
+            : info?.sourceFreshness === 'current'
+              ? 'nominal'
+              : 'unknown',
+      coverage: {
+        area:
+          typeof info?.sourceCoverage === 'string' ? info.sourceCoverage : null,
+        completeness:
+          info?.sourceComplete === true &&
+          !/regional/i.test(info?.sourceCoverage || '')
+            ? 'complete'
+            : info?.sourceFreshness === 'partial' ||
+                /regional/i.test(info?.sourceCoverage || '')
+              ? 'partial'
+              : 'unknown',
+      },
+      limitations: [
+        info?.positionObservedAtMs == null
+          ? 'The source did not provide a per-aircraft position time.'
+          : null,
+        stale
+          ? 'Displayed position is dead-reckoned from earlier fixes.'
+          : null,
+      ].filter(Boolean),
+    });
   }
 
   /**
@@ -97,6 +149,7 @@ export function createTracking({
       layerId: 'military',
       layerName: 'Military Flights',
       source: flightState.feed._lastSource,
+      evidence: _militaryEvidence(icao24, info, described.stale === true),
       label,
       latitude: described.latitude,
       longitude: described.longitude,

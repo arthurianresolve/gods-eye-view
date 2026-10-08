@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
@@ -51,7 +51,9 @@ jobs:
 
       - name: Check published layer-token allocations
         if: github.event_name == 'pull_request'
-        run: npm run layer-token:check -- --base-ref origin/main
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref || github.event.repository.default_branch }}
+        run: npm run layer-token:check -- --base-ref "origin/$BASE_REF"
 
       - name: Run unit tests
         run: npm test
@@ -104,6 +106,31 @@ jobs:
       - name: Street Level gate with Mapillary fixtures
         run: npm run qa:street-level:fixtures -- --strict --url http://localhost:4173
 
+      - name: Start the application lifecycle fixture server
+        if: success() || failure()
+        run: |
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > lifecycle.log 2>&1 &
+          for attempt in $(seq 1 90); do
+            curl -sf http://localhost:4174/ > /dev/null && exit 0
+            sleep 2
+          done
+          cat lifecycle.log
+          exit 1
+
+      - name: First-use application lifecycle gate
+        if: success() || failure()
+        run: npm run qa:application -- --url http://localhost:4174
+
+      - name: Scene import and sharing gate
+        if: success() || failure()
+        env:
+          QA_BASE_URL: http://localhost:4173
+        run: npm run qa:director-sharing
+
+      - name: Aircraft evidence panel gate
+        if: success() || failure()
+        run: npm run qa:evidence-panel -- --url http://localhost:4173
+
       - name: Portable panel gate
         if: success() || failure()
         run: npm run qa:panel-resize -- --url http://localhost:4173
@@ -117,7 +144,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: browser-gate-evidence
-          path: qa-artifacts/
+          path: |
+            qa-artifacts/
+            qa-shots/director-sharing/
           if-no-files-found: ignore
           retention-days: 14
 

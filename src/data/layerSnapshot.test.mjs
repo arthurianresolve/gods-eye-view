@@ -71,6 +71,13 @@ test('layerFeedState matches the chip classifier for every honesty class', () =>
     }),
     'degraded',
   );
+  assert.equal(layerFeedState({ status: 'partial', count: 20 }), 'partial');
+  assert.equal(layerFeedState({ partial: true, count: 20 }), 'partial');
+  assert.equal(layerFeedState({ status: 'no-coverage', count: 0 }), 'partial');
+  assert.equal(
+    layerFeedState({ status: 'empty', coverage: 'no coverage' }),
+    'partial',
+  );
   assert.equal(layerFeedState({ loading: true }), 'loading');
   assert.equal(layerFeedState({ count: 5, lastUpdate: 1 }), 'nominal');
   assert.equal(
@@ -90,7 +97,15 @@ test('layerFeedState matches the chip classifier for every honesty class', () =>
 test('chip labels and severity cover every feed-state the envelope can emit', () => {
   assert.deepEqual(
     [...LAYER_FEED_STATES],
-    ['nominal', 'loading', 'degraded', 'stale', 'fallback', 'unavailable'],
+    [
+      'nominal',
+      'loading',
+      'degraded',
+      'partial',
+      'stale',
+      'fallback',
+      'unavailable',
+    ],
   );
   assert.deepEqual([...SNAPSHOT_FEED_STATES], [...LAYER_FEED_STATES, 'off']);
   for (const state of LAYER_FEED_STATES) {
@@ -102,9 +117,57 @@ test('chip labels and severity cover every feed-state the envelope can emit', ()
     true,
   );
   assert.equal(FEED_STATE_SEVERITY.stale < FEED_STATE_SEVERITY.fallback, true);
+  assert.equal(FEED_STATE_SEVERITY.partial < FEED_STATE_SEVERITY.nominal, true);
   assert.equal(worstFeedState(['nominal', 'stale', 'fallback']), 'stale');
   assert.equal(worstFeedState(['degraded', 'unavailable']), 'unavailable');
   assert.equal(worstFeedState([]), null);
+});
+
+test('partial coverage remains visible in snapshots and mixed feed ranking', () => {
+  const partial = layerSnapshot(
+    {
+      id: 'flights',
+      enabled: true,
+      stats: {
+        status: 'partial',
+        partial: true,
+        count: 2,
+        coverage: 'Austin only',
+      },
+    },
+    { now: NOW },
+  );
+  assert.equal(partial.feedState, 'partial');
+  assert.equal(worstFeedState(['nominal', partial.feedState]), 'partial');
+  assert.match(feedProvenanceNote([partial], 'partial'), /PARTIAL/);
+});
+
+test('snapshot separates unknown observation time from last refresh and preserves forecast issue/valid times', () => {
+  const unknown = layerSnapshot(
+    { id: 'sites', enabled: true, stats: { count: 0, lastUpdate: NOW } },
+    { now: NOW },
+  );
+  assert.equal(unknown.lastUpdate, NOW);
+  assert.equal(unknown.observedAt, null);
+  assert.equal(unknown.sourceTimeKind, 'unknown');
+
+  const forecast = layerSnapshot(
+    {
+      id: 'wind',
+      enabled: true,
+      stats: {
+        count: 4,
+        lastUpdate: NOW - 3600_000,
+        validTime: '2026-01-01T01:00:00.000Z',
+        source: 'NOAA GFS',
+      },
+    },
+    { now: NOW },
+  );
+  assert.equal(forecast.observedAt, null);
+  assert.equal(forecast.issuedAt, NOW - 3600_000);
+  assert.equal(forecast.validAt, Date.UTC(2026, 0, 1, 1));
+  assert.equal(forecast.sourceTimeKind, 'forecast');
 });
 
 test('a disabled layer is off even when leftover stats would read stale', () => {

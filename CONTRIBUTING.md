@@ -147,7 +147,7 @@ ownership and adoption process.
 
 ## Pull requests
 
-1. Branch off `main`.
+1. In this fork, branch off `dev` and target `dev` for integration.
 2. Keep `npm run build`, `npm test`, and `npm run test:track` green and avoid new console errors, plus the [feature gate](#feature-regression-gates) for the area you touched.
 3. If you change runtime behavior, update `docs/CURRENT-STATE.md` and `CHANGELOG.md` in the same PR.
 4. If you add or change a data source, update [DATA_SOURCES.md](DATA_SOURCES.md) with its license and attribution. **Don't add data you don't have the right to redistribute** — fetch it at runtime instead.
@@ -159,6 +159,10 @@ God's Eye View is maintained by [Bilawal Sidhu](https://github.com/bilawalsidhu)
 and [Sameh Khamis](https://github.com/samehkhamis) at
 [Halfpixel](https://halfpixel.ai). Either maintainer can review and merge
 contributions.
+
+For this fork, maintainers integrate reviewed changes into `dev`. Promote a
+release-ready `dev` revision to `main` with a reviewed pull request after the
+normal gates pass; do not push release commits directly to `main`.
 
 ## Ground rules
 
