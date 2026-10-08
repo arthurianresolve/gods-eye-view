@@ -7,7 +7,8 @@
           <button class="panel-collapse-btn panel-surface-control" data-collapse-target="evidence-panel" type="button" aria-label="Collapse evidence inspector" title="Collapse evidence inspector">▼</button>
           <button id="evidence-panel-close" class="panel-surface-control" type="button" aria-label="Close evidence inspector">Close</button>
         </header>
-        <div data-panel-body data-rail-scroller aria-live="polite" aria-atomic="true">
+        <div data-panel-body data-rail-scroller>
+          <p data-evidence-status role="status" aria-live="polite"></p>
           <dl class="evidence-panel-fields" data-evidence-fields></dl>
           <details class="evidence-panel-technical">
             <summary>Technical evidence</summary>

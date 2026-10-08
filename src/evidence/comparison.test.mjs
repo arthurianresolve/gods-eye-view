@@ -13,6 +13,33 @@ const record = (id, value = 1) => ({
   value,
 });
 
+test('all export formats retain references even when evidence is unchanged', () => {
+  const snapshot = createEvidenceSnapshot({
+    records: [
+      {
+        entityRef: { layerKey: 'fixture', id: 'same' },
+        references: [
+          {
+            kind: 'archive',
+            url: 'https://web.archive.org/web/20200101000000/https://example.test/',
+            originalUrl: 'https://example.test/',
+            archiveAt: 1577836800000,
+            lookedUpAt: 1577836900000,
+          },
+        ],
+      },
+    ],
+  });
+  const comparison = compareEvidenceSnapshots(snapshot, snapshot);
+  assert.equal(comparison.rows.length, 0);
+  for (const format of ['json', 'csv', 'markdown']) {
+    const report = exportEvidenceComparison(comparison, { format });
+    assert.match(report, /web\.archive\.org/);
+    assert.match(report, /1577836800000/);
+    assert.match(report, /1577836900000/);
+  }
+});
+
 test('comparison distinguishes added, changed and not-observed records under partial coverage', () => {
   const a = createEvidenceSnapshot({
     id: 'a',
@@ -134,6 +161,6 @@ test('comparison snapshots reject unsafe evidence references', () => {
           },
         ],
       }),
-    /Evidence references are invalid/,
+    /Evidence reference.*unsafe/,
   );
 });

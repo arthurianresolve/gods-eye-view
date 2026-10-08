@@ -2,6 +2,7 @@ import {
   normalizeEvidence,
   safeEvidenceUrl,
   safePeeringDbFacilityUrl,
+  safeReferenceUrl,
 } from '../evidence/evidence.js';
 import { createArchiveLookup } from '../evidence/archiveLookup.js';
 
@@ -70,6 +71,33 @@ export class EvidencePanel {
       if (!event.detail?.evidence) return;
       this.show(event.detail, { pinned: true });
     };
+    this._onCameraHealth = (event) => {
+      const detail = event.detail;
+      if (
+        this.pinned ||
+        this.currentEvidence?.entityRef.layerKey !== 'cctv' ||
+        this.currentEvidence.entityRef.id !== detail?.evidence?.entityRef.id
+      )
+        return;
+      this.currentEvidence = normalizeEvidence({
+        ...detail.evidence,
+        references: this.currentEvidence.references,
+      });
+      this.currentDetail = {
+        ...this.currentDetail,
+        ...detail,
+        evidence: this.currentEvidence,
+      };
+      this._showCameraHealth(detail.cameraState);
+      this._publishEvidence(this.currentDetail);
+      this._set('feed-state', this.currentEvidence.feedState.toUpperCase());
+      this._set('observed', formatTime(this.currentEvidence.observedAt));
+      this._set('received', formatTime(this.currentEvidence.receivedAt));
+    };
+    windowRef.addEventListener(
+      'gev:camera-health-updated',
+      this._onCameraHealth,
+    );
     this._onClose = () => this.clear({ restoreFocus: true });
     windowRef.addEventListener(SELECTED, this._onSelected);
     windowRef.addEventListener(CLEARED, this._onCleared);
@@ -163,11 +191,233 @@ export class EvidencePanel {
   _publishEvidence(detail) {
     const EventCtor = this.windowRef?.CustomEvent || globalThis.CustomEvent;
     if (!EventCtor || !this.windowRef?.dispatchEvent) return;
-    this.windowRef.dispatchEvent(new EventCtor(ENTITY_SELECTED, { detail }));
+    this.windowRef.dispatchEvent(
+      new EventCtor('gev:evidence-updated', { detail }),
+    );
+  }
+
+  _replaceReferences(references) {
+    const detail = {
+      ...this.currentDetail,
+      evidence: normalizeEvidence({ ...this.currentEvidence, references }),
+    };
+    this.show(detail, { pinned: this.pinned });
+    this._publishEvidence(detail);
+    this.rows.get('references')?.querySelector('button, input, a')?.focus();
+  }
+
+  _showCameraHealth(cameraState) {
+    for (const key of ['health', 'delivery', 'fallback'])
+      if (this.rows.get(key)?.parentElement)
+        this.rows.get(key).parentElement.hidden = !cameraState;
+    this._set(
+      'health',
+      cameraState
+        ? `${cameraState.healthReason || 'unknown'} (${cameraState.sourceStatus || 'unknown'})`
+        : null,
+    );
+    this._set(
+      'delivery',
+      cameraState
+        ? [
+            'Attempted: ' + formatTime(cameraState.healthAttemptedAt),
+            'Last source delivery: ' +
+              formatTime(cameraState.healthLastSuccessAt),
+            'Decode: ' + (cameraState.decodeStatus || 'unknown'),
+            'Last decoded: ' + formatTime(cameraState.decodeLastSuccessAt),
+          ].join(' | ')
+        : null,
+    );
+    this._set(
+      'fallback',
+      !cameraState
+        ? null
+        : cameraState.sourceKind === 'synthetic'
+          ? 'Synthetic placeholder'
+          : cameraState.sourceKind === 'streetview'
+            ? 'Street View fallback'
+            : cameraState.videoFallback
+              ? 'Still image fallback'
+              : cameraState.healthLastSuccessAt
+                ? 'Source delivery'
+                : 'No verified source delivery',
+    );
+  }
+
+  _renderReferences(evidence) {
+    const container = this.rows.get('references');
+    if (!container) return;
+    container.replaceChildren();
+    const signal = this.lookupController.signal;
+    const makeButton = (text, action) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'panel-surface-control';
+      button.textContent = text;
+      button.addEventListener('click', action);
+      return button;
+    };
+    const appendLookup = (url, parent) => {
+      const target = safeReferenceUrl(url);
+      if (!target || evidence.references.length >= 8) return;
+      const preview = document.createElement('div');
+      preview.textContent = 'Archive lookup URL: ' + target;
+      const status = document.createElement('div');
+      status.setAttribute('role', 'status');
+      // A source observation can suggest a requested date, never a capture date.
+      const requestedAt = evidence.observedAt ?? evidence.snapshotAt;
+      const timestamp = Number.isFinite(requestedAt)
+        ? new Date(requestedAt).toISOString().replace(/\D/g, '').slice(0, 14)
+        : undefined;
+      const requested = document.createElement('div');
+      requested.textContent = timestamp
+        ? 'Requested date: ' + formatTime(requestedAt)
+        : 'Requested date: latest available';
+      const button = makeButton('Find archived copy', async () => {
+        button.disabled = true;
+        status.textContent = 'Looking up archive…';
+        try {
+          const result = await this.archiveLookup.lookup({
+            url: target,
+            timestamp,
+            signal,
+          });
+          if (signal.aborted) return;
+          if (result.state !== 'available' || !result.reference) {
+            status.textContent = 'No archived copy found.';
+            return;
+          }
+          const reference = normalizeEvidence({
+            references: [result.reference],
+          }).references[0];
+          if (!reference || reference.kind !== 'archive')
+            throw new Error('Malformed archive result');
+          status.textContent =
+            'Closest archive capture: ' +
+            formatTime(reference.archiveAt) +
+            '. This may differ from the requested date and does not prove the underlying event. ';
+          const attach = makeButton('Attach archived reference', () => {
+            if (signal.aborted) return;
+            this._replaceReferences([...evidence.references, reference]);
+          });
+          status.append(attach);
+          attach.focus();
+        } catch (error) {
+          if (signal.aborted) return;
+          const message =
+            error.code === 'rate-limited'
+              ? 'Archive lookup rate limited. Try again later.'
+              : error.state === 'malformed'
+                ? 'Archive returned malformed data.'
+                : 'Archive lookup failed. You can try again.';
+          status.textContent = message;
+        } finally {
+          if (!signal.aborted) button.disabled = false;
+        }
+      });
+      button.dataset.archiveUrl = target;
+      parent.append(preview, requested, button, status);
+    };
+    const seen = new Set();
+    for (const [index, reference] of evidence.references.entries()) {
+      const row = document.createElement('div');
+      row.className = 'evidence-reference';
+      const link = document.createElement('a');
+      link.href = reference.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = reference.title || reference.kind;
+      const remove = makeButton('Remove', () =>
+        this._replaceReferences(
+          evidence.references.filter((_, i) => i !== index),
+        ),
+      );
+      remove.setAttribute(
+        'aria-label',
+        'Remove reference: ' + link.textContent,
+      );
+      row.append(link, document.createTextNode(' '), remove);
+      if (reference.kind === 'archive') {
+        const date = document.createElement('div');
+        date.textContent =
+          'Archive capture: ' +
+          formatTime(reference.archiveAt) +
+          ' · Looked up: ' +
+          formatTime(reference.lookedUpAt) +
+          '. Capture time is separate from source observation time.';
+        row.append(date);
+      } else {
+        seen.add(reference.url);
+        appendLookup(reference.url, row);
+      }
+      container.append(row);
+    }
+    if (evidence.sourceUrl && !seen.has(evidence.sourceUrl))
+      appendLookup(evidence.sourceUrl, container);
+    if (!evidence.references.length) {
+      const empty = document.createElement('div');
+      empty.textContent = 'None attached';
+      container.prepend(empty);
+    }
+    const facility = evidence.entityRef.layerKey === 'local-datacenters';
+    for (const isFacility of facility ? [false, true] : [false]) {
+      const form = document.createElement('div');
+      form.className = 'evidence-reference-attach';
+      const input = document.createElement('input');
+      input.type = 'url';
+      input.maxLength = 4096;
+      input.placeholder = isFacility
+        ? 'https://www.peeringdb.com/fac/…'
+        : 'https://…';
+      input.setAttribute(
+        'aria-label',
+        isFacility ? 'PeeringDB facility URL' : 'Public reference URL',
+      );
+      const status = document.createElement('span');
+      status.setAttribute('role', 'status');
+      const button = makeButton(
+        isFacility ? 'Attach facility' : 'Attach public reference',
+        () => {
+          const url = isFacility
+            ? safePeeringDbFacilityUrl(input.value)
+            : safeReferenceUrl(input.value);
+          if (!url) {
+            status.textContent = isFacility
+              ? 'Use a public PeeringDB /fac/{id} URL.'
+              : 'Use a public HTTPS URL without credentials.';
+            return;
+          }
+          if (evidence.references.length >= 8) {
+            status.textContent = 'Maximum of 8 references reached.';
+            return;
+          }
+          if (evidence.references.some((reference) => reference.url === url)) {
+            status.textContent = 'This reference is already attached.';
+            return;
+          }
+          this._replaceReferences([
+            ...evidence.references,
+            {
+              kind: 'user-linked',
+              url,
+              title: isFacility ? 'PeeringDB facility (user-linked)' : url,
+            },
+          ]);
+        },
+      );
+      form.append(input, button, status);
+      container.append(form);
+    }
+    const hint = document.createElement('div');
+    hint.textContent =
+      'Pin this evidence in a workspace to save its references.';
+    container.append(hint);
   }
 
   show(detail = {}, { pinned = false } = {}) {
     if (!this.panel) return;
+    this.lookupController?.abort();
+    this.lookupController = new AbortController();
     if (!this.returnFocusTarget && !this.panel.contains(document.activeElement))
       this.returnFocusTarget = document.activeElement;
     this.pinned = pinned;
@@ -187,6 +437,14 @@ export class EvidencePanel {
       detail.label || evidence.entityRef.id || 'Selected object',
     );
     const sourceUrl = safeEvidenceUrl(evidence.sourceUrl);
+    const announcement = this.panel.querySelector('[data-evidence-status]');
+    if (announcement)
+      announcement.textContent =
+        'Evidence for ' +
+        name +
+        '. ' +
+        evidence.references.length +
+        ' public references.';
     this._set('subject', name);
     this._set('layer', evidence.entityRef.layerKey);
     this._set(
@@ -199,31 +457,7 @@ export class EvidencePanel {
         : evidence.sourceId,
     );
     this._set('source-record', evidence.sourceRecordId);
-    const cameraState = detail.cameraState;
-    this._set(
-      'health',
-      cameraState
-        ? `${cameraState.healthReason || 'unknown'} (${cameraState.sourceStatus || 'unknown'})`
-        : null,
-    );
-    this._set(
-      'delivery',
-      cameraState
-        ? `attempted ${formatTime(cameraState.healthAttemptedAt)} · decoded ${cameraState.decodeStatus || 'unknown'}${cameraState.decodeLastSuccessAt != null ? ` · last decode ${formatTime(cameraState.decodeLastSuccessAt)}` : ''}`
-        : null,
-    );
-    this._set(
-      'fallback',
-      cameraState
-        ? cameraState.videoFallback
-          ? 'Still image fallback'
-          : cameraState.sourceKind === 'synthetic'
-            ? 'Synthetic placeholder'
-            : cameraState.sourceKind === 'streetview'
-              ? 'Street View fallback'
-              : 'Source delivery'
-        : null,
-    );
+    this._showCameraHealth(detail.cameraState || evidence.cameraHealth);
     this._set('observed', formatTime(evidence.observedAt));
     this._set('age', formatAge(evidence.observedAt));
     this._set('snapshot', formatTime(evidence.snapshotAt));
@@ -253,130 +487,7 @@ export class EvidencePanel {
         : `${evidence.uncertainty.value} ${evidence.uncertainty.unit || ''} ${evidence.uncertainty.kind || ''}`.trim(),
     );
     this._set('license', evidence.licenseRef || 'Not provided');
-    const references = this.rows.get('references');
-    if (references) {
-      references.replaceChildren();
-      if (!evidence.references.length) references.textContent = 'None attached';
-      for (const [index, reference] of evidence.references.entries()) {
-        if (index) references.append(document.createTextNode(' · '));
-        const link = document.createElement('a');
-        link.href = reference.url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = reference.title || reference.kind;
-        references.append(link);
-        if (reference.kind === 'archive') {
-          const remove = document.createElement('button');
-          remove.type = 'button';
-          remove.className = 'panel-surface-control';
-          remove.textContent = 'Remove';
-          remove.setAttribute('aria-label', 'Remove archived reference');
-          remove.addEventListener('click', () => {
-            const next = normalizeEvidence({
-              ...evidence,
-              references: evidence.references.filter(
-                (_, referenceIndex) => referenceIndex !== index,
-              ),
-            });
-            this.show(
-              { ...this.currentDetail, evidence: next },
-              { pinned: this.pinned },
-            );
-            this._publishEvidence(this.currentDetail);
-          });
-          references.append(document.createTextNode(' '), remove);
-        }
-      }
-      const archiveTarget =
-        evidence.sourceUrl || evidence.references[0]?.originalUrl;
-      if (archiveTarget) {
-        if (
-          evidence.references.some((reference) => reference.kind === 'archive')
-        ) {
-          references.append(
-            document.createTextNode(' · archived copy attached'),
-          );
-        } else if (evidence.references.length < 8) {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'panel-surface-control';
-          button.textContent = 'Find archived copy';
-          button.addEventListener('click', async () => {
-            button.disabled = true;
-            button.textContent = 'Looking up archive…';
-            try {
-              const result = await this.archiveLookup.lookup({
-                url: archiveTarget,
-                timestamp:
-                  evidence.observedAt || evidence.snapshotAt || undefined,
-              });
-              if (result.state === 'available' && result.reference) {
-                const next = normalizeEvidence({
-                  ...evidence,
-                  references: [...evidence.references, result.reference],
-                });
-                this.show(
-                  { ...this.currentDetail, evidence: next },
-                  { pinned: this.pinned },
-                );
-                this._publishEvidence(this.currentDetail);
-              } else {
-                button.textContent = 'No archived copy found';
-              }
-            } catch {
-              button.textContent = 'Archive lookup failed';
-            } finally {
-              button.disabled = false;
-            }
-          });
-          references.append(document.createTextNode(' · '), button);
-        }
-      }
-      if (evidence.entityRef.layerKey === 'local-datacenters') {
-        const attach = document.createElement('span');
-        attach.className = 'evidence-reference-attach';
-        const input = document.createElement('input');
-        input.type = 'url';
-        input.inputMode = 'url';
-        input.placeholder = 'https://www.peeringdb.com/fac/…';
-        input.setAttribute('aria-label', 'PeeringDB facility URL');
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'panel-surface-control';
-        button.textContent = 'Attach facility';
-        const status = document.createElement('span');
-        status.setAttribute('role', 'status');
-        button.addEventListener('click', () => {
-          const url = safePeeringDbFacilityUrl(input.value);
-          if (!url) {
-            status.textContent = 'Use a public PeeringDB /fac/{id} URL.';
-            return;
-          }
-          if (evidence.references.length >= 8) {
-            status.textContent = 'Maximum of 8 references reached.';
-            return;
-          }
-          const next = normalizeEvidence({
-            ...evidence,
-            references: [
-              ...evidence.references,
-              {
-                kind: 'user-linked',
-                url,
-                title: 'PeeringDB facility (user-linked)',
-              },
-            ],
-          });
-          this.show(
-            { ...this.currentDetail, evidence: next },
-            { pinned: this.pinned },
-          );
-          this._publishEvidence(this.currentDetail);
-        });
-        attach.append(input, button, status);
-        references.append(document.createTextNode(' · '), attach);
-      }
-    }
+    this._renderReferences(evidence);
     this._set(
       'limitations',
       evidence.limitations.join(' · ') || 'No additional limitations provided',
@@ -386,6 +497,9 @@ export class EvidencePanel {
   }
 
   clear({ restoreFocus = false } = {}) {
+    this.lookupController?.abort();
+    this.currentDetail = null;
+    this.currentEvidence = null;
     if (!this.panel) return;
     this.pinned = false;
     this.panel.dataset.pinned = 'false';
@@ -405,6 +519,11 @@ export class EvidencePanel {
   }
 
   destroy() {
+    this.lookupController?.abort();
+    this.windowRef.removeEventListener(
+      'gev:camera-health-updated',
+      this._onCameraHealth,
+    );
     this.windowRef.removeEventListener(SELECTED, this._onSelected);
     this.windowRef.removeEventListener(CLEARED, this._onCleared);
     this.windowRef.removeEventListener(ENTITY_SELECTED, this._onEntitySelected);

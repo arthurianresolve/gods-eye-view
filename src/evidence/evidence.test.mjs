@@ -8,6 +8,25 @@ import {
   safeEvidenceUrl,
 } from './evidence.js';
 
+test('public references reject local aliases, private literals and credentials', () => {
+  for (const url of [
+    'https://localhost./',
+    'https://host.local/',
+    'https://printer/',
+    'https://[::]/',
+    'https://[::ffff:127.0.0.1]/',
+    'https://100.64.0.1/',
+    'https://[fe90::1]/',
+    'https://u:p@example.test/',
+    'https://0x7f000001/',
+  ])
+    assert.equal(safeReferenceUrl(url), null, url);
+  assert.equal(
+    safePeeringDbFacilityUrl('https://peeringdb.com:444/fac/1'),
+    null,
+  );
+});
+
 test('evidence keeps source time unknown instead of using receipt time', () => {
   const evidence = createEvidenceEnvelope({
     entityRef: { layerKey: 'flights', id: 'abc123' },
@@ -108,7 +127,7 @@ test('references are bounded and normalized as immutable data', () => {
 test('PeeringDB facility references require a public /fac/ path', () => {
   assert.equal(
     safePeeringDbFacilityUrl('https://www.peeringdb.com/fac/123?x=1#details'),
-    'https://www.peeringdb.com/fac/123?x=1',
+    'https://www.peeringdb.com/fac/123',
   );
   assert.equal(
     safePeeringDbFacilityUrl('https://www.peeringdb.com/search?q=x'),

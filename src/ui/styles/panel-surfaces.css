@@ -228,6 +228,30 @@ button.panel-surface-control {
   overflow-wrap: anywhere;
 }
 
+.evidence-panel-row:has([data-evidence-value='references']) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.evidence-reference,
+.evidence-reference-attach {
+  display: grid;
+  gap: 6px;
+  margin-block: 8px;
+  min-width: 0;
+}
+
+.evidence-reference-attach input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+[data-evidence-value='references'] button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 [data-panel-popup] {
   position: absolute;
   z-index: 5;

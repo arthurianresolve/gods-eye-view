@@ -44,6 +44,17 @@ function workspace(overrides = {}) {
   };
 }
 
+test('direct pinned envelopes cannot bypass reference import validation', () => {
+  const input = JSON.parse(
+    JSON.stringify(createWorkspaceDocument(workspace())),
+  );
+  input.pinnedEvidence[0].record = {
+    entityRef: { layerKey: 'fixture', id: 'one' },
+    references: [{ kind: 'user-linked', url: 'https://localhost./private' }],
+  };
+  assert.throws(() => parseWorkspaceDocument(JSON.stringify(input)), /unsafe/);
+});
+
 test('workspace documents normalize the saved view and preserve stable evidence references', () => {
   const document = createWorkspaceDocument(workspace());
   assert.equal(document.kind, 'investigation-workspace');

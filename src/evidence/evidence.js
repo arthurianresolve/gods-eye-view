@@ -68,10 +68,10 @@ export function evidenceInstant(value) {
 
 /** Remove URL credentials, query values and fragments before displaying a source. */
 export function safeEvidenceUrl(value) {
-  if (typeof value !== 'string' || !value.trim()) return null;
+  const safe = safeReferenceUrl(value);
+  if (!safe) return null;
   try {
-    const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    const url = new URL(safe);
     return `${url.origin}${url.pathname}`;
   } catch {
     return null;
@@ -80,10 +80,11 @@ export function safeEvidenceUrl(value) {
 
 /** Keep a public HTTPS reference while preserving harmless query parameters. */
 export function safeReferenceUrl(value) {
-  if (typeof value !== 'string' || !value.trim()) return null;
+  if (typeof value !== 'string' || !value.trim() || value.length > 4096)
+    return null;
   try {
     const url = new URL(value);
-    const host = url.hostname.toLowerCase();
+    const host = url.hostname.toLowerCase().replace(/\.$/, '');
     const ipv6 = host.startsWith('[') ? host.slice(1, -1) : '';
     const mappedMatch = ipv6.match(
       /^::ffff:(?:([\da-f]{1,4}):([\da-f]{1,4})|(\d+\.\d+\.\d+\.\d+))$/i,
@@ -93,22 +94,33 @@ export function safeReferenceUrl(value) {
       (mappedMatch
         ? `${parseInt(mappedMatch[1], 16) >> 8}.${parseInt(mappedMatch[1], 16) & 255}.${parseInt(mappedMatch[2], 16) >> 8}.${parseInt(mappedMatch[2], 16) & 255}`
         : null);
+    const address = mappedIpv4 || host;
+    const octets = /^\d+\.\d+\.\d+\.\d+$/.test(address)
+      ? address.split('.').map(Number)
+      : null;
     const privateIpv4 =
-      mappedIpv4 &&
-      (/^(127\.|10\.|192\.168\.|169\.254\.)/.test(mappedIpv4) ||
-        /^172\.(1[6-9]|2\d|3[0-1])\./.test(mappedIpv4));
+      octets &&
+      ([0, 10, 127].includes(octets[0]) ||
+        octets[0] >= 224 ||
+        (octets[0] === 100 && octets[1] >= 64 && octets[1] <= 127) ||
+        (octets[0] === 169 && octets[1] === 254) ||
+        (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+        (octets[0] === 192 && octets[1] === 168) ||
+        (octets[0] === 198 && [18, 19].includes(octets[1])));
     if (
       url.protocol !== 'https:' ||
       url.username ||
       url.password ||
+      (!ipv6 && !host.includes('.')) ||
       host === 'localhost' ||
-      host.endsWith('.localhost') ||
+      /\.(localhost|local|internal|home|lan)$/.test(host) ||
       host === '0.0.0.0' ||
       /^(127\.|10\.|192\.168\.|169\.254\.)/.test(host) ||
       /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
       ipv6 === '::1' ||
+      ipv6 === '::' ||
       privateIpv4 ||
-      /^(fc|fd|fe80:)/i.test(ipv6)
+      /^(fc|fd|fe[89ab]|ff)/i.test(ipv6)
     )
       return null;
     url.hash = '';
@@ -129,7 +141,9 @@ export function safePeeringDbFacilityUrl(value) {
       url.hostname !== 'peeringdb.com'
     )
       return null;
-    return /^\/fac\/\d+\/?$/.test(url.pathname) ? safe : null;
+    return !url.port && /^\/fac\/[1-9]\d*\/?$/.test(url.pathname)
+      ? 'https://www.peeringdb.com' + url.pathname.replace(/\/$/, '')
+      : null;
   } catch {
     return null;
   }
@@ -158,6 +172,36 @@ function normalizeReference(value) {
     archiveAt,
     lookedUpAt,
   });
+}
+
+/** Strict import boundary; legacy envelopes without references remain valid. */
+export function validateEvidenceReferences(evidence) {
+  if (!evidence || !Object.hasOwn(evidence, 'references')) return;
+  if (
+    !Array.isArray(evidence.references) ||
+    evidence.references.length > MAX_EVIDENCE_REFERENCES
+  )
+    throw new TypeError('Evidence references must be a bounded list.');
+  for (const reference of evidence.references) {
+    if (
+      !reference ||
+      Array.isArray(reference) ||
+      !EVIDENCE_REFERENCE_KINDS.includes(reference.kind) ||
+      !safeReferenceUrl(reference.url) ||
+      (reference.originalUrl != null &&
+        !safeReferenceUrl(reference.originalUrl))
+    )
+      throw new TypeError('Evidence reference has an unsafe URL or kind.');
+    if (
+      reference.title != null &&
+      (typeof reference.title !== 'string' || reference.title.length > 160)
+    )
+      throw new TypeError('Evidence reference title is invalid.');
+    for (const field of ['archiveAt', 'lookedUpAt']) {
+      if (reference[field] != null && evidenceInstant(reference[field]) == null)
+        throw new TypeError('Evidence reference timestamp is invalid.');
+    }
+  }
 }
 
 /**
@@ -199,6 +243,38 @@ export function createEvidenceEnvelope(input = {}) {
 
   return Object.freeze({
     version: EVIDENCE_VERSION,
+    ...(input.cameraHealth && typeof input.cameraHealth === 'object'
+      ? {
+          cameraHealth: Object.freeze({
+            sourceStatus: optionalText(input.cameraHealth.sourceStatus, 40),
+            sourceKind: optionalText(input.cameraHealth.sourceKind, 40),
+            healthReason: optionalText(input.cameraHealth.healthReason, 80),
+            upstreamReasonCode: optionalText(
+              input.cameraHealth.upstreamReasonCode,
+              80,
+            ),
+            transportStatus: optionalText(
+              input.cameraHealth.transportStatus,
+              40,
+            ),
+            healthAttemptedAt: evidenceInstant(
+              input.cameraHealth.healthAttemptedAt,
+            ),
+            healthLastSuccessAt: evidenceInstant(
+              input.cameraHealth.healthLastSuccessAt,
+            ),
+            decodeStatus: optionalText(input.cameraHealth.decodeStatus, 40),
+            decodeReason: optionalText(input.cameraHealth.decodeReason, 80),
+            decodeAttemptedAt: evidenceInstant(
+              input.cameraHealth.decodeAttemptedAt,
+            ),
+            decodeLastSuccessAt: evidenceInstant(
+              input.cameraHealth.decodeLastSuccessAt,
+            ),
+            videoFallback: input.cameraHealth.videoFallback === true,
+          }),
+        }
+      : {}),
     observationId:
       optionalText(input.observationId, 240) ||
       (layerKey && entityId

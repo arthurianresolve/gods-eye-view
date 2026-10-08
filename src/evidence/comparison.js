@@ -1,9 +1,7 @@
 import {
-  EVIDENCE_REFERENCE_KINDS,
-  MAX_EVIDENCE_REFERENCES,
+  validateEvidenceReferences,
   normalizeEvidence,
   safeEvidenceUrl,
-  safeReferenceUrl,
 } from './evidence.js';
 
 const SNAPSHOT_LIMIT = 20_000;
@@ -62,30 +60,10 @@ export function createEvidenceSnapshot(input = {}) {
     if (!key || seen.has(key)) continue;
     seen.add(key);
     const normalizedRecord = plain(record);
-    if (normalizedRecord?.evidence?.references !== undefined) {
-      try {
-        const references = normalizedRecord.evidence.references;
-        if (
-          !Array.isArray(references) ||
-          references.length > MAX_EVIDENCE_REFERENCES ||
-          references.some(
-            (reference) =>
-              !reference ||
-              !EVIDENCE_REFERENCE_KINDS.includes(reference.kind) ||
-              !safeReferenceUrl(reference.url) ||
-              (reference.originalUrl != null &&
-                !safeReferenceUrl(reference.originalUrl)),
-          )
-        )
-          throw new TypeError('unsafe reference');
-        normalizedRecord.evidence = normalizeEvidence(
-          normalizedRecord.evidence,
-        );
-      } catch (error) {
-        throw new TypeError(
-          `Evidence references are invalid: ${error.message}`,
-        );
-      }
+    for (const envelope of [normalizedRecord, normalizedRecord?.evidence]) {
+      if (!envelope || !Object.hasOwn(envelope, 'references')) continue;
+      validateEvidenceReferences(envelope);
+      envelope.references = normalizeEvidence(envelope).references;
     }
     normalized.push({ key, record: normalizedRecord });
   }
@@ -143,6 +121,13 @@ function hasCompleteCoverage(snapshot, layer) {
 
 function comparableScope(a, b) {
   return signature(a.scope || {}) === signature(b.scope || {});
+}
+
+function referenceMetadata(snapshot) {
+  return snapshot.records.flatMap(({ key, record }) => {
+    const references = (record.evidence || record).references || [];
+    return references.length ? [{ key, references }] : [];
+  });
 }
 
 /** Compare by stable layer/entity identity; incomplete coverage never means disappearance. */
@@ -206,6 +191,7 @@ export function compareEvidenceSnapshots(leftInput, rightInput) {
       coverage: left.coverage,
       sourceLinks: left.sourceLinks,
       limitations: left.limitations,
+      references: referenceMetadata(left),
     },
     right: {
       id: right.id,
@@ -215,6 +201,7 @@ export function compareEvidenceSnapshots(leftInput, rightInput) {
       coverage: right.coverage,
       sourceLinks: right.sourceLinks,
       limitations: right.limitations,
+      references: referenceMetadata(right),
     },
     scope: right.scope,
     scopeCompatible: sameScope,
@@ -248,6 +235,8 @@ export function exportEvidenceComparison(comparison, { format = 'json' } = {}) {
         'before',
         'after',
         'explanation',
+        'left_references',
+        'right_references',
       ],
     ];
     for (const row of data.rows)
@@ -259,6 +248,23 @@ export function exportEvidenceComparison(comparison, { format = 'json' } = {}) {
         row.before,
         row.after,
         row.explanation || '',
+        data.left.references || [],
+        data.right.references || [],
+      ]);
+    if (
+      !data.rows.length &&
+      (data.left.references?.length || data.right.references?.length)
+    )
+      rows.push([
+        'unchanged',
+        '',
+        utc(data.left.capturedAt),
+        utc(data.right.capturedAt),
+        '',
+        '',
+        'References retained for unchanged evidence.',
+        data.left.references || [],
+        data.right.references || [],
       ]);
     return rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
   }
@@ -296,6 +302,14 @@ export function exportEvidenceComparison(comparison, { format = 'json' } = {}) {
       '| --- | --- | --- |',
       ...rows,
       ...sourceBlock,
+      '',
+      'Reference metadata (capture dates are separate from observation time):',
+      '',
+      '    ' +
+        JSON.stringify({
+          left: data.left.references || [],
+          right: data.right.references || [],
+        }),
       ...limitationBlock,
     ].join('\n');
   }

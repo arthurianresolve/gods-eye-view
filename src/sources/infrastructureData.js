@@ -94,9 +94,15 @@ export function mapAnalystRecord(raw, layerId = '') {
     layerId === 'local-dams'
       ? text(props.output) || text(tags['plant:output:electricity'])
       : null;
+  const sourceRecordId = text(props.osm_id) || text(raw?.id);
+  const entityId =
+    sourceRecordId ||
+    (Number.isFinite(raw?.lat) && Number.isFinite(raw?.lon)
+      ? 'coordinate:' + raw.lat + ':' + raw.lon + ':' + (name || 'unnamed')
+      : null);
   return {
     id: name || text(raw?.id) || layerTitle(layerId),
-    sourceRecordId: text(raw?.id),
+    sourceRecordId,
     name,
     lat: num(raw?.lat),
     lon: num(raw?.lon),
@@ -107,13 +113,13 @@ export function mapAnalystRecord(raw, layerId = '') {
     evidence: createEvidenceEnvelope({
       entityRef: {
         layerKey: layerId,
-        id: text(raw?.id) || name || layerTitle(layerId),
+        id: entityId,
       },
       sourceId:
         layerId === 'local-dams'
           ? 'Open Infrastructure Map / OpenStreetMap'
           : 'OpenStreetMap contributors',
-      sourceRecordId: text(raw?.id),
+      sourceRecordId,
       sourceUrl:
         layerId === 'local-dams'
           ? 'https://openinframap.org/'
@@ -125,7 +131,7 @@ export function mapAnalystRecord(raw, layerId = '') {
       },
       licenseRef: 'ODbL-1.0',
       references:
-        layerId === 'local-datacenters' && (name || text(raw?.id))
+        layerId === 'local-datacenters' && name
           ? [
               {
                 kind: 'peeringdb',

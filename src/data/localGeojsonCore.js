@@ -694,6 +694,15 @@ export function createLocalGeoJsonLayer(
                   layerId: id,
                   layerName: name,
                   source,
+                  evidence: mapAnalystRecord(
+                    {
+                      id: properties.osm_id ?? recordId,
+                      properties,
+                      lat: Cesium.Math.toDegrees(carto.latitude),
+                      lon: Cesium.Math.toDegrees(carto.longitude),
+                    },
+                    id,
+                  ).evidence,
                   dataSource: loaded,
                   label: featureLabelFromProperties(properties, id),
                   properties,

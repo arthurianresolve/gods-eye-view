@@ -1251,6 +1251,7 @@ export function createWorkspaceLibraryPanel({
       `Selected evidence: ${evidence.entityRef.layerKey}:${evidence.entityRef.id}.`;
   };
   const evidenceEvents = [
+    'gev:evidence-updated',
     'gev:evidence-result-pinned',
     'gev:evidence-record-opened',
     'gev:entity-selected',
