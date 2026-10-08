@@ -237,10 +237,34 @@ try {
           services.setDetectionModeByLabel(detectionMode);
           if (services.getDetectionMode() !== detectionMode)
             throw new Error(`Detection mode did not become ${detectionMode}`);
+          const viewer = app.viewer;
+          const center = { latitude: 30.2672, longitude: -97.7431 };
+          const radians = Math.PI / 180;
+          const destination =
+            viewer.scene.globe.ellipsoid.cartographicToCartesian({
+              longitude: center.longitude * radians,
+              latitude: center.latitude * radians,
+              height: 130_000,
+            });
+          viewer.camera.setView({
+            destination,
+            orientation: {
+              heading: 0,
+              pitch: -Math.PI / 2,
+              roll: 0,
+            },
+          });
+          viewer.scene.requestRender();
           return {
             id: 'synthetic-aircraft-ring-v1',
             count,
-            center: { latitude: 30.2672, longitude: -97.7431 },
+            center,
+            cameraPath: {
+              id: 'austin-overhead-v1',
+              altitudeM: 130_000,
+              headingDeg: 0,
+              pitchDeg: -90,
+            },
             seed: 1,
             detectionMode,
           };
@@ -261,7 +285,10 @@ try {
         return (
           diagnostics &&
           diagnostics.observationCount > 0 &&
-          diagnostics.candidateCount > 0
+          diagnostics.candidateCount > 0 &&
+          Object.values(diagnostics.labelsByLayer || {}).some(
+            (count) => count > 0,
+          )
         );
       },
       { timeout: 90_000 },
