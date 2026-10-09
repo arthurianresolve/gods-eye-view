@@ -27,7 +27,7 @@ the earlier release requirements and historical results.
 | S57 map-resource lifetime | Pending | Pending slice-specific validation | Pending |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
-| S60 final candidate | Pending | Corrected fixture-worker preflights pass at `04b49d1`; full rendered soak is running for that revision | Pending all required hardware environments |
+| S60 final candidate | Pending | Corrected worker preflights pass at `04b49d1`; soak stopped at a workspace status polling race after ten measured cycles, and its correction awaits rerun | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
@@ -174,14 +174,33 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   change is involved.
 - [The `04b49d1` soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37942979707/job/113862502404)
   passed both worker network interception and cold/reused/error/recovery geometry
-  preflights and began mixed-use cycles. A running job is not a retention pass;
-  its final checkpoints and renderer must still be evaluated.
+  preflights, then completed ten measured cycles. At 330 seconds it stopped waiting
+  for the transient "Opened" status, which had become "Autosaved revision 32."
+  The corrected fixture observes status mutations before clicking and latches the
+  completion even when autosave immediately replaces it; success, timeout and
+  click failure release the observer/timer. Failure reports now include separate
+  retained diagnostics without treating a mid-operation state as a plateau
+  checkpoint. The interrupted run uses SwiftShader and is neither a 60-minute
+  retention pass nor hardware evidence. Its JSON remains in the linked artifact.
 - Startup diagnostics in [the Windows `3cf6f58` recovery job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37942077509/job/113859197493)
   identify WebGL initialization failure on the hosted runner. Recovery CI now
   explicitly selects SwiftShader in its disposable fixture browser and asserts
   the actual renderer in each reopen result. Recovery reports never qualify as
   hardware evidence. User Chrome, deployed runtime and hardware-soak renderer
   selection are unchanged. This recovery correction awaits CI validation.
+
+## Framework consideration
+
+Next.js was considered on 9 October 2026. The reproduced failures involve fixture
+request interception, hosted-runner WebGL initialization and transient UI status
+observation. A framework migration does not remove those causes. Cesium still
+requires browser rendering, workers and lifecycle ownership; Next.js keeps browser
+APIs and interactivity in [client components](https://nextjs.org/docs/app/getting-started/server-and-client-components).
+Keep the existing implementation and revisit the framework only if a measured
+architectural limitation justifies migration cost. No Next.js migration is planned
+as a Cesium performance fix.
+
+## Historical evidence continued
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser

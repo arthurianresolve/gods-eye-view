@@ -117,6 +117,13 @@ export async function runMixedUseSoak({
       updateReport();
       report.operationStatus = 'failed';
       report.error = error.message;
+      // This may be an intermediate scene, so keep it out of equivalent-state
+      // plateau checkpoints while retaining its worker/resource diagnostics.
+      try {
+        report.failureMetrics = await driver.retainedMetrics?.();
+      } catch {
+        report.failureMetrics = null;
+      }
       report.stability = evaluateSoakStability(report);
       error.soakReport = report;
       throw error;

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
+import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
 
 const fixtureDiagnostics = new WeakMap();
 
@@ -122,13 +123,8 @@ export async function openWorkspace(page, id) {
     id,
   );
   await page.select('.workspace-library [data-workspace-select]', id);
-  await clickControl(page, '.workspace-library [data-action="open"]');
   try {
-    await page.waitForFunction(() =>
-      document
-        .querySelector('.workspace-library [data-status]')
-        ?.textContent.startsWith('Opened'),
-    );
+    await page.evaluate(clickAndWaitForWorkspaceOpen);
   } catch (error) {
     const diagnostics = await page.evaluate(() => {
       const app = window.__godsEyeView;
@@ -146,6 +142,8 @@ export async function openWorkspace(page, id) {
       return {
         status: document.querySelector('.workspace-library [data-status]')
           ?.textContent,
+        restore: app?.workspaceLibraryPanel?.restore.getState(),
+        workers: window.__gevSoakWorkers?.snapshot() || null,
         viewer: {
           entities: app?.viewer?.entities?.values?.length ?? null,
           dataSources: app?.viewer?.dataSources?.length ?? null,

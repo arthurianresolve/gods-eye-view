@@ -4,6 +4,7 @@ import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import { bootFixturePage } from './qa-application-fixtures.mjs';
 import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
+import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
 import {
   fixtureRequestCommand,
@@ -21,6 +22,81 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
     workers: { instrumented: true, overflow: false, pending: 0, workers: [] },
     resources: { primitives: 3, ownerResources: { fixture: { pendingJobs } } },
   },
+});
+
+test('workspace completion is latched even when autosave replaces it before polling', async () => {
+  let callback,
+    disconnected = 0,
+    cleared = 0;
+  const status = { textContent: 'Old status' };
+  const button = {
+    click() {
+      status.textContent = 'Autosaved revision 32.';
+      callback([
+        {
+          addedNodes: [
+            { textContent: 'Opened investigation.' },
+            { textContent: status.textContent },
+          ],
+        },
+      ]);
+    },
+  };
+  const scope = {
+    document: {
+      querySelector: () => ({
+        querySelector: (selector) =>
+          selector === '[data-status]' ? status : button,
+      }),
+    },
+    MutationObserver: class {
+      constructor(fn) {
+        callback = fn;
+      }
+      observe() {}
+      disconnect() {
+        disconnected++;
+      }
+    },
+    setTimeout: () => 1,
+    clearTimeout: () => cleared++,
+  };
+  await clickAndWaitForWorkspaceOpen(scope);
+  assert.equal(disconnected, 1);
+  assert.equal(cleared, 1);
+  button.click = () => {
+    throw new Error('click failed');
+  };
+  await assert.rejects(clickAndWaitForWorkspaceOpen(scope), /click failed/);
+  assert.equal(disconnected, 2);
+  assert.equal(cleared, 2);
+});
+
+test('a missing workspace completion times out and removes its observer', async () => {
+  let disconnected = false;
+  const scope = {
+    document: {
+      querySelector: () => ({
+        querySelector: () => ({
+          click() {},
+          textContent: 'Opening investigation',
+        }),
+      }),
+    },
+    MutationObserver: class {
+      observe() {}
+      disconnect() {
+        disconnected = true;
+      }
+    },
+    setTimeout,
+    clearTimeout,
+  };
+  await assert.rejects(
+    clickAndWaitForWorkspaceOpen(scope, 1),
+    /completion timed out/,
+  );
+  assert.equal(disconnected, true);
 });
 
 test('network preflight requires actual worker interception, not merely DNS failure', async () => {
