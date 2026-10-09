@@ -141,8 +141,8 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser
   job, but failed Windows profile recovery while building the prior installation.
-  The path canonicalization fix is in `c441832`; the latest run for `20f5a8a`
-  ([CI run 37930218525](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37930218525))
+  The path canonicalization fix is in `c441832`; the latest run for `2cdfb2d`
+  ([CI run 37931644764](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37931644764))
   is pending and is not yet acceptance evidence. The 60-minute rendered soak was
   skipped: it requires manual workflow dispatch with `full_soak=true`. A smoke
   pass does not replace it.
