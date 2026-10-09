@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
 import {
   mkdtemp,
+  realpath,
   mkdir,
   readFile,
   writeFile,
@@ -40,7 +41,13 @@ const sourceStatus = () =>
     encoding: 'utf8',
   }).trim();
 const sourceDirtyAtStart = Boolean(sourceStatus());
-const scratch = await mkdtemp(path.join(os.tmpdir(), 'gev-profile-recovery-'));
+// Windows can expose the same temporary directory through an 8.3 short name
+// in one process and its long name in another. Vite/Rollup treats those as
+// different roots and may then emit an absolute path for index.html. Resolve
+// the freshly-created directory once so every child process uses one spelling.
+const scratch = await realpath(
+  await mkdtemp(path.join(os.tmpdir(), 'gev-profile-recovery-')),
+);
 const installation = path.join(scratch, 'installation');
 const out = path.resolve(value('--out', 'qa-artifacts/profile-recovery.json'));
 await mkdir(path.dirname(out), { recursive: true });
