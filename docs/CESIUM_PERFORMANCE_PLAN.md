@@ -46,6 +46,14 @@ a performance shortcut. Auto quality remains opt-in.
   state condition with a 100 ms timer instead of animation callbacks, keeping
   the same deadline and all persistence assertions. It also records panel,
   visibility and focus state on failure. Validation of that change is pending.
+- The [Windows rerun at 503a4f2](performance-evidence/recovery-windows-503a4f2-failed.json)
+  reaches and passes upgraded-application recovery, then times out reopening the
+  frozen `6b896e2` rollback build in its final stage. All stored-asset checks up to
+  that point pass; the overall run remains failed. The recovery-only fixture now
+  uses and reports a 960 × 640 viewport to bound software raster work on GPU-less
+  CI runners. Resolution scale, effects, data, assertions and timeouts are
+  unchanged. This is not a performance configuration or proof of the timeout's
+  cause; validation of the recovery fixture adjustment is pending.
 - `c66b81c` adds an isolated point-collection diagnostic: five alternating pairs,
   840 core and 10,000 dense synthetic points, 60 warmup frames and 180 measured
   frames per sample. It counts WebGL buffer submissions and instrumented

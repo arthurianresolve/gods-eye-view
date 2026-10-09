@@ -27,6 +27,10 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
+// Recovery checks storage/update behavior on GPU-less runners, not performance.
+// Bound software raster work without changing resolution scale, effects or data.
+// Other browser/performance fixtures retain their declared viewports.
+const viewport = { width: 960, height: 640 };
 const value = (key, fallback) => {
   const index = process.argv.indexOf(key);
   return index < 0 ? fallback : process.argv[index + 1];
@@ -195,7 +199,9 @@ async function reopen(label, { seed = false } = {}) {
   try {
     browserVersion = await browser.version();
     progress('install-fixtures');
-    const { page, errors } = await prepareFixturePage(browser, base);
+    const { page, errors } = await prepareFixturePage(browser, base, {
+      viewport,
+    });
     await bootFixturePage(page, base, { onProgress: progress });
     progress('read-renderer');
     const renderer = await page.evaluate(() => {
@@ -337,6 +343,7 @@ try {
     os: os.release(),
     node: process.version,
     browserVersion,
+    viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.
     timestamp: new Date().toISOString(),
     sourceDirtyAtStart,

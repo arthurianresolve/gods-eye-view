@@ -26,7 +26,11 @@ export async function launchFixtureBrowser(options = {}) {
   });
 }
 
-export async function prepareFixturePage(browser, base, { respond } = {}) {
+export async function prepareFixturePage(
+  browser,
+  base,
+  { respond, viewport = { width: 1440, height: 1000 } } = {},
+) {
   const page = await browser.newPage();
   const errors = [];
   const networkProbe = createFixtureNetworkProbe(base);
@@ -46,7 +50,7 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
   page.on('pageerror', (error) => errors.push(error.message));
   page.setDefaultTimeout(30000);
   page.setDefaultNavigationTimeout(90000);
-  await page.setViewport({ width: 1440, height: 1000 });
+  await page.setViewport(viewport);
   const onError = (error) => {
     if (
       !page.isClosed() &&
