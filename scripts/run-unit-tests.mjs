@@ -13,6 +13,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/qa-candidate.test.mjs',
   'scripts/qa-install-recovery.test.mjs',
   'scripts/qa-mixed-use-soak.test.mjs',
+  'scripts/review-soak-evidence.test.mjs',
   'scripts/stage-release.test.mjs',
   'server/providers/evidenceArchive.test.mjs',
 ]);

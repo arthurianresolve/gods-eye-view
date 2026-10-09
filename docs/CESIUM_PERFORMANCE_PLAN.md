@@ -37,6 +37,19 @@ a performance shortcut. Auto quality remains opt-in.
 
 ### Follow-up validation on 9 October
 
+- The free [hosted Mac soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37960247130/job/113920967041)
+  at `0fa31401b07d1156b0d50de4c7268c8735501f39` completed 252 cycles in
+  3,603,543 ms using Chrome 152 and verified Apple paravirtual Metal acceleration.
+  All 13 post-GC checkpoints retain 629 listeners and zero pending worker jobs;
+  final-window heap growth is 1.58%. Its old validator failed solely on the same
+  cumulative cache-use counter. The [original report](performance-evidence/hosted-mac-0fa3140-original.json)
+  and [hashed reassessment](performance-evidence/hosted-mac-0fa3140-review.json)
+  preserve both verdicts. The corrected ownership/heap validation passes. The
+  runner is an Apple M1 virtual machine with 3 logical CPUs and 7 GiB RAM;
+  `physicalDesktopCoverage` remains false. This establishes hosted accelerated
+  retention for that revision, not Windows UHD 620 stability or a physical Mac
+  performance comparison.
+
 - The [5328e25 software-rendered soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37959251555/job/113917592739)
   completed 130 cycles over 3,620,845 ms with 13 post-GC checkpoints. The
   [original report](performance-evidence/soak-5328e25-original.json) failed only

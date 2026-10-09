@@ -191,3 +191,11 @@ cache-use counter incorrectly classified as owned state. The
 preserve both outcomes and exact revisions. The reassessment passes with 1.70%
 final-window retained-heap growth. This supplements software retention evidence;
 it does not complete physical hardware coverage or validate later `dev` commits.
+
+The free hosted Mac run at `0fa3140` adds verified Apple paravirtual Metal
+retention evidence: 252 cycles, 3,603,543 ms, 13 post-GC checkpoints with 629
+listeners and zero pending worker jobs, and 1.58% final-window heap growth.
+Its [original verdict](performance-evidence/hosted-mac-0fa3140-original.json)
+also failed only on the cumulative counter; its
+[reassessment](performance-evidence/hosted-mac-0fa3140-review.json) passes.
+This is hosted accelerated coverage, not a physical Mac/Windows comparison.

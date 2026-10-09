@@ -251,6 +251,16 @@ installation-recovery jobs also pass for this exact revision.
 
 ## What is not established yet
 
+Free GitHub-hosted macOS also supplies verified **paravirtual Metal** acceleration.
+The [0fa3140 run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37960247130/job/113920967041)
+completed 252 cycles in 3,603,543 ms on Chrome 152. Its 13 post-GC checkpoints
+retain 629 listeners and zero pending worker jobs; final-window heap growth is
+1.58%. The [original result](performance-evidence/hosted-mac-0fa3140-original.json)
+failed solely on the cumulative cache-use counter; the
+[separate corrected-validator reassessment](performance-evidence/hosted-mac-0fa3140-review.json)
+passes. The report explicitly excludes physical desktop coverage. It does not
+measure the target Windows GPU or a motion-p95 improvement.
+
 A second software-rendered run at `5328e256460a13edbf1be65397d2faf43e8d3075`
 completed 130 cycles in 3,620,845 ms. Its [original report](performance-evidence/soak-5328e25-original.json)
 failed because the old validator counted cumulative cache reuse as retained
