@@ -25,7 +25,7 @@ a new provider dependency.
 | S41 camera health | implemented | focused tests passed | pending |
 | S42 camera selection | implemented | selection and provider fingerprint fixture tests | verified current production examples pending |
 | S43 camera evidence | implemented | focused tests passed | pending |
-| S44 soak/performance | implemented | 72-second rendered fixture smoke passed on Chrome/Intel UHD 620; default 60-minute run and GPU matrix pending | matched Windows/macOS hardware and long-run evidence pending |
+| S44 soak/performance | implemented | 128-second rendered fixture smoke passed on Chrome/Intel UHD 620 after CCTV geometry de-duplication; the prior 60-minute run exposed retained Cesium terrain-worker work and remains a failed diagnostic, not an acceptance pass | matched Windows/macOS hardware and a clean long-run rerun pending |
 | S45 release provenance | implemented | draft-only tags, readiness and downloaded-attestation gates | pending |
 | S46 final candidate | planned | pending | pending |
 
@@ -68,12 +68,15 @@ a new provider dependency.
   nearest-camera selection, placeholder/fallback distinctions, and shared
   inspector evidence. Existing manual selection and camera ownership paths are
   unchanged.
-- S44 now performs actual operations in one persistent browser: source mode
-  changes, replay reads, GeoJSON imports, IndexedDB workspace switches, inspector
-  rendering, archive errors and decode recovery. The recorded smoke report is
-  `qa-artifacts/rendered-smoke-final2.json`; it used a hermetic eight-feature
-  datacenter fixture and real WebGL rendering on Chrome/Intel UHD 620. The
-  default 60-minute run and matched GPU evidence remain separate.
+- S44 performs actual operations in one persistent browser: source mode changes,
+  replay reads, GeoJSON imports, IndexedDB workspace switches, inspector
+  rendering, archive errors and decode recovery. The post-fix smoke run completed
+  nine cycles in 128 seconds on Chrome/Intel UHD 620. CCTV now skips identical
+  frustum rewrites and does not restart its geometry queue when re-enabled with
+  materialized geometry. A prior 60-minute run exposed retained Cesium terrain
+  worker listeners during repeated fixture camera/workspace moves; that report is
+  retained as a diagnostic and is not treated as a pass. A clean long-run rerun
+  and matched GPU evidence remain separate.
 - S45 checks exact staged commits, checksums, downloaded candidate contents,
   and GitHub artifact attestations. Tag pushes create unpublished drafts. Stable
   promotion requires complete exact-commit acceptance, another download and

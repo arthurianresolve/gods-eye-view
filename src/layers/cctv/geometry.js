@@ -341,6 +341,34 @@ export function createGeometry({ state: layerState, services, parts, source }) {
       record.probeClampRangeM,
       footprintGroundFor(record),
     );
+    // Cesium treats a new positions array as a geometry mutation and schedules
+    // a worker rebuild even when every coordinate is unchanged. CCTV disable /
+    // enable intentionally re-probes the active camera, so this path is common
+    // during recovery and soak runs. Keep the semantic activation pass while
+    // avoiding a duplicate worker submission for an identical frustum.
+    const previous = record.frustumGeometry;
+    const samePoint = (a, b) =>
+      a && b && a.lat === b.lat && a.lon === b.lon && a.alt === b.alt;
+    const sameGeometry =
+      previous &&
+      record.frustumPositions &&
+      previous.rangeM === geometry.rangeM &&
+      previous.vFovDeg === geometry.vFovDeg &&
+      previous.halfW === geometry.halfW &&
+      previous.halfH === geometry.halfH &&
+      previous.groundAltM === geometry.groundAltM &&
+      previous.liftM === geometry.liftM &&
+      previous.liftLimitedBy === geometry.liftLimitedBy &&
+      previous.liftCapped === geometry.liftCapped &&
+      previous.footprintMeasured === geometry.footprintMeasured &&
+      samePoint(previous.mount, geometry.mount) &&
+      samePoint(previous.capCenter, geometry.capCenter) &&
+      samePoint(previous.topCenter, geometry.topCenter) &&
+      samePoint(previous.corners?.tl, geometry.corners?.tl) &&
+      samePoint(previous.corners?.tr, geometry.corners?.tr) &&
+      samePoint(previous.corners?.br, geometry.corners?.br) &&
+      samePoint(previous.corners?.bl, geometry.corners?.bl);
+    if (sameGeometry) return;
     const positions = frustumCartesians(geometry);
     record.frustumGeometry = geometry;
     record.frustumPositions = positions;

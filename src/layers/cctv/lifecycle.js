@@ -369,7 +369,16 @@ export function createLifecycle({
         parts.projection.ensureProjectionRuntime(activeRecord);
         parts.frames.refreshProjectionImage(activeRecord, true);
       }
-      parts.geometryQueue.startGeometryLoadQueue();
+      // Re-enabling a layer must not resubmit Cesium geometry jobs for records
+      // that already have a materialized frustum.  The previous unconditional
+      // restart rebuilt every coverage primitive on every toggle; a quick
+      // outage/recovery cycle could therefore leave a growing tail of worker
+      // message listeners while those jobs drained.  Records without geometry
+      // still enter the initial staggered pass, and the existing one-shot
+      // unresolved-ground refresh remains owned by ingestion.update().
+      if (layerState._records.some((record) => !record.frustumGeometry))
+        parts.geometryQueue.startGeometryLoadQueue();
+      else parts.geometryQueue.stopGeometryLoadQueue();
       parts.rendering.refreshCoverageStyles();
       parts.projection.startProjectionLoop();
       // The projection loop self-stops when idle; a focus target appearing
