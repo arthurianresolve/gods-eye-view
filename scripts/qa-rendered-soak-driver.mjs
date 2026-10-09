@@ -26,6 +26,12 @@ export async function createRenderedSoakDriver(base) {
   try {
     const { page, errors } = await prepareFixturePage(browser, base, {
       respond(url, request) {
+        if (url.hostname === 'terrain.reearth.land')
+          return {
+            status: 404,
+            contentType: 'text/plain',
+            body: 'fixture terrain unavailable',
+          };
         // Keep the hermetic soak representative of the real infrastructure
         // layer while bounding Cesium's data-source lifecycle. The production
         // file is several thousand features and is covered by the layer's
@@ -292,13 +298,21 @@ export async function createRenderedSoakDriver(base) {
       await page.evaluate(async () => {
         const app = window.__godsEyeView;
         await app.dataManager.setEnabled('cctv', true);
-        app.viewer.camera.setView({
-          destination: app.viewer.camera.position.constructor.fromDegrees(
-            -73.9,
-            40.7,
-            1000,
-          ),
-        });
+        const destination = app.viewer.camera.position.constructor.fromDegrees(
+          -73.9,
+          40.7,
+          1000,
+        );
+        const current = app.viewer.camera.position;
+        // Reapplying an identical Cesium view starts another terrain quadtree
+        // build even though the operator did not move. Keep the fixture's
+        // camera journey representative without manufacturing unbounded work.
+        if (
+          Math.abs(current.x - destination.x) > 1 ||
+          Math.abs(current.y - destination.y) > 1 ||
+          Math.abs(current.z - destination.z) > 1
+        )
+          app.viewer.camera.setView({ destination });
         app.dataManager.layers
           .get('cctv')
           .module.setParams({ autoHop: false, showProjection: true });

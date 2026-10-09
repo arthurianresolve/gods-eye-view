@@ -14,8 +14,10 @@ import { _initGlobalContextPanel } from './ui/contextBindings.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import * as Cesium from 'cesium';
 import { ShareLinkManager, decodeShareCreatedAtMs } from './sharelink.js';
 import { createDefaultLayerState } from './data/layerState.js';
+import { createView } from './view/index.js';
 
 const uiSource = readShellSource();
 
@@ -696,6 +698,60 @@ test('share-link restore forces a final stationary render for Google 3D Tiles', 
     orientation: calls.flyTo.orientation,
   });
   assert.equal(calls.renders, 1);
+});
+
+test('share-link restore does not restart a flight for an already matching camera', async () => {
+  let flights = 0;
+  const viewer = {
+    camera: {
+      changed: { addEventListener() {} },
+      position: Cesium.Cartesian3.fromDegrees(-73.9909, 40.7669, 396),
+      heading: Cesium.Math.toRadians(206),
+      pitch: Cesium.Math.toRadians(-22),
+      roll: 0,
+      flyTo() {
+        flights += 1;
+      },
+    },
+  };
+  const manager = new ShareLinkManager(viewer);
+
+  const result = await manager.applyState({
+    lat: 40.7669,
+    lon: -73.9909,
+    alt: 396,
+    heading: 206,
+    pitch: -22,
+    roll: 0,
+  });
+
+  assert.equal(flights, 0);
+  assert.equal(result.camera, 'already-applied');
+});
+
+test('workspace view restore applies a camera pose without an animation flight', async () => {
+  let flights = 0;
+  let setViews = 0;
+  const viewer = {
+    camera: {
+      changed: { addEventListener() {} },
+      flyTo() {
+        flights += 1;
+      },
+      setView() {
+        setViews += 1;
+      },
+    },
+  };
+  const manager = new ShareLinkManager(viewer);
+
+  const result = await manager.applyView(
+    createView({ camera: { lat: 40.7669, lon: -73.9909, altitude_m: 396 } }),
+  );
+
+  assert.equal(flights, 0);
+  assert.equal(setViews, 1);
+  assert.equal(result.camera, 'applied');
 });
 
 test('newer navigation suppresses delayed share camera while non-camera state still restores', async () => {

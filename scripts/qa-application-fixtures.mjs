@@ -24,22 +24,23 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
   page.on('request', async (request) => {
     try {
       const url = new URL(request.url());
-      if (
+      // A fixture may deliberately answer a public provider URL (for example,
+      // with a deterministic 404) so Cesium takes its normal terminal error
+      // path instead of retaining work for an aborted network request.
+      const response = await respond?.(url, request);
+      if (response) await request.respond(response);
+      else if (
         ['http:', 'https:'].includes(url.protocol) &&
         url.origin !== new URL(base).origin
-      ) {
+      )
         await request.abort();
-      } else {
-        const response = await respond?.(url, request);
-        if (response) await request.respond(response);
-        else if (url.pathname.startsWith('/api/'))
-          await request.respond({
-            status: 503,
-            contentType: 'application/json',
-            body: '{"error":"fixture-offline"}',
-          });
-        else await request.continue();
-      }
+      else if (url.pathname.startsWith('/api/'))
+        await request.respond({
+          status: 503,
+          contentType: 'application/json',
+          body: '{"error":"fixture-offline"}',
+        });
+      else await request.continue();
     } catch (error) {
       // Navigation/disposal may cancel an intercepted request.
       if (

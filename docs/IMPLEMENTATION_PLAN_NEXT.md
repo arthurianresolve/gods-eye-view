@@ -73,10 +73,16 @@ a new provider dependency.
   rendering, archive errors and decode recovery. The post-fix smoke run completed
   nine cycles in 128 seconds on Chrome/Intel UHD 620. CCTV now skips identical
   frustum rewrites and does not restart its geometry queue when re-enabled with
-  materialized geometry. The clean 60-minute run completed 253 cycles in
+  materialized geometry. Workspace and settings restores now apply an already
+  matching camera pose without starting another flight, and incoming share-link
+  restores retain their animated handoff. The focused share-link suite and the
+  full 6,421-test gate pass. A follow-up two-minute smoke run completed nine
+  cycles with no operation failures, but retained listeners still grew 783 ->
+  1,471 and JS heap 67.2 -> 73.4 MB; the earlier clean 60-minute run completed
+  253 cycles in
   3,606,160 ms with no operation failure, but retained listeners grew from 732 to
   11,982 and JS heap from 67.8 MB to 153.2 MB (178.1 MB peak). Repeated fixture
-  camera/workspace moves still retain Cesium terrain-worker work, so S44 remains
+  layer toggles still enqueue Cesium createGeometry worker work, so S44 remains
   a failed acceptance diagnostic until that resource path is fixed. Hardware
   rendering was not validated in this run.
 - S45 checks exact staged commits, checksums, downloaded candidate contents,

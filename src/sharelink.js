@@ -27,6 +27,45 @@ import {
 const DEBOUNCE_MS = 500;
 const LEGACY_BLOOM_FALLBACK = 50;
 
+const CAMERA_POSITION_EPSILON_METERS = 0.5;
+const CAMERA_ANGLE_EPSILON_RADIANS = 1e-6;
+
+function cameraPoseMatches(camera, view) {
+  if (!camera?.position || !view?.destination || !view.orientation)
+    return false;
+
+  const position = camera.position;
+  const destination = view.destination;
+  const dx = position.x - destination.x;
+  const dy = position.y - destination.y;
+  const dz = position.z - destination.z;
+  if (
+    !Number.isFinite(dx) ||
+    !Number.isFinite(dy) ||
+    !Number.isFinite(dz) ||
+    dx * dx + dy * dy + dz * dz >
+      CAMERA_POSITION_EPSILON_METERS * CAMERA_POSITION_EPSILON_METERS
+  ) {
+    return false;
+  }
+
+  const orientation = view.orientation;
+  return [
+    [camera.heading, orientation.heading],
+    [camera.pitch, orientation.pitch],
+    [camera.roll, orientation.roll],
+  ].every(
+    ([current, expected]) =>
+      Number.isFinite(current) &&
+      Cesium.Math.equalsEpsilon(
+        current,
+        expected,
+        CAMERA_ANGLE_EPSILON_RADIANS,
+        CAMERA_ANGLE_EPSILON_RADIANS,
+      ),
+  );
+}
+
 // Style name mapping: internal → URL-friendly, shared with views.
 const STYLE_TO_URL = STYLE_URL_NAMES;
 
@@ -192,7 +231,10 @@ export class ShareLinkManager {
   }
 
   /** Apply a validated workspace view without changing the browser URL. */
-  async applyView(view, { applyCamera = true, navigationToken = null } = {}) {
+  async applyView(
+    view,
+    { applyCamera = true, navigationToken = null, animateCamera = false } = {},
+  ) {
     const params = viewToParams(view);
     const number = (key, fallback) => {
       const value = Number(params.get(key));
@@ -233,7 +275,11 @@ export class ShareLinkManager {
       temporal: view.temporal,
       temporalInvalid: false,
     };
-    return this.applyState(state, { applyCamera, navigationToken });
+    return this.applyState(state, {
+      applyCamera,
+      navigationToken,
+      cameraDuration: animateCamera ? 3.0 : 0,
+    });
   }
 
   /**
@@ -349,7 +395,10 @@ export class ShareLinkManager {
   /**
    * Apply a parsed state to the viewer + style manager.
    */
-  async applyState(state, { applyCamera = true, navigationToken = null } = {}) {
+  async applyState(
+    state,
+    { applyCamera = true, navigationToken = null, cameraDuration = 3.0 } = {},
+  ) {
     if (this._destroyed || !state)
       return { succeeded: false, reason: 'unavailable' };
     const view = {
@@ -364,10 +413,23 @@ export class ShareLinkManager {
         roll: Cesium.Math.toRadians(state.roll),
       },
     };
+    const cameraAlreadyAtView =
+      applyCamera &&
+      !this._activeCameraFlight &&
+      this._isNavigationCurrent(navigationToken) &&
+      cameraPoseMatches(this.viewer.camera, view);
     let cameraPromise = Promise.resolve({
-      status: applyCamera ? 'superseded' : 'skipped',
+      status: applyCamera
+        ? cameraAlreadyAtView
+          ? 'already-applied'
+          : 'superseded'
+        : 'skipped',
     });
-    if (applyCamera && this._isNavigationCurrent(navigationToken)) {
+    if (
+      applyCamera &&
+      !cameraAlreadyAtView &&
+      this._isNavigationCurrent(navigationToken)
+    ) {
       const restoreGeneration = ++this._restoreGeneration;
       let settleCamera;
       cameraPromise = new Promise((resolve) => {
@@ -384,27 +446,35 @@ export class ShareLinkManager {
         navigationToken,
         settle: releaseOwnedFlight,
       };
-      // Re-apply the final pose only while this share restoration still owns
-      // navigation. A later user or voice command wins over delayed restore.
-      this.viewer.camera.flyTo({
-        ...view,
-        duration: 3.0,
-        easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
-        complete: () => {
-          if (
-            this._destroyed ||
-            restoreGeneration !== this._restoreGeneration ||
-            !this._isNavigationCurrent(navigationToken)
-          ) {
-            releaseOwnedFlight('superseded');
-            return;
-          }
-          this.viewer.camera.setView(view);
-          this.viewer.scene?.requestRender?.();
-          releaseOwnedFlight('applied');
-        },
-        cancel: () => releaseOwnedFlight('cancelled'),
-      });
+      const applyFinalPose = () => {
+        if (
+          this._destroyed ||
+          restoreGeneration !== this._restoreGeneration ||
+          !this._isNavigationCurrent(navigationToken)
+        ) {
+          releaseOwnedFlight('superseded');
+          return;
+        }
+        this.viewer.camera.setView(view);
+        this.viewer.scene?.requestRender?.();
+        releaseOwnedFlight('applied');
+      };
+      if (!(cameraDuration > 0)) {
+        // Workspace and settings restores already have a validated local view;
+        // an instant pose avoids building terrain for an unnecessary flight
+        // path while retaining the share-link handoff's mesh-friendly delay.
+        applyFinalPose();
+      } else {
+        // Re-apply the final pose only while this share restoration still owns
+        // navigation. A later user or voice command wins over delayed restore.
+        this.viewer.camera.flyTo({
+          ...view,
+          duration: cameraDuration,
+          easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+          complete: applyFinalPose,
+          cancel: () => releaseOwnedFlight('cancelled'),
+        });
+      }
     }
 
     const temporal = await this._restoreTemporalState(
