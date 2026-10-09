@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer';
 
+const fixtureDiagnostics = new WeakMap();
+
 export async function launchFixtureBrowser(options = {}) {
   return puppeteer.launch({
     headless: true,
@@ -16,6 +18,19 @@ export async function launchFixtureBrowser(options = {}) {
 export async function prepareFixturePage(browser, base, { respond } = {}) {
   const page = await browser.newPage();
   const errors = [];
+  const startupMessages = [];
+  fixtureDiagnostics.set(page, { errors, startupMessages });
+  page.on('console', (message) => {
+    if (!['error', 'warn'].includes(message.type())) return;
+    // Local fixture evidence only: strip URL values and bound diagnostics.
+    startupMessages.push(
+      message
+        .text()
+        .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+        .slice(0, 500),
+    );
+    if (startupMessages.length > 12) startupMessages.shift();
+  });
   page.on('pageerror', (error) => errors.push(error.message));
   page.setDefaultTimeout(30000);
   page.setDefaultNavigationTimeout(90000);
@@ -57,10 +72,33 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
 
 export async function bootFixturePage(page, base) {
   await page.goto(base + '/?welcome=0', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(
-    () => window.__godsEyeView?.workspaceLibraryPanel,
-    { timeout: 90000 },
-  );
+  try {
+    await page.waitForFunction(
+      () => window.__godsEyeView?.workspaceLibraryPanel,
+      { timeout: 90000 },
+    );
+  } catch (error) {
+    const state = await page
+      .evaluate(() => ({
+        readyState: document.readyState,
+        applicationPresent: Boolean(window.__godsEyeView),
+        canvasCount: document.querySelectorAll('canvas').length,
+        cesiumError:
+          document
+            .querySelector('.cesium-widget-errorPanel')
+            ?.textContent?.slice(0, 500) || null,
+      }))
+      .catch(() => null);
+    const diagnostics = fixtureDiagnostics.get(page);
+    error.message +=
+      '; startup diagnostics: ' +
+      JSON.stringify({
+        state,
+        errors: diagnostics?.errors?.slice(-5),
+        messages: diagnostics?.startupMessages,
+      });
+    throw error;
+  }
   await page.evaluate(async () => {
     await window.__godsEyeView.styleManager.initialRestorePromise;
     window.prompt = () => 'Persistent recovery investigation';

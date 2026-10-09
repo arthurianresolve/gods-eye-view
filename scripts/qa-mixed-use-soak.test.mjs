@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
+import { bootFixturePage } from './qa-application-fixtures.mjs';
 import {
   evaluateSoakStability,
   FULL_SOAK_MS,
@@ -20,6 +21,26 @@ const stableReport = () => ({
     elapsedMs: i * 300000,
     metrics: metrics(),
   })),
+});
+
+test('startup failures include application readiness and renderer error diagnostics', async () => {
+  await assert.rejects(
+    bootFixturePage(
+      {
+        goto: async () => {},
+        waitForFunction: async () => {
+          throw new Error('startup timeout');
+        },
+        evaluate: async () => ({
+          applicationPresent: false,
+          canvasCount: 0,
+          cesiumError: 'WebGL unavailable',
+        }),
+      },
+      'http://localhost',
+    ),
+    /startup timeout; startup diagnostics: .*WebGL unavailable/,
+  );
 });
 
 test('stability accepts a complete plateau and leaves short/missing evidence pending', () => {
