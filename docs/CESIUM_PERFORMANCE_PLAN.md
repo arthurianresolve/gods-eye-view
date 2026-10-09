@@ -421,16 +421,40 @@ partial packet remains partial and cannot close the parent slice.
   The [combined focused result](performance-evidence/measurement-foundations-80d7c73.json)
   identifies the exact tested code. Capture integration and the unchanged-baseline
   observer remain the next implementation packet, **S47.1b-2**.
-- **Integration failure retained:** [CI at `70ca7de`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37987235260)
+- **Historical integration failure retained:** [CI at `70ca7de`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37987235260)
   passes Node 24/26, Windows onboarding and Linux/macOS recovery, but Windows
   recovery fails reopening the prior `6b896e2` application after the interrupted
   update. The [raw recovery report](performance-evidence/recovery-windows-70ca7de.json)
   records an application-ready timeout of 90 seconds after the initial workspace
-  save passed. It does not establish a cause or a lost workspace; later recovery
-  stages did not execute. Keep this failure open for the S49.1 fixture/lifecycle
-  investigation; do not increase its timeout or count the run as green. The new
-  build-provenance helper is not present in that CI revision. Browser-gate results
-  must be checked separately when the run finishes.
+  save passed. It does not establish a lost workspace; later recovery stages did
+  not execute. The unchanged timeout remains part of the recovery contract.
+- **Windows recovery cause and fix:** the later [0cdddd2 run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37988992802)
+  timed out in the renderer query at stage two. Bounded diagnostics in the paired
+  [8d1360c run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37991156080)
+  revealed that each reopen left its app tab open before `browser.close()`. Chrome
+  restored those tabs from the shared profile while the fixture created another
+  page; the target inventory grew to four old app pages before the final stage.
+  Some restored page targets arrived after the initial inventory. The WebGL-only
+  job reported all five checks passed, while the full-driver job failed final
+  workspace verification, but both had the extra restored tabs and are invalid as
+  hermetic recovery evidence. The observed renderer-query stalls do not establish
+  a specific Chromium engine mechanism or a performance difference; the A/B jobs
+  ran on different CPU models.
+- `fc67b90450625313414d36b986dbb2e54cdae2ad` fixes fixture page ownership: reuse
+  the single initial blank page, reject restored or additional page targets, close
+  the owned page and verify zero open pages before graceful browser close. The
+  app and full-driver SwiftShader default are unchanged. Both jobs in the
+  [corrected Windows run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37993455783)
+  pass all five stages with the same persisted workspace asset digest, one
+  rendered feature, clean source and the page-ownership checks. This validates
+  the fixture correction on hosted Windows. In this run, the full-driver
+  end-to-end renderer query took 23.697 to 59.627 seconds, and its instrumented
+  `getParameter` phase took 23.075 to 59.030 seconds; the exact Chromium
+  mechanism is unknown. The separate CPU hosts preclude a timing comparison
+  with the WebGL-only job. This is not GPU performance evidence. At
+  evidence-recording time, a full dev CI repeat containing this docs commit has
+  not yet run; broader S49 and S60 gates remain pending. Raw reports and
+  limits are summarized in [the Windows recovery note](performance-evidence/WINDOWS_RECOVERY.md).
 
 ## Measurement contract
 

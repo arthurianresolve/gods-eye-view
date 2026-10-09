@@ -1,0 +1,2621 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "fc67b90450625313414d36b986dbb2e54cdae2ad",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "AMD EPYC 7763 64-Core Processor                ",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-webgl-only",
+  "browserVersion": "Chrome/152.0.7977.75",
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-09T21:35:20.802Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791581385609,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 1310
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791581378814,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 8105,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791581379892,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 7027,
+            "gapMs": 1078
+          },
+          {
+            "receivedAt": 1791581380850,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 6069,
+            "gapMs": 958
+          },
+          {
+            "receivedAt": 1791581382370,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 4549,
+            "gapMs": 1520
+          },
+          {
+            "receivedAt": 1791581382734,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 4185,
+            "gapMs": 364
+          },
+          {
+            "receivedAt": 1791581383766,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3153,
+            "gapMs": 1032
+          },
+          {
+            "receivedAt": 1791581384816,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 2103,
+            "gapMs": 1050
+          },
+          {
+            "receivedAt": 1791581385609,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 1310,
+            "gapMs": 793
+          }
+        ],
+        "heartbeatCount": 16,
+        "requests": [
+          {
+            "at": 1791581380931,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581380952,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381743,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381755,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381756,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381767,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381767,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381767,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381779,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381780,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381780,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581381780,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382433,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382434,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382434,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382435,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382437,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382437,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382438,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382439,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382439,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382440,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382440,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382442,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382442,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382472,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382482,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382485,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382487,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382488,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382735,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581382736,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "stderr": [],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0,
+            "receivedAt": 1791581375541
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.19999999995343387,
+            "receivedAt": 1791581375542
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.29999999998835847,
+            "receivedAt": 1791581375542
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 0.7999999999883585,
+            "receivedAt": 1791581375542
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 0.7999999999883585,
+          "receivedAt": 1791581375542
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 8,
+        "browserProcessId": 6156,
+        "bootElapsedMs": 6024,
+        "rendererQueryDurationMs": 351,
+        "reopenElapsedMs": 19417,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 1603
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 1664
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 2679
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 7295
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 7688
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 7689
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 8040
+          },
+          {
+            "step": "seed-workspace",
+            "elapsedMs": 8041
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 17328
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 19857
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ]
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791581401576,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 968
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791581394328,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 8216,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791581395042,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 7502,
+            "gapMs": 714
+          },
+          {
+            "receivedAt": 1791581396325,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 6219,
+            "gapMs": 1283
+          },
+          {
+            "receivedAt": 1791581397417,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 5127,
+            "gapMs": 1092
+          },
+          {
+            "receivedAt": 1791581398625,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3919,
+            "gapMs": 1208
+          },
+          {
+            "receivedAt": 1791581399473,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3071,
+            "gapMs": 848
+          },
+          {
+            "receivedAt": 1791581400367,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 2177,
+            "gapMs": 894
+          },
+          {
+            "receivedAt": 1791581401576,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 968,
+            "gapMs": 1209
+          }
+        ],
+        "heartbeatCount": 13,
+        "requests": [
+          {
+            "at": 1791581399891,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399910,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399923,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399929,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399932,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399934,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399935,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399949,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581399970,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400043,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400043,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400044,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400044,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400044,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400044,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400045,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400046,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400047,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400369,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400370,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400370,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400370,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400370,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400651,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400651,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400651,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400651,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400962,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400963,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400963,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400964,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581400964,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "stderr": [],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0.09999999997671694,
+            "receivedAt": 1791581394247
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.3999999999650754,
+            "receivedAt": 1791581394247
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.5999999999767169,
+            "receivedAt": 1791581394247
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 0.8999999999650754,
+            "receivedAt": 1791581394247
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 0.8999999999650754,
+          "receivedAt": 1791581394247
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 8,
+        "browserProcessId": 4920,
+        "bootElapsedMs": 4615,
+        "rendererQueryDurationMs": 665,
+        "reopenElapsedMs": 14008,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 411
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 430
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 1068
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 4530
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 5045
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 5046
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 5711
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 5712
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 14357
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ]
+      }
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791581542738,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 676
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791581535457,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 7957,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791581536590,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 6824,
+            "gapMs": 1133
+          },
+          {
+            "receivedAt": 1791581537649,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 5765,
+            "gapMs": 1059
+          },
+          {
+            "receivedAt": 1791581538802,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 4612,
+            "gapMs": 1153
+          },
+          {
+            "receivedAt": 1791581539798,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3616,
+            "gapMs": 996
+          },
+          {
+            "receivedAt": 1791581540636,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 2778,
+            "gapMs": 838
+          },
+          {
+            "receivedAt": 1791581541810,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 1604,
+            "gapMs": 1174
+          },
+          {
+            "receivedAt": 1791581542738,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 676,
+            "gapMs": 928
+          }
+        ],
+        "heartbeatCount": 13,
+        "requests": [
+          {
+            "at": 1791581540358,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540358,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540643,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540643,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540644,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540645,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540913,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540913,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540913,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540913,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540913,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540914,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540914,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581540914,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541192,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541193,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541202,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541202,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541499,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541500,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541500,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541500,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541811,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541811,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541812,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581541812,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "stderr": [],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0,
+            "receivedAt": 1791581534263
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.29999999998835847,
+            "receivedAt": 1791581534263
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.3999999999650754,
+            "receivedAt": 1791581534263
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 0.6999999999534339,
+            "receivedAt": 1791581534263
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 0.6999999999534339,
+          "receivedAt": 1791581534263
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 7,
+        "browserProcessId": 10008,
+        "bootElapsedMs": 4090,
+        "rendererQueryDurationMs": 3,
+        "reopenElapsedMs": 13674,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 409
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 430
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 1030
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 4286
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 4520
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 4520
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 4523
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 4523
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 14616
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ]
+      }
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791581693858,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 673
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791581686931,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 7600,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791581687993,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 6538,
+            "gapMs": 1062
+          },
+          {
+            "receivedAt": 1791581688835,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 5696,
+            "gapMs": 842
+          },
+          {
+            "receivedAt": 1791581690043,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 4488,
+            "gapMs": 1208
+          },
+          {
+            "receivedAt": 1791581690818,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3713,
+            "gapMs": 775
+          },
+          {
+            "receivedAt": 1791581692177,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 2354,
+            "gapMs": 1359
+          },
+          {
+            "receivedAt": 1791581692933,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 1598,
+            "gapMs": 756
+          },
+          {
+            "receivedAt": 1791581693858,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 673,
+            "gapMs": 925
+          }
+        ],
+        "heartbeatCount": 14,
+        "requests": [
+          {
+            "at": 1791581691785,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691786,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691786,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691786,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691786,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691786,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691786,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691787,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581691787,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692153,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692183,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692188,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692192,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692208,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692230,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692236,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692241,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692244,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692260,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692278,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692286,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692347,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692347,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692347,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692347,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692348,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692641,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692765,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692774,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692933,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692933,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581692933,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "stderr": [],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0,
+            "receivedAt": 1791581686922
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.2999999999301508,
+            "receivedAt": 1791581686923
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.39999999990686774,
+            "receivedAt": 1791581686923
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 0.6999999999534339,
+            "receivedAt": 1791581686923
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 0.6999999999534339,
+          "receivedAt": 1791581686923
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 7,
+        "browserProcessId": 8984,
+        "bootElapsedMs": 5023,
+        "rendererQueryDurationMs": 1438,
+        "reopenElapsedMs": 14505,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 417
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 436
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 1072
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 4957
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 5459
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 5459
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 6897
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 6898
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 19965
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ]
+      }
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791581717659,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 1037
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791581710642,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 8054,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791581711863,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 6833,
+            "gapMs": 1221
+          },
+          {
+            "receivedAt": 1791581712525,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 6171,
+            "gapMs": 662
+          },
+          {
+            "receivedAt": 1791581713667,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 5029,
+            "gapMs": 1142
+          },
+          {
+            "receivedAt": 1791581714911,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3785,
+            "gapMs": 1244
+          },
+          {
+            "receivedAt": 1791581715642,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3054,
+            "gapMs": 731
+          },
+          {
+            "receivedAt": 1791581716697,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 1999,
+            "gapMs": 1055
+          },
+          {
+            "receivedAt": 1791581717659,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 1037,
+            "gapMs": 962
+          }
+        ],
+        "heartbeatCount": 16,
+        "requests": [
+          {
+            "at": 1791581714904,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715233,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715241,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715241,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715241,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715284,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715285,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715286,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715549,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715550,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715550,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715551,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715565,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715576,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715577,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715577,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715578,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715578,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715579,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715579,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715596,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715596,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715969,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715970,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715970,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715971,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715971,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715972,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715972,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715973,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715973,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791581715973,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "stderr": [],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0,
+            "receivedAt": 1791581707513
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.19999999995343387,
+            "receivedAt": 1791581707513
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.39999999990686774,
+            "receivedAt": 1791581707513
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 0.6999999999534339,
+            "receivedAt": 1791581707732
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 0.6999999999534339,
+          "receivedAt": 1791581707732
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 8,
+        "browserProcessId": 7836,
+        "bootElapsedMs": 6373,
+        "rendererQueryDurationMs": 236,
+        "reopenElapsedMs": 18066,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 485
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 507
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 1153
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 6873
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 6880
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 6880
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 7116
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 7116
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 20171
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ]
+      }
+    }
+  ],
+  "status": "passed",
+  "failure": null
+}
