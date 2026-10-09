@@ -318,6 +318,30 @@ test('missing and sparse heap checkpoints cannot pass as zero growth', () => {
   assert.equal(evaluateSoakStability(sparse).status, 'pending');
 });
 
+test('retention compares owned gauges rather than cumulative provider activity', () => {
+  const report = stableReport();
+  report.checkpoints.forEach((point, index) => {
+    point.metrics.application.resources.ownerResources.maps = {
+      cacheEntries: 3,
+      listeners: 2,
+      pendingJobs: 0,
+      providerLoadsStarted: index + 3,
+      providerCacheReuses: index * 12,
+      providerLoadFailures: index,
+    };
+  });
+  assert.equal(evaluateSoakStability(report).status, 'passed');
+  report.checkpoints.at(-1).metrics.application.resources.ownerResources.maps
+    .cacheEntries++;
+  const result = evaluateSoakStability(report);
+  assert.equal(result.status, 'failed');
+  assert.match(result.failures.join(' '), /maps.cacheEntries grew/);
+  assert.equal(
+    result.failures.some((reason) => reason.includes('providerCacheReuses')),
+    false,
+  );
+});
+
 test('operation failure preserves completed counts and retained checkpoints', async () => {
   let clock = 0,
     cycles = 0;

@@ -1,17 +1,43 @@
 export const FULL_SOAK_MS = 60 * 60_000;
 const RETENTION_WINDOW_MS = 30 * 60_000;
+// Gauges describe current ownership. Monotonic diagnostic counters (for example
+// providerCacheReuses or providerLoadsStarted) are expected to increase and must
+// never be interpreted as retained resources. Unknown metrics remain outside
+// this gate until their ownership/units are declared.
+const RESOURCE_GAUGES = new Set([
+  'listeners',
+  'timers',
+  'pendingJobs',
+  'primitives',
+  'groundPrimitives',
+  'dataSources',
+  'dataLayers',
+  'cacheEntries',
+  'imageryLayers',
+  'renderHolds',
+  'scheduledUpdates',
+  'estimatedTileBytes',
+]);
 
 function resourceCounts(metrics) {
   const resources = metrics?.application?.resources;
   if (!resources?.ownerResources) return null;
   const counts = {};
   for (const [key, value] of Object.entries(resources)) {
-    if (typeof value === 'number' && Number.isFinite(value))
+    if (
+      RESOURCE_GAUGES.has(key) &&
+      typeof value === 'number' &&
+      Number.isFinite(value)
+    )
       counts[key] = value;
   }
   for (const [owner, owned] of Object.entries(resources.ownerResources)) {
     for (const [key, value] of Object.entries(owned)) {
-      if (typeof value === 'number' && Number.isFinite(value))
+      if (
+        RESOURCE_GAUGES.has(key) &&
+        typeof value === 'number' &&
+        Number.isFinite(value)
+      )
         counts[`${owner}.${key}`] = value;
     }
   }
