@@ -1,0 +1,41 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "c61b6236d9e2b899587fb9444fb2343a0625bcaa",
+  "harnessCommit": "c61b6236d9e2b899587fb9444fb2343a0625bcaa",
+  "capturedAt": "2026-10-09T17:16:39.595Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [],
+  "samples": [
+    {
+      "pair": 0,
+      "mode": "synchronous",
+      "elapsedMs": 106.89999997615814,
+      "maxHeartbeatGapMs": 216.60000002384186,
+      "features": 5000,
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    }
+  ],
+  "renderErrors": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "c61b6236d9e2b899587fb9444fb2343a0625bcaa",
+    "harnessCommit": "c61b6236d9e2b899587fb9444fb2343a0625bcaa",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "coldActivationMs": 477.1999999284744,
+  "error": "A fresh capture is required.",
+  "foregroundUninterrupted": true
+}

@@ -53,8 +53,21 @@ function settledFrame(viewer) {
     viewer.scene.requestRender();
   });
 }
-async function pixels(viewer) {
+async function pixels(viewer, sample) {
+  const started = performance.now();
+  let frames = 0;
+  const remove = viewer.scene.postRender.addEventListener(() => frames++);
   const canvas = await captureFreshCesiumFrame(viewer);
+  remove();
+  sample.capture = {
+    elapsedMs: performance.now() - started,
+    renderedFrames: frames,
+    width: viewer.canvas.width,
+    height: viewer.canvas.height,
+    contextLost: viewer.canvas.getContext('webgl2')?.isContextLost() ?? null,
+    visible: document.visibilityState,
+    completed: Boolean(canvas),
+  };
   check(canvas, 'A fresh capture is required.');
   try {
     const data = canvas
@@ -156,21 +169,22 @@ run.addEventListener('click', async () => {
           'Incomplete import or stale evidence context.',
         );
         check(layer.getState().pendingJobs === 0, 'Import task retained.');
-        await settledFrame(viewer);
-        const hash = await pixels(viewer);
-        if (expectedPixels === null) expectedPixels = hash;
-        check(
-          hash === expectedPixels,
-          'Final pixels differ across equivalent imports.',
-        );
-        report.samples.push({
+        const sample = {
           pair,
           mode,
           elapsedMs,
           maxHeartbeatGapMs: Math.max(...gaps),
           features: 5000,
-          pixelSha256: hash,
-        });
+        };
+        report.samples.push(sample);
+        await settledFrame(viewer);
+        const hash = await pixels(viewer, sample);
+        sample.pixelSha256 = hash;
+        if (expectedPixels === null) expectedPixels = hash;
+        check(
+          hash === expectedPixels,
+          'Final pixels differ across equivalent imports.',
+        );
       }
     }
     report.checks.push({
