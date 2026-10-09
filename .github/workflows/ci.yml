@@ -10,6 +10,14 @@ on:
         description: Run the 60-minute rendered application acceptance soak
         type: boolean
         default: false
+      hosted_gpu_probe:
+        description: Probe native WebGL on free standard hosted runners
+        type: boolean
+        default: false
+      upload_artifacts:
+        description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -159,7 +167,7 @@ jobs:
         run: cat preview.log
 
       - name: Upload gate evidence
-        if: failure()
+        if: failure() && inputs.upload_artifacts == true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: browser-gate-evidence
@@ -245,12 +253,15 @@ jobs:
         run: node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json
 
       - name: Preserve recovery evidence
-        if: always()
+        if: always() && inputs.upload_artifacts == true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: profile-recovery-${{ matrix.os }}
           path: qa-artifacts/profile-recovery*
           retention-days: 30
+      - name: Recovery evidence in job logs
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
 
   rendered-soak:
     name: 60-minute rendered application soak
@@ -281,7 +292,7 @@ jobs:
       - name: Run full rendered soak
         run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --out qa-artifacts/rendered-soak.json
       - name: Preserve soak evidence
-        if: always()
+        if: always() && inputs.upload_artifacts == true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: rendered-soak
@@ -289,3 +300,26 @@ jobs:
             qa-artifacts/
             application.log
           retention-days: 30
+      - name: Soak evidence in job logs
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/rendered-soak.json
+
+  hosted-gpu-probe:
+    name: Native WebGL probe (${{ matrix.os }})
+    if: github.event_name == 'workflow_dispatch' && inputs.hosted_gpu_probe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+      - run: npm ci
+      - name: Probe default renderer without forcing software or bypassing GPU blocks
+        run: node scripts/qa-hosted-capture.mjs

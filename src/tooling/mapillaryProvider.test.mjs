@@ -949,20 +949,29 @@ test('concurrent disk readers share the read before its rewrite can finish', asy
   const file = tileFile(address);
   await writeAged(file, tile([{ name: 'sequence' }, { name: 'image' }]), HOUR);
   const readFile = fsp.readFile;
-  let reads = 0, release;
-  const gate = new Promise((resolve) => { release = resolve; });
+  let reads = 0,
+    release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
   t.mock.method(fsp, 'readFile', async (target, ...args) => {
-    if (String(target) === file) { reads++; await gate; }
+    if (String(target) === file) {
+      reads++;
+      await gate;
+    }
     return readFile.call(fsp, target, ...args);
   });
   const pending = [1, 2, 3].map(() => fetchTile(address));
   try {
     await waitFor(() => reads >= 1, 'disk read started');
     assert.equal(reads, 1);
-  } finally { release(); }
+  } finally {
+    release();
+  }
   const results = await Promise.all(pending);
   assert.equal(reads, 1, 'only one physical read is shared');
-  for (const result of results) assert.deepEqual(listTileLayers(result.bytes), ['sequence']);
+  for (const result of results)
+    assert.deepEqual(listTileLayers(result.bytes), ['sequence']);
   await _settleTileWritesForTest();
 });
 
