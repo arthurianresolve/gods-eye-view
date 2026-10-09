@@ -113,6 +113,26 @@ try {
     report.reason = report.hardwareRenderingAvailable
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
+    await page.goto(url.replace('capture-matrix.html', 'import-batches.html'), {
+      waitUntil: 'networkidle0',
+    });
+    await page.click('#run');
+    await page.waitForFunction(
+      () => document.querySelector('#result')?.textContent,
+      { timeout: 120_000 },
+    );
+    report.importBatches = await page.$eval('#result', (element) =>
+      JSON.parse(element.textContent),
+    );
+    if (
+      report.importBatches.applicationCommit !== commit ||
+      report.importBatches.status !== 'passed' ||
+      report.importBatches.samples?.length !== 10 ||
+      report.importBatches.checks?.length !== 2
+    )
+      throw new Error(
+        `Import comparison failed: ${report.importBatches.error || 'incomplete checks'}`,
+      );
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       await browser.close();
       browser = null;
