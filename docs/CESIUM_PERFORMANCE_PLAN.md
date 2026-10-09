@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` after
-`3aff740`. The worktree was clean before this
+`3cdd5cbd9f744de2a0d4d8a45a9a114660a182f8`. The worktree was clean before this
 documentation update. The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
@@ -16,7 +16,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, satellite, and CCTV lifecycle owners | Snapshot/monitor and local lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable load cleanup paths | Existing lifecycle tests pass; no accepted post-fix retention reproduction or 60-minute soak | Pending resource plateau |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb` | Pending real-GPU resource plateau |
 | S50 geometry coalescing | Partial: CCTV queue cursor plus existing geometry reuse | Queue tests pass; complete revision/coalescing and late-job acceptance remain pending | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: disposable coalesced scheduling API with satellite periodic-cadence integration; full layer rollout remains pending | Governor and satellite focused suites pass; static-frame and cadence acceptance remain pending | Pending static and animated comparisons |
 | S52 overlay invalidation | Pending | Pending slice-specific validation | Pending |
@@ -27,7 +27,7 @@ the earlier release requirements and historical results.
 | S57 map-resource lifetime | Pending | Pending slice-specific validation | Pending |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
-| S60 final candidate | Pending | Corrected worker preflights pass at `04b49d1`; soak stopped at a workspace status polling race after ten measured cycles, and its correction awaits rerun | Pending all required hardware environments |
+| S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
@@ -138,12 +138,30 @@ shared history to manufacture a per-slice delivery record.
   An experiment rejected on measured evidence should be recorded, not counted as
   an unimplemented runtime optimization that must be forced into the application.
 
-Start with the S47-S50 measurement/retention gaps; the Windows recovery fix is
-implemented in `c441832` and awaits the current CI rerun.
+Start with the S47-S50 measurement/retention gaps; Windows recovery now passes
+alongside macOS and Linux at `3cdd5cb`.
 Later optimization work follows measured costs and the original dependencies;
 pending human reviews or unavailable extra GPUs do not block independent code work.
 
 ## Current evidence
+
+- [Full CI at `3cdd5cb`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028)
+  passes Node 24/26, production builds, formatting, package boundaries, Windows
+  onboarding, browser journeys and installation/profile recovery on all three
+  operating systems. Recovery verifies persisted assets through previous install,
+  interruption, rollback, upgrade and failed-verification rollback. These hosted
+  recovery browsers explicitly use SwiftShader, not hardware rendering.
+- [The 60-minute soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028/job/113868003442)
+  serves the exact clean `3cdd5cb` build and completes 169 measured cycles in
+  3,602,183 ms. All 13 post-GC checkpoints report 632 listeners and zero pending
+  worker tasks. Retained heap grows from 73,424,108 to 80,248,328 bytes across
+  the whole run; the defined retention window grows 2.03%, below the 5% gate.
+  Operations and stability pass with no failures or pending checks in this
+  report. The `rendered-soak` workflow artifact retains the raw JSON. Chrome 152
+  uses ANGLE/SwiftShader and `hardwareRenderingValidated` is false. This closes
+  the automatic soak blocker, not the hardware matrix or motion-p95 objective.
+
+## Investigation history
 
 - The continuation adds exact served-build validation, a cold/reused/error/recovery
   Cesium worker preflight, five-minute post-GC checkpoints, automatic retention
@@ -187,7 +205,7 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   explicitly selects SwiftShader in its disposable fixture browser and asserts
   the actual renderer in each reopen result. Recovery reports never qualify as
   hardware evidence. User Chrome, deployed runtime and hardware-soak renderer
-  selection are unchanged. This recovery correction awaits CI validation.
+  selection are unchanged. The later `3cdd5cb` run validates this correction.
 
 ## Framework consideration
 
@@ -229,9 +247,10 @@ as a Cesium performance fix.
   it therefore proves the restore fix and hardware path, but is not a 60-minute
   retention pass.
 - The older comparisons in [PERFORMANCE.md](PERFORMANCE.md) remain historical.
-  No accepted matched comparison against `eb8c682`, post-fix 60-minute retention
-  pass, Windows discrete-GPU result or macOS candidate result was found in the
-  local artifacts. No 20% gain or final hardware-support claim is established.
+  No accepted matched comparison against `eb8c682`, post-fix hardware-rendered
+  60-minute retention pass, Windows discrete-GPU result or macOS hardware
+  candidate result exists yet. No 20% gain or final hardware-support claim is
+  established.
 
 The reconciliation itself changes documentation only. Existing checks above are
 evidence for their named source commits, not newly run checks of this document

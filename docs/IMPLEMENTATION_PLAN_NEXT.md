@@ -1,8 +1,8 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
 Status: Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` at
-`2e0fb80cb696aa6b621e8b93d8effd299ffa4b14`. Code, automated results and external
-acceptance are separate. Current CI fails Windows profile recovery; successful
+`3cdd5cbd9f744de2a0d4d8a45a9a114660a182f8`. Code, automated results and external
+acceptance are separate. Current CI passes three-OS recovery and the full software-rendered soak; successful
 older PR, release and component checks remain historical evidence. The
 [S47-S60 ledger](CESIUM_PERFORMANCE_PLAN.md) tracks incomplete performance work
 and the retention remediation required to close S44.
@@ -16,9 +16,9 @@ a new provider dependency.
 
 | Slice | Code status | Automated status | External status |
 | --- | --- | --- | --- |
-| S32 integration baseline | implemented; ledger reconciled | representative PRs to dev/main passed for `91a6076`, including layer-token checks; current push CI has a Windows recovery failure | refresh PR matrix for final candidate |
+| S32 integration baseline | implemented; ledger reconciled | representative PRs to dev/main passed for `91a6076`, including layer-token checks; all CI gates pass at `3cdd5cb` | refresh PR matrix for final candidate |
 | S33 candidate evidence | implemented | focused tests passed | pending |
-| S34 install/update recovery | implemented; Windows path failure needs correction | `2e0fb80`: Linux/macOS real profile recovery passed; Windows prior-install build failed; Windows onboarding passed | complete three-OS final-candidate matrix pending |
+| S34 install/update recovery | implemented, Windows path/renderer failures corrected | `3cdd5cb`: Windows, macOS and Linux real profile recovery and Windows onboarding pass | rerun for final candidate |
 | S35 accessibility/first use | implemented | automated keyboard, focus, AX-name, status, and 200%-equivalent reflow report | NVDA, VoiceOver, contrast/zoom and five users pending |
 | S36 infrastructure provenance | implemented | focused tests passed | pending |
 | S37 durable references | implemented | focused tests passed | pending |
@@ -28,7 +28,7 @@ a new provider dependency.
 | S41 camera health | implemented | focused tests passed | pending |
 | S42 camera selection | implemented | selection and provider fingerprint fixture tests | verified current production examples pending |
 | S43 camera evidence | implemented | focused tests passed | pending |
-| S44 soak/performance | harness implemented; retention remediation partial under S49-S50 | historical rendered soak failed stability (listeners 732 -> 11,982; heap 67.8 -> 153.2 MB); `2e0fb80` rendered smoke passed, full soak skipped | root cause, post-fix plateau and matched Windows/macOS GPU evidence pending |
+| S44 soak/performance | corrected fixture worker interception and status observer | `3cdd5cb`: full 60-minute soak passes, 169 cycles, 632 listeners and zero pending workers at all checkpoints; retention-window heap growth 2.03% | matched Windows/macOS real-GPU evidence pending |
 | S45 release provenance | gates implemented | artifact/attestation verification passed for `91a6076`; later `9df13c5` archive locally checksum-verified; neither validates current candidate | final-candidate attestation/download checks and post-publication verification pending |
 | S46 final candidate | pending | historical candidate report exists for `91a6076`; no completed final-candidate report for current dev | pending manual/hardware acceptance; stable publication not established |
 
@@ -106,10 +106,10 @@ a new provider dependency.
 
 ## Remaining slices
 
-S34 must fix the Windows recovery failure and pass the complete real-profile
-matrix. S35 still needs screen-reader, contrast, zoom and five-participant
-first-task review. S42 requires current verified provider placeholders. S44 needs
-retention remediation, a post-fix 60-minute plateau and matched hardware captures.
+S34's three-OS real-profile matrix passes at `3cdd5cb`; repeat it for the final
+candidate. S35 still needs screen-reader, contrast, zoom and five-participant
+first-task review. S42 requires current verified provider placeholders. S44's
+automatic retention gate passes, while matched hardware captures remain pending.
 S32/S45 need final-candidate PR and artifact evidence; S46 must freeze that
 candidate, collect remaining evidence and update support claims. The independent
 S47-S60 implementation work is detailed in its linked ledger.

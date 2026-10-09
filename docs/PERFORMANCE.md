@@ -225,6 +225,29 @@ correctly excluded from the moving-scene budget. With the same dense scene and a
 200 ms injected main-thread delay, the moving p95 reached 266.9 ms and the gate
 failed as intended: [negative-control report](../qa-artifacts/performance-delay-control-dense-fdd4d7d-1run.json).
 The 200 ms ceiling verifies the harness behavior; it is not a product target.
+## Corrected retention soak — 9 October 2026
+
+[CI run 37944725028](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028)
+tests clean application/harness commit `3cdd5cbd9f744de2a0d4d8a45a9a114660a182f8`.
+The corrected interceptor handles worker requests directly, and the workspace
+fixture observes completion before autosave can replace its status. No Cesium
+dependency patch or VM change was necessary for these reproduced failures.
+
+The [full soak job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028/job/113868003442)
+completes 169 measured cycles in 3,602,183 ms. All 13 post-GC checkpoints have
+632 listeners and zero pending worker tasks. Retained heap starts at 73,424,108
+bytes and finishes at 80,248,328 bytes; growth in the defined retention window
+is 2.03%, below the 5% limit. Operations and stability pass. The workflow's
+`rendered-soak` artifact contains the complete JSON and measurement conditions.
+
+This is Chrome 152 with ANGLE/SwiftShader, explicitly reporting
+`hardwareRenderingValidated: false`. Forced GC separates this retention
+diagnostic from latency measurements. It does not establish a hardware plateau,
+a motion-p95 improvement or visual equivalence for the remaining optimizations.
+The earlier failing reports remain historical evidence rather than being
+reclassified as passes. Node 24/26, builds, browser journeys and all three
+installation-recovery jobs also pass for this exact revision.
+
 ## What is not established yet
 
 - The Apple baseline is not a Windows measurement. The separate Windows diagnostic
