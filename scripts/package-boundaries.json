@@ -100,7 +100,11 @@
   },
   "viewer": {
     "exports": ["./application/viewer"],
-    "modules": ["src/app/viewer.js", "src/app/atmosphereCompat.js"],
+    "modules": [
+      "src/app/viewer.js",
+      "src/app/atmosphereCompat.js",
+      "src/freshFrame.js"
+    ],
     "external": ["cesium"]
   },
   "vite-build": {
@@ -1296,7 +1300,8 @@
       "src/data/cctvFootprint.js",
       "src/data/inputOwnership.js",
       "src/layers/cctv/sourcePolicy.js",
-      "src/evidence/evidence.js"
+      "src/evidence/evidence.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": ["hls.js", "cesium"]
   },
@@ -1503,7 +1508,8 @@
       "src/voice/earcon.js",
       "src/voice/pointerContext.js",
       "src/voice/pointerReticle.js",
-      "src/evidence/evidence.js"
+      "src/evidence/evidence.js",
+      "src/freshFrame.js"
     ],
     "external": []
   },
@@ -2363,7 +2369,9 @@
       "src/time/weatherAdapter.js",
       "src/recording/vessels.js",
       "src/recording/vesselReplaySource.js",
-      "src/recording/vesselSourceRouter.js"
+      "src/recording/vesselSourceRouter.js",
+      "src/freshFrame.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": [
       "hls.js",
@@ -2910,7 +2918,8 @@
       "src/data/local_data/osm_military_names/names.json",
       "src/layers/installations/namedMarkers.js",
       "src/data/infrastructureOverlayEntry.js",
-      "src/sources/infrastructureData.js"
+      "src/sources/infrastructureData.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": [
       "hls.js",
@@ -2988,7 +2997,11 @@
   },
   "layer-lifecycle": {
     "exports": ["./data/lifecycle"],
-    "modules": ["src/data/lifecycle.js", "src/data/cameraArrival.js"],
+    "modules": [
+      "src/data/lifecycle.js",
+      "src/data/cameraArrival.js",
+      "src/performance/cpuTimings.js"
+    ],
     "external": []
   },
   "ui-navigation": {
@@ -3395,7 +3408,8 @@
       "src/sources/overpassFeaturesRecords.js",
       "src/sources/overpassFeatures.js",
       "src/sources/featureSource.js",
-      "src/sources/capability.js"
+      "src/sources/capability.js",
+      "src/performance/cpuTimings.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },

@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { beginCpuTiming, endCpuTiming } from '../performance/cpuTimings.js';
 import {
   createCyberSonarSampler,
   isCyberContactSonarActive as isCyberSonarActive,
@@ -2603,6 +2604,15 @@ function resetFrameDiagnostics() {
 }
 
 function drawWorldOverlay() {
+  const timing = beginCpuTiming('overlay', 'frame');
+  try {
+    return drawWorldOverlayFrame();
+  } finally {
+    endCpuTiming(timing);
+  }
+}
+
+function drawWorldOverlayFrame() {
   if (_sonarRenderTimer !== null) {
     clearTimeout(_sonarRenderTimer);
     _sonarRenderTimer = null;

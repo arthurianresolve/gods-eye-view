@@ -102,3 +102,23 @@ test('performance monitor can be disabled without installing a render listener',
   assert.deepEqual(report.resources, {});
   assert.deepEqual(report.timings, {});
 });
+
+test('demand intervals identify possible idle time and disabling releases diagnostics completely', () => {
+  let clock = 0, listener, removed = 0;
+  const scene = { requestRenderMode: true, postRender: { addEventListener(fn) {
+    listener = fn;
+    return () => { removed++; listener = null; };
+  } } };
+  const monitor = createPerformanceMonitor({ viewer: { scene }, now: () => clock });
+  listener(); clock = 10000; listener();
+  assert.equal(monitor.getSnapshot().samples[0].metadata.mayIncludeIntentionalIdle, true);
+  assert.equal(monitor.getSnapshot().timings.gpuExecutionMs, null);
+  monitor.setEnabled(false);
+  assert.equal(listener, null);
+  assert.deepEqual(monitor.getSnapshot().timings, {});
+  monitor.setEnabled(true);
+  clock = 20000; listener();
+  assert.equal(monitor.getSnapshot().samples.length, 1, 'disabled interval is never added to frame samples');
+  monitor.destroy(); monitor.destroy();
+  assert.equal(removed, 2);
+});

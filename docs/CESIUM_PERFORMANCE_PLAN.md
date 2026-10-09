@@ -15,7 +15,7 @@ the earlier release requirements and historical results.
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, satellite, and CCTV lifecycle owners | Snapshot/monitor and local lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
+| S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; workload attribution and overhead comparisons remain | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb` | Pending real-GPU resource plateau |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; full geometry revision matrix remains pending | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass; static-frame and cadence acceptance remain pending | Pending static and animated comparisons |
@@ -91,8 +91,15 @@ shared history to manufacture a per-slice delivery record.
   arbitrary payloads are discarded. [Application tools](../src/app/tools.js)
   now collect bounded counts from local GeoJSON, submarine-cable, satellite, and
   CCTV lifecycle modules. The monitor now supports a disabled mode that installs no
-  render listener or diagnostic readers. Complete broader owner accounting,
-  layer/geometry CPU timing and intentional-idle separation. Measure overhead
+  render listener or diagnostic readers. Opt-in CPU series now cover the synchronous
+  portion of layer updates, CCTV geometry preparation and overlay frames. The
+  bounded 128-series/120-sample buffers store identifiers and numbers; overflow is
+  explicit. Promise waits are excluded and GPU execution remains unavailable.
+  Demand-render intervals explicitly warn that they may include intentional idle.
+  The application debug interface can enable or completely disable the new
+  monitor/CPU hooks; disabled CPU hooks do not read the clock. Effective settings
+  now read the live viewer's resolution, MSAA, FXAA and drawing-buffer mode.
+  Complete broader owner accounting and workload attribution. Measure overhead
   separately; an interval
   between rendered frames is not CPU execution time or a GPU duration.
 - **S49:** [local GeoJSON](../src/data/localGeojsonCore.js) and

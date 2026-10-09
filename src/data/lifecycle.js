@@ -1,5 +1,16 @@
 import { cancelCameraArrival } from './cameraArrival.js';
 
+import { beginCpuTiming, endCpuTiming } from '../performance/cpuTimings.js';
+
+function callLayerUpdate(layerId, module, viewer, options) {
+  const timing = beginCpuTiming(layerId, 'update-sync');
+  try {
+    return module.update(viewer, options);
+  } finally {
+    endCpuTiming(timing);
+  }
+}
+
 function cloneLayerParams(value) {
   if (Array.isArray(value)) return value.map(cloneLayerParams);
   if (value && typeof value === 'object') {
@@ -280,7 +291,9 @@ export class LayerLifecycle {
     let result;
     let failure = null;
     try {
-      result = await entry.module.update(this.viewer, { signal });
+      result = await callLayerUpdate(layerId, entry.module, this.viewer, {
+        signal,
+      });
       // Even a rejected/partial update may have changed the data exposed by
       // the layer. Publish before classifying its result so observers see it.
       this._publishActivity({ type: 'data-updated', layerId });
@@ -994,7 +1007,12 @@ export class LayerLifecycle {
       // First update immediately
       this._setVisibilityIntentPhase(entry, intentEpoch, 'update');
       try {
-        const updated = await entry.module.update(this.viewer, { signal });
+        const updated = await callLayerUpdate(
+          layerId,
+          entry.module,
+          this.viewer,
+          { signal },
+        );
         if (updated === false) throw lifecycleRejectedError(layerId, 'update');
       } catch (e) {
         if (signal?.aborted || isAbortError(e)) {

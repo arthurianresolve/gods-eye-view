@@ -29,6 +29,10 @@ import {
   readPerformanceEnvironment,
 } from '../performance/performanceSnapshot.js';
 import { getWorldOverlayDiagnostics } from '../overlays/worldOverlay.js';
+import {
+  getCpuTimings,
+  setCpuTimingsEnabled,
+} from '../performance/cpuTimings.js';
 
 /** Attach scene tools, rendering listeners and the application debug handle. */
 export async function createApplicationTools({
@@ -522,13 +526,13 @@ export async function createApplicationTools({
     readTimings: () => {
       const overlay = getWorldOverlayDiagnostics?.() || {};
       return {
+        applicationCpu: getCpuTimings(),
         overlayProjectionMs: overlay.projectionMs ?? null,
         overlayPlacementMs: overlay.solveMs ?? null,
         overlayPaintMs: overlay.paintMs ?? null,
       };
     },
     readSettings: () => {
-      const view = styleManager.shareLinkManager?.getCurrentView?.() || {};
       const tuning = styleManager.services?.getDetectionTuning?.() || {};
       return {
         qualityMode: styleManager._adaptiveQuality?.getMode?.() || null,
@@ -536,12 +540,21 @@ export async function createApplicationTools({
           ? tuning.densityPct
           : null,
         detectionMode: styleManager.services?.getDetectionMode?.() || null,
-        resolutionScale: view.resolutionScale ?? null,
-        antialias: viewer.scene.context?.antialias ?? null,
+        resolutionScale: viewer.resolutionScale ?? null,
+        antialias:
+          viewer.scene.context?._gl?.getContextAttributes?.()?.antialias ??
+          null,
+        msaaSamples: viewer.scene.msaaSamples ?? null,
+        fxaa: viewer.scene.postProcessStages?.fxaa?.enabled ?? null,
+        preserveDrawingBuffer:
+          viewer.scene.context?._gl?.getContextAttributes?.()
+            ?.preserveDrawingBuffer ?? null,
+        visualState: styleManager.getVisualState?.() || null,
       };
     },
   });
   defer(() => performanceMonitor.destroy());
+  defer(() => setCpuTimingsEnabled(false));
 
   window.__godsEyeView = {
     viewer,
@@ -577,6 +590,10 @@ export async function createApplicationTools({
           typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
       }),
     getPerformanceSnapshot: (extra) => performanceMonitor.getSnapshot(extra),
+    setPerformanceDiagnosticsEnabled: (enabled) => {
+      performanceMonitor.setEnabled(enabled);
+      setCpuTimingsEnabled(enabled);
+    },
   };
   const debug = window.__godsEyeView;
   defer(() => {

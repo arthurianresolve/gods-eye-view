@@ -137,19 +137,43 @@ export function createPerformanceMonitor({
   const scene = viewer?.scene;
   let frameCount = 0;
   let previousFrameAt = null;
+  let previousWasDemand = false;
+  let active = false;
+  let destroyed = false;
+  let removeListener = null;
   const onPostRender = () => {
+    if (!active) return;
     const current = now();
     if (previousFrameAt !== null)
-      snapshot.record('frameInterval', current - previousFrameAt);
+      snapshot.record('frameInterval', current - previousFrameAt, {
+        renderMode: scene.requestRenderMode ? 'demand' : 'continuous',
+        mayIncludeIntentionalIdle:
+          previousWasDemand || Boolean(scene.requestRenderMode),
+      });
     previousFrameAt = current;
+    previousWasDemand = Boolean(scene.requestRenderMode);
     frameCount += 1;
     snapshot.count('renderedFrames');
   };
-  const removeListener = enabled
-    ? scene?.postRender?.addEventListener?.(onPostRender)
-    : null;
+  function setEnabled(value) {
+    if (destroyed || active === Boolean(value)) return;
+    if (removeListener) removeListener();
+    removeListener = null;
+    active = Boolean(value);
+    enabled = active;
+    previousFrameAt = null;
+    if (active && scene?.postRender?.addEventListener) {
+      const unsubscribe = scene.postRender.addEventListener(onPostRender);
+      removeListener =
+        typeof unsubscribe === 'function'
+          ? unsubscribe
+          : () => scene.postRender.removeEventListener?.(onPostRender);
+    }
+  }
+  setEnabled(enabled);
 
   return {
+    setEnabled,
     getSnapshot(extra = {}) {
       const environment = readPerformanceEnvironment({
         viewer,
@@ -176,14 +200,21 @@ export function createPerformanceMonitor({
           ...(clone(extra.resources) || {}),
         },
         timings: {
+          ...(enabled
+            ? {
+                gpuExecutionMs: null,
+                frameIntervalScope: 'completed-frame-wall-time',
+              }
+            : {}),
           ...(enabled ? clone(readTimings()) || {} : {}),
           ...(clone(extra.timings) || {}),
         },
       });
     },
     destroy() {
-      if (typeof removeListener === 'function') removeListener();
-      else scene?.postRender?.removeEventListener?.(onPostRender);
+      if (destroyed) return;
+      setEnabled(false);
+      destroyed = true;
     },
   };
 }

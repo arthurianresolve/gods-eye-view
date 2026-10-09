@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { beginCpuTiming, endCpuTiming } from '../../performance/cpuTimings.js';
 import {
   GEO_PROGRESS_NOTIFY_INTERVAL_MS,
   GEO_PROGRESS_NOTIFY_BATCH_LIMIT,
@@ -281,6 +282,7 @@ export function createGeometryQueue({
         }),
         visit: (record) => {
           pendingRecords.delete(record);
+          const timing = beginCpuTiming('cctv', 'geometry-prepare');
           try {
             parts.geometry.updateRecordGeometry(record);
           } catch (err) {
@@ -288,6 +290,8 @@ export function createGeometryQueue({
               '[Data:CCTV] geometry refresh error:',
               err?.message || err,
             );
+          } finally {
+            endCpuTiming(timing);
           }
           if (
             layerState._geoLoading &&
