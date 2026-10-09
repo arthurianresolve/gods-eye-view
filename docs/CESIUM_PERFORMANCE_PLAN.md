@@ -15,18 +15,18 @@ the earlier release requirements and historical results.
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; workload attribution and overhead comparisons remain | Pending traces, allocation profiles and cost attribution |
+| S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb` | Pending real-GPU resource plateau |
-| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; full geometry revision matrix remains pending | Pending appearance and build-count comparisons |
-| S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass; static-frame and cadence acceptance remain pending | Pending static and animated comparisons |
-| S52 overlay invalidation | Pending | Pending slice-specific validation | Pending |
+| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
+| S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass | Four isolated UHD 620 governor checks pass at `3664f4f`; full application cadence remains pending |
+| S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression | Existing satellite tests pass; upload/allocation reduction and collection partitioning remain pending | Pending matched comparison |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
-| S59 cooperative ingestion | Partial: prepare only the existing 5,000-feature render cohort; four-ms CCTV batches | Import identity/order tests pass; two clean-revision CPU comparisons preserve the cohort and reduce preparation cost | Pending end-to-end import interaction and geometry measurements |
+| S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | 45 focused import/workspace/CCTV tests and 40 contract checks pass; build, formatting and package boundaries pass | Pending end-to-end import interaction and geometry measurements |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -313,8 +313,9 @@ The first probes observed no WebGL 2 on Windows, SwiftShader on Linux, and Apple
 Paravirtual Metal on macOS. Linux and macOS passed all twelve isolated capture
 checks, but the initial conservative classifier left all hardware evidence
 pending. Apple's documented paravirtual framework supplies Metal acceleration;
-subsequent probes must also require Chrome's WebGL/WebGL2 feature status to report
-`enabled`. A separate hosted accelerated retention run never becomes physical
+subsequent probes require Chrome's WebGL feature status to report `enabled`.
+Current Chromium reports a unified WebGL status; an absent legacy `webgl2` field
+is allowed, but an explicitly disabled value is rejected. A separate hosted accelerated retention run never becomes physical
 Mac desktop coverage. [Apple graphics documentation](https://developer.apple.com/documentation/paravirtualizedgraphics).
 
 S59 now prepares only the existing 5,000-feature render cohort instead of cloning
@@ -337,3 +338,77 @@ Windows/Node 24.16 and the exact source revisions. These are Node CPU
 microbenchmarks; they exclude parsing, Cesium geometry and GPU rendering and do
 not establish an end-to-end frame-time gain or complete S59. Cooperative parsing,
 geometry preparation, cancellation and large-import interaction remain pending.
+
+
+## Subsequent validation on available hardware
+
+[Run 37961356119](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37961356119)
+passes all automatic gates at `8c952b0cda853a73b0dc2eaad3a941e36eca2def`: Node 24/26,
+formatting, package boundaries, production builds, browser journeys, Windows
+onboarding and real browser-profile recovery on Linux, macOS and Windows.
+The [Windows recovery report](performance-evidence/recovery-windows-8c952b0.json)
+records all five stages and the unchanged persisted asset digest. The earlier
+`5328e25` Windows timeout is retained; the diagnostic rerun passed without proving
+its root cause. Neither recovery run is GPU evidence.
+
+The earlier `5328e25` browser smoke reported failure solely because cumulative
+`maps.providerCacheReuses` was compared as retained ownership. `e53dab1` separates
+explicit current-resource gauges from cumulative activity, with a regression
+case that still fails on cache-entry growth. The fresh `8c952b0` smoke passes;
+the earlier report is not overwritten or relabeled.
+
+The [Windows render-demand report](performance-evidence/render-demand-3664f4f.json)
+tests exactly `3664f4f24eafe1e640aca01ecae281a38784b9c8` on Intel UHD 620 / Chrome
+154. A settled isolated viewer renders zero frames in 10,002.6 ms; three scheduled
+one-second updates render three frames. The final capture is green and ownership
+returns to zero holds and scheduled updates. All four checks pass in an
+uninterrupted foreground tab. This supports governor correctness, not every
+layer's cadence, tracking performance or a full application soak.
+
+S48 now records projection, placement and painting as separate bounded CPU
+series. Diagnostic buffers remain opt-in and disabled instrumentation reads no
+clock. The Node attribution fixture uses a mock Canvas2D context: its phase
+names describe synchronous algorithm work, not browser paint, GPU duration or
+motion p95. Allocation/forced-GC diagnostics remain separate from timing runs.
+
+
+## S52 experiment disposition and S59 continuation
+
+The layout-cache experiment `a63096b` is reverted by `3d8eaba` and is not enabled.
+The [paired raw report](performance-evidence/overlay-layout-experiment-a63096b.json)
+compares it with `82a1951` using five alternating pairs per workload, each child
+process collecting five disabled/enabled diagnostic samples after warmup.
+Candidate populations and painted counts match the baseline in every sample.
+Median paired CPU changes were -8.19% generic, -6.80% infrastructure, -17.71%
+all-live/radio, and **+12.85% detection**. This last result crosses the regression
+limit. The earlier sequential sample did not reproduce that detection penalty;
+the source of variance is not established. No browser or GPU speedup is claimed,
+and there is no justification for retaining an optimization with this unresolved
+result. This diagnostic ran on the Windows machine while unrelated import files
+were being edited; measured overlay modules remained unchanged. It is not a
+full frozen-candidate acceptance run.
+
+The [attribution report](performance-evidence/overlay-attribution-82a1951.json)
+records the earlier clean-source Node workload phases. Projection dominates the
+three ordinary overlay fixtures; detection's custom painting phase includes its
+algorithm work. Enabled instrumentation overhead in those fixtures was about
+3.6-5.9%, while detection's small negative difference is noise, not a speedup.
+The reproducible `scripts/performance/overlayComparison.mjs` now rejects dirty or
+changed source trees at both ends of future comparisons.
+
+`e1dde25` adds cooperative import normalization for GeoJSON, CSV, KML and GPX,
+and cooperative Cesium entity creation. The previous microtask-only preview
+yields did not permit browser input to run. The shared iterator consumer now
+owns a single cancellable timeout and a four-ms work budget. Clear, replacement,
+abort, failure and destruction release partial geometry, contexts and queued
+work. The synchronous layer API remains available; the application awaits the
+new async API, rejects stale workspace completion and prevents duplicate Apply
+operations. Complete stored records, the 5,000-feature render cap, geometry,
+evidence and stable entity IDs are retained.
+
+JSON/XML/CSV decoding and one indivisible feature may still exceed four ms.
+The visible `scripts/fixtures/import-batches.html` comparison checks exact final
+pixels, populations, evidence counts and cancellation ownership. Its heartbeat
+measure is an event-loop diagnostic, not the product's interaction-p95 gate.
+Full application journeys and current hardware interaction acceptance remain
+pending for this change until their exact-revision runs complete.
