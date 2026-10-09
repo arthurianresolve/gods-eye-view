@@ -25,7 +25,7 @@ the earlier release requirements and historical results.
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
-| S58 weather/effects | Pending | Pending slice-specific validation | Pending |
+| S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
 | S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | Focused tests and full CI at `eb90492` pass; Linux software-rendered ten-capture comparison passes at `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; Windows UHD 620 capture fails, full interaction acceptance pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
@@ -37,6 +37,37 @@ a performance shortcut. Auto quality remains opt-in.
 
 ### Follow-up validation on 9 October
 
+- S58 now retains the currently owned wind scalar image when immutable grid,
+  wind and scalar contents are equal. Scalar revisions are checked by values,
+  not forecast IDs alone. Provider errors retry installation; changed data,
+  clear/destroy and map-host changes keep their existing replacement and
+  disposal behavior. The 223 wind/weather tests, formatting, package boundaries
+  and production build pass. No extra image cache, rendering setting or source
+  population is introduced.
+- Three five-pair Node comparisons test `b7e54c0` against `5ae6969`, with three
+  warmups and ten equivalent or revised forecasts per overlay per child:
+  [first](performance-evidence/wind-restores-b7e54c0-first.json),
+  [repeat](performance-evidence/wind-restores-b7e54c0-repeat.json), and
+  [third](performance-evidence/wind-restores-b7e54c0-third.json).
+  Every equivalent and revised raster sequence is byte-identical across builds.
+  Equal restores create zero new images instead of ten; ownership remains one
+  image and teardown releases it. The third comparison's median per-restore CPU
+  times are speed 9.97 to 0.71 ms, temperature 6.90 to 0.24 ms and pressure
+  9.88 to 0.26 ms. These measure application image preparation with mocked DOM
+  and collection ownership, excluding PNG encoding, GPU work and motion p95.
+  The first changed-temperature median regresses 16.0%; two subsequent batches
+  do not reproduce a regression above 10% (maximum changed-case increases
+  8.7% and 6.7%). The timing variance remains visible in all raw reports.
+- The [hosted Metal visual comparison at `d905f30`](performance-evidence/hosted-wind-d905f30.json)
+  passes all three scalar overlays in
+  [the free standard Mac job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37982484769).
+  Initial construction, repeated control and retained-image captures have exact
+  matching pixel hashes. Real paused GPU flow retains 1,200 paths and 152,736
+  vertices. This validates the isolated globe-host image change at one fixed
+  camera, not a full effect matrix, motion improvement, Windows rendering or
+  physical Mac desktop coverage. The same run also passes the twelve capture
+  checks and ten equivalent imported-geometry captures. Broader S58 and S60
+  acceptance remain pending.
 - [Full CI at `7c6c324`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37978265763)
   passes Node 24/26, builds, formatting, boundaries, Windows onboarding,
   installation/profile recovery on all three operating systems, and every

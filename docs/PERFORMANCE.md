@@ -11,6 +11,17 @@ Windows UHD 620 capture result and repeated import-preparation CPU comparisons.
 No accepted matched comparison establishes the S47-S60 20% motion-p95 target.
 Historical results below remain evidence for their named revisions only.
 
+The S58 wind-image change has a narrower measured result: identical forecast
+refreshes retain the scalar image, avoiding its repeated CPU preparation and
+replacement. Three five-pair comparisons preserve exact raster bytes; the last
+batch reduces median preparation from 6.9-10.0 ms to 0.24-0.71 ms depending on
+the field. Revised forecasts still rebuild. A hosted paravirtual Metal check
+at `d905f30` confirms exact matching rendered pixels for speed, temperature and
+pressure with unchanged 1,200 flow paths and 152,736 vertices. This is not an
+overall frame-rate or Windows claim. The [ledger](CESIUM_PERFORMANCE_PLAN.md)
+links all reports, including the first batch's non-reproduced changed-temperature
+regression and the outstanding full-scene validation.
+
 This page records one hardware-rendered Apple M5 comparison captured on 22
 August 2026 in Chrome 150 at 1440 x 900. It is not a minimum hardware
 specification and should not be used to predict performance on untested systems.
