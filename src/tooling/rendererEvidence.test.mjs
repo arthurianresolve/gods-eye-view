@@ -46,6 +46,29 @@ test('Apple virtual Metal evidence remains distinct from desktop hardware', () =
   assert.equal(result.accelerationVerified, true);
   assert.equal(result.physicalDesktopCoverage, false);
 });
+
+test('current Chromium uses one WebGL feature status while legacy explicit denial is retained', () => {
+  const renderer =
+    'ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)';
+  assert.equal(
+    classifyRenderer(renderer, {
+      featureStatus: { webgl: 'enabled', webgl2: null },
+    }).accelerationVerified,
+    true,
+  );
+  assert.equal(
+    classifyRenderer(renderer, {
+      featureStatus: { webgl: 'enabled', webgl2: 'disabled_off' },
+    }).accelerationVerified,
+    false,
+  );
+  assert.equal(
+    classifyRenderer(renderer, {
+      featureStatus: { webgl: 'unavailable_software' },
+    }).accelerationVerified,
+    false,
+  );
+});
 test('system diagnostics discard command lines and always detach their session', async () => {
   let detached = 0;
   const session = {

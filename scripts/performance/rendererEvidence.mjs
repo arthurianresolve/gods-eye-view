@@ -17,9 +17,13 @@ export function classifyRenderer(renderer, graphics = null) {
   );
   const native =
     /Intel|NVIDIA|AMD|Apple|Radeon/i.test(text) && !/virtual/i.test(text);
+  // Current Chromium reports one accelerated-WebGL status. Older versions
+  // additionally reported webgl2. Absence of that retired field is not a
+  // software fallback; an explicit disabled value must still fail closed.
   const enabled =
     graphics?.featureStatus?.webgl === 'enabled' &&
-    graphics?.featureStatus?.webgl2 === 'enabled';
+    (graphics.featureStatus.webgl2 == null ||
+      graphics.featureStatus.webgl2 === 'enabled');
   return {
     kind: software
       ? 'software'
