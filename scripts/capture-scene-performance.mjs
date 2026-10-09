@@ -667,6 +667,11 @@ try {
   }
 
   for (const sample of captures) {
+    if (!sample.performanceSnapshot) {
+      throw new Error(
+        `Performance instrumentation is unavailable for ${sample.scenario} run ${sample.run}; refusing an uninstrumented report`,
+      );
+    }
     const before = sample.settings?.before;
     const after = sample.settings?.after;
     if (!before || !after || before.qualityMode !== after.qualityMode) {
@@ -686,11 +691,23 @@ try {
     }
   }
 
-  const populations = new Set(
-    captures.map((sample) => JSON.stringify(sample.layers)),
+  const stableWithinScenario = (read) => {
+    const byScenario = new Map();
+    for (const sample of captures) {
+      const values = byScenario.get(sample.scenario) || new Set();
+      values.add(JSON.stringify(read(sample)));
+      byScenario.set(sample.scenario, values);
+    }
+    return [...byScenario.values()].every((values) => values.size <= 1);
+  };
+  // Idle, scripted motion, and tracking intentionally have different routes.
+  // Compare repeated runs within each workload rather than declaring the
+  // entire report mismatched because two different workloads were collected.
+  const populationStableAcrossSamples = stableWithinScenario(
+    (sample) => sample.layers,
   );
-  const cameraPaths = new Set(
-    captures.map((sample) => JSON.stringify(sample.cameraPath)),
+  const cameraPathStableAcrossSamples = stableWithinScenario(
+    (sample) => sample.cameraPath,
   );
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
   const report = {
@@ -712,8 +729,8 @@ try {
         'elapsed-move-right-v1 for scripted motion; parked-v1 for idle/tracking',
       detectionMode: fixture ? detectionMode : null,
       injectedDelayMs: delayMs,
-      populationStableAcrossSamples: populations.size === 1,
-      cameraPathStableAcrossSamples: cameraPaths.size === 1,
+      populationStableAcrossSamples,
+      cameraPathStableAcrossSamples,
       note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
     },
     motionBudget: {
