@@ -188,6 +188,11 @@ export async function createRenderedSoakDriver(
       (node) => node.value,
     );
     await clickControl(page, '.workspace-library [data-action="duplicate"]');
+    await page.waitForFunction(() =>
+      document
+        .querySelector('.workspace-library [data-status]')
+        ?.textContent.startsWith('Created'),
+    );
     await page.waitForFunction(
       (id) =>
         document.querySelector('.workspace-library [data-workspace-select]')

@@ -547,7 +547,8 @@ export function createWorkspaceLibraryPanel({
       const owner = active;
       select.value = owner.id;
       await refresh();
-      if (disposed || active !== owner) return;
+      if (disposed || generation !== openGeneration || active?.id !== owner.id)
+        return;
       if (!(await renderImportedData(imports, { workspaceId: owner.id })))
         return;
       setStatus(
@@ -908,10 +909,20 @@ export function createWorkspaceLibraryPanel({
         };
         const owner = active;
         await refresh();
-        if (disposed || active !== owner) return;
+        if (
+          disposed ||
+          generation !== openGeneration ||
+          active?.id !== owner.id
+        )
+          return;
         select.value = owner.id;
         const stored = await library.getWorkspace(owner.id);
-        if (disposed || active !== owner) return;
+        if (
+          disposed ||
+          generation !== openGeneration ||
+          active?.id !== owner.id
+        )
+          return;
         active.chunks = stored?.chunks || {};
         if (
           !(await renderImportedData(active.chunks.imports || [], {
@@ -1047,6 +1058,9 @@ export function createWorkspaceLibraryPanel({
     cancelButton.disabled = true;
     const previewOwner = stagedPreview;
     const owner = active;
+    const generation = openGeneration;
+    const current = () =>
+      !disposed && generation === openGeneration && active?.id === owner.id;
     const entry = {
       id: `import-${now()}`,
       kind: stagedPreview.kind,
@@ -1071,7 +1085,7 @@ export function createWorkspaceLibraryPanel({
         id: active.id,
         expectedRevision: active.revision,
       });
-      if (disposed || active !== owner) return;
+      if (!current()) return;
       active.revision = result.manifest.revision;
       active.chunks = chunks;
       if (stagedPreview === previewOwner) {
@@ -1080,14 +1094,15 @@ export function createWorkspaceLibraryPanel({
         stagedFile = stagedText = stagedPreview = null;
       }
       await refresh();
-      if (disposed || active !== owner) return;
+      if (!current()) return;
       if (
         !(await renderImportedData(chunks.imports, { workspaceId: owner.id }))
       )
         return;
+      if (!current()) return;
       importStatus.textContent = `Imported ${entry.accepted} features in workspace revision ${active.revision}.`;
     } catch (error) {
-      if (disposed || active !== owner) return;
+      if (!current()) return;
       importStatus.textContent =
         error.code === 'revision-conflict'
           ? 'Import was not applied because another tab saved a newer revision. Reopen the workspace and preview again.'
