@@ -18,7 +18,7 @@ the earlier release requirements and historical results.
 | S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, satellite, and CCTV lifecycle owners | Snapshot/monitor and local lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb` | Pending real-GPU resource plateau |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; full geometry revision matrix remains pending | Pending appearance and build-count comparisons |
-| S51 render demand scheduling | Partial: disposable coalesced scheduling API with satellite periodic-cadence integration; full layer rollout remains pending | Governor and satellite focused suites pass; static-frame and cadence acceptance remain pending | Pending static and animated comparisons |
+| S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass; static-frame and cadence acceptance remain pending | Pending static and animated comparisons |
 | S52 overlay invalidation | Pending | Pending slice-specific validation | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression | Existing satellite tests pass; upload/allocation reduction and collection partitioning remain pending | Pending matched comparison |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
@@ -114,7 +114,11 @@ shared history to manufacture a per-slice delivery record.
 - **S51:** [the governor](../src/renderGovernor.js) exports
   `scheduleRenderUpdate`, and satellites now use a disposable one-second
   scheduled wake while untracked. Tracking retains a continuous hold, and
-  disabling the layer disposes the timer. Extend this pattern where measured,
+  disabling the layer disposes the timer. Independent deadlines now share only
+  the earliest timer; a slow periodic owner no longer delays an urgent update,
+  nor is it executed early. `registerRenderDemand` owns continuous holds,
+  scheduled work and explicit invalidation with one disposer; stale owners are
+  inert after viewer teardown. Extend this pattern where measured,
   then prove <=2 frames in ten seconds for a settled static fixture while
   keeping tracking, wind, fades and final transition frames correct.
 - **S52:** implement revision-based overlay projection/placement/paint reuse,

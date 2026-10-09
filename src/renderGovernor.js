@@ -40,21 +40,54 @@ const _recentRequests = [];
 const RECENT_REQUEST_CAP = 16;
 const _scheduledUpdates = new Map();
 let _scheduledTimer = null;
+let _scheduledAt = null;
+let _generation = 0;
+
+const now = () => performance.now();
+const ownerLabel = (owner) =>
+  typeof owner === 'symbol' ? owner.description : owner;
+
+function armScheduledUpdates() {
+  const earliest =
+    _scheduledUpdates.size && _installed
+      ? Math.min(...[..._scheduledUpdates.values()].map((update) => update.at))
+      : null;
+  if (_scheduledTimer !== null && earliest === _scheduledAt) return;
+  if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
+  _scheduledTimer = null;
+  _scheduledAt = earliest;
+  if (earliest !== null) {
+    _scheduledTimer = setTimeout(
+      flushScheduledUpdates,
+      Math.max(0, earliest - now()),
+    );
+  }
+}
 
 function flushScheduledUpdates() {
   _scheduledTimer = null;
+  _scheduledAt = null;
   if (!_installed || !_viewer?.scene) return;
-  const pending = [..._scheduledUpdates.values()];
-  _scheduledUpdates.clear();
-  for (const update of pending) {
-    if (typeof update.callback !== 'function') continue;
+  const current = now();
+  const generation = _generation;
+  const pending = [..._scheduledUpdates.entries()].filter(
+    ([, update]) => update.at <= current,
+  );
+  let ran = false;
+  for (const [owner, update] of pending) {
+    if (generation !== _generation || _scheduledUpdates.get(owner) !== update)
+      continue;
+    _scheduledUpdates.delete(owner);
+    ran = true;
     try {
       update.callback();
     } catch (error) {
       console.warn('[RenderGovernor] scheduled update failed:', error);
     }
   }
-  if (pending.length) governorRequestRender('scheduled-update');
+  if (ran && generation === _generation)
+    governorRequestRender('scheduled-update');
+  armScheduledUpdates();
 }
 
 function applyMode() {
@@ -88,6 +121,7 @@ export function installRenderGovernor(viewer) {
   // explicit requests.
   viewer.scene.maximumRenderTimeChange = Infinity;
   applyMode();
+  armScheduledUpdates();
 }
 
 /**
@@ -142,19 +176,48 @@ export function governorRequestRender(reason = 'unspecified') {
  */
 export function scheduleRenderUpdate(ownerId, callback, delayMs = 0) {
   if (!ownerId || typeof callback !== 'function') return () => {};
-  const key = String(ownerId);
-  const update = { callback };
+  const key = typeof ownerId === 'symbol' ? ownerId : String(ownerId);
+  const delay = Number.isFinite(delayMs)
+    ? Math.max(0, Math.min(2_147_483_647, delayMs))
+    : 0;
+  const update = { callback, at: now() + delay };
   _scheduledUpdates.set(key, update);
-  if (_scheduledTimer === null) {
-    const delay = Number.isFinite(delayMs) ? Math.max(0, delayMs) : 0;
-    _scheduledTimer = setTimeout(flushScheduledUpdates, delay);
-  }
+  armScheduledUpdates();
   return () => {
     if (_scheduledUpdates.get(key) === update) _scheduledUpdates.delete(key);
-    if (!_scheduledUpdates.size && _scheduledTimer !== null) {
-      clearTimeout(_scheduledTimer);
-      _scheduledTimer = null;
-    }
+    armScheduledUpdates();
+  };
+}
+
+/** One disposable animation owner; equal diagnostic names do not share lifetime. */
+export function registerRenderDemand(ownerId) {
+  const owner = Symbol(String(ownerId || 'anonymous').slice(0, 64));
+  const generation = _generation;
+  let disposed = false;
+  let cancel = () => {};
+  const active = () => !disposed && generation === _generation;
+  return {
+    setContinuous(value) {
+      if (!active()) return;
+      if (value) holdContinuousRender(owner);
+      else releaseContinuousRender(owner);
+    },
+    schedule(callback, delayMs = 0) {
+      cancel();
+      cancel = active()
+        ? scheduleRenderUpdate(owner, callback, delayMs)
+        : () => {};
+      return cancel;
+    },
+    invalidate() {
+      if (active()) governorRequestRender(owner.description);
+    },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      cancel();
+      releaseContinuousRender(owner);
+    },
   };
 }
 
@@ -166,31 +229,35 @@ export function getRenderGovernorDiagnostics() {
   return {
     installed: _installed,
     mode: _holds.size > 0 ? 'continuous' : 'idle',
-    holds: [..._holds].sort(),
+    holds: [..._holds].map(ownerLabel).sort(),
     recentRequests: [..._recentRequests],
-    scheduledUpdates: [..._scheduledUpdates.keys()].sort(),
+    scheduledUpdates: [..._scheduledUpdates.keys()].map(ownerLabel).sort(),
   };
 }
 
 /** Release the installed viewer after its animation owners have stopped. */
 export function uninstallRenderGovernor(viewer) {
   if (_viewer !== viewer) return;
+  _generation += 1;
   _viewer = null;
   _installed = false;
   _holds.clear();
   _recentRequests.length = 0;
   if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
   _scheduledTimer = null;
+  _scheduledAt = null;
   _scheduledUpdates.clear();
 }
 
 /** Test seam: reset module state between unit tests. */
 export function _resetRenderGovernorForTest() {
+  _generation += 1;
   _viewer = null;
   _installed = false;
   _holds.clear();
   _recentRequests.length = 0;
   if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
   _scheduledTimer = null;
+  _scheduledAt = null;
   _scheduledUpdates.clear();
 }

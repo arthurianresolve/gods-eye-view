@@ -8,6 +8,8 @@ import {
   getRenderGovernorDiagnostics,
   _resetRenderGovernorForTest,
   scheduleRenderUpdate,
+  registerRenderDemand,
+  uninstallRenderGovernor,
 } from './renderGovernor.js';
 
 function makeViewer() {
@@ -112,4 +114,54 @@ test('scheduled updates coalesce by owner and dispose cleanly', async () => {
   assert.equal(ran, 10);
   assert.equal(getRenderGovernorDiagnostics().scheduledUpdates.length, 0);
   assert.ok(calls.requestRender >= 2);
+});
+
+test('independent deadlines neither wake periodic owners early nor delay urgent updates', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let clock = 0;
+  t.mock.method(performance, 'now', () => clock);
+  const { viewer } = makeViewer();
+  installRenderGovernor(viewer);
+  const seen = [];
+  scheduleRenderUpdate('periodic', () => seen.push('periodic'), 1000);
+  scheduleRenderUpdate('urgent', () => seen.push('urgent'), 10);
+  clock = 10; t.mock.timers.tick(10);
+  assert.deepEqual(seen, ['urgent']);
+  clock = 999; t.mock.timers.tick(989);
+  assert.deepEqual(seen, ['urgent']);
+  clock = 1000; t.mock.timers.tick(1);
+  assert.deepEqual(seen, ['urgent', 'periodic']);
+});
+
+test('disposable owners preserve independent lifetimes and reject stale callbacks', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  t.mock.method(performance, 'now', () => 0);
+  const { viewer, scene } = makeViewer();
+  installRenderGovernor(viewer);
+  const a = registerRenderDemand('tracking'), b = registerRenderDemand('tracking');
+  a.setContinuous(true); b.setContinuous(true);
+  a.dispose();
+  assert.equal(scene.requestRenderMode, false);
+  b.dispose();
+  assert.equal(scene.requestRenderMode, true);
+  const owner = registerRenderDemand('periodic');
+  owner.schedule(() => assert.fail('disposed owner ran'));
+  uninstallRenderGovernor(viewer);
+  installRenderGovernor(viewer);
+  owner.setContinuous(true);
+  owner.schedule(() => assert.fail('stale owner ran'));
+  t.mock.timers.tick(0);
+  assert.equal(scene.requestRenderMode, true);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+});
+
+test('cancellation during a due callback prevents another due owner from running', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  t.mock.method(performance, 'now', () => 0);
+  installRenderGovernor(makeViewer().viewer);
+  let cancel;
+  scheduleRenderUpdate('first', () => cancel());
+  cancel = scheduleRenderUpdate('second', () => assert.fail('cancelled update ran'));
+  t.mock.timers.tick(0);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
 });
