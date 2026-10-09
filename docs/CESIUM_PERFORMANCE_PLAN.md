@@ -139,6 +139,12 @@ requirements. Resume diagnosis with a specific hypothesis and a new control.
   must patch baseline code, record its separate patch/hash and changed-source
   status; never call that an unchanged clean `eb8c682` run. Reject unsupported
   identity paths rather than silently substituting a later baseline.
+- Match fixture delivery to the build being verified: today's aircraft injection
+  hook is Vite-development-only. A production artifact cannot be treated as an
+  equivalent fixture run by assuming that hook exists. Use controlled provider
+  responses through existing source boundaries for both artifacts, or explicitly
+  verify and label a common development-build recipe. Do not add a production
+  test backdoor or compare development against production without disclosure.
 - Cover the operating Austin view; dense 2,500 aircraft + 4,362 datacenters +
   716 dams; fixed selected tracking/cockpit/replay; individual/combined
   infrastructure; fixed weather/wind/effects; lifecycle stress; deterministic
@@ -401,9 +407,30 @@ partial packet remains partial and cannot close the parent slice.
   achievement and regression flags; unknown idle timing stays unavailable.
 - **S47.1 remains partial:** real capture reports do not yet emit the required
   fixture/time/full-route contract or verified served-build provenance. A passing
-  pure validator is not a matched browser comparison. S47.1b-1 (build provenance)
-  is assigned next to GPT-6 Luna; workload export/baseline observer integration
-  follows. No application runtime, VM deployment or visual default changed here.
+  pure validator is not a matched browser comparison. S47.1b-1 provides the build-provenance foundation below;
+  workload export and the baseline observer remain to be integrated. No application runtime, VM deployment or visual default changed here.
+- **S47.1b-1 implemented by GPT-6 Luna:** `69ea815` adds
+  [local build provenance](../scripts/performance/buildProvenance.mjs), corrected
+  in `80d7c7369ce9470a5abe7ce381ecce7f1b42968e`. The correction removes literal
+  quotes from npm's output argument (the original fixture had masked them) and
+  rechecks the harness after building. Creation runs a locked install and fresh
+  build in an explicitly named isolated checkout, refuses reused output and
+  shared dependency junctions, and records source/harness/recipe and asset hashes.
+  Separate loopback verification checks bounded streamed responses against that
+  unsigned receipt. It neither updates VM105 nor establishes release attestation.
+  The [combined focused result](performance-evidence/measurement-foundations-80d7c73.json)
+  identifies the exact tested code. Capture integration and the unchanged-baseline
+  observer remain the next implementation packet, **S47.1b-2**.
+- **Integration failure retained:** [CI at `70ca7de`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37987235260)
+  passes Node 24/26, Windows onboarding and Linux/macOS recovery, but Windows
+  recovery fails reopening the prior `6b896e2` application after the interrupted
+  update. The [raw recovery report](performance-evidence/recovery-windows-70ca7de.json)
+  records an application-ready timeout of 90 seconds after the initial workspace
+  save passed. It does not establish a cause or a lost workspace; later recovery
+  stages did not execute. Keep this failure open for the S49.1 fixture/lifecycle
+  investigation; do not increase its timeout or count the run as green. The new
+  build-provenance helper is not present in that CI revision. Browser-gate results
+  must be checked separately when the run finishes.
 
 ## Measurement contract
 

@@ -1,0 +1,23 @@
+{
+  "schema": "gev-implementation-packet/v1",
+  "packets": [
+    "S47.1a",
+    "S47.1b-1"
+  ],
+  "executor": "gpt-6-luna",
+  "codeCommit": "80d7c7369ce9470a5abe7ce381ecce7f1b42968e",
+  "timestamp": "2026-10-09T20:43:29.451865+00:00",
+  "validationScope": "Focused Node tests; temporary Git repos/npm builds and loopback HTTP only. No browser, hardware or signed-release validation.",
+  "command": [
+    "node",
+    "--test",
+    "scripts/performance/pairedReport.test.mjs",
+    "scripts/performance/buildProvenance.test.mjs",
+    "scripts/performance/captureIntegrity.test.mjs",
+    "scripts/performance/motionBudget.test.mjs"
+  ],
+  "exitCode": 0,
+  "stdout": "\u2714 fresh build receipts bind source, harness, lockfile recipe and locally built asset bytes (2923.4131ms)\n\u2714 wrong expected SHAs, dirty checkouts and an already existing output are rejected (4394.6954ms)\n\u2714 build changes and failed builds produce no local receipt (7620.5495ms)\n\u2714 served verification checks loopback bytes and rejects changed, missing, redirected and escaped assets (6582.8073ms)\n\u2714 served verification rejects local build changes and times out a stalled streamed asset (9887.4074ms)\n\u2714 served body overflow is cancelled before the full stream is consumed (3527.7038ms)\n\u2714 matched samples pass and independent scenarios keep their own camera paths (5.4784ms)\n\u2714 wrong builds, missing populations, changed settings and background samples are rejected (9.734ms)\n\u2714 repeat runs with different settings or route endpoints cannot pass (2.2064ms)\n\u2714 opt-in Auto captures permit density adaptation but still reject other visual changes (0.7744ms)\n\u2714 motion budgets exclude intentionally sparse idle frames (2.2314ms)\n\u2714 a moving-scene sample above the configured frame budget fails (0.362ms)\n\u2714 missing moving-scene metrics and missing motion samples remain incomplete (0.2553ms)\n\u2714 an omitted threshold records that no regression budget was evaluated (0.2629ms)\n\u2714 valid paired reports calculate scenario medians, objective and regressions separately (55.6674ms)\n\u2714 an unreported required tracking workload does not create a global objective claim (9.8464ms)\n\u2714 infrastructure-only workloads remain comparable without aircraft populations (8.983ms)\n\u2714 malformed or incomplete evidence is rejected instead of treating unknown metrics as zero (78.7993ms)\n\u2714 browser, fixture, route, populations and visual condition changes cannot be paired (29.0797ms)\n\u2714 dense-investigation cannot omit selected tracking from its objective contract (4.3372ms)\n\u2714 synthetic delayed samples fail the existing motion frame budget (0.5869ms)\n\u2714 idle zero-frame windows remain explicitly unavailable (7.1051ms)\n\u2139 tests 22\n\u2139 suites 0\n\u2139 pass 22\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 35098.4445\n",
+  "stderr": "",
+  "remaining": "S47.1b capture integration and baseline-compatible observation are not implemented. Windows recovery CI at70ca7de failed in prior-app startup; no performance acceptance claim."
+}
