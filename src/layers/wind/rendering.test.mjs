@@ -252,6 +252,98 @@ const FIELD = {
   dy: 180,
 };
 
+for (const overlay of ['speed', 'temperature', 'pressure']) {
+  test(`${overlay} image survives equivalent decoded forecasts and invalidates revised content`, () => {
+    const h = harness();
+    const snapshot = {
+      grid: FIELD,
+      u: new Float32Array(FIELD.u),
+      v: new Float32Array(FIELD.v),
+      scalar: {
+        kind: overlay,
+        units: overlay === 'pressure' ? 'hPa' : '\u00b0C',
+        values: Float32Array.from([overlay === 'pressure' ? 1013 : 20]),
+      },
+    };
+    h.rendering.attach();
+    h.rendering.setOptions({ overlay });
+    h.rendering.setField(snapshot);
+    const original = h.imagery[0];
+    const equal = {
+      ...snapshot,
+      u: new Float32Array(snapshot.u),
+      v: new Float32Array(snapshot.v),
+      scalar: {
+        ...snapshot.scalar,
+        values: new Float32Array(snapshot.scalar.values),
+      },
+    };
+    h.rendering.setField(equal);
+    assert.equal(h.imagery[0], original);
+    assert.equal(h.textures.length, 1);
+    assert.equal(h.removed.length, 0);
+    const changed =
+      overlay === 'speed'
+        ? { ...equal, u: Float32Array.from([11]) }
+        : {
+            ...equal,
+            scalar: { ...equal.scalar, values: Float32Array.from([50]) },
+          };
+    h.rendering.setField(changed);
+    assert.notEqual(h.imagery[0], original);
+    assert.equal(h.textures.length, 2);
+    assert.equal(h.removed.length, 1);
+    h.rendering.clear();
+    h.rendering.setField(changed);
+    assert.equal(h.textures.length, 3, 'clear releases the image owner');
+    h.rendering.destroy();
+    assert.equal(h.imagery.length, 0);
+  });
+}
+
+test('an equal refresh retries failed imagery instead of retaining an error', () => {
+  const h = harness();
+  h.rendering.attach();
+  h.rendering.setOptions({ overlay: 'speed' });
+  h.rendering.setField(FIELD);
+  const original = h.imagery[0];
+  original.provider.errorEvent.emit();
+  h.rendering.setField(FIELD);
+  assert.notEqual(h.imagery[0], original);
+  assert.equal(original.provider.errorEvent.size, 0);
+  assert.equal(h.rendering.getDiagnostics().imageryError, null);
+  h.rendering.destroy();
+});
+
+test('equivalent fields still migrate between globe imagery and a tileset shell', () => {
+  let host;
+  const h = harness({
+    shell: true,
+    getHost: () =>
+      host ?? { collection: h.viewer.imageryLayers, kind: 'globe' },
+  });
+  h.rendering.attach();
+  h.rendering.setOptions({ overlay: 'speed' });
+  h.rendering.setField(FIELD);
+  host = { collection: null, kind: 'tileset' };
+  h.rendering.setField(FIELD);
+  assert.equal(h.imagery.length, 0);
+  const [primitive] = h.primitives();
+  assert.ok(primitive);
+  h.rendering.setField({ ...FIELD });
+  assert.deepEqual(h.primitives(), [primitive]);
+  assert.equal(
+    h.textures.length,
+    2,
+    'equivalent shell refresh keeps its image',
+  );
+  host = null;
+  h.rendering.setField(FIELD);
+  assert.equal(primitive.destroyed, true);
+  assert.equal(h.imagery.length, 1);
+  h.rendering.destroy();
+});
+
 test('wind rendering owns the canvas and particle lifecycle', () => {
   const { rendering, canvas, callbacks, strokes } = harness();
   rendering.attach();
@@ -499,7 +591,7 @@ for (const overlay of ['speed', 'pressure', 'temperature']) {
     assert.equal(layer.alpha, 0);
     assert.equal(layer.show, false);
     h.rendering.setField({ ...snapshot });
-    assert.notEqual(h.imagery[0], layer, 'reinstall replaces the layer');
+    assert.equal(h.imagery[0], layer, 'equivalent refresh retains the layer');
     layer = h.imagery[0];
     assert.equal(layer.alpha, 0, 'reinstall at low height starts transparent');
     assert.equal(layer.show, false, 'reinstall at low height starts hidden');
@@ -532,7 +624,7 @@ for (const overlay of ['speed', 'pressure', 'temperature']) {
     assert.equal(h.pending.size, 0);
     assert.equal(
       h.textures.length,
-      2,
+      1,
       'height changes never rebuild the texture',
     );
     h.rendering.destroy();

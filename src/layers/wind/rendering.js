@@ -41,6 +41,27 @@ function sameWind(previous, next, previousField, nextField) {
   return true;
 }
 
+// Called only after grid and wind equality. Scalar revisions can change within
+// the same forecast cycle, so never use cycle IDs alone as an image cache key.
+function sameScalar(previous, next, kind) {
+  if (kind === 'speed') return true;
+  const before = previous?.scalar;
+  const after = next?.scalar;
+  if (
+    before?.kind !== kind ||
+    after?.kind !== kind ||
+    before.units !== after.units ||
+    !before.values ||
+    !after.values ||
+    before.values.length !== after.values.length
+  )
+    return false;
+  if (before.values === after.values) return true;
+  for (let i = 0; i < before.values.length; i++)
+    if (before.values[i] !== after.values[i]) return false;
+  return true;
+}
+
 /** Globe-projected surface flow plus one owned, static colour field: globe
  * imagery on the globe host, a raised shell on the 3D Tiles host. */
 export function createWindRendering({
@@ -691,11 +712,17 @@ export function createWindRendering({
         : next;
       const viewer = viewerReady();
       const nextNarrow = (viewer?.scene?.canvas?.clientWidth || 800) < 700;
+      const unchangedWind = sameWind(snapshot, next, field, nextField);
       const reuseGeometry =
         gpuActive &&
         gpuNarrow === nextNarrow &&
         gpu.supported() &&
-        sameWind(snapshot, next, field, nextField);
+        unchangedWind;
+      const reuseImagery =
+        (imagery || shell) &&
+        !imageryError &&
+        unchangedWind &&
+        sameScalar(snapshot, next, overlay);
       snapshot = next;
       field = nextField;
       cameraChanged = true;
@@ -714,7 +741,8 @@ export function createWindRendering({
           resize(viewer);
           seed(viewer.scene, makeOccluder(viewer.scene));
         }
-        installImagery();
+        if (reuseImagery) rehome();
+        else installImagery();
         relief.attach();
         motionChanged();
       }
