@@ -89,11 +89,35 @@ export async function openWorkspace(page, id) {
   );
   await page.select('.workspace-library [data-workspace-select]', id);
   await clickControl(page, '.workspace-library [data-action="open"]');
-  await page.waitForFunction(() =>
-    document
-      .querySelector('.workspace-library [data-status]')
-      ?.textContent.startsWith('Opened'),
-  );
+  try {
+    await page.waitForFunction(() =>
+      document
+        .querySelector('.workspace-library [data-status]')
+        ?.textContent.startsWith('Opened'),
+    );
+  } catch (error) {
+    const diagnostics = await page.evaluate(() => {
+      const app = window.__godsEyeView;
+      const layers = [...(app?.dataManager?.layers?.entries?.() || [])].map(
+        ([id, entry]) => ({
+          id,
+          enabled: entry.enabled,
+          lifecycleState: entry.lifecycleState,
+          uncertain: entry.lifecycleUncertain,
+          intentEpoch: entry.visibilityIntentEpoch,
+          intentEnabled: entry.visibilityIntentEnabled,
+          queuedIntent: entry.latestQueuedAbsoluteIntent || null,
+        }),
+      );
+      return {
+        status: document.querySelector('.workspace-library [data-status]')
+          ?.textContent,
+        layers,
+      };
+    });
+    error.message += `; workspace diagnostics: ${JSON.stringify(diagnostics)}`;
+    throw error;
+  }
 }
 
 export async function importFixtureGeometry(page, name = 'Persistent fixture') {
