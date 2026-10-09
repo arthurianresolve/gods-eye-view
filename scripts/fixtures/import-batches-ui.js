@@ -56,12 +56,28 @@ function settledFrame(viewer) {
 async function pixels(viewer, sample) {
   const started = performance.now();
   let frames = 0;
+  let updates = 0;
+  let animationFrames = 0;
+  let raf;
+  const tick = () => {
+    animationFrames++;
+    raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+  const removeUpdate = viewer.scene.preUpdate.addEventListener(() => updates++);
   const remove = viewer.scene.postRender.addEventListener(() => frames++);
   const canvas = await captureFreshCesiumFrame(viewer);
   remove();
+  removeUpdate();
+  cancelAnimationFrame(raf);
   sample.capture = {
     elapsedMs: performance.now() - started,
     renderedFrames: frames,
+    updates,
+    animationFrames,
+    defaultRenderLoop: viewer.useDefaultRenderLoop,
+    targetFrameRate: viewer.targetFrameRate,
+    requestRenderMode: viewer.scene.requestRenderMode,
     width: viewer.canvas.width,
     height: viewer.canvas.height,
     contextLost: viewer.canvas.getContext('webgl2')?.isContextLost() ?? null,
