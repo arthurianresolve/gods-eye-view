@@ -67,6 +67,18 @@ a performance shortcut. Auto quality remains opt-in.
   failed visual comparison, not five pairs or a performance pass. The report
   also retains the passing 12 small captures and ten imported-geometry captures.
   Production collections remain unchanged.
+- Repeated controls at `9dacb7c` produce identical pixels. The first partitioned
+  pair still changes 24 of 230,400 pixels (maximum channel difference 36), despite
+  identical Cartesian-coordinate hashes. The
+  [raw comparison and both images](performance-evidence/point-collections-9dacb7c-failed.json)
+  preserve that discrepancy. The cause is not established; the five-pair run
+  stops at its first failed pair and production collection partitioning remains
+  rejected. Exact-pixel criteria are not relaxed to make the result pass.
+- The [Windows recovery run at 9dacb7c](performance-evidence/recovery-windows-9dacb7c.json)
+  passes all five prior/install/interruption/upgrade/rollback stages and reopens
+  the same asset digest after every stage. It uses the declared 960-by-640
+  software-rendered viewport and establishes recovery correctness only. Earlier
+  timeouts are preserved; this pass does not prove their root cause.
 - The S47 restore audit found that the existing status notification was confined
   to display-slider actions. Share-link and workspace restores call the visual
   settings owner directly, leaving the Manual status stale. The visual owner now
@@ -531,3 +543,23 @@ pixels, populations, evidence counts and cancellation ownership. Its heartbeat
 measure is an event-loop diagnostic, not the product's interaction-p95 gate.
 Full application journeys and current hardware interaction acceptance remain
 pending for this change until their exact-revision runs complete.
+
+### Single-feature preparation experiment
+
+`9d84ded` tested yielding within the Cartesian preparation of one permitted
+50,000-vertex line or polygon. Twenty-four import tests, package boundaries and
+the production build pass. All final coordinate hashes, including polygon holes,
+match the baseline `9dacb7c`, and cancellation does not publish partial geometry.
+The production change is reverted because completion cost regresses materially.
+The comparison harness remains for further diagnosis.
+
+The [first five-pair report](performance-evidence/import-geometry-9d84ded-exploratory.json)
+overlapped a separate boundary/build job and is exploratory. The
+[repeat without that competing job](performance-evidence/import-geometry-9d84ded-repeat.json)
+uses five alternating pairs, three warmups per workload in each child process,
+Node 24.16 on Windows, and no forced GC. Median maximum preparation tasks fall
+from 9.32 to 4.20 ms for lines and 10.51 to 4.08 ms for polygons. Total completion
+rises from 15.94 to 27.23 ms and 16.12 to 30.98 ms respectively (about 71% and 92%).
+This identifies an unresolved scheduling/completion trade-off; it is not an
+accepted activation improvement, browser interaction result or GPU comparison.
+Single-feature preparation and raw document decoding therefore remain S59 gaps.

@@ -4,7 +4,7 @@ import * as Cesium from 'cesium';
 import { createImportedGeometryLayer } from './runtimeLayer.js';
 import { getContextStore } from '../data/contextStore.js';
 
-function fixture(t, { timedPreparation = false } = {}) {
+function fixture(t) {
   const previous = globalThis.window;
   globalThis.window = { dispatchEvent() {} };
   let clock = 0,
@@ -30,7 +30,7 @@ function fixture(t, { timedPreparation = false } = {}) {
     },
     now: () => 1000,
     batchOptions: {
-      now: () => (timedPreparation ? (clock += 2) : clock),
+      now: () => clock,
       schedule(fn) {
         timers.set(++timerId, fn);
         return timerId;
@@ -158,79 +158,4 @@ test('already aborted, malformed and empty loads leave no orphaned task or geome
   assert.equal(env.entities.values.length, 0);
   assert.equal(env.timers.size, 0);
   assert.equal(env.layer.getState().pendingJobs, 0);
-});
-
-const ring = (count, radius = 0.1) => {
-  const points = Array.from({ length: count - 1 }, (_, index) => {
-    const angle = (index / (count - 1)) * Math.PI * 2;
-    return [-97 + Math.cos(angle) * radius, 30 + Math.sin(angle) * radius, 25];
-  });
-  return [...points, [...points[0]]];
-};
-
-for (const type of ['LineString', 'Polygon']) {
-  test(`${type} preparation yields within one feature and retains every coordinate`, async (t) => {
-    const env = fixture(t, { timedPreparation: true });
-    const coordinates =
-      type === 'Polygon' ? [ring(512), ring(256, 0.02)] : ring(768);
-    const input = [
-      {
-        id: 'complex',
-        kind: 'geojson',
-        records: [{ id: 'shape', geometry: { type, coordinates } }],
-      },
-    ];
-    env.layer.load(input);
-    const old = env.entities.values[0];
-    const expected =
-      type === 'Polygon'
-        ? old.polygon.hierarchy.getValue()
-        : old.polyline.positions.getValue();
-    const pending = env.layer.loadAsync(input);
-    assert.equal(
-      env.entities.values.length,
-      0,
-      'incomplete geometry is not published',
-    );
-    assert.equal(getContextStore().entities.size, 0);
-    assert.equal(env.timers.size, 1, 'a single-feature import can yield');
-    env.flush();
-    assert.deepEqual(await pending, { drawn: 1, omitted: 0 });
-    const current = env.entities.values[0];
-    const actual =
-      type === 'Polygon'
-        ? current.polygon.hierarchy.getValue()
-        : current.polyline.positions.getValue();
-    assert.deepEqual(actual, expected);
-    assert.equal(current.id, old.id);
-    assert.equal(env.timers.size, 0);
-  });
-}
-
-test('cancelling mid-feature never publishes old geometry after a replacement', async (t) => {
-  const env = fixture(t, { timedPreparation: true });
-  const input = [
-    {
-      id: 'complex',
-      records: [
-        { id: 'old', geometry: { type: 'Polygon', coordinates: [ring(512)] } },
-      ],
-    },
-  ];
-  const old = env.layer.loadAsync(input, { workspaceId: 'old' });
-  const rejected = assert.rejects(old, { name: 'AbortError' });
-  assert.equal(env.entities.values.length, 0);
-  const late = [...env.timers.values()][0];
-  const current = env.layer.loadAsync(records(1), { workspaceId: 'new' });
-  late();
-  env.flush();
-  await rejected;
-  await current;
-  assert.deepEqual(
-    env.entities.values.map((e) => e.id),
-    ['gev-import:new:fixture:0'],
-  );
-  assert.equal(getContextStore().entities.size, 1);
-  assert.equal(env.layer.getState().pendingJobs, 0);
-  assert.equal(env.timers.size, 0);
 });
