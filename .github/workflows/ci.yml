@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       validation_mode:
-        description: Full automated validation or isolated free hosted Mac soak
+        description: Full validation, free native-renderer probe, or hosted Mac soak
         type: choice
-        options: [standard, hosted-macos-soak]
+        options: [standard, hosted-native-probe, hosted-macos-soak]
         default: standard
       full_soak:
         description: Run the 60-minute rendered application acceptance soak
@@ -29,12 +29,12 @@ permissions:
 
 concurrency:
   # A new push must not cancel a manually started soak of a frozen commit.
-  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.validation_mode == 'hosted-macos-soak' && 'macos-soak' || github.event_name }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.validation_mode || github.event_name }}
   cancel-in-progress: true
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -83,7 +83,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -185,7 +185,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -220,7 +220,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -274,7 +274,7 @@ jobs:
 
   rendered-soak:
     name: 60-minute rendered application soak
-    if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode != 'hosted-macos-soak'
+    if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode == 'standard'
     runs-on: ubuntu-latest
     timeout-minutes: 85
     steps:
@@ -315,7 +315,7 @@ jobs:
 
   hosted-gpu-probe:
     name: Native WebGL probe (${{ matrix.os }})
-    if: github.event_name == 'workflow_dispatch' && inputs.hosted_gpu_probe && inputs.validation_mode != 'hosted-macos-soak'
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
