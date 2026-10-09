@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` after
-`f77effc`. The worktree was clean before this
+`20f5a8a`. The worktree was clean before this
 documentation update. The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
@@ -14,7 +14,7 @@ the earlier release requirements and historical results.
 
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
-| S47 baseline and comparable capture | Partial: density UI synchronization, capture defaults, elapsed-time movement and instrumentation guard | Current CI unit/build gates pass; build identity, route and complete mismatch rejection remain incomplete | Pending matched captures and negative control |
+| S47 baseline and comparable capture | Partial: density UI synchronization, capture defaults, runtime app-commit binding, elapsed-time movement and instrumentation guard | Focused capture/build checks pass, including runtime identity and wrong-commit rejection; complete settings/population guards and matched-run evidence remain pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, and satellite lifecycle owners | Snapshot/monitor and local GeoJSON/cable lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable load cleanup paths | Existing lifecycle tests pass; no accepted post-fix retention reproduction or 60-minute soak | Pending resource plateau |
 | S50 geometry coalescing | Partial: CCTV queue cursor plus existing geometry reuse | Queue tests pass; complete revision/coalescing and late-job acceptance remain pending | Pending appearance and build-count comparisons |
@@ -27,7 +27,7 @@ the earlier release requirements and historical results.
 | S57 map-resource lifetime | Pending | Pending slice-specific validation | Pending |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
-| S60 final candidate | Pending | Overall current CI fails Windows profile recovery; full rendered soak skipped | Pending all required hardware environments |
+| S60 final candidate | Pending | Latest CI is pending; full rendered soak skipped | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
@@ -62,7 +62,8 @@ counts must return to baseline and post-GC heap must plateau, with no more than
 ## Code reconciliation and remaining work
 
 The changes since the comparison baseline are in `510ed8d`, `d8ce27b`,
-`2e0fb80`, `c441832`, `f77effc`, and the pending owner-diagnostics change.
+`2e0fb80`, `c441832`, `f77effc`, `8021a50`, `24c06cb`, `e9a29ba`,
+and `20f5a8a`.
 The first commit combines several
 foundations, rather than delivering
 one accepted optimization per slice. Remaining accepted optimizations should have
@@ -71,14 +72,10 @@ shared history to manufacture a per-slice delivery record.
 
 - **S47:** [the harness](../scripts/capture-scene-performance.mjs) defaults to
   five runs/30-second warmup/60-second measurement and rejects missing snapshots.
-  It still defaults the reported app commit to the harness checkout; the runtime
-  calls in [application tools](../src/app/tools.js) do not pass a build commit to
-  the environment or monitor. Its route uses elapsed-time deltas with `setInterval`
-  and `camera.moveRight`, not an absolute pose from one fixed starting transform.
-  Population/path stability is reported but not rejected, and settings rejection
-  is incomplete. Finish runtime identity verification, absolute routes, full
-  before/after guards and slider/share/workspace/profile density journeys before
-  generating accepted baseline comparisons.
+  Runtime captures now bind the reported app commit to `__GEV_APP_COMMIT__`, reject
+  an explicit wrong commit, and use an absolute elapsed-time camera route. Complete
+  before/after population and settings guards plus slider/share/workspace/profile
+  density journeys before generating accepted baseline comparisons.
 - **S48:** [the monitor](../src/performance/performanceSnapshot.js) samples
   completed-frame intervals and reuses existing overlay diagnostics. It now
   accepts a bounded per-owner count map for listeners, timers, pending jobs,
@@ -132,21 +129,22 @@ shared history to manufacture a per-slice delivery record.
   An experiment rejected on measured evidence should be recorded, not counted as
   an unimplemented runtime optimization that must be forced into the application.
 
-Start with the Windows recovery failure and S47-S50 measurement/retention gaps.
+Start with the S47-S50 measurement/retention gaps; the Windows recovery fix is
+implemented in `c441832` and awaits the current CI rerun.
 Later optimization work follows measured costs and the original dependencies;
 pending human reviews or unavailable extra GPUs do not block independent code work.
 
 ## Current evidence
 
-- [CI for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
-  passes Node 24.14.0/26.x suites and production builds, formatting/boundaries,
+- [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
+  passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser
-  job (including reference transfer, accessibility and rendered smoke). Overall CI
-  **fails** Windows profile recovery while building the prior installation:
-  Vite/Rollup rejects the emitted `index.html` path, with `RUNNER~1` and
-  `runneradmin` temporary-path forms in the error. The exact cause needs a focused
-  fix and rerun. The 60-minute rendered soak was **skipped**: it requires manual
-  workflow dispatch with `full_soak=true`. A smoke pass does not replace it.
+  job, but failed Windows profile recovery while building the prior installation.
+  The path canonicalization fix is in `c441832`; the latest run for `20f5a8a`
+  ([CI run 37930218525](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37930218525))
+  is pending and is not yet acceptance evidence. The 60-minute rendered soak was
+  skipped: it requires manual workflow dispatch with `full_soak=true`. A smoke
+  pass does not replace it.
 - The local `qa-artifacts/perf-s47-smoke.json` is exploratory evidence only: it
   labels app/harness `d8ce27b` with dirty source, records zero objects and null
   performance snapshots. It does not identify or validate the deployed app or
