@@ -3,6 +3,7 @@ import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import { bootFixturePage } from './qa-application-fixtures.mjs';
+import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
 import {
   fixtureRequestCommand,
@@ -20,6 +21,26 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
     workers: { instrumented: true, overflow: false, pending: 0, workers: [] },
     resources: { primitives: 3, ownerResources: { fixture: { pendingJobs } } },
   },
+});
+
+test('network preflight requires actual worker interception, not merely DNS failure', async () => {
+  const probe = createFixtureNetworkProbe('http://localhost:4174');
+  const result = [
+    'fixture-network-intercepted',
+    'fixture-network-intercepted',
+    'blocked',
+  ];
+  await assert.rejects(probe.verify({ evaluate: async () => result }));
+  const report = await probe.verify({
+    evaluate: async (_operation, urls) => {
+      assert.equal(probe.respond(new URL(urls[0])).body, result[0]);
+      assert.equal(probe.respond(new URL(urls[1])).body, result[1]);
+      assert.equal(probe.respond(new URL(urls[2])), undefined);
+      return result;
+    },
+  });
+  assert.equal(report.interceptedWorkerRequests, 3);
+  assert.equal(probe.respond(new URL('https://example.test/other')), undefined);
 });
 
 test('worker instrumentation tracks settlement, failures and termination without retaining payloads', () => {

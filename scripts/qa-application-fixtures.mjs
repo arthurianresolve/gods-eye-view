@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
 
 const fixtureDiagnostics = new WeakMap();
 
@@ -19,6 +20,7 @@ export async function launchFixtureBrowser(options = {}) {
 export async function prepareFixturePage(browser, base, { respond } = {}) {
   const page = await browser.newPage();
   const errors = [];
+  const networkProbe = createFixtureNetworkProbe(base);
   const startupMessages = [];
   fixtureDiagnostics.set(page, { errors, startupMessages });
   page.on('console', (message) => {
@@ -44,20 +46,16 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
       errors.push(error.message);
   };
   // The high-level interceptor can leave module-worker requests paused while
-  // waiting for a Network event that never arrives. Each target's Fetch event
-  // already contains everything needed to settle the request exactly once.
-  page.on('workercreated', (worker) => {
-    void interceptFixtureSession(worker.client, base, respond, onError).catch(
-      onError,
-    );
-  });
+  // waiting for a Network event that never arrives. The page target receives
+  // worker Fetch events too; Chromium worker targets do not expose Fetch.enable.
+  // The soak preflight checks local/external worker interception before use.
   await interceptFixtureSession(
     await page.createCDPSession(),
     base,
-    respond,
+    (url, request) => networkProbe.respond(url) ?? respond?.(url, request),
     onError,
   );
-  return { page, errors };
+  return { page, errors, verifyNetwork: () => networkProbe.verify(page) };
 }
 
 export async function bootFixturePage(page, base) {

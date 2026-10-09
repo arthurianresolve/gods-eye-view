@@ -154,11 +154,16 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
 - [The intercepted CI probe at `885cb48`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37941399027/job/113856408602)
   fails on `geometry-cold` before measurement. Its failure JSON was preserved.
   This rules out treating earlier operation-only soaks as worker-lifecycle
-  acceptance. The fixture interceptor now settles each target's raw Fetch event
-  directly, including worker module requests, instead of waiting for Puppeteer's
-  Fetch/Network event pairing. Unconfigured provider requests remain blocked.
-  This harness correction needs the same worker preflight and full soak rerun;
-  it is not an engine or VM change.
+  acceptance. The fixture interceptor now settles the page target's raw Fetch
+  events directly instead of waiting for Puppeteer's Fetch/Network event pairing.
+  [The `3cf6f58` rerun](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37942077509/job/113859197474)
+  passed the geometry completion preflight, but then failed because worker targets
+  do not support `Fetch.enable`. The unsupported worker-target setup has been
+  removed. A new preflight must prove worker requests reach the page interceptor:
+  local and external synthetic responses must be fulfilled, and an unconfigured
+  external request must be observed and blocked. DNS failure alone cannot pass.
+  This correction and the full soak still need CI validation; no engine or VM
+  change is involved.
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser

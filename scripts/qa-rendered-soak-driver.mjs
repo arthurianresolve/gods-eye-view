@@ -35,92 +35,99 @@ export async function createRenderedSoakDriver(
     body: JSON.stringify(payload),
   });
   try {
-    const { page, errors } = await prepareFixturePage(browser, base, {
-      respond(url, request) {
-        if (url.hostname === 'terrain.reearth.land')
-          return {
-            status: 404,
-            contentType: 'text/plain',
-            body: 'fixture terrain unavailable',
-          };
-        // Keep the hermetic soak representative of the real infrastructure
-        // layer while bounding Cesium's data-source lifecycle. The production
-        // file is several thousand features and is covered by the layer's
-        // focused tests; the mixed-use soak must measure retained resources
-        // from repeated journeys rather than fixture volume.
-        if (url.pathname.endsWith('/datacenters.geojsonl'))
-          return {
-            status: 200,
-            contentType: 'application/x-ndjson',
-            body: Array.from({ length: 8 }, (_, n) =>
-              JSON.stringify({
-                type: 'Feature',
-                id: 'way/' + (n + 1),
-                properties: { name: 'Synthetic datacenter ' + n },
-                geometry: {
-                  type: 'Point',
-                  coordinates: [-73.9 + n * 0.002, 40.7],
-                },
-              }),
-            ).join('\n'),
-          };
-        if (url.pathname === '/api/cctv/sources')
-          return json({
-            sources: [0, 1].map((n) => ({
-              id: 'fixture-camera-' + n,
-              name: 'Synthetic agency camera ' + n,
-              provider: 'Synthetic public-agency fixture',
-              sourceKind: 'configured',
-              url: 'https://example.test/frame',
-              credit: 'https://example.test/camera',
-              lat: 40.7,
-              lon: -73.9 + n * 0.001,
-              feedType: 'image',
-              headingDeg: 90,
-              fovDeg: 60,
-              rangeM: 145,
-            })),
-          });
-        if (url.pathname === '/api/cctv/health')
-          return json({
-            cameras: [0, 1].map((n) => ({
-              id: 'fixture-camera-' + n,
-              sourceKind: 'configured',
-              status: cameraFailure && n === 0 ? 'unavailable' : 'ok',
-              reasonCode:
-                cameraFailure && n === 0 ? 'upstream-http-error' : 'delivered',
-              transportStatus: cameraFailure && n === 0 ? 'failed' : 'ok',
-              attemptedAt: Date.now(),
-              lastSuccessAt: cameraFailure && n === 0 ? null : Date.now(),
-              updatedAt: Date.now(),
-              refreshIntervalMs: 10000,
-            })),
-          });
-        if (url.pathname.startsWith('/api/cctv/frame/')) {
-          if (cameraFailure && url.pathname.endsWith('fixture-camera-0'))
-            return json({ error: 'fixture-outage' }, 503);
-          return { status: 200, contentType: 'image/png', body: png };
-        }
-        if (url.pathname === '/api/evidence/archive-lookup') {
-          archiveCalls++;
-          if (archiveFailure)
-            return json({ state: 'failed', error: 'fixture-outage' }, 502);
-          const { url: originalUrl } = JSON.parse(request.postData());
-          return json({
-            state: 'available',
-            requestedUrl: originalUrl,
-            reference: {
-              kind: 'archive',
-              title: 'Synthetic archive fixture',
-              url: 'https://web.archive.org/web/20200101120000/' + originalUrl,
-              originalUrl,
-              archiveAt: Date.parse('2020-01-01T12:00:00Z'),
-              lookedUpAt: Date.now(),
-            },
-          });
-        }
+    const { page, errors, verifyNetwork } = await prepareFixturePage(
+      browser,
+      base,
+      {
+        respond(url, request) {
+          if (url.hostname === 'terrain.reearth.land')
+            return {
+              status: 404,
+              contentType: 'text/plain',
+              body: 'fixture terrain unavailable',
+            };
+          // Keep the hermetic soak representative of the real infrastructure
+          // layer while bounding Cesium's data-source lifecycle. The production
+          // file is several thousand features and is covered by the layer's
+          // focused tests; the mixed-use soak must measure retained resources
+          // from repeated journeys rather than fixture volume.
+          if (url.pathname.endsWith('/datacenters.geojsonl'))
+            return {
+              status: 200,
+              contentType: 'application/x-ndjson',
+              body: Array.from({ length: 8 }, (_, n) =>
+                JSON.stringify({
+                  type: 'Feature',
+                  id: 'way/' + (n + 1),
+                  properties: { name: 'Synthetic datacenter ' + n },
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [-73.9 + n * 0.002, 40.7],
+                  },
+                }),
+              ).join('\n'),
+            };
+          if (url.pathname === '/api/cctv/sources')
+            return json({
+              sources: [0, 1].map((n) => ({
+                id: 'fixture-camera-' + n,
+                name: 'Synthetic agency camera ' + n,
+                provider: 'Synthetic public-agency fixture',
+                sourceKind: 'configured',
+                url: 'https://example.test/frame',
+                credit: 'https://example.test/camera',
+                lat: 40.7,
+                lon: -73.9 + n * 0.001,
+                feedType: 'image',
+                headingDeg: 90,
+                fovDeg: 60,
+                rangeM: 145,
+              })),
+            });
+          if (url.pathname === '/api/cctv/health')
+            return json({
+              cameras: [0, 1].map((n) => ({
+                id: 'fixture-camera-' + n,
+                sourceKind: 'configured',
+                status: cameraFailure && n === 0 ? 'unavailable' : 'ok',
+                reasonCode:
+                  cameraFailure && n === 0
+                    ? 'upstream-http-error'
+                    : 'delivered',
+                transportStatus: cameraFailure && n === 0 ? 'failed' : 'ok',
+                attemptedAt: Date.now(),
+                lastSuccessAt: cameraFailure && n === 0 ? null : Date.now(),
+                updatedAt: Date.now(),
+                refreshIntervalMs: 10000,
+              })),
+            });
+          if (url.pathname.startsWith('/api/cctv/frame/')) {
+            if (cameraFailure && url.pathname.endsWith('fixture-camera-0'))
+              return json({ error: 'fixture-outage' }, 503);
+            return { status: 200, contentType: 'image/png', body: png };
+          }
+          if (url.pathname === '/api/evidence/archive-lookup') {
+            archiveCalls++;
+            if (archiveFailure)
+              return json({ state: 'failed', error: 'fixture-outage' }, 502);
+            const { url: originalUrl } = JSON.parse(request.postData());
+            return json({
+              state: 'available',
+              requestedUrl: originalUrl,
+              reference: {
+                kind: 'archive',
+                title: 'Synthetic archive fixture',
+                url:
+                  'https://web.archive.org/web/20200101120000/' + originalUrl,
+                originalUrl,
+                archiveAt: Date.parse('2020-01-01T12:00:00Z'),
+                lookedUpAt: Date.now(),
+              },
+            });
+          }
+        },
       },
-    });
+    );
     await page.evaluateOnNewDocument(installWorkerDiagnostics);
     console.log('SOAK boot application');
     await bootFixturePage(page, base);
@@ -133,6 +140,8 @@ export async function createRenderedSoakDriver(
       throw new Error(
         `Soak application commit mismatch: expected ${expectedCommit}, received ${applicationCommit}`,
       );
+    const networkPreflight = await verifyNetwork();
+    console.log('SOAK worker network interception preflight passed');
     const workerPreflight = await page.evaluate(async () => {
       const { runCesiumWorkerProbe } =
         await import('/scripts/fixtures/cesium-worker-probe.js');
@@ -145,6 +154,7 @@ export async function createRenderedSoakDriver(
         throw error;
       }
     });
+    workerPreflight.network = networkPreflight;
     console.log('SOAK worker completion preflight passed');
     // Seed only synthetic observations through the real application recorder.
     await page.evaluate(async () => {
