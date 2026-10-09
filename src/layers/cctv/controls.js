@@ -277,7 +277,8 @@ export function createControls({ state: layerState, services, parts, source }) {
           Number(Boolean(layerState._geoLoading)) +
           (layerState._cardFetchInFlightCount || 0) +
           (layerState._cardFetchPendingIds?.size || 0),
-        primitives: Number(Boolean(layerState._billboards)) + viewshedPrimitives,
+        primitives:
+          Number(Boolean(layerState._billboards)) + viewshedPrimitives,
         dataSources: sceneEntities,
         cacheEntries:
           (layerState._cardFrameSlots?.size || 0) +
