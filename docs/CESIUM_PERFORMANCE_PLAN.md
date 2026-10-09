@@ -156,6 +156,14 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   accepted GPU evidence. Heap paths show worker listeners retaining promises,
   primitives, entities and GeoJSON sources, without establishing whether the cause
   is application ownership, fixture interception or unresolved engine work.
+- The headed hardware runs for `3f322de` now exercise the real Intel UHD 620
+  D3D11 renderer and report `hardwareRenderingValidated: true`. The 60-second
+  smoke and five-minute diagnostic completed all mixed-use operations without
+  frame stalls or operation failures, and application-owned resource counts
+  returned to their warmed values. The five-minute diagnostic still grew browser
+  listener counts from 731 to 1,719 and retained JS heap from 67.4 to 74.7 MB;
+  it therefore proves the restore fix and hardware path, but is not a 60-minute
+  retention pass.
 - The older comparisons in [PERFORMANCE.md](PERFORMANCE.md) remain historical.
   No accepted matched comparison against `eb8c682`, post-fix 60-minute retention
   pass, Windows discrete-GPU result or macOS candidate result was found in the
