@@ -5,6 +5,10 @@ import { createImportedGeometryLayer } from '../../src/imports/runtimeLayer.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { getContextStore } from '../../src/data/contextStore.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
+import {
+  installRenderGovernor,
+  uninstallRenderGovernor,
+} from '../../src/renderGovernor.js';
 
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
@@ -33,6 +37,22 @@ const imports = [
   },
 ];
 let report;
+function settledFrame(viewer) {
+  return new Promise((resolve, reject) => {
+    const remove = viewer.scene.postRender.addEventListener(() => {
+      clearTimeout(timer);
+      remove();
+      resolve();
+    });
+    const timer = setTimeout(() => {
+      remove();
+      reject(
+        new Error('Fixture did not complete a render within ten seconds.'),
+      );
+    }, 10000);
+    viewer.scene.requestRender();
+  });
+}
 async function pixels(viewer) {
   const canvas = await captureFreshCesiumFrame(viewer);
   check(canvas, 'A fresh capture is required.');
@@ -65,6 +85,7 @@ run.addEventListener('click', async () => {
       'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
     checks: [],
     samples: [],
+    renderErrors: [],
     status: 'running',
   };
   let viewer, layer;
@@ -82,6 +103,11 @@ run.addEventListener('click', async () => {
       container: document.querySelector('#viewer'),
       creditContainer: document.querySelector('#credits'),
     });
+    viewer.scene.renderError.addEventListener((_scene, error) => {
+      report.renderErrors.push(String(error?.message || error).slice(0, 400));
+      if (report.renderErrors.length > 4) report.renderErrors.shift();
+    });
+    installRenderGovernor(viewer);
     for (const item of ['skyBox', 'skyAtmosphere', 'sun', 'moon', 'globe'])
       viewer.scene[item].show = false;
     viewer.camera.setView({
@@ -93,7 +119,11 @@ run.addEventListener('click', async () => {
       harnessCommit: report.harnessCommit,
     });
     layer = createImportedGeometryLayer({ viewer });
-    await wait(1000);
+    status.textContent = 'Warming the complete point population';
+    const coldAt = performance.now();
+    await layer.loadAsync(imports, { workspaceId: 'fixture' });
+    await settledFrame(viewer);
+    report.coldActivationMs = performance.now() - coldAt;
     let expectedPixels = null;
     for (let pair = 0; pair < 5; pair++) {
       for (const mode of pair % 2
@@ -126,7 +156,7 @@ run.addEventListener('click', async () => {
           'Incomplete import or stale evidence context.',
         );
         check(layer.getState().pendingJobs === 0, 'Import task retained.');
-        await wait(250);
+        await settledFrame(viewer);
         const hash = await pixels(viewer);
         if (expectedPixels === null) expectedPixels = hash;
         check(
@@ -181,6 +211,7 @@ run.addEventListener('click', async () => {
     report.error = error.message;
   } finally {
     layer?.destroy();
+    if (viewer) uninstallRenderGovernor(viewer);
     viewer?.destroy();
     document.removeEventListener('visibilitychange', visibility);
     report.foregroundUninterrupted = !backgrounded;
