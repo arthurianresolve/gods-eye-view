@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>WebGL frame-delivery diagnostic</title>
+  <style>
+    body {
+      font:
+        16px system-ui,
+        sans-serif;
+      margin: 1rem;
+    }
+    canvas {
+      display: block;
+      width: 640px;
+      height: 360px;
+      border: 1px solid #667;
+    }
+    pre {
+      max-width: 80rem;
+      white-space: pre-wrap;
+    }
+  </style>
+  <body>
+    <h1>WebGL frame-delivery diagnostic</h1>
+    <p>
+      Five-second browser scheduling diagnostic only. It does not measure GPU
+      speed or qualify a performance result.
+    </p>
+    <label>
+      Mode
+      <select id="mode">
+        <option value="webgl2">WebGL2: draw 5,000 points each frame</option>
+        <option value="plain-raf">Plain RAF: no WebGL context</option>
+      </select>
+    </label>
+    <button id="run">Run for five seconds</button>
+    <button id="download" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <canvas id="surface" width="640" height="360"></canvas>
+    <pre id="result"></pre>
+    <script type="module" src="./webgl-frame-delivery.js"></script>
+  </body>
+</html>
