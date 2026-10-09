@@ -2,7 +2,10 @@ import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { createApplicationViewer } from '../../src/app/viewer.js';
 import { createImportedGeometryLayer } from '../../src/imports/runtimeLayer.js';
-import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
+import {
+  captureFreshCesiumFrame,
+  renderFreshCesiumFrame,
+} from '../../src/freshFrame.js';
 import { observeSubmittedCommands } from '../performance/glCompletionProbe.mjs';
 import { getContextStore } from '../../src/data/contextStore.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
@@ -139,7 +142,9 @@ async function pixels(viewer, sample) {
     : null;
   let canvas;
   try {
-    canvas = await captureFreshCesiumFrame(viewer);
+    canvas = await (report.captureMode === 'render-only'
+      ? renderFreshCesiumFrame(viewer)
+      : captureFreshCesiumFrame(viewer));
   } finally {
     clearInterval(heartbeat);
     remove();
@@ -168,7 +173,9 @@ async function pixels(viewer, sample) {
     completed: Boolean(canvas),
   };
   check(canvas, 'A fresh capture is required.');
+  if (report.captureMode === 'render-only') return null;
   try {
+    if (report.captureMode === 'copy-only') return null;
     const data = canvas
       .getContext('2d')
       .getImageData(0, 0, canvas.width, canvas.height).data;
@@ -198,6 +205,7 @@ run.addEventListener('click', async () => {
     fixture: 'synthetic-5000-import-points/v1',
     workload,
     preserveDrawingBuffer,
+    captureMode: document.querySelector('#capture-mode').value,
     observeCommands: document.querySelector('#observe-commands').checked,
     commandObservationScope:
       'Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison',
@@ -303,7 +311,10 @@ run.addEventListener('click', async () => {
       }
     }
     report.checks.push({
-      id: 'same-population-evidence-and-pixels',
+      id:
+        report.captureMode === 'pixels'
+          ? 'same-population-evidence-and-pixels'
+          : 'diagnostic-population-and-fresh-frames-without-pixel-equivalence',
       status: 'passed',
     });
     status.textContent = 'Checking cancellation and repeated teardown';

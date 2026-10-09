@@ -60,6 +60,16 @@ a performance shortcut. Auto quality remains opt-in.
   tests pass. This changes command scheduling and reports observation delay,
   not GPU execution time, GPU idle state or a normal performance comparison;
   the option is off by default and has no production runtime effect.
+- The [fence diagnostic at `572c80c`](performance-evidence/import-batches-572c80c-fence-failed.json)
+  reproduces the failed second capture. Its fence completes after 8.2 ms, while
+  animation callbacks and scene updates remain absent for the 401 ms capture;
+  timer heartbeat gaps stay below 9.2 ms. This rules out those earlier commands
+  still waiting in this WebGL context at capture timeout, not all compositor or
+  GPU work. After viewer destruction, a separate
+  [five-second callback probe](performance-evidence/frame-delivery-572c80c.json)
+  observes 299 callbacks, maximum gap 25.1 ms. The fixture now provides render-only
+  and copy-without-readback controls to isolate the capture path; neither checks
+  pixel equivalence, and the default remains full copied-pixel validation.
 - The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
   at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
   validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window

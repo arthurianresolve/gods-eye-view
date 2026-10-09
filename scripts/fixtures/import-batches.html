@@ -18,6 +18,18 @@
       </select>
     </label>
     <label
+      >Fresh-frame check
+      <select id="capture-mode">
+        <option value="pixels">Copy and verify pixels</option>
+        <option value="copy-only">
+          Copy only (diagnostic; no pixel check)
+        </option>
+        <option value="render-only">
+          Render only (diagnostic; no pixel check)
+        </option>
+      </select>
+    </label>
+    <label
       ><input id="preserve" type="checkbox" checked /> Preserve drawing
       buffer</label
     >
