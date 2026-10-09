@@ -25,8 +25,8 @@ a new provider dependency.
 | S41 camera health | implemented | focused tests passed | pending |
 | S42 camera selection | implemented | selection and provider fingerprint fixture tests | verified current production examples pending |
 | S43 camera evidence | implemented | focused tests passed | pending |
-| S44 soak/performance | implemented | 128-second rendered fixture smoke passed on Chrome/Intel UHD 620 after CCTV geometry de-duplication; the prior 60-minute run exposed retained Cesium terrain-worker work and remains a failed diagnostic, not an acceptance pass | matched Windows/macOS hardware and a clean long-run rerun pending |
-| S45 release provenance | implemented | draft-only tags, readiness and downloaded-attestation gates | pending |
+| S44 soak/performance | implemented | clean 60-minute rendered fixture run completed on Chrome/Intel UHD 620 (253 cycles; no operation failures), but retained listeners grew 732 -> 11,982 and JS heap 67.8 -> 153.2 MB; full soak is a failed acceptance diagnostic | matched Windows/macOS hardware and remediation of retained Cesium terrain-worker work pending |
+| S45 release provenance | implemented | dev artifact staged and independently checksum-verified: 441 files from `9df13c5`; draft-only tags, readiness and downloaded-attestation gates remain | GitHub attestation and publication verification pending |
 | S46 final candidate | planned | pending | pending |
 
 ## Decisions and compatibility
@@ -73,10 +73,12 @@ a new provider dependency.
   rendering, archive errors and decode recovery. The post-fix smoke run completed
   nine cycles in 128 seconds on Chrome/Intel UHD 620. CCTV now skips identical
   frustum rewrites and does not restart its geometry queue when re-enabled with
-  materialized geometry. A prior 60-minute run exposed retained Cesium terrain
-  worker listeners during repeated fixture camera/workspace moves; that report is
-  retained as a diagnostic and is not treated as a pass. A clean long-run rerun
-  and matched GPU evidence remain separate.
+  materialized geometry. The clean 60-minute run completed 253 cycles in
+  3,606,160 ms with no operation failure, but retained listeners grew from 732 to
+  11,982 and JS heap from 67.8 MB to 153.2 MB (178.1 MB peak). Repeated fixture
+  camera/workspace moves still retain Cesium terrain-worker work, so S44 remains
+  a failed acceptance diagnostic until that resource path is fixed. Hardware
+  rendering was not validated in this run.
 - S45 checks exact staged commits, checksums, downloaded candidate contents,
   and GitHub artifact attestations. Tag pushes create unpublished drafts. Stable
   promotion requires complete exact-commit acceptance, another download and
@@ -85,8 +87,8 @@ a new provider dependency.
 ## Remaining slices
 
 S35 must complete screen-reader, contrast, zoom, and five-participant first-task
-review. S44 must run the default 60-minute fixture soak and matched hardware
-captures. The fixture can be smoke-tested with
+review. S44 needs remediation of the retained Cesium terrain-worker path and
+matched hardware captures. The fixture can be smoke-tested with
 `npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 1000`; the three-OS CI job runs
 `npm run qa:install-recovery`. S46 must freeze the candidate, collect those
 external records, and update support claims without turning pending evidence
