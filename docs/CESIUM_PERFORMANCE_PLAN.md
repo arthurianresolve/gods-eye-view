@@ -129,6 +129,16 @@ requirements. Resume diagnosis with a specific hypothesis and a new control.
   versioned, deterministic workload descriptors: fixture hashes, fixed time,
   route, selected identity, layer counts, effective settings, browser/renderer,
   viewport/DPR and drawing buffer. Keep application and harness commits separate.
+- Baseline compatibility is required work in S47.1b: `eb8c682` has neither
+  `src/performance/performanceSnapshot.js` nor the current runtime build-identity
+  hooks (verified with `git show`/`git grep`). Use a shared harness-side observer
+  over common scene APIs and independently verified build-artifact identity for
+  both revisions. Bind served asset hashes to a clean checkout and build recipe;
+  a supplied expected SHA alone is not proof of the loaded application. Keep
+  candidate-only diagnostics off during paired latency runs. If instrumentation
+  must patch baseline code, record its separate patch/hash and changed-source
+  status; never call that an unchanged clean `eb8c682` run. Reject unsupported
+  identity paths rather than silently substituting a later baseline.
 - Cover the operating Austin view; dense 2,500 aircraft + 4,362 datacenters +
   716 dams; fixed selected tracking/cockpit/replay; individual/combined
   infrastructure; fixed weather/wind/effects; lifecycle stress; deterministic
@@ -374,9 +384,26 @@ does not assert stable release readiness.
 Start with **S47.1a: a pure paired-report validator and meaningful negative tests**,
 reusing `captureIntegrity.mjs`. It must reject insufficient/mismatched evidence
 before anyone can claim a performance win. Then connect the workload descriptors
-and capture/export path in S47.1b, followed by S48.1 and the isolated S49 cases.
+and baseline-compatible capture/export path in S47.1b, followed by S48.1 and the
+isolated S49 cases.
 The coordinator reviews each result and dispatches the next ready packet; a
 partial packet remains partial and cannot close the parent slice.
+
+### Execution results for the revised plan
+
+- **S47.1a implemented by GPT-6 Luna:** `af74f183fbb1f6775346a98ad5f99729937c83fd`
+  adds [paired report validation](../scripts/performance/pairedReport.mjs) and
+  registers its eight new tests in the normal suite. The coordinator's combined
+  run includes four existing capture-integrity and four motion-budget tests:
+  **16 passed**. [Raw focused result](performance-evidence/paired-validator-af74f18.json)
+  records the exact code commit and command. Formatting and package boundaries
+  also pass. The API separates comparability, per-workload deltas, objective
+  achievement and regression flags; unknown idle timing stays unavailable.
+- **S47.1 remains partial:** real capture reports do not yet emit the required
+  fixture/time/full-route contract or verified served-build provenance. A passing
+  pure validator is not a matched browser comparison. S47.1b-1 (build provenance)
+  is assigned next to GPT-6 Luna; workload export/baseline observer integration
+  follows. No application runtime, VM deployment or visual default changed here.
 
 ## Measurement contract
 
