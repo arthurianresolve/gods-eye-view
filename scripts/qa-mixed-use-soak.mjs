@@ -4,7 +4,11 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
-const DEFAULT_DURATION_MS = 60 * 60_000;
+import {
+  evaluateSoakStability,
+  FULL_SOAK_MS,
+} from './performance/soakStability.mjs';
+const DEFAULT_DURATION_MS = FULL_SOAK_MS;
 
 /** No counters advance until a real operation reports completion. Short runs are smoke tests. */
 export async function runMixedUseSoak({
@@ -13,18 +17,25 @@ export async function runMixedUseSoak({
   driver,
   url = 'http://localhost:4174',
   browserOptions = {},
+  expectedCommit,
+  checkpointIntervalMs = 5 * 60_000,
   intervalMs = 250,
   progress = () => {},
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
     throw new TypeError('Duration must be positive.');
   const ownsDriver = !driver;
-  driver ||= await createRenderedSoakDriver(url, { browserOptions });
+  driver ||= await createRenderedSoakDriver(url, {
+    browserOptions,
+    expectedCommit,
+  });
+  let report;
   try {
     for (let i = 0; i < (driver.warmupIterations || 0); i++)
       await driver.runCycle(i);
     const firstRetainedMetrics = await driver.retainedMetrics?.();
     const startedAt = now();
+    const checkpoints = [{ elapsedMs: 0, metrics: firstRetainedMetrics }];
     const totals = {
       iterations: 0,
       sourceToggles: 0,
@@ -38,41 +49,78 @@ export async function runMixedUseSoak({
       firstMetrics = null,
       lastMetrics = null,
       lastProgress = startedAt;
-    do {
-      const result = await driver.runCycle(totals.iterations);
-      for (const field of Object.keys(totals).filter(
-        (name) => name !== 'iterations',
-      )) {
-        if (!Number.isInteger(result[field]) || result[field] < 1)
-          throw new Error('Soak did not complete ' + field);
-        totals[field] += result[field];
-      }
-      totals.iterations++;
-      lastMetrics = (await driver.metrics?.()) || {};
-      firstMetrics ||= lastMetrics;
-      peakHeapBytes = Math.max(peakHeapBytes, lastMetrics.JSHeapUsedSize || 0);
-      if (now() - lastProgress >= 60000) {
-        progress({ elapsedMs: now() - startedAt, ...totals });
-        lastProgress = now();
-      }
-      if (intervalMs)
-        await new Promise((resolve) => setTimeout(resolve, intervalMs));
-    } while (now() - startedAt < durationMs);
-    return {
+    report = {
       scope: driver.scope || 'test-driver',
       renderer: driver.renderer || null,
+      applicationCommit: driver.applicationCommit || null,
+      workerPreflight: driver.workerPreflight || null,
       warmupIterations: driver.warmupIterations || 0,
       firstRetainedMetrics,
-      lastRetainedMetrics: await driver.retainedMetrics?.(),
+      checkpoints,
       hardwareRenderingValidated: Boolean(driver.hardwareRenderingValidated),
-      fullSoak: now() - startedAt >= DEFAULT_DURATION_MS,
-      durationMs: now() - startedAt,
       browserVersion: driver.browserVersion || 'test driver',
-      ...totals,
-      peakHeapBytes,
-      firstMetrics,
-      lastMetrics,
+      operationStatus: 'running',
     };
+    const updateReport = () =>
+      Object.assign(report, totals, {
+        durationMs: now() - startedAt,
+        fullSoak: now() - startedAt >= DEFAULT_DURATION_MS,
+        peakHeapBytes,
+        firstMetrics,
+        lastMetrics,
+      });
+    try {
+      do {
+        const result = await driver.runCycle(totals.iterations);
+        const fields = Object.keys(totals).filter(
+          (name) => name !== 'iterations',
+        );
+        for (const field of fields) {
+          if (!Number.isInteger(result[field]) || result[field] < 1)
+            throw new Error('Soak did not complete ' + field);
+        }
+        for (const field of fields) totals[field] += result[field];
+        totals.iterations++;
+        lastMetrics = (await driver.metrics?.()) || {};
+        firstMetrics ||= lastMetrics;
+        peakHeapBytes = Math.max(
+          peakHeapBytes,
+          lastMetrics.JSHeapUsedSize || 0,
+        );
+        updateReport();
+        if (
+          now() - startedAt - checkpoints.at(-1).elapsedMs >=
+          checkpointIntervalMs
+        ) {
+          const metrics = await driver.retainedMetrics?.();
+          checkpoints.push({ elapsedMs: now() - startedAt, metrics });
+          // Keep the warmed baseline and a bounded recent history.
+          if (checkpoints.length > 128) checkpoints.splice(1, 1);
+        }
+        if (now() - lastProgress >= 60000) {
+          progress({ elapsedMs: now() - startedAt, ...totals });
+          lastProgress = now();
+        }
+        if (intervalMs)
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      } while (now() - startedAt < durationMs);
+      report.lastRetainedMetrics = await driver.retainedMetrics?.();
+      checkpoints.push({
+        elapsedMs: now() - startedAt,
+        metrics: report.lastRetainedMetrics,
+      });
+      report.operationStatus = 'passed';
+      updateReport();
+      report.stability = evaluateSoakStability(report);
+      return report;
+    } catch (error) {
+      updateReport();
+      report.operationStatus = 'failed';
+      report.error = error.message;
+      report.stability = evaluateSoakStability(report);
+      error.soakReport = report;
+      throw error;
+    }
   } finally {
     if (ownsDriver) await driver.close();
   }
@@ -97,21 +145,37 @@ if (
       }).trim(),
     );
   const sourceDirtyAtStart = dirty();
-  const report = await runMixedUseSoak({
-    durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
-    url: value('--url', 'http://localhost:4174'),
-    browserOptions: hasFlag('--headed')
-      ? {
-          headless: false,
-          args: [
-            '--no-sandbox',
-            '--disable-dev-shm-usage',
-            ...(hasFlag('--hardware') ? ['--use-angle=d3d11'] : []),
-          ],
-        }
-      : {},
-    progress: (report) => console.log(JSON.stringify(report)),
-  });
+  let report, runError;
+  try {
+    report = await runMixedUseSoak({
+      expectedCommit: commit,
+      durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
+      url: value('--url', 'http://localhost:4174'),
+      browserOptions: hasFlag('--headed')
+        ? {
+            headless: false,
+            args: [
+              '--no-sandbox',
+              '--disable-dev-shm-usage',
+              ...(hasFlag('--hardware') ? ['--use-angle=d3d11'] : []),
+            ],
+          }
+        : {},
+      progress: (report) => console.log(JSON.stringify(report)),
+    });
+  } catch (error) {
+    runError = error;
+    report = error.soakReport || {
+      operationStatus: 'failed',
+      error: error.message,
+      fullSoak: false,
+      hardwareRenderingValidated: false,
+      stability: {
+        status: 'pending',
+        pending: ['Run failed before measurement.'],
+      },
+    };
+  }
   report.candidateCommit = commit;
   report.sourceDirtyAtStart = sourceDirtyAtStart;
   report.sourceChangedDuringRun =
@@ -126,4 +190,12 @@ if (
     });
   }
   console.log(JSON.stringify(report, null, 2));
+  if (
+    runError ||
+    report.stability.status === 'failed' ||
+    (report.fullSoak && report.stability.status !== 'passed') ||
+    report.sourceDirtyAtStart ||
+    report.sourceChangedDuringRun
+  )
+    process.exitCode = 1;
 }

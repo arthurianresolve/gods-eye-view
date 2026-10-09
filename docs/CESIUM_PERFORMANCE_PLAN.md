@@ -137,6 +137,13 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
 
 ## Current evidence
 
+- The continuation adds exact served-build validation, a cold/reused/error/recovery
+  Cesium worker preflight, five-minute post-GC checkpoints, automatic retention
+  gates and failure-report preservation. The standalone worker check passes in
+  the user's Chrome on 2026-10-09. That check uses no fixture interception; the
+  intercepted harness still needs the same check before any new soak evidence
+  is accepted. It does not establish the cause of the historical worker retention
+  or complete S49/S60. No engine patch is justified by the evidence so far.
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser

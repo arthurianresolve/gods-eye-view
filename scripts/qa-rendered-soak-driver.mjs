@@ -18,7 +18,7 @@ export function isSoftwareRenderer(renderer) {
 
 export async function createRenderedSoakDriver(
   base,
-  { browserOptions = {} } = {},
+  { browserOptions = {}, expectedCommit } = {},
 ) {
   const browser = await launchFixtureBrowser(browserOptions);
   let cameraFailure = true;
@@ -123,6 +123,20 @@ export async function createRenderedSoakDriver(
     console.log('SOAK boot application');
     await bootFixturePage(page, base);
     console.log('SOAK application ready');
+    const applicationCommit = await page.evaluate(
+      () =>
+        window.__godsEyeView.getPerformanceEnvironment?.()?.appCommit || null,
+    );
+    if (expectedCommit && applicationCommit !== expectedCommit)
+      throw new Error(
+        `Soak application commit mismatch: expected ${expectedCommit}, received ${applicationCommit}`,
+      );
+    const workerPreflight = await page.evaluate(async () => {
+      const { runCesiumWorkerProbe } =
+        await import('/scripts/fixtures/cesium-worker-probe.js');
+      return runCesiumWorkerProbe();
+    });
+    console.log('SOAK worker completion preflight passed');
     // Seed only synthetic observations through the real application recorder.
     await page.evaluate(async () => {
       const app = window.__godsEyeView;
@@ -456,6 +470,8 @@ export async function createRenderedSoakDriver(
       page,
       warmupIterations: 2,
       scope: 'rendered-application-fixtures',
+      workerPreflight,
+      applicationCommit,
       renderer,
       hardwareRenderingValidated:
         Boolean(renderer?.renderer) && !isSoftwareRenderer(renderer.renderer),
