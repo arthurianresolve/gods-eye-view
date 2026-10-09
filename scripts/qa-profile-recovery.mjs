@@ -30,6 +30,15 @@ import {
   captureBoundedDomState,
   createStartupDiagnostics,
 } from './performance/startupDiagnostics.mjs';
+import {
+  assertInitialRecoveryPage,
+  assertOwnedRecoveryPage,
+  closeOwnedRecoveryPage,
+  closeRecoveryBrowser,
+  createRecoveryPageTargetGuard,
+  countRecoveryApplicationPages,
+  recoveryPageCleanupError,
+} from './performance/profileRecoveryPageOwnership.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
@@ -240,6 +249,7 @@ async function reopen(label, { seed = false } = {}) {
   browser = await launchFixtureBrowser({
     userDataDir: path.join(scratch, 'browser-profile'),
   });
+  const pageTargetGuard = createRecoveryPageTargetGuard(browser);
   const diagnosticMode = process.env.GEV_PROFILE_RECOVERY_DIAGNOSTICS === '1';
   const diagnostics = diagnosticMode ? createStartupDiagnostics(base) : null;
   const browserProcess = browser.process();
@@ -250,6 +260,17 @@ async function reopen(label, { seed = false } = {}) {
     diagnostics.recordInitialTargets(browser.targets());
     browserProcess?.stderr?.on('data', stderrListener);
   }
+  const pageOwnership = {
+    initialPageCount: null,
+    appPagesBeforeNavigation: null,
+    appPagesAfterBoot: null,
+    appPagesAfterWorkspace: null,
+    unexpectedCreatedPageTargets: null,
+    closeCompleted: null,
+    openPagesBeforeBrowserClose: null,
+    browserCloseCompleted: null,
+    forcedBrowserProcessTermination: false,
+  };
   let page = null;
   let bootElapsedMs = null;
   let rendererQueryStartedAt = null;
@@ -257,13 +278,37 @@ async function reopen(label, { seed = false } = {}) {
   try {
     browserVersion = await browser.version();
     timedProgress('install-fixtures');
+    const initialPages = await browser.pages();
+    pageOwnership.initialPageCount = initialPages.length;
+    pageOwnership.appPagesBeforeNavigation = countRecoveryApplicationPages(
+      initialPages,
+      base,
+    );
+    page = assertInitialRecoveryPage(initialPages, base);
+    pageOwnership.unexpectedCreatedPageTargets =
+      pageTargetGuard.unexpectedPageTargetCount(page);
+    pageTargetGuard.assertOnlyOwnedPageTarget(page);
     const prepared = await prepareFixturePage(browser, base, {
       viewport,
       startupDiagnostics: diagnostics,
+      page,
     });
     page = prepared.page;
     const { errors } = prepared;
     await bootFixturePage(page, base, { onProgress: timedProgress });
+    const pagesAfterBoot = await browser.pages();
+    pageOwnership.unexpectedCreatedPageTargets =
+      pageTargetGuard.unexpectedPageTargetCount(page);
+    pageTargetGuard.assertOnlyOwnedPageTarget(page);
+    pageOwnership.appPagesAfterBoot = countRecoveryApplicationPages(
+      pagesAfterBoot,
+      base,
+    );
+    pageOwnership.appPagesAfterBoot = assertOwnedRecoveryPage(
+      pagesAfterBoot,
+      page,
+      base,
+    );
     const navigationAt = progressTimeline.find(
       (entry) => entry.step === 'navigation',
     )?.elapsedMs;
@@ -312,8 +357,20 @@ async function reopen(label, { seed = false } = {}) {
     }
     timedProgress('verify-persisted-workspace');
     const result = await assertPersistentWorkspace(page, expected);
+    const pagesAfterWorkspace = await browser.pages();
+    pageOwnership.unexpectedCreatedPageTargets =
+      pageTargetGuard.unexpectedPageTargetCount(page);
+    pageTargetGuard.assertOnlyOwnedPageTarget(page);
+    pageOwnership.appPagesAfterWorkspace = countRecoveryApplicationPages(
+      pagesAfterWorkspace,
+      base,
+    );
+    pageOwnership.appPagesAfterWorkspace = assertOwnedRecoveryPage(
+      pagesAfterWorkspace,
+      page,
+      base,
+    );
     assert.deepEqual(errors, []);
-    timedProgress('passed');
     const startup = diagnostics
       ? {
           ...await collectRecoveryDiagnostics(page, browser, diagnostics),
@@ -329,9 +386,9 @@ async function reopen(label, { seed = false } = {}) {
       status: 'passed',
       renderer,
       ...result,
+      pageOwnership,
       ...(startup ? { diagnostics: startup } : {}),
     });
-    console.log(JSON.stringify(checks.at(-1)));
   } catch (error) {
     if (diagnostics && page)
       error.recoveryDiagnostics = await collectRecoveryDiagnostics(
@@ -358,16 +415,79 @@ async function reopen(label, { seed = false } = {}) {
       status: 'failed',
       step: activeStep,
       error: error.message,
+      pageOwnership,
       ...(error.recoveryDiagnostics
         ? { diagnostics: error.recoveryDiagnostics }
         : {}),
     });
     throw error;
   } finally {
-    if (page) await cleanupFixturePageDiagnostics(page);
+    let cleanupError = null;
+    if (page) {
+      try {
+        await cleanupFixturePageDiagnostics(page);
+      } catch (error) {
+        cleanupError = error;
+      }
+    }
+    let pageCleanup = { closeCompleted: false, openPageCount: null };
+    const check = checks.at(-1)?.id === label ? checks.at(-1) : null;
+    if (browser) {
+      pageCleanup = await closeOwnedRecoveryPage(page, browser);
+      pageOwnership.closeCompleted = pageCleanup.closeCompleted;
+      pageOwnership.openPagesBeforeBrowserClose = pageCleanup.openPageCount;
+      pageOwnership.unexpectedCreatedPageTargets = page
+        ? pageTargetGuard.unexpectedPageTargetCount(page)
+        : null;
+    }
     if (stderrListener) browserProcess?.stderr?.off('data', stderrListener);
-    await browser.close();
+    pageTargetGuard.dispose();
+    let browserClose = {
+      closeCompleted: false,
+      forcedProcessTermination: false,
+    };
+    if (browser)
+      browserClose = await closeRecoveryBrowser(browser, {
+        forceProcess: () => stopTree(browser.process()),
+      });
+    pageOwnership.browserCloseCompleted = browserClose.closeCompleted;
+    pageOwnership.forcedBrowserProcessTermination =
+      browserClose.forcedProcessTermination;
     browser = null;
+    const pageCleanupFailure = recoveryPageCleanupError({
+      ...pageCleanup,
+      unexpectedCreatedPageTargets:
+        pageOwnership.unexpectedCreatedPageTargets,
+      browserCloseCompleted: pageOwnership.browserCloseCompleted,
+    });
+    cleanupError ||= pageCleanupFailure;
+    if (cleanupError) {
+      if (check) {
+        check.pageOwnership = pageOwnership;
+        check.pageOwnership.cleanupError = cleanupError.message.slice(0, 240);
+      }
+      if (check?.status === 'passed') {
+        check.status = 'failed';
+        check.step = 'owned-page-cleanup';
+        check.error = cleanupError.message;
+        check.pageOwnership.cleanupError = cleanupError.message.slice(0, 240);
+      }
+      if (!check || check.status === 'failed' && check.step !== 'owned-page-cleanup')
+        console.error(
+          JSON.stringify({
+            phase: 'browser-recovery-cleanup',
+            check: label,
+            error: cleanupError.message,
+          }),
+        );
+      if (check?.step === 'owned-page-cleanup') throw cleanupError;
+    }
+    if (check?.status === 'passed') {
+      timedProgress('passed');
+      if (check.diagnostics)
+        check.diagnostics.progressTimeline = progressTimeline;
+      console.log(JSON.stringify(check));
+    }
   }
 }
 

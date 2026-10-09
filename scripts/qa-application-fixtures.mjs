@@ -51,9 +51,10 @@ export async function prepareFixturePage(
     respond,
     viewport = { width: 1440, height: 1000 },
     startupDiagnostics = null,
+    page: existingPage = null,
   } = {},
 ) {
-  const page = await browser.newPage();
+  const page = existingPage || (await browser.newPage());
   const errors = [];
   const networkProbe = createFixtureNetworkProbe(base);
   const startupMessages = [];

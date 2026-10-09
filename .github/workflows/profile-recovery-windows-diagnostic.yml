@@ -11,7 +11,7 @@ on:
         default: false
 
 concurrency:
-  group: windows-profile-recovery-diagnostic-${{ github.ref }}
+  group: windows-profile-recovery-diagnostic-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 permissions:
@@ -51,8 +51,8 @@ jobs:
       - name: Install dependencies
         run: node scripts/pinokio-install.mjs
 
-      - name: Test startup diagnostic bounds and redaction
-        run: node --test scripts/performance/startupDiagnostics.test.mjs
+      - name: Test startup and page ownership diagnostics
+        run: node --test scripts/performance/startupDiagnostics.test.mjs scripts/performance/profileRecoveryPageOwnership.test.mjs
 
       - name: Install fixture browser
         run: npx puppeteer browsers install chrome
