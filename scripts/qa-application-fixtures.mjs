@@ -4,8 +4,31 @@ import puppeteer from 'puppeteer';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
 import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
+import {
+  cleanupStartupHeartbeat,
+  installStartupHeartbeat,
+  sanitizeDiagnosticText,
+} from './performance/startupDiagnostics.mjs';
 
 const fixtureDiagnostics = new WeakMap();
+
+export function fixtureBrowserArgs({
+  softwareRendering = process.env.GEV_QA_SOFTWARE_RENDERING === '1',
+  webglOnly = process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1',
+} = {}) {
+  const softwareRendererArgs = webglOnly
+    ? [
+        '--use-gl=angle',
+        '--use-angle=swiftshader-webgl',
+        '--enable-unsafe-swiftshader',
+      ]
+    : ['--use-gl=angle', '--use-angle=swiftshader'];
+  return [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    ...(softwareRendering ? softwareRendererArgs : []),
+  ];
+}
 
 export async function launchFixtureBrowser(options = {}) {
   return puppeteer.launch({
@@ -13,15 +36,9 @@ export async function launchFixtureBrowser(options = {}) {
     executablePath:
       process.env.PUPPETEER_EXECUTABLE_PATH ||
       (await puppeteer.executablePath()),
-    args: [
-      '--no-sandbox',
-      '--disable-dev-shm-usage',
-      // Explicit fixture-only opt-in for GPU-less hosted recovery runners.
-      // Hardware measurement callers keep their original renderer selection.
-      ...(process.env.GEV_QA_SOFTWARE_RENDERING === '1'
-        ? ['--use-gl=angle', '--use-angle=swiftshader']
-        : []),
-    ],
+    // Explicit fixture-only opt-in for GPU-less hosted recovery runners.
+    // Hardware measurement callers keep their original renderer selection.
+    args: fixtureBrowserArgs(),
     ...options,
   });
 }
@@ -29,13 +46,23 @@ export async function launchFixtureBrowser(options = {}) {
 export async function prepareFixturePage(
   browser,
   base,
-  { respond, viewport = { width: 1440, height: 1000 } } = {},
+  {
+    respond,
+    viewport = { width: 1440, height: 1000 },
+    startupDiagnostics = null,
+  } = {},
 ) {
   const page = await browser.newPage();
   const errors = [];
   const networkProbe = createFixtureNetworkProbe(base);
   const startupMessages = [];
-  fixtureDiagnostics.set(page, { errors, startupMessages });
+  const pageDiagnostics = {
+    errors,
+    startupMessages,
+    startupDiagnostics,
+    listeners: [],
+  };
+  fixtureDiagnostics.set(page, pageDiagnostics);
   page.on('console', (message) => {
     if (!['error', 'warn'].includes(message.type())) return;
     // Local fixture evidence only: strip URL values and bound diagnostics.
@@ -48,6 +75,36 @@ export async function prepareFixturePage(
     if (startupMessages.length > 12) startupMessages.shift();
   });
   page.on('pageerror', (error) => errors.push(error.message));
+  if (startupDiagnostics) {
+    const onResponse = (response) => {
+      if (response.status() < 400) return;
+      const request = response.request();
+      startupDiagnostics.recordRequest({
+        url: request.url(),
+        status: response.status(),
+        method: request.method(),
+        resourceType: request.resourceType(),
+      });
+    };
+    const onRequestFailed = (request) => {
+      startupDiagnostics.recordRequest({
+        url: request.url(),
+        method: request.method(),
+        resourceType: request.resourceType(),
+        failure: request.failure()?.errorText,
+      });
+    };
+    page.on('response', onResponse);
+    page.on('requestfailed', onRequestFailed);
+    pageDiagnostics.listeners.push(
+      ['response', onResponse],
+      ['requestfailed', onRequestFailed],
+    );
+    pageDiagnostics.heartbeatScriptIdentifier = await installStartupHeartbeat(
+      page,
+      startupDiagnostics,
+    );
+  }
   page.setDefaultTimeout(30000);
   page.setDefaultNavigationTimeout(90000);
   await page.setViewport(viewport);
@@ -71,6 +128,32 @@ export async function prepareFixturePage(
   return { page, errors, verifyNetwork: () => networkProbe.verify(page) };
 }
 
+export async function cleanupFixturePageDiagnostics(page) {
+  const diagnostics = fixtureDiagnostics.get(page);
+  if (!diagnostics) return;
+  for (const [event, listener] of diagnostics.listeners)
+    page.off(event, listener);
+  if (diagnostics.startupDiagnostics)
+    await cleanupStartupHeartbeat(
+      page,
+      diagnostics.heartbeatScriptIdentifier,
+      1000,
+    );
+  fixtureDiagnostics.delete(page);
+}
+
+export function readFixturePageDiagnostics(page) {
+  const diagnostics = fixtureDiagnostics.get(page);
+  return diagnostics
+    ? {
+        errors: diagnostics.errors
+          .slice(-8)
+          .map((error) => sanitizeDiagnosticText(error, 240)),
+        messages: diagnostics.startupMessages.slice(-12),
+      }
+    : { errors: [], messages: [] };
+}
+
 export async function bootFixturePage(
   page,
   base,
@@ -90,6 +173,8 @@ export async function bootFixturePage(
       { timeout: 90000, polling: 100 },
     );
   } catch (error) {
+    const diagnostics = fixtureDiagnostics.get(page);
+    if (diagnostics?.startupDiagnostics) throw error;
     const state = await page
       .evaluate(() => ({
         readyState: document.readyState,
@@ -106,7 +191,6 @@ export async function bootFixturePage(
             ?.textContent?.slice(0, 500) || null,
       }))
       .catch(() => null);
-    const diagnostics = fixtureDiagnostics.get(page);
     error.message +=
       '; startup diagnostics: ' +
       JSON.stringify({

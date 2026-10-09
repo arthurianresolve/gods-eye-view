@@ -21,9 +21,15 @@ import {
   launchFixtureBrowser,
   prepareFixturePage,
   bootFixturePage,
+  cleanupFixturePageDiagnostics,
+  readFixturePageDiagnostics,
   seedPersistentWorkspace,
   assertPersistentWorkspace,
 } from './qa-application-fixtures.mjs';
+import {
+  captureBoundedDomState,
+  createStartupDiagnostics,
+} from './performance/startupDiagnostics.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
@@ -71,6 +77,38 @@ async function stopTree(child) {
       process.kill(-child.pid, 'SIGTERM');
     } catch {}
   }
+}
+
+function chromeProcessCount() {
+  if (process.platform !== 'win32') return null;
+  try {
+    const output = execFileSync(
+      'tasklist.exe',
+      ['/FI', 'IMAGENAME eq chrome.exe', '/FO', 'CSV', '/NH'],
+      { encoding: 'utf8', timeout: 2500, maxBuffer: 8192, windowsHide: true },
+    );
+    return output
+      .split(/\r?\n/)
+      .filter((line) => /^"chrome\.exe"/i.test(line.trim())).length;
+  } catch {
+    return null;
+  }
+}
+
+async function collectRecoveryDiagnostics(page, browser, diagnostics) {
+  const domState = await captureBoundedDomState(page, 5000);
+  let targetInventory = [];
+  try {
+    targetInventory = diagnostics.recordTargets(browser.targets());
+  } catch {
+    // The browser may already be closing after a renderer failure.
+  }
+  return diagnostics.snapshot({
+    domState,
+    targetInventory,
+    chromeProcessCount: chromeProcessCount(),
+    browserProcessId: browser.process()?.pid ?? null,
+  });
 }
 
 async function command(
@@ -192,24 +230,58 @@ const progress = (step) => {
 };
 async function reopen(label, { seed = false } = {}) {
   activeCheck = label;
-  progress('launch');
+  const bootStartedAt = Date.now();
+  const progressTimeline = [];
+  const timedProgress = (step) => {
+    progressTimeline.push({ step, elapsedMs: Date.now() - bootStartedAt });
+    progress(step);
+  };
+  timedProgress('launch');
   browser = await launchFixtureBrowser({
     userDataDir: path.join(scratch, 'browser-profile'),
   });
+  const diagnosticMode = process.env.GEV_PROFILE_RECOVERY_DIAGNOSTICS === '1';
+  const diagnostics = diagnosticMode ? createStartupDiagnostics(base) : null;
+  const browserProcess = browser.process();
+  const stderrListener = diagnostics
+    ? (chunk) => diagnostics.recordStderr(chunk)
+    : null;
+  if (stderrListener) {
+    diagnostics.recordInitialTargets(browser.targets());
+    browserProcess?.stderr?.on('data', stderrListener);
+  }
+  let page = null;
+  let bootElapsedMs = null;
+  let rendererQueryStartedAt = null;
+  let rendererQueryDurationMs = null;
   try {
     browserVersion = await browser.version();
-    progress('install-fixtures');
-    const { page, errors } = await prepareFixturePage(browser, base, {
+    timedProgress('install-fixtures');
+    const prepared = await prepareFixturePage(browser, base, {
       viewport,
+      startupDiagnostics: diagnostics,
     });
-    await bootFixturePage(page, base, { onProgress: progress });
-    progress('read-renderer');
+    page = prepared.page;
+    const { errors } = prepared;
+    await bootFixturePage(page, base, { onProgress: timedProgress });
+    const navigationAt = progressTimeline.find(
+      (entry) => entry.step === 'navigation',
+    )?.elapsedMs;
+    const readyAt = progressTimeline.find(
+      (entry) => entry.step === 'ready',
+    )?.elapsedMs;
+    if (Number.isFinite(navigationAt) && Number.isFinite(readyAt))
+      bootElapsedMs = readyAt - navigationAt;
+    rendererQueryStartedAt = Date.now();
+    timedProgress('read-renderer');
     const renderer = await page.evaluate(() => {
       const canvas = window.__godsEyeView.viewer.scene.canvas;
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
       const info = gl.getExtension('WEBGL_debug_renderer_info');
       return gl.getParameter(info?.UNMASKED_RENDERER_WEBGL || gl.RENDERER);
     });
+    rendererQueryDurationMs = Date.now() - rendererQueryStartedAt;
+    timedProgress('renderer-read-complete');
     if (process.env.GEV_QA_SOFTWARE_RENDERING === '1')
       assert.match(
         renderer,
@@ -217,24 +289,65 @@ async function reopen(label, { seed = false } = {}) {
         'Expected explicit fixture software renderer',
       );
     if (seed) {
-      progress('seed-workspace');
+      timedProgress('seed-workspace');
       expected = await seedPersistentWorkspace(page);
     }
-    progress('verify-persisted-workspace');
+    timedProgress('verify-persisted-workspace');
     const result = await assertPersistentWorkspace(page, expected);
     assert.deepEqual(errors, []);
-    checks.push({ id: label, status: 'passed', renderer, ...result });
+    timedProgress('passed');
+    const startup = diagnostics
+      ? {
+          ...await collectRecoveryDiagnostics(page, browser, diagnostics),
+          bootElapsedMs,
+          rendererQueryDurationMs,
+          reopenElapsedMs: Date.now() - bootStartedAt,
+          progressTimeline,
+          ...readFixturePageDiagnostics(page),
+        }
+      : null;
+    checks.push({
+      id: label,
+      status: 'passed',
+      renderer,
+      ...result,
+      ...(startup ? { diagnostics: startup } : {}),
+    });
     console.log(JSON.stringify(checks.at(-1)));
-    progress('passed');
   } catch (error) {
+    if (diagnostics && page)
+      error.recoveryDiagnostics = await collectRecoveryDiagnostics(
+        page,
+        browser,
+        diagnostics,
+      );
+    if (error.recoveryDiagnostics) {
+      error.recoveryDiagnostics.bootElapsedMs = bootElapsedMs;
+      error.recoveryDiagnostics.rendererQueryDurationMs =
+        rendererQueryDurationMs ??
+        (rendererQueryStartedAt == null
+          ? null
+          : Date.now() - rendererQueryStartedAt);
+      error.recoveryDiagnostics.reopenElapsedMs = Date.now() - bootStartedAt;
+      error.recoveryDiagnostics.progressTimeline = progressTimeline;
+      Object.assign(
+        error.recoveryDiagnostics,
+        readFixturePageDiagnostics(page),
+      );
+    }
     checks.push({
       id: label,
       status: 'failed',
       step: activeStep,
       error: error.message,
+      ...(error.recoveryDiagnostics
+        ? { diagnostics: error.recoveryDiagnostics }
+        : {}),
     });
     throw error;
   } finally {
+    if (page) await cleanupFixturePageDiagnostics(page);
+    if (stderrListener) browserProcess?.stderr?.off('data', stderrListener);
     await browser.close();
     browser = null;
   }
@@ -332,7 +445,9 @@ try {
   serving = path.join(previous, 'dist');
   await reopen('failed-verification-rolls-back-and-reopens-assets');
 } catch (error) {
-  failure = { check: activeCheck, step: activeStep, error: error.message };
+    failure = { check: activeCheck, step: activeStep, error: error.message };
+    if (error.recoveryDiagnostics)
+      failure.diagnostics = error.recoveryDiagnostics;
   throw error;
 } finally {
   const report = {
@@ -342,6 +457,17 @@ try {
     platform: process.platform,
     os: os.release(),
     node: process.version,
+    hostEnvironment: {
+      cpuModel: os.cpus()[0]?.model || null,
+      logicalCpus: os.cpus().length,
+      totalMemoryBytes: os.totalmem(),
+    },
+    requestedRenderingBackend:
+      process.env.GEV_QA_SOFTWARE_RENDERING !== '1'
+        ? 'default'
+        : process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1'
+          ? 'swiftshader-webgl-only'
+          : 'swiftshader-gl-driver',
     browserVersion,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.
