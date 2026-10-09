@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /** Real prior checkout -> interrupted installer -> rollback -> upgrade, one Chrome profile. */
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
@@ -177,14 +177,27 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const base = 'http://127.0.0.1:' + server.address().port;
 let expected, browser, browserVersion;
 const checks = [];
+let activeCheck = 'setup',
+  activeStep = 'setup',
+  failure = null;
+const progress = (step) => {
+  activeStep = step;
+  console.log(
+    JSON.stringify({ phase: 'browser-recovery', check: activeCheck, step }),
+  );
+};
 async function reopen(label, { seed = false } = {}) {
+  activeCheck = label;
+  progress('launch');
   browser = await launchFixtureBrowser({
     userDataDir: path.join(scratch, 'browser-profile'),
   });
   try {
     browserVersion = await browser.version();
+    progress('install-fixtures');
     const { page, errors } = await prepareFixturePage(browser, base);
-    await bootFixturePage(page, base);
+    await bootFixturePage(page, base, { onProgress: progress });
+    progress('read-renderer');
     const renderer = await page.evaluate(() => {
       const canvas = window.__godsEyeView.viewer.scene.canvas;
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
@@ -197,11 +210,24 @@ async function reopen(label, { seed = false } = {}) {
         /swiftshader/i,
         'Expected explicit fixture software renderer',
       );
-    if (seed) expected = await seedPersistentWorkspace(page);
+    if (seed) {
+      progress('seed-workspace');
+      expected = await seedPersistentWorkspace(page);
+    }
+    progress('verify-persisted-workspace');
     const result = await assertPersistentWorkspace(page, expected);
     assert.deepEqual(errors, []);
     checks.push({ id: label, status: 'passed', renderer, ...result });
     console.log(JSON.stringify(checks.at(-1)));
+    progress('passed');
+  } catch (error) {
+    checks.push({
+      id: label,
+      status: 'failed',
+      step: activeStep,
+      error: error.message,
+    });
+    throw error;
   } finally {
     await browser.close();
     browser = null;
@@ -299,6 +325,10 @@ try {
   assert.equal((await verifyReleaseDirectory(previous)).commit, priorCommit);
   serving = path.join(previous, 'dist');
   await reopen('failed-verification-rolls-back-and-reopens-assets');
+} catch (error) {
+  failure = { check: activeCheck, step: activeStep, error: error.message };
+  throw error;
+} finally {
   const report = {
     scope: 'prior-install-browser-profile-recovery',
     candidateCommit,
@@ -317,10 +347,11 @@ try {
         encoding: 'utf8',
       }).trim() !== candidateCommit,
     checks,
+    status: failure ? 'failed' : 'passed',
+    failure,
   };
   await writeFile(out, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
   console.log(JSON.stringify(report, null, 2));
-} finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));
   // Only this freshly created scratch directory is removed; reports live outside it.

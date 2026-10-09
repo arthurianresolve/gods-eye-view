@@ -67,9 +67,15 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
   return { page, errors, verifyNetwork: () => networkProbe.verify(page) };
 }
 
-export async function bootFixturePage(page, base) {
+export async function bootFixturePage(
+  page,
+  base,
+  { onProgress = () => {} } = {},
+) {
+  onProgress('navigation');
   await page.goto(base + '/?welcome=0', { waitUntil: 'domcontentloaded' });
   try {
+    onProgress('application-ready');
     await page.waitForFunction(
       () => window.__godsEyeView?.workspaceLibraryPanel,
       { timeout: 90000 },
@@ -96,11 +102,31 @@ export async function bootFixturePage(page, base) {
       });
     throw error;
   }
+  onProgress('initial-view-restore');
   await page.evaluate(async () => {
-    await window.__godsEyeView.styleManager.initialRestorePromise;
-    window.prompt = () => 'Persistent recovery investigation';
-    window.confirm = () => true;
+    let timeout;
+    try {
+      await Promise.race([
+        window.__godsEyeView.styleManager.initialRestorePromise,
+        new Promise((_, reject) => {
+          timeout = setTimeout(
+            () =>
+              reject(
+                new Error(
+                  'Initial view restore did not settle within 90 seconds.',
+                ),
+              ),
+            90000,
+          );
+        }),
+      ]);
+      window.prompt = () => 'Persistent recovery investigation';
+      window.confirm = () => true;
+    } finally {
+      clearTimeout(timeout);
+    }
   });
+  onProgress('ready');
 }
 
 export const clickControl = (page, selector) =>
