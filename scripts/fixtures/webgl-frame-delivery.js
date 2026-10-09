@@ -10,6 +10,8 @@ const status = document.querySelector('#status');
 const result = document.querySelector('#result');
 let canvas = document.querySelector('#surface');
 let lastReport = null;
+const appCommit =
+  typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null;
 
 function compileShader(gl, type, source) {
   const shader = gl.createShader(type);
@@ -180,11 +182,20 @@ runButton.addEventListener('click', () => {
     const rafGap = previousFrame === null ? null : endedAt - previousFrame;
     const timerGap =
       previousHeartbeat === null ? null : endedAt - previousHeartbeat;
+    const rect = canvas.getBoundingClientRect();
+    const visibleWidth = Math.max(
+      0,
+      Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0),
+    );
+    const visibleHeight = Math.max(
+      0,
+      Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0),
+    );
     maximumHeartbeatGapMs = Math.max(maximumHeartbeatGapMs, timerGap || 0);
     const report = {
       schema: 'gev-webgl-frame-delivery/v1',
-      appCommit:
-        typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
+      appCommit,
+      harnessCommit: appCommit,
       scope:
         'diagnostic-only browser frame-delivery observation; not performance acceptance',
       mode,
@@ -200,7 +211,28 @@ runButton.addEventListener('click', () => {
         focusedAtStart,
         visibilityAtStart,
       },
-      canvas: { width: canvas.width, height: canvas.height },
+      pointCount: mode === 'webgl2' ? POINT_COUNT : null,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      canvas: {
+        width: canvas.width,
+        height: canvas.height,
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height,
+        },
+        viewportIntersection: {
+          width: visibleWidth,
+          height: visibleHeight,
+          fraction:
+            rect.width > 0 && rect.height > 0
+              ? (visibleWidth * visibleHeight) / (rect.width * rect.height)
+              : 0,
+        },
+      },
       contextAttributes: gl?.getContextAttributes() ?? null,
       renderer: gl ? readRenderer(gl) : null,
       rendererMetadataReadAfterWindow: true,
@@ -209,6 +241,8 @@ runButton.addEventListener('click', () => {
       buckets,
       maximumFrameGapMs: frames >= 2 ? maximumFrameGapMs : null,
       trailingFrameGapMs: rafGap,
+      frameClock:
+        'performance.now sampled inside each native requestAnimationFrame callback',
       timer: {
         intervalMs: 20,
         ticks: heartbeatTicks,
@@ -271,8 +305,9 @@ runButton.addEventListener('click', () => {
   endTimer = setTimeout(() => finish('duration-complete'), DURATION_MS);
   status.textContent = `Running ${mode} for five seconds`;
 
-  const frame = (timestamp) => {
+  const frame = () => {
     rafId = null;
+    const timestamp = performance.now();
     const elapsed = timestamp - start;
     if (elapsed >= DURATION_MS) return;
     if (firstFrameAtMs === null) firstFrameAtMs = elapsed;
