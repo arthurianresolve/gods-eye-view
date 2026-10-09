@@ -16,7 +16,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb` | Pending real-GPU resource plateau |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb`; corrected-validator reassessment passes at `5328e25` | Hosted paravirtual Metal retention reassessment passes at `0fa3140`; Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass | Four isolated UHD 620 governor checks pass at `3664f4f`; full application cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
@@ -26,7 +26,7 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
-| S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | 45 focused import/workspace/CCTV tests and 40 contract checks pass; build, formatting and package boundaries pass | Pending end-to-end import interaction and geometry measurements |
+| S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | Focused tests and full CI at `eb90492` pass; Linux software-rendered ten-capture comparison passes at `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; Windows UHD 620 capture fails, full interaction acceptance pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -36,6 +36,25 @@ a performance shortcut. Auto quality remains opt-in.
 ## Measurement contract
 
 ### Follow-up validation on 9 October
+
+- [CI at eb90492](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37966397084)
+  passes all Node 24/26, formatting, boundary, build, onboarding, browser and
+  Windows/Linux/macOS recovery jobs. This includes the corrected workspace import
+  and duplicate completion paths. Later commits add diagnostics, evidence and CI
+  probe controls; they do not imply a new full-application acceptance pass.
+- The isolated [free hosted-renderer probe at ee38af4](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37968012285)
+  reports [Mac paravirtual Metal](performance-evidence/hosted-mac-ee38af4.json)
+  and [Linux software rendering](performance-evidence/hosted-linux-ee38af4.json).
+  Both pass ten matching 5,000-feature captures and twelve cancelled-import
+  ownership checks. On the Mac, median per-run maximum heartbeat gap falls from
+  198 ms to 57 ms while median import completion grows from 90.2 ms to 385.2 ms.
+  On Linux, those values are 150.9 ms to 49.7 ms and 51.6 ms to 137.1 ms.
+  The heartbeat covers import creation plus a 20 ms task drain; it does not cover
+  subsequent image capture and is not control p95 or a full-application latency
+  gate. [Hosted Windows](performance-evidence/hosted-windows-ee38af4.json) has no
+  WebGL 2 context and correctly remains pending, despite a successful capability
+  probe job. All runners are standard free public-repository runners; probe-only
+  dispatch avoids repeating unrelated test jobs or uploading billed artifacts.
 
 - The free [hosted Mac soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37960247130/job/113920967041)
   at `0fa31401b07d1156b0d50de4c7268c8735501f39` completed 252 cycles in
@@ -73,7 +92,13 @@ a performance shortcut. Auto quality remains opt-in.
   samples. The last run has zero Cesium updates and zero independent animation
   callbacks during a 401 ms capture wait, despite a visible page, enabled render
   loop, valid context and no render errors. Browser foreground/power conditions
-  require verification; the cause is not established. Do not accept its event-loop
+  were checked with a separate plain-page control: 293 animation callbacks in
+  five seconds with focus and visibility confirmed. The
+  [synchronous-only control](performance-evidence/import-batches-50f7b68-sync-failed.json)
+  fails too, so the cooperative change is not the sole cause. A
+  [later detailed run](performance-evidence/import-batches-a49b221-failed.json)
+  matches the first pair's pixels, then stalls on the next repetition. The cause
+  is not established. Do not accept its event-loop
   improvement as a validated comparison. The 400 ms capture deadline and the
   complete 5,000-feature population remain unchanged.
 

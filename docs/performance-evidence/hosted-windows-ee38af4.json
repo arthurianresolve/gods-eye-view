@@ -1,0 +1,22 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "ee38af49f024242252f7a6297837dde44236d3c5",
+  "platform": "win32",
+  "timestamp": "2026-10-09T17:42:00.164Z",
+  "status": "pending",
+  "hardwareRenderingAvailable": false,
+  "captureMatrix": null,
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.26100",
+    "cpu": "AMD EPYC 9V74 80-Core Processor                ",
+    "logicalCpus": 4,
+    "memoryBytes": 17174360064,
+    "hosted": true,
+    "runnerImage": "win25-vs2026",
+    "runnerImageVersion": "20260925.250.1"
+  },
+  "webglAvailable": false,
+  "reason": "Standard runner exposes no WebGL 2 context; hardware evidence remains pending."
+}
