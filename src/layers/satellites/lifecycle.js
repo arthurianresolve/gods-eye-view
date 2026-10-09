@@ -46,6 +46,10 @@ export function createLifecycle({
       return;
     }
     releaseContinuousRender('satellites');
+    if (!layerState._params.showPoints && !layerState._params.showOrbits) {
+      stopPeriodicRenderDemand();
+      return;
+    }
     schedulePeriodicRenderDemand();
   }
 
