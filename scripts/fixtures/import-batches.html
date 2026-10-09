@@ -9,6 +9,14 @@
       creation. This is an isolated viewer check, not a full application
       performance or soak pass.
     </p>
+    <label
+      >Import workload
+      <select id="workload">
+        <option value="paired">Paired synchronous/cooperative</option>
+        <option value="synchronous">Synchronous control only</option>
+        <option value="cooperative">Cooperative control only</option>
+      </select>
+    </label>
     <button id="run">Run import checks</button>
     <button id="frame-probe">Check browser frame delivery</button>
     <button id="download" disabled>Download report</button>

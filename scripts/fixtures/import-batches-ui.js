@@ -143,12 +143,14 @@ async function pixels(viewer, sample) {
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
+  const workload = document.querySelector('#workload').value;
   report = {
     schema: 'gev-import-batches/v1',
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     capturedAt: new Date().toISOString(),
     fixture: 'synthetic-5000-import-points/v1',
+    workload,
     scope:
       'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
     checks: [],
@@ -194,9 +196,13 @@ run.addEventListener('click', async () => {
     report.coldActivationMs = performance.now() - coldAt;
     let expectedPixels = null;
     for (let pair = 0; pair < 5; pair++) {
-      for (const mode of pair % 2
-        ? ['cooperative', 'synchronous']
-        : ['synchronous', 'cooperative']) {
+      const modes =
+        workload === 'paired'
+          ? pair % 2
+            ? ['cooperative', 'synchronous']
+            : ['synchronous', 'cooperative']
+          : [workload, workload];
+      for (const mode of modes) {
         status.textContent = `Pair ${pair + 1}/5: ${mode} import`;
         layer.clear();
         await wait(150);
