@@ -8,6 +8,28 @@ import {
   viewUrl,
 } from './index.js';
 
+test('optional detection settings survive canonical view and URL round trips', () => {
+  for (const detection of ['OFF', 'SPARSE', 'BALANCED', 'DENSE'].flatMap(
+    (mode) => [0, 25, 50, 75, 100].map((densityPct) => ({ mode, densityPct })),
+  )) {
+    const view = createView({ camera: { lat: 1, lon: 2 }, detection });
+    assert.deepEqual(viewFromParams(viewToParams(view)), view);
+    assert.ok(Object.isFrozen(view.detection));
+  }
+  const old = createView({ camera: { lat: 1, lon: 2 } });
+  assert.equal('detection' in old, false);
+  assert.deepEqual(viewFromParams(viewToParams(old)), old);
+  for (const detection of [
+    { mode: 'DENSE', densityPct: NaN },
+    { mode: 'AUTO', densityPct: 75 },
+    { mode: 'OFF', densityPct: '75' },
+  ])
+    assert.throws(
+      () => createView({ camera: { lat: 1, lon: 2 }, detection }),
+      /Invalid view detection/,
+    );
+});
+
 test('a view round-trips through share-link parameters', () => {
   const view = createView({
     camera: {

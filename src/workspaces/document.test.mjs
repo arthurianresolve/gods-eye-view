@@ -44,6 +44,18 @@ function workspace(overrides = {}) {
   };
 }
 
+test('version-one workspace documents retain optional detection settings', () => {
+  const input = workspace();
+  input.view.detection = { mode: 'DENSE', densityPct: 75 };
+  const saved = createWorkspaceDocument(input);
+  const reopened = parseWorkspaceDocument(JSON.stringify(saved));
+  assert.equal(reopened.schemaVersion, 1);
+  assert.deepEqual(reopened.view.detection, input.view.detection);
+  assert.equal('detection' in createWorkspaceDocument(workspace()).view, false);
+  input.view.detection.densityPct = 999;
+  assert.throws(() => createWorkspaceDocument(input), /detection/);
+});
+
 test('direct pinned envelopes cannot bypass reference import validation', () => {
   const input = JSON.parse(
     JSON.stringify(createWorkspaceDocument(workspace())),

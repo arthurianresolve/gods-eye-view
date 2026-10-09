@@ -20,12 +20,13 @@ const out = option('--out', 'qa-artifacts/visual-settings.json');
 const browser = await launchFixtureBrowser();
 const checks = [];
 let report;
+let commit = null;
 try {
   const { page, errors } = await prepareFixturePage(browser, base);
   await bootFixturePage(page, base, {
     hash: '#v=2&lat=30.2738&lon=-97.7371&alt=85000&heading=0&pitch=-90&roll=0&style=normal&dm=SPARSE&dd=25&map=esri-imagery&l=',
   });
-  const commit = await page.evaluate(
+  commit = await page.evaluate(
     () => window.__godsEyeView.getPerformanceEnvironment().appCommit,
   );
   assert.match(commit, /^[a-f0-9]{40}$/);
@@ -45,12 +46,14 @@ try {
     });
   const check = async (id, mode, value) => {
     const actual = await read();
+    const result = { id, status: 'failed', actual };
+    checks.push(result);
     assert.equal(actual.mode, mode, id);
     assert.equal(actual.slider, value, id);
     assert.equal(actual.effective, value, id);
     assert.equal(actual.label, `${value}%`, id);
     assert.equal(actual.status, `${mode.toUpperCase()} · ${value}%`, id);
-    checks.push({ id, status: 'passed', actual });
+    result.status = 'passed';
   };
   const density = (value) =>
     page.evaluate((next) => {
@@ -101,6 +104,7 @@ try {
     schema: 'gev-visual-settings-journey/v1',
     status: 'failed',
     checks,
+    commit,
     error: error.message,
   };
   process.exitCode = 1;

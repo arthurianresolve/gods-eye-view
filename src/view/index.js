@@ -11,6 +11,26 @@ import {
   decodeLayerStateParams,
   encodeLayerStateParams,
 } from '../data/layerState.js';
+import {
+  DENSITY_STOPS,
+  migrateDetectionState,
+} from '../data/detectionPolicy.js';
+
+const DETECTION_MODES = Object.freeze(['OFF', 'SPARSE', 'BALANCED', 'DENSE']);
+
+function detectionOf(value) {
+  if (value == null) return null;
+  if (
+    !DETECTION_MODES.includes(value.mode) ||
+    !DENSITY_STOPS.includes(value.densityPct)
+  )
+    throw new TypeError('Invalid view detection mode or density');
+  const restored = migrateDetectionState(value.mode, value.densityPct);
+  return Object.freeze({
+    mode: restored.enabled ? restored.profile : 'OFF',
+    densityPct: restored.densityPct,
+  });
+}
 
 /** Visual styles by internal name, with the name share links use. */
 export const STYLE_URL_NAMES = Object.freeze({
@@ -95,6 +115,16 @@ const MAX_ALTITUDE_M = 20_000_000;
 
 /** JSON Schema for the parts of a view a caller chooses directly. */
 export const VIEW_PROPERTIES = Object.freeze({
+  detection: Object.freeze({
+    type: 'object',
+    description: 'Saved detection display mode and label density percentage.',
+    properties: {
+      mode: { type: 'string', enum: [...DETECTION_MODES] },
+      densityPct: { type: 'number', enum: [...DENSITY_STOPS] },
+    },
+    required: ['mode', 'densityPct'],
+    additionalProperties: false,
+  }),
   camera: Object.freeze({
     type: 'object',
     description:
@@ -334,6 +364,7 @@ export function createView({
   follow = null,
   annotations = [],
   temporal = null,
+  detection = null,
 } = {}) {
   if (!Number.isFinite(camera?.lat) || !Number.isFinite(camera?.lon))
     throw new TypeError('A view needs a camera lat and lon');
@@ -379,6 +410,7 @@ export function createView({
         .filter(Boolean),
     ),
     temporal: temporalOf(temporal),
+    ...(detection == null ? {} : { detection: detectionOf(detection) }),
   });
 }
 
@@ -395,6 +427,11 @@ export function viewToParams(view) {
   });
   if (view.style) params.set('style', STYLE_URL_NAMES[view.style]);
   if (view.map) params.set('map', view.map);
+  const detection = detectionOf(view.detection);
+  if (detection) {
+    params.set('dm', detection.mode);
+    params.set('dd', String(detection.densityPct));
+  }
   if (view.layers.length) {
     const state = createDefaultLayerState();
     state.enabledLayerIds = [...view.layers];
@@ -453,6 +490,10 @@ export function viewFromParams(params) {
   const map = params.get('map');
   const decodedTemporal = temporalFromParams(params);
   if (decodedTemporal.invalid) return null;
+  const restoredDetection =
+    params.has('dm') || params.has('dd')
+      ? migrateDetectionState(params.get('dm') || 'OFF', number('dd'), 50)
+      : null;
   return createView({
     camera: {
       lat,
@@ -467,6 +508,12 @@ export function viewFromParams(params) {
     follow,
     annotations: annotationsFromParams(params),
     temporal: decodedTemporal.temporal,
+    detection: restoredDetection
+      ? {
+          mode: restoredDetection.enabled ? restoredDetection.profile : 'OFF',
+          densityPct: restoredDetection.densityPct,
+        }
+      : null,
   });
 }
 

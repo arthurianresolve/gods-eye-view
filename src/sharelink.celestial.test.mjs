@@ -754,6 +754,25 @@ test('workspace view restore applies a camera pose without an animation flight',
   assert.equal(result.camera, 'applied');
 });
 
+test('workspace restoration carries saved detection settings instead of replacing them with defaults', async () => {
+  const manager = makeManager();
+  let restored;
+  manager.applyState = async (state) => {
+    restored = state;
+  };
+  await manager.applyView(
+    createView({
+      camera: { lat: 1, lon: 2 },
+      detection: { mode: 'DENSE', densityPct: 75 },
+    }),
+  );
+  assert.equal(restored.detectionMode, 'DENSE');
+  assert.equal(restored.detectionDensity, 75);
+  await manager.applyView(createView({ camera: { lat: 1, lon: 2 } }));
+  assert.equal(restored.detectionMode, 'OFF');
+  assert.equal(restored.detectionDensity, 50);
+});
+
 test('newer navigation suppresses delayed share camera while non-camera state still restores', async () => {
   let flights = 0;
   let restored = null;

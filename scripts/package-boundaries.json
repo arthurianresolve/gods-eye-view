@@ -54,7 +54,8 @@
       "src/view/index.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",
-      "src/evidence/evidence.js"
+      "src/evidence/evidence.js",
+      "src/data/detectionPolicy.js"
     ],
     "external": []
   },
@@ -3028,7 +3029,8 @@
       "src/navigationPolicy.js",
       "src/ui/shareRestoration.js",
       "src/view/index.js",
-      "src/ui/uiLifetime.js"
+      "src/ui/uiLifetime.js",
+      "src/data/detectionPolicy.js"
     ],
     "external": []
   },
@@ -3558,7 +3560,8 @@
       "src/view/index.js",
       "src/tools/views.js",
       "src/tools/globePanel.js",
-      "src/tools/queries/panelRequest.js"
+      "src/tools/queries/panelRequest.js",
+      "src/data/detectionPolicy.js"
     ],
     "external": ["satellite.js"]
   },
@@ -3655,7 +3658,8 @@
     "modules": [
       "src/view/index.js",
       "src/data/layerState.js",
-      "src/data/layerStateTokenReservations.json"
+      "src/data/layerStateTokenReservations.json",
+      "src/data/detectionPolicy.js"
     ],
     "external": []
   }

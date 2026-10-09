@@ -87,6 +87,20 @@ a performance shortcut. Auto quality remains opt-in.
   the status, slider, label, profile and effective renderer density after a share
   restore, slider edit, quality/performance/manual cycle and saved-workspace
   restore. Its CI result is pending; the fix changes no rendering detail.
+- [CI at 9dacb7c](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37973615671)
+  passes Node 24/26, production builds, formatting/boundaries, onboarding,
+  recovery on all three operating systems and every prior browser journey.
+  The new visual-settings journey **fails** only at workspace restoration:
+  its earlier five share/slider/profile checks pass, then saved 75% returns as
+  50%. The [failed report](performance-evidence/visual-settings-9dacb7c-failed.json)
+  is retained. Canonical workspace views did not contain detection settings,
+  and `applyView` replaced them with OFF/50 defaults. The additive optional
+  `view.detection` contract now carries canonical mode/density through view,
+  URL and version-one workspace serialization. Legacy views remain readable
+  with their previous defaults. Focused view, storage and restoration tests
+  cover the round trip; the full browser journey must pass on the new revision
+  before this gap is closed. Failed future checks now retain actual observed
+  values and the tested commit in their report.
 
 - [CI at eb90492](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37966397084)
   passes all Node 24/26, formatting, boundary, build, onboarding, browser and
