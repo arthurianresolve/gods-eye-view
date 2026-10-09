@@ -206,6 +206,7 @@ run.addEventListener('click', async () => {
     workload,
     preserveDrawingBuffer,
     captureMode: document.querySelector('#capture-mode').value,
+    renderDemand: document.querySelector('#render-demand').checked,
     observeCommands: document.querySelector('#observe-commands').checked,
     commandObservationScope:
       'Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison',
@@ -236,7 +237,7 @@ run.addEventListener('click', async () => {
       report.renderErrors.push(String(error?.message || error).slice(0, 400));
       if (report.renderErrors.length > 4) report.renderErrors.shift();
     });
-    installRenderGovernor(viewer);
+    if (report.renderDemand) installRenderGovernor(viewer);
     for (const item of ['skyBox', 'skyAtmosphere', 'sun', 'moon', 'globe'])
       viewer.scene[item].show = false;
     viewer.camera.setView({

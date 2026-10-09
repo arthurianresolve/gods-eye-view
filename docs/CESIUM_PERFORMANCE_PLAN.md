@@ -70,6 +70,11 @@ a performance shortcut. Auto quality remains opt-in.
   observes 299 callbacks, maximum gap 25.1 ms. The fixture now provides render-only
   and copy-without-readback controls to isolate the capture path; neither checks
   pixel equivalence, and the default remains full copied-pixel validation.
+- The [render-only control at `6a393c8`](performance-evidence/import-batches-6a393c8-render-only-failed.json)
+  fails in the same second sample without copying or reading any pixels. This
+  rules out capture readback as a necessary trigger. A separate continuous-render
+  diagnostic can now omit governor installation, while the default remains
+  render-on-demand. Neither diagnostic changes production viewer behavior.
 - The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
   at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
   validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window
