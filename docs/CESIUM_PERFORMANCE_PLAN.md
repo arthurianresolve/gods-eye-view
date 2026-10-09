@@ -14,7 +14,7 @@ the earlier release requirements and historical results.
 
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
-| S47 baseline and comparable capture | Partial: density UI synchronization, capture defaults, runtime app-commit binding, elapsed-time movement and instrumentation guard | Focused capture/build checks pass, including runtime identity and wrong-commit rejection; complete settings/population guards and matched-run evidence remain pending | Pending matched captures and negative control |
+| S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, satellite, and CCTV lifecycle owners | Snapshot/monitor and local lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable load cleanup paths | Existing lifecycle tests pass; no accepted post-fix retention reproduction or 60-minute soak | Pending resource plateau |
 | S50 geometry coalescing | Partial: CCTV queue cursor plus existing geometry reuse | Queue tests pass; complete revision/coalescing and late-job acceptance remain pending | Pending appearance and build-count comparisons |
@@ -27,7 +27,7 @@ the earlier release requirements and historical results.
 | S57 map-resource lifetime | Pending | Pending slice-specific validation | Pending |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
-| S60 final candidate | Pending | Latest CI is pending; full rendered soak skipped | Pending all required hardware environments |
+| S60 final candidate | Pending | Corrected fixture-worker preflights pass at `04b49d1`; full rendered soak is running for that revision | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
@@ -73,9 +73,17 @@ shared history to manufacture a per-slice delivery record.
 - **S47:** [the harness](../scripts/capture-scene-performance.mjs) defaults to
   five runs/30-second warmup/60-second measurement and rejects missing snapshots.
   Runtime captures now bind the reported app commit to `__GEV_APP_COMMIT__`, reject
-  an explicit wrong commit, and use an absolute elapsed-time camera route. Complete
-  before/after population and settings guards plus slider/share/workspace/profile
-  density journeys before generating accepted baseline comparisons.
+  a wrong commit (including the default expected local revision), and use an
+  absolute elapsed-time route with a fixed endpoint even after slow frames.
+  Before/after guards reject changed populations, renderer, dimensions, visual
+  settings or interrupted foreground state; repeat runs must match within each
+  scenario. Dense fixtures require 2,500 aircraft when selected by the mixed
+  workload, 4,362 datacenters and 716 dams. Each sample receives its declared
+  warmup. Opt-in Auto may change density, but not other settings. These guards
+  have unit coverage; real-browser validation and slider/share/workspace/profile
+  density journeys remain outstanding. The legacy `motionDistancePx` report key
+  is retained for compatibility; new `motionDistanceM` correctly labels Cesium's
+  world-distance units.
 - **S48:** [the monitor](../src/performance/performanceSnapshot.js) samples
   completed-frame intervals and reuses existing overlay diagnostics. It now
   accepts a bounded per-owner count map for listeners, timers, pending jobs,
@@ -164,6 +172,10 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   external request must be observed and blocked. DNS failure alone cannot pass.
   This correction and the full soak still need CI validation; no engine or VM
   change is involved.
+- [The `04b49d1` soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37942979707/job/113862502404)
+  passed both worker network interception and cold/reused/error/recovery geometry
+  preflights and began mixed-use cycles. A running job is not a retention pass;
+  its final checkpoints and renderer must still be evaluated.
 - Startup diagnostics in [the Windows `3cf6f58` recovery job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37942077509/job/113859197493)
   identify WebGL initialization failure on the hosted runner. Recovery CI now
   explicitly selects SwiftShader in its disposable fixture browser and asserts

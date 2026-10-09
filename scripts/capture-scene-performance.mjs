@@ -5,6 +5,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import puppeteer from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
+import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -25,6 +26,12 @@ const detectionMode = String(option('--detection-mode', 'DENSE')).toUpperCase();
 const mixedLayers = args.includes('--mixed-layers');
 const effectiveFixtureAircraftCount =
   fixtureAircraftCount || (mixedLayers ? 2500 : 0);
+const expectedDensityPct = Number(
+  option(
+    '--expected-density',
+    effectiveFixtureAircraftCount && qualityMode === 'manual' ? '75' : 'NaN',
+  ),
+);
 const startupRuns = Math.max(
   1,
   Math.min(5, Number(option('--startup-runs', String(runs))) || runs),
@@ -92,6 +99,13 @@ if (!['manual', 'auto', 'quality', 'performance'].includes(qualityMode))
   );
 if (!['SPARSE', 'BALANCED', 'DENSE'].includes(detectionMode))
   throw new Error('--detection-mode must be SPARSE, BALANCED or DENSE');
+if (
+  args.includes('--expected-density') &&
+  (!Number.isFinite(expectedDensityPct) ||
+    expectedDensityPct < 0 ||
+    expectedDensityPct > 100)
+)
+  throw new Error('--expected-density must be a number from 0 to 100');
 
 const browser = await puppeteer.launch({
   headless: args.includes('--headless') ? 'new' : false,
@@ -377,13 +391,6 @@ try {
       transform: camera.transform.clone(),
     };
   });
-  if (warmupMs) {
-    await page.evaluate(() =>
-      window.__godsEyeView.viewer.scene.requestRender(),
-    );
-    await new Promise((resolve) => setTimeout(resolve, warmupMs));
-  }
-
   const environment = await page.evaluate(() => {
     const viewer = window.__godsEyeView.viewer;
     const canvas = viewer.scene.canvas;
@@ -429,9 +436,9 @@ try {
         window.__godsEyeView?.getPerformanceEnvironment?.()?.appCommit || null,
     };
   });
-  if (appCommitOverride && environment.appCommit !== appCommitOverride) {
+  if (environment.appCommit !== source.appCommit) {
     throw new Error(
-      `Performance capture used the wrong application commit: ${JSON.stringify({ expected: appCommitOverride, actual: environment.appCommit })}`,
+      `Performance capture used the wrong application commit: ${JSON.stringify({ expected: source.appCommit, actual: environment.appCommit })}`,
     );
   }
   environment.startup = {
@@ -487,10 +494,14 @@ try {
         },
         { scenarioName: scenario, hasFixture: Boolean(fixture) },
       );
+      // Each workload/run receives the declared warmup, including tracking.
+      if (warmupMs)
+        await new Promise((resolve) => setTimeout(resolve, warmupMs));
       const sample = await page.evaluate(
         async ({ durationMs, scenarioName, delay }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
+          const style = window.__godsEyeView.styleManager;
           const readSettings = () => ({
             qualityMode:
               window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
@@ -501,7 +512,36 @@ try {
             detectionMode:
               window.__godsEyeView?.styleManager?.services?.getDetectionMode?.() ||
               null,
+            resolutionScale: viewer.resolutionScale,
+            antialias:
+              scene.context?._gl?.getContextAttributes()?.antialias ?? null,
+            msaaSamples: scene.msaaSamples ?? null,
+            fxaa: scene.postProcessStages.fxaa.enabled,
+            bloom: style.bloomEnabled,
+            bloomIntensity: style.bloomIntensity,
+            sharpen: style.sharpenEnabled,
+            sharpenIntensity: style.sharpenIntensity,
+            style: style.shareLinkManager?.getCurrentView?.()?.style ?? null,
+            map: style.shareLinkManager?.getCurrentView?.()?.map ?? null,
+            visualState: style.getVisualState?.() || null,
           });
+          const readConditions = () => ({
+            settings: readSettings(),
+            environment: window.__godsEyeView.getPerformanceEnvironment(),
+            focused: document.hasFocus(),
+            visible: !document.hidden,
+          });
+          const conditionsBefore = readConditions();
+          let foregroundThroughout =
+            conditionsBefore.focused && conditionsBefore.visible;
+          const onBackground = () => {
+            foregroundThroughout = false;
+          };
+          const onVisibility = () => {
+            if (document.hidden) onBackground();
+          };
+          window.addEventListener('blur', onBackground);
+          document.addEventListener('visibilitychange', onVisibility);
           const settingsBefore = readSettings();
           const intervals = [];
           const longTasks = [];
@@ -529,23 +569,14 @@ try {
           let motionDistance = 0;
           let delayTimer = null;
           let motionFinished = Promise.resolve();
-          if (scenarioName === 'scripted-motion') {
-            // Rebuild the pose from one elapsed-time sample on every frame.
-            // A timer-step route accumulates missed callbacks and makes a slow
-            // machine travel a different distance from a fast one.
-            const home = window.__gevPerformanceHome;
-            motionStartedAt = performance.now();
-            motionFinished = new Promise((resolve) => {
-              const move = () => {
-                if (!active) {
-                  resolve();
-                  return;
-                }
-                const elapsed = Math.min(
-                  durationMs,
-                  Math.max(0, performance.now() - motionStartedAt),
-                );
-                const distance = (elapsed * 16) / 50;
+          let finishMotion = () => {};
+          try {
+            if (scenarioName === 'scripted-motion') {
+              // Rebuild the pose from one elapsed-time sample on every frame.
+              // A timer-step route accumulates missed callbacks and makes a slow
+              // machine travel a different distance from a fast one.
+              const home = window.__gevPerformanceHome;
+              const applyDistance = (distance) => {
                 viewer.camera.setView({
                   destination: home.position,
                   orientation: { direction: home.direction, up: home.up },
@@ -553,127 +584,161 @@ try {
                 });
                 viewer.camera.moveRight(distance);
                 motionDistance = distance;
-                if (elapsed >= durationMs) {
-                  resolve();
-                  return;
-                }
-                requestAnimationFrame(move);
               };
-              move();
-            });
-          }
-          if (delay > 0) {
-            delayTimer = setInterval(() => {
-              const start = performance.now();
-              while (performance.now() - start < delay) {}
-            }, 1000);
-          }
-          const startedAt = performance.now();
-          await new Promise((resolve) => setTimeout(resolve, durationMs));
-          active = false;
-          await motionFinished;
-          clearInterval(delayTimer);
-          await new Promise((resolve) => requestAnimationFrame(resolve));
-          const renderCount = intervals.length;
-          const sorted = [...intervals].sort((a, b) => a - b);
-          const pick = (p) =>
-            sorted.length
-              ? sorted[
-                  Math.min(sorted.length - 1, Math.ceil(sorted.length * p) - 1)
-                ]
-              : null;
-          const memory = performance.memory
-            ? { usedJsHeapBytes: performance.memory.usedJSHeapSize }
-            : {
-                usedJsHeapBytes: null,
-                reason: 'performance.memory is unavailable in this browser',
-              };
-          const counts = (
-            window.__godsEyeView.dataManager?.getAll?.() || []
-          ).map((layer) => ({
-            id: layer.id,
-            enabled: Boolean(layer.enabled),
-            count: Number.isFinite(layer.stats?.count)
-              ? layer.stats.count
-              : null,
-          }));
-          const detectionDiagnostics =
-            window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
-          const settingsAfter = readSettings();
-          const performanceSnapshot =
-            window.__godsEyeView?.getPerformanceSnapshot?.({
-              scene: { workload: scenarioName },
-            }) || null;
-          observer
-            ?.takeRecords?.()
-            .forEach((entry) => longTasks.push(entry.duration));
-          observer?.disconnect();
-          scene.postRender.removeEventListener(onRender);
-          return {
-            durationMs: performance.now() - startedAt,
-            frameCount: renderCount,
-            frameIntervalMs: {
-              p50: pick(0.5),
-              p95: pick(0.95),
-              max: sorted.at(-1) ?? null,
-              samples: sorted.length,
-              reason: sorted.length
-                ? null
-                : 'no scene postRender samples in this window',
-            },
-            longTasks: {
-              count: longTasks.length,
-              maxMs: longTasks.length ? Math.max(...longTasks) : null,
-            },
-            memory,
-            layers: counts,
-            totalObjects: counts.reduce(
-              (total, layer) => total + (layer.count || 0),
-              0,
-            ),
-            focused: document.hasFocus(),
-            visible: !document.hidden,
-            trackedAircraftId: viewer.trackedEntity?.gevTrackedId || null,
-            injectedDelayMs: delay || 0,
-            quality: {
-              mode:
-                window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
-                null,
-              densityPct:
-                window.__godsEyeView?.styleManager?.services?.getDetectionTuning?.()
-                  ?.densityPct ?? null,
-              p95FrameMs:
-                window.__godsEyeView?.styleManager?._adaptiveQuality?.policy
-                  ?.lastP95Ms ?? null,
-            },
-            detection: detectionDiagnostics
-              ? {
-                  mode: detectionDiagnostics.profile,
-                  densityPct: detectionDiagnostics.densityPct,
-                  observationCount: detectionDiagnostics.observationCount,
-                  candidateCount: detectionDiagnostics.candidateCount,
-                  selectedCount: detectionDiagnostics.selectedCount,
-                  visibleCount: detectionDiagnostics.visibleCount,
-                  protectedVisibleCount:
-                    detectionDiagnostics.protectedVisibleCount,
-                  labelsByLayer: detectionDiagnostics.labelsByLayer,
-                }
+              finishMotion = () => applyDistance((durationMs * 16) / 50);
+              motionStartedAt = performance.now();
+              motionFinished = new Promise((resolve) => {
+                const move = () => {
+                  if (!active) {
+                    resolve();
+                    return;
+                  }
+                  const elapsed = Math.min(
+                    durationMs,
+                    Math.max(0, performance.now() - motionStartedAt),
+                  );
+                  const distance = (elapsed * 16) / 50;
+                  applyDistance(distance);
+                  if (elapsed >= durationMs) {
+                    resolve();
+                    return;
+                  }
+                  requestAnimationFrame(move);
+                };
+                move();
+              });
+            }
+            if (delay > 0) {
+              delayTimer = setInterval(() => {
+                const start = performance.now();
+                while (performance.now() - start < delay) {}
+              }, 1000);
+            }
+            const startedAt = performance.now();
+            await new Promise((resolve) => setTimeout(resolve, durationMs));
+            active = false;
+            await motionFinished;
+            clearInterval(delayTimer);
+            // Slow frames must still reach the same absolute route endpoint.
+            finishMotion();
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+            const renderCount = intervals.length;
+            const sorted = [...intervals].sort((a, b) => a - b);
+            const pick = (p) =>
+              sorted.length
+                ? sorted[
+                    Math.min(
+                      sorted.length - 1,
+                      Math.ceil(sorted.length * p) - 1,
+                    )
+                  ]
+                : null;
+            const memory = performance.memory
+              ? { usedJsHeapBytes: performance.memory.usedJSHeapSize }
               : {
-                  mode: null,
-                  observationCount: null,
-                  candidateCount: null,
-                  reason: 'detection diagnostics are unavailable',
-                },
-            performanceSnapshot,
-            settings: { before: settingsBefore, after: settingsAfter },
-            cameraPath: {
-              id:
-                scenarioName === 'scripted-motion'
-                  ? 'elapsed-move-right-v1'
-                  : 'parked-v1',
-              motionDistancePx: motionDistance,
-            },
-          };
+                  usedJsHeapBytes: null,
+                  reason: 'performance.memory is unavailable in this browser',
+                };
+            const counts = (
+              window.__godsEyeView.dataManager?.getAll?.() || []
+            ).map((layer) => ({
+              id: layer.id,
+              enabled: Boolean(layer.enabled),
+              count: Number.isFinite(layer.stats?.count)
+                ? layer.stats.count
+                : null,
+            }));
+            const detectionDiagnostics =
+              window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
+            const settingsAfter = readSettings();
+            const conditionsAfter = readConditions();
+            window.removeEventListener('blur', onBackground);
+            document.removeEventListener('visibilitychange', onVisibility);
+            const performanceSnapshot =
+              window.__godsEyeView?.getPerformanceSnapshot?.({
+                scene: { workload: scenarioName },
+              }) || null;
+            observer
+              ?.takeRecords?.()
+              .forEach((entry) => longTasks.push(entry.duration));
+            observer?.disconnect();
+            scene.postRender.removeEventListener(onRender);
+            return {
+              durationMs: performance.now() - startedAt,
+              frameCount: renderCount,
+              frameIntervalMs: {
+                p50: pick(0.5),
+                p95: pick(0.95),
+                max: sorted.at(-1) ?? null,
+                samples: sorted.length,
+                reason: sorted.length
+                  ? null
+                  : 'no scene postRender samples in this window',
+              },
+              longTasks: {
+                count: longTasks.length,
+                maxMs: longTasks.length ? Math.max(...longTasks) : null,
+              },
+              memory,
+              layers: counts,
+              totalObjects: counts.reduce(
+                (total, layer) => total + (layer.count || 0),
+                0,
+              ),
+              focused: document.hasFocus(),
+              visible: !document.hidden,
+              trackedAircraftId: viewer.trackedEntity?.gevTrackedId || null,
+              injectedDelayMs: delay || 0,
+              quality: {
+                mode:
+                  window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
+                  null,
+                densityPct:
+                  window.__godsEyeView?.styleManager?.services?.getDetectionTuning?.()
+                    ?.densityPct ?? null,
+                p95FrameMs:
+                  window.__godsEyeView?.styleManager?._adaptiveQuality?.policy
+                    ?.lastP95Ms ?? null,
+              },
+              detection: detectionDiagnostics
+                ? {
+                    mode: detectionDiagnostics.profile,
+                    densityPct: detectionDiagnostics.densityPct,
+                    observationCount: detectionDiagnostics.observationCount,
+                    candidateCount: detectionDiagnostics.candidateCount,
+                    selectedCount: detectionDiagnostics.selectedCount,
+                    visibleCount: detectionDiagnostics.visibleCount,
+                    protectedVisibleCount:
+                      detectionDiagnostics.protectedVisibleCount,
+                    labelsByLayer: detectionDiagnostics.labelsByLayer,
+                  }
+                : {
+                    mode: null,
+                    observationCount: null,
+                    candidateCount: null,
+                    reason: 'detection diagnostics are unavailable',
+                  },
+              performanceSnapshot,
+              conditions: { before: conditionsBefore, after: conditionsAfter },
+              foregroundThroughout,
+              settings: { before: settingsBefore, after: settingsAfter },
+              cameraPath: {
+                id:
+                  scenarioName === 'scripted-motion'
+                    ? 'elapsed-move-right-v1'
+                    : 'parked-v1',
+                motionDistancePx: motionDistance,
+                motionDistanceM: motionDistance,
+              },
+            };
+          } finally {
+            active = false;
+            clearInterval(delayTimer);
+            observer?.disconnect();
+            scene.postRender.removeEventListener(onRender);
+            window.removeEventListener('blur', onBackground);
+            document.removeEventListener('visibilitychange', onVisibility);
+          }
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
       );
@@ -733,12 +798,22 @@ try {
     (sample) => sample.cameraPath,
   );
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
+  const integrity = assertCaptureIntegrity(captures, {
+    expectedCommit: source.appCommit,
+    qualityMode,
+    expectedDensityPct,
+    expectedCounts: {
+      ...(fixture ? { flights: effectiveFixtureAircraftCount } : {}),
+      ...(mixedLayers ? { 'local-datacenters': 4362, 'local-dams': 716 } : {}),
+    },
+  });
   const report = {
     schema: 'gev-performance-capture/v1',
     capturedAt: new Date().toISOString(),
     source,
     url: new URL(url).origin,
     environment,
+    integrity,
     workload: {
       warmupMs,
       durationPerSampleMs: seconds * 1000,
@@ -748,6 +823,9 @@ try {
       fixture,
       mixedLayers: mixedLayerFixture,
       qualityMode,
+      expectedDensityPct: Number.isFinite(expectedDensityPct)
+        ? expectedDensityPct
+        : null,
       cameraPath:
         'elapsed-move-right-v1 for scripted motion; parked-v1 for idle/tracking',
       detectionMode: fixture ? detectionMode : null,

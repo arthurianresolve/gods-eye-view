@@ -9,6 +9,7 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
 ]);
 const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/motionBudget.test.mjs',
+  'scripts/performance/captureIntegrity.test.mjs',
   'scripts/qa-candidate.test.mjs',
   'scripts/qa-install-recovery.test.mjs',
   'scripts/qa-mixed-use-soak.test.mjs',
