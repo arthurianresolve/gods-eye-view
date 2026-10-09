@@ -26,6 +26,8 @@ const frameProbe = document.querySelector('#frame-probe');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runOptions = new URLSearchParams(window.location.search);
 const requestedWorkload = runOptions.get('workload');
+const requestedViewer =
+  runOptions.get('viewer') === 'cesium' ? 'cesium' : 'application-wrapper';
 if (
   ['paired', 'synchronous', 'cooperative'].includes(requestedWorkload)
 )
@@ -225,7 +227,8 @@ run.addEventListener('click', async () => {
       : document.querySelector('#workload').value;
   const diagnosticRun =
     runOptions.get('diag') === '1' ||
-    ['initial-load', 'steady-population'].includes(workload);
+    ['initial-load', 'steady-population'].includes(workload) ||
+    requestedViewer === 'cesium';
   frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
@@ -235,6 +238,7 @@ run.addEventListener('click', async () => {
     capturedAt: new Date().toISOString(),
     fixture: 'synthetic-5000-import-points/v1',
     workload,
+    viewerConstruction: requestedViewer,
     diagnosticsEnabled: diagnosticRun,
     ...(diagnosticRun
       ? {
@@ -248,8 +252,8 @@ run.addEventListener('click', async () => {
     observeCommands: document.querySelector('#observe-commands').checked,
     commandObservationScope:
       'Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison',
-    scope:
-      'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
+      scope:
+        'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
     checks: [],
     samples: [],
     renderErrors: [],
@@ -266,11 +270,40 @@ run.addEventListener('click', async () => {
       /^[a-f0-9]{40}$/.test(report.applicationCommit || ''),
       'Exact source revision required.',
     );
-    viewer = createApplicationViewer({
-      container: document.querySelector('#viewer'),
+    const viewerOptions = {
+      timeline: false,
+      animation: false,
+      baseLayerPicker: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      fullscreenButton: false,
+      vrButton: false,
+      selectionIndicator: false,
+      infoBox: false,
+      baseLayer: false,
       creditContainer: document.querySelector('#credits'),
-      preserveDrawingBuffer,
-    });
+      msaaSamples: 4,
+      contextOptions: { webgl: { preserveDrawingBuffer } },
+    };
+    if (requestedViewer === 'cesium') {
+      report.scope =
+        'diagnostic-only direct Cesium.Viewer comparison with application options; omits application atmosphere workaround and resolution guard; no performance acceptance';
+      report.diagnosticClassification =
+        'opt-in viewer-construction isolation only; not performance acceptance';
+      viewer = new Cesium.Viewer(
+        document.querySelector('#viewer'),
+        viewerOptions,
+      );
+      viewer.targetFrameRate = 60;
+    } else {
+      viewer = createApplicationViewer({
+        container: document.querySelector('#viewer'),
+        creditContainer: document.querySelector('#credits'),
+        preserveDrawingBuffer,
+      });
+    }
     viewer.scene.renderError.addEventListener((_scene, error) => {
       report.renderErrors.push(String(error?.message || error).slice(0, 400));
       if (report.renderErrors.length > 4) report.renderErrors.shift();
