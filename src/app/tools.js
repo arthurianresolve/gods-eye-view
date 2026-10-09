@@ -508,6 +508,8 @@ export async function createApplicationTools({
   const performanceMonitor = createPerformanceMonitor({
     viewer,
     dataManager,
+    appCommit:
+      typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
     readDiagnostics: getRenderGovernorDiagnostics,
     readTimings: () => {
       const overlay = getWorldOverlayDiagnostics?.() || {};
@@ -560,7 +562,12 @@ export async function createApplicationTools({
     surfaceServices: operations.surface,
     requestRender: governorRequestRender,
     getPerformanceEnvironment: () =>
-      readPerformanceEnvironment({ viewer, dataManager }),
+      readPerformanceEnvironment({
+        viewer,
+        dataManager,
+        appCommit:
+          typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
+      }),
     getPerformanceSnapshot: (extra) => performanceMonitor.getSnapshot(extra),
   };
   const debug = window.__godsEyeView;

@@ -429,6 +429,11 @@ try {
         window.__godsEyeView?.getPerformanceEnvironment?.()?.appCommit || null,
     };
   });
+  if (appCommitOverride && environment.appCommit !== appCommitOverride) {
+    throw new Error(
+      `Performance capture used the wrong application commit: ${JSON.stringify({ expected: appCommitOverride, actual: environment.appCommit })}`,
+    );
+  }
   environment.startup = {
     runs: startupSamples,
     runCount: startupSamples.length,
@@ -520,24 +525,42 @@ try {
             }
           }
           let active = true;
-          let moveTimer = null;
-          let motionAnchorMs = null;
+          let motionStartedAt = null;
           let motionDistance = 0;
           let delayTimer = null;
+          let motionFinished = Promise.resolve();
           if (scenarioName === 'scripted-motion') {
-            motionAnchorMs = performance.now();
-            let previousStep = 0;
-            moveTimer = setInterval(() => {
-              if (!active) return;
-              const step = (performance.now() - motionAnchorMs) / 50;
-              const delta = step - previousStep;
-              previousStep = step;
-              const distance = 16 * delta;
-              if (distance) {
+            // Rebuild the pose from one elapsed-time sample on every frame.
+            // A timer-step route accumulates missed callbacks and makes a slow
+            // machine travel a different distance from a fast one.
+            const home = window.__gevPerformanceHome;
+            motionStartedAt = performance.now();
+            motionFinished = new Promise((resolve) => {
+              const move = () => {
+                if (!active) {
+                  resolve();
+                  return;
+                }
+                const elapsed = Math.min(
+                  durationMs,
+                  Math.max(0, performance.now() - motionStartedAt),
+                );
+                const distance = (elapsed * 16) / 50;
+                viewer.camera.setView({
+                  destination: home.position,
+                  orientation: { direction: home.direction, up: home.up },
+                  endTransform: home.transform,
+                });
                 viewer.camera.moveRight(distance);
-                motionDistance += distance;
-              }
-            }, 16);
+                motionDistance = distance;
+                if (elapsed >= durationMs) {
+                  resolve();
+                  return;
+                }
+                requestAnimationFrame(move);
+              };
+              move();
+            });
           }
           if (delay > 0) {
             delayTimer = setInterval(() => {
@@ -548,7 +571,7 @@ try {
           const startedAt = performance.now();
           await new Promise((resolve) => setTimeout(resolve, durationMs));
           active = false;
-          clearInterval(moveTimer);
+          await motionFinished;
           clearInterval(delayTimer);
           await new Promise((resolve) => requestAnimationFrame(resolve));
           const renderCount = intervals.length;

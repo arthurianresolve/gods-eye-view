@@ -53,6 +53,7 @@ export function createBrowserViteConfig({
   googleApiKey,
   cesiumToken,
   mapillaryToken,
+  appCommit,
   host = 'localhost',
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
@@ -111,6 +112,9 @@ export function createBrowserViteConfig({
       'import.meta.env.MAPILLARY_CLIENT_TOKEN': JSON.stringify(
         mapillaryToken ?? '',
       ),
+      // A commit is diagnostic metadata only; never use it for authorization.
+      // The harness can require this value to match the revision under test.
+      __GEV_APP_COMMIT__: JSON.stringify(appCommit || null),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };
