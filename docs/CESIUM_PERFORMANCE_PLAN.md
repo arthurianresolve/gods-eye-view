@@ -75,6 +75,13 @@ a performance shortcut. Auto quality remains opt-in.
   rules out capture readback as a necessary trigger. A separate continuous-render
   diagnostic can now omit governor installation, while the default remains
   render-on-demand. Neither diagnostic changes production viewer behavior.
+- The [continuous-render control at `93261f0`](performance-evidence/import-batches-93261f0-continuous-failed.json)
+  fails its first measured capture with the governor absent and
+  `requestRenderMode: false`: no animation callbacks or scene updates in
+  400.9 ms, with timer gaps at most 9.3 ms. Readback and the governor are therefore
+  not necessary triggers. Browser/compositor evidence remains needed before
+  attributing this to an engine or driver defect. Production quality, engine
+  version, capture deadline and render scheduling remain unchanged.
 - The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
   at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
   validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window
