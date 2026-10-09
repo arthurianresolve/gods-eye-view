@@ -151,6 +151,14 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   A task unsettled for ten seconds fails this small-fixture diagnostic; it does
   not impose a production worker timeout. The standalone Chrome probe observed
   four submissions/four replies, the expected error, and zero pending jobs.
+- [The intercepted CI probe at `885cb48`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37941399027/job/113856408602)
+  fails on `geometry-cold` before measurement. Its failure JSON was preserved.
+  This rules out treating earlier operation-only soaks as worker-lifecycle
+  acceptance. The fixture interceptor now settles each target's raw Fetch event
+  directly, including worker module requests, instead of waiting for Puppeteer's
+  Fetch/Network event pairing. Unconfigured provider requests remain blocked.
+  This harness correction needs the same worker preflight and full soak rerun;
+  it is not an engine or VM change.
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser

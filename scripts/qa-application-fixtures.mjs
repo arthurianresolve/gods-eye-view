@@ -1,6 +1,7 @@
 /** Shared hermetic full-application journeys. No provider traffic leaves Chrome. */
 import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer';
+import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 
 const fixtureDiagnostics = new WeakMap();
 
@@ -35,38 +36,27 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
   page.setDefaultTimeout(30000);
   page.setDefaultNavigationTimeout(90000);
   await page.setViewport({ width: 1440, height: 1000 });
-  await page.setRequestInterception(true);
-  page.on('request', async (request) => {
-    try {
-      const url = new URL(request.url());
-      // A fixture may deliberately answer a public provider URL (for example,
-      // with a deterministic 404) so Cesium takes its normal terminal error
-      // path instead of retaining work for an aborted network request.
-      const response = await respond?.(url, request);
-      if (response) await request.respond(response);
-      else if (
-        ['http:', 'https:'].includes(url.protocol) &&
-        url.origin !== new URL(base).origin
-      )
-        await request.abort();
-      else if (url.pathname.startsWith('/api/'))
-        await request.respond({
-          status: 503,
-          contentType: 'application/json',
-          body: '{"error":"fixture-offline"}',
-        });
-      else await request.continue();
-    } catch (error) {
-      // Navigation/disposal may cancel an intercepted request.
-      if (
-        !page.isClosed() &&
-        !/Target closed|Session closed|Invalid InterceptionId|Invalid state/.test(
-          error.message,
-        )
-      )
-        errors.push(error.message);
-    }
+  const onError = (error) => {
+    if (
+      !page.isClosed() &&
+      !/Target closed|Session closed|Invalid session/i.test(error.message)
+    )
+      errors.push(error.message);
+  };
+  // The high-level interceptor can leave module-worker requests paused while
+  // waiting for a Network event that never arrives. Each target's Fetch event
+  // already contains everything needed to settle the request exactly once.
+  page.on('workercreated', (worker) => {
+    void interceptFixtureSession(worker.client, base, respond, onError).catch(
+      onError,
+    );
   });
+  await interceptFixtureSession(
+    await page.createCDPSession(),
+    base,
+    respond,
+    onError,
+  );
   return { page, errors };
 }
 

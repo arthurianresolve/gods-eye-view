@@ -5,6 +5,10 @@ import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import { bootFixturePage } from './qa-application-fixtures.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
 import {
+  fixtureRequestCommand,
+  interceptFixtureSession,
+} from './performance/fixtureInterception.mjs';
+import {
   evaluateSoakStability,
   FULL_SOAK_MS,
 } from './performance/soakStability.mjs';
@@ -95,6 +99,68 @@ const stableReport = () => ({
     elapsedMs: i * 300000,
     metrics: metrics(),
   })),
+});
+
+test('fixture interception settles worker imports and blocks unconfigured provider traffic', async () => {
+  const event = (url) => ({
+    requestId: 'worker-1',
+    networkId: 'no-network-event',
+    request: { url, method: 'GET' },
+  });
+  const base = 'http://localhost:4174';
+  assert.deepEqual(
+    await fixtureRequestCommand(
+      event(base + '/cesium/Workers/createBoxGeometry.js'),
+      base,
+    ),
+    ['Fetch.continueRequest', { requestId: 'worker-1' }],
+  );
+  assert.equal(
+    (await fixtureRequestCommand(event('https://provider.test/live'), base))[0],
+    'Fetch.failRequest',
+  );
+  const [method, params] = await fixtureRequestCommand(
+    event(base + '/api/live'),
+    base,
+  );
+  assert.equal(method, 'Fetch.fulfillRequest');
+  assert.equal(params.responseCode, 503);
+  const bytes = Buffer.from([0, 255, 32]);
+  const [, image] = await fixtureRequestCommand(
+    event(base + '/api/image'),
+    base,
+    () => ({ contentType: 'image/png', body: bytes }),
+  );
+  assert.deepEqual(Buffer.from(image.body, 'base64'), bytes);
+});
+
+test('Fetch events settle without a Network event, and throwing fixtures abort the request', async () => {
+  const callbacks = {},
+    sent = [],
+    errors = [];
+  const client = {
+    on: (name, fn) => {
+      callbacks[name] = fn;
+    },
+    send: async (...args) => {
+      sent.push(args);
+    },
+  };
+  await interceptFixtureSession(
+    client,
+    'http://localhost',
+    () => {
+      throw new Error('broken fixture');
+    },
+    (error) => errors.push(error.message),
+  );
+  await callbacks['Fetch.requestPaused']({
+    requestId: '1',
+    networkId: 'unpaired',
+    request: { url: 'http://localhost/api/test' },
+  });
+  assert.equal(sent[1][0], 'Fetch.failRequest');
+  assert.deepEqual(errors, ['broken fixture']);
 });
 
 test('startup failures include application readiness and renderer error diagnostics', async () => {

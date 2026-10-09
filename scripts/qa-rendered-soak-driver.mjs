@@ -136,7 +136,14 @@ export async function createRenderedSoakDriver(
     const workerPreflight = await page.evaluate(async () => {
       const { runCesiumWorkerProbe } =
         await import('/scripts/fixtures/cesium-worker-probe.js');
-      return runCesiumWorkerProbe();
+      try {
+        return await runCesiumWorkerProbe();
+      } catch (error) {
+        error.message +=
+          '; worker diagnostics: ' +
+          JSON.stringify(window.__gevSoakWorkers?.snapshot());
+        throw error;
+      }
     });
     console.log('SOAK worker completion preflight passed');
     // Seed only synthetic observations through the real application recorder.
