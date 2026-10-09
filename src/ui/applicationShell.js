@@ -566,6 +566,9 @@ export class StyleManager extends ShellFacade {
               userDensityOverride: true,
             });
           else this._adaptiveQuality?.rememberManualDensity();
+          this._adaptiveQuality?.syncExternalDensity?.(
+            this.services.getDetectionTuning?.()?.densityPct,
+          );
           return result;
         },
         _setDetectionAllocation: (...args) =>

@@ -277,7 +277,10 @@ export function createApplicationViewer({ container, creditContainer }) {
     baseLayer: false,
     creditContainer,
     msaaSamples: 4,
-    contextOptions: { webgl: { preserveDrawingBuffer: true } },
+    // Captures copy pixels from the completed postRender frame. Keeping the
+    // browser's drawing buffer alive between frames otherwise adds a sizeable
+    // GPU allocation on every viewer.
+    contextOptions: { webgl: { preserveDrawingBuffer: false } },
   });
   try {
     viewer.targetFrameRate = 60;

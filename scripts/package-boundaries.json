@@ -1616,6 +1616,7 @@
       "src/app/stateChannel.js",
       "src/app/surfaceServices.js",
       "src/app/tools.js",
+      "src/performance/performanceSnapshot.js",
       "src/app/viewer.js",
       "src/app/atmosphereCompat.js",
       "src/bloom.js",

@@ -85,6 +85,10 @@ export function createState({ services }) {
 
   layerState._geoQueue = [];
 
+  // Cursor-based draining avoids shifting the entire pending queue on every
+  // bounded batch. The cursor is reset whenever a new queue is assembled.
+  layerState._geoQueueCursor = { index: 0 };
+
   layerState._geoQueueTimer = 0;
 
   layerState._geoLoading = false;

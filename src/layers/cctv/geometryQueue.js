@@ -14,6 +14,8 @@ export function createGeometryQueue({
   parts,
   source,
 }) {
+  const queueCursor = () => (layerState._geoQueueCursor ||= { index: 0 });
+
   /**
    * Stops the staggered geometry-load queue and optionally clears progress
    * counters (kept when pausing mid-flight is not needed — we always clear).
@@ -26,6 +28,7 @@ export function createGeometryQueue({
       layerState._geoQueueTimer = 0;
     }
     layerState._geoQueue = [];
+    queueCursor().index = 0;
     layerState._geoProgressNotifier = null;
     if (clearProgress) {
       layerState._geoLoading = false;
@@ -97,6 +100,7 @@ export function createGeometryQueue({
   function processCctvGeometryQueueBatch({
     queue,
     batchSize,
+    cursor = null,
     visit,
     progress,
     complete,
@@ -105,11 +109,32 @@ export function createGeometryQueue({
     const take = Number.isFinite(batchSize)
       ? Math.max(1, Math.floor(batchSize))
       : 1;
-    const batch = safeQueue.splice(0, take);
+    let batch;
+    let hasMore;
+    if (cursor && typeof cursor === 'object') {
+      const rawIndex = Number.isFinite(cursor.index) ? cursor.index : 0;
+      const start = Math.max(
+        0,
+        Math.min(safeQueue.length, Math.floor(rawIndex)),
+      );
+      const end = Math.min(safeQueue.length, start + take);
+      batch = safeQueue.slice(start, end);
+      cursor.index = end;
+      hasMore = end < safeQueue.length;
+    } else {
+      // Keep the small standalone helper backwards compatible for callers
+      // that pass a plain test queue without a cursor.
+      batch = safeQueue.splice(0, take);
+      hasMore = safeQueue.length > 0;
+    }
     for (const record of batch) visit?.(record);
-    if (safeQueue.length) {
+    if (hasMore) {
       progress?.();
       return true;
+    }
+    if (cursor && typeof cursor === 'object') {
+      safeQueue.length = 0;
+      cursor.index = 0;
     }
     complete?.();
     return false;
@@ -155,6 +180,7 @@ export function createGeometryQueue({
 
   function processCctvGeometryDrainBatch({
     queue,
+    cursor = null,
     readOwnership,
     visit,
     progress,
@@ -163,6 +189,7 @@ export function createGeometryQueue({
     const pacing = cctvGeometryDrainPacing(readOwnership?.() || {});
     const hasMore = processCctvGeometryQueueBatch({
       queue,
+      cursor,
       batchSize: pacing.batchSize,
       visit,
       progress,
@@ -178,11 +205,30 @@ export function createGeometryQueue({
    * @returns {boolean} Whether the queue order changed.
    */
 
-  function prioritizeActiveCctvGeometryRecord(queue, activeRecord) {
+  function prioritizeActiveCctvGeometryRecord(queue, activeRecord, cursor) {
+    return prioritizeActiveCctvGeometryRecordWithCursor(
+      queue,
+      activeRecord,
+      cursor,
+    );
+  }
+
+  function prioritizeActiveCctvGeometryRecordWithCursor(
+    queue,
+    activeRecord,
+    cursor,
+  ) {
     if (!Array.isArray(queue) || !activeRecord) return false;
     const index = queue.indexOf(activeRecord);
     if (index <= 0) return false;
-    queue.splice(index, 1);
+    if (cursor && index < cursor.index) return false;
+    if (cursor && cursor.index > 0) {
+      queue.splice(0, cursor.index);
+      cursor.index = 0;
+    }
+    const rebasedIndex = queue.indexOf(activeRecord);
+    if (rebasedIndex <= 0) return false;
+    queue.splice(rebasedIndex, 1);
     queue.unshift(activeRecord);
     return true;
   }
@@ -205,9 +251,11 @@ export function createGeometryQueue({
     prioritizeActiveCctvGeometryRecord(
       layerState._geoQueue,
       parts.selection.getActiveRecord(),
+      queueCursor(),
     );
     const batchResult = processCctvGeometryDrainBatch({
       queue: layerState._geoQueue,
+      cursor: queueCursor(),
       readOwnership: () => ({
         trackedEntity: layerState._viewer.trackedEntity,
         cockpitActive:
@@ -317,6 +365,7 @@ export function createGeometryQueue({
       .sort((a, b) => a.distKm - b.distKm)
       .map((entry) => entry.record);
     layerState._geoQueue = active ? [active, ...pending] : pending;
+    queueCursor().index = 0;
     layerState._geoLoadTotal = layerState._geoQueue.length;
     layerState._geoLoadDone = 0;
     layerState._geoLoading = true;

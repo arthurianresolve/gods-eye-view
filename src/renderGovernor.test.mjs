@@ -7,6 +7,7 @@ import {
   governorRequestRender,
   getRenderGovernorDiagnostics,
   _resetRenderGovernorForTest,
+  scheduleRenderUpdate,
 } from './renderGovernor.js';
 
 function makeViewer() {
@@ -97,4 +98,18 @@ test('holds registered before install apply at install time', () => {
   assert.equal(scene.requestRenderMode, false, 'pre-install hold keeps continuous mode');
   releaseContinuousRender('flights');
   assert.equal(scene.requestRenderMode, true);
+});
+
+test('scheduled updates coalesce by owner and dispose cleanly', async () => {
+  const { viewer, calls } = makeViewer();
+  installRenderGovernor(viewer);
+  let ran = 0;
+  scheduleRenderUpdate('layer', () => ran++);
+  scheduleRenderUpdate('layer', () => ran += 10);
+  const dispose = scheduleRenderUpdate('cancelled', () => ran += 100);
+  dispose();
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.equal(ran, 10);
+  assert.equal(getRenderGovernorDiagnostics().scheduledUpdates.length, 0);
+  assert.ok(calls.requestRender >= 2);
 });

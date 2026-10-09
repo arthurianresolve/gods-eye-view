@@ -24,6 +24,11 @@ import {
   holdContinuousRender,
   releaseContinuousRender,
 } from '../renderGovernor.js';
+import {
+  createPerformanceMonitor,
+  readPerformanceEnvironment,
+} from '../performance/performanceSnapshot.js';
+import { getWorldOverlayDiagnostics } from '../overlays/worldOverlay.js';
 
 /** Attach scene tools, rendering listeners and the application debug handle. */
 export async function createApplicationTools({
@@ -500,6 +505,34 @@ export async function createApplicationTools({
   // loop burning behind a hidden tab. (perf wave 2 fix)
   syncVisibilitySuspension();
 
+  const performanceMonitor = createPerformanceMonitor({
+    viewer,
+    dataManager,
+    readDiagnostics: getRenderGovernorDiagnostics,
+    readTimings: () => {
+      const overlay = getWorldOverlayDiagnostics?.() || {};
+      return {
+        overlayProjectionMs: overlay.projectionMs ?? null,
+        overlayPlacementMs: overlay.solveMs ?? null,
+        overlayPaintMs: overlay.paintMs ?? null,
+      };
+    },
+    readSettings: () => {
+      const view = styleManager.shareLinkManager?.getCurrentView?.() || {};
+      const tuning = styleManager.services?.getDetectionTuning?.() || {};
+      return {
+        qualityMode: styleManager._adaptiveQuality?.getMode?.() || null,
+        densityPct: Number.isFinite(tuning.densityPct)
+          ? tuning.densityPct
+          : null,
+        detectionMode: styleManager.services?.getDetectionMode?.() || null,
+        resolutionScale: view.resolutionScale ?? null,
+        antialias: viewer.scene.context?.antialias ?? null,
+      };
+    },
+  });
+  defer(() => performanceMonitor.destroy());
+
   window.__godsEyeView = {
     viewer,
     styleManager,
@@ -526,6 +559,9 @@ export async function createApplicationTools({
     getRenderGovernorDiagnostics,
     surfaceServices: operations.surface,
     requestRender: governorRequestRender,
+    getPerformanceEnvironment: () =>
+      readPerformanceEnvironment({ viewer, dataManager }),
+    getPerformanceSnapshot: (extra) => performanceMonitor.getSnapshot(extra),
   };
   const debug = window.__godsEyeView;
   defer(() => {

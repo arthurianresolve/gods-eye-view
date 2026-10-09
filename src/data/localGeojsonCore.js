@@ -583,6 +583,16 @@ export function createLocalGeoJsonLayer(
             // Whether the scene has actually accepted `loaded` — the two rollback
             // windows (before vs after the add settles) need different cleanup.
             let addedToScene = false;
+            const disposeLoaded = () => {
+              if (!loaded) return;
+              try {
+                if (addedToScene) viewer?.dataSources?.remove(loaded, true);
+                else loaded.destroy?.();
+              } catch {
+                // A stale load can race viewer teardown; cleanup is best effort.
+              }
+              loaded = null;
+            };
             try {
               let features = _cachedFeatures;
               if (!features) {
@@ -616,7 +626,10 @@ export function createLocalGeoJsonLayer(
                 markerColor: baseColor,
               });
 
-              if (_destroyed) return;
+              if (_destroyed) {
+                disposeLoaded();
+                return;
+              }
               loaded.name = name;
               loaded.show = false;
               // Cesium's DataSourceCollection.add() returns a promise and only
@@ -629,7 +642,7 @@ export function createLocalGeoJsonLayer(
               await viewer.dataSources.add(loaded);
               addedToScene = true;
               if (_destroyed) {
-                viewer.dataSources.remove(loaded, true);
+                disposeLoaded();
                 return;
               }
 
@@ -781,7 +794,14 @@ export function createLocalGeoJsonLayer(
                 } catch {
                   /* already gone */
                 }
+              } else {
+                try {
+                  loaded?.destroy?.();
+                } catch {
+                  /* already gone */
+                }
               }
+              loaded = null;
               if (_destroyed) return;
               removeEntityContextsForLayer(id);
               _count = 0;

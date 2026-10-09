@@ -27,8 +27,8 @@ export async function captureViewportImage() {
   // capture. The caller labels this image "Current"; a stale preserved
   // frame would feed the model old entities as current context. (perf
   // wave 2 fix)
-  const fresh = await renderFreshCesiumFrame(viewer);
-  if (!fresh) return null;
+  const freshCanvas = await captureFreshCesiumFrame(viewer);
+  if (!freshCanvas) return null;
 
   // Clamp BOTH dimensions by a total-pixel budget so tall portrait windows are
   // downscaled too (the old width-only clamp let them through — M13).
@@ -43,7 +43,7 @@ export async function captureViewportImage() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   try {
-    ctx.drawImage(source, 0, 0, width, height);
+    ctx.drawImage(freshCanvas, 0, 0, width, height);
     if (isNearlyBlackFrame(ctx, width, height)) {
       console.warn('[GEV Voice] Skipped black Cesium viewport capture');
       return null;
@@ -132,8 +132,8 @@ export async function capturePointerCrop(screenPx) {
   const viewer = window.__godsEyeView?.viewer;
   const source = viewer?.scene?.canvas;
   if (!source?.width || !source?.height || !screenPx) return null;
-  const fresh = await renderFreshPointerFrame(viewer);
-  if (!fresh) return null;
+  const freshCanvas = await captureFreshCesiumFrame(viewer);
+  if (!freshCanvas) return null;
   const rect = pointerCropRect({
     x: screenPx.x,
     y: screenPx.y,
@@ -150,7 +150,7 @@ export async function capturePointerCrop(screenPx) {
   if (!ctx) return null;
   try {
     ctx.drawImage(
-      source,
+      freshCanvas,
       rect.sx,
       rect.sy,
       rect.sw,
@@ -190,6 +190,57 @@ export async function renderFreshPointerFrame(viewer) {
   if (await renderFreshCesiumFrame(viewer)) return true;
   if (typeof document !== 'undefined' && document.hidden) return false;
   return renderFreshCesiumFrame(viewer);
+}
+
+/**
+ * Render once and copy the completed WebGL frame before the browser may reuse
+ * or clear its drawing buffer. The returned canvas is owned by the caller.
+ */
+export async function captureFreshCesiumFrame(viewer) {
+  const scene = viewer?.scene;
+  const source = scene?.canvas;
+  if (!source?.width || !source?.height) return null;
+  if (typeof document !== 'undefined' && document.hidden) return null;
+  let copy = null;
+  try {
+    const rendered = new Promise((resolve) => {
+      let settled = false;
+      let timeout = null;
+      let remove = () => {};
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        if (timeout !== null) clearTimeout(timeout);
+        remove?.();
+        resolve(value);
+      };
+      const onRender = () => {
+        try {
+          copy = document.createElement('canvas');
+          copy.width = source.width;
+          copy.height = source.height;
+          const context = copy.getContext('2d');
+          if (!context) return finish(false);
+          context.drawImage(source, 0, 0);
+          finish(true);
+        } catch {
+          finish(false);
+        }
+      };
+      const unsubscribe = scene.postRender?.addEventListener?.(onRender);
+      remove =
+        typeof unsubscribe === 'function'
+          ? unsubscribe
+          : () => scene.postRender?.removeEventListener?.(onRender);
+      timeout = setTimeout(() => finish(false), 400);
+    });
+    scene.requestRender?.();
+    if (!(await rendered)) return null;
+    if (typeof document !== 'undefined' && document.hidden) return null;
+    return copy;
+  } catch {
+    return null;
+  }
 }
 
 // Scale (w, h) down so w*h <= maxPixels while preserving aspect ratio. Never

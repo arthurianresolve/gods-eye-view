@@ -377,6 +377,29 @@ test('geometry drain pacing yields to tracked and cockpit camera ownership', () 
   assert.equal(queue[0], active);
 });
 
+test('cursor geometry drains avoid shifting the pending queue between batches', () => {
+  const queue = [1, 2, 3, 4, 5];
+  const cursor = { index: 0 };
+  const visited = [];
+  const drain = () =>
+    processCctvGeometryQueueBatch({
+      queue,
+      cursor,
+      batchSize: 2,
+      visit: (value) => visited.push(value),
+    });
+
+  assert.equal(drain(), true);
+  assert.deepEqual(queue, [1, 2, 3, 4, 5]);
+  assert.equal(cursor.index, 2);
+  assert.equal(drain(), true);
+  assert.equal(cursor.index, 4);
+  assert.equal(drain(), false);
+  assert.deepEqual(visited, [1, 2, 3, 4, 5]);
+  assert.deepEqual(queue, []);
+  assert.equal(cursor.index, 0);
+});
+
 test('geometry drain rechecks pacing when tracking releases between batches', () => {
   let trackedEntity = { id: 'flight-1' };
   const queue = Array.from({ length: 10 }, (_, index) => index + 1);

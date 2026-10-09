@@ -160,3 +160,14 @@ test('hidden tabs suspend Auto samples and reset elapsed frame timing', () => {
   assert.equal(f.controller.policy.samples.length, 1);
   f.controller.destroy();
 });
+
+test('external restoration updates the Manual status without changing mode', () => {
+  const states = [];
+  const f = controllerFixture(75);
+  f.controller.onState = (state) => states.push(state);
+  f.controller.syncExternalDensity(75);
+  assert.equal(f.controller.getMode(), 'manual');
+  assert.equal(f.controller.manualDensity, 75);
+  assert.equal(states.at(-1).densityPct, 75);
+  f.controller.destroy();
+});

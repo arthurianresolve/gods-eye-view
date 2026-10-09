@@ -38,6 +38,24 @@ const _holds = new Set();
 /** Debug trail of the most recent one-shot render requests (idle mode only). */
 const _recentRequests = [];
 const RECENT_REQUEST_CAP = 16;
+const _scheduledUpdates = new Map();
+let _scheduledTimer = null;
+
+function flushScheduledUpdates() {
+  _scheduledTimer = null;
+  if (!_installed || !_viewer?.scene) return;
+  const pending = [..._scheduledUpdates.values()];
+  _scheduledUpdates.clear();
+  for (const update of pending) {
+    if (typeof update.callback !== 'function') continue;
+    try {
+      update.callback();
+    } catch (error) {
+      console.warn('[RenderGovernor] scheduled update failed:', error);
+    }
+  }
+  if (pending.length) governorRequestRender('scheduled-update');
+}
 
 function applyMode() {
   if (!_installed || !_viewer?.scene) return;
@@ -117,6 +135,30 @@ export function governorRequestRender(reason = 'unspecified') {
 }
 
 /**
+ * Register one bounded, coalesced update that wakes the scene once. The
+ * returned disposer removes the update if the owner is destroyed before the
+ * scheduled turn. This is for periodic visual work; continuous animation must
+ * still use holdContinuousRender().
+ */
+export function scheduleRenderUpdate(ownerId, callback, delayMs = 0) {
+  if (!ownerId || typeof callback !== 'function') return () => {};
+  const key = String(ownerId);
+  const update = { callback };
+  _scheduledUpdates.set(key, update);
+  if (_scheduledTimer === null) {
+    const delay = Number.isFinite(delayMs) ? Math.max(0, delayMs) : 0;
+    _scheduledTimer = setTimeout(flushScheduledUpdates, delay);
+  }
+  return () => {
+    if (_scheduledUpdates.get(key) === update) _scheduledUpdates.delete(key);
+    if (!_scheduledUpdates.size && _scheduledTimer !== null) {
+      clearTimeout(_scheduledTimer);
+      _scheduledTimer = null;
+    }
+  };
+}
+
+/**
  * @returns {{installed: boolean, mode: 'continuous'|'idle', holds: string[],
  *   recentRequests: Array<{reason: string, at: number}>}}
  */
@@ -126,6 +168,7 @@ export function getRenderGovernorDiagnostics() {
     mode: _holds.size > 0 ? 'continuous' : 'idle',
     holds: [..._holds].sort(),
     recentRequests: [..._recentRequests],
+    scheduledUpdates: [..._scheduledUpdates.keys()].sort(),
   };
 }
 
@@ -136,6 +179,9 @@ export function uninstallRenderGovernor(viewer) {
   _installed = false;
   _holds.clear();
   _recentRequests.length = 0;
+  if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
+  _scheduledTimer = null;
+  _scheduledUpdates.clear();
 }
 
 /** Test seam: reset module state between unit tests. */
@@ -144,4 +190,7 @@ export function _resetRenderGovernorForTest() {
   _installed = false;
   _holds.clear();
   _recentRequests.length = 0;
+  if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
+  _scheduledTimer = null;
+  _scheduledUpdates.clear();
 }

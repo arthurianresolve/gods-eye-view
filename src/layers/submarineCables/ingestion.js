@@ -58,7 +58,10 @@ export function createIngestion({ state, parts, source }) {
           markerSize: 6,
         },
       );
-      if (!owns()) return;
+      if (!owns()) {
+        cableDataSource.destroy?.();
+        return;
+      }
       const landingDataSource = await Cesium.GeoJsonDataSource.load(
         { type: 'FeatureCollection', features: landingFeatures },
         {
@@ -70,7 +73,11 @@ export function createIngestion({ state, parts, source }) {
           markerSize: 6,
         },
       );
-      if (!owns()) return;
+      if (!owns()) {
+        cableDataSource.destroy?.();
+        landingDataSource.destroy?.();
+        return;
+      }
 
       cableDataSource.name = `${source.label} Submarine Cables`;
       landingDataSource.name = `${source.label} Landing Points`;

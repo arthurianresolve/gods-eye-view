@@ -135,6 +135,12 @@ export class AdaptiveQualityController {
     if (Number.isFinite(densityPct)) this.manualDensity = densityPct;
   }
 
+  /** Synchronize the status line after an external restore changes density. */
+  syncExternalDensity(densityPct = this.readDensity()) {
+    if (Number.isFinite(densityPct)) this.manualDensity = densityPct;
+    this._publish();
+  }
+
   setMode(mode, { persist = true, userDensityOverride = false } = {}) {
     if (!['auto', 'quality', 'performance', 'manual'].includes(mode))
       return false;

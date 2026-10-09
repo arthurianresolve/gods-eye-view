@@ -149,6 +149,10 @@ try {
           height: innerHeight,
           dpr: devicePixelRatio,
         },
+        drawingBuffer: {
+          width: viewer.scene.canvas.width,
+          height: viewer.scene.canvas.height,
+        },
         focused: document.hasFocus(),
         visible: !document.hidden,
         navigationMs:
@@ -408,6 +412,10 @@ try {
         height: innerHeight,
         dpr: devicePixelRatio,
       },
+      drawingBuffer: {
+        width: canvas.width,
+        height: canvas.height,
+      },
       focused: document.hasFocus(),
       visible: !document.hidden,
       layers,
@@ -415,6 +423,8 @@ try {
         (total, layer) => total + (layer.count || 0),
         0,
       ),
+      appCommit:
+        window.__godsEyeView?.getPerformanceEnvironment?.()?.appCommit || null,
     };
   });
   environment.startup = {
@@ -474,6 +484,18 @@ try {
         async ({ durationMs, scenarioName, delay }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
+          const readSettings = () => ({
+            qualityMode:
+              window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
+              null,
+            densityPct:
+              window.__godsEyeView?.styleManager?.services?.getDetectionTuning?.()
+                ?.densityPct ?? null,
+            detectionMode:
+              window.__godsEyeView?.styleManager?.services?.getDetectionMode?.() ||
+              null,
+          });
+          const settingsBefore = readSettings();
           const intervals = [];
           const longTasks = [];
           let previous = null;
@@ -497,11 +519,23 @@ try {
           }
           let active = true;
           let moveTimer = null;
+          let motionAnchorMs = null;
+          let motionDistance = 0;
           let delayTimer = null;
           if (scenarioName === 'scripted-motion') {
+            motionAnchorMs = performance.now();
+            let previousStep = 0;
             moveTimer = setInterval(() => {
-              if (active) viewer.camera.moveRight(16);
-            }, 50);
+              if (!active) return;
+              const step = (performance.now() - motionAnchorMs) / 50;
+              const delta = step - previousStep;
+              previousStep = step;
+              const distance = 16 * delta;
+              if (distance) {
+                viewer.camera.moveRight(distance);
+                motionDistance += distance;
+              }
+            }, 16);
           }
           if (delay > 0) {
             delayTimer = setInterval(() => {
@@ -540,6 +574,11 @@ try {
           }));
           const detectionDiagnostics =
             window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
+          const settingsAfter = readSettings();
+          const performanceSnapshot =
+            window.__godsEyeView?.getPerformanceSnapshot?.({
+              scene: { workload: scenarioName },
+            }) || null;
           observer
             ?.takeRecords?.()
             .forEach((entry) => longTasks.push(entry.duration));
@@ -600,6 +639,15 @@ try {
                   candidateCount: null,
                   reason: 'detection diagnostics are unavailable',
                 },
+            performanceSnapshot,
+            settings: { before: settingsBefore, after: settingsAfter },
+            cameraPath: {
+              id:
+                scenarioName === 'scripted-motion'
+                  ? 'elapsed-move-right-v1'
+                  : 'parked-v1',
+              motionDistancePx: motionDistance,
+            },
           };
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
@@ -616,8 +664,31 @@ try {
     }
   }
 
+  for (const sample of captures) {
+    const before = sample.settings?.before;
+    const after = sample.settings?.after;
+    if (!before || !after || before.qualityMode !== after.qualityMode) {
+      throw new Error(
+        `Performance sample changed quality mode during capture: ${JSON.stringify({ scenario: sample.scenario, run: sample.run, before, after })}`,
+      );
+    }
+    if (fixture && before.detectionMode !== detectionMode) {
+      throw new Error(
+        `Performance sample used the wrong detection mode: ${JSON.stringify({ scenario: sample.scenario, run: sample.run, expected: detectionMode, actual: before.detectionMode })}`,
+      );
+    }
+    if (sample.quality?.mode !== qualityMode) {
+      throw new Error(
+        `Performance sample used the wrong quality mode: ${JSON.stringify({ scenario: sample.scenario, run: sample.run, expected: qualityMode, actual: sample.quality?.mode })}`,
+      );
+    }
+  }
+
   const populations = new Set(
     captures.map((sample) => JSON.stringify(sample.layers)),
+  );
+  const cameraPaths = new Set(
+    captures.map((sample) => JSON.stringify(sample.cameraPath)),
   );
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
   const report = {
@@ -635,9 +706,12 @@ try {
       fixture,
       mixedLayers: mixedLayerFixture,
       qualityMode,
+      cameraPath:
+        'elapsed-move-right-v1 for scripted motion; parked-v1 for idle/tracking',
       detectionMode: fixture ? detectionMode : null,
       injectedDelayMs: delayMs,
       populationStableAcrossSamples: populations.size === 1,
+      cameraPathStableAcrossSamples: cameraPaths.size === 1,
       note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
     },
     motionBudget: {

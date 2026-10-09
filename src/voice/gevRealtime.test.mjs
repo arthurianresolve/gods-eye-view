@@ -8,6 +8,7 @@ import { controlRadio as runControlRadio, createGevActionRunner as createActionR
 import { createStandalonePlaceSearch } from '../standalone/placeSearch.js';
 import {
   computeDownscale,
+  captureFreshCesiumFrame,
   renderFreshCesiumFrame,
   estimateDataUrlBytes,
   GevRealtimeController,
@@ -2969,6 +2970,54 @@ test('visible document with a rendering scene reports a fresh frame', async () =
     };
     const fresh = await renderFreshCesiumFrame({ scene });
     assert.equal(fresh, true);
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test('fresh frame capture copies inside postRender and removes its listener', async () => {
+  const originalDocument = globalThis.document;
+  let fire = null;
+  let removed = 0;
+  let copiedFrom = null;
+  const source = { width: 3, height: 2 };
+  const scene = {
+    canvas: source,
+    postRender: {
+      addEventListener(listener) {
+        fire = listener;
+        return () => {
+          removed += 1;
+          fire = null;
+        };
+      },
+    },
+    requestRender() {
+      queueMicrotask(() => fire?.());
+    },
+  };
+  try {
+    globalThis.document = {
+      hidden: false,
+      createElement() {
+        return {
+          width: 0,
+          height: 0,
+          getContext() {
+            return {
+              drawImage(value) {
+                copiedFrom = value;
+              },
+            };
+          },
+        };
+      },
+    };
+    const copy = await captureFreshCesiumFrame({ scene });
+    assert.equal(copy.width, 3);
+    assert.equal(copy.height, 2);
+    assert.equal(copiedFrom, source);
+    assert.equal(removed, 1);
   } finally {
     globalThis.document = originalDocument;
   }
