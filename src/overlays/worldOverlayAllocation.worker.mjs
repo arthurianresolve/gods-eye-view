@@ -1,4 +1,9 @@
 import * as Cesium from 'cesium';
+import { performance as cpuClock } from 'node:perf_hooks';
+import {
+  setCpuTimingsEnabled,
+  getCpuTimings,
+} from '../performance/cpuTimings.js';
 import {
   AMBIENT_CARD_COLLISION_CAPACITY,
   destroyWorldOverlay,
@@ -1165,7 +1170,8 @@ function advanceWorkload(positions, drifts, frame) {
 }
 
 function main() {
-  if (typeof globalThis.gc !== 'function') {
+  const cpuOnly = process.env.GEV_OVERLAY_CPU === '1';
+  if (!cpuOnly && typeof globalThis.gc !== 'function') {
     process.stdout.write(`${JSON.stringify({ ok: false, reason: 'no-gc' })}\n`);
     return;
   }
@@ -1249,6 +1255,45 @@ function main() {
   };
 
   for (let i = 0; i < WARMUP_FRAMES; i++) tick();
+
+  // CPU attribution is a separate run: no forced GC and no claim about GPU,
+  // browser layout or Canvas2D execution (this fixture uses a silent context).
+  if (cpuOnly) {
+    const samples = [];
+    for (let run = 0; run < 5; run++) {
+      for (const enabled of run % 2 ? [true, false] : [false, true]) {
+        setCpuTimingsEnabled(enabled, { now: () => cpuClock.now() });
+        for (let i = 0; i < 200; i++) tick();
+        // Reset collected timings after warmup without changing the fixture.
+        setCpuTimingsEnabled(enabled, { now: () => cpuClock.now() });
+        const started = cpuClock.now();
+        for (let i = 0; i < 600; i++) tick();
+        samples.push({
+          run,
+          enabled,
+          frames: 600,
+          cpuMs: cpuClock.now() - started,
+          candidates: getWorldOverlayDiagnostics().candidateCount,
+          painted: getWorldOverlayDiagnostics().paintedCount,
+          phases: getCpuTimings(),
+        });
+      }
+    }
+    setCpuTimingsEnabled(false);
+    process.stdout.write(
+      JSON.stringify({
+        ok: true,
+        profile: PROFILE,
+        entryCount: ENTRY_COUNT,
+        scope:
+          'Node synchronous overlay work; mock canvas, no GPU or browser layout, no forced GC',
+        samples,
+      }) + '\n',
+    );
+    if (detectionActive) destroyDetection();
+    destroyWorldOverlay();
+    return;
+  }
 
   // Enter the same explicit-GC regime used by the measurement before taking
   // samples. Frame-only warmup does not stabilize the first GC-bracketed

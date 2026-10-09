@@ -2653,11 +2653,26 @@ function drawWorldOverlayFrame() {
     _keyholeOutsideOpacity = fadeTuning.outsideOpacity;
   }
   const keyhole = _keyhole;
-  const viewProjection = prepareCustomPaintFrame(timestamp, keyhole);
-  collectFrameCandidates(keyhole, viewProjection);
+  const projectionTiming = beginCpuTiming('overlay', 'projection');
+  try {
+    const viewProjection = prepareCustomPaintFrame(timestamp, keyhole);
+    collectFrameCandidates(keyhole, viewProjection);
+  } finally {
+    endCpuTiming(projectionTiming);
+  }
   _diagnostics.projectionMs = nowMs() - projectionStarted;
-  solveDomains(timestamp);
-  paintFrame(keyhole);
+  const placementTiming = beginCpuTiming('overlay', 'placement');
+  try {
+    solveDomains(timestamp);
+  } finally {
+    endCpuTiming(placementTiming);
+  }
+  const paintTiming = beginCpuTiming('overlay', 'paint');
+  try {
+    paintFrame(keyhole);
+  } finally {
+    endCpuTiming(paintTiming);
+  }
   // Labels-only layers need a bounded sweep refresh even with detection off.
   // Empty/hidden hosts and teardown never retain scanner render demand.
   if (_paintRectCount > 0 && isCyberSonarActive()) {
