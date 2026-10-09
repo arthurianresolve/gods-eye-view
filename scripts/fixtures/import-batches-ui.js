@@ -3,6 +3,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { createApplicationViewer } from '../../src/app/viewer.js';
 import { createImportedGeometryLayer } from '../../src/imports/runtimeLayer.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
+import { observeSubmittedCommands } from '../performance/glCompletionProbe.mjs';
 import { getContextStore } from '../../src/data/contextStore.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
@@ -133,15 +134,24 @@ async function pixels(viewer, sample) {
   raf = requestAnimationFrame(tick);
   const removeUpdate = viewer.scene.preUpdate.addEventListener(() => updates++);
   const remove = viewer.scene.postRender.addEventListener(() => frames++);
-  const canvas = await captureFreshCesiumFrame(viewer);
-  clearInterval(heartbeat);
+  const submittedCommands = report.observeCommands
+    ? observeSubmittedCommands(viewer.canvas.getContext('webgl2'))
+    : null;
+  let canvas;
+  try {
+    canvas = await captureFreshCesiumFrame(viewer);
+  } finally {
+    clearInterval(heartbeat);
+    remove();
+    removeUpdate();
+    cancelAnimationFrame(raf);
+    if (submittedCommands)
+      sample.submittedCommands = submittedCommands.finish();
+  }
   maximumHeartbeatGapMs = Math.max(
     maximumHeartbeatGapMs,
     performance.now() - lastHeartbeat,
   );
-  remove();
-  removeUpdate();
-  cancelAnimationFrame(raf);
   sample.capture = {
     elapsedMs: performance.now() - started,
     renderedFrames: frames,
@@ -188,6 +198,9 @@ run.addEventListener('click', async () => {
     fixture: 'synthetic-5000-import-points/v1',
     workload,
     preserveDrawingBuffer,
+    observeCommands: document.querySelector('#observe-commands').checked,
+    commandObservationScope:
+      'Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison',
     scope:
       'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
     checks: [],

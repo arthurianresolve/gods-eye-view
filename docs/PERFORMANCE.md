@@ -1,8 +1,10 @@
 # Performance baseline
 
-Current status (9 October 2026): remote `dev` includes the follow-up work through
-`5328e25`. The corrected `3cdd5cb` software-rendered retention soak passed; see the
-exact-revision report below. A new full validation is running for `5328e25`.
+Current status (9 October 2026): full automatic CI passes at `7c6c324`, including
+Node 24/26, three-OS recovery and browser journeys. The corrected `3cdd5cb`
+software-rendered retention soak and the fresh `2e839a4` hosted paravirtual Metal
+retention soak passed. These validate their exact revisions, not the later
+candidate. Windows UHD 620 dense-import capture still fails at `7c6c324`.
 The [Cesium plan](CESIUM_PERFORMANCE_PLAN.md) distinguishes code, automatic checks,
 physical GPU checks and hosted paravirtual rendering. It also records the limited
 Windows UHD 620 capture result and repeated import-preparation CPU comparisons.

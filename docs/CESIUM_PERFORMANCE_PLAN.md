@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 9 October 2026. Full runtime CI passes at
-`eb90492fa486d0c2afd727527a8d43d5affc8c35`, with additional hosted-renderer
+`7c6c324269f0f67c7361530013ff99e361664556`, with additional hosted-renderer
 probes at `ee38af49f024242252f7a6297837dde44236d3c5`. The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
@@ -37,6 +37,29 @@ a performance shortcut. Auto quality remains opt-in.
 
 ### Follow-up validation on 9 October
 
+- [Full CI at `7c6c324`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37978265763)
+  passes Node 24/26, builds, formatting, boundaries, Windows onboarding,
+  installation/profile recovery on all three operating systems, and every
+  browser gate. This includes all six density-restoration checks and the
+  corrected archive-state waits in mixed-use smoke. The short smoke is not a
+  60-minute retention pass. Its earlier failure remains below; the exact cause
+  is still unproven. This supersedes the pending CI descriptions for older
+  commits without reclassifying their failed runs.
+- The fresh [Windows UHD 620 import diagnostic at `7c6c324`](performance-evidence/import-batches-7c6c324-failed.json)
+  remains **failed**. Chrome 154, foreground visible, 640-by-360 drawing buffer
+  and 5,000 points produce one fresh capture, then zero animation callbacks,
+  scene updates or rendered frames during the next 400 ms capture. Timers
+  continue (maximum heartbeat gap 25.1 ms), the context is valid and no render
+  error is reported. This does not establish a GPU-driver or application root
+  cause. Closing old fixture tabs and restarting the exact-build server did
+  not resolve the failure. No Windows soak or latency pass is inferred.
+- The import fixture now offers an opt-in WebGL fence observation. It uses
+  public WebGL 2 `fenceSync`, `flush` and zero-timeout `clientWaitSync` calls to
+  distinguish prior-command completion from absent frame callbacks. Fence and
+  polling timer ownership ends with the capture, including failure. Six unit
+  tests pass. This changes command scheduling and reports observation delay,
+  not GPU execution time, GPU idle state or a normal performance comparison;
+  the option is off by default and has no production runtime effect.
 - The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
   at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
   validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window

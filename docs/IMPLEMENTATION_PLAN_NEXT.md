@@ -1,8 +1,9 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
 Status: Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` at
-`3cdd5cbd9f744de2a0d4d8a45a9a114660a182f8`. Code, automated results and external
-acceptance are separate. Current CI passes three-OS recovery and the full software-rendered soak; successful
+`7c6c324269f0f67c7361530013ff99e361664556`. Code, automated results and external
+acceptance are separate. Current CI passes three-OS recovery and all browser gates;
+the full software-rendered soak passed at `3cdd5cb`. Successful
 older PR, release and component checks remain historical evidence. The
 [S47-S60 ledger](CESIUM_PERFORMANCE_PLAN.md) tracks incomplete performance work
 and the retention remediation required to close S44.
