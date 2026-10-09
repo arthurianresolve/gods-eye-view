@@ -23,7 +23,7 @@ the earlier release requirements and historical results.
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression | Existing satellite tests pass; upload/allocation reduction and collection partitioning remain pending | Pending matched comparison |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
-| S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture; browser matrix pending | Pending capture correctness and measured benefit before enabling false default |
+| S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
@@ -171,6 +171,15 @@ Later optimization work follows measured costs and the original dependencies;
 pending human reviews or unavailable extra GPUs do not block independent code work.
 
 ## Current evidence
+
+- [Capture matrix at `9b1c18e`](performance-evidence/capture-matrix-9b1c18e.json)
+  passes 12 checks in the user's Chrome 154 on Windows using Intel UHD 620
+  Direct3D 11, MSAA 4, and DPR 2. Both preservation settings produce the expected
+  newly rendered pixels for idle, moved-camera, portrait, resized and restored
+  synthetic scenes; destroying the viewer cancels a pending copy. No post-render
+  listener accumulates. This isolated application-viewer fixture validates the
+  copy mechanism. It does not validate all application effects, hidden-tab
+  transitions in a real browser, throughput benefit or the 60-minute GPU soak.
 
 - [Full CI at `3cdd5cb`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37944725028)
   passes Node 24/26, production builds, formatting, package boundaries, Windows
