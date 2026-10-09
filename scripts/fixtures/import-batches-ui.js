@@ -13,6 +13,10 @@ import {
   installRenderGovernor,
   uninstallRenderGovernor,
 } from '../../src/renderGovernor.js';
+import {
+  createImportFrameDiagnostics,
+  observeImportFrameHealth,
+} from '../performance/importFrameDiagnostics.mjs';
 
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
@@ -20,6 +24,13 @@ const result = document.querySelector('#result');
 const download = document.querySelector('#download');
 const frameProbe = document.querySelector('#frame-probe');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const runOptions = new URLSearchParams(window.location.search);
+const requestedWorkload = runOptions.get('workload');
+if (['paired', 'synchronous', 'cooperative'].includes(requestedWorkload))
+  document.querySelector('#workload').value = requestedWorkload;
+if (requestedWorkload === 'initial-load')
+  status.textContent = 'Diagnostic only: initial loaded population';
+let frameDiagnostics = null;
 const check = (condition, message) => {
   if (!condition) throw new Error(message);
 };
@@ -116,6 +127,9 @@ function settledFrame(viewer) {
 }
 async function pixels(viewer, sample) {
   const started = performance.now();
+  const browserStateBefore = report.diagnosticsEnabled
+    ? frameDiagnostics.snapshotCanvas(viewer.canvas)
+    : null;
   let frames = 0;
   let updates = 0;
   let animationFrames = 0;
@@ -171,7 +185,15 @@ async function pixels(viewer, sample) {
     contextLost: viewer.canvas.getContext('webgl2')?.isContextLost() ?? null,
     visible: document.visibilityState,
     completed: Boolean(canvas),
+    ...(report.diagnosticsEnabled
+      ? {
+          browserStateBefore,
+          browserStateAfter: frameDiagnostics.snapshotCanvas(viewer.canvas),
+        }
+      : {}),
   };
+  if (!canvas && report.diagnosticsEnabled)
+    sample.rafHealthWhileViewerAlive = await observeImportFrameHealth();
   check(canvas, 'A fresh capture is required.');
   if (report.captureMode === 'render-only') return null;
   try {
@@ -195,7 +217,13 @@ async function pixels(viewer, sample) {
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
-  const workload = document.querySelector('#workload').value;
+  const workload =
+    requestedWorkload === 'initial-load'
+      ? 'initial-load'
+      : document.querySelector('#workload').value;
+  const diagnosticRun =
+    runOptions.get('diag') === '1' || workload === 'initial-load';
+  frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
     schema: 'gev-import-batches/v1',
@@ -204,6 +232,13 @@ run.addEventListener('click', async () => {
     capturedAt: new Date().toISOString(),
     fixture: 'synthetic-5000-import-points/v1',
     workload,
+    diagnosticsEnabled: diagnosticRun,
+    ...(diagnosticRun
+      ? {
+          diagnosticClassification:
+            'opt-in browser scheduling diagnosis only; not performance acceptance',
+        }
+      : {}),
     preserveDrawingBuffer,
     captureMode: document.querySelector('#capture-mode').value,
     renderDemand: document.querySelector('#render-demand').checked,
@@ -249,77 +284,104 @@ run.addEventListener('click', async () => {
       harnessCommit: report.harnessCommit,
     });
     layer = createImportedGeometryLayer({ viewer });
-    status.textContent = 'Warming the complete point population';
+    status.textContent = diagnosticRun
+      ? 'Diagnostic only: warming the complete 5,000-point population'
+      : 'Warming the complete point population';
     const coldAt = performance.now();
     await layer.loadAsync(imports, { workspaceId: 'fixture' });
     await settledFrame(viewer);
     report.coldActivationMs = performance.now() - coldAt;
     report.warmedResources = resources(viewer);
     let expectedPixels = null;
-    for (let pair = 0; pair < 5; pair++) {
-      const modes =
-        workload === 'paired'
-          ? pair % 2
-            ? ['cooperative', 'synchronous']
-            : ['synchronous', 'cooperative']
-          : [workload, workload];
-      for (const mode of modes) {
-        status.textContent = `Pair ${pair + 1}/5: ${mode} import`;
-        layer.clear();
-        await wait(150);
-        let previous = performance.now();
-        const gaps = [];
-        const timer = setInterval(() => {
-          const time = performance.now();
-          gaps.push(time - previous);
-          previous = time;
-        }, 5);
-        const started = performance.now();
-        let elapsedMs;
-        try {
-          await (mode === 'synchronous'
-            ? layer.load(imports, { workspaceId: 'fixture' })
-            : layer.loadAsync(imports, { workspaceId: 'fixture' }));
-          elapsedMs = performance.now() - started;
-          await wait(20);
-        } finally {
-          clearInterval(timer);
+    if (workload === 'initial-load') {
+      const sample = {
+        pair: null,
+        mode: 'initial-loaded-population',
+        elapsedMs: report.coldActivationMs,
+        preCaptureDrainMs: 20,
+        maxHeartbeatGapMs: null,
+        features: 5000,
+        resources: resources(viewer),
+      };
+      report.samples.push(sample);
+      await wait(20);
+      sample.pixelSha256 = await pixels(viewer, sample);
+      check(
+        sample.capture?.completed &&
+          (report.captureMode !== 'pixels' || Boolean(sample.pixelSha256)),
+        'Initial loaded-population diagnostic did not capture the 5,000-point scene.',
+      );
+      report.checks.push({
+        id: 'initial-5000-point-population-diagnostic',
+        status: 'passed',
+      });
+    } else {
+      for (let pair = 0; pair < 5; pair++) {
+        const modes =
+          workload === 'paired'
+            ? pair % 2
+              ? ['cooperative', 'synchronous']
+              : ['synchronous', 'cooperative']
+            : [workload, workload];
+        for (const mode of modes) {
+          status.textContent = `Pair ${pair + 1}/5: ${mode} import`;
+          layer.clear();
+          await wait(150);
+          let previous = performance.now();
+          const gaps = [];
+          const timer = setInterval(() => {
+            const time = performance.now();
+            gaps.push(time - previous);
+            previous = time;
+          }, 5);
+          const started = performance.now();
+          let elapsedMs;
+          try {
+            await (mode === 'synchronous'
+              ? layer.load(imports, { workspaceId: 'fixture' })
+              : layer.loadAsync(imports, { workspaceId: 'fixture' }));
+            elapsedMs = performance.now() - started;
+            await wait(20);
+          } finally {
+            clearInterval(timer);
+          }
+          check(
+            layer.getState().featureCount === 5000 &&
+              getContextStore().entities.size === 5000,
+            'Incomplete import or stale evidence context.',
+          );
+          check(layer.getState().pendingJobs === 0, 'Import task retained.');
+          const sample = {
+            pair,
+            mode,
+            elapsedMs,
+            maxHeartbeatGapMs: Math.max(...gaps),
+            features: 5000,
+            resources: resources(viewer),
+          };
+          report.samples.push(sample);
+          // The capture operation owns its completed-frame wait. Request it from
+          // the import task, rather than immediately chaining two postRender waits.
+          const hash = await pixels(viewer, sample);
+          sample.pixelSha256 = hash;
+          if (expectedPixels === null) expectedPixels = hash;
+          check(
+            hash === expectedPixels,
+            'Final pixels differ across equivalent imports.',
+          );
         }
-        check(
-          layer.getState().featureCount === 5000 &&
-            getContextStore().entities.size === 5000,
-          'Incomplete import or stale evidence context.',
-        );
-        check(layer.getState().pendingJobs === 0, 'Import task retained.');
-        const sample = {
-          pair,
-          mode,
-          elapsedMs,
-          maxHeartbeatGapMs: Math.max(...gaps),
-          features: 5000,
-          resources: resources(viewer),
-        };
-        report.samples.push(sample);
-        // The capture operation owns its completed-frame wait. Request it from
-        // the import task, rather than immediately chaining two postRender waits.
-        const hash = await pixels(viewer, sample);
-        sample.pixelSha256 = hash;
-        if (expectedPixels === null) expectedPixels = hash;
-        check(
-          hash === expectedPixels,
-          'Final pixels differ across equivalent imports.',
-        );
       }
+      report.checks.push({
+        id:
+          report.captureMode === 'pixels'
+            ? 'same-population-evidence-and-pixels'
+            : 'diagnostic-population-and-fresh-frames-without-pixel-equivalence',
+        status: 'passed',
+      });
     }
-    report.checks.push({
-      id:
-        report.captureMode === 'pixels'
-          ? 'same-population-evidence-and-pixels'
-          : 'diagnostic-population-and-fresh-frames-without-pixel-equivalence',
-      status: 'passed',
-    });
-    status.textContent = 'Checking cancellation and repeated teardown';
-    for (let i = 0; i < 12; i++) {
+    if (workload !== 'initial-load')
+      status.textContent = 'Checking cancellation and repeated teardown';
+    for (let i = 0; workload !== 'initial-load' && i < 12; i++) {
       const pending = layer.loadAsync(imports, { workspaceId: 'cancelled' });
       const observed = pending.then(
         () => 'completed',
@@ -338,10 +400,11 @@ run.addEventListener('click', async () => {
       );
       await wait(10);
     }
-    report.checks.push({
-      id: 'twelve-cancelled-imports-release-ownership',
-      status: 'passed',
-    });
+    if (workload !== 'initial-load')
+      report.checks.push({
+        id: 'twelve-cancelled-imports-release-ownership',
+        status: 'passed',
+      });
     check(
       !backgrounded,
       'Foreground interrupted; rerun for valid measurements.',
@@ -356,6 +419,11 @@ run.addEventListener('click', async () => {
     viewer?.destroy();
     document.removeEventListener('visibilitychange', visibility);
     report.foregroundUninterrupted = !backgrounded;
+    if (frameDiagnostics) {
+      report.browserLifecycleEvents = frameDiagnostics.events();
+      frameDiagnostics.dispose();
+      frameDiagnostics = null;
+    }
     result.textContent = JSON.stringify(report, null, 2);
     status.textContent = report.status;
     run.disabled = download.disabled = frameProbe.disabled = false;
