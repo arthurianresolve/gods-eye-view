@@ -26,6 +26,19 @@ export function evaluateSoakStability({ durationMs, checkpoints = [] }) {
     pending.push('Requires a 60-minute run.');
   const first = checkpoints[0];
   const last = checkpoints.at(-1);
+  for (const point of checkpoints) {
+    const workers = point.metrics?.application?.workers;
+    if (!workers?.instrumented || workers.overflow)
+      pending.push('Worker task ownership evidence is incomplete.');
+    else if (
+      workers.workers.some(
+        (worker) => worker.pending && worker.oldestPendingMs >= 10000,
+      )
+    )
+      failures.push(
+        `Worker tasks remained unsettled for at least ten seconds at ${point.elapsedMs} ms.`,
+      );
+  }
   const baseline = resourceCounts(first?.metrics);
   if (!baseline || !Object.keys(baseline).length)
     pending.push('Application-owned resource baseline is unavailable.');

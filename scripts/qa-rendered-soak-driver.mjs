@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
 import {
   launchFixtureBrowser,
   prepareFixturePage,
@@ -120,6 +121,7 @@ export async function createRenderedSoakDriver(
         }
       },
     });
+    await page.evaluateOnNewDocument(installWorkerDiagnostics);
     console.log('SOAK boot application');
     await bootFixturePage(page, base);
     console.log('SOAK application ready');
@@ -488,6 +490,7 @@ export async function createRenderedSoakDriver(
                 resources: snapshot.resources || null,
                 scene: snapshot.scene || null,
                 timings: snapshot.timings || null,
+                workers: window.__gevSoakWorkers?.snapshot() || null,
               }
             : null;
         });

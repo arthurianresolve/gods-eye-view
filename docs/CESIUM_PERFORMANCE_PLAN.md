@@ -144,6 +144,13 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   intercepted harness still needs the same check before any new soak evidence
   is accepted. It does not establish the cause of the historical worker retention
   or complete S49/S60. No engine patch is justified by the evidence so far.
+- Retention runs now install test-only worker counters (64 workers, 1,024 pending
+  IDs per worker maximum); overflow leaves evidence incomplete. Counters retain
+  no worker objects, task payloads or URLs. Checkpoints record submissions,
+  replies, error replies, post failures, termination and the age of pending work.
+  A task unsettled for ten seconds fails this small-fixture diagnostic; it does
+  not impose a production worker timeout. The standalone Chrome probe observed
+  four submissions/four replies, the expected error, and zero pending jobs.
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser

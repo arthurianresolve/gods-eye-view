@@ -3,6 +3,7 @@ import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
 import { bootFixturePage } from './qa-application-fixtures.mjs';
+import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
 import {
   evaluateSoakStability,
   FULL_SOAK_MS,
@@ -12,8 +13,81 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
   JSHeapUsedSize: heap,
   JSEventListeners: listeners,
   application: {
+    workers: { instrumented: true, overflow: false, pending: 0, workers: [] },
     resources: { primitives: 3, ownerResources: { fixture: { pendingJobs } } },
   },
+});
+
+test('worker instrumentation tracks settlement, failures and termination without retaining payloads', () => {
+  let clock = 0;
+  class Worker extends EventTarget {
+    postMessage(message) {
+      if (message.throw) throw new Error('clone error');
+    }
+    terminate() {
+      this.stopped = true;
+    }
+  }
+  const scope = { Worker, performance: { now: () => clock } };
+  installWorkerDiagnostics(scope);
+  const worker = new scope.Worker(
+    'https://secret.test/Workers/createGeometry.js?token=secret',
+  );
+  worker.postMessage({ id: 1, geometry: 'sensitive payload' });
+  clock = 12000;
+  const pending = scope.__gevSoakWorkers.snapshot();
+  assert.equal(pending.pending, 1);
+  assert.equal(pending.workers[0].oldestPendingMs, 12000);
+  assert.doesNotMatch(JSON.stringify(pending), /secret|sensitive|geometry:/);
+  worker.dispatchEvent(new MessageEvent('message', { data: { id: 999 } }));
+  assert.equal(scope.__gevSoakWorkers.snapshot().pending, 1);
+  worker.dispatchEvent(
+    new MessageEvent('message', { data: { id: 1, error: 'bad geometry' } }),
+  );
+  worker.dispatchEvent(new Event('error'));
+  assert.throws(
+    () => worker.postMessage({ id: 2, throw: true }),
+    /clone error/,
+  );
+  worker.postMessage({ id: 3 });
+  worker.terminate();
+  const result = scope.__gevSoakWorkers.snapshot().workers[0];
+  assert.equal(result.pending, 0);
+  assert.equal(result.completed, 1);
+  assert.equal(result.taskErrors, 1);
+  assert.equal(result.workerErrors, 1);
+  assert.equal(result.postErrors, 1);
+  assert.equal(result.cancelled, 1);
+  assert.equal(worker.stopped, true);
+});
+
+test('worker diagnostic buffers are bounded and overflow is explicit', () => {
+  class Worker extends EventTarget {
+    postMessage() {}
+    terminate() {}
+  }
+  const scope = { Worker, performance: { now: () => 0 } };
+  installWorkerDiagnostics(scope);
+  const worker = new scope.Worker('worker.js');
+  for (let id = 0; id < 1026; id++) worker.postMessage({ id });
+  for (let i = 0; i < 70; i++) new scope.Worker('worker.js');
+  const result = scope.__gevSoakWorkers.snapshot();
+  assert.equal(result.workers.length, 64);
+  assert.equal(result.pending, 1024);
+  assert.equal(result.overflow, true);
+});
+
+test('unsettled workers fail retention and absent worker instrumentation stays pending', () => {
+  const report = stableReport();
+  report.checkpoints.at(-1).metrics.application.workers.workers = [
+    { pending: 1, oldestPendingMs: 10001 },
+  ];
+  assert.match(
+    evaluateSoakStability(report).failures.join(' '),
+    /Worker tasks remained unsettled/,
+  );
+  delete report.checkpoints.at(-1).metrics.application.workers;
+  assert.equal(evaluateSoakStability(report).status, 'pending');
 });
 const stableReport = () => ({
   durationMs: FULL_SOAK_MS,
