@@ -124,6 +124,7 @@ function readOwnerResources(value) {
 export function createPerformanceMonitor({
   viewer = null,
   dataManager = null,
+  enabled = true,
   readSettings = () => ({}),
   readTimings = () => ({}),
   readDiagnostics = () => null,
@@ -144,7 +145,9 @@ export function createPerformanceMonitor({
     frameCount += 1;
     snapshot.count('renderedFrames');
   };
-  const removeListener = scene?.postRender?.addEventListener?.(onPostRender);
+  const removeListener = enabled
+    ? scene?.postRender?.addEventListener?.(onPostRender)
+    : null;
 
   return {
     getSnapshot(extra = {}) {
@@ -156,22 +159,24 @@ export function createPerformanceMonitor({
       });
       return snapshot.snapshot({
         identity: environment,
-        settings: clone(readSettings()) || {},
+        settings: enabled ? clone(readSettings()) || {} : {},
         scene: {
           renderedFrameCount: frameCount,
           ...(clone(extra.scene) || {}),
         },
         resources: {
-          ...readResourceCounts({
-            viewer,
-            dataManager,
-            diagnostics: readDiagnostics(),
-            ownership: readOwnership(),
-          }),
+          ...(enabled
+            ? readResourceCounts({
+                viewer,
+                dataManager,
+                diagnostics: readDiagnostics(),
+                ownership: readOwnership(),
+              })
+            : {}),
           ...(clone(extra.resources) || {}),
         },
         timings: {
-          ...(clone(readTimings()) || {}),
+          ...(enabled ? clone(readTimings()) || {} : {}),
           ...(clone(extra.timings) || {}),
         },
       });

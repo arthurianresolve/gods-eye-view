@@ -68,3 +68,37 @@ test('performance monitor records frames and releases its listener', () => {
   monitor.destroy();
   assert.equal(removed, 1);
 });
+
+test('performance monitor can be disabled without installing a render listener', () => {
+  let listeners = 0;
+  const scene = {
+    postRender: {
+      addEventListener() {
+        listeners += 1;
+        return () => {};
+      },
+    },
+  };
+  const monitor = createPerformanceMonitor({
+    viewer: { scene },
+    enabled: false,
+    readSettings: () => {
+      throw new Error('disabled monitor must not read settings');
+    },
+    readDiagnostics: () => {
+      throw new Error('disabled monitor must not read diagnostics');
+    },
+    readOwnership: () => {
+      throw new Error('disabled monitor must not read ownership');
+    },
+    readTimings: () => {
+      throw new Error('disabled monitor must not read timings');
+    },
+  });
+  const report = monitor.getSnapshot();
+  monitor.destroy();
+  assert.equal(listeners, 0);
+  assert.deepEqual(report.settings, {});
+  assert.deepEqual(report.resources, {});
+  assert.deepEqual(report.timings, {});
+});

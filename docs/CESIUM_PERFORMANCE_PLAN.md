@@ -85,9 +85,10 @@ shared history to manufacture a per-slice delivery record.
   primitives, data sources, and cache entries; absent metrics stay `null` and
   arbitrary payloads are discarded. [Application tools](../src/app/tools.js)
   now collect bounded counts from local GeoJSON, submarine-cable, and satellite
-  lifecycle modules. Complete broader owner accounting, layer/geometry CPU timing,
-  intentional-idle separation and a complete instrumentation-disable path.
-  Measure overhead separately; an interval
+  lifecycle modules. The monitor now supports a disabled mode that installs no
+  render listener or diagnostic readers. Complete broader owner accounting,
+  layer/geometry CPU timing and intentional-idle separation. Measure overhead
+  separately; an interval
   between rendered frames is not CPU execution time or a GPU duration.
 - **S49:** [local GeoJSON](../src/data/localGeojsonCore.js) and
   [cable ingestion](../src/layers/submarineCables/ingestion.js) attempt cleanup
