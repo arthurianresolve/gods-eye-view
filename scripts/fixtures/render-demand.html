@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cesium render-demand checks</title>
+  </head>
+  <body>
+    <h1>Cesium render-demand checks</h1>
+    <p>
+      Keep this tab visible for about 20 seconds. This synthetic viewer checks
+      the governor's render cadence and cleanup. It does not validate every
+      application layer or establish an FPS gain.
+    </p>
+    <button id="run">Run render-demand checks</button>
+    <button id="download" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <div id="viewer" style="width: 640px; height: 360px"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./render-demand-ui.js"></script>
+  </body>
+</html>
