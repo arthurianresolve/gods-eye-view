@@ -115,6 +115,16 @@ async function pixels(viewer, sample) {
   let frames = 0;
   let updates = 0;
   let animationFrames = 0;
+  let lastHeartbeat = started;
+  let maximumHeartbeatGapMs = 0;
+  const heartbeat = setInterval(() => {
+    const current = performance.now();
+    maximumHeartbeatGapMs = Math.max(
+      maximumHeartbeatGapMs,
+      current - lastHeartbeat,
+    );
+    lastHeartbeat = current;
+  }, 8);
   let raf;
   const tick = () => {
     animationFrames++;
@@ -124,6 +134,11 @@ async function pixels(viewer, sample) {
   const removeUpdate = viewer.scene.preUpdate.addEventListener(() => updates++);
   const remove = viewer.scene.postRender.addEventListener(() => frames++);
   const canvas = await captureFreshCesiumFrame(viewer);
+  clearInterval(heartbeat);
+  maximumHeartbeatGapMs = Math.max(
+    maximumHeartbeatGapMs,
+    performance.now() - lastHeartbeat,
+  );
   remove();
   removeUpdate();
   cancelAnimationFrame(raf);
@@ -132,6 +147,7 @@ async function pixels(viewer, sample) {
     renderedFrames: frames,
     updates,
     animationFrames,
+    maximumHeartbeatGapMs,
     defaultRenderLoop: viewer.useDefaultRenderLoop,
     targetFrameRate: viewer.targetFrameRate,
     requestRenderMode: viewer.scene.requestRenderMode,
@@ -163,6 +179,7 @@ run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
   const workload = document.querySelector('#workload').value;
+  const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
     schema: 'gev-import-batches/v1',
     applicationCommit: __GEV_APP_COMMIT__,
@@ -170,6 +187,7 @@ run.addEventListener('click', async () => {
     capturedAt: new Date().toISOString(),
     fixture: 'synthetic-5000-import-points/v1',
     workload,
+    preserveDrawingBuffer,
     scope:
       'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
     checks: [],
@@ -191,6 +209,7 @@ run.addEventListener('click', async () => {
     viewer = createApplicationViewer({
       container: document.querySelector('#viewer'),
       creditContainer: document.querySelector('#credits'),
+      preserveDrawingBuffer,
     });
     viewer.scene.renderError.addEventListener((_scene, error) => {
       report.renderErrors.push(String(error?.message || error).slice(0, 400));
