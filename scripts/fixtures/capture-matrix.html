@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cesium fresh-frame capture matrix</title>
+  </head>
+  <body>
+    <h1>Cesium fresh-frame capture matrix</h1>
+    <p>
+      Local synthetic fixture. Keep this tab visible. This checks capture
+      correctness, not application performance or soak acceptance.
+    </p>
+    <button id="run">Run capture matrix</button>
+    <button id="download" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <div id="viewer" style="width: 640px; height: 360px"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./capture-matrix-ui.js"></script>
+  </body>
+</html>
