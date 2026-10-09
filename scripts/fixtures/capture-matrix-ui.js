@@ -69,6 +69,10 @@ run.addEventListener('click', async () => {
   };
   let viewer;
   try {
+    check(
+      /^[a-f0-9]{40}$/.test(report.applicationCommit || ''),
+      'Start the local server with GEV_APP_COMMIT set to its clean source revision.',
+    );
     for (const preserveDrawingBuffer of [true, false]) {
       status.textContent = `Checking preserveDrawingBuffer=${preserveDrawingBuffer}`;
       viewer = createApplicationViewer({
