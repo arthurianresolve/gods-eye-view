@@ -48,6 +48,11 @@ export function createState({ services }) {
 
   state._preRenderListener = null;
 
+  // One-shot governor timer used for the one-second untracked cadence. A
+  // tracked satellite uses a continuous hold because its position, label, and
+  // follow camera are evaluated every rendered frame.
+  state._periodicRenderDisposer = null;
+
   state._lastPropagation = 0;
 
   // Reused by the fleet and dense propagation paths. Cesium clones a point's

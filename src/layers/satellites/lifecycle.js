@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { ISS_OVERLAY_SOURCE_ID } from './policy.js';
+import { ISS_OVERLAY_SOURCE_ID, POSITION_UPDATE_MS } from './policy.js';
 
 export function createLifecycle({
   state: layerState,
@@ -8,13 +8,53 @@ export function createLifecycle({
   source,
 }) {
   const { clearFocusTarget } = services.focus;
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const holdContinuousRender =
+    services.render?.holdContinuousRender || (() => {});
+  const releaseContinuousRender =
+    services.render?.releaseContinuousRender || (() => {});
+  const scheduleRenderUpdate = services.render?.scheduleRenderUpdate;
   const { registerPickOwner, unregisterPickOwner } = services.picking;
+
+  function stopPeriodicRenderDemand() {
+    layerState._periodicRenderDisposer?.();
+    layerState._periodicRenderDisposer = null;
+  }
+
+  function schedulePeriodicRenderDemand() {
+    if (
+      !layerState._enabled ||
+      layerState._trackedNorad !== null ||
+      (!layerState._params.showPoints && !layerState._params.showOrbits) ||
+      typeof scheduleRenderUpdate !== 'function' ||
+      layerState._periodicRenderDisposer
+    )
+      return;
+    layerState._periodicRenderDisposer = scheduleRenderUpdate(
+      'satellites-periodic',
+      () => {
+        layerState._periodicRenderDisposer = null;
+        schedulePeriodicRenderDemand();
+      },
+      POSITION_UPDATE_MS,
+    );
+  }
+
+  function syncRenderDemand() {
+    if (layerState._trackedNorad !== null) {
+      stopPeriodicRenderDemand();
+      holdContinuousRender('satellites');
+      return;
+    }
+    releaseContinuousRender('satellites');
+    schedulePeriodicRenderDemand();
+  }
 
   const methods = {
     // Catalog data refresh; propagation remains preRender-owned.
 
     async init(viewer) {
+      stopPeriodicRenderDemand();
+      releaseContinuousRender('satellites');
       parts.catalog._abortActiveUpdates();
       clearFocusTarget('satellites');
       layerState._viewer = viewer;
@@ -63,7 +103,6 @@ export function createLifecycle({
 
     enable(viewer) {
       layerState._enabled = true;
-      holdContinuousRender('satellites'); // per-frame animator (perf wave 2)
       if (layerState._pointCollection)
         layerState._pointCollection.show =
           parts.controls.satelliteVisualsVisible(
@@ -91,12 +130,14 @@ export function createLifecycle({
         );
       }
       parts.tracking._applyPendingTrackingRestore();
+      syncRenderDemand();
     },
 
     disable(viewer) {
       parts.catalog._abortActiveUpdates();
       parts.tracking._cancelPendingTrackingRestore();
       layerState._enabled = false;
+      stopPeriodicRenderDemand();
       releaseContinuousRender('satellites');
       if (layerState._pointCollection) layerState._pointCollection.show = false;
       for (const path of layerState._orbitPaths.values())
@@ -122,6 +163,7 @@ export function createLifecycle({
 
     destroy(viewer) {
       parts.catalog._abortActiveUpdates();
+      stopPeriodicRenderDemand();
       releaseContinuousRender('satellites'); // direct-destroy path (perf wave 2 fix)
       layerState._enabled = false;
       parts.tracking._clearTracking();
@@ -174,6 +216,9 @@ export function createLifecycle({
       };
       layerState._viewer = null;
     },
+
+    /** Reconcile continuous versus periodic render demand after a state change. */
+    syncRenderDemand,
 
     /** Bounded ownership counts consumed only by local performance snapshots. */
     getPerformanceDiagnostics() {

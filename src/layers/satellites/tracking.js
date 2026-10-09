@@ -19,6 +19,10 @@ export function createTracking({ state: layerState, services, parts, source }) {
     selectTrackedSubjectContext,
   } = services.context;
   const { refreshTrackedReadout } = services.readout;
+  const holdContinuousRender =
+    services.render?.holdContinuousRender || (() => {});
+  const releaseContinuousRender =
+    services.render?.releaseContinuousRender || (() => {});
 
   function _normalizeTrackedNorad(candidate) {
     const numeric = Number(candidate);
@@ -78,8 +82,10 @@ export function createTracking({ state: layerState, services, parts, source }) {
     layerState._dockedCompanions = new Set();
     layerState._lastDockedScanMs = Number.NEGATIVE_INFINITY;
     if (!layerState._trackedNorad) {
+      releaseContinuousRender('satellites');
       clearFocusTarget('satellites');
       parts.labels._syncIssOverlay();
+      parts.lifecycle?.methods?.syncRenderDemand?.();
       return;
     }
     const clearedNorad = layerState._trackedNorad;
@@ -118,9 +124,11 @@ export function createTracking({ state: layerState, services, parts, source }) {
       layerState._trackedEntity = null;
     }
     layerState._trackedNorad = null;
+    releaseContinuousRender('satellites');
     parts.labels._syncIssOverlay();
     clearTrackedSubjectContext('satellites');
     layerState._contextRefreshedAtMs = 0;
+    parts.lifecycle?.methods?.syncRenderDemand?.();
     _emitAwarenessEvent('gev:awareness-subject-cleared', {
       layerId: 'satellites',
       id: clearedNorad,
@@ -411,6 +419,7 @@ export function createTracking({ state: layerState, services, parts, source }) {
     if (!point || !sat) return;
 
     layerState._trackedNorad = noradId;
+    holdContinuousRender('satellites');
     layerState._trackedFrameNumber = -1;
     layerState._trackedFrameGeo = null;
     layerState._trackedFrameTimeMs = null;
