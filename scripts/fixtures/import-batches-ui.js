@@ -38,6 +38,25 @@ const imports = [
   },
 ];
 let report;
+function resources(viewer) {
+  const collections = [];
+  const visit = (value, depth = 0) => {
+    if (!value || depth > 5 || collections.length >= 64) return;
+    collections.push({
+      type: value.constructor.name,
+      count: value.length ?? null,
+    });
+    if (value instanceof Cesium.PrimitiveCollection)
+      for (let i = 0; i < value.length; i++) visit(value.get(i), depth + 1);
+  };
+  visit(viewer.scene.primitives);
+  return {
+    heapBytes: performance.memory?.usedJSHeapSize ?? null,
+    heapScope: 'Unforced heap sample; not retained-memory acceptance',
+    entities: viewer.entities.values.length,
+    collections,
+  };
+}
 frameProbe.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
@@ -194,6 +213,7 @@ run.addEventListener('click', async () => {
     await layer.loadAsync(imports, { workspaceId: 'fixture' });
     await settledFrame(viewer);
     report.coldActivationMs = performance.now() - coldAt;
+    report.warmedResources = resources(viewer);
     let expectedPixels = null;
     for (let pair = 0; pair < 5; pair++) {
       const modes =
@@ -236,6 +256,7 @@ run.addEventListener('click', async () => {
           elapsedMs,
           maxHeartbeatGapMs: Math.max(...gaps),
           features: 5000,
+          resources: resources(viewer),
         };
         report.samples.push(sample);
         // The capture operation owns its completed-frame wait. Request it from
