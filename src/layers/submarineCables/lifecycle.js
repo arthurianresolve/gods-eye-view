@@ -152,5 +152,25 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
         referenceLabelCount: state._referenceLabelCount,
       };
     },
+
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics() {
+      return {
+        listeners:
+          Number(Boolean(state._mapStackListener)) +
+          Number(Boolean(state._preRenderRemover)) +
+          Number(Boolean(state._moveEndRemover)) +
+          Number(Boolean(state._clickHandler)),
+        pendingJobs: Number(Boolean(state._loading)),
+        dataSources: [
+          state._cableDataSource,
+          state._landingDataSource,
+          state._referenceDataSource,
+        ].filter(Boolean).length,
+        cacheEntries:
+          Number(Boolean(state._cachedCableJson)) +
+          Number(Boolean(state._cachedLandingJson)),
+      };
+    },
   };
 }

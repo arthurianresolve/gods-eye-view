@@ -503,6 +503,18 @@ export function createLocalGeoJsonLayer(
       return { count: _count, lastUpdate: _lastUpdate, error: _error };
     },
 
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics: () => ({
+      listeners:
+        Number(Boolean(_clickHandler)) +
+        Number(Boolean(_preRenderRemover)) +
+        Number(Boolean(_cameraMoveEndRemover)),
+      timers: Number(Boolean(_groundRetryTimer)),
+      pendingJobs: Number(Boolean(_loadPromise)),
+      dataSources: Number(Boolean(_dataSource)),
+      cacheEntries: Number(Boolean(_cachedFeatures)),
+    }),
+
     /**
      * Globe-LOD state for QA harnesses (scripts/qa-infra-lod.mjs) and tests.
      * `active` is how many records currently carry a live stem; `total` is the

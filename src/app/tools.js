@@ -511,6 +511,14 @@ export async function createApplicationTools({
     appCommit:
       typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
     readDiagnostics: getRenderGovernorDiagnostics,
+    readOwnership: () => {
+      const owners = {};
+      for (const [id, entry] of dataManager?.layers || []) {
+        const diagnostics = entry?.module?.getPerformanceDiagnostics?.();
+        if (diagnostics) owners[id] = diagnostics;
+      }
+      return owners;
+    },
     readTimings: () => {
       const overlay = getWorldOverlayDiagnostics?.() || {};
       return {

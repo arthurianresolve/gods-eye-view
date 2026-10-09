@@ -15,7 +15,7 @@ the earlier release requirements and historical results.
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density UI synchronization, capture defaults, elapsed-time movement and instrumentation guard | Current CI unit/build gates pass; build identity, route and complete mismatch rejection remain incomplete | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract | Snapshot/monitor unit coverage passes; production owner accounting and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
+| S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON and submarine-cable lifecycle owners | Snapshot/monitor and local GeoJSON lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable load cleanup paths | Existing lifecycle tests pass; no accepted post-fix retention reproduction or 60-minute soak | Pending resource plateau |
 | S50 geometry coalescing | Partial: CCTV queue cursor plus existing geometry reuse | Queue tests pass; complete revision/coalescing and late-job acceptance remain pending | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: disposable coalesced scheduling API; no production layer callers yet | Governor unit coverage passes; layer cadence and static-frame acceptance remain pending | Pending static and animated comparisons |
@@ -62,7 +62,8 @@ counts must return to baseline and post-GC heap must plateau, with no more than
 ## Code reconciliation and remaining work
 
 The changes since the comparison baseline are in `510ed8d`, `d8ce27b`,
-`2e0fb80`, `c441832`, and `f77effc`. The first commit combines several
+`2e0fb80`, `c441832`, `f77effc`, and the pending owner-diagnostics change.
+The first commit combines several
 foundations, rather than delivering
 one accepted optimization per slice. Remaining accepted optimizations should have
 separate reversible commits and their comparison reports; do not rewrite the
@@ -82,9 +83,11 @@ shared history to manufacture a per-slice delivery record.
   completed-frame intervals and reuses existing overlay diagnostics. It now
   accepts a bounded per-owner count map for listeners, timers, pending jobs,
   primitives, data sources, and cache entries; absent metrics stay `null` and
-  arbitrary payloads are discarded. Complete production owner accounting,
-  layer/geometry CPU timing, intentional-idle separation and a complete
-  instrumentation-disable path. Measure overhead separately; an interval
+  arbitrary payloads are discarded. [Application tools](../src/app/tools.js)
+  now collect bounded counts from local GeoJSON and submarine-cable lifecycle
+  modules. Complete broader owner accounting, layer/geometry CPU timing,
+  intentional-idle separation and a complete instrumentation-disable path.
+  Measure overhead separately; an interval
   between rendered frames is not CPU execution time or a GPU duration.
 - **S49:** [local GeoJSON](../src/data/localGeojsonCore.js) and
   [cable ingestion](../src/layers/submarineCables/ingestion.js) attempt cleanup

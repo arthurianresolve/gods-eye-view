@@ -51,9 +51,23 @@ test('destroy removes context records and permits a fresh replacement', async t 
   const env = harness(t);
   t.mock.method(globalThis, 'fetch', async () => response());
   await env.layer.enable(env.viewer);
+  assert.deepEqual(env.layer.getPerformanceDiagnostics(), {
+    listeners: 3,
+    timers: 0,
+    pendingJobs: 0,
+    dataSources: 1,
+    cacheEntries: 1,
+  });
   const oldEntity = [...getContextStore().entities.values()][0].entity;
   assert.equal(getContextStore().entities.size, 1);
   env.layer.disable(env.viewer);
+  assert.deepEqual(env.layer.getPerformanceDiagnostics(), {
+    listeners: 1,
+    timers: 0,
+    pendingJobs: 0,
+    dataSources: 0,
+    cacheEntries: 1,
+  });
   assert.equal(getContextStore().entities.size, 0, 'disable releases its records with the source');
   assert.equal(env.sources.size, 0, 'disable removes the built source from the scene');
   env.layer.destroy(env.viewer);
