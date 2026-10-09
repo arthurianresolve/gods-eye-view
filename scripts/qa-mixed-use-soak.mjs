@@ -12,13 +12,14 @@ export async function runMixedUseSoak({
   now = () => Date.now(),
   driver,
   url = 'http://localhost:4174',
+  browserOptions = {},
   intervalMs = 250,
   progress = () => {},
 } = {}) {
   if (!Number.isFinite(durationMs) || durationMs <= 0)
     throw new TypeError('Duration must be positive.');
   const ownsDriver = !driver;
-  driver ||= await createRenderedSoakDriver(url);
+  driver ||= await createRenderedSoakDriver(url, { browserOptions });
   try {
     for (let i = 0; i < (driver.warmupIterations || 0); i++)
       await driver.runCycle(i);
@@ -63,7 +64,7 @@ export async function runMixedUseSoak({
       warmupIterations: driver.warmupIterations || 0,
       firstRetainedMetrics,
       lastRetainedMetrics: await driver.retainedMetrics?.(),
-      hardwareRenderingValidated: false,
+      hardwareRenderingValidated: Boolean(driver.hardwareRenderingValidated),
       fullSoak: now() - startedAt >= DEFAULT_DURATION_MS,
       durationMs: now() - startedAt,
       browserVersion: driver.browserVersion || 'test driver',
@@ -85,6 +86,7 @@ if (
     const index = process.argv.indexOf(name);
     return index < 0 ? fallback : process.argv[index + 1];
   };
+  const hasFlag = (name) => process.argv.includes(name);
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], {
     encoding: 'utf8',
   }).trim();
@@ -98,6 +100,16 @@ if (
   const report = await runMixedUseSoak({
     durationMs: Number(value('--duration-ms', DEFAULT_DURATION_MS)),
     url: value('--url', 'http://localhost:4174'),
+    browserOptions: hasFlag('--headed')
+      ? {
+          headless: false,
+          args: [
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+            ...(hasFlag('--hardware') ? ['--use-angle=d3d11'] : []),
+          ],
+        }
+      : {},
     progress: (report) => console.log(JSON.stringify(report)),
   });
   report.candidateCommit = commit;

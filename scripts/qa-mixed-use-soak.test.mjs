@@ -27,6 +27,16 @@ test('soak reports completed driver operations and labels short runs as smoke', 
   assert.equal(report.fullSoak, false);
   assert.equal(report.hardwareRenderingValidated, false);
 });
+
+test('software renderer detection rejects known fallback strings', async () => {
+  const { isSoftwareRenderer } = await import('./qa-rendered-soak-driver.mjs');
+  assert.equal(
+    isSoftwareRenderer('ANGLE (Intel, Intel UHD Graphics 620, D3D11)'),
+    false,
+  );
+  assert.equal(isSoftwareRenderer('ANGLE (Google, SwiftShader)'), true);
+  assert.equal(isSoftwareRenderer('llvmpipe (LLVM 15.0.7, 256 bits)'), true);
+});
 test('soak fails when an operation is missing or fails', async () => {
   await assert.rejects(
     runMixedUseSoak({ durationMs: 1, driver: { runCycle: async () => ({}) } }),

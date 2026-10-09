@@ -9,8 +9,18 @@ import {
 } from './qa-application-fixtures.mjs';
 
 /** Exercise the actual application, renderer, layer lifecycle and UI controllers. */
-export async function createRenderedSoakDriver(base) {
-  const browser = await launchFixtureBrowser();
+/** Chromium renderer strings that do not qualify as hardware evidence. */
+export function isSoftwareRenderer(renderer) {
+  return /swiftshader|software|llvmpipe|basic render|warp/i.test(
+    String(renderer || ''),
+  );
+}
+
+export async function createRenderedSoakDriver(
+  base,
+  { browserOptions = {} } = {},
+) {
+  const browser = await launchFixtureBrowser(browserOptions);
   let cameraFailure = true;
   let archiveFailure = true;
   let archiveCalls = 0;
@@ -434,6 +444,8 @@ export async function createRenderedSoakDriver(base) {
       warmupIterations: 2,
       scope: 'rendered-application-fixtures',
       renderer,
+      hardwareRenderingValidated:
+        Boolean(renderer?.renderer) && !isSoftwareRenderer(renderer.renderer),
       browserVersion: await browser.version(),
       runCycle: cycle,
       metrics: () => page.metrics(),
