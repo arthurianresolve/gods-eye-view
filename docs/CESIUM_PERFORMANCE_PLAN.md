@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` after
-`20f5a8a`. The worktree was clean before this
+`3aff740`. The worktree was clean before this
 documentation update. The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
@@ -63,7 +63,7 @@ counts must return to baseline and post-GC heap must plateau, with no more than
 
 The changes since the comparison baseline are in `510ed8d`, `d8ce27b`,
 `2e0fb80`, `c441832`, `f77effc`, `8021a50`, `24c06cb`, `e9a29ba`,
-and `20f5a8a`.
+`20f5a8a`, `72535a9`, `3a4bb4f`, `379fca0`, and `3aff740`.
 The first commit combines several
 foundations, rather than delivering
 one accepted optimization per slice. Remaining accepted optimizations should have
