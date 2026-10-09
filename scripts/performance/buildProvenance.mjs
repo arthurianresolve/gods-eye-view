@@ -429,7 +429,7 @@ export async function createLocalBuildReceipt({
     await runNpm(appBefore.root, ['ci', '--no-audit', '--no-fund'], {
       npmConfig,
     });
-    const buildArg = `--outDir="${canonicalOut}"`;
+    const buildArg = `--outDir=${canonicalOut}`;
     await runNpm(appBefore.root, ['run', 'build', '--', buildArg], {
       npmConfig,
     });
@@ -439,8 +439,15 @@ export async function createLocalBuildReceipt({
       'Application',
       expectedAppCommit,
     );
+    const harnessAfter = await readSourceIdentity(
+      harness.root,
+      'Harness',
+      expectedHarnessCommit,
+    );
     if (appAfter.commit !== appBefore.commit)
       throw new Error('Application source revision changed during the build.');
+    if (harnessAfter.commit !== harness.commit)
+      throw new Error('Harness source revision changed during the build.');
     const afterRecipe = await packageRecipe(appAfter.root, npmConfig);
     compareRecord(afterRecipe, recipe, 'Build recipe');
     const assets = await inventory(actualOut);
@@ -449,7 +456,7 @@ export async function createLocalBuildReceipt({
       scope:
         'unsigned local source-build receipt; not a hardware or release attestation',
       source: { commit: appAfter.commit, worktree: 'clean' },
-      harness: { commit: harness.commit, worktree: 'clean' },
+      harness: { commit: harnessAfter.commit, worktree: 'clean' },
       buildRecipe: recipe,
       assets: assets.files,
       assetCount: assets.files.length,

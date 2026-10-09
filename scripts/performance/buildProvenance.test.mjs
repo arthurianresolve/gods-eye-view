@@ -25,9 +25,13 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 const arg = process.argv.find((value) => value.startsWith('--outDir='));
 if (!arg) throw new Error('Missing output directory');
-const out = arg.slice('--outDir='.length).replace(/^['\"]|['\"]$/g, '');
+const out = arg.slice('--outDir='.length);
 if (existsSync('.fail-build')) process.exit(7);
 if (existsSync('.mutate-during-build')) await writeFile('src/app.js', 'changed during build');
+if (existsSync('.mutate-harness-during-build')) {
+  const target = await readFile('.mutate-harness-during-build', 'utf8');
+  await writeFile(target, 'changed harness during build');
+}
 await mkdir(path.join(out, 'assets'), { recursive: true });
 await writeFile(path.join(out, 'index.html'), '<main>fixture app</main>');
 await writeFile(path.join(out, 'assets', 'app.js'), await readFile('src/app.js'));
@@ -45,7 +49,7 @@ async function fixture(t, { staleDist = false } = {}) {
   await mkdir(path.join(checkout, 'src'));
   await writeFile(
     path.join(checkout, '.gitignore'),
-    '.fail-build\n.mutate-during-build\nnode_modules/\n',
+    '.fail-build\n.mutate-during-build\n.mutate-harness-during-build\nnode_modules/\n',
   );
   await writeFile(
     path.join(checkout, 'package.json'),
@@ -91,7 +95,7 @@ async function fixture(t, { staleDist = false } = {}) {
   );
   const appCommit = await commitRepo(checkout);
   const harnessCommit = await commitRepo(harness);
-  const buildRoot = path.join(tmpRoot, 'fresh-output');
+  const buildRoot = path.join(tmpRoot, 'fresh output');
   t.after(async () => {
     const canonical = await realpath(tmpRoot);
     const canonicalTemp = await realpath(os.tmpdir());
@@ -224,6 +228,14 @@ test('fresh build receipts bind source, harness, lockfile recipe and locally bui
     await readFile(path.join(fx.buildRoot, 'index.html'), 'utf8'),
     '<main>fixture app</main>',
   );
+  assert.equal(await realpath(fx.buildRoot), fx.buildRoot);
+  assert.equal(
+    await lstat(path.join(fx.tmpRoot, '"fresh output"')).then(
+      () => true,
+      () => false,
+    ),
+    false,
+  );
 });
 
 test('wrong expected SHAs, dirty checkouts and an already existing output are rejected', async (t) => {
@@ -278,6 +290,13 @@ test('build changes and failed builds produce no local receipt', async (t) => {
   const changed = await fixture(t);
   await writeFile(path.join(changed.checkout, '.mutate-during-build'), 'go');
   await assert.rejects(build(changed), /Application checkout must be clean/);
+
+  const changedHarness = await fixture(t);
+  await writeFile(
+    path.join(changedHarness.checkout, '.mutate-harness-during-build'),
+    path.join(changedHarness.harness, 'harness.txt'),
+  );
+  await assert.rejects(build(changedHarness), /Harness checkout must be clean/);
 
   const failed = await fixture(t);
   await writeFile(path.join(failed.checkout, '.fail-build'), 'go');
