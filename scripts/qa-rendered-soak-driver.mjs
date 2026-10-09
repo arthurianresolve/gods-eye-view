@@ -396,11 +396,12 @@ export async function createRenderedSoakDriver(
         ),
         'fixture-camera-0',
       );
-      const frames = await page.evaluate(async () => {
+      const frameState = await page.evaluate(async () => {
         const app = window.__godsEyeView;
         const viewer = app.viewer;
         if (viewer.isDestroyed() || viewer.scene.context.isDestroyed())
           throw new Error('Renderer destroyed');
+        viewer.resize();
         for (let n = 0; n < 3; n++) {
           viewer.scene.requestRender();
           viewer.render();
@@ -418,13 +419,25 @@ export async function createRenderedSoakDriver(
         document
           .querySelector('.investigation-timeline-controls button:last-child')
           .click();
-        return window.__soakRenderedFrames;
+        return {
+          frames: window.__soakRenderedFrames,
+          frameNumber: viewer.scene.frameState?.frameNumber ?? null,
+          requestRenderMode: viewer.scene.requestRenderMode,
+          renderRequested: viewer.scene._renderRequested ?? null,
+          canRender: viewer._cesiumWidget?._canRender ?? null,
+          canvas: {
+            clientWidth: canvas.clientWidth,
+            clientHeight: canvas.clientHeight,
+            width: canvas.width,
+            height: canvas.height,
+          },
+        };
       });
       assert.ok(
-        frames > previousFrames,
-        'no rendered frames during mixed-use cycle',
+        frameState.frames > previousFrames,
+        `no rendered frames during mixed-use cycle: ${JSON.stringify(frameState)}`,
       );
-      previousFrames = frames;
+      previousFrames = frameState.frames;
       await page.waitForFunction(
         () => window.__godsEyeView.aircraftSource.getState().mode === 'live',
       );
