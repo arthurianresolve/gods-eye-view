@@ -21,6 +21,11 @@ on:
         description: Run the 60-minute rendered application acceptance soak
         type: boolean
         default: false
+      renderer_diagnostic:
+        description: Workload for the isolated hosted Mac diagnostic
+        type: choice
+        options: [collections, wind]
+        default: collections
       hosted_gpu_probe:
         description: Probe native WebGL on free standard hosted runners
         type: boolean
@@ -360,7 +365,7 @@ jobs:
         run: node scripts/qa-hosted-capture.mjs --soak
 
   hosted-collection-probe:
-    name: Free hosted Mac point upload diagnostic
+    name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
     timeout-minutes: 10
@@ -372,5 +377,7 @@ jobs:
         with:
           node-version: 24.14.0
       - run: npm ci
-      - name: Measure fixed point update submissions with verified acceleration
-        run: node scripts/qa-hosted-capture.mjs --collections
+      - name: Run selected project diagnostic with verified acceleration
+        env:
+          DIAGNOSTIC: ${{ inputs.renderer_diagnostic || 'collections' }}
+        run: node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"

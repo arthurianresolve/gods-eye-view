@@ -160,6 +160,30 @@ try {
           `Collection diagnostic failed: ${report.pointCollections.error || 'incomplete samples'}`,
         );
     }
+    if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
+      await page.goto(
+        url.replace('capture-matrix.html', 'wind-restores.html'),
+        {
+          waitUntil: 'networkidle0',
+        },
+      );
+      await page.click('#run');
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 90_000, polling: 100 },
+      );
+      report.windRestores = await page.$eval('#result', (element) =>
+        JSON.parse(element.textContent),
+      );
+      if (
+        report.windRestores.applicationCommit !== commit ||
+        report.windRestores.status !== 'passed' ||
+        report.windRestores.checks?.length !== 3
+      )
+        throw new Error(
+          `Wind image comparison failed: ${report.windRestores.error || 'incomplete checks'}`,
+        );
+    }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       await browser.close();
       browser = null;
