@@ -14,13 +14,13 @@ the earlier release requirements and historical results.
 
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
-| S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
+| S47 baseline and comparable capture | Partial: density synchronization and workspace persistence, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb`; corrected-validator reassessment passes at `5328e25` | Hosted paravirtual Metal retention reassessment passes at `0fa3140`; Windows UHD 620 plateau pending |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb`; corrected-validator reassessment passes at `5328e25` | Fresh hosted paravirtual Metal retention run passes at `2e839a4`; Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass | Four isolated UHD 620 governor checks pass at `3664f4f`; full application cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
-| S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; first isolated partitioning pair reduces submission calls but fails pixel equality | Hosted Metal visual mismatch at `503a4f2`; accepted matched comparison pending |
+| S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
@@ -36,6 +36,31 @@ a performance shortcut. Auto quality remains opt-in.
 ## Measurement contract
 
 ### Follow-up validation on 9 October
+
+- The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
+  at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
+  validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window
+  retained-heap growth is 1.59%; listeners return from 629 to 629, with transient
+  checkpoint peaks of 641. Final pending workers are zero. Intermediate
+  checkpoints contain at most two active terrain jobs, all younger than 25 ms;
+  none crosses the ten-second unsettled-task threshold. Application-owned
+  resource gauges remain bounded. The report records Chrome 152.0.7977.75,
+  Apple M1 (Virtual), 3 logical CPUs, 7 GiB RAM and verified paravirtual Metal;
+  physical desktop coverage is false. This is an actual new run, not a
+  reassessment, but predates the later density fixes and does not validate the
+  current candidate or Windows UHD 620.
+- At `d70dac9`, all six [density journey checks](performance-evidence/visual-settings-d70dac9.json)
+  pass, including saved 75% workspace restoration. Node 24/26, builds,
+  formatting/boundaries, onboarding, all three recovery jobs and other browser
+  journeys pass. The [Windows recovery report](performance-evidence/recovery-windows-d70dac9.json)
+  preserves the asset digest through all five stages. Overall CI remains
+  **failed** because [mixed-use smoke](performance-evidence/smoke-d70dac9-failed.json)
+  times out during archive recovery in warmup cycle 1, before measurements.
+  Its original error does not identify which archive predicate timed out.
+  The fixture now polls these network/DOM states on a 100 ms timer, retaining
+  the same 30-second deadline and assertions, and records the exact phase and
+  bounded UI/render state on failure. Twenty fixture tests pass; the new browser
+  run must establish whether this fixes the timeout. Its root cause is unproven.
 
 - CI at `2e839a4` passes Node 24/26, builds, formatting, boundaries, onboarding,
   Linux/macOS recovery and all browser journeys. Windows recovery passes its

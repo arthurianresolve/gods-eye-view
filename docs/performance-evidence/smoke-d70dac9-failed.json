@@ -1,0 +1,15 @@
+{
+  "operationStatus": "failed",
+  "error": "Waiting failed: 30000ms exceeded",
+  "fullSoak": false,
+  "hardwareRenderingValidated": false,
+  "stability": {
+    "status": "pending",
+    "pending": [
+      "Run failed before measurement."
+    ]
+  },
+  "candidateCommit": "d70dac956158323ca79324d8e4c83988eceedc4b",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false
+}

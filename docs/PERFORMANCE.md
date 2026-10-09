@@ -251,6 +251,15 @@ installation-recovery jobs also pass for this exact revision.
 
 ## What is not established yet
 
+A fresh [hosted Metal run at 2e839a4](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37970731290)
+passes directly: 252 cycles over 60 minutes 9 seconds, 13 post-GC checkpoints
+and 1.59% final-window retained-heap growth. Listeners return from 629 to 629,
+with transient peaks of 641, and final pending workers are zero. The
+[raw evidence](performance-evidence/hosted-mac-2e839a4.json) identifies the
+Apple M1 virtual runner and Chrome 152.0.7977.75. This is retention evidence
+for that frozen commit, not a motion-p95 result, a later-candidate pass, or
+physical Windows coverage.
+
 Free GitHub-hosted macOS also supplies verified **paravirtual Metal** acceleration.
 The [0fa3140 run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37960247130/job/113920967041)
 completed 252 cycles in 3,603,543 ms on Chrome 152. Its 13 post-GC checkpoints

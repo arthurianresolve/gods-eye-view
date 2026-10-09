@@ -199,3 +199,11 @@ Its [original verdict](performance-evidence/hosted-mac-0fa3140-original.json)
 also failed only on the cumulative counter; its
 [reassessment](performance-evidence/hosted-mac-0fa3140-review.json) passes.
 This is hosted accelerated coverage, not a physical Mac/Windows comparison.
+
+A fresh free hosted Metal run at `2e839a4` passes the corrected validator directly:
+252 cycles in 3,609,194 ms, 13 post-GC checkpoints and 1.59% final-window heap
+growth. Listeners return from 629 to 629, with brief peaks up to 641; final
+pending workers are zero. The [raw report](performance-evidence/hosted-mac-2e839a4.json)
+retains the actual Apple M1 virtual runner and Chrome 152 environment. It predates
+the later density fixes, supplies no physical Windows result, and does not
+complete S44 or S46 for a newer candidate.

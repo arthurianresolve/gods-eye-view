@@ -226,6 +226,43 @@ export async function createRenderedSoakDriver(
     const renderingEvidence = classifyRenderer(renderer.renderer, graphics);
     let previousFrames = 0;
     let cycleNumber = 0;
+    async function waitForArchiveState(phase, predicate) {
+      try {
+        // Network/DOM state is independent of Cesium's animation cadence.
+        // Keep the existing deadline and assertion, using timer-based polling.
+        await page.waitForFunction(predicate, { polling: 100, timeout: 30000 });
+      } catch (error) {
+        const state = await page
+          .evaluate(() => ({
+            text: document
+              .querySelector('#evidence-panel')
+              ?.textContent?.slice(-1600),
+            buttons: [
+              ...document.querySelectorAll('#evidence-panel button'),
+            ].map((button) => ({
+              text: button.textContent,
+              disabled: button.disabled,
+            })),
+            visible: !document.hidden,
+            focused: document.hasFocus(),
+            renderedFrames: window.__soakRenderedFrames,
+            renderLoop: window.__godsEyeView?.viewer?.useDefaultRenderLoop,
+            contextLost:
+              window.__godsEyeView?.viewer?.scene?.context?._gl?.isContextLost?.(),
+          }))
+          .catch(() => null);
+        error.message +=
+          '; archive fixture: ' +
+          JSON.stringify({
+            phase,
+            cycle: cycleNumber - 1,
+            archiveCalls,
+            archiveFailure,
+            state,
+          });
+        throw error;
+      }
+    }
     async function cycle() {
       const iteration = cycleNumber++;
       assert.deepEqual(errors, []);
@@ -278,14 +315,14 @@ export async function createRenderedSoakDriver(
       archiveFailure = true;
       const before = archiveCalls;
       await clickControl(page, '[data-archive-url]');
-      await page.waitForFunction(() =>
+      await waitForArchiveState('failed lookup shown', () =>
         document
           .querySelector('#evidence-panel')
           .textContent.includes('Archive lookup failed'),
       );
       archiveFailure = false;
       await clickControl(page, '[data-archive-url]');
-      await page.waitForFunction(() =>
+      await waitForArchiveState('recovered lookup attachable', () =>
         [...document.querySelectorAll('#evidence-panel button')].some(
           (node) => node.textContent === 'Attach archived reference',
         ),
