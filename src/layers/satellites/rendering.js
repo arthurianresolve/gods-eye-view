@@ -155,10 +155,19 @@ export function createRendering({
         pos.longitude,
         pos.latitude,
         pos.altitude,
+        undefined,
+        layerState._scratchPropagationCartesian,
       );
       const point = layerState._points.get(noradId);
       if (point) {
-        point.position = cartesian;
+        const previous = point.position;
+        if (
+          !previous ||
+          previous.x !== cartesian.x ||
+          previous.y !== cartesian.y ||
+          previous.z !== cartesian.z
+        )
+          point.position = cartesian;
         updated++;
       }
     }

@@ -12,9 +12,9 @@ validation remains pending.
 | S50 geometry coalescing | implemented for CCTV queue cursor and latest-result ownership | CCTV cursor/queue tests and full suite pass | pending |
 | S51 render demand scheduling | implemented | governor tests pass | pending |
 | S52 overlay invalidation | pending | pending | pending |
-| S53 collection uploads | pending | pending | pending |
+| S53 collection uploads | implemented for satellite position scratch reuse and unchanged-write suppression | satellite catalog/tracking tests and full suite pass | pending |
 | S54 infrastructure batching | pending | pending | pending |
-| S55 tracking updates | pending | pending | pending |
+| S55 tracking updates | existing cached-frame path retained; no new camera ownership change | satellite tracking tests and full suite pass | pending |
 | S56 fresh-frame capture | implemented | fresh-frame/listener cleanup tests and full suite pass | pending |
 | S57 map-resource lifetime | pending | pending | pending |
 | S58 weather/effects | pending | pending | pending |

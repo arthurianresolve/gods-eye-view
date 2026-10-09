@@ -44,11 +44,21 @@ export function createCatalog({ state: layerState, services, parts, source }) {
       if (!sat || !point) continue;
       const pos = parts.orbits.propagatePosition(sat.satrec, now);
       if (pos) {
-        point.position = Cesium.Cartesian3.fromDegrees(
+        const cartesian = Cesium.Cartesian3.fromDegrees(
           pos.longitude,
           pos.latitude,
           pos.altitude,
+          undefined,
+          layerState._scratchPropagationCartesian,
         );
+        const previous = point.position;
+        if (
+          !previous ||
+          previous.x !== cartesian.x ||
+          previous.y !== cartesian.y ||
+          previous.z !== cartesian.z
+        )
+          point.position = cartesian;
       }
     }
   }

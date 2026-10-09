@@ -50,6 +50,11 @@ export function createState({ services }) {
 
   state._lastPropagation = 0;
 
+  // Reused by the fleet and dense propagation paths. Cesium clones a point's
+  // position on assignment, so one scratch Cartesian is sufficient and avoids
+  // allocating a new position object for every collection upload.
+  state._scratchPropagationCartesian = new Cesium.Cartesian3();
+
   state._lastRingRotation = 0;
 
   state._lastFocusUpdate = 0;

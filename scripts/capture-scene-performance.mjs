@@ -12,9 +12,11 @@ const option = (name, fallback) => {
   return index >= 0 ? args[index + 1] : fallback;
 };
 const url = option('--url', 'http://localhost:4173');
-const seconds = Math.max(1, Number(option('--seconds', '5')) || 5);
-const warmupMs = Math.max(0, Number(option('--warmup-ms', '5000')) || 0);
-const runs = Math.max(1, Math.min(10, Number(option('--runs', '3')) || 3));
+// The default is the release-comparison workload from S47. Short exploratory
+// captures remain available by passing --seconds/--warmup-ms/--runs explicitly.
+const seconds = Math.max(1, Number(option('--seconds', '60')) || 60);
+const warmupMs = Math.max(0, Number(option('--warmup-ms', '30000')) || 0);
+const runs = Math.max(1, Math.min(10, Number(option('--runs', '5')) || 5));
 const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
