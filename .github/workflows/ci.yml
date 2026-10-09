@@ -248,6 +248,9 @@ jobs:
       # Exercise recovery with a deterministic software renderer on GPU-less bots.
       # This job does not contribute hardware/performance acceptance evidence.
       GEV_QA_SOFTWARE_RENDERING: '1'
+      # Windows install recovery uses the measured WebGL-only SwiftShader path.
+      # Keep the full-driver software renderer available on other OS jobs.
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ matrix.os == 'windows-latest' && '1' || '0' }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0

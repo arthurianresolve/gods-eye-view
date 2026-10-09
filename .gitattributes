@@ -12,6 +12,9 @@
 # Shell launchers must stay LF to run at all.
 *.sh text eol=lf
 
+# Renderer experiment reports are archived evidence whose byte hashes are recorded.
+docs/performance-evidence/renderer-query-*.json -text whitespace=cr-at-eol
+
 # Assets Git must never rewrite.
 *.gif binary
 *.png binary

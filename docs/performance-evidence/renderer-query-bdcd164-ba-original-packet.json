@@ -1,0 +1,39 @@
+{
+  "scope": "same-runner-ordered-renderer-recovery-experiment",
+  "status": "failed",
+  "order": "BA",
+  "expectedCommit": "bdcd16487506a584865ed8b88f37451b5b8d9a79",
+  "sequence": [
+    "webgl-late",
+    "driver-late"
+  ],
+  "runId": "BA-bdcd16487506-3816",
+  "processResults": [
+    {
+      "variant": "webgl-late",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "reportFile": "webgl-late.json",
+      "logFile": "webgl-late.log"
+    },
+    {
+      "variant": "driver-late",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "reportFile": "driver-late.json",
+      "logFile": "driver-late.log"
+    }
+  ],
+  "reportFiles": [
+    "webgl-late.json",
+    "driver-late.json"
+  ],
+  "logFiles": [
+    "webgl-late.log",
+    "driver-late.log"
+  ],
+  "comparison": null,
+  "validationError": "Renderer experiment evidence invalid: driver-late persisted workspace asset digest differs from the declared fixture"
+}

@@ -66,7 +66,7 @@ for (let sequenceIndex = 0; sequenceIndex < sequence.length; sequenceIndex++) {
   try {
     reports.push({ variant, report: JSON.parse(await readFile(reportPath, 'utf8')) });
   } catch {
-    // Retain all remaining variants even when a recovery process did not emit JSON.
+    // Preserve this partial packet; the sequence stops after the failed child.
   }
   console.log(JSON.stringify({ phase: 'renderer-experiment-variant-complete', ...processResults.at(-1) }));
   if (child.status !== 0 || child.error) break;

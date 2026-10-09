@@ -451,10 +451,41 @@ partial packet remains partial and cannot close the parent slice.
   end-to-end renderer query took 23.697 to 59.627 seconds, and its instrumented
   `getParameter` phase took 23.075 to 59.030 seconds; the exact Chromium
   mechanism is unknown. The separate CPU hosts preclude a timing comparison
-  with the WebGL-only job. This is not GPU performance evidence. At
-  evidence-recording time, a full dev CI repeat containing this docs commit has
-  not yet run; broader S49 and S60 gates remain pending. Raw reports and
-  limits are summarized in [the Windows recovery note](performance-evidence/WINDOWS_RECOVERY.md).
+  with the WebGL-only job. This is not GPU performance evidence. At the time of
+  that evidence record, a full dev CI repeat had not yet run. The subsequent
+  [full CI repeat](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37995293018)
+  passed the unchanged full-driver Windows recovery at
+  [job 114039659519](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37995293018/job/114039659519): all five stages passed with zero extra pages and identical persisted workspace asset digests.
+  Broader S49 and S60 gates remain pending. Raw reports and limits are
+  summarized in [the Windows recovery note](performance-evidence/WINDOWS_RECOVERY.md).
+- **Windows recovery renderer tuning:** the isolated
+  [Windows protocol](performance-evidence/RENDERER_QUERY_TUNING.md) defaults to
+  full-driver/late-query control and WebGL-only/late-query in counterbalanced
+  `AB` and `BA` orders, comparing only within each host. Manual dispatch can
+  additionally run the optional full-driver/early-query candidate in `ABC` and
+  `CBA`. The early-query stage failed graceful browser close in both sequences
+  and required forced termination, so neither early observation is comparable
+  and the candidate is not adopted; both raw reports are retained in the
+  [experiment record](performance-evidence/RENDERER_QUERY_TUNING.md). Both ABC
+  backend reports passed all five checks, but the original ABC packet is
+  incomplete and those reports are descriptive only. The original backend-only
+  AB and BA packets both failed because their comparator used an incorrect
+  expected fixture digest. Corrected offline re-evaluations of the unchanged,
+  hashed reports found `webgl-late` eligible in both orders: median critical
+  paths improved 92.1% in AB and 87.4% in BA, with no per-stage regressions.
+  The four reports passed all five recovery stages (20 stage checks total) and
+  preserved the same settings, workspace asset digest, and page ownership.
+  These are offline evaluations of existing reports, not browser reruns. Based
+  on the counterbalanced result, only the Windows install-recovery CI job uses
+  WebGL-only SwiftShader with its existing late query; the full-driver
+  diagnostic remains available and application/global renderer defaults stay
+  unchanged. The predeclared acceptance criterion was at least 20% improvement
+  in median navigation-to-renderer-checkpoint critical path with no per-stage
+  regression above 10% in both backend-only orders; both comparisons meet it.
+  Query-only timings are diagnostic;
+  these software-rendered recovery runs establish no app FPS or GPU-performance
+  claim. The change is scoped to that CI fixture and does not change application
+  renderer defaults.
 
 ## Measurement contract
 

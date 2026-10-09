@@ -1,0 +1,99 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "818105acea3e752b16f55a472f8aea3664285021",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "AMD EPYC 7763 64-Core Processor                ",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-gl-driver",
+  "rendererExperiment": {
+    "variant": "driver-early",
+    "queryTiming": "early",
+    "sequenceOrder": "ABC",
+    "sequenceIndex": 2,
+    "runId": "ABC-818105acea3e-772"
+  },
+  "browserVersion": "Chrome/152.0.7977.75",
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-09T22:39:12.328Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "early",
+        "rendererQueryDurationClock": "page-performance-clock",
+        "rendererQueryMeasurement": "page-query",
+        "bootElapsedMs": 65187,
+        "rendererQueryDurationMs": 0.30000000004656613,
+        "bootPlusQueryCriticalPathMs": 65270,
+        "rendererCheckpointElapsedMs": 65773
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "failed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "early",
+        "rendererQueryDurationClock": "page-performance-clock",
+        "rendererQueryMeasurement": "page-query",
+        "bootElapsedMs": 15637,
+        "rendererQueryDurationMs": 0.30000000004656613,
+        "bootPlusQueryCriticalPathMs": 15643,
+        "rendererCheckpointElapsedMs": 16077
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": false,
+        "forcedBrowserProcessTermination": true,
+        "cleanupError": "Graceful browser close did not complete."
+      },
+      "step": "owned-page-cleanup",
+      "error": "Graceful browser close did not complete."
+    }
+  ],
+  "status": "failed",
+  "failure": {
+    "check": "interrupted-update-retained-application",
+    "step": "verify-persisted-workspace",
+    "error": "Graceful browser close did not complete."
+  }
+}
