@@ -1,3 +1,5 @@
+import { PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256 } from './profileRecoveryFixtureContract.mjs';
+
 const STAGES = [
   'prior-install-saves-browser-workspace',
   'interrupted-update-retained-application',
@@ -5,8 +7,6 @@ const STAGES = [
   'upgraded-application-same-profile',
   'failed-verification-rolls-back-and-reopens-assets',
 ];
-const FIXTURE_WORKSPACE_ASSET_SHA256 =
-  'd41c5ba5b579e090afd39f445f3df21b3a476581996c3980627e9bbc3d403d9c';
 
 export const RENDERER_EXPERIMENT_VARIANTS = Object.freeze({
   'driver-late': { backend: 'swiftshader-gl-driver', queryTiming: 'late' },
@@ -79,7 +79,7 @@ function assertReport(report, variant, expectedCommit, reference) {
   if (!Array.isArray(report.checks) || report.checks.length !== STAGES.length)
     fail(`${variant} does not contain exactly five recovery stages`);
   const digest = report.checks[0]?.assetSha256;
-  if (digest !== FIXTURE_WORKSPACE_ASSET_SHA256)
+  if (digest !== PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256)
     fail(`${variant} persisted workspace asset digest differs from the declared fixture`);
   for (let index = 0; index < STAGES.length; index++) {
     const check = report.checks[index];

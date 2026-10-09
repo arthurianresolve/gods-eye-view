@@ -47,7 +47,7 @@ jobs:
         run: node scripts/pinokio-install.mjs
 
       - name: Test renderer comparison and early-context probe
-        run: node --test scripts/performance/pairedRendererExperiment.test.mjs scripts/performance/startupDiagnostics.test.mjs scripts/performance/profileRecoveryPageOwnership.test.mjs
+        run: node --test scripts/performance/pairedRendererExperiment.test.mjs scripts/performance/profileRecoveryFixtureContract.test.mjs scripts/performance/startupDiagnostics.test.mjs scripts/performance/profileRecoveryPageOwnership.test.mjs
 
       - name: Install fixture browser
         run: npx puppeteer browsers install chrome

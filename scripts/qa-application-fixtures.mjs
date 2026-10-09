@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import puppeteer from 'puppeteer';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
+import { PROFILE_RECOVERY_WORKSPACE_ASSET_TEXT } from './performance/profileRecoveryFixtureContract.mjs';
 import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
 import {
   cleanupStartupHeartbeat,
@@ -346,16 +347,14 @@ export async function seedPersistentWorkspace(page) {
         .value,
   );
   await importFixtureGeometry(page);
-  return page.evaluate(async () => {
+  return page.evaluate(async (workspaceAssetText) => {
     const app = window.__godsEyeView;
     const id = document.querySelector(
       '.workspace-library [data-workspace-select]',
     ).value;
     const library = app.workspaceLibraryPanel.library;
     const record = await library.getWorkspace(id);
-    const asset = new TextEncoder().encode(
-      'Persisted public investigation notes\n',
-    );
+    const asset = new TextEncoder().encode(workspaceAssetText);
     const sha256 = [
       ...new Uint8Array(await crypto.subtle.digest('SHA-256', asset)),
     ]
@@ -378,7 +377,7 @@ export async function seedPersistentWorkspace(page) {
       bundle: await library.exportBackup(id),
       settings: { 'gev:detection-allocation:v1': 'ELASTIC' },
     };
-  });
+  }, PROFILE_RECOVERY_WORKSPACE_ASSET_TEXT);
 }
 
 export async function assertPersistentWorkspace(page, expected) {

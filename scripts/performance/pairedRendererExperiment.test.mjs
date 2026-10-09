@@ -6,6 +6,7 @@ import {
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './earlyCesiumRendererProbe.mjs';
+import { PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256 } from './profileRecoveryFixtureContract.mjs';
 import {
   evaluatePairedRendererExperiment,
   RENDERER_EXPERIMENT_ORDERS,
@@ -51,7 +52,7 @@ function report(variant, { factor = 1, cpu = 'Test CPU' } = {}) {
       id,
       status: 'passed',
       renderer: 'Google SwiftShader',
-      assetSha256: 'd41c5ba5b579e090afd39f445f3df21b3a476581996c3980627e9bbc3d403d9c',
+      assetSha256: PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256,
       renderedFeatures: 1,
       settingsMatch: true,
       workspaceBundleMatches: true,

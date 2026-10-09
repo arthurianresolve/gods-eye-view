@@ -16,6 +16,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/profileRecoveryPageOwnership.test.mjs',
   'scripts/performance/glCompletionProbe.test.mjs',
   'scripts/performance/pairedRendererExperiment.test.mjs',
+  'scripts/performance/profileRecoveryFixtureContract.test.mjs',
   'scripts/qa-candidate.test.mjs',
   'scripts/qa-install-recovery.test.mjs',
   'scripts/qa-mixed-use-soak.test.mjs',
