@@ -7,6 +7,11 @@ const OWNER_RESOURCE_FIELDS = Object.freeze([
   'primitives',
   'dataSources',
   'cacheEntries',
+  'imageryLayers',
+  'estimatedTileBytes',
+  'providerLoadsStarted',
+  'providerCacheReuses',
+  'providerLoadFailures',
 ]);
 
 function finite(value) {
@@ -111,6 +116,7 @@ function readOwnerResources(value) {
       const amount = rawCounts[field];
       if (Number.isFinite(amount) && amount >= 0)
         counts[field] = Math.floor(amount);
+      else if (amount === null) counts[field] = null;
     }
     if (Object.keys(counts).length) result[owner] = counts;
   }

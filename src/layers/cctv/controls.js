@@ -274,7 +274,11 @@ export function createControls({ state: layerState, services, parts, source }) {
           Number(Boolean(layerState._cardFetchTimer)) +
           Number(Boolean(layerState._hoverReleaseTimer)),
         pendingJobs:
-          Number(Boolean(layerState._geoLoading)) +
+          Math.max(
+            0,
+            layerState._geoQueue.length -
+              (layerState._geoQueueCursor?.index || 0),
+          ) +
           (layerState._cardFetchInFlightCount || 0) +
           (layerState._cardFetchPendingIds?.size || 0),
         primitives:

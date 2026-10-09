@@ -69,6 +69,88 @@ function fixture(registry, options = {}) {
 const settle = async () => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
 };
+
+test('equivalent map-switch cycles retain bounded providers, imagery and listeners', async () => {
+  const env = publicFixture();
+  for (let i = 0; i < 30; i++) {
+    for (const id of ['esri-imagery', 'osm', 'photoreal'])
+      await env.controller.setStack(id);
+    const state = env.controller.getPerformanceDiagnostics();
+    assert.equal(
+      state.cacheEntries,
+      3,
+      'two imagery providers and one terrain provider',
+    );
+    assert.equal(state.providerLoadsStarted, 3);
+    assert.equal(state.pendingJobs, 0);
+    assert.equal(
+      state.imageryLayers,
+      0,
+      'photoreal hides and releases imagery layers',
+    );
+    assert.equal(state.listeners, 0);
+    assert.equal(
+      state.estimatedTileBytes,
+      null,
+      'unknown memory must not become zero',
+    );
+  }
+  assert.equal(
+    env.controller.getPerformanceDiagnostics().providerCacheReuses,
+    58,
+  );
+  env.controller.destroy();
+  await settle();
+  const final = env.controller.getPerformanceDiagnostics();
+  assert.equal(final.cacheEntries, 0);
+  assert.equal(final.pendingJobs, 0);
+  assert.equal(final.primitives, 0);
+});
+
+test('pending map ownership drains on failure, retry and late completion after destruction', async () => {
+  let resolve, reject;
+  const env = fixture({
+    defaultId: 'slow',
+    sources: [
+      {
+        descriptor: { id: 'slow' },
+        createTileset: () =>
+          new Promise((yes, no) => {
+            resolve = yes;
+            reject = no;
+          }),
+      },
+    ],
+  });
+  const first = env.controller.setStack('slow');
+  await settle();
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 1);
+  reject(new Error('fixture failure'));
+  await first;
+  assert.equal(env.controller.getPerformanceDiagnostics().pendingJobs, 0);
+  assert.equal(env.controller.getPerformanceDiagnostics().cacheEntries, 0);
+  const second = env.controller.setStack('slow');
+  await settle();
+  env.controller.destroy();
+  assert.equal(
+    env.controller.getPerformanceDiagnostics().pendingJobs,
+    1,
+    'uncancellable provider remains pending until it actually settles',
+  );
+  let disposed = 0;
+  resolve({
+    destroy() {
+      disposed++;
+    },
+  });
+  await second;
+  await settle();
+  assert.equal(disposed, 1);
+  const final = env.controller.getPerformanceDiagnostics();
+  assert.equal(final.pendingJobs, 0);
+  assert.equal(final.providerLoadsStarted, 2);
+  assert.equal(final.providerLoadFailures, 1);
+});
 const descriptor = (id) => ({ id, label: id, kind: 'imagery' });
 function publicFixture() {
   const tileset = { show: true };

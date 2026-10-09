@@ -50,6 +50,8 @@ export class MapSourceController {
     this._terrainMode = null;
     this._subscribers = new Set();
     this._destroyed = false;
+    this._pendingLoads = new Set();
+    this._cacheRequests = { started: 0, reused: 0, failed: 0 };
   }
 
   getStack(id) {
@@ -113,6 +115,41 @@ export class MapSourceController {
       lastError: this._lastError,
       switchOrigin: this._switchOrigin,
       ...this._registry.state,
+    };
+  }
+  /** Numeric ownership only; no provider URLs, credentials or tile payloads. */
+  getPerformanceDiagnostics() {
+    const tilesets = new Set(this._ownedTilesets);
+    if (!this._destroyed)
+      for (const source of this._sources.values()) {
+        if (source.tileset) tilesets.add(source.tileset);
+      }
+    let estimatedTileBytes = 0;
+    for (const tileset of tilesets) {
+      const bytes = tileset.isDestroyed?.()
+        ? 0
+        : tileset.totalMemoryUsageInBytes;
+      if (!Number.isFinite(bytes) || bytes < 0) {
+        estimatedTileBytes = null;
+        break;
+      }
+      estimatedTileBytes += bytes;
+    }
+    return {
+      listeners:
+        this._subscribers.size +
+        Number(Boolean(this._removeImageryErrorListener)),
+      pendingJobs: this._pendingLoads.size,
+      primitives: this._ownedTilesets.size,
+      imageryLayers: Number(Boolean(this._imageryLayer)),
+      cacheEntries:
+        this._imageryProviders.size +
+        this._terrainProviders.size +
+        this._tilesets.size,
+      estimatedTileBytes,
+      providerLoadsStarted: this._cacheRequests.started,
+      providerCacheReuses: this._cacheRequests.reused,
+      providerLoadFailures: this._cacheRequests.failed,
     };
   }
   _emitChange(status) {
@@ -298,16 +335,24 @@ export class MapSourceController {
   }
 
   _cached(cache, id, create) {
-    if (cache.has(id)) return cache.get(id);
+    if (cache.has(id)) {
+      this._cacheRequests.reused += 1;
+      return cache.get(id);
+    }
+    this._cacheRequests.started += 1;
+    const pending = Symbol();
+    this._pendingLoads.add(pending);
     const promise = Promise.resolve()
       .then(() => {
         this._abort.signal.throwIfAborted();
         return create();
       })
       .catch((error) => {
+        this._cacheRequests.failed += 1;
         if (cache.get(id) === promise) cache.delete(id);
         throw error;
-      });
+      })
+      .finally(() => this._pendingLoads.delete(pending));
     cache.set(id, promise);
     return promise;
   }

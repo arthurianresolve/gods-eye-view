@@ -24,7 +24,7 @@ the earlier release requirements and historical results.
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture; browser matrix pending | Pending capture correctness and measured benefit before enabling false default |
-| S57 map-resource lifetime | Pending | Pending slice-specific validation | Pending |
+| S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
@@ -147,7 +147,15 @@ shared history to manufacture a per-slice delivery record.
   Complete idle/moving/portrait/resized/restored/hidden-tab browser comparisons
   and measure benefit before changing the default again.
 - **S57:** audit and fix superseded map loads and provider/tileset ownership;
-  compare repeated switches and streaming without reducing detail/cache targets.
+  the current controller already guards stale imagery/terrain/tileset completions
+  and releases cached owned results at teardown. Thirty equivalent switch cycles
+  retain exactly two imagery providers and one terrain provider, without new
+  provider construction, active imagery or error-listener growth. New numeric
+  diagnostics expose pending factory loads, cache hits/failures and Cesium's
+  optional tile-memory estimate (unknown stays null). Uncancellable provider
+  promises remain pending until they actually settle, including after teardown.
+  Retain bounded warm caches; no arbitrary cache reduction is justified. Compare
+  real streaming and activation before claiming a performance improvement.
 - **S58:** measure weather/wind/effect costs, reuse equivalent resources and remove
   redundant work only where compositing and animation remain equivalent.
 - **S59:** add measured cooperative batches targeting <=4 ms, bounded backpressure,

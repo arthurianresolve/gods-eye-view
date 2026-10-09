@@ -516,7 +516,9 @@ export async function createApplicationTools({
       typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null,
     readDiagnostics: getRenderGovernorDiagnostics,
     readOwnership: () => {
-      const owners = {};
+      const owners = {
+        maps: mapStackController?.getPerformanceDiagnostics?.(),
+      };
       for (const [id, entry] of dataManager?.layers || []) {
         const diagnostics = entry?.module?.getPerformanceDiagnostics?.();
         if (diagnostics) owners[id] = diagnostics;
