@@ -12,7 +12,15 @@ export async function launchFixtureBrowser(options = {}) {
     executablePath:
       process.env.PUPPETEER_EXECUTABLE_PATH ||
       (await puppeteer.executablePath()),
-    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      // Explicit fixture-only opt-in for GPU-less hosted recovery runners.
+      // Hardware measurement callers keep their original renderer selection.
+      ...(process.env.GEV_QA_SOFTWARE_RENDERING === '1'
+        ? ['--use-gl=angle', '--use-angle=swiftshader']
+        : []),
+    ],
     ...options,
   });
 }

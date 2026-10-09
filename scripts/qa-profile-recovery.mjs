@@ -185,10 +185,22 @@ async function reopen(label, { seed = false } = {}) {
     browserVersion = await browser.version();
     const { page, errors } = await prepareFixturePage(browser, base);
     await bootFixturePage(page, base);
+    const renderer = await page.evaluate(() => {
+      const canvas = window.__godsEyeView.viewer.scene.canvas;
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      const info = gl.getExtension('WEBGL_debug_renderer_info');
+      return gl.getParameter(info?.UNMASKED_RENDERER_WEBGL || gl.RENDERER);
+    });
+    if (process.env.GEV_QA_SOFTWARE_RENDERING === '1')
+      assert.match(
+        renderer,
+        /swiftshader/i,
+        'Expected explicit fixture software renderer',
+      );
     if (seed) expected = await seedPersistentWorkspace(page);
     const result = await assertPersistentWorkspace(page, expected);
     assert.deepEqual(errors, []);
-    checks.push({ id: label, status: 'passed', ...result });
+    checks.push({ id: label, status: 'passed', renderer, ...result });
     console.log(JSON.stringify(checks.at(-1)));
   } finally {
     await browser.close();
@@ -295,6 +307,7 @@ try {
     os: os.release(),
     node: process.version,
     browserVersion,
+    hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.
     timestamp: new Date().toISOString(),
     sourceDirtyAtStart,
     sourceChangedDuringRun:

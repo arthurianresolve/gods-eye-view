@@ -164,6 +164,12 @@ pending human reviews or unavailable extra GPUs do not block independent code wo
   external request must be observed and blocked. DNS failure alone cannot pass.
   This correction and the full soak still need CI validation; no engine or VM
   change is involved.
+- Startup diagnostics in [the Windows `3cf6f58` recovery job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37942077509/job/113859197493)
+  identify WebGL initialization failure on the hosted runner. Recovery CI now
+  explicitly selects SwiftShader in its disposable fixture browser and asserts
+  the actual renderer in each reopen result. Recovery reports never qualify as
+  hardware evidence. User Chrome, deployed runtime and hardware-soak renderer
+  selection are unchanged. This recovery correction awaits CI validation.
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser
