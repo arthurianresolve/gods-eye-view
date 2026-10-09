@@ -112,6 +112,14 @@ export async function openWorkspace(page, id) {
       return {
         status: document.querySelector('.workspace-library [data-status]')
           ?.textContent,
+        viewer: {
+          entities: app?.viewer?.entities?.values?.length ?? null,
+          dataSources: app?.viewer?.dataSources?.length ?? null,
+          primitives: app?.viewer?.scene?.primitives?.length ?? null,
+          groundPrimitives:
+            app?.viewer?.scene?.groundPrimitives?.length ?? null,
+        },
+        performance: app?.getPerformanceSnapshot?.() || null,
         layers,
       };
     });

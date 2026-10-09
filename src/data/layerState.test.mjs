@@ -1122,6 +1122,27 @@ test('restore applies sanitized params after init and before enable', async () =
   });
 });
 
+test('repeated workspace restores skip unchanged layer parameters', async () => {
+  let paramsCalls = 0;
+  const manager = productionManager({
+    cctv: {
+      setParams: () => {
+        paramsCalls += 1;
+        return true;
+      },
+    },
+  });
+  const coordinator = new LayerStateCoordinator(manager, shareSink(), {
+    storage: memoryStorage(),
+  });
+  const state = createDefaultLayerState();
+  state.options.cctv.autoHop = true;
+  await coordinator.restoreWorkspaceState(state);
+  await coordinator.restoreWorkspaceState(state);
+  assert.equal(paramsCalls, 1);
+  coordinator.destroy();
+});
+
 test('manager forwards passive restore origin into module parameter application', async () => {
   const seen = [];
   const manager = productionManager({

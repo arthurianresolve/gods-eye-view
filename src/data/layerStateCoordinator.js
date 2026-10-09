@@ -45,6 +45,18 @@ function currentLayerOutcome(dataManager, layerId) {
   };
 }
 
+/** Avoid re-entering a layer's parameter side effects when a restore repeats. */
+function layerParamsAlreadyApplied(dataManager, layerId, options) {
+  if (!options || Object.keys(options).length === 0) return true;
+  const current = dataManager.getLayerParams?.(layerId);
+  return Boolean(
+    current &&
+    Object.entries(options).every(([key, value]) =>
+      Object.is(current[key], value),
+    ),
+  );
+}
+
 /**
  * Owns durable user layer preferences independently from transient runtime
  * choreography, and coordinates passive post-registration restoration.
@@ -359,6 +371,8 @@ export class LayerStateCoordinator {
           const paramsSucceeded =
             !options ||
             Object.keys(options).length === 0 ||
+            (origin === LAYER_RESTORE_ORIGINS.workspace &&
+              layerParamsAlreadyApplied(this.dataManager, entry.id, options)) ||
             this.dataManager.setLayerParams(entry.id, options, { origin });
           return this.dataManager
             .restoreLayerState(
