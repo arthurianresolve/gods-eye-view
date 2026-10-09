@@ -1,8 +1,11 @@
 # Cesium performance plan
 
 Updated on 9 October 2026. Full runtime CI passes at
-`7c6c324269f0f67c7361530013ff99e361664556`, with additional hosted-renderer
-probes at `ee38af49f024242252f7a6297837dde44236d3c5`. The comparison baseline remains
+`93caf86405a56ba56dbcca72e16eaf23a35e32d6` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37982744197)).
+The latest isolated hosted wind/capture checks pass at
+`d905f301bd6856a21c9f648200a380f792d29968`; the 60-minute hosted Metal
+retention pass belongs to `2e839a449ce32582130b33267a1a276e8cb59224`, not the current tip.
+The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
 This ledger separates code delivery, automatic checks, and hardware acceptance.
@@ -32,6 +35,348 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+## Completion execution plan - 9 October 2026
+
+This section is the forward work order. The ledger above reports delivered work;
+older reconciliation notes and reports below are historical and do not override
+this queue. Updating this plan does not change a slice to implemented or passed.
+The restart point is clean `dev` at `93caf86405a56ba56dbcca72e16eaf23a35e32d6`.
+The original comparison baseline remains `eb8c682`; use both full SHAs in evidence.
+
+The user selected **GPT-6 Luna** to execute implementation after the originally
+requested GPT-5.6 Luna was unavailable in this session's executor. Assign one
+bounded work packet at a time to `gpt-6-luna`; the coordinating agent reviews the
+patch and evidence, integrates commits and operates deployment. Record the actual
+executor in each packet result. Do not silently substitute a model. Browser work
+must use the authorized Chrome connection; repository automation on GitHub may
+use its existing browser harness. Do not bypass a denied browser surface with a
+second runtime.
+
+### Completion rules and available environments
+
+- **Implemented:** the complete packet behavior exists, ownership and compatibility
+  checks pass, and its reversible commit is identified. A helper or passing old
+  tests alone is not completion of a new behavior.
+- **Automatically validated:** named focused tests, integration gates and artifacts
+  identify the source they actually tested. Skipped, canceled, unavailable and
+  failed checks stay distinct. Green CI never implies completion of this plan.
+- **Hardware validated:** matched results identify the renderer and environment;
+  software rendering, hosted paravirtual Metal and a physical desktop are separate.
+- **Experiment rejected:** retain the reproducer, measurements and reason, revert
+  the runtime change, and assess another design. A rejection closes that experiment,
+  not unrelated deliverables in its parent slice. A no-change disposition for a
+  complete optimization requires evidence covering the original contract.
+- **All done:** every packet has an accepted implementation or an evidenced
+  no-change disposition, all required available-environment checks pass on the
+  frozen candidate, documentation and deployment agree, and remaining unavailable
+  coverage is explicitly reported. If a required available-machine check fails,
+  report the failure; do not label the plan fully accepted. The 20% objective is
+  reported separately as achieved or not achieved.
+
+| Environment | Work to execute | What it cannot establish |
+| --- | --- | --- |
+| User's Windows / Intel UHD 620 | Primary foreground visual comparisons, five paired runs per workload, interaction checks, capture matrix, tracking journeys and 60-minute retention soak | Other GPUs or operating systems |
+| VM105 / Linux | Node 24/26 where supported, install/upgrade/rollback, application/API health, worker assets, deployment and persistence | Windows rendering or GPU performance without a verified physical renderer |
+| Free standard GitHub Linux/Windows/macOS runners | Existing CI/recovery suites, bounded fixture jobs, software or verified hosted Metal visual/retention supplements | Physical Mac or discrete Windows GPU coverage; software results are not GPU evidence |
+| Unavailable discrete Windows GPU / physical Mac | Keep original matrix entries unavailable and support claims unverified | These missing machines do not block independent implementation or pretend to pass |
+
+Use free standard public-repository runners only, with bounded project tests,
+limited retained artifacts and no paid GPU/larger runners. Keep tests independent
+of live providers. Do not replace VM105, change DNS/TLS, or disturb the working
+`vision.macarthur.systems` deployment while preparing the candidate.
+
+### Execution order and checkpoint discipline
+
+1. **A - make comparisons executable:** S47.1, S48.1, S49.1 and S50.1. Run the
+   existing tests first; repair concrete fixture/counter faults before optimizing.
+2. **B - finish scheduling and overlays:** S51.1, S52.1-S52.2, S53.1-S53.2.
+   Instrument before changing hot paths; retain only fidelity-preserving wins.
+3. **C - deliver the untouched work:** S54.1-S54.3 and S55.1-S55.2. Shared
+   representation and frame-context changes land separately from renderer changes.
+4. **D - close remaining resource paths:** S56.1, S57.1, S58.1 and S59.1-S59.2.
+   Independent audits/fixtures may proceed during B/C; dependent runtime changes
+   wait for the needed interfaces and focused ownership checks.
+5. **E - qualify and deliver:** S60.1-S60.3; freeze code, run exact-revision
+   comparisons/soaks, report outcomes, then deploy the verified development build.
+
+Dependencies are local technical gates, not a reason to wait for unavailable
+hardware: S51 needs the S49/S50 ownership checks; S52 needs S51 invalidation;
+S53 needs measured overlay costs; S54 needs S49/S50/S53 identity and collection
+contracts; S55 needs S53 tracked/fleet separation; S58 uses the S51/S56 lifecycle
+contracts; S59 uses S50/S54 preparation boundaries. Failed correctness or visual
+checks block the affected change. Missing global performance evidence leaves its
+acceptance pending while other independent packets continue.
+
+For each packet deliver one reviewable commit, meaningful behavior tests, and a
+result record with packet ID, executor, source/harness/baseline SHAs, changed
+paths, commands, exit results, raw artifact paths/digests, measured outcome,
+remaining acceptance and next packet. Append evidence without rewriting failures.
+Commit generated evidence after measuring the clean code commit; its parent SHA
+remains the tested revision. Do not claim the later report-only commit was tested.
+
+A green checkpoint is not a stopping point. After review, start the next ready
+packet without asking for permission again. After two controlled reproductions
+of an unchanged failure with no new discriminating evidence, preserve the failure
+and continue another ready packet. This limits repeated diagnosis, not testing
+requirements. Resume diagnosis with a specific hypothesis and a new control.
+
+### A - measurements, retention and geometry ownership
+
+**S47.1 - workload registry and paired comparison validation.**
+
+- Extend `scripts/performance/` and `scripts/capture-scene-performance.mjs` with
+  versioned, deterministic workload descriptors: fixture hashes, fixed time,
+  route, selected identity, layer counts, effective settings, browser/renderer,
+  viewport/DPR and drawing buffer. Keep application and harness commits separate.
+- Cover the operating Austin view; dense 2,500 aircraft + 4,362 datacenters +
+  716 dams; fixed selected tracking/cockpit/replay; individual/combined
+  infrastructure; fixed weather/wind/effects; lifecycle stress; deterministic
+  terrain/tiles streaming. Record live-provider checks separately.
+- Add a paired-report validator requiring five baseline and five candidate runs,
+  each with 30-second warmup/60-second measurement, matched absolute-time routes,
+  Manual/Dense 75%, unchanged resolution/MSAA/effects/populations and foreground
+  continuity. Cold activation is a separate result. Reject dirty/wrong builds,
+  mismatches, insufficient samples and missing renderer/fixture identities.
+- Verify a deliberately injected delay fails the actual motion gate. Test malformed
+  reports, changed conditions, no frames and the negative control; retain all raw
+  runs. Existing capture guards are reused, not replaced by a weaker schema.
+- **Exit:** executable descriptors and comparison validation cover every workload;
+  available browser paths can export those records. Full paired hardware captures
+  are S60 acceptance, not a prerequisite to writing subsequent code.
+
+**S48.1 - ownership coverage and attributable costs.**
+
+- Extend existing `src/performance/` hooks for application geometry preparation,
+  tracked-object work, overlays and layer updates. Inventory every application
+  listener/timer/render hold/job/cache/primitive/data-source owner; classify
+  cumulative counters separately from current resources.
+- Add bounded workload summaries and leading measured CPU phases. Keep rendered
+  intervals, CPU time, intentional idle and measured GPU time separate; unsupported
+  values stay null. Disabled instrumentation installs no owners and reads no clock.
+- Capture browser traces/allocation evidence separately from latency runs through
+  permitted tooling. Measure enabled/disabled overhead with five alternating pairs;
+  if material, keep profiling off in acceptance runs and document the cost.
+- **Exit:** all measured owners have create/dispose accounting, diagnostic buffers
+  are bounded, and every workload has either attribution or a named unavailable
+  metric. Node mock-canvas results are labeled as such.
+
+**S49.1 - isolated lifecycle regressions and Windows failure diagnosis.**
+
+- Build separate fixture cycles for imports, workspace replacement, CCTV toggles,
+  terrain and picking. Use corrected worker interception; preflight worker URLs,
+  status/MIME and submission/completion/error paths before collecting retention.
+- At equal warmed checkpoints, drain bounded pending work and compare listeners,
+  jobs, data sources, primitives and caches. Test disposal while work is outstanding,
+  late success/error, malformed data and cancellation. Store job ages, not provider
+  payloads. Fix the responsible owner only; keep Cesium pinned unless an independent
+  engine reproduction justifies a separate dependency patch.
+- Windows diagnosis: use the same population, build, frame deadline and dimensions;
+  compare empty viewer, static loaded viewer, synchronous/cooperative import and
+  repeated create/destroy, with visible/focused state and RAF/update/render/timer
+  counts. Existing readback-free and governor-free failures remain evidence. A
+  passing stripped scene is diagnostic, not a substitute for the full workload.
+- **Exit:** each isolated case returns to warmed ownership with no abandoned work.
+  Windows frame failure requires a demonstrated fix or remains an explicit S60
+  blocker; it cannot be declared a driver defect from missing callbacks alone.
+
+**S50.1 - complete geometry revision and visibility reuse.**
+
+- Audit `src/layers/cctv/geometryQueue.js` and callers for every source, pose,
+  terrain and parameter revision. Keep one latest queued build per stable feature;
+  preserve compatible materialized geometry across visibility changes.
+- Measure build submissions, completions, superseded-result disposal and retained
+  ownership for unchanged restore/toggle and rapid edits. Ensure terrain revision
+  invalidates correctly, disabled layers cannot resurrect, cursor batches remain
+  bounded, and selection/frusta/coverage retain exact inputs and appearance.
+- **Exit:** unchanged cycles submit zero duplicate builds; rapid edits publish only
+  the latest result, and source/pose/terrain/parameter plus visual fixtures pass.
+
+### B - render scheduling, overlays and collections
+
+**S51.1 - complete render-demand adoption.** Inventory layer callbacks and holds in
+`src/app/layers/`, `src/layers/` and `src/renderGovernor.js`. Replace continuous
+holds only for measured periodic visual work; retain them for tracking,
+interpolation, wind, fades, projection and camera motion. Gate hidden/preUpdate
+work separately from collection. Test data arrival, selection, resize, visibility
+resume, cancel and final transition frame. Exit with at most two rendered frames
+in ten settled seconds, correct declared periodic cadence and zero owners after
+teardown, first isolated and then in the full application.
+
+**S52.1 - projection and placement invalidation.** Add explicit revisions in
+`src/overlays/worldOverlay.js` and the overlay host for camera pose, viewport/DPR,
+source positions, selection, style and UI occlusion. Cache only stages whose full
+inputs are unchanged; preserve stable identities and pooled records. Test one
+input mutation at a time, including panel movement, horizon changes and zoom.
+Exit with no repeat projection/layout on unchanged input and identical cohorts,
+placement, hit regions and accessible actions.
+
+**S52.2 - text preparation and conditional painting.** Cache bounded text/style
+preparation; include opacity/fade/animation phase in paint invalidation. Keep the
+accessible mirror and picking consistent with the actual painted frame. Revisit
+the rejected detection regression using five alternating pairs for all overlay
+fixtures; do not reapply `a63096b` unchanged. Exit with identical visible content
+and repeatable browser benefit; no repeatable >10% workload regression.
+
+**S53.1 - collection write/allocation reduction.** Audit satellite and flight hot
+paths; reuse Cartesian/scratch records, batch membership and suppress unchanged
+property writes. Count actual mutations, buffer uploads/bytes and allocations
+separately from estimated CPU cost. Test selected objects, focus, horizon, opacity
+and recovery at unchanged populations/cadence.
+
+**S53.2 - tracked/fleet collection experiment.** Compare a small number of
+frequency-based collections with the current representation. Preserve blend/depth
+ordering and fading; use specialized blending only with proven opacity semantics.
+Explain the prior 24-pixel mismatch before accepting a new split. Exit with
+repeatable upload/allocation benefit and strict identical-scene visual/identity
+checks. Reject a split that still changes pixels; document a complete no-change
+disposition only after the applicable alternatives are measured.
+
+### C - infrastructure and tracking implementation
+
+**S54.1 - separate infrastructure records from rendering.** In
+`src/data/localGeojsonCore.js`, `src/data/infrastructure.js` and cable ingestion,
+introduce a lightweight stable feature-to-render/pick mapping. Preserve duplicate
+names, evidence/references, legacy query IDs, analyst results, pinning and workspace
+persistence. Keep current rendering in this first commit; test identity round trips
+and cleanup without silently changing imported user geometry.
+
+**S54.2 - batch compatible static infrastructure.** Convert repeated datacenter/dam
+points and stems into shared collections/geometry instances within existing
+spatial/LOD partitions. Preserve camera-height stem scaling, ground sampling,
+colors, opacity, depth behavior, focus/selection and per-feature picking. Batch
+compatible cable geometry only where the same appearance can be demonstrated;
+retain specialized paths otherwise. Release temporary construction arrays after
+ownership transfer and cancel/dispose superseded results. Do not retain hidden
+GeoJSON entity data sources merely to avoid construction.
+
+**S54.3 - validate infrastructure activation and memory.** Run all three layers
+individually and together, dense bundled populations, duplicate names and missing
+metadata. Compare repeated activation, retained ownership and full-pose pixels,
+including terrain and LOD boundaries. Exit with lower activation cost or retained
+memory, no >10% repeatable regression elsewhere, and unchanged selection/evidence.
+S54 stays unimplemented until S54.1 and an accepted rendering disposition exist.
+
+**S55.1 - authoritative tracked-frame context.** Inspect
+`src/layers/flights/tracking.js`, `rendering.js`, other tracking modules and
+`src/data/trackedCamera.js`. Share one time sample, position/orientation and camera
+pose/projection result per tracked frame. Keep fleet maintenance outside that path;
+avoid redundant transforms and writes without quantizing real motion. Introduce
+no second camera owner. Test same-time reuse and invalidation after identity,
+trajectory, replay time and ownership changes.
+
+**S55.2 - tracking transitions and matched motion.** Exercise manual navigation,
+aircraft follow, cockpit, CCTV, replay seeks, loss/reacquisition and layer disable.
+Run `npm run test:track` in supported browser automation and the fixed trajectory
+journey, compare selected model count, readout/label/time alignment, jumps and drift.
+Exit with unchanged authority transitions and repeatable improvement in tracking
+p95/long tasks; the final 20% objective remains a separate S60 result.
+
+### D - capture, streaming, effects and ingestion
+
+**S56.1 - finish capture validation and preservation decision.** Verify all viewport
+and pointer capture callers use `src/freshFrame.js`; audit copied-image encoding
+and surface cleanup on success, timeout, hidden tab, abort, resize and destruction.
+Run idle/moving/portrait/resized/restored/hidden application scenes with true/false
+preservation at equal resolution/MSAA/effects and unchanged size limits. Preserve
+the 400 ms fixture deadline. Enable false only after freshness, no-black-frame,
+resource cleanup and repeatable benefit pass; otherwise record the measured
+no-change outcome and keep true. An isolated capture pass is not the full matrix.
+
+**S57.1 - streaming lifetime and request comparisons.** Extend existing map fixtures
+and `src/maps/` tests with deterministic imagery/terrain/tiles, rapid switching,
+comparison leases, failures, retries and late completion. Track active providers,
+cache ownership, duplicate requests, loading stalls and actual tile memory when
+available. Run matched routes and equivalent warmed switch checkpoints. Exit with
+bounded owners, no duplicate active providers, unchanged detail/SSE/textures/
+collision/attribution and no repeatable >10% activation/loading regression. Keep
+live checks separately labeled; do not reduce Google cache limits as a shortcut.
+
+**S58.1 - weather frame and effect ownership.** Preserve the accepted wind-image
+reuse and extend `src/layers/weather/`, wind and `src/ui/effects.js` only where
+measurements find duplicate texture/geometry/pass work. Reuse equivalent resources,
+update animation uniforms, skip fully invisible contributions and release retired
+frames/intermediate targets. Compare frame times, paths, vertices, colors,
+transparency and effect strength for pause/resume, reduced motion, source changes
+and map-host changes. Exit with an unchanged full effect matrix, bounded ownership
+and measured benefit, or an evidenced no-change disposition for each rejected pass.
+
+**S59.1 - bounded document decoding and single-feature preparation.** Extend the
+existing cooperative import path rather than adding an unrelated queue. Measure
+JSON/CSV/XML decoding and a 50,000-vertex line/polygon with holes. Prototype chunked
+or existing-worker preprocessing with bounded messages/backpressure; keep DOM and
+Cesium on the main thread. Preserve all stored records, current 5,000-feature render
+cap, order, coordinates, identity and evidence. Target <=4 ms application batches;
+measure total completion as well as maximum task. Do not reintroduce the rejected
+71-92% completion regression. Test cancellation, worker failure, malformed data,
+replacement and destruction with no partial publication or orphan jobs.
+
+**S59.2 - UI/catalog maintenance and interaction.** Coalesce obsolete refreshes,
+write DOM only when values change and keep progress cadence bounded. Preserve
+selection across refreshes and reject stale workspace/source completions. Test
+rapid imports, workspace switching and catalog updates; exit with complete data,
+local-control p95 <=100 ms and loaded replay-seek p95 <=250 ms on the primary
+machine. Unit task budgets alone are insufficient to assert interaction acceptance.
+
+### E - candidate evidence, final verification and deployment
+
+**S60.1 - consumable performance acceptance.** Extend
+`scripts/qa-candidate.mjs` additively with named performance comparison, visual,
+interaction and retention evidence (or a validated linked performance report).
+Preserve version-1 manifests and pre-release/post-publication separation. Bind all
+results to full candidate SHA and artifact digest, keep environment-level outcomes,
+and reject duplicate/malformed checks, wrong commits, missing files, absent
+hardware identity, invalid five-pair reports and failed retention. Unavailable
+physical hardware remains unavailable; do not replace it with hosted results or
+turn a target miss into a pass. Keep older release human-review requirements visible
+in `docs/IMPLEMENTATION_PLAN_NEXT.md`; this performance plan does not waive them.
+
+**S60.2 - freeze and run the full available matrix.**
+
+1. Freeze a clean code SHA after A-D review. Run formatting, package boundaries,
+   Node 24/26 suites, builds, Windows onboarding, install/profile recovery,
+   browser journeys, capture and tracking gates. Inspect individual job steps;
+   canceled/skipped jobs are not passes. Use separate immutable baseline/candidate
+   checkouts and the same browser/harness/fixtures. No competing build or profiling
+   load during latency samples.
+2. Run five matched baseline/candidate pairs per workload, 30-second warmup and
+   60-second measurement each; retain individual runs, cold activation, effective
+   settings/populations, absolute camera route, exact renderer and OS/browser
+   versions. Fixed-pose/time screenshots require explained nondeterministic masks;
+   never mask changed detail, selected features or rendering defects.
+3. Run separate 60-minute fixture mixed-use retention soaks with periodic post-GC
+   checkpoints. Require equal warmed application-owned counts, no persistent
+   upward trend and final-30-minute retained-heap growth <=5%. Compare failures,
+   oldest jobs and resource classes, not only an overall boolean. The Windows
+   primary run is required; repeat hosted/Linux evidence remains supplemental.
+4. Investigate any repeatable >10% motion p95, activation, peak heap or retained
+   resource regression; the dense/tracking objective is >=20% reduction in median
+   run-level motion p95. If a fix changes code, freeze a new SHA and rerun affected
+   comparisons plus final integration; earlier artifacts remain historical.
+5. Produce a report with implemented/automatic/hardware status, raw artifact hashes,
+   exact revisions and explicit failed/pending/unavailable items. Update this ledger,
+   S44 and `docs/PERFORMANCE.md`. Do not manufacture a new untested candidate by
+   attributing a tested code SHA to a later documentation-only commit.
+
+**S60.3 - deliver dev and verify VM105.** Push all accepted commits to remote `dev`
+and verify matching SHAs with no unexplained local commits. After candidate checks,
+record VM105's current build and recoverable deployment/configuration, preserve
+secrets and user/workspace storage, deploy that exact code artifact through the
+existing HTTPS setup, and verify served build identity, worker assets, API health,
+workspace reopen, evidence references and camera recovery. Keep VM105 and
+`vision.macarthur.systems`; rollback the application if verification fails. Record
+the tested code SHA and documentation tip separately. Stable publication still
+requires the existing attestation/tag/release and human-review gates; a dev update
+does not assert stable release readiness.
+
+### First executor packet
+
+Start with **S47.1a: a pure paired-report validator and meaningful negative tests**,
+reusing `captureIntegrity.mjs`. It must reject insufficient/mismatched evidence
+before anyone can claim a performance win. Then connect the workload descriptors
+and capture/export path in S47.1b, followed by S48.1 and the isolated S49 cases.
+The coordinator reviews each result and dispatches the next ready packet; a
+partial packet remains partial and cannot close the parent slice.
 
 ## Measurement contract
 
