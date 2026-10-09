@@ -1,8 +1,8 @@
 # Cesium performance plan
 
-Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` after
-`3cdd5cbd9f744de2a0d4d8a45a9a114660a182f8`. The worktree was clean before this
-documentation update. The comparison baseline remains
+Updated on 9 October 2026. Full runtime CI passes at
+`eb90492fa486d0c2afd727527a8d43d5affc8c35`, with additional hosted-renderer
+probes at `ee38af49f024242252f7a6297837dde44236d3c5`. The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
 This ledger separates code delivery, automatic checks, and hardware acceptance.
@@ -101,6 +101,15 @@ a performance shortcut. Auto quality remains opt-in.
   is not established. Do not accept its event-loop
   improvement as a validated comparison. The 400 ms capture deadline and the
   complete 5,000-feature population remain unchanged.
+- The [96df53f framebuffer experiment](performance-evidence/import-batches-96df53f-no-preserve-failed.json)
+  also fails with `preserveDrawingBuffer: false`. During its failed 401.8 ms
+  capture, ordinary timers continue with at most a 9.1 ms gap while no animation
+  callbacks or Cesium updates arrive. A preceding import also has a 3.34-second
+  heartbeat gap; these are separate observations, not an established GPU-driver
+  diagnosis. Buffer preservation is not accepted as the fix and the production
+  default remains true. Inspection of `chrome://gpu` through browser automation
+  is blocked by the browser URL security policy; no alternate privileged browser
+  channel was used. Driver/compositor diagnosis requires further evidence.
 
 The reassessment command writes a new report and refuses to overwrite an existing
 file: `node scripts/review-soak-evidence.mjs original.json new-review.json`.
