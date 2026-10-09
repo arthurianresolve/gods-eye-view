@@ -1,4 +1,10 @@
 import assert from 'node:assert/strict';
+import {
+  classifyRenderer,
+  readBrowserGraphicsInfo,
+  readHostEnvironment,
+} from './performance/rendererEvidence.mjs';
+export { isSoftwareRenderer } from './performance/rendererEvidence.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
 import {
   launchFixtureBrowser,
@@ -10,13 +16,6 @@ import {
 } from './qa-application-fixtures.mjs';
 
 /** Exercise the actual application, renderer, layer lifecycle and UI controllers. */
-/** Chromium renderer strings that do not qualify as hardware evidence. */
-export function isSoftwareRenderer(renderer) {
-  return /swiftshader|software|llvmpipe|basic render|warp/i.test(
-    String(renderer || ''),
-  );
-}
-
 export async function createRenderedSoakDriver(
   base,
   { browserOptions = {}, expectedCommit } = {},
@@ -218,6 +217,8 @@ export async function createRenderedSoakDriver(
         version: gl.getParameter(gl.VERSION),
       };
     });
+    const graphics = await readBrowserGraphicsInfo(browser);
+    const renderingEvidence = classifyRenderer(renderer.renderer, graphics);
     let previousFrames = 0;
     let cycleNumber = 0;
     async function cycle() {
@@ -492,8 +493,10 @@ export async function createRenderedSoakDriver(
       workerPreflight,
       applicationCommit,
       renderer,
-      hardwareRenderingValidated:
-        Boolean(renderer?.renderer) && !isSoftwareRenderer(renderer.renderer),
+      graphics,
+      renderingEvidence,
+      environment: readHostEnvironment(),
+      hardwareRenderingValidated: renderingEvidence.accelerationVerified,
       browserVersion: await browser.version(),
       runCycle: cycle,
       metrics: () => page.metrics(),

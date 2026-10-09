@@ -1,5 +1,12 @@
 import { spawn } from 'node:child_process';
 import puppeteer from 'puppeteer';
+import {
+  classifyRenderer,
+  readBrowserGraphicsInfo,
+  readHostEnvironment,
+} from './performance/rendererEvidence.mjs';
+import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
+import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 
 if (process.env.GITHUB_ACTIONS !== 'true')
   throw new Error(
@@ -37,6 +44,7 @@ const report = {
   status: 'pending',
   hardwareRenderingAvailable: false,
   captureMatrix: null,
+  environment: readHostEnvironment(),
 };
 try {
   const deadline = Date.now() + 90_000;
@@ -92,19 +100,44 @@ try {
       );
     const renderers =
       matrix.environments?.map((environment) => environment.renderer) || [];
+    report.graphics = await readBrowserGraphicsInfo(browser);
+    report.renderingEvidence = renderers.map((renderer) =>
+      classifyRenderer(renderer, report.graphics),
+    );
     report.hardwareRenderingAvailable =
       renderers.length === 2 &&
-      renderers.every(
-        (renderer) =>
-          /Intel|NVIDIA|AMD|Apple|Radeon/i.test(renderer || '') &&
-          !/SwiftShader|llvmpipe|software|basic render|virtual/i.test(renderer),
-      );
+      report.renderingEvidence.every((item) => item.accelerationVerified);
     report.status = report.hardwareRenderingAvailable
       ? matrix.status
       : 'pending';
     report.reason = report.hardwareRenderingAvailable
-      ? 'Native renderer observed; full hardware workloads and soak still required.'
-      : 'Standard runner did not expose a verified hardware renderer. Software capture checks do not complete hardware acceptance.';
+      ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
+      : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
+    if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
+      await browser.close();
+      browser = null;
+      const driver = await createRenderedSoakDriver('http://127.0.0.1:4184', {
+        expectedCommit: commit,
+      });
+      try {
+        if (!driver.hardwareRenderingValidated)
+          throw new Error('Soak browser did not retain verified acceleration');
+        report.soak = await runMixedUseSoak({
+          driver,
+          progress: (value) => console.log(JSON.stringify(value)),
+        });
+        report.soak.candidateCommit = commit;
+        if (!report.soak.fullSoak || report.soak.stability.status !== 'passed')
+          throw new Error(
+            'Hosted accelerated soak did not pass stability acceptance',
+          );
+      } catch (error) {
+        if (error.soakReport) report.soak = error.soakReport;
+        throw error;
+      } finally {
+        await driver.close();
+      }
+    }
   }
 } catch (error) {
   report.status = 'failed';

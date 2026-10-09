@@ -52,6 +52,9 @@ export async function runMixedUseSoak({
     report = {
       scope: driver.scope || 'test-driver',
       renderer: driver.renderer || null,
+      graphics: driver.graphics || null,
+      renderingEvidence: driver.renderingEvidence || null,
+      environment: driver.environment || null,
       applicationCommit: driver.applicationCommit || null,
       workerPreflight: driver.workerPreflight || null,
       warmupIterations: driver.warmupIterations || 0,
