@@ -5,6 +5,11 @@ on:
   push:
     branches: [main, dev]
   workflow_dispatch:
+    inputs:
+      full_soak:
+        description: Run the 60-minute rendered application acceptance soak
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -126,7 +131,11 @@ jobs:
         if: success() || failure()
         run: npm run qa:references -- --url http://localhost:4174
 
-      - name: Mixed-use browser component smoke
+      - name: Keyboard, accessible names and reflow
+        if: success() || failure()
+        run: npm run qa:accessibility -- --url http://localhost:4174
+
+      - name: Rendered application mixed-use smoke
         if: success() || failure()
         run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json
 
@@ -196,7 +205,7 @@ jobs:
   install-recovery:
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -208,6 +217,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Use supported Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -223,3 +233,55 @@ jobs:
 
       - name: Reject incomplete artifacts and reopen portable workspaces
         run: npm run qa:install-recovery
+
+      - name: Install fixture browser
+        run: npx puppeteer browsers install chrome
+
+      - name: Upgrade and recover a real installation and browser profile
+        run: node scripts/qa-profile-recovery.mjs --out qa-artifacts/profile-recovery.json
+
+      - name: Preserve recovery evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: profile-recovery-${{ matrix.os }}
+          path: qa-artifacts/profile-recovery*
+          retention-days: 30
+
+  rendered-soak:
+    name: 60-minute rendered application soak
+    if: github.event_name == 'workflow_dispatch' && inputs.full_soak
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install dependencies and fixture browser
+        run: npm ci
+      - name: Start application
+        run: |
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > application.log 2>&1 &
+          for attempt in $(seq 1 90); do
+            curl -sf http://localhost:4174/ > /dev/null && exit 0
+            sleep 2
+          done
+          cat application.log
+          exit 1
+      - name: Run full rendered soak
+        run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --out qa-artifacts/rendered-soak.json
+      - name: Preserve soak evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rendered-soak
+          path: |
+            qa-artifacts/
+            application.log
+          retention-days: 30

@@ -96,7 +96,13 @@ export async function openWorkspace(page, id) {
 }
 
 export async function importFixtureGeometry(page, name = 'Persistent fixture') {
+  await page.waitForSelector('.workspace-library [data-geo-file]', {
+    visible: true,
+  });
   await page.evaluate((label) => {
+    const input = document.querySelector('.workspace-library [data-geo-file]');
+    if (!input) throw new Error('Import file control is unavailable');
+    input.value = '';
     const file = new File(
       [
         JSON.stringify({
@@ -111,12 +117,11 @@ export async function importFixtureGeometry(page, name = 'Persistent fixture') {
           ],
         }),
       ],
-      'fixture.geojson',
+      `fixture-${Date.now()}.geojson`,
       { type: 'application/geo+json' },
     );
     const transfer = new DataTransfer();
     transfer.items.add(file);
-    const input = document.querySelector('.workspace-library [data-geo-file]');
     input.files = transfer.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }, name);

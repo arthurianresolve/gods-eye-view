@@ -15,8 +15,8 @@ a new provider dependency.
 | --- | --- | --- | --- |
 | S32 integration baseline | implemented | historical push CI passed; corrected PR matrix pending | pending |
 | S33 candidate evidence | implemented | focused tests passed | pending |
-| S34 install/update recovery | partial | real installer/updater CI and portable artifact recovery | full prior-install/browser-profile matrix pending |
-| S35 accessibility/first use | partial | existing browser gates plus reference controls | NVDA, VoiceOver, contrast/zoom and five users pending |
+| S34 install/update recovery | implemented | real installer/updater CI, portable recovery, and persistent-profile runner | three-OS exact-candidate run pending |
+| S35 accessibility/first use | implemented | automated keyboard, focus, AX-name, status, and 200%-equivalent reflow report | NVDA, VoiceOver, contrast/zoom and five users pending |
 | S36 infrastructure provenance | implemented | focused tests passed | pending |
 | S37 durable references | implemented | focused tests passed | pending |
 | S38 archive lookup | implemented | focused tests passed | pending |
@@ -25,7 +25,7 @@ a new provider dependency.
 | S41 camera health | implemented | focused tests passed | pending |
 | S42 camera selection | implemented | selection and provider fingerprint fixture tests | verified current production examples pending |
 | S43 camera evidence | implemented | focused tests passed | pending |
-| S44 soak/performance | component harness implemented | real browser smoke; full duration pending | full rendered application and GPU matrix pending |
+| S44 soak/performance | implemented | 72-second rendered fixture smoke passed on Chrome/Intel UHD 620; default 60-minute run and GPU matrix pending | matched Windows/macOS hardware and long-run evidence pending |
 | S45 release provenance | implemented | draft-only tags, readiness and downloaded-attestation gates | pending |
 | S46 final candidate | planned | pending | pending |
 
@@ -55,8 +55,9 @@ a new provider dependency.
 - S34 adds `qa:install-recovery` and a Windows/macOS/Linux Node 24 CI matrix.
   CI runs the actual installer and real Git updater tests. The portable fixture
   stages and verifies checksummed files, rejects interrupted and corrupted copies,
-  and reopens a bundle with a verified asset. It does not establish a complete
-  old-install/browser-profile migration.
+  and reopens a bundle with a verified asset. `qa:profile-recovery` now exercises
+  an actual prior checkout, interrupted update, rollback, candidate update, and
+  persistent Chrome profile; cross-platform exact-candidate runs remain external.
 - S36 gives datacenters and dams stable source-record identity, evidence
   envelopes, OSM/OpenInfraMap attribution, ODbL licensing, unknown time fields,
   and a link-only PeeringDB search reference for named datacenters.
@@ -69,8 +70,10 @@ a new provider dependency.
   unchanged.
 - S44 now performs actual operations in one persistent browser: source mode
   changes, replay reads, GeoJSON imports, IndexedDB workspace switches, inspector
-  rendering, archive errors and decode recovery. A short run is a smoke check.
-  Full application rendering and matched GPU evidence remain separate.
+  rendering, archive errors and decode recovery. The recorded smoke report is
+  `qa-artifacts/rendered-smoke-final2.json`; it used a hermetic eight-feature
+  datacenter fixture and real WebGL rendering on Chrome/Intel UHD 620. The
+  default 60-minute run and matched GPU evidence remain separate.
 - S45 checks exact staged commits, checksums, downloaded candidate contents,
   and GitHub artifact attestations. Tag pushes create unpublished drafts. Stable
   promotion requires complete exact-commit acceptance, another download and
@@ -78,9 +81,9 @@ a new provider dependency.
 
 ## Remaining slices
 
-S35 must complete keyboard, focus, screen-reader, contrast, zoom, and
-five-participant first-task review. S44 must run the default 60-minute fixture
-soak and matched hardware captures. The fixture can be smoke-tested with
+S35 must complete screen-reader, contrast, zoom, and five-participant first-task
+review. S44 must run the default 60-minute fixture soak and matched hardware
+captures. The fixture can be smoke-tested with
 `npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 1000`; the three-OS CI job runs
 `npm run qa:install-recovery`. S46 must freeze the candidate, collect those
 external records, and update support claims without turning pending evidence

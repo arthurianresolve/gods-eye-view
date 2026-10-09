@@ -51,6 +51,7 @@
     "qa:evidence-panel": "node scripts/qa-evidence-panel.mjs",
     "qa:render-resolution": "node scripts/qa-render-resolution.mjs",
     "qa:storage": "node scripts/qa-workspace-storage.mjs",
+    "qa:accessibility": "node scripts/qa-accessibility.mjs",
     "qa:profile-recovery": "node scripts/qa-profile-recovery.mjs",
     "qa:install-recovery": "node scripts/qa-install-recovery.mjs",
     "qa:mixed-use-soak": "node scripts/qa-mixed-use-soak.mjs",

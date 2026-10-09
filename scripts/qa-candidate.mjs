@@ -195,6 +195,7 @@ export async function runCandidateMatrix({
     for (const [id, script] of [
       ['workspace-library', 'qa:workspaces'],
       ['public-references', 'qa:references'],
+      ['accessibility-automation', 'qa:accessibility'],
       ['timeline', 'qa:timeline'],
       ['recording', 'qa:recording'],
       ['evidence-panel', 'qa:evidence-panel'],
