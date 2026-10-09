@@ -37,6 +37,23 @@ a performance shortcut. Auto quality remains opt-in.
 
 ### Follow-up validation on 9 October
 
+- CI at `2e839a4` passes Node 24/26, builds, formatting, boundaries, onboarding,
+  Linux/macOS recovery and all browser journeys. Windows recovery passes its
+  first three stages, then fails the 90-second upgraded-application startup wait.
+  The [partial failure report](performance-evidence/recovery-windows-2e839a4-failed.json)
+  is retained. The application object existed at timeout; the prior diagnostic
+  did not separately record its workspace panel. The fixture now polls this
+  state condition with a 100 ms timer instead of animation callbacks, keeping
+  the same deadline and all persistence assertions. It also records panel,
+  visibility and focus state on failure. Validation of that change is pending.
+- `c66b81c` adds an isolated point-collection diagnostic: five alternating pairs,
+  840 core and 10,000 dense synthetic points, 60 warmup frames and 180 measured
+  frames per sample. It counts WebGL buffer submissions and instrumented
+  collection update CPU duration, with matching final pixel hashes and fixed
+  update steps. This is S48 attribution work, not the 30/60-second S47 benchmark,
+  application motion performance, GPU execution timing, or an accepted S53
+  optimization. Production collections remain unchanged; hosted results pending.
+
 - [CI at eb90492](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37966397084)
   passes all Node 24/26, formatting, boundary, build, onboarding, browser and
   Windows/Linux/macOS recovery jobs. This includes the corrected workspace import

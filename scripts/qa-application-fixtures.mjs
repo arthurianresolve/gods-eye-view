@@ -78,13 +78,21 @@ export async function bootFixturePage(
     onProgress('application-ready');
     await page.waitForFunction(
       () => window.__godsEyeView?.workspaceLibraryPanel,
-      { timeout: 90000 },
+      // This is an application-state gate, not a rendered-frame gate. Chromium
+      // can defer animation callbacks while an otherwise responsive software
+      // renderer is busy; timer polling keeps the same condition and deadline.
+      { timeout: 90000, polling: 100 },
     );
   } catch (error) {
     const state = await page
       .evaluate(() => ({
         readyState: document.readyState,
         applicationPresent: Boolean(window.__godsEyeView),
+        workspacePanelPresent: Boolean(
+          window.__godsEyeView?.workspaceLibraryPanel,
+        ),
+        visibility: document.visibilityState,
+        focused: document.hasFocus(),
         canvasCount: document.querySelectorAll('canvas').length,
         cesiumError:
           document
