@@ -26,7 +26,7 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
-| S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
+| S59 cooperative ingestion | Partial: prepare only the existing 5,000-feature render cohort; four-ms CCTV batches | Import identity/order tests pass; two clean-revision CPU comparisons preserve the cohort and reduce preparation cost | Pending end-to-end import interaction and geometry measurements |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -44,7 +44,7 @@ or camera path is not a baseline comparison.
 The long soak is accepted only when application-owned listeners, pending jobs,
 scene resources, and post-GC retained heap return to their warmed baseline at
 equivalent checkpoints. Forced-GC and allocation tracing are diagnostic runs,
-not latency measurements. Missing Windows/macOS GPU evidence remains pending.
+not latency measurements. Missing Windows discrete-GPU and physical macOS evidence remains pending. The user has only the Windows UHD 620 machine; VM105 can cover Linux server/recovery checks. Free standard GitHub-hosted runners may supplement these checks, with software, paravirtual and physical rendering identified separately.
 
 Required comparisons use five runs per workload with 30 seconds of warmup and
 60 seconds of measurement; record cold activation separately. Cover the operating
@@ -292,3 +292,48 @@ The reconciliation itself changes documentation only. Existing checks above are
 evidence for their named source commits, not newly run checks of this document
 commit. VM deployment and HTTPS/DNS fixes are operational work and do not satisfy
 performance acceptance.
+
+## Free hosted validation and bounded import preparation ? 9 October 2026
+
+All local commits through `5328e256460a13edbf1be65397d2faf43e8d3075` were pushed to
+`fork/dev`. [Run 37959251555](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37959251555)
+validates that exact revision; it is not evidence for later edits. The redundant
+push-triggered run was canceled. No VM deployment changed during this validation.
+
+The repository is public. GitHub documents standard public-repository runners as
+free, with larger runners billed separately. This task uses only standard
+`ubuntu-latest`, `windows-latest` and `macos-latest` jobs for bounded repository
+build/test work. Artifact uploads are opt-in; the bounded QA reports are retained
+in job logs, which do not consume artifact storage. No paid GPU runner, account
+setting change, unrelated workload or hosted production service is used.
+[Billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions),
+[Actions terms](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features#actions).
+
+The first probes observed no WebGL 2 on Windows, SwiftShader on Linux, and Apple
+Paravirtual Metal on macOS. Linux and macOS passed all twelve isolated capture
+checks, but the initial conservative classifier left all hardware evidence
+pending. Apple's documented paravirtual framework supplies Metal acceleration;
+subsequent probes must also require Chrome's WebGL/WebGL2 feature status to report
+`enabled`. A separate hosted accelerated retention run never becomes physical
+Mac desktop coverage. [Apple graphics documentation](https://developer.apple.com/documentation/paravirtualizedgraphics).
+
+S59 now prepares only the existing 5,000-feature render cohort instead of cloning
+all imported records before applying the same cap. Ordering, source identity,
+feature identity, complete stored data and rendered population are preserved.
+The unchanged old implementation is embedded in the comparison harness. Two
+clean-source runs, each with three warmups and five alternating measurements,
+show repeated CPU preparation reductions:
+
+| Source commit | Stored records | Old median ms | Candidate median ms | Selected features |
+| --- | ---: | ---: | ---: | ---: |
+| `4d90058` | 50,000 | 4.106 | 0.169 | 5,000 |
+| `4d90058` | 250,000 | 19.130 | 0.135 | 5,000 |
+| `5328e25` | 50,000 | 4.306 | 0.176 | 5,000 |
+| `5328e25` | 250,000 | 15.546 | 0.084 | 5,000 |
+
+[First raw report](performance-evidence/import-preparation-4d90058.json) and
+[repeat report](performance-evidence/import-preparation-5328e25.json) identify
+Windows/Node 24.16 and the exact source revisions. These are Node CPU
+microbenchmarks; they exclude parsing, Cesium geometry and GPU rendering and do
+not establish an end-to-end frame-time gain or complete S59. Cooperative parsing,
+geometry preparation, cancellation and large-import interaction remain pending.

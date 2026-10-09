@@ -1,0 +1,166 @@
+{
+  "schema": "gev-import-preparation/v1",
+  "commit": "5328e256460a13edbf1be65397d2faf43e8d3075",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "capturedAt": "2026-10-09T16:27:16.218Z",
+  "scope": "Node CPU cohort preparation only; excludes Cesium geometry, rendering and ingestion parsing",
+  "samples": [
+    {
+      "count": 50000,
+      "run": 0,
+      "method": "baseline",
+      "durationMs": 4.915800000000019,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 0,
+      "method": "candidate",
+      "durationMs": 0.16110000000000468,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 1,
+      "method": "candidate",
+      "durationMs": 0.15890000000001692,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 1,
+      "method": "baseline",
+      "durationMs": 4.024300000000011,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 2,
+      "method": "baseline",
+      "durationMs": 3.7272999999999854,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 2,
+      "method": "candidate",
+      "durationMs": 0.19319999999999027,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 3,
+      "method": "candidate",
+      "durationMs": 0.176400000000001,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 3,
+      "method": "baseline",
+      "durationMs": 4.305700000000002,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 4,
+      "method": "baseline",
+      "durationMs": 5.839799999999997,
+      "renderedCount": 5000
+    },
+    {
+      "count": 50000,
+      "run": 4,
+      "method": "candidate",
+      "durationMs": 0.23730000000000473,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 0,
+      "method": "baseline",
+      "durationMs": 14.944600000000037,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 0,
+      "method": "candidate",
+      "durationMs": 0.07529999999997017,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 1,
+      "method": "candidate",
+      "durationMs": 0.32780000000002474,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 1,
+      "method": "baseline",
+      "durationMs": 13.605999999999995,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 2,
+      "method": "baseline",
+      "durationMs": 40.88839999999999,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 2,
+      "method": "candidate",
+      "durationMs": 0.08400000000000318,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 3,
+      "method": "candidate",
+      "durationMs": 0.07810000000000628,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 3,
+      "method": "baseline",
+      "durationMs": 15.546299999999974,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 4,
+      "method": "baseline",
+      "durationMs": 39.28589999999997,
+      "renderedCount": 5000
+    },
+    {
+      "count": 250000,
+      "run": 4,
+      "method": "candidate",
+      "durationMs": 0.10210000000006403,
+      "renderedCount": 5000
+    }
+  ],
+  "workloads": [
+    {
+      "records": 50000,
+      "selected": 5000,
+      "equivalent": true,
+      "baselineMedianMs": 4.305700000000002,
+      "candidateMedianMs": 0.176400000000001
+    },
+    {
+      "records": 250000,
+      "selected": 5000,
+      "equivalent": true,
+      "baselineMedianMs": 15.546299999999974,
+      "candidateMedianMs": 0.08400000000000318
+    }
+  ]
+}

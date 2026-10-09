@@ -1,12 +1,13 @@
 # Performance baseline
 
-Current status (9 October 2026): local `dev` and remote `fork/dev` were reconciled
-at `2e0fb80cb696aa6b621e8b93d8effd299ffa4b14`. The measurements below concern older
-revisions; they do not establish the S47-S60 target of a 20% reduction in motion
-p95 or a passing post-fix retention soak. See the
-[reconciled Cesium plan](CESIUM_PERFORMANCE_PLAN.md) for partial implementations,
-remaining work and the current Windows recovery CI failure. Preserve these
-historical results without treating them as acceptance of the deployed build.
+Current status (9 October 2026): remote `dev` includes the follow-up work through
+`5328e25`. The corrected `3cdd5cb` software-rendered retention soak passed; see the
+exact-revision report below. A new full validation is running for `5328e25`.
+The [Cesium plan](CESIUM_PERFORMANCE_PLAN.md) distinguishes code, automatic checks,
+physical GPU checks and hosted paravirtual rendering. It also records the limited
+Windows UHD 620 capture result and repeated import-preparation CPU comparisons.
+No accepted matched comparison establishes the S47-S60 20% motion-p95 target.
+Historical results below remain evidence for their named revisions only.
 
 This page records one hardware-rendered Apple M5 comparison captured on 22
 August 2026 in Chrome 150 at 1440 x 900. It is not a minimum hardware
