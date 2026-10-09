@@ -26,8 +26,16 @@ function position(coordinate) {
   );
 }
 
-function positions(coordinates) {
-  return coordinates.map(position);
+function* positions(coordinates) {
+  const result = new Array(coordinates.length);
+  for (let index = 0; index < coordinates.length; index++) {
+    result[index] = position(coordinates[index]);
+    // A single permitted feature can contain 50,000 vertices. Let the existing
+    // four-ms consumer yield within it, before publishing an incomplete entity.
+    // Small chunks avoid a clock read and iterator resume for every vertex.
+    if ((index + 1) % 64 === 0) yield;
+  }
+  return result;
 }
 
 /** Render a bounded user-imported cohort with the shared evidence inspector. */
@@ -93,7 +101,7 @@ export function createImportedGeometryLayer({
       ) {
         shape = {
           polyline: {
-            positions: positions(geometry.coordinates),
+            positions: yield* positions(geometry.coordinates),
             width: 3,
             material: Cesium.Color.CYAN,
             clampToGround: true,
@@ -103,14 +111,17 @@ export function createImportedGeometryLayer({
         geometry?.type === 'Polygon' &&
         geometry.coordinates?.[0]?.length >= 4
       ) {
+        const outer = yield* positions(geometry.coordinates[0]);
+        const holes = [];
+        for (let index = 1; index < geometry.coordinates.length; index++)
+          holes.push(
+            new Cesium.PolygonHierarchy(
+              yield* positions(geometry.coordinates[index]),
+            ),
+          );
         shape = {
           polygon: {
-            hierarchy: new Cesium.PolygonHierarchy(
-              positions(geometry.coordinates[0]),
-              geometry.coordinates
-                .slice(1)
-                .map((ring) => new Cesium.PolygonHierarchy(positions(ring))),
-            ),
+            hierarchy: new Cesium.PolygonHierarchy(outer, holes),
             material: Cesium.Color.CYAN.withAlpha(0.18),
             outline: true,
             outlineColor: Cesium.Color.CYAN,
