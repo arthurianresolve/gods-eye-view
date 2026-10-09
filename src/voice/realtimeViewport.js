@@ -1,4 +1,12 @@
 import {
+  captureFreshCesiumFrame,
+  renderFreshCesiumFrame,
+} from '../freshFrame.js';
+export {
+  captureFreshCesiumFrame,
+  renderFreshCesiumFrame,
+} from '../freshFrame.js';
+import {
   shouldSendViewportImage,
   hasStructuredViewIdentity,
 } from './realtimeProtocol.js';
@@ -29,20 +37,20 @@ export async function captureViewportImage() {
   // wave 2 fix)
   const freshCanvas = await captureFreshCesiumFrame(viewer);
   if (!freshCanvas) return null;
-
-  // Clamp BOTH dimensions by a total-pixel budget so tall portrait windows are
-  // downscaled too (the old width-only clamp let them through — M13).
-  const { width, height } = computeDownscale(
-    source.width,
-    source.height,
-    VIEWPORT_MAX_PIXELS,
-  );
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+  let canvas = null;
   try {
+    // Clamp BOTH dimensions by a total-pixel budget so tall portrait windows are
+    // downscaled too (the old width-only clamp let them through — M13).
+    const { width, height } = computeDownscale(
+      freshCanvas.width,
+      freshCanvas.height,
+      VIEWPORT_MAX_PIXELS,
+    );
+    canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
     ctx.drawImage(freshCanvas, 0, 0, width, height);
     if (isNearlyBlackFrame(ctx, width, height)) {
       console.warn('[GEV Voice] Skipped black Cesium viewport capture');
@@ -62,6 +70,9 @@ export async function captureViewportImage() {
     return dataUrl;
   } catch {
     return null;
+  } finally {
+    freshCanvas.width = freshCanvas.height = 0;
+    if (canvas) canvas.width = canvas.height = 0;
   }
 }
 
@@ -134,21 +145,25 @@ export async function capturePointerCrop(screenPx) {
   if (!source?.width || !source?.height || !screenPx) return null;
   const freshCanvas = await captureFreshCesiumFrame(viewer);
   if (!freshCanvas) return null;
-  const rect = pointerCropRect({
-    x: screenPx.x,
-    y: screenPx.y,
-    cssWidth: source.clientWidth || source.width,
-    cssHeight: source.clientHeight || source.height,
-    pixelWidth: source.width,
-    pixelHeight: source.height,
-  });
-  if (!rect) return null;
-  const canvas = document.createElement('canvas');
-  canvas.width = rect.output;
-  canvas.height = rect.output;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+  let canvas = null;
   try {
+    const rect = pointerCropRect({
+      x: screenPx.x,
+      y: screenPx.y,
+      cssWidth: source.clientWidth || source.width,
+      cssHeight: source.clientHeight || source.height,
+      pixelWidth: freshCanvas.width,
+      pixelHeight: freshCanvas.height,
+    });
+    if (!rect) {
+      freshCanvas.width = freshCanvas.height = 0;
+      return null;
+    }
+    canvas = document.createElement('canvas');
+    canvas.width = rect.output;
+    canvas.height = rect.output;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
     ctx.drawImage(
       freshCanvas,
       rect.sx,
@@ -171,14 +186,17 @@ export async function capturePointerCrop(screenPx) {
     return {
       dataUrl,
       rect: {
-        x: rect.sx / source.width,
-        y: rect.sy / source.height,
-        w: rect.sw / source.width,
-        h: rect.sh / source.height,
+        x: rect.sx / freshCanvas.width,
+        y: rect.sy / freshCanvas.height,
+        w: rect.sw / freshCanvas.width,
+        h: rect.sh / freshCanvas.height,
       },
     };
   } catch {
     return null;
+  } finally {
+    freshCanvas.width = freshCanvas.height = 0;
+    if (canvas) canvas.width = canvas.height = 0;
   }
 }
 
@@ -190,57 +208,6 @@ export async function renderFreshPointerFrame(viewer) {
   if (await renderFreshCesiumFrame(viewer)) return true;
   if (typeof document !== 'undefined' && document.hidden) return false;
   return renderFreshCesiumFrame(viewer);
-}
-
-/**
- * Render once and copy the completed WebGL frame before the browser may reuse
- * or clear its drawing buffer. The returned canvas is owned by the caller.
- */
-export async function captureFreshCesiumFrame(viewer) {
-  const scene = viewer?.scene;
-  const source = scene?.canvas;
-  if (!source?.width || !source?.height) return null;
-  if (typeof document !== 'undefined' && document.hidden) return null;
-  let copy = null;
-  try {
-    const rendered = new Promise((resolve) => {
-      let settled = false;
-      let timeout = null;
-      let remove = () => {};
-      const finish = (value) => {
-        if (settled) return;
-        settled = true;
-        if (timeout !== null) clearTimeout(timeout);
-        remove?.();
-        resolve(value);
-      };
-      const onRender = () => {
-        try {
-          copy = document.createElement('canvas');
-          copy.width = source.width;
-          copy.height = source.height;
-          const context = copy.getContext('2d');
-          if (!context) return finish(false);
-          context.drawImage(source, 0, 0);
-          finish(true);
-        } catch {
-          finish(false);
-        }
-      };
-      const unsubscribe = scene.postRender?.addEventListener?.(onRender);
-      remove =
-        typeof unsubscribe === 'function'
-          ? unsubscribe
-          : () => scene.postRender?.removeEventListener?.(onRender);
-      timeout = setTimeout(() => finish(false), 400);
-    });
-    scene.requestRender?.();
-    if (!(await rendered)) return null;
-    if (typeof document !== 'undefined' && document.hidden) return null;
-    return copy;
-  } catch {
-    return null;
-  }
 }
 
 // Scale (w, h) down so w*h <= maxPixels while preserving aspect ratio. Never
@@ -270,44 +237,6 @@ export function estimateDataUrlBytes(dataUrl) {
   const base64 = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
   const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
   return Math.max(0, Math.floor((base64.length * 3) / 4) - padding);
-}
-
-/**
- * Ensure the canvas holds a CURRENT frame before capture.
- * @returns {Promise<boolean>} true only when a fresh frame was presented —
- *   false while hidden (render loop suspended; a capture would be stale) or
- *   when the bounded wait timed out. Callers must not label a non-fresh
- *   canvas as current. (perf wave 2)
- */
-export async function renderFreshCesiumFrame(viewer) {
-  const scene = viewer?.scene;
-  if (!scene) return false;
-  // While the document is hidden the render loop is suspended — don't
-  // secretly restart rendering for an optional screenshot, and don't pass
-  // the stale preserved frame off as current.
-  if (typeof document !== 'undefined' && document.hidden) return false;
-  try {
-    // Under the idle render governor a bare scene.render() doesn't
-    // necessarily draw — request a frame and await its postRender (bounded),
-    // which also covers the just-became-visible race.
-    const rendered = new Promise((resolve) => {
-      const remove = scene.postRender.addEventListener(() => {
-        remove();
-        resolve(true);
-      });
-      setTimeout(() => {
-        remove();
-        resolve(false);
-      }, 400);
-    });
-    scene.requestRender?.();
-    const fresh = await rendered;
-    // A tab switch during the bounded wait invalidates freshness.
-    if (typeof document !== 'undefined' && document.hidden) return false;
-    return fresh;
-  } catch {
-    return false;
-  }
 }
 
 export function isNearlyBlackFrame(ctx, width, height) {

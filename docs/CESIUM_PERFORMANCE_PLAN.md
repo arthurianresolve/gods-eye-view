@@ -23,7 +23,7 @@ the earlier release requirements and historical results.
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression | Existing satellite tests pass; upload/allocation reduction and collection partitioning remain pending | Pending matched comparison |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
-| S56 fresh-frame capture | Partial: shared post-render copy for viewport/pointer captures; drawing-buffer preservation already disabled | Copy/successful-listener-cleanup unit coverage passes; cancellation/destruction and full capture matrix remain pending | Pending capture correctness and measured benefit |
+| S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture; browser matrix pending | Pending capture correctness and measured benefit before enabling false default |
 | S57 map-resource lifetime | Pending | Pending slice-specific validation | Pending |
 | S58 weather/effects | Pending | Pending slice-specific validation | Pending |
 | S59 cooperative ingestion | Pending | Pending slice-specific validation | Pending |
@@ -130,13 +130,15 @@ shared history to manufacture a per-slice delivery record.
   identity preserved and temporary construction data released.
 - **S55:** measure and consolidate tracking time/pose/projection work, preserving
   camera authority across manual, aircraft, cockpit, CCTV and replay transitions.
-- **S56:** [viewport capture](../src/voice/realtimeViewport.js) copies inside
-  `postRender`, but explicit cancellation/destruction ownership remains incomplete.
-  [Viewer creation](../src/app/viewer.js) already sets `preserveDrawingBuffer: false`.
-  This default changed before the required real-browser capture matrix and
-  measured-benefit evidence were recorded. Validate idle/moving/portrait/resized/
-  restored/hidden-tab cases and every cleanup path; retain or revert the default
-  based on that evidence. The current default is not an accepted optimization.
+- **S56:** [fresh-frame capture](../src/freshFrame.js) copies inside `postRender`
+  and owns timeout, abort, visibility and destruction cleanup. The viewer cancels
+  all pending captures before teardown. Viewport/pointer encoding releases
+  temporary surfaces and uses the copied frame's dimensions after resizing.
+  [Viewer creation](../src/app/viewer.js) restores `preserveDrawingBuffer: true`
+  by default: the earlier false default had no required comparison evidence.
+  False remains an explicit constructor option for controlled experiments.
+  Complete idle/moving/portrait/resized/restored/hidden-tab browser comparisons
+  and measure benefit before changing the default again.
 - **S57:** audit and fix superseded map loads and provider/tileset ownership;
   compare repeated switches and streaming without reducing detail/cache targets.
 - **S58:** measure weather/wind/effect costs, reuse equivalent resources and remove

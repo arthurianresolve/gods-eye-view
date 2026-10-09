@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { applyModelAtmosphereWorkaround } from './atmosphereCompat.js';
+import { cancelPendingFrameCaptures } from '../freshFrame.js';
 
 const PINCH_ZOOM_MULTIPLIER = 8;
 const MAX_PINCH_PIXEL_DELTA = 120;
@@ -259,7 +260,11 @@ export function boundedResolutionScale({
 }
 
 /** Create the standard globe viewer in caller-owned, visible containers. */
-export function createApplicationViewer({ container, creditContainer }) {
+export function createApplicationViewer({
+  container,
+  creditContainer,
+  preserveDrawingBuffer = true,
+}) {
   if (!container || !creditContainer)
     throw new TypeError('Viewer and credit containers are required');
   const viewer = new Cesium.Viewer(container, {
@@ -277,10 +282,9 @@ export function createApplicationViewer({ container, creditContainer }) {
     baseLayer: false,
     creditContainer,
     msaaSamples: 4,
-    // Captures copy pixels from the completed postRender frame. Keeping the
-    // browser's drawing buffer alive between frames otherwise adds a sizeable
-    // GPU allocation on every viewer.
-    contextOptions: { webgl: { preserveDrawingBuffer: false } },
+    // The false experiment requires matched capture and GPU evidence before
+    // becoming the default. The fresh-frame path works with either setting.
+    contextOptions: { webgl: { preserveDrawingBuffer } },
   });
   try {
     viewer.targetFrameRate = 60;
@@ -296,6 +300,7 @@ export function createApplicationViewer({ container, creditContainer }) {
     const resolutionGuard = installResolutionScaleGuard(viewer);
     const originalDestroy = viewer.destroy;
     viewer.destroy = function destroyWithResolutionGuard(...args) {
+      cancelPendingFrameCaptures(viewer);
       resolutionGuard.destroy();
       return originalDestroy.apply(this, args);
     };
