@@ -133,6 +133,33 @@ try {
       throw new Error(
         `Import comparison failed: ${report.importBatches.error || 'incomplete checks'}`,
       );
+    if (
+      process.argv.includes('--collections') &&
+      report.hardwareRenderingAvailable
+    ) {
+      await page.goto(
+        url.replace('capture-matrix.html', 'point-collections.html'),
+        {
+          waitUntil: 'networkidle0',
+        },
+      );
+      await page.click('#run');
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 360_000 },
+      );
+      report.pointCollections = await page.$eval('#result', (element) =>
+        JSON.parse(element.textContent),
+      );
+      if (
+        report.pointCollections.applicationCommit !== commit ||
+        report.pointCollections.status !== 'passed' ||
+        report.pointCollections.samples?.length !== 10
+      )
+        throw new Error(
+          `Collection diagnostic failed: ${report.pointCollections.error || 'incomplete samples'}`,
+        );
+    }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       await browser.close();
       browser = null;

@@ -9,7 +9,13 @@ on:
       validation_mode:
         description: Full validation, free native-renderer probe, or hosted Mac soak
         type: choice
-        options: [standard, hosted-native-probe, hosted-macos-soak]
+        options:
+          [
+            standard,
+            hosted-native-probe,
+            hosted-macos-soak,
+            hosted-collection-probe,
+          ]
         default: standard
       full_soak:
         description: Run the 60-minute rendered application acceptance soak
@@ -34,7 +40,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -83,7 +89,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -185,7 +191,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -220,7 +226,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -348,3 +354,19 @@ jobs:
       - run: npm ci
       - name: Verify acceleration and run bounded project soak
         run: node scripts/qa-hosted-capture.mjs --soak
+
+  hosted-collection-probe:
+    name: Free hosted Mac point upload diagnostic
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+      - run: npm ci
+      - name: Measure fixed point update submissions with verified acceleration
+        run: node scripts/qa-hosted-capture.mjs --collections
