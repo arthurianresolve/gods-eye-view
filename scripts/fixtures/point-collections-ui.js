@@ -13,6 +13,7 @@ const status = document.querySelector('#status');
 const output = document.querySelector('#result');
 const download = document.querySelector('#download');
 let report;
+let pixelFrames = new WeakMap();
 const check = (value, message) => {
   if (!value) throw new Error(message);
 };
@@ -89,12 +90,68 @@ async function pixels(viewer) {
       coloredPixels > 1000,
       'Capture does not contain the populated point field.',
     );
-    return [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
+    const sha256 = [
+      ...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+    ]
       .map((value) => value.toString(16).padStart(2, '0'))
       .join('');
+    return {
+      sha256,
+      bytes,
+      png: canvas.toDataURL('image/png'),
+      width: canvas.width,
+      height: canvas.height,
+    };
   } finally {
     canvas.width = canvas.height = 0;
   }
+}
+
+function requireSamePixels(first, second, label) {
+  if (first.pixels === second.pixels) return;
+  const before = pixelFrames.get(first);
+  const after = pixelFrames.get(second);
+  let changedPixels = 0;
+  let maximumChannelDifference = 0;
+  let left = before.width,
+    top = before.height,
+    right = -1,
+    bottom = -1;
+  check(
+    before.width === after.width && before.height === after.height,
+    'Capture dimensions changed.',
+  );
+  for (let i = 0; i < before.bytes.length; i += 4) {
+    let changed = false;
+    for (let channel = 0; channel < 4; channel++) {
+      const delta = Math.abs(
+        before.bytes[i + channel] - after.bytes[i + channel],
+      );
+      maximumChannelDifference = Math.max(maximumChannelDifference, delta);
+      changed ||= delta !== 0;
+    }
+    if (changed) {
+      changedPixels++;
+      const index = i / 4;
+      const x = index % before.width;
+      const y = Math.floor(index / before.width);
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  report.visualMismatch = {
+    label,
+    changedPixels,
+    totalPixels: before.width * before.height,
+    maximumChannelDifference,
+    bounds: { left, top, right, bottom },
+    samePositions: first.positionSha256 === second.positionSha256,
+    beforePng: before.png,
+    afterPng: after.png,
+  };
+  throw new Error(`${label}: rendered pixels differ.`);
 }
 
 async function sample(viewer, mode) {
@@ -202,6 +259,17 @@ async function sample(viewer, mode) {
     clearTimeout(timer);
     submissions.stop();
     measured = false;
+    const coordinates = new Float64Array(points.length * 3);
+    for (let i = 0; i < points.length; i++) {
+      const position = points[i].position;
+      coordinates.set([position.x, position.y, position.z], i * 3);
+    }
+    const positionSha256 = [
+      ...new Uint8Array(await crypto.subtle.digest('SHA-256', coordinates)),
+    ]
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join('');
+    const capture = await pixels(viewer);
     const snapshot = {
       mode,
       collections: collections.length,
@@ -214,8 +282,10 @@ async function sample(viewer, mode) {
       collectionUpdateCpuMs: summary(cpuSamples),
       renderedFrameIntervalMs: summary(intervals),
       submissions: { ...submissions.counts },
-      pixels: await pixels(viewer),
+      pixels: capture.sha256,
+      positionSha256,
     };
+    pixelFrames.set(snapshot, capture);
     check(snapshot.points === CORE + DENSE, 'Point population changed.');
     return snapshot;
   } finally {
@@ -234,6 +304,7 @@ async function sample(viewer, mode) {
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = true;
   output.textContent = '';
+  pixelFrames = new WeakMap();
   report = {
     schema: 'gev-point-collection-diagnostic/v1',
     applicationCommit: __GEV_APP_COMMIT__,
@@ -246,6 +317,7 @@ run.addEventListener('click', async () => {
     measurementFrames: MEASURE_FRAMES,
     pairs: 5,
     status: 'running',
+    controls: [],
     samples: [],
   };
   let viewer;
@@ -285,18 +357,21 @@ run.addEventListener('click', async () => {
       width: viewer.canvas.width,
       height: viewer.canvas.height,
     };
+    status.textContent = 'Checking two identical mixed-collection controls';
+    report.controls.push(await sample(viewer, 'mixed'));
+    report.controls.push(await sample(viewer, 'mixed'));
+    requireSamePixels(...report.controls, 'Repeated mixed control');
     for (let pair = 0; pair < 5; pair++) {
       const modes =
         pair % 2 ? ['partitioned', 'mixed'] : ['mixed', 'partitioned'];
       for (const mode of modes) {
         status.textContent = `Pair ${pair + 1}/5: ${mode}`;
-        report.samples.push({ pair, ...(await sample(viewer, mode)) });
+        const record = await sample(viewer, mode);
+        record.pair = pair;
+        report.samples.push(record);
       }
       const [first, second] = report.samples.slice(-2);
-      check(
-        first.pixels === second.pixels,
-        'Partitioning changed the rendered pixels.',
-      );
+      requireSamePixels(first, second, 'Mixed versus partitioned');
       check(!backgrounded, 'Diagnostic was backgrounded.');
       check(
         viewer.canvas.width === report.settings.width &&
@@ -311,6 +386,7 @@ run.addEventListener('click', async () => {
   } finally {
     document.removeEventListener('visibilitychange', visibility);
     if (viewer && !viewer.isDestroyed()) viewer.destroy();
+    pixelFrames = new WeakMap();
     report.backgrounded = backgrounded;
     output.textContent = JSON.stringify(report, null, 2);
     status.textContent = `${report.status}: ${report.samples.length}/10 samples`;
