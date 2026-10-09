@@ -17,7 +17,7 @@ the earlier release requirements and historical results.
 | S47 baseline and comparable capture | Partial: density synchronization, capture defaults, runtime identity, absolute route endpoint and before/after condition guards | Unit gates reject changed builds, populations, render settings, routes and background interruptions; browser journeys and matched-run evidence remain pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, satellite, and CCTV lifecycle owners | Snapshot/monitor and local lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable cleanup and corrected fixture worker interception; isolated lifecycle cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb` | Pending real-GPU resource plateau |
-| S50 geometry coalescing | Partial: CCTV queue cursor plus existing geometry reuse | Queue tests pass; complete revision/coalescing and late-job acceptance remain pending | Pending appearance and build-count comparisons |
+| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; full geometry revision matrix remains pending | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: disposable coalesced scheduling API with satellite periodic-cadence integration; full layer rollout remains pending | Governor and satellite focused suites pass; static-frame and cadence acceptance remain pending | Pending static and animated comparisons |
 | S52 overlay invalidation | Pending | Pending slice-specific validation | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression | Existing satellite tests pass; upload/allocation reduction and collection partitioning remain pending | Pending matched comparison |
@@ -102,7 +102,13 @@ shared history to manufacture a per-slice delivery record.
   verify fixture/worker loading. Optional cleanup calls alone do not prove Cesium
   releases ownership. No isolated engine defect or dependency patch is accepted.
 - **S50:** [CCTV preparation](../src/layers/cctv/geometryQueue.js) drains through
-  a cursor. Complete source/pose/terrain/parameter revision handling and one latest
+  a cursor. Pending membership now excludes consumed records, so a later edit
+  during a drain is retained and repeated pending edits coalesce. Active-camera
+  priority swaps pending slots without shifting the consumed prefix. Each batch
+  yields after four ms of application work (one indivisible record may exceed
+  that budget), and generation checks reject work after cancellation. Focused
+  tests cover reentrant refresh and disabling during work. This is a correctness
+  and bounded-work change; no hardware speedup is claimed. Complete source/pose/terrain/parameter revision handling and one latest
   authoritative build per feature; demonstrate no duplicate unchanged builds,
   bounded preparation and immediate disposal of superseded results.
 - **S51:** [the governor](../src/renderGovernor.js) exports
