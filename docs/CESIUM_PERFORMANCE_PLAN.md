@@ -15,7 +15,7 @@ the earlier release requirements and historical results.
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density UI synchronization, capture defaults, runtime app-commit binding, elapsed-time movement and instrumentation guard | Focused capture/build checks pass, including runtime identity and wrong-commit rejection; complete settings/population guards and matched-run evidence remain pending | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, and satellite lifecycle owners | Snapshot/monitor and local GeoJSON/cable lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
+| S48 attribution and resource diagnostics | Partial: bounded frame samples, overlay timings, scene counts, renderer metadata, and a bounded per-owner resource contract wired to local GeoJSON, submarine-cable, satellite, and CCTV lifecycle owners | Snapshot/monitor and local lifecycle coverage pass; production coverage and instrumentation overhead remain unvalidated | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable load cleanup paths | Existing lifecycle tests pass; no accepted post-fix retention reproduction or 60-minute soak | Pending resource plateau |
 | S50 geometry coalescing | Partial: CCTV queue cursor plus existing geometry reuse | Queue tests pass; complete revision/coalescing and late-job acceptance remain pending | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: disposable coalesced scheduling API; no production layer callers yet | Governor unit coverage passes; layer cadence and static-frame acceptance remain pending | Pending static and animated comparisons |
@@ -81,8 +81,8 @@ shared history to manufacture a per-slice delivery record.
   accepts a bounded per-owner count map for listeners, timers, pending jobs,
   primitives, data sources, and cache entries; absent metrics stay `null` and
   arbitrary payloads are discarded. [Application tools](../src/app/tools.js)
-  now collect bounded counts from local GeoJSON, submarine-cable, and satellite
-  lifecycle modules. The monitor now supports a disabled mode that installs no
+  now collect bounded counts from local GeoJSON, submarine-cable, satellite, and
+  CCTV lifecycle modules. The monitor now supports a disabled mode that installs no
   render listener or diagnostic readers. Complete broader owner accounting,
   layer/geometry CPU timing and intentional-idle separation. Measure overhead
   separately; an interval

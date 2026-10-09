@@ -112,6 +112,22 @@ function makeGestureHandler() {
 // lat/lon→metres conversion in the assertions matches the module's math.
 const M_PER_DEG = (Math.PI / 180) * 6371000;
 
+test('CCTV ownership diagnostics are bounded and JSON-safe', () => {
+  const diagnostics = cctvLayer.getPerformanceDiagnostics();
+  for (const field of [
+    'listeners',
+    'timers',
+    'pendingJobs',
+    'primitives',
+    'dataSources',
+    'cacheEntries',
+  ]) {
+    assert.ok(Number.isInteger(diagnostics[field]));
+    assert.ok(diagnostics[field] >= 0);
+  }
+  assert.doesNotThrow(() => JSON.stringify(diagnostics));
+});
+
 /** Local ENU metres of point b relative to point a ({lat, lon, alt}). */
 function enu(a, b) {
   return {

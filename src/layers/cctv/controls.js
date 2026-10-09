@@ -250,6 +250,43 @@ export function createControls({ state: layerState, services, parts, source }) {
       };
     },
 
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics() {
+      let viewshedPrimitives = 0;
+      let sceneEntities = 0;
+      for (const record of layerState._records) {
+        viewshedPrimitives += Number(Boolean(record.viewshedPrimitive));
+        sceneEntities +=
+          (record.coverageEntities?.length || 0) +
+          Number(Boolean(record.projection?.planeEntity));
+      }
+      return {
+        listeners:
+          Number(Boolean(layerState._clickHandler)) +
+          Number(Boolean(layerState._mapStackListener)) +
+          Number(Boolean(layerState._horizonCullListener)) +
+          Number(Boolean(layerState._moveStartListener)) +
+          Number(Boolean(layerState._removeFocusAppearListener)) +
+          (layerState._listeners?.size || 0),
+        timers:
+          Number(Boolean(layerState._geoQueueTimer)) +
+          Number(Boolean(layerState._projectionRaf)) +
+          Number(Boolean(layerState._cardFetchTimer)) +
+          Number(Boolean(layerState._hoverReleaseTimer)),
+        pendingJobs:
+          Number(Boolean(layerState._geoLoading)) +
+          (layerState._cardFetchInFlightCount || 0) +
+          (layerState._cardFetchPendingIds?.size || 0),
+        primitives: Number(Boolean(layerState._billboards)) + viewshedPrimitives,
+        dataSources: sceneEntities,
+        cacheEntries:
+          (layerState._cardFrameSlots?.size || 0) +
+          (layerState._healthById?.size || 0) +
+          (layerState._clientHealthById?.size || 0) +
+          (layerState._calibrationById?.size || 0),
+      };
+    },
+
     /**
      * Registers a callback that receives the full UI state on every change.
      * The callback is invoked immediately with the current state.

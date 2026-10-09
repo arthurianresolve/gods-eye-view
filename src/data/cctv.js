@@ -54,6 +54,7 @@ export const bindCctvWorldClickGesture = layer.bindCctvWorldClickGesture;
 export const setActiveCamera = layer.setActiveCamera;
 export const deactivateActiveCamera = layer.deactivateActiveCamera;
 export const cctvEmptyClickDeselects = layer.cctvEmptyClickDeselects;
+export const getPerformanceDiagnostics = layer.getPerformanceDiagnostics;
 export const materializeCctvCoverageEntities =
   layer.materializeCctvCoverageEntities;
 export const materializeCctvActiveCoverageEntities =
