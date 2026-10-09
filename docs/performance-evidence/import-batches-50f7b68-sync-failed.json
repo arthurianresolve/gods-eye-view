@@ -1,0 +1,77 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "50f7b689e35471a2410c223c5dc9cd195f021096",
+  "harnessCommit": "50f7b689e35471a2410c223c5dc9cd195f021096",
+  "capturedAt": "2026-10-09T17:35:24.419Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "workload": "synchronous",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [],
+  "samples": [
+    {
+      "pair": 0,
+      "mode": "synchronous",
+      "elapsedMs": 115.10000002384186,
+      "maxHeartbeatGapMs": 223.79999995231628,
+      "features": 5000,
+      "capture": {
+        "elapsedMs": 13.200000047683716,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 0,
+      "mode": "synchronous",
+      "elapsedMs": 140.39999997615814,
+      "maxHeartbeatGapMs": 146.20000004768372,
+      "features": 5000,
+      "capture": {
+        "elapsedMs": 411.7999999523163,
+        "renderedFrames": 0,
+        "updates": 0,
+        "animationFrames": 0,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": false
+      }
+    }
+  ],
+  "renderErrors": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "50f7b689e35471a2410c223c5dc9cd195f021096",
+    "harnessCommit": "50f7b689e35471a2410c223c5dc9cd195f021096",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "coldActivationMs": 547,
+  "error": "A fresh capture is required.",
+  "foregroundUninterrupted": true
+}

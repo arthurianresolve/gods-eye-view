@@ -238,7 +238,8 @@ run.addEventListener('click', async () => {
           features: 5000,
         };
         report.samples.push(sample);
-        await settledFrame(viewer);
+        // The capture operation owns its completed-frame wait. Request it from
+        // the import task, rather than immediately chaining two postRender waits.
         const hash = await pixels(viewer, sample);
         sample.pixelSha256 = hash;
         if (expectedPixels === null) expectedPixels = hash;
