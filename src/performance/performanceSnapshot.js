@@ -1,4 +1,13 @@
 const MAX_SAMPLES = 120;
+const MAX_RESOURCE_OWNERS = 32;
+const OWNER_RESOURCE_FIELDS = Object.freeze([
+  'listeners',
+  'timers',
+  'pendingJobs',
+  'primitives',
+  'dataSources',
+  'cacheEntries',
+]);
 
 function finite(value) {
   return Number.isFinite(value) ? value : null;
@@ -70,6 +79,7 @@ function readResourceCounts({
   viewer = null,
   dataManager = null,
   diagnostics = null,
+  ownership = null,
 } = {}) {
   const scene = viewer?.scene;
   const count = (value) => (Number.isFinite(value) ? value : null);
@@ -81,7 +91,30 @@ function readResourceCounts({
     dataLayers: count(dataManager?.getAll?.()?.length),
     renderHolds: count(diagnostics?.holds?.length),
     scheduledUpdates: count(diagnostics?.scheduledUpdates?.length),
+    ownerResources: readOwnerResources(ownership),
   };
+}
+
+/**
+ * Keep ownership diagnostics numeric, bounded and local. Providers must pass
+ * counts rather than object references, URLs, payloads or Cesium instances.
+ */
+function readOwnerResources(value) {
+  if (!value || typeof value !== 'object') return null;
+  const entries = Object.entries(value).slice(0, MAX_RESOURCE_OWNERS);
+  const result = {};
+  for (const [rawOwner, rawCounts] of entries) {
+    const owner = String(rawOwner).trim().slice(0, 64);
+    if (!owner || !rawCounts || typeof rawCounts !== 'object') continue;
+    const counts = {};
+    for (const field of OWNER_RESOURCE_FIELDS) {
+      const amount = rawCounts[field];
+      if (Number.isFinite(amount) && amount >= 0)
+        counts[field] = Math.floor(amount);
+    }
+    if (Object.keys(counts).length) result[owner] = counts;
+  }
+  return Object.keys(result).length ? result : null;
 }
 
 /**
@@ -94,6 +127,7 @@ export function createPerformanceMonitor({
   readSettings = () => ({}),
   readTimings = () => ({}),
   readDiagnostics = () => null,
+  readOwnership = () => null,
   appCommit = null,
   harnessCommit = null,
   now = () => globalThis.performance?.now?.() ?? Date.now(),
@@ -132,6 +166,7 @@ export function createPerformanceMonitor({
             viewer,
             dataManager,
             diagnostics: readDiagnostics(),
+            ownership: readOwnership(),
           }),
           ...(clone(extra.resources) || {}),
         },

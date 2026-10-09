@@ -45,6 +45,10 @@ test('performance monitor records frames and releases its listener', () => {
     dataManager: { getAll: () => [{ id: 'flights', enabled: true, stats: { count: 4 } }] },
     readSettings: () => ({ densityPct: 75 }),
     readTimings: () => ({ overlayProjectionMs: 2.5 }),
+    readOwnership: () => ({
+      cctv: { listeners: 2, pendingJobs: 3, cacheEntries: 4 },
+      invalid: { listeners: -1, secretUrl: 'discarded' },
+    }),
   });
   now = 10;
   listener?.();
@@ -58,6 +62,9 @@ test('performance monitor records frames and releases its listener', () => {
   assert.equal(report.settings.densityPct, 75);
   assert.equal(report.resources.dataSources, 2);
   assert.equal(report.timings.overlayProjectionMs, 2.5);
+  assert.deepEqual(report.resources.ownerResources, {
+    cctv: { listeners: 2, pendingJobs: 3, cacheEntries: 4 },
+  });
   monitor.destroy();
   assert.equal(removed, 1);
 });
