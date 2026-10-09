@@ -20,7 +20,6 @@ let _textMeasureClock = 0;
 let _fontInvalidationInstalled = false;
 let _fontInvalidationGeneration = 0;
 let _observedFontSet = null;
-let _fontRevision = 0;
 
 function evictOldestTextMeasureEntry() {
   let oldestFont = null;
@@ -43,15 +42,9 @@ function evictOldestTextMeasureEntry() {
 
 /** Clear cached text widths after web-font availability changes. */
 export function clearWorldOverlayTextMeasureCache() {
-  _fontRevision++;
   _textMeasureCache.clear();
   _textMeasureCacheSize = 0;
   _textMeasureClock = 0;
-}
-
-/** Layouts own no extra cache: their entry lifetime and this font revision bound reuse. */
-export function getWorldOverlayFontRevision() {
-  return _fontRevision;
 }
 
 /** Install the font-loading invalidation hooks once, when the API exists. */

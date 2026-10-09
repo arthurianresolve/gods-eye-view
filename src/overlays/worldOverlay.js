@@ -18,7 +18,6 @@ import {
   distanceFade,
   distanceScale,
   measureOverlayEntry,
-  getWorldOverlayFontRevision,
   paintOverlayEntry,
   placementVariants,
 } from './worldOverlayDraw.js';
@@ -278,7 +277,6 @@ const _diagnostics = {
   paintedCount: 0,
   hitRectCount: 0,
   projectionMs: 0,
-  layoutMeasurements: 0,
   solveMs: 0,
   paintMs: 0,
   solveRevision: 0,
@@ -634,7 +632,6 @@ export function normalizeOverlayEntry(sourceId, entry) {
       ? normalized.image
       : null;
   normalized._overlayLayout = {};
-  normalized._overlayLayoutFontRevision = -1;
   return normalized;
 }
 
@@ -2009,15 +2006,7 @@ function snapshotAndProject(entry, source, viewProjection, keyhole) {
   )
     return null;
 
-  // Upsert/replacement normalizes into a fresh entry and layout. Content,
-  // selection, variant and thumbnail sizing therefore invalidate naturally;
-  // changing positions or camera transforms does not change text dimensions.
-  const fontRevision = getWorldOverlayFontRevision();
-  if (entry._overlayLayoutFontRevision !== fontRevision) {
-    measureOverlayEntry(_ctx, entry, record.layout);
-    entry._overlayLayoutFontRevision = fontRevision;
-    _diagnostics.layoutMeasurements++;
-  }
+  measureOverlayEntry(_ctx, entry, record.layout);
   record.placementInput.anchorX = record.screen.x;
   record.placementInput.anchorY = record.screen.y;
   record.placementInput.width = record.layout.w * record.paintScale;
@@ -2600,7 +2589,6 @@ function localizeScaledPlacement(placement, scale, out) {
 }
 
 function resetFrameDiagnostics() {
-  _diagnostics.layoutMeasurements = 0;
   _diagnostics.candidateCount = 0;
   _diagnostics.projectedCount = 0;
   _diagnostics.selectedCount = 0;
@@ -2880,7 +2868,6 @@ export function destroyWorldOverlay() {
     paintedCount: 0,
     hitRectCount: 0,
     projectionMs: 0,
-    layoutMeasurements: 0,
     solveMs: 0,
     paintMs: 0,
     solveRevision: 0,
