@@ -464,9 +464,21 @@ export async function createRenderedSoakDriver(
       metrics: () => page.metrics(),
       async retainedMetrics() {
         await session.send('HeapProfiler.collectGarbage');
+        const application = await page.evaluate(() => {
+          const app = window.__godsEyeView;
+          const snapshot = app?.getPerformanceSnapshot?.();
+          return snapshot
+            ? {
+                resources: snapshot.resources || null,
+                scene: snapshot.scene || null,
+                timings: snapshot.timings || null,
+              }
+            : null;
+        });
         return {
           ...(await page.metrics()),
           ...(await session.send('Memory.getDOMCounters')),
+          application,
           renderedFrames: previousFrames,
         };
       },
