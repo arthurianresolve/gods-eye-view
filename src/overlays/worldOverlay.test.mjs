@@ -11,7 +11,7 @@ import {
   setKeyholeFadeTuning,
 } from '../celestialRing.js';
 import { createCctvThumbnailOverlayEntry, createFrameSlot } from '../data/cctvCards.js';
-import { combinedOverlayAlpha } from './worldOverlayDraw.js';
+import { combinedOverlayAlpha, clearWorldOverlayTextMeasureCache } from './worldOverlayDraw.js';
 import {
   AMBIENT_CARD_COLLISION_CAPACITY,
   WORLD_OVERLAY_OCCLUDER_SELECTORS,
@@ -607,6 +607,40 @@ test('canvas backing store tracks CSS size and live DPR', () => {
   assert.ok(env.ctx.calls.some((call) => call[0] === 'setTransform' && call[1] === 1.5));
   assert.ok(env.detectionCtx.calls.some((call) => call[0] === 'setTransform' && call[1] === 1.5));
   env.cleanup();
+});
+
+test('entry layout reuse preserves drawing and hits, and invalidates on content and fonts', () => {
+  const env = installMockEnvironment({ width: 700, height: 500, dpr: 1 });
+  try {
+    initWorldOverlay(env.viewer);
+    setOverlayEntries('layout-cache', [selectedEntry('A', { interactive: true })]);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().layoutMeasurements, 1);
+    const firstWidth = getOverlayPaintRect('layout-cache', 'A').w;
+    env.paintTrace.length = 0;
+    env.postRender.raise();
+    const expectedPaint = structuredClone(env.paintTrace);
+    assert.equal(getWorldOverlayDiagnostics().layoutMeasurements, 0);
+    env.paintTrace.length = 0;
+    env.postRender.raise();
+    assert.deepEqual(env.paintTrace, expectedPaint, 'reused layout paints identical commands');
+    const rect = getOverlayPaintRect('layout-cache', 'A');
+    assert.equal(rect.w, firstWidth);
+    assert.ok(hitTestWorldOverlay(rect.x + 1, rect.y + 1), 'hit region remains synchronized');
+
+    upsertOverlayEntry('layout-cache', selectedEntry('A', {title:'Much longer content',interactive:true}));
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().layoutMeasurements, 1);
+    const changedWidth = getOverlayPaintRect('layout-cache', 'A').w;
+    assert.ok(changedWidth > firstWidth);
+    env.ctx.measureText = (text) => ({ width: String(text).length * 8 });
+    clearWorldOverlayTextMeasureCache();
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().layoutMeasurements, 1);
+    assert.ok(getOverlayPaintRect('layout-cache', 'A').w > changedWidth, 'new font metrics replace old dimensions');
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().layoutMeasurements, 0);
+  } finally { env.cleanup(); }
 });
 
 test('shared fade tuning reaches a host-painted card on the next rendered frame', () => {
@@ -2220,7 +2254,7 @@ test('diagnostics facade preserves the complete binding shape', () => {
     'sourceCount', 'entryCount', 'candidateCount', 'projectedCount', 'selectedCount',
     'fadingCount', 'paintedCount', 'hitRectCount', 'projectionMs', 'solveMs',
     'paintMs', 'solveRevision', 'paintItemPoolSize', 'paintRectPoolSize',
-    'candidateIndexSize', 'entriesBySource', 'paintedBySource',
+    'candidateIndexSize', 'entriesBySource', 'paintedBySource', 'layoutMeasurements',
   ];
   assert.deepEqual(Object.keys(diagnostics).sort(), fields.sort());
 });
