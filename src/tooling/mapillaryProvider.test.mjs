@@ -944,6 +944,28 @@ test('concurrent disk hits on an untrimmed tile rewrite it once, keeping its age
   assert.ok(Math.abs(stat.mtimeMs - writtenAt) < 1000, 'no fresh 24 h of life');
 });
 
+test('concurrent disk readers share the read before its rewrite can finish', async (t) => {
+  const address = { layer: 'coverage', z: 14, x: 16, y: 16 };
+  const file = tileFile(address);
+  await writeAged(file, tile([{ name: 'sequence' }, { name: 'image' }]), HOUR);
+  const readFile = fsp.readFile;
+  let reads = 0, release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  t.mock.method(fsp, 'readFile', async (target, ...args) => {
+    if (String(target) === file) { reads++; await gate; }
+    return readFile.call(fsp, target, ...args);
+  });
+  const pending = [1, 2, 3].map(() => fetchTile(address));
+  try {
+    await waitFor(() => reads >= 1, 'disk read started');
+    assert.equal(reads, 1);
+  } finally { release(); }
+  const results = await Promise.all(pending);
+  assert.equal(reads, 1, 'only one physical read is shared');
+  for (const result of results) assert.deepEqual(listTileLayers(result.bytes), ['sequence']);
+  await _settleTileWritesForTest();
+});
+
 test('a rewrite overtaken by a fresh tile write steps aside cleanly', async (t) => {
   const address = { layer: 'coverage', z: 14, x: 15, y: 15 };
   const file = tileFile(address);
