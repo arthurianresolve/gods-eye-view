@@ -7,6 +7,7 @@ import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.m
 import {
   cleanupStartupHeartbeat,
   installStartupHeartbeat,
+  parseWebglDiagnosticMarker,
   sanitizeDiagnosticText,
 } from './performance/startupDiagnostics.mjs';
 
@@ -64,6 +65,11 @@ export async function prepareFixturePage(
   };
   fixtureDiagnostics.set(page, pageDiagnostics);
   page.on('console', (message) => {
+    if (startupDiagnostics && message.type() === 'info') {
+      const marker = parseWebglDiagnosticMarker(message.text());
+      if (marker) startupDiagnostics.recordRendererPhase(marker);
+      if (marker) return;
+    }
     if (!['error', 'warn'].includes(message.type())) return;
     // Local fixture evidence only: strip URL values and bound diagnostics.
     startupMessages.push(

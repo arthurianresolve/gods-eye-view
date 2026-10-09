@@ -6,6 +6,7 @@ import {
   cleanupStartupHeartbeat,
   createStartupDiagnostics,
   installStartupHeartbeat,
+  parseWebglDiagnosticMarker,
 } from './startupDiagnostics.mjs';
 
 test('startup evidence redacts locations and bounds every event list', () => {
@@ -153,16 +154,19 @@ test('heartbeat install and cleanup stay bounded if renderer evaluation stalls',
 });
 
 test('WebGL-only SwiftShader is opt-in and leaves the default driver mode unchanged', () => {
-  assert.deepEqual(fixtureBrowserArgs(), [
+  assert.deepEqual(fixtureBrowserArgs({ softwareRendering: false, webglOnly: false }), [
     '--no-sandbox',
     '--disable-dev-shm-usage',
   ]);
-  assert.deepEqual(fixtureBrowserArgs({ softwareRendering: true }), [
+  assert.deepEqual(
+    fixtureBrowserArgs({ softwareRendering: true, webglOnly: false }),
+    [
     '--no-sandbox',
     '--disable-dev-shm-usage',
     '--use-gl=angle',
     '--use-angle=swiftshader',
-  ]);
+    ],
+  );
   assert.deepEqual(
     fixtureBrowserArgs({ softwareRendering: true, webglOnly: true }),
     [
@@ -173,8 +177,29 @@ test('WebGL-only SwiftShader is opt-in and leaves the default driver mode unchan
       '--enable-unsafe-swiftshader',
     ],
   );
-  assert.deepEqual(fixtureBrowserArgs({ webglOnly: true }), [
+  assert.deepEqual(fixtureBrowserArgs({ softwareRendering: false, webglOnly: true }), [
     '--no-sandbox',
     '--disable-dev-shm-usage',
   ]);
+});
+
+test('renderer query marker parser accepts only bounded known phases', () => {
+  const diagnostics = createStartupDiagnostics('http://127.0.0.1:4173');
+  const marker = parseWebglDiagnosticMarker(
+    '__GEV_RECOVERY_WEBGL__{"phase":"extension-ready","elapsedMs":42.5}',
+  );
+  assert.deepEqual(marker, { phase: 'extension-ready', elapsedMs: 42.5 });
+  diagnostics.recordRendererPhase(marker);
+  for (const invalid of [
+    '__GEV_RECOVERY_WEBGL__{"phase":"secret","elapsedMs":1}',
+    '__GEV_RECOVERY_WEBGL__{"phase":"renderer-ready","elapsedMs":null}',
+    '__GEV_RECOVERY_WEBGL__{"phase":"renderer-ready","elapsedMs":-1}',
+    '__GEV_RECOVERY_WEBGL__not-json',
+    'ordinary console message',
+  ])
+    assert.equal(parseWebglDiagnosticMarker(invalid), null);
+  const snapshot = diagnostics.snapshot();
+  assert.deepEqual(snapshot.lastRendererPhase.phase, 'extension-ready');
+  assert.equal(snapshot.lastRendererPhase.elapsedMs, 42.5);
+  assert.equal(snapshot.rendererPhases.length, 1);
 });

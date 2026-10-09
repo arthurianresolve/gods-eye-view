@@ -2,6 +2,15 @@ const MAX_EVENTS = 32;
 const MAX_HEARTBEATS = 16;
 const MAX_TARGETS = 24;
 const MAX_TEXT = 320;
+const WEBGL_PHASE_PREFIX = '__GEV_RECOVERY_WEBGL__';
+const WEBGL_PHASES = new Set([
+  'query-start',
+  'webgl2-unavailable',
+  'context-ready',
+  'webgl-context-unavailable',
+  'extension-ready',
+  'renderer-ready',
+]);
 
 function boundedText(value, limit = MAX_TEXT) {
   return String(value || '')
@@ -49,6 +58,7 @@ export function createStartupDiagnostics(baseUrl) {
   const heartbeats = [];
   const requests = [];
   const stderr = [];
+  const rendererPhases = [];
   let initialTargets = [];
 
   const push = (list, value, limit = MAX_EVENTS) => {
@@ -88,6 +98,19 @@ export function createStartupDiagnostics(baseUrl) {
         if (line.trim()) push(stderr, { at: Date.now(), text: line }, 16);
       }
     },
+    recordRendererPhase({ phase, elapsedMs }) {
+      if (
+        !WEBGL_PHASES.has(phase) ||
+        !Number.isFinite(elapsedMs) ||
+        elapsedMs < 0
+      )
+        return;
+      push(
+        rendererPhases,
+        { phase, elapsedMs, receivedAt: Date.now() },
+        12,
+      );
+    },
     recordInitialTargets(targets) {
       initialTargets = summarizeTargets(targets, appOrigin);
     },
@@ -122,6 +145,8 @@ export function createStartupDiagnostics(baseUrl) {
         heartbeatCount: heartbeats.length,
         requests: [...requests],
         stderr: [...stderr],
+        rendererPhases: [...rendererPhases],
+        lastRendererPhase: rendererPhases.at(-1) || null,
         initialTargets: [...initialTargets],
         targetInventory: [...targetInventory],
         chromeProcessCount,
@@ -131,6 +156,24 @@ export function createStartupDiagnostics(baseUrl) {
       };
     },
   };
+}
+
+/** Accept only the known, tiny marker emitted around the unchanged GL query. */
+export function parseWebglDiagnosticMarker(text) {
+  if (typeof text !== 'string' || !text.startsWith(WEBGL_PHASE_PREFIX))
+    return null;
+  try {
+    const marker = JSON.parse(text.slice(WEBGL_PHASE_PREFIX.length));
+    if (
+      !WEBGL_PHASES.has(marker?.phase) ||
+      !Number.isFinite(marker.elapsedMs) ||
+      marker.elapsedMs < 0
+    )
+      return null;
+    return { phase: marker.phase, elapsedMs: marker.elapsedMs };
+  } catch {
+    return null;
+  }
 }
 
 function summarizeTargets(targets, appOrigin) {

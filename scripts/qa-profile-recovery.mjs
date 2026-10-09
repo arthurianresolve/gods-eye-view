@@ -275,10 +275,28 @@ async function reopen(label, { seed = false } = {}) {
     rendererQueryStartedAt = Date.now();
     timedProgress('read-renderer');
     const renderer = await page.evaluate(() => {
+      const queryStartedAt = performance.now();
+      const mark = (phase) =>
+        console.info(
+          '__GEV_RECOVERY_WEBGL__' +
+            JSON.stringify({
+              phase,
+              elapsedMs: performance.now() - queryStartedAt,
+            }),
+        );
+      mark('query-start');
       const canvas = window.__godsEyeView.viewer.scene.canvas;
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      let gl = canvas.getContext('webgl2');
+      if (!gl) mark('webgl2-unavailable');
+      if (!gl) gl = canvas.getContext('webgl');
+      mark(gl ? 'context-ready' : 'webgl-context-unavailable');
       const info = gl.getExtension('WEBGL_debug_renderer_info');
-      return gl.getParameter(info?.UNMASKED_RENDERER_WEBGL || gl.RENDERER);
+      mark('extension-ready');
+      const renderer = gl.getParameter(
+        info?.UNMASKED_RENDERER_WEBGL || gl.RENDERER,
+      );
+      mark('renderer-ready');
+      return renderer;
     });
     rendererQueryDurationMs = Date.now() - rendererQueryStartedAt;
     timedProgress('renderer-read-complete');
