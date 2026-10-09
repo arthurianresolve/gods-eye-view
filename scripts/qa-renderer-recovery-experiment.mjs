@@ -4,12 +4,12 @@ import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluatePairedRendererExperiment } from './performance/pairedRendererExperiment.mjs';
+import { evaluatePairedRendererExperiment, RENDERER_EXPERIMENT_ORDERS } from './performance/pairedRendererExperiment.mjs';
 import { RENDERER_EXPERIMENT_VARIANTS } from './performance/pairedRendererExperiment.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const order = process.argv[2];
-assert.ok(['ABC', 'CBA'].includes(order), 'Usage: node scripts/qa-renderer-recovery-experiment.mjs ABC|CBA');
+assert.ok(Object.hasOwn(RENDERER_EXPERIMENT_ORDERS, order), 'Usage: node scripts/qa-renderer-recovery-experiment.mjs AB|BA|ABC|CBA');
 const expectedCommit = process.env.GITHUB_SHA ||
   spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
 assert.match(expectedCommit, /^[a-f0-9]{40}$/i, 'Expected full source commit SHA');
@@ -21,9 +21,7 @@ assert.equal(head.stdout.trim(), expectedCommit, 'Workflow source SHA differs fr
 assert.equal(status.stdout.trim(), '', 'Renderer experiment requires a clean checkout');
 const outputDirectory = path.resolve(root, 'qa-artifacts', `renderer-recovery-${order.toLowerCase()}`);
 await mkdir(outputDirectory, { recursive: true });
-const sequence = order === 'ABC'
-  ? ['driver-late', 'webgl-late', 'driver-early']
-  : ['driver-early', 'webgl-late', 'driver-late'];
+const sequence = RENDERER_EXPERIMENT_ORDERS[order];
 const reports = [];
 const processResults = [];
 const sequenceRunId = `${order}-${expectedCommit.slice(0, 12)}-${process.pid}`;
@@ -77,13 +75,23 @@ for (let sequenceIndex = 0; sequenceIndex < sequence.length; sequenceIndex++) {
 let comparison = null;
 let validationError = null;
 try {
-  assert.ok(processResults.every((result) => result.status === 0), 'A recovery process failed or timed out');
-  comparison = evaluatePairedRendererExperiment({ reports, order, expectedCommit });
+  comparison = evaluatePairedRendererExperiment({
+    reports,
+    order,
+    expectedCommit,
+    processResults,
+  });
 } catch (error) {
   validationError = String(error?.message || error).slice(0, 400);
 }
 const packet = {
   scope: 'same-runner-ordered-renderer-recovery-experiment',
+  status:
+    comparison?.status === 'comparable' &&
+    processResults.length === sequence.length &&
+    processResults.every((result) => result.status === 0 && !result.error)
+      ? 'passed'
+      : 'failed',
   order,
   expectedCommit,
   sequence,
@@ -97,4 +105,4 @@ const packet = {
 const packetPath = path.join(outputDirectory, 'packet.json');
 await writeFile(packetPath, JSON.stringify(packet, null, 2) + '\n');
 console.log('GEV_RENDERER_EXPERIMENT_PACKET ' + JSON.stringify(packet));
-if (!comparison) process.exitCode = 1;
+if (packet.status !== 'passed') process.exitCode = 1;

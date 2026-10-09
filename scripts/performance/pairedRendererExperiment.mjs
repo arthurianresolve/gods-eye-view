@@ -13,6 +13,12 @@ export const RENDERER_EXPERIMENT_VARIANTS = Object.freeze({
   'webgl-late': { backend: 'swiftshader-webgl-only', queryTiming: 'late' },
   'driver-early': { backend: 'swiftshader-gl-driver', queryTiming: 'early' },
 });
+export const RENDERER_EXPERIMENT_ORDERS = Object.freeze({
+  AB: ['driver-late', 'webgl-late'],
+  BA: ['webgl-late', 'driver-late'],
+  ABC: ['driver-late', 'webgl-late', 'driver-early'],
+  CBA: ['driver-early', 'webgl-late', 'driver-late'],
+});
 
 const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 const fail = (message) => {
@@ -140,52 +146,100 @@ function median(values) {
     : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
-/** Validate one same-host ABC or CBA packet and compute per-sequence deltas. */
+/** Validate one same-host packet and compare each present candidate independently. */
 export function evaluatePairedRendererExperiment({
   reports,
   order,
   expectedCommit,
+  processResults = [],
 }) {
-  if (!['ABC', 'CBA'].includes(order)) fail('sequence must be ABC or CBA');
-  const variants = order === 'ABC'
-    ? ['driver-late', 'webgl-late', 'driver-early']
-    : ['driver-early', 'webgl-late', 'driver-late'];
-  if (!Array.isArray(reports) || reports.length !== 3)
-    fail('packet must contain three reports');
+  const variants = RENDERER_EXPERIMENT_ORDERS[order];
+  if (!variants) fail('sequence must be AB, BA, ABC, or CBA');
+  if (!/^[a-f0-9]{40}$/i.test(expectedCommit || ''))
+    fail('expected workflow commit must be a full SHA');
+  if (!Array.isArray(reports) || reports.length < 1 || reports.length > variants.length)
+    fail('packet has an invalid report count');
+  if (
+    !Array.isArray(processResults) ||
+    processResults.length > variants.length ||
+    processResults.some((entry, index) => entry?.variant !== variants[index])
+  )
+    fail('process results do not form the declared execution-sequence prefix');
   if (reports.some((entry, index) => entry?.variant !== variants[index]))
-    fail('reports do not follow the declared execution sequence');
+    fail('reports do not form the declared execution-sequence prefix');
   const byVariant = new Map();
   for (const entry of reports) {
     if (!variants.includes(entry?.variant) || byVariant.has(entry.variant))
       fail('packet has an unknown or duplicate variant');
     byVariant.set(entry.variant, entry.report);
   }
-  if (variants.some((variant) => !byVariant.has(variant)))
-    fail('packet is incomplete');
-  const reference = byVariant.get(variants[0]);
+  const control = byVariant.get('driver-late');
+  if (!control) fail('valid driver-late control report is required');
+  const reference = control;
   if (
     reference?.rendererExperiment?.sequenceOrder !== order ||
     !reference?.rendererExperiment?.runId
   )
     fail('reference sequence identity is missing or mismatched');
-  const digest = assertReport(reference, variants[0], expectedCommit, reference);
-  const reportsByVariant = {};
-  for (let index = 0; index < variants.length; index++) {
-    const variant = variants[index];
-    const report = byVariant.get(variant);
-    if (assertReport(report, variant, expectedCommit, reference) !== digest)
-      fail(`${variant} persisted workspace asset digest differs`);
-    if (
-      report.rendererExperiment.runId !== reference.rendererExperiment.runId ||
-      report.rendererExperiment.sequenceIndex !== index
-    )
-      fail(`${variant} sequence/run identity differs`);
-    reportsByVariant[variant] = report;
+  const controlIndex = variants.indexOf('driver-late');
+  const digest = assertReport(reference, 'driver-late', expectedCommit, reference);
+  if (
+    reference.rendererExperiment.runId !== control.rendererExperiment.runId ||
+    reference.rendererExperiment.sequenceIndex !== controlIndex
+  )
+    fail('control sequence identity differs');
+  if (processResults.length) {
+    const controlProcess = processResults.find((entry) => entry.variant === 'driver-late');
+    if (controlProcess?.status !== 0 || controlProcess?.error)
+      fail('driver-late control process did not exit successfully');
   }
-  const control = reportsByVariant['driver-late'];
+
+  const validCandidates = new Map();
+  const candidateFailures = new Map();
+  for (const variant of variants.filter((entry) => entry !== 'driver-late')) {
+    const report = byVariant.get(variant);
+    if (!report) {
+      const processResult = processResults.find((entry) => entry.variant === variant);
+      candidateFailures.set(
+        variant,
+        processResult && (processResult.status !== 0 || processResult.error)
+          ? `${variant} recovery process failed or timed out before producing a valid report`
+          : 'report missing because the sequence ended early',
+      );
+      continue;
+    }
+    const index = variants.indexOf(variant);
+    try {
+      if (assertReport(report, variant, expectedCommit, reference) !== digest)
+        fail(`${variant} persisted workspace asset digest differs`);
+      if (
+        report.rendererExperiment.runId !== reference.rendererExperiment.runId ||
+        report.rendererExperiment.sequenceIndex !== index
+      )
+        fail(`${variant} sequence/run identity differs`);
+      if (processResults.length) {
+        const processResult = processResults.find((entry) => entry.variant === variant);
+        if (processResult?.status !== 0 || processResult?.error)
+          fail(`${variant} recovery process did not exit successfully`);
+      }
+      validCandidates.set(variant, report);
+    } catch (error) {
+      candidateFailures.set(variant, String(error?.message || error).replace(/^Renderer experiment evidence invalid: /, ''));
+    }
+  }
   const comparisons = {};
-  for (const variant of ['webgl-late', 'driver-early']) {
-    const candidate = reportsByVariant[variant];
+  for (const variant of variants.filter((entry) => entry !== 'driver-late')) {
+    const candidate = validCandidates.get(variant);
+    if (!candidate) {
+      comparisons[variant] = {
+        status: 'incomparable',
+        reason: candidateFailures.get(variant) || 'candidate report unavailable',
+        objectiveMet: false,
+        adoptionEligible: false,
+        stageRegressionOver10Percent: [],
+      };
+      continue;
+    }
     const baselineValues = control.checks.map(
       (check) => check.timing.bootPlusQueryCriticalPathMs,
     );
@@ -203,6 +257,7 @@ export function evaluatePairedRendererExperiment({
       .filter((change) => change.changeFraction > 0.1)
       .map((change) => change.stage);
     comparisons[variant] = {
+      status: 'comparable',
       baselineMedianMs,
       candidateMedianMs,
       criticalPathImprovementFraction: improvement,
@@ -214,7 +269,9 @@ export function evaluatePairedRendererExperiment({
     };
   }
   return {
-    status: 'comparable',
+    status: Object.values(comparisons).every((comparison) => comparison.status === 'comparable')
+      ? 'comparable'
+      : 'partially-comparable',
     evidenceScope: 'same-host profile-recovery timing experiment; not hardware-performance acceptance',
     adoptionEligibilityScope:
       'within-sequence only; confirm the same candidate in the counterbalanced other order',

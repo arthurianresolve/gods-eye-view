@@ -6,7 +6,10 @@ import {
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './earlyCesiumRendererProbe.mjs';
-import { evaluatePairedRendererExperiment } from './pairedRendererExperiment.mjs';
+import {
+  evaluatePairedRendererExperiment,
+  RENDERER_EXPERIMENT_ORDERS,
+} from './pairedRendererExperiment.mjs';
 
 const commit = 'a'.repeat(40);
 const stageIds = [
@@ -75,9 +78,7 @@ function report(variant, { factor = 1, cpu = 'Test CPU' } = {}) {
 }
 
 function packet({ factors = { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early': 0.7 }, order = 'ABC' } = {}) {
-  const sequence = order === 'ABC'
-    ? ['driver-late', 'webgl-late', 'driver-early']
-    : ['driver-early', 'webgl-late', 'driver-late'];
+  const sequence = RENDERER_EXPERIMENT_ORDERS[order];
   return {
     reports: sequence.map((variant) => ({
       variant,
@@ -93,6 +94,7 @@ function packet({ factors = { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early
     })),
     order,
     expectedCommit: commit,
+    processResults: sequence.map((variant) => ({ variant, status: 0, error: null })),
   };
 }
 
@@ -143,10 +145,37 @@ test('CBA order and same-host comparisons are enforced', () => {
   assert.equal(evaluatePairedRendererExperiment(packet({ order: 'CBA' })).order, 'CBA');
   const reports = packet({ order: 'CBA' }).reports;
   reports.find((entry) => entry.variant === 'webgl-late').report.hostEnvironment.cpuModel = 'Other CPU';
-  assert.throws(
-    () => evaluatePairedRendererExperiment({ reports, order: 'CBA', expectedCommit: commit }),
-    /host changed/,
-  );
+  const result = evaluatePairedRendererExperiment({ reports, order: 'CBA', expectedCommit: commit });
+  assert.equal(result.status, 'partially-comparable');
+  assert.equal(result.comparisons['webgl-late'].status, 'incomparable');
+});
+
+test('AB and BA compare backend variants without requiring the early-query report', () => {
+  for (const order of ['AB', 'BA']) {
+    const result = evaluatePairedRendererExperiment(packet({ order }));
+    assert.equal(result.status, 'comparable');
+    assert.deepEqual(Object.keys(result.comparisons), ['webgl-late']);
+    assert.equal(result.comparisons['webgl-late'].status, 'comparable');
+  }
+});
+
+test('a failed early candidate does not invalidate a completed backend comparison', () => {
+  const input = packet({ order: 'ABC' });
+  input.reports[2].report.status = 'failed';
+  input.processResults[2].status = 1;
+  const result = evaluatePairedRendererExperiment(input);
+  assert.equal(result.status, 'partially-comparable');
+  assert.equal(result.comparisons['webgl-late'].status, 'comparable');
+  assert.equal(result.comparisons['webgl-late'].adoptionEligible, true);
+  assert.equal(result.comparisons['driver-early'].status, 'incomparable');
+  assert.equal(result.comparisons['driver-early'].adoptionEligible, false);
+});
+
+test('a sequence without the required driver control cannot compare a candidate', () => {
+  const input = packet({ order: 'CBA' });
+  input.reports = input.reports.slice(0, 1);
+  input.processResults = input.processResults.slice(0, 1);
+  assert.throws(() => evaluatePairedRendererExperiment(input), /control report is required/);
 });
 
 test('dirty, wrong-build, missing, reordered, or invalid-ownership reports fail closed', () => {
@@ -172,16 +201,25 @@ test('dirty, wrong-build, missing, reordered, or invalid-ownership reports fail 
   }
   const incomplete = packet();
   incomplete.reports.pop();
-  assert.throws(() => evaluatePairedRendererExperiment(incomplete), /three reports/);
+  const partial = evaluatePairedRendererExperiment(incomplete);
+  assert.equal(partial.status, 'partially-comparable');
+  assert.equal(partial.comparisons['webgl-late'].status, 'comparable');
+  assert.equal(partial.comparisons['driver-early'].status, 'incomparable');
+  const reordered = packet({ order: 'AB' });
+  reordered.reports.reverse();
+  assert.throws(() => evaluatePairedRendererExperiment(reordered), /sequence prefix/);
+  const badProcessOrder = packet({ order: 'BA' });
+  badProcessOrder.processResults.reverse();
+  assert.throws(() => evaluatePairedRendererExperiment(badProcessOrder), /process results.*prefix/);
   const browserMismatch = packet();
   browserMismatch.reports[1].report.browserVersion = 'Chrome/other';
-  assert.throws(() => evaluatePairedRendererExperiment(browserMismatch), /browserVersion differs/);
+  assert.equal(evaluatePairedRendererExperiment(browserMismatch).comparisons['webgl-late'].status, 'incomparable');
   const viewportMismatch = packet();
   viewportMismatch.reports[2].report.viewport.width += 1;
-  assert.throws(() => evaluatePairedRendererExperiment(viewportMismatch), /viewport differs/);
+  assert.equal(evaluatePairedRendererExperiment(viewportMismatch).comparisons['driver-early'].status, 'incomparable');
   const duplicateRun = packet();
   duplicateRun.reports[2].report.rendererExperiment.runId = 'another-run';
-  assert.throws(() => evaluatePairedRendererExperiment(duplicateRun), /run identity differs/);
+  assert.equal(evaluatePairedRendererExperiment(duplicateRun).comparisons['driver-early'].status, 'incomparable');
 });
 
 function earlyProbePage(performanceStep = 5) {

@@ -4,6 +4,12 @@ on:
   push:
     branches: [qa/windows-renderer-experiment]
   workflow_dispatch:
+    inputs:
+      sequence_set:
+        description: Include the optional early-query candidate
+        type: choice
+        options: [backend-only, with-early-query]
+        default: backend-only
 
 concurrency:
   group: windows-profile-recovery-renderer-experiment-${{ github.ref }}-${{ github.sha }}
@@ -20,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        order: [ABC, CBA]
+        order: ${{ (github.event_name == 'workflow_dispatch' && inputs.sequence_set == 'with-early-query') && fromJSON('["ABC","CBA"]') || fromJSON('["AB","BA"]') }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
 
@@ -46,7 +52,7 @@ jobs:
       - name: Install fixture browser
         run: npx puppeteer browsers install chrome
 
-      - name: Run ordered three-variant recovery sequence
+      - name: Run ordered renderer recovery sequence
         run: node scripts/qa-renderer-recovery-experiment.mjs ${{ matrix.order }}
 
       - name: Print compact comparison packet
