@@ -158,11 +158,37 @@ export function createWorkspaceLibraryPanel({
   let stagedText = null;
   let stagedPreview = null;
   let importController = null;
+  let applyingImport = false;
+  let renderController = null;
+  let openGeneration = 0;
   let autosaveTimer = null;
   let historyTimer = null;
   let pendingHistoryView = null;
   let lastAuthoredSignature = '';
   let disposed = false;
+  function cancelImportRendering() {
+    renderController?.abort();
+    renderController = null;
+  }
+  async function renderImportedData(imports, options) {
+    cancelImportRendering();
+    if (disposed || options.workspaceId !== (active?.id ?? null)) return false;
+    const controller = new AbortController();
+    renderController = controller;
+    try {
+      await onImportedData(imports, { ...options, signal: controller.signal });
+      return !disposed && !controller.signal.aborted;
+    } catch (error) {
+      if (controller.signal.aborted) return false;
+      setStatus(
+        `Imported geometry could not be opened: ${error.message}`,
+        'error',
+      );
+      return false;
+    } finally {
+      if (renderController === controller) renderController = null;
+    }
+  }
   const navTokenIsCurrent = (token) =>
     token == null || navigation?._navigationGeneration === token;
 
@@ -455,6 +481,10 @@ export function createWorkspaceLibraryPanel({
   }
 
   async function showOfflineDemo() {
+    const generation = ++openGeneration;
+    restore.cancel('synthetic-demo');
+    cancelImportRendering();
+    applying = false;
     try {
       const view = shareLinkManager.getCurrentView();
       if (!view) throw new Error('Wait for the globe to finish loading.');
@@ -506,6 +536,7 @@ export function createWorkspaceLibraryPanel({
       const saved = await library.save(
         snapshot('Synthetic offline demo', { chunks: { imports } }),
       );
+      if (disposed || generation !== openGeneration) return;
       active = {
         id: saved.document.id,
         title: saved.document.title,
@@ -513,9 +544,12 @@ export function createWorkspaceLibraryPanel({
         pinnedEvidence: [],
         chunks: { imports },
       };
-      select.value = active.id;
+      const owner = active;
+      select.value = owner.id;
       await refresh();
-      onImportedData(imports, { workspaceId: active.id });
+      if (disposed || active !== owner) return;
+      if (!(await renderImportedData(imports, { workspaceId: owner.id })))
+        return;
       setStatus(
         'Opened a local synthetic demo. These marks are generated examples, not live observations.',
         'warning',
@@ -759,6 +793,9 @@ export function createWorkspaceLibraryPanel({
   }
 
   async function openSelected(revision = null) {
+    const generation = ++openGeneration;
+    const workspaceId = select.value;
+    cancelImportRendering();
     if (!select.value)
       return setStatus('Choose an investigation first.', 'warning');
     setStatus('Opening investigation…');
@@ -788,13 +825,25 @@ export function createWorkspaceLibraryPanel({
                 : { status: 'missing' };
             })();
     } finally {
-      applying = false;
+      if (generation === openGeneration) applying = false;
     }
+    if (
+      disposed ||
+      generation !== openGeneration ||
+      select.value !== workspaceId
+    )
+      return;
     if (result.status === 'applied') {
       const row = (await library.list()).find(
         (item) => item.id === select.value,
       );
       const stored = row ? await library.getWorkspace(row.id) : null;
+      if (
+        disposed ||
+        generation !== openGeneration ||
+        select.value !== workspaceId
+      )
+        return;
       active = row
         ? {
             ...row,
@@ -802,10 +851,19 @@ export function createWorkspaceLibraryPanel({
             chunks: stored?.chunks || {},
           }
         : active;
-      if (stored)
-        onImportedData(stored.chunks?.imports || [], {
-          workspaceId: select.value,
-        });
+      if (
+        disposed ||
+        generation !== openGeneration ||
+        select.value !== workspaceId
+      )
+        return;
+      if (
+        stored &&
+        !(await renderImportedData(stored.chunks?.imports || [], {
+          workspaceId,
+        }))
+      )
+        return;
       history.reset(shareLinkManager.getCurrentView());
       refreshHistoryControls();
       lastAuthoredSignature = authoredSignature();
@@ -836,18 +894,31 @@ export function createWorkspaceLibraryPanel({
     if (!select.value)
       return setStatus('Choose an investigation first.', 'warning');
     if (action === 'duplicate') {
+      const generation = ++openGeneration;
+      restore.cancel('workspace-duplicate');
+      cancelImportRendering();
+      applying = false;
       const copy = await library.duplicate(select.value);
+      if (disposed || generation !== openGeneration) return;
       if (copy) {
         active = {
           id: copy.document.id,
           title: copy.document.title,
           revision: 1,
         };
+        const owner = active;
         await refresh();
-        select.value = active.id;
-        const stored = await library.getWorkspace(active.id);
+        if (disposed || active !== owner) return;
+        select.value = owner.id;
+        const stored = await library.getWorkspace(owner.id);
+        if (disposed || active !== owner) return;
         active.chunks = stored?.chunks || {};
-        onImportedData(active.chunks.imports || [], { workspaceId: active.id });
+        if (
+          !(await renderImportedData(active.chunks.imports || [], {
+            workspaceId: active.id,
+          }))
+        )
+          return;
         setStatus(`Created “${active.title}”.`);
       }
     } else if (action === 'delete') {
@@ -864,7 +935,7 @@ export function createWorkspaceLibraryPanel({
       history.bindWorkspace(null);
       active = null;
       await refresh();
-      onImportedData([], { workspaceId: null });
+      if (!(await renderImportedData([], { workspaceId: null }))) return;
       setStatus('Investigation deleted.');
     } else if (action === 'export') {
       const backup = await library.exportBackup(select.value);
@@ -932,7 +1003,8 @@ export function createWorkspaceLibraryPanel({
       ? ` Notes: ${preview.warnings.join(' ')}`
       : '';
     importSummary.textContent = `${preview.accepted} accepted, ${preview.rejected} rejected. Bounds [west, south, east, north]: ${bounds}. ${preview.timeInterpretation}${timeRange}${warnings}${rejected}`;
-    applyImportButton.disabled = !active || preview.accepted === 0;
+    applyImportButton.disabled =
+      applyingImport || !active || preview.accepted === 0;
     importStatus.textContent = active
       ? 'Review counts, bounds, time interpretation, and attribution, then choose Apply to save this layer.'
       : 'Preview ready. Open or save a workspace before applying the import.';
@@ -960,15 +1032,21 @@ export function createWorkspaceLibraryPanel({
               : await previewGeoJSON(stagedText, { signal, attribution });
       if (!signal.aborted) showPreview(preview);
     } catch (error) {
-      if (!signal.aborted)
-        importStatus.textContent = `Preview failed: ${error.message}`;
+      if (signal.aborted) return;
+      importStatus.textContent = `Preview failed: ${error.message}`;
       stagedPreview = null;
       importReview.hidden = true;
     }
   }
 
   async function applyStagedImport() {
-    if (!active || !stagedPreview?.accepted) return;
+    if (!active || !stagedPreview?.accepted || applyingImport) return;
+    applyingImport = true;
+    applyImportButton.disabled = true;
+    const cancelButton = root.querySelector('[data-action="cancel-import"]');
+    cancelButton.disabled = true;
+    const previewOwner = stagedPreview;
+    const owner = active;
     const entry = {
       id: `import-${now()}`,
       kind: stagedPreview.kind,
@@ -993,25 +1071,36 @@ export function createWorkspaceLibraryPanel({
         id: active.id,
         expectedRevision: active.revision,
       });
+      if (disposed || active !== owner) return;
       active.revision = result.manifest.revision;
       active.chunks = chunks;
+      if (stagedPreview === previewOwner) {
+        importReview.hidden = true;
+        geoFile.value = '';
+        stagedFile = stagedText = stagedPreview = null;
+      }
       await refresh();
-      onImportedData(chunks.imports, { workspaceId: active.id });
+      if (disposed || active !== owner) return;
+      if (
+        !(await renderImportedData(chunks.imports, { workspaceId: owner.id }))
+      )
+        return;
       importStatus.textContent = `Imported ${entry.accepted} features in workspace revision ${active.revision}.`;
-      importReview.hidden = true;
-      geoFile.value = '';
-      stagedFile = null;
-      stagedText = null;
-      stagedPreview = null;
     } catch (error) {
+      if (disposed || active !== owner) return;
       importStatus.textContent =
         error.code === 'revision-conflict'
           ? 'Import was not applied because another tab saved a newer revision. Reopen the workspace and preview again.'
           : `Import was not applied: ${error.message}`;
+    } finally {
+      applyingImport = false;
+      cancelButton.disabled = false;
+      applyImportButton.disabled = !active || !stagedPreview?.accepted;
     }
   }
 
   function cancelStagedImport() {
+    if (applyingImport) return;
     importController?.abort('user-cancelled');
     importController = null;
     stagedFile = null;
@@ -1187,6 +1276,10 @@ export function createWorkspaceLibraryPanel({
     if (button) void act(button.dataset.action);
   });
   select.addEventListener('change', () => {
+    openGeneration++;
+    restore.cancel('workspace-selection-changed');
+    cancelImportRendering();
+    applying = false;
     active = null;
     lastAuthoredSignature = authoredSignature();
   });
@@ -1295,6 +1388,8 @@ export function createWorkspaceLibraryPanel({
     destroy() {
       if (disposed) return;
       disposed = true;
+      openGeneration++;
+      cancelImportRendering();
       clearTimeout(autosaveTimer);
       clearTimeout(historyTimer);
       importController?.abort('panel-destroyed');

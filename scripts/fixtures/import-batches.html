@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Imported geometry lifecycle checks</title>
+  <body>
+    <h1>Imported geometry lifecycle checks</h1>
+    <p>
+      Compare identical 5,000-point imports using synchronous and cooperative
+      creation. This is an isolated viewer check, not a full application
+      performance or soak pass.
+    </p>
+    <button id="run">Run import checks</button>
+    <button id="download" disabled>Download report</button>
+    <p id="status" role="status">Ready</p>
+    <div id="viewer" style="width: 640px; height: 360px"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./import-batches-ui.js"></script>
+  </body>
+</html>

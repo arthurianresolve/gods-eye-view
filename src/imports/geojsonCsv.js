@@ -1,3 +1,4 @@
+import { consumeInBatches } from './cooperative.js';
 import { decodePackGeoJSON } from '../director/packs/geojson.js';
 import { PACK_LIMITS } from '../director/packs/manifest.js';
 
@@ -140,64 +141,72 @@ export async function previewGeoJSON(
   const rejected = [];
   const seen = new Set();
   let positions = 0;
-  for (let index = 0; index < value.features.length; index++) {
-    signal?.throwIfAborted();
-    const feature = value.features[index];
-    let id = String(
-      feature?.id ?? feature?.properties?.id ?? `feature-${index + 1}`,
-    ).trim();
-    if (!id || id.length > 256 || seen.has(id)) {
-      rejected.push({
-        row: index + 1,
-        reason: 'Missing, duplicate or oversized feature ID.',
-      });
-      continue;
-    }
-    try {
-      const validated = decodePackGeoJSON(
-        new TextEncoder().encode(
-          JSON.stringify({
-            type: 'FeatureCollection',
-            features: [{ ...feature, id }],
-          }),
-        ),
-      )[0];
-      const count = (coordinates) =>
-        Array.isArray(coordinates) && typeof coordinates[0] === 'number'
-          ? 1
-          : Array.isArray(coordinates)
-            ? coordinates.reduce((sum, part) => sum + count(part), 0)
-            : 0;
-      positions += count(validated.coordinates);
-      if (positions > IMPORT_LIMITS.positions)
-        fail(
-          'too-many-positions',
-          'GeoJSON exceeds the coordinate vertex limit.',
-        );
-      const properties = propertyBag(feature.properties);
-      let timeMs = null;
-      if (timeField && properties[timeField] != null) {
-        const parsed = parseImportInstant(properties[timeField]);
-        if (parsed === 'ambiguous')
-          throw new Error(`Ambiguous timestamp in ${timeField}.`);
-        timeMs = parsed;
+  await consumeInBatches(
+    (function* () {
+      for (let index = 0; index < value.features.length; index++) {
+        yield;
+        signal?.throwIfAborted();
+        const feature = value.features[index];
+        let id = String(
+          feature?.id ?? feature?.properties?.id ?? `feature-${index + 1}`,
+        ).trim();
+        if (!id || id.length > 256 || seen.has(id)) {
+          rejected.push({
+            row: index + 1,
+            reason: 'Missing, duplicate or oversized feature ID.',
+          });
+          continue;
+        }
+        try {
+          const validated = decodePackGeoJSON(
+            new TextEncoder().encode(
+              JSON.stringify({
+                type: 'FeatureCollection',
+                features: [{ ...feature, id }],
+              }),
+            ),
+          )[0];
+          const count = (coordinates) =>
+            Array.isArray(coordinates) && typeof coordinates[0] === 'number'
+              ? 1
+              : Array.isArray(coordinates)
+                ? coordinates.reduce((sum, part) => sum + count(part), 0)
+                : 0;
+          positions += count(validated.coordinates);
+          if (positions > IMPORT_LIMITS.positions)
+            fail(
+              'too-many-positions',
+              'GeoJSON exceeds the coordinate vertex limit.',
+            );
+          const properties = propertyBag(feature.properties);
+          let timeMs = null;
+          if (timeField && properties[timeField] != null) {
+            const parsed = parseImportInstant(properties[timeField]);
+            if (parsed === 'ambiguous')
+              throw new Error(`Ambiguous timestamp in ${timeField}.`);
+            timeMs = parsed;
+          }
+          records.push({
+            id,
+            geometry: {
+              type: validated.type,
+              coordinates: validated.coordinates,
+            },
+            properties,
+            timeMs,
+          });
+          seen.add(id);
+        } catch (error) {
+          if (error.code === 'too-many-positions') throw error;
+          rejected.push({
+            row: index + 1,
+            reason: String(error.message || 'Invalid feature.').slice(0, 180),
+          });
+        }
       }
-      records.push({
-        id,
-        geometry: { type: validated.type, coordinates: validated.coordinates },
-        properties,
-        timeMs,
-      });
-      seen.add(id);
-    } catch (error) {
-      if (error.code === 'too-many-positions') throw error;
-      rejected.push({
-        row: index + 1,
-        reason: String(error.message || 'Invalid feature.').slice(0, 180),
-      });
-    }
-    if (index % 256 === 255) await Promise.resolve();
-  }
+    })(),
+    { signal },
+  );
   return createImportPreview({
     kind: 'geojson',
     records,
@@ -286,63 +295,70 @@ export async function previewCSV(
   const records = [];
   const rejected = [];
   const ids = new Set();
-  for (let i = 0; i < rows.length; i++) {
-    signal?.throwIfAborted();
-    const cells = rows[i];
-    const rowNumber = i + 2;
-    const latitude = Number(cells[latColumn]);
-    const longitude = Number(cells[lonColumn]);
-    if (
-      !Number.isFinite(latitude) ||
-      Math.abs(latitude) > 90 ||
-      !Number.isFinite(longitude) ||
-      Math.abs(longitude) > 180
-    ) {
-      rejected.push({
-        row: rowNumber,
-        reason: 'Latitude/longitude must be valid WGS84 decimal degrees.',
-      });
-      continue;
-    }
-    const id = String(cells[idColumn] || `row-${rowNumber}`).trim();
-    if (!id || id.length > 256 || ids.has(id)) {
-      rejected.push({
-        row: rowNumber,
-        reason: 'Missing, duplicate or oversized ID.',
-      });
-      continue;
-    }
-    let timeMs = null;
-    if (timeColumn >= 0 && cells[timeColumn]?.trim()) {
-      timeMs = parseImportInstant(cells[timeColumn]);
-      if (timeMs === 'ambiguous') {
-        rejected.push({
-          row: rowNumber,
-          reason: 'Timestamp must be ISO 8601 and include Z or a UTC offset.',
+  await consumeInBatches(
+    (function* () {
+      for (let i = 0; i < rows.length; i++) {
+        yield;
+        signal?.throwIfAborted();
+        const cells = rows[i];
+        const rowNumber = i + 2;
+        const latitude = Number(cells[latColumn]);
+        const longitude = Number(cells[lonColumn]);
+        if (
+          !Number.isFinite(latitude) ||
+          Math.abs(latitude) > 90 ||
+          !Number.isFinite(longitude) ||
+          Math.abs(longitude) > 180
+        ) {
+          rejected.push({
+            row: rowNumber,
+            reason: 'Latitude/longitude must be valid WGS84 decimal degrees.',
+          });
+          continue;
+        }
+        const id = String(cells[idColumn] || `row-${rowNumber}`).trim();
+        if (!id || id.length > 256 || ids.has(id)) {
+          rejected.push({
+            row: rowNumber,
+            reason: 'Missing, duplicate or oversized ID.',
+          });
+          continue;
+        }
+        let timeMs = null;
+        if (timeColumn >= 0 && cells[timeColumn]?.trim()) {
+          timeMs = parseImportInstant(cells[timeColumn]);
+          if (timeMs === 'ambiguous') {
+            rejected.push({
+              row: rowNumber,
+              reason:
+                'Timestamp must be ISO 8601 and include Z or a UTC offset.',
+            });
+            continue;
+          }
+        }
+        const properties = {};
+        for (const [index, header] of headers.entries()) {
+          if (
+            index === latColumn ||
+            index === lonColumn ||
+            index === idColumn ||
+            index === timeColumn
+          )
+            continue;
+          if (cells[index] != null)
+            properties[header] = cells[index].slice(0, 500);
+        }
+        ids.add(id);
+        records.push({
+          id,
+          geometry: { type: 'Point', coordinates: [longitude, latitude] },
+          properties,
+          timeMs,
         });
-        continue;
       }
-    }
-    const properties = {};
-    for (const [index, header] of headers.entries()) {
-      if (
-        index === latColumn ||
-        index === lonColumn ||
-        index === idColumn ||
-        index === timeColumn
-      )
-        continue;
-      if (cells[index] != null) properties[header] = cells[index].slice(0, 500);
-    }
-    ids.add(id);
-    records.push({
-      id,
-      geometry: { type: 'Point', coordinates: [longitude, latitude] },
-      properties,
-      timeMs,
-    });
-    if (i % 512 === 511) await Promise.resolve();
-  }
+    })(),
+    { signal },
+  );
   return createImportPreview({
     kind: 'csv',
     records,

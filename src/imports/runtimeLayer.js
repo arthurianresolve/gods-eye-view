@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { consumeInBatches } from './cooperative.js';
 import { selectImportRenderRecords } from './renderRecords.js';
 import {
   registerEntityContext,
@@ -33,12 +34,16 @@ function positions(coordinates) {
 export function createImportedGeometryLayer({
   viewer,
   now = () => Date.now(),
+  batchOptions = {},
+  screenSpaceEventHandlerFactory = (canvas) =>
+    new Cesium.ScreenSpaceEventHandler(canvas),
 } = {}) {
   if (!viewer?.entities || !viewer?.scene?.canvas)
     throw new TypeError('A Cesium viewer is required.');
   const ids = new Set();
   let destroyed = false;
-  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  let pending = null;
+  const handler = screenSpaceEventHandlerFactory(viewer.scene.canvas);
   handler.setInputAction((movement) => {
     if (destroyed || !isPointerFree()) return;
     const picked = viewer.scene.pick(movement.position)?.id;
@@ -46,6 +51,9 @@ export function createImportedGeometryLayer({
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
   function clear() {
+    const previous = pending;
+    pending = null;
+    previous?.abort();
     for (const id of ids) {
       const entity = viewer.entities.getById(id);
       if (entity) viewer.entities.remove(entity);
@@ -55,9 +63,7 @@ export function createImportedGeometryLayer({
     clearOverlaySource(IMPORTED_LAYER_ID);
   }
 
-  function load(imports, { workspaceId = 'active' } = {}) {
-    if (destroyed) return { drawn: 0, omitted: 0 };
-    clear();
+  function* build(imports, { workspaceId = 'active' } = {}) {
     const { selected, total } = selectImportRenderRecords(
       imports,
       MAX_RENDERED_IMPORT_FEATURES,
@@ -111,7 +117,10 @@ export function createImportedGeometryLayer({
             perPositionHeight: false,
           },
         };
-      } else continue;
+      } else {
+        yield;
+        continue;
+      }
       const anchor =
         geometry.type === 'Point'
           ? geometry.coordinates
@@ -170,6 +179,7 @@ export function createImportedGeometryLayer({
           properties: feature.properties,
         },
       });
+      yield;
     }
     setOverlayEntries(IMPORTED_LAYER_ID, overlayEntries, {
       cohortLimit: MAX_IMPORTED_OVERLAY_LABELS,
@@ -184,10 +194,59 @@ export function createImportedGeometryLayer({
     };
   }
 
+  function load(imports, options) {
+    if (destroyed) return { drawn: 0, omitted: 0 };
+    clear();
+    const iterator = build(imports, options);
+    try {
+      let next;
+      do {
+        next = iterator.next();
+      } while (!next.done);
+      return next.value;
+    } catch (error) {
+      clear();
+      throw error;
+    }
+  }
+
+  async function loadAsync(imports, { signal, ...options } = {}) {
+    if (destroyed) return { drawn: 0, omitted: 0 };
+    clear();
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    pending = controller;
+    signal?.addEventListener('abort', abort, { once: true });
+    if (signal?.aborted) abort();
+    try {
+      return await consumeInBatches(build(imports, options), {
+        ...batchOptions,
+        signal: controller.signal,
+        budgetMs: 4,
+      });
+    } catch (error) {
+      // A cancelled older load must not clear a replacement workspace.
+      if (pending === controller) clear();
+      throw error;
+    } finally {
+      signal?.removeEventListener('abort', abort);
+      if (pending === controller) pending = null;
+    }
+  }
+
   return Object.freeze({
     load,
+    loadAsync,
     clear,
-    getState: () => ({ featureCount: ids.size, destroyed }),
+    getPerformanceDiagnostics: () => ({
+      pendingJobs: pending ? 1 : 0,
+      cacheEntries: ids.size,
+    }),
+    getState: () => ({
+      featureCount: ids.size,
+      pendingJobs: pending ? 1 : 0,
+      destroyed,
+    }),
     destroy() {
       if (destroyed) return;
       clear();

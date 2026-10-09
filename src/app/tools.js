@@ -134,7 +134,7 @@ export async function createApplicationTools({
     navigation: styleManager._navigation,
     analystEngine,
     onImportedData: (imports, options) =>
-      importedGeometryLayer.load(imports, options),
+      importedGeometryLayer.loadAsync(imports, options),
   });
   defer(() => workspaceLibraryPanel.destroy());
   const diagnosticsPanel = createDiagnosticsPanel({
@@ -518,6 +518,7 @@ export async function createApplicationTools({
     readOwnership: () => {
       const owners = {
         maps: mapStackController?.getPerformanceDiagnostics?.(),
+        imports: importedGeometryLayer.getPerformanceDiagnostics(),
       };
       for (const [id, entry] of dataManager?.layers || []) {
         const diagnostics = entry?.module?.getPerformanceDiagnostics?.();

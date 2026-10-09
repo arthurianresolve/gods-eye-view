@@ -1,3 +1,4 @@
+import { consumeInBatches } from './cooperative.js';
 import {
   IMPORT_LIMITS,
   createImportPreview,
@@ -260,34 +261,41 @@ export async function previewKML(input, { signal, attribution = '' } = {}) {
     xmlFail('KML is limited to 50,000 placemarks.');
   const records = [];
   const rejected = [];
-  for (let i = 0; i < placemarks.length; i++) {
-    signal?.throwIfAborted();
-    try {
-      const placemark = placemarks[i];
-      const geometry = kmlGeometry(placemark);
-      const timeText = textOf(placemark, 'when') || textOf(placemark, 'begin');
-      records.push(
-        timed(
-          {
-            id: textOf(placemark, 'name') || `placemark-${i + 1}`,
-            geometry,
-            properties: {
-              name: textOf(placemark, 'name'),
-              description: textOf(placemark, 'description').slice(0, 500),
-              altitudeMode: textOf(placemark, 'altitudemode') || 'unspecified',
-            },
-          },
-          timeText,
-        ),
-      );
-    } catch (error) {
-      rejected.push({
-        row: i + 1,
-        reason: String(error.message || error).slice(0, 180),
-      });
-    }
-    if (i % 256 === 255) await Promise.resolve();
-  }
+  await consumeInBatches(
+    (function* () {
+      for (let i = 0; i < placemarks.length; i++) {
+        yield;
+        signal?.throwIfAborted();
+        try {
+          const placemark = placemarks[i];
+          const geometry = kmlGeometry(placemark);
+          const timeText =
+            textOf(placemark, 'when') || textOf(placemark, 'begin');
+          records.push(
+            timed(
+              {
+                id: textOf(placemark, 'name') || `placemark-${i + 1}`,
+                geometry,
+                properties: {
+                  name: textOf(placemark, 'name'),
+                  description: textOf(placemark, 'description').slice(0, 500),
+                  altitudeMode:
+                    textOf(placemark, 'altitudemode') || 'unspecified',
+                },
+              },
+              timeText,
+            ),
+          );
+        } catch (error) {
+          rejected.push({
+            row: i + 1,
+            reason: String(error.message || error).slice(0, 180),
+          });
+        }
+      }
+    })(),
+    { signal },
+  );
   const altitudeModes = new Set(
     records
       .map((record) => record.properties.altitudeMode)
@@ -373,67 +381,75 @@ export async function previewGPX(input, { signal, attribution = '' } = {}) {
     }
   };
   let row = 0;
-  for (const waypoint of children(root, 'wpt')) {
-    signal?.throwIfAborted();
-    row++;
-    try {
-      const { point, time } = gpxPoint(waypoint);
-      const timeMs = time ? parseImportInstant(time) : null;
-      if (timeMs === 'ambiguous')
-        throw new Error('Timestamp must include an explicit UTC offset.');
-      records.push({
-        id: textOf(waypoint, 'name') || `waypoint-${row}`,
-        geometry: { type: 'Point', coordinates: point },
-        properties: {
-          name: textOf(waypoint, 'name'),
-          description: textOf(waypoint, 'desc'),
-        },
-        timeMs,
-      });
-    } catch (error) {
-      rejected.push({
-        row,
-        reason: String(error.message || error).slice(0, 180),
-      });
-    }
-  }
-  for (const route of children(root, 'rte')) {
-    signal?.throwIfAborted();
-    row++;
-    try {
-      add(
-        textOf(route, 'name') || `route-${row}`,
-        gpxLine(children(route, 'rtept')),
-        { name: textOf(route, 'name'), type: 'route' },
-        row,
-      );
-    } catch (error) {
-      rejected.push({
-        row,
-        reason: String(error.message || error).slice(0, 180),
-      });
-    }
-  }
-  for (const track of children(root, 'trk')) {
-    const segments = descendants(track, 'trkseg');
-    for (let index = 0; index < segments.length; index++) {
-      signal?.throwIfAborted();
-      row++;
-      try {
-        add(
-          `${textOf(track, 'name') || `track-${row}`}-segment-${index + 1}`,
-          gpxLine(children(segments[index], 'trkpt')),
-          { name: textOf(track, 'name'), type: 'track' },
-          row,
-        );
-      } catch (error) {
-        rejected.push({
-          row,
-          reason: String(error.message || error).slice(0, 180),
-        });
+  await consumeInBatches(
+    (function* () {
+      for (const waypoint of children(root, 'wpt')) {
+        yield;
+        signal?.throwIfAborted();
+        row++;
+        try {
+          const { point, time } = gpxPoint(waypoint);
+          const timeMs = time ? parseImportInstant(time) : null;
+          if (timeMs === 'ambiguous')
+            throw new Error('Timestamp must include an explicit UTC offset.');
+          records.push({
+            id: textOf(waypoint, 'name') || `waypoint-${row}`,
+            geometry: { type: 'Point', coordinates: point },
+            properties: {
+              name: textOf(waypoint, 'name'),
+              description: textOf(waypoint, 'desc'),
+            },
+            timeMs,
+          });
+        } catch (error) {
+          rejected.push({
+            row,
+            reason: String(error.message || error).slice(0, 180),
+          });
+        }
       }
-    }
-  }
+      for (const route of children(root, 'rte')) {
+        yield;
+        signal?.throwIfAborted();
+        row++;
+        try {
+          add(
+            textOf(route, 'name') || `route-${row}`,
+            gpxLine(children(route, 'rtept')),
+            { name: textOf(route, 'name'), type: 'route' },
+            row,
+          );
+        } catch (error) {
+          rejected.push({
+            row,
+            reason: String(error.message || error).slice(0, 180),
+          });
+        }
+      }
+      for (const track of children(root, 'trk')) {
+        const segments = descendants(track, 'trkseg');
+        for (let index = 0; index < segments.length; index++) {
+          yield;
+          signal?.throwIfAborted();
+          row++;
+          try {
+            add(
+              `${textOf(track, 'name') || `track-${row}`}-segment-${index + 1}`,
+              gpxLine(children(segments[index], 'trkpt')),
+              { name: textOf(track, 'name'), type: 'track' },
+              row,
+            );
+          } catch (error) {
+            rejected.push({
+              row,
+              reason: String(error.message || error).slice(0, 180),
+            });
+          }
+        }
+      }
+    })(),
+    { signal },
+  );
   if (records.length + rejected.length > IMPORT_LIMITS.rows)
     xmlFail('GPX is limited to 50,000 features.');
   return createImportPreview({
