@@ -1551,6 +1551,7 @@
       "src/imports/geojsonCsv.js",
       "src/imports/kmlGpx.js",
       "src/imports/runtimeLayer.js",
+      "src/imports/renderRecords.js",
       "src/ui/commandPalette.js",
       "src/ui/styles/commandPalette.css",
       "src/ui/styles/workspaceLibrary.css",

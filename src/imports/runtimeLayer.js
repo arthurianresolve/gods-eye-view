@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { selectImportRenderRecords } from './renderRecords.js';
 import {
   registerEntityContext,
   removeEntityContextsForLayer,
@@ -57,15 +58,13 @@ export function createImportedGeometryLayer({
   function load(imports, { workspaceId = 'active' } = {}) {
     if (destroyed) return { drawn: 0, omitted: 0 };
     clear();
-    const features = (Array.isArray(imports) ? imports : []).flatMap((entry) =>
-      Array.isArray(entry?.records)
-        ? entry.records.map((record) => ({ ...record, __import: entry }))
-        : [],
+    const { selected, total } = selectImportRenderRecords(
+      imports,
+      MAX_RENDERED_IMPORT_FEATURES,
     );
-    const selected = features.slice(0, MAX_RENDERED_IMPORT_FEATURES);
     const overlayEntries = [];
-    for (const feature of selected) {
-      const importId = feature.__import.id || 'import';
+    for (const { record: feature, source } of selected) {
+      const importId = source.id || 'import';
       const id = `gev-import:${workspaceId}:${importId}:${feature.id}`;
       const label = String(
         feature.properties?.name || feature.properties?.title || feature.id,
@@ -138,23 +137,21 @@ export function createImportedGeometryLayer({
       const evidence = createEvidenceEnvelope({
         entityRef: { layerKey: IMPORTED_LAYER_ID, id: String(feature.id) },
         sourceId:
-          feature.__import.kind === 'synthetic-demo'
+          source.kind === 'synthetic-demo'
             ? 'Synthetic offline demo · generated locally, not live'
-            : `User import · ${feature.__import.kind || 'geographic file'}`,
+            : `User import · ${source.kind || 'geographic file'}`,
         observedAt: feature.timeMs,
         receivedAt: now(),
-        method:
-          feature.__import.kind === 'synthetic-demo' ? 'simulated' : 'unknown',
-        feedState:
-          feature.__import.kind === 'synthetic-demo' ? 'off' : 'unknown',
+        method: source.kind === 'synthetic-demo' ? 'simulated' : 'unknown',
+        feedState: source.kind === 'synthetic-demo' ? 'off' : 'unknown',
         coverage: {
           completeness: 'unknown',
           reason:
             'A local file has no inferred geographic or temporal coverage.',
         },
-        licenseRef: feature.__import.attribution || null,
+        licenseRef: source.attribution || null,
         limitations:
-          feature.__import.kind === 'synthetic-demo'
+          source.kind === 'synthetic-demo'
             ? [
                 'Synthetic demonstration only; these generated marks are not live observations and have no real source coverage.',
               ]
@@ -183,7 +180,7 @@ export function createImportedGeometryLayer({
     viewer.scene.requestRender?.();
     return {
       drawn: selected.length,
-      omitted: Math.max(0, features.length - selected.length),
+      omitted: Math.max(0, total - selected.length),
     };
   }
 
