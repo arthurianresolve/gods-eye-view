@@ -265,8 +265,11 @@ runButton.addEventListener('click', () => {
   try {
     if (mode === 'webgl2') {
       gl = canvas.getContext('webgl2', {
+        alpha: false,
         antialias: true,
         preserveDrawingBuffer: true,
+        powerPreference: 'high-performance',
+        stencil: true,
       });
       if (!gl) throw new Error('WebGL2 context creation failed.');
       program = createPointProgram(gl);
