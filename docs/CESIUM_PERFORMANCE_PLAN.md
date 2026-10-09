@@ -567,6 +567,40 @@ partial packet remains partial and cannot close the parent slice.
   not necessary triggers. Browser/compositor evidence remains needed before
   attributing this to an engine or driver defect. Production quality, engine
   version, capture deadline and render scheduling remain unchanged.
+- **Windows frame-delivery boundary, not a root-cause fix:** On the user’s
+  Chrome 154 / Intel UHD 620 D3D11 renderer, the original [paired run at
+  `06da9de`](performance-evidence/import-batches-06da9de-failed.json) and a
+  focused rerun at [`1d04d35`](performance-evidence/import-batches-1d04d35-paired-focus-failed.json)
+  pass the first 5,000-point capture, then fail the next 400 ms capture with no
+  RAF, Cesium update or rendered frame while timers continue. The focused run
+  stayed focused and visible, had no recorded lifecycle events and showed
+  94.2% canvas/viewport intersection. Its one-shot [initial-load control](performance-evidence/import-batches-1d04d35-initial-load.json)
+  passed in 7.8 ms. A [steady-population diagnostic at `f3dcfee`](performance-evidence/import-batches-f3dcfee-steady-failed.json)
+  then failed on capture four with the same unchanged 5,000 entities and no
+  frame/update callbacks; a [direct `Cesium.Viewer` run at `e194fd3`](performance-evidence/import-batches-e194fd3-direct-cesium-failed.json)
+  failed on capture two without the application viewer wrapper. The separate
+  [`1d04d35` synchronous-only run](performance-evidence/import-batches-1d04d35-synchronous-interrupted.json)
+  is invalid for comparison because the page became hidden before failure.
+- The minimal [WebGL2 loop at `0edfb8e`](performance-evidence/webgl-frame-delivery-0edfb8e-webgl2.json)
+  reproduces the callback collapse without Cesium or app imports: it draws
+  5,000 cyan 9-pixel points from RAF on a 640-by-360 WebGL2 canvas for five
+  seconds, with matching Cesium context attributes. It records 47 callbacks
+  (per-second buckets 24/1/1/4/17), a 1,016 ms maximum callback gap, 249
+  20-ms timer ticks and no focus, visibility or context-loss events. The same
+  [fully visible canvas run](performance-evidence/webgl-frame-delivery-0edfb8e-fully-visible.json)
+  still drops to 64 callbacks with a 1,016.5 ms maximum gap at 100% viewport
+  intersection. The [plain-RAF control](performance-evidence/webgl-frame-delivery-0edfb8e-plain-raf.json)
+  without a WebGL context receives 286 callbacks (46/60/60/60/60); after the
+  WebGL canvas is released, the [plain-RAF recovery control](performance-evidence/webgl-frame-delivery-0edfb8e-plain-recovery.json)
+  receives 298 (58/60/60/60/60). These controls show that a WebGL-coupled
+  browser frame-delivery failure can occur without the Cesium engine, import
+  workload, capture path or application wrapper. They do not identify whether
+  Chromium scheduling, ANGLE, the Intel driver, compositor behavior, external
+  window occlusion or browser automation causes it. Document focus and
+  visibility do not establish OS-level foreground visibility. Before changing
+  browser or driver behavior, run a controlled manual foreground test. The
+  400 ms capture limit and all application visuals/settings remain unchanged;
+  this diagnostic is not a GPU speed or hardware acceptance result.
 - The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
   at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
   validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window

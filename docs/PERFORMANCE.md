@@ -5,6 +5,12 @@ Node 24/26, three-OS recovery and browser journeys. The corrected `3cdd5cb`
 software-rendered retention soak and the fresh `2e839a4` hosted paravirtual Metal
 retention soak passed. These validate their exact revisions, not the later
 candidate. Windows UHD 620 dense-import capture still fails at `7c6c324`.
+Later Chrome 154 diagnostics on the same UHD 620 reproduce severe frame-callback
+loss in a standalone WebGL draw loop with no Cesium or app code, while a plain
+RAF control runs near 60 callbacks/s and recovers after WebGL context release.
+This narrows the failing boundary but does not identify Chromium, ANGLE, driver,
+compositor or OS-level occlusion as the cause. No runtime fix or hardware
+acceptance is claimed; a controlled manual foreground run remains necessary.
 The [Cesium plan](CESIUM_PERFORMANCE_PLAN.md) distinguishes code, automatic checks,
 physical GPU checks and hosted paravirtual rendering. It also records the limited
 Windows UHD 620 capture result and repeated import-preparation CPU comparisons.

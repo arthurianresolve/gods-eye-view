@@ -1,0 +1,511 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "f3dcfeec12b6938b8fd8e46e33ec9b68f9fb0d16",
+  "harnessCommit": "f3dcfeec12b6938b8fd8e46e33ec9b68f9fb0d16",
+  "capturedAt": "2026-10-09T23:25:42.599Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "workload": "steady-population",
+  "diagnosticsEnabled": true,
+  "diagnosticClassification": "opt-in steady-population scheduling diagnosis only; not performance acceptance",
+  "preserveDrawingBuffer": true,
+  "captureMode": "pixels",
+  "renderDemand": true,
+  "observeCommands": false,
+  "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [],
+  "samples": [
+    {
+      "pair": null,
+      "mode": "steady-loaded-population",
+      "captureIndex": 0,
+      "interCaptureWaitMs": null,
+      "preCaptureDrainMs": 20,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 170381788,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 16,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 9.699999928474426,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true,
+        "browserStateBefore": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        },
+        "browserStateAfter": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        }
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": null,
+      "mode": "steady-loaded-population",
+      "captureIndex": 1,
+      "interCaptureWaitMs": 150,
+      "preCaptureDrainMs": 20,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 171741904,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 13.100000023841858,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 8.5,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true,
+        "browserStateBefore": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        },
+        "browserStateAfter": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        }
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": null,
+      "mode": "steady-loaded-population",
+      "captureIndex": 2,
+      "interCaptureWaitMs": 150,
+      "preCaptureDrainMs": 20,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 172792972,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 55.700000047683716,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 8.700000047683716,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true,
+        "browserStateBefore": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        },
+        "browserStateAfter": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        }
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": null,
+      "mode": "steady-loaded-population",
+      "captureIndex": 3,
+      "interCaptureWaitMs": 150,
+      "preCaptureDrainMs": 20,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 173802696,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 401.5,
+        "renderedFrames": 0,
+        "updates": 0,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 9,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": false,
+        "browserStateBefore": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        },
+        "browserStateAfter": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 887,
+            "height": 585,
+            "visualWidth": 872,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 605.875,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 245.875,
+            "right": 648,
+            "bottom": 585,
+            "width": 640,
+            "height": 339.125,
+            "area": 217040
+          },
+          "canvasViewportIntersectionRatio": 0.9420138888888889
+        }
+      },
+      "rafHealthWhileViewerAlive": {
+        "status": "observed",
+        "elapsedMs": 1001.6000000238419,
+        "frames": 1,
+        "firstFrameDelayMs": 420.89999997615814,
+        "trailingFrameGapMs": 580.7000000476837,
+        "timerTicks": 50,
+        "firstTimerDelayMs": 21,
+        "maximumFrameGapMs": null,
+        "maximumTimerGapMs": 21,
+        "trailingTimerGapMs": 0
+      }
+    }
+  ],
+  "renderErrors": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "f3dcfeec12b6938b8fd8e46e33ec9b68f9fb0d16",
+    "harnessCommit": "f3dcfeec12b6938b8fd8e46e33ec9b68f9fb0d16",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 585,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "coldActivationMs": 429.10000002384186,
+  "warmedResources": {
+    "heapBytes": 170381788,
+    "heapScope": "Unforced heap sample; not retained-memory acceptance",
+    "entities": 5000,
+    "collections": [
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "EntityCluster",
+        "count": null
+      }
+    ]
+  },
+  "steadyPopulation": {
+    "features": 5000,
+    "captures": 10,
+    "interCaptureWaitMs": 150,
+    "preCaptureDrainMs": 20,
+    "sceneMutatedBetweenCaptures": false
+  },
+  "error": "A fresh capture is required.",
+  "foregroundUninterrupted": true,
+  "browserLifecycleEvents": []
+}
