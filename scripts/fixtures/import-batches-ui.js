@@ -14,6 +14,7 @@ const run = document.querySelector('#run');
 const status = document.querySelector('#status');
 const result = document.querySelector('#result');
 const download = document.querySelector('#download');
+const frameProbe = document.querySelector('#frame-probe');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const check = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -37,6 +38,43 @@ const imports = [
   },
 ];
 let report;
+frameProbe.addEventListener('click', async () => {
+  run.disabled = download.disabled = frameProbe.disabled = true;
+  result.textContent = '';
+  status.textContent =
+    'Observing ordinary browser callbacks for five seconds, without Cesium';
+  let count = 0,
+    previous = performance.now(),
+    maximumGapMs = 0,
+    frame;
+  const started = previous;
+  const tick = () => {
+    const current = performance.now();
+    maximumGapMs = Math.max(maximumGapMs, current - previous);
+    previous = current;
+    count++;
+    frame = requestAnimationFrame(tick);
+  };
+  frame = requestAnimationFrame(tick);
+  await wait(5000);
+  cancelAnimationFrame(frame);
+  result.textContent = JSON.stringify(
+    {
+      scope:
+        'Browser scheduling diagnostic without a Cesium viewer; not acceptance evidence',
+      frames: count,
+      maximumGapMs: count ? maximumGapMs : null,
+      trailingGapMs: performance.now() - previous,
+      elapsedMs: performance.now() - started,
+      visibility: document.visibilityState,
+      focused: document.hasFocus(),
+    },
+    null,
+    2,
+  );
+  status.textContent = 'Browser scheduling diagnostic complete';
+  run.disabled = frameProbe.disabled = false;
+});
 function settledFrame(viewer) {
   return new Promise((resolve, reject) => {
     const remove = viewer.scene.postRender.addEventListener(() => {
@@ -103,7 +141,8 @@ async function pixels(viewer, sample) {
 }
 
 run.addEventListener('click', async () => {
-  run.disabled = download.disabled = true;
+  run.disabled = download.disabled = frameProbe.disabled = true;
+  result.textContent = '';
   report = {
     schema: 'gev-import-batches/v1',
     applicationCommit: __GEV_APP_COMMIT__,
@@ -247,7 +286,7 @@ run.addEventListener('click', async () => {
     report.foregroundUninterrupted = !backgrounded;
     result.textContent = JSON.stringify(report, null, 2);
     status.textContent = report.status;
-    run.disabled = download.disabled = false;
+    run.disabled = download.disabled = frameProbe.disabled = false;
   }
 });
 download.addEventListener('click', () => {
