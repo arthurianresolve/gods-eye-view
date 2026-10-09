@@ -22,6 +22,21 @@ import { createTrackedOverlayEntry } from './trackedReadout.js';
 const L1 = '1 25544U 98067A   08264.51782528 -.00002182  00000-0 -11606-4 0  2927';
 const L2 = '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537';
 
+test('satellite ownership diagnostics are bounded and JSON-safe', () => {
+  const diagnostics = satellitesLayer.getPerformanceDiagnostics();
+  for (const field of [
+    'listeners',
+    'pendingJobs',
+    'primitives',
+    'dataSources',
+    'cacheEntries',
+  ]) {
+    assert.ok(Number.isInteger(diagnostics[field]));
+    assert.ok(diagnostics[field] >= 0);
+  }
+  assert.doesNotThrow(() => JSON.stringify(diagnostics));
+});
+
 test('partial and dense catalogs do not make an early false missing decision', async () => {
   _setSatelliteTrackingRefreshOutcomeForTest({
     status: 'partial',

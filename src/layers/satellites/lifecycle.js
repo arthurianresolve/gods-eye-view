@@ -174,6 +174,27 @@ export function createLifecycle({
       };
       layerState._viewer = null;
     },
+
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics() {
+      return {
+        listeners:
+          Number(Boolean(layerState._clickHandler)) +
+          Number(Boolean(layerState._trackedEntityChangedRemove)) +
+          Number(Boolean(layerState._preRenderListener)),
+        pendingJobs:
+          layerState._activeUpdateControllers?.size ||
+          Number(Boolean(layerState._denseLoadPromise)),
+        primitives:
+          Number(Boolean(layerState._pointCollection)) +
+          (layerState._orbitPaths?.size || 0),
+        dataSources: Number(Boolean(layerState._trackedEntity)),
+        cacheEntries:
+          (layerState._catalog?.size || 0) +
+          (layerState._points?.size || 0) +
+          (layerState._detectionObjects?.size || 0),
+      };
+    },
   };
 
   return { methods };
