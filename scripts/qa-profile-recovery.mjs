@@ -39,6 +39,11 @@ import {
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
 } from './performance/profileRecoveryPageOwnership.mjs';
+import {
+  cleanupEarlyCesiumRendererProbe,
+  installEarlyCesiumRendererProbe,
+  readEarlyCesiumRendererProbe,
+} from './performance/earlyCesiumRendererProbe.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
@@ -54,6 +59,14 @@ const candidateCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
   cwd: ROOT,
   encoding: 'utf8',
 }).trim();
+const rendererQueryTiming =
+  process.env.GEV_QA_RENDERER_QUERY_TIMING === 'early' ? 'early' : 'late';
+const rendererExperimentVariant =
+  process.env.GEV_QA_RENDERER_EXPERIMENT_VARIANT || null;
+const sequenceIndexText = process.env.GEV_QA_RENDERER_EXPERIMENT_INDEX || '';
+const rendererExperimentSequenceIndex = /^\d+$/.test(sequenceIndexText)
+  ? Number(sequenceIndexText)
+  : null;
 const sourceStatus = () =>
   execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], {
     cwd: ROOT,
@@ -272,6 +285,7 @@ async function reopen(label, { seed = false } = {}) {
     forcedBrowserProcessTermination: false,
   };
   let page = null;
+  let earlyProbeScript = null;
   let bootElapsedMs = null;
   let rendererQueryStartedAt = null;
   let rendererQueryDurationMs = null;
@@ -295,6 +309,8 @@ async function reopen(label, { seed = false } = {}) {
     });
     page = prepared.page;
     const { errors } = prepared;
+    if (rendererQueryTiming === 'early')
+      earlyProbeScript = await installEarlyCesiumRendererProbe(page);
     await bootFixturePage(page, base, { onProgress: timedProgress });
     const pagesAfterBoot = await browser.pages();
     pageOwnership.unexpectedCreatedPageTargets =
@@ -317,33 +333,44 @@ async function reopen(label, { seed = false } = {}) {
     )?.elapsedMs;
     if (Number.isFinite(navigationAt) && Number.isFinite(readyAt))
       bootElapsedMs = readyAt - navigationAt;
-    rendererQueryStartedAt = Date.now();
     timedProgress('read-renderer');
-    const renderer = await page.evaluate(() => {
-      const queryStartedAt = performance.now();
-      const mark = (phase) =>
-        console.info(
-          '__GEV_RECOVERY_WEBGL__' +
-            JSON.stringify({
-              phase,
-              elapsedMs: performance.now() - queryStartedAt,
-            }),
+    let renderer;
+    if (rendererQueryTiming === 'early') {
+      const early = await readEarlyCesiumRendererProbe(page);
+      renderer = early.renderer;
+      rendererQueryDurationMs = early.queryDurationMs;
+    } else {
+      rendererQueryStartedAt = Date.now();
+      renderer = await page.evaluate(() => {
+        const queryStartedAt = performance.now();
+        const mark = (phase) =>
+          console.info(
+            '__GEV_RECOVERY_WEBGL__' +
+              JSON.stringify({
+                phase,
+                elapsedMs: performance.now() - queryStartedAt,
+              }),
+          );
+        mark('query-start');
+        const canvas = window.__godsEyeView.viewer.scene.canvas;
+        let gl = canvas.getContext('webgl2');
+        if (!gl) mark('webgl2-unavailable');
+        if (!gl) gl = canvas.getContext('webgl');
+        mark(gl ? 'context-ready' : 'webgl-context-unavailable');
+        const info = gl.getExtension('WEBGL_debug_renderer_info');
+        mark('extension-ready');
+        const renderer = gl.getParameter(
+          info?.UNMASKED_RENDERER_WEBGL || gl.RENDERER,
         );
-      mark('query-start');
-      const canvas = window.__godsEyeView.viewer.scene.canvas;
-      let gl = canvas.getContext('webgl2');
-      if (!gl) mark('webgl2-unavailable');
-      if (!gl) gl = canvas.getContext('webgl');
-      mark(gl ? 'context-ready' : 'webgl-context-unavailable');
-      const info = gl.getExtension('WEBGL_debug_renderer_info');
-      mark('extension-ready');
-      const renderer = gl.getParameter(
-        info?.UNMASKED_RENDERER_WEBGL || gl.RENDERER,
-      );
-      mark('renderer-ready');
-      return renderer;
-    });
-    rendererQueryDurationMs = Date.now() - rendererQueryStartedAt;
+        mark('renderer-ready');
+        return renderer;
+      });
+      rendererQueryDurationMs = Date.now() - rendererQueryStartedAt;
+    }
+    const rendererCheckpointAt = Date.now();
+    const bootPlusQueryCriticalPathMs = Number.isFinite(navigationAt)
+      ? Date.now() - (bootStartedAt + navigationAt)
+      : null;
     timedProgress('renderer-read-complete');
     if (process.env.GEV_QA_SOFTWARE_RENDERING === '1')
       assert.match(
@@ -357,6 +384,10 @@ async function reopen(label, { seed = false } = {}) {
     }
     timedProgress('verify-persisted-workspace');
     const result = await assertPersistentWorkspace(page, expected);
+    if (rendererQueryTiming === 'early') {
+      const verifiedAgain = await readEarlyCesiumRendererProbe(page);
+      assert.equal(verifiedAgain.renderer, renderer);
+    }
     const pagesAfterWorkspace = await browser.pages();
     pageOwnership.unexpectedCreatedPageTargets =
       pageTargetGuard.unexpectedPageTargetCount(page);
@@ -385,6 +416,17 @@ async function reopen(label, { seed = false } = {}) {
       id: label,
       status: 'passed',
       renderer,
+      timing: {
+        rendererQueryTiming,
+        rendererQueryDurationClock:
+          rendererQueryTiming === 'early' ? 'page-performance-clock' : 'host-wall-clock',
+        rendererQueryMeasurement:
+          rendererQueryTiming === 'early' ? 'page-query' : 'host-round-trip',
+        bootElapsedMs,
+        rendererQueryDurationMs,
+        bootPlusQueryCriticalPathMs,
+        rendererCheckpointElapsedMs: rendererCheckpointAt - bootStartedAt,
+      },
       ...result,
       pageOwnership,
       ...(startup ? { diagnostics: startup } : {}),
@@ -424,6 +466,15 @@ async function reopen(label, { seed = false } = {}) {
   } finally {
     let cleanupError = null;
     if (page) {
+      if (earlyProbeScript) {
+        try {
+          const cleaned = await cleanupEarlyCesiumRendererProbe(page, earlyProbeScript);
+          if (!cleaned)
+            throw new Error('early renderer probe cleanup did not complete');
+        } catch (error) {
+          cleanupError = error;
+        }
+      }
       try {
         await cleanupFixturePageDiagnostics(page);
       } catch (error) {
@@ -606,6 +657,15 @@ try {
         : process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1'
           ? 'swiftshader-webgl-only'
           : 'swiftshader-gl-driver',
+    rendererExperiment: rendererExperimentVariant
+      ? {
+          variant: rendererExperimentVariant,
+          queryTiming: rendererQueryTiming,
+          sequenceOrder: process.env.GEV_QA_RENDERER_EXPERIMENT_ORDER || null,
+          sequenceIndex: rendererExperimentSequenceIndex,
+          runId: process.env.GEV_QA_RENDERER_EXPERIMENT_ID || null,
+        }
+      : null,
     browserVersion,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.

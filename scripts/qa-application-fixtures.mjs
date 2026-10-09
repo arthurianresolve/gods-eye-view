@@ -426,5 +426,10 @@ export async function assertPersistentWorkspace(page, expected) {
     'persisted geometry must reopen in the renderer',
   );
   assert.deepEqual(actual.settings, expected.settings);
-  return { assetSha256: actual.sha256, renderedFeatures: actual.drawn };
+  return {
+    assetSha256: actual.sha256,
+    renderedFeatures: actual.drawn,
+    settingsMatch: true,
+    workspaceBundleMatches: true,
+  };
 }

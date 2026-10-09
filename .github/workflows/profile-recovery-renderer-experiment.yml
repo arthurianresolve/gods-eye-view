@@ -1,0 +1,67 @@
+name: Windows profile recovery renderer experiment
+
+on:
+  push:
+    branches: [qa/windows-renderer-experiment]
+  workflow_dispatch:
+
+concurrency:
+  group: windows-profile-recovery-renderer-experiment-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ordered-renderer-sequence:
+    name: Same-host renderer sequence ${{ matrix.order }}
+    runs-on: windows-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        order: [ABC, CBA]
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - name: Install dependencies
+        run: node scripts/pinokio-install.mjs
+
+      - name: Test renderer comparison and early-context probe
+        run: node --test scripts/performance/pairedRendererExperiment.test.mjs scripts/performance/startupDiagnostics.test.mjs scripts/performance/profileRecoveryPageOwnership.test.mjs
+
+      - name: Install fixture browser
+        run: npx puppeteer browsers install chrome
+
+      - name: Run ordered three-variant recovery sequence
+        run: node scripts/qa-renderer-recovery-experiment.mjs ${{ matrix.order }}
+
+      - name: Print compact comparison packet
+        if: always()
+        shell: pwsh
+        run: |
+          $sequence = "${{ matrix.order }}".ToLowerInvariant()
+          $directory = "qa-artifacts/renderer-recovery-$sequence"
+          node scripts/print-qa-evidence.mjs `
+            "$directory/driver-late.json" `
+            "$directory/webgl-late.json" `
+            "$directory/driver-early.json"
+          $packet = "$directory/packet.json"
+          if (Test-Path $packet) {
+            Get-Content -Raw $packet
+          } else {
+            Write-Output "Renderer experiment packet was not produced: $packet"
+          }
