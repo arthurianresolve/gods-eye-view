@@ -1,0 +1,229 @@
+/** Shared hermetic full-application journeys. No provider traffic leaves Chrome. */
+import assert from 'node:assert/strict';
+import puppeteer from 'puppeteer';
+
+export async function launchFixtureBrowser(options = {}) {
+  return puppeteer.launch({
+    headless: true,
+    executablePath:
+      process.env.PUPPETEER_EXECUTABLE_PATH ||
+      (await puppeteer.executablePath()),
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    ...options,
+  });
+}
+
+export async function prepareFixturePage(browser, base, { respond } = {}) {
+  const page = await browser.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.setDefaultTimeout(30000);
+  page.setDefaultNavigationTimeout(90000);
+  await page.setViewport({ width: 1440, height: 1000 });
+  await page.setRequestInterception(true);
+  page.on('request', async (request) => {
+    try {
+      const url = new URL(request.url());
+      if (
+        ['http:', 'https:'].includes(url.protocol) &&
+        url.origin !== new URL(base).origin
+      ) {
+        await request.abort();
+      } else {
+        const response = await respond?.(url, request);
+        if (response) await request.respond(response);
+        else if (url.pathname.startsWith('/api/'))
+          await request.respond({
+            status: 503,
+            contentType: 'application/json',
+            body: '{"error":"fixture-offline"}',
+          });
+        else await request.continue();
+      }
+    } catch (error) {
+      // Navigation/disposal may cancel an intercepted request.
+      if (
+        !page.isClosed() &&
+        !/Target closed|Session closed|Invalid InterceptionId|Invalid state/.test(
+          error.message,
+        )
+      )
+        errors.push(error.message);
+    }
+  });
+  return { page, errors };
+}
+
+export async function bootFixturePage(page, base) {
+  await page.goto(base + '/?welcome=0', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(
+    () => window.__godsEyeView?.workspaceLibraryPanel,
+    { timeout: 90000 },
+  );
+  await page.evaluate(async () => {
+    await window.__godsEyeView.styleManager.initialRestorePromise;
+    window.prompt = () => 'Persistent recovery investigation';
+    window.confirm = () => true;
+  });
+}
+
+export const clickControl = (page, selector) =>
+  page.evaluate((target) => {
+    const element = document.querySelector(target);
+    if (!element || element.disabled)
+      throw new Error('Unavailable control: ' + target);
+    element.click();
+  }, selector);
+
+export async function openWorkspace(page, id) {
+  await page.waitForFunction(
+    (key) =>
+      [
+        ...document.querySelectorAll(
+          '.workspace-library [data-workspace-select] option',
+        ),
+      ].some((option) => option.value === key),
+    {},
+    id,
+  );
+  await page.select('.workspace-library [data-workspace-select]', id);
+  await clickControl(page, '.workspace-library [data-action="open"]');
+  await page.waitForFunction(() =>
+    document
+      .querySelector('.workspace-library [data-status]')
+      ?.textContent.startsWith('Opened'),
+  );
+}
+
+export async function importFixtureGeometry(page, name = 'Persistent fixture') {
+  await page.evaluate((label) => {
+    const file = new File(
+      [
+        JSON.stringify({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              id: 'fixture-point',
+              properties: { name: label },
+              geometry: { type: 'Point', coordinates: [-73.9, 40.7] },
+            },
+          ],
+        }),
+      ],
+      'fixture.geojson',
+      { type: 'application/geo+json' },
+    );
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    const input = document.querySelector('.workspace-library [data-geo-file]');
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, name);
+  await page.waitForFunction(() =>
+    document
+      .querySelector('.workspace-library [data-import-summary]')
+      ?.textContent.includes('1 accepted'),
+  );
+  await clickControl(page, '.workspace-library [data-action="apply-import"]');
+  await page.waitForFunction(() =>
+    document
+      .querySelector('.workspace-library [data-import-status]')
+      ?.textContent.includes('Imported 1 features'),
+  );
+  await page.waitForFunction(
+    () =>
+      window.__godsEyeView.importedGeometryLayer.getState().featureCount >= 1,
+  );
+}
+
+export async function seedPersistentWorkspace(page) {
+  await clickControl(page, '.workspace-library [data-action="save-as"]');
+  await page.waitForFunction(
+    () =>
+      document.querySelector('.workspace-library [data-workspace-select]')
+        .value,
+  );
+  await importFixtureGeometry(page);
+  return page.evaluate(async () => {
+    const app = window.__godsEyeView;
+    const id = document.querySelector(
+      '.workspace-library [data-workspace-select]',
+    ).value;
+    const library = app.workspaceLibraryPanel.library;
+    const record = await library.getWorkspace(id);
+    const asset = new TextEncoder().encode(
+      'Persisted public investigation notes\n',
+    );
+    const sha256 = [
+      ...new Uint8Array(await crypto.subtle.digest('SHA-256', asset)),
+    ]
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+    await library.save(
+      {
+        ...record.document,
+        chunks: record.chunks,
+        assets: { 'notes.txt': asset },
+        assetRefs: [{ id: 'notes.txt', sha256, byteLength: asset.length }],
+      },
+      { id, expectedRevision: record.manifest.revision },
+    );
+    // This is an actual supported setting consumed during startup.
+    localStorage.setItem('gev:detection-allocation:v1', 'ELASTIC');
+    return {
+      id,
+      sha256,
+      bundle: await library.exportBackup(id),
+      settings: { 'gev:detection-allocation:v1': 'ELASTIC' },
+    };
+  });
+}
+
+export async function assertPersistentWorkspace(page, expected) {
+  await openWorkspace(page, expected.id);
+  const actual = await page.evaluate(async (id) => {
+    const app = window.__godsEyeView;
+    const record = await app.workspaceLibraryPanel.library.getWorkspace(id);
+    const bytes = record.assets['notes.txt'];
+    const sha256 = [
+      ...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+    ]
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+    return {
+      saved: record.saved,
+      version: record.document.version,
+      sha256,
+      bundle: await app.workspaceLibraryPanel.library.exportBackup(id),
+      drawn: app.importedGeometryLayer.getState().featureCount,
+      settings: {
+        'gev:detection-allocation:v1': localStorage.getItem(
+          'gev:detection-allocation:v1',
+        ),
+      },
+    };
+  }, expected.id);
+  assert.equal(
+    actual.saved,
+    true,
+    'workspace must come from durable IndexedDB',
+  );
+  assert.equal(
+    actual.sha256,
+    expected.sha256,
+    'asset bytes changed across update/recovery',
+  );
+  assert.deepEqual(
+    JSON.parse(actual.bundle),
+    JSON.parse(expected.bundle),
+    'workspace, chunks or asset export changed',
+  );
+  assert.equal(
+    actual.drawn,
+    1,
+    'persisted geometry must reopen in the renderer',
+  );
+  assert.deepEqual(actual.settings, expected.settings);
+  return { assetSha256: actual.sha256, renderedFeatures: actual.drawn };
+}

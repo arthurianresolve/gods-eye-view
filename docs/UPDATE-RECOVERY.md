@@ -60,7 +60,13 @@ attach API keys, request headers or raw voice transcripts.
 
 CI runs the real installer and Git updater tests on Windows, macOS and Linux.
 The portable recovery fixture rejects incomplete/corrupted artifacts and reopens
-a bundle with a verified asset. The browser journey checks IndexedDB reload and
-transfer to a fresh profile. The full prior-install and browser-profile recovery
-matrix remains acceptance work in
-[`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md#s30).
+a bundle with a verified asset. `npm run qa:profile-recovery` also clones the
+previous supported revision `6b896e2`, runs its installer and production build,
+and saves an actual workspace, imported geometry and asset in a persistent
+Chrome profile. It interrupts the real updater during dependency installation,
+reinstalls the prior checkout, completes the update, rejects damaged candidate
+artifacts, and reopens the same profile with the retained prior build. Each
+reopen checks complete bundle equality, asset SHA-256, settings and rendered
+geometry. Reports identify the tested source commits and platform; three-platform
+acceptance requires passing reports for the exact candidate on all three OSes.
+This tests compatible version-1 recovery, not reversal of a future schema change.
