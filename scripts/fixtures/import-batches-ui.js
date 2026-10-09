@@ -26,10 +26,12 @@ const frameProbe = document.querySelector('#frame-probe');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runOptions = new URLSearchParams(window.location.search);
 const requestedWorkload = runOptions.get('workload');
-if (['paired', 'synchronous', 'cooperative'].includes(requestedWorkload))
+if (
+  ['paired', 'synchronous', 'cooperative'].includes(requestedWorkload)
+)
   document.querySelector('#workload').value = requestedWorkload;
-if (requestedWorkload === 'initial-load')
-  status.textContent = 'Diagnostic only: initial loaded population';
+if (['initial-load', 'steady-population'].includes(requestedWorkload))
+  status.textContent = 'Diagnostic only: unchanged loaded population';
 let frameDiagnostics = null;
 const check = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -218,11 +220,12 @@ run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
   const workload =
-    requestedWorkload === 'initial-load'
-      ? 'initial-load'
+    ['initial-load', 'steady-population'].includes(requestedWorkload)
+      ? requestedWorkload
       : document.querySelector('#workload').value;
   const diagnosticRun =
-    runOptions.get('diag') === '1' || workload === 'initial-load';
+    runOptions.get('diag') === '1' ||
+    ['initial-load', 'steady-population'].includes(workload);
   frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
@@ -315,6 +318,46 @@ run.addEventListener('click', async () => {
         id: 'initial-5000-point-population-diagnostic',
         status: 'passed',
       });
+    } else if (workload === 'steady-population') {
+      report.diagnosticClassification =
+        'opt-in steady-population scheduling diagnosis only; not performance acceptance';
+      report.steadyPopulation = {
+        features: 5000,
+        captures: 10,
+        interCaptureWaitMs: 150,
+        preCaptureDrainMs: 20,
+        sceneMutatedBetweenCaptures: false,
+      };
+      for (let captureIndex = 0; captureIndex < 10; captureIndex++) {
+        status.textContent = `Steady-population capture ${captureIndex + 1}/10`;
+        if (captureIndex > 0) await wait(150);
+        check(
+          layer.getState().featureCount === 5000 &&
+            getContextStore().entities.size === 5000,
+          'The steady diagnostic population changed between captures.',
+        );
+        await wait(20);
+        const sample = {
+          pair: null,
+          mode: 'steady-loaded-population',
+          captureIndex,
+          interCaptureWaitMs: captureIndex > 0 ? 150 : null,
+          preCaptureDrainMs: 20,
+          features: 5000,
+          resources: resources(viewer),
+        };
+        report.samples.push(sample);
+        sample.pixelSha256 = await pixels(viewer, sample);
+        if (expectedPixels === null) expectedPixels = sample.pixelSha256;
+        check(
+          sample.pixelSha256 === expectedPixels,
+          'Steady-population pixels changed between captures.',
+        );
+      }
+      report.checks.push({
+        id: 'ten-captures-over-unchanged-5000-point-population-diagnostic',
+        status: 'passed',
+      });
     } else {
       for (let pair = 0; pair < 5; pair++) {
         const modes =
@@ -379,9 +422,13 @@ run.addEventListener('click', async () => {
         status: 'passed',
       });
     }
-    if (workload !== 'initial-load')
+    if (!['initial-load', 'steady-population'].includes(workload))
       status.textContent = 'Checking cancellation and repeated teardown';
-    for (let i = 0; workload !== 'initial-load' && i < 12; i++) {
+    for (
+      let i = 0;
+      !['initial-load', 'steady-population'].includes(workload) && i < 12;
+      i++
+    ) {
       const pending = layer.loadAsync(imports, { workspaceId: 'cancelled' });
       const observed = pending.then(
         () => 'completed',
@@ -400,7 +447,7 @@ run.addEventListener('click', async () => {
       );
       await wait(10);
     }
-    if (workload !== 'initial-load')
+    if (!['initial-load', 'steady-population'].includes(workload))
       report.checks.push({
         id: 'twelve-cancelled-imports-release-ownership',
         status: 'passed',
