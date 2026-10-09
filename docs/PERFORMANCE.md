@@ -1,5 +1,13 @@
 # Performance baseline
 
+Current status (9 October 2026): local `dev` and remote `fork/dev` were reconciled
+at `2e0fb80cb696aa6b621e8b93d8effd299ffa4b14`. The measurements below concern older
+revisions; they do not establish the S47-S60 target of a 20% reduction in motion
+p95 or a passing post-fix retention soak. See the
+[reconciled Cesium plan](CESIUM_PERFORMANCE_PLAN.md) for partial implementations,
+remaining work and the current Windows recovery CI failure. Preserve these
+historical results without treating them as acceptance of the deployed build.
+
 This page records one hardware-rendered Apple M5 comparison captured on 22
 August 2026 in Chrome 150 at 1440 x 900. It is not a minimum hardware
 specification and should not be used to predict performance on untested systems.

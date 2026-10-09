@@ -1,8 +1,11 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
-Status: Corrective implementation and validation are in progress. Code, automated
-results and external acceptance are separate. Earlier fixture passes did not
-establish complete installation recovery or application soak acceptance.
+Status: Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` at
+`2e0fb80cb696aa6b621e8b93d8effd299ffa4b14`. Code, automated results and external
+acceptance are separate. Current CI fails Windows profile recovery; successful
+older PR, release and component checks remain historical evidence. The
+[S47-S60 ledger](CESIUM_PERFORMANCE_PLAN.md) tracks incomplete performance work
+and the retention remediation required to close S44.
 
 This roadmap builds on `6b896e2` and preserves S00-S31. It keeps free-first
 sources, uses PeeringDB as a user-opened reference rather than ingesting its
@@ -13,9 +16,9 @@ a new provider dependency.
 
 | Slice | Code status | Automated status | External status |
 | --- | --- | --- | --- |
-| S32 integration baseline | implemented | historical push CI passed; corrected PR matrix pending | pending |
+| S32 integration baseline | implemented; ledger reconciled | representative PRs to dev/main passed for `91a6076`, including layer-token checks; current push CI has a Windows recovery failure | refresh PR matrix for final candidate |
 | S33 candidate evidence | implemented | focused tests passed | pending |
-| S34 install/update recovery | implemented | real installer/updater CI, portable recovery, and persistent-profile runner | three-OS exact-candidate run pending |
+| S34 install/update recovery | implemented; Windows path failure needs correction | `2e0fb80`: Linux/macOS real profile recovery passed; Windows prior-install build failed; Windows onboarding passed | complete three-OS final-candidate matrix pending |
 | S35 accessibility/first use | implemented | automated keyboard, focus, AX-name, status, and 200%-equivalent reflow report | NVDA, VoiceOver, contrast/zoom and five users pending |
 | S36 infrastructure provenance | implemented | focused tests passed | pending |
 | S37 durable references | implemented | focused tests passed | pending |
@@ -25,9 +28,9 @@ a new provider dependency.
 | S41 camera health | implemented | focused tests passed | pending |
 | S42 camera selection | implemented | selection and provider fingerprint fixture tests | verified current production examples pending |
 | S43 camera evidence | implemented | focused tests passed | pending |
-| S44 soak/performance | implemented | clean 60-minute rendered fixture run completed on Chrome/Intel UHD 620 (253 cycles; no operation failures), but retained listeners grew 732 -> 11,982 and JS heap 67.8 -> 153.2 MB; full soak is a failed acceptance diagnostic | matched Windows/macOS hardware and remediation of retained Cesium terrain-worker work pending |
-| S45 release provenance | implemented | dev artifact staged and independently checksum-verified: 441 files from `9df13c5`; draft-only tags, readiness and downloaded-attestation gates remain | GitHub attestation and publication verification pending |
-| S46 final candidate | planned | pending | pending |
+| S44 soak/performance | harness implemented; retention remediation partial under S49-S50 | historical rendered soak failed stability (listeners 732 -> 11,982; heap 67.8 -> 153.2 MB); `2e0fb80` rendered smoke passed, full soak skipped | root cause, post-fix plateau and matched Windows/macOS GPU evidence pending |
+| S45 release provenance | gates implemented | artifact/attestation verification passed for `91a6076`; later `9df13c5` archive locally checksum-verified; neither validates current candidate | final-candidate attestation/download checks and post-publication verification pending |
+| S46 final candidate | pending | historical candidate report exists for `91a6076`; no completed final-candidate report for current dev | pending manual/hardware acceptance; stable publication not established |
 
 ## Decisions and compatibility
 
@@ -47,8 +50,9 @@ a new provider dependency.
 
 ## Implementation notes
 
-- S32 records the `6b896e2` baseline and keeps hosted PR and publication URLs
-  pending rather than inventing external evidence.
+- S32 records the `6b896e2` baseline and the historical representative PR runs
+  listed below. Those runs exist and must not be described as never completed;
+  they do not validate the later S47-S60 changes.
 - S33 validates a schema-versioned manifest, exact candidate commit, phase,
   outcome, environment, timestamp, and bounded artifact references. Missing
   checks remain pending; publication verification is separate from readiness.
@@ -57,7 +61,11 @@ a new provider dependency.
   stages and verifies checksummed files, rejects interrupted and corrupted copies,
   and reopens a bundle with a verified asset. `qa:profile-recovery` now exercises
   an actual prior checkout, interrupted update, rollback, candidate update, and
-  persistent Chrome profile; cross-platform exact-candidate runs remain external.
+  persistent Chrome profile. At `2e0fb80`, Linux and macOS pass this runner;
+  Windows fails while building the prior installation, before the profile journey.
+  Vite/Rollup rejects the emitted `index.html` path and the error includes both
+  `RUNNER~1` and `runneradmin` temporary-path forms. Investigate path normalization
+  and rerun; the passing Windows onboarding job does not resolve this failure.
 - S36 gives datacenters and dams stable source-record identity, evidence
   envelopes, OSM/OpenInfraMap attribution, ODbL licensing, unknown time fields,
   and a link-only PeeringDB search reference for named datacenters.
@@ -75,30 +83,41 @@ a new provider dependency.
   frustum rewrites and does not restart its geometry queue when re-enabled with
   materialized geometry. Workspace and settings restores now apply an already
   matching camera pose without starting another flight, and incoming share-link
-  restores retain their animated handoff. The focused share-link suite and the
-  full 6,421-test gate pass. A follow-up two-minute smoke run completed nine
-  cycles with no operation failures, but retained listeners still grew 783 ->
+  restores retain their animated handoff. At that historical milestone the
+  focused share-link suite and full 6,421-test gate passed. A follow-up two-minute
+  smoke run completed nine cycles with no operation failures, but retained listeners still grew 783 ->
   1,471 and JS heap 67.2 -> 73.4 MB; the earlier clean 60-minute run completed
   253 cycles in
   3,606,160 ms with no operation failure, but retained listeners grew from 732 to
   11,982 and JS heap from 67.8 MB to 153.2 MB (178.1 MB peak). Repeated fixture
   layer toggles still enqueue Cesium createGeometry worker work, so S44 remains
-  a failed acceptance diagnostic until that resource path is fixed. Hardware
-  rendering was not validated in this run.
+  a failed acceptance diagnostic until that resource path is fixed. The report
+  records an Intel UHD 620 renderer but sets `hardwareRenderingValidated: false`.
+  Retention paths do not yet establish whether the root cause is application
+  ownership, fixture interception or Cesium itself. Current CI's rendered smoke
+  passes, while its 60-minute job is skipped unless explicitly dispatched.
 - S45 checks exact staged commits, checksums, downloaded candidate contents,
   and GitHub artifact attestations. Tag pushes create unpublished drafts. Stable
   promotion requires complete exact-commit acceptance, another download and
-  verification of draft assets, and a current tag-target check.
+  verification of draft assets, and a current tag-target check. The historical
+  `91a6076` workflow and local verification checked GitHub attestation, repository,
+  workflow, source commit, archive checksum and all 441 manifest entries. This is
+  completed historical provenance evidence; repeat it for the final candidate.
 
 ## Remaining slices
 
-S35 must complete screen-reader, contrast, zoom, and five-participant first-task
-review. S44 needs remediation of the retained Cesium terrain-worker path and
-matched hardware captures. The fixture can be smoke-tested with
-`npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 1000`; the three-OS CI job runs
-`npm run qa:install-recovery`. S46 must freeze the candidate, collect those
-external records, and update support claims without turning pending evidence
-into passes.
+S34 must fix the Windows recovery failure and pass the complete real-profile
+matrix. S35 still needs screen-reader, contrast, zoom and five-participant
+first-task review. S42 requires current verified provider placeholders. S44 needs
+retention remediation, a post-fix 60-minute plateau and matched hardware captures.
+S32/S45 need final-candidate PR and artifact evidence; S46 must freeze that
+candidate, collect remaining evidence and update support claims. The independent
+S47-S60 implementation work is detailed in its linked ledger.
+
+`npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 1000`
+is a smoke check only. CI's recovery matrix includes both `qa:install-recovery`
+and `qa:profile-recovery`. A full rendered CI soak requires dispatching CI with
+`full_soak=true`; its runner does not replace the required real-GPU comparisons.
 
 ## Validation contract
 
@@ -107,8 +126,21 @@ The baseline is 6b896e2a8277fba12bc9577ad7772005a71e13c7. Its
 passed. The pre-correction revision 56f8936b6308463d0a64ebec6c7d180bfa9ffa14
 also [passed push CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37837104706).
 These historical results do not validate later changes. Push CI does not execute
-the PR-only layer-token check. Retain run URLs, bases and tested revisions for
-representative PRs against both dev and main.
+the PR-only layer-token check.
+
+### Reconciled hosted evidence
+
+| Evidence | Revision / base | Result and limits |
+| --- | --- | --- |
+| [PR #1 to dev](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37848853442) | head `91a60769cd389968190ef0700d281189c9a0c35c`; base `56f8936b6308463d0a64ebec6c7d180bfa9ffa14`; tested merge `3a3f61f4af1529e09070c8ed20c885f0d6e5fbb1` | Passed, including published layer-token checks; historical |
+| [PR #2 to main](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37848852682) | head `91a60769cd389968190ef0700d281189c9a0c35c`; base `6be25595b16491ce01ffd8d81e66921f321ee200`; tested merge `ab9e08172bf3919dd8e0d79bfdc76f6eb4048816` | Passed, including published layer-token checks; historical |
+| [Candidate artifact verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37849245508) | `91a60769cd389968190ef0700d281189c9a0c35c` | Passed; local download/attestation verification recorded in `qa-artifacts/VALIDATION_NEXT_91a6076.md`; no stable publication |
+| [Current dev CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204) | `2e0fb80cb696aa6b621e8b93d8effd299ffa4b14` | Overall failure: Windows profile recovery. Node 24/26 suites/builds, formatting/boundaries, Windows onboarding, Linux/macOS recovery and browser job passed; full soak skipped |
+
+The older report records matching PR/candidate trees at
+`de00751f1a2871fbbaf983ba993fd7dd093d89e7`. Keep its local artifacts and the hosted
+run URLs as historical evidence. None is relabeled as a pass for current `dev`.
+The documentation reconciliation does not claim a new execution of these checks.
 
 The corrective audit found unbounded archive state, missing datacenter selection
 evidence, stale inspector responses, lingering camera failure reasons, unchecked
@@ -144,6 +176,9 @@ retained resources, recording actual GPU/OS/browser versions.
 
 S35 still needs NVDA/Windows, VoiceOver/macOS, contrast and 200% zoom reviews.
 Four of five first-time participants must inspect evidence and save a workspace
-within 90 seconds without coaching. S46 cannot mark readiness until that evidence,
-the full recovery/rendered-soak/hardware matrix, and published artifact verification
-exist for the candidate. Preserve older reports without relabeling their passes.
+within 90 seconds without coaching. Pre-release readiness requires that evidence,
+the full recovery/rendered-soak/hardware matrix and candidate provenance checks.
+Verification of published artifacts is a separate post-publication phase, not a
+circular prerequisite for creating a ready candidate. S46 remains incomplete until
+the applicable final reports exist. Preserve older reports without relabeling
+their passes.
