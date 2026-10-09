@@ -182,3 +182,12 @@ Verification of published artifacts is a separate post-publication phase, not a
 circular prerequisite for creating a ready candidate. S46 remains incomplete until
 the applicable final reports exist. Preserve older reports without relabeling
 their passes.
+
+S44 follow-up: the 60-minute run at `5328e25` completed 130 mixed-use cycles on
+Chrome 152/SwiftShader. Its original retention failure was solely a cumulative
+cache-use counter incorrectly classified as owned state. The
+[original report](performance-evidence/soak-5328e25-original.json) and
+[separate corrected-validator reassessment](performance-evidence/soak-5328e25-review.json)
+preserve both outcomes and exact revisions. The reassessment passes with 1.70%
+final-window retained-heap growth. This supplements software retention evidence;
+it does not complete physical hardware coverage or validate later `dev` commits.

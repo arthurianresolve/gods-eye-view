@@ -1,0 +1,44 @@
+{
+  "schema": "gev-soak-reassessment/v1",
+  "scope": "Historical measurements evaluated by a newer validator; not a new run or current-candidate acceptance.",
+  "sourceSha256": "5881e0c7c8a7609d7b0501df1fefb58a55b4a4303bf97a965a14b3cad98fb205",
+  "candidateCommit": "5328e256460a13edbf1be65397d2faf43e8d3075",
+  "validatorCommit": "461b4152a4a0982f0e3957441af0c32107b0cd37",
+  "applicationCommit": "5328e256460a13edbf1be65397d2faf43e8d3075",
+  "originalStability": {
+    "status": "failed",
+    "failures": [
+      "Resource maps.providerCacheReuses grew from 4 to 28 at 327260 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 50 at 648039 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 74 at 979489 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 96 at 1285193 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 120 at 1604018 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 142 at 1915752 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 164 at 2225272 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 188 at 2559864 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 210 at 2864627 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 232 at 3185176 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 254 at 3488175 ms.",
+      "Resource maps.providerCacheReuses grew from 4 to 264 at 3620845 ms."
+    ],
+    "pending": [],
+    "heapGrowthRatio": 0.01697572400414335
+  },
+  "originalOperationStatus": "passed",
+  "stability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.01697572400414335
+  },
+  "outcome": "passed",
+  "renderer": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "renderingEvidence": null,
+  "hardwareRenderingValidated": false,
+  "durationMs": 3620845,
+  "checkpointCount": 13
+}

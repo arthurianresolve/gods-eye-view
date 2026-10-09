@@ -35,6 +35,39 @@ a performance shortcut. Auto quality remains opt-in.
 
 ## Measurement contract
 
+### Follow-up validation on 9 October
+
+- The [5328e25 software-rendered soak](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37959251555/job/113917592739)
+  completed 130 cycles over 3,620,845 ms with 13 post-GC checkpoints. The
+  [original report](performance-evidence/soak-5328e25-original.json) failed only
+  because the older validator treated the cumulative `maps.providerCacheReuses`
+  counter as an ownership gauge. The [separate reassessment](performance-evidence/soak-5328e25-review.json)
+  records the source file SHA-256 and validator commit `461b415`; it passes the
+  unchanged ownership and heap thresholds. Final-window heap growth is 1.70%;
+  listeners return to 632 after transient peaks of 639 and 644. This is historical
+  SwiftShader evidence, not a fresh run at the current revision or a GPU claim.
+- CI at `95dc09a` passed Node 24/26, builds, formatting, boundaries, onboarding and
+  all three recovery jobs, but its mixed-use browser journey failed before
+  measurement. A workspace-list refresh creates a new in-memory row, so checking
+  row object identity incorrectly cancelled an import's completion. `eb90492`
+  checks the stable workspace ID and navigation generation instead; the same
+  correction covers duplicate and synthetic-demo completion. The existing browser
+  journey remains the regression gate, with duplicate completion now observed too.
+- The Windows UHD 620 5,000-point import diagnostic remains **failed**. Saved
+  failures at [95dc09a](performance-evidence/import-batches-95dc09a-failed.json),
+  [c61b623](performance-evidence/import-batches-c61b623-failed.json) and
+  [dc01d3c](performance-evidence/import-batches-dc01d3c-failed.json) preserve partial
+  samples. The last run has zero Cesium updates and zero independent animation
+  callbacks during a 401 ms capture wait, despite a visible page, enabled render
+  loop, valid context and no render errors. Browser foreground/power conditions
+  require verification; the cause is not established. Do not accept its event-loop
+  improvement as a validated comparison. The 400 ms capture deadline and the
+  complete 5,000-feature population remain unchanged.
+
+The reassessment command writes a new report and refuses to overwrite an existing
+file: `node scripts/review-soak-evidence.mjs original.json new-review.json`.
+It does not turn an operation failure into a pass or alter the original report.
+
 Performance reports include the application and harness revisions, fixture
 identity, camera path, browser and renderer, viewport and drawing-buffer sizes,
 device pixel ratio, effective visual settings, layer populations, warmup, and

@@ -251,6 +251,17 @@ installation-recovery jobs also pass for this exact revision.
 
 ## What is not established yet
 
+A second software-rendered run at `5328e256460a13edbf1be65397d2faf43e8d3075`
+completed 130 cycles in 3,620,845 ms. Its [original report](performance-evidence/soak-5328e25-original.json)
+failed because the old validator counted cumulative cache reuse as retained
+ownership. A [separate, revision-bound reassessment](performance-evidence/soak-5328e25-review.json)
+passes the corrected validator: owned resource counts stay bounded, browser
+listeners return to 632, and final-window retained-heap growth is 1.70%.
+The original failed verdict remains available. This is Chrome 152/SwiftShader;
+it provides no hardware motion-p95 result. See the [current slice ledger](CESIUM_PERFORMANCE_PLAN.md)
+for subsequent code changes, failed Windows capture diagnostics and remaining
+acceptance work.
+
 - The Apple baseline is not a Windows measurement. The separate Windows diagnostic
   above covers only one Intel UHD 620 system and does not establish performance
   across Windows devices.
