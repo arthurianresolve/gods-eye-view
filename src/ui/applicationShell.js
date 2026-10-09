@@ -261,6 +261,8 @@ export class StyleManager extends ShellFacade {
       readContextMode: () => this._contextMode,
       readContextChanging: () => this._contextModeChanging,
       readDisplayPortalActive: () => this._cockpitDisplayPortalActive,
+      onDensityChanged: (densityPct) =>
+        this._adaptiveQuality?.syncExternalDensity(densityPct),
     });
 
     this._layerBindings = new LayerBindings({

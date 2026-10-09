@@ -141,3 +141,60 @@ test('visual teardown restores owned fog and aircraft sensor state once', async 
   assert.equal(owner._irBoostActive, false);
   owner.destroy();
 });
+
+test('share, workspace and preset density restores publish the effective Manual value', async () => {
+  const { VisualSettings } = await import('./visualSettings.js');
+  const { AdaptiveQualityController } =
+    await import('../performance/adaptiveQuality.js');
+  let density = 50;
+  const states = [];
+  const quality = new AdaptiveQualityController({
+    documentRef: { addEventListener() {}, removeEventListener() {} },
+    readDensity: () => density,
+    applyDensity: (value) => {
+      density = value;
+    },
+    onState: (state) => states.push(state),
+    storage: { getItem: () => null, setItem() {} },
+  });
+  const owner = Object.assign(Object.create(VisualSettings.prototype), {
+    services: {
+      setDetectionTuning: ({ densityPct }) => {
+        density = densityPct;
+      },
+      getDetectionTuning: () => ({ densityPct: density }),
+      getDetectionMode: () => 'DENSE',
+      getKeyholeFadeTuning: () => ({}),
+    },
+    _detectionDensitySlider: { value: '50' },
+    _detectionDensityValue: { textContent: '50%' },
+    _applyDetectionFadeFromUi() {},
+    _setDetectionAllocation() {},
+    _updateDetectionButton() {},
+    _syncShareState() {},
+    onDensityChanged: (value) => quality.syncExternalDensity(value),
+  });
+  const expect = (value) => {
+    assert.equal(density, value);
+    assert.equal(owner._detectionDensitySlider.value, String(value));
+    assert.equal(owner._detectionDensityValue.textContent, `${value}%`);
+    assert.equal(states.at(-1).densityPct, value);
+    assert.equal(states.at(-1).mode, 'manual');
+  };
+  try {
+    await owner.restoreShareState({ detectionDensity: 25 });
+    expect(25);
+    await owner.applyVisualState({ detection: { density: 75 } });
+    expect(75);
+    owner.applyCinematicPreset({ detectionDensity: 100 });
+    expect(100);
+    density = 25;
+    owner._syncDetectionUiFromEngine();
+    expect(25);
+    quality.setMode('performance', { persist: false });
+    quality.setMode('manual', { persist: false });
+    expect(25);
+  } finally {
+    quality.destroy();
+  }
+});

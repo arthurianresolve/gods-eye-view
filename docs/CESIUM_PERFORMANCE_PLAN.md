@@ -20,7 +20,7 @@ the earlier release requirements and historical results.
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass | Four isolated UHD 620 governor checks pass at `3664f4f`; full application cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
-| S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression | Existing satellite tests pass; upload/allocation reduction and collection partitioning remain pending | Pending matched comparison |
+| S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; first isolated partitioning pair reduces submission calls but fails pixel equality | Hosted Metal visual mismatch at `503a4f2`; accepted matched comparison pending |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
@@ -52,7 +52,21 @@ a performance shortcut. Auto quality remains opt-in.
   collection update CPU duration, with matching final pixel hashes and fixed
   update steps. This is S48 attribution work, not the 30/60-second S47 benchmark,
   application motion performance, GPU execution timing, or an accepted S53
-  optimization. Production collections remain unchanged; hosted results pending.
+  optimization. In the [first hosted Metal pair](performance-evidence/point-collections-503a4f2-failed.json)
+  at `503a4f2`, partitioning reduces buffer submission calls from 18,885 to 6,300
+  with the same 604,320 submitted bytes. Final pixel hashes differ, so the
+  diagnostic stops early and the optimization is **not accepted**. This is one
+  failed visual comparison, not five pairs or a performance pass. The report
+  also retains the passing 12 small captures and ten imported-geometry captures.
+  Production collections remain unchanged.
+- The S47 restore audit found that the existing status notification was confined
+  to display-slider actions. Share-link and workspace restores call the visual
+  settings owner directly, leaving the Manual status stale. The visual owner now
+  reports density changes to the quality controller, including engine/profile
+  synchronization. Fifty focused tests pass. A new full-browser journey compares
+  the status, slider, label, profile and effective renderer density after a share
+  restore, slider edit, quality/performance/manual cycle and saved-workspace
+  restore. Its CI result is pending; the fix changes no rendering detail.
 
 - [CI at eb90492](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37966397084)
   passes all Node 24/26, formatting, boundary, build, onboarding, browser and

@@ -157,6 +157,10 @@ jobs:
         if: success() || failure()
         run: npm run qa:accessibility -- --url http://localhost:4174
 
+      - name: Effective visual settings across share and workspace restores
+        if: success() || failure()
+        run: node scripts/qa-visual-settings.mjs --url http://localhost:4174
+
       - name: Rendered application mixed-use smoke
         if: success() || failure()
         run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json

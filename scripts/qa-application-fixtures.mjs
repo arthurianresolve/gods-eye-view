@@ -70,10 +70,12 @@ export async function prepareFixturePage(browser, base, { respond } = {}) {
 export async function bootFixturePage(
   page,
   base,
-  { onProgress = () => {} } = {},
+  { onProgress = () => {}, hash = '' } = {},
 ) {
   onProgress('navigation');
-  await page.goto(base + '/?welcome=0', { waitUntil: 'domcontentloaded' });
+  await page.goto(base + '/?welcome=0' + hash, {
+    waitUntil: 'domcontentloaded',
+  });
   try {
     onProgress('application-ready');
     await page.waitForFunction(
