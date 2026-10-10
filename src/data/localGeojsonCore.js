@@ -1126,6 +1126,7 @@ export function createLocalGeoJsonLayer(
       _dataSource = null;
       _cachedFeatures = null;
       _stemRecords = [];
+      _pickFeatureByEntity = new WeakMap();
       _count = 0;
       _lastUpdate = null;
       _error = null;
