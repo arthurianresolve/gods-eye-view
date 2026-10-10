@@ -197,6 +197,51 @@ export function matchesInfrastructureCollectionPick(
   );
 }
 
+/** Require actual ready surfaces and successful native picks after a mode switch. */
+export function infrastructureModeTransitionReady(observation) {
+  return Boolean(
+    Number.isSafeInteger(observation?.completedFrames) &&
+    observation.completedFrames >= 3 &&
+    Number.isSafeInteger(observation?.stableFrames) &&
+    observation.stableFrames >= 3 &&
+    observation.dataSourceReady === true &&
+    observation.dataSourceLoading === false &&
+    Number.isSafeInteger(observation?.expectedSurfaceCount) &&
+    observation.expectedSurfaceCount > 0 &&
+    observation.observedSurfaceCount === observation.expectedSurfaceCount &&
+    observation.pointPickResolved === true &&
+    observation.stemPickResolved === true,
+  );
+}
+
+/** Resolve a pick location from either Entity Cartesians or collection arrays. */
+export function infrastructurePickCartesian(Cesium, surface, kind) {
+  const cartesian = (value) => {
+    if (
+      Array.isArray(value) &&
+      value.length === 3 &&
+      value.every(Number.isFinite)
+    )
+      return new Cesium.Cartesian3(value[0], value[1], value[2]);
+    if (
+      value &&
+      Number.isFinite(value.x) &&
+      Number.isFinite(value.y) &&
+      Number.isFinite(value.z)
+    )
+      return value;
+    throw new TypeError('Infrastructure pick coordinates are unavailable.');
+  };
+  if (kind === 'point') return cartesian(surface?.position);
+  if (kind !== 'stem' || !Array.isArray(surface?.positions))
+    throw new TypeError('Infrastructure pick kind is invalid.');
+  return Cesium.Cartesian3.midpoint(
+    cartesian(surface.positions[0]),
+    cartesian(surface.positions[1]),
+    new Cesium.Cartesian3(),
+  );
+}
+
 /**
  * Snapshot public Entity graphics and reconcile their source-owned identity.
  * The returned Cesium references are for a short-lived fixture run only.
@@ -389,11 +434,42 @@ export function validateInfrastructureCollectionReport(
     report.caseCount !== expectedCases.length ||
     report.pairsPerCase !== INFRASTRUCTURE_COLLECTION_PAIRS ||
     report.samples?.length !==
-      expectedCases.length * INFRASTRUCTURE_COLLECTION_PAIRS * 2
+      expectedCases.length * INFRASTRUCTURE_COLLECTION_PAIRS * 2 ||
+    report.modeTransitions?.length !== report.samples?.length
   )
     throw new Error(
       'Infrastructure collection sample inventory is incomplete.',
     );
+  if (
+    !Array.isArray(report.warmupTransitions) ||
+    report.warmupTransitions.length < 2 ||
+    !['entity', 'collection'].every((mode) =>
+      report.warmupTransitions.some(
+        (transition) =>
+          transition.mode === mode && transition.status === 'settled',
+      ),
+    )
+  )
+    throw new Error('Infrastructure representation warmup is incomplete.');
+  for (const transition of report.warmupTransitions) {
+    if (
+      !Number.isFinite(transition.elapsedMs) ||
+      transition.elapsedMs < 0 ||
+      transition.elapsedMs > 5000 ||
+      !Number.isSafeInteger(transition.completedFrames) ||
+      transition.completedFrames < 3 ||
+      !Number.isSafeInteger(transition.stableFrames) ||
+      transition.stableFrames < 3 ||
+      transition.dataSourceReady !== true ||
+      transition.dataSourceLoading !== false ||
+      !Number.isSafeInteger(transition.expectedSurfaceCount) ||
+      transition.expectedSurfaceCount <= 0 ||
+      transition.observedSurfaceCount !== transition.expectedSurfaceCount ||
+      transition.pointPickResolved !== true ||
+      transition.stemPickResolved !== true
+    )
+      throw new Error('Infrastructure representation warmup is invalid.');
+  }
   if (
     !Array.isArray(report.checks) ||
     report.checks.some(({ passed }) => passed !== true)
@@ -424,6 +500,7 @@ export function validateInfrastructureCollectionReport(
       if (!entity || !collection)
         throw new Error(`${caseId} pair ${pair + 1} is incomplete.`);
       for (const sample of [entity, collection]) {
+        const transition = sample.modeTransition;
         if (
           !Number.isSafeInteger(sample.sourceFeatureCount) ||
           sample.sourceFeatureCount <= 0 ||
@@ -451,6 +528,23 @@ export function validateInfrastructureCollectionReport(
           sample.frame.height <= 0 ||
           !Number.isFinite(sample.frame?.elapsedMs) ||
           sample.frame.elapsedMs <= 0 ||
+          transition?.status !== 'settled' ||
+          transition.caseId !== caseId ||
+          transition.pair !== pair ||
+          transition.mode !== sample.mode ||
+          !Number.isFinite(transition.elapsedMs) ||
+          transition.elapsedMs < 0 ||
+          transition.elapsedMs > 5000 ||
+          !Number.isSafeInteger(transition.completedFrames) ||
+          transition.completedFrames < 3 ||
+          !Number.isSafeInteger(transition.stableFrames) ||
+          transition.stableFrames < 3 ||
+          transition.dataSourceReady !== true ||
+          transition.dataSourceLoading !== false ||
+          transition.expectedSurfaceCount !== sample.surfaceCount ||
+          transition.observedSurfaceCount !== sample.surfaceCount ||
+          transition.pointPickResolved !== true ||
+          transition.stemPickResolved !== true ||
           !/^[a-f0-9]{64}$/.test(sample.identitySha256) ||
           !/^[a-f0-9]{64}$/.test(sample.positionSha256) ||
           !/^[a-f0-9]{64}$/.test(sample.styleSha256) ||

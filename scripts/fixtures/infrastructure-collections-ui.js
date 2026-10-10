@@ -12,6 +12,8 @@ import {
   INFRASTRUCTURE_COLLECTION_CASES,
   INFRASTRUCTURE_COLLECTION_PAIRS,
   INFRASTRUCTURE_COLLECTION_SCHEMA,
+  infrastructurePickCartesian,
+  infrastructureModeTransitionReady,
   matchesInfrastructureCollectionPick,
   readInfrastructurePrimitiveSurfaces,
   snapshotInfrastructureSurfaces,
@@ -303,14 +305,7 @@ function pixelDifferenceCount(left, right) {
 }
 
 function capturePick(viewer, surface, kind, mode, collections) {
-  const cartesian =
-    kind === 'point'
-      ? surface.position
-      : Cesium.Cartesian3.midpoint(
-          surface.positions[0],
-          surface.positions[1],
-          new Cesium.Cartesian3(),
-        );
+  const cartesian = infrastructurePickCartesian(Cesium, surface, kind);
   const windowPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
     viewer.scene,
     cartesian,
@@ -616,6 +611,112 @@ async function waitForCameraMaterialization(
   );
 }
 
+async function waitForRepresentationTransition({
+  viewer,
+  dataSource,
+  layer,
+  mode,
+  collections,
+  targetEntityId,
+  expectedSurfaceCount,
+}) {
+  const startedAt = performance.now();
+  const deadline = startedAt + 5000;
+  let completedFrames = 0;
+  let stableFrames = 0;
+  let previousSignature = null;
+  let lastObservation = null;
+  while (performance.now() < deadline) {
+    viewer.scene.requestRender();
+    let canvas;
+    try {
+      canvas = await captureFreshCesiumFrame(viewer, {
+        timeoutMs: Math.min(
+          FRAME_TIMEOUT_MS,
+          Math.max(0, deadline - performance.now()),
+        ),
+      });
+    } catch (error) {
+      error.transitionObservation = {
+        ...(lastObservation || {}),
+        completedFrames,
+        elapsedMs: performance.now() - startedAt,
+      };
+      throw error;
+    }
+    if (!canvas) break;
+    canvas.width = canvas.height = 0;
+    completedFrames++;
+    const surfaces = observedSurfaces(
+      mode,
+      dataSource,
+      layer,
+      collections,
+      Cesium.JulianDate.now(),
+    );
+    const signature = JSON.stringify(
+      surfaces.map((surface) => [
+        surface.entityId,
+        surface.positionFingerprint,
+        surface.styleFingerprint,
+        surface.entityShow,
+      ]),
+    );
+    stableFrames = signature === previousSignature ? stableFrames + 1 : 1;
+    previousSignature = signature;
+    const target = surfaces.find(
+      (surface) => surface.entityId === targetEntityId,
+    );
+    const pointPick = target
+      ? capturePick(viewer, target, 'point', mode, collections)
+      : null;
+    const stemPick = target
+      ? capturePick(viewer, target, 'stem', mode, collections)
+      : null;
+    lastObservation = {
+      completedFrames,
+      stableFrames,
+      dataSourceReady: viewer.dataSourceDisplay?.ready === true,
+      dataSourceLoading: dataSource.isLoading === true,
+      expectedSurfaceCount,
+      observedSurfaceCount: surfaces.length,
+      pointPickResolved: Boolean(pointPick),
+      stemPickResolved: Boolean(stemPick),
+      frameNumber: viewer.scene.frameState?.frameNumber ?? null,
+    };
+    if (infrastructureModeTransitionReady(lastObservation))
+      return {
+        ...lastObservation,
+        elapsedMs: performance.now() - startedAt,
+      };
+  }
+  const error = new Error(
+    `The ${mode} representation did not materialize stable point and stem picks within 5 seconds.`,
+  );
+  error.transitionObservation = {
+    ...(lastObservation || {}),
+    completedFrames,
+    elapsedMs: performance.now() - startedAt,
+  };
+  throw error;
+}
+
+async function recordRepresentationTransition(records, descriptor, options) {
+  const transition = { ...descriptor, status: 'waiting' };
+  records.push(transition);
+  try {
+    Object.assign(transition, await waitForRepresentationTransition(options), {
+      status: 'settled',
+    });
+    return transition;
+  } catch (error) {
+    transition.status = 'failed';
+    transition.elapsedMs = error.transitionObservation?.elapsedMs ?? null;
+    transition.observation = error.transitionObservation || null;
+    throw error;
+  }
+}
+
 function makeCheck(name, passed, details = {}) {
   return { name, passed: passed === true, ...details };
 }
@@ -649,6 +750,8 @@ async function runDiagnostic() {
     cameraUpdate: null,
     checks: [],
     samples: [],
+    modeTransitions: [],
+    warmupTransitions: [],
     visualMismatch: null,
     cleanup: {
       viewerDestroyed: false,
@@ -898,6 +1001,20 @@ async function runDiagnostic() {
     setCollectionVisibility(collections, true);
     addCollections(collectionParent, collections);
     viewer.scene.requestRender();
+    phase = 'representation-warmup-collection-settle';
+    await recordRepresentationTransition(
+      report.warmupTransitions,
+      { caseId: 'default-style', pair: -1, mode: 'collection' },
+      {
+        viewer,
+        dataSource,
+        layer: damsLayer,
+        mode: 'collection',
+        collections,
+        targetEntityId: target.surface.entityId,
+        expectedSurfaceCount: currentSurfaces.length,
+      },
+    );
     const collectionWarmupFrames = await warmPixels(
       viewer,
       glObserver,
@@ -912,6 +1029,20 @@ async function runDiagnostic() {
     setCollectionVisibility(collections, false);
     setEntitySurfaceVisibility(currentSurfaces, true, originalEntityVisibility);
     viewer.scene.requestRender();
+    phase = 'representation-warmup-entity-restore';
+    await recordRepresentationTransition(
+      report.warmupTransitions,
+      { caseId: 'default-style', pair: -1, mode: 'entity' },
+      {
+        viewer,
+        dataSource,
+        layer: damsLayer,
+        mode: 'entity',
+        collections,
+        targetEntityId: target.surface.entityId,
+        expectedSurfaceCount: currentSurfaces.length,
+      },
+    );
     report.checks.push(
       makeCheck('entity-repeat-frame-control', true, {
         pixelSha256: entityWarmupFrames[0],
@@ -1015,6 +1146,19 @@ async function runDiagnostic() {
           originalEntityVisibility,
         );
         viewer.scene.requestRender();
+        await recordRepresentationTransition(
+          report.warmupTransitions,
+          { caseId, pair: -1, mode: 'entity' },
+          {
+            viewer,
+            dataSource,
+            layer: damsLayer,
+            mode: 'entity',
+            collections,
+            targetEntityId: focusedSurface.entityId,
+            expectedSurfaceCount: currentSurfaces.length,
+          },
+        );
         const focusedEntityWarmup = await warmPixels(
           viewer,
           glObserver,
@@ -1029,6 +1173,19 @@ async function runDiagnostic() {
         setCollectionVisibility(collections, true);
         addCollections(collectionParent, collections);
         viewer.scene.requestRender();
+        await recordRepresentationTransition(
+          report.warmupTransitions,
+          { caseId, pair: -1, mode: 'collection' },
+          {
+            viewer,
+            dataSource,
+            layer: damsLayer,
+            mode: 'collection',
+            collections,
+            targetEntityId: focusedSurface.entityId,
+            expectedSurfaceCount: currentSurfaces.length,
+          },
+        );
         const focusedCollectionWarmup = await warmPixels(
           viewer,
           glObserver,
@@ -1050,6 +1207,20 @@ async function runDiagnostic() {
           currentSurfaces,
           true,
           originalEntityVisibility,
+        );
+        viewer.scene.requestRender();
+        await recordRepresentationTransition(
+          report.warmupTransitions,
+          { caseId, pair: -1, mode: 'entity' },
+          {
+            viewer,
+            dataSource,
+            layer: damsLayer,
+            mode: 'entity',
+            collections,
+            targetEntityId: focusedSurface.entityId,
+            expectedSurfaceCount: currentSurfaces.length,
+          },
         );
         report.checks.push(
           makeCheck('focused-style-warmup-stable', true, {
@@ -1084,6 +1255,19 @@ async function runDiagnostic() {
             addCollections(collectionParent, collections);
           }
           viewer.scene.requestRender();
+          const transition = await recordRepresentationTransition(
+            report.modeTransitions,
+            { caseId, pair, mode },
+            {
+              viewer,
+              dataSource,
+              layer: damsLayer,
+              mode,
+              collections,
+              targetEntityId: target.surface.entityId,
+              expectedSurfaceCount: currentSurfaces.length,
+            },
+          );
           glObserver.reset();
           displayObserver.reset();
           const captured = await snapshotPixels(
@@ -1160,6 +1344,7 @@ async function runDiagnostic() {
               },
               webglSubmissionApi: captured.webglSubmissions,
               cleanup: null,
+              modeTransition: { ...transition },
             };
             side.set(mode, { row, captured });
             report.samples.push(row);

@@ -7,6 +7,8 @@ import {
   INFRASTRUCTURE_COLLECTION_CASES,
   INFRASTRUCTURE_COLLECTION_PAIRS,
   INFRASTRUCTURE_COLLECTION_SCHEMA,
+  infrastructurePickCartesian,
+  infrastructureModeTransitionReady,
   matchesInfrastructureCollectionPick,
   snapshotInfrastructureSurfaces,
   readInfrastructurePrimitiveSurfaces,
@@ -91,6 +93,21 @@ function sample(caseId, pair, mode) {
       kind: 'stem',
       screen: [110, 220],
     },
+    modeTransition: {
+      caseId,
+      pair,
+      mode,
+      status: 'settled',
+      elapsedMs: 38,
+      completedFrames: 3,
+      stableFrames: 3,
+      dataSourceReady: true,
+      dataSourceLoading: false,
+      expectedSurfaceCount: 2,
+      observedSurfaceCount: 2,
+      pointPickResolved: true,
+      stemPickResolved: true,
+    },
   };
 }
 
@@ -102,6 +119,21 @@ function report() {
       samples.push(sample(caseId, pair, 'collection'));
     }
   }
+  const warmupTransitions = ['entity', 'collection'].map((mode) => ({
+    caseId: 'default-style',
+    pair: -1,
+    mode,
+    status: 'settled',
+    elapsedMs: 36,
+    completedFrames: 3,
+    stableFrames: 3,
+    dataSourceReady: true,
+    dataSourceLoading: false,
+    expectedSurfaceCount: 2,
+    observedSurfaceCount: 2,
+    pointPickResolved: true,
+    stemPickResolved: true,
+  }));
   return {
     schema: INFRASTRUCTURE_COLLECTION_SCHEMA,
     applicationCommit: 'b'.repeat(40),
@@ -111,6 +143,8 @@ function report() {
     pairsPerCase: INFRASTRUCTURE_COLLECTION_PAIRS,
     checks: [{ passed: true }],
     samples,
+    modeTransitions: samples.map((entry) => entry.modeTransition),
+    warmupTransitions,
     cleanup: {
       viewerDestroyed: true,
       layersDestroyed: true,
@@ -325,6 +359,75 @@ test('real Cesium item pick IDs resolve individual point and polyline items', ()
   }
 });
 
+test('mode transition requires stable ready surfaces and both actual picks', () => {
+  const observation = {
+    completedFrames: 3,
+    stableFrames: 3,
+    dataSourceReady: true,
+    dataSourceLoading: false,
+    expectedSurfaceCount: 704,
+    observedSurfaceCount: 704,
+    pointPickResolved: true,
+    stemPickResolved: true,
+  };
+  assert.equal(infrastructureModeTransitionReady(observation), true);
+  for (const patch of [
+    { dataSourceReady: false },
+    { dataSourceLoading: true },
+    { completedFrames: 2 },
+    { stableFrames: 2 },
+    { expectedSurfaceCount: 0 },
+    { observedSurfaceCount: 703 },
+    { pointPickResolved: false },
+    { stemPickResolved: false },
+    { stemPickResolved: undefined },
+  ])
+    assert.equal(
+      infrastructureModeTransitionReady({ ...observation, ...patch }),
+      false,
+    );
+});
+
+test('pick target normalization accepts collection arrays and Entity Cartesians', () => {
+  const pointArray = infrastructurePickCartesian(
+    Cesium,
+    { position: [1, 2, 3] },
+    'point',
+  );
+  const pointCartesian = infrastructurePickCartesian(
+    Cesium,
+    { position: new Cesium.Cartesian3(1, 2, 3) },
+    'point',
+  );
+  assert.ok(pointArray.equals(pointCartesian));
+
+  const stemArray = infrastructurePickCartesian(
+    Cesium,
+    {
+      positions: [
+        [0, 0, 0],
+        [0, 0, 10],
+      ],
+    },
+    'stem',
+  );
+  const stemCartesian = infrastructurePickCartesian(
+    Cesium,
+    {
+      positions: [
+        new Cesium.Cartesian3(0, 0, 0),
+        new Cesium.Cartesian3(0, 0, 10),
+      ],
+    },
+    'stem',
+  );
+  assert.ok(stemArray.equals(stemCartesian));
+  assert.throws(
+    () => infrastructurePickCartesian(Cesium, { position: null }, 'point'),
+    /coordinates are unavailable/,
+  );
+});
+
 test('real Cesium scene parent destroys fixture parent exactly through owned removal', () => {
   const restoreDomTypes = installCesiumDomTypeShims();
   const scenePrimitives = new Cesium.PrimitiveCollection();
@@ -512,6 +615,34 @@ test('report validator checks complete unique pair inventory and rejects weak ev
         expectedCommit: 'b'.repeat(40),
       }),
     /checks are missing/,
+  );
+  const missingTransition = structuredClone(value);
+  delete missingTransition.samples[0].modeTransition;
+  assert.throws(
+    () =>
+      validateInfrastructureCollectionReport(missingTransition, {
+        expectedCommit: 'b'.repeat(40),
+      }),
+    /invalid evidence/,
+  );
+  const incompleteWarmup = structuredClone(value);
+  incompleteWarmup.warmupTransitions[0].stemPickResolved = false;
+  assert.throws(
+    () =>
+      validateInfrastructureCollectionReport(incompleteWarmup, {
+        expectedCommit: 'b'.repeat(40),
+      }),
+    /warmup is invalid/,
+  );
+  const failedTransition = structuredClone(value);
+  failedTransition.modeTransitions[0].stemPickResolved = false;
+  failedTransition.samples[0].modeTransition.stemPickResolved = false;
+  assert.throws(
+    () =>
+      validateInfrastructureCollectionReport(failedTransition, {
+        expectedCommit: 'b'.repeat(40),
+      }),
+    /invalid evidence/,
   );
   const duplicate = structuredClone(value);
   duplicate.samples[1].pair = 0;
