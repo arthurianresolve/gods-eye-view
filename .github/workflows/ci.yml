@@ -17,6 +17,7 @@ on:
             hosted-collection-probe,
             performance-build-smoke,
             import-workspace-lifecycle,
+            mission-render-demand,
           ]
         default: standard
       full_soak:
@@ -57,7 +58,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -106,7 +107,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -212,7 +213,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -247,7 +248,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -418,6 +419,43 @@ jobs:
           if-no-files-found: warn
           retention-days: 3
 
+  mission-render-demand:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mission-render-demand'
+    name: Isolated mission render-demand correctness
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Initialize failure evidence before browser setup
+        run: |
+          mkdir -p qa-artifacts
+          cat > qa-artifacts/mission-render-demand.json <<'JSON'
+          {"schema":"gev-mission-render-demand/v1","status":"not-run","scope":"isolated hosted correctness and rendered-work comparison, not physical desktop or full-application performance acceptance","error":"Mission render-demand runner did not complete."}
+          JSON
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run bounded mission render-demand comparison
+        run: node scripts/qa-mission-render-demand.mjs --out qa-artifacts/mission-render-demand.json
+      - name: Print diagnostic evidence
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/mission-render-demand.json
+      - name: Preserve diagnostic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mission-render-demand-${{ github.run_id }}
+          path: qa-artifacts/mission-render-demand*
+          if-no-files-found: warn
+          retention-days: 3
+
   rendered-soak:
     name: 60-minute rendered application soak
     if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode == 'standard'
@@ -461,7 +499,7 @@ jobs:
 
   hosted-gpu-probe:
     name: Native WebGL probe (${{ matrix.os }})
-    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
