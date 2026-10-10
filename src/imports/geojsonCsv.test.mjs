@@ -183,32 +183,6 @@ test('CSV preview supports quoted cells and rejects ambiguous local dates and ba
   assert.equal(preview.records[0].geometry.coordinates[0], 179);
 });
 
-test('CSV preview fuses bounds and time summary with accepted-row normalization', async () => {
-  const preview = await previewCSV(
-    [
-      'id,lat,lon,time,note',
-      'first,10,20,2026-01-02T00:00:00Z,kept',
-      'bad-lat,91,30,2026-01-01T00:00:00Z,rejected',
-      'second,-4,-8,2026-01-01T00:00:00Z,also kept',
-      'bad-time,2,3,local time,rejected',
-    ].join('\n'),
-    {
-      mapping: { id: 'id', latitude: 'lat', longitude: 'lon', time: 'time' },
-    },
-  );
-  assert.equal(preview.accepted, 2);
-  assert.equal(preview.rejected, 2);
-  assert.deepEqual(preview.bounds, [-8, -4, 20, 10]);
-  assert.deepEqual(preview.timeRange, [
-    Date.parse('2026-01-01T00:00:00Z'),
-    Date.parse('2026-01-02T00:00:00Z'),
-  ]);
-  assert.deepEqual(
-    preview.records.map((record) => record.id),
-    ['first', 'second'],
-  );
-});
-
 test('CSV parsing rejects missing mapping, malformed quoting and oversized files', async () => {
   await assert.rejects(previewCSV('a,b\n1,2'), { code: 'mapping-required' });
   await assert.rejects(
@@ -310,17 +284,7 @@ test('CSV preview cancellation takes precedence before decoding and scanning', a
   );
 });
 
-test('CSV fused summary is null with no accepted coordinates or known times', async () => {
-  const preview = await previewCSV('lat,lon,time\n91,2,\n3,181,\n', {
-    mapping: { latitude: 'lat', longitude: 'lon', time: 'time' },
-  });
-  assert.equal(preview.accepted, 0);
-  assert.equal(preview.rejected, 2);
-  assert.equal(preview.bounds, null);
-  assert.equal(preview.timeRange, null);
-});
-
-test('CSV preview retains parser error precedence and bounds', async () => {
+test('CSV preview preserves parser error precedence', async () => {
   const mapping = { latitude: 'lat', longitude: 'lon' };
   const cases = [
     ['lat,lat\n1,2', 'invalid-csv'],

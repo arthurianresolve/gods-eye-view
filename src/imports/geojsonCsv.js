@@ -327,7 +327,7 @@ export async function previewCSV(
   signal?.throwIfAborted();
   const text = decodeImportText(input);
   signal?.throwIfAborted();
-  const { headers, rows } = scanCsv(text);
+  const { headers, rows } = parseCsv(text);
   const column = (field) => {
     const selected = mapping[field];
     if (Number.isInteger(selected)) return selected;
@@ -347,9 +347,6 @@ export async function previewCSV(
   const records = [];
   const rejected = [];
   const ids = new Set();
-  const bounds = [Infinity, Infinity, -Infinity, -Infinity];
-  let minTime = Infinity;
-  let maxTime = -Infinity;
   await consumeInBatches(
     (function* () {
       for (let i = 0; i < rows.length; i++) {
@@ -404,37 +401,21 @@ export async function previewCSV(
             properties[header] = cells[index].slice(0, 500);
         }
         ids.add(id);
-        const record = {
+        records.push({
           id,
           geometry: { type: 'Point', coordinates: [longitude, latitude] },
           properties,
           timeMs,
-        };
-        records.push(record);
-        bounds[0] = Math.min(bounds[0], longitude);
-        bounds[1] = Math.min(bounds[1], latitude);
-        bounds[2] = Math.max(bounds[2], longitude);
-        bounds[3] = Math.max(bounds[3], latitude);
-        if (Number.isSafeInteger(timeMs)) {
-          minTime = Math.min(minTime, timeMs);
-          maxTime = Math.max(maxTime, timeMs);
-        }
+        });
       }
     })(),
     { signal },
   );
-  return buildImportPreview(
-    {
-      kind: 'csv',
-      records,
-      rejected,
-      attribution,
-      timeField: timeColumn >= 0 ? headers[timeColumn] : null,
-    },
-    {
-      bounds: records.length ? bounds : null,
-      minTime,
-      maxTime,
-    },
-  );
+  return createImportPreview({
+    kind: 'csv',
+    records,
+    rejected,
+    attribution,
+    timeField: timeColumn >= 0 ? headers[timeColumn] : null,
+  });
 }

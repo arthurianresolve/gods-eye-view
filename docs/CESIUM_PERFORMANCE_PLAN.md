@@ -1044,6 +1044,24 @@ SHA-256 `931d65a5b73ba88bce9cc50712b5e1011b5f9048d98735b264844eb2a7eadffa`.
 This is local Windows/Node CPU and event-loop evidence, not browser interaction
 or GPU acceptance.
 
+The isolated summary candidate at `01ab8671f250e83b6b8a7c386b8b555a4bd6630d`
+also preserves all 60 complete outputs with clean source before and after its
+comparison, but does not demonstrate a repeatable preview benefit. Ordinary
+preview medians are 366.96 versus 374.41 ms (2.0% slower), and long quoted CRLF
+preview medians are 686.22 versus 713.42 ms (4.0% slower). The summary optimization
+is therefore not accepted. Only the separately demonstrated correctness fix for
+already-cancelled CSV requests is retained; bounded full decoding remains open.
+
+The synchronous long-record parser comparison also reports 235.62 versus
+267.40 ms (13.5% slower, candidate slower in four of five pairs). Root verified
+that the scanner, header validation and synchronous public wrappers are
+byte-identical between these revisions. This does not prove an algorithmic
+regression or excuse the observed result: load/JIT/GC and measurement-order
+controls remain needed before attributing it. No performance pass is claimed.
+Short header operations now report a null timer gap when the observer receives
+no tick, instead of implying a measured zero gap. [Raw comparison](performance-evidence/csv-decode-comparison-01ab867.json),
+SHA-256 `dafbaf5a20b32dacb328488287192b95e9930c3c5ebe6ddf0b27d2aaf7f1cd88`.
+
 ### S59.1 CSV column setup - 10 October 2026
 
 GPT-6 Luna's `9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` adds a header-only mode to the existing CSV scanner. Column mapping no longer materializes every data row merely to discover the column names. The public full decoder and preview retain complete body validation, output ordering, quoted multiline/BOM handling and existing error precedence. A malformed body is still rejected when the user requests a preview; header setup deliberately validates only the header. Twenty-four focused parser, cancellation and import panel checks pass in the root review, and package boundaries pass.

@@ -1,0 +1,539 @@
+{
+  "schema": "gev-csv-decode-comparison/v1",
+  "baselineCommit": "ef6fcd5de4ead7e5771a08f4eecc0cd35bd6ecb5",
+  "candidateCommit": "01ab8671f250e83b6b8a7c386b8b555a4bd6630d",
+  "capturedAt": "2026-10-10T21:38:35.001Z",
+  "status": "passed",
+  "sourceClean": true,
+  "sourceHashes": {
+    "baseline": "aa6eafbf49d4365fce8dd3dd829330721811a6c158e83de38d90611217c67b38",
+    "candidate": "532e0d9e3d469ba773cea3b35c74a98e90e67c2104020d19ba01d3c35d20837c"
+  },
+  "harnessSha256": "57f46e5ee892a8945f99e38c4cca1dcd288e554c8f53311196c8e3b8f7fed2d1",
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32",
+    "release": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "memoryBytes": 16907538432
+  },
+  "conditions": {
+    "warmupsPerVariant": 2,
+    "alternatingPairs": 5,
+    "forcedGC": false,
+    "profiling": false
+  },
+  "scope": "Exact public parser exports on Node. Complete outputs and elapsed completion are compared. One-ms timer gaps observe event-loop responsiveness, not application CPU duration or browser interaction. No GPU evidence.",
+  "workloads": [
+    {
+      "id": "ordinary-50k/parseCsvHeaders",
+      "fixtureSha256": "eacea0296d7738af41f3e54cecaf775946f3758d151af3bcd6f672cf644d78a1",
+      "fixtureBytes": 2303377,
+      "fixtureRows": 50000,
+      "expectedOutputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "totalCompletionMs": 0.12150000000002592,
+          "maxMainThreadGapMs": 1.0585999999999558,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "totalCompletionMs": 0.0261000000000422,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "totalCompletionMs": 0.017899999999997362,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "totalCompletionMs": 0.024900000000002365,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "totalCompletionMs": 0.03300000000001546,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "totalCompletionMs": 0.04370000000000118,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "totalCompletionMs": 0.02400000000000091,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "totalCompletionMs": 0.028200000000026648,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "totalCompletionMs": 0.03209999999995716,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "totalCompletionMs": 0.032100000000014006,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        }
+      ],
+      "baselineMedianMs": 0.03209999999995716,
+      "candidateMedianMs": 0.0261000000000422,
+      "changeRatio": -0.18691588784806756,
+      "baselineMedianTimerGapMs": 1.0585999999999558,
+      "candidateMedianTimerGapMs": null
+    },
+    {
+      "id": "ordinary-50k/parseCsv",
+      "fixtureSha256": "eacea0296d7738af41f3e54cecaf775946f3758d151af3bcd6f672cf644d78a1",
+      "fixtureBytes": 2303377,
+      "fixtureRows": 50000,
+      "expectedOutputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "totalCompletionMs": 83.1289999999999,
+          "maxMainThreadGapMs": 83.4099000000001,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "totalCompletionMs": 75.3291999999999,
+          "maxMainThreadGapMs": 75.43869999999993,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "totalCompletionMs": 69.77890000000002,
+          "maxMainThreadGapMs": 69.90480000000002,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "totalCompletionMs": 64.56060000000002,
+          "maxMainThreadGapMs": 64.69060000000013,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "totalCompletionMs": 66.76589999999987,
+          "maxMainThreadGapMs": 66.87919999999986,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "totalCompletionMs": 70.76660000000015,
+          "maxMainThreadGapMs": 70.88319999999999,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "totalCompletionMs": 75.10670000000005,
+          "maxMainThreadGapMs": 75.25009999999997,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "totalCompletionMs": 81.19449999999983,
+          "maxMainThreadGapMs": 81.31780000000003,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "totalCompletionMs": 71.57199999999966,
+          "maxMainThreadGapMs": 71.68189999999959,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "totalCompletionMs": 75.31939999999986,
+          "maxMainThreadGapMs": 75.44520000000011,
+          "outputSha256": "31c6b2edd4782a9034a78324297b854eb0e0f2c5ca6098994f866de5de04bbea"
+        }
+      ],
+      "baselineMedianMs": 71.57199999999966,
+      "candidateMedianMs": 75.10670000000005,
+      "changeRatio": 0.04938663164366508,
+      "baselineMedianTimerGapMs": 71.68189999999959,
+      "candidateMedianTimerGapMs": 75.25009999999997
+    },
+    {
+      "id": "ordinary-50k/previewCSV",
+      "fixtureSha256": "eacea0296d7738af41f3e54cecaf775946f3758d151af3bcd6f672cf644d78a1",
+      "fixtureBytes": 2303377,
+      "fixtureRows": 50000,
+      "expectedOutputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "totalCompletionMs": 608.9749000000002,
+          "maxMainThreadGapMs": 150.51400000000012,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "totalCompletionMs": 440.6382000000003,
+          "maxMainThreadGapMs": 67.15429999999924,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "totalCompletionMs": 408.2641000000003,
+          "maxMainThreadGapMs": 73.75540000000001,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "totalCompletionMs": 377.46950000000015,
+          "maxMainThreadGapMs": 83.89879999999994,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "totalCompletionMs": 339.84970000000067,
+          "maxMainThreadGapMs": 55.61290000000008,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "totalCompletionMs": 345.9866000000002,
+          "maxMainThreadGapMs": 56.47280000000046,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "totalCompletionMs": 374.41350000000057,
+          "maxMainThreadGapMs": 68.17529999999988,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "totalCompletionMs": 366.95750000000044,
+          "maxMainThreadGapMs": 64.17659999999887,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "totalCompletionMs": 331.4179000000004,
+          "maxMainThreadGapMs": 62.41580000000067,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "totalCompletionMs": 355.65179999999964,
+          "maxMainThreadGapMs": 71.21389999999883,
+          "outputSha256": "c9edd4306f150559d223c4e7d388588f9b2c9a4345f962b9a8b70c7189f5a3bf"
+        }
+      ],
+      "baselineMedianMs": 366.95750000000044,
+      "candidateMedianMs": 374.41350000000057,
+      "changeRatio": 0.020318429245894,
+      "baselineMedianTimerGapMs": 64.17659999999887,
+      "candidateMedianTimerGapMs": 68.17529999999988
+    },
+    {
+      "id": "aligned-crlf-quoted-5k/parseCsvHeaders",
+      "fixtureSha256": "940481062d10ae28cd69037eae25f9fa9a3ae5c4a45b35da33661e793f8b1fb7",
+      "fixtureBytes": 5120001,
+      "fixtureRows": 5000,
+      "expectedOutputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "totalCompletionMs": 0.008700000000317232,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "totalCompletionMs": 0.008499999999912689,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "totalCompletionMs": 0.008200000000215368,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "totalCompletionMs": 0.007799999999406282,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "totalCompletionMs": 0.007600000000820728,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "totalCompletionMs": 0.0072000000000116415,
+          "maxMainThreadGapMs": 0.021199999999225838,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "totalCompletionMs": 0.007400000000416185,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "totalCompletionMs": 0.007600000000820728,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "totalCompletionMs": 0.007599999999001739,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "totalCompletionMs": 0.007099999998899875,
+          "maxMainThreadGapMs": null,
+          "outputSha256": "bcc122aae91ec766bb9af985e3cbcb56c87e5e3d9701c6137abb511af52fa439"
+        }
+      ],
+      "baselineMedianMs": 0.007600000000820728,
+      "candidateMedianMs": 0.007400000000416185,
+      "changeRatio": -0.026315789524071764,
+      "baselineMedianTimerGapMs": null,
+      "candidateMedianTimerGapMs": 0.021199999999225838
+    },
+    {
+      "id": "aligned-crlf-quoted-5k/parseCsv",
+      "fixtureSha256": "940481062d10ae28cd69037eae25f9fa9a3ae5c4a45b35da33661e793f8b1fb7",
+      "fixtureBytes": 5120001,
+      "fixtureRows": 5000,
+      "expectedOutputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "totalCompletionMs": 329.04639999999927,
+          "maxMainThreadGapMs": 329.28549999999996,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "totalCompletionMs": 285.7491000000009,
+          "maxMainThreadGapMs": 288.8863999999994,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "totalCompletionMs": 267.39919999999984,
+          "maxMainThreadGapMs": 267.5470999999998,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "totalCompletionMs": 243.02429999999913,
+          "maxMainThreadGapMs": 243.13190000000031,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "totalCompletionMs": 228.0607999999993,
+          "maxMainThreadGapMs": 228.16130000000157,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "totalCompletionMs": 280.95740000000114,
+          "maxMainThreadGapMs": 281.08610000000044,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "totalCompletionMs": 258.7407000000003,
+          "maxMainThreadGapMs": 258.88640000000123,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "totalCompletionMs": 230.48370000000068,
+          "maxMainThreadGapMs": 230.59720000000016,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "totalCompletionMs": 235.6155000000017,
+          "maxMainThreadGapMs": 235.73320000000058,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "totalCompletionMs": 239.08580000000075,
+          "maxMainThreadGapMs": 239.2570999999989,
+          "outputSha256": "13e03df891400b7fe481fa86b3a35ad74b5bec8a69098ffdccd97d9a58bf0c1e"
+        }
+      ],
+      "baselineMedianMs": 235.6155000000017,
+      "candidateMedianMs": 267.39919999999984,
+      "changeRatio": 0.13489647327955034,
+      "baselineMedianTimerGapMs": 235.73320000000058,
+      "candidateMedianTimerGapMs": 267.5470999999998
+    },
+    {
+      "id": "aligned-crlf-quoted-5k/previewCSV",
+      "fixtureSha256": "940481062d10ae28cd69037eae25f9fa9a3ae5c4a45b35da33661e793f8b1fb7",
+      "fixtureBytes": 5120001,
+      "fixtureRows": 5000,
+      "expectedOutputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f",
+      "samples": [
+        {
+          "pair": 0,
+          "variant": "baseline",
+          "totalCompletionMs": 552.1887000000024,
+          "maxMainThreadGapMs": 248.64260000000286,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 0,
+          "variant": "candidate",
+          "totalCompletionMs": 713.4226999999992,
+          "maxMainThreadGapMs": 261.45080000000235,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 1,
+          "variant": "candidate",
+          "totalCompletionMs": 732.5409,
+          "maxMainThreadGapMs": 235.6304999999993,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 1,
+          "variant": "baseline",
+          "totalCompletionMs": 647.1663999999982,
+          "maxMainThreadGapMs": 240.6349999999984,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 2,
+          "variant": "baseline",
+          "totalCompletionMs": 686.2161000000015,
+          "maxMainThreadGapMs": 259.65339999999924,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 2,
+          "variant": "candidate",
+          "totalCompletionMs": 786.3125999999975,
+          "maxMainThreadGapMs": 251.40820000000167,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 3,
+          "variant": "candidate",
+          "totalCompletionMs": 603.5468000000001,
+          "maxMainThreadGapMs": 228.45699999999852,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 3,
+          "variant": "baseline",
+          "totalCompletionMs": 754.3247999999985,
+          "maxMainThreadGapMs": 262.1141000000025,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 4,
+          "variant": "baseline",
+          "totalCompletionMs": 721.3590000000004,
+          "maxMainThreadGapMs": 214.93830000000162,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        },
+        {
+          "pair": 4,
+          "variant": "candidate",
+          "totalCompletionMs": 652.7957999999999,
+          "maxMainThreadGapMs": 238.64100000000326,
+          "outputSha256": "eee69b96ff15e3ea353867410f07a832c473a1318f428a3122959cdb43d91d7f"
+        }
+      ],
+      "baselineMedianMs": 686.2161000000015,
+      "candidateMedianMs": 713.4226999999992,
+      "changeRatio": 0.03964727729354878,
+      "baselineMedianTimerGapMs": 248.64260000000286,
+      "candidateMedianTimerGapMs": 238.64100000000326
+    }
+  ],
+  "sourceCleanAtEnd": true,
+  "candidateCommitAtEnd": "01ab8671f250e83b6b8a7c386b8b555a4bd6630d",
+  "performanceRegressions": [
+    "aligned-crlf-quoted-5k/parseCsv"
+  ],
+  "acceptanceScope": "Passed describes output parity and measurement integrity; regression and browser interaction acceptance are separate."
+}
