@@ -11,6 +11,14 @@ export function createOrbitRendering({
   source,
 }) {
   const { orbitFrameModelMatrix } = services.satellites;
+  const makeOrbitDemand =
+    services.render?.registerRenderDemand ||
+    (() => ({ schedule: () => () => {}, invalidate() {}, dispose() {} }));
+  let orbitDemand = makeOrbitDemand('rocket-launches-orbit-cadence');
+  let orbitCadenceActive = false;
+  let cancelOrbitWake = () => {};
+  let orbitGeneration = 0;
+  let lastOrbitUpdateMs = null;
 
   /**
    * Register the selected-orbit tactical material once. Each group begins with
@@ -77,6 +85,86 @@ export function createOrbitRendering({
       if (path.primitive)
         path.primitive.show = missionOrbitPrimitiveVisible(launchId);
     }
+    syncOrbitCadence();
+    orbitDemand?.invalidate?.();
+  }
+
+  function hasVisibleOrbitPrimitive() {
+    if (!layerState._enabled || !layerState._dataSource?.show) return false;
+    for (const [launchId, path] of layerState._missionOrbitPrimitives) {
+      if (path.primitive && missionOrbitPrimitiveVisible(launchId)) return true;
+    }
+    return false;
+  }
+
+  function scheduleOrbitCadence() {
+    if (!orbitDemand || orbitCadenceActive) return;
+    orbitCadenceActive = true;
+    const generation = ++orbitGeneration;
+    const nextDelay = () =>
+      lastOrbitUpdateMs === null
+        ? 1000
+        : Math.max(0, 1000 - (Date.now() - lastOrbitUpdateMs));
+    const wake = () => {
+      if (generation !== orbitGeneration || !orbitCadenceActive) return;
+      if (!hasVisibleOrbitPrimitive()) {
+        orbitGeneration += 1;
+        orbitCadenceActive = false;
+        return;
+      }
+      refreshMissionOrbitFramesIfDue(new Date(), false);
+      cancelOrbitWake = orbitDemand.schedule(wake, nextDelay());
+    };
+    cancelOrbitWake = orbitDemand.schedule(wake, nextDelay());
+  }
+
+  function syncOrbitCadence() {
+    if (hasVisibleOrbitPrimitive()) {
+      scheduleOrbitCadence();
+    } else if (orbitCadenceActive) {
+      orbitCadenceActive = false;
+      orbitGeneration += 1;
+      cancelOrbitWake();
+      cancelOrbitWake = () => {};
+    }
+  }
+
+  function destroyOrbitCadence() {
+    orbitCadenceActive = false;
+    orbitGeneration += 1;
+    lastOrbitUpdateMs = null;
+    cancelOrbitWake();
+    cancelOrbitWake = () => {};
+    orbitDemand?.dispose();
+    orbitDemand = null;
+  }
+
+  function resetOrbitCadence() {
+    if (orbitDemand) destroyOrbitCadence();
+    orbitDemand = makeOrbitDemand('rocket-launches-orbit-cadence');
+  }
+
+  function refreshMissionOrbitFramesIfDue(
+    nowDate = new Date(),
+    reschedule = true,
+  ) {
+    if (!hasVisibleOrbitPrimitive()) return false;
+    const nowMs = nowDate.getTime();
+    if (
+      !Number.isFinite(nowMs) ||
+      (lastOrbitUpdateMs !== null && nowMs - lastOrbitUpdateMs < 1000)
+    )
+      return false;
+    updateMissionOrbitPrimitiveFrames(nowDate);
+    lastOrbitUpdateMs = nowMs;
+    if (reschedule && orbitCadenceActive) {
+      orbitCadenceActive = false;
+      orbitGeneration += 1;
+      cancelOrbitWake();
+      cancelOrbitWake = () => {};
+      scheduleOrbitCadence();
+    }
+    return true;
   }
 
   function removeMissionOrbitPrimitives() {
@@ -86,6 +174,7 @@ export function createOrbitRendering({
       }
     }
     layerState._missionOrbitPrimitives.clear();
+    syncOrbitCadence();
   }
 
   function updateMissionOrbitPrimitiveFrames(nowDate) {
@@ -127,11 +216,13 @@ export function createOrbitRendering({
       new Date(),
       collection.modelMatrix,
     );
+    lastOrbitUpdateMs = Date.now();
     layerState._viewer.scene.primitives.add(collection);
     layerState._missionOrbitPrimitives.set(launch.id, {
       primitive: collection,
       gmstAtBake: satelliteTrack.gmstAtBake,
     });
+    syncOrbitCadence();
     return true;
   }
 
@@ -177,6 +268,9 @@ export function createOrbitRendering({
     syncMissionOrbitPrimitiveVisibility,
     removeMissionOrbitPrimitives,
     updateMissionOrbitPrimitiveFrames,
+    refreshMissionOrbitFramesIfDue,
+    destroyOrbitCadence,
+    resetOrbitCadence,
     addMissionOrbitPrimitive,
     MissionOrbitPatternMaterialProperty,
   };

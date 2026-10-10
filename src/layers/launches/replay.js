@@ -361,6 +361,7 @@ export function createReplay({ state: layerState, services, parts, source }) {
     if (layerState._viewer?.camera)
       layerState._viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     layerState._replayCameraLaunchId = null;
+    parts.renderDemand.sync();
     layerState._replayPaused = false;
     layerState._replayPausedAtMs = null;
     if (stoppedLaunchId)
@@ -405,6 +406,7 @@ export function createReplay({ state: layerState, services, parts, source }) {
     parts.selection.stopMissionZoomAnchor();
     stopMissionReplay({ release: false, cancelPending: false });
     layerState._replayCameraLaunchId = launchId;
+    parts.renderDemand.sync();
     layerState._replayPaused = false;
     layerState._replayPausedAtMs = null;
     const token = ++layerState._replayCameraToken;

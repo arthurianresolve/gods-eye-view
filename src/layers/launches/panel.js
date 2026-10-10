@@ -395,7 +395,10 @@ export function createPanel({ state: layerState, services, parts, source }) {
     layerState._missionRosterHoverTimer = null;
     const changed = layerState._hoveredRosterLaunchId !== null;
     layerState._hoveredRosterLaunchId = null;
-    if (changed) parts.overlays.syncMissionOverlayEntries();
+    if (changed) {
+      parts.overlays.syncMissionOverlayEntries();
+      parts.renderDemand.invalidate();
+    }
   }
 
   function clearMissionRosterHover() {
@@ -411,6 +414,7 @@ export function createPanel({ state: layerState, services, parts, source }) {
       clearTimeout(layerState._missionRosterHoverTimer);
     layerState._hoveredRosterLaunchId = launch.id;
     parts.overlays.syncMissionOverlayEntries();
+    parts.renderDemand.invalidate();
     layerState._missionRosterHoverTimer = setTimeout(() => {
       layerState._missionRosterHoverTimer = null;
       if (layerState._hoveredRosterLaunchId !== launch.id) return;

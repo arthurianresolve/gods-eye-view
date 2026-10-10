@@ -73,6 +73,11 @@ export const _setRocketMissionOverlayHostForTest =
   layer._setRocketMissionOverlayHostForTest;
 export const _setSelectedRocketMissionForTest =
   layer._setSelectedRocketMissionForTest;
+export const _observeRocketRenderInvalidationForTest =
+  layer._observeRocketRenderInvalidationForTest;
+export const _previewRocketMissionForTest = layer._previewRocketMissionForTest;
+export const _clearRocketMissionPreviewForTest =
+  layer._clearRocketMissionPreviewForTest;
 export {
   ROCKET_MISSION_AMBIENT_OVERLAY_SOURCE_ID,
   ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_ID,

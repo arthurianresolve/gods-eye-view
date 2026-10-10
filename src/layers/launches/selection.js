@@ -32,7 +32,7 @@ export function createSelection({
     );
     const distance = earthRadius / Math.max(Math.sin(angularRadius), 1e-4);
     const altitude = Math.max(earthRadius * 1.55, distance - earthRadius);
-    viewer.camera.flyTo({
+    parts.renderDemand.wrapCameraFlight(viewer.scene, viewer.camera, 'flyTo', {
       destination: Cesium.Cartesian3.fromRadians(
         cartographic.longitude,
         cartographic.latitude,
@@ -81,6 +81,8 @@ export function createSelection({
         : entity.id.startsWith('rocket-launch:');
     }
     parts.orbitRendering.syncMissionOrbitPrimitiveVisibility();
+    parts.renderDemand.sync();
+    parts.renderDemand.invalidate();
     parts.overlays.syncMissionOverlayEntries();
     parts.panel.renderMissionPanel();
   }
@@ -187,15 +189,20 @@ export function createSelection({
       Cesium.Cartesian3.cross(right, direction, new Cesium.Cartesian3()),
       new Cesium.Cartesian3(),
     );
-    layerState._viewer.camera.flyTo({
-      destination,
-      orientation: { direction, up },
-      duration: 1.1,
-      complete: () => {
-        if (layerState._selectedLaunchId === launch.id)
-          startMissionZoomAnchor(launch, range);
+    parts.renderDemand.wrapCameraFlight(
+      layerState._viewer.scene,
+      layerState._viewer.camera,
+      'flyTo',
+      {
+        destination,
+        orientation: { direction, up },
+        duration: 1.1,
+        complete: () => {
+          if (layerState._selectedLaunchId === launch.id)
+            startMissionZoomAnchor(launch, range);
+        },
       },
-    });
+    );
   }
 
   function focusLaunchSite(launch) {
@@ -209,7 +216,10 @@ export function createSelection({
     layerState._viewer.selectedEntity = layerState._dataSource.entities.getById(
       `rocket-launch:${launch.id}`,
     );
-    layerState._viewer.camera.flyToBoundingSphere(
+    parts.renderDemand.wrapCameraFlight(
+      layerState._viewer.scene,
+      layerState._viewer.camera,
+      'flyToBoundingSphere',
       new Cesium.BoundingSphere(launchPosition, 0),
       {
         offset: new Cesium.HeadingPitchRange(

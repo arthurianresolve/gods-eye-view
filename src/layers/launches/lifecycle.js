@@ -7,12 +7,13 @@ export function createLifecycle({
   parts,
   source,
 }) {
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
-
   const methods = {
     init(viewer) {
+      parts.renderDemand.reset();
+      parts.orbitRendering.resetOrbitCadence();
       layerState._viewer = viewer;
       layerState._enabled = false;
+      parts.renderDemand.setActive(false);
       parts.panel.createMissionPanel();
       parts.overlays.createReplayVehicleOverlay();
       layerState._dataSource = new Cesium.CustomDataSource('rocket-launches');
@@ -65,7 +66,7 @@ export function createLifecycle({
       layerState._sourceController.abort();
       layerState._sourceController = new AbortController();
       layerState._enabled = true;
-      holdContinuousRender('rocket-launches'); // per-frame animator (perf wave 2)
+      parts.renderDemand.setActive(true);
       layerState._lifecycleToken++;
       layerState._postTleRetryCount = 0;
       try {
@@ -101,7 +102,8 @@ export function createLifecycle({
     async disable() {
       layerState._sourceController.abort();
       layerState._enabled = false;
-      releaseContinuousRender('rocket-launches');
+      parts.renderDemand.setActive(false);
+      parts.renderDemand.cancelCameraFlights();
       layerState._lifecycleToken++;
       layerState._updateDirty = false;
       parts.ingestion.clearPostTleRetry();
@@ -122,10 +124,13 @@ export function createLifecycle({
 
     async destroy(viewer) {
       layerState._sourceController.abort();
-      releaseContinuousRender('rocket-launches'); // direct-destroy path (perf wave 2 fix)
       layerState._enabled = false;
+      parts.renderDemand.setActive(false);
+      parts.renderDemand.cancelCameraFlights();
       layerState._lifecycleToken++;
       layerState._updateDirty = false;
+      parts.orbitRendering.destroyOrbitCadence();
+      parts.renderDemand.dispose();
       await parts.ingestion.restoreSatelliteDependency();
       parts.panel.clearMissionRosterHover();
       parts.replay.destroy();
