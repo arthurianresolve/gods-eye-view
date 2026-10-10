@@ -28,7 +28,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; terrain/picking runner fails at `79f319f` before measured cycles | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and equal-style write suppression | Existing queue/revision tests plus 52 focused CCTV tests pass; exact evaluated styles match across eight states; five hosted toggle cycles add zero geometry jobs at `db298d4` | Full appearance and hardware build-count comparisons pending |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
@@ -100,6 +100,25 @@ repository's existing direct `Fetch.requestPaused` implementation. That repeats
 the previously diagnosed worker-module interception risk. Reuse the existing
 interceptor and verify paused worker requests settle without a Network event
 before attributing these pending jobs to Cesium or the production layers.
+
+That correction at `d7f25edd040a5e1d92da0e6eea63f26f97a28c44` passes
+[run 38072562918](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38072562918).
+All five terrain cycles return to the warmed counts: three cable data sources,
+four cable listeners, two cable cache entries, four map cache entries, one imagery
+layer, one scene primitive and zero pending jobs. The initial heightmap transition
+requests 162 tiles and observes 174 additional worker submissions and replies.
+Three native selection/re-enable cycles, injected stale picks, late terrain
+replacement, fixture-owned disposal hook and final cleanup pass. Browser shutdown
+completes normally in 391 ms, without forced termination. External requests remain
+zero. Root independently recomputed the report validator; the nine focused tests
+include a paused worker request without a matching Network event.
+
+[Passing raw report](performance-evidence/terrain-picking-38072562918.json),
+SHA-256 `b943f6c27655e5650333d870d336347332f013198f519ba3bbe02a8b01b03b4e`;
+[run metadata](performance-evidence/terrain-picking-38072562918-run.json).
+This unchanged production-code comparison supports request interception as the
+cause of the isolated fixture stall. The historical failures remain preserved;
+it does not establish the cause of the earlier physical Windows soak growth.
 
 This fixture uses one-sample MSAA and continuous rendering for
 ownership observation; it is not a visual-equivalence or performance comparison,
