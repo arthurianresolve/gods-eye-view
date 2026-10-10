@@ -1037,7 +1037,7 @@ test('CCTV runner completes the full serialized lifecycle and closes owned resou
   ]) {
     assert.equal(row.drainStability.status, 'stable');
     assert.ok(row.drainStability.windowMs >= 1000);
-    assert.ok(row.drainStability.sampleCount >= 10);
+    assert.ok(row.drainStability.sampleCount >= 3);
     assert.ok(
       row.drainStability.lastFrameNumber > row.drainStability.firstFrameNumber,
     );
@@ -1111,6 +1111,54 @@ test('CCTV stable drain restarts its window when new work appears after initial 
   assert.equal(result.checkpoint.worker.workers[1].submitted, 4);
   assert.ok(result.stability.windowMs >= 1000);
   assert.ok(result.elapsedMs >= 1300);
+});
+
+test('CCTV stable drain accepts slow native frames without imposing a frame-rate gate', async () => {
+  const { page } = createCctvRunnerDependencies();
+  const originalEvaluate = page.evaluate.bind(page);
+  page.evaluate = async (callback, ...args) => {
+    if (callback.name === 'waitForCctvLifecycleRenderInPage')
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    return originalEvaluate(callback, ...args);
+  };
+  const initial = await page.evaluate(readCctvLifecycleCheckpointInPage);
+  const result = await waitForCctvLifecycleDrain(page, 4000, {
+    expectedTaskErrors: cctvTaskErrorSignature(initial),
+  });
+  assert.ok(result.stability.sampleCount >= 3);
+  assert.ok(result.stability.sampleCount < 10);
+  assert.ok(result.stability.maximumSampleGapMs > 500);
+  assert.ok(result.stability.windowMs >= 1000);
+  assert.equal(result.checkpoint.drainHistory.truncated, false);
+  assert.ok(result.checkpoint.drainHistory.samples.length >= 3);
+});
+
+test('CCTV drain preserves the last observation when a later render request fails', async () => {
+  const { page } = createCctvRunnerDependencies();
+  const originalEvaluate = page.evaluate.bind(page);
+  let renderCalls = 0;
+  page.evaluate = async (callback, ...args) => {
+    if (
+      callback.name === 'waitForCctvLifecycleRenderInPage' &&
+      ++renderCalls === 2
+    )
+      throw new Error('synthetic render deadline');
+    return originalEvaluate(callback, ...args);
+  };
+  const initial = await page.evaluate(readCctvLifecycleCheckpointInPage);
+  await assert.rejects(
+    waitForCctvLifecycleDrain(page, 2000, {
+      expectedTaskErrors: cctvTaskErrorSignature(initial),
+    }),
+    (error) => {
+      assert.match(error.message, /synthetic render deadline/);
+      assert.equal(error.drainHistory.samples.length, 1);
+      assert.equal(error.drainHistory.truncated, false);
+      assert.equal(error.lastCheckpoint.worker.pending, 0);
+      assert.equal(error.drainStability.sampleCount, 1);
+      return true;
+    },
+  );
 });
 
 test('CCTV runner retains the original phase/error and closes acquired resources on failure', async () => {

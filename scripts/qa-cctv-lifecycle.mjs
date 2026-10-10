@@ -269,103 +269,114 @@ export async function waitForCctvLifecycleDrain(
   let lastStableFrame = null;
   let maxPollGapMs = 0;
   let priorSampleAt = null;
-  while (performance.now() - startedAt <= timeoutMs) {
-    const remaining = timeoutMs - (performance.now() - startedAt);
-    if (remaining <= 0) break;
-    const renderTimeoutMs = Math.max(1, Math.min(5000, remaining));
-    const render = await withDeadline(
-      () => page.evaluate(waitForCctvLifecycleRenderInPage, renderTimeoutMs),
-      'wait for CCTV drain sample render',
-      remaining,
-    );
-    const afterRenderRemaining = timeoutMs - (performance.now() - startedAt);
-    if (afterRenderRemaining <= 0) break;
-    last = await withDeadline(
-      () => readCheckpoint(page, { requireSettled: false, fixtureView }),
-      'read CCTV stable drain sample',
-      afterRenderRemaining,
-    );
-    last.render = render;
-    if (fixtureView) assertCctvCameraPose(last, fixtureView);
-    const ready = validDrainCandidate(last, expectedTaskErrors);
-    const elapsedMs = Math.max(0, performance.now() - startedAt);
-    const signature = ready ? cctvDrainSignature(last) : null;
-    if (!ready || signature !== stableSignature) {
-      stableStartedAt = ready ? elapsedMs : null;
-      stableSignature = signature;
-      stableSamples = ready ? 1 : 0;
-      firstStableFrame = ready ? render.frameNumber : null;
-      lastStableFrame = ready ? render.frameNumber : null;
-      maxPollGapMs = 0;
-      priorSampleAt = ready ? elapsedMs : null;
-    } else {
-      const sampleGapMs =
-        priorSampleAt === null ? 0 : elapsedMs - priorSampleAt;
-      if (sampleGapMs > 500) {
-        stableStartedAt = elapsedMs;
-        stableSamples = 1;
-        firstStableFrame = render.frameNumber;
+  const history = [];
+  let historyTruncated = false;
+  try {
+    while (performance.now() - startedAt <= timeoutMs) {
+      const remaining = timeoutMs - (performance.now() - startedAt);
+      if (remaining <= 0) break;
+      const renderTimeoutMs = Math.max(1, Math.min(5000, remaining));
+      const render = await withDeadline(
+        () => page.evaluate(waitForCctvLifecycleRenderInPage, renderTimeoutMs),
+        'wait for CCTV drain sample render',
+        remaining,
+      );
+      const afterRenderRemaining = timeoutMs - (performance.now() - startedAt);
+      if (afterRenderRemaining <= 0) break;
+      last = await withDeadline(
+        () => readCheckpoint(page, { requireSettled: false, fixtureView }),
+        'read CCTV stable drain sample',
+        afterRenderRemaining,
+      );
+      last.render = render;
+      if (fixtureView) assertCctvCameraPose(last, fixtureView);
+      const ready = validDrainCandidate(last, expectedTaskErrors);
+      const elapsedMs = Math.max(0, performance.now() - startedAt);
+      const signature = ready ? cctvDrainSignature(last) : null;
+      const signatureChanged = signature !== stableSignature;
+      if (!ready || signature !== stableSignature) {
+        stableStartedAt = ready ? elapsedMs : null;
+        stableSignature = signature;
+        stableSamples = ready ? 1 : 0;
+        firstStableFrame = ready ? render.frameNumber : null;
+        lastStableFrame = ready ? render.frameNumber : null;
         maxPollGapMs = 0;
+        priorSampleAt = ready ? elapsedMs : null;
       } else {
-        stableSamples++;
+        const sampleGapMs =
+          priorSampleAt === null ? 0 : elapsedMs - priorSampleAt;
+        if (render.frameNumber > lastStableFrame) {
+          stableSamples++;
+        }
         maxPollGapMs = Math.max(maxPollGapMs, sampleGapMs);
+        priorSampleAt = elapsedMs;
+        lastStableFrame = render.frameNumber;
       }
-      priorSampleAt = elapsedMs;
-      lastStableFrame = render.frameNumber;
-    }
-    const stableElapsedMs =
-      stableStartedAt === null ? 0 : Math.max(0, elapsedMs - stableStartedAt);
-    onObservation(
-      {
+      const stableElapsedMs =
+        stableStartedAt === null ? 0 : Math.max(0, elapsedMs - stableStartedAt);
+      const observation = {
         elapsedMs: Math.round(elapsedMs),
         pendingJobs: last.diagnostics.pendingJobs,
         workerPending: last.worker.pending,
+        workerSubmitted: last.worker.workers.reduce(
+          (total, worker) => total + worker.submitted,
+          0,
+        ),
         frameNumber: render.frameNumber,
         stableElapsedMs: Math.round(stableElapsedMs),
         stableSamples,
-      },
-      last,
-    );
-    if (
-      ready &&
-      elapsedMs <= timeoutMs &&
-      stableElapsedMs >= stableWindowMs &&
-      stableSamples >= Math.ceil(stableWindowMs / sampleIntervalMs)
-    ) {
-      assertCctvCheckpoint(last, { expectedTaskErrors });
-      last.drainStability = {
-        status: 'stable',
-        windowMs: Math.round(stableElapsedMs),
-        sampleCount: stableSamples,
-        firstFrameNumber: firstStableFrame,
-        lastFrameNumber: lastStableFrame,
-        maximumSampleGapMs: Math.round(maxPollGapMs),
+        signatureChanged,
       };
-      assertCctvStableDrain(last);
-      return { checkpoint: last, elapsedMs, stability: last.drainStability };
+      if (history.length === 64) {
+        history.shift();
+        historyTruncated = true;
+      }
+      history.push(observation);
+      onObservation(observation, last);
+      if (
+        ready &&
+        elapsedMs <= timeoutMs &&
+        stableElapsedMs >= stableWindowMs &&
+        // This gate measures settled ownership, not renderer throughput. Slow
+        // software frames must not reset an otherwise unchanged counter window.
+        stableSamples >= 3
+      ) {
+        assertCctvCheckpoint(last, { expectedTaskErrors });
+        last.drainStability = {
+          status: 'stable',
+          windowMs: Math.round(stableElapsedMs),
+          sampleCount: stableSamples,
+          firstFrameNumber: firstStableFrame,
+          lastFrameNumber: lastStableFrame,
+          maximumSampleGapMs: Math.round(maxPollGapMs),
+        };
+        last.drainHistory = { samples: history, truncated: historyTruncated };
+        assertCctvStableDrain(last);
+        return { checkpoint: last, elapsedMs, stability: last.drainStability };
+      }
+      const remainingAfterSample = timeoutMs - (performance.now() - startedAt);
+      if (remainingAfterSample <= 0) break;
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.min(sampleIntervalMs, remainingAfterSample)),
+      );
     }
-    const remainingAfterSample = timeoutMs - (performance.now() - startedAt);
-    if (remainingAfterSample <= 0) break;
-    await new Promise((resolve) =>
-      setTimeout(resolve, Math.min(sampleIntervalMs, remainingAfterSample)),
-    );
+    throw new Error(`CCTV lifecycle did not drain within ${timeoutMs}ms.`);
+  } catch (error) {
+    error.lastCheckpoint = last;
+    error.drainHistory = { samples: history, truncated: historyTruncated };
+    error.drainStability = {
+      status: 'timed-out',
+      stableWindowMs:
+        stableStartedAt === null
+          ? 0
+          : Math.max(0, performance.now() - startedAt - stableStartedAt),
+      sampleCount: stableSamples,
+      firstFrameNumber: firstStableFrame,
+      lastFrameNumber: lastStableFrame,
+      maximumSampleGapMs: Math.round(maxPollGapMs),
+    };
+    throw error;
   }
-  const error = new Error(
-    `CCTV lifecycle did not drain within ${timeoutMs}ms.`,
-  );
-  error.lastCheckpoint = last;
-  error.drainStability = {
-    status: 'timed-out',
-    stableWindowMs:
-      stableStartedAt === null
-        ? 0
-        : Math.max(0, performance.now() - startedAt - stableStartedAt),
-    sampleCount: stableSamples,
-    firstFrameNumber: firstStableFrame,
-    lastFrameNumber: lastStableFrame,
-    maximumSampleGapMs: Math.round(maxPollGapMs),
-  };
-  throw error;
 }
 
 async function renderAndDrain(
@@ -835,6 +846,7 @@ export async function runCctvLifecycle({
     report.failedPhase = report.phase;
     if (error?.lastCheckpoint) report.lastCheckpoint = error.lastCheckpoint;
     if (error?.drainStability) report.lastDrainStability = error.drainStability;
+    if (error?.drainHistory) report.lastDrainHistory = error.drainHistory;
     if (error?.sceneReadiness) report.sceneReadiness = error.sceneReadiness;
   } finally {
     if (page) {

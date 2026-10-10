@@ -407,7 +407,7 @@ export function assertCctvStableDrain(checkpoint) {
   if (
     stable?.status !== 'stable' ||
     !Number.isSafeInteger(stable.sampleCount) ||
-    stable.sampleCount < 10 ||
+    stable.sampleCount < 3 ||
     !Number.isFinite(stable.windowMs) ||
     stable.windowMs < 1000 ||
     !Number.isSafeInteger(stable.firstFrameNumber) ||
@@ -415,7 +415,7 @@ export function assertCctvStableDrain(checkpoint) {
     stable.lastFrameNumber <= stable.firstFrameNumber ||
     !Number.isFinite(stable.maximumSampleGapMs) ||
     stable.maximumSampleGapMs < 0 ||
-    stable.maximumSampleGapMs > 500
+    stable.maximumSampleGapMs > 10_000
   )
     throw new Error(
       'CCTV checkpoint lacks a stable one-second native-render drain window.',
