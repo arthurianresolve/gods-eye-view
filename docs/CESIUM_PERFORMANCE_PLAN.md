@@ -315,6 +315,14 @@ comparison on hosted Apple paravirtual Metal, not physical Windows performance,
 full-application equivalence, or long-run resource stability. Raw SHA-256:
 `f98a6a036d050cb13cec7cb6bebd8e0c50622efd898cd2ab1aa14f54b7c00aed`.
 
+The [tracking regression](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38082567836)
+at the same clean `aea307c` revision passes **109 checks, zero failures and zero
+skips** ([raw log](performance-evidence/tracking-aea307c.txt),
+[job metadata](performance-evidence/tracking-aea307c-run.json)). Browser cleanup
+completes normally in 722 ms without forced termination. This is the existing
+full-application, fixture-based software-rendered tracking regression, not
+hardware latency evidence.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
