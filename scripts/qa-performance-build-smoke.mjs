@@ -26,6 +26,7 @@ import {
   auditReceiptedCodeRequests,
   respondToWorkerPreflight,
   runSameOriginWorkerPreflight,
+  waitForPreflightWorkerTargetsClosed,
 } from './performance/buildSmokeContract.mjs';
 import {
   describeObservedRoute,
@@ -339,6 +340,7 @@ async function runRevision({
     page.setDefaultTimeout(30_000);
     page.setDefaultNavigationTimeout(45_000);
     const codeRequests = [];
+    const preflightPhase = { active: true };
     let requestCount = 0;
     page.on('request', (request) => {
       requestCount += 1;
@@ -352,7 +354,7 @@ async function runRevision({
         codeRequests.push({ url: requestUrl, resourceType });
     });
     page.on('workercreated', (worker) => {
-      if (codeRequests.length < 4000)
+      if (!preflightPhase.active && codeRequests.length < 4000)
         codeRequests.push({ url: worker.url(), resourceType: 'worker' });
     });
     page.on('pageerror', (error) => {
@@ -378,6 +380,28 @@ async function runRevision({
         return discardedAudit;
       },
     });
+    phase = 'preflight-worker-target-disposal';
+    const preflightTargetDisposal = await waitForPreflightWorkerTargetsClosed({
+      getTargets: () =>
+        browser.targets().map((target) => ({
+          type: target.type(),
+          url: target.url(),
+        })),
+      // The preflight is the only worker-producing action before app navigation.
+      // Require every such target to disappear; don't whitelist its blob URL.
+      workerUrls: null,
+    });
+    workerNetworkPreflight.discardedAudit = {
+      requestCount: workerNetworkPreflight.discardedAudit?.requestCount ?? 0,
+      codeRequestCount:
+        workerNetworkPreflight.discardedAudit?.codeRequestCount ?? 0,
+    };
+    workerNetworkPreflight.targetDisposal = preflightTargetDisposal;
+    if (!preflightTargetDisposal.closed)
+      throw new Error(
+        `Harness preflight worker target remained after termination (${preflightTargetDisposal.remainingCount}).`,
+      );
+    preflightPhase.active = false;
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
       waitUntil: 'domcontentloaded',

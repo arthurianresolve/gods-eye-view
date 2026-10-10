@@ -4,6 +4,7 @@ import {
   auditReceiptedCodeRequests,
   respondToWorkerPreflight,
   runSameOriginWorkerPreflight,
+  waitForPreflightWorkerTargetsClosed,
   WORKER_PREFLIGHT_PATH,
 } from './buildSmokeContract.mjs';
 
@@ -54,7 +55,7 @@ test('code request audit rejects missing, escaped and unsafe asset paths', () =>
   ])
     assert.throws(
       () => auditReceiptedCodeRequests({ ...base, requests: [request] }),
-      /absent from the build receipt|escaped|unsafe/,
+      /absent from the build receipt|build-root integrity|unsafe/,
     );
 });
 
@@ -149,4 +150,70 @@ test('worker preflight rejects navigation away from the verified inert entry', a
     /left its exact same-origin page/,
   );
   assert.equal(verified, false);
+});
+
+test('worker preflight waits for target removal and a bounded settle window', async () => {
+  let clock = 0;
+  const workerUrls = ['blob:http://127.0.0.1:4173/fixture-worker'];
+  const result = await waitForPreflightWorkerTargetsClosed({
+    workerUrls,
+    now: () => clock,
+    sleep: async (duration) => {
+      clock += duration;
+    },
+    getTargets: () =>
+      clock < 75
+        ? [{ type: 'worker', url: workerUrls[0] }]
+        : [],
+    timeoutMs: 200,
+    pollMs: 25,
+    settleMs: 50,
+  });
+  assert.equal(result.closed, true);
+  assert.equal(result.remainingCount, 0);
+  assert.ok(result.waitMs >= 125);
+});
+
+test('worker preflight fails boundedly if the exact worker target persists', async () => {
+  let clock = 0;
+  const workerUrl = 'blob:http://127.0.0.1:4173/fixture-worker';
+  const result = await waitForPreflightWorkerTargetsClosed({
+    workerUrls: [workerUrl],
+    now: () => clock,
+    sleep: async (duration) => {
+      clock += duration;
+    },
+    getTargets: () => [{ type: 'worker', url: workerUrl }],
+    timeoutMs: 80,
+    pollMs: 20,
+    settleMs: 20,
+  });
+  assert.equal(result.closed, false);
+  assert.equal(result.remainingCount, 1);
+  assert.ok(result.waitMs >= 80 && result.waitMs <= 81);
+});
+
+test('preflight disposal waits for every worker target without persisting URLs', async () => {
+  let clock = 0;
+  const targets = [
+    { type: 'page', url: 'about:blank' },
+    { type: 'worker', url: 'blob:http://127.0.0.1/opaque-id' },
+  ];
+  const result = await waitForPreflightWorkerTargetsClosed({
+    workerUrls: null,
+    now: () => clock,
+    sleep: async (duration) => {
+      clock += duration;
+      if (clock >= 50) targets.pop();
+    },
+    getTargets: () => targets,
+    timeoutMs: 200,
+    pollMs: 25,
+    settleMs: 50,
+  });
+  assert.deepEqual(result, {
+    closed: true,
+    remainingCount: 0,
+    waitMs: 100,
+  });
 });

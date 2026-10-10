@@ -61,6 +61,58 @@ export async function runSameOriginWorkerPreflight({
   };
 }
 
+/** Wait for the exact preflight Worker targets to disappear before app auditing. */
+export async function waitForPreflightWorkerTargetsClosed({
+  getTargets,
+  workerUrls = null,
+  timeoutMs = 2000,
+  pollMs = 25,
+  settleMs = 100,
+  now = () => performance.now(),
+  sleep = (duration) => new Promise((resolve) => setTimeout(resolve, duration)),
+} = {}) {
+  if (
+    typeof getTargets !== 'function' ||
+    (workerUrls !== null && !Array.isArray(workerUrls))
+  )
+    throw new TypeError('Preflight worker target inputs are required.');
+  if (
+    !Number.isFinite(timeoutMs) ||
+    timeoutMs < 1 ||
+    !Number.isFinite(pollMs) ||
+    pollMs < 1 ||
+    !Number.isFinite(settleMs) ||
+    settleMs < 0
+  )
+    throw new TypeError('Preflight target wait bounds are invalid.');
+  const expected = workerUrls === null ? null : new Set(workerUrls);
+  const isExpectedWorker = (target) =>
+    target?.type === 'worker' && (!expected || expected.has(target.url));
+  const startedAt = now();
+  let absentSince = null;
+  while (now() - startedAt <= timeoutMs) {
+    const remaining = getTargets().filter(isExpectedWorker).length;
+    if (remaining === 0) {
+      absentSince ??= now();
+      if (now() - absentSince >= settleMs)
+        return {
+          closed: true,
+          remainingCount: 0,
+          waitMs: Math.max(0, now() - startedAt),
+        };
+    } else {
+      absentSince = null;
+    }
+    await sleep(Math.min(pollMs, Math.max(1, timeoutMs - (now() - startedAt))));
+  }
+  const remainingCount = getTargets().filter(isExpectedWorker).length;
+  return {
+    closed: remainingCount === 0 && settleMs === 0,
+    remainingCount,
+    waitMs: Math.max(0, now() - startedAt),
+  };
+}
+
 /** Audit observed code request paths against the local build receipt. */
 export function auditReceiptedCodeRequests({ requests, baseUrl, assets } = {}) {
   if (!Array.isArray(requests))
@@ -85,8 +137,14 @@ export function auditReceiptedCodeRequests({ requests, baseUrl, assets } = {}) {
       externalCodeRequests += 1;
       continue;
     }
-    if (url.username || url.password || !url.pathname.startsWith(prefix))
-      throw new Error('Observed code request escaped the verified build root.');
+    if (url.username || url.password)
+      throw new Error(
+        `Observed code request failed build-root integrity (credentialed URL; protocol=${url.protocol}; resourceType=${String(request.resourceType).slice(0, 24)}).`,
+      );
+    if (!url.pathname.startsWith(prefix))
+      throw new Error(
+        `Observed code request failed build-root integrity (outside path; protocol=${url.protocol}; sameOrigin=true; resourceType=${String(request.resourceType).slice(0, 24)}).`,
+      );
     let relative;
     try {
       relative = decodeURIComponent(url.pathname.slice(prefix.length));
