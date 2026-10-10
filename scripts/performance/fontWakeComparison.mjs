@@ -96,6 +96,7 @@ const report = {
     launchArgs,
   },
   sources: {},
+  fixtureOwnership: {},
   pairs: [],
   cleanup: {
     browserClosed: false,
@@ -125,12 +126,18 @@ for (const [side, root] of Object.entries(roots)) {
   );
   const commit = git(root, ['rev-parse', 'HEAD']);
   assert.equal(commit, expectedCommits[side], `Wrong ${side} commit.`);
-  for (const name of fixtures.keys())
-    assert.equal(
-      existsSync(resolve(root, 'scripts/fixtures', name)),
-      false,
-      `Fixture already exists in ${side}: ${name}`,
-    );
+  report.fixtureOwnership[side] = {};
+  for (const [name, bytes] of fixtures) {
+    const path = resolve(root, 'scripts/fixtures', name);
+    const present = existsSync(path);
+    if (present)
+      assert.deepEqual(
+        readFileSync(path),
+        bytes,
+        `Existing fixture differs from the harness in ${side}: ${name}`,
+      );
+    report.fixtureOwnership[side][name] = present ? 'existing' : 'temporary';
+  }
   const files = Object.fromEntries(
     sourceFiles.map((name) => [name, hash(readFileSync(resolve(root, name)))]),
   );
@@ -362,6 +369,7 @@ try {
   for (const [side, root] of Object.entries(roots)) {
     for (const [name, bytes] of fixtures) {
       const path = resolve(root, 'scripts/fixtures', name);
+      if (report.fixtureOwnership[side][name] === 'existing') continue;
       writeFileSync(path, bytes, { flag: 'wx' });
       copied.push(path);
     }
@@ -645,6 +653,14 @@ try {
           report.sources[side].files[name],
           `${side} source changed during comparison: ${name}`,
         );
+      for (const [name, bytes] of fixtures) {
+        if (report.fixtureOwnership[side][name] !== 'existing') continue;
+        assert.deepEqual(
+          readFileSync(resolve(root, 'scripts/fixtures', name)),
+          bytes,
+          `${side} pre-existing fixture changed during comparison: ${name}`,
+        );
+      }
     }
     report.cleanup.sourceTreesUnchanged = true;
   } catch (error) {
