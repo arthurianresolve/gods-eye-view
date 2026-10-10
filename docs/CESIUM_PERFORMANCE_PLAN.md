@@ -1,9 +1,10 @@
 # Cesium performance plan
 
-Updated on 10 October 2026. The latest `084a771` integration run has a Windows
-recovery cleanup failure, recorded below; it is not a full CI pass. The last
-complete runtime CI pass is at
-`b5b8c92a811f2da5cf53ea08969d4352b4d0eb4c` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046733687), [job results](performance-evidence/ci-b5b8c92.json)).
+Updated on 10 October 2026. All seven full integration jobs pass at
+`7b92db45d56e3b171f3d65482166fe725a6791bd` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38051924445), [job results](performance-evidence/ci-7b92db4.json)),
+including Windows recovery. The earlier Windows shutdown failures at `084a771`
+and `0940b57` remain historical evidence; this successful run does not establish
+their cause or a permanent fix. Subsequent code requires its own applicable checks.
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -43,6 +44,42 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### Integration and isolated Windows shutdown - 10 October 2026
+
+The full [integration run 38051924445](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38051924445)
+passes all seven required jobs at `7b92db45d56e3b171f3d65482166fe725a6791bd`:
+Node 24/26 unit/build gates, Windows onboarding, the complete browser journeys,
+and Windows/Linux/macOS recovery. No required job or failed step is counted as
+a pass. The [Windows recovery report](performance-evidence/profile-recovery-38051924445-windows.json)
+was extracted from the delimited JSON in CI logs. All five prior-install,
+interrupted-update, rollback, upgrade and failed-verification checkpoints retain
+the workspace, settings and asset. Chrome 152.0.7977.75 uses observed SwiftShader
+on Windows Server 2025; its five browser closes take 324-496 ms without forced
+termination. This is installation/recovery evidence, not physical GPU acceptance.
+The report's SHA-256 is
+`64b7c7c427d3937f3b45565cfe1d14131c857d3ea77a358ce94dbfecf5004299`.
+
+GPT-6 Luna's bounded shutdown controls (`045abd7`, hardened at `c2f3625`) run
+blank, WebGL 2 and minimal Cesium documents, each with normal close and an
+unload-first treatment. Six fresh profiles share the pinned Chrome and installed
+Cesium build; exact commits, asset hashes, actual renderer, protocol close and
+parent-process exit are recorded. Descendant process observation is explicitly
+unavailable. Eighteen diagnostic tests and twenty existing recovery tests pass;
+the five-second close deadline remains unchanged.
+
+The [hosted diagnostic 38052625232](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38052625232)
+at `c2f3625e3fa4a62f0f29d3178dbcba68d456c13d` **fails** its unload-observation
+requirement. All six parent processes close normally in 441-517 ms, with protocol
+acknowledgement and no forced termination. The three normal-close controls pass.
+The three unload-first controls complete navigation to `about:blank` but report
+no observed outgoing-document `pagehide`; they remain failed. The exposed-function
+notification may be lost across document replacement, but that hypothesis needs
+a durable observation control before acceptance. No unchanged retry or timeout
+increase is justified. [Raw report](performance-evidence/browser-shutdown-38052625232.json)
+and [job results](performance-evidence/browser-shutdown-38052625232-run.json)
+preserve the result. It neither reproduces nor fixes the historical parent-process
+stall, and it does not exercise the full application or the Windows GPU soak.
 
 ### Local S51 integration diagnostics - 10 October 2026
 
