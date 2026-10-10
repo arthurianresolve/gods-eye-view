@@ -936,6 +936,47 @@ Environment: Windows 10.0.19045, Node 24.16.0, i7-8665U, approximately 16 GB RAM
 This is Node CPU/queue evidence on the available Windows machine, not browser or
 GPU evidence. GPX and browser interaction acceptance remain open.
 
+### S59.1 transferable-coordinate experiment - 10 October 2026
+
+The diagnostic at `ef6fcd5de4ead7e5771a08f4eecc0cd35bd6ecb5` adds a
+third path: transferable numeric coordinate buffers with cloned metadata and
+cooperative reconstruction on the main thread. It uses the existing batch
+consumer with a four-ms target. Packing, reconstruction, delivery and scheduling
+remain included in total completion. Startup and all three warmups are measured
+separately. Neither this prototype nor the preceding worker prototype changes
+the production import path.
+
+Twenty-two focused tests pass, including exact metadata/key-order preservation,
+50,000-coordinate and 200,000-instruction bounds, malformed packets, cancellation,
+and timeout/disposal while reconstruction owns a scheduled wake. Root repeated
+these checks; package boundaries and formatting of 1,506 source files pass.
+The clean comparison has five rotated triples for each of four workloads, all
+60 outputs matching their complete hashes and expected counts/order. Source
+identity remains clean and unchanged through cleanup, with no pending jobs and
+the owned worker terminated. Root independently recomputed all medians.
+
+| Workload | Main median | Clone-worker median | Transfer-worker median | Transfer reconstruction median |
+| --- | ---: | ---: | ---: | ---: |
+| 50k-vertex GeoJSON line | 40.40 ms | 105.07 ms | 418.38 ms | 330.63 ms |
+| 50k-vertex polygon with hole | 39.36 ms | 83.18 ms | 333.45 ms | 256.78 ms |
+| 50k CSV rows | 455.29 ms | 593.71 ms | 901.64 ms | 269.70 ms |
+| 50k-coordinate KML line | 53.79 ms | 81.37 ms | 331.31 ms | 246.55 ms |
+
+Transfer is **rejected as a production path**: total completion regresses for
+every workload, and the CSV median main-thread timer gap remains 104.49 ms.
+Observed reconstruction batches reach 4.16 ms; the four-ms target is not a hard
+wall-clock guarantee. The unassigned remainder explicitly combines cloning,
+delivery, reconstruction and scheduling; it does not isolate clone cost. Worker
+startup takes 68.00 ms and is excluded from warmed samples. The next S59 packet
+targets the existing CSV scanner and final summary pass instead of accepting
+the transport regression.
+
+[Raw comparison](performance-evidence/s59-coordinate-transfer-ef6fcd5.json),
+SHA-256 `27df11a6abcf6aee2472087930735fe407ec93db524031ceaae439374eed851d`.
+This is Windows 10.0.19045 / Node 24.16.0 / i7-8665U CPU evidence, not browser
+interaction or GPU acceptance. A passing report means output parity and cleanup;
+it does not mean the performance target passed.
+
 ### S59.1 CSV column setup - 10 October 2026
 
 GPT-6 Luna's `9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` adds a header-only mode to the existing CSV scanner. Column mapping no longer materializes every data row merely to discover the column names. The public full decoder and preview retain complete body validation, output ordering, quoted multiline/BOM handling and existing error precedence. A malformed body is still rejected when the user requests a preview; header setup deliberately validates only the header. Twenty-four focused parser, cancellation and import panel checks pass in the root review, and package boundaries pass.
