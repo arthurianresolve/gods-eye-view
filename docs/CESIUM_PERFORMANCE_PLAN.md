@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38065661135), [job results](performance-evidence/ci-9a665b2.json)),
+`20e53bebe83d7a6f9598969b9dda3048649dfaad` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38070091246), [job results](performance-evidence/ci-20e53be.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -33,7 +33,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
-| S54 infrastructure batching | Partial: S54.1 identity separation and S54.2 native comparison fixture; direct-collection prototype rejected; production representation unchanged | 12 fixture contract checks pass; `dc94ddf` matches all five default-style pairs but fails translucent-stem equivalence by 184 pixels; cleanup passes | Hosted Metal comparison failure retained; compatible representation and activation/memory evidence remain pending |
+| S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
@@ -69,7 +69,52 @@ Synthetic acceptance tests verify the consumer and do not constitute hardware
 evidence. Root repeated the focused manifest, paired-report, build-provenance,
 capture-integrity and soak tests: 68 passed. Formatting passes for 1,476 adopted
 files; package boundaries, modified-script syntax and diff checks also pass.
-Full integration validation for this packet is recorded separately below.
+Full integration at `20e53bebe83d7a6f9598969b9dda3048649dfaad` passes all seven
+standard jobs in [run 38070091246](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38070091246)
+([job results](performance-evidence/ci-20e53be.json)): Node 24.14/26 suites and
+production builds, Windows onboarding, Linux/macOS/Windows installation recovery,
+and all browser journeys. Node 24 reports 6,847 passing tests, one declared skip,
+zero failures, plus 14 separately run allocation checks. Pull-request-only
+published layer-token checks were skipped, not passed.
+
+The Windows [recovery report extracted from job logs](performance-evidence/profile-recovery-38070091246-windows.json)
+preserves settings and workspace contents through all five checkpoints, including
+interrupted update, rollback and failed verification. All owned browsers close
+normally in 289-435 ms with no forced termination. Its renderer is SwiftShader;
+this is functional recovery evidence, not physical GPU evidence. Extracted report
+SHA-256: `0d77f20d075db1fe55d13744900a38c779dc0ea93b238d30ed453305f56a8834`.
+Later fixture and documentation commits are distinct from this tested revision.
+
+### S54.2 Entity-compatible color encoding - 10 October 2026
+
+The explicit `entity-color-attribute-byte` fixture variant at
+`fdc2ab9da861f9b33c0ad01aa3275ffaf086f284` passes
+[hosted run 38070594759](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38070594759).
+All 20 samples (five alternating pairs for each of two styles) have exact pixels,
+matching populations and point/stem picks; all 17 checks and owned cleanup pass.
+The original direct-float variant remains selectable and its failed report below
+remains historical evidence. [Raw report](performance-evidence/infrastructure-38070594759.json),
+SHA-256 `abef2a3e408ac751c0d34e8a29fc1e2c90dcb32563b5eebb89315d1aa4e9de13`;
+[run metadata](performance-evidence/infrastructure-38070594759-run.json).
+
+The change uses Cesium's actual `ColorGeometryInstanceAttribute` byte encoding
+before constructing the candidate stem material. Raw source/style colors remain
+recorded; only the explicitly declared stem representation may differ, and its
+effective encoded color must match. Point style, all other stem properties,
+positions, feature identity, visibility and complete pixels remain exact. The
+focused 0.55 alpha maps to 140/255, and the previous 184-pixel mismatch disappears.
+Real-Cesium unit tests cover numeric RGBA arrays, collection readback and this
+encoding contract. Root repeated all 16 focused checks plus syntax/format checks.
+
+This is hosted Apple paravirtual Metal with Chrome 152, a 960x640 drawing buffer,
+and the unchanged 704-feature dam source. It is not physical desktop evidence.
+Both modes still retain all source Entities, polygons and the production update
+loop. The sampled DataSourceDisplay median is 0.4/0.3 ms for the two Entity styles
+and 0.2 ms in both collection cases, but candidate stem updates add a separately
+measured 1.2 ms median. Entity-owned primitive update costs are not instrumented
+symmetrically, so these figures do not establish a total CPU improvement. All
+samples submit 48 buffer bytes. Activation and retained-memory benefit remain
+unmeasured; no production batching change or performance acceptance follows.
 
 ### S54.2 native infrastructure comparison - 10 October 2026
 
