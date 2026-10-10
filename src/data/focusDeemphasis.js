@@ -221,7 +221,8 @@ export function publishFocusTargetFromCachedPosition({
   const padding = tuning.paddingPx;
   const halfWidth = Math.max(1, widthPx) / 2;
   const halfHeight = Math.max(1, heightPx) / 2;
-  const appeared = !_focusTarget;
+  const previous = _focusTarget;
+  const appeared = !previous;
   _focusTarget = {
     ownerLayer,
     id,
@@ -238,6 +239,7 @@ export function publishFocusTargetFromCachedPosition({
     ),
     frameNumber: scene.frameState?.frameNumber ?? -1,
   };
+  notifyFocusTargetIdentityChange(previous, _focusTarget);
   if (appeared) {
     for (const listener of _focusAppearListeners) {
       try {
@@ -251,6 +253,19 @@ export function publishFocusTargetFromCachedPosition({
 }
 
 const _focusAppearListeners = new Set();
+const _focusTargetChangeListeners = new Set();
+
+function notifyFocusTargetIdentityChange(previous, next) {
+  if (previous?.ownerLayer === next?.ownerLayer && previous?.id === next?.id)
+    return;
+  for (const listener of _focusTargetChangeListeners) {
+    try {
+      listener(next, previous);
+    } catch (error) {
+      console.warn('[focus] target-change listener error:', error);
+    }
+  }
+}
 
 /**
  * Notify on the null→set edge of the shared focus target. Consumers that
@@ -267,6 +282,18 @@ export function onFocusTargetAppear(listener) {
 }
 
 /**
+ * Subscribe to shared focus target identity appearance, replacement, and
+ * clearing. Re-publication of the same owner/id pose does not notify, so
+ * frame-by-frame tracked target updates cannot starve a consumer's timer.
+ * @param {(next: object|null, previous: object|null) => void} listener
+ * @returns {() => void} Unsubscribe.
+ */
+export function onFocusTargetChange(listener) {
+  _focusTargetChangeListeners.add(listener);
+  return () => _focusTargetChangeListeners.delete(listener);
+}
+
+/**
  * Clear the focus only when the caller still owns it. This prevents idle
  * tracked-layer ticks from erasing a target just published by another layer.
  * @param {string} [ownerLayer]
@@ -276,7 +303,9 @@ export function clearFocusTarget(ownerLayer, id = null) {
   if (!_focusTarget) return;
   if (ownerLayer && _focusTarget.ownerLayer !== ownerLayer) return;
   if (id !== null && id !== undefined && _focusTarget.id !== id) return;
+  const previous = _focusTarget;
   _focusTarget = null;
+  notifyFocusTargetIdentityChange(previous, null);
 }
 
 /** @returns {object|null} The current shared focus target. */

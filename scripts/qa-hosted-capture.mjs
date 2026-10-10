@@ -9,6 +9,12 @@ import {
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
+import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
+import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import {
+  closeRecoveryBrowser,
+  stopOwnedRecoveryProcessTree,
+} from './performance/profileRecoveryPageOwnership.mjs';
 
 if (process.env.GITHUB_ACTIONS !== 'true')
   throw new Error(
@@ -38,6 +44,13 @@ server.on('error', (error) => {
 });
 const url = 'http://127.0.0.1:4184/scripts/fixtures/capture-matrix.html';
 let browser;
+let vesselPage;
+let vesselSession;
+const closeOwnedBrowser = (ownedBrowser) =>
+  closeRecoveryBrowser(ownedBrowser, {
+    timeoutMs: 5000,
+    forceProcess: () => stopOwnedRecoveryProcessTree(ownedBrowser.process()),
+  });
 const report = {
   schema: 'gev-hosted-native-renderer/v1',
   commit,
@@ -229,6 +242,82 @@ try {
           `Wind image comparison failed: ${report.windRestores.error || 'incomplete checks'}`,
         );
     }
+    if (
+      process.argv.includes('--vessels') &&
+      report.hardwareRenderingAvailable
+    ) {
+      report.vesselPageErrors = [];
+      report.vesselInterceptionErrors = [];
+      report.vesselExternalRequestCount = 0;
+      vesselPage = await browser.newPage();
+      vesselPage.on('pageerror', (error) => {
+        if (report.vesselPageErrors.length < 20)
+          report.vesselPageErrors.push(String(error.message).slice(0, 500));
+      });
+      await vesselPage.setViewport({
+        width: 1200,
+        height: 960,
+        deviceScaleFactor: 1,
+      });
+      // Worker requests must not wait for Puppeteer's Fetch/Network pairing.
+      vesselSession = await vesselPage.createCDPSession();
+      await interceptFixtureSession(
+        vesselSession,
+        new URL(url).origin,
+        (requestUrl) => {
+          if (
+            ['http:', 'https:'].includes(requestUrl.protocol) &&
+            requestUrl.origin !== new URL(url).origin
+          )
+            report.vesselExternalRequestCount += 1;
+        },
+        (error) => {
+          if (report.vesselInterceptionErrors.length < 20)
+            report.vesselInterceptionErrors.push(
+              String(error.message).slice(0, 500),
+            );
+        },
+      );
+      await vesselPage.goto(
+        url.replace('capture-matrix.html', 'vessel-render-demand.html'),
+        { waitUntil: 'networkidle0' },
+      );
+      await vesselPage.click('#run');
+      const vesselDeadline = Date.now() + 240_000;
+      for (;;) {
+        // Short host polls avoid a single long awaitPromise protocol command.
+        const result = await vesselPage.$eval('#result', (element) =>
+          element.textContent ? JSON.parse(element.textContent) : null,
+        );
+        if (result) {
+          report.vesselRenderDemand = result;
+          break;
+        }
+        if (Date.now() >= vesselDeadline)
+          throw new Error('Vessel render-demand fixture timeout');
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      report.vesselGraphics = await readBrowserGraphicsInfo(browser);
+      if (report.vesselRenderDemand.status !== 'passed')
+        throw new Error(
+          `Vessel fixture failed in ${report.vesselRenderDemand.failedPhase || 'unknown phase'}: ${report.vesselRenderDemand.error || report.vesselRenderDemand.cleanup?.error || 'incomplete checks'}`,
+        );
+      report.vesselRenderingEvidence = classifyRenderer(
+        report.vesselRenderDemand.environment?.renderer,
+        report.vesselGraphics,
+      );
+      if (!report.vesselRenderingEvidence.accelerationVerified)
+        throw new Error('Vessel viewer did not retain verified acceleration');
+      if (
+        report.vesselPageErrors.length ||
+        report.vesselInterceptionErrors.length ||
+        report.vesselExternalRequestCount
+      )
+        throw new Error('Vessel fixture had page errors or external requests');
+      validateVesselRenderDemandReport(report.vesselRenderDemand, {
+        expectedCommit: commit,
+      });
+    }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       await browser.close();
       browser = null;
@@ -256,17 +345,38 @@ try {
     }
   }
 } catch (error) {
+  if (vesselPage && !report.vesselRenderDemand) {
+    report.vesselRenderDemand = await vesselPage
+      .evaluate(() => window.__vesselRenderDemandResult || null)
+      .catch(() => null);
+  }
   report.status = 'failed';
   report.reason = `Native renderer probe failed: ${error.message}`;
   process.exitCode = 1;
 } finally {
-  await browser?.close().catch((error) => {
-    report.status = 'failed';
-    report.cleanupError = error.message;
-    process.exitCode = 1;
-  });
+  if (vesselSession) {
+    await vesselSession.detach().catch((error) => {
+      report.status = 'failed';
+      report.vesselDetachError = error.message;
+      process.exitCode = 1;
+    });
+  }
+  if (browser) {
+    report.browserClose = await closeOwnedBrowser(browser).catch((error) => ({
+      closeCompleted: false,
+      error: error.message,
+    }));
+    if (!report.browserClose.closeCompleted) {
+      report.status = 'failed';
+      report.cleanupError = 'Owned browser did not close normally';
+      process.exitCode = 1;
+    }
+  }
   server.kill();
-  if (process.argv.includes('--infrastructure')) {
+  if (
+    process.argv.includes('--infrastructure') ||
+    process.argv.includes('--vessels')
+  ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(
       'qa-artifacts/hosted-native-renderer.json',

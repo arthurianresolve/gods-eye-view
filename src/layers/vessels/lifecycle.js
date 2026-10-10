@@ -3,6 +3,8 @@ import {
   AIS_FIRST_CONNECT_GRACE_MS,
   AIS_FIRST_CONNECT_LABEL,
   AIS_HEALTHY_STATUSES,
+  FOCUS_UPDATE_MS,
+  VISIBILITY_UPDATE_MS,
 } from './policy.js';
 
 export function createLifecycle({
@@ -15,8 +17,87 @@ export function createLifecycle({
   const { state } = vesselState;
   const { restoreSpriteOrder, restoreSpriteOrderOnEnable } = services.sprites;
   const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const scheduleRenderUpdate = services.render?.scheduleRenderUpdate;
   const { ensureGeoidReady } = services.geoid;
   const { registerPickOwner, unregisterPickOwner } = services.picking;
+  const periodicRenderOwner = Symbol('ais-vessels-periodic');
+  let periodicRenderDisposer = null;
+  let periodicRenderDueAt = null;
+  let removeFocusTargetListener = null;
+
+  function stopPeriodicRenderDemand() {
+    periodicRenderDisposer?.();
+    periodicRenderDisposer = null;
+    periodicRenderDueAt = null;
+  }
+
+  function schedulePeriodicRenderDemand(dueAt, replace = false) {
+    if (!state.feed.enabled || typeof scheduleRenderUpdate !== 'function')
+      return;
+    if (periodicRenderDisposer && !replace && periodicRenderDueAt === dueAt)
+      return;
+    stopPeriodicRenderDemand();
+    periodicRenderDueAt = dueAt;
+    const now =
+      services.focus?.focusNowMs?.(performance.now()) ?? performance.now();
+    periodicRenderDisposer = scheduleRenderUpdate(
+      periodicRenderOwner,
+      () => {
+        periodicRenderDisposer = null;
+        periodicRenderDueAt = null;
+        if (!state.feed.enabled) return;
+        components.rendering.updateVisibility();
+      },
+      Math.max(0, dueAt - now),
+    );
+  }
+
+  function syncPeriodicRenderDemand() {
+    if (typeof scheduleRenderUpdate !== 'function') return;
+    if (!state.feed.enabled || !state.records.all.length) {
+      stopPeriodicRenderDemand();
+      return;
+    }
+    const focusTarget = services.focus?.getFocusTarget?.() || null;
+    const focusActive =
+      state.focusTransitioning ||
+      services.focus?.focusPassIsNeeded?.(focusTarget, state.activeFocusCount);
+    const visibilityDueAt = state.lastVisibilityUpdate + VISIBILITY_UPDATE_MS;
+    const focusDueAt = focusActive
+      ? state.lastFocusUpdate + FOCUS_UPDATE_MS
+      : Number.POSITIVE_INFINITY;
+    schedulePeriodicRenderDemand(Math.min(visibilityDueAt, focusDueAt));
+  }
+
+  function startPeriodicRenderDemand() {
+    if (typeof scheduleRenderUpdate !== 'function') {
+      holdContinuousRender('ais-vessels');
+      return;
+    }
+    releaseContinuousRender('ais-vessels');
+    if (!removeFocusTargetListener) {
+      removeFocusTargetListener = services.focus?.onFocusTargetChange?.(() => {
+        if (state.feed.enabled && state.records.all.length)
+          schedulePeriodicRenderDemand(
+            services.focus?.focusNowMs?.(performance.now()) ??
+              performance.now(),
+            true,
+          );
+      });
+    }
+    if (state.records.all.length)
+      schedulePeriodicRenderDemand(
+        services.focus?.focusNowMs?.(performance.now()) ?? performance.now(),
+        true,
+      );
+  }
+
+  function stopVesselRenderDemand() {
+    stopPeriodicRenderDemand();
+    removeFocusTargetListener?.();
+    removeFocusTargetListener = null;
+    releaseContinuousRender('ais-vessels');
+  }
 
   function clearFirstConnectTimer() {
     if (state.feed.firstConnectTimer === null) return;
@@ -131,6 +212,7 @@ export function createLifecycle({
     state.lastVisibilityUpdate = 0;
     state.lastFocusUpdate = 0;
     state.activeFocusCount = 0;
+    state.focusTransitioning = false;
     state.activeLabelCount = 0;
     state.selectedRecord = null;
     state.trail = null;
@@ -167,7 +249,7 @@ export function createLifecycle({
       const wasEnabled = state.feed.enabled;
       state.feed.enabled = true;
       if (!wasEnabled) beginAisSession();
-      holdContinuousRender('ais-vessels'); // per-frame animator (perf wave 2)
+      startPeriodicRenderDemand();
       const activeViewer = viewer || state.viewer;
       components.rendering.ensureCollections(activeViewer);
       components.selection.installInteraction(activeViewer);
@@ -210,7 +292,7 @@ export function createLifecycle({
       removeViewListener();
       state.feed.enabled = false;
       invalidateAisSession();
-      releaseContinuousRender('ais-vessels');
+      stopVesselRenderDemand();
       unregisterPickOwner('ais-live-vessels');
       components.rendering.setVisible(false);
       vesselState._vesselOverlayHost.clearSource(VESSEL_OVERLAY_SOURCE_ID);
@@ -229,7 +311,8 @@ export function createLifecycle({
       removeViewListener();
       const activeViewer = viewer || state.viewer;
       invalidateAisSession();
-      releaseContinuousRender('ais-vessels'); // direct-destroy path (perf wave 2 fix)
+      state.feed.enabled = false;
+      stopVesselRenderDemand(); // direct-destroy path
       if (state.feed.abort) state.feed.abort.abort();
       unregisterPickOwner('ais-live-vessels');
       components.selection.clearVesselInspection();
@@ -266,6 +349,7 @@ export function createLifecycle({
     isDefinitiveTransportFailure,
     markAisUnavailable,
     resetState,
+    syncPeriodicRenderDemand,
     methods,
   };
 }

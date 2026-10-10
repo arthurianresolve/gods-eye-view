@@ -45,6 +45,34 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### S51.3 vessel render-demand candidate - 10 October 2026
+
+The vessel layer can use the governor's owned scheduler instead of holding
+continuous rendering throughout an enabled session. Its existing 800 ms visibility
+and 80 ms focus policies remain in force. Deadlines are derived from the last
+actual pass, so an early timer or an intervening render cannot postpone work by
+another full interval. Shared focus identity changes wake the owner; repeated
+publication of the same identity does not restart its timer. Disable and destroy
+dispose the scheduled update and focus subscription. Discrete source, selection,
+visibility and geoid changes still request a frame. Services without the scheduler
+retain the continuous-render compatibility path.
+
+The isolated comparison uses that compatibility path as the control, fixed
+synthetic observations through the production vessel adapter, and five alternating
+control/candidate pairs. It checks visible billboards, focus attack/release,
+completed render counts, endpoint pixels and owned cleanup. The hosted integration
+uses the existing direct Fetch interceptor and short host-side result polls;
+partial failures are preserved. It does not establish full application overlay,
+tracking, motion-p95 or physical Windows acceptance.
+
+Root's broader vessel, analyst, evidence, source, label, focus and governor suite
+passes 136 tests; the runner's cleanup/interception suite passes 19 tests.
+Four fixture-contract tests pass, including a settled release tail returning to
+the normal visibility cadence. Formatting passes for 1,485 adopted files, and
+package boundaries and syntax checks pass. Rendered comparison and full integration
+are pending at the frozen candidate; this is not yet an accepted optimization or
+a performance claim.
+
 ### Windows frame controls after Chrome reconnection - 10 October 2026
 
 Four fresh-viewer controls used the existing frozen diagnostic build

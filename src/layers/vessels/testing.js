@@ -82,6 +82,15 @@ export function createTesting({
     components.rendering.updateClusteredLabels(records);
   }
 
+  /** Exercise the production throttled visibility pass with a fixture clock. */
+  function _updateVesselVisibilityForTest(force = false) {
+    components.rendering.updateVisibility(force);
+  }
+
+  function _setVesselVisibilityForTest(show) {
+    components.rendering.setVisible(show);
+  }
+
   /**
    * Reconcile AIS rows through the production lifecycle. Test-only seam.
    * @param {Object} viewer - Viewer-like object.
@@ -169,6 +178,8 @@ export function createTesting({
     _setVesselStateForTest,
     _setVesselOverlayHostForTest,
     _updateVesselCardsForTest,
+    _updateVesselVisibilityForTest,
+    _setVesselVisibilityForTest,
     _reconcileVesselsForTest,
     _applyAisFeedSnapshotForTest,
     _loadLivePositionsForTest,

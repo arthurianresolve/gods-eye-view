@@ -1,12 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as Cesium from 'cesium';
 import {
   DEFAULT_FOCUS_DEEMPHASIS_PARAMS,
   advanceFocusEvidenceNowMs,
   advanceSpriteFocus,
+  clearFocusTarget,
   focusNowMs,
   focusTargetEmphasis,
   nearFarScalarValueAtDistance,
+  onFocusTargetChange,
+  publishFocusTargetFromCachedPosition,
   setFocusEvidenceNowMs,
   smoothFocusEmphasis,
 } from './focusDeemphasis.js';
@@ -17,6 +21,54 @@ const target = {
   paddingPx: 0,
   cameraDistance: 1000,
 };
+
+test('focus identity changes notify once and isolate listener failures', () => {
+  const originalProject = Cesium.SceneTransforms.worldToWindowCoordinates;
+  const originalWarn = console.warn;
+  Cesium.SceneTransforms.worldToWindowCoordinates = () =>
+    new Cesium.Cartesian2(10, 20);
+  console.warn = () => {};
+  clearFocusTarget();
+  const changes = [];
+  const removeFailureListener = onFocusTargetChange(() => {
+    throw new Error('observer failure');
+  });
+  const remove = onFocusTargetChange((next, previous) => {
+    changes.push({ next: next?.id ?? null, previous: previous?.id ?? null });
+  });
+  const camera = { positionWC: new Cesium.Cartesian3(0, 0, 0) };
+  const publish = (ownerLayer, id, frameNumber) =>
+    publishFocusTargetFromCachedPosition({
+      ownerLayer,
+      id,
+      scene: { frameState: { frameNumber } },
+      camera,
+      displayPosition: new Cesium.Cartesian3(1, 2, 3),
+    });
+
+  try {
+    publish('flights', 'A', 1);
+    publish('flights', 'A', 2);
+    publish('flights', 'B', 3);
+    publish('satellites', 'B', 4);
+    clearFocusTarget('flights', 'B');
+    clearFocusTarget('satellites', 'B');
+    remove();
+    publish('flights', 'C', 5);
+    assert.deepEqual(changes, [
+      { next: 'A', previous: null },
+      { next: 'B', previous: 'A' },
+      { next: 'B', previous: 'B' },
+      { next: null, previous: 'B' },
+    ]);
+  } finally {
+    remove();
+    removeFailureListener();
+    clearFocusTarget();
+    Cesium.SceneTransforms.worldToWindowCoordinates = originalProject;
+    console.warn = originalWarn;
+  }
+});
 
 test('focus decision dims a farther sprite inside and preserves one outside', () => {
   assert.equal(focusTargetEmphasis({ x: 50, y: 50 }, 1200, target, params), 0.25);
