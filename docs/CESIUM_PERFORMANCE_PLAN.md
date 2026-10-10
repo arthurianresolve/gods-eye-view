@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. Full runtime CI passes at
-`9ea72f8498eeacc77f8bd266d5c007d03e3bd8b7` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38044308819), [job results](performance-evidence/ci-9ea72f8.json)).
+`b5b8c92a811f2da5cf53ea08969d4352b4d0eb4c` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046733687), [job results](performance-evidence/ci-b5b8c92.json)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -63,7 +63,12 @@ combined camera, render-demand and fixture checks pass 37/37. The separate
 `8ca3356a5881297fdaa7b94c536524973587d944` supplies the missing fallback-owner
 invalidation method and covers it with a regression. The new exact-commit
 [full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046733687)
-targets `b5b8c92`; its result is pending and does not replace the failed local run.
+targets `b5b8c92` and passes all seven jobs: Node 24/26 unit/build gates, Windows
+onboarding, Windows/Linux/macOS install-and-update recovery, and the browser
+journeys. This immutable result follows the deterministic test correction; it
+does not rewrite the earlier failed local run. Later diagnostic and infrastructure
+changes require their own applicable checks. Pull-request-only published-token
+checks are outside this branch-dispatch result.
 
 The isolated S51 mission comparison is implemented in
 `93bebfc3da5ff4c015ac1578036bf73f4dd47b85` with workflow integration at
