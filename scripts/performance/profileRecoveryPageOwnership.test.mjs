@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import {
+  applyRecoveryCleanupFailure,
   assertInitialRecoveryPage,
   assertOwnedRecoveryPage,
   closeOwnedRecoveryPage,
@@ -142,11 +144,63 @@ test('a passed workspace check still fails when cleanup leaves a page open', () 
   );
 });
 
-test('browser close is bounded and invokes only the owned-process fallback', async () => {
+function fakeBrowserProcess({ exitCode = null, signalCode = null } = {}) {
+  const child = new EventEmitter();
+  child.exitCode = exitCode;
+  child.signalCode = signalCode;
+  return child;
+}
+
+test('browser close records an already-exited process and releases listeners', async () => {
+  const child = fakeBrowserProcess({ exitCode: 0 });
+  let forced = false;
+  const outcome = await closeRecoveryBrowser(
+    { process: () => child, close: async () => {} },
+    { timeoutMs: 25, forceProcess: async () => (forced = true) },
+  );
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(forced, false);
+  assert.equal(outcome.observation.processExitedBeforeClose, true);
+  assert.deepEqual(outcome.observation.processExit, {
+    code: 0,
+    signal: null,
+    elapsedMs: 0,
+  });
+  assert.equal(child.listenerCount('exit'), 0);
+  assert.equal(outcome.observation.closeStatus, 'completed');
+  assert.equal(outcome.observation.closeDeadlineMs, 25);
+});
+
+test('an exited process with an unresolved close acknowledgement remains a failure', async () => {
+  const child = fakeBrowserProcess();
+  const started = Date.now();
+  const outcome = await closeRecoveryBrowser(
+    {
+      process: () => child,
+      close: () => {
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        return new Promise(() => {});
+      },
+    },
+    { timeoutMs: 20, forceProcess: async () => {} },
+  );
+  assert.ok(Date.now() - started < 500);
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, true);
+  assert.equal(outcome.observation.closeStatus, 'timed-out');
+  assert.equal(outcome.observation.processExitedBeforeClose, false);
+  assert.equal(outcome.observation.processExit.code, 0);
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('a live process timeout invokes bounded owned-process cleanup and stays failed', async () => {
+  const child = fakeBrowserProcess();
   let forced = false;
   const started = Date.now();
   const outcome = await closeRecoveryBrowser(
-    { close: () => new Promise(() => {}) },
+    { process: () => child, close: () => new Promise(() => {}) },
     {
       timeoutMs: 20,
       forceProcess: async () => {
@@ -156,25 +210,81 @@ test('browser close is bounded and invokes only the owned-process fallback', asy
   );
   assert.ok(Date.now() - started < 500);
   assert.equal(forced, true);
-  assert.deepEqual(outcome, {
-    closeCompleted: false,
-    forcedProcessTermination: true,
-  });
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, true);
+  assert.equal(outcome.observation.processExit, null);
+  assert.equal(outcome.observation.forceProcessStatus, 'completed');
+  assert.equal(child.listenerCount('exit'), 0);
 });
 
-test('successful browser close is reported without invoking the process fallback', async () => {
+test('close rejection is distinguished and failed forced cleanup is reported', async () => {
+  const child = fakeBrowserProcess();
+  const failure = Object.assign(new Error('message intentionally omitted'), {
+    name: 'ProtocolError',
+  });
+  const outcome = await closeRecoveryBrowser(
+    { process: () => child, close: async () => Promise.reject(failure) },
+    {
+      timeoutMs: 20,
+      forceProcess: async () => {
+        throw new Error('force failure');
+      },
+    },
+  );
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(outcome.observation.closeStatus, 'rejected');
+  assert.equal(outcome.observation.closeRejectionName, 'ProtocolError');
+  assert.equal(outcome.observation.forceProcessStatus, 'rejected');
+  assert.equal(child.listenerCount('exit'), 0);
+  assert.equal(
+    JSON.stringify(outcome).includes('message intentionally'),
+    false,
+  );
+  assert.equal(JSON.stringify(outcome).includes('force failure'), false);
+});
+
+test('successful close clears the deadline and does not invoke fallback', async () => {
+  const child = fakeBrowserProcess();
   let forced = false;
   const outcome = await closeRecoveryBrowser(
-    { close: async () => {} },
+    { process: () => child, close: async () => {} },
     {
+      timeoutMs: 20,
       forceProcess: async () => {
         forced = true;
       },
     },
   );
-  assert.deepEqual(outcome, {
-    closeCompleted: true,
-    forcedProcessTermination: false,
-  });
+  await new Promise((resolve) => setTimeout(resolve, 35));
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(outcome.observation.closeStatus, 'completed');
   assert.equal(forced, false);
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('cleanup failure becomes primary only after an otherwise-passed check', () => {
+  const cleanupError = new Error('Graceful browser close did not complete.');
+  const passed = { status: 'passed', pageOwnership: {} };
+  assert.deepEqual(applyRecoveryCleanupFailure(passed, cleanupError), {
+    becamePrimaryFailure: true,
+    shouldThrow: true,
+  });
+  assert.equal(passed.step, 'owned-page-cleanup');
+  assert.equal(passed.error, cleanupError.message);
+
+  const earlierFailure = {
+    status: 'failed',
+    step: 'application-ready',
+    error: 'startup failed',
+    pageOwnership: {},
+  };
+  assert.deepEqual(applyRecoveryCleanupFailure(earlierFailure, cleanupError), {
+    becamePrimaryFailure: false,
+    shouldThrow: false,
+  });
+  assert.equal(earlierFailure.step, 'application-ready');
+  assert.equal(earlierFailure.error, 'startup failed');
+  assert.equal(earlierFailure.pageOwnership.cleanupError, cleanupError.message);
 });

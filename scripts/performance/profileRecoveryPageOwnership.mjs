@@ -24,9 +24,8 @@ export function createRecoveryPageTargetGuard(browser) {
   return {
     unexpectedPageTargetCount(page) {
       const ownedTarget = page?.target?.();
-      return [...createdPageTargets].filter(
-        (target) => target !== ownedTarget,
-      ).length;
+      return [...createdPageTargets].filter((target) => target !== ownedTarget)
+        .length;
     },
     assertOnlyOwnedPageTarget(page) {
       const unexpected = this.unexpectedPageTargetCount(page);
@@ -70,61 +69,134 @@ export function assertOwnedRecoveryPage(pages, ownedPage, baseUrl) {
   return application.length;
 }
 
-export async function closeOwnedRecoveryPage(
-  page,
-  browser,
-  timeoutMs = 2000,
-) {
-  if (!page)
-    return { closeCompleted: false, openPageCount: null };
+export async function closeOwnedRecoveryPage(page, browser, timeoutMs = 2000) {
+  if (!page) return { closeCompleted: false, openPageCount: null };
   const closeCompleted =
-    (await withHostTimeout(
-      async () => {
-        if (!page.isClosed()) await page.close({ runBeforeUnload: false });
-        return true;
-      },
-      timeoutMs,
-    )) === true;
-  if (!closeCompleted)
-    return { closeCompleted: false, openPageCount: null };
+    (await withHostTimeout(async () => {
+      if (!page.isClosed()) await page.close({ runBeforeUnload: false });
+      return true;
+    }, timeoutMs)) === true;
+  if (!closeCompleted) return { closeCompleted: false, openPageCount: null };
   const remainingPages = await withHostTimeout(
     () => browser.pages(),
     timeoutMs,
   );
   return {
     closeCompleted: true,
-    openPageCount: Array.isArray(remainingPages)
-      ? remainingPages.length
-      : null,
+    openPageCount: Array.isArray(remainingPages) ? remainingPages.length : null,
   };
 }
 
 export async function closeRecoveryBrowser(
   browser,
-  { timeoutMs = 5000, forceProcess } = {},
+  { timeoutMs = 5000, forceProcess, now = () => performance.now() } = {},
 ) {
-  const closeCompleted =
-    (await withHostTimeout(
-      async () => {
-        await browser.close();
-        return true;
-      },
-      timeoutMs,
-    )) === true;
-  if (closeCompleted)
-    return { closeCompleted: true, forcedProcessTermination: false };
+  const child = browser.process?.() ?? null;
+  const startedAt = now();
+  let processExit = null;
+  const initialExit = () => {
+    const code = child?.exitCode;
+    const signal = child?.signalCode;
+    return code != null || signal != null ? { code, signal } : null;
+  };
+  processExit = initialExit();
+  const processExitedBeforeClose = processExit !== null;
+  if (processExit) processExit = { ...processExit, elapsedMs: 0 };
+  const onExit = (code, signal) => {
+    processExit = { code, signal, elapsedMs: Math.max(0, now() - startedAt) };
+  };
+  if (!processExit) child?.once?.('exit', onExit);
+
+  const settleWithin = async (operation) => {
+    let timer;
+    const settled = Promise.resolve()
+      .then(operation)
+      .then(
+        (value) => ({ kind: 'resolved', value }),
+        (error) => ({ kind: 'rejected', error }),
+      );
+    try {
+      return await Promise.race([
+        settled,
+        new Promise((resolve) => {
+          timer = setTimeout(() => resolve({ kind: 'timeout' }), timeoutMs);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
   let forcedProcessTermination = false;
-  if (forceProcess) {
-    forcedProcessTermination =
-      (await withHostTimeout(
-        async () => {
-          await forceProcess();
-          return true;
-        },
-        timeoutMs,
-      )) === true;
+  let forceProcessStatus = forceProcess ? 'not-needed' : 'not-configured';
+  try {
+    const closeResult = await settleWithin(() => browser.close());
+    const closeCompleted = closeResult.kind === 'resolved';
+    const closeStatus = closeCompleted
+      ? 'completed'
+      : closeResult.kind === 'timeout'
+        ? 'timed-out'
+        : 'rejected';
+    const closeSettledAt = now();
+    const closeElapsedMs = Math.max(0, closeSettledAt - startedAt);
+    let closeRejectionName = null;
+    let forceProcessElapsedMs = null;
+
+    if (closeResult.kind === 'rejected') {
+      const name = closeResult.error?.name;
+      closeRejectionName =
+        typeof name === 'string' && /^[A-Za-z][A-Za-z0-9]*$/.test(name)
+          ? name.slice(0, 48)
+          : 'Error';
+    }
+
+    if (!closeCompleted && forceProcess) {
+      const forceStartedAt = now();
+      const forceResult = await settleWithin(forceProcess);
+      forceProcessElapsedMs = Math.max(0, now() - forceStartedAt);
+      forceProcessStatus =
+        forceResult.kind === 'resolved'
+          ? 'completed'
+          : forceResult.kind === 'timeout'
+            ? 'timed-out'
+            : 'rejected';
+      forcedProcessTermination = forceResult.kind === 'resolved';
+    }
+
+    processExit ||= initialExit();
+    if (processExit && processExit.elapsedMs == null)
+      processExit = { ...processExit, elapsedMs: 0 };
+    return {
+      closeCompleted,
+      forcedProcessTermination,
+      observation: {
+        closeStatus,
+        closeDeadlineMs: timeoutMs,
+        closeStartHostMs: startedAt,
+        closeSettledHostMs: closeSettledAt,
+        closeElapsedMs,
+        closeRejectionName,
+        processExitedBeforeClose,
+        processExit,
+        forceProcessStatus,
+        forceProcessElapsedMs,
+      },
+    };
+  } finally {
+    child?.off?.('exit', onExit);
   }
-  return { closeCompleted: false, forcedProcessTermination };
+}
+
+export function applyRecoveryCleanupFailure(check, cleanupError) {
+  if (!check) return { becamePrimaryFailure: false, shouldThrow: false };
+  check.pageOwnership ||= {};
+  check.pageOwnership.cleanupError = cleanupError.message.slice(0, 240);
+  if (check.status !== 'passed')
+    return { becamePrimaryFailure: false, shouldThrow: false };
+  check.status = 'failed';
+  check.step = 'owned-page-cleanup';
+  check.error = cleanupError.message;
+  return { becamePrimaryFailure: true, shouldThrow: true };
 }
 
 export function recoveryPageCleanupError({

@@ -29,8 +29,10 @@ import {
 import {
   captureBoundedDomState,
   createStartupDiagnostics,
+  sanitizeDiagnosticText,
 } from './performance/startupDiagnostics.mjs';
 import {
+  applyRecoveryCleanupFailure,
   assertInitialRecoveryPage,
   assertOwnedRecoveryPage,
   closeOwnedRecoveryPage,
@@ -266,13 +268,17 @@ async function reopen(label, { seed = false } = {}) {
   const diagnosticMode = process.env.GEV_PROFILE_RECOVERY_DIAGNOSTICS === '1';
   const diagnostics = diagnosticMode ? createStartupDiagnostics(base) : null;
   const browserProcess = browser.process();
-  const stderrListener = diagnostics
-    ? (chunk) => diagnostics.recordStderr(chunk)
-    : null;
-  if (stderrListener) {
-    diagnostics.recordInitialTargets(browser.targets());
-    browserProcess?.stderr?.on('data', stderrListener);
-  }
+  const browserStderr = [];
+  const stderrListener = (chunk) => {
+    diagnostics?.recordStderr(chunk);
+    for (const line of sanitizeDiagnosticText(chunk, 1200).split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      browserStderr.push(line.slice(0, 320));
+      if (browserStderr.length > 16) browserStderr.shift();
+    }
+  };
+  if (diagnostics) diagnostics.recordInitialTargets(browser.targets());
+  browserProcess?.stderr?.on('data', stderrListener);
   const pageOwnership = {
     initialPageCount: null,
     appPagesBeforeNavigation: null,
@@ -283,6 +289,7 @@ async function reopen(label, { seed = false } = {}) {
     openPagesBeforeBrowserClose: null,
     browserCloseCompleted: null,
     forcedBrowserProcessTermination: false,
+    browserCloseObservation: null,
   };
   let page = null;
   let earlyProbeScript = null;
@@ -404,7 +411,7 @@ async function reopen(label, { seed = false } = {}) {
     assert.deepEqual(errors, []);
     const startup = diagnostics
       ? {
-          ...await collectRecoveryDiagnostics(page, browser, diagnostics),
+          ...(await collectRecoveryDiagnostics(page, browser, diagnostics)),
           bootElapsedMs,
           rendererQueryDurationMs,
           reopenElapsedMs: Date.now() - bootStartedAt,
@@ -419,7 +426,9 @@ async function reopen(label, { seed = false } = {}) {
       timing: {
         rendererQueryTiming,
         rendererQueryDurationClock:
-          rendererQueryTiming === 'early' ? 'page-performance-clock' : 'host-wall-clock',
+          rendererQueryTiming === 'early'
+            ? 'page-performance-clock'
+            : 'host-wall-clock',
         rendererQueryMeasurement:
           rendererQueryTiming === 'early' ? 'page-query' : 'host-round-trip',
         bootElapsedMs,
@@ -468,7 +477,10 @@ async function reopen(label, { seed = false } = {}) {
     if (page) {
       if (earlyProbeScript) {
         try {
-          const cleaned = await cleanupEarlyCesiumRendererProbe(page, earlyProbeScript);
+          const cleaned = await cleanupEarlyCesiumRendererProbe(
+            page,
+            earlyProbeScript,
+          );
           if (!cleaned)
             throw new Error('early renderer probe cleanup did not complete');
         } catch (error) {
@@ -491,39 +503,41 @@ async function reopen(label, { seed = false } = {}) {
         ? pageTargetGuard.unexpectedPageTargetCount(page)
         : null;
     }
-    if (stderrListener) browserProcess?.stderr?.off('data', stderrListener);
     pageTargetGuard.dispose();
     let browserClose = {
       closeCompleted: false,
       forcedProcessTermination: false,
+      observation: null,
     };
     if (browser)
       browserClose = await closeRecoveryBrowser(browser, {
         forceProcess: () => stopTree(browser.process()),
       });
+    browserProcess?.stderr?.off('data', stderrListener);
     pageOwnership.browserCloseCompleted = browserClose.closeCompleted;
     pageOwnership.forcedBrowserProcessTermination =
       browserClose.forcedProcessTermination;
+    pageOwnership.browserCloseObservation = browserClose.observation
+      ? {
+          ...browserClose.observation,
+          stderr: browserStderr,
+        }
+      : null;
     browser = null;
     const pageCleanupFailure = recoveryPageCleanupError({
       ...pageCleanup,
-      unexpectedCreatedPageTargets:
-        pageOwnership.unexpectedCreatedPageTargets,
+      unexpectedCreatedPageTargets: pageOwnership.unexpectedCreatedPageTargets,
       browserCloseCompleted: pageOwnership.browserCloseCompleted,
     });
     cleanupError ||= pageCleanupFailure;
     if (cleanupError) {
-      if (check) {
-        check.pageOwnership = pageOwnership;
-        check.pageOwnership.cleanupError = cleanupError.message.slice(0, 240);
-      }
-      if (check?.status === 'passed') {
-        check.status = 'failed';
-        check.step = 'owned-page-cleanup';
-        check.error = cleanupError.message;
-        check.pageOwnership.cleanupError = cleanupError.message.slice(0, 240);
-      }
-      if (!check || check.status === 'failed' && check.step !== 'owned-page-cleanup')
+      const cleanupFailure = applyRecoveryCleanupFailure(check, cleanupError);
+      if (cleanupFailure.becamePrimaryFailure)
+        activeStep = 'owned-page-cleanup';
+      if (
+        !check ||
+        (check.status === 'failed' && check.step !== 'owned-page-cleanup')
+      )
         console.error(
           JSON.stringify({
             phase: 'browser-recovery-cleanup',
@@ -531,7 +545,7 @@ async function reopen(label, { seed = false } = {}) {
             error: cleanupError.message,
           }),
         );
-      if (check?.step === 'owned-page-cleanup') throw cleanupError;
+      if (cleanupFailure.shouldThrow) throw cleanupError;
     }
     if (check?.status === 'passed') {
       timedProgress('passed');
@@ -634,9 +648,9 @@ try {
   serving = path.join(previous, 'dist');
   await reopen('failed-verification-rolls-back-and-reopens-assets');
 } catch (error) {
-    failure = { check: activeCheck, step: activeStep, error: error.message };
-    if (error.recoveryDiagnostics)
-      failure.diagnostics = error.recoveryDiagnostics;
+  failure = { check: activeCheck, step: activeStep, error: error.message };
+  if (error.recoveryDiagnostics)
+    failure.diagnostics = error.recoveryDiagnostics;
   throw error;
 } finally {
   const report = {
