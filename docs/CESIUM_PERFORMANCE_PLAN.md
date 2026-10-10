@@ -27,7 +27,7 @@ the earlier release requirements and historical results.
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable and traffic-listener cleanup, corrected worker interception, isolated import/workspace lifecycle runner; CCTV/terrain/picking cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb`; corrected-validator reassessment passes at `5328e25` | Fresh hosted paravirtual Metal retention run passes at `2e839a4`; Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
-| S51 render demand scheduling | Partial: per-owner deadlines and disposable continuous/scheduled/invalidation registration, satellite periodic cadence; full layer rollout remains pending | Deadline, cancellation and owner teardown tests pass | Four isolated UHD 620 governor checks pass at `3664f4f`; full application cadence remains pending |
+| S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
@@ -111,7 +111,24 @@ All 59 combined lifecycle, mission, capture-integrity and paired-report tests
 pass. The [offline reassessment](performance-evidence/mission-render-demand-38046523488-reassessment.json)
 passes for the original `2e1245e` observations without rewriting their failed CI
 status or claiming a new measurement. The [fresh end-to-end run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38047705551)
-tests `7c68cdc`; acceptance remains pending its result.
+tests `7c68cdc` and passes all 30 trials (15 alternating-order pairs) in 277.3
+seconds. [Raw report](performance-evidence/mission-render-demand-38047705551.json),
+[job result](performance-evidence/mission-render-demand-38047705551-run.json) and
+[retained image manifest](performance-evidence/mission-render-demand-38047705551-images/manifest.json)
+identify the exact source and observations. All 30 PNG digests were checked and
+all 15 pairs match exactly; the two nonempty scenario images were visually
+reviewed. The actual renderer is Apple Paravirtual Metal. Median measured frames
+are 235 versus zero over ten seconds for the static scene, 51 versus five over
+three seconds for unselected orbits, and 53 versus 50 for selected live missions.
+Selected missions retain continuous mode and moving position samples; every
+trial releases its layer/viewer/render owners. Page, browser and Vite cleanup
+succeed; normal browser close takes 649.68 ms without forced termination.
+
+This accepts the bounded mission scheduling pilot's isolated correctness and
+render-demand reduction. It does not establish full application UI/overlay
+equivalence, latency improvement, a Windows hardware result, the final 20% target,
+or completion of S51. Frame counts are render-demand observations, not CPU/GPU
+execution timings. The earlier failed CI and offline reassessment stay historical.
 
 ### S49 bounded worker-quiescence history - 10 October 2026
 
