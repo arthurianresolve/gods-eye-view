@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`7b92db45d56e3b171f3d65482166fe725a6791bd` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38051924445), [job results](performance-evidence/ci-7b92db4.json)),
+`f2e5ae9f2f5ec56404e6372e610370eb9be007de` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38053750181), [job results](performance-evidence/ci-f2e5ae9.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -45,6 +45,37 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### Durable Windows shutdown observation - 10 October 2026
+
+GPT-6 Luna's `ee3bb72b6fcec3d7e0f7eb620c3530bacc6e02e1` replaces the outgoing
+document's exposed-function callback with an empty, same-origin `sendBeacon`
+received by the owned fixture server. Only six registered tokens are retained;
+request bodies, body-read time, observations and cleanup are bounded. Receipt
+time is checked against the original one-second deadline. Late observations
+remain supplemental evidence and cannot change a failed result to a pass.
+The version-2 report calls the treatment **navigation-first**, and records the
+pagehide event's `persisted` state without claiming resource destruction.
+
+The [Windows diagnostic 38054242558](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38054242558)
+passes all six controls at that exact source/harness commit. Normal and
+navigation-first blank, WebGL 2 and minimal Cesium documents close without forced
+termination; parent-process close times are 482-1,138 ms, within the unchanged
+five-second limit. The three navigation beacons arrive in 11.4-79.9 ms. Blank and
+WebGL report `persisted: true`; Cesium reports `persisted: false`. Chrome
+152.0.7977.75 uses SwiftShader on Windows Server 2025, Node 24.14.0 and Cesium
+1.138.0. This accepts the isolated observation packet; it neither reproduces nor
+fixes the earlier full-application shutdown stall, and is not hardware evidence.
+
+The [raw report](performance-evidence/browser-shutdown-38054242558.json) and
+[job results](performance-evidence/browser-shutdown-38054242558-run.json) retain
+the exact identity and cleanup evidence. Raw SHA-256:
+`7cfe0c69dc40aff8ad6446af1a0df7f765ff63588fb4b132cde0d2291a7da2ff`.
+Root's combined shutdown/recovery review passes 40 focused tests; Luna's final
+shutdown suite passes 21 checks, with syntax, formatting and package boundaries
+passing. The earlier version-1 failure remains unchanged below. The next packet
+is rendered CCTV lifecycle isolation, with warmed ownership and geometry-reuse
+checks; terrain, picking and the Windows 60-minute plateau remain outstanding.
+
 ### S49 CCTV lifecycle ownership - 10 October 2026
 
 GPT-6 Luna's `f2e5ae9` fixes a reproduced direct-destroy focus-listener leak and
@@ -67,6 +98,17 @@ rendered soak or visual-equivalence result. The normal layer manager disables
 before destroying an enabled layer, which already releases the focus listener;
 this defect is not established as the historical Windows soak's root cause.
 Rendered CCTV, terrain and picking isolation and the Windows plateau remain open.
+
+The [full integration run 38053750181](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38053750181)
+passes all seven required jobs at `f2e5ae9f2f5ec56404e6372e610370eb9be007de`:
+Node 24/26, Windows onboarding, the full browser journeys and recovery on all
+three operating systems. The [Windows recovery report](performance-evidence/profile-recovery-38053750181-windows.json),
+extracted from the delimited CI log JSON, preserves settings, the workspace and
+the asset in all five checkpoints. Its five Chrome parent-process closes take
+287-519 ms without forced termination. The observed renderer is SwiftShader;
+this is automatic recovery evidence, not physical GPU validation or a proven
+fix for the older intermittent shutdown failure. Raw report SHA-256:
+`c10402658b684d614dd8ecabfb617f24bd52048c8b589a2229e4d3b463648e44`.
 
 ### Integration and isolated Windows shutdown - 10 October 2026
 
