@@ -19,6 +19,14 @@ import {
   describeObservedRoute,
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
+import {
+  deriveCesiumEmbeddedWorkerContract,
+  installCesiumWorkerBlobAudit,
+  MAX_WORKER_BLOB_RECORDS,
+  MAX_WORKER_TARGETS,
+  restoreCesiumWorkerBlobAudit,
+  validateCesiumWorkerBlobs,
+} from './performance/cesiumWorkerBlobContract.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -133,6 +141,7 @@ function harnessSourceRevision(root) {
 }
 const harnessSource = harnessSourceRevision(actualHarnessRoot);
 let captureProvenance = null;
+let captureWorkerContract = null;
 if (buildProvenanceEnabled) {
   const receipt = JSON.parse(
     await fs.readFile(buildProvenanceOptions.receipt, 'utf8'),
@@ -163,6 +172,16 @@ if (buildProvenanceEnabled) {
     harnessRoot: requestedHarnessRoot,
     actualHarnessRoot,
     captureUrl: url,
+  });
+  const bundlePath = 'cesium/Cesium.js';
+  if (!receipt.assets.some((asset) => asset.path === bundlePath))
+    throw new Error('Verified build receipt is missing the Cesium bundle.');
+  captureWorkerContract = deriveCesiumEmbeddedWorkerContract({
+    bundlePath,
+    bundleBytes: await fs.readFile(
+      path.join(buildProvenanceOptions.buildRoot, ...bundlePath.split('/')),
+    ),
+    assets: receipt.assets,
   });
   if (effectiveFixtureAircraftCount && !productionFlightFixture)
     throw new Error(
@@ -264,9 +283,25 @@ try {
   const startupSamples = [];
   const loadedScriptAssets = new Set();
   const unexpectedScriptAssets = new Set();
+  const workerBlobObservations = [];
   let scriptRequestCount = 0;
   const auditPageCodeRequests = (auditPage) => {
-    if (!captureProvenance) return;
+    if (!captureProvenance)
+      return { workerUrls: new Set(), blobUrls: new Set() };
+    const workerUrls = new Set();
+    const blobUrls = new Set();
+    let workerUrlOverflow = 0;
+    let blobUrlOverflow = 0;
+    const rememberWorker = (workerUrl) => {
+      if (workerUrls.has(workerUrl)) return;
+      if (workerUrls.size >= MAX_WORKER_TARGETS) workerUrlOverflow += 1;
+      else workerUrls.add(workerUrl);
+    };
+    const rememberBlob = (blobUrl) => {
+      if (blobUrls.has(blobUrl)) return;
+      if (blobUrls.size >= MAX_WORKER_BLOB_RECORDS) blobUrlOverflow += 1;
+      else blobUrls.add(blobUrl);
+    };
     const base = new URL(buildProvenanceOptions.baseUrl);
     const prefix = base.pathname.endsWith('/')
       ? base.pathname
@@ -281,6 +316,10 @@ try {
       try {
         requested = new URL(request.url());
       } catch {
+        return;
+      }
+      if (requested.protocol === 'blob:') {
+        rememberBlob(request.url());
         return;
       }
       if (requested.origin !== base.origin) return;
@@ -299,6 +338,62 @@ try {
         loadedScriptAssets.add(relative);
       } else unexpectedScriptAssets.add(requested.pathname);
     });
+    auditPage.on('workercreated', (worker) => {
+      rememberWorker(worker.url());
+      if (worker.url().startsWith('blob:')) rememberBlob(worker.url());
+    });
+    return {
+      workerUrls,
+      blobUrls,
+      getOverflow: () => ({ workerUrlOverflow, blobUrlOverflow }),
+    };
+  };
+  const auditPageWorkerBlobs = async (auditPage, auditState) => {
+    if (!captureProvenance) return null;
+    for (const worker of auditPage.workers()) {
+      if (!auditState.workerUrls.has(worker.url()))
+        throw new Error(
+          'Capture worker targets exceeded the observed creation audit.',
+        );
+    }
+    const overflow = auditState.getOverflow();
+    if (overflow.workerUrlOverflow || overflow.blobUrlOverflow)
+      throw new Error(
+        'Capture worker target audit exceeded its bounded capacity.',
+      );
+    const workerUrls = [...auditState.workerUrls].filter((value) =>
+      value.startsWith('blob:'),
+    );
+    try {
+      const metadata = await auditPage.evaluate(
+        () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
+      );
+      if (!metadata)
+        throw new Error('Receipt-verified page worker blob audit is missing.');
+      if (
+        metadata.createdBlobCount === 0 &&
+        workerUrls.length === 0 &&
+        auditState.blobUrls.size === 0
+      )
+        return null;
+      const blobAudit = await auditPage.evaluate(async (urls) => {
+        const audit = window.__gevCesiumWorkerBlobAuditV1;
+        if (!audit)
+          throw new Error('Receipt-verified page worker audit disappeared.');
+        return audit.readWorkerBodies(urls);
+      }, workerUrls);
+      const validation = validateCesiumWorkerBlobs({
+        contract: captureWorkerContract,
+        baseUrl: buildProvenanceOptions.baseUrl,
+        workerUrls,
+        observedBlobUrls: [...auditState.blobUrls],
+        blobAudit,
+      });
+      workerBlobObservations.push(validation.observation);
+      return validation.observation;
+    } finally {
+      await auditPage.evaluate(restoreCesiumWorkerBlobAudit);
+    }
   };
   for (let run = 1; run <= startupRuns; run += 1) {
     process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
@@ -312,7 +407,9 @@ try {
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
     await configureFlightFixturePage(startupPage);
-    auditPageCodeRequests(startupPage);
+    if (captureProvenance)
+      await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
+    const startupAuditState = auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
     if (captureProvenance) {
@@ -386,6 +483,7 @@ try {
       initialSettleMs,
       ...details,
     });
+    await auditPageWorkerBlobs(startupPage, startupAuditState);
     await context.close();
   }
 
@@ -401,7 +499,9 @@ try {
       )
     : null;
   await configureFlightFixturePage(page, flightFixtureDelivery);
-  auditPageCodeRequests(page);
+  if (captureProvenance)
+    await page.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
+  const captureAuditState = auditPageCodeRequests(page);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   if (captureProvenance) {
     const servedBase = new URL(buildProvenanceOptions.baseUrl);
@@ -972,9 +1072,13 @@ try {
       throw new Error(
         'Capture did not request any receipted same-origin code assets.',
       );
+    await auditPageWorkerBlobs(page, captureAuditState);
     source.buildProvenance.pageAssetAudit = {
+      scope:
+        'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
       scriptRequestCount,
       loadedAssetPaths: [...loadedScriptAssets].sort(),
+      cesiumWorkerBlobAudits: workerBlobObservations,
       unexpectedAssetPaths: [],
     };
     delete source.buildProvenance.expectedAssetPaths;

@@ -53,6 +53,7 @@ export async function prepareFixturePage(
     viewport = { width: 1440, height: 1000 },
     startupDiagnostics = null,
     page: existingPage = null,
+    onFulfilled = null,
   } = {},
 ) {
   const page = existingPage || (await browser.newPage());
@@ -132,6 +133,7 @@ export async function prepareFixturePage(
     base,
     (url, request) => networkProbe.respond(url) ?? respond?.(url, request),
     onError,
+    onFulfilled ? { onFulfilled } : undefined,
   );
   return { page, errors, verifyNetwork: () => networkProbe.verify(page) };
 }

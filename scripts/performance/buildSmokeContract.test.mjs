@@ -36,6 +36,7 @@ test('code request audit includes receipt-backed scripts and workers only', () =
     'assets/worker-B2.mjs',
   ]);
   assert.equal(result.externalCodeRequests, 1);
+  assert.equal(result.validatedWorkerBlobCount, 0);
 });
 
 test('code request audit rejects missing, escaped and unsafe asset paths', () => {
@@ -163,9 +164,7 @@ test('worker preflight waits for target removal and a bounded settle window', as
       clock += duration;
     },
     getTargets: () =>
-      clock < 75
-        ? [{ type: 'worker', url: workerUrls[0] }]
-        : [],
+      clock < 75 ? [{ type: 'worker', url: workerUrls[0] }] : [],
     timeoutMs: 200,
     pollMs: 25,
     settleMs: 50,
@@ -219,7 +218,7 @@ test('preflight disposal waits for every worker target without persisting URLs',
   });
 });
 
-test('application code audit opens after preflight and still rejects an app blob worker', () => {
+test('application code audit opens after preflight and only accepts receipt-validated app blob workers', () => {
   const audit = createApplicationCodeRequestAudit();
   const preflightBlob = 'blob:http://127.0.0.1:4173/harness-worker';
   audit.observeRequest(preflightBlob, 'script');
@@ -243,8 +242,15 @@ test('application code audit opens after preflight and still rejects an app blob
         baseUrl: 'http://127.0.0.1:4173/',
         assets: [{ path: 'assets/main.js' }],
       }),
-    /build-root integrity/,
+    /receipt-derived worker validation/,
   );
+  const accepted = auditReceiptedCodeRequests({
+    requests: snapshot.requests,
+    baseUrl: 'http://127.0.0.1:4173/',
+    assets: [{ path: 'assets/main.js' }],
+    validatedBlobUrls: ['blob:http://127.0.0.1:4173/app-worker'],
+  });
+  assert.equal(accepted.validatedWorkerBlobCount, 1);
 });
 
 test('application code audit reports bounded overflow instead of silently dropping code paths', () => {

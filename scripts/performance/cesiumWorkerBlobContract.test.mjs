@@ -262,6 +262,34 @@ test('worker blob validator fails closed on overflow and malformed sizes', () =>
     () => validateCesiumWorkerBlobs(malformed),
     /byte length changed/,
   );
+  const tooManyTargets = workerAudit(contract);
+  tooManyTargets.workerUrls = Array.from(
+    { length: 65 },
+    (_, index) => `blob:http://127.0.0.1:4173/worker-${index}`,
+  );
+  assert.throws(
+    () => validateCesiumWorkerBlobs(tooManyTargets),
+    /incomplete or over its bound/,
+  );
+});
+
+test('validator rejects a created script blob that is unrelated to a receipt worker', () => {
+  const contract = makeContract();
+  const audit = workerAudit(contract);
+  const url = 'blob:http://127.0.0.1:4173/unrelated-script';
+  const body = 'self.postMessage("unrelated");';
+  audit.blobAudit.records.push({
+    url,
+    type: 'application/javascript',
+    byteLength: Buffer.byteLength(body),
+    body,
+  });
+  audit.blobAudit.createdBlobCount += 1;
+  audit.blobAudit.totalReadBytes += Buffer.byteLength(body);
+  assert.throws(
+    () => validateCesiumWorkerBlobs(audit),
+    /not a validated Cesium worker/,
+  );
 });
 
 test('page blob instrumentation retains bounded script blobs only and restores the native API', async () => {
@@ -301,6 +329,28 @@ test('page blob instrumentation retains bounded script blobs only and restores t
     ),
     1,
   );
+  vm.runInContext(
+    'URL.createObjectURL(new Blob([new Uint8Array(2 * 1024 * 1024)], { type: "text/javascript" }))',
+    context,
+  );
+  vm.runInContext(
+    'URL.createObjectURL(new Blob([new Uint8Array(2 * 1024 * 1024)], { type: "application/ecmascript" }))',
+    context,
+  );
+  vm.runInContext(
+    'URL.createObjectURL(new Blob([new Uint8Array(2 * 1024 * 1024)], { type: "application/javascript" }))',
+    context,
+  );
+  vm.runInContext(
+    'URL.createObjectURL(new Blob([new Uint8Array(2 * 1024 * 1024)], { type: "application/javascript" }))',
+    context,
+  );
+  const aggregateMetadata = vm.runInContext(
+    'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+    context,
+  );
+  assert.equal(aggregateMetadata.records.length, 4);
+  assert.equal(aggregateMetadata.overflowCount, 2);
   vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context);
   assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
   assert.deepEqual(

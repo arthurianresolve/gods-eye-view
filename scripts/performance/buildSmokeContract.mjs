@@ -158,11 +158,19 @@ export async function waitForPreflightWorkerTargetsClosed({
 }
 
 /** Audit observed code request paths against the local build receipt. */
-export function auditReceiptedCodeRequests({ requests, baseUrl, assets } = {}) {
+export function auditReceiptedCodeRequests({
+  requests,
+  baseUrl,
+  assets,
+  validatedBlobUrls = [],
+} = {}) {
   if (!Array.isArray(requests))
     throw new TypeError('Code requests are required.');
   if (!Array.isArray(assets) || assets.length === 0)
     throw new TypeError('Receipt assets are required.');
+  if (!Array.isArray(validatedBlobUrls) || validatedBlobUrls.length > 256)
+    throw new TypeError('Validated worker blob URLs are invalid.');
+  const acceptedBlobs = new Set(validatedBlobUrls);
   const base = new URL(baseUrl);
   const prefix = base.pathname.endsWith('/')
     ? base.pathname
@@ -170,6 +178,7 @@ export function auditReceiptedCodeRequests({ requests, baseUrl, assets } = {}) {
   const expected = new Set(assets.map((asset) => asset.path));
   const observed = new Set();
   let externalCodeRequests = 0;
+  let validatedWorkerBlobCount = 0;
 
   for (const request of requests) {
     const url = new URL(request.url);
@@ -177,6 +186,14 @@ export function auditReceiptedCodeRequests({ requests, baseUrl, assets } = {}) {
       CODE_RESOURCE_TYPES.has(request.resourceType) ||
       CODE_PATH.test(url.pathname);
     if (!isCode) continue;
+    if (url.protocol === 'blob:') {
+      if (!acceptedBlobs.has(request.url))
+        throw new Error(
+          'Observed code blob failed receipt-derived worker validation.',
+        );
+      validatedWorkerBlobCount += 1;
+      continue;
+    }
     if (url.origin !== base.origin) {
       externalCodeRequests += 1;
       continue;
@@ -215,5 +232,6 @@ export function auditReceiptedCodeRequests({ requests, baseUrl, assets } = {}) {
   return {
     paths: [...observed].sort(),
     externalCodeRequests,
+    validatedWorkerBlobCount,
   };
 }

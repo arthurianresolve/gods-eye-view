@@ -351,6 +351,12 @@ export function validateCesiumWorkerBlobs({
     if (!accepted.has(url))
       throw new Error('Observed code blob is not a validated Cesium worker.');
   }
+  for (const url of records.keys()) {
+    if (!accepted.has(url))
+      throw new Error(
+        'Created JavaScript blob is not a validated Cesium worker.',
+      );
+  }
   return {
     acceptedBlobUrls: [...accepted],
     observation: {

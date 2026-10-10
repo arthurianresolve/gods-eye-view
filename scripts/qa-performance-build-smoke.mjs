@@ -33,6 +33,19 @@ import {
   describeObservedRoute,
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
+import {
+  createFlightFixtureDeliveryObserver,
+  createProductionFlightFixture,
+  installFixedWallClock,
+  respondToProductionFlightFixture,
+} from './performance/productionFlightFixture.mjs';
+import {
+  deriveCesiumEmbeddedWorkerContract,
+  installCesiumWorkerBlobAudit,
+  MAX_WORKER_TARGETS,
+  restoreCesiumWorkerBlobAudit,
+  validateCesiumWorkerBlobs,
+} from './performance/cesiumWorkerBlobContract.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 const ROOT = await realpath(
@@ -278,6 +291,7 @@ async function runRevision({
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
+  let workerContract;
   try {
     build = await createLocalBuildReceipt({
       checkoutRoot: checkout,
@@ -286,6 +300,20 @@ async function runRevision({
       expectedAppCommit: commit,
       expectedHarnessCommit: harnessCommit,
       commandTimeoutMs: BUILD_COMMAND_TIMEOUT_MS,
+    });
+    const bundlePath = 'cesium/Cesium.js';
+    const bundleAsset = build.receipt.assets.find(
+      (asset) => asset.path === bundlePath,
+    );
+    if (!bundleAsset)
+      throw new Error('Build receipt is missing the Cesium bundle.');
+    const bundleBytes = await readFile(
+      path.join(build.buildRoot, ...bundlePath.split('/')),
+    );
+    workerContract = deriveCesiumEmbeddedWorkerContract({
+      bundlePath,
+      bundleBytes,
+      assets: build.receipt.assets,
     });
   } catch (error) {
     error.smokeDiagnostics = {
@@ -310,6 +338,7 @@ async function runRevision({
   let page = null;
   let provenance = null;
   let fixturePage = null;
+  let workerBlobValidation = null;
   let phase = 'browser-page-setup';
   const pageErrors = [];
   const cleanupErrors = [];
@@ -342,20 +371,43 @@ async function runRevision({
     page.setDefaultNavigationTimeout(45_000);
     const preflightPhase = { active: true };
     const requestAudit = createApplicationCodeRequestAudit();
+    const workerTargetUrls = new Set();
+    let workerTargetOverflowCount = 0;
+    const rememberWorkerTarget = (workerUrl) => {
+      if (!workerUrl.startsWith('blob:') || workerTargetUrls.has(workerUrl))
+        return;
+      if (workerTargetUrls.size >= MAX_WORKER_TARGETS)
+        workerTargetOverflowCount += 1;
+      else workerTargetUrls.add(workerUrl);
+    };
     page.on('request', (request) => {
       requestAudit.observeRequest(request.url(), request.resourceType());
     });
     page.on('workercreated', (worker) => {
       if (!preflightPhase.active) requestAudit.observeWorker(worker.url());
+      rememberWorkerTarget(worker.url());
     });
     page.on('pageerror', (error) => {
       if (pageErrors.length < 8) pageErrors.push(sanitizeError(error));
     });
     phase = 'worker-aware-provider-interception';
+    const flightFixture = createProductionFlightFixture();
+    const flightFixtureDelivery = createFlightFixtureDeliveryObserver(
+      flightFixture,
+      served.baseUrl,
+    );
     fixturePage = await prepareFixturePage(browser, served.baseUrl, {
       page,
       viewport: { width: 1280, height: 900 },
-      respond: (url) => respondToWorkerPreflight(url, served.baseUrl),
+      respond: (url, request) =>
+        respondToWorkerPreflight(url, served.baseUrl) ??
+        respondToProductionFlightFixture(
+          url,
+          request,
+          flightFixture,
+          served.baseUrl,
+        ),
+      onFulfilled: flightFixtureDelivery.onFulfilled,
     });
     const workerNetworkPreflight = await runSameOriginWorkerPreflight({
       page,
@@ -392,9 +444,16 @@ async function runRevision({
         `Harness preflight worker target remained after termination (${preflightTargetDisposal.remainingCount}).`,
       );
     preflightPhase.active = false;
+    workerTargetUrls.clear();
+    workerTargetOverflowCount = 0;
     // Ignore preflight-phase events and begin app collection after its settle
     // window, so harness-only requests cannot enter the app code audit.
     requestAudit.begin();
+    await page.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
+    await page.evaluateOnNewDocument(
+      installFixedWallClock,
+      flightFixture.fixedTimeMs,
+    );
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
       waitUntil: 'domcontentloaded',
@@ -431,6 +490,44 @@ async function runRevision({
         'Application unexpectedly has a controlling service worker.',
       );
 
+    phase = 'production-provider-fixture-population';
+    const expectedLayerCounts = {
+      flights: flightFixture.count,
+      'local-datacenters': 4362,
+      'local-dams': 716,
+    };
+    await page.evaluate(async (layerIds) => {
+      const manager = window.__godsEyeView?.dataManager;
+      if (!manager) throw new Error('Application data manager is unavailable.');
+      for (const id of layerIds) {
+        if (!manager.layers?.has(id))
+          throw new Error(`Dense fixture layer is missing: ${id}`);
+        if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+      }
+    }, Object.keys(expectedLayerCounts));
+    await page.waitForFunction(
+      (counts) =>
+        Object.entries(counts).every(([id, expected]) => {
+          const layer = window.__godsEyeView?.dataManager
+            ?.getAll?.()
+            ?.find((entry) => entry.id === id);
+          return layer?.enabled === true && layer?.stats?.count === expected;
+        }),
+      { timeout: 90_000, polling: 100 },
+      expectedLayerCounts,
+    );
+    const readDenseLayerPopulation = () =>
+      page.evaluate((layerIds) => {
+        const layers = window.__godsEyeView.dataManager.getAll();
+        return Object.fromEntries(
+          layerIds.map((id) => {
+            const layer = layers.find((entry) => entry.id === id);
+            return [id, { enabled: layer.enabled, count: layer.stats.count }];
+          }),
+        );
+      }, Object.keys(expectedLayerCounts));
+    const denseLayerPopulation = await readDenseLayerPopulation();
+
     phase = 'shared-scene-and-route-observation';
     const before = await page.evaluate(observeCommonScene, {
       appCommit: commit,
@@ -460,7 +557,8 @@ async function runRevision({
       throw new Error(
         `Fixture interception reported ${fixturePage.errors.length} errors.`,
       );
-    for (const worker of page.workers()) requestAudit.observeWorker(worker.url());
+    for (const worker of page.workers())
+      requestAudit.observeWorker(worker.url());
     for (const target of browser.targets())
       if (['worker', 'service_worker'].includes(target.type()))
         requestAudit.observeWorker(target.url());
@@ -469,11 +567,62 @@ async function runRevision({
       throw new Error(
         'Application code request audit exceeded its bounded event capacity.',
       );
+    const blobCodeRequests = finalAuditSnapshot.requests
+      .filter((request) => request.url.startsWith('blob:'))
+      .map((request) => request.url);
+    for (const worker of page.workers()) rememberWorkerTarget(worker.url());
+    for (const target of browser.targets())
+      if (
+        ['worker', 'service_worker'].includes(target.type()) &&
+        target.url().startsWith('blob:')
+      )
+        rememberWorkerTarget(target.url());
+    if (workerTargetOverflowCount > 0)
+      throw new Error(
+        'Application worker target audit exceeded its bounded capacity.',
+      );
+    const workerUrls = [...workerTargetUrls];
+    const blobAudit = await withTimeout(
+      page.evaluate(async (urls) => {
+        const audit = window.__gevCesiumWorkerBlobAuditV1;
+        if (!audit) throw new Error('Cesium worker blob audit is unavailable.');
+        return audit.readWorkerBodies(urls);
+      }, workerUrls),
+      10_000,
+      'Cesium worker blob collection',
+    );
+    workerBlobValidation = validateCesiumWorkerBlobs({
+      contract: workerContract,
+      baseUrl: served.baseUrl,
+      workerUrls,
+      observedBlobUrls: [...new Set([...blobCodeRequests, ...workerUrls])],
+      blobAudit,
+    });
     const finalCodeAudit = auditReceiptedCodeRequests({
       requests: finalAuditSnapshot.requests,
       baseUrl: served.baseUrl,
       assets: build.receipt.assets,
+      validatedBlobUrls: workerBlobValidation.acceptedBlobUrls,
     });
+    if (pageErrors.length)
+      throw new Error(`Application emitted ${pageErrors.length} page errors.`);
+    if (fixturePage.errors.length)
+      throw new Error(
+        `Fixture interception reported ${fixturePage.errors.length} errors.`,
+      );
+    const finalDenseLayerPopulation = await readDenseLayerPopulation();
+    for (const [id, expected] of Object.entries(expectedLayerCounts)) {
+      if (
+        denseLayerPopulation[id]?.enabled !== true ||
+        denseLayerPopulation[id]?.count !== expected ||
+        finalDenseLayerPopulation[id]?.enabled !== true ||
+        finalDenseLayerPopulation[id]?.count !== expected
+      )
+        throw new Error(`Dense fixture population changed for ${id}.`);
+    }
+    const flightFixtureObservation = flightFixtureDelivery.summarize(
+      finalDenseLayerPopulation.flights.count,
+    );
     result = {
       revision: commit,
       status: 'passed',
@@ -486,14 +635,26 @@ async function runRevision({
         status: 'receipt-backed-paths-observed',
         paths: finalCodeAudit.paths,
         externalCodeRequestsObserved: finalCodeAudit.externalCodeRequests,
+        validatedWorkerBlobCount: finalCodeAudit.validatedWorkerBlobCount,
+        cesiumWorkerBlobs: workerBlobValidation.observation,
         requestCount: finalAuditSnapshot.requestCount,
         coverage:
-          'request-path audit for observed script/worker targets; browser response bytes are not independently attested',
+          'receipt-backed request-path audit with smoke-only Cesium worker blob instrumentation; browser response bytes are not independently attested and the smoke is not performance evidence',
       },
       providerInterception: {
         status: 'worker-aware-external-blocking-probe-passed',
         preflight: workerNetworkPreflight,
         sameOriginOnlyStaticServer: true,
+      },
+      denseProviderFixture: {
+        scope:
+          'real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence',
+        expectedLayerCounts,
+        observedLayerPopulation: finalDenseLayerPopulation,
+        flightFixture: flightFixtureObservation,
+        comparisonEligible: false,
+        comparisonIneligibilityReason:
+          'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
       },
       serviceWorker: serviceWorkerState,
       browser: {
@@ -521,6 +682,17 @@ async function runRevision({
     };
     failure = error;
   } finally {
+    if (page) {
+      try {
+        await withTimeout(
+          page.evaluate(restoreCesiumWorkerBlobAudit),
+          3000,
+          'Cesium worker blob audit cleanup',
+        );
+      } catch (error) {
+        cleanupErrors.push(sanitizeError(error));
+      }
+    }
     if (fixturePage?.page) {
       try {
         await withTimeout(
@@ -600,7 +772,7 @@ async function main() {
     limitations: [
       'Local build receipts are unsigned and do not attest hardware or release provenance.',
       'The browser request audit records code paths; it does not independently attest response bytes.',
-      'No provider fixture is claimed as observed, so this smoke is not paired-comparison evidence.',
+      'The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.',
       'Software rendering is explicit SwiftShader and cannot support hardware performance claims.',
     ],
     failure: null,
