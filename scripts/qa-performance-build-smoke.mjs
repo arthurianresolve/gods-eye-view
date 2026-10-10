@@ -22,7 +22,11 @@ import {
 } from './qa-application-fixtures.mjs';
 import { createLocalBuildReceipt } from './performance/buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
-import { auditReceiptedCodeRequests } from './performance/buildSmokeContract.mjs';
+import {
+  auditReceiptedCodeRequests,
+  respondToWorkerPreflight,
+  runSameOriginWorkerPreflight,
+} from './performance/buildSmokeContract.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -358,8 +362,22 @@ async function runRevision({
     fixturePage = await prepareFixturePage(browser, served.baseUrl, {
       page,
       viewport: { width: 1280, height: 900 },
+      respond: (url) => respondToWorkerPreflight(url, served.baseUrl),
     });
-    const workerNetworkProbe = await fixturePage.verifyNetwork();
+    const workerNetworkPreflight = await runSameOriginWorkerPreflight({
+      page,
+      baseUrl: served.baseUrl,
+      verifyNetwork: fixturePage.verifyNetwork,
+      resetRequestAudit: () => {
+        const discardedAudit = {
+          requestCount,
+          codeRequestCount: codeRequests.length,
+        };
+        requestCount = 0;
+        codeRequests.length = 0;
+        return discardedAudit;
+      },
+    });
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
       waitUntil: 'domcontentloaded',
@@ -453,7 +471,7 @@ async function runRevision({
       },
       providerInterception: {
         status: 'worker-aware-external-blocking-probe-passed',
-        workerNetworkProbe,
+        preflight: workerNetworkPreflight,
         sameOriginOnlyStaticServer: true,
       },
       serviceWorker: serviceWorkerState,
