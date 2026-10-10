@@ -489,6 +489,21 @@ partial packet remains partial and cannot close the parent slice.
   blob requests. Until this is implemented and exercised, the smoke stays failed;
   provider-fixture implementation can proceed independently. `87a9b46` additionally
   rejects request-audit buffer overflow instead of silently dropping code events.
+- **S47.1b-4 production provider fixture implemented by GPT-6 Luna:**
+  `597ffe868d1cf47559a99ec00552207df3d4ef67` adds
+  `--provider-fixture dense-investigation --mixed-layers` to the verified-build
+  capture path. The deterministic 2,500-aircraft OpenSky payload enters through
+  the normal same-origin `/api/flights` source. Delivery is recorded only after
+  CDP acknowledges the exact response bytes; failed acknowledgements, different
+  bytes, wrong populations and late interception errors cannot pass. A fixed
+  starting epoch advances with the native monotonic clock while preserving
+  callable/constructed Date behavior, timers and RAF. The coordinator's
+  [14-test fixture, observer and integrity result](performance-evidence/production-fixture-597ffe8.json)
+  passes, including the actual flight-source normalizer and freshness boundary.
+  This is a static-count integration fixture, not the moving/time-reset contract
+  needed for matched performance samples. Production-browser population checks,
+  embedded-worker validation and the remaining workload registry are pending;
+  reports continue to set `comparisonEligible: false`.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
@@ -526,7 +541,17 @@ partial packet remains partial and cannot close the parent slice.
   earlier startup/workspace failures retain their phase. The coordinator's
   [22-test Node verification](performance-evidence/recovery-diagnostics-f428421.json)
   passes. This instrumentation does not claim to fix or explain the intermittent
-  shutdown; the exact-commit hosted Windows diagnostic is being collected.
+  shutdown. The [exact-commit diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38030519075)
+  now records two distinct outcomes: [WebGL-only passes all five stages](performance-evidence/recovery-f428421-windows-webgl-only.json),
+  preserving settings and workspace bytes with graceful closes of 330-631 ms;
+  [full-driver mode fails](performance-evidence/recovery-f428421-windows-gl-driver.json)
+  during the third stage's renderer query. That failing query reaches
+  `getParameter` after extension lookup, never reports completion and stops
+  page heartbeats before the protocol timeout. Its subsequent graceful close
+  exceeds five seconds; owned-process termination is confirmed separately.
+  This reproduces the full-driver query stall, not the earlier shutdown-only
+  failure's cause. The standard Windows recovery job already uses WebGL-only;
+  neither software mode establishes physical GPU frame-delivery acceptance.
 - **Windows wind validation remains failed:** a clean isolated checkout of
   `a83dd7af30cb3b9a39095da0f081a1037725d2cd`, served by Vite on loopback, produced
   [a fresh-frame timeout](performance-evidence/wind-a83dd7a-windows-capture-failure.json)

@@ -1,0 +1,1882 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "f4284217c87d1afecab56da6e6cb215d7c5fe01d",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-gl-driver",
+  "rendererExperiment": null,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-10T06:32:15.241Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 39725,
+        "rendererQueryDurationMs": 68055,
+        "bootPlusQueryCriticalPathMs": 107781,
+        "rendererCheckpointElapsedMs": 109835
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 242327.9705,
+          "closeSettledHostMs": 242946.854,
+          "closeElapsedMs": 618.8834999999963,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 618.6263000000035
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[8608:5196:1010/062317.192:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+            "[8608:5196:1010/062342.371:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          ]
+        }
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791613442432,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 2510
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791613368606,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 76336,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791613436921,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 8021,
+            "gapMs": 68315
+          },
+          {
+            "receivedAt": 1791613437700,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 7242,
+            "gapMs": 779
+          },
+          {
+            "receivedAt": 1791613439162,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 5780,
+            "gapMs": 1462
+          },
+          {
+            "receivedAt": 1791613439486,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 5456,
+            "gapMs": 324
+          },
+          {
+            "receivedAt": 1791613440690,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 4252,
+            "gapMs": 1204
+          },
+          {
+            "receivedAt": 1791613441360,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 3582,
+            "gapMs": 670
+          },
+          {
+            "receivedAt": 1791613442432,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 2510,
+            "gapMs": 1072
+          }
+        ],
+        "heartbeatCount": 16,
+        "requests": [
+          {
+            "at": 1791613329366,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "stylesheet",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613329368,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "stylesheet",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613332922,
+            "location": "app",
+            "path": "/api/google/tiles-token",
+            "status": 503,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": ""
+          },
+          {
+            "at": 1791613335682,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613344881,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613344883,
+            "location": "app",
+            "path": "/api/local-receivers/aircraft",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613354893,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613354894,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613354894,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613354894,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613354896,
+            "location": "app",
+            "path": "/api/google/nearby-places",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613354897,
+            "location": "app",
+            "path": "/api/openai/hud-summary",
+            "status": null,
+            "method": "POST",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613367509,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613367658,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613367867,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613368538,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613436918,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613436919,
+            "location": "app",
+            "path": "/api/setup/status",
+            "status": 503,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": ""
+          },
+          {
+            "at": 1791613436919,
+            "location": "app",
+            "path": "/api/realtime/debug-log",
+            "status": 503,
+            "method": "POST",
+            "resourceType": "ping",
+            "failure": ""
+          },
+          {
+            "at": 1791613436921,
+            "location": "app",
+            "path": "/api/setup/status",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613440999,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613441264,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613441264,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613441264,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613441296,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613441297,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613442284,
+            "location": "app",
+            "path": "/api/google/nearby-places",
+            "status": 503,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": ""
+          },
+          {
+            "at": 1791613442285,
+            "location": "app",
+            "path": "/api/google/nearby-places",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613442291,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613442291,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          }
+        ],
+        "stderr": [
+          {
+            "at": 1791613397194,
+            "text": "[8608:5196:1010/062317.192:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          },
+          {
+            "at": 1791613422372,
+            "text": "[8608:5196:1010/062342.371:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          }
+        ],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0.09999999997671694,
+            "receivedAt": 1791613368908
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.8999999999650754,
+            "receivedAt": 1791613368909
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 1.2000000000116415,
+            "receivedAt": 1791613368910
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 67523.89999999997,
+            "receivedAt": 1791613436916
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 67523.89999999997,
+          "receivedAt": 1791613436916
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 9,
+        "browserProcessId": 8608,
+        "bootElapsedMs": 39725,
+        "rendererQueryDurationMs": 68055,
+        "reopenElapsedMs": 117860,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 1
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 2019
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 2054
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 4478
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 41776
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 41779
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 41780
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 109835
+          },
+          {
+            "step": "seed-workspace",
+            "elapsedMs": 109835
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 115222
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 118799
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "[.WebGL-0x5fc0092cc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "[.WebGL-0x5fc0092cc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "[.WebGL-0x5fc0092cc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        ]
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 35330,
+        "rendererQueryDurationMs": 56178,
+        "bootPlusQueryCriticalPathMs": 91510,
+        "rendererCheckpointElapsedMs": 91931
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 339594.0871,
+          "closeSettledHostMs": 340175.4519,
+          "closeElapsedMs": 581.3647999999812,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 581.2759000000078
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": [
+            "[6092:2388:1010/062445.527:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+            "[6092:2388:1010/062509.792:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          ]
+        }
+      },
+      "diagnostics": {
+        "rendererResponsive": true,
+        "domState": {
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX..."
+        },
+        "lastHeartbeat": {
+          "receivedAt": 1791613539802,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 1981
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791613479973,
+            "readyState": "complete",
+            "appPresent": false,
+            "canvasCount": 7,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 61810,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791613482288,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 59495,
+            "gapMs": 2315
+          },
+          {
+            "receivedAt": 1791613482296,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 59487,
+            "gapMs": 8
+          },
+          {
+            "receivedAt": 1791613482297,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 59486,
+            "gapMs": 1
+          },
+          {
+            "receivedAt": 1791613482305,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 59478,
+            "gapMs": 8
+          },
+          {
+            "receivedAt": 1791613482613,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 59170,
+            "gapMs": 308
+          },
+          {
+            "receivedAt": 1791613539029,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 2754,
+            "gapMs": 56416
+          },
+          {
+            "receivedAt": 1791613539802,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 1981,
+            "gapMs": 773
+          }
+        ],
+        "heartbeatCount": 16,
+        "requests": [
+          {
+            "at": 1791613465666,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613465667,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613465667,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613465667,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613465667,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613468086,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613469791,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613469792,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613469792,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613472196,
+            "location": "app",
+            "path": "/api/google/nearby-places",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613473171,
+            "location": "app",
+            "path": "/api/openai/hud-summary",
+            "status": null,
+            "method": "POST",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613482270,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482286,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482297,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482298,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482580,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482581,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482586,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482592,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482604,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482606,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482609,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482610,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482610,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482611,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482611,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482613,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482815,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482856,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613482895,
+            "location": "app",
+            "path": "/api/setup/status",
+            "status": 503,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": ""
+          },
+          {
+            "at": 1791613482909,
+            "location": "app",
+            "path": "/api/setup/status",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613539029,
+            "location": "app",
+            "path": "/api/realtime/debug-log",
+            "status": 503,
+            "method": "POST",
+            "resourceType": "ping",
+            "failure": ""
+          }
+        ],
+        "stderr": [
+          {
+            "at": 1791613485528,
+            "text": "[6092:2388:1010/062445.527:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          },
+          {
+            "at": 1791613509792,
+            "text": "[6092:2388:1010/062509.792:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          }
+        ],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0.09999999997671694,
+            "receivedAt": 1791613482922
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.2999999999301508,
+            "receivedAt": 1791613482925
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.5999999999767169,
+            "receivedAt": 1791613482925
+          },
+          {
+            "phase": "renderer-ready",
+            "elapsedMs": 55648,
+            "receivedAt": 1791613539028
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "renderer-ready",
+          "elapsedMs": 55648,
+          "receivedAt": 1791613539028
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": 9,
+        "browserProcessId": 6092,
+        "bootElapsedMs": 35330,
+        "rendererQueryDurationMs": 56178,
+        "reopenElapsedMs": 94686,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 398
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 421
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 2366
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 35189
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 35751
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 35752
+          },
+          {
+            "step": "renderer-read-complete",
+            "elapsedMs": 91931
+          },
+          {
+            "step": "verify-persisted-workspace",
+            "elapsedMs": 91931
+          },
+          {
+            "step": "passed",
+            "elapsedMs": 96013
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+          "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+          "[.WebGL-0x47b4001e2000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+          "[.WebGL-0x47b4001e2000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+        ]
+      }
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "failed",
+      "step": "read-renderer",
+      "error": "Runtime.callFunctionOn timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": null,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": false,
+        "forcedBrowserProcessTermination": true,
+        "browserCloseObservation": {
+          "closeStatus": "timed-out",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 726544.7676,
+          "closeSettledHostMs": 731547.8874,
+          "closeElapsedMs": 5003.119799999986,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 1,
+            "signal": null,
+            "elapsedMs": 5760.445999999996
+          },
+          "forceProcessStatus": "confirmed",
+          "forceProcessAttempted": true,
+          "forceProcessCallbackInvoked": true,
+          "forceProcessElapsedMs": 757.4619999999413,
+          "stderr": [
+            "[2820:2236:1010/062834.929:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+            "[2820:2236:1010/062904.005:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+            "[2820:2236:1010/062947.270:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+            "[2820:2236:1010/063110.485:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          ]
+        },
+        "cleanupError": "Graceful browser close did not complete."
+      },
+      "diagnostics": {
+        "rendererResponsive": false,
+        "domState": null,
+        "lastHeartbeat": {
+          "receivedAt": 1791613733131,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 192117
+        },
+        "heartbeatTail": [
+          {
+            "receivedAt": 1791613692572,
+            "readyState": "complete",
+            "appPresent": false,
+            "canvasCount": 3,
+            "loaderText": "Initializing systems...",
+            "ageMs": 232676,
+            "gapMs": null
+          },
+          {
+            "receivedAt": 1791613708441,
+            "readyState": "complete",
+            "appPresent": false,
+            "canvasCount": 7,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 216807,
+            "gapMs": 15869
+          },
+          {
+            "receivedAt": 1791613719456,
+            "readyState": "complete",
+            "appPresent": false,
+            "canvasCount": 7,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 205792,
+            "gapMs": 11015
+          },
+          {
+            "receivedAt": 1791613719458,
+            "readyState": "complete",
+            "appPresent": false,
+            "canvasCount": 7,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 205790,
+            "gapMs": 2
+          },
+          {
+            "receivedAt": 1791613723467,
+            "readyState": "complete",
+            "appPresent": false,
+            "canvasCount": 7,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 201781,
+            "gapMs": 4009
+          },
+          {
+            "receivedAt": 1791613732773,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 192475,
+            "gapMs": 9306
+          },
+          {
+            "receivedAt": 1791613733130,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 192118,
+            "gapMs": 357
+          },
+          {
+            "receivedAt": 1791613733131,
+            "readyState": "complete",
+            "appPresent": true,
+            "canvasCount": 8,
+            "loaderText": "Flying to Austin, TX...",
+            "ageMs": 192117,
+            "gapMs": 1
+          }
+        ],
+        "heartbeatCount": 16,
+        "requests": [
+          {
+            "at": 1791613675598,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "stylesheet",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613675634,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "stylesheet",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613678761,
+            "location": "app",
+            "path": "/api/google/tiles-token",
+            "status": 503,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": ""
+          },
+          {
+            "at": 1791613688582,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613708274,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613708277,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613708281,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613708282,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613708283,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613719457,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613719457,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613719457,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613719458,
+            "location": "external",
+            "path": null,
+            "status": null,
+            "method": "GET",
+            "resourceType": "xhr",
+            "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          },
+          {
+            "at": 1791613719458,
+            "location": "app",
+            "path": "/api/local-receivers/aircraft",
+            "status": 503,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": ""
+          },
+          {
+            "at": 1791613719458,
+            "location": "app",
+            "path": "/api/google/nearby-places",
+            "status": null,
+            "method": "GET",
+            "resourceType": "fetch",
+            "failure": "net::ERR_ABORTED"
+          },
+          {
+            "at": 1791613723466,
+            "location": "app",
+            "path": "/api/openai/hud-summary",
+            "status": 503,
+            "method": "POST",
+            "resourceType": "fetch",
+            "failure": ""
+          }
+        ],
+        "stderr": [
+          {
+            "at": 1791613719455,
+            "text": "[2820:2236:1010/062834.929:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          },
+          {
+            "at": 1791613744005,
+            "text": "[2820:2236:1010/062904.005:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          },
+          {
+            "at": 1791613787270,
+            "text": "[2820:2236:1010/062947.270:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          },
+          {
+            "at": 1791613870486,
+            "text": "[2820:2236:1010/063110.485:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+          }
+        ],
+        "rendererPhases": [
+          {
+            "phase": "query-start",
+            "elapsedMs": 0,
+            "receivedAt": 1791613733373
+          },
+          {
+            "phase": "context-ready",
+            "elapsedMs": 0.30000000004656613,
+            "receivedAt": 1791613733373
+          },
+          {
+            "phase": "extension-ready",
+            "elapsedMs": 0.5,
+            "receivedAt": 1791613733373
+          }
+        ],
+        "lastRendererPhase": {
+          "phase": "extension-ready",
+          "elapsedMs": 0.5,
+          "receivedAt": 1791613733373
+        },
+        "initialTargets": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "blank"
+          }
+        ],
+        "targetInventory": [
+          {
+            "type": "browser",
+            "location": "blank"
+          },
+          {
+            "type": "page",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          },
+          {
+            "type": "other",
+            "location": "app"
+          }
+        ],
+        "chromeProcessCount": null,
+        "browserProcessId": 2820,
+        "bootElapsedMs": 57786,
+        "rendererQueryDurationMs": 191929,
+        "reopenElapsedMs": 250131,
+        "progressTimeline": [
+          {
+            "step": "launch",
+            "elapsedMs": 0
+          },
+          {
+            "step": "install-fixtures",
+            "elapsedMs": 388
+          },
+          {
+            "step": "navigation",
+            "elapsedMs": 416
+          },
+          {
+            "step": "application-ready",
+            "elapsedMs": 2378
+          },
+          {
+            "step": "initial-view-restore",
+            "elapsedMs": 57674
+          },
+          {
+            "step": "ready",
+            "elapsedMs": 58202
+          },
+          {
+            "step": "read-renderer",
+            "elapsedMs": 58202
+          }
+        ],
+        "errors": [],
+        "messages": [
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+          "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+          "[.WebGL-0x1c5c00437400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+        ]
+      }
+    }
+  ],
+  "status": "failed",
+  "failure": {
+    "check": "prior-install-rollback-same-profile",
+    "step": "read-renderer",
+    "error": "Runtime.callFunctionOn timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
+    "diagnostics": {
+      "rendererResponsive": false,
+      "domState": null,
+      "lastHeartbeat": {
+        "receivedAt": 1791613733131,
+        "readyState": "complete",
+        "appPresent": true,
+        "canvasCount": 8,
+        "loaderText": "Flying to Austin, TX...",
+        "ageMs": 192117
+      },
+      "heartbeatTail": [
+        {
+          "receivedAt": 1791613692572,
+          "readyState": "complete",
+          "appPresent": false,
+          "canvasCount": 3,
+          "loaderText": "Initializing systems...",
+          "ageMs": 232676,
+          "gapMs": null
+        },
+        {
+          "receivedAt": 1791613708441,
+          "readyState": "complete",
+          "appPresent": false,
+          "canvasCount": 7,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 216807,
+          "gapMs": 15869
+        },
+        {
+          "receivedAt": 1791613719456,
+          "readyState": "complete",
+          "appPresent": false,
+          "canvasCount": 7,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 205792,
+          "gapMs": 11015
+        },
+        {
+          "receivedAt": 1791613719458,
+          "readyState": "complete",
+          "appPresent": false,
+          "canvasCount": 7,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 205790,
+          "gapMs": 2
+        },
+        {
+          "receivedAt": 1791613723467,
+          "readyState": "complete",
+          "appPresent": false,
+          "canvasCount": 7,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 201781,
+          "gapMs": 4009
+        },
+        {
+          "receivedAt": 1791613732773,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 192475,
+          "gapMs": 9306
+        },
+        {
+          "receivedAt": 1791613733130,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 192118,
+          "gapMs": 357
+        },
+        {
+          "receivedAt": 1791613733131,
+          "readyState": "complete",
+          "appPresent": true,
+          "canvasCount": 8,
+          "loaderText": "Flying to Austin, TX...",
+          "ageMs": 192117,
+          "gapMs": 1
+        }
+      ],
+      "heartbeatCount": 16,
+      "requests": [
+        {
+          "at": 1791613675598,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "stylesheet",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613675634,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "stylesheet",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613678761,
+          "location": "app",
+          "path": "/api/google/tiles-token",
+          "status": 503,
+          "method": "GET",
+          "resourceType": "fetch",
+          "failure": ""
+        },
+        {
+          "at": 1791613688582,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613708274,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613708277,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613708281,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613708282,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613708283,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613719457,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613719457,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613719457,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613719458,
+          "location": "external",
+          "path": null,
+          "status": null,
+          "method": "GET",
+          "resourceType": "xhr",
+          "failure": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "at": 1791613719458,
+          "location": "app",
+          "path": "/api/local-receivers/aircraft",
+          "status": 503,
+          "method": "GET",
+          "resourceType": "fetch",
+          "failure": ""
+        },
+        {
+          "at": 1791613719458,
+          "location": "app",
+          "path": "/api/google/nearby-places",
+          "status": null,
+          "method": "GET",
+          "resourceType": "fetch",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "at": 1791613723466,
+          "location": "app",
+          "path": "/api/openai/hud-summary",
+          "status": 503,
+          "method": "POST",
+          "resourceType": "fetch",
+          "failure": ""
+        }
+      ],
+      "stderr": [
+        {
+          "at": 1791613719455,
+          "text": "[2820:2236:1010/062834.929:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+        },
+        {
+          "at": 1791613744005,
+          "text": "[2820:2236:1010/062904.005:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+        },
+        {
+          "at": 1791613787270,
+          "text": "[2820:2236:1010/062947.270:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+        },
+        {
+          "at": 1791613870486,
+          "text": "[2820:2236:1010/063110.485:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+        }
+      ],
+      "rendererPhases": [
+        {
+          "phase": "query-start",
+          "elapsedMs": 0,
+          "receivedAt": 1791613733373
+        },
+        {
+          "phase": "context-ready",
+          "elapsedMs": 0.30000000004656613,
+          "receivedAt": 1791613733373
+        },
+        {
+          "phase": "extension-ready",
+          "elapsedMs": 0.5,
+          "receivedAt": 1791613733373
+        }
+      ],
+      "lastRendererPhase": {
+        "phase": "extension-ready",
+        "elapsedMs": 0.5,
+        "receivedAt": 1791613733373
+      },
+      "initialTargets": [
+        {
+          "type": "browser",
+          "location": "blank"
+        },
+        {
+          "type": "page",
+          "location": "blank"
+        }
+      ],
+      "targetInventory": [
+        {
+          "type": "browser",
+          "location": "blank"
+        },
+        {
+          "type": "page",
+          "location": "app"
+        },
+        {
+          "type": "other",
+          "location": "app"
+        },
+        {
+          "type": "other",
+          "location": "app"
+        }
+      ],
+      "chromeProcessCount": null,
+      "browserProcessId": 2820,
+      "bootElapsedMs": 57786,
+      "rendererQueryDurationMs": 191929,
+      "reopenElapsedMs": 250131,
+      "progressTimeline": [
+        {
+          "step": "launch",
+          "elapsedMs": 0
+        },
+        {
+          "step": "install-fixtures",
+          "elapsedMs": 388
+        },
+        {
+          "step": "navigation",
+          "elapsedMs": 416
+        },
+        {
+          "step": "application-ready",
+          "elapsedMs": 2378
+        },
+        {
+          "step": "initial-view-restore",
+          "elapsedMs": 57674
+        },
+        {
+          "step": "ready",
+          "elapsedMs": 58202
+        },
+        {
+          "step": "read-renderer",
+          "elapsedMs": 58202
+        }
+      ],
+      "errors": [],
+      "messages": [
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+        "[.WebGL-0x1c5c00437400]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      ]
+    }
+  }
+}
