@@ -214,6 +214,14 @@ requests. The next comparison must observe a completed post-release geometry
 frame before applying the unchanged fresh-frame capture deadline. Raw SHA-256:
 `7c93c3f5a7644d7858956109e38a465589237b73f95cfd18daf8a3933d12fda0`.
 
+The independent [tracking regression run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38080322288)
+at `48153a0` passes **109 checks, zero failures and zero skips**
+([raw log](performance-evidence/tracking-48153a0.txt),
+[exact run metadata](performance-evidence/tracking-48153a0-run.json)). It uses
+the existing deterministic full-application harness with bundled imagery and
+software rendering; it establishes tracking behavior, not hardware performance.
+Browser shutdown completes normally without forced process termination.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
