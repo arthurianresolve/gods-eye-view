@@ -1,0 +1,65 @@
+name: Overlay CPU comparison
+
+on:
+  push:
+    branches: [qa/s52-node-comparison]
+  workflow_dispatch:
+    inputs:
+      baseline_sha:
+        description: Immutable baseline application commit
+        type: string
+        default: 886b7d2927b6eb3a546c0dfaf629684973d9e501
+      candidate_sha:
+        description: Immutable candidate application commit
+        type: string
+        default: 33d985657c8949a02cfce2f0f1ad4131d3da774c
+
+permissions:
+  contents: read
+
+jobs:
+  paired-cpu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      BASELINE_SHA: ${{ inputs.baseline_sha || '886b7d2927b6eb3a546c0dfaf629684973d9e501' }}
+      CANDIDATE_SHA: ${{ inputs.candidate_sha || '33d985657c8949a02cfce2f0f1ad4131d3da774c' }}
+    steps:
+      - name: Check out the comparison harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Prepare two immutable source checkouts
+        shell: bash
+        run: |
+          [[ "$BASELINE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git worktree add --detach ../overlay-baseline "$BASELINE_SHA"
+          git worktree add --detach ../overlay-candidate "$CANDIDATE_SHA"
+          test "$(git -C ../overlay-baseline rev-parse HEAD)" = "$BASELINE_SHA"
+          test "$(git -C ../overlay-candidate rev-parse HEAD)" = "$CANDIDATE_SHA"
+          cmp package-lock.json ../overlay-baseline/package-lock.json
+          cmp package-lock.json ../overlay-candidate/package-lock.json
+          ln -s "$PWD/node_modules" ../overlay-baseline/node_modules
+          ln -s "$PWD/node_modules" ../overlay-candidate/node_modules
+      - name: Run the same eight-workload paired CPU comparison in isolation
+        run: node scripts/performance/overlayProjectionComparison.mjs ../overlay-baseline ../overlay-candidate qa-artifacts/overlay-cpu.json
+      - name: Preserve the complete or partial report in job logs
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, readFileSync } from 'node:fs';
+          const path = 'qa-artifacts/overlay-cpu.json';
+          if (existsSync(path)) console.log('OVERLAY_CPU_REPORT ' + JSON.stringify(JSON.parse(readFileSync(path, 'utf8'))));
+          else console.log('OVERLAY_CPU_REPORT ' + JSON.stringify({ status: 'not-run', error: 'No comparison report; inspect preceding setup failures.' }));
+          JS
