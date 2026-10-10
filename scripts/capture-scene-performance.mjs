@@ -38,6 +38,10 @@ import {
 } from './performance/cesiumWorkerBlobContract.mjs';
 import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
+import {
+  createObservedDenseComparisonContract,
+  getCaptureComparisonIneligibilityReasons,
+} from './performance/captureComparisonContract.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -1299,15 +1303,16 @@ try {
           let active = true;
           let motionStartedAt = null;
           let motionDistance = 0;
+          let measurementTimer = null;
           let delayTimer = null;
           let motionFinished = Promise.resolve();
           let finishMotion = () => {};
           try {
             if (stagedClock) stagedClock.startMeasurement();
             const startedAt = performance.now();
-            const measurementWait = new Promise((resolve) =>
-              setTimeout(resolve, durationMs),
-            );
+            const measurementWait = new Promise((resolve) => {
+              measurementTimer = setTimeout(resolve, durationMs);
+            });
             if (scenarioName === 'scripted-motion') {
               // Rebuild the pose from one elapsed-time sample on every frame.
               // A timer-step route accumulates missed callbacks and makes a slow
@@ -1429,6 +1434,7 @@ try {
             };
           } finally {
             active = false;
+            clearTimeout(measurementTimer);
             clearInterval(delayTimer);
             observer?.disconnect();
             scene.postRender.removeEventListener(onRender);
@@ -1684,6 +1690,23 @@ try {
   failureProgress.current = null;
   fixtureDelivery = await summarizeFlightFixtureDelivery();
   failureProgress.fixtureDelivery = fixtureDelivery;
+  if (productionFlightFixture) {
+    const perSampleResponseCounts = captures.map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      fulfilledResponseCount:
+        sample.fixtureDelivery?.fulfilledResponseCount ?? null,
+    }));
+    fixtureDelivery = {
+      ...fixtureDelivery,
+      fulfilledResponseCount: perSampleResponseCounts.reduce(
+        (total, row) => total + (row.fulfilledResponseCount || 0),
+        0,
+      ),
+      perSampleResponseCounts,
+    };
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
   const integrity = assertCaptureIntegrity(captures, {
     expectedCommit: source.appCommit,
@@ -1701,21 +1724,56 @@ try {
         }
       : {}),
   });
+  const comparisonContract = productionFlightFixture
+    ? createObservedDenseComparisonContract({
+        fixture: productionFlightFixture,
+        fixtureDelivery,
+        environment,
+        captures,
+        scenarios,
+      })
+    : null;
+  const comparisonReadinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: comparisonContract,
+    fixture: productionFlightFixture,
+    fixtureDelivery,
+    source,
+    environment,
+    workload: {
+      warmupMs,
+      durationPerSampleMs: seconds * 1000,
+      runsPerScenario: runs,
+      startupRuns: startupSamples.length,
+      injectedDelayMs: delayMs,
+      scenarios,
+      hardwareRequired,
+    },
+    captures,
+    diagnosticsDocuments: performanceDiagnosticsDocuments,
+    workerBlobAuditInstrumented: Boolean(captureProvenance),
+    hardwareRequired,
+  });
   const report = {
     schema: 'gev-performance-capture/v1',
     performanceDiagnostics: {
-      requested: 'disabled-when-supported-before-document-setup',
+      requested:
+        'disabled-after-app-ready-before-warmup-when-supported-per-document',
       documents: performanceDiagnosticsDocuments,
     },
     capturedAt: new Date().toISOString(),
     source,
     url: new URL(url).origin,
     comparisonEligible: false,
+    ...(comparisonContract ? { comparisonContract } : {}),
     comparisonReadiness: {
       status: 'not-ready',
-      reason: productionFlightFixture
-        ? 'Observed provider fixture delivery is a static-count integration smoke only; versioned comparison-contract export and paired capture eligibility remain pending.'
-        : 'Versioned fixture delivery and comparison-contract export are not present in this capture; paired capture eligibility remains pending.',
+      reasons:
+        comparisonReadinessReasons.length > 0
+          ? comparisonReadinessReasons
+          : ['comparison-eligibility-is-not-enabled-by-this-capture-path'],
+      reason:
+        comparisonReadinessReasons.join('; ') ||
+        'comparison-eligibility-is-not-enabled-by-this-capture-path',
     },
     ...(fixtureDelivery ? { fixtureDelivery } : {}),
     environment,

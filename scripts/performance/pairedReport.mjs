@@ -56,6 +56,20 @@ function validateContract(report, label) {
     `${label}: fixed fixture time must be a valid timestamp`,
   );
   requireText(contract.workloadId, `${label}: workload identity`);
+  const contractDelivery = contract.fixtureDelivery;
+  assert.equal(
+    contractDelivery?.schema,
+    'gev-fixture-delivery-observation/v1',
+    `${label}: observed fixture delivery contract is required`,
+  );
+  assert.equal(contractDelivery.status, 'observed');
+  requireText(contractDelivery.method, `${label}: delivery method`);
+  assert.equal(contractDelivery.fixtureSha256, contract.fixture.sha256);
+  assert.equal(contractDelivery.fixedTime, contract.fixture.fixedTime);
+  validCount(
+    contractDelivery.observedFlightsCount,
+    `${label}: observed fixture flight population`,
+  );
   assert.ok(
     contract.routes && typeof contract.routes === 'object',
     `${label}: route descriptors are required`,
@@ -149,6 +163,21 @@ function validateContract(report, label) {
   const browser = contract.browser;
   requireText(browser?.name, `${label}: browser name`);
   requireText(browser?.version, `${label}: browser version`);
+  for (const name of ['viewport', 'drawingBuffer']) {
+    const size = contract.rendering?.[name];
+    finitePositive(size?.width, `${label}: ${name} width`);
+    finitePositive(size?.height, `${label}: ${name} height`);
+  }
+  assert.deepEqual(
+    contract.rendering.viewport,
+    report.environment?.viewport,
+    `${label}: contract viewport differs from observed environment`,
+  );
+  assert.deepEqual(
+    contract.rendering.drawingBuffer,
+    report.environment?.drawingBuffer,
+    `${label}: contract drawing buffer differs from observed environment`,
+  );
   return contract;
 }
 
@@ -179,6 +208,86 @@ function validateFixtureDelivery(report, contract, label) {
     delivery.fixedTime,
     contract.fixture.fixedTime,
     `${label}: observed fixture time mismatch`,
+  );
+  assert.equal(
+    delivery.method,
+    contract.fixtureDelivery?.method,
+    `${label}: observed fixture delivery method mismatch`,
+  );
+  assert.equal(
+    delivery.status,
+    contract.fixtureDelivery?.status,
+    `${label}: contract does not record observed fixture delivery`,
+  );
+  const expectedFlightCount = contract.populations.find(
+    (row) => row.id === 'flights',
+  )?.count;
+  if (expectedFlightCount !== undefined) {
+    assert.equal(
+      contract.fixtureDelivery?.observedFlightsCount,
+      expectedFlightCount,
+      `${label}: contract flight population differs from observed delivery`,
+    );
+    assert.equal(
+      delivery.observedFlightsCount,
+      expectedFlightCount,
+      `${label}: observed delivery did not produce the declared flight population`,
+    );
+  } else
+    assert.equal(
+      contract.fixtureDelivery?.observedFlightsCount,
+      delivery.observedFlightsCount,
+      `${label}: contract and report fixture populations differ`,
+    );
+  assert.ok(
+    Number.isInteger(delivery.fulfilledResponseCount) &&
+      delivery.fulfilledResponseCount > 0,
+    `${label}: at least one successful fixture response acknowledgement is required`,
+  );
+  if (delivery.perSampleResponseCounts !== undefined) {
+    assert.ok(
+      Array.isArray(delivery.perSampleResponseCounts),
+      `${label}: per-sample delivery diagnostics must be an array`,
+    );
+    const diagnosticKeys = delivery.perSampleResponseCounts.map((row) => {
+      requireText(row?.scenario, `${label}: per-sample delivery scenario`);
+      assert.ok(
+        Number.isInteger(row.run) && row.run > 0,
+        `${label}: per-sample delivery run is invalid`,
+      );
+      assert.ok(
+        Number.isInteger(row.fulfilledResponseCount) &&
+          row.fulfilledResponseCount > 0,
+        `${label}: per-sample delivery count is invalid`,
+      );
+      return `${row.scenario}:${row.run}`;
+    });
+    const captureKeys = report.captures.map(
+      (sample) => `${sample.scenario}:${sample.run}`,
+    );
+    assert.deepEqual(
+      [...diagnosticKeys].sort(),
+      [...captureKeys].sort(),
+      `${label}: delivery diagnostics do not match capture samples`,
+    );
+    assert.equal(
+      delivery.perSampleResponseCounts.reduce(
+        (sum, row) => sum + row.fulfilledResponseCount,
+        0,
+      ),
+      delivery.fulfilledResponseCount,
+      `${label}: delivery diagnostic counts do not sum to the report total`,
+    );
+  }
+  assert.equal(
+    contract.fixtureDelivery?.fixtureSha256,
+    contract.fixture.sha256,
+    `${label}: delivery contract fixture hash differs`,
+  );
+  assert.equal(
+    contract.fixtureDelivery?.fixedTime,
+    contract.fixture.fixedTime,
+    `${label}: delivery contract fixture time differs`,
   );
 }
 
@@ -306,7 +415,13 @@ function validateBuildProvenance(source, side) {
   }
   return recipe;
 }
-function validateRoute(route, scenario, durationMs, label, { fixture, warmupMs } = {}) {
+function validateRoute(
+  route,
+  scenario,
+  durationMs,
+  label,
+  { fixture, warmupMs } = {},
+) {
   requireText(route?.id, `${label}: route id`);
   const start = route?.start;
   assert.ok(
@@ -781,10 +896,18 @@ export function validatePairedPerformanceReports({
       candidateRoutes[scenario],
       `Baseline and candidate ${scenario} route descriptors differ beyond camera pose roundoff`,
     );
+  const fixtureDeliverySignature = (delivery) => ({
+    schema: delivery.schema,
+    status: delivery.status,
+    method: delivery.method,
+    fixtureSha256: delivery.fixtureSha256,
+    fixedTime: delivery.fixedTime,
+    observedFlightsCount: delivery.observedFlightsCount,
+  });
   equal(
-    baseline.fixtureDelivery,
-    candidate.fixtureDelivery,
-    'Observed fixture delivery differs between builds',
+    fixtureDeliverySignature(baseline.fixtureDelivery),
+    fixtureDeliverySignature(candidate.fixtureDelivery),
+    'Observed fixture identity and delivered population differ between builds',
   );
   equal(
     baseline.workload.scenarios,
@@ -954,6 +1077,17 @@ export function validatePairedPerformanceReports({
       scenarios: denseObjectiveResults,
     },
     scenarios,
+    fixtureDeliveryDiagnostics: {
+      baseline: {
+        fulfilledResponseCount: baseline.fixtureDelivery.fulfilledResponseCount,
+        perSample: baseline.fixtureDelivery.perSampleResponseCounts || null,
+      },
+      candidate: {
+        fulfilledResponseCount:
+          candidate.fixtureDelivery.fulfilledResponseCount,
+        perSample: candidate.fixtureDelivery.perSampleResponseCounts || null,
+      },
+    },
     regressionsOver10Pct: Object.keys(scenarios).filter(
       (scenario) => scenarios[scenario].regressionOver10Pct,
     ),

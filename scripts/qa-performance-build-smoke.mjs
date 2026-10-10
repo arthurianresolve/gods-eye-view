@@ -48,6 +48,10 @@ import {
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
+import {
+  createObservedDenseComparisonContract,
+  getCaptureComparisonIneligibilityReasons,
+} from './performance/captureComparisonContract.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 const ROOT = await realpath(
@@ -371,6 +375,66 @@ export function validateCaptureCliReport(report, expected) {
     'scripted-motion',
     'selected-aircraft-tracking',
   ]);
+  const diagnosticDocuments = report.performanceDiagnostics?.documents;
+  const expectedDiagnosticCount =
+    report.workload.startupRuns + 1 + report.captures.length;
+  assert.ok(Array.isArray(diagnosticDocuments));
+  assert.equal(diagnosticDocuments.length, expectedDiagnosticCount);
+  const expectedRoles = [
+    ...Array.from(
+      { length: report.workload.startupRuns },
+      (_, index) => `startup-${index + 1}`,
+    ),
+    'main-setup',
+    ...Array.from(
+      { length: report.captures.length },
+      (_, index) => `provider-sample-${index + 1}`,
+    ),
+  ].sort();
+  assert.deepEqual(
+    diagnosticDocuments.map((entry) => entry.documentRole).sort(),
+    expectedRoles,
+  );
+  for (const entry of diagnosticDocuments) {
+    assert.equal(entry.requested, true);
+    if (expected.appSha === BASELINE_SHA) {
+      assert.equal(entry.hookAvailable, false);
+      assert.equal(entry.disabled, false);
+    } else {
+      assert.equal(entry.hookAvailable, true);
+      assert.equal(entry.disabled, true);
+    }
+  }
+  const observedComparisonContract = createObservedDenseComparisonContract({
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+  });
+  assert.deepEqual(report.comparisonContract, observedComparisonContract);
+  const observedReadinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: observedComparisonContract,
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    source: report.source,
+    environment: report.environment,
+    workload: report.workload,
+    captures: report.captures,
+    diagnosticsDocuments: diagnosticDocuments,
+    workerBlobAuditInstrumented: true,
+    hardwareRequired: false,
+  });
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.deepEqual(
+    report.comparisonReadiness?.reasons,
+    observedReadinessReasons,
+  );
+  assert.ok(
+    observedReadinessReasons.includes(
+      'latency-comparison-remains-disabled-pending-uninstrumented-capture',
+    ),
+  );
   assert.match(report.environment?.renderer || '', /swiftshader/i);
   assert.equal(report.environment?.hardwareEligible, false);
   assert.equal(report.captures?.length, 6);

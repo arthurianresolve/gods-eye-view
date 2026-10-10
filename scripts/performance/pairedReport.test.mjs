@@ -59,7 +59,10 @@ const routes = {
     sourceFreshness: { start: 'current', end: 'current' },
     targetStart: { longitudeDeg: -97.7, latitudeDeg: 30.2, heightM: 1000 },
     targetEnd: { longitudeDeg: -97.6, latitudeDeg: 30.3, heightM: 1000 },
-    start: { ...startPose, dateEpochMs: Date.parse('2026-10-08T12:00:30.000Z') },
+    start: {
+      ...startPose,
+      dateEpochMs: Date.parse('2026-10-08T12:00:30.000Z'),
+    },
     end: { ...startPose, dateEpochMs: Date.parse('2026-10-08T12:01:30.000Z') },
   },
 };
@@ -69,9 +72,15 @@ const routes = {
   const latitude1 = route.targetStart.latitudeDeg * radians;
   const latitude2 = route.targetEnd.latitudeDeg * radians;
   const deltaLatitude = latitude2 - latitude1;
-  const deltaLongitude = (route.targetEnd.longitudeDeg - route.targetStart.longitudeDeg) * radians;
-  const haversine = Math.sin(deltaLatitude / 2) ** 2 + Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(deltaLongitude / 2) ** 2;
-  route.motionDistanceM = route.observedTargetDistanceM = 2 * 6_371_000 * Math.asin(Math.sqrt(haversine));
+  const deltaLongitude =
+    (route.targetEnd.longitudeDeg - route.targetStart.longitudeDeg) * radians;
+  const haversine =
+    Math.sin(deltaLatitude / 2) ** 2 +
+    Math.cos(latitude1) *
+      Math.cos(latitude2) *
+      Math.sin(deltaLongitude / 2) ** 2;
+  route.motionDistanceM = route.observedTargetDistanceM =
+    2 * 6_371_000 * Math.asin(Math.sqrt(haversine));
 }
 const populations = [
   { id: 'flights', enabled: true, count: 2500 },
@@ -187,8 +196,20 @@ function makeReport(
         sha256: fixtureHash,
         fixedTime: '2026-10-08T12:00:00.000Z',
       },
+      fixtureDelivery: {
+        schema: 'gev-fixture-delivery-observation/v1',
+        status: 'observed',
+        method: 'controlled-provider-boundary-v1',
+        fixtureSha256: fixtureHash,
+        fixedTime: '2026-10-08T12:00:00.000Z',
+        observedFlightsCount: 2500,
+      },
       routes: structuredClone(routes),
       browser: { name: 'Chrome', version: '152.0' },
+      rendering: {
+        viewport: { width: 1440, height: 900, dpr: 1 },
+        drawingBuffer: { width: 1440, height: 900 },
+      },
       populations: structuredClone(populations),
       visual: { qualityMode: 'manual', detectionMode: 'DENSE', densityPct: 75 },
       objectiveScenarios: ['scripted-motion', 'selected-aircraft-tracking'],
@@ -200,6 +221,8 @@ function makeReport(
       method: 'controlled-provider-boundary-v1',
       fixtureSha256: fixtureHash,
       fixedTime: '2026-10-08T12:00:00.000Z',
+      fulfilledResponseCount: 15,
+      observedFlightsCount: 2500,
     },
     environment: {
       appCommit: commit,
@@ -339,6 +362,60 @@ test('paired reports reject a caller-only fixture descriptor without observed de
   );
 });
 
+test('paired delivery compares fixed identity while retaining independent poll counts', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  baseline.fixtureDelivery.fulfilledResponseCount = 20;
+  candidate.fixtureDelivery.fulfilledResponseCount = 26;
+  baseline.fixtureDelivery.perSampleResponseCounts = baseline.captures.map(
+    (sample, index) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      fulfilledResponseCount: index === 0 ? 6 : 1,
+    }),
+  );
+  candidate.fixtureDelivery.perSampleResponseCounts = candidate.captures.map(
+    (sample, index) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      fulfilledResponseCount: index === 0 ? 12 : 1,
+    }),
+  );
+  const result = validate(baseline, candidate);
+  assert.equal(result.status, 'comparable');
+  assert.equal(
+    result.fixtureDeliveryDiagnostics.baseline.fulfilledResponseCount,
+    20,
+  );
+  assert.equal(
+    result.fixtureDeliveryDiagnostics.candidate.fulfilledResponseCount,
+    26,
+  );
+  assert.throws(() => {
+    candidate.comparisonContract.fixtureDelivery.method = 'different-method';
+    validate(baseline, candidate);
+  }, /delivery method mismatch|delivery contract method/);
+});
+
+test('paired delivery rejects inconsistent per-sample diagnostic totals', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const report of [baseline, candidate]) {
+    report.fixtureDelivery.perSampleResponseCounts = report.captures.map(
+      (sample) => ({
+        scenario: sample.scenario,
+        run: sample.run,
+        fulfilledResponseCount: 1,
+      }),
+    );
+  }
+  baseline.fixtureDelivery.perSampleResponseCounts[0].fulfilledResponseCount = 2;
+  assert.throws(
+    () => validate(baseline, candidate),
+    /do not sum to the report total/,
+  );
+});
+
 test('an unreported required tracking workload does not create a global objective claim', () => {
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);
@@ -371,8 +448,13 @@ test('infrastructure-only workloads remain comparable without aircraft populatio
       sha256: 'e'.repeat(64),
       fixedTime: '2026-10-08T12:00:00.000Z',
     };
+    report.comparisonContract.fixtureDelivery.fixtureSha256 = 'e'.repeat(64);
+    report.comparisonContract.fixtureDelivery.fixedTime =
+      '2026-10-08T12:00:00.000Z';
+    report.comparisonContract.fixtureDelivery.observedFlightsCount = 0;
     report.fixtureDelivery.fixtureSha256 = 'e'.repeat(64);
     report.fixtureDelivery.fixedTime = '2026-10-08T12:00:00.000Z';
+    report.fixtureDelivery.observedFlightsCount = 0;
     report.comparisonContract.populations = [
       { id: 'local-datacenters', enabled: true, count: 4362 },
       { id: 'local-dams', enabled: true, count: 716 },
@@ -540,29 +622,50 @@ test('paired route checks tolerate camera pose roundoff without rounding evidenc
 test('entity-follow endpoint jitter stays within sub-micron tolerance while real drift and phase changes fail', () => {
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);
-  const route = candidate.comparisonContract.routes['selected-aircraft-tracking'];
+  const route =
+    candidate.comparisonContract.routes['selected-aircraft-tracking'];
   route.start.position.x += 5e-7;
   route.end.position.z -= 5e-7;
   route.start.direction.y += 5e-13;
   route.end.transform[12] += 5e-7;
   route.targetStart.longitudeDeg += 1e-13;
   route.targetEnd.latitudeDeg -= 1e-13;
-  for (const sample of candidate.captures.filter((row) => row.scenario === 'selected-aircraft-tracking'))
+  for (const sample of candidate.captures.filter(
+    (row) => row.scenario === 'selected-aircraft-tracking',
+  ))
     sample.cameraPath = structuredClone(route);
-  const preserved = candidate.captures.find((row) => row.scenario === 'selected-aircraft-tracking').cameraPath.targetEnd.latitudeDeg;
+  const preserved = candidate.captures.find(
+    (row) => row.scenario === 'selected-aircraft-tracking',
+  ).cameraPath.targetEnd.latitudeDeg;
   assert.equal(validate(baseline, candidate).status, 'comparable');
-  assert.equal(candidate.captures.find((row) => row.scenario === 'selected-aircraft-tracking').cameraPath.targetEnd.latitudeDeg, preserved);
+  assert.equal(
+    candidate.captures.find(
+      (row) => row.scenario === 'selected-aircraft-tracking',
+    ).cameraPath.targetEnd.latitudeDeg,
+    preserved,
+  );
 
   for (const mutate of [
-    (value) => { value.targetEnd.latitudeDeg += 1e-5; },
-    (value) => { value.end.position.x += 1; },
-    (value) => { value.measurementMs += 1; },
-    (value) => { value.endEpochMs += 1; },
+    (value) => {
+      value.targetEnd.latitudeDeg += 1e-5;
+    },
+    (value) => {
+      value.end.position.x += 1;
+    },
+    (value) => {
+      value.measurementMs += 1;
+    },
+    (value) => {
+      value.endEpochMs += 1;
+    },
   ]) {
     const changed = makeReport(candidateCommit);
-    const changedRoute = changed.comparisonContract.routes['selected-aircraft-tracking'];
+    const changedRoute =
+      changed.comparisonContract.routes['selected-aircraft-tracking'];
     mutate(changedRoute);
-    for (const sample of changed.captures.filter((row) => row.scenario === 'selected-aircraft-tracking'))
+    for (const sample of changed.captures.filter(
+      (row) => row.scenario === 'selected-aircraft-tracking',
+    ))
       sample.cameraPath = structuredClone(changedRoute);
     assert.throws(() => validate(makeReport(baselineCommit), changed));
   }

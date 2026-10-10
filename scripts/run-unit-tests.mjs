@@ -13,6 +13,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/captureDiagnosticsControl.test.mjs',
   'scripts/performance/captureFailureReport.test.mjs',
   'scripts/performance/pairedReport.test.mjs',
+  'scripts/performance/captureComparisonContract.test.mjs',
   'scripts/performance/buildProvenance.test.mjs',
   'scripts/performance/buildSmokeContract.test.mjs',
   'scripts/qa-performance-build-smoke.test.mjs',

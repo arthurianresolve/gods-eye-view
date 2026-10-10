@@ -12,8 +12,17 @@ import {
   validateCaptureCliReport,
 } from './qa-performance-build-smoke.mjs';
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
+import { createProductionFlightFixture } from './performance/productionFlightFixture.mjs';
+import {
+  createObservedDenseComparisonContract,
+  getCaptureComparisonIneligibilityReasons,
+} from './performance/captureComparisonContract.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const EXPECTED_FIXTURE_SHA256 = createProductionFlightFixture({
+  count: 2500,
+  fixedTime: '2026-10-08T12:00:00.000Z',
+}).sha256;
 
 test('smoke CLI parser preserves the candidate SHA and output path', () => {
   const sha = 'a'.repeat(40);
@@ -29,98 +38,217 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
 
 function validCaptureCliReport() {
   const scenarios = ['idle', 'scripted-motion', 'selected-aircraft-tracking'];
-  const fixtureSha256 = 'a'.repeat(64);
+  const generatedFixture = createProductionFlightFixture({
+    count: 2500,
+    fixedTime: '2026-10-08T12:00:00.000Z',
+  });
+  const fixture = {
+    id: generatedFixture.id,
+    sha256: generatedFixture.sha256,
+    fixedTime: generatedFixture.fixedTime,
+    count: generatedFixture.count,
+    center: { latitude: 30.2672, longitude: -97.7431 },
+    cameraPath: {
+      id: 'austin-overhead-v1',
+      altitudeM: 130_000,
+      headingDeg: 0,
+      pitchDeg: -90,
+    },
+    seed: 1,
+    detectionMode: 'DENSE',
+  };
+  const settings = {
+    qualityMode: 'manual',
+    densityPct: 75,
+    detectionMode: 'DENSE',
+    resolutionScale: 1,
+    msaaSamples: 4,
+    antialias: false,
+    fxaa: true,
+    visualState: {
+      style: 'normal',
+      styleParams: {},
+      detection: { density: 75 },
+    },
+  };
+  const layers = [
+    { id: 'flights', enabled: true, count: 2500 },
+    { id: 'local-datacenters', enabled: true, count: 4362 },
+    { id: 'local-dams', enabled: true, count: 716 },
+  ];
+  const fixtureDelivery = {
+    schema: 'gev-fixture-delivery-observation/v1',
+    status: 'observed',
+    method:
+      'same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest',
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+    fulfilledResponseCount: 6,
+    observedFlightsCount: 2500,
+    perSampleResponseCounts: scenarios.flatMap((scenario) =>
+      [1, 2].map((run) => ({ scenario, run, fulfilledResponseCount: 1 })),
+    ),
+  };
+  const captures = scenarios.flatMap((scenario) =>
+    [1, 2].map((run) => ({
+      scenario,
+      run,
+      fixtureClock: {
+        freshBrowserContext: true,
+        start: { startCount: 1 },
+        sourceFreshness: 'current',
+        actualWarmupElapsedMs: 1000,
+        measuredWindowElapsedMs: 1000,
+        ageAtMeasurementStartMs: 1000,
+        ageAtEndMs: 2000,
+      },
+      fixtureDelivery: {
+        ...fixtureDelivery,
+        fulfilledResponseCount: 1,
+        perSampleResponseCounts: undefined,
+      },
+      layers: structuredClone(layers),
+      conditions: {
+        before: {
+          settings: structuredClone(settings),
+          visible: true,
+          focused: true,
+        },
+        after: {
+          settings: structuredClone(settings),
+          visible: true,
+          focused: true,
+        },
+      },
+      foregroundThroughout: true,
+      renderedFrameCount: 61,
+      frameCount: 60,
+      frameIntervalMs: { p50: 16, p95: 18, max: 20, samples: 60 },
+      cameraPath: {
+        id:
+          scenario === 'scripted-motion'
+            ? 'elapsed-move-right-v1'
+            : scenario === 'selected-aircraft-tracking'
+              ? 'entity-follow-v1'
+              : 'parked-v1',
+        start: { position: { x: 1, y: 2, z: 3 } },
+      },
+      ...(scenario === 'selected-aircraft-tracking'
+        ? { trackedAircraftId: 'flights:000001' }
+        : {}),
+      settings: {
+        before: structuredClone(settings),
+        after: structuredClone(settings),
+      },
+    })),
+  );
+  const source = {
+    appCommit: 'b'.repeat(40),
+    harnessCommit: 'c'.repeat(40),
+    provenanceStatus: 'verified-local-build-and-served-assets-before-and-after',
+    buildProvenance: {
+      schema: 'gev-capture-build-provenance/v1',
+      status: 'verified-local-build-and-served-assets-before-and-after',
+      receiptSha256: 'd'.repeat(64),
+      pageAssetAudit: {
+        scriptRequestCount: 12,
+        loadedAssetPaths: ['assets/index.js'],
+        unexpectedAssetPaths: [],
+        cesiumWorkerBlobAudits: Array.from({ length: 6 }, () => ({
+          status: 'receipt-derived-worker-blobs-validated',
+        })),
+      },
+    },
+  };
+  const workload = {
+    warmupMs: 1000,
+    durationPerSampleMs: 1000,
+    runsPerScenario: 2,
+    startupRuns: 1,
+    scenarios,
+    fixture,
+    injectedDelayMs: 0,
+    cameraPath: 'observed per-scenario route descriptors',
+    populationStableAcrossSamples: true,
+    cameraPathStableAcrossSamples: true,
+    hardwareRequired: false,
+  };
+  const environment = {
+    appCommit: source.appCommit,
+    userAgent: 'Mozilla/5.0 HeadlessChrome/152.0.0.0',
+    platform: 'Linux x86_64',
+    renderer: 'ANGLE (Google, Vulkan 1.3, SwiftShader device)',
+    vendor: 'Google Inc.',
+    viewport: { width: 1280, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1280, height: 900 },
+    layers: structuredClone(layers),
+    hardwareEligible: false,
+    startup: {
+      runCount: 1,
+      measurement: 'cache-disabled fresh browser contexts',
+    },
+  };
+  const performanceDiagnostics = {
+    requested:
+      'disabled-after-app-ready-before-warmup-when-supported-per-document',
+    documents: [
+      {
+        documentRole: 'startup-1',
+        requested: true,
+        hookAvailable: true,
+        disabled: true,
+      },
+      {
+        documentRole: 'main-setup',
+        requested: true,
+        hookAvailable: true,
+        disabled: true,
+      },
+      ...captures.map((sample, index) => ({
+        documentRole: `provider-sample-${index + 1}`,
+        requested: true,
+        hookAvailable: true,
+        disabled: true,
+      })),
+    ],
+  };
+  const comparisonContract = createObservedDenseComparisonContract({
+    fixture,
+    fixtureDelivery,
+    environment,
+    captures,
+    scenarios,
+  });
+  const comparisonReadiness = {
+    status: 'not-ready',
+    reasons: getCaptureComparisonIneligibilityReasons({
+      contract: comparisonContract,
+      fixture,
+      fixtureDelivery,
+      source,
+      environment,
+      workload,
+      captures,
+      diagnosticsDocuments: performanceDiagnostics.documents,
+      workerBlobAuditInstrumented: true,
+      hardwareRequired: false,
+    }),
+  };
+  comparisonReadiness.reason = comparisonReadiness.reasons.join('; ');
   return {
     schema: 'gev-performance-capture/v1',
     comparisonEligible: false,
+    comparisonContract,
+    comparisonReadiness,
+    performanceDiagnostics,
     integrity: { status: 'passed', sampleCount: 6 },
-    source: {
-      appCommit: 'b'.repeat(40),
-      harnessCommit: 'c'.repeat(40),
-      provenanceStatus:
-        'verified-local-build-and-served-assets-before-and-after',
-      buildProvenance: {
-        receiptSha256: 'd'.repeat(64),
-        pageAssetAudit: {
-          scriptRequestCount: 12,
-          loadedAssetPaths: ['assets/index.js'],
-          unexpectedAssetPaths: [],
-          cesiumWorkerBlobAudits: Array.from({ length: 6 }, () => ({
-            status: 'receipt-derived-worker-blobs-validated',
-          })),
-        },
-      },
-    },
-    workload: {
-      warmupMs: 1000,
-      durationPerSampleMs: 1000,
-      runsPerScenario: 2,
-      startupRuns: 1,
-      scenarios,
-    },
-    environment: {
-      renderer: 'ANGLE (Google, Vulkan 1.3, SwiftShader device)',
-      hardwareEligible: false,
-      startup: {
-        runCount: 1,
-        measurement: 'cache-disabled fresh browser contexts',
-      },
-    },
+    source,
+    workload,
+    environment,
     fixtureDelivery: {
-      status: 'observed',
-      fixtureSha256,
-      observedFlightsCount: 2500,
-      fulfilledResponseCount: 1,
+      ...fixtureDelivery,
     },
-    captures: scenarios.flatMap((scenario) =>
-      [1, 2].map((run) => ({
-        scenario,
-        run,
-        fixtureClock: {
-          freshBrowserContext: true,
-          start: { startCount: 1 },
-          sourceFreshness: 'current',
-          actualWarmupElapsedMs: 1000,
-          measuredWindowElapsedMs: 1000,
-          ageAtMeasurementStartMs: 1000,
-          ageAtEndMs: 2000,
-        },
-        fixtureDelivery: {
-          status: 'observed',
-          fixtureSha256,
-          observedFlightsCount: 2500,
-          fulfilledResponseCount: 1,
-        },
-        layers: [
-          { id: 'flights', enabled: true, count: 2500 },
-          { id: 'local-datacenters', enabled: true, count: 4362 },
-          { id: 'local-dams', enabled: true, count: 716 },
-        ],
-        conditions: {
-          before: { visible: true, focused: true },
-          after: { visible: true, focused: true },
-        },
-        foregroundThroughout: true,
-        renderedFrameCount: 61,
-        frameCount: 60,
-        frameIntervalMs: { p50: 16, p95: 18, max: 20, samples: 60 },
-        ...(scenario === 'selected-aircraft-tracking'
-          ? { trackedAircraftId: 'flights:000001' }
-          : {}),
-        settings: {
-          before: {
-            qualityMode: 'manual',
-            densityPct: 75,
-            detectionMode: 'DENSE',
-          },
-          after: {
-            qualityMode: 'manual',
-            densityPct: 75,
-            detectionMode: 'DENSE',
-          },
-        },
-      })),
-    ),
+    captures,
   };
 }
 
@@ -129,7 +257,7 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
     appSha: 'b'.repeat(40),
     harnessSha: 'c'.repeat(40),
     receiptSha256: 'd'.repeat(64),
-    fixtureSha256: 'a'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
   });
   assert.equal(result.status, 'passed');
   assert.equal(result.comparisonEligible, false);
@@ -153,7 +281,7 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
         appSha: 'b'.repeat(40),
         harnessSha: 'c'.repeat(40),
         receiptSha256: 'd'.repeat(64),
-        fixtureSha256: 'a'.repeat(64),
+        fixtureSha256: EXPECTED_FIXTURE_SHA256,
       }),
     /false !== true/,
   );
@@ -165,10 +293,53 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
         appSha: 'b'.repeat(40),
         harnessSha: 'c'.repeat(40),
         receiptSha256: 'd'.repeat(64),
-        fixtureSha256: 'a'.repeat(64),
+        fixtureSha256: EXPECTED_FIXTURE_SHA256,
       }),
     /sampleCount/,
   );
+});
+
+test('capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence', () => {
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+  };
+  const incomplete = validCaptureCliReport();
+  incomplete.performanceDiagnostics.documents.pop();
+  assert.throws(() => validateCaptureCliReport(incomplete, expected));
+
+  const baseline = validCaptureCliReport();
+  const baselineSha = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
+  baseline.source.appCommit = baselineSha;
+  for (const entry of baseline.performanceDiagnostics.documents) {
+    entry.hookAvailable = false;
+    entry.disabled = false;
+  }
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(baseline, { ...expected, appSha: baselineSha }),
+  );
+});
+
+test('capture CLI rejects missing, altered or unreported comparison contracts', () => {
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+  };
+  const missing = validCaptureCliReport();
+  delete missing.comparisonContract;
+  assert.throws(() => validateCaptureCliReport(missing, expected));
+
+  const altered = validCaptureCliReport();
+  altered.comparisonContract.fixture.sha256 = 'e'.repeat(64);
+  assert.throws(() => validateCaptureCliReport(altered, expected));
+
+  const unreportedReason = validCaptureCliReport();
+  unreportedReason.comparisonReadiness.reasons = [];
+  assert.throws(() => validateCaptureCliReport(unreportedReason, expected));
 });
 
 test('capture CLI requires usable frame-interval evidence for moving and tracking samples', () => {
@@ -218,7 +389,7 @@ test('capture CLI requires usable frame-interval evidence for moving and trackin
             appSha: 'b'.repeat(40),
             harnessSha: 'c'.repeat(40),
             receiptSha256: 'd'.repeat(64),
-            fixtureSha256: 'a'.repeat(64),
+            fixtureSha256: EXPECTED_FIXTURE_SHA256,
           }),
         new RegExp(`${scenario} run 1`),
         `${scenario} should reject ${label} frame evidence`,
@@ -240,7 +411,7 @@ test('capture CLI preserves legitimately unavailable zero-frame idle timing', ()
     appSha: 'b'.repeat(40),
     harnessSha: 'c'.repeat(40),
     receiptSha256: 'd'.repeat(64),
-    fixtureSha256: 'a'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
   });
   assert.equal(validated.captureCount, 6);
 });
