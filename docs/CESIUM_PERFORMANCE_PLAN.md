@@ -83,6 +83,24 @@ command failed. A correction must use short synchronous status reads, retain
 bounded causes on failure, and preserve the existing fixture/command deadlines.
 No application retention conclusion follows from this failed run.
 
+The host-polling correction at `b4db0b7ff1e79289190eb4f566b375736b53a345`
+passes eight focused tests. Its
+[hosted rerun](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38072252632)
+gets past the former command cutoff, then fails the unchanged 30-second initial
+readiness gate. At the final observation it has rendered 822 frames, globe tiles
+are loaded, and DataSourceDisplay remains unready. One geometry job and five
+terrain-picker jobs have been pending for about 28-29 seconds; 42 heightmap jobs
+have completed. No worker errors or external requests are recorded. Owned browser
+cleanup completes normally in 593 ms. [Raw failure report](performance-evidence/terrain-picking-38072252632.json),
+SHA-256 `35a55857146c2ef115c52fe1284e08478f5aea9df6bd035beb7a744028a10dc7`;
+[run metadata](performance-evidence/terrain-picking-38072252632-run.json).
+
+The new runner used Puppeteer's paired request interception instead of the
+repository's existing direct `Fetch.requestPaused` implementation. That repeats
+the previously diagnosed worker-module interception risk. Reuse the existing
+interceptor and verify paused worker requests settle without a Network event
+before attributing these pending jobs to Cesium or the production layers.
+
 This fixture uses one-sample MSAA and continuous rendering for
 ownership observation; it is not a visual-equivalence or performance comparison,
 quantized-mesh/network-provider test, physical Windows result or heap-soak pass.

@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import * as Cesium from 'cesium';
 import {
   parseTerrainPickingLifecycleArgs,
   validateTerrainPickingLifecycleReport,
 } from './terrainPickingLifecycle.mjs';
 import {
+  installTerrainFixtureRequestInterception,
   runTerrainPickingLifecycle,
   waitForTerrainFixtureCompletion,
 } from '../qa-terrain-picking-lifecycle.mjs';
@@ -270,11 +272,19 @@ function runnerDependencies({
     written: [],
     closed: { page: 0, browser: 0, server: 0 },
     failedWriteReport: null,
+    cdpSessionDetached: 0,
+  };
+  const cdpSession = new EventEmitter();
+  cdpSession.send = async () => {};
+  cdpSession.detach = async () => {
+    state.cdpSessionDetached++;
   };
   const page = {
     on() {},
     async setViewport() {},
-    async setRequestInterception() {},
+    async createCDPSession() {
+      return cdpSession;
+    },
     async goto() {
       if (navigationError) throw navigationError;
     },
@@ -356,7 +366,9 @@ test('runner preserves fixture identity, partial evidence, and owned cleanup', a
   assert.equal(passed.status, 'passed');
   assert.equal(passed.fixtureCleanup.viewerDestroyed, true);
   assert.equal(passed.cleanup.browserClose.closeCompleted, true);
+  assert.equal(passed.cleanup.cdpSessionDetached, true);
   assert.deepEqual(success.state.closed, { page: 1, browser: 1, server: 1 });
+  assert.equal(success.state.cdpSessionDetached, 1);
 
   const wrongBuild = runnerDependencies({
     servedCommit: 'b'.repeat(40),
@@ -509,4 +521,61 @@ test('fixture completion retains last phase and observation when a bounded poll 
       return true;
     },
   );
+});
+
+test('raw CDP Fetch interception resolves worker requests without Network pairing', async () => {
+  const client = new EventEmitter();
+  const commands = [];
+  client.send = async (method, params) => {
+    commands.push({ method, params });
+  };
+  client.detach = async () => {};
+  let externalRequests = 0;
+  await installTerrainFixtureRequestInterception(
+    { createCDPSession: async () => client },
+    {
+      origin: 'http://127.0.0.1:4174',
+      onExternalRequest: () => externalRequests++,
+    },
+  );
+  assert.deepEqual(commands[0], {
+    method: 'Fetch.enable',
+    params: { patterns: [{ urlPattern: '*' }] },
+  });
+
+  client.emit('Fetch.requestPaused', {
+    requestId: 'worker-request-without-network-event',
+    request: {
+      url: 'http://127.0.0.1:4174/assets/terrain-worker.js',
+      method: 'GET',
+      postData: null,
+    },
+  });
+  for (let attempt = 0; attempt < 10 && commands.length < 2; attempt++)
+    await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(commands[1], {
+    method: 'Fetch.continueRequest',
+    params: { requestId: 'worker-request-without-network-event' },
+  });
+  assert.equal(externalRequests, 0);
+  assert.equal(client.listenerCount('Network.requestWillBeSent'), 0);
+
+  client.emit('Fetch.requestPaused', {
+    requestId: 'external-worker-request',
+    request: {
+      url: 'https://example.invalid/terrain-worker.js',
+      method: 'GET',
+      postData: null,
+    },
+  });
+  for (let attempt = 0; attempt < 10 && commands.length < 3; attempt++)
+    await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(commands[2], {
+    method: 'Fetch.failRequest',
+    params: {
+      requestId: 'external-worker-request',
+      errorReason: 'BlockedByClient',
+    },
+  });
+  assert.equal(externalRequests, 1);
 });

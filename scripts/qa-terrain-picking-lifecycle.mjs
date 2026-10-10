@@ -18,6 +18,7 @@ import {
   readBrowserGraphicsInfo,
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
+import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ORIGIN = 'http://127.0.0.1:4174';
@@ -121,6 +122,29 @@ export function assertServedBuildIdentity(servedIdentity, expectedCommit) {
     );
 }
 
+export async function installTerrainFixtureRequestInterception(
+  page,
+  { origin = ORIGIN, onExternalRequest = () => {}, onError = () => {} } = {},
+) {
+  const client = await page.createCDPSession();
+  try {
+    await interceptFixtureSession(
+      client,
+      origin,
+      (url) => {
+        if (['http:', 'https:'].includes(url.protocol) && url.origin !== origin)
+          onExternalRequest();
+        return null;
+      },
+      onError,
+    );
+    return client;
+  } catch (error) {
+    await Promise.resolve(client.detach?.()).catch(() => {});
+    throw error;
+  }
+}
+
 async function closeWithin(operation, timeoutMs) {
   let timer;
   const pending = Promise.resolve()
@@ -191,6 +215,7 @@ export async function runTerrainPickingLifecycle({
     cycles: [],
     cleanup: {
       pageClosed: false,
+      cdpSessionDetached: false,
       browserClose: null,
       serverClosed: false,
     },
@@ -199,6 +224,7 @@ export async function runTerrainPickingLifecycle({
   let server = null;
   let browser = null;
   let page = null;
+  let fixtureSession = null;
   let primaryError = null;
   const errors = [];
   await writeReportFile(outPath, report);
@@ -225,23 +251,17 @@ export async function runTerrainPickingLifecycle({
       if (errors.length < 12) errors.push(sanitize(error));
       report.pageErrors = [...errors];
     });
-    await page.setRequestInterception(true);
-    page.on('request', (request) => {
-      let local = false;
-      try {
-        const url = new URL(request.url());
-        local =
-          url.protocol === 'data:' ||
-          url.protocol === 'blob:' ||
-          url.origin === ORIGIN;
-      } catch {}
-      if (!local) {
+    fixtureSession = await installTerrainFixtureRequestInterception(page, {
+      onExternalRequest: () => {
         report.externalRequestCount = Math.min(
           1000,
           report.externalRequestCount + 1,
         );
-        void request.abort().catch(() => {});
-      } else void request.continue().catch(() => {});
+      },
+      onError: (error) => {
+        if (errors.length < 12) errors.push(sanitize(error));
+        report.pageErrors = [...errors];
+      },
     });
     report.progress = { phase: 'fixture-navigation' };
     await page.goto(
@@ -372,6 +392,18 @@ export async function runTerrainPickingLifecycle({
       }
     }
   } finally {
+    if (fixtureSession) {
+      const detached = await closeWithin(() => fixtureSession.detach(), 1000);
+      report.cleanup.cdpSessionDetached = detached.completed === true;
+      if (!detached.completed) {
+        report.cleanup.cdpSessionDetachError = detached.timedOut
+          ? 'Owned CDP fixture session detach exceeded 1000ms.'
+          : sanitize(detached.error);
+        report.status = 'failed';
+        report.error ||= report.cleanup.cdpSessionDetachError;
+        primaryError ||= detached.error || new Error(report.error);
+      }
+    } else report.cleanup.cdpSessionDetached = true;
     if (page) {
       const pageClose = await closeWithin(() => page.close(), 2000);
       report.cleanup.pageClosed = pageClose.completed === true;
@@ -424,6 +456,7 @@ export async function runTerrainPickingLifecycle({
     }
     if (
       !report.cleanup.pageClosed ||
+      !report.cleanup.cdpSessionDetached ||
       report.cleanup.browserClose?.closeCompleted !== true ||
       report.cleanup.browserClose?.forcedProcessTermination === true ||
       !report.cleanup.serverClosed
