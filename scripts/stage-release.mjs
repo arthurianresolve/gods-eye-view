@@ -101,6 +101,14 @@ export async function stageRelease({
   const dist = path.join(source, 'dist');
   if (!(await stat(dist).catch(() => null))?.isDirectory())
     throw new Error('Build dist/ before staging a release.');
+  // Recovery also stages historical installations, before this hook existed.
+  // Require support files when the staged package uses them, rather than
+  // requiring a new dependency patch in every older supported release.
+  const usesCesiumPatch = Object.values(pkg.scripts ?? {}).some(
+    (command) =>
+      typeof command === 'string' &&
+      command.includes('scripts/apply-cesium-patches.mjs'),
+  );
   const filesToCopy = [
     ...(await listFiles(dist)).map((entry) => ({
       ...entry,
@@ -114,8 +122,12 @@ export async function stageRelease({
       'DATA_SOURCES.md',
       'docs/UPDATE-RECOVERY.md',
       'scripts/verify-release.mjs',
-      'scripts/apply-cesium-patches.mjs',
-      'patches/cesium-1.138.0-inertia.json',
+      ...(usesCesiumPatch
+        ? [
+            'scripts/apply-cesium-patches.mjs',
+            'patches/cesium-1.138.0-inertia.json',
+          ]
+        : []),
     ].map((relative) => ({
       absolute: path.join(source, relative),
       relative,

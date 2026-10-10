@@ -96,6 +96,26 @@ test('release retains and checksums the dependency postinstall support files', a
   await assert.rejects(verifyReleaseDirectory(staged), /checksum mismatch/);
 });
 
+test('historical packages without dependency hooks remain stageable for recovery', async (t) => {
+  const root = await fixture(t);
+  const pkgPath = path.join(root, 'package.json');
+  const pkg = JSON.parse(await readFile(pkgPath));
+  delete pkg.scripts;
+  await writeFile(pkgPath, JSON.stringify(pkg));
+  await rm(path.join(root, 'scripts', 'apply-cesium-patches.mjs'));
+  await rm(path.join(root, 'patches', 'cesium-1.138.0-inertia.json'));
+  await stageRelease({ root, out: 'historical', commit: 'prior-supported' });
+  const verified = await verifyReleaseDirectory(path.join(root, 'historical'));
+  assert.equal(verified.commit, 'prior-supported');
+  assert.equal(verified.artifactFiles.length, 8);
+});
+
+test('a package declaring the dependency hook cannot omit its applier', async (t) => {
+  const root = await fixture(t);
+  await rm(path.join(root, 'scripts', 'apply-cesium-patches.mjs'));
+  await assert.rejects(stageRelease({ root, out: 'incomplete' }), /ENOENT/);
+});
+
 test('stable staging requires the exact version tag in CI, independently of the host workflow', async (t) => {
   const root = await fixture(t);
   for (const [type, name] of [

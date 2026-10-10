@@ -289,6 +289,18 @@ distribution. These are implementation and automated checks only. A fresh
 rendered calibration comparison and exact-commit integration run are still
 required before accepting the candidate.
 
+Candidate `aea307c211e99f2f23a538a8356825723edd0097` is under validation in
+[rendered calibration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38082567573),
+[standard integration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38082567321),
+and [tracking regression](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38082567836).
+The standard run exposed a release-staging compatibility error during Linux and
+macOS profile-recovery setup: the current stager required the new patch files
+from the prior `6b896e2` checkout, which predates them. New packages still require
+their declared hook and manifest, while historical packages without that hook
+remain stageable. Seven focused release/recovery tests pass after this correction,
+including rejection of a new package with a missing applier. The existing CI
+failures remain failures; a new exact-commit recovery run is required.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
