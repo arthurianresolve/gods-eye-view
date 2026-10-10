@@ -910,8 +910,31 @@ aborted replies, and releases request state on cloning errors, worker exit and
 timeout. Thirteen focused tests cover parity, malformed input, cancellation,
 reuse, bounded ownership, startup readiness, exit and injected blocking controls.
 An exploratory dirty-tree measurement missed synchronous KML timer gaps and is
-not acceptance evidence. Clean-commit timing remains to be collected before
-choosing a production approach. GPX and browser interaction evidence remain open.
+not acceptance evidence. The corrected clean-commit comparison at
+`f59831067a27b223781956af5430afda300be569` preserves all 40 sample outputs and
+finishes with zero pending jobs and a terminated owned worker. Root recomputed
+the five-pair medians and complete output/count comparisons from the raw report.
+
+| Workload | Main completion median | Worker completion median | Change |
+| --- | --- | --- | --- |
+| 50k-vertex GeoJSON line | 49.87 ms | 79.20 ms | +58.8% |
+| 50k-vertex polygon with hole | 39.92 ms | 86.17 ms | +115.8% |
+| 50k CSV rows | 535.47 ms | 701.03 ms | +30.9% |
+| 50k-coordinate KML line | 66.82 ms | 102.23 ms | +53.0% |
+
+Worker startup is 59.86 ms, excluded from these warmed comparisons. CSV's
+main-thread timer-gap median falls from 129.22 to 18.44 ms and KML's from 66.93
+to 16.14 ms, but total completion regresses for every workload. This whole-result
+worker prototype is **rejected as a production default**. Its report's `passed`
+status describes output parity and cleanup, not performance acceptance. The next
+experiment must address result-cloning overhead and include packing, rehydration
+and scheduling costs rather than hiding them. The production parser is unchanged.
+
+[Raw comparison](performance-evidence/s59-document-decode-worker-f598310.json),
+SHA-256 `e8ee9a9813dbdc73a859aa3e555561d37eb53b5e4a8308726bbb9d204c72eff3`.
+Environment: Windows 10.0.19045, Node 24.16.0, i7-8665U, approximately 16 GB RAM.
+This is Node CPU/queue evidence on the available Windows machine, not browser or
+GPU evidence. GPX and browser interaction acceptance remain open.
 
 ### S59.1 CSV column setup - 10 October 2026
 
