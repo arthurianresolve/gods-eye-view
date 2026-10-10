@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. Full runtime CI passes at
-`c1db4c6e6ecce810229996e4ae04d41acdf0ba7d` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38031567486), [job results](performance-evidence/ci-c1db4c6.json)).
+`3e9a1f859d58fe2434b3dfa28b055f45c25c5e79` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38032631999), [job results](performance-evidence/ci-3e9a1f8.json)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -541,6 +541,34 @@ partial packet remains partial and cannot close the parent slice.
   SwiftShader and bounded Blob-retention instrumentation make this an integration
   result only. S47 matched routes/time reset, hardware comparisons and the full
   workload registry remain pending.
+- **Worker-audit capacity correction implemented by GPT-6 Luna:**
+  `9b11aadda01239fba3c95276f288b9145075c220` raises the aggregate
+  diagnostic Blob budget from 8 MiB to 32 MiB, retaining the existing per-Blob,
+  record and worker-target bounds and fail-closed overflow behavior. The earlier
+  passing hosted run read about 6.43 MB across seven worker targets; an eight-core
+  browser can create additional geometry workers and exceed the old aggregate
+  bound without loading unexpected code. This corrects a harness capacity limit,
+  not a measured application memory regression. The aggregate-limit regression
+  test passes locally; physical Windows browser validation remains outstanding.
+- **S47.1b-6 fixture clock and sample isolation implemented by GPT-6 Luna:**
+  `abc93cbf2f33154ea58a726e384b0d890e3b4fce` starts every measured provider-fixture sample
+  in a fresh BrowserContext, including new storage, page state, interception and
+  worker auditing. Wall time stays at the whole-second OpenSky epoch during
+  setup, then advances once from native monotonic time after camera/tracking
+  readiness. It never rewinds an existing application or refreshes timestamps
+  independently of positions. Native timers and animation clocks are untouched.
+  Each sample records acknowledged fixture bytes and verifies delivery again
+  after measurement, source age, current freshness and unchanged population.
+  Context-owned interception and worker references are released before the next
+  sample. The actual source adapter retains its 120-second freshness boundary;
+  equal/older observations do not append flight-history fixes. Twelve focused
+  checks, syntax, formatting and package boundaries pass locally. The registered
+  suite reached 6,608 pass / 0 fail / 10 skipped; its second serialized allocation
+  gate is not yet reported as complete. [The hosted clock smoke](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034045915)
+  is running. A short one-page smoke does not validate the capture CLI's complete
+  repeated-context lifecycle; that separate integration packet is next. Samples
+  remain diagnostic and `comparisonEligible: false` until the comparison
+  export and full workload contracts are implemented and verified.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
