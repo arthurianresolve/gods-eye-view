@@ -99,6 +99,29 @@ focused tests pass, including the former failing sequence, equal-endpoint writes
 and selection changes. This correctness fix does not explain the earlier missing
 scene pick or the Windows capture timeout; rendered acceptance remains pending.
 
+The corrected foundation styles at `04ff0c8a769fcccb9a8c49dc7c7c0d2f823a5664`
+stabilize the initial height, but do not pass the comparison.
+[Hosted run 38078622285](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38078622285)
+([raw report](performance-evidence/calibration-38078622285.json),
+[job result](performance-evidence/calibration-38078622285-run.json)) records a
+1200x800 settled canvas, then a 1278x800 buffer when the visible pointer
+instruction is inserted. The grid's intrinsic content width moves the handle:
+the native click picks the camera billboard, clears selection, and fails.
+The next fixture constrains its column and overflow, and checks canvas dimensions
+through instruction insertion, pointer down, release and completed capture.
+Raw SHA-256: `98a99c1cf8e08e1eb0bfcb19e65026eae2a34f1912f40ed6c9139fc6d9a4f01c`.
+
+The [Windows run at the same revision](performance-evidence/calibration-windows-04ff0c8-2026-10-10.json)
+has a stable 888x425 canvas and still fails its first 400 ms capture. Its
+failure-only follow-up sees two scene renders over 2,488.5 ms, a first RAF after
+428.7 ms, and roughly 2,047 ms timer / 2,049 ms RAF gaps. No render errors,
+pending layer jobs, visibility changes or cleanup failures are reported.
+This identifies delayed frame and timer delivery, not its cause. Bounded
+scene-event spans and browser long-task observations are being added only to
+the failed-trial follow-up; the acceptance deadline and measured idle intervals
+remain unchanged. Raw SHA-256:
+`bcce1d96e2f59a1e70e4e0223c9a6e1238293d1619463a45f347369364d3c82d`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
