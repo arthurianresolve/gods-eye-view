@@ -78,10 +78,13 @@ export function createHealth({ state: layerState, services, parts, source }) {
       return;
     layerState._lastHealthSyncAt = now;
 
+    const signal = layerState._sourceAbort?.signal;
+    const isCurrentRequest = () =>
+      signal === layerState._sourceAbort?.signal && !signal?.aborted;
     try {
-      const signal = layerState._sourceAbort?.signal;
       const data = await source.getHealth({ signal });
       signal?.throwIfAborted();
+      if (!isCurrentRequest()) return;
       const rows = Array.isArray(data?.cameras) ? data.cameras : [];
       const next = new Map();
       for (const row of rows) {
@@ -114,7 +117,7 @@ export function createHealth({ state: layerState, services, parts, source }) {
         notifyInspector(layerState._activeCameraId);
     } catch {
       // keep previous health map
-      if (layerState._activeCameraId)
+      if (isCurrentRequest() && layerState._activeCameraId)
         notifyInspector(layerState._activeCameraId);
     }
   }

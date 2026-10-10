@@ -9,6 +9,33 @@ import {
   CALIBRATION_RANGE_FLOOR_M,
 } from './policy.js';
 
+export function raceWithFallbackTimeout(
+  promise,
+  timeoutMs,
+  fallback = null,
+  timerApi = globalThis,
+  signal,
+) {
+  let timer;
+  let abortHandler;
+  const timeout = new Promise((resolve) => {
+    timer = timerApi.setTimeout(() => resolve(fallback), timeoutMs);
+  });
+  const aborted = signal
+    ? new Promise((_, reject) => {
+        abortHandler = () => reject(signal.reason || new Error('Aborted'));
+        if (signal.aborted) abortHandler();
+        else signal.addEventListener('abort', abortHandler, { once: true });
+      })
+    : null;
+  const contenders = [Promise.resolve(promise), timeout];
+  if (aborted) contenders.push(aborted);
+  return Promise.race(contenders).finally(() => {
+    if (timer !== undefined) timerApi.clearTimeout(timer);
+    if (abortHandler) signal.removeEventListener('abort', abortHandler);
+  });
+}
+
 export function createLifecycle({
   state: layerState,
   services,
@@ -46,6 +73,50 @@ export function createLifecycle({
     // recomputes it against the then-current scene.
     layerState._lastAppliedRegime = null;
   }
+
+  function releaseViewerOwners(viewer) {
+    layerState._removeFocusAppearListener?.();
+    layerState._removeFocusAppearListener = null;
+    unregisterPickOwner('cctv');
+    releaseContinuousRender('cctv-adjust');
+    layerState._calibrationMode = false;
+    if (viewer) services.credits?.hideOsmCredit?.(viewer, 'cctv');
+    parts.projection.stopProjectionLoop();
+    parts.geometryQueue.stopGeometryLoadQueue();
+    parts.cards.teardownAmbientCards();
+    parts.geometry.destroyCoverageEntities();
+    if (layerState._clickHandler) {
+      layerState._clickHandler.destroy();
+      layerState._clickHandler = null;
+    }
+    if (!viewer) return;
+    if (layerState._horizonCullListener && viewer.camera?.moveEnd) {
+      viewer.camera.moveEnd.removeEventListener(
+        layerState._horizonCullListener,
+      );
+      layerState._horizonCullListener = null;
+    }
+    if (layerState._moveStartListener && viewer.camera?.moveStart) {
+      viewer.camera.moveStart.removeEventListener(
+        layerState._moveStartListener,
+      );
+      layerState._moveStartListener = null;
+    }
+    if (layerState._gizmo) {
+      layerState._gizmo.destroy();
+      layerState._gizmo = null;
+    }
+    if (viewer.scene.screenSpaceCameraController)
+      viewer.scene.screenSpaceCameraController.enableInputs = true;
+    if (layerState._billboards) {
+      viewer.scene.primitives.remove(layerState._billboards);
+      services.sprites.unregisterSpriteCollection?.(
+        'cctv',
+        layerState._billboards,
+      );
+      layerState._billboards = null;
+    }
+  }
   const methods = {
     /**
      * Initializes the CCTV layer: loads camera sources, builds the catalog,
@@ -55,6 +126,7 @@ export function createLifecycle({
      */
     async init(viewer) {
       layerState._sourceAbort?.abort();
+      releaseViewerOwners(layerState._viewer);
       const sourceAbort = new AbortController();
       layerState._sourceAbort = sourceAbort;
       if (typeof document !== 'undefined')
@@ -76,6 +148,7 @@ export function createLifecycle({
       registerSpriteCollection('cctv', layerState._billboards);
 
       const sources = await parts.catalog.loadCameraSources();
+      sourceAbort.signal.throwIfAborted();
       const catalogFromSources = parts.catalog.buildCatalogFromSources(sources);
       const catalog = catalogFromSources.length
         ? catalogFromSources
@@ -119,12 +192,13 @@ export function createLifecycle({
       // every regime); a cold/slow upstream loses the race and the batch
       // applies post-hoc via applyLateGroundPriors instead of hanging init.
       const priorsPromise = parts.ground.resolveGroundPriors(catalog);
-      const priors = await Promise.race([
+      const priors = await raceWithFallbackTimeout(
         priorsPromise,
-        new Promise((resolve) =>
-          setTimeout(() => resolve(null), GROUND_PRIOR_INIT_WAIT_MS),
-        ),
-      ]);
+        GROUND_PRIOR_INIT_WAIT_MS,
+        null,
+        globalThis,
+        sourceAbort.signal,
+      );
       sourceAbort.signal.throwIfAborted();
 
       for (let i = 0; i < catalog.length; i++) {
@@ -324,6 +398,7 @@ export function createLifecycle({
       );
 
       await parts.health.syncHealthState(true);
+      sourceAbort.signal.throwIfAborted();
       parts.rendering.refreshCoverageStyles();
       parts.presentation.notifyListeners();
       restoreSpriteOrder(layerState._viewer);
@@ -423,14 +498,14 @@ export function createLifecycle({
      * @param {Cesium.Viewer} [viewer] - Viewer instance (falls back to stored ref).
      */
     destroy(viewer) {
-      services.credits?.hideOsmCredit?.(layerState._viewer, 'cctv');
+      const teardownViewer = layerState._viewer || viewer;
+      services.credits?.hideOsmCredit?.(teardownViewer, 'cctv');
       layerState._sourceAbort?.abort();
       if (typeof document !== 'undefined')
         document.removeEventListener(
           'visibilitychange',
           parts.cards.handleVisibilityChange,
         );
-      unregisterPickOwner('cctv');
       if (layerState._mapStackListener && typeof window !== 'undefined') {
         window.removeEventListener(
           'gev:map-stack-changed',
@@ -438,40 +513,8 @@ export function createLifecycle({
         );
         layerState._mapStackListener = null;
       }
-      const teardownViewer = viewer || layerState._viewer;
-      if (layerState._horizonCullListener && teardownViewer?.camera?.moveEnd) {
-        teardownViewer.camera.moveEnd.removeEventListener(
-          layerState._horizonCullListener,
-        );
-        layerState._horizonCullListener = null;
-      }
-      if (layerState._moveStartListener && teardownViewer?.camera?.moveStart) {
-        teardownViewer.camera.moveStart.removeEventListener(
-          layerState._moveStartListener,
-        );
-        layerState._moveStartListener = null;
-      }
-      if (layerState._gizmo) {
-        layerState._gizmo.destroy();
-        layerState._gizmo = null;
-      }
       layerState._calibrationMode = false;
-      releaseContinuousRender('cctv-adjust');
-      if (layerState._clickHandler) {
-        layerState._clickHandler.destroy();
-        layerState._clickHandler = null;
-      }
-      if (teardownViewer?.scene?.screenSpaceCameraController) {
-        teardownViewer.scene.screenSpaceCameraController.enableInputs = true;
-      }
-      parts.projection.stopProjectionLoop();
-      parts.geometryQueue.stopGeometryLoadQueue();
-      parts.cards.teardownAmbientCards();
-      parts.geometry.destroyCoverageEntities();
-      if (layerState._billboards && teardownViewer) {
-        teardownViewer.scene.primitives.remove(layerState._billboards);
-        layerState._billboards = null;
-      }
+      releaseViewerOwners(teardownViewer);
       clearRuntimeState();
       layerState._viewer = null;
       layerState._enabled = false;
