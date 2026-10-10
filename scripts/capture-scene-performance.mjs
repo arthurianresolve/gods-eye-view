@@ -1188,7 +1188,9 @@ try {
           const intervals = [];
           const longTasks = [];
           let previous = null;
+          let renderedFrameCount = 0;
           const onRender = () => {
+            renderedFrameCount += 1;
             const now = performance.now();
             if (previous != null) intervals.push(now - previous);
             previous = now;
@@ -1290,6 +1292,7 @@ try {
             scene.postRender.removeEventListener(onRender);
             return {
               durationMs: performance.now() - startedAt,
+              renderedFrameCount,
               frameCount: renderCount,
               frameIntervalMs: {
                 p50: pick(0.5),

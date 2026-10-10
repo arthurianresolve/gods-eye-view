@@ -101,6 +101,9 @@ function validCaptureCliReport() {
           after: { visible: true, focused: true },
         },
         foregroundThroughout: true,
+        renderedFrameCount: 61,
+        frameCount: 60,
+        frameIntervalMs: { p50: 16, p95: 18, max: 20, samples: 60 },
         ...(scenario === 'selected-aircraft-tracking'
           ? { trackedAircraftId: 'flights:000001' }
           : {}),
@@ -168,6 +171,80 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
   );
 });
 
+test('capture CLI requires usable frame-interval evidence for moving and tracking samples', () => {
+  const invalidCases = [
+    [
+      'empty',
+      (sample) => {
+        sample.renderedFrameCount = 0;
+        sample.frameCount = 0;
+        sample.frameIntervalMs = { p95: null, samples: 0 };
+      },
+    ],
+    [
+      'one rendered frame',
+      (sample) => {
+        sample.renderedFrameCount = 1;
+        sample.frameCount = 0;
+        sample.frameIntervalMs = { p95: null, samples: 0 };
+      },
+    ],
+    [
+      'missing p95',
+      (sample) => {
+        sample.frameIntervalMs.p95 = null;
+      },
+    ],
+    [
+      'non-finite p95',
+      (sample) => {
+        sample.frameIntervalMs.p95 = Number.NaN;
+      },
+    ],
+    [
+      'interval count mismatch',
+      (sample) => {
+        sample.frameIntervalMs.samples -= 1;
+      },
+    ],
+  ];
+  for (const scenario of ['scripted-motion', 'selected-aircraft-tracking']) {
+    for (const [label, corrupt] of invalidCases) {
+      const report = validCaptureCliReport();
+      corrupt(report.captures.find((sample) => sample.scenario === scenario));
+      assert.throws(
+        () =>
+          validateCaptureCliReport(report, {
+            appSha: 'b'.repeat(40),
+            harnessSha: 'c'.repeat(40),
+            receiptSha256: 'd'.repeat(64),
+            fixtureSha256: 'a'.repeat(64),
+          }),
+        new RegExp(`${scenario} run 1`),
+        `${scenario} should reject ${label} frame evidence`,
+      );
+    }
+  }
+});
+
+test('capture CLI preserves legitimately unavailable zero-frame idle timing', () => {
+  const report = validCaptureCliReport();
+  for (const sample of report.captures.filter(
+    (entry) => entry.scenario === 'idle',
+  )) {
+    sample.renderedFrameCount = 0;
+    sample.frameCount = 0;
+    sample.frameIntervalMs = { p50: null, p95: null, max: null, samples: 0 };
+  }
+  const validated = validateCaptureCliReport(report, {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: 'a'.repeat(64),
+  });
+  assert.equal(validated.captureCount, 6);
+});
+
 test('smoke compaction preserves the complete bounded capture failure report and mismatch evidence', () => {
   const rawReport = {
     schema: 'gev-performance-capture-failure/v1',
@@ -195,7 +272,9 @@ test('smoke compaction preserves the complete bounded capture failure report and
     evidenceTruncated: false,
   };
   const serialized = `${JSON.stringify(rawReport, null, 2)}\n`;
-  assert.ok(Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES);
+  assert.ok(
+    Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  );
 
   const compacted = compactCaptureCliFailure(rawReport);
   assert.equal(compacted.schema, 'gev-smoke-capture-cli-failure/v1');

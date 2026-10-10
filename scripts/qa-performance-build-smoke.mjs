@@ -419,6 +419,48 @@ export function validateCaptureCliReport(report, expected) {
       assert.equal(sample.conditions?.after?.visible, true);
       assert.equal(sample.conditions?.after?.focused, true);
       assert.equal(sample.foregroundThroughout, true);
+      assert.ok(
+        Number.isInteger(sample.frameCount) && sample.frameCount >= 0,
+        `${scenario} run ${sample.run}: frame count is missing or invalid.`,
+      );
+      assert.ok(
+        Number.isInteger(sample.renderedFrameCount) &&
+          sample.renderedFrameCount >= 0,
+        `${scenario} run ${sample.run}: rendered-frame count is missing or invalid.`,
+      );
+      assert.equal(
+        sample.frameCount,
+        Math.max(0, sample.renderedFrameCount - 1),
+        `${scenario} run ${sample.run}: rendered-frame and interval counts disagree.`,
+      );
+      const frameIntervals = sample.frameIntervalMs;
+      assert.ok(
+        Number.isInteger(frameIntervals?.samples) &&
+          frameIntervals.samples === sample.frameCount,
+        `${scenario} run ${sample.run}: frame interval samples do not match rendered-frame intervals.`,
+      );
+      if (scenario === 'idle') {
+        if (sample.frameCount === 0)
+          assert.equal(
+            frameIntervals.p95,
+            null,
+            `idle run ${sample.run}: zero-frame timing must remain unavailable.`,
+          );
+        else
+          assert.ok(
+            Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
+            `idle run ${sample.run}: frame interval p95 is missing or invalid.`,
+          );
+      } else {
+        assert.ok(
+          sample.renderedFrameCount >= 2,
+          `${scenario} run ${sample.run}: expected at least two rendered frames.`,
+        );
+        assert.ok(
+          Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
+          `${scenario} run ${sample.run}: frame interval p95 is missing or invalid.`,
+        );
+      }
       assert.equal(sample.settings?.before?.qualityMode, 'manual');
       assert.equal(sample.settings?.before?.densityPct, 75);
       assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
@@ -488,7 +530,8 @@ export function compactCaptureCliFailure(report) {
             status: report.fixtureDelivery.status,
             fixtureSha256: report.fixtureDelivery.fixtureSha256,
             observedFlightsCount: report.fixtureDelivery.observedFlightsCount,
-            fulfilledResponseCount: report.fixtureDelivery.fulfilledResponseCount,
+            fulfilledResponseCount:
+              report.fixtureDelivery.fulfilledResponseCount,
           }
         : null,
       completedSampleCount:
