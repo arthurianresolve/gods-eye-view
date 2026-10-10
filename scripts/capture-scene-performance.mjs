@@ -28,6 +28,7 @@ import {
   restoreCesiumWorkerBlobAudit,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
+import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -226,6 +227,60 @@ const source = {
     : 'unverified-exploratory-capture',
   reason: harnessSource.reason,
 };
+const failureProgress = {
+  phase: 'browser-startup',
+  scenario: null,
+  run: null,
+  current: null,
+  startupSamples: [],
+  completedSamples: [],
+  fixture: productionFlightFixture,
+  fixtureDelivery: null,
+  workload: {
+    warmupMs,
+    durationPerSampleMs: seconds * 1000,
+    runsPerScenario: runs,
+    startupRuns,
+    qualityMode,
+    expectedDensityPct: Number.isFinite(expectedDensityPct)
+      ? expectedDensityPct
+      : null,
+    detectionMode,
+    mixedLayers,
+  },
+};
+let captureFailure = null;
+let failureReportWritten = false;
+async function writeCaptureFailure(error) {
+  const report = createCaptureFailureReport({
+    source,
+    fixture: failureProgress.fixture,
+    workload: {
+      ...failureProgress.workload,
+      scenarios: failureProgress.scenarios || [],
+    },
+    phase: failureProgress.current?.phase || failureProgress.phase,
+    scenario: failureProgress.current?.scenario || failureProgress.scenario,
+    run: failureProgress.current?.run || failureProgress.run,
+    error,
+    errorActual: error?.actual,
+    errorExpected: error?.expected,
+    errorOperator: error?.operator,
+    current: failureProgress.current,
+    startupSamples: failureProgress.startupSamples,
+    completedSamples: failureProgress.completedSamples,
+    fixtureDelivery: failureProgress.fixtureDelivery,
+  });
+  const json = `${JSON.stringify(report, null, 2)}\n`;
+  if (out) {
+    await fs.mkdir(path.dirname(path.resolve(out)), { recursive: true });
+    await fs.writeFile(out, json, 'utf8');
+    process.stderr.write('Wrote bounded failed-capture evidence.\n');
+  } else process.stdout.write(json);
+  process.stderr.write(
+    `Capture failed during ${report.failure.phase}: ${report.failure.message}\n`,
+  );
+}
 if (
   !Number.isInteger(fixtureAircraftCount) ||
   fixtureAircraftCount < 0 ||
@@ -327,9 +382,11 @@ async function releaseFlightFixtureSession(session) {
 }
 
 try {
+  failureProgress.phase = 'startup-navigation';
   const startupUrl = new URL(url);
   startupUrl.searchParams.set('welcome', '0');
   const startupSamples = [];
+  failureProgress.startupSamples = startupSamples;
   const loadedScriptAssets = new Set();
   const unexpectedScriptAssets = new Set();
   const workerBlobObservations = [];
@@ -466,6 +523,8 @@ try {
     };
   }
   for (let run = 1; run <= startupRuns; run += 1) {
+    failureProgress.phase = 'startup-navigation';
+    failureProgress.run = run;
     process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
     const context = await browser.createBrowserContext();
     const startupPage = await context.newPage();
@@ -559,6 +618,9 @@ try {
   }
 
   process.stdout.write('[performance] preparing measured scene\n');
+  failureProgress.phase = 'main-navigation';
+  failureProgress.scenario = null;
+  failureProgress.run = null;
   let page = await browser.newPage();
   let providerContext = null;
   let flightFixtureDelivery = productionFlightFixture
@@ -711,6 +773,7 @@ try {
         },
       )
     : null;
+  failureProgress.fixture = productionFlightFixture || fixture;
 
   const summarizeFlightFixtureDelivery = async () => {
     if (!productionFlightFixture) return null;
@@ -727,6 +790,9 @@ try {
     return flightFixtureDelivery.summarize(observedCount);
   };
   let fixtureDelivery = null;
+  failureProgress.phase = productionFlightFixture
+    ? 'wait-for-initial-provider-fixture'
+    : 'prepare-measured-scene';
   if (productionFlightFixture) {
     await page.waitForFunction(
       (count) => {
@@ -739,8 +805,10 @@ try {
       productionFlightFixture.count,
     );
     fixtureDelivery = await summarizeFlightFixtureDelivery();
+    failureProgress.fixtureDelivery = fixtureDelivery;
   }
 
+  failureProgress.phase = 'configure-aircraft-fixture';
   if (fixture) {
     try {
       await page.waitForFunction(
@@ -785,6 +853,7 @@ try {
     }
   }
 
+  failureProgress.phase = 'configure-mixed-layers';
   const mixedLayerFixture = mixedLayers
     ? await page.evaluate(async () => {
         const manager = window.__godsEyeView?.dataManager;
@@ -849,7 +918,10 @@ try {
 
   const scenarios = ['idle', 'scripted-motion'];
   if (fixture) scenarios.push('selected-aircraft-tracking');
+  failureProgress.scenarios = scenarios;
   const captures = [];
+  failureProgress.completedSamples = captures;
+  failureProgress.phase = 'verify-dense-populations';
   const mixedLayerCounts = productionFlightFixture
     ? await page.evaluate(() => {
         const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
@@ -986,6 +1058,7 @@ try {
       },
     );
     fixtureDelivery = await summarizeFlightFixtureDelivery();
+    failureProgress.fixtureDelivery = fixtureDelivery;
     await page.evaluate(() => {
       const camera = window.__godsEyeView.viewer.camera;
       window.__gevPerformanceHome = {
@@ -999,8 +1072,18 @@ try {
 
   for (const scenario of scenarios) {
     for (let run = 1; run <= runs; run += 1) {
+      failureProgress.phase = 'prepare-sample-context';
+      failureProgress.scenario = scenario;
+      failureProgress.run = run;
+      failureProgress.current = { phase: failureProgress.phase, scenario, run };
       process.stdout.write(`[performance] ${scenario} ${run}/${runs}\n`);
-      if (productionFlightFixture) await prepareFreshProviderDocument();
+      if (productionFlightFixture) {
+        failureProgress.phase = 'prepare-fresh-provider-document';
+        failureProgress.current.phase = failureProgress.phase;
+        await prepareFreshProviderDocument();
+      }
+      failureProgress.phase = 'configure-scenario-route';
+      failureProgress.current.phase = failureProgress.phase;
       const trackingResult = await page.evaluate(
         async ({ scenarioName, hasFixture }) => {
           const fixtureClock = window.__gevHeldMonotonicWallClockV1;
@@ -1042,6 +1125,8 @@ try {
         { scenarioName: scenario, hasFixture: Boolean(fixture) },
       );
       const trackingSetup = trackingResult?.trackedAircraftId ?? null;
+      failureProgress.current.trackingSetup = trackingSetup;
+      failureProgress.current.clockStart = trackingResult?.clockStart ?? null;
       // Each workload/run receives the declared warmup, including tracking.
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
@@ -1057,6 +1142,9 @@ try {
             documentFocused: document.hasFocus(),
           }))
         : null;
+      failureProgress.phase = 'validate-measurement-start';
+      failureProgress.current.phase = failureProgress.phase;
+      failureProgress.current.measurementStart = fixtureMeasurementStart;
       if (
         productionFlightFixture &&
         (!fixtureMeasurementStart.clock?.started ||
@@ -1081,6 +1169,9 @@ try {
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      failureProgress.phase = 'measure-scene';
+      failureProgress.current.phase = failureProgress.phase;
+      failureProgress.current.before = sceneBefore;
       const sample = await page.evaluate(
         async ({ durationMs, scenarioName, delay }) => {
           const viewer = window.__godsEyeView.viewer;
@@ -1250,7 +1341,10 @@ try {
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
       );
+      failureProgress.current.measurement = sample;
       if (productionFlightFixture) {
+        failureProgress.phase = 'validate-provider-fixture-clock';
+        failureProgress.current.phase = failureProgress.phase;
         const clockEnd = await page.evaluate(() => ({
           clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
           wallTimeMs: Date.now(),
@@ -1301,6 +1395,7 @@ try {
           freshBrowserContext: true,
         };
         fixtureDelivery = await summarizeFlightFixtureDelivery();
+        failureProgress.fixtureDelivery = fixtureDelivery;
         sample.fixtureDelivery = fixtureDelivery;
         await auditPageWorkerBlobs(page, captureAuditState);
         providerSampleWorkerAuditComplete = true;
@@ -1308,6 +1403,9 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      failureProgress.current.after = sceneAfter;
+      failureProgress.phase = 'validate-sample-integrity';
+      failureProgress.current.phase = failureProgress.phase;
       sample.layers = sceneAfter.environment.layers;
       sample.totalObjects = sceneAfter.environment.totalObjects;
       sample.quality = {
@@ -1349,6 +1447,7 @@ try {
           `Selected-aircraft workload lost camera tracking: ${JSON.stringify({ trackingSetup, trackedAircraftId: sample.trackedAircraftId })}`,
         );
       captures.push({ scenario, run, ...sample });
+      failureProgress.current = null;
     }
   }
 
@@ -1421,7 +1520,12 @@ try {
   );
   // Recheck delivery after all samples so a late failed/mismatched fulfillment
   // cannot leave an earlier pre-measurement observation looking complete.
+  failureProgress.phase = 'final-integrity-check';
+  failureProgress.scenario = null;
+  failureProgress.run = null;
+  failureProgress.current = null;
   fixtureDelivery = await summarizeFlightFixtureDelivery();
+  failureProgress.fixtureDelivery = fixtureDelivery;
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
   const integrity = assertCaptureIntegrity(captures, {
     expectedCommit: source.appCommit,
@@ -1500,6 +1604,24 @@ try {
   // workload, as required by the performance acceptance contract.
   if (motionBudget.status === 'failed' || motionBudget.status === 'incomplete')
     process.exitCode = 1;
+} catch (error) {
+  captureFailure = error;
+  if (failureProgress.phase === 'final-integrity-check') {
+    const failedSample = String(error?.message || '').match(
+      /^(idle|scripted-motion|selected-aircraft-tracking) run (\d+):/,
+    );
+    if (failedSample) {
+      failureProgress.scenario = failedSample[1];
+      failureProgress.run = Number(failedSample[2]);
+    }
+  }
+  process.exitCode = 1;
+  try {
+    await writeCaptureFailure(error);
+    failureReportWritten = true;
+  } catch {
+    process.stderr.write('Could not write bounded failed-capture evidence.\n');
+  }
 } finally {
   for (const session of fixtureInterceptionSessions) {
     await session.send('Fetch.disable').catch(() => {});
@@ -1507,8 +1629,18 @@ try {
   }
   try {
     await browser.close();
+  } catch (error) {
+    captureFailure ||= error;
+    process.exitCode = 1;
   } finally {
     if (ownedBrowserPidFile)
       await fs.rm(ownedBrowserPidFile, { force: true }).catch(() => {});
+  }
+}
+if (captureFailure && !failureReportWritten) {
+  try {
+    await writeCaptureFailure(captureFailure);
+  } catch {
+    process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 }
