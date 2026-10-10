@@ -573,7 +573,7 @@ export function validateCesiumWorkerBlobs({
       auditMode,
       instrumentation:
         auditMode === 'prewarm'
-          ? 'prewarm URL.createObjectURL observer restored before warmup'
+          ? 'prewarm URL.createObjectURL observer restored after warmup boundary and completed render; outside measurement'
           : 'URL.createObjectURL creation observer; smoke-only diagnostic',
       createdScriptBlobCount: blobAudit.createdBlobCount,
       validatedWorkerCount: new Set(workerUrls).size,
