@@ -20,6 +20,8 @@ let _textMeasureClock = 0;
 let _fontInvalidationInstalled = false;
 let _fontInvalidationGeneration = 0;
 let _observedFontSet = null;
+let _fontInvalidationListener = null;
+let _fontInvalidationCallback = null;
 
 function evictOldestTextMeasureEntry() {
   let oldestFont = null;
@@ -47,27 +49,33 @@ export function clearWorldOverlayTextMeasureCache() {
   _textMeasureClock = 0;
 }
 
-/** Install the font-loading invalidation hooks once, when the API exists. */
-export function installWorldOverlayFontInvalidation() {
-  if (
-    _fontInvalidationInstalled ||
-    typeof document === 'undefined' ||
-    !document.fonts
-  )
+/** Install font hooks and notify the current host when metrics may change. */
+export function installWorldOverlayFontInvalidation(onInvalidate) {
+  if (_fontInvalidationInstalled) {
+    if (typeof onInvalidate === 'function')
+      _fontInvalidationCallback = onInvalidate;
     return;
+  }
+  if (typeof document === 'undefined' || !document.fonts) return;
   _fontInvalidationInstalled = true;
   _observedFontSet = document.fonts;
+  _fontInvalidationCallback =
+    typeof onInvalidate === 'function' ? onInvalidate : null;
   const generation = ++_fontInvalidationGeneration;
+  const invalidateForFontChange = () => {
+    if (generation !== _fontInvalidationGeneration) return;
+    clearWorldOverlayTextMeasureCache();
+    try {
+      _fontInvalidationCallback?.();
+    } catch {
+      // Font events must remain safe if the host can no longer request a frame.
+    }
+  };
+  _fontInvalidationListener = invalidateForFontChange;
   Promise.resolve(document.fonts.ready)
-    .then(() => {
-      if (generation === _fontInvalidationGeneration)
-        clearWorldOverlayTextMeasureCache();
-    })
+    .then(invalidateForFontChange)
     .catch(() => {});
-  _observedFontSet.addEventListener?.(
-    'loadingdone',
-    clearWorldOverlayTextMeasureCache,
-  );
+  _observedFontSet.addEventListener?.('loadingdone', invalidateForFontChange);
 }
 
 /** Remove font hooks and cached measurements when the overlay host is destroyed. */
@@ -75,9 +83,11 @@ export function destroyWorldOverlayDraw() {
   _fontInvalidationGeneration++;
   _observedFontSet?.removeEventListener?.(
     'loadingdone',
-    clearWorldOverlayTextMeasureCache,
+    _fontInvalidationListener,
   );
   _observedFontSet = null;
+  _fontInvalidationListener = null;
+  _fontInvalidationCallback = null;
   _fontInvalidationInstalled = false;
   clearWorldOverlayTextMeasureCache();
 }

@@ -1,0 +1,90 @@
+✖ destroyed host font events cannot wake its replacement viewer (7.1283ms)
+✖ font loading wakes a parked static overlay to recompute layout and hit bounds (9.2255ms)
+✖ font invalidation requests a render only when font state changes (4.8287ms)
+✖ late readiness and queued events cannot wake a disposed or replacement host (1.173ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3361.9337
+
+✖ failing tests:
+
+test at src\overlays\worldOverlay.test.mjs:2774:1
+✖ destroyed host font events cannot wake its replacement viewer (7.1283ms)
+  AssertionError [ERR_ASSERTION]: replacement owns a font listener
+  + actual - expected
+  
+  + 'object'
+  - 'function'
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s52-visual-harness/src/overlays/worldOverlay.test.mjs:2804:10)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'object',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlay.test.mjs:2810:1
+✖ font loading wakes a parked static overlay to recompute layout and hit bounds (9.2255ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 2
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s52-visual-harness/src/overlays/worldOverlay.test.mjs:2832:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayFontWake.test.mjs:37:1
+✖ font invalidation requests a render only when font state changes (4.8287ms)
+  AssertionError [ERR_ASSERTION]: loadingdone wakes a parked host once
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s52-visual-harness/src/overlays/worldOverlayFontWake.test.mjs:48:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.start (node:internal/test_runner/test:1177:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayFontWake.test.mjs:54:1
+✖ late readiness and queued events cannot wake a disposed or replacement host (1.173ms)
+  AssertionError [ERR_ASSERTION]: replacement host receives its own font event
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s52-visual-harness/src/overlays/worldOverlayFontWake.test.mjs:78:10)
+      at async Test.run (node:internal/test_runner/test:1313:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -69,6 +69,25 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### S52 font lifecycle: idle invalidation regression - 11 October 2026
+
+Review of layout invalidation found that `document.fonts.ready` and `loadingdone`
+only cleared cached text widths. They did not wake an idle scene or invalidate
+static placement. A font could therefore leave the overlay and its hit bounds
+stale until another source or camera change. The fix connects those events to
+the existing host invalidation path, with host-generation checks and owned
+listener removal at destruction. It adds no per-frame work or continuous hold.
+
+All four new regression checks fail against the unchanged production modules
+at harness baseline `1da828a` (runtime identical to `33d9856`). The candidate
+passes 81 focused overlay checks, including static re-layout, updated edge hit
+bounds and ignored callbacks from a destroyed or replaced host.
+The [report](performance-evidence/s52-font-wake/report.json),
+[baseline failures](performance-evidence/s52-font-wake/baseline.log) and
+[candidate results](performance-evidence/s52-font-wake/candidate.log) are retained.
+These are Node tests with a mocked host. Native font-load/render validation is
+pending; they establish neither browser acceptance nor a performance improvement.
+
 ### S52 projection reuse: local CPU diagnostic - 11 October 2026
 
 The [complete Windows CPU report](performance-evidence/s52-33d9856/cpu-windows.json)

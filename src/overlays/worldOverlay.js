@@ -17,6 +17,7 @@ import {
   destroyWorldOverlayDraw,
   distanceFade,
   distanceScale,
+  installWorldOverlayFontInvalidation,
   measureOverlayEntry,
   paintOverlayEntry,
   placementVariants,
@@ -2817,6 +2818,9 @@ export function initWorldOverlay(viewer) {
   if (_viewer) destroyWorldOverlay();
   _destroyed = false;
   _viewer = viewer;
+  installWorldOverlayFontInvalidation(() => {
+    if (_viewer === viewer && !_destroyed) invalidateHost();
+  });
   ensureOverlayDom();
   _occluder = new Cesium.EllipsoidalOccluder(
     Cesium.Ellipsoid.WGS84,

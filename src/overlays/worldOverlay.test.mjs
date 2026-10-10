@@ -2770,3 +2770,75 @@ test('promoting an ambient entry to selected paints it once with no fading dupli
     assert.equal(paint(), 1, 'deselect restores the ambient card without re-entry cooldown');
   } finally { env.cleanup(); }
 });
+
+test('destroyed host font events cannot wake its replacement viewer', async (t) => {
+  const oldEnv = installMockEnvironment();
+  let replacementEnv;
+  t.after(() => { replacementEnv?.cleanup(); oldEnv.cleanup(); });
+  let oldResolve;
+  let oldLoadingDone = null;
+  oldEnv.document.fonts = {
+    ready: new Promise((resolve) => { oldResolve = resolve; }),
+    addEventListener(name, listener) { if (name === 'loadingdone') oldLoadingDone = listener; },
+    removeEventListener() {},
+  };
+  initWorldOverlay(oldEnv.viewer);
+  const oldRequests = oldEnv.viewer.scene.requestRenderCount;
+  destroyWorldOverlay();
+
+  replacementEnv = installMockEnvironment();
+  let replacementLoadingDone = null;
+  replacementEnv.document.fonts = {
+    ready: new Promise(() => {}),
+    addEventListener(name, listener) { if (name === 'loadingdone') replacementLoadingDone = listener; },
+    removeEventListener() {},
+  };
+  initWorldOverlay(replacementEnv.viewer);
+  const replacementRequests = replacementEnv.viewer.scene.requestRenderCount;
+
+  oldLoadingDone?.();
+  oldResolve();
+  await Promise.resolve();
+  assert.equal(oldEnv.viewer.scene.requestRenderCount, oldRequests);
+  assert.equal(replacementEnv.viewer.scene.requestRenderCount, replacementRequests);
+  assert.equal(typeof replacementLoadingDone, 'function', 'replacement owns a font listener');
+  replacementLoadingDone();
+  assert.equal(replacementEnv.viewer.scene.requestRenderCount, replacementRequests + 1);
+
+});
+
+test('font loading wakes a parked static overlay to recompute layout and hit bounds', (t) => {
+  const env = installMockEnvironment();
+  t.after(() => env.cleanup());
+  let fontLoaded = false;
+  env.ctx.measureText = (text) => ({ width: String(text).length * (fontLoaded ? 10 : 6) });
+  let loadingDone = null;
+  env.document.fonts = {
+    ready: new Promise(() => {}),
+    addEventListener(name, listener) { if (name === 'loadingdone') loadingDone = listener; },
+    removeEventListener() {},
+  };
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('font-wake', [selectedEntry('static', { interactive: true, title: 'FONT' })]);
+  env.postRender.raise();
+  const initialRect = getOverlayPaintRect('font-wake', 'static');
+  const initialWidth = initialRect?.w;
+  const initialSolve = getWorldOverlayDiagnostics().solveRevision;
+  const initialRequests = env.viewer.scene.requestRenderCount;
+  assert.ok(initialRect);
+
+  fontLoaded = true;
+  loadingDone();
+  assert.equal(env.viewer.scene.requestRenderCount, initialRequests + 1);
+  env.postRender.raise();
+
+  const updatedRect = getOverlayPaintRect('font-wake', 'static');
+  assert.ok(getWorldOverlayDiagnostics().solveRevision > initialSolve);
+  assert.ok(updatedRect.w > initialWidth);
+  const updatedEdgeHit = hitTestWorldOverlay(
+    updatedRect.x + updatedRect.w - 1,
+    updatedRect.y + 1,
+    { sourceId: 'font-wake' },
+  );
+  assert.equal(updatedEdgeHit?.entryId, 'static');
+});
