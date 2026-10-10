@@ -30,7 +30,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
-| S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
+| S54 infrastructure batching | Partial: S54.1 plain feature records and generation-owned pick mappings; rendering representation remains unchanged | 45 focused identity/lifecycle/picking tests, format, boundaries and production build pass at `89fb2fd`; batching comparisons remain | Pending activation/memory and visual comparison |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `0edfb8e`: fresh 12-check isolated viewer matrix passes on Windows UHD 620; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
@@ -159,6 +159,28 @@ completed. Browser close succeeds normally in 94.82 ms without forced terminatio
 Further diagnosis must observe the drain predicate during its existing deadline;
 an unchanged rerun or longer timeout is not a fix. The earlier retention failure
 remains unresolved while independent implementation proceeds.
+
+### S54.1 infrastructure identity separation - 10 October 2026
+
+GPT-6 Luna delivered `0d62562a1ccd764a87f2cf1b6ebbdc9dc9ef2bc1` plus explicit
+destroy-map cleanup in `89fb2fdefe5328d46c0174db5de441587ad976a1`. Datacenter/dam
+analyst records now use plain feature metadata and the existing Cesium-derived
+center independently of mutable entity properties. Existing query/context IDs,
+OSM evidence identity and PeeringDB references remain intact. Cable geometry
+and reference stems share one immutable source identity. Both layer paths reject
+old render objects after ownership is released. A cable styling failure after
+source insertion rolls back accepted sources and identity records; an automatic
+retry restores overlay visibility without requiring another enable.
+
+All 45 focused tests pass across `localGeojson.analyst`, `localGeojsonLifecycle`,
+cable `geometry`/`interaction` and `telegeographySubmarineCables`. They cover
+duplicate names, missing metadata, unchanged centers, cleared entity properties,
+detached evidence snapshots, same-identity rebuilds, stale picks and failed-load
+rollback/retry. At clean `89fb2fd`, root's full format check passes all 1,445
+adopted source files, both import/package boundary checks pass, and the production
+build succeeds (Node 24.16.0, Windows). This completes the S54.1 code packet;
+batching, activation/memory measurements and hardware comparison remain pending.
+The renderer, geometry parameters and visual quality settings are unchanged.
 
 ## Completion execution plan - 9 October 2026
 
