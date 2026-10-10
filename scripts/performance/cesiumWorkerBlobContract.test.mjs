@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import {
   deriveCesiumEmbeddedWorkerContract,
   installCesiumWorkerBlobAudit,
+  summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './cesiumWorkerBlobContract.mjs';
 
@@ -289,6 +290,55 @@ test('validator rejects a created script blob that is unrelated to a receipt wor
   assert.throws(
     () => validateCesiumWorkerBlobs(audit),
     /not a validated Cesium worker/,
+  );
+});
+
+test('worker blob failure diagnostics identify unmatched evidence without exposing URLs or bodies', () => {
+  const contract = makeContract();
+  const audit = workerAudit(contract);
+  const unmatchedUrl = 'blob:http://127.0.0.1:4173/unmatched-secret';
+  const unmatchedBody = 'sensitive-worker-payload';
+  audit.observedBlobUrls.push(unmatchedUrl);
+  audit.blobAudit.records.push({
+    url: unmatchedUrl,
+    type: 'text/javascript',
+    byteLength: Buffer.byteLength(unmatchedBody),
+    body: unmatchedBody,
+  });
+  const diagnostics = summarizeCesiumWorkerBlobEvidence({
+    workerUrls: audit.workerUrls,
+    observedBlobUrls: audit.observedBlobUrls,
+    blobAudit: audit.blobAudit,
+    requests: [
+      { url: unmatchedUrl, resourceType: 'script' },
+      { url: unmatchedUrl, resourceType: 'worker' },
+    ],
+  });
+  const encoded = JSON.stringify(diagnostics);
+  assert.equal(diagnostics.urlValuesOmitted, true);
+  assert.equal(diagnostics.blobRequestCount, 2);
+  const unmatched = diagnostics.entries.find(
+    (entry) => entry.bodySha256 === sha256(Buffer.from(unmatchedBody)),
+  );
+  assert.ok(unmatched);
+  assert.equal(unmatched.creationRecordPresent, true);
+  assert.equal(unmatched.type, 'text/javascript');
+  assert.equal(unmatched.byteLength, Buffer.byteLength(unmatchedBody));
+  assert.equal(unmatched.requestCount, 2);
+  assert.deepEqual(unmatched.requestResourceTypes, ['script', 'worker']);
+  assert.equal(unmatched.workerTargetHistoryMember, false);
+  assert.equal(encoded.includes(unmatchedUrl), false);
+  assert.equal(encoded.includes(unmatchedBody), false);
+  assert.throws(
+    () =>
+      summarizeCesiumWorkerBlobEvidence({
+        workerUrls: [],
+        observedBlobUrls: [],
+        blobAudit: { records: [] },
+        requests: [],
+        maxEntries: 65,
+      }),
+    /invalid/,
   );
 });
 

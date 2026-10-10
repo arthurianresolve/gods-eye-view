@@ -228,6 +228,77 @@ export function restoreCesiumWorkerBlobAudit() {
   window.__gevCesiumWorkerBlobAuditV1?.restore();
 }
 
+/** Return bounded, URL-free metadata to diagnose a failed worker-blob audit. */
+export function summarizeCesiumWorkerBlobEvidence({
+  workerUrls = [],
+  observedBlobUrls = [],
+  blobAudit,
+  requests = [],
+  maxEntries = 32,
+} = {}) {
+  if (
+    !Number.isInteger(maxEntries) ||
+    maxEntries < 1 ||
+    maxEntries > 64 ||
+    !Array.isArray(workerUrls) ||
+    !Array.isArray(observedBlobUrls) ||
+    !Array.isArray(blobAudit?.records) ||
+    !Array.isArray(requests)
+  )
+    throw new TypeError('Worker blob diagnostic inputs are invalid.');
+
+  const workerSet = new Set(workerUrls);
+  const records = new Map(blobAudit.records.map((record) => [record.url, record]));
+  const requestCounts = new Map();
+  let blobRequestCount = 0;
+  for (const request of requests) {
+    if (!request?.url?.startsWith('blob:')) continue;
+    blobRequestCount += 1;
+    const current = requestCounts.get(request.url) || {
+      count: 0,
+      resourceTypes: new Set(),
+    };
+    current.count += 1;
+    if (typeof request.resourceType === 'string')
+      current.resourceTypes.add(request.resourceType.slice(0, 24));
+    requestCounts.set(request.url, current);
+  }
+
+  const urls = [
+    ...new Set([
+      ...observedBlobUrls,
+      ...workerUrls,
+      ...blobAudit.records.map((record) => record?.url).filter((url) => typeof url === 'string'),
+    ]),
+  ];
+  const entries = urls.slice(0, maxEntries).map((url, index) => {
+    const record = records.get(url);
+    const body = typeof record?.body === 'string' ? Buffer.from(record.body) : null;
+    const request = requestCounts.get(url);
+    return {
+      index,
+      creationRecordPresent: Boolean(record),
+      type: typeof record?.type === 'string' ? record.type.slice(0, 64) : null,
+      byteLength: Number.isSafeInteger(record?.byteLength)
+        ? record.byteLength
+        : null,
+      bodySha256: body ? sha256(body) : null,
+      requestCount: request?.count || 0,
+      requestResourceTypes: [...(request?.resourceTypes || [])].sort().slice(0, 8),
+      workerTargetHistoryMember: workerSet.has(url),
+    };
+  });
+  return {
+    schema: 'gev-cesium-worker-blob-diagnostics/v1',
+    urlValuesOmitted: true,
+    blobRequestCount,
+    observedBlobCount: urls.length,
+    entryCount: entries.length,
+    omittedEntryCount: Math.max(0, urls.length - entries.length),
+    entries,
+  };
+}
+
 /** Validate every observed script blob worker against receipt-derived Cesium bytes. */
 export function validateCesiumWorkerBlobs({
   contract,

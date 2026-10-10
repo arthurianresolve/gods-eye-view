@@ -44,6 +44,7 @@ import {
   installCesiumWorkerBlobAudit,
   MAX_WORKER_TARGETS,
   restoreCesiumWorkerBlobAudit,
+  summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
 
@@ -339,6 +340,9 @@ async function runRevision({
   let provenance = null;
   let fixturePage = null;
   let workerBlobValidation = null;
+  let workerBlobDiagnostics = null;
+  let densePopulationObservations = [];
+  let finalDenseLayerPopulation = null;
   let phase = 'browser-page-setup';
   const pageErrors = [];
   const cleanupErrors = [];
@@ -527,6 +531,10 @@ async function runRevision({
         );
       }, Object.keys(expectedLayerCounts));
     const denseLayerPopulation = await readDenseLayerPopulation();
+    densePopulationObservations.push({
+      checkpoint: 'initial',
+      layers: denseLayerPopulation,
+    });
 
     phase = 'shared-scene-and-route-observation';
     const before = await page.evaluate(observeCommonScene, {
@@ -567,6 +575,11 @@ async function runRevision({
       throw new Error(
         'Application code request audit exceeded its bounded event capacity.',
       );
+    finalDenseLayerPopulation = await readDenseLayerPopulation();
+    densePopulationObservations.push({
+      checkpoint: 'final-before-code-validation',
+      layers: finalDenseLayerPopulation,
+    });
     const blobCodeRequests = finalAuditSnapshot.requests
       .filter((request) => request.url.startsWith('blob:'))
       .map((request) => request.url);
@@ -591,6 +604,12 @@ async function runRevision({
       10_000,
       'Cesium worker blob collection',
     );
+    workerBlobDiagnostics = summarizeCesiumWorkerBlobEvidence({
+      workerUrls,
+      observedBlobUrls: [...new Set([...blobCodeRequests, ...workerUrls])],
+      blobAudit,
+      requests: finalAuditSnapshot.requests,
+    });
     workerBlobValidation = validateCesiumWorkerBlobs({
       contract: workerContract,
       baseUrl: served.baseUrl,
@@ -610,7 +629,6 @@ async function runRevision({
       throw new Error(
         `Fixture interception reported ${fixturePage.errors.length} errors.`,
       );
-    const finalDenseLayerPopulation = await readDenseLayerPopulation();
     for (const [id, expected] of Object.entries(expectedLayerCounts)) {
       if (
         denseLayerPopulation[id]?.enabled !== true ||
@@ -679,6 +697,13 @@ async function runRevision({
       interceptionErrors: (fixturePage?.errors || [])
         .slice(0, 4)
         .map(sanitizeError),
+      ...(workerBlobDiagnostics
+        ? {
+            workerBlobDiagnostics,
+            workerBlobValidationFailure: sanitizeError(error),
+          }
+        : {}),
+      densePopulationObservations,
     };
     failure = error;
   } finally {
