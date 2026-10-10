@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   createObservedDenseComparisonContract,
   getCaptureComparisonIneligibilityReasons,
+  getCaptureReadinessReasons,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
 
@@ -204,6 +205,24 @@ test('prewarm audit readiness names the unobservable late-creation limitation', 
   );
   assert.equal(
     reasons.includes(
+      'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
+    ),
+    false,
+  );
+});
+
+test('capture readiness boundary maps workerAuditMode into the report reason', () => {
+  const prewarmReasons = getCaptureReadinessReasons({
+    workerAuditMode: 'prewarm',
+    workerBlobAuditInstrumented: true,
+  });
+  assert.ok(
+    prewarmReasons.includes(
+      'prewarm-worker-audit-does-not-observe-unused-late-blob-creations',
+    ),
+  );
+  assert.equal(
+    prewarmReasons.includes(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     ),
     false,

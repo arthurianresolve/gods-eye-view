@@ -350,3 +350,11 @@ export function getCaptureComparisonIneligibilityReasons({
   );
   return [...new Set(reasons)];
 }
+
+/** Capture CLI adapter keeps its workerAuditMode name at the report boundary. */
+export function getCaptureReadinessReasons({ workerAuditMode, ...options } = {}) {
+  return getCaptureComparisonIneligibilityReasons({
+    ...options,
+    workerBlobAuditMode: workerAuditMode,
+  });
+}

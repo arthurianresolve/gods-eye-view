@@ -41,7 +41,7 @@ import { createCaptureFailureReport } from './performance/captureFailureReport.m
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import {
   createObservedDenseComparisonContract,
-  getCaptureComparisonIneligibilityReasons,
+  getCaptureReadinessReasons,
 } from './performance/captureComparisonContract.mjs';
 
 const args = process.argv.slice(2);
@@ -1891,7 +1891,7 @@ try {
         scenarios,
       })
     : null;
-  const comparisonReadinessReasons = getCaptureComparisonIneligibilityReasons({
+  const comparisonReadinessReasons = getCaptureReadinessReasons({
     contract: comparisonContract,
     fixture: productionFlightFixture,
     fixtureDelivery,
@@ -1909,7 +1909,7 @@ try {
     captures,
     diagnosticsDocuments: performanceDiagnosticsDocuments,
     workerBlobAuditInstrumented: Boolean(captureProvenance),
-    workerBlobAuditMode,
+    workerAuditMode,
     hardwareRequired,
   });
   const report = {
