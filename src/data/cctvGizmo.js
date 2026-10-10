@@ -296,6 +296,45 @@ function ringPositions(center, radius, basisA, basisB) {
   return positions;
 }
 
+function propertyValue(property) {
+  return typeof property?.getValue === 'function'
+    ? property.getValue()
+    : property;
+}
+
+function samePositions(left, right) {
+  return (
+    Array.isArray(left) &&
+    Array.isArray(right) &&
+    left.length === right.length &&
+    left.every((position, index) =>
+      Cesium.Cartesian3.equals(position, right[index]),
+    )
+  );
+}
+
+/**
+ * Cesium's ConstantProperty equality is reference-based for position arrays.
+ * Avoid replacing an equal array on every gizmo refresh: the new property
+ * wrapper otherwise raises geometryChanged and rebuilds static polyline data.
+ */
+function setPolylinePositionsIfChanged(entity, positions) {
+  const property = entity?.polyline?.positions;
+  if (samePositions(propertyValue(property), positions)) return false;
+  entity.polyline.positions = positions.map((position) =>
+    Cesium.Cartesian3.clone(position),
+  );
+  return true;
+}
+
+function setEntityPositionIfChanged(entity, position) {
+  if (Cesium.Cartesian3.equals(propertyValue(entity?.position), position)) {
+    return false;
+  }
+  entity.position = Cesium.Cartesian3.clone(position);
+  return true;
+}
+
 /**
  * Creates the calibration gizmo controller (design §3c). Renders grab-able
  * handles for the ACTIVE camera's 7 calibration DOF and turns pointer drags
@@ -457,17 +496,13 @@ export function createCalibrationGizmo({
     );
     const arrowLen = radius * ARROW_LENGTH_FACTOR;
 
-    entities.get('ring-heading').polyline.positions = ringPositions(
-      mount,
-      radius,
-      axes.north,
-      axes.east,
+    setPolylinePositionsIfChanged(
+      entities.get('ring-heading'),
+      ringPositions(mount, radius, axes.north, axes.east),
     );
-    entities.get('ring-pitch').polyline.positions = ringPositions(
-      mount,
-      radius,
-      forwardHoriz,
-      axes.up,
+    setPolylinePositionsIfChanged(
+      entities.get('ring-pitch'),
+      ringPositions(mount, radius, forwardHoriz, axes.up),
     );
     const arrowTo = (dir) => [
       mount,
@@ -484,22 +519,31 @@ export function createCalibrationGizmo({
     const eastArrow = arrowTo(axes.east);
     const northArrow = arrowTo(axes.north);
     const upArrow = arrowTo(axes.up);
-    entities.get('move-east').polyline.positions = eastArrow;
-    entities.get('move-east').position = eastArrow[1];
-    entities.get('move-north').polyline.positions = northArrow;
-    entities.get('move-north').position = northArrow[1];
-    entities.get('move-up').polyline.positions = upArrow;
-    entities.get('move-up').position = upArrow[1];
-    entities.get('handle-range').position = positions.capCenter;
-    entities.get('handle-fov-l').position = Cesium.Cartesian3.midpoint(
-      positions.tl,
-      positions.bl,
-      new Cesium.Cartesian3(),
+    setPolylinePositionsIfChanged(entities.get('move-east'), eastArrow);
+    setEntityPositionIfChanged(entities.get('move-east'), eastArrow[1]);
+    setPolylinePositionsIfChanged(entities.get('move-north'), northArrow);
+    setEntityPositionIfChanged(entities.get('move-north'), northArrow[1]);
+    setPolylinePositionsIfChanged(entities.get('move-up'), upArrow);
+    setEntityPositionIfChanged(entities.get('move-up'), upArrow[1]);
+    setEntityPositionIfChanged(
+      entities.get('handle-range'),
+      positions.capCenter,
     );
-    entities.get('handle-fov-r').position = Cesium.Cartesian3.midpoint(
-      positions.tr,
-      positions.br,
-      new Cesium.Cartesian3(),
+    setEntityPositionIfChanged(
+      entities.get('handle-fov-l'),
+      Cesium.Cartesian3.midpoint(
+        positions.tl,
+        positions.bl,
+        new Cesium.Cartesian3(),
+      ),
+    );
+    setEntityPositionIfChanged(
+      entities.get('handle-fov-r'),
+      Cesium.Cartesian3.midpoint(
+        positions.tr,
+        positions.br,
+        new Cesium.Cartesian3(),
+      ),
     );
     for (const entity of entities.values()) entity.show = true;
     requestSceneRender('cctv-gizmo-refresh');

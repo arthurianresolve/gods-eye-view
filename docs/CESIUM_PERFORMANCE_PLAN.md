@@ -55,6 +55,26 @@ were skipped. This green integration run does not override the rendered CCTV
 comparison failures below, and does not cover subsequent camera compatibility
 changes.
 
+### S50.2 CCTV calibration handle geometry reuse - 10 October 2026
+
+The next candidate compares numeric Cartesian positions before replacing the
+five calibration-handle polylines and point anchors. Cesium's constant array
+property otherwise treats equivalent newly allocated arrays as a definition
+change. Changed arrays own cloned positions so later in-place source edits cannot
+silently mutate materialized geometry. Handle IDs, widths, colors, geometry and
+visibility remain unchanged; the existing explicit render invalidations remain.
+
+Root repeated all 15 focused gizmo tests, including actual Cesium
+`PolylineGeometryUpdater` notifications for unchanged refreshes, disable/enable,
+equivalent cloned records, heading, range, pitch, cap/FOV, terrain height and
+in-place pose edits. The reproducible comparison is
+`node scripts/qa-cctv-gizmo-geometry.mjs --out qa-artifacts/gizmo-comparison.json`.
+It compares five pairs of ten exact numerical entity snapshots against
+`aea307c211e99f2f23a538a8356825723edd0097`, recording source hashes and dirty state.
+This measures definition-change notifications, not submitted worker jobs, GPU
+work or frame time. Frozen-commit comparison, rendered equivalence and integration
+checks remain pending. This does not complete the wider S50.1 revision audit.
+
 ### S51.4 CCTV calibration render-demand candidate - 10 October 2026
 
 The next candidate removes the permanent `cctv-adjust` render hold. Accepted

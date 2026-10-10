@@ -588,3 +588,341 @@ test('replacement gizmo cancels a destroyed owners pending camera restore', (t) 
   assert.equal(controller.enableInputs, true);
   assert.equal(viewer.scene.postUpdate.numberOfListeners, 0);
 });
+
+test('gizmo refresh preserves geometry and only invalidates affected Cesium updaters', (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    onmousewheel: null,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  t.after(() => {
+    globalThis.document = previousDocument;
+  });
+
+  const { viewer, controller } = createEngineControllerGizmoViewer();
+  const entities = new Cesium.EntityCollection();
+  viewer.entities = entities;
+  const updaters = [];
+  const removers = [];
+  let gizmo;
+  t.after(() => {
+    for (const remove of removers) remove();
+    for (const updater of updaters) updater.destroy();
+    gizmo?.destroy();
+    controller.destroy();
+    entities.removeAll();
+  });
+  const makeRecord = ({
+    rangeM = 100,
+    headingDeg = 0,
+    pitchDeg = -17,
+    longitude = -97,
+    altitudeM = 20,
+    capAltitudeM = 720,
+    capHalfWidthDeg = 0.0001,
+    capHalfHeightDeg = 0.0001,
+  } = {}) => ({
+    camera: {
+      id: 'geometry-refresh',
+      headingDeg,
+      pitchDeg,
+      rangeM,
+      basePose: {},
+    },
+    frustumPositions: {
+      mount: Cesium.Cartesian3.fromDegrees(longitude, 30, altitudeM),
+      capCenter: Cesium.Cartesian3.fromDegrees(longitude, 30, capAltitudeM),
+      tl: Cesium.Cartesian3.fromDegrees(
+        longitude - capHalfWidthDeg,
+        30 + capHalfHeightDeg,
+        capAltitudeM,
+      ),
+      tr: Cesium.Cartesian3.fromDegrees(
+        longitude + capHalfWidthDeg,
+        30 + capHalfHeightDeg,
+        capAltitudeM,
+      ),
+      bl: Cesium.Cartesian3.fromDegrees(
+        longitude - capHalfWidthDeg,
+        30 - capHalfHeightDeg,
+        capAltitudeM,
+      ),
+      br: Cesium.Cartesian3.fromDegrees(
+        longitude + capHalfWidthDeg,
+        30 - capHalfHeightDeg,
+        capAltitudeM,
+      ),
+    },
+    frustumGeometry: { rangeM },
+  });
+  let record = makeRecord();
+  gizmo = createCalibrationGizmo({
+    viewer,
+    getActiveRecord: () => record,
+    applyPatch() {},
+    endPatch() {},
+  });
+  gizmo.setEnabled(true);
+
+  const gizmoEntities = entities.values;
+  const polylineEntities = gizmoEntities.filter((entity) => entity.polyline);
+  assert.equal(polylineEntities.length, 5);
+  assert.equal(gizmoEntities.length, 8);
+  for (const entity of polylineEntities) {
+    updaters.push(
+      new Cesium.PolylineGeometryUpdater(entity, {
+        frameState: { context: { depthTexture: true } },
+      }),
+    );
+  }
+  const geometryChanges = new Map();
+  for (const [index, updater] of updaters.entries()) {
+    removers.push(
+      updater.geometryChanged.addEventListener(() => {
+        const id = polylineEntities[index].id;
+        geometryChanges.set(id, (geometryChanges.get(id) || 0) + 1);
+      }),
+    );
+  }
+  const clearGeometryChanges = () => geometryChanges.clear();
+  const changedGeometryIds = () => [...geometryChanges.keys()].sort();
+  const snapshot = () =>
+    gizmoEntities.map((entity) => ({
+      id: entity.id,
+      show: entity.show,
+      position: (() => {
+        const value = entity.position?.getValue?.() ?? entity.position;
+        return value ? [value.x, value.y, value.z] : null;
+      })(),
+      point: entity.point && {
+        pixelSize: entity.point.pixelSize,
+        color: entity.point.color.getValue().toString(),
+        outlineColor: entity.point.outlineColor.getValue().toString(),
+        outlineWidth: entity.point.outlineWidth,
+        disableDepthTestDistance: entity.point.disableDepthTestDistance,
+      },
+      polyline: entity.polyline && {
+        positions: entity.polyline.positions
+          .getValue()
+          .map(({ x, y, z }) => [x, y, z]),
+        width: entity.polyline.width,
+        materialType: entity.polyline.material.getType(),
+        materialColor: entity.polyline.material.color.getValue().toString(),
+        depthFailColor: entity.polyline.depthFailMaterial.color
+          .getValue()
+          .toString(),
+      },
+    }));
+  const baseline = snapshot();
+
+  for (let cycle = 0; cycle < 5; cycle += 1) {
+    gizmo.refresh();
+  }
+  gizmo.setEnabled(true);
+  gizmo.setEnabled(false);
+  gizmo.setEnabled(true);
+
+  assert.deepEqual(
+    snapshot(),
+    baseline,
+    'unchanged refresh keeps all outputs exact',
+  );
+  assert.deepEqual(changedGeometryIds(), []);
+  clearGeometryChanges();
+
+  const cloned = makeRecord();
+  record = {
+    ...cloned,
+    camera: { ...cloned.camera },
+    frustumPositions: Object.fromEntries(
+      Object.entries(cloned.frustumPositions).map(([key, value]) => [
+        key,
+        Cesium.Cartesian3.clone(value),
+      ]),
+    ),
+  };
+  gizmo.refresh();
+  assert.deepEqual(snapshot(), baseline, 'a cloned equivalent record is exact');
+  assert.deepEqual(changedGeometryIds(), []);
+  gizmo.refresh();
+  assert.deepEqual(
+    snapshot(),
+    baseline,
+    'the repeated cloned record stays exact',
+  );
+  assert.deepEqual(changedGeometryIds(), []);
+
+  const expectChange = (
+    label,
+    next,
+    expectedIds,
+    expectedPointChanges = [],
+  ) => {
+    const before = snapshot();
+    clearGeometryChanges();
+    record = next;
+    gizmo.refresh();
+    const after = snapshot();
+    assert.deepEqual(changedGeometryIds(), [...expectedIds].sort(), label);
+    assert.deepEqual(
+      [...geometryChanges.values()],
+      expectedIds.map(() => 1),
+      `${label}: each affected polyline updater is notified once`,
+    );
+    for (const id of expectedPointChanges) {
+      assert.notDeepEqual(
+        after.find((row) => row.id === id)?.position,
+        before.find((row) => row.id === id)?.position,
+        `${label}: ${id} position should change`,
+      );
+    }
+    clearGeometryChanges();
+    gizmo.refresh();
+    assert.deepEqual(snapshot(), after, `${label}: second refresh stays exact`);
+    assert.deepEqual(
+      changedGeometryIds(),
+      [],
+      `${label}: second refresh is quiet`,
+    );
+    return after;
+  };
+
+  const id = (part) => `cctv-gizmo-${part}`;
+  const current = () => record;
+  expectChange(
+    'heading-only change',
+    { ...current(), camera: { ...current().camera, headingDeg: 35 } },
+    [id('ring-pitch')],
+  );
+  expectChange(
+    'range-only change',
+    { ...current(), camera: { ...current().camera, rangeM: 180 } },
+    polylineEntities.map((entity) => entity.id),
+  );
+  const beforePitch = snapshot();
+  clearGeometryChanges();
+  record = {
+    ...current(),
+    camera: { ...current().camera, pitchDeg: -24 },
+  };
+  gizmo.refresh();
+  assert.deepEqual(
+    snapshot(),
+    beforePitch,
+    'camera pitch alone does not alter gizmo geometry',
+  );
+  assert.deepEqual(changedGeometryIds(), []);
+  clearGeometryChanges();
+  gizmo.refresh();
+  assert.deepEqual(
+    snapshot(),
+    beforePitch,
+    'pitch-only no-op refresh remains exact',
+  );
+  assert.deepEqual(changedGeometryIds(), []);
+
+  expectChange(
+    'cap altitude change',
+    makeRecord({
+      rangeM: 180,
+      headingDeg: 35,
+      pitchDeg: -24,
+      capAltitudeM: 740,
+    }),
+    [],
+    [id('handle-range'), id('handle-fov-l'), id('handle-fov-r')],
+  );
+  expectChange(
+    'cap/FOV-only change',
+    makeRecord({
+      rangeM: 180,
+      headingDeg: 35,
+      pitchDeg: -24,
+      capAltitudeM: 740,
+      capHalfWidthDeg: 0.0002,
+      capHalfHeightDeg: 0.00015,
+    }),
+    [],
+    [id('handle-fov-l'), id('handle-fov-r')],
+  );
+  expectChange(
+    'mount terrain-height change',
+    makeRecord({
+      rangeM: 180,
+      headingDeg: 35,
+      pitchDeg: -24,
+      longitude: -96.999,
+      altitudeM: 125,
+      capAltitudeM: 845,
+      capHalfWidthDeg: 0.0002,
+      capHalfHeightDeg: 0.00015,
+    }),
+    polylineEntities.map((entity) => entity.id),
+    [id('handle-range'), id('handle-fov-l'), id('handle-fov-r')],
+  );
+
+  const beforeMutation = snapshot();
+  clearGeometryChanges();
+  const sameRecord = current();
+  Cesium.Cartesian3.fromDegrees(
+    -96.998,
+    30,
+    125,
+    undefined,
+    sameRecord.frustumPositions.mount,
+  );
+  sameRecord.camera.headingDeg = 51;
+  gizmo.refresh();
+  const afterMutation = snapshot();
+  assert.notDeepEqual(afterMutation, beforeMutation);
+  assert.deepEqual(
+    changedGeometryIds(),
+    [
+      id('ring-pitch'),
+      id('ring-heading'),
+      id('move-east'),
+      id('move-north'),
+      id('move-up'),
+    ].sort(),
+    'in-place heading and mount mutations update all affected geometry',
+  );
+  clearGeometryChanges();
+  gizmo.refresh();
+  assert.deepEqual(snapshot(), afterMutation);
+  assert.deepEqual(changedGeometryIds(), []);
+
+  assert.deepEqual(
+    snapshot().map(({ id: entityId, point, polyline }) => ({
+      id: entityId,
+      point: point && [
+        point.pixelSize,
+        point.color,
+        point.outlineColor,
+        point.outlineWidth,
+      ],
+      polyline: polyline && [
+        polyline.width,
+        polyline.materialType,
+        polyline.materialColor,
+        polyline.depthFailColor,
+      ],
+    })),
+    baseline.map(({ id: entityId, point, polyline }) => ({
+      id: entityId,
+      point: point && [
+        point.pixelSize,
+        point.color,
+        point.outlineColor,
+        point.outlineWidth,
+      ],
+      polyline: polyline && [
+        polyline.width,
+        polyline.materialType,
+        polyline.materialColor,
+        polyline.depthFailColor,
+      ],
+    })),
+    'refresh optimization preserves original handle styles and IDs',
+  );
+});

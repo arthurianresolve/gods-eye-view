@@ -1156,5 +1156,6 @@
   "scripts/apply-cesium-patches.mjs",
   "scripts/apply-cesium-patches.test.mjs",
   "patches/cesium-1.138.0-inertia.json",
-  "scripts/performance/cesiumDisabledInputInertia.test.mjs"
+  "scripts/performance/cesiumDisabledInputInertia.test.mjs",
+  "scripts/qa-cctv-gizmo-geometry.mjs"
 ]
