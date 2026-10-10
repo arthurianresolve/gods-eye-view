@@ -588,7 +588,15 @@ partial packet remains partial and cannot close the parent slice.
   owned CLI/browser processes; errors retain bounded, redacted stderr and sample
   progress, with observed cleanup separated from unconfirmed cleanup. Eight
   focused tests and syntax checks pass locally. [The first full CLI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034906382)
-  is running at candidate/harness `c49288e`; a browser pass is not yet claimed.
+  [fails before candidate/CLI execution](performance-evidence/build-smoke-38034906382.json)
+  at candidate/harness `c49288e`: the baseline final audit observes a newly
+  created 136-byte JavaScript Blob with no request or worker-target history entry.
+  Its seven embedded source bodies have the expected receipt-derived hash and
+  both dense population checkpoints pass, but the extra bootstrap body has not
+  yet been classified. This gives a construction/target-publication race hypothesis
+  to test. The strict audit remains failed; no CLI browser pass is claimed.
+  Validate all created bootstrap recipes independently from observed execution,
+  keeping unstarted constructions distinct from worker-target evidence.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
