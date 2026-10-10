@@ -42,6 +42,18 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### Local S51 integration diagnostics - 10 October 2026
+
+The local Node 24 parallel suite reports 6,684 passes, one failure and ten skips.
+The failing camera-stream idle-deadline test passes all 21 tests when its file is
+run alone; its real 10 ms producer and 40 ms deadline assume scheduling precision
+that a CPU-loaded parallel run cannot guarantee. Deterministic test correction remains
+pending, without changing the production timeout. The 14 serialized allocation
+gates pass in a separate run. Preserve the failed full run; an isolated pass does
+not replace it. [Counts, log digests and scope](performance-evidence/local-s51-checks-20261010.json)
+record these working-tree diagnostics. The full suite overlapped edits, so these
+results do not certify an immutable candidate or establish GPU performance.
+
 ## Completion execution plan - 9 October 2026
 
 This section is the forward work order. The ledger above reports delivered work;
