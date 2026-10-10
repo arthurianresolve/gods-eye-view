@@ -36,7 +36,13 @@ export async function fixtureRequestCommand(event, base, respond) {
   ];
 }
 
-export async function interceptFixtureSession(client, base, respond, onError) {
+export async function interceptFixtureSession(
+  client,
+  base,
+  respond,
+  onError,
+  { onFulfilled } = {},
+) {
   client.on('Fetch.requestPaused', async (event) => {
     try {
       const [method, params] = await fixtureRequestCommand(
@@ -45,6 +51,18 @@ export async function interceptFixtureSession(client, base, respond, onError) {
         respond,
       );
       await client.send(method, params);
+      if (method === 'Fetch.fulfillRequest') {
+        try {
+          onFulfilled?.({
+            url: event.request.url,
+            method: event.request.method,
+            status: params.responseCode,
+            bodyBase64: params.body,
+          });
+        } catch (error) {
+          onError?.(error);
+        }
+      }
     } catch (error) {
       // A broken fixture must not leave a worker fetch permanently suspended.
       await client

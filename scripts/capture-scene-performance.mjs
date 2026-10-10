@@ -8,6 +8,13 @@ import puppeteer from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
+import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import {
+  createFlightFixtureDeliveryObserver,
+  createProductionFlightFixture,
+  installFixedWallClock,
+  respondToProductionFlightFixture,
+} from './performance/productionFlightFixture.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -27,11 +34,32 @@ const runs = Math.max(1, Math.min(10, Number(option('--runs', '5')) || 5));
 const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
+const providerFixtureMode = option('--provider-fixture', null);
+const providerFixtureTime = option(
+  '--provider-fixture-time',
+  '2026-10-08T12:00:00.000Z',
+);
+if (providerFixtureMode && providerFixtureMode !== 'dense-investigation')
+  throw new Error('--provider-fixture supports only dense-investigation');
+if (
+  providerFixtureMode &&
+  (fixtureAircraftCount !== 0 || !args.includes('--mixed-layers'))
+)
+  throw new Error(
+    'The dense provider fixture requires --mixed-layers and must not use --fixture-aircraft.',
+  );
+const productionFlightFixture = providerFixtureMode
+  ? createProductionFlightFixture({
+      count: 2500,
+      fixedTime: providerFixtureTime,
+    })
+  : null;
 const qualityMode = option('--quality-mode', 'manual');
 const detectionMode = String(option('--detection-mode', 'DENSE')).toUpperCase();
 const mixedLayers = args.includes('--mixed-layers');
-const effectiveFixtureAircraftCount =
-  fixtureAircraftCount || (mixedLayers ? 2500 : 0);
+const effectiveFixtureAircraftCount = productionFlightFixture
+  ? productionFlightFixture.count
+  : fixtureAircraftCount || (mixedLayers ? 2500 : 0);
 const expectedDensityPct = Number(
   option(
     '--expected-density',
@@ -75,6 +103,10 @@ if (
 )
   throw new Error(
     'Verified capture requires --build-receipt, --app-checkout, --harness-checkout, --build-root, --expected-app-sha, --expected-harness-sha and --served-base-url together.',
+  );
+if (productionFlightFixture && !buildProvenanceEnabled)
+  throw new Error(
+    'The production flight fixture requires verified build provenance options.',
   );
 const actualHarnessRoot = await fs.realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
@@ -132,7 +164,7 @@ if (buildProvenanceEnabled) {
     actualHarnessRoot,
     captureUrl: url,
   });
-  if (effectiveFixtureAircraftCount)
+  if (effectiveFixtureAircraftCount && !productionFlightFixture)
     throw new Error(
       'The aircraft fixture uses a Vite development-only injection seam and is not comparable with a local production build receipt.',
     );
@@ -194,6 +226,38 @@ const browser = await puppeteer.launch({
   ],
 });
 
+const fixtureInterceptionSessions = [];
+const fixtureInterceptionErrors = [];
+async function configureFlightFixturePage(page, deliveryObserver = null) {
+  if (!productionFlightFixture) return;
+  await page.evaluateOnNewDocument(
+    installFixedWallClock,
+    productionFlightFixture.fixedTimeMs,
+  );
+  const session = await page.createCDPSession();
+  fixtureInterceptionSessions.push(session);
+  await interceptFixtureSession(
+    session,
+    new URL(url).origin + '/',
+    (requestUrl, request) =>
+      respondToProductionFlightFixture(
+        requestUrl,
+        request,
+        productionFlightFixture,
+        new URL(url).origin + '/',
+      ),
+    (error) => {
+      if (fixtureInterceptionErrors.length < 8)
+        fixtureInterceptionErrors.push(
+          String(error?.message || 'Fixture interception failed').slice(0, 240),
+        );
+    },
+    deliveryObserver
+      ? { onFulfilled: deliveryObserver.onFulfilled }
+      : undefined,
+  );
+}
+
 try {
   const startupUrl = new URL(url);
   startupUrl.searchParams.set('welcome', '0');
@@ -247,6 +311,7 @@ try {
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
+    await configureFlightFixturePage(startupPage);
     auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
@@ -329,6 +394,13 @@ try {
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
   await page.setCacheEnabled(false);
   await page.setBypassServiceWorker(true);
+  const flightFixtureDelivery = productionFlightFixture
+    ? createFlightFixtureDeliveryObserver(
+        productionFlightFixture,
+        new URL(url).origin + '/',
+      )
+    : null;
+  await configureFlightFixturePage(page, flightFixtureDelivery);
   auditPageCodeRequests(page);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   if (captureProvenance) {
@@ -360,7 +432,15 @@ try {
 
   const fixture = effectiveFixtureAircraftCount
     ? await page.evaluate(
-        async ({ count, mode, detectionMode }) => {
+        async ({
+          count,
+          mode,
+          detectionMode,
+          productionProvider,
+          fixtureId,
+          fixtureSha256,
+          fixedTime,
+        }) => {
           const app = window.__godsEyeView;
           const manager = app?.dataManager;
           const entry = manager?.layers?.get('flights');
@@ -370,32 +450,34 @@ try {
             );
           if (!manager.isEnabled('flights'))
             await manager.setEnabled('flights', true);
-          const layer = manager.layers.get('flights')?.module;
-          const inject = layer?.__focusEvidence?.setAircraft;
-          if (typeof inject !== 'function')
-            throw new Error(
-              'Aircraft fixture injection is available only in a Vite development build',
-            );
-          const records = Array.from({ length: count }, (_, index) => {
-            const angle = index * 2.399963229728653;
-            const radius = Math.sqrt((index + 0.5) / count);
-            return {
-              id: (index + 1).toString(16).padStart(6, '0'),
-              callsign: `FX${String(index + 1).padStart(5, '0')}`,
-              latitude: 30.2672 + Math.sin(angle) * radius * 0.14,
-              longitude: -97.7431 + Math.cos(angle) * radius * 0.18,
-              altitudeM: 1_500 + (index % 16) * 850,
-              velocityMps: 70 + (index % 90),
-              trackDeg: index % 360,
-            };
-          });
-          const result = inject(records);
-          if (!result?.ok || result.count !== count)
-            throw new Error(
-              `Fixture injection failed: ${JSON.stringify(result)}`,
-            );
-          if (entry.intervalId != null) clearInterval(entry.intervalId);
-          entry.intervalId = null;
+          if (!productionProvider) {
+            const layer = manager.layers.get('flights')?.module;
+            const inject = layer?.__focusEvidence?.setAircraft;
+            if (typeof inject !== 'function')
+              throw new Error(
+                'Aircraft fixture injection is available only in a Vite development build',
+              );
+            const records = Array.from({ length: count }, (_, index) => {
+              const angle = index * 2.399963229728653;
+              const radius = Math.sqrt((index + 0.5) / count);
+              return {
+                id: (index + 1).toString(16).padStart(6, '0'),
+                callsign: `FX${String(index + 1).padStart(5, '0')}`,
+                latitude: 30.2672 + Math.sin(angle) * radius * 0.14,
+                longitude: -97.7431 + Math.cos(angle) * radius * 0.18,
+                altitudeM: 1_500 + (index % 16) * 850,
+                velocityMps: 70 + (index % 90),
+                trackDeg: index % 360,
+              };
+            });
+            const result = inject(records);
+            if (!result?.ok || result.count !== count)
+              throw new Error(
+                `Fixture injection failed: ${JSON.stringify(result)}`,
+              );
+            if (entry.intervalId != null) clearInterval(entry.intervalId);
+            entry.intervalId = null;
+          }
           const controller = app.styleManager?._adaptiveQuality;
           if (controller && !controller.setMode(mode))
             throw new Error('Presentation quality controller is unavailable');
@@ -433,9 +515,10 @@ try {
           });
           viewer.scene.requestRender();
           return {
-            id: 'synthetic-aircraft-ring-v1',
+            id: productionProvider ? fixtureId : 'synthetic-aircraft-ring-v1',
             count,
             center,
+            ...(productionProvider ? { sha256: fixtureSha256, fixedTime } : {}),
             cameraPath: {
               id: 'austin-overhead-v1',
               altitudeM: 130_000,
@@ -450,9 +533,42 @@ try {
           count: effectiveFixtureAircraftCount,
           mode: qualityMode,
           detectionMode,
+          productionProvider: Boolean(productionFlightFixture),
+          fixtureId: productionFlightFixture?.id || null,
+          fixtureSha256: productionFlightFixture?.sha256 || null,
+          fixedTime: productionFlightFixture?.fixedTime || null,
         },
       )
     : null;
+
+  const summarizeFlightFixtureDelivery = async () => {
+    if (!productionFlightFixture) return null;
+    if (fixtureInterceptionErrors.length)
+      throw new Error(
+        `Provider fixture interception reported ${fixtureInterceptionErrors.length} bounded errors.`,
+      );
+    const observedCount = await page.evaluate(
+      () =>
+        window.__godsEyeView?.dataManager
+          ?.getAll?.()
+          ?.find((entry) => entry.id === 'flights')?.stats?.count ?? null,
+    );
+    return flightFixtureDelivery.summarize(observedCount);
+  };
+  let fixtureDelivery = null;
+  if (productionFlightFixture) {
+    await page.waitForFunction(
+      (count) => {
+        const layer = window.__godsEyeView?.dataManager
+          ?.getAll?.()
+          ?.find((entry) => entry.id === 'flights');
+        return layer?.enabled === true && layer?.stats?.count === count;
+      },
+      { timeout: fixtureTimeoutMs, polling: 100 },
+      productionFlightFixture.count,
+    );
+    fixtureDelivery = await summarizeFlightFixtureDelivery();
+  }
 
   if (fixture) {
     try {
@@ -884,6 +1000,9 @@ try {
   const cameraPathStableAcrossSamples = stableWithinScenario(
     (sample) => sample.cameraPath,
   );
+  // Recheck delivery after all samples so a late failed/mismatched fulfillment
+  // cannot leave an earlier pre-measurement observation looking complete.
+  fixtureDelivery = await summarizeFlightFixtureDelivery();
   const motionBudget = evaluateMotionFrameBudget(captures, maxP95Ms);
   const integrity = assertCaptureIntegrity(captures, {
     expectedCommit: source.appCommit,
@@ -902,9 +1021,11 @@ try {
     comparisonEligible: false,
     comparisonReadiness: {
       status: 'not-ready',
-      reason:
-        'Versioned fixture delivery and observed comparison-contract export are not implemented in this packet.',
+      reason: productionFlightFixture
+        ? 'Observed provider fixture delivery is a static-count integration smoke only; versioned comparison-contract export and paired capture eligibility remain pending.'
+        : 'Versioned fixture delivery and comparison-contract export are not present in this capture; paired capture eligibility remains pending.',
     },
+    ...(fixtureDelivery ? { fixtureDelivery } : {}),
     environment,
     integrity,
     workload: {
@@ -948,5 +1069,9 @@ try {
   if (motionBudget.status === 'failed' || motionBudget.status === 'incomplete')
     process.exitCode = 1;
 } finally {
+  for (const session of fixtureInterceptionSessions) {
+    await session.send('Fetch.disable').catch(() => {});
+    await session.detach().catch(() => {});
+  }
   await browser.close();
 }
