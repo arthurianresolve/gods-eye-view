@@ -245,7 +245,7 @@ export const clickControl = (page, selector) =>
     element.click();
   }, selector);
 
-export async function openWorkspace(page, id) {
+export async function openWorkspace(page, id, { timeoutMs = 30_000 } = {}) {
   await page.waitForFunction(
     (key) =>
       [
@@ -253,12 +253,15 @@ export async function openWorkspace(page, id) {
           '.workspace-library [data-workspace-select] option',
         ),
       ].some((option) => option.value === key),
-    {},
+    { timeout: timeoutMs, polling: 50 },
     id,
   );
   await page.select('.workspace-library [data-workspace-select]', id);
   try {
-    await page.evaluate(clickAndWaitForWorkspaceOpen);
+    // Puppeteer serializes the supplied function into the page. Passing the
+    // imported function directly keeps its browser-side `window` default in
+    // scope; a wrapper cannot close over this module binding.
+    await page.evaluate(clickAndWaitForWorkspaceOpen, undefined, timeoutMs);
   } catch (error) {
     const diagnostics = await page.evaluate(() => {
       const app = window.__godsEyeView;

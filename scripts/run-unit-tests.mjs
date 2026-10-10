@@ -26,6 +26,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/pairedRendererExperiment.test.mjs',
   'scripts/performance/importFrameDiagnostics.test.mjs',
   'scripts/performance/profileRecoveryFixtureContract.test.mjs',
+  'scripts/performance/importWorkspaceLifecycle.test.mjs',
   'scripts/performance/cesiumWorkerBlobContract.test.mjs',
   'scripts/qa-candidate.test.mjs',
   'scripts/qa-install-recovery.test.mjs',
