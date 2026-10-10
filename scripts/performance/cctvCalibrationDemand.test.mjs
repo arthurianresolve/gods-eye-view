@@ -123,6 +123,7 @@ function trial(mode, pair, globalIndex) {
           viewportWidth: viewport.viewportWidth,
           viewportHeight: viewport.viewportHeight,
           devicePixelRatio: viewport.devicePixelRatio,
+          canvasLayout: { ...settledLayout },
         },
         after: {
           visibilityState: 'visible',
@@ -130,10 +131,12 @@ function trial(mode, pair, globalIndex) {
           viewportWidth: viewport.viewportWidth,
           viewportHeight: viewport.viewportHeight,
           devicePixelRatio: viewport.devicePixelRatio,
+          canvasLayout: { ...settledLayout },
         },
         events: [],
         eventOverflow: false,
         foregroundUninterrupted: true,
+        canvasLayoutUnchanged: true,
         durationMs: 10_000,
         completedPhase: 'observation',
       },
@@ -180,6 +183,13 @@ function trial(mode, pair, globalIndex) {
           y: (160 * viewport.height) / viewport.cssHeight,
         },
       },
+      canvasLayoutAtPointerDown: { ...settledLayout },
+      canvasLayoutObservations: {
+        beforeInstruction: { ...settledLayout },
+        afterInstruction: { ...settledLayout },
+        afterRelease: { ...settledLayout },
+        afterCapture: { ...settledLayout },
+      },
       conditions: {
         before: {
           visibilityState: 'visible',
@@ -187,6 +197,7 @@ function trial(mode, pair, globalIndex) {
           viewportWidth: viewport.viewportWidth,
           viewportHeight: viewport.viewportHeight,
           devicePixelRatio: viewport.devicePixelRatio,
+          canvasLayout: { ...settledLayout },
         },
         after: {
           visibilityState: 'visible',
@@ -194,10 +205,12 @@ function trial(mode, pair, globalIndex) {
           viewportWidth: viewport.viewportWidth,
           viewportHeight: viewport.viewportHeight,
           devicePixelRatio: viewport.devicePixelRatio,
+          canvasLayout: { ...settledLayout },
         },
         events: [],
         eventOverflow: false,
         foregroundUninterrupted: true,
+        canvasLayoutUnchanged: true,
         durationMs: 500,
         completedPhase: 'after-frame-capture',
       },
@@ -342,6 +355,35 @@ test('rejects pick evidence from a mismatched canvas coordinate mapping', () => 
   assert.throws(() =>
     validateCctvCalibrationDemandReport(report, { expectedCommit: commit }),
   );
+});
+
+test('rejects instruction-induced canvas changes even with a stable window viewport', () => {
+  for (const mutate of [
+    (run) => {
+      run.drag.canvasLayoutObservations.afterInstruction.cssWidth = 1278;
+    },
+    (run) => {
+      run.drag.canvasLayoutObservations.afterRelease.drawingBufferWidth += 1;
+    },
+    (run) => {
+      run.drag.canvasLayoutAtPointerDown.cssWidth += 1;
+    },
+    (run) => {
+      delete run.drag.canvasLayoutObservations;
+    },
+    (run) => {
+      run.idle.conditions.canvasLayoutUnchanged = false;
+    },
+    (run) => {
+      run.drag.conditions.after.canvasLayout.cssLeft += 2;
+    },
+  ]) {
+    const report = validReport();
+    mutate(report.pairs[0].runs[0]);
+    assert.throws(() =>
+      validateCctvCalibrationDemandReport(report, { expectedCommit: commit }),
+    );
+  }
 });
 
 test('rejects missing pointer, pixel, foreground, or cleanup evidence', () => {

@@ -20,6 +20,7 @@ import {
 } from '../performance/cctvCalibrationDemand.mjs';
 import {
   createImportFrameDiagnostics,
+  createSceneFrameTimingDiagnostics,
   observeImportFrameHealth,
 } from '../performance/importFrameDiagnostics.mjs';
 
@@ -329,6 +330,16 @@ async function collectCaptureFailureDiagnostics(
     documentTarget: document,
   });
   const scene = viewer?.scene;
+  let frameTimingDiagnostics = null;
+  let frameTimingSetupError = null;
+  let frameTiming = null;
+  try {
+    frameTimingDiagnostics = createSceneFrameTimingDiagnostics(scene);
+  } catch (diagnosticError) {
+    frameTimingSetupError = String(
+      diagnosticError?.message || diagnosticError,
+    ).slice(0, 240);
+  }
   const eventNames = ['preUpdate', 'postUpdate', 'preRender', 'postRender'];
   const sceneEvents = Object.fromEntries(eventNames.map((name) => [name, 0]));
   const removes = [];
@@ -336,6 +347,7 @@ async function collectCaptureFailureDiagnostics(
   const listenerCleanupErrors = [];
   const sceneBefore = sceneSnapshot(viewer, layer);
   const lifecycleBefore = lifecycle.snapshotCanvas(viewer?.canvas);
+  let result;
   try {
     if (scene) {
       for (const name of eventNames) {
@@ -359,7 +371,7 @@ async function collectCaptureFailureDiagnostics(
       }
     }
     const frameHealth = await observeImportFrameHealth({ durationMs: 1000 });
-    return {
+    result = {
       phase,
       captureTimeoutMs: 400,
       primaryError: {
@@ -372,6 +384,7 @@ async function collectCaptureFailureDiagnostics(
       lifecycleAfter: lifecycle.snapshotCanvas(viewer?.canvas),
       lifecycleEvents: lifecycle.events(),
       frameHealth,
+      frameTimingSetupError,
       sceneEventCounts: sceneEvents,
       renderErrors,
       sceneBefore,
@@ -379,7 +392,7 @@ async function collectCaptureFailureDiagnostics(
       listenerCleanupErrors,
     };
   } catch (diagnosticError) {
-    return {
+    result = {
       phase,
       captureTimeoutMs: 400,
       primaryError: {
@@ -391,6 +404,7 @@ async function collectCaptureFailureDiagnostics(
       diagnosticError: String(
         diagnosticError?.message || diagnosticError,
       ).slice(0, 240),
+      frameTimingSetupError,
       sceneEventCounts: sceneEvents,
       renderErrors,
       sceneBefore,
@@ -398,6 +412,13 @@ async function collectCaptureFailureDiagnostics(
       listenerCleanupErrors,
     };
   } finally {
+    try {
+      frameTiming = frameTimingDiagnostics?.stop() ?? null;
+    } catch (diagnosticError) {
+      frameTimingSetupError ||= String(
+        diagnosticError?.message || diagnosticError,
+      ).slice(0, 240);
+    }
     for (const remove of removes) {
       try {
         remove();
@@ -417,6 +438,11 @@ async function collectCaptureFailureDiagnostics(
         );
     }
   }
+  if (result) {
+    result.frameTiming = frameTiming;
+    result.frameTimingSetupError = frameTimingSetupError;
+  }
+  return result;
 }
 
 async function captureTrialFrame(viewer, layer, trial, phase) {
@@ -516,25 +542,27 @@ async function attachCameraGeometryDigest(run, viewer, layer) {
   };
 }
 
-function viewportSnapshot() {
+function viewportSnapshot(viewer) {
   return {
     viewportWidth: window.innerWidth,
     viewportHeight: window.innerHeight,
     devicePixelRatio: window.devicePixelRatio,
     visibilityState: document.visibilityState,
     focused: document.hasFocus(),
+    canvasLayout: viewer ? layoutSnapshot(viewer) : null,
   };
 }
 
-function observeIdleConditions() {
+function observeIdleConditions(viewer) {
   const startedAt = performance.now();
-  const before = viewportSnapshot();
+  const before = viewportSnapshot(viewer);
   const events = [];
   let eventOverflow = false;
+  let canvasLayoutUnchanged = Boolean(before.canvasLayout);
   let foregroundUninterrupted =
     before.visibilityState === 'visible' && before.focused;
   const record = (event) => {
-    const value = { type: event.type, ...viewportSnapshot() };
+    const value = { type: event.type, ...viewportSnapshot(viewer) };
     if (value.visibilityState !== 'visible' || !value.focused)
       foregroundUninterrupted = false;
     if (
@@ -543,6 +571,10 @@ function observeIdleConditions() {
       value.devicePixelRatio !== before.devicePixelRatio
     )
       foregroundUninterrupted = false;
+    if (!sameLayout(value.canvasLayout, before.canvasLayout)) {
+      canvasLayoutUnchanged = false;
+      foregroundUninterrupted = false;
+    }
     if (events.length < 16) events.push(value);
     else eventOverflow = true;
   };
@@ -554,15 +586,20 @@ function observeIdleConditions() {
       document.removeEventListener('visibilitychange', record);
       for (const type of ['focus', 'blur', 'resize'])
         window.removeEventListener(type, record);
-      const after = viewportSnapshot();
+      const after = viewportSnapshot(viewer);
       if (after.visibilityState !== 'visible' || !after.focused)
         foregroundUninterrupted = false;
+      if (!sameLayout(after.canvasLayout, before.canvasLayout)) {
+        canvasLayoutUnchanged = false;
+        foregroundUninterrupted = false;
+      }
       return {
         before,
         after,
         events,
         eventOverflow,
         foregroundUninterrupted,
+        canvasLayoutUnchanged,
         durationMs: performance.now() - startedAt,
         completedPhase,
       };
@@ -743,6 +780,7 @@ function observeNativeInput(viewer, layer, targetPoint) {
     trustedPointerUp: false,
     pickIdentity: null,
     pickEvidence: null,
+    canvasLayoutAtPointerDown: null,
     dragInputsDisabledObserved: false,
     dragInputsRestoredAfterRelease: false,
   };
@@ -771,6 +809,7 @@ function observeNativeInput(viewer, layer, targetPoint) {
     if (event.isTrusted && event.button === 0) {
       state.trustedPointerDown = true;
       const rect = canvas.getBoundingClientRect();
+      state.canvasLayoutAtPointerDown = layoutSnapshot(viewer);
       const local = new Cesium.Cartesian2(
         event.clientX - rect.left,
         event.clientY - rect.top,
@@ -888,6 +927,8 @@ async function waitForNativeRelease(run, viewer, layer, input) {
       run.drag.trustedPointerUp = input.state.trustedPointerUp;
       run.drag.pickIdentity = input.state.pickIdentity;
       run.drag.pickEvidence = input.state.pickEvidence;
+      run.drag.canvasLayoutAtPointerDown =
+        input.state.canvasLayoutAtPointerDown;
       run.drag.dragInputsDisabledObserved =
         input.state.dragInputsDisabledObserved;
       run.drag.dragInputsRestoredAfterRelease =
@@ -902,6 +943,7 @@ async function waitForNativeRelease(run, viewer, layer, input) {
   run.drag.trustedPointerUp = input.state.trustedPointerUp;
   run.drag.pickIdentity = input.state.pickIdentity;
   run.drag.pickEvidence = input.state.pickEvidence;
+  run.drag.canvasLayoutAtPointerDown = input.state.canvasLayoutAtPointerDown;
   run.drag.dragInputsDisabledObserved = input.state.dragInputsDisabledObserved;
   run.drag.dragInputsRestoredAfterRelease =
     input.state.dragInputsRestoredAfterRelease;
@@ -1050,6 +1092,8 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       selectedCameraIdAfterRelease: null,
       pickIdentity: null,
       pickEvidence: null,
+      canvasLayoutAtPointerDown: null,
+      canvasLayoutObservations: null,
       geometrySha256After: null,
     };
     if (mode === 'legacy-control') {
@@ -1065,7 +1109,7 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
     trial.renderingSettings.requestRenderModeDuringIdle = initialMode;
     idleCounter = frameCountListener(viewer);
     const idleStart = performance.now();
-    idleObserver = observeIdleConditions();
+    idleObserver = observeIdleConditions(viewer);
     await wait(IDLE_MS);
     const idleDurationMs = performance.now() - idleStart;
     trial.idle = {
@@ -1086,7 +1130,7 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
 
     setPhase(`pair-${pair}-${mode}-native-drag`);
     updateStatus(`Pair ${pair + 1}/5: native drag (${mode})`);
-    interactionObserver = observeIdleConditions();
+    interactionObserver = observeIdleConditions(viewer);
     inputObserver = observeNativeInput(viewer, layer, trial.drag.from);
     const instruction = {
       id: trial.drag.instructionId,
@@ -1095,12 +1139,30 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       to: trial.drag.to,
       steps: 6,
     };
+    trial.drag.canvasLayoutObservations = {
+      beforeInstruction: layoutSnapshot(viewer),
+      afterInstruction: null,
+      afterRelease: null,
+      afterCapture: null,
+    };
     pointerNode.textContent = JSON.stringify(instruction);
+    trial.drag.canvasLayoutObservations.afterInstruction =
+      layoutSnapshot(viewer);
+    if (
+      !sameLayout(
+        trial.drag.canvasLayoutObservations.beforeInstruction,
+        trial.drag.canvasLayoutObservations.afterInstruction,
+      )
+    )
+      throw new Error(
+        'Native pointer instructions changed the settled CCTV canvas layout.',
+      );
     publishPartial();
     await waitForNativeRelease(trial, viewer, layer, inputObserver);
     pointerNode.textContent = '';
     inputObserver.dispose();
     inputObserver = null;
+    trial.drag.canvasLayoutObservations.afterRelease = layoutSnapshot(viewer);
     check(
       trial.drag.pickIdentity?.entityId === 'cctv-gizmo-move-east',
       'Native drag did not scene-pick the expected east-move gizmo.',
@@ -1118,6 +1180,8 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       trial,
       'after-pixels',
     );
+    trial.drag.canvasLayoutObservations.afterCapture =
+      trial.layoutEvidence.afterPixelsCapture.after;
     trial.drag.conditions = interactionObserver.finish({
       completedPhase: 'after-frame-capture',
     });

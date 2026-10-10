@@ -1,6 +1,157 @@
 export const IMPORT_FRAME_EVENT_LIMIT = 32;
 export const IMPORT_FAILURE_RAF_OBSERVATION_MS = 1000;
 
+/** Failure-only CPU event spans; these are not GPU execution timings. */
+export function createSceneFrameTimingDiagnostics(
+  scene,
+  {
+    now = () => globalThis.performance.now(),
+    PerformanceObserverClass = globalThis.PerformanceObserver,
+  } = {},
+) {
+  const startedAt = now();
+  const spans = { update: [], render: [] };
+  const counts = { update: 0, render: 0 };
+  const starts = { update: null, render: null };
+  const removers = [];
+  const observers = [];
+  const entries = { longtask: null, 'long-animation-frame': null };
+  const overflow = { update: false, render: false };
+  const observerErrors = [];
+  let result = null;
+  let active = true;
+
+  function append(target, value) {
+    target.push(value);
+    if (target.length > IMPORT_FRAME_EVENT_LIMIT) target.shift();
+  }
+  function add(event, listener) {
+    if (!event?.addEventListener) return;
+    const remove = event.addEventListener(listener);
+    removers.push(
+      typeof remove === 'function'
+        ? remove
+        : () => event.removeEventListener?.(listener),
+    );
+  }
+  function consume(type, records) {
+    if (!active) return;
+    for (const entry of records) {
+      if (!Number.isFinite(entry.startTime) || entry.startTime < startedAt)
+        continue;
+      if (!Number.isFinite(entry.duration) || entry.duration < 0) continue;
+      const row = {
+        startMs: entry.startTime - startedAt,
+        durationMs: entry.duration,
+      };
+      if (type === 'long-animation-frame') {
+        for (const key of [
+          'blockingDuration',
+          'renderStart',
+          'styleAndLayoutStart',
+        ]) {
+          row[key] = Number.isFinite(entry[key]) ? entry[key] : null;
+        }
+        // Retain timing and invocation kind only, never script URLs or names.
+        row.scripts = Array.from(entry.scripts || [])
+          .slice(0, 8)
+          .map((script) => ({
+            durationMs: Number.isFinite(script.duration)
+              ? script.duration
+              : null,
+            invokerType: [
+              'classic-script',
+              'module-script',
+              'event-listener',
+              'user-callback',
+              'resolve-promise',
+              'reject-promise',
+            ].includes(script.invokerType)
+              ? script.invokerType
+              : 'unknown',
+            forcedStyleAndLayoutDurationMs: Number.isFinite(
+              script.forcedStyleAndLayoutDuration,
+            )
+              ? script.forcedStyleAndLayoutDuration
+              : null,
+          }));
+      }
+      append(entries[type], row);
+    }
+  }
+
+  try {
+    for (const [name, before, after] of [
+      ['update', 'preUpdate', 'postUpdate'],
+      ['render', 'preRender', 'postRender'],
+    ]) {
+      add(scene?.[before], () => {
+        if (active) starts[name] = now();
+      });
+      add(scene?.[after], () => {
+        if (!active || starts[name] === null) return;
+        counts[name]++;
+        overflow[name] ||= counts[name] > IMPORT_FRAME_EVENT_LIMIT;
+        append(spans[name], {
+          startMs: starts[name] - startedAt,
+          durationMs: Math.max(0, now() - starts[name]),
+        });
+        starts[name] = null;
+      });
+    }
+    for (const type of Object.keys(entries)) {
+      if (!PerformanceObserverClass?.supportedEntryTypes?.includes(type))
+        continue;
+      let observer;
+      try {
+        observer = new PerformanceObserverClass((list) =>
+          consume(type, list.getEntries()),
+        );
+        entries[type] = [];
+        observer.observe({ type, buffered: false });
+        observers.push({ type, observer });
+      } catch {
+        observer?.disconnect();
+        entries[type] = null;
+        observerErrors.push(type);
+      }
+    }
+  } catch {
+    for (const remove of removers) remove();
+    throw new Error(
+      'Could not install bounded scene frame timing diagnostics.',
+    );
+  }
+
+  return {
+    stop() {
+      if (result) return result;
+      for (const { type, observer } of observers) {
+        try {
+          consume(type, observer.takeRecords());
+        } catch {
+          observerErrors.push(type);
+        } finally {
+          observer.disconnect();
+        }
+      }
+      active = false;
+      for (const remove of removers) remove();
+      result = {
+        scope:
+          'Failure follow-up only; wall-clock CPU event spans include stalls, not GPU execution timing',
+        elapsedMs: Math.max(0, now() - startedAt),
+        counts,
+        spans,
+        overflow,
+        entries,
+        observerErrors,
+      };
+      return result;
+    },
+  };
+}
+
 const LIFECYCLE_EVENTS = [
   ['window', 'focus'],
   ['window', 'blur'],

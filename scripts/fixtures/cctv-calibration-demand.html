@@ -24,6 +24,7 @@
       }
       body {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: 42px 42px minmax(0, 1fr) 76px;
         background: #09141f;
         color: #d9e8f0;
@@ -31,6 +32,7 @@
       header,
       #instruction-area,
       footer {
+        min-width: 0;
         padding: 6px 12px;
         display: flex;
         align-items: center;
@@ -61,14 +63,21 @@
       }
       #instruction-area {
         height: 42px;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
         border-bottom: 1px solid #27404e;
       }
       #pointer-instruction {
+        flex: 1 1 auto;
         min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
         font:
           12px ui-monospace,
           monospace;
         white-space: pre;
+        text-overflow: ellipsis;
       }
       #viewer {
         width: 100%;
@@ -84,13 +93,16 @@
       }
       footer {
         align-items: flex-start;
+        overflow: hidden;
         border-top: 1px solid #27404e;
       }
       #result {
         margin: 0;
         width: 100%;
+        min-width: 0;
         max-height: 64px;
         overflow: auto;
+        overflow-wrap: anywhere;
         white-space: pre-wrap;
         font:
           10px ui-monospace,

@@ -208,7 +208,11 @@ function assertRunEnvironment(run, report) {
 function assertForegroundConditions(
   conditions,
   viewport,
-  { completedPhase = 'observation', minimumDurationMs = 0 } = {},
+  {
+    completedPhase = 'observation',
+    minimumDurationMs = 0,
+    expectedLayout = null,
+  } = {},
 ) {
   if (
     !conditions ||
@@ -217,6 +221,7 @@ function assertForegroundConditions(
     conditions.after?.visibilityState !== 'visible' ||
     conditions.before?.focused !== true ||
     conditions.after?.focused !== true ||
+    conditions.canvasLayoutUnchanged !== true ||
     conditions.completedPhase !== completedPhase ||
     !Number.isFinite(conditions.durationMs) ||
     conditions.durationMs < minimumDurationMs ||
@@ -234,6 +239,8 @@ function assertForegroundConditions(
       point.devicePixelRatio !== viewport.devicePixelRatio
     )
       throw new Error('CCTV idle viewport changed during observation.');
+    if (expectedLayout && !exactJson(point.canvasLayout, expectedLayout))
+      throw new Error('CCTV canvas layout changed during observation.');
   }
 }
 
@@ -275,11 +282,15 @@ function assertRun(run, expectedCommit, report) {
     throw new Error('CCTV legacy control did not render continuously.');
   if (idle.renderMode !== (run.mode === 'candidate'))
     throw new Error('CCTV idle render mode does not match the trial.');
-  assertForegroundConditions(idle.conditions, {
-    width: run.renderingSettings.viewportWidth,
-    height: run.renderingSettings.viewportHeight,
-    devicePixelRatio: run.viewport.devicePixelRatio,
-  });
+  assertForegroundConditions(
+    idle.conditions,
+    {
+      width: run.renderingSettings.viewportWidth,
+      height: run.renderingSettings.viewportHeight,
+      devicePixelRatio: run.viewport.devicePixelRatio,
+    },
+    { expectedLayout: run.layoutEvidence.settled },
+  );
 
   const drag = run.drag;
   if (
@@ -308,6 +319,7 @@ function assertRun(run, expectedCommit, report) {
     drag.pickEvidence?.entityId !== 'cctv-gizmo-move-east' ||
     drag.pickEvidence?.drawingBuffer?.width !== run.viewport.width ||
     drag.pickEvidence?.drawingBuffer?.height !== run.viewport.height ||
+    !exactJson(drag.canvasLayoutAtPointerDown, run.layoutEvidence.settled) ||
     !drag.pickEvidence?.canvasRect ||
     !drag.pickEvidence?.cssLocal ||
     !drag.pickEvidence?.drawingBuffer ||
@@ -351,6 +363,21 @@ function assertRun(run, expectedCommit, report) {
     Math.abs(pickRect.height - run.layoutEvidence.settled.cssHeight) > 0.01
   )
     throw new Error('CCTV pick was sampled against a different canvas layout.');
+  const layoutObservations = drag.canvasLayoutObservations;
+  if (
+    !layoutObservations ||
+    !exactJson(
+      layoutObservations.beforeInstruction,
+      run.layoutEvidence.settled,
+    ) ||
+    !exactJson(
+      layoutObservations.afterInstruction,
+      run.layoutEvidence.settled,
+    ) ||
+    !exactJson(layoutObservations.afterRelease, run.layoutEvidence.settled) ||
+    !exactJson(layoutObservations.afterCapture, run.layoutEvidence.settled)
+  )
+    throw new Error('CCTV native drag changed the settled canvas layout.');
   for (const [axis, size, rectSize] of [
     ['x', run.viewport.width, pickRect.width],
     ['y', run.viewport.height, pickRect.height],
@@ -401,6 +428,7 @@ function assertRun(run, expectedCommit, report) {
     {
       completedPhase: 'after-frame-capture',
       minimumDurationMs: 1,
+      expectedLayout: run.layoutEvidence.settled,
     },
   );
 

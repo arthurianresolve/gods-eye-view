@@ -2,9 +2,131 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createImportFrameDiagnostics,
+  createSceneFrameTimingDiagnostics,
   IMPORT_FRAME_EVENT_LIMIT,
   observeImportFrameHealth,
 } from './importFrameDiagnostics.mjs';
+
+test('failure frame timings separate event spans, bound records and dispose ownership', () => {
+  let time = 100;
+  const events = () => {
+    const callbacks = new Set();
+    return {
+      callbacks,
+      addEventListener(callback) {
+        callbacks.add(callback);
+        return () => callbacks.delete(callback);
+      },
+      fire() {
+        for (const callback of callbacks) callback();
+      },
+    };
+  };
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
+      name,
+      events(),
+    ]),
+  );
+  const trace = createSceneFrameTimingDiagnostics(scene, {
+    now: () => time,
+    PerformanceObserverClass: null,
+  });
+  for (let i = 0; i < IMPORT_FRAME_EVENT_LIMIT + 5; i++) {
+    scene.preUpdate.fire();
+    time += 3;
+    scene.postUpdate.fire();
+    scene.preRender.fire();
+    time += 2000;
+    scene.postRender.fire();
+  }
+  const report = trace.stop();
+  assert.equal(report.counts.update, IMPORT_FRAME_EVENT_LIMIT + 5);
+  assert.equal(report.spans.update.length, IMPORT_FRAME_EVENT_LIMIT);
+  assert.equal(report.spans.render.length, IMPORT_FRAME_EVENT_LIMIT);
+  assert.equal(report.spans.update[0].durationMs, 3);
+  assert.equal(report.spans.render[0].durationMs, 2000);
+  assert.equal(report.overflow.render, true);
+  assert.equal(report.entries.longtask, null);
+  for (const event of Object.values(scene))
+    assert.equal(event.callbacks.size, 0);
+  scene.preRender.fire();
+  scene.postRender.fire();
+  assert.equal(trace.stop(), report);
+});
+
+test('failure frame observer drains only current entries and excludes script identities', () => {
+  const instances = [];
+  class Observer {
+    static supportedEntryTypes = ['long-animation-frame', 'longtask'];
+    constructor(callback) {
+      this.callback = callback;
+      instances.push(this);
+    }
+    observe({ type }) {
+      this.type = type;
+    }
+    takeRecords() {
+      return [
+        {
+          startTime: 110,
+          duration: 2100,
+          scripts: [
+            {
+              duration: 2000,
+              invokerType: 'user-callback',
+              sourceURL: 'https://private/?token=secret',
+              sourceFunctionName: 'secret',
+            },
+          ],
+        },
+      ];
+    }
+    disconnect() {
+      this.disconnected = true;
+    }
+  }
+  const trace = createSceneFrameTimingDiagnostics(
+    {},
+    { now: () => 100, PerformanceObserverClass: Observer },
+  );
+  for (const instance of instances)
+    instance.callback({ getEntries: () => [{ startTime: 99, duration: 9 }] });
+  const report = trace.stop();
+  assert.equal(report.entries.longtask.length, 1);
+  assert.equal(
+    report.entries['long-animation-frame'][0].scripts[0].durationMs,
+    2000,
+  );
+  assert.equal(JSON.stringify(report).includes('secret'), false);
+  for (const instance of instances) {
+    assert.equal(instance.disconnected, true);
+    instance.callback({
+      getEntries: () => [{ startTime: 120, duration: 100 }],
+    });
+  }
+  assert.equal(report.entries.longtask.length, 1);
+});
+
+test('rejected browser observers remain unavailable and are disconnected', () => {
+  let disconnected = 0;
+  class Observer {
+    static supportedEntryTypes = ['longtask'];
+    observe() {
+      throw new Error('Unavailable');
+    }
+    disconnect() {
+      disconnected++;
+    }
+  }
+  const trace = createSceneFrameTimingDiagnostics(
+    {},
+    { now: () => 0, PerformanceObserverClass: Observer },
+  );
+  assert.equal(trace.stop().entries.longtask, null);
+  assert.deepEqual(trace.stop().observerErrors, ['longtask']);
+  assert.equal(disconnected, 1);
+});
 
 class EventTargetStub {
   listeners = new Map();
