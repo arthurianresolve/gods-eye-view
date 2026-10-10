@@ -2298,7 +2298,10 @@ function makeControlledImportDriver(
       return evaluateWithDeadline(
         page,
         'controlled-import-worker-counters',
-        () => window.__gevSoakWorkers?.snapshot?.() || null,
+        () => {
+          const value = window.__gevSoakWorkers?.snapshot?.() || null;
+          return value ? { ...value, scope: 'cumulative-per-document' } : null;
+        },
       );
     },
     async failureEvidence({ phase, error, progress }) {

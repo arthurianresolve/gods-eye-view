@@ -511,6 +511,19 @@ function controlledImportDriver({
   let closed = false;
   let closeCount = 0;
   let cleanup = null;
+  const preflight = {
+    scope: 'cumulative-per-document',
+    status: 'passed',
+    taskCount: 4,
+    cumulativeSubmitted: 4,
+    cumulativeCompleted: 4,
+    cumulativeCancelled: 0,
+    pendingAtProbeCompletion: 0,
+    quiescenceWaitMs: 0,
+    quiescenceTimeoutMs: 1_000,
+    pendingAtPreflight: 0,
+    overflow: false,
+  };
   const replacementResult = (cycle) => ({
     drawn: featureCount,
     omitted: 0,
@@ -534,6 +547,10 @@ function controlledImportDriver({
     },
     get cleanup() {
       return cleanup;
+    },
+    workerPreflight: preflight,
+    async workerCounters() {
+      return workerCounters();
     },
     async checkpoint() {
       return current;
@@ -2477,9 +2494,14 @@ test('v2 lifecycle contract requires native cycles and separate controlled race 
     importId: fixture.imports[0].id,
     featureIds: fixture.imports[0].records.map((record) => record.id),
   });
+  assert.deepEqual(controlledResult.workerCounters, workerCounters());
+  assert.deepEqual(
+    controlledResult.workerPreflight,
+    controlledDriver.workerPreflight,
+  );
   const controlled = {
-    ...controlledResult,
     ...common,
+    ...controlledResult,
     id: 'controlled-import-supersession',
     applicationCommit: appSha,
     mode: 'controlled-instance-scheduler',

@@ -1685,6 +1685,8 @@ export async function runControlledImportSupersessionLifecycleCase({
       ...progress,
       status: 'passed',
       final: progress.checkpoints.at(-1)?.snapshot || warmed,
+      workerCounters: await driver.workerCounters?.(),
+      workerPreflight: driver.workerPreflight,
     };
   });
   if (driver.cleanup) result.cleanup = driver.cleanup;
