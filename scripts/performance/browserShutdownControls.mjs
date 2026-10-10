@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 export const BROWSER_SHUTDOWN_CLOSE_DEADLINE_MS = 5_000;
 export const BROWSER_SHUTDOWN_CONTROLS = Object.freeze([
   { id: 'blank-normal', document: 'blank', treatment: 'normal' },
-  { id: 'blank-unload', document: 'blank', treatment: 'unload-first' },
+  { id: 'blank-unload', document: 'blank', treatment: 'navigation-first' },
   { id: 'webgl2-normal', document: 'webgl2', treatment: 'normal' },
-  { id: 'webgl2-unload', document: 'webgl2', treatment: 'unload-first' },
+  { id: 'webgl2-unload', document: 'webgl2', treatment: 'navigation-first' },
   { id: 'cesium-normal', document: 'cesium', treatment: 'normal' },
-  { id: 'cesium-unload', document: 'cesium', treatment: 'unload-first' },
+  { id: 'cesium-unload', document: 'cesium', treatment: 'navigation-first' },
 ]);
 
 const SHA1 = /^[a-f0-9]{40}$/i;
@@ -16,7 +16,7 @@ const SHA256 = /^[a-f0-9]{64}$/i;
 export function createBrowserShutdownReport(identity) {
   assertShutdownIdentity(identity);
   return {
-    schema: 'gev-browser-shutdown-controls/v1',
+    schema: 'gev-browser-shutdown-controls/v2',
     status: 'running',
     scope: 'owned-chrome-close-controls; diagnostic-only',
     closeDeadlineMs: BROWSER_SHUTDOWN_CLOSE_DEADLINE_MS,
@@ -150,9 +150,20 @@ export function classifyBrowserShutdownControl(result) {
   )
     return 'failed';
   if (
-    result.treatment === 'unload-first' &&
-    (result.unloadNavigationCompleted !== true ||
-      result.pageHideObserved !== true)
+    result.treatment === 'navigation-first' &&
+    (result.navigationToBlankCompleted !== true ||
+      result.pageHideObserved !== true ||
+      result.pageHideObservation?.scope !== 'fixture-server-sendBeacon' ||
+      !Number.isSafeInteger(result.pageHideObservation?.count) ||
+      result.pageHideObservation.count < 1 ||
+      typeof result.pageHideObservation.persisted !== 'boolean' ||
+      !Number.isFinite(result.pageHideObservation.deliveryElapsedMs) ||
+      result.pageHideObservation.deliveryElapsedMs < 0 ||
+      result.pageHideObservation.receivedWithinDeadline !== true ||
+      result.pageHideObservation.deadlineMs !== 1_000 ||
+      result.pageHideObservation.deliveryElapsedMs > 1_000 ||
+      result.pageHideObservedAfterDeadline !== false ||
+      result.pageHideFailureReason !== null)
   )
     return 'failed';
   return 'passed';
@@ -256,7 +267,7 @@ export async function runBrowserShutdownControlMatrix({
 export function validateBrowserShutdownReport(report) {
   assertShutdownIdentity(report?.identity);
   if (
-    report.schema !== 'gev-browser-shutdown-controls/v1' ||
+    report.schema !== 'gev-browser-shutdown-controls/v2' ||
     report.scope !== 'owned-chrome-close-controls; diagnostic-only' ||
     report.closeDeadlineMs !== BROWSER_SHUTDOWN_CLOSE_DEADLINE_MS ||
     !['passed', 'failed'].includes(report.status) ||

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { createServer, get } from 'node:http';
+import { createServer, get, request } from 'node:http';
 import { mkdtemp, rm, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,9 +22,12 @@ import {
 import {
   closeFixtureServer,
   cleanupScratchProfile,
+  installPageHideBeacon,
   main,
   preserveInterruptedShutdownReport,
+  recordPageHideAfterDeadline,
   setupDocument,
+  startFixtureServer,
 } from '../qa-browser-shutdown.mjs';
 
 const identity = () => ({
@@ -115,8 +118,21 @@ function successfulResult(specification, overrides = {}) {
       malformedCloseMessage: false,
       protocolObservationComplete: true,
     },
-    ...(specification.treatment === 'unload-first'
-      ? { unloadNavigationCompleted: true, pageHideObserved: true }
+    ...(specification.treatment === 'navigation-first'
+      ? {
+          navigationToBlankCompleted: true,
+          pageHideObserved: true,
+          pageHideFailureReason: null,
+          pageHideObservation: {
+            scope: 'fixture-server-sendBeacon',
+            count: 1,
+            persisted: false,
+            deliveryElapsedMs: 25,
+            receivedWithinDeadline: true,
+            deadlineMs: 1_000,
+          },
+          pageHideObservedAfterDeadline: false,
+        }
       : {}),
     ...overrides,
   };
@@ -222,6 +238,10 @@ test('validator rejects missing control evidence, changed identity, or false for
   wrongVersion.controls[0].browserVersion = 'Chrome/151.0.0.0';
   assert.throws(() => validateBrowserShutdownReport(wrongVersion));
 
+  const legacySchema = structuredClone(report);
+  legacySchema.schema = 'gev-browser-shutdown-controls/v1';
+  assert.throws(() => validateBrowserShutdownReport(legacySchema));
+
   const contradictoryErrors = structuredClone(report);
   contradictoryErrors.controls[0].pageErrors = ['unreported page error'];
   assert.throws(() => validateBrowserShutdownReport(contradictoryErrors));
@@ -236,7 +256,7 @@ test('validator rejects missing control evidence, changed identity, or false for
   );
 });
 
-test('unload-first control requires navigation completion and observed pagehide', () => {
+test('navigation-first control requires a delivered outgoing-pagehide observation', () => {
   const control = BROWSER_SHUTDOWN_CONTROLS.find(
     ({ id }) => id === 'webgl2-unload',
   );
@@ -246,15 +266,43 @@ test('unload-first control requires navigation completion and observed pagehide'
   );
   assert.equal(
     classifyBrowserShutdownControl(
-      successfulResult(control, { pageHideObserved: false }),
+      successfulResult(control, {
+        pageHideObserved: false,
+        pageHideFailureReason: 'outgoing-pagehide-beacon-not-observed',
+      }),
     ),
     'failed',
   );
   assert.equal(
     classifyBrowserShutdownControl(
-      successfulResult(control, { unloadNavigationCompleted: false }),
+      successfulResult(control, {
+        navigationToBlankCompleted: false,
+        pageHideFailureReason: 'navigation-to-blank-not-completed',
+      }),
     ),
     'failed',
+  );
+  assert.equal(
+    classifyBrowserShutdownControl(
+      successfulResult(control, { pageHideObservation: null }),
+    ),
+    'failed',
+  );
+  assert.equal(
+    classifyBrowserShutdownControl(
+      successfulResult(control, {
+        pageHideObservation: {
+          scope: 'fixture-server-sendBeacon',
+          count: 1,
+          persisted: true,
+          deliveryElapsedMs: 25,
+          receivedWithinDeadline: true,
+          deadlineMs: 1_000,
+        },
+      }),
+    ),
+    'passed',
+    'pagehide persisted state is diagnostic and does not imply resource destruction',
   );
 });
 
@@ -472,78 +520,224 @@ test('shutdown CLI can be imported for fixture tests without launching Chrome', 
   assert.equal(typeof setupDocument, 'function');
 });
 
-test('blank-page unload observer is installed in the already-open document', async () => {
+test('serialized pagehide handler reaches the bounded owned fixture server', async (t) => {
+  const fixture = await startFixtureServer();
+  t.after(async () => {
+    const closed = await closeFixtureServer(fixture.server);
+    assert.equal(closed.completed, true);
+  });
   const listeners = [];
-  const observedTokens = [];
+  const sentBeacons = [];
   const browserContext = vm.createContext({
+    Date,
+    Math,
+    encodeURIComponent,
     window: {
       addEventListener(name, callback) {
-        if (name === 'pagehide')
-          listeners.push(() => {
-            const token =
-              browserContext.window.__qaBrowserShutdownDocumentToken;
-            observedTokens.push(token);
-            callback.call(browserContext.window, token);
-          });
+        if (name === 'pagehide') listeners.push(callback);
+      },
+    },
+    navigator: {
+      sendBeacon(url, body) {
+        sentBeacons.push({ url, body });
+        void fetch(new URL(url, fixture.origin), {
+          method: 'POST',
+          body,
+        });
+        return true;
       },
     },
   });
+  const callOrder = [];
   const runSerialized = (callback) =>
     vm.runInContext(`(${callback.toString()})()`, browserContext);
-  let pageHideCallback = null;
-  let newDocumentObserver = null;
-  const events = {};
-  let currentUrl = 'about:blank';
   const page = {
-    async exposeFunction(_name, callback) {
-      pageHideCallback = callback;
-      browserContext.window.qaObservePageHide = callback;
-    },
-    async evaluateOnNewDocument(callback) {
-      newDocumentObserver = callback;
-      runSerialized(callback);
-    },
     async evaluate(callback) {
+      callOrder.push('evaluate');
       return runSerialized(callback);
     },
     async setRequestInterception() {},
     async goto(url) {
-      const oldDocumentListeners = listeners.slice();
-      for (const listener of oldDocumentListeners) listener();
-      currentUrl = url;
+      callOrder.push('goto');
+      this.currentUrl = url;
       browserContext.window = {
-        qaObservePageHide: pageHideCallback,
         addEventListener(name, callback) {
-          if (name === 'pagehide')
-            listeners.push(() => {
-              const token =
-                browserContext.window.__qaBrowserShutdownDocumentToken;
-              observedTokens.push(token);
-              callback.call(browserContext.window, token);
-            });
+          if (name === 'pagehide') listeners.push(callback);
         },
       };
-      runSerialized(newDocumentObserver);
     },
-    on(name, callback) {
-      events[name] = callback;
+    on() {},
+    url() {
+      return this.currentUrl;
     },
-    url: () => currentUrl,
   };
-  const origin = 'http://127.0.0.1';
-  const prepared = await setupDocument(page, 'blank', origin);
+  const prepared = await setupDocument(
+    page,
+    'blank',
+    fixture.origin,
+    fixture.pageHideTracker,
+  );
   assert.equal(prepared.documentReady, true);
-  assert.equal(listeners.length, 2);
-  const currentToken = prepared.getPageHideToken();
-  const initialToken = observedTokens[0];
-  assert.notEqual(currentToken, initialToken);
-  assert.equal(prepared.getPageHideCount(initialToken), 1);
-  assert.equal(prepared.getPageHideCount(currentToken), 0);
-  listeners.at(-1)();
-  await Promise.resolve();
-  assert.equal(prepared.getPageHideCount(currentToken), 1);
-  assert.equal(typeof pageHideCallback, 'function');
-  assert.equal(typeof events.request, 'function');
+  assert.deepEqual(callOrder.slice(0, 2), ['goto', 'evaluate']);
+  assert.equal(listeners.length, 1);
+  assert.equal(prepared.getPageHideCount(), 0);
+  assert.equal(
+    fixture.pageHideTracker.arm(prepared.getPageHideToken(), performance.now()),
+    true,
+  );
+  listeners[0]({ persisted: false });
+  for (
+    let attempt = 0;
+    attempt < 20 && prepared.getPageHideCount() === 0;
+    attempt++
+  )
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(prepared.getPageHideCount(), 1);
+  const observation = prepared.getPageHideObservation();
+  assert.equal(observation.scope, 'fixture-server-sendBeacon');
+  assert.equal(observation.count, 1);
+  assert.equal(observation.persisted, false);
+  assert.ok(Number.isFinite(observation.deliveryElapsedMs));
+  assert.ok(observation.deliveryElapsedMs >= 0);
+  assert.equal(sentBeacons.length, 1);
+  assert.match(sentBeacons[0].url, /^\/__qa\/pagehide\?token=/);
+  assert.equal(sentBeacons[0].body, '');
+  assert.equal(typeof installPageHideBeacon, 'function');
+});
+
+test('pagehide endpoint rejects unknown tokens, malformed events, and oversized bodies', async (t) => {
+  const fixture = await startFixtureServer();
+  t.after(async () => {
+    const closed = await closeFixtureServer(fixture.server);
+    assert.equal(closed.completed, true);
+  });
+  const token = 'fixture-token-1';
+  assert.equal(fixture.pageHideTracker.register(token), true);
+
+  const post = (url, body = '') =>
+    fetch(`${fixture.origin}${url}`, { method: 'POST', body });
+  const unknown = await post('/__qa/pagehide?token=unknown-token&persisted=0');
+  assert.equal(unknown.status, 404);
+  const malformed = await post(`/__qa/pagehide?token=${token}&persisted=yes`);
+  assert.equal(malformed.status, 400);
+  const oversized = await post(
+    `/__qa/pagehide?token=${token}&persisted=1`,
+    'x'.repeat(64),
+  );
+  assert.equal(oversized.status, 413);
+  const nonempty = await post(`/__qa/pagehide?token=${token}&persisted=1`, 'x');
+  assert.equal(nonempty.status, 400);
+  const chunkedOversize = await new Promise((resolve, reject) => {
+    const target = new URL(
+      `${fixture.origin}/__qa/pagehide?token=${token}&persisted=1`,
+    );
+    const outgoing = request(
+      {
+        hostname: target.hostname,
+        port: target.port,
+        path: target.pathname + target.search,
+        method: 'POST',
+        headers: { 'Transfer-Encoding': 'chunked' },
+      },
+      (incoming) => {
+        incoming.resume();
+        incoming.once('end', () => resolve(incoming.statusCode));
+      },
+    );
+    outgoing.once('error', reject);
+    outgoing.end('x'.repeat(64));
+  });
+  assert.equal(chunkedOversize, 413);
+  const bodyTimeout = await new Promise((resolve, reject) => {
+    const target = new URL(
+      `${fixture.origin}/__qa/pagehide?token=${token}&persisted=1`,
+    );
+    const outgoing = request(
+      {
+        hostname: target.hostname,
+        port: target.port,
+        path: target.pathname + target.search,
+        method: 'POST',
+        headers: { 'Transfer-Encoding': 'chunked' },
+      },
+      (incoming) => {
+        incoming.resume();
+        incoming.once('end', () => resolve(incoming.statusCode));
+      },
+    );
+    outgoing.once('error', reject);
+    outgoing.flushHeaders();
+  });
+  assert.equal(bodyTimeout, 408);
+  assert.equal(fixture.pageHideTracker.read(token).count, 0);
+  assert.equal(fixture.pageHideTracker.size, 1);
+});
+
+test('pagehide tracker bounds registered control tokens and ignores delayed or absent delivery', async (t) => {
+  const fixture = await startFixtureServer();
+  t.after(async () => {
+    const closed = await closeFixtureServer(fixture.server);
+    assert.equal(closed.completed, true);
+  });
+  for (let index = 0; index < 6; index++)
+    assert.equal(fixture.pageHideTracker.register(`token-${index}`), true);
+  assert.equal(fixture.pageHideTracker.size, 6);
+  assert.equal(fixture.pageHideTracker.register('overflow'), false);
+  assert.equal(fixture.pageHideTracker.read('token-0').count, 0);
+  assert.equal(fixture.pageHideTracker.observe('not-registered', false), false);
+  assert.equal(fixture.pageHideTracker.arm('token-0', performance.now()), true);
+  assert.equal(fixture.pageHideTracker.observe('token-0', true), true);
+  const observed = fixture.pageHideTracker.read('token-0');
+  assert.equal(observed.count, 1);
+  assert.equal(observed.persisted, true);
+  assert.ok(Number.isFinite(observed.deliveryElapsedMs));
+  assert.equal(observed.receivedWithinDeadline, true);
+  assert.equal(observed.deadlineMs, 1_000);
+  assert.equal(fixture.pageHideTracker.observe('token-0', false), true);
+  assert.equal(fixture.pageHideTracker.observe('token-0', false), false);
+  assert.equal(fixture.pageHideTracker.read('token-0').count, 2);
+});
+
+test('pagehide timing uses server receipt time and late evidence remains a failure', async (t) => {
+  const fixture = await startFixtureServer();
+  t.after(async () => {
+    const closed = await closeFixtureServer(fixture.server);
+    assert.equal(closed.completed, true);
+  });
+  assert.equal(fixture.pageHideTracker.register('late-token'), true);
+  assert.equal(
+    fixture.pageHideTracker.arm('late-token', performance.now() - 1_100),
+    true,
+  );
+  assert.equal(fixture.pageHideTracker.observe('late-token', false), true);
+  const late = fixture.pageHideTracker.read('late-token');
+  assert.ok(late.deliveryElapsedMs > late.deadlineMs);
+  assert.equal(late.receivedWithinDeadline, false);
+  const failedDeadline = {
+    pageHideObserved: false,
+    pageHideFailureReason: 'outgoing-pagehide-beacon-not-observed',
+  };
+  recordPageHideAfterDeadline(failedDeadline, late, 0, true);
+  assert.equal(failedDeadline.pageHideObserved, false);
+  assert.equal(
+    failedDeadline.pageHideFailureReason,
+    'outgoing-pagehide-beacon-not-observed',
+  );
+  assert.equal(failedDeadline.pageHideObservedAfterDeadline, true);
+  const control = BROWSER_SHUTDOWN_CONTROLS.find(
+    ({ id }) => id === 'blank-unload',
+  );
+  assert.equal(
+    classifyBrowserShutdownControl(
+      successfulResult(control, {
+        pageHideObserved: false,
+        pageHideObservedAfterDeadline: true,
+        pageHideFailureReason: 'outgoing-pagehide-beacon-not-observed',
+        pageHideObservation: late,
+      }),
+    ),
+    'failed',
+  );
 });
 
 test('an emitted page error invalidates an otherwise healthy shutdown control', () => {

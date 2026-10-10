@@ -50,6 +50,10 @@ const LAUNCH_TIMEOUT_MS = 30_000;
 const PAGE_SETUP_TIMEOUT_MS = 15_000;
 const DOCUMENT_TIMEOUT_MS = 20_000;
 const PROCESS_EXIT_OBSERVATION_MS = 1_000;
+const PAGE_HIDE_TOKEN_LIMIT = 6;
+const PAGE_HIDE_TOKEN_PATTERN = /^[A-Za-z0-9._:-]{1,80}$/;
+const PAGE_HIDE_BODY_LIMIT_BYTES = 32;
+const PAGE_HIDE_DEADLINE_MS = 1_000;
 let activeReport = null;
 
 export function preserveInterruptedShutdownReport(
@@ -207,12 +211,79 @@ async function serveCesium(response, pathname) {
   }
 }
 
-async function serveFixture(request, response) {
+async function serveFixture(request, response, pageHideTracker) {
+  const url = new URL(request.url, 'http://127.0.0.1');
+  const pathname = url.pathname;
+  if (pathname === '/__qa/pagehide') {
+    if (request.method !== 'POST') {
+      response.writeHead(405).end();
+      return;
+    }
+    const token = url.searchParams.get('token');
+    const persistedValue = url.searchParams.get('persisted');
+    if (
+      !PAGE_HIDE_TOKEN_PATTERN.test(token || '') ||
+      !['0', '1'].includes(persistedValue)
+    ) {
+      response.writeHead(400, { Connection: 'close' }).end(() => {
+        request.destroy();
+      });
+      return;
+    }
+    const declaredLength = Number(request.headers['content-length'] || 0);
+    if (
+      !Number.isSafeInteger(declaredLength) ||
+      declaredLength < 0 ||
+      declaredLength > PAGE_HIDE_BODY_LIMIT_BYTES
+    ) {
+      response.writeHead(413, { Connection: 'close' }).end(() => {
+        request.destroy();
+      });
+      return;
+    }
+    let bodyBytes = 0;
+    const bodyResult = await new Promise((resolve) => {
+      let settled = false;
+      const finish = (status) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (status !== 204) request.pause();
+        request.removeListener('data', onData);
+        request.removeListener('end', onEnd);
+        request.removeListener('error', onError);
+        resolve(status);
+      };
+      const timer = setTimeout(() => finish(408), 1_000);
+      const onData = (chunk) => {
+        bodyBytes += chunk.byteLength;
+        finish(bodyBytes > PAGE_HIDE_BODY_LIMIT_BYTES ? 413 : 400);
+        request.pause();
+      };
+      const onEnd = () => finish(bodyBytes === 0 ? 204 : 400);
+      const onError = () => finish(400);
+      request.on('data', onData);
+      request.once('end', onEnd);
+      request.once('error', onError);
+      request.resume();
+    });
+    if (bodyResult !== 204) {
+      response.writeHead(bodyResult, { Connection: 'close' }).end(() => {
+        request.destroy();
+      });
+      return;
+    }
+    if (!pageHideTracker.observe(token, persistedValue === '1')) {
+      response.writeHead(404).end();
+      return;
+    }
+    response.writeHead(204, { 'Cache-Control': 'no-store' }).end();
+    return;
+  }
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     response.writeHead(405).end();
     return;
   }
-  const pathname = new URL(request.url, 'http://127.0.0.1').pathname;
   if (pathname === '/webgl2.html') {
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
@@ -238,9 +309,77 @@ async function serveFixture(request, response) {
   }
 }
 
-async function startFixtureServer() {
+function createPageHideTracker() {
+  const records = new Map();
+  return {
+    register(token) {
+      if (
+        !PAGE_HIDE_TOKEN_PATTERN.test(token || '') ||
+        records.size >= PAGE_HIDE_TOKEN_LIMIT ||
+        records.has(token)
+      )
+        return false;
+      records.set(token, {
+        count: 0,
+        persisted: null,
+        deliveryElapsedMs: null,
+        receivedWithinDeadline: false,
+        startedAt: null,
+      });
+      return true;
+    },
+    arm(token, startedAt) {
+      const record = records.get(token);
+      if (!record || record.startedAt !== null || !Number.isFinite(startedAt))
+        return false;
+      record.startedAt = startedAt;
+      return true;
+    },
+    observe(token, persisted) {
+      const record = records.get(token);
+      if (
+        !record ||
+        record.startedAt === null ||
+        record.count >= 2 ||
+        typeof persisted !== 'boolean'
+      )
+        return false;
+      const deliveryElapsedMs = Math.max(
+        0,
+        performance.now() - record.startedAt,
+      );
+      if (record.count === 0) {
+        record.persisted = persisted;
+        record.deliveryElapsedMs = deliveryElapsedMs;
+        record.receivedWithinDeadline =
+          deliveryElapsedMs <= PAGE_HIDE_DEADLINE_MS;
+      }
+      record.count++;
+      return true;
+    },
+    read(token) {
+      const record = records.get(token);
+      return record
+        ? {
+            scope: 'fixture-server-sendBeacon',
+            count: record.count,
+            persisted: record.persisted,
+            deliveryElapsedMs: record.deliveryElapsedMs,
+            receivedWithinDeadline: record.receivedWithinDeadline,
+            deadlineMs: PAGE_HIDE_DEADLINE_MS,
+          }
+        : null;
+    },
+    get size() {
+      return records.size;
+    },
+  };
+}
+
+export async function startFixtureServer() {
+  const pageHideTracker = createPageHideTracker();
   const server = createServer((request, response) => {
-    void serveFixture(request, response).catch(() => {
+    void serveFixture(request, response, pageHideTracker).catch(() => {
       if (!response.headersSent) response.writeHead(500);
       response.end();
     });
@@ -256,6 +395,7 @@ async function startFixtureServer() {
   return {
     server,
     origin: `http://127.0.0.1:${server.address().port}`,
+    pageHideTracker,
   };
 }
 
@@ -331,38 +471,45 @@ async function waitForChildExit(child, timeoutMs) {
   });
 }
 
-export async function setupDocument(page, kind, origin) {
+export function installPageHideBeacon() {
+  if (window.__qaBrowserShutdownPageHideInstalled) return;
+  window.__qaBrowserShutdownPageHideInstalled = true;
+  const token = `${Date.now()}-${Math.random()}`.slice(0, 80);
+  window.__qaBrowserShutdownDocumentToken = token;
+  window.addEventListener('pagehide', (event) => {
+    try {
+      const persisted = event?.persisted === true ? '1' : '0';
+      navigator.sendBeacon(
+        `/__qa/pagehide?token=${encodeURIComponent(token)}&persisted=${persisted}`,
+        '',
+      );
+    } catch {}
+  });
+}
+
+export function recordPageHideAfterDeadline(
+  result,
+  observation,
+  previousCount,
+  deadlineWaitCompleted,
+) {
+  result.pageHideObservation = observation;
+  result.pageHideObservedAfterDeadline =
+    deadlineWaitCompleted === true &&
+    result.pageHideObserved === false &&
+    Number.isSafeInteger(observation?.count) &&
+    observation.count > previousCount;
+  return result;
+}
+
+export async function setupDocument(page, kind, origin, pageHideTracker) {
   const pageErrors = [];
   let pageErrorCount = 0;
-  const pageHideCounts = new Map();
-  await withHostTimeout(
-    () =>
-      page.exposeFunction('qaObservePageHide', (token) => {
-        if (typeof token !== 'string' || token.length > 80) return;
-        const previous = pageHideCounts.get(token) || 0;
-        pageHideCounts.set(token, Math.min(2, previous + 1));
-      }),
-    PAGE_SETUP_TIMEOUT_MS,
-  );
-  const installPageHideObserver = () => {
-    if (window.__qaBrowserShutdownPageHideInstalled) return;
-    window.__qaBrowserShutdownPageHideInstalled = true;
-    const token = `${Date.now()}-${Math.random()}`.slice(0, 80);
-    window.__qaBrowserShutdownDocumentToken = token;
-    window.addEventListener('pagehide', () => {
-      try {
-        window.qaObservePageHide(token);
-      } catch {}
-    });
-  };
-  await withHostTimeout(
-    () => page.evaluateOnNewDocument(installPageHideObserver),
-    PAGE_SETUP_TIMEOUT_MS,
-  );
-  await withHostTimeout(
-    () => page.evaluate(installPageHideObserver),
-    PAGE_SETUP_TIMEOUT_MS,
-  );
+  let pageHideToken = null;
+  if (!pageHideTracker?.register || !pageHideTracker?.read)
+    throw new TypeError(
+      'Shutdown fixture requires its owned pagehide tracker.',
+    );
   page.on('pageerror', (error) => {
     pageErrorCount++;
     if (pageErrors.length < 8) pageErrors.push(safeError(error));
@@ -371,7 +518,11 @@ export async function setupDocument(page, kind, origin) {
     () => page.setRequestInterception(true),
     PAGE_SETUP_TIMEOUT_MS,
   );
-  const readPageHideToken = async () => {
+  const installAndReadPageHideToken = async () => {
+    await withHostTimeout(
+      () => page.evaluate(installPageHideBeacon),
+      PAGE_SETUP_TIMEOUT_MS,
+    );
     const token = await withHostTimeout(
       () =>
         page.evaluate(() => window.__qaBrowserShutdownDocumentToken || null),
@@ -379,8 +530,13 @@ export async function setupDocument(page, kind, origin) {
     );
     if (typeof token !== 'string' || token.length > 80)
       throw new Error('Shutdown document pagehide token was unavailable.');
+    if (!pageHideTracker.register(token))
+      throw new Error(
+        'Shutdown document pagehide token could not be registered.',
+      );
     return token;
   };
+  const readPageHideCount = (token) => pageHideTracker.read(token)?.count || 0;
   page.on('request', (request) => {
     let allowed = false;
     try {
@@ -397,15 +553,16 @@ export async function setupDocument(page, kind, origin) {
         }),
       DOCUMENT_TIMEOUT_MS + 1_000,
     );
-    const pageHideToken = await readPageHideToken();
+    pageHideToken = await installAndReadPageHideToken();
     return {
       documentReady: page.url() === `${origin}/blank.html`,
       pageErrors,
       getPageErrors: () => pageErrors.slice(0, 8),
       getPageErrorCount: () => pageErrorCount,
       getPageErrorsTruncated: () => pageErrorCount > pageErrors.length,
-      getPageHideCount: (token = pageHideToken) =>
-        pageHideCounts.get(token) || 0,
+      getPageHideCount: (token = pageHideToken) => readPageHideCount(token),
+      getPageHideObservation: (token = pageHideToken) =>
+        pageHideTracker.read(token),
       getPageHideToken: () => pageHideToken,
       readiness: { blank: true },
     };
@@ -419,6 +576,7 @@ export async function setupDocument(page, kind, origin) {
       }),
     DOCUMENT_TIMEOUT_MS + 1_000,
   );
+  pageHideToken = await installAndReadPageHideToken();
   const ready = await withHostTimeout(
     () =>
       page.waitForFunction(() => window.__shutdownReady?.ready === true, {
@@ -430,14 +588,15 @@ export async function setupDocument(page, kind, origin) {
     () => page.evaluate(() => window.__shutdownReady),
     PAGE_SETUP_TIMEOUT_MS,
   );
-  const pageHideToken = await readPageHideToken();
   return {
     documentReady: Boolean(ready) && readiness?.ready === true,
     pageErrors,
     getPageErrors: () => pageErrors.slice(0, 8),
     getPageErrorCount: () => pageErrorCount,
     getPageErrorsTruncated: () => pageErrorCount > pageErrors.length,
-    getPageHideCount: (token = pageHideToken) => pageHideCounts.get(token) || 0,
+    getPageHideCount: (token = pageHideToken) => readPageHideCount(token),
+    getPageHideObservation: (token = pageHideToken) =>
+      pageHideTracker.read(token),
     getPageHideToken: () => pageHideToken,
     readiness: {
       ready: readiness?.ready === true,
@@ -492,6 +651,7 @@ async function executeControl({
   specification,
   scratch,
   origin,
+  pageHideTracker,
   expectedBrowserVersion,
 }) {
   const startedAt = performance.now();
@@ -501,7 +661,10 @@ async function executeControl({
     setupCompleted: false,
     documentReady: false,
     pageHideObserved: false,
-    unloadNavigationCompleted: false,
+    pageHideObservedAfterDeadline: false,
+    navigationToBlankCompleted: false,
+    pageHideObservation: null,
+    pageHideFailureReason: null,
     pageCloseCompleted: false,
     openPageCountAfterClose: null,
     browserCloseCompleted: false,
@@ -529,6 +692,10 @@ async function executeControl({
   let page = null;
   let pageHideReader = () => 0;
   let pageHideTokenReader = () => null;
+  let pageHideObservationReader = () => null;
+  let pageHideToken = null;
+  let pageHideBaseline = 0;
+  let pageHideDeadlineWaitCompleted = false;
   let pageErrorCountReader = () => 0;
   let pageErrorsReader = () => [];
   let browserCloseTrace = null;
@@ -571,9 +738,15 @@ async function executeControl({
       () => page.setViewport({ width: 800, height: 600 }),
       PAGE_SETUP_TIMEOUT_MS,
     );
-    const prepared = await setupDocument(page, specification.document, origin);
+    const prepared = await setupDocument(
+      page,
+      specification.document,
+      origin,
+      pageHideTracker,
+    );
     pageHideReader = prepared.getPageHideCount;
     pageHideTokenReader = prepared.getPageHideToken;
+    pageHideObservationReader = prepared.getPageHideObservation;
     pageErrorCountReader = prepared.getPageErrorCount;
     pageErrorsReader = prepared.getPageErrors;
     result.documentReady = prepared.documentReady;
@@ -586,9 +759,11 @@ async function executeControl({
       throw new Error('Control document did not reach its ready state.');
     if (prepared.pageErrors.length)
       throw new Error('Control document emitted a page error.');
-    if (specification.treatment === 'unload-first') {
-      const pageHideToken = pageHideTokenReader();
-      const pageHideBaseline = pageHideReader(pageHideToken);
+    if (specification.treatment === 'navigation-first') {
+      pageHideToken = pageHideTokenReader();
+      pageHideBaseline = pageHideReader(pageHideToken);
+      if (!pageHideTracker.arm(pageHideToken, performance.now()))
+        throw new Error('Pagehide observation deadline could not be armed.');
       await withHostTimeout(
         () =>
           page.goto('about:blank', {
@@ -597,16 +772,30 @@ async function executeControl({
           }),
         DOCUMENT_TIMEOUT_MS + 1_000,
       );
-      result.unloadNavigationCompleted = page.url() === 'about:blank';
+      result.navigationToBlankCompleted = page.url() === 'about:blank';
       result.pageHideObserved = await waitForPageHide(
-        () => pageHideReader(pageHideToken),
+        () => pageHideObservationReader(pageHideToken),
         pageHideBaseline,
-        1_000,
+        PAGE_HIDE_DEADLINE_MS,
       );
+      pageHideDeadlineWaitCompleted = true;
+      result.pageHideObservation = pageHideObservationReader(pageHideToken);
+      result.pageHideFailureReason = result.navigationToBlankCompleted
+        ? result.pageHideObserved
+          ? null
+          : 'outgoing-pagehide-beacon-not-observed'
+        : 'navigation-to-blank-not-completed';
     }
   } catch (error) {
     result.error = safeError(error);
-    if (page) result.pageHideObserved ||= pageHideReader() > 0;
+    if (specification.treatment === 'navigation-first') {
+      result.pageHideObservation = pageHideObservationReader(pageHideToken);
+      result.pageHideFailureReason = result.navigationToBlankCompleted
+        ? result.pageHideObserved
+          ? null
+          : 'outgoing-pagehide-beacon-not-observed'
+        : 'navigation-to-blank-not-completed';
+    }
   } finally {
     if (browser) {
       if (page) {
@@ -618,7 +807,16 @@ async function executeControl({
           );
           result.pageCloseCompleted = closed.closeCompleted;
           result.openPageCountAfterClose = closed.openPageCount;
-          result.pageHideObserved ||= pageHideReader() > 0;
+          if (specification.treatment === 'navigation-first') {
+            recordPageHideAfterDeadline(
+              result,
+              pageHideObservationReader(pageHideToken),
+              pageHideBaseline,
+              pageHideDeadlineWaitCompleted,
+            );
+          } else {
+            result.pageHideObserved ||= pageHideReader() > 0;
+          }
           result.pageErrorCount = pageErrorCountReader();
           result.pageErrors = pageErrorsReader();
           result.pageErrorsTruncated =
@@ -707,8 +905,16 @@ async function executeControl({
   return result;
 }
 
-function waitForPageHide(readCount, previousCount, timeoutMs) {
-  if (readCount() > previousCount) return Promise.resolve(true);
+function waitForPageHide(readObservation, previousCount, timeoutMs) {
+  const receivedOnTime = () => {
+    const observation = readObservation();
+    return (
+      observation?.count > previousCount &&
+      observation.receivedWithinDeadline === true &&
+      observation.deliveryElapsedMs <= timeoutMs
+    );
+  };
+  if (receivedOnTime()) return Promise.resolve(true);
   return new Promise((resolve) => {
     let settled = false;
     const finish = (observed) => {
@@ -719,12 +925,9 @@ function waitForPageHide(readCount, previousCount, timeoutMs) {
       resolve(observed);
     };
     const poll = setInterval(() => {
-      if (readCount() > previousCount) finish(true);
+      if (receivedOnTime()) finish(true);
     }, 20);
-    const deadline = setTimeout(
-      () => finish(readCount() > previousCount),
-      timeoutMs,
-    );
+    const deadline = setTimeout(() => finish(receivedOnTime()), timeoutMs);
   });
 }
 
@@ -792,13 +995,14 @@ export async function main() {
   let scratch = null;
   let server = null;
   let origin = null;
+  let pageHideTracker = null;
   let scratchRetained = false;
   let primaryFailure = null;
   try {
     scratch = await realpath(
       await mkdtemp(path.join(os.tmpdir(), 'gev-browser-shutdown-')),
     );
-    ({ server, origin } = await startFixtureServer());
+    ({ server, origin, pageHideTracker } = await startFixtureServer());
     let matrix;
     try {
       matrix = await runBrowserShutdownControlMatrix({
@@ -808,6 +1012,7 @@ export async function main() {
             specification,
             scratch,
             origin,
+            pageHideTracker,
             expectedBrowserVersion: identity.browserVersion,
           }),
         onControl: async (row, partial) => {
@@ -921,7 +1126,7 @@ if (invokedDirectly)
     try {
       await mkdir(path.dirname(out), { recursive: true });
       const partial = activeReport || {
-        schema: 'gev-browser-shutdown-controls/v1',
+        schema: 'gev-browser-shutdown-controls/v2',
         status: 'failed',
         scope: 'owned-chrome-close-controls; diagnostic-only',
         closeDeadlineMs: BROWSER_SHUTDOWN_CLOSE_DEADLINE_MS,
