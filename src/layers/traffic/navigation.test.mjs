@@ -11,8 +11,13 @@ function deferred() {
   return { promise, resolve };
 }
 
-function setup(t, requestRoads, getStatus = async () => ({ hasKey: false })) {
-  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+function setup(
+  t,
+  requestRoads,
+  getStatus = async () => ({ hasKey: false }),
+  { mockTimers = true } = {},
+) {
+  if (mockTimers) t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   const camera = {
     positionCartographic: Cesium.Cartographic.fromDegrees(
       -97.744,
@@ -338,6 +343,100 @@ test('traffic surface observers belong to enable and leave no listener after dis
   layer.destroy(viewer);
   assert.equal(viewer.scene.postRender.numberOfListeners, 0);
   assert.equal(viewer.scene.preRender.numberOfListeners, 0);
+});
+
+test('traffic style listeners are owned by each layer and removed on destroy', (t) => {
+  class CountingEventTarget extends EventTarget {
+    listeners = new Map();
+
+    addEventListener(type, listener, options) {
+      super.addEventListener(type, listener, options);
+      if (!this.listeners.has(type)) this.listeners.set(type, new Set());
+      this.listeners.get(type).add(listener);
+    }
+
+    removeEventListener(type, listener, options) {
+      super.removeEventListener(type, listener, options);
+      this.listeners.get(type)?.delete(listener);
+    }
+
+    listenerCount(type) {
+      return this.listeners.get(type)?.size || 0;
+    }
+
+    changeStyle(style) {
+      const event = new Event('gev:style-change');
+      Object.defineProperty(event, 'detail', { value: { style } });
+      this.dispatchEvent(event);
+    }
+  }
+
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousDocument = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'document',
+  );
+  const eventTarget = new CountingEventTarget();
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: eventTarget,
+  });
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: { documentElement: { dataset: { gevStyle: 'normal' } } },
+  });
+  t.after(() => {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousDocument)
+      Object.defineProperty(globalThis, 'document', previousDocument);
+    else delete globalThis.document;
+  });
+
+  const baseline = eventTarget.listenerCount('gev:style-change');
+  const first = setup(t, async (bounds) => roads(bounds));
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 1);
+
+  first.layer.disable(first.viewer);
+  eventTarget.changeStyle('nvg');
+  assert.equal(
+    first.layer.getStats().stylePreset,
+    'nvg',
+    'style changes remain active while the traffic layer is disabled',
+  );
+  eventTarget.changeStyle('normal');
+  first.layer.destroy(first.viewer);
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline);
+  eventTarget.changeStyle('nvg');
+  assert.equal(
+    first.layer.getStats().stylePreset,
+    'normal',
+    'destroyed layers no longer receive style changes',
+  );
+
+  for (let cycle = 0; cycle < 3; cycle++) {
+    first.layer.init(first.viewer);
+    assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 1);
+    first.layer.destroy(first.viewer);
+    first.layer.destroy(first.viewer);
+    assert.equal(eventTarget.listenerCount('gev:style-change'), baseline);
+  }
+
+  const second = setup(t, async (bounds) => roads(bounds), undefined, {
+    mockTimers: false,
+  });
+  const third = setup(t, async (bounds) => roads(bounds), undefined, {
+    mockTimers: false,
+  });
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 2);
+  second.layer.destroy(second.viewer);
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline + 1);
+  eventTarget.changeStyle('retro');
+  assert.equal(second.layer.getStats().stylePreset, 'normal');
+  assert.equal(third.layer.getStats().stylePreset, 'retro');
+  third.layer.destroy(third.viewer);
+  assert.equal(eventTarget.listenerCount('gev:style-change'), baseline);
 });
 
 test('coverage changes at the same center reload and disabling invalidates coverage without dropping source caches', async (t) => {

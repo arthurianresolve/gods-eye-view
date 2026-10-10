@@ -53,16 +53,18 @@ export function createLifecycle({
       // Preset-aware dot styling: adopt the active post-FX style (persisted
       // style restore may run before layer registration, so read the dataset)
       // and follow StyleManager's gev:style-change event thereafter. Guarded
-      // for non-browser contexts; bound once per page (init survives layer
-      // destroy/re-register).
+      // for non-browser contexts. The layer owns this subscription for its
+      // lifetime, including while disabled, and releases it on destroy.
       if (typeof window !== 'undefined') {
         layerState._stylePreset =
           document?.documentElement?.dataset?.gevStyle || 'normal';
-        if (!layerState._styleListenerBound) {
-          window.addEventListener('gev:style-change', (e) =>
-            parts.style.setStylePreset(e?.detail?.style),
-          );
-          layerState._styleListenerBound = true;
+        if (!layerState._styleEventListener) {
+          const eventTarget = window;
+          const listener = (event) =>
+            parts.style.setStylePreset(event?.detail?.style);
+          eventTarget.addEventListener('gev:style-change', listener);
+          layerState._styleEventTarget = eventTarget;
+          layerState._styleEventListener = listener;
         }
       }
       parts.style.refreshBucketColors();
@@ -191,6 +193,14 @@ export function createLifecycle({
      */
     destroy(viewer) {
       this.disable(viewer);
+      if (layerState._styleEventListener) {
+        layerState._styleEventTarget?.removeEventListener(
+          'gev:style-change',
+          layerState._styleEventListener,
+        );
+        layerState._styleEventTarget = null;
+        layerState._styleEventListener = null;
+      }
       if (layerState._pointCollection) {
         viewer.scene.primitives.remove(layerState._pointCollection);
         layerState._pointCollection = null;
