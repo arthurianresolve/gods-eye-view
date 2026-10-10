@@ -1,5 +1,5 @@
 import { consumeInBatches } from './cooperative.js';
-import { decodePackGeoJSON } from '../director/packs/geojson.js';
+import { validatePackGeoJSONFeature } from '../director/packs/geojson.js';
 import { PACK_LIMITS } from '../director/packs/manifest.js';
 
 export const IMPORT_LIMITS = Object.freeze({
@@ -63,37 +63,43 @@ function propertyBag(value) {
   return output;
 }
 
-export function createImportPreview({
-  kind,
-  records,
-  rejected,
-  attribution,
-  timeField = null,
-  warnings = [],
-}) {
+function buildImportPreview(
+  { kind, records, rejected, attribution, timeField = null, warnings = [] },
+  summary = null,
+) {
   const bounds = [Infinity, Infinity, -Infinity, -Infinity];
-  const times = [];
   let minTime = Infinity;
   let maxTime = -Infinity;
-  for (const feature of records) {
-    const visit = (point) => {
-      if (!Array.isArray(point)) return;
-      bounds[0] = Math.min(bounds[0], point[0]);
-      bounds[1] = Math.min(bounds[1], point[1]);
-      bounds[2] = Math.max(bounds[2], point[0]);
-      bounds[3] = Math.max(bounds[3], point[1]);
-    };
-    const walk = (value) =>
-      Array.isArray(value) && typeof value[0] === 'number'
-        ? visit(value)
-        : Array.isArray(value) && value.forEach(walk);
-    walk(feature.geometry.coordinates);
-    if (Number.isSafeInteger(feature.timeMs)) {
-      times.push(feature.timeMs);
-      minTime = Math.min(minTime, feature.timeMs);
-      maxTime = Math.max(maxTime, feature.timeMs);
+  if (summary) {
+    if (summary.bounds) bounds.splice(0, bounds.length, ...summary.bounds);
+    minTime = summary.minTime;
+    maxTime = summary.maxTime;
+  } else {
+    for (const feature of records) {
+      const visit = (point) => {
+        if (!Array.isArray(point)) return;
+        bounds[0] = Math.min(bounds[0], point[0]);
+        bounds[1] = Math.min(bounds[1], point[1]);
+        bounds[2] = Math.max(bounds[2], point[0]);
+        bounds[3] = Math.max(bounds[3], point[1]);
+      };
+      const walk = (value) =>
+        Array.isArray(value) && typeof value[0] === 'number'
+          ? visit(value)
+          : Array.isArray(value) && value.forEach(walk);
+      walk(feature.geometry.coordinates);
+      if (Number.isSafeInteger(feature.timeMs)) {
+        minTime = Math.min(minTime, feature.timeMs);
+        maxTime = Math.max(maxTime, feature.timeMs);
+      }
     }
   }
+  const previewBounds =
+    records.length && (summary ? summary.bounds : bounds)
+      ? Object.freeze([...bounds])
+      : null;
+  const timeRange =
+    minTime !== Infinity ? Object.freeze([minTime, maxTime]) : null;
   return Object.freeze({
     kind,
     accepted: records.length,
@@ -101,8 +107,8 @@ export function createImportPreview({
     rejectedRows: Object.freeze(
       rejected.slice(0, IMPORT_LIMITS.rejectedPreview),
     ),
-    bounds: records.length ? Object.freeze(bounds) : null,
-    timeRange: times.length ? Object.freeze([minTime, maxTime]) : null,
+    bounds: previewBounds,
+    timeRange,
     timeField,
     timeInterpretation: timeField
       ? 'ISO 8601 timestamps with explicit UTC offset; missing timestamps stay unknown.'
@@ -118,12 +124,18 @@ export function createImportPreview({
   });
 }
 
+export function createImportPreview(options) {
+  return buildImportPreview(options);
+}
+
 /** Stage validated GeoJSON geometry while leaving all mutations to Apply. */
 export async function previewGeoJSON(
   input,
   { signal, attribution = '', timeField = null } = {},
 ) {
+  signal?.throwIfAborted();
   const text = decodeImportText(input);
+  signal?.throwIfAborted();
   let value;
   try {
     value = JSON.parse(text);
@@ -141,6 +153,9 @@ export async function previewGeoJSON(
   const rejected = [];
   const seen = new Set();
   let positions = 0;
+  const summaryBounds = [Infinity, Infinity, -Infinity, -Infinity];
+  let minTime = Infinity;
+  let maxTime = -Infinity;
   await consumeInBatches(
     (function* () {
       for (let index = 0; index < value.features.length; index++) {
@@ -158,21 +173,18 @@ export async function previewGeoJSON(
           continue;
         }
         try {
-          const validated = decodePackGeoJSON(
-            new TextEncoder().encode(
-              JSON.stringify({
-                type: 'FeatureCollection',
-                features: [{ ...feature, id }],
-              }),
-            ),
-          )[0];
-          const count = (coordinates) =>
-            Array.isArray(coordinates) && typeof coordinates[0] === 'number'
-              ? 1
-              : Array.isArray(coordinates)
-                ? coordinates.reduce((sum, part) => sum + count(part), 0)
-                : 0;
-          positions += count(validated.coordinates);
+          const validator = validatePackGeoJSONFeature(
+            { ...feature, id },
+            { maximumPositions: PACK_LIMITS.positions },
+          );
+          let step = validator.next();
+          while (!step.done) {
+            yield;
+            signal?.throwIfAborted();
+            step = validator.next();
+          }
+          const validated = step.value;
+          positions += validated.positionCount;
           if (positions > IMPORT_LIMITS.positions)
             fail(
               'too-many-positions',
@@ -196,7 +208,18 @@ export async function previewGeoJSON(
             timeMs,
           });
           seen.add(id);
+          if (validated.bounds)
+            for (let index = 0; index < 4; index++)
+              summaryBounds[index] =
+                index < 2
+                  ? Math.min(summaryBounds[index], validated.bounds[index])
+                  : Math.max(summaryBounds[index], validated.bounds[index]);
+          if (Number.isSafeInteger(timeMs)) {
+            minTime = Math.min(minTime, timeMs);
+            maxTime = Math.max(maxTime, timeMs);
+          }
         } catch (error) {
+          if (signal?.aborted || error?.name === 'AbortError') throw error;
           if (error.code === 'too-many-positions') throw error;
           rejected.push({
             row: index + 1,
@@ -205,15 +228,16 @@ export async function previewGeoJSON(
         }
       }
     })(),
-    { signal },
+    { signal, deferStart: true },
   );
-  return createImportPreview({
-    kind: 'geojson',
-    records,
-    rejected,
-    attribution,
-    timeField,
-  });
+  return buildImportPreview(
+    { kind: 'geojson', records, rejected, attribution, timeField },
+    {
+      bounds: records.length ? summaryBounds : null,
+      minTime,
+      maxTime,
+    },
+  );
 }
 
 /** RFC 4180-style bounded CSV decoder supporting quoted commas and newlines. */

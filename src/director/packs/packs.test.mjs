@@ -177,6 +177,79 @@ test('GeoJSON preserves stable geometry IDs but never properties or remote style
   assert.throws(decode, /ring/);
 });
 
+test('pack GeoJSON decoder keeps synchronous output for lines and polygons with holes', () => {
+  const data = {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        id: 'route',
+        properties: { ignored: true },
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [-97, 30, 12],
+            [-96, 31],
+          ],
+        },
+      },
+      {
+        type: 'Feature',
+        id: 'area',
+        properties: { ignored: 'also' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-95, 30],
+              [-94, 30],
+              [-94, 31],
+              [-95, 30],
+            ],
+            [
+              [-94.8, 30.2],
+              [-94.7, 30.2],
+              [-94.7, 30.3],
+              [-94.8, 30.2],
+            ],
+          ],
+        },
+      },
+    ],
+  };
+  assert.deepEqual(
+    decodePackGeoJSON(new TextEncoder().encode(JSON.stringify(data))),
+    [
+      {
+        id: 'route',
+        type: 'LineString',
+        coordinates: [
+          [-97, 30, 12],
+          [-96, 31, 0],
+        ],
+      },
+      {
+        id: 'area',
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-95, 30, 0],
+            [-94, 30, 0],
+            [-94, 31, 0],
+            [-95, 30, 0],
+          ],
+          [
+            [-94.8, 30.2, 0],
+            [-94.7, 30.2, 0],
+            [-94.7, 30.3, 0],
+            [-94.8, 30.2, 0],
+          ],
+        ],
+      },
+    ],
+  );
+});
+
 test('pack session removes presentations and cancels the transport on Stop', async () => {
   let disposed = 0,
     signal;

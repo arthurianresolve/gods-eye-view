@@ -7,6 +7,7 @@ export function consumeInBatches(
     schedule = (callback) => setTimeout(callback, 0),
     cancel = (timer) => clearTimeout(timer),
     budgetMs = 4,
+    deferStart = false,
   } = {},
 ) {
   return new Promise((resolve, reject) => {
@@ -45,6 +46,12 @@ export function consumeInBatches(
     };
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort();
-    else step();
+    else if (deferStart) {
+      try {
+        timer = schedule(step);
+      } catch (error) {
+        finish(error);
+      }
+    } else step();
   });
 }

@@ -55,3 +55,33 @@ for (const kind of ['csv', 'geojson', 'kml', 'gpx']) {
     }
   });
 }
+
+test('one very large GeoJSON feature yields for queued cancellation', async () => {
+  const coordinates = Array.from({ length: 50_000 }, (_, index) => [
+    (index % 360) - 180,
+    (index % 160) - 80,
+  ]);
+  const input = JSON.stringify({
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        id: 'single-large-route',
+        properties: {},
+        geometry: { type: 'LineString', coordinates },
+      },
+    ],
+  });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 0);
+    try {
+      await assert.rejects(
+        previewGeoJSON(input, { signal: controller.signal }),
+        { name: 'AbortError' },
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+});
