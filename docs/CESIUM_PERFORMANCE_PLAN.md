@@ -122,6 +122,31 @@ the failed-trial follow-up; the acceptance deadline and measured idle intervals
 remain unchanged. Raw SHA-256:
 `bcce1d96e2f59a1e70e4e0223c9a6e1238293d1619463a45f347369364d3c82d`.
 
+At `61d662a870f4b1e5c82711a18676a2f3c623e847`,
+[hosted run 38079038864](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38079038864)
+([raw report](performance-evidence/calibration-38079038864.json),
+[job result](performance-evidence/calibration-38079038864-run.json)) verifies
+stable canvas dimensions and genuine east-handle picking in both first-pair
+trials. Both commit an east offset of 28.8 m, preserve selection, restore camera
+input, and produce identical post-drag geometry hashes. Acceptance still fails:
+the candidate has 17 idle frames, above the two-frame gate, and its post-drag
+pixel hash differs (1,492 versus 1,493 non-background pixels). Before-drag pixels
+match. No image mask or relaxed frame threshold is accepted. The next diagnostic
+must identify the requests and actual differing pixels. Raw SHA-256:
+`08f1d3c8dd78cfd0a128aa8fb8848c725e73cbac8e174e4850f2fdf82af519fe`.
+
+The [Windows 61d662a failure](performance-evidence/calibration-windows-61d662a-2026-10-10.json)
+still occurs before the measured interval, at the 400 ms camera-pose capture.
+During its one-second failure follow-up, 50 timer ticks arrive normally (maximum
+21.4 ms gap), but only two animation frames arrive, 433.9 ms apart. The measured
+scene update spans are 0-0.2 ms and render spans 1.4-2.9 ms; supported browser
+long-task and long-animation-frame observers record no entries. These are
+failure-follow-up CPU spans, not GPU execution times or a measurement of the
+failed capture interval. The evidence narrows this occurrence to delayed frame
+delivery without establishing a browser, desktop-occlusion or GPU cause.
+Manual foreground verification is requested before another Windows run.
+Raw SHA-256: `336ccfcdc8a9e6cee3011078a432924ace19e25b365d62403363a98881dd8e56`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
