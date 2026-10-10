@@ -69,6 +69,27 @@ full-application projection/coverage equivalence, motion p95, CPU/GPU time, or a
 60-minute retention pass. The candidate must remain unaccepted until the rendered
 comparison and applicable integration checks pass at its exact revision.
 
+The first rendered revision, `e2e099a8693220159f5b3ff174019b802661ae73`, is
+not accepted. The [Windows report](performance-evidence/calibration-windows-e2e099a-2026-10-10.json)
+records 14 preparation frames followed by a failed 400 ms camera-pose capture,
+before the first measured interval. Its one viewer and all layer owners clean
+up. The reported renderer is Intel UHD 620/ANGLE D3D11, Chrome 154. SHA-256:
+`2ee87a76f1b02f512b5fcacfdeb3481cc006a03203875cbddec243a43b9b8473`.
+
+[Hosted run 38078104191](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38078104191)
+also fails ([raw report](performance-evidence/calibration-38078104191.json),
+[job result](performance-evidence/calibration-38078104191-run.json)). Its first
+control renders 261 frames in 10,021 ms, but the native drag picks no gizmo and
+does not change calibration. All six pointer moves are trusted; input dispatch
+alone is therefore insufficient acceptance evidence. Cleanup succeeds and no
+external requests, page errors or interception errors occur. The report also
+exposes an invalid fixture layout baseline: the initial 1200x800 buffer changes
+to 1200x787 before capture. The standalone fixture omitted the shared overlay
+positioning rules; those inserted elements participated in its grid layout.
+That fixture defect must be corrected before comparisons. It does not establish
+the cause of either the missed pick or the Windows capture failure. Raw SHA-256:
+`bfe9e875034afe9637e718189ffbad11894cadea371009b36ba5d7b481385b53`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
