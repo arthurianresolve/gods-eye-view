@@ -358,7 +358,7 @@ function capturePick(viewer, surface, kind, mode, collections) {
     : null;
 }
 
-function findEntityPickTarget(viewer, surfaces) {
+function findEntityPickTarget(viewer, surfaces, { allowMissing = false } = {}) {
   for (const surface of surfaces) {
     if (
       !surface.entityShow ||
@@ -377,6 +377,7 @@ function findEntityPickTarget(viewer, surfaces) {
         return { surface, pointPick, stemPick, projectedGapPx };
     }
   }
+  if (allowMissing) return null;
   throw new Error(
     'The rendered source exposes no verified point/stem pick target.',
   );
@@ -601,7 +602,8 @@ async function waitForCameraMaterialization(
       observedChange &&
       stableChangedFrames >= 3 &&
       viewer.dataSourceDisplay?.ready === true &&
-      dataSource.isLoading !== true
+      dataSource.isLoading !== true &&
+      findEntityPickTarget(viewer, currentSurfaces, { allowMissing: true })
     )
       return currentSurfaces;
     viewer.scene.requestRender();
@@ -851,6 +853,7 @@ async function runDiagnostic() {
     setFixtureCamera(cameraHeightM);
     let completedFrames = 0;
     let stableReadinessFrames = 0;
+    let readyWithoutPickTarget = 0;
     let previousReadinessSignature = null;
     const readyDeadline = performance.now() + 8000;
     while (performance.now() < readyDeadline && completedFrames < 64) {
@@ -890,14 +893,28 @@ async function runDiagnostic() {
         completedFrames >= 4 &&
         stableReadinessFrames >= 3 &&
         viewer.dataSourceDisplay?.ready === true
-      )
-        break;
+      ) {
+        target = findEntityPickTarget(viewer, currentSurfaces, {
+          allowMissing: true,
+        });
+        if (target) break;
+        readyWithoutPickTarget++;
+      }
     }
+    report.initialMaterialization = {
+      completedFrames,
+      stableReadinessFrames,
+      readyWithoutPickTarget,
+      pointAndStemPickTargetResolved: Boolean(target),
+      dataSourceReady: viewer.dataSourceDisplay?.ready === true,
+      timeoutMs: 8000,
+    };
     check(
       completedFrames >= 4 &&
         stableReadinessFrames >= 3 &&
-        viewer.dataSourceDisplay?.ready === true,
-      'Entity visualizer readiness did not settle within the setup deadline.',
+        viewer.dataSourceDisplay?.ready === true &&
+        target,
+      'Entity visualizers and native point/stem picks did not settle within the setup deadline.',
     );
     check(
       currentSurfaces.length > 0,
@@ -954,7 +971,7 @@ async function runDiagnostic() {
     );
 
     phase = 'pick-target';
-    target = findEntityPickTarget(viewer, currentSurfaces);
+    check(target, 'A materialized point/stem pick target is required.');
     report.checks.push(
       makeCheck('entity-point-and-stem-picking', true, {
         sourceRecordId: target.surface.sourceRecordId,
