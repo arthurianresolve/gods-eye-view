@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`fdf0bbd33c16a4a8f891157383b3a12d36adf8e9` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38074637763), [job results](performance-evidence/ci-fdf0bbd.json)),
+`65fd7f3e106f214340c1bab4afcebb9c35a0cce7` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075994264), [job results](performance-evidence/ci-65fd7f3.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -30,7 +30,7 @@ the earlier release requirements and historical results.
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and equal-style write suppression | Existing queue/revision tests plus 52 focused CCTV tests pass; exact evaluated styles match across eight states; five hosted toggle cycles add zero geometry jobs at `db298d4` | Full appearance and hardware build-count comparisons pending |
-| S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
+| S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot and vessel scheduling with exact focus endpoints; full layer rollout remains pending | Full integration CI passes at `65fd7f3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Five vessel pairs on reported UHD 620 and five on hosted Metal preserve endpoint pixels and reduce idle frames at `65fd7f3`; full application cadence and Windows browser-level acceleration verification remain pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
@@ -177,7 +177,16 @@ also pass. These are isolated billboard-only comparisons, with the shared
 overlay service excluded. Fewer completed idle frames do not establish lower
 motion p95, CPU time, GPU time, full-application stability or the 60-minute
 retention gate. The fixture uses `preserveDrawingBuffer: false`; the production
-default remains unchanged. Full integration CI at this revision is still pending.
+default remains unchanged.
+
+All seven standard integration jobs pass at this exact revision
+([run 38075994264](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075994264),
+[job results](performance-evidence/ci-65fd7f3.json)): Node 24/26 tests and production
+builds, Windows onboarding, install/update recovery on all three operating
+systems, and browser journeys. Node 24 records 6,872 passes, one skip and zero
+failures, plus 14 separate allocation checks. PR-only layer-token, dedicated
+aircraft tracking and full-soak jobs are skipped, not passes. This admits the
+isolated vessel optimization; it does not complete S51 or final acceptance.
 
 Raw SHA-256 values, in table order:
 `3db7e1672a6bb664183dd98f75350678fcd61c91731cad10ece94c4d18031a98`,

@@ -1,7 +1,7 @@
 # Performance baseline
 
-Current status (10 October 2026): full automatic CI passes at `6046012`, including
-Node 24/26, three-OS recovery and browser journeys. The corrected `3cdd5cb`
+Current status (10 October 2026): full automatic CI passes at `65fd7f3`, including
+Node 24/26, three-OS recovery and browser journeys ([results](performance-evidence/ci-65fd7f3.json)). The corrected `3cdd5cb`
 software-rendered retention soak and the fresh `2e839a4` hosted paravirtual Metal
 retention soak passed. These validate their exact revisions, not the later
 candidate. Windows UHD 620 dense-import capture recovered at `0edfb8e` after
