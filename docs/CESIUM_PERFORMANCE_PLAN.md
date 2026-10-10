@@ -563,10 +563,15 @@ partial packet remains partial and cannot close the parent slice.
   sample. The actual source adapter retains its 120-second freshness boundary;
   equal/older observations do not append flight-history fixes. Twelve focused
   checks, syntax, formatting and package boundaries pass locally. The registered
-  suite reached 6,608 pass / 0 fail / 10 skipped; its second serialized allocation
-  gate is not yet reported as complete. [The hosted clock smoke](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034045915)
-  is running. A short one-page smoke does not validate the capture CLI's complete
-  repeated-context lifecycle; that separate integration packet is next. Samples
+  suite completes with 6,611 pass / 0 fail / 10 skipped, including both
+  serialized allocation gates. [The hosted clock smoke](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034045915)
+  [passes both production builds](performance-evidence/build-smoke-38034045915.json):
+  baseline `eb8c682` and candidate/harness `abc93cb` retain identical fixture bytes,
+  populations and visual settings. Their clocks start once and remain current
+  after about 7.1 and 6.3 seconds respectively. Each worker audit reads about
+  6.43 MB under the new bounded capacity. A short one-page smoke does not validate
+  the capture CLI's complete repeated-context lifecycle; that separate integration
+  packet is next. Samples
   remain diagnostic and `comparisonEligible: false` until the comparison
   export and full workload contracts are implemented and verified.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
