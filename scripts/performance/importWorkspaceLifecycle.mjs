@@ -628,6 +628,124 @@ export function assertWorkerCheckpoint(worker) {
   return worker;
 }
 
+export function assertSceneReadiness(value) {
+  const validVector = (vector) =>
+    Array.isArray(vector) &&
+    vector.length === 3 &&
+    vector.every(Number.isFinite);
+  const validSample = (sample) =>
+    sample?.validEnvelope === true &&
+    sample.instrumented === true &&
+    sample.overflow === false &&
+    sample.workersTruncated === false &&
+    sample.pending === 0 &&
+    sample.tilesLoaded === true &&
+    Number.isSafeInteger(sample.frameNumber) &&
+    sample.frameNumber >= 0 &&
+    Number.isFinite(sample.elapsedMs) &&
+    sample.elapsedMs >= 0 &&
+    validVector(sample.camera?.position) &&
+    validVector(sample.camera?.direction) &&
+    validVector(sample.camera?.up) &&
+    Array.isArray(sample.workers) &&
+    sample.workers.length <= 64 &&
+    sample.workers.reduce((sum, worker) => sum + worker.pending, 0) === 0 &&
+    sample.workers.every(
+      (worker) =>
+        typeof worker.kind === 'string' &&
+        worker.kind.length <= 80 &&
+        [
+          worker.submitted,
+          worker.completed,
+          worker.taskErrors,
+          worker.workerErrors,
+          worker.postErrors,
+          worker.cancelled,
+          worker.pending,
+        ].every((count) => Number.isSafeInteger(count) && count >= 0) &&
+        worker.taskErrors === 0 &&
+        worker.workerErrors === 0 &&
+        worker.postErrors === 0 &&
+        Number.isSafeInteger(
+          worker.completed + worker.cancelled + worker.pending,
+        ) &&
+        worker.submitted ===
+          worker.completed + worker.cancelled + worker.pending,
+    );
+  if (
+    value?.status !== 'ready' ||
+    value.reason !== null ||
+    value.timeoutMs !== 30_000 ||
+    value.pollMs !== 100 ||
+    value.stableWindowMs !== 1_000 ||
+    value.historyTruncated !== false ||
+    !Array.isArray(value.history) ||
+    value.history.length < 10 ||
+    value.history.length > 302 ||
+    value.historySampleCount !== value.history.length ||
+    value.observerDisposed !== true ||
+    !Number.isFinite(value.elapsedMs) ||
+    value.elapsedMs < 1_000 ||
+    value.elapsedMs > value.timeoutMs ||
+    !Number.isSafeInteger(value.stableSampleCount) ||
+    value.stableSampleCount < 10 ||
+    !Number.isFinite(value.stableElapsedMs) ||
+    value.stableElapsedMs < value.stableWindowMs ||
+    !Number.isSafeInteger(value.renderRequests) ||
+    value.renderRequests < 1 ||
+    !Number.isSafeInteger(value.completedPostRenders) ||
+    value.completedPostRenders < 1 ||
+    !Number.isSafeInteger(value.postRenderCountAtRequest) ||
+    value.postRenderCountAtRequest < 0 ||
+    !Number.isSafeInteger(value.frameNumberAtRequest) ||
+    value.frameNumberAtRequest < 0 ||
+    !validSample(value.final)
+  )
+    throw new Error('Cold scene readiness evidence is incomplete.');
+  assert.deepEqual(value.final, value.history.at(-1));
+  if (
+    value.stableSampleCount > value.history.length ||
+    value.history.at(-value.stableSampleCount)?.elapsedMs === undefined ||
+    value.history.at(-1).elapsedMs -
+      value.history.at(-value.stableSampleCount).elapsedMs <
+      value.stableWindowMs
+  )
+    throw new Error('Cold scene stable window is not present in its history.');
+  for (const sample of value.history.slice(-value.stableSampleCount)) {
+    if (!validSample(sample))
+      throw new Error('Cold scene stable sample is incomplete.');
+    if (
+      !Number.isSafeInteger(sample.postRenderCount) ||
+      sample.postRenderCount < 0 ||
+      !Number.isSafeInteger(sample.lastPostRenderFrame) ||
+      sample.lastPostRenderFrame < 0 ||
+      sample.elapsedMs > value.elapsedMs
+    )
+      throw new Error('Cold scene stable render history is incomplete.');
+    assert.deepEqual(sample.camera, value.final.camera);
+    assert.deepEqual(sample.workers, value.final.workers);
+  }
+  const stableHistory = value.history.slice(-value.stableSampleCount);
+  if (
+    stableHistory[0].postRenderCount <= value.postRenderCountAtRequest ||
+    stableHistory[0].lastPostRenderFrame === null ||
+    stableHistory[0].lastPostRenderFrame <= value.frameNumberAtRequest ||
+    stableHistory[0].frameNumber <= value.frameNumberAtRequest
+  )
+    throw new Error(
+      'Cold scene stable history does not contain the requested completed render.',
+    );
+  for (let index = 1; index < stableHistory.length; index++) {
+    if (
+      stableHistory[index].frameNumber < stableHistory[index - 1].frameNumber ||
+      stableHistory[index].postRenderCount <
+        stableHistory[index - 1].postRenderCount
+    )
+      throw new Error('Cold scene stable render history moved backward.');
+  }
+  return value;
+}
+
 export function assertEquivalentOwnedResources(actual, expected) {
   assert.deepEqual(
     actual.imports,
@@ -2248,6 +2366,7 @@ export function validateImportWorkspaceLifecycleV2Report(
     )
       throw new Error(`Lifecycle v2 case is incomplete: ${id}.`);
     assertWorkerCheckpoint(row.workerCounters);
+    assertSceneReadiness(row.sceneReadiness);
     if (
       row.workerPreflight?.scope !== 'cumulative-per-document' ||
       row.workerPreflight.status !== 'passed' ||

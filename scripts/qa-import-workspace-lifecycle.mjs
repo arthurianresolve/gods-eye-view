@@ -44,6 +44,9 @@ const BROWSER_CLOSE_TIMEOUT_MS = 5_000;
 const PROGRESS_EVENT_CAP = 64;
 const WORKER_QUIESCENCE_POLL_MS = 50;
 const WORKER_QUIESCENCE_SAMPLE_CAP = 202;
+const SCENE_READINESS_TIMEOUT_MS = 30_000;
+const SCENE_READINESS_POLL_MS = 100;
+const SCENE_READINESS_STABLE_MS = 1_000;
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -563,6 +566,426 @@ export async function observeWorkerQuiescenceInPage({
   return result;
 }
 
+/** Install a bounded startup-only observer for an actually settled Cesium scene. */
+export function installLifecycleSceneReadinessObserver() {
+  if (window.__qaLifecycleSceneReadiness) return;
+  const cap = 302;
+  const safeWorker = (worker) => ({
+    kind:
+      typeof worker?.kind === 'string' &&
+      /^[a-zA-Z][a-zA-Z0-9_-]{0,70}\.js$/.test(worker.kind)
+        ? worker.kind
+        : 'opaque-worker',
+    submitted: worker?.submitted,
+    completed: worker?.completed,
+    taskErrors: worker?.taskErrors,
+    workerErrors: worker?.workerErrors,
+    postErrors: worker?.postErrors,
+    cancelled: worker?.cancelled,
+    pending: worker?.pending,
+  });
+  const finiteVector = (value) =>
+    value &&
+    [value.x, value.y, value.z].every((component) => Number.isFinite(component))
+      ? [value.x, value.y, value.z]
+      : null;
+  let state = null;
+
+  function stop() {
+    if (!state || !state.active) return;
+    state.finishedElapsedMs = Math.max(0, performance.now() - state.startedAt);
+    state.active = false;
+    if (state.timer !== null) clearInterval(state.timer);
+    state.timer = null;
+    if (state.listener)
+      state.scene.postRender.removeEventListener(state.listener);
+    state.listener = null;
+  }
+
+  function snapshot(includeHistory = true) {
+    if (!state) return null;
+    const elapsedMs =
+      state.finishedElapsedMs ??
+      Math.max(0, performance.now() - state.startedAt);
+    return {
+      status: state.status,
+      reason: state.reason,
+      timeoutMs: state.timeoutMs,
+      stableWindowMs: state.stableWindowMs,
+      pollMs: state.pollMs,
+      elapsedMs,
+      historyTruncated: state.historyTruncated,
+      ...(includeHistory ? { history: state.history.slice() } : {}),
+      historySampleCount: state.sampleCount,
+      stableSampleCount: state.candidate?.stableSampleCount || 0,
+      stableElapsedMs:
+        state.candidate?.stableStartedAt === null || !state.candidate
+          ? null
+          : Math.max(0, elapsedMs - state.candidate.stableStartedAt),
+      postRenderCountAtRequest:
+        state.candidate?.requestedAtPostRenderCount ?? null,
+      frameNumberAtRequest: state.candidate?.requestedAtFrameNumber ?? null,
+      renderRequests: state.renderRequests,
+      completedPostRenders: state.postRenderCount,
+      final: state.history.at(-1) || null,
+    };
+  }
+
+  function capture() {
+    const app = window.__godsEyeView;
+    const scene = app?.viewer?.scene;
+    const diagnostics = window.__gevSoakWorkers?.snapshot?.() || null;
+    const workers = Array.isArray(diagnostics?.workers)
+      ? diagnostics.workers.slice(0, 64).map(safeWorker)
+      : null;
+    const camera = scene?.camera;
+    const pose = camera
+      ? {
+          position: finiteVector(camera.positionWC),
+          direction: finiteVector(camera.directionWC),
+          up: finiteVector(camera.upWC),
+        }
+      : null;
+    return {
+      elapsedMs: Math.max(0, performance.now() - state.startedAt),
+      validEnvelope:
+        diagnostics?.instrumented === true &&
+        diagnostics.overflow === false &&
+        Number.isSafeInteger(diagnostics.pending) &&
+        diagnostics.pending >= 0 &&
+        Array.isArray(diagnostics.workers) &&
+        diagnostics.workers.length <= 64,
+      instrumented: diagnostics?.instrumented === true,
+      overflow: diagnostics?.overflow === true,
+      pending: Number.isSafeInteger(diagnostics?.pending)
+        ? diagnostics.pending
+        : null,
+      workers,
+      workersTruncated:
+        !Array.isArray(diagnostics?.workers) || diagnostics.workers.length > 64,
+      tilesLoaded:
+        typeof scene?.globe?.tilesLoaded === 'boolean'
+          ? scene.globe.tilesLoaded
+          : null,
+      frameNumber:
+        Number.isSafeInteger(scene?.frameState?.frameNumber) &&
+        scene.frameState.frameNumber >= 0
+          ? scene.frameState.frameNumber
+          : null,
+      camera: pose,
+      postRenderCount: state.postRenderCount,
+      lastPostRenderFrame: state.lastPostRenderFrame,
+    };
+  }
+
+  function validate(sample) {
+    if (!sample.validEnvelope || sample.workersTruncated)
+      return 'worker-diagnostics-unavailable';
+    if (sample.tilesLoaded === null) return 'globe-readiness-unavailable';
+    if (
+      !sample.camera ||
+      !sample.camera.position ||
+      !sample.camera.direction ||
+      !sample.camera.up
+    )
+      return 'camera-pose-unavailable';
+    if (sample.frameNumber === null) return 'frame-counter-unavailable';
+    const workers = sample.workers;
+    if (
+      workers.some(
+        (worker) =>
+          [
+            worker.submitted,
+            worker.completed,
+            worker.taskErrors,
+            worker.workerErrors,
+            worker.postErrors,
+            worker.cancelled,
+            worker.pending,
+          ].some((count) => !Number.isSafeInteger(count) || count < 0) ||
+          !Number.isSafeInteger(
+            worker.completed + worker.cancelled + worker.pending,
+          ) ||
+          worker.submitted !==
+            worker.completed + worker.cancelled + worker.pending,
+      )
+    )
+      return 'invalid-worker-counter';
+    if (
+      workers.some(
+        (worker) =>
+          worker.taskErrors !== 0 ||
+          worker.workerErrors !== 0 ||
+          worker.postErrors !== 0,
+      )
+    )
+      return 'worker-error';
+    if (
+      workers.reduce((sum, worker) => sum + worker.pending, 0) !==
+      sample.pending
+    )
+      return 'pending-count-mismatch';
+    return null;
+  }
+
+  function signature(sample) {
+    return JSON.stringify({
+      camera: sample.camera,
+      tilesLoaded: sample.tilesLoaded,
+      workers: sample.workers.map((worker) => ({
+        kind: worker.kind,
+        submitted: worker.submitted,
+        completed: worker.completed,
+        cancelled: worker.cancelled,
+        pending: worker.pending,
+        taskErrors: worker.taskErrors,
+        workerErrors: worker.workerErrors,
+        postErrors: worker.postErrors,
+      })),
+    });
+  }
+
+  function tick() {
+    if (!state?.active) return;
+    const sample = capture();
+    state.sampleCount++;
+    if (state.history.length < cap) state.history.push(sample);
+    else state.historyTruncated = true;
+    const invalidReason = validate(sample);
+    if (invalidReason) {
+      state.status = 'failed';
+      state.reason = invalidReason;
+      stop();
+      return;
+    }
+    if (sample.elapsedMs >= state.timeoutMs) {
+      state.status = 'timed-out';
+      state.reason = 'cold-scene-readiness-deadline';
+      stop();
+      return;
+    }
+    if (sample.tilesLoaded !== true || sample.pending !== 0) {
+      state.candidate = null;
+      return;
+    }
+
+    const currentSignature = signature(sample);
+    if (!state.candidate || state.candidate.signature !== currentSignature) {
+      state.candidate = {
+        signature: currentSignature,
+        requestedAtPostRenderCount: state.postRenderCount,
+        requestedAtFrameNumber: sample.frameNumber,
+        stableStartedAt: null,
+        stableSampleCount: 0,
+      };
+      try {
+        state.renderRequests++;
+        state.scene.requestRender();
+      } catch {
+        state.status = 'failed';
+        state.reason = 'readiness-render-request-failed';
+        stop();
+      }
+      return;
+    }
+    if (
+      state.candidate.stableStartedAt === null &&
+      state.postRenderCount > state.candidate.requestedAtPostRenderCount
+    ) {
+      state.candidate.stableStartedAt = sample.elapsedMs;
+      state.candidate.stableSampleCount = 1;
+    } else if (state.candidate.stableStartedAt !== null) {
+      state.candidate.stableSampleCount++;
+      if (
+        sample.elapsedMs - state.candidate.stableStartedAt >=
+          state.stableWindowMs &&
+        state.candidate.stableSampleCount >= 10
+      ) {
+        state.status = 'ready';
+        state.reason = null;
+        stop();
+      }
+    }
+  }
+
+  window.__qaLifecycleSceneReadiness = {
+    start({ timeoutMs = 30_000, pollMs = 100, stableWindowMs = 1_000 } = {}) {
+      if (state?.active)
+        throw new Error('Scene readiness observation is already active.');
+      if (
+        !Number.isSafeInteger(timeoutMs) ||
+        timeoutMs < 1 ||
+        timeoutMs > 30_000 ||
+        !Number.isSafeInteger(pollMs) ||
+        pollMs < 50 ||
+        pollMs > 500 ||
+        !Number.isSafeInteger(stableWindowMs) ||
+        stableWindowMs < 500 ||
+        stableWindowMs > 2_000
+      )
+        throw new RangeError('Scene readiness bounds are invalid.');
+      const scene = window.__godsEyeView?.viewer?.scene;
+      if (!scene?.postRender?.addEventListener || !scene?.requestRender)
+        throw new Error('Cesium scene readiness controls are unavailable.');
+      state = {
+        scene,
+        status: 'pending',
+        reason: null,
+        timeoutMs,
+        pollMs,
+        stableWindowMs,
+        startedAt: performance.now(),
+        active: true,
+        finishedElapsedMs: null,
+        timer: null,
+        listener: null,
+        postRenderCount: 0,
+        lastPostRenderFrame: null,
+        renderRequests: 0,
+        sampleCount: 0,
+        historyTruncated: false,
+        history: [],
+        candidate: null,
+      };
+      state.listener = () => {
+        state.postRenderCount++;
+        state.lastPostRenderFrame = Number.isSafeInteger(
+          scene.frameState?.frameNumber,
+        )
+          ? scene.frameState.frameNumber
+          : null;
+      };
+      scene.postRender.addEventListener(state.listener);
+      state.timer = setInterval(tick, pollMs);
+      tick();
+      return snapshot();
+    },
+    snapshot,
+    summary() {
+      return snapshot(false);
+    },
+    cancel(includeHistory = true) {
+      if (!state) return null;
+      if (state.active) {
+        state.status = 'cancelled';
+        state.reason = 'host-cancelled';
+        stop();
+      }
+      return snapshot(includeHistory);
+    },
+    dispose() {
+      if (state?.active) stop();
+      state = null;
+      delete window.__qaLifecycleSceneReadiness;
+    },
+  };
+}
+
+export function startLifecycleSceneReadinessInPage(options) {
+  return window.__qaLifecycleSceneReadiness?.start(options) || null;
+}
+
+export function finishLifecycleSceneReadinessInPage() {
+  const observer = window.__qaLifecycleSceneReadiness;
+  if (!observer) return { snapshot: null, disposed: true };
+  if (observer.summary()?.status === 'pending') observer.cancel(false);
+  const snapshot = observer.snapshot();
+  observer.dispose();
+  return { snapshot, disposed: !window.__qaLifecycleSceneReadiness };
+}
+
+export async function waitForLifecycleSceneReadiness(
+  page,
+  { timeoutMs = SCENE_READINESS_TIMEOUT_MS, onProgress = () => {} } = {},
+) {
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000)
+    throw new RangeError('Cold scene readiness deadline is invalid.');
+  const startedAt = performance.now();
+  let last = null;
+  let primaryError = null;
+  let lastProgressBucket = -1;
+  try {
+    await evaluateWithDeadline(
+      page,
+      'start-cold-scene-readiness',
+      startLifecycleSceneReadinessInPage,
+      {
+        timeoutMs,
+        pollMs: SCENE_READINESS_POLL_MS,
+        stableWindowMs: SCENE_READINESS_STABLE_MS,
+      },
+    );
+    while (performance.now() - startedAt <= timeoutMs + 1_000) {
+      const summary = await withProtocolDeadline(
+        () =>
+          page.evaluate(
+            () => window.__qaLifecycleSceneReadiness?.summary() || null,
+          ),
+        'read-cold-scene-readiness-summary',
+        1_000,
+      );
+      last = summary;
+      if (last?.status === 'ready') break;
+      if (last?.status !== 'pending') {
+        const error = new Error(
+          `Cold scene did not become ready: ${last?.status || 'missing'}/${last?.reason || 'no-observation'}.`,
+        );
+        error.sceneReadiness = last;
+        throw error;
+      }
+      const progressBucket = Math.floor(last.elapsedMs / 5_000);
+      if (progressBucket !== lastProgressBucket) {
+        lastProgressBucket = progressBucket;
+        onProgress({
+          elapsedMs: Math.round(last.elapsedMs),
+          status: last.status,
+          sampleCount: last.historySampleCount,
+        });
+      }
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.min(SCENE_READINESS_POLL_MS, 100)),
+      );
+    }
+    if (last?.status !== 'ready') {
+      const error = new Error('Cold scene readiness deadline elapsed.');
+      error.sceneReadiness = last;
+      throw error;
+    }
+  } catch (error) {
+    primaryError = error;
+    if (!error.sceneReadiness) error.sceneReadiness = last;
+    throw error;
+  } finally {
+    try {
+      const terminal = await withProtocolDeadline(
+        () => page.evaluate(finishLifecycleSceneReadinessInPage),
+        'cancel-cold-scene-readiness',
+        1_000,
+      );
+      const finalSnapshot = terminal?.snapshot || null;
+      if (terminal && !terminal.disposed)
+        throw new Error('Cold scene readiness observer was not disposed.');
+      if (finalSnapshot) {
+        last = finalSnapshot;
+        last.observerDisposed = terminal?.disposed === true;
+        if (primaryError) primaryError.sceneReadiness = last;
+      }
+    } catch (cleanupError) {
+      if (primaryError)
+        primaryError.sceneReadinessCleanupError = boundedText(cleanupError);
+      else throw cleanupError;
+    }
+  }
+  if (last?.status !== 'ready') {
+    const error = new Error(
+      `Cold scene did not become ready: ${last?.status || 'missing'}/${last?.reason || 'no-observation'}.`,
+    );
+    error.sceneReadiness = last;
+    throw error;
+  }
+  return last;
+}
+
 export async function readWorkerPreflight(
   page,
   verifyNetwork,
@@ -730,6 +1153,7 @@ async function setupOwnedPage(
   let page = null;
   let setupPhase = 'create-context';
   const progress = [];
+  let sceneReadiness = null;
   try {
     context = await browser.createBrowserContext();
     setupPhase = 'create-page';
@@ -776,6 +1200,17 @@ async function setupOwnedPage(
       'install-drain-observer',
       installLifecycleDrainObserver,
     );
+    setupPhase = 'cold-scene-readiness';
+    onProgress(`cold-scene-readiness:${role}`);
+    await evaluateWithDeadline(
+      page,
+      'install-cold-scene-readiness-observer',
+      installLifecycleSceneReadinessObserver,
+    );
+    sceneReadiness = await waitForLifecycleSceneReadiness(page, {
+      timeoutMs: SCENE_READINESS_TIMEOUT_MS,
+      onProgress: () => onProgress(`cold-scene-readiness-poll:${role}`),
+    });
     setupPhase = 'read-application-identity';
     const identity = await evaluateWithDeadline(
       page,
@@ -803,6 +1238,7 @@ async function setupOwnedPage(
       disabledLayers,
       allLayersDisabled: true,
       applicationCommit: identity,
+      sceneReadiness,
       workerPreflight,
     };
   } catch (error) {
@@ -816,6 +1252,10 @@ async function setupOwnedPage(
     });
     failureEvidence.setupPhase = setupPhase;
     failureEvidence.bootProgress = progress.slice(0, 16);
+    failureEvidence.sceneReadiness =
+      existingEvidence?.sceneReadiness ||
+      error.sceneReadiness ||
+      sceneReadiness;
     error.lifecycleFailureEvidence = failureEvidence;
     try {
       await closeOwnedPageAndContext(page, context);
@@ -2304,6 +2744,7 @@ export async function runImportWorkspaceLifecycle({
           disabledLayers: owned.disabledLayers,
           allLayersDisabled: owned.allLayersDisabled,
           bootProgress: owned.progress.slice(0, 16),
+          sceneReadiness: owned.sceneReadiness,
           workerPreflight: owned.workerPreflight,
           pageErrors: owned.errors.slice(0, 8).map(boundedText),
         });
@@ -2316,6 +2757,10 @@ export async function runImportWorkspaceLifecycle({
           error: boundedText(error),
           failureEvidence: error.lifecycleFailureEvidence || null,
           bootProgress: owned?.progress?.slice(0, 16) || [],
+          sceneReadiness:
+            owned?.sceneReadiness ||
+            error.lifecycleFailureEvidence?.sceneReadiness ||
+            null,
           disabledLayers: owned?.disabledLayers || [],
           allLayersDisabled: owned?.allLayersDisabled === true,
           workerPreflight: owned?.workerPreflight || null,

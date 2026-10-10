@@ -6,16 +6,21 @@ import {
   createLifecycleImportFixture,
   createLifecycleReport,
   finalizeLifecycleReportStatus,
+  finishLifecycleSceneReadinessInPage,
   installControlledRenderWaiterFactory,
+  installLifecycleSceneReadinessObserver,
+  startLifecycleSceneReadinessInPage,
   readWorkerPreflight,
   observeWorkerQuiescenceInPage,
   runImportWorkspaceLifecycle,
   runControlledImportOperation,
+  waitForLifecycleSceneReadiness,
   validateLifecycleCandidate,
   WORKSPACE_IMPORT_FIXTURE_SHA256,
 } from '../qa-import-workspace-lifecycle.mjs';
 import {
   assertOwnedLifecycleCheckpoint,
+  assertSceneReadiness,
   closeControlledOwnerAndContext,
   createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
@@ -362,6 +367,134 @@ function controlledSnapshot({ count = 0, workspaceId = null, ids } = {}) {
     contextRecordCount: 0,
   };
   return result;
+}
+
+function sceneReadinessEvidence() {
+  const makeSample = (elapsedMs) => ({
+    elapsedMs,
+    validEnvelope: true,
+    instrumented: true,
+    overflow: false,
+    pending: 0,
+    workers: [],
+    workersTruncated: false,
+    tilesLoaded: true,
+    frameNumber: 40 + Math.floor(elapsedMs / 100),
+    camera: {
+      position: [1, 2, 3],
+      direction: [0, 0, -1],
+      up: [0, 1, 0],
+    },
+    postRenderCount: 1,
+    lastPostRenderFrame: 40 + Math.floor(elapsedMs / 100),
+  });
+  const history = Array.from({ length: 11 }, (_, index) =>
+    makeSample(200 + index * 100),
+  );
+  return {
+    status: 'ready',
+    reason: null,
+    timeoutMs: 30_000,
+    stableWindowMs: 1_000,
+    pollMs: 100,
+    elapsedMs: 1_200,
+    historyTruncated: false,
+    history,
+    historySampleCount: history.length,
+    stableSampleCount: history.length,
+    stableElapsedMs: 1_000,
+    postRenderCountAtRequest: 0,
+    frameNumberAtRequest: 1,
+    renderRequests: 1,
+    completedPostRenders: 1,
+    observerDisposed: true,
+    final: history.at(-1),
+  };
+}
+
+function createSceneReadinessContext({
+  autoRender = true,
+  tilesLoaded = true,
+  initialNow = 0,
+  workerState = {
+    instrumented: true,
+    overflow: false,
+    pending: 0,
+    workers: [],
+  },
+} = {}) {
+  let now = initialNow;
+  let nextTimer = 0;
+  const timers = new Map();
+  const listeners = new Set();
+  const scene = {
+    frameState: { frameNumber: 1 },
+    globe: { tilesLoaded },
+    camera: {
+      positionWC: { x: 1, y: 2, z: 3 },
+      directionWC: { x: 0, y: 0, z: -1 },
+      upWC: { x: 0, y: 1, z: 0 },
+    },
+    postRender: {
+      addEventListener(listener) {
+        listeners.add(listener);
+      },
+      removeEventListener(listener) {
+        listeners.delete(listener);
+      },
+    },
+    requestCount: 0,
+    requestRender() {
+      scene.requestCount++;
+      if (!autoRender) return;
+      scene.frameState.frameNumber++;
+      for (const listener of [...listeners]) listener();
+    },
+  };
+  const window = {
+    __godsEyeView: { viewer: { scene } },
+    __gevSoakWorkers: { snapshot: () => workerState },
+  };
+  const context = vm.createContext({
+    window,
+    performance: { now: () => now },
+    setInterval(callback) {
+      const id = ++nextTimer;
+      timers.set(id, callback);
+      return id;
+    },
+    clearInterval(id) {
+      timers.delete(id);
+    },
+  });
+  vm.runInContext(
+    `(${installLifecycleSceneReadinessObserver.toString()})()`,
+    context,
+  );
+  const advance = (elapsedMs = 100) => {
+    now += elapsedMs;
+    for (const callback of [...timers.values()]) callback();
+  };
+  return {
+    context,
+    window,
+    scene,
+    timers,
+    listeners,
+    setNow(value) {
+      now = value;
+    },
+    advance,
+    setWorkerState(value) {
+      workerState = value;
+    },
+    setTilesLoaded(value) {
+      scene.globe.tilesLoaded = value;
+    },
+    moveCamera() {
+      scene.camera.positionWC.x += 1;
+    },
+  };
 }
 
 function controlledImportDriver({
@@ -1963,6 +2096,299 @@ test('controlled owner context closes even when disposal or cleanup validation f
   assert.deepEqual(calls, ['dispose', 'validate', 'close']);
 });
 
+test('cold scene readiness requires a stable loaded scene and verifies a completed render', () => {
+  const fixture = createSceneReadinessContext({ initialNow: 50_000 });
+  const readiness = fixture.window.__qaLifecycleSceneReadiness;
+  readiness.start({ timeoutMs: 2_000, pollMs: 100, stableWindowMs: 1_000 });
+  assert.equal(fixture.scene.requestCount, 1);
+  for (let index = 0; index < 11; index++) fixture.advance(100);
+  const result = readiness.snapshot();
+  assert.equal(result.status, 'ready');
+  assert.equal(result.stableElapsedMs, 1_000);
+  assert.equal(result.stableSampleCount, 11);
+  assert.equal(result.renderRequests, 1);
+  assert.ok(result.completedPostRenders >= 1);
+  assert.equal(fixture.listeners.size, 0);
+  assert.equal(fixture.timers.size, 0);
+  const frozenElapsed = result.elapsedMs;
+  fixture.advance(5_000);
+  assert.equal(readiness.snapshot().elapsedMs, frozenElapsed);
+});
+
+test('readiness page callbacks serialize with explicit options and dispose once', () => {
+  const calls = [];
+  const window = {
+    __qaLifecycleSceneReadiness: {
+      start(options) {
+        calls.push(['start', options]);
+        return { status: 'pending' };
+      },
+      summary: () => ({ status: 'ready' }),
+      snapshot: () => ({ status: 'ready', history: [1] }),
+      cancel: () => calls.push(['cancel']),
+      dispose() {
+        calls.push(['dispose']);
+        delete window.__qaLifecycleSceneReadiness;
+      },
+    },
+  };
+  const context = vm.createContext({ window });
+  const options = { timeoutMs: 30_000, pollMs: 100, stableWindowMs: 1_000 };
+  const started = vm.runInContext(
+    `(${startLifecycleSceneReadinessInPage.toString()})(${JSON.stringify(options)})`,
+    context,
+  );
+  assert.equal(started.status, 'pending');
+  assert.equal(JSON.stringify(calls[0]), JSON.stringify(['start', options]));
+  const finished = vm.runInContext(
+    `(${finishLifecycleSceneReadinessInPage.toString()})()`,
+    context,
+  );
+  assert.equal(
+    JSON.stringify(finished),
+    JSON.stringify({
+      snapshot: { status: 'ready', history: [1] },
+      disposed: true,
+    }),
+  );
+  assert.deepEqual(calls.slice(1), [['dispose']]);
+});
+
+test('host readiness orchestration uses serialized callbacks and disposes terminal history', async () => {
+  const terminal = sceneReadinessEvidence();
+  let startedOptions = null;
+  let disposed = 0;
+  const window = {
+    __qaLifecycleSceneReadiness: {
+      start(options) {
+        startedOptions = options;
+        return { status: 'pending' };
+      },
+      summary() {
+        return { status: 'ready', elapsedMs: terminal.elapsedMs };
+      },
+      snapshot() {
+        return terminal;
+      },
+      dispose() {
+        disposed++;
+        delete window.__qaLifecycleSceneReadiness;
+      },
+    },
+  };
+  const context = vm.createContext({ window });
+  const page = {
+    evaluate(callback, ...args) {
+      return vm.runInContext(
+        `(${callback.toString()})(...${JSON.stringify(args)})`,
+        context,
+      );
+    },
+  };
+  const result = await waitForLifecycleSceneReadiness(page);
+  assert.equal(
+    JSON.stringify(startedOptions),
+    JSON.stringify({
+      timeoutMs: 30_000,
+      pollMs: 100,
+      stableWindowMs: 1_000,
+    }),
+  );
+  assert.equal(result.status, 'ready');
+  assert.equal(result.observerDisposed, true);
+  assert.equal(result.history.length, 11);
+  assert.equal(disposed, 1);
+});
+
+test('cold readiness resets on terrain, camera changes, and transient zero', () => {
+  const fixture = createSceneReadinessContext();
+  const readiness = fixture.window.__qaLifecycleSceneReadiness;
+  readiness.start({ timeoutMs: 3_000, pollMs: 100, stableWindowMs: 1_000 });
+  fixture.advance(100);
+  fixture.setWorkerState({
+    instrumented: true,
+    overflow: false,
+    pending: 1,
+    workers: [
+      {
+        kind: 'terrain.js',
+        submitted: 2,
+        completed: 1,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        cancelled: 0,
+        pending: 1,
+      },
+    ],
+  });
+  fixture.advance(100);
+  assert.equal(readiness.snapshot().status, 'pending');
+  fixture.setWorkerState({
+    instrumented: true,
+    overflow: false,
+    pending: 0,
+    workers: [
+      {
+        kind: 'terrain.js',
+        submitted: 2,
+        completed: 2,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        cancelled: 0,
+        pending: 0,
+      },
+    ],
+  });
+  fixture.advance(100);
+  fixture.advance(100);
+  fixture.moveCamera();
+  fixture.advance(100);
+  assert.equal(fixture.scene.requestCount, 3);
+  for (let index = 0; index < 11; index++) fixture.advance(100);
+  assert.equal(readiness.snapshot().status, 'ready');
+  assert.equal(fixture.listeners.size, 0);
+  assert.equal(fixture.timers.size, 0);
+});
+
+test('cold readiness fails closed for malformed workers, late frames, and deadline zero', () => {
+  const malformed = createSceneReadinessContext({
+    workerState: {
+      instrumented: true,
+      overflow: false,
+      pending: 0,
+      workers: [
+        {
+          kind: 'terrain.js',
+          submitted: -1,
+          completed: 0,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          pending: 0,
+        },
+      ],
+    },
+  });
+  malformed.window.__qaLifecycleSceneReadiness.start({
+    timeoutMs: 1_000,
+    pollMs: 100,
+    stableWindowMs: 500,
+  });
+  assert.equal(
+    malformed.window.__qaLifecycleSceneReadiness.snapshot().reason,
+    'invalid-worker-counter',
+  );
+  assert.equal(malformed.listeners.size, 0);
+  assert.equal(malformed.timers.size, 0);
+
+  const unconserved = createSceneReadinessContext({
+    workerState: {
+      instrumented: true,
+      overflow: false,
+      pending: 0,
+      workers: [
+        {
+          kind: 'terrain.js',
+          submitted: 2,
+          completed: 1,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          pending: 0,
+        },
+      ],
+    },
+  });
+  unconserved.window.__qaLifecycleSceneReadiness.start({
+    timeoutMs: 1_000,
+    pollMs: 100,
+    stableWindowMs: 500,
+  });
+  assert.equal(
+    unconserved.window.__qaLifecycleSceneReadiness.snapshot().reason,
+    'invalid-worker-counter',
+  );
+
+  const stalled = createSceneReadinessContext({ autoRender: false });
+  stalled.window.__qaLifecycleSceneReadiness.start({
+    timeoutMs: 1_000,
+    pollMs: 100,
+    stableWindowMs: 500,
+  });
+  for (let index = 0; index < 11; index++) stalled.advance(100);
+  assert.equal(
+    stalled.window.__qaLifecycleSceneReadiness.snapshot().status,
+    'timed-out',
+  );
+  assert.equal(stalled.listeners.size, 0);
+  assert.equal(stalled.timers.size, 0);
+
+  const lateZero = createSceneReadinessContext({
+    workerState: {
+      instrumented: true,
+      overflow: false,
+      pending: 1,
+      workers: [
+        {
+          kind: 'terrain.js',
+          submitted: 1,
+          completed: 0,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          pending: 1,
+        },
+      ],
+    },
+  });
+  lateZero.window.__qaLifecycleSceneReadiness.start({
+    timeoutMs: 1_000,
+    pollMs: 100,
+    stableWindowMs: 500,
+  });
+  for (let index = 0; index < 10; index++) lateZero.advance(100);
+  lateZero.setWorkerState({
+    instrumented: true,
+    overflow: false,
+    pending: 0,
+    workers: [
+      {
+        kind: 'terrain.js',
+        submitted: 1,
+        completed: 1,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        cancelled: 0,
+        pending: 0,
+      },
+    ],
+  });
+  lateZero.advance(100);
+  const late = lateZero.window.__qaLifecycleSceneReadiness.snapshot();
+  assert.equal(late.status, 'timed-out');
+  assert.equal(lateZero.listeners.size, 0);
+  assert.equal(lateZero.timers.size, 0);
+});
+
+test('cold readiness cancellation releases its timer and listener', () => {
+  const fixture = createSceneReadinessContext({ tilesLoaded: false });
+  const readiness = fixture.window.__qaLifecycleSceneReadiness;
+  readiness.start({ timeoutMs: 2_000, pollMs: 100, stableWindowMs: 1_000 });
+  assert.equal(fixture.scene.requestCount, 0);
+  const cancelled = readiness.cancel();
+  assert.equal(cancelled.status, 'cancelled');
+  assert.equal(fixture.listeners.size, 0);
+  assert.equal(fixture.timers.size, 0);
+  readiness.dispose();
+  assert.equal(fixture.window.__qaLifecycleSceneReadiness, undefined);
+});
+
 test('v2 lifecycle contract requires native cycles and separate controlled race proof', async () => {
   const fixture = createLifecycleImportFixture(2);
   const common = {
@@ -1970,6 +2396,7 @@ test('v2 lifecycle contract requires native cycles and separate controlled race 
     allLayersDisabled: true,
     disabledLayers: ['flights', 'traffic'],
     workerCounters: workerCounters(),
+    sceneReadiness: sceneReadinessEvidence(),
     workerPreflight: {
       scope: 'cumulative-per-document',
       status: 'passed',
@@ -2095,6 +2522,13 @@ test('v2 lifecycle contract requires native cycles and separate controlled race 
     report,
   );
 
+  const missingReadiness = structuredClone(report);
+  delete missingReadiness.cases[1].sceneReadiness;
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(missingReadiness, expected),
+    /Cold scene readiness/,
+  );
+
   assert.throws(
     () =>
       validateImportWorkspaceLifecycleReport(
@@ -2165,6 +2599,40 @@ test('v2 lifecycle contract requires native cycles and separate controlled race 
     () => validateImportWorkspaceLifecycleReport(badPostZero, expected),
     /Worker quiescence history/,
   );
+});
+
+test('scene readiness contract requires a postRender in the final stable window', () => {
+  const valid = sceneReadinessEvidence();
+  assert.doesNotThrow(() => assertSceneReadiness(valid));
+  const missed = structuredClone(valid);
+  missed.history[0].postRenderCount = 0;
+  assert.throws(
+    () => assertSceneReadiness(missed),
+    /requested completed render/,
+  );
+  const negativeFrame = structuredClone(valid);
+  negativeFrame.history[0].frameNumber = -1;
+  negativeFrame.final = negativeFrame.history.at(-1);
+  assert.throws(() => assertSceneReadiness(negativeFrame));
+  const missingRender = structuredClone(valid);
+  delete missingRender.history[0].lastPostRenderFrame;
+  assert.throws(() => assertSceneReadiness(missingRender));
+  const unbalancedWorkers = structuredClone(valid);
+  const worker = {
+    kind: 'terrain.js',
+    submitted: 2,
+    completed: 1,
+    taskErrors: 0,
+    workerErrors: 0,
+    postErrors: 0,
+    cancelled: 0,
+    pending: 0,
+  };
+  for (const sample of unbalancedWorkers.history) {
+    sample.workers = [worker];
+  }
+  unbalancedWorkers.final = unbalancedWorkers.history.at(-1);
+  assert.throws(() => assertSceneReadiness(unbalancedWorkers));
 });
 
 test('queued cancellation or supersession that was not actually observed fails closed', async () => {
