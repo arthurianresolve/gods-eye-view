@@ -476,6 +476,19 @@ partial packet remains partial and cannot close the parent slice.
   leaves its exact source unresolved. Delayed preflight request events remain a
   hypothesis; isolate application event collection at the navigation boundary
   before changing any code-provenance policy.
+- **S47.1b-3 production-worker investigation:** `98d2966` starts request
+  collection only after the preflight and its target-disposal wait; eleven focused
+  tests pass. The [next run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38030203352)
+  still fails on a same-origin blob script ([raw artifact](performance-evidence/build-smoke-38030203352.json)).
+  The preflight theory is not established. Static inspection identifies a missing
+  production-build contract: [the build configuration](../build/vite.js) documents
+  that bundled Cesium workers use `importScripts(blob:...)`. The locked Cesium
+  bundle assigns a base64 literal to `globalThis.CESIUM_WORKERS`; its decoded
+  worker script can be derived from the verified parent asset without evaluation.
+  Validate that script and its narrowly defined bootstrap wrapper before accepting
+  blob requests. Until this is implemented and exercised, the smoke stays failed;
+  provider-fixture implementation can proceed independently. `87a9b46` additionally
+  rejects request-audit buffer overflow instead of silently dropping code events.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
@@ -502,6 +515,18 @@ partial packet remains partial and cannot close the parent slice.
   records SwiftShader on hosted Windows; it is not GPU evidence. This passing
   rerun predates the new close diagnostics and does not establish the cause of
   the earlier shutdown failure.
+- **Bounded recovery-close diagnostics implemented by GPT-6 Luna:**
+  `4c5da0d`, corrected through `f4284217c87d1afecab56da6e6cb215d7c5fe01d`,
+  retains the five-second graceful-close deadline and reports host-clock timing,
+  close rejection/timeout, process exit, bounded sanitized stderr and confirmed
+  termination separately. An already-exited child cannot count as forced
+  termination. The Windows stop helper has its own bounded lifetime and direct
+  tests for successful taskkill, failed requests, natural exit and timeout.
+  Cleanup becomes the primary failure only after an otherwise successful check;
+  earlier startup/workspace failures retain their phase. The coordinator's
+  [22-test Node verification](performance-evidence/recovery-diagnostics-f428421.json)
+  passes. This instrumentation does not claim to fix or explain the intermittent
+  shutdown; the exact-commit hosted Windows diagnostic is being collected.
 - **Windows wind validation remains failed:** a clean isolated checkout of
   `a83dd7af30cb3b9a39095da0f081a1037725d2cd`, served by Vite on loopback, produced
   [a fresh-frame timeout](performance-evidence/wind-a83dd7a-windows-capture-failure.json)
