@@ -162,6 +162,25 @@ equivalence, latency improvement, a Windows hardware result, the final 20% targe
 or completion of S51. Frame counts are render-demand observations, not CPU/GPU
 execution timings. The earlier failed CI and offline reassessment stay historical.
 
+### Windows frame-delivery diagnostic - 10 October 2026
+
+A fresh tab in the same authorized Chrome profile restored browser control after
+the previously selected diagnostic tab could not be inspected. The existing
+port-4176 fixture declares app/harness
+`a83dd7af30cb3b9a39095da0f081a1037725d2cd`, not current `dev`. Its five-second
+WebGL2 diagnostic at `2026-10-10T12:07:45.799Z` completed with 301 frames,
+maximum frame gap 17.4 ms and maximum 20 ms-heartbeat gap 22 ms. The reported
+renderer is Intel UHD 620 through ANGLE/D3D11, Chrome 154 on Windows. Focus and
+visibility remain true/visible; no context-loss event is recorded.
+
+The canvas is 640 by 360 with antialiasing and drawing-buffer preservation;
+about 90% of its CSS rectangle intersects the viewport. Desktop occlusion is
+unavailable. This narrow scheduling observation is not a matched comparison,
+fresh capture test, current-candidate performance result, or 60-minute retention
+soak. It does not explain or erase older failures or the separate hosted Windows
+browser-process shutdown failure. The unmodified downloaded [raw report](performance-evidence/windows-webgl-frame-a83dd7a-20261010T120745.json)
+has SHA-256 `639f7892e4ad84d9711599bdbb5e1bed07f62e174ccbb12c153fd5b23ab790e9`.
+
 ### S49 deterministic cancellation coverage - 10 October 2026
 
 GPT-6 Luna implemented `fe97950f45f8279f660b6901efc8beb5eb7edbc8`.
