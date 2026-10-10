@@ -471,13 +471,20 @@ export function createTracking({
             // icon predates all real history, so there is no valid body point behind it.
             if (
               !flightState._trackedIcao ||
-              flightState._trailPositions.length < 2 ||
-              parts.motion._isTrackWarmingUp()
+              flightState._trailPositions.length < 2
             )
               return [];
+            const renderTime = parts.motion._trackedDisplayRenderTime(
+              flightState._trackedIcao,
+              { preferCachedPose: true },
+            );
+            if (parts.motion._isTrackWarmingUp(renderTime)) return [];
             const head =
               parts.motion._trackedTrailCached() ||
-              parts.motion._trackedDisplayPosition(flightState._trackedIcao);
+              parts.motion._trackedDisplayPosition(
+                flightState._trackedIcao,
+                renderTime,
+              );
             if (!head) return [];
             // body[n−2] (last displayed body point) → delayed head: runs FORWARD, never a
             // backward/reversing segment.

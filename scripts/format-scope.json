@@ -1011,6 +1011,8 @@
   "scripts/qa-cctv-lifecycle.mjs",
   "scripts/performance/cctvLifecycle.mjs",
   "scripts/performance/cctvLifecycle.test.mjs",
+  "scripts/performance/trackedFrameTimeRepro.mjs",
+  "scripts/performance/trackedFrameTimeRepro.test.mjs",
   "scripts/qa-mixed-use-soak.mjs",
   "scripts/qa-mixed-use-soak.test.mjs",
   "scripts/performance/missionRenderDemand.mjs",
