@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 
 const canonical = (value) => {
   if (Array.isArray(value)) return value.map(canonical);
@@ -128,13 +129,19 @@ export function assertCaptureIntegrity(
       `${label}: capture conditions changed during measurement`,
     );
     const signature = { conditions: before, cameraPath: sample.cameraPath };
-    if (firstByScenario.has(sample.scenario))
+    if (firstByScenario.has(sample.scenario)) {
+      const first = firstByScenario.get(sample.scenario);
       assert.deepEqual(
-        signature,
-        firstByScenario.get(sample.scenario),
+        signature.conditions,
+        first.conditions,
         `${label}: repeated workload changed`,
       );
-    else firstByScenario.set(sample.scenario, signature);
+      assertRouteDescriptorsEquivalent(
+        signature.cameraPath,
+        first.cameraPath,
+        `${label}: repeated workload route changed beyond camera pose roundoff`,
+      );
+    } else firstByScenario.set(sample.scenario, signature);
   }
   return { status: 'passed', sampleCount: captures.length };
 }

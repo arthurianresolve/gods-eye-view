@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
+import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -1503,14 +1504,20 @@ try {
     source.provenanceStatus = source.buildProvenance.status;
   }
 
-  const stableWithinScenario = (read) => {
-    const byScenario = new Map();
+  const stableWithinScenario = (
+    read,
+    equivalent = (left, right) =>
+      JSON.stringify(left) === JSON.stringify(right),
+  ) => {
+    const firstByScenario = new Map();
     for (const sample of captures) {
-      const values = byScenario.get(sample.scenario) || new Set();
-      values.add(JSON.stringify(read(sample)));
-      byScenario.set(sample.scenario, values);
+      const value = read(sample);
+      if (firstByScenario.has(sample.scenario)) {
+        if (!equivalent(value, firstByScenario.get(sample.scenario)))
+          return false;
+      } else firstByScenario.set(sample.scenario, value);
     }
-    return [...byScenario.values()].every((values) => values.size <= 1);
+    return true;
   };
   // Idle, scripted motion, and tracking intentionally have different routes.
   // Compare repeated runs within each workload rather than declaring the
@@ -1520,6 +1527,7 @@ try {
   );
   const cameraPathStableAcrossSamples = stableWithinScenario(
     (sample) => sample.cameraPath,
+    routeDescriptorsEquivalent,
   );
   // Recheck delivery after all samples so a late failed/mismatched fulfillment
   // cannot leave an earlier pre-measurement observation looking complete.

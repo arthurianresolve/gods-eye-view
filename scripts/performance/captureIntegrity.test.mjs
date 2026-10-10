@@ -44,6 +44,13 @@ function sample(scenario = 'scripted-motion', run = 1) {
     foregroundThroughout: true,
     cameraPath: {
       id: scenario,
+      start: {
+        position: { x: 1, y: 2, z: 3 },
+        direction: { x: 0, y: 1, z: 0 },
+        up: { x: 0, y: 0, z: 1 },
+        transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      },
+      elapsedDurationMs: 60_000,
       motionDistanceM: scenario === 'idle' ? 0 : 19200,
     },
   };
@@ -108,12 +115,69 @@ test('wrong builds, missing populations, changed settings and background samples
   }
 });
 
+test('repeat runs tolerate only bounded camera pose roundoff', () => {
+  const first = sample('scripted-motion', 1);
+  const second = sample('scripted-motion', 2);
+  second.cameraPath.start.position.x += 5e-7;
+  second.cameraPath.start.direction.x += 5e-13;
+  second.cameraPath.start.transform[0] += 5e-13;
+  second.cameraPath.start.transform[12] += 5e-7;
+  assert.equal(
+    assertCaptureIntegrity([first, second], options).status,
+    'passed',
+  );
+  assert.equal(second.cameraPath.start.position.x, 1 + 5e-7);
+});
+
+test('repeat runs reject meaningful pose, duration, and route changes', () => {
+  const mutations = [
+    (route) => {
+      route.start.position.x += 4;
+    },
+    (route) => {
+      route.start.direction.x += 5e-7;
+    },
+    (route) => {
+      route.start.transform[12] += 4;
+    },
+    (route) => {
+      route.start.transform[0] += 5e-7;
+    },
+    (route) => {
+      route.elapsedDurationMs += 1;
+    },
+    (route) => {
+      route.motionDistanceM += 0.01;
+    },
+    (route) => {
+      route.start.position.x = Number.NaN;
+    },
+  ];
+  let routeFailure;
+  for (const mutate of mutations) {
+    const first = sample('scripted-motion', 1);
+    const second = sample('scripted-motion', 2);
+    mutate(second.cameraPath);
+    assert.throws(
+      () => assertCaptureIntegrity([first, second], options),
+      (error) => {
+        routeFailure ||= error;
+        assert.match(error.message, /repeated workload route changed/);
+        return true;
+      },
+    );
+  }
+  assert.equal(routeFailure.operator, 'routePoseEquivalent');
+  assert.equal(routeFailure.actual.start.position.x, 5);
+  assert.equal(routeFailure.expected.start.position.x, 1);
+});
+
 test('repeat runs with different settings or route endpoints cannot pass', () => {
   const second = sample('scripted-motion', 2);
   second.cameraPath.motionDistanceM -= 8;
   assert.throws(
     () => assertCaptureIntegrity([sample(), second], options),
-    /repeated workload changed/,
+    /repeated workload route changed/,
   );
   second.cameraPath = sample().cameraPath;
   second.conditions.before.settings.densityPct = 50;

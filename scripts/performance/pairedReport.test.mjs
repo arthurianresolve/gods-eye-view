@@ -478,6 +478,28 @@ test('browser, fixture, route, populations and visual condition changes cannot b
   }
 });
 
+test('paired route checks tolerate camera pose roundoff without rounding evidence', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const scenario of scenarios) {
+    const route = structuredClone(
+      candidate.comparisonContract.routes[scenario],
+    );
+    route.start.position.x += 5e-7;
+    route.start.direction.x += 5e-13;
+    route.start.transform[0] += 5e-13;
+    route.start.transform[12] += 5e-7;
+    candidate.comparisonContract.routes[scenario] = route;
+    for (const sample of candidate.captures.filter(
+      (entry) => entry.scenario === scenario,
+    ))
+      sample.cameraPath = structuredClone(route);
+  }
+  const rawPosition = candidate.captures[0].cameraPath.start.position.x;
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+  assert.equal(candidate.captures[0].cameraPath.start.position.x, rawPosition);
+});
+
 test('dense-investigation cannot omit selected tracking from its objective contract', () => {
   const candidate = makeReport(candidateCommit);
   candidate.comparisonContract.objectiveScenarios = ['scripted-motion'];

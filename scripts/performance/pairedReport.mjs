@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { assertCaptureIntegrity } from './captureIntegrity.mjs';
+import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -563,7 +564,7 @@ function validateReport(report, side, expectedAppCommit) {
       true,
       `${label}: foreground continuity failed`,
     );
-    equal(
+    assertRouteDescriptorsEquivalent(
       sample.cameraPath,
       contract.routes[sample.scenario],
       `${label}: full route descriptor mismatch`,
@@ -748,11 +749,24 @@ export function validatePairedPerformanceReports({
       next.buildRecipe[key],
       `Build toolchain differs: ${key}`,
     );
+  const { routes: baseRoutes, ...baseContract } = base.contract;
+  const { routes: candidateRoutes, ...candidateContract } = next.contract;
   equal(
-    base.contract,
-    next.contract,
+    baseContract,
+    candidateContract,
     'Baseline and candidate comparison contracts differ',
   );
+  equal(
+    Object.keys(baseRoutes).sort(),
+    Object.keys(candidateRoutes).sort(),
+    'Baseline and candidate route scenarios differ',
+  );
+  for (const scenario of Object.keys(baseRoutes))
+    assertRouteDescriptorsEquivalent(
+      baseRoutes[scenario],
+      candidateRoutes[scenario],
+      `Baseline and candidate ${scenario} route descriptors differ beyond camera pose roundoff`,
+    );
   equal(
     baseline.fixtureDelivery,
     candidate.fixtureDelivery,
@@ -820,12 +834,17 @@ export function validatePairedPerformanceReports({
         const conditions = structuredClone(sample.conditions);
         for (const point of [conditions.before, conditions.after])
           delete point.environment.appCommit;
-        return { conditions, cameraPath: sample.cameraPath };
+        return conditions;
       };
       equal(
         pairedConditions(baseRun),
         pairedConditions(candidateRun),
         `${scenario} run ${baseRun.run}: baseline and candidate conditions differ`,
+      );
+      assertRouteDescriptorsEquivalent(
+        baseRun.cameraPath,
+        candidateRun.cameraPath,
+        `${scenario} run ${baseRun.run}: baseline and candidate routes differ beyond camera pose roundoff`,
       );
     }
   }
