@@ -225,6 +225,9 @@ try {
       const forbiddenRequests = [];
       page.on('pageerror', (error) => pageErrors.push(String(error)));
       await page.setViewport(report.environment.viewport);
+      // Each repeat loads the frozen checkout afresh. A browser cache hit can
+      // expose the server's 304 response instead of a new 200 navigation.
+      await page.setCacheEnabled(false);
       await page.setRequestInterception(true);
       page.on('request', (request) => {
         const url = new URL(request.url());
