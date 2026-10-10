@@ -3,6 +3,7 @@ export {
   createImportPreview,
   decodeImportText,
   parseCsv,
+  parseCsvHeaders,
   parseImportInstant,
   previewCSV,
   previewGeoJSON,

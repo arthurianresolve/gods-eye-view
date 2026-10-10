@@ -14,7 +14,7 @@ import {
 } from '../evidence/comparison.js';
 import {
   IMPORT_LIMITS,
-  parseCsv,
+  parseCsvHeaders,
   previewCSV,
   previewGeoJSON,
   previewGPX,
@@ -1243,7 +1243,7 @@ export function createWorkspaceLibraryPanel({
       stagedText = read.text;
       const extension = owner.file.name.split('.').at(-1).toLowerCase();
       if (extension === 'csv') {
-        const { headers } = parseCsv(read.text);
+        const headers = parseCsvHeaders(read.text);
         if (!importOwnerIsCurrent(owner)) return;
         for (const field of ['latitude', 'longitude', 'id', 'time']) {
           const selectColumn = root.querySelector(`[data-column="${field}"]`);

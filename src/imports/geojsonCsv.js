@@ -241,7 +241,7 @@ export async function previewGeoJSON(
 }
 
 /** RFC 4180-style bounded CSV decoder supporting quoted commas and newlines. */
-export function parseCsv(text) {
+function scanCsv(text, headersOnly = false) {
   const rows = [];
   let row = [],
     cell = '',
@@ -260,6 +260,11 @@ export function parseCsv(text) {
     row = [];
     if (rows.length > IMPORT_LIMITS.rows + 1)
       fail('too-many-rows', `CSV is limited to ${IMPORT_LIMITS.rows} records.`);
+    if (headersOnly && rows.length === 1) {
+      const headers = validateCsvHeaders(rows[0]);
+      return headers;
+    }
+    return null;
   };
   const source = text.replace(/^\uFEFF/, '');
   for (let i = 0; i < source.length; i++) {
@@ -274,24 +279,44 @@ export function parseCsv(text) {
     }
     if (char === '"' && cell === '') quoted = true;
     else if (char === ',') pushCell();
-    else if (char === '\n') pushRow();
-    else if (char === '\r') {
+    else if (char === '\n') {
+      const headers = pushRow();
+      if (headers) return headers;
+    } else if (char === '\r') {
       if (source[i + 1] === '\n') i++;
-      pushRow();
+      const headers = pushRow();
+      if (headers) return headers;
     } else cell += char;
     if (cell.length > IMPORT_LIMITS.cellChars)
       fail('cell-too-large', 'A CSV cell exceeds 4,096 characters.');
   }
   if (quoted) fail('invalid-csv', 'CSV ends inside a quoted cell.');
-  if (cell || row.length) pushRow();
+  if (cell || row.length) {
+    const headers = pushRow();
+    if (headers) return headers;
+  }
   if (!rows.length) fail('invalid-csv', 'CSV needs a header row.');
-  const headers = rows[0].map((header) => header.trim());
+  const headers = validateCsvHeaders(rows[0]);
+  return headersOnly ? headers : { headers, rows: rows.slice(1) };
+}
+
+function validateCsvHeaders(row) {
+  const headers = row.map((header) => header.trim());
   if (
     headers.some((header) => !header) ||
     new Set(headers).size !== headers.length
   )
     fail('invalid-csv', 'CSV headers must be present and unique.');
-  return { headers, rows: rows.slice(1) };
+  return headers;
+}
+
+export function parseCsv(text) {
+  return scanCsv(text);
+}
+
+/** Read only the validated header record for the column-mapping controls. */
+export function parseCsvHeaders(text) {
+  return scanCsv(text, true);
 }
 
 /** Stage CSV points using explicit latitude/longitude and optional field mappings. */

@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { previewCSV, previewGeoJSON } from './geojsonCsv.js';
+import {
+  parseCsv,
+  parseCsvHeaders,
+  previewCSV,
+  previewGeoJSON,
+} from './geojsonCsv.js';
 
 test('GeoJSON preview validates WGS84 geometry and leaves invalid features staged as rejections', async () => {
   const input = JSON.stringify({
@@ -188,6 +193,69 @@ test('CSV parsing rejects missing mapping, malformed quoting and oversized files
   );
   await assert.rejects(previewGeoJSON(' '.repeat(8 * 1024 * 1024 + 1)), {
     code: 'file-too-large',
+  });
+});
+
+test('shared CSV decoder preserves sync parse output and reads headers without scanning the body', async () => {
+  const csv =
+    '\uFEFFid,lat,lon,note\r\nalpha,10,20,"line one,\nline ""two"""\r\n\r\nbeta,11,21,last';
+  const parsed = parseCsv(csv);
+  assert.deepEqual(parsed.headers, ['id', 'lat', 'lon', 'note']);
+  assert.deepEqual(parsed.rows, [
+    ['alpha', '10', '20', 'line one,\nline "two"'],
+    ['beta', '11', '21', 'last'],
+  ]);
+  assert.deepEqual(parseCsvHeaders(csv), parsed.headers);
+
+  const malformedTail = 'lat,lon\n1,2\n"unterminated';
+  assert.deepEqual(parseCsvHeaders(malformedTail), ['lat', 'lon']);
+  await assert.rejects(
+    previewCSV(malformedTail, {
+      mapping: { latitude: 'lat', longitude: 'lon' },
+    }),
+    { code: 'invalid-csv' },
+  );
+  await assert.rejects(
+    previewCSV(malformedTail),
+    { code: 'invalid-csv' },
+    'syntax errors in the body still take precedence over missing mapping',
+  );
+});
+
+test('CSV header-only path shares grammar but stops before body validation', async () => {
+  const malformedTail = 'lat,lon\n1,2\n"unterminated';
+  assert.deepEqual(parseCsvHeaders(malformedTail), ['lat', 'lon']);
+  assert.throws(() => parseCsv(malformedTail), {
+    code: 'invalid-csv',
+    message: 'CSV ends inside a quoted cell.',
+  });
+  await assert.rejects(
+    previewCSV(malformedTail, {
+      mapping: { latitude: 'lat', longitude: 'lon' },
+    }),
+    { code: 'invalid-csv' },
+  );
+});
+
+test('CSV sync parser preserves late syntax and configured-limit error precedence', () => {
+  assert.throws(() => parseCsv('a,a\n"unterminated'), {
+    message: 'CSV ends inside a quoted cell.',
+  });
+  assert.throws(() => parseCsv(`a,a\n${'1,2\n'.repeat(50_001)}`), {
+    code: 'too-many-rows',
+  });
+  assert.throws(() => parseCsv(`a,b\n"${'x'.repeat(4097)}`), {
+    code: 'invalid-csv',
+  });
+  assert.throws(() => parseCsv(`a,b\n"${'x'.repeat(4097)}"`), {
+    code: 'cell-too-large',
+  });
+  assert.throws(() => parseCsv(`${Array(65).fill('c').join(',')}\n`), {
+    code: 'too-many-columns',
+  });
+  assert.deepEqual(parseCsv('\nlat,lon\r\n\r\n10,20\r\n'), {
+    headers: ['lat', 'lon'],
+    rows: [['10', '20']],
   });
 });
 
