@@ -222,6 +222,24 @@ the existing deterministic full-application harness with bundled imagery and
 software rendering; it establishes tracking behavior, not hardware performance.
 Browser shutdown completes normally without forced process termination.
 
+The drag-release candidate is `b80b3793cfeab8fa873c67b1332b04b90a2eeb65`.
+A production-gizmo regression with Cesium's actual input controller and event
+aggregator reproduces queued movement surviving pointer release. The fix keeps
+the public camera-input lock through the next `postUpdate`, after the controller
+drains that movement. A controller-owned lease remembers later input-state
+requests and survives gizmo replacement; CCTV teardown no longer unconditionally
+enables input belonging to another owner. Forty-three focused gizmo, source,
+lifecycle and report-integrity checks pass, together with targeted formatting
+and package boundaries. Its rendered comparison is
+[run 38081150864](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38081150864);
+acceptance remains pending until the raw report passes.
+
+That comparison replaces the former fixed post-release delay with a bounded
+passive wait for a naturally rendered, complete edited scene. The 400 ms
+fresh-frame deadline and exact-pixel comparison remain unchanged. The validator
+also requires that calibration leave the viewer's position, direction and up
+vector unchanged, even if both representations would otherwise drift equally.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
