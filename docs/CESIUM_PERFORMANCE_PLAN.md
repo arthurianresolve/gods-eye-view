@@ -45,6 +45,14 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### Mixed-use timeout diagnosis - 10 October 2026
+
+GPT-6 Luna's harness-only `3e87cc828950441768cb04427315a40a1f2106c5` adds named workspace/import phases and bounded, URL-redacted failure diagnostics. The original 30-second operation deadlines, polling and assertions remain unchanged. Diagnostics cannot replace the primary failure and have their own 1.5-second bound. Twenty-four focused tests pass, including the serialized browser callback contract and a stalled diagnostic request.
+
+The isolated [hosted smoke run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38063609361) passes at that clean, unchanged revision: both warmup cycles and one measured cycle complete every workspace/import phase, archive failure/recovery, replay and camera recovery. The measured cycle takes 24.32 seconds. [Raw report](performance-evidence/mixed-use-smoke-38063609361.json), SHA-256 `bba884886942b6811a5ac13343d44604f8c5536287d8bc3919b0d3e2d9f55a9b`; [run metadata](performance-evidence/mixed-use-smoke-38063609361-run.json).
+
+This does **not** identify or repair the timeout in full integration run `38062012141`; it records non-reproduction in an isolated hosted job. Ubuntu/Chrome uses SwiftShader. The short report correctly leaves stability pending; it is neither a 60-minute soak nor physical GPU evidence. A separate source audit found unowned asynchronous import file reads and stale preview text; that application fix requires its own regression tests and candidate validation.
+
 ### Windows fresh-viewer controls - 10 October 2026, 15:14-15:16 UTC
 
 GPT-6 Luna's fixture-only `7e09988616e3242eef0b2349416e36b523243441` creates one fresh viewer for each selected control, preserving the 400-ms deadline and stopping on the first failed request. Copy mode separately times the wait/copy, pixel extraction and hashing. A bounded follow-up observation cannot convert failure into success. Five helper tests and 12 existing capture/diagnostic checks pass; syntax and targeted formatting pass.
