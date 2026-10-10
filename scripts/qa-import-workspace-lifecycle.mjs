@@ -7,12 +7,14 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   assertOwnedLifecycleCheckpoint,
+  closeControlledOwnerAndContext,
   createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
   installLifecycleDrainObserver,
   parseImportWorkspaceLifecycleArgs,
   readLifecycleDrainObservation,
   runCooperativeImportLifecycleCase,
+  runControlledImportSupersessionLifecycleCase,
   runWorkspaceReplacementLifecycleCase,
   validateImportWorkspaceLifecycleReport,
 } from './performance/importWorkspaceLifecycle.mjs';
@@ -833,10 +835,11 @@ export function createLifecycleReport({
   fixture,
   cycles,
   drainMs,
+  schema = 'gev-import-workspace-lifecycle/v1',
   startedAt = performance.now(),
 }) {
   const report = {
-    schema: 'gev-import-workspace-lifecycle/v1',
+    schema,
     status: 'pending',
     phase: 'initialize',
     elapsedMs: 0,
@@ -1357,6 +1360,562 @@ function makeImportDriver(
   };
 }
 
+/** Install a second, instance-owned import layer without replacing the app's owner. */
+export function installControlledRenderWaiterFactory() {
+  window.__qaCreateControlledRenderWaiter =
+    function createControlledRenderWaiter({
+      scene,
+      snapshot,
+      renderWaits,
+      ownedTimers,
+      workspaceId,
+      count,
+      timeoutMs,
+    }) {
+      const startingFrame = scene.frameState.frameNumber;
+      let listener;
+      let timeout;
+      let settled = false;
+      let resolvePromise;
+      let rejectPromise;
+      const row = {
+        promise: new Promise((resolve, reject) => {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        }),
+        cancel(reason = 'Controlled render wait cancelled.') {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          rejectPromise(new DOMException(reason, 'AbortError'));
+        },
+        get done() {
+          return settled;
+        },
+      };
+      function cleanup() {
+        if (listener) scene.postRender.removeEventListener(listener);
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
+          ownedTimers.delete(timeout);
+          timeout = undefined;
+        }
+        renderWaits.delete(row);
+      }
+      try {
+        row.promise.catch(() => {});
+        renderWaits.add(row);
+        listener = () => {
+          if (scene.frameState.frameNumber <= startingFrame) return;
+          const current = snapshot();
+          const ids = current.importEntityIds;
+          const prefix = `gev-import:${workspaceId}:`;
+          if (
+            current.imports.featureCount !== count ||
+            ids.length !== count ||
+            ids.some((id) => !id.startsWith(prefix))
+          )
+            return;
+          settled = true;
+          cleanup();
+          resolvePromise({
+            frameNumber: current.frame.frameNumber,
+            importedEntityCount: count,
+            workspaceId,
+          });
+        };
+        timeout = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          rejectPromise(
+            new Error('Controlled import render was not observed.'),
+          );
+        }, timeoutMs);
+        ownedTimers.add(timeout);
+        scene.postRender.addEventListener(listener);
+        scene.requestRender();
+        return row;
+      } catch (error) {
+        row.cancel('Controlled render waiter setup failed.');
+        throw error;
+      }
+    };
+}
+
+async function installControlledImportOwner({ featureCount }) {
+  const app = window.__godsEyeView;
+  const appLayer = app?.importedGeometryLayer;
+  const appState = appLayer?.getState?.();
+  const appIds =
+    app?.viewer?.entities?.values
+      ?.filter((entity) => String(entity.id).startsWith('gev-import:'))
+      .map((entity) => String(entity.id)) || [];
+  if (
+    !app?.viewer?.scene ||
+    appState?.featureCount !== 0 ||
+    appState?.pendingJobs !== 0 ||
+    appIds.length !== 0 ||
+    window.__qaControlledImportOwner
+  )
+    throw new Error(
+      'Controlled import owner requires an empty app import owner.',
+    );
+
+  const [
+    { createImportedGeometryLayer },
+    { getContextStore },
+    { getWorldOverlayDiagnostics },
+  ] = await Promise.all([
+    import('/src/imports/runtimeLayer.js'),
+    import('/src/data/contextStore.js'),
+    import('/src/overlays/worldOverlay.js'),
+  ]);
+  const contextStore = getContextStore();
+  const initialImportContexts = [...contextStore.entities.values()].filter(
+    (record) => record?.layerId === 'user-imports',
+  ).length;
+  const initialOverlayEntries =
+    getWorldOverlayDiagnostics().entriesBySource?.['user-imports'] || 0;
+  if (initialImportContexts !== 0 || initialOverlayEntries !== 0)
+    throw new Error(
+      'Controlled import context/overlay source is already owned.',
+    );
+  let logicalClock = 0;
+  let nextHandle = 0;
+  let holdNext = false;
+  const heldCallbacks = new Map();
+  const ownedTimers = new Set();
+  const renderWaits = new Set();
+  const tick = () => logicalClock++;
+  const schedule = (callback) => {
+    if (holdNext) {
+      holdNext = false;
+      const token = { id: ++nextHandle };
+      heldCallbacks.set(token, callback);
+      return token;
+    }
+    const timer = setTimeout(() => {
+      ownedTimers.delete(timer);
+      callback();
+    }, 0);
+    ownedTimers.add(timer);
+    return timer;
+  };
+  const cancel = (handle) => {
+    if (heldCallbacks.delete(handle)) return;
+    if (ownedTimers.delete(handle)) clearTimeout(handle);
+  };
+  const layer = createImportedGeometryLayer({
+    viewer: app.viewer,
+    batchOptions: { now: tick, schedule, cancel },
+  });
+
+  function snapshot(renderedPopulation = null) {
+    const state = layer.getState();
+    const diagnostics = layer.getPerformanceDiagnostics();
+    const viewer = app.viewer;
+    const scene = viewer.scene;
+    const entities = viewer.entities.values.filter((entity) =>
+      String(entity.id).startsWith('gev-import:'),
+    );
+    const applicationOwnerIds = entities
+      .map((entity) => String(entity.id))
+      .filter((id) => !id.startsWith('gev-import:controlled-'));
+    const applicationContextCount = [...contextStore.entities.values()].filter(
+      (record) =>
+        record?.layerId === 'user-imports' &&
+        !String(record.entity?.id || '').startsWith('gev-import:controlled-'),
+    ).length;
+    const workerCounters = window.__gevSoakWorkers?.snapshot?.() || null;
+    return {
+      imports: {
+        featureCount: state.featureCount,
+        pendingJobs: diagnostics.pendingJobs,
+        cacheEntries: diagnostics.cacheEntries,
+      },
+      importEntityIds: entities
+        .map((entity) => String(entity.id))
+        .slice(0, 5000),
+      importEntityRecords: entities.slice(0, 5000).map((entity) => {
+        const position = entity.position?.getValue(viewer.clock.currentTime);
+        return {
+          id: String(entity.id),
+          name: String(entity.name || ''),
+          position: position ? [position.x, position.y, position.z] : null,
+        };
+      }),
+      scene: {
+        entities: viewer.entities.values.length,
+        dataSources: viewer.dataSources.length,
+        primitives: scene.primitives.length,
+        groundPrimitives: scene.groundPrimitives.length,
+      },
+      frame: { frameNumber: scene.frameState.frameNumber },
+      overlaySourceEntries:
+        getWorldOverlayDiagnostics().entriesBySource?.['user-imports'] || 0,
+      workerCounters: workerCounters
+        ? { ...workerCounters, scope: 'cumulative-per-document' }
+        : null,
+      renderedPopulation,
+      applicationOwner: {
+        featureCount: appLayer.getState().featureCount,
+        pendingJobs: appLayer.getState().pendingJobs,
+        importedEntityIds: applicationOwnerIds.slice(0, 5000),
+        contextRecordCount: applicationContextCount,
+      },
+    };
+  }
+
+  const renderWaiterFactory = window.__qaCreateControlledRenderWaiter;
+  if (typeof renderWaiterFactory !== 'function')
+    throw new Error('Controlled render waiter factory is unavailable.');
+  const waitForRender = (workspaceId, count, timeoutMs) =>
+    renderWaiterFactory({
+      scene: app.viewer.scene,
+      snapshot,
+      renderWaits,
+      ownedTimers,
+      workspaceId,
+      count,
+      timeoutMs,
+    });
+
+  window.__qaControlledImportOwner = {
+    featureCount,
+    layer,
+    snapshot,
+    waitForRender,
+    setHoldNext(value) {
+      holdNext = value === true;
+    },
+    get heldCallbackCount() {
+      return heldCallbacks.size;
+    },
+    get ownedTimerCount() {
+      return ownedTimers.size;
+    },
+    async dispose() {
+      for (const wait of [...renderWaits])
+        wait.cancel('Controlled import owner disposed.');
+      layer.destroy();
+      for (const timer of ownedTimers) clearTimeout(timer);
+      ownedTimers.clear();
+      heldCallbacks.clear();
+      const result = snapshot();
+      const overlayEntries =
+        getWorldOverlayDiagnostics().entriesBySource?.['user-imports'] || 0;
+      const contextRecordCount = [...contextStore.entities.values()].filter(
+        (record) => record?.layerId === 'user-imports',
+      ).length;
+      const cleanup = {
+        destroyed: layer.getState().destroyed === true,
+        pendingJobs: layer.getState().pendingJobs,
+        ownedTimers: ownedTimers.size,
+        heldCallbacks: heldCallbacks.size,
+        renderWaiters: renderWaits.size,
+        overlayEntries,
+        contextRecordCount,
+        applicationOwnerUnchanged:
+          result.applicationOwner.featureCount === 0 &&
+          result.applicationOwner.pendingJobs === 0 &&
+          result.applicationOwner.importedEntityIds.length === 0 &&
+          result.applicationOwner.contextRecordCount === 0,
+        snapshot: result,
+      };
+      delete window.__qaControlledImportOwner;
+      delete window.__qaCreateControlledRenderWaiter;
+      return cleanup;
+    },
+  };
+  return {
+    applicationOwnerBaseline: {
+      featureCount: appState.featureCount,
+      pendingJobs: appState.pendingJobs,
+      importedEntityIds: appIds,
+    },
+    snapshot: snapshot(),
+  };
+}
+
+/** Browser-serialized operation body shared by the controlled driver. */
+export async function runControlledImportOperation({
+  action,
+  imports,
+  featureCount,
+  cycle,
+  timeoutMs,
+}) {
+  const owner = window.__qaControlledImportOwner;
+  if (!owner) throw new Error('Controlled import owner is unavailable.');
+  if (action === 'warmup') {
+    const workspaceId = 'controlled-warmup';
+    const renderWait = owner.waitForRender(
+      workspaceId,
+      featureCount,
+      timeoutMs,
+    );
+    try {
+      const result = await owner.layer.loadAsync(imports, { workspaceId });
+      const renderedPopulation = await renderWait.promise;
+      return {
+        ...result,
+        renderedPopulation,
+        importEntityIds: owner.snapshot().importEntityIds,
+      };
+    } finally {
+      if (!renderWait.done) renderWait.cancel();
+    }
+  }
+  if (action === 'cancel') {
+    const workspaceId = `controlled-cancel-${cycle}`;
+    owner.setHoldNext(true);
+    const controller = new AbortController();
+    const pending = owner.layer.loadAsync(imports, {
+      workspaceId,
+      signal: controller.signal,
+    });
+    const queuedObserved =
+      owner.layer.getState().pendingJobs === 1 &&
+      owner.layer.getState().featureCount < featureCount &&
+      owner.heldCallbackCount === 1;
+    controller.abort('controlled-lifecycle-cancel');
+    let status = 'unexpected-resolve';
+    try {
+      await pending;
+    } catch (error) {
+      status = error.name === 'AbortError' ? 'cancelled' : 'failed';
+    }
+    const renderWait = owner.waitForRender('__empty__', 0, timeoutMs);
+    try {
+      const renderedPopulation = await renderWait.promise;
+      const snapshot = owner.snapshot(renderedPopulation);
+      return {
+        status,
+        queuedObserved,
+        heldCallbacksAfter: owner.heldCallbackCount,
+        ownedTimersAfter: owner.ownedTimerCount,
+        oldIdsStillPresent: snapshot.importEntityIds.some((id) =>
+          id.startsWith(`gev-import:${workspaceId}:`),
+        ),
+        snapshot,
+      };
+    } finally {
+      if (!renderWait.done) renderWait.cancel();
+    }
+  }
+  if (action === 'supersede') {
+    const oldWorkspaceId = `controlled-superseded-${cycle}`;
+    const workspaceId = `controlled-replacement-${cycle}`;
+    owner.setHoldNext(true);
+    const oldPending = owner.layer.loadAsync(imports, {
+      workspaceId: oldWorkspaceId,
+    });
+    const queuedObserved =
+      owner.layer.getState().pendingJobs === 1 &&
+      owner.layer.getState().featureCount < featureCount &&
+      owner.heldCallbackCount === 1;
+    let oldStatus = 'unexpected-resolve';
+    const oldSettled = oldPending.then(
+      () => oldStatus,
+      (error) =>
+        (oldStatus = error.name === 'AbortError' ? 'cancelled' : 'failed'),
+    );
+    const renderWait = owner.waitForRender(
+      workspaceId,
+      featureCount,
+      timeoutMs,
+    );
+    try {
+      const replacement = await owner.layer.loadAsync(imports, { workspaceId });
+      await oldSettled;
+      const renderedPopulation = await renderWait.promise;
+      const snapshot = owner.snapshot(renderedPopulation);
+      return {
+        oldStatus,
+        queuedObserved,
+        heldCallbacksAfter: owner.heldCallbackCount,
+        ownedTimersAfter: owner.ownedTimerCount,
+        oldIdsStillPresent: snapshot.importEntityIds.some((id) =>
+          id.startsWith(`gev-import:${oldWorkspaceId}:`),
+        ),
+        replacement: {
+          ...replacement,
+          renderedPopulation,
+          importEntityIds: snapshot.importEntityIds,
+        },
+        snapshot,
+      };
+    } finally {
+      if (!renderWait.done) renderWait.cancel();
+    }
+  }
+  if (action === 'clear') {
+    owner.layer.clear();
+    const renderWait = owner.waitForRender('__empty__', 0, timeoutMs);
+    try {
+      const renderedPopulation = await renderWait.promise;
+      return owner.snapshot(renderedPopulation);
+    } finally {
+      if (!renderWait.done) renderWait.cancel();
+    }
+  }
+  throw new TypeError('Unknown controlled import lifecycle operation.');
+}
+
+function makeControlledImportDriver(
+  page,
+  fixture,
+  drainMs,
+  workerPreflight,
+  applicationCommit,
+  onPhase,
+) {
+  const driver = {
+    onPhase,
+    cleanup: null,
+    async initialize() {
+      await evaluateWithDeadline(
+        page,
+        'install-controlled-render-waiter',
+        installControlledRenderWaiterFactory,
+      );
+      try {
+        return await evaluateWithDeadline(
+          page,
+          'install-controlled-import-owner',
+          installControlledImportOwner,
+          { featureCount: fixture.count },
+        );
+      } catch (error) {
+        try {
+          await evaluateWithDeadline(
+            page,
+            'remove-controlled-render-waiter',
+            () => delete window.__qaCreateControlledRenderWaiter,
+          );
+        } catch {}
+        throw error;
+      }
+    },
+    async checkpoint() {
+      return evaluateWithDeadline(
+        page,
+        'controlled-import-checkpoint',
+        () => window.__qaControlledImportOwner?.snapshot() || null,
+      );
+    },
+    async warmup({ featureCount }) {
+      return evaluateWithDeadline(
+        page,
+        'controlled-import-warmup',
+        runControlledImportOperation,
+        {
+          action: 'warmup',
+          imports: fixture.imports,
+          featureCount,
+          timeoutMs: drainMs,
+        },
+      );
+    },
+    async cancelQueued({ cycle, featureCount }) {
+      return evaluateWithDeadline(
+        page,
+        `controlled-import-cancel-${cycle}`,
+        runControlledImportOperation,
+        {
+          action: 'cancel',
+          imports: fixture.imports,
+          featureCount,
+          cycle,
+          timeoutMs: drainMs,
+        },
+      );
+    },
+    async supersedeQueued({ cycle, featureCount }) {
+      return evaluateWithDeadline(
+        page,
+        `controlled-import-supersede-${cycle}`,
+        runControlledImportOperation,
+        {
+          action: 'supersede',
+          imports: fixture.imports,
+          featureCount,
+          cycle,
+          timeoutMs: drainMs,
+        },
+      );
+    },
+    async clearAndDrain() {
+      return evaluateWithDeadline(
+        page,
+        'controlled-import-clear-and-render',
+        runControlledImportOperation,
+        { action: 'clear', timeoutMs: drainMs },
+      );
+    },
+    async workerCounters() {
+      return evaluateWithDeadline(
+        page,
+        'controlled-import-worker-counters',
+        () => window.__gevSoakWorkers?.snapshot?.() || null,
+      );
+    },
+    async failureEvidence({ phase, error, progress }) {
+      let observation = null;
+      try {
+        observation = await this.checkpoint();
+      } catch {}
+      return createLifecycleFailureEvidence({
+        caseId: 'controlled-import-supersession',
+        phase,
+        error,
+        observation,
+        observationError: observation
+          ? null
+          : 'controlled snapshot unavailable',
+        supersession: progress.supersessionOutcome,
+      });
+    },
+    async close() {
+      driver.cleanup = await closeControlledOwnerAndContext({
+        dispose: async () => {
+          const cleanup = await evaluateWithDeadline(
+            page,
+            'dispose-controlled-import-owner',
+            async () =>
+              window.__qaControlledImportOwner
+                ? await window.__qaControlledImportOwner.dispose()
+                : null,
+          );
+          driver.cleanup = cleanup;
+          return cleanup;
+        },
+        validateCleanup: (cleanup) => {
+          if (
+            cleanup?.destroyed !== true ||
+            cleanup.pendingJobs !== 0 ||
+            cleanup.ownedTimers !== 0 ||
+            cleanup.heldCallbacks !== 0 ||
+            cleanup.renderWaiters !== 0 ||
+            cleanup.overlayEntries !== 0 ||
+            cleanup.contextRecordCount !== 0 ||
+            cleanup.applicationOwnerUnchanged !== true ||
+            cleanup.snapshot?.imports?.featureCount !== 0 ||
+            cleanup.snapshot?.importEntityIds?.length !== 0
+          )
+            throw new Error('Controlled import owner cleanup was incomplete.');
+        },
+        closeContext: () =>
+          closeOwnedPageAndContext(page, page.browserContext()),
+      });
+    },
+    workerPreflight,
+    applicationCommit,
+  };
+  return driver.initialize().then(() => driver);
+}
+
 function makeWorkspaceDriver(
   page,
   drainMs,
@@ -1615,6 +2174,7 @@ export async function runImportWorkspaceLifecycle({
     fixture,
     cycles,
     drainMs,
+    schema: 'gev-import-workspace-lifecycle/v2',
   });
   const emitProgress = (phase, caseId = null, caseProgress = null) => {
     if (report.status === 'pending') report.status = 'running';
@@ -1654,7 +2214,11 @@ export async function runImportWorkspaceLifecycle({
       () => browser.version(),
       'read-browser-version',
     );
-    for (const id of ['cooperative-import', 'workspace-replacement']) {
+    for (const id of [
+      'cooperative-import',
+      'workspace-replacement',
+      'controlled-import-supersession',
+    ]) {
       caseId = id;
       emitProgress(`setup:${id}`, id);
       let owned = null;
@@ -1668,8 +2232,8 @@ export async function runImportWorkspaceLifecycle({
         const onPhase = (phase, caseProgress) =>
           emitProgress(`case:${id}:${phase}`, id, caseProgress);
         const driver =
-          id === 'cooperative-import'
-            ? makeImportDriver(
+          id === 'controlled-import-supersession'
+            ? await makeControlledImportDriver(
                 owned.page,
                 fixture,
                 drainMs,
@@ -1677,17 +2241,26 @@ export async function runImportWorkspaceLifecycle({
                 owned.applicationCommit,
                 onPhase,
               )
-            : makeWorkspaceDriver(
-                owned.page,
-                drainMs,
-                owned.workerPreflight,
-                owned.applicationCommit,
-                onPhase,
-              );
+            : id === 'cooperative-import'
+              ? makeImportDriver(
+                  owned.page,
+                  fixture,
+                  drainMs,
+                  owned.workerPreflight,
+                  owned.applicationCommit,
+                  onPhase,
+                )
+              : makeWorkspaceDriver(
+                  owned.page,
+                  drainMs,
+                  owned.workerPreflight,
+                  owned.applicationCommit,
+                  onPhase,
+                );
         emitProgress(`run-case:${id}`, id);
         const result =
-          id === 'cooperative-import'
-            ? await runCooperativeImportLifecycleCase({
+          id === 'controlled-import-supersession'
+            ? await runControlledImportSupersessionLifecycleCase({
                 driver,
                 cycles,
                 featureCount,
@@ -1696,13 +2269,37 @@ export async function runImportWorkspaceLifecycle({
                 ),
                 importId: fixture.imports[0].id,
               })
-            : await runWorkspaceReplacementLifecycleCase({ driver, cycles });
+            : id === 'cooperative-import'
+              ? await runCooperativeImportLifecycleCase({
+                  driver,
+                  cycles,
+                  featureCount,
+                  includeRaceCoverage: false,
+                  featureIds: fixture.imports[0].records.map(
+                    (record) => record.id,
+                  ),
+                  importId: fixture.imports[0].id,
+                })
+              : await runWorkspaceReplacementLifecycleCase({ driver, cycles });
         if (result.status === 'passed' && owned.errors.length)
           throw new Error('Application page emitted uncaught errors.');
         const snapshots = [result.baseline, result.final].filter(Boolean);
         for (const item of snapshots) addWorkerAndHeapDiagnostics(item);
         report.cases.push({
           ...result,
+          mode:
+            id === 'controlled-import-supersession'
+              ? 'controlled-instance-scheduler'
+              : 'native-full-app',
+          timingScope:
+            id === 'controlled-import-supersession'
+              ? 'correctness-only; no native timing claim'
+              : id === 'cooperative-import'
+                ? 'native-full-app-load-clear'
+                : 'native-full-app-workspace-replacement',
+          ...(id === 'controlled-import-supersession'
+            ? { cleanup: driver.cleanup }
+            : {}),
           applicationCommit: owned.applicationCommit,
           disabledLayers: owned.disabledLayers,
           allLayersDisabled: owned.allLayersDisabled,
@@ -1737,7 +2334,7 @@ export async function runImportWorkspaceLifecycle({
       delete report.activeCase;
     }
     if (
-      report.cases.length !== 2 ||
+      report.cases.length !== 3 ||
       report.cases.some((row) => row.status !== 'passed')
     ) {
       report.status = 'failed';
@@ -1870,7 +2467,7 @@ if (import.meta.url === invoked) {
     });
   } catch (error) {
     report = {
-      schema: 'gev-import-workspace-lifecycle/v1',
+      schema: 'gev-import-workspace-lifecycle/v2',
       status: 'failed',
       error: boundedText(error),
       cases: [],

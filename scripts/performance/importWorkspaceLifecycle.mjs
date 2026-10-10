@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 
 const SHA1 = /^[a-f0-9]{40}$/i;
 const SHA256 = /^[a-f0-9]{64}$/i;
-const CASES = ['cooperative-import', 'workspace-replacement'];
+const CASES_V1 = ['cooperative-import', 'workspace-replacement'];
+const CASES_V2 = [
+  'cooperative-import',
+  'workspace-replacement',
+  'controlled-import-supersession',
+];
+const V1_SCHEMA = 'gev-import-workspace-lifecycle/v1';
+const V2_SCHEMA = 'gev-import-workspace-lifecycle/v2';
 const RESOURCE_KEYS = [
   'entities',
   'dataSources',
@@ -1144,6 +1151,7 @@ export async function runCooperativeImportLifecycleCase({
   driver,
   cycles = 5,
   featureCount = 512,
+  includeRaceCoverage = true,
   featureIds = Array.from({ length: featureCount }, (_, index) =>
     String(index),
   ),
@@ -1233,6 +1241,8 @@ export async function runCooperativeImportLifecycleCase({
         renderedPopulation: loaded.renderedPopulation,
         snapshot: drained,
       });
+
+      if (!includeRaceCoverage) continue;
 
       setPhase(progress, driver, `queued-cancellation-${cycle}`);
       const cancellation = await driver.cancelQueued({ cycle, featureCount });
@@ -1375,6 +1385,194 @@ export async function runCooperativeImportLifecycleCase({
   });
 }
 
+/** Exercise the same import owner with an injected scheduler that proves a batch was queued. */
+export async function runControlledImportSupersessionLifecycleCase({
+  driver,
+  cycles = 5,
+  featureCount = 512,
+  featureIds = Array.from({ length: featureCount }, (_, index) =>
+    String(index),
+  ),
+  importId = 'fixture',
+} = {}) {
+  if (!driver || typeof driver.checkpoint !== 'function')
+    throw new TypeError('A controlled import lifecycle driver is required.');
+  if (!Number.isSafeInteger(cycles) || cycles < 1 || cycles > 10)
+    throw new RangeError('Import lifecycle cycles must be between 1 and 10.');
+  requireCount(featureCount, 'Import fixture feature count');
+  if (
+    !Array.isArray(featureIds) ||
+    featureIds.length !== featureCount ||
+    featureIds.some((id) => typeof id !== 'string' || !id || id.length > 200)
+  )
+    throw new TypeError('Import fixture entity identities are incomplete.');
+
+  const progress = {
+    id: 'controlled-import-supersession',
+    mode: 'controlled-instance-scheduler',
+    timingScope: 'correctness-only; no native timing claim',
+    cycles,
+    featureCount,
+    operations: {
+      warmupLoads: 0,
+      cancellations: 0,
+      supersessions: 0,
+      completedReplacementLoads: 0,
+      clearDrains: 0,
+    },
+    checkpoints: [],
+  };
+  const result = await withCaseCleanup(driver, progress, async () => {
+    setPhase(progress, driver, 'controlled-owner-initial-empty');
+    const initial = assertOwnedLifecycleCheckpoint(await driver.checkpoint(), {
+      featureCount: 0,
+    });
+    assertControlledAppOwnerUntouched(initial);
+    const warmup = await driver.warmup({ featureCount });
+    assertLoadResult(
+      warmup,
+      featureCount,
+      'controlled-warmup',
+      featureIds,
+      importId,
+    );
+    progress.operations.warmupLoads++;
+    const warmed = assertOwnedLifecycleCheckpoint(
+      await driver.clearAndDrain(),
+      { featureCount: 0 },
+    );
+    assertControlledAppOwnerUntouched(warmed);
+    assertRenderedPopulation(warmed.renderedPopulation, '__empty__', 0);
+    progress.operations.clearDrains++;
+    progress.baseline = warmed;
+    progress.initialEmpty = initial;
+
+    for (let cycle = 1; cycle <= cycles; cycle++) {
+      setPhase(progress, driver, `controlled-cancellation-${cycle}`);
+      const cancellation = await driver.cancelQueued({ cycle, featureCount });
+      if (
+        cancellation?.status !== 'cancelled' ||
+        cancellation.queuedObserved !== true ||
+        cancellation.oldIdsStillPresent !== false
+      )
+        throw new Error(
+          `Controlled queued cancellation ${cycle} was not observed.`,
+        );
+      const cancelled = assertOwnedLifecycleCheckpoint(cancellation.snapshot, {
+        featureCount: 0,
+      });
+      assertControlledAppOwnerUntouched(cancelled);
+      if (
+        cancellation.heldCallbacksAfter !== 0 ||
+        cancellation.ownedTimersAfter !== 0
+      )
+        throw new Error(
+          'Controlled cancellation retained a scheduled callback.',
+        );
+      assertEquivalentOwnedResources(cancelled, warmed);
+      assertRenderedPopulation(cancelled.renderedPopulation, '__empty__', 0);
+      progress.operations.cancellations++;
+
+      setPhase(progress, driver, `controlled-supersession-${cycle}`);
+      progress.supersessionOutcome = null;
+      const result = await driver.supersedeQueued({ cycle, featureCount });
+      progress.supersessionOutcome = {
+        cycle,
+        oldStatus: result?.oldStatus ?? null,
+        queuedObserved: result?.queuedObserved === true,
+        oldIdsStillPresent: result?.oldIdsStillPresent ?? null,
+        replacement: result?.replacement
+          ? {
+              drawn: result.replacement.drawn,
+              omitted: result.replacement.omitted,
+              importEntityIds: Array.isArray(result.replacement.importEntityIds)
+                ? result.replacement.importEntityIds.slice(0, 16)
+                : null,
+              importEntityIdsTruncated:
+                Array.isArray(result.replacement.importEntityIds) &&
+                result.replacement.importEntityIds.length > 16,
+              renderedPopulation: result.replacement.renderedPopulation || null,
+            }
+          : null,
+      };
+      if (
+        result?.oldStatus !== 'cancelled' ||
+        result?.queuedObserved !== true ||
+        result?.oldIdsStillPresent !== false
+      )
+        throw new Error(
+          `Controlled queued supersession ${cycle} was not observed.`,
+        );
+      assertLoadResult(
+        result.replacement,
+        featureCount,
+        `controlled-replacement-${cycle}`,
+        featureIds,
+        importId,
+      );
+      const replacementSnapshot = assertOwnedLifecycleCheckpoint(
+        result.snapshot,
+        {
+          featureCount,
+          importWorkspaceId: `controlled-replacement-${cycle}`,
+        },
+      );
+      assertControlledAppOwnerUntouched(replacementSnapshot);
+      if (result.heldCallbacksAfter !== 0 || result.ownedTimersAfter !== 0)
+        throw new Error(
+          'Controlled supersession retained a scheduled callback.',
+        );
+      assertRenderedPopulation(
+        result.replacement.renderedPopulation,
+        `controlled-replacement-${cycle}`,
+        featureCount,
+      );
+      progress.operations.supersessions++;
+      progress.operations.completedReplacementLoads++;
+      progress.checkpoints.push({
+        cycle,
+        phase: 'controlled-replacement-loaded',
+        cancellation: {
+          status: cancellation.status,
+          queuedObserved: cancellation.queuedObserved,
+          oldIdsStillPresent: cancellation.oldIdsStillPresent,
+          snapshot: cancelled,
+        },
+        supersession: {
+          oldStatus: result.oldStatus,
+          queuedObserved: result.queuedObserved,
+          oldIdsStillPresent: result.oldIdsStillPresent,
+          replacement: result.replacement,
+          snapshot: replacementSnapshot,
+        },
+      });
+
+      setPhase(progress, driver, `controlled-clear-${cycle}`);
+      const cleared = assertOwnedLifecycleCheckpoint(
+        await driver.clearAndDrain(),
+        { featureCount: 0 },
+      );
+      assertControlledAppOwnerUntouched(cleared);
+      assertRenderedPopulation(cleared.renderedPopulation, '__empty__', 0);
+      assertEquivalentOwnedResources(cleared, warmed);
+      progress.operations.clearDrains++;
+      progress.checkpoints.push({
+        cycle,
+        phase: 'controlled-replacement-cleared',
+        snapshot: cleared,
+      });
+      progress.supersessionOutcome = null;
+    }
+    return {
+      ...progress,
+      status: 'passed',
+      final: progress.checkpoints.at(-1)?.snapshot || warmed,
+    };
+  });
+  if (driver.cleanup) result.cleanup = driver.cleanup;
+  return result;
+}
+
 function assertLoadResult(
   result,
   featureCount,
@@ -1399,6 +1597,54 @@ function assertLoadResult(
     workspaceId,
     featureCount,
   );
+}
+
+function assertControlledAppOwnerUntouched(snapshot) {
+  const owner = snapshot?.applicationOwner;
+  if (
+    owner?.featureCount !== 0 ||
+    owner?.pendingJobs !== 0 ||
+    !Array.isArray(owner.importedEntityIds) ||
+    owner.importedEntityIds.length !== 0 ||
+    owner.contextRecordCount !== 0
+  )
+    throw new Error('Controlled imports collided with the application owner.');
+}
+
+export async function closeControlledOwnerAndContext({
+  dispose,
+  validateCleanup,
+  closeContext,
+} = {}) {
+  if (
+    typeof dispose !== 'function' ||
+    typeof validateCleanup !== 'function' ||
+    typeof closeContext !== 'function'
+  )
+    throw new TypeError('Controlled owner close callbacks are required.');
+  let cleanup;
+  let cleanupError = null;
+  let contextCloseError = null;
+  try {
+    cleanup = await dispose();
+    await validateCleanup(cleanup);
+  } catch (error) {
+    cleanupError = error;
+  } finally {
+    try {
+      await closeContext();
+    } catch (error) {
+      contextCloseError = error;
+    }
+  }
+  if (cleanupError && contextCloseError)
+    throw new AggregateError(
+      [cleanupError, contextCloseError],
+      'Controlled owner cleanup and context close both failed.',
+    );
+  if (cleanupError) throw cleanupError;
+  if (contextCloseError) throw contextCloseError;
+  return cleanup;
 }
 
 function assertRenderedPopulation(observation, workspaceId, featureCount) {
@@ -1603,16 +1849,16 @@ function assertEquivalentImportIdentities(
   }
 }
 
-export function validateImportWorkspaceLifecycleReport(
-  report,
-  {
+export function validateImportWorkspaceLifecycleReport(report, options = {}) {
+  if (report?.schema === V2_SCHEMA)
+    return validateImportWorkspaceLifecycleV2Report(report, options);
+  const {
     expectedCommit,
     expectedImportFixtureSha256,
     expectedWorkspaceFixtureSha256,
-  } = {},
-) {
+  } = options;
   if (
-    report?.schema !== 'gev-import-workspace-lifecycle/v1' ||
+    report?.schema !== V1_SCHEMA ||
     report.status !== 'passed' ||
     !SHA1.test(expectedCommit || '') ||
     report.applicationCommit !== expectedCommit ||
@@ -1640,10 +1886,10 @@ export function validateImportWorkspaceLifecycleReport(
       report.fixtures.cooperativeImportCount ||
     report.fixtures?.workspaceImportCount !== 1 ||
     !Array.isArray(report.cases) ||
-    report.cases.length !== CASES.length
+    report.cases.length !== CASES_V1.length
   )
     throw new Error('Lifecycle report identity or case inventory is invalid.');
-  for (const id of CASES) {
+  for (const id of CASES_V1) {
     const row = report.cases.find((candidate) => candidate.id === id);
     if (
       !row ||
@@ -1731,13 +1977,13 @@ export function validateImportWorkspaceLifecycleReport(
     )
       throw new Error(`Lifecycle checkpoints are incomplete: ${id}.`);
     const expectedCheckpointCount =
-      id === CASES[0] ? report.cycles * 4 : report.cycles;
+      id === CASES_V1[0] ? report.cycles * 4 : report.cycles;
     if (row.checkpoints.length !== expectedCheckpointCount)
       throw new Error(
         `Lifecycle checkpoint count does not match completed cycles: ${id}.`,
       );
     const expectedPhases = Array.from({ length: report.cycles }, (_, index) =>
-      id === CASES[0]
+      id === CASES_V1[0]
         ? [
             { cycle: index + 1, phase: 'load-clear' },
             { cycle: index + 1, phase: 'cancelled-while-queued' },
@@ -1760,7 +2006,7 @@ export function validateImportWorkspaceLifecycleReport(
       throw new Error(
         `Lifecycle baseline/final observations are missing: ${id}.`,
       );
-    if (id === CASES[0]) {
+    if (id === CASES_V1[0]) {
       if (row.featureCount !== report.fixtures.cooperativeImportCount)
         throw new Error('Cooperative import fixture population changed.');
       assertOwnedLifecycleCheckpoint(row.baseline, { featureCount: 0 });
@@ -1826,7 +2072,7 @@ export function validateImportWorkspaceLifecycleReport(
           requireCount(snapshot.scene?.[key], `Checkpoint scene ${key}`);
         assertWorkerCheckpoint(snapshot.workerCounters);
       }
-      if (id === CASES[0] && checkpoint.phase === 'load-clear') {
+      if (id === CASES_V1[0] && checkpoint.phase === 'load-clear') {
         assertOwnedLifecycleCheckpoint(checkpoint.snapshot, {
           featureCount: 0,
         });
@@ -1847,7 +2093,7 @@ export function validateImportWorkspaceLifecycleReport(
         );
       }
       if (
-        id === CASES[0] &&
+        id === CASES_V1[0] &&
         checkpoint.phase === 'superseded-replacement-loaded'
       ) {
         assertRenderedPopulation(
@@ -1866,7 +2112,7 @@ export function validateImportWorkspaceLifecycleReport(
         assert.deepEqual(checkpoint.snapshot.importEntityIds, expectedIds);
       }
       if (
-        id === CASES[0] &&
+        id === CASES_V1[0] &&
         ['cancelled-while-queued', 'superseded-replacement-cleared'].includes(
           checkpoint.phase,
         )
@@ -1876,7 +2122,7 @@ export function validateImportWorkspaceLifecycleReport(
         });
         assertEquivalentOwnedResources(checkpoint.snapshot, row.baseline);
       }
-      if (id === CASES[1]) {
+      if (id === CASES_V1[1]) {
         assertOwnedLifecycleCheckpoint(checkpoint.alternate, {
           featureCount: row.featureCount,
           restoreWorkspaceId: row.alternateWorkspaceId,
@@ -1914,7 +2160,7 @@ export function validateImportWorkspaceLifecycleReport(
       }
     }
   }
-  const importCase = report.cases.find((row) => row.id === CASES[0]);
+  const importCase = report.cases.find((row) => row.id === CASES_V1[0]);
   if (
     importCase.operations.completedLoads !== report.cycles ||
     importCase.operations.warmupLoads !== 1 ||
@@ -1926,7 +2172,7 @@ export function validateImportWorkspaceLifecycleReport(
     throw new Error(
       'Import lifecycle operation counts do not match completions.',
     );
-  const workspaceCase = report.cases.find((row) => row.id === CASES[1]);
+  const workspaceCase = report.cases.find((row) => row.id === CASES_V1[1]);
   if (
     workspaceCase.operations.completedWorkspaceReplacements !== report.cycles ||
     workspaceCase.baselineWorkspaceId !==
@@ -1934,6 +2180,378 @@ export function validateImportWorkspaceLifecycleReport(
   )
     throw new Error(
       'Workspace lifecycle did not return to its baseline owner.',
+    );
+  return report;
+}
+
+/** Validate the new split: native lifecycle timing plus controlled race correctness. */
+export function validateImportWorkspaceLifecycleV2Report(
+  report,
+  {
+    expectedCommit,
+    expectedImportFixtureSha256,
+    expectedWorkspaceFixtureSha256,
+  } = {},
+) {
+  if (
+    report?.schema !== V2_SCHEMA ||
+    report.status !== 'passed' ||
+    !SHA1.test(expectedCommit || '') ||
+    report.applicationCommit !== expectedCommit ||
+    report.applicationCommitAtEnd !== expectedCommit ||
+    report.applicationSourceCleanAtEnd !== true ||
+    report.sourceChangedDuringRun !== false ||
+    !SHA1.test(report.harnessCommit || '') ||
+    report.harnessSourceClean !== true ||
+    report.applicationSourceClean !== true ||
+    !Number.isSafeInteger(report.cycles) ||
+    report.cycles < 1 ||
+    report.cycles > 10 ||
+    !Number.isSafeInteger(report.drainLimitMs) ||
+    report.drainLimitMs < 1 ||
+    report.drainLimitMs > 10_000 ||
+    !SHA256.test(expectedImportFixtureSha256 || '') ||
+    !SHA256.test(expectedWorkspaceFixtureSha256 || '') ||
+    report.fixtures?.cooperativeImportSha256 !== expectedImportFixtureSha256 ||
+    report.fixtures?.cooperativeImportSourceId !== 'lifecycle-fixture' ||
+    report.fixtures?.workspaceImportSha256 !== expectedWorkspaceFixtureSha256 ||
+    !Number.isSafeInteger(report.fixtures?.cooperativeImportCount) ||
+    report.fixtures.cooperativeImportCount < 1 ||
+    report.fixtures.cooperativeImportCount > 5000 ||
+    !Array.isArray(report.fixtures.cooperativeImportRecordIds) ||
+    report.fixtures.cooperativeImportRecordIds.length !==
+      report.fixtures.cooperativeImportCount ||
+    new Set(report.fixtures.cooperativeImportRecordIds).size !==
+      report.fixtures.cooperativeImportCount ||
+    report.fixtures.workspaceImportCount !== 1 ||
+    !Array.isArray(report.cases) ||
+    report.cases.length !== CASES_V2.length ||
+    new Set(report.cases.map((row) => row?.id)).size !== CASES_V2.length ||
+    CASES_V2.some((id) => !report.cases.some((row) => row?.id === id))
+  )
+    throw new Error(
+      'Lifecycle v2 report identity or case inventory is invalid.',
+    );
+
+  const byId = new Map(report.cases.map((row) => [row.id, row]));
+  for (const id of CASES_V2) {
+    const row = byId.get(id);
+    if (
+      row.status !== 'passed' ||
+      row.cycles !== report.cycles ||
+      row.applicationCommit !== expectedCommit ||
+      row.allLayersDisabled !== true ||
+      !Array.isArray(row.disabledLayers) ||
+      row.disabledLayers.length === 0 ||
+      row.disabledLayers.length > 128 ||
+      new Set(row.disabledLayers).size !== row.disabledLayers.length
+    )
+      throw new Error(`Lifecycle v2 case is incomplete: ${id}.`);
+    assertWorkerCheckpoint(row.workerCounters);
+    if (
+      row.workerPreflight?.scope !== 'cumulative-per-document' ||
+      row.workerPreflight.status !== 'passed' ||
+      !Number.isSafeInteger(row.workerPreflight.taskCount) ||
+      row.workerPreflight.taskCount !== 4 ||
+      !Number.isSafeInteger(row.workerPreflight.cumulativeSubmitted) ||
+      row.workerPreflight.cumulativeSubmitted < 4 ||
+      !Number.isSafeInteger(row.workerPreflight.cumulativeCompleted) ||
+      row.workerPreflight.cumulativeCompleted >
+        row.workerPreflight.cumulativeSubmitted ||
+      !Number.isSafeInteger(row.workerPreflight.cumulativeCancelled) ||
+      row.workerPreflight.cumulativeCancelled >
+        row.workerPreflight.cumulativeSubmitted ||
+      !Number.isSafeInteger(row.workerPreflight.pendingAtProbeCompletion) ||
+      row.workerPreflight.pendingAtProbeCompletion < 0 ||
+      !Number.isSafeInteger(row.workerPreflight.quiescenceTimeoutMs) ||
+      row.workerPreflight.quiescenceTimeoutMs < 1 ||
+      row.workerPreflight.quiescenceTimeoutMs > report.drainLimitMs ||
+      !Number.isFinite(row.workerPreflight.quiescenceWaitMs) ||
+      row.workerPreflight.quiescenceWaitMs < 0 ||
+      row.workerPreflight.quiescenceWaitMs >
+        row.workerPreflight.quiescenceTimeoutMs ||
+      !Number.isSafeInteger(row.workerPreflight.pendingAtPreflight) ||
+      row.workerPreflight.pendingAtPreflight !== 0 ||
+      row.workerPreflight.overflow !== false
+    )
+      throw new Error(`Worker preflight evidence is incomplete: ${id}.`);
+    if (
+      row.workerPreflight.pendingAtProbeCompletion > 0 &&
+      (row.workerPreflight.quiescenceHistory?.status !== 'settled' ||
+        row.workerPreflight.quiescenceHistory?.historyTruncated !== false ||
+        !Array.isArray(row.workerPreflight.quiescenceHistory?.history) ||
+        row.workerPreflight.quiescenceHistory.history.length < 2 ||
+        row.workerPreflight.quiescenceHistory.history.length > 202 ||
+        row.workerPreflight.quiescenceHistory.pollCount !==
+          row.workerPreflight.quiescenceHistory.history.length ||
+        !Number.isFinite(
+          row.workerPreflight.quiescenceHistory?.firstObservedZeroMs,
+        ) ||
+        row.workerPreflight.quiescenceHistory.firstObservedZeroMs < 0 ||
+        row.workerPreflight.quiescenceHistory.firstObservedZeroMs >
+          row.workerPreflight.quiescenceHistory.elapsedMs ||
+        !Number.isFinite(
+          row.workerPreflight.quiescenceHistory?.maxPollingGapMs,
+        ) ||
+        row.workerPreflight.quiescenceHistory.maxPollingGapMs < 0 ||
+        !Number.isFinite(row.workerPreflight.quiescenceHistory?.elapsedMs) ||
+        row.workerPreflight.quiescenceHistory.elapsedMs < 0 ||
+        row.workerPreflight.quiescenceHistory.elapsedMs >
+          row.workerPreflight.quiescenceTimeoutMs ||
+        !Number.isFinite(
+          row.workerPreflight.quiescenceHistory?.postZeroVerification
+            ?.elapsedMs,
+        ) ||
+        row.workerPreflight.quiescenceHistory.postZeroVerification.elapsedMs <
+          row.workerPreflight.quiescenceHistory.firstObservedZeroMs ||
+        row.workerPreflight.quiescenceHistory.postZeroVerification.elapsedMs >
+          row.workerPreflight.quiescenceTimeoutMs ||
+        row.workerPreflight.quiescenceHistory?.postZeroVerification?.pending !==
+          0 ||
+        row.workerPreflight.quiescenceHistory?.postZeroVerification
+          ?.overflow !== false ||
+        row.workerPreflight.quiescenceHistory?.postZeroVerification
+          ?.workersTruncated !== false)
+    )
+      throw new Error(`Worker quiescence history is incomplete: ${id}.`);
+  }
+
+  const native = byId.get('cooperative-import');
+  if (
+    native.mode !== 'native-full-app' ||
+    native.timingScope !== 'native-full-app-load-clear' ||
+    native.featureCount !== report.fixtures.cooperativeImportCount ||
+    native.operations?.warmupLoads !== 1 ||
+    native.operations?.completedLoads !== report.cycles ||
+    native.operations?.clearDrains !== report.cycles + 1 ||
+    native.operations?.cancellations !== 0 ||
+    native.operations?.supersededLoads !== 0 ||
+    native.checkpoints?.length !== report.cycles ||
+    native.checkpoints.some(
+      (checkpoint, index) =>
+        checkpoint.cycle !== index + 1 || checkpoint.phase !== 'load-clear',
+    )
+  )
+    throw new Error('Native import lifecycle evidence is incomplete.');
+  assertOwnedLifecycleCheckpoint(native.baseline, { featureCount: 0 });
+  assertOwnedLifecycleCheckpoint(native.final, { featureCount: 0 });
+  assertRenderedPopulation(native.baseline.renderedPopulation, '__empty__', 0);
+  assertRenderedPopulation(native.final.renderedPopulation, '__empty__', 0);
+  if (
+    native.baseline.imports.pendingJobs !== 0 ||
+    native.final.imports.pendingJobs !== 0
+  )
+    throw new Error('Native import baseline/final is not settled.');
+  assertEquivalentOwnedResources(native.final, native.baseline);
+  for (const checkpoint of native.checkpoints) {
+    assertOwnedLifecycleCheckpoint(checkpoint.snapshot, { featureCount: 0 });
+    assertRenderedPopulation(
+      checkpoint.snapshot.renderedPopulation,
+      '__empty__',
+      0,
+    );
+    assertEquivalentOwnedResources(checkpoint.snapshot, native.baseline);
+    assertRenderedPopulation(
+      checkpoint.renderedPopulation,
+      `lifecycle-measured-${checkpoint.cycle}`,
+      report.fixtures.cooperativeImportCount,
+    );
+    const expectedIds = report.fixtures.cooperativeImportRecordIds.map(
+      (recordId) =>
+        `gev-import:lifecycle-measured-${checkpoint.cycle}:${report.fixtures.cooperativeImportSourceId}:${recordId}`,
+    );
+    assert.deepEqual(checkpoint.loadedEntityIds, expectedIds);
+  }
+
+  const workspace = byId.get('workspace-replacement');
+  if (
+    workspace.mode !== 'native-full-app' ||
+    workspace.timingScope !== 'native-full-app-workspace-replacement' ||
+    workspace.checkpoints?.length !== report.cycles ||
+    workspace.operations?.completedWorkspaceReplacements !== report.cycles ||
+    !workspace.baselineWorkspaceId ||
+    !workspace.alternateWorkspaceId ||
+    workspace.baselineWorkspaceId === workspace.alternateWorkspaceId
+  )
+    throw new Error('Native workspace lifecycle evidence is incomplete.');
+  assertOwnedLifecycleCheckpoint(workspace.baseline, {
+    featureCount: workspace.featureCount,
+    restoreWorkspaceId: workspace.baselineWorkspaceId,
+    importWorkspaceId: workspace.baselineWorkspaceId,
+  });
+  assertOwnedLifecycleCheckpoint(workspace.final, {
+    featureCount: workspace.featureCount,
+    restoreWorkspaceId: workspace.baselineWorkspaceId,
+    importWorkspaceId: workspace.baselineWorkspaceId,
+  });
+  assertEquivalentOwnedResources(workspace.final, workspace.baseline);
+  assertRenderedPopulation(
+    workspace.baseline.renderedPopulation,
+    workspace.baselineWorkspaceId,
+    workspace.featureCount,
+  );
+  assertRenderedPopulation(
+    workspace.final.renderedPopulation,
+    workspace.baselineWorkspaceId,
+    workspace.featureCount,
+  );
+  for (const checkpoint of workspace.checkpoints) {
+    if (
+      checkpoint.cycle !== workspace.checkpoints.indexOf(checkpoint) + 1 ||
+      checkpoint.phase !== 'alternation'
+    )
+      throw new Error('Workspace checkpoint order is invalid.');
+    assertOwnedLifecycleCheckpoint(checkpoint.alternate, {
+      featureCount: workspace.featureCount,
+      restoreWorkspaceId: workspace.alternateWorkspaceId,
+      importWorkspaceId: workspace.alternateWorkspaceId,
+    });
+    assertOwnedLifecycleCheckpoint(checkpoint.returned, {
+      featureCount: workspace.featureCount,
+      restoreWorkspaceId: workspace.baselineWorkspaceId,
+      importWorkspaceId: workspace.baselineWorkspaceId,
+    });
+    assertEquivalentOwnedResources(checkpoint.returned, workspace.baseline);
+    assertRenderedPopulation(
+      checkpoint.alternate.renderedPopulation,
+      workspace.alternateWorkspaceId,
+      workspace.featureCount,
+    );
+    assertRenderedPopulation(
+      checkpoint.returned.renderedPopulation,
+      workspace.baselineWorkspaceId,
+      workspace.featureCount,
+    );
+    assertEquivalentImportIdentities(
+      checkpoint.alternate,
+      workspace.alternateWorkspaceId,
+      workspace.baseline,
+      workspace.baselineWorkspaceId,
+    );
+    assertEquivalentImportIdentities(
+      checkpoint.returned,
+      workspace.baselineWorkspaceId,
+      workspace.baseline,
+      workspace.baselineWorkspaceId,
+    );
+  }
+
+  const controlled = byId.get('controlled-import-supersession');
+  if (
+    controlled.mode !== 'controlled-instance-scheduler' ||
+    controlled.timingScope !== 'correctness-only; no native timing claim' ||
+    controlled.featureCount !== report.fixtures.cooperativeImportCount ||
+    controlled.cleanup?.destroyed !== true ||
+    controlled.cleanup?.pendingJobs !== 0 ||
+    controlled.cleanup?.ownedTimers !== 0 ||
+    controlled.cleanup?.heldCallbacks !== 0 ||
+    controlled.cleanup?.renderWaiters !== 0 ||
+    controlled.cleanup?.overlayEntries !== 0 ||
+    controlled.cleanup?.contextRecordCount !== 0 ||
+    controlled.cleanup?.applicationOwnerUnchanged !== true ||
+    controlled.operations?.warmupLoads !== 1 ||
+    controlled.operations?.cancellations !== report.cycles ||
+    controlled.operations?.supersessions !== report.cycles ||
+    controlled.operations?.completedReplacementLoads !== report.cycles ||
+    controlled.operations?.clearDrains !== report.cycles + 1 ||
+    controlled.checkpoints?.length !== report.cycles * 2
+  )
+    throw new Error('Controlled scheduler lifecycle evidence is incomplete.');
+  assertOwnedLifecycleCheckpoint(controlled.baseline, { featureCount: 0 });
+  assertOwnedLifecycleCheckpoint(controlled.final, { featureCount: 0 });
+  assertRenderedPopulation(
+    controlled.baseline.renderedPopulation,
+    '__empty__',
+    0,
+  );
+  assertRenderedPopulation(controlled.final.renderedPopulation, '__empty__', 0);
+  assertOwnedLifecycleCheckpoint(controlled.cleanup.snapshot, {
+    featureCount: 0,
+  });
+  const untouchedAppOwner = (snapshot) =>
+    snapshot?.applicationOwner?.featureCount === 0 &&
+    snapshot.applicationOwner.pendingJobs === 0 &&
+    Array.isArray(snapshot.applicationOwner.importedEntityIds) &&
+    snapshot.applicationOwner.importedEntityIds.length === 0 &&
+    snapshot.applicationOwner.contextRecordCount === 0;
+  if (
+    !untouchedAppOwner(controlled.baseline) ||
+    !untouchedAppOwner(controlled.final) ||
+    !untouchedAppOwner(controlled.cleanup.snapshot)
+  )
+    throw new Error('Controlled owner changed the full-app import owner.');
+  assertEquivalentOwnedResources(controlled.final, controlled.baseline);
+  for (let cycle = 1; cycle <= report.cycles; cycle++) {
+    const loaded = controlled.checkpoints[(cycle - 1) * 2];
+    const cleared = controlled.checkpoints[(cycle - 1) * 2 + 1];
+    if (
+      loaded?.cycle !== cycle ||
+      loaded.phase !== 'controlled-replacement-loaded' ||
+      cleared?.cycle !== cycle ||
+      cleared.phase !== 'controlled-replacement-cleared'
+    )
+      throw new Error('Controlled scheduler checkpoint order is invalid.');
+    const cancellation = loaded.cancellation;
+    assertOwnedLifecycleCheckpoint(cancellation?.snapshot, {
+      featureCount: 0,
+    });
+    assertRenderedPopulation(
+      cancellation.snapshot.renderedPopulation,
+      '__empty__',
+      0,
+    );
+    if (
+      cancellation?.status !== 'cancelled' ||
+      cancellation.queuedObserved !== true ||
+      cancellation.oldIdsStillPresent !== false
+    )
+      throw new Error('Controlled queued cancellation was not proven.');
+    assertEquivalentOwnedResources(cancellation.snapshot, controlled.baseline);
+    if (!untouchedAppOwner(cancellation.snapshot))
+      throw new Error('Controlled cancellation changed the app import owner.');
+    const supersession = loaded.supersession;
+    const workspaceId = `controlled-replacement-${cycle}`;
+    if (
+      supersession?.oldStatus !== 'cancelled' ||
+      supersession.queuedObserved !== true ||
+      supersession.oldIdsStillPresent !== false
+    )
+      throw new Error('Controlled queued supersession was not proven.');
+    assertLoadResult(
+      supersession.replacement,
+      controlled.featureCount,
+      workspaceId,
+      report.fixtures.cooperativeImportRecordIds,
+      report.fixtures.cooperativeImportSourceId,
+    );
+    assertOwnedLifecycleCheckpoint(supersession.snapshot, {
+      featureCount: controlled.featureCount,
+      importWorkspaceId: workspaceId,
+    });
+    if (!untouchedAppOwner(supersession.snapshot))
+      throw new Error('Controlled supersession changed the app import owner.');
+    assertRenderedPopulation(
+      supersession.replacement.renderedPopulation,
+      workspaceId,
+      controlled.featureCount,
+    );
+    assertOwnedLifecycleCheckpoint(cleared.snapshot, { featureCount: 0 });
+    assertRenderedPopulation(
+      cleared.snapshot.renderedPopulation,
+      '__empty__',
+      0,
+    );
+    assertEquivalentOwnedResources(cleared.snapshot, controlled.baseline);
+    if (!untouchedAppOwner(cleared.snapshot))
+      throw new Error('Controlled clear changed the app import owner.');
+  }
+  if (
+    controlled.final.imports.featureCount !== 0 ||
+    native.operations.cancellations !== 0 ||
+    native.operations.supersededLoads !== 0
+  )
+    throw new Error(
+      'Lifecycle scopes were mixed between native and control cases.',
     );
   return report;
 }

@@ -6,20 +6,24 @@ import {
   createLifecycleImportFixture,
   createLifecycleReport,
   finalizeLifecycleReportStatus,
+  installControlledRenderWaiterFactory,
   readWorkerPreflight,
   observeWorkerQuiescenceInPage,
   runImportWorkspaceLifecycle,
+  runControlledImportOperation,
   validateLifecycleCandidate,
   WORKSPACE_IMPORT_FIXTURE_SHA256,
 } from '../qa-import-workspace-lifecycle.mjs';
 import {
   assertOwnedLifecycleCheckpoint,
+  closeControlledOwnerAndContext,
   createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
   installLifecycleDrainObserver,
   parseImportWorkspaceLifecycleArgs,
   readLifecycleDrainObservation,
   runCooperativeImportLifecycleCase,
+  runControlledImportSupersessionLifecycleCase,
   runWorkspaceReplacementLifecycleCase,
   validateImportWorkspaceLifecycleReport,
 } from './importWorkspaceLifecycle.mjs';
@@ -334,6 +338,135 @@ function importDriver({ failMeasured = false, cleanupFailure = false } = {}) {
       closeCount++;
       closed = true;
       if (cleanupFailure) throw new Error('cleanup failed');
+    },
+  };
+}
+
+function controlledSnapshot({ count = 0, workspaceId = null, ids } = {}) {
+  const loaded = workspaceId ? loadResult(workspaceId, count) : null;
+  const result = snapshot({
+    count,
+    ids: ids || loaded?.importEntityIds || [],
+    workspaceId,
+    scene: count ? [4 + count, 0, 2, 0] : [4, 0, 2, 0],
+  });
+  result.renderedPopulation = {
+    frameNumber: 11,
+    importedEntityCount: count,
+    workspaceId: workspaceId || '__empty__',
+  };
+  result.applicationOwner = {
+    featureCount: 0,
+    pendingJobs: 0,
+    importedEntityIds: [],
+    contextRecordCount: 0,
+  };
+  return result;
+}
+
+function controlledImportDriver({
+  featureCount = 2,
+  importId = 'fixture',
+  featureIds = Array.from({ length: featureCount }, (_, index) =>
+    String(index),
+  ),
+  queued = true,
+  staleIds = false,
+  cleanupFailure = false,
+} = {}) {
+  let current = controlledSnapshot();
+  let closed = false;
+  let closeCount = 0;
+  let cleanup = null;
+  const replacementResult = (cycle) => ({
+    drawn: featureCount,
+    omitted: 0,
+    importEntityIds: Array.from(
+      { length: featureCount },
+      (_, index) =>
+        `gev-import:controlled-replacement-${cycle}:${importId}:${featureIds[index]}`,
+    ),
+    renderedPopulation: {
+      frameNumber: 20 + cycle,
+      importedEntityCount: featureCount,
+      workspaceId: `controlled-replacement-${cycle}`,
+    },
+  });
+  return {
+    get closed() {
+      return closed;
+    },
+    get closeCount() {
+      return closeCount;
+    },
+    get cleanup() {
+      return cleanup;
+    },
+    async checkpoint() {
+      return current;
+    },
+    async warmup() {
+      const workspaceId = 'controlled-warmup';
+      const result = {
+        ...loadResult(workspaceId, featureCount),
+        importEntityIds: featureIds.map(
+          (id) => `gev-import:${workspaceId}:${importId}:${id}`,
+        ),
+      };
+      current = controlledSnapshot({
+        count: featureCount,
+        workspaceId,
+        ids: result.importEntityIds,
+      });
+      return result;
+    },
+    async cancelQueued() {
+      current = controlledSnapshot();
+      return {
+        status: 'cancelled',
+        queuedObserved: queued,
+        heldCallbacksAfter: 0,
+        ownedTimersAfter: 0,
+        oldIdsStillPresent: staleIds,
+        snapshot: current,
+      };
+    },
+    async supersedeQueued({ cycle }) {
+      const result = replacementResult(cycle);
+      current = controlledSnapshot({
+        count: featureCount,
+        workspaceId: `controlled-replacement-${cycle}`,
+        ids: result.importEntityIds,
+      });
+      return {
+        oldStatus: 'cancelled',
+        queuedObserved: queued,
+        heldCallbacksAfter: 0,
+        ownedTimersAfter: 0,
+        oldIdsStillPresent: staleIds,
+        replacement: result,
+        snapshot: current,
+      };
+    },
+    async clearAndDrain() {
+      current = controlledSnapshot();
+      return current;
+    },
+    async close() {
+      closeCount++;
+      closed = true;
+      cleanup = {
+        destroyed: true,
+        pendingJobs: 0,
+        ownedTimers: 0,
+        heldCallbacks: 0,
+        renderWaiters: 0,
+        overlayEntries: 0,
+        contextRecordCount: 0,
+        applicationOwnerUnchanged: true,
+        snapshot: current,
+      };
+      if (cleanupFailure) throw new Error('controlled cleanup failed');
     },
   };
 }
@@ -1546,6 +1679,492 @@ test('cooperative import case counts only completed operations and drains to war
   assert.equal(result.operations.clearDrains, 7);
   assert.equal(result.checkpoints.length, 8);
   assert.equal(driver.closed, true);
+});
+
+test('native full-app import case can preserve five ordinary load/clear cycles without race timing', async () => {
+  const driver = importDriver();
+  driver.cancelQueued = async () => {
+    throw new Error('native case must not run controlled cancellation');
+  };
+  driver.supersedeQueued = async () => {
+    throw new Error('native case must not run controlled supersession');
+  };
+  const result = await runCooperativeImportLifecycleCase({
+    driver,
+    cycles: 5,
+    featureCount: 2,
+    includeRaceCoverage: false,
+  });
+  assert.equal(result.status, 'passed');
+  assert.equal(result.operations.warmupLoads, 1);
+  assert.equal(result.operations.completedLoads, 5);
+  assert.equal(result.operations.clearDrains, 6);
+  assert.equal(result.operations.cancellations, 0);
+  assert.equal(result.operations.supersededLoads, 0);
+  assert.deepEqual(
+    result.checkpoints.map(({ cycle, phase }) => ({ cycle, phase })),
+    Array.from({ length: 5 }, (_, index) => ({
+      cycle: index + 1,
+      phase: 'load-clear',
+    })),
+  );
+});
+
+test('controlled import owner proves five queued cancellations and supersessions with cleanup', async () => {
+  const driver = controlledImportDriver();
+  const result = await runControlledImportSupersessionLifecycleCase({
+    driver,
+    cycles: 5,
+    featureCount: 2,
+  });
+  assert.equal(result.status, 'passed');
+  assert.equal(result.mode, 'controlled-instance-scheduler');
+  assert.equal(result.operations.warmupLoads, 1);
+  assert.equal(result.operations.cancellations, 5);
+  assert.equal(result.operations.supersessions, 5);
+  assert.equal(result.operations.completedReplacementLoads, 5);
+  assert.equal(result.checkpoints.length, 10);
+  assert.equal(result.cleanup.applicationOwnerUnchanged, true);
+  assert.equal(driver.closed, true);
+  assert.equal(driver.closeCount, 1);
+});
+
+test('controlled import case fails closed on an unqueued load, stale IDs, and cleanup failure', async () => {
+  const noQueue = controlledImportDriver({ queued: false });
+  const noQueueResult = await runControlledImportSupersessionLifecycleCase({
+    driver: noQueue,
+    cycles: 1,
+    featureCount: 2,
+  });
+  assert.equal(noQueueResult.status, 'failed');
+  assert.equal(noQueueResult.failedPhase, 'controlled-cancellation-1');
+  assert.equal(noQueueResult.operations.cancellations, 0);
+  assert.equal(noQueue.closed, true);
+
+  const stale = controlledImportDriver({ staleIds: true });
+  const staleResult = await runControlledImportSupersessionLifecycleCase({
+    driver: stale,
+    cycles: 1,
+    featureCount: 2,
+  });
+  assert.equal(staleResult.status, 'failed');
+  assert.equal(staleResult.failedPhase, 'controlled-cancellation-1');
+  assert.equal(stale.closed, true);
+
+  const cleanup = controlledImportDriver({ cleanupFailure: true });
+  const cleanupResult = await runControlledImportSupersessionLifecycleCase({
+    driver: cleanup,
+    cycles: 1,
+    featureCount: 2,
+  });
+  assert.equal(cleanupResult.status, 'failed');
+  assert.match(cleanupResult.cleanupError, /controlled cleanup failed/);
+});
+
+test('controlled operation callback survives browser function serialization', async () => {
+  let cleared = 0;
+  const scope = {
+    __qaControlledImportOwner: {
+      layer: {
+        clear() {
+          cleared++;
+        },
+      },
+      waitForRender: (workspaceId, count) => ({
+        promise: Promise.resolve({
+          frameNumber: 2,
+          importedEntityCount: count,
+          workspaceId,
+        }),
+        done: true,
+        cancel() {},
+      }),
+      snapshot: (renderedPopulation) => ({ renderedPopulation }),
+    },
+  };
+  const context = vm.createContext({ window: scope });
+  const serialized = vm.runInContext(
+    `(${runControlledImportOperation.toString()})`,
+    context,
+  );
+  const result = await serialized({
+    action: 'clear',
+    timeoutMs: 100,
+  });
+  assert.equal(cleared, 1);
+  assert.equal(result.renderedPopulation.workspaceId, '__empty__');
+});
+
+test('serialized controlled cancellation observes a synchronous owned render waiter', async () => {
+  let state = { featureCount: 0, pendingJobs: 0 };
+  let heldCallbacks = 0;
+  const scope = {
+    AbortController,
+    DOMException,
+    window: {
+      __qaControlledImportOwner: {
+        layer: {
+          getState: () => state,
+          loadAsync(_imports, { signal }) {
+            state = { featureCount: 0, pendingJobs: 1 };
+            heldCallbacks = 1;
+            return new Promise((_resolve, reject) => {
+              signal.addEventListener(
+                'abort',
+                () => {
+                  state = { featureCount: 0, pendingJobs: 0 };
+                  heldCallbacks = 0;
+                  reject(new DOMException('cancelled', 'AbortError'));
+                },
+                { once: true },
+              );
+            });
+          },
+        },
+        setHoldNext(value) {
+          assert.equal(value, true);
+        },
+        get heldCallbackCount() {
+          return heldCallbacks;
+        },
+        get ownedTimerCount() {
+          return 0;
+        },
+        waitForRender(workspaceId, count) {
+          return {
+            promise: Promise.resolve({
+              frameNumber: 2,
+              importedEntityCount: count,
+              workspaceId,
+            }),
+            done: true,
+            cancel() {},
+          };
+        },
+        snapshot(renderedPopulation) {
+          return {
+            importEntityIds: [],
+            renderedPopulation,
+          };
+        },
+      },
+    },
+  };
+  const context = vm.createContext(scope);
+  const serialized = vm.runInContext(
+    `(${runControlledImportOperation.toString()})`,
+    context,
+  );
+  const result = await serialized({
+    action: 'cancel',
+    cycle: 1,
+    featureCount: 2,
+    imports: [],
+    timeoutMs: 100,
+  });
+  assert.equal(result.status, 'cancelled');
+  assert.equal(result.queuedObserved, true);
+  assert.equal(result.oldIdsStillPresent, false);
+  assert.equal(result.snapshot.renderedPopulation.workspaceId, '__empty__');
+});
+
+test('browser-serialized waiter factory returns an owned waiter, not a Promise wrapper', async () => {
+  const listeners = new Set();
+  const timers = new Set();
+  const scene = {
+    frameState: { frameNumber: 4 },
+    postRender: {
+      addEventListener(listener) {
+        listeners.add(listener);
+      },
+      removeEventListener(listener) {
+        listeners.delete(listener);
+      },
+    },
+    requestRender() {
+      scene.frameState.frameNumber++;
+      for (const listener of [...listeners]) listener();
+    },
+  };
+  const window = {};
+  const context = vm.createContext({
+    window,
+    DOMException,
+    setTimeout(callback) {
+      const token = { callback };
+      timers.add(token);
+      return token;
+    },
+    clearTimeout(token) {
+      timers.delete(token);
+    },
+  });
+  vm.runInContext(
+    `(${installControlledRenderWaiterFactory.toString()})()`,
+    context,
+  );
+  const renderWaits = new Set();
+  const ownedTimers = new Set();
+  const wait = window.__qaCreateControlledRenderWaiter({
+    scene,
+    snapshot: () => ({
+      imports: { featureCount: 0 },
+      importEntityIds: [],
+      frame: { frameNumber: scene.frameState.frameNumber },
+    }),
+    renderWaits,
+    ownedTimers,
+    workspaceId: '__empty__',
+    count: 0,
+    timeoutMs: 100,
+  });
+  assert.equal(typeof wait.then, 'undefined');
+  assert.equal(renderWaits.has(wait), false);
+  const rendered = await wait.promise;
+  assert.equal(rendered.frameNumber, 5);
+  assert.equal(rendered.importedEntityCount, 0);
+  assert.equal(rendered.workspaceId, '__empty__');
+  assert.equal(wait.done, true);
+  assert.equal(listeners.size, 0);
+  assert.equal(ownedTimers.size, 0);
+  assert.equal(timers.size, 0);
+});
+
+test('controlled owner context closes even when disposal or cleanup validation fails', async () => {
+  const calls = [];
+  await assert.rejects(
+    closeControlledOwnerAndContext({
+      dispose: async () => {
+        calls.push('dispose');
+        throw new Error('dispose failed');
+      },
+      validateCleanup: () => calls.push('validate'),
+      closeContext: async () => calls.push('close'),
+    }),
+    /dispose failed/,
+  );
+  assert.deepEqual(calls, ['dispose', 'close']);
+
+  calls.length = 0;
+  await assert.rejects(
+    closeControlledOwnerAndContext({
+      dispose: async () => {
+        calls.push('dispose');
+        return { destroyed: false };
+      },
+      validateCleanup: () => {
+        calls.push('validate');
+        throw new Error('cleanup validation failed');
+      },
+      closeContext: async () => calls.push('close'),
+    }),
+    /cleanup validation failed/,
+  );
+  assert.deepEqual(calls, ['dispose', 'validate', 'close']);
+});
+
+test('v2 lifecycle contract requires native cycles and separate controlled race proof', async () => {
+  const fixture = createLifecycleImportFixture(2);
+  const common = {
+    applicationCommit: appSha,
+    allLayersDisabled: true,
+    disabledLayers: ['flights', 'traffic'],
+    workerCounters: workerCounters(),
+    workerPreflight: {
+      scope: 'cumulative-per-document',
+      status: 'passed',
+      taskCount: 4,
+      cumulativeSubmitted: 4,
+      cumulativeCompleted: 4,
+      cumulativeCancelled: 0,
+      pendingAtProbeCompletion: 0,
+      quiescenceWaitMs: 0,
+      quiescenceTimeoutMs: 1000,
+      pendingAtPreflight: 0,
+      overflow: false,
+    },
+  };
+  const empty = {
+    ...snapshot(),
+    renderedPopulation: {
+      frameNumber: 11,
+      importedEntityCount: 0,
+      workspaceId: '__empty__',
+    },
+  };
+  const measuredIds = fixture.imports[0].records.map(
+    (record) =>
+      `gev-import:lifecycle-measured-1:${fixture.imports[0].id}:${record.id}`,
+  );
+  const native = {
+    ...common,
+    id: 'cooperative-import',
+    status: 'passed',
+    mode: 'native-full-app',
+    timingScope: 'native-full-app-load-clear',
+    cycles: 1,
+    featureCount: fixture.count,
+    operations: {
+      warmupLoads: 1,
+      completedLoads: 1,
+      clearDrains: 2,
+      cancellations: 0,
+      supersededLoads: 0,
+    },
+    baseline: empty,
+    final: empty,
+    checkpoints: [
+      {
+        cycle: 1,
+        phase: 'load-clear',
+        loadedEntityIds: measuredIds,
+        renderedPopulation: {
+          frameNumber: 12,
+          importedEntityCount: fixture.count,
+          workspaceId: 'lifecycle-measured-1',
+        },
+        snapshot: empty,
+      },
+    ],
+  };
+  const workspaceResult = await runWorkspaceReplacementLifecycleCase({
+    driver: workspaceDriver(),
+    cycles: 1,
+  });
+  const workspace = {
+    ...workspaceResult,
+    ...common,
+    id: 'workspace-replacement',
+    mode: 'native-full-app',
+    timingScope: 'native-full-app-workspace-replacement',
+  };
+  const controlledDriver = controlledImportDriver({
+    featureCount: fixture.count,
+    importId: fixture.imports[0].id,
+    featureIds: fixture.imports[0].records.map((record) => record.id),
+  });
+  const controlledResult = await runControlledImportSupersessionLifecycleCase({
+    driver: controlledDriver,
+    cycles: 1,
+    featureCount: fixture.count,
+    importId: fixture.imports[0].id,
+    featureIds: fixture.imports[0].records.map((record) => record.id),
+  });
+  const controlled = {
+    ...controlledResult,
+    ...common,
+    id: 'controlled-import-supersession',
+    applicationCommit: appSha,
+    mode: 'controlled-instance-scheduler',
+    timingScope: 'correctness-only; no native timing claim',
+    cleanup: controlledDriver.cleanup,
+  };
+  const report = {
+    schema: 'gev-import-workspace-lifecycle/v2',
+    status: 'passed',
+    applicationCommit: appSha,
+    applicationCommitAtEnd: appSha,
+    applicationSourceCleanAtEnd: true,
+    sourceChangedDuringRun: false,
+    harnessCommit: harnessSha,
+    harnessSourceClean: true,
+    applicationSourceClean: true,
+    cycles: 1,
+    drainLimitMs: 1000,
+    fixtures: {
+      cooperativeImportId: fixture.id,
+      cooperativeImportSourceId: fixture.imports[0].id,
+      cooperativeImportCount: fixture.count,
+      cooperativeImportRecordIds: fixture.imports[0].records.map(
+        (record) => record.id,
+      ),
+      cooperativeImportSha256: fixture.sha256,
+      workspaceImportId: 'workspace-synthetic-point-v1',
+      workspaceImportCount: 1,
+      workspaceImportSha256: workspaceSha,
+    },
+    cases: [native, workspace, controlled],
+  };
+  const expected = {
+    expectedCommit: appSha,
+    expectedImportFixtureSha256: fixture.sha256,
+    expectedWorkspaceFixtureSha256: workspaceSha,
+  };
+  assert.equal(
+    validateImportWorkspaceLifecycleReport(report, expected),
+    report,
+  );
+
+  assert.throws(
+    () =>
+      validateImportWorkspaceLifecycleReport(
+        { ...report, cases: report.cases.slice(0, 2) },
+        expected,
+      ),
+    /case inventory/,
+  );
+  const noQueued = structuredClone(report);
+  noQueued.cases[2].checkpoints[0].cancellation.queuedObserved = false;
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(noQueued, expected),
+    /queued cancellation/,
+  );
+  const staleIdentity = structuredClone(report);
+  staleIdentity.cases[2].checkpoints[0].supersession.oldIdsStillPresent = true;
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(staleIdentity, expected),
+    /queued supersession/,
+  );
+  const missingEmptyFrame = structuredClone(report);
+  delete missingEmptyFrame.cases[0].baseline.renderedPopulation;
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(missingEmptyFrame, expected),
+    /completed render/,
+  );
+  const missingControlledClearFrame = structuredClone(report);
+  delete missingControlledClearFrame.cases[2].checkpoints[1].snapshot
+    .renderedPopulation;
+  assert.throws(
+    () =>
+      validateImportWorkspaceLifecycleReport(
+        missingControlledClearFrame,
+        expected,
+      ),
+    /completed render/,
+  );
+  const appContextLeak = structuredClone(report);
+  delete appContextLeak.cases[2].final.applicationOwner.contextRecordCount;
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(appContextLeak, expected),
+    /app import owner/,
+  );
+  const cleanupWaiterLeak = structuredClone(report);
+  cleanupWaiterLeak.cases[2].cleanup.renderWaiters = 1;
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(cleanupWaiterLeak, expected),
+    /Controlled scheduler lifecycle/,
+  );
+  const badPostZero = structuredClone(report);
+  badPostZero.cases[0].workerPreflight.pendingAtProbeCompletion = 1;
+  badPostZero.cases[0].workerPreflight.quiescenceHistory = {
+    status: 'settled',
+    historyTruncated: false,
+    history: [{}, {}],
+    pollCount: 2,
+    firstObservedZeroMs: 5,
+    elapsedMs: 10,
+    maxPollingGapMs: 5,
+    postZeroVerification: {
+      elapsedMs: 4,
+      pending: 0,
+      overflow: false,
+      workersTruncated: false,
+    },
+  };
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(badPostZero, expected),
+    /Worker quiescence history/,
+  );
 });
 
 test('queued cancellation or supersession that was not actually observed fails closed', async () => {
