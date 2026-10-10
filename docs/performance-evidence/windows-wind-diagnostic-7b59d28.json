@@ -1,0 +1,147 @@
+{
+  "schema": "gev-wind-image-reuse/v1",
+  "applicationCommit": "7b59d286b22b78ac694cd064b0c47889f89179f3",
+  "harnessCommit": "7b59d286b22b78ac694cd064b0c47889f89179f3",
+  "capturedAt": "2026-10-10T15:02:58.826Z",
+  "fixture": "synthetic-360x181-wind-and-scalars/v1",
+  "scope": "Same-build forced construction versus retained-image equivalence at a fixed pose; isolated globe host, paused real GPU wind geometry. No FPS, latency or soak claim.",
+  "checks": [],
+  "captureAttempts": [
+    {
+      "phase": "speed:constructed",
+      "startedAtMs": 140246,
+      "before": {
+        "preUpdate": 50,
+        "preRender": 50,
+        "postRender": 50
+      },
+      "visibility": {
+        "visible": "visible",
+        "focused": true,
+        "viewport": {
+          "width": 888,
+          "height": 585,
+          "visualWidth": 888,
+          "visualHeight": 585,
+          "visualOffsetLeft": 0,
+          "visualOffsetTop": 0
+        },
+        "canvasRect": {
+          "left": 8,
+          "top": 186.375,
+          "right": 648,
+          "bottom": 546.375,
+          "width": 640,
+          "height": 360
+        },
+        "canvasViewportIntersection": {
+          "left": 8,
+          "top": 186.375,
+          "right": 648,
+          "bottom": 546.375,
+          "width": 640,
+          "height": 360,
+          "area": 230400
+        },
+        "canvasViewportIntersectionRatio": 1
+      },
+      "elapsedMs": 4.299999952316284,
+      "after": {
+        "preUpdate": 51,
+        "preRender": 51,
+        "postRender": 51
+      },
+      "copied": true,
+      "viewerLoopEnabled": true,
+      "contextDestroyed": false
+    },
+    {
+      "phase": "speed:control",
+      "startedAtMs": 140327.5,
+      "before": {
+        "preUpdate": 51,
+        "preRender": 51,
+        "postRender": 51
+      },
+      "visibility": {
+        "visible": "visible",
+        "focused": true,
+        "viewport": {
+          "width": 888,
+          "height": 585,
+          "visualWidth": 888,
+          "visualHeight": 585,
+          "visualOffsetLeft": 0,
+          "visualOffsetTop": 0
+        },
+        "canvasRect": {
+          "left": 8,
+          "top": 186.375,
+          "right": 648,
+          "bottom": 546.375,
+          "width": 640,
+          "height": 360
+        },
+        "canvasViewportIntersection": {
+          "left": 8,
+          "top": 186.375,
+          "right": 648,
+          "bottom": 546.375,
+          "width": 640,
+          "height": 360,
+          "area": 230400
+        },
+        "canvasViewportIntersectionRatio": 1
+      },
+      "elapsedMs": 403.1999999284744,
+      "after": {
+        "preUpdate": 51,
+        "preRender": 51,
+        "postRender": 51
+      },
+      "copied": false,
+      "viewerLoopEnabled": true,
+      "contextDestroyed": false
+    }
+  ],
+  "status": "failed",
+  "environment": {
+    "appCommit": "7b59d286b22b78ac694cd064b0c47889f89179f3",
+    "harnessCommit": "7b59d286b22b78ac694cd064b0c47889f89179f3",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 888,
+      "height": 585,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "error": "Fresh capture did not complete",
+  "failureFrameHealth": {
+    "status": "observed",
+    "elapsedMs": 1001.3999999761581,
+    "frames": 3,
+    "firstFrameDelayMs": 563.7999999523163,
+    "trailingFrameGapMs": 375.89999997615814,
+    "timerTicks": 50,
+    "firstTimerDelayMs": 20.5,
+    "maximumFrameGapMs": 33.40000009536743,
+    "maximumTimerGapMs": 24.399999976158142,
+    "trailingTimerGapMs": 0.10000002384185791
+  },
+  "sceneEvents": {
+    "preUpdate": 54,
+    "preRender": 52,
+    "postRender": 52
+  },
+  "renderErrors": [],
+  "contextEvents": [],
+  "lifecycleEvents": [],
+  "foregroundUninterrupted": true
+}
