@@ -62,6 +62,20 @@ The [completed job results](performance-evidence/ci-084a771.json) record six
 passing jobs: both Node versions, the complete browser journeys, Windows
 onboarding and Linux/macOS recovery. Windows recovery is the only failed job.
 
+The bounded shutdown trace at `0940b57201b198734bf460f59ed81fe05f7d0c8d`
+passes 20 combined ownership/fixture checks. Its [Windows-only diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38049597539)
+fails at the first prior-install checkpoint after successfully reopening the
+workspace. Chrome acknowledges `Browser.close` in 18.0 ms and disconnects in
+42.4 ms, with no protocol overflow or acknowledgement error. The OS browser
+process remains alive beyond the unchanged five-second deadline and exits only
+after confirmed forced cleanup (7.25 seconds after close began). This narrows the
+stall to process shutdown after protocol acknowledgement; it does not establish
+the underlying Chrome/GPU/profile cause or a fix. [Raw report](performance-evidence/profile-recovery-38049597539-windows.json)
+and [job result](performance-evidence/profile-recovery-38049597539-run.json) retain
+the failure. The trace stores only allowlisted milestones, no protocol payloads,
+and activates only during close. The separate workflow mode uses the existing
+free standard Windows recovery job; ordinary CI still runs all three OSes.
+
 The local Node 24 parallel suite reports 6,684 passes, one failure and ten skips.
 The failing camera-stream idle-deadline test passes all 21 tests when its file is
 run alone; its real 10 ms producer and 40 ms deadline assume scheduling precision
@@ -168,6 +182,19 @@ hypothesis, not an established cause. This run does not reproduce or resolve the
 earlier drain timeout. [Raw report](performance-evidence/lifecycle-38049166697.json)
 and [job result](performance-evidence/lifecycle-38049166697-run.json) preserve the
 failure. The browser closes normally in 55.5 ms without forced termination.
+
+`32d725d` adds bounded supersession outcomes before assertions and clears stale
+outcomes between attempts; 36 focused tests pass. Its [changed diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38049907954)
+fails earlier, at the initial empty checkpoint before any import operation. The
+worker preflight observes 57 submissions and 57 completions with no pending
+tasks, but the later initial checkpoint has six pending terrain tasks, each
+under 400 ms old. Submissions have increased to 68. This exposes a startup
+measurement boundary problem: momentary worker idleness is not proof that scene
+streaming has settled. It is not evidence of abandoned import jobs. Workspace
+replacement again passes five cycles; browser close takes 70.1 ms. [Raw report](performance-evidence/lifecycle-38049907954.json)
+and [job result](performance-evidence/lifecycle-38049907954-run.json) remain
+failed. A scene-readiness boundary and deterministic, separately scoped queue
+tests are required before another lifecycle acceptance attempt.
 
 GPT-6 Luna implementation `e2f65cd4b66e1e654bf1c59ca6a3c36e224d4b69` replaces
 opaque polling with an in-page timeline capped at 202 samples and 64 worker
