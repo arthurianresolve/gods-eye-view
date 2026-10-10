@@ -41,6 +41,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/cctvLifecycle.test.mjs',
   'scripts/performance/terrainPickingLifecycle.test.mjs',
   'scripts/performance/trackedFrameTimeRepro.test.mjs',
+  'scripts/performance/trackedFloorCoverage.test.mjs',
   'scripts/performance/militaryTrackedFrameTimeRepro.test.mjs',
   'scripts/performance/windFrameProbe.test.mjs',
   'scripts/performance/infrastructureCollectionExperiment.test.mjs',

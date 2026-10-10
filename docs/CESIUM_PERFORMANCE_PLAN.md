@@ -59,6 +59,26 @@ were skipped. This green integration run does not override the rendered CCTV
 comparison failures below, and does not cover subsequent camera compatibility
 changes.
 
+### Tracking fixture ground coverage correction - 10 October 2026
+
+The failed `996a8d3` tracking report observed a 192.4-m floor after initially
+seeding 440 m. The ground service's mesh cells do not expire; the moving
+12-m/s contact can leave the fixture's old three-by-three seed patch during
+its existing model-load wait. A structural service reproduction loses mesh
+coverage after 180 m; the earlier browser report did not record its actual
+cell, so that reproduction alone does not establish the exact failed route.
+
+The fixture now seeds a bounded corridor from the observed display position
+through the feed fix and the forward distance allowed by its unchanged
+43.1-second operation budget. Route construction fails before changing the
+cache if it exceeds 64 cells or 1,024 samples. Cold, model-visible and
+billboard-visible checkpoints record actual cells, mesh floors and elapsed
+time, and fail outside the declared coverage. Off-route and missing-floor
+controls retain the distinction between known ground and unavailable ground.
+The existing model/billboard ownership assertions remain unchanged. No runtime
+tracking or floor-service behavior is changed. Four focused helper/wiring
+checks pass; the rendered tracking run is still required.
+
 ### S50.3 asynchronous CCTV revision validation - 10 October 2026
 
 The lifecycle runner now has a version-2 acceptance path for rapid calibration
