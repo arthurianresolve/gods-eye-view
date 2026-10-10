@@ -1,8 +1,11 @@
 # Performance baseline
 
-Current status (10 October 2026): the latest full automatic CI at `f598310`
-fails its mixed-use import smoke with a workspace revision conflict. Node 24/26,
-three-OS recovery and Windows onboarding pass ([results](performance-evidence/ci-f598310.json)).
+Current status (11 October 2026): all seven full automatic CI jobs pass at
+`167ba62c047fe94f36d0d60066aa4d648ede7519`, including the mixed-use import smoke,
+Node 24/26, production builds, three-OS recovery and Windows onboarding
+([results](performance-evidence/ci-167ba62.json)). The same-panel workspace save
+race is fixed without bypassing genuine external revision conflicts. The earlier
+`f598310` failure remains [historical evidence](performance-evidence/ci-f598310.json).
 The corrected `3cdd5cb` software-rendered retention soak and the fresh `996a8d3`
 hosted paravirtual Metal retention soak passed. The latter completed 252 cycles
 and 13 post-GC checkpoints, with 40 unchanged resource gauges, final pending

@@ -1,9 +1,13 @@
 # Cesium performance plan
 
-Updated on 11 October 2026. The latest full integration at `f598310` fails the
-mixed-use import smoke with a workspace revision conflict; the other six jobs
-pass ([job results](performance-evidence/ci-f598310.json)). The failure is recorded
-below and is not cleared by isolated passing checks. All seven full integration jobs pass at
+Updated on 11 October 2026. All seven full integration jobs pass at
+`167ba62c047fe94f36d0d60066aa4d648ede7519` after the workspace save ownership fix
+([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38090393482),
+[job results](performance-evidence/ci-167ba62.json)). This covers Node 24/26,
+production builds, formatting, boundaries, Windows onboarding, three-OS recovery
+and the existing browser gates, including the previously failing mixed-use smoke.
+The earlier `f598310` conflict remains recorded as a failure
+([historical results](performance-evidence/ci-f598310.json)). All seven full integration jobs also pass at
 `996a8d3b8b73da0d3f64392b993bdff81a1e857f` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083652826), [job results](performance-evidence/ci-996a8d3.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
@@ -148,9 +152,8 @@ owners cannot redirect queued writes into another workspace. Real external
 revision conflicts remain failures without retries. The focused workspace,
 import, history, restore and storage suite passes 44/44 checks, including 19
 panel tests. Repository formatting passes for 1,508 source files, and package
-boundaries pass for 1,003 modules and 78 portable entries. Rendered and full
-integration acceptance for the follow-up remain pending until their exact-commit
-runs pass.
+boundaries pass for 1,003 modules and 78 portable entries. Exact-commit rendered
+and full integration results for this fix are recorded below.
 
 The follow-up is committed as `167ba62c047fe94f36d0d60066aa4d648ede7519`.
 Its [isolated rendered smoke](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38090185732)
@@ -165,6 +168,26 @@ physical GPU evidence or a full integration pass.
 [Raw report](performance-evidence/mixed-use-smoke-167ba62.json),
 SHA-256 `eba6049984179fa3a13805944b7c7baeb2523f4bf07db1ddb8c6fe5d5bf720ef`;
 [terminal run metadata](performance-evidence/mixed-use-smoke-167ba62-run.json).
+
+The subsequent [full integration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38090393482)
+passes all seven selected jobs at the same `167ba62` revision. Each Node suite
+reports 6,968 passes, zero failures and one skip; Node 24 additionally passes all
+14 calibrated allocation checks. Node 26 does not run those Node-24-calibrated
+allocation probes. The browser job passes every selected journey, including
+its own mixed-use smoke, accessibility, evidence transfer, visual settings,
+director sharing and portable panels. Separate tracking, 60-minute soak and
+published layer-token PR checks were not selected and remain separate gates.
+[Full job metadata](performance-evidence/ci-167ba62.json).
+
+The current [Windows recovery report](performance-evidence/profile-recovery-38090393482-windows.json)
+passes all five scenarios with matching settings, complete workspace bundles and
+the same persisted asset hash as the earlier run. All five owned browser
+processes exit normally in 685, 442, 343, 390 and 388 ms, under the unchanged
+five-second deadline; no forced termination or unexpected page targets occur.
+Report SHA-256 `aa60c9e8b3db8850a073e43985f163eaf3d59ebd06e5998ad062abc119482535`;
+[terminal job metadata](performance-evidence/profile-recovery-38090393482-windows-job.json).
+This validates hosted Windows/SwiftShader recovery at this revision, not the
+root cause of the earlier intermittent shutdown failure or physical GPU behavior.
 
 ### Tracking fixture ground coverage correction - 10 October 2026
 

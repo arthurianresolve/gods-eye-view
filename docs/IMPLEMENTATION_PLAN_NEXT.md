@@ -1,8 +1,9 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
-Status: Reconciled on 9 October 2026 against local `dev` and remote `fork/dev` at
-`7c6c324269f0f67c7361530013ff99e361664556`. Code, automated results and external
-acceptance are separate. Current CI passes three-OS recovery and all browser gates;
+Status: Automated checkpoint on 11 October 2026 at
+`167ba62c047fe94f36d0d60066aa4d648ede7519`. Code, automated results and external
+acceptance are separate. [All seven selected CI jobs pass](performance-evidence/ci-167ba62.json),
+including three-OS recovery, Windows onboarding and the existing browser gates;
 the full software-rendered soak passed at `3cdd5cb`. Successful
 older PR, release and component checks remain historical evidence. The
 [S47-S60 ledger](CESIUM_PERFORMANCE_PLAN.md) tracks incomplete performance work
@@ -19,7 +20,7 @@ a new provider dependency.
 | --- | --- | --- | --- |
 | S32 integration baseline | implemented; ledger reconciled | representative PRs to dev/main passed for `91a6076`, including layer-token checks; all CI gates pass at `3cdd5cb` | refresh PR matrix for final candidate |
 | S33 candidate evidence | implemented | focused tests passed | pending |
-| S34 install/update recovery | implemented, Windows path/renderer failures corrected | `3cdd5cb`: Windows, macOS and Linux real profile recovery and Windows onboarding pass | rerun for final candidate |
+| S34 install/update recovery | implemented, Windows path/renderer failures corrected | `167ba62`: Windows, macOS and Linux real profile recovery and Windows onboarding pass; historical intermittent shutdown cause remains unproven | rerun for final candidate |
 | S35 accessibility/first use | implemented | automated keyboard, focus, AX-name, status, and 200%-equivalent reflow report | NVDA, VoiceOver, contrast/zoom and five users pending |
 | S36 infrastructure provenance | implemented | focused tests passed | pending |
 | S37 durable references | implemented | focused tests passed | pending |
