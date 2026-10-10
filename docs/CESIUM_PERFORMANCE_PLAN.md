@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. Full runtime CI passes at
-`a22884acda007179bd0789029b462f47eef410ac` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034974692), [job results](performance-evidence/ci-a22884a.json)).
+`a84d371b0cab5cd85002316b0ff2108454661a00` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38036135219), [job results](performance-evidence/ci-a84d371.json)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
