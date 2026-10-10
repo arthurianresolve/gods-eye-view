@@ -181,6 +181,41 @@ soak. It does not explain or erase older failures or the separate hosted Windows
 browser-process shutdown failure. The unmodified downloaded [raw report](performance-evidence/windows-webgl-frame-a83dd7a-20261010T120745.json)
 has SHA-256 `639f7892e4ad84d9711599bdbb5e1bed07f62e174ccbb12c153fd5b23ab790e9`.
 
+### S49 cold-scene readiness boundary - 10 October 2026
+
+GPT-6 Luna implemented `ef65fe189f8c40e2b452bccf6ba70aaec5213a8c`.
+Before worker probes and import baselines, the runner now allows a separate
+30-second cold-scene warmup. It requires loaded terrain, valid conserved worker
+counters with no pending work/errors, an unchanged finite camera pose, and a
+completed render followed by one second of stable observations. New terrain work
+or camera changes reset readiness. An explicit `requestRender()` verifies an idle
+scene without calling `render()` or changing rendering settings.
+
+The startup observer samples every 100 ms, caps history at 302 samples and 64
+workers, uses summary-only host polling, freezes terminal timing and releases its
+timer, render listener and page-owned history before lifecycle measurement. Invalid
+metrics, stalled renders and readiness deadlines fail. The existing ten-second
+post-operation drain remains an independent acceptance gate.
+
+Root independently passed 59 focused tests (51 lifecycle plus eight import
+runtime/cooperative cases); syntax, targeted formatting, boundaries and diff
+checks pass; the repository format check also passes across 1,445 adopted files.
+The exact-commit [hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38051341534)
+completes all three runtime cases: five native imports, five workspace
+replacements, and five controlled cancellation/supersession cycles. Cold scenes
+settle in 19.8, 17.0 and 14.5 seconds respectively. Every observer is disposed;
+all owned cleanup counts are zero. Browser shutdown completes normally in
+86.6 ms without forced termination.
+
+The overall report remains **failed**: the controlled case's returned row omits
+the top-level worker checkpoint required by the final report validator. Its
+baseline, final and cleanup snapshots contain valid zero-pending counters, but
+that does not repair the emitted contract. The [raw report](performance-evidence/lifecycle-38051341534.json)
+and [job result](performance-evidence/lifecycle-38051341534-run.json) retain this
+failure. Correct the report assembly and test the actual generated case result
+before rerunning. This is Linux software-rendered lifecycle evidence, not a
+hardware performance or historical Windows retention acceptance result.
+
 ### S49 deterministic cancellation coverage - 10 October 2026
 
 GPT-6 Luna implemented `fe97950f45f8279f660b6901efc8beb5eb7edbc8`.
