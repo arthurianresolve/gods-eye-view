@@ -45,6 +45,16 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+The full standard integration run at `61d662a870f4b1e5c82711a18676a2f3c623e847`
+[passes all seven selected jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38079112938)
+([exact job metadata](performance-evidence/ci-61d662a.json)): Node 24/26 suites,
+formatting, boundaries, production builds, Windows onboarding, Windows/macOS/Linux
+installation recovery, and the Street Level/browser journeys. The separately
+selected tracking and 60-minute soak jobs, and published layer-token PR checks,
+were skipped. This green integration run does not override the rendered CCTV
+comparison failures below, and does not cover subsequent camera compatibility
+changes.
+
 ### S51.4 CCTV calibration render-demand candidate - 10 October 2026
 
 The next candidate removes the permanent `cctv-adjust` render hold. Accepted
