@@ -1,5 +1,43 @@
 const CODE_RESOURCE_TYPES = new Set(['script', 'worker', 'serviceworker']);
 const CODE_PATH = /\.(?:m?js)$/i;
+
+/** Collect code requests only after the caller opens the application boundary. */
+export function createApplicationCodeRequestAudit({ limit = 4000 } = {}) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 20_000)
+    throw new TypeError('Application code audit limit is invalid.');
+  let active = false;
+  let requestCount = 0;
+  const requests = [];
+  const add = (url, resourceType, countRequest) => {
+    if (!active) return;
+    if (countRequest) requestCount += 1;
+    let codePath = false;
+    try {
+      codePath = CODE_PATH.test(new URL(url).pathname);
+    } catch {
+      codePath = false;
+    }
+    if (
+      requests.length < limit &&
+      (CODE_RESOURCE_TYPES.has(resourceType) || codePath)
+    )
+      requests.push({ url, resourceType });
+  };
+  return {
+    begin() {
+      active = true;
+    },
+    observeRequest(url, resourceType) {
+      add(url, resourceType, true);
+    },
+    observeWorker(url) {
+      add(url, 'worker', false);
+    },
+    snapshot() {
+      return { requestCount, requests: requests.slice() };
+    },
+  };
+}
 export const WORKER_PREFLIGHT_PATH =
   '/__gev_performance_smoke_worker_preflight__';
 

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   auditReceiptedCodeRequests,
+  createApplicationCodeRequestAudit,
   respondToWorkerPreflight,
   runSameOriginWorkerPreflight,
   waitForPreflightWorkerTargetsClosed,
@@ -216,4 +217,28 @@ test('preflight disposal waits for every worker target without persisting URLs',
     remainingCount: 0,
     waitMs: 100,
   });
+});
+
+test('application code audit opens after preflight and still rejects an app blob worker', () => {
+  const audit = createApplicationCodeRequestAudit();
+  const preflightBlob = 'blob:http://127.0.0.1:4173/harness-worker';
+  audit.observeRequest(preflightBlob, 'script');
+  audit.observeWorker(preflightBlob);
+  assert.deepEqual(audit.snapshot(), { requestCount: 0, requests: [] });
+
+  audit.begin();
+  audit.observeRequest('http://127.0.0.1:4173/assets/main.js', 'script');
+  audit.observeWorker('blob:http://127.0.0.1:4173/app-worker');
+  const snapshot = audit.snapshot();
+  assert.equal(snapshot.requestCount, 1);
+  assert.equal(snapshot.requests.length, 2);
+  assert.throws(
+    () =>
+      auditReceiptedCodeRequests({
+        requests: snapshot.requests,
+        baseUrl: 'http://127.0.0.1:4173/',
+        assets: [{ path: 'assets/main.js' }],
+      }),
+    /build-root integrity/,
+  );
 });

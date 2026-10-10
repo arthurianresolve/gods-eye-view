@@ -24,6 +24,7 @@ import { createLocalBuildReceipt } from './performance/buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
 import {
   auditReceiptedCodeRequests,
+  createApplicationCodeRequestAudit,
   respondToWorkerPreflight,
   runSameOriginWorkerPreflight,
   waitForPreflightWorkerTargetsClosed,
@@ -339,23 +340,13 @@ async function runRevision({
     await page.setBypassServiceWorker(true);
     page.setDefaultTimeout(30_000);
     page.setDefaultNavigationTimeout(45_000);
-    const codeRequests = [];
     const preflightPhase = { active: true };
-    let requestCount = 0;
+    const requestAudit = createApplicationCodeRequestAudit();
     page.on('request', (request) => {
-      requestCount += 1;
-      if (codeRequests.length >= 4000) return;
-      const resourceType = request.resourceType();
-      const requestUrl = request.url();
-      if (
-        ['script', 'worker', 'serviceworker'].includes(resourceType) ||
-        /\.m?js(?:[?#]|$)/i.test(requestUrl)
-      )
-        codeRequests.push({ url: requestUrl, resourceType });
+      requestAudit.observeRequest(request.url(), request.resourceType());
     });
     page.on('workercreated', (worker) => {
-      if (!preflightPhase.active && codeRequests.length < 4000)
-        codeRequests.push({ url: worker.url(), resourceType: 'worker' });
+      if (!preflightPhase.active) requestAudit.observeWorker(worker.url());
     });
     page.on('pageerror', (error) => {
       if (pageErrors.length < 8) pageErrors.push(sanitizeError(error));
@@ -371,12 +362,11 @@ async function runRevision({
       baseUrl: served.baseUrl,
       verifyNetwork: fixturePage.verifyNetwork,
       resetRequestAudit: () => {
+        const snapshot = requestAudit.snapshot();
         const discardedAudit = {
-          requestCount,
-          codeRequestCount: codeRequests.length,
+          requestCount: snapshot.requestCount,
+          codeRequestCount: snapshot.requests.length,
         };
-        requestCount = 0;
-        codeRequests.length = 0;
         return discardedAudit;
       },
     });
@@ -402,6 +392,9 @@ async function runRevision({
         `Harness preflight worker target remained after termination (${preflightTargetDisposal.remainingCount}).`,
       );
     preflightPhase.active = false;
+    // Begin observing after every harness-only request and worker target has
+    // settled, so delayed protocol events cannot cross the audit boundary.
+    requestAudit.begin();
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
       waitUntil: 'domcontentloaded',
@@ -467,13 +460,13 @@ async function runRevision({
       throw new Error(
         `Fixture interception reported ${fixturePage.errors.length} errors.`,
       );
-    for (const worker of page.workers())
-      codeRequests.push({ url: worker.url(), resourceType: 'worker' });
+    for (const worker of page.workers()) requestAudit.observeWorker(worker.url());
     for (const target of browser.targets())
       if (['worker', 'service_worker'].includes(target.type()))
-        codeRequests.push({ url: target.url(), resourceType: target.type() });
+        requestAudit.observeWorker(target.url());
+    const finalAuditSnapshot = requestAudit.snapshot();
     const finalCodeAudit = auditReceiptedCodeRequests({
-      requests: codeRequests,
+      requests: finalAuditSnapshot.requests,
       baseUrl: served.baseUrl,
       assets: build.receipt.assets,
     });
@@ -489,7 +482,7 @@ async function runRevision({
         status: 'receipt-backed-paths-observed',
         paths: finalCodeAudit.paths,
         externalCodeRequestsObserved: finalCodeAudit.externalCodeRequests,
-        requestCount,
+        requestCount: finalAuditSnapshot.requestCount,
         coverage:
           'request-path audit for observed script/worker targets; browser response bytes are not independently attested',
       },
