@@ -7,8 +7,9 @@ and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
 The separate tracking run at that revision fails one of 109 checks. Its GitHub
 job was incorrectly green because a logging pipeline masked the test exit code;
-the raw failure and the pipeline correction are recorded below. Tracking
-acceptance at this revision remains failed.
+the raw failure and the pipeline correction are recorded below. The corrected
+fixture at `8c3e99a` passes 111 hosted tracking checks; this later result does not
+change the failed historical result at `996a8d3`.
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -77,7 +78,20 @@ time, and fail outside the declared coverage. Off-route and missing-floor
 controls retain the distinction between known ground and unavailable ground.
 The existing model/billboard ownership assertions remain unchanged. No runtime
 tracking or floor-service behavior is changed. Four focused helper/wiring
-checks pass; the rendered tracking run is still required.
+checks pass. The [rendered run at `8c3e99a`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38086425275)
+passes all 111 checks, with zero failures/skips. Its cold/model/billboard
+observations occur at 5.3/9.7/10.5 seconds, 66/119/129 m from the starting
+position, each with the intended 440-m mesh floor. Thirty seeded cells cover
+the declared route; off-route and missing-floor controls remain unclamped.
+The tracked model renders while the billboard floor stands aside, then the
+billboard returns at 441.5 m after model exit. This confirms the corrected
+fixture's invariants without a production floor change. Normal close takes
+1.23 seconds; no console or HTTP 5xx errors occur. The downloaded source
+revision is clean and matches `8c3e99a8f17e9fd0bc67ad4632d50516fc6d03c9`.
+[Raw output](performance-evidence/tracking-8c3e99a.txt),
+[terminal job metadata](performance-evidence/tracking-8c3e99a-run.json).
+Raw SHA-256: `8fac4832d61c964f609685c182610fee286c4f053dfdb4ada525706dac3e61cb`.
+Hosted software rendering remains separate from physical Windows p95 acceptance.
 
 ### S50.3 asynchronous CCTV revision validation - 10 October 2026
 
