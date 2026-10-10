@@ -1,6 +1,9 @@
 # Cesium performance plan
 
-Updated on 10 October 2026. All seven full integration jobs pass at
+Updated on 10 October 2026. The latest full integration at `f598310` fails the
+mixed-use import smoke with a workspace revision conflict; the other six jobs
+pass ([job results](performance-evidence/ci-f598310.json)). The failure is recorded
+below and is not cleared by isolated passing checks. All seven full integration jobs pass at
 `996a8d3b8b73da0d3f64392b993bdff81a1e857f` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083652826), [job results](performance-evidence/ci-996a8d3.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
@@ -79,6 +82,26 @@ shutdown failures. Root independently checked each persisted-content and close
 observation. [Raw report extracted from the job log](performance-evidence/profile-recovery-38087067518-windows.json),
 SHA-256 `c6ec2f2d41dde357ea4c9b6897176687087faa4515d725dbe55c960730f2748b`;
 [terminal job metadata](performance-evidence/profile-recovery-38087067518-windows-job.json).
+
+### Mixed-use save conflict - 10 October 2026
+
+The [full CI run at `f598310`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38087067518)
+fails its mixed-use smoke during cycle 1's import application. The page reports
+that a newer workspace revision prevents applying the import, while its main
+status reports `Autosaved revision 3.` All worker tasks have completed, pending
+worker counts are zero, the import layer is empty, and the document is visible
+and focused. This is a failed save operation, not evidence of a retained worker
+or a frame deadline problem. The harness waits for success until its unchanged
+30-second limit.
+
+The autosave and import handlers currently call the same optimistic-revision
+save independently. Their potential same-tab overlap needs a deterministic
+reproduction and an ownership fix; the error text alone does not prove another
+tab actually wrote the revision. Genuine cross-tab conflict protection must
+remain. No rerun or timeout increase clears this failure. Node 24/26, three-OS
+recovery and Windows onboarding pass at this SHA, but the integration result is
+**failed**. [Raw failure extracted from the job log](performance-evidence/mixed-use-smoke-f598310.json),
+SHA-256 `a4bcaad72e57f71b5e5420a162eb7fc1b827b8eb137d13839769b77c8fab3b18`.
 
 ### Tracking fixture ground coverage correction - 10 October 2026
 
@@ -996,6 +1019,30 @@ SHA-256 `27df11a6abcf6aee2472087930735fe407ec93db524031ceaae439374eed851d`.
 This is Windows 10.0.19045 / Node 24.16.0 / i7-8665U CPU evidence, not browser
 interaction or GPU acceptance. A passing report means output parity and cleanup;
 it does not mean the performance target passed.
+
+### S59.1 cooperative CSV scanner disposition - 10 October 2026
+
+The shared-generator scanner candidate at
+`00aecc4c46f83e53bb7bb778fd604f64d95eff3e` preserves synchronous public parser
+contracts and all 60 outputs in a clean exact-source comparison against
+`ef6fcd5`. However, full preview completion regresses from 392.15 to 540.39 ms
+(37.8%) for 50,000 ordinary rows, and from 802.24 to 1,036.39 ms (29.2%) for
+5,000 long quoted records with aligned CRLF boundaries. Median main-thread timer
+gaps decrease from 70.77 to 17.44 ms and from 257.90 to 36.92 ms respectively,
+but that improvement does not waive the completion regression. The cooperative
+scanner is rejected and the original synchronous parser/scheduling is restored.
+Pre-cancellation checks and summary accumulation are isolated for a separate
+comparison; full bounded document decoding remains unfinished.
+
+Thirty-nine focused parser, batching, workspace ownership, cancellation and
+comparison checks pass before measurement. The deterministic CRLF/escaped-quote
+tests caught and corrected an index-skipping yield bug in the rejected prototype;
+passing those tests did not establish acceptable throughput. Root independently
+recomputed five paired medians and full output hashes for all six workloads.
+[Raw comparison](performance-evidence/csv-decode-comparison-00aecc4.json),
+SHA-256 `931d65a5b73ba88bce9cc50712b5e1011b5f9048d98735b264844eb2a7eadffa`.
+This is local Windows/Node CPU and event-loop evidence, not browser interaction
+or GPU acceptance.
 
 ### S59.1 CSV column setup - 10 October 2026
 
