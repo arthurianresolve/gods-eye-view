@@ -509,6 +509,7 @@ export function createCalibrationGizmo({
       effectiveRangeM: geometry.rangeM,
       startAngle: null,
       startParam: null,
+      lastAppliedPosition: Cesium.Cartesian2.clone(windowPosition),
     };
 
     if (part === 'ring-heading') {
@@ -675,7 +676,15 @@ export function createCalibrationGizmo({
         '→',
         patch ? JSON.stringify(patch) : null,
       );
-      if (patch) applyPatch(patch, drag.record);
+      if (patch) {
+        const currentDrag = drag;
+        applyPatch(patch, currentDrag.record);
+        if (drag === currentDrag)
+          Cesium.Cartesian2.clone(
+            event.endPosition,
+            currentDrag.lastAppliedPosition,
+          );
+      }
       return;
     }
     if (now - lastHoverAt < HOVER_THROTTLE_MS) return;
@@ -683,9 +692,23 @@ export function createCalibrationGizmo({
     setHovered(pickGizmoPart(event.endPosition));
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-  handler.setInputAction(() => {
+  handler.setInputAction((event) => {
     if (!enabled) return;
-    endDrag();
+    try {
+      // Movement is throttled, but release is the authoritative endpoint.
+      // Flush a skipped final position only to the still-active pinned record.
+      if (
+        drag &&
+        getActiveRecord() === drag.record &&
+        event.position &&
+        !Cesium.Cartesian2.equals(event.position, drag.lastAppliedPosition)
+      ) {
+        const patch = dragPatch(event.position);
+        if (patch) applyPatch(patch, drag.record);
+      }
+    } finally {
+      endDrag();
+    }
   }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
   return {

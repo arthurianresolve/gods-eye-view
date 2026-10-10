@@ -90,6 +90,15 @@ That fixture defect must be corrected before comparisons. It does not establish
 the cause of either the missed pick or the Windows capture failure. Raw SHA-256:
 `bfe9e875034afe9637e718189ffbad11894cadea371009b36ba5d7b481385b53`.
 
+A separate input-path reproduction confirms that the gizmo can drop the final
+drag position: two moves one millisecond apart reach 10 m and 20 m, but release
+previously commits 10 m because the second move is throttled. The fix flushes
+the release position to the pinned record if it is still selected, skips an
+already-applied endpoint, and restores navigation in a `finally` block. Thirteen
+focused tests pass, including the former failing sequence, equal-endpoint writes
+and selection changes. This correctness fix does not explain the earlier missing
+scene pick or the Windows capture timeout; rendered acceptance remains pending.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding

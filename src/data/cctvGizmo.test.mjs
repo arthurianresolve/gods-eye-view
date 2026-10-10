@@ -205,3 +205,122 @@ test('gizmo visibility refreshes request discrete frames and stop after disposal
   assert.equal(requests.length, beforeDispose);
   assert.equal(viewer._entities.size, 0);
 });
+
+test('native release commits the final pointer position skipped by drag throttling', (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    onmousewheel: null,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  t.after(() => {
+    globalThis.document = previousDocument;
+  });
+  let now = 1000;
+  t.mock.method(Date, 'now', () => now);
+  const viewer = createGizmoViewer();
+  const mount = Cesium.Cartesian3.fromDegrees(0, 0, 0);
+  const record = {
+    camera: {
+      headingDeg: 0,
+      pitchDeg: -17,
+      calibration: {
+        offsetEastM: 0,
+        offsetNorthM: 0,
+        headingDeg: 0,
+        pitchDeg: 0,
+        rangeScale: 1,
+        heightM: 0,
+      },
+      basePose: { rangeM: 700, fovDeg: 70 },
+    },
+    frustumPositions: {
+      mount,
+      capCenter: c3(mount.x + 700, 0, 0),
+      tl: mount,
+      tr: mount,
+      bl: mount,
+      br: mount,
+    },
+    frustumGeometry: { rangeM: 700 },
+  };
+  // At lon/lat zero, local east is +Y and up is +X. Each CSS x pixel
+  // represents one eastward metre in this deterministic camera-ray adapter.
+  viewer.camera.getPickRay = (position) => ({
+    origin: c3(mount.x + 100, position.x, 0),
+    direction: c3(-1, 0, 0),
+  });
+  viewer._setPicked({ id: { id: 'cctv-gizmo-move-east' } });
+  const patches = [];
+  const commits = [];
+  let activeRecord = record;
+  const gizmo = createCalibrationGizmo({
+    viewer,
+    getActiveRecord: () => activeRecord,
+    applyPatch(patch, target) {
+      patches.push(patch);
+      Object.assign(target.camera.calibration, patch);
+    },
+    endPatch(target) {
+      commits.push(target.camera.calibration.offsetEastM);
+    },
+  });
+  t.after(() => gizmo.destroy());
+  gizmo.setEnabled(true);
+  const input = (type, x, buttons) =>
+    viewer.scene.canvas.dispatch(type, {
+      clientX: x,
+      clientY: 20,
+      button: 0,
+      buttons,
+      preventDefault() {},
+    });
+  input('mousedown', 0, 1);
+  assert.equal(gizmo.isDragging(), true);
+  input('mousemove', 10, 1);
+  now += 1;
+  input('mousemove', 20, 1);
+  assert.equal(
+    patches.length,
+    1,
+    'second move is deliberately inside the 16 ms throttle',
+  );
+  input('mouseup', 20, 0);
+  assert.deepEqual(commits, [20]);
+  assert.deepEqual(
+    patches.map((patch) => patch.offsetEastM),
+    [10, 20],
+  );
+  assert.equal(gizmo.isDragging(), false);
+  assert.equal(viewer.scene.screenSpaceCameraController.enableInputs, true);
+
+  now += 20;
+  input('mousedown', 0, 1);
+  input('mousemove', 10, 1);
+  const beforeEqualRelease = patches.length;
+  input('mouseup', 10, 0);
+  assert.equal(
+    patches.length,
+    beforeEqualRelease,
+    'equal release does not duplicate the last accepted patch',
+  );
+  assert.deepEqual(commits, [20, 30]);
+
+  now += 20;
+  input('mousedown', 0, 1);
+  input('mousemove', 10, 1);
+  activeRecord = { ...record, camera: { ...record.camera } };
+  const beforeSwitchedRelease = patches.length;
+  input('mouseup', 20, 0);
+  assert.equal(
+    patches.length,
+    beforeSwitchedRelease,
+    'selection switch prevents a late endpoint patch',
+  );
+  assert.deepEqual(
+    commits,
+    [20, 30, 40],
+    'existing edits commit to the original record',
+  );
+  assert.equal(viewer.scene.screenSpaceCameraController.enableInputs, true);
+});
