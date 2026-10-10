@@ -894,6 +894,25 @@ The settled-frame fixture at `dc94ddfd4dc9982da78c2365e13dbf35d26d45dd` reaches 
 
 Root's independent [decoded-image audit](performance-evidence/infrastructure-38069176623-image-audit.json) locates every difference along the selected stem, with a one-unit increase in the blue channel only. Cesium's Entity static color batch stores unsigned-byte color attributes, whereas the direct polyline candidate supplies a floating-point color uniform. The result is consistent with alpha quantization, but a renderer alternative has not yet been measured to establish causality. The current prototype is rejected without masking pixels or relaxing tolerance. It establishes neither an accepted infrastructure optimization nor a full-app performance gain. A subsequent alternative should preserve the Entity-compatible color representation and must still prove activation/memory benefit.
 
+### S59.1 document decode worker prototype - 10 October 2026
+
+A diagnostic compares the actual public GeoJSON, CSV and KML preview APIs on
+the Node main thread and in a persistent `worker_threads` worker. It preserves
+complete output hashes, IDs/order and counts for 50,000-vertex lines, a polygon
+with a hole, and 50,000 CSV rows. Five alternating pairs measure end-to-end
+completion including message cloning; worker startup and warmups are separate.
+The maximum one-ms timer gap is a responsiveness observation, not CPU task
+duration or proof of the four-ms application batch target. No browser worker,
+production import path or default is changed.
+
+The prototype permits one owned task, bounds fixtures and deadlines, rejects
+aborted replies, and releases request state on cloning errors, worker exit and
+timeout. Thirteen focused tests cover parity, malformed input, cancellation,
+reuse, bounded ownership, startup readiness, exit and injected blocking controls.
+An exploratory dirty-tree measurement missed synchronous KML timer gaps and is
+not acceptance evidence. Clean-commit timing remains to be collected before
+choosing a production approach. GPX and browser interaction evidence remain open.
+
 ### S59.1 CSV column setup - 10 October 2026
 
 GPT-6 Luna's `9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` adds a header-only mode to the existing CSV scanner. Column mapping no longer materializes every data row merely to discover the column names. The public full decoder and preview retain complete body validation, output ordering, quoted multiline/BOM handling and existing error precedence. A malformed body is still rejected when the user requests a preview; header setup deliberately validates only the header. Twenty-four focused parser, cancellation and import panel checks pass in the root review, and package boundaries pass.
