@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
@@ -22,10 +23,18 @@ import {
   seedPersistentWorkspace,
 } from './qa-application-fixtures.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
+import {
+  closeRecoveryBrowser,
+  stopOwnedRecoveryProcessTree,
+} from './performance/profileRecoveryPageOwnership.mjs';
 
 const DEFAULT_CYCLES = 5;
 const FEATURE_COUNT = 512;
 const SHA1 = /^[a-f0-9]{40}$/i;
+const HOST_PROTOCOL_TIMEOUT_MS = 15_000;
+const PAGE_CONTEXT_CLEANUP_TIMEOUT_MS = 2_000;
+const BROWSER_CLOSE_TIMEOUT_MS = 5_000;
+const PROGRESS_EVENT_CAP = 64;
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -81,29 +90,75 @@ function boundedText(value, limit = 500) {
     .slice(0, limit);
 }
 
+async function withProtocolDeadline(
+  operation,
+  label,
+  timeoutMs = HOST_PROTOCOL_TIMEOUT_MS,
+) {
+  let timer;
+  const outcome = await Promise.race([
+    Promise.resolve()
+      .then(operation)
+      .then(
+        (value) => ({ status: 'completed', value }),
+        (error) => ({ status: 'failed', error }),
+      ),
+    new Promise((resolve) => {
+      timer = setTimeout(() => resolve({ status: 'timed-out' }), timeoutMs);
+    }),
+  ]).finally(() => clearTimeout(timer));
+  if (outcome.status === 'timed-out')
+    throw new Error(`Browser protocol ${label} exceeded ${timeoutMs}ms.`);
+  if (outcome.status === 'failed') throw outcome.error;
+  return outcome.value;
+}
+
+function evaluateWithDeadline(page, label, ...args) {
+  return withProtocolDeadline(() => page.evaluate(...args), label);
+}
+
 async function closeOwnedPageAndContext(page, context) {
   const errors = [];
+  const attempt = async (label, operation) => {
+    let timer;
+    const result = await Promise.race([
+      Promise.resolve()
+        .then(operation)
+        .then(
+          (value) => ({ status: 'completed', value }),
+          (error) => ({ status: 'failed', error }),
+        ),
+      new Promise((resolve) => {
+        timer = setTimeout(
+          () => resolve({ status: 'timed-out' }),
+          PAGE_CONTEXT_CLEANUP_TIMEOUT_MS,
+        );
+      }),
+    ]).finally(() => clearTimeout(timer));
+    if (result.status !== 'completed') {
+      errors.push(
+        new Error(
+          `${label} ${result.status === 'timed-out' ? 'timed out' : boundedText(result.error)}`,
+        ),
+      );
+    }
+  };
   try {
     if (page && !page.isClosed())
-      await page.evaluate(() => window.__qaLifecycleCancelAll?.());
+      await attempt('Cancel page-owned render waiters', () =>
+        page.evaluate(() => window.__qaLifecycleCancelAll?.()),
+      );
   } catch (error) {
     errors.push(error);
   }
-  try {
-    if (page) await cleanupFixturePageDiagnostics(page);
-  } catch (error) {
-    errors.push(error);
-  }
-  try {
-    if (page && !page.isClosed()) await page.close();
-  } catch (error) {
-    errors.push(error);
-  }
-  try {
-    if (context) await context.close();
-  } catch (error) {
-    errors.push(error);
-  }
+  if (page)
+    await attempt('Remove page diagnostics', () =>
+      cleanupFixturePageDiagnostics(page),
+    );
+  if (page && !page.isClosed())
+    await attempt('Close owned lifecycle page', () => page.close());
+  if (context)
+    await attempt('Close owned lifecycle context', () => context.close());
   if (errors.length)
     throw new AggregateError(
       errors,
@@ -118,7 +173,9 @@ async function startRenderedPopulationWait(
   timeoutMs,
   requireRestoreTransition = false,
 ) {
-  return page.evaluate(
+  return evaluateWithDeadline(
+    page,
+    'start-render-wait',
     (options) => window.__qaLifecycleStartRenderWait(options),
     { workspaceId, count, timeoutMs, requireRestoreTransition },
   );
@@ -126,14 +183,22 @@ async function startRenderedPopulationWait(
 
 async function finishRenderedPopulationWait(page, id) {
   try {
-    return await page.evaluate(
+    return await evaluateWithDeadline(
+      page,
+      'finish-render-wait',
       (waitId) => window.__qaLifecycleWaitForRender(waitId),
       id,
     );
   } finally {
-    await page
-      .evaluate((waitId) => window.__qaLifecycleCancelRenderWait(waitId), id)
-      .catch(() => {});
+    await withProtocolDeadline(
+      () =>
+        page.evaluate(
+          (waitId) => window.__qaLifecycleCancelRenderWait(waitId),
+          id,
+        ),
+      'cancel-render-wait',
+      1000,
+    ).catch(() => {});
   }
 }
 
@@ -195,41 +260,71 @@ function assertWorkerPreflight(value) {
 
 async function readWorkerPreflight(page, verifyNetwork) {
   const network = await verifyNetwork();
-  const value = await page.evaluate(async () => {
-    const { runCesiumWorkerProbe } =
-      await import('/scripts/fixtures/cesium-worker-probe.js');
-    const probe = await runCesiumWorkerProbe();
-    return { probe, diagnostics: window.__gevSoakWorkers?.snapshot() || null };
-  });
+  const value = await evaluateWithDeadline(
+    page,
+    'worker-preflight',
+    async () => {
+      const { runCesiumWorkerProbe } =
+        await import('/scripts/fixtures/cesium-worker-probe.js');
+      const probe = await runCesiumWorkerProbe();
+      return {
+        probe,
+        diagnostics: window.__gevSoakWorkers?.snapshot() || null,
+      };
+    },
+  );
   return assertWorkerPreflight({ ...value, network });
 }
 
-async function setupOwnedPage(browser, base, { expectedCommit, role }) {
-  const context = await browser.createBrowserContext();
+async function setupOwnedPage(
+  browser,
+  base,
+  { expectedCommit, role, onProgress = () => {} },
+) {
+  onProgress(`create-context:${role}`);
+  let context = null;
   let page = null;
   try {
+    context = await browser.createBrowserContext();
+    onProgress(`create-page:${role}`);
     page = await context.newPage();
     await page.evaluateOnNewDocument(installWorkerDiagnostics);
+    onProgress(`prepare-page:${role}`);
     const prepared = await prepareFixturePage(browser, base, { page });
     const progress = [];
     await bootFixturePage(page, base, {
-      onProgress: (phase) => progress.push(phase),
+      onProgress: (phase) => {
+        progress.push(phase);
+        onProgress(`boot:${role}:${phase}`);
+      },
       hash: `#qa-lifecycle-${role}`,
     });
-    const disabledLayers = await page.evaluate(async () => {
-      const manager = window.__godsEyeView?.dataManager;
-      if (!manager || typeof manager.restoreEnabledLayerIds !== 'function')
-        throw new Error('Public layer lifecycle controls are unavailable.');
-      await manager.restoreEnabledLayerIds([], {
-        origin: 'qa-import-workspace-lifecycle',
-      });
-      const layers = manager.getAll?.();
-      if (!Array.isArray(layers) || layers.some((layer) => layer.enabled))
-        throw new Error('Unrelated application layers remain enabled.');
-      return layers.map((layer) => layer.id).slice(0, 128);
-    });
-    await page.evaluate(installLifecycleRenderWaiter);
-    const identity = await page.evaluate(
+    page.setDefaultTimeout(HOST_PROTOCOL_TIMEOUT_MS);
+    onProgress(`disable-unrelated-layers:${role}`);
+    const disabledLayers = await evaluateWithDeadline(
+      page,
+      'disable-layers',
+      async () => {
+        const manager = window.__godsEyeView?.dataManager;
+        if (!manager || typeof manager.restoreEnabledLayerIds !== 'function')
+          throw new Error('Public layer lifecycle controls are unavailable.');
+        await manager.restoreEnabledLayerIds([], {
+          origin: 'qa-import-workspace-lifecycle',
+        });
+        const layers = manager.getAll?.();
+        if (!Array.isArray(layers) || layers.some((layer) => layer.enabled))
+          throw new Error('Unrelated application layers remain enabled.');
+        return layers.map((layer) => layer.id).slice(0, 128);
+      },
+    );
+    await evaluateWithDeadline(
+      page,
+      'install-render-waiter',
+      installLifecycleRenderWaiter,
+    );
+    const identity = await evaluateWithDeadline(
+      page,
+      'read-application-identity',
       () =>
         window.__godsEyeView?.getPerformanceEnvironment?.()?.appCommit || null,
     );
@@ -237,10 +332,12 @@ async function setupOwnedPage(browser, base, { expectedCommit, role }) {
       throw new Error(
         'Served application commit does not match the expected build.',
       );
+    onProgress(`worker-preflight:${role}`);
     const workerPreflight = await readWorkerPreflight(
       page,
       prepared.verifyNetwork,
     );
+    onProgress(`ready:${role}`);
     return {
       context,
       page,
@@ -261,76 +358,161 @@ async function setupOwnedPage(browser, base, { expectedCommit, role }) {
   }
 }
 
+export function createLifecycleReport({
+  expectedCommit,
+  actualHarnessCommit,
+  harnessSourceClean,
+  applicationSourceClean,
+  fixture,
+  cycles,
+  drainMs,
+  startedAt = performance.now(),
+}) {
+  const report = {
+    schema: 'gev-import-workspace-lifecycle/v1',
+    status: 'pending',
+    phase: 'initialize',
+    elapsedMs: 0,
+    applicationCommit: expectedCommit,
+    harnessCommit: actualHarnessCommit,
+    harnessSourceClean,
+    applicationSourceClean,
+    browserVersion: null,
+    browserClose: null,
+    environment: {
+      platform: process.platform,
+      nodeVersion: process.versions.node,
+      softwareRenderingRequested: process.env.GEV_QA_SOFTWARE_RENDERING === '1',
+      webglOnlyRequested: process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1',
+    },
+    cycles,
+    drainLimitMs: drainMs,
+    fixtures: {
+      cooperativeImportId: fixture.id,
+      cooperativeImportSourceId: fixture.imports[0].id,
+      cooperativeImportCount: fixture.count,
+      cooperativeImportRecordIds: fixture.imports[0].records.map(
+        (record) => record.id,
+      ),
+      cooperativeImportSha256: fixture.sha256,
+      workspaceImportId: 'workspace-synthetic-point-v1',
+      workspaceImportCount: 1,
+      workspaceImportSha256: WORKSPACE_IMPORT_FIXTURE_SHA256,
+    },
+    cases: [],
+    progressEvents: [],
+  };
+  Object.defineProperty(report, '_startedAt', { value: startedAt });
+  return report;
+}
+
+export function validateLifecycleCandidate(report, expected) {
+  return validateImportWorkspaceLifecycleReport(
+    { ...report, status: 'passed' },
+    expected,
+  );
+}
+
+export function finalizeLifecycleReportStatus(report, { ownsBrowser }) {
+  if (report.status === 'failed') return report.status;
+  if (
+    report.validationStatus === 'passed' &&
+    (!ownsBrowser || report.browserClose?.closeCompleted === true)
+  ) {
+    report.status = 'passed';
+  } else {
+    report.status = 'failed';
+    report.error ||= 'Lifecycle validation or owned cleanup was incomplete.';
+  }
+  return report.status;
+}
+
+function recordLifecycleProgress(report, phase, caseId = null) {
+  report.phase = String(phase).slice(0, 120);
+  report.currentCase = caseId;
+  report.elapsedMs = Math.max(0, performance.now() - report._startedAt);
+  const events = report.progressEvents;
+  events.push({ phase: report.phase, caseId, elapsedMs: report.elapsedMs });
+  if (events.length > PROGRESS_EVENT_CAP) events.shift();
+}
+
 async function pageSnapshot(page) {
-  const snapshot = await page.evaluate(() => {
-    const app = window.__godsEyeView;
-    const layer = app?.importedGeometryLayer;
-    const importState = layer?.getState?.();
-    const importDiagnostics = layer?.getPerformanceDiagnostics?.();
-    const scene = app?.viewer?.scene;
-    const importEntities =
-      app?.viewer?.entities?.values?.filter((entity) =>
-        String(entity.id).startsWith('gev-import:'),
-      ) || [];
-    const worker = window.__gevSoakWorkers?.snapshot?.() || null;
-    return {
-      imports: {
-        featureCount: importState?.featureCount ?? null,
-        pendingJobs: importState?.pendingJobs ?? null,
-        cacheEntries: importDiagnostics?.cacheEntries ?? null,
-      },
-      importEntityIds:
-        app?.viewer?.entities?.values
-          ?.filter((entity) => String(entity.id).startsWith('gev-import:'))
-          .map((entity) => String(entity.id))
-          .slice(0, 5000) ?? null,
-      importEntityRecords: importEntities.slice(0, 5000).map((entity) => {
-        const position = entity.position?.getValue(
-          app.viewer.clock.currentTime,
-        );
-        return {
-          id: String(entity.id),
-          name: String(entity.name || ''),
-          position: position ? [position.x, position.y, position.z] : null,
-        };
-      }),
-      scene: {
-        entities: app?.viewer?.entities?.values?.length ?? null,
-        dataSources: app?.viewer?.dataSources?.length ?? null,
-        primitives: scene?.primitives?.length ?? null,
-        groundPrimitives: scene?.groundPrimitives?.length ?? null,
-      },
-      restore: app?.workspaceLibraryPanel?.restore?.getState?.() || null,
-      workerCounters: worker
-        ? {
-            scope: 'cumulative-per-document',
-            instrumented: worker.instrumented,
-            overflow: worker.overflow,
-            pending: worker.pending,
-            workers: worker.workers.slice(0, 64).map((entry) => ({
-              kind: entry.kind,
-              submitted: entry.submitted,
-              completed: entry.completed,
-              taskErrors: entry.taskErrors,
-              workerErrors: entry.workerErrors,
-              postErrors: entry.postErrors,
-              cancelled: entry.cancelled,
-              pending: entry.pending,
-              oldestPendingMs: entry.oldestPendingMs,
-              terminated: entry.terminated,
-            })),
-          }
-        : null,
-      diagnostics: {
-        scope: 'point-in-time-no-forced-gc-no-plateau-claim',
-        jsHeapUsedBytes: Number.isFinite(performance.memory?.usedJSHeapSize)
-          ? performance.memory.usedJSHeapSize
+  const snapshot = await evaluateWithDeadline(
+    page,
+    'read-page-snapshot',
+    () => {
+      const app = window.__godsEyeView;
+      const layer = app?.importedGeometryLayer;
+      const importState = layer?.getState?.();
+      const importDiagnostics = layer?.getPerformanceDiagnostics?.();
+      const scene = app?.viewer?.scene;
+      const importEntities =
+        app?.viewer?.entities?.values?.filter((entity) =>
+          String(entity.id).startsWith('gev-import:'),
+        ) || [];
+      const worker = window.__gevSoakWorkers?.snapshot?.() || null;
+      return {
+        imports: {
+          featureCount: importState?.featureCount ?? null,
+          pendingJobs: importState?.pendingJobs ?? null,
+          cacheEntries: importDiagnostics?.cacheEntries ?? null,
+        },
+        importEntityIds:
+          app?.viewer?.entities?.values
+            ?.filter((entity) => String(entity.id).startsWith('gev-import:'))
+            .map((entity) => String(entity.id))
+            .slice(0, 5000) ?? null,
+        importEntityRecords: importEntities.slice(0, 5000).map((entity) => {
+          const position = entity.position?.getValue(
+            app.viewer.clock.currentTime,
+          );
+          return {
+            id: String(entity.id),
+            name: String(entity.name || ''),
+            position: position ? [position.x, position.y, position.z] : null,
+          };
+        }),
+        scene: {
+          entities: app?.viewer?.entities?.values?.length ?? null,
+          dataSources: app?.viewer?.dataSources?.length ?? null,
+          primitives: scene?.primitives?.length ?? null,
+          groundPrimitives: scene?.groundPrimitives?.length ?? null,
+        },
+        restore: app?.workspaceLibraryPanel?.restore?.getState?.() || null,
+        workerCounters: worker
+          ? {
+              scope: 'cumulative-per-document',
+              instrumented: worker.instrumented,
+              overflow: worker.overflow,
+              pending: worker.pending,
+              workers: worker.workers.slice(0, 64).map((entry) => ({
+                kind: entry.kind,
+                submitted: entry.submitted,
+                completed: entry.completed,
+                taskErrors: entry.taskErrors,
+                workerErrors: entry.workerErrors,
+                postErrors: entry.postErrors,
+                cancelled: entry.cancelled,
+                pending: entry.pending,
+                oldestPendingMs: entry.oldestPendingMs,
+                terminated: entry.terminated,
+              })),
+            }
           : null,
-        browserEventListeners: null,
-      },
-    };
-  });
-  const metrics = await page.metrics();
+        diagnostics: {
+          scope: 'point-in-time-no-forced-gc-no-plateau-claim',
+          jsHeapUsedBytes: Number.isFinite(performance.memory?.usedJSHeapSize)
+            ? performance.memory.usedJSHeapSize
+            : null,
+          browserEventListeners: null,
+        },
+      };
+    },
+  );
+  const metrics = await withProtocolDeadline(
+    () => page.metrics(),
+    'read-page-metrics',
+  );
   snapshot.diagnostics.browserEventListeners = Number.isFinite(
     metrics.JSEventListeners,
   )
@@ -348,15 +530,19 @@ function makeImportDriver(
   drainMs,
   workerPreflight,
   applicationCommit,
+  onPhase,
 ) {
   return {
+    onPhase,
     async checkpoint() {
       return pageSnapshot(page);
     },
     async load({ kind, cycle }) {
       const workspaceId =
         kind === 'warmup' ? 'lifecycle-warmup' : `lifecycle-measured-${cycle}`;
-      return page.evaluate(
+      return evaluateWithDeadline(
+        page,
+        `load-import-${kind}-${cycle ?? 'warmup'}`,
         async ({ imports, workspaceId, timeoutMs }) => {
           const app = window.__godsEyeView;
           const waitId = window.__qaLifecycleStartRenderWait({
@@ -386,7 +572,9 @@ function makeImportDriver(
       );
     },
     async cancelQueued({ cycle }) {
-      const result = await page.evaluate(
+      const result = await evaluateWithDeadline(
+        page,
+        `cancel-queued-import-${cycle}`,
         async ({ imports, cycle }) => {
           const layer = window.__godsEyeView.importedGeometryLayer;
           const controller = new AbortController();
@@ -424,7 +612,9 @@ function makeImportDriver(
       return { ...result, snapshot: await pageSnapshot(page) };
     },
     async supersedeQueued({ cycle }) {
-      const result = await page.evaluate(
+      const result = await evaluateWithDeadline(
+        page,
+        `supersede-queued-import-${cycle}`,
         async ({ imports, cycle, timeoutMs }) => {
           const layer = window.__godsEyeView.importedGeometryLayer;
           const replacementWorkspaceId = `lifecycle-replacement-${cycle}`;
@@ -486,7 +676,7 @@ function makeImportDriver(
         drainMs,
       );
       try {
-        await page.evaluate(() => {
+        await evaluateWithDeadline(page, 'clear-import-and-drain', () => {
           const app = window.__godsEyeView;
           app.importedGeometryLayer.clear();
           app.viewer.scene.requestRender();
@@ -511,14 +701,20 @@ function makeImportDriver(
         );
         return { ...(await pageSnapshot(page)), renderedPopulation };
       } catch (error) {
-        await page
-          .evaluate((id) => window.__qaLifecycleCancelRenderWait(id), waitId)
-          .catch(() => {});
+        await withProtocolDeadline(
+          () =>
+            page.evaluate(
+              (id) => window.__qaLifecycleCancelRenderWait(id),
+              waitId,
+            ),
+          'cancel-render-wait-after-clear-failure',
+          1000,
+        ).catch(() => {});
         throw error;
       }
     },
     async workerCounters() {
-      return page.evaluate(() => {
+      return evaluateWithDeadline(page, 'read-import-worker-counters', () => {
         const value = window.__gevSoakWorkers?.snapshot() || null;
         return value ? { ...value, scope: 'cumulative-per-document' } : null;
       });
@@ -536,8 +732,10 @@ function makeWorkspaceDriver(
   drainMs,
   workerPreflight,
   applicationCommit,
+  onPhase,
 ) {
   return {
+    onPhase,
     async seed() {
       const baseline = await seedPersistentWorkspace(page);
       const initialId = baseline.id;
@@ -595,17 +793,27 @@ function makeWorkspaceDriver(
         );
         return { ...(await pageSnapshot(page)), renderedPopulation };
       } catch (error) {
-        await page
-          .evaluate((id) => window.__qaLifecycleCancelRenderWait(id), waitId)
-          .catch(() => {});
+        await withProtocolDeadline(
+          () =>
+            page.evaluate(
+              (id) => window.__qaLifecycleCancelRenderWait(id),
+              waitId,
+            ),
+          'cancel-render-wait-after-workspace-failure',
+          1000,
+        ).catch(() => {});
         throw error;
       }
     },
     async workerCounters() {
-      return page.evaluate(() => {
-        const value = window.__gevSoakWorkers?.snapshot() || null;
-        return value ? { ...value, scope: 'cumulative-per-document' } : null;
-      });
+      return evaluateWithDeadline(
+        page,
+        'read-workspace-worker-counters',
+        () => {
+          const value = window.__gevSoakWorkers?.snapshot() || null;
+          return value ? { ...value, scope: 'cumulative-per-document' } : null;
+        },
+      );
     },
     async close() {
       await closeOwnedPageAndContext(page, page.browserContext());
@@ -660,6 +868,8 @@ export async function runImportWorkspaceLifecycle({
   featureCount = FEATURE_COUNT,
   harnessCommit = null,
   browser = null,
+  launchBrowser = launchFixtureBrowser,
+  onProgress = () => {},
 } = {}) {
   if (!SHA1.test(expectedCommit || ''))
     throw new TypeError('A full expected application commit is required.');
@@ -715,47 +925,66 @@ export async function runImportWorkspaceLifecycle({
       { encoding: 'utf8' },
     ).trim() === '';
   const workspaceFixtureSha256 = WORKSPACE_IMPORT_FIXTURE_SHA256;
-  let ownsBrowser = !browser;
-  browser ||= await launchFixtureBrowser({ timeout: 30_000 });
-  const report = {
-    schema: 'gev-import-workspace-lifecycle/v1',
-    status: 'pending',
-    applicationCommit: expectedCommit,
-    harnessCommit: actualHarnessCommit,
+  const ownsBrowser = !browser;
+  const report = createLifecycleReport({
+    expectedCommit,
+    actualHarnessCommit,
     harnessSourceClean,
     applicationSourceClean,
-    browserVersion: null,
-    environment: {
-      platform: process.platform,
-      nodeVersion: process.versions.node,
-      softwareRenderingRequested: process.env.GEV_QA_SOFTWARE_RENDERING === '1',
-      webglOnlyRequested: process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1',
-    },
+    fixture,
     cycles,
-    drainLimitMs: drainMs,
-    fixtures: {
-      cooperativeImportId: fixture.id,
-      cooperativeImportSourceId: fixture.imports[0].id,
-      cooperativeImportCount: fixture.count,
-      cooperativeImportRecordIds: fixture.imports[0].records.map(
-        (record) => record.id,
-      ),
-      cooperativeImportSha256: fixture.sha256,
-      workspaceImportId: 'workspace-synthetic-point-v1',
-      workspaceImportCount: 1,
-      workspaceImportSha256,
-    },
-    cases: [],
+    drainMs,
+  });
+  const emitProgress = (phase, caseId = null, caseProgress = null) => {
+    if (report.status === 'pending') report.status = 'running';
+    recordLifecycleProgress(report, phase, caseId);
+    if (caseProgress) {
+      report.activeCase = {
+        id: caseId,
+        phase: String(caseProgress.phase || phase).slice(0, 120),
+        operations: { ...caseProgress.operations },
+        checkpointCount: Array.isArray(caseProgress.checkpoints)
+          ? caseProgress.checkpoints.length
+          : 0,
+      };
+    } else if (caseId === null) {
+      delete report.activeCase;
+    }
+    try {
+      onProgress(report);
+    } catch (error) {
+      report.progressWriteError = boundedText(error);
+    }
   };
+  let caseId = null;
+  let browserCloseStarted = false;
+  let browserLaunchAttempted = Boolean(browser);
+  emitProgress('launch-browser');
   try {
-    report.browserVersion = await browser.version();
+    if (!browser) {
+      browserLaunchAttempted = true;
+      browser = await launchBrowser({
+        timeout: 30_000,
+        protocolTimeout: HOST_PROTOCOL_TIMEOUT_MS,
+      });
+    }
+    emitProgress('read-browser-version');
+    report.browserVersion = await withProtocolDeadline(
+      () => browser.version(),
+      'read-browser-version',
+    );
     for (const id of ['cooperative-import', 'workspace-replacement']) {
+      caseId = id;
+      emitProgress(`setup:${id}`, id);
       let owned = null;
       try {
         owned = await setupOwnedPage(browser, url, {
           expectedCommit,
           role: id,
+          onProgress: (phase) => emitProgress(phase, id),
         });
+        const onPhase = (phase, caseProgress) =>
+          emitProgress(`case:${id}:${phase}`, id, caseProgress);
         const driver =
           id === 'cooperative-import'
             ? makeImportDriver(
@@ -764,13 +993,16 @@ export async function runImportWorkspaceLifecycle({
                 drainMs,
                 owned.workerPreflight,
                 owned.applicationCommit,
+                onPhase,
               )
             : makeWorkspaceDriver(
                 owned.page,
                 drainMs,
                 owned.workerPreflight,
                 owned.applicationCommit,
+                onPhase,
               );
+        emitProgress(`run-case:${id}`, id);
         const result =
           id === 'cooperative-import'
             ? await runCooperativeImportLifecycleCase({
@@ -796,10 +1028,12 @@ export async function runImportWorkspaceLifecycle({
           workerPreflight: owned.workerPreflight,
           pageErrors: owned.errors.slice(0, 8).map(boundedText),
         });
+        emitProgress(`case-${result.status}:${id}`, id);
       } catch (error) {
         report.cases.push({
           id,
           status: 'failed',
+          failedPhase: report.activeCase?.phase || report.phase,
           error: boundedText(error),
           bootProgress: owned?.progress?.slice(0, 16) || [],
           disabledLayers: owned?.disabledLayers || [],
@@ -808,11 +1042,16 @@ export async function runImportWorkspaceLifecycle({
           pageErrors: owned?.errors?.slice(0, 8).map(boundedText) || [],
         });
         if (owned) {
-          await cleanupFixturePageDiagnostics(owned.page).catch(() => {});
-          await owned.page.close().catch(() => {});
-          await owned.context.close().catch(() => {});
+          try {
+            await closeOwnedPageAndContext(owned.page, owned.context);
+          } catch (cleanupError) {
+            report.cases.at(-1).cleanupError = boundedText(cleanupError);
+          }
         }
+        emitProgress(`case-failed:${id}`, id);
       }
+      caseId = null;
+      delete report.activeCase;
     }
     if (
       report.cases.length !== 2 ||
@@ -820,6 +1059,8 @@ export async function runImportWorkspaceLifecycle({
     ) {
       report.status = 'failed';
       report.error = 'One or more isolated lifecycle cases failed.';
+      const failedCase = report.cases.find((row) => row.status !== 'passed');
+      report.failedPhase = failedCase?.failedPhase || failedCase?.phase || null;
     } else {
       report.applicationCommitAtEnd = execFileSync(
         'git',
@@ -852,26 +1093,56 @@ export async function runImportWorkspaceLifecycle({
         throw new Error(
           'Application source identity changed during lifecycle run.',
         );
-      report.status = 'passed';
-      validateImportWorkspaceLifecycleReport(report, {
+      validateLifecycleCandidate(report, {
         expectedCommit,
         expectedImportFixtureSha256: fixture.sha256,
         expectedWorkspaceFixtureSha256: workspaceFixtureSha256,
       });
+      report.validationStatus = 'passed';
     }
   } catch (error) {
     report.status = 'failed';
     report.error = boundedText(error);
+    report.failedPhase = report.phase;
   } finally {
-    if (ownsBrowser) {
+    if (ownsBrowser && browser) {
+      browserCloseStarted = true;
+      emitProgress('close-owned-browser', caseId);
       try {
-        await browser.close();
+        report.browserClose = await closeRecoveryBrowser(browser, {
+          timeoutMs: BROWSER_CLOSE_TIMEOUT_MS,
+          forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
+        });
+        if (!report.browserClose.closeCompleted) {
+          report.status = 'failed';
+          report.browserCloseError =
+            report.browserClose.observation?.closeStatus ||
+            'Owned browser did not close cleanly.';
+          report.error ||= report.browserCloseError;
+        }
+        if (
+          report.browserClose.forcedProcessTermination ||
+          report.browserClose.observation?.forceProcessStatus ===
+            'unconfirmed' ||
+          report.browserClose.observation?.forceProcessStatus === 'timed-out'
+        ) {
+          report.status = 'failed';
+          report.error ||= 'Owned browser required process-tree cleanup.';
+        }
       } catch (error) {
         report.status = 'failed';
         report.browserCloseError = boundedText(error);
         report.error ||= report.browserCloseError;
       }
     }
+    if (ownsBrowser && !browser && !browserCloseStarted)
+      report.browserClose = {
+        status: browserLaunchAttempted ? 'launch-failed' : 'not-launched',
+        confirmed: null,
+      };
+    report.elapsedMs = Math.max(0, performance.now() - report._startedAt);
+    finalizeLifecycleReportStatus(report, { ownsBrowser });
+    emitProgress(report.status === 'passed' ? 'complete' : 'failed', caseId);
   }
   return report;
 }
@@ -880,6 +1151,13 @@ export async function writeLifecycleReport(filename, report) {
   if (!filename) return;
   await mkdir(path.dirname(path.resolve(filename)), { recursive: true });
   await writeFile(filename, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+}
+
+export function writeLifecycleReportSync(filename, report) {
+  if (!filename) return;
+  const absolute = path.resolve(filename);
+  mkdirSync(path.dirname(absolute), { recursive: true });
+  writeFileSync(absolute, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 }
 
 const invoked = process.argv[1]
@@ -902,6 +1180,10 @@ if (import.meta.url === invoked) {
       ...options,
       url: url.origin,
       expectedCommit: commit,
+      onProgress: (current) => {
+        report = current;
+        writeLifecycleReportSync(options?.out, current);
+      },
     });
   } catch (error) {
     report = {

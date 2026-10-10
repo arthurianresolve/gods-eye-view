@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { clickAndWaitForWorkspaceOpen } from './workspaceOpenProbe.mjs';
 import {
+  createLifecycleImportFixture,
+  createLifecycleReport,
+  finalizeLifecycleReportStatus,
+  runImportWorkspaceLifecycle,
+  validateLifecycleCandidate,
+  WORKSPACE_IMPORT_FIXTURE_SHA256,
+} from '../qa-import-workspace-lifecycle.mjs';
+import {
   assertOwnedLifecycleCheckpoint,
   installLifecycleRenderWaiter,
   parseImportWorkspaceLifecycleArgs,
@@ -201,6 +209,65 @@ test('runner options are bounded and require an HTTP(S) target and full expected
     ['--cycles'],
   ])
     assert.throws(() => parseImportWorkspaceLifecycleArgs(args));
+});
+
+test('report initializer includes the actual workspace fixture digest', () => {
+  const fixture = createLifecycleImportFixture(1);
+  const report = createLifecycleReport({
+    expectedCommit: appSha,
+    actualHarnessCommit: harnessSha,
+    harnessSourceClean: true,
+    applicationSourceClean: true,
+    fixture,
+    cycles: 1,
+    drainMs: 1000,
+  });
+  assert.equal(
+    report.fixtures.workspaceImportSha256,
+    WORKSPACE_IMPORT_FIXTURE_SHA256,
+  );
+  assert.equal(report.fixtures.cooperativeImportSha256, fixture.sha256);
+  assert.equal(report.phase, 'initialize');
+});
+
+test('owned browser closes when initialization fails after launch and emits durable phases', async () => {
+  let closed = false;
+  const browser = {
+    async version() {
+      throw new Error('version probe failed');
+    },
+    async close() {
+      closed = true;
+    },
+    process() {
+      return null;
+    },
+  };
+  const phases = [];
+  const report = await runImportWorkspaceLifecycle({
+    url: 'http://localhost:4174',
+    expectedCommit: appSha,
+    harnessCommit: harnessSha,
+    cycles: 1,
+    drainMs: 1000,
+    featureCount: 1,
+    launchBrowser: async (options) => {
+      assert.equal(options.protocolTimeout, 15_000);
+      return browser;
+    },
+    onProgress: (current) => phases.push(current.phase),
+  });
+  assert.equal(report.status, 'failed');
+  assert.match(report.error, /version probe failed/);
+  assert.equal(report.failedPhase, 'read-browser-version');
+  assert.equal(report.browserClose.closeCompleted, true);
+  assert.equal(closed, true);
+  assert.deepEqual(phases, [
+    'launch-browser',
+    'read-browser-version',
+    'close-owned-browser',
+    'failed',
+  ]);
 });
 
 test('workspace open callback works after Puppeteer-style function serialization', async () => {
@@ -671,6 +738,18 @@ test('checkpoint and final report reject missing resources, workers, build ident
   assert.equal(
     validateImportWorkspaceLifecycleReport(report, expected),
     report,
+  );
+  const inProgressReport = { ...report, status: 'running' };
+  assert.equal(
+    validateLifecycleCandidate(inProgressReport, expected).status,
+    'passed',
+  );
+  assert.equal(inProgressReport.status, 'running');
+  inProgressReport.validationStatus = 'passed';
+  inProgressReport.browserClose = { closeCompleted: true };
+  assert.equal(
+    finalizeLifecycleReportStatus(inProgressReport, { ownsBrowser: true }),
+    'passed',
   );
   assert.throws(
     () =>

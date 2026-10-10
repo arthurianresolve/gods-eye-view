@@ -290,16 +290,24 @@ function boundedError(error) {
     .slice(0, 500);
 }
 
+function setPhase(progress, driver, phase) {
+  progress.phase = phase;
+  driver.onPhase?.(phase, progress);
+}
+
 async function withCaseCleanup(driver, progress, run) {
   let primaryError = null;
+  let primaryFailurePhase = null;
   let result;
   try {
     result = await run();
   } catch (error) {
     primaryError = error;
+    primaryFailurePhase = progress.phase || 'unknown';
   }
   let cleanupError = null;
   try {
+    setPhase(progress, driver, 'cleanup-owned-context');
     await driver.close?.();
   } catch (error) {
     cleanupError = error;
@@ -309,7 +317,7 @@ async function withCaseCleanup(driver, progress, run) {
       ...progress,
       ...(result || {}),
       status: 'failed',
-      failedPhase: progress.phase || 'unknown',
+      failedPhase: primaryFailurePhase || progress.phase || 'unknown',
       error: boundedError(primaryError || cleanupError),
       ...(cleanupError ? { cleanupError: boundedError(cleanupError) } : {}),
     };
@@ -354,13 +362,13 @@ export async function runCooperativeImportLifecycleCase({
     checkpoints,
   };
   return withCaseCleanup(driver, progress, async () => {
-    progress.phase = 'initial-empty-checkpoint';
+    setPhase(progress, driver, 'initial-empty-checkpoint');
     const initialEmpty = assertOwnedLifecycleCheckpoint(
       await driver.checkpoint(),
       { featureCount: 0 },
     );
     progress.initialEmpty = initialEmpty;
-    progress.phase = 'warmup-load';
+    setPhase(progress, driver, 'warmup-load');
     const warmup = await driver.load({ featureCount, kind: 'warmup' });
     assertLoadResult(
       warmup,
@@ -370,7 +378,7 @@ export async function runCooperativeImportLifecycleCase({
       importId,
     );
     operations.warmupLoads++;
-    progress.phase = 'warmup-drain';
+    setPhase(progress, driver, 'warmup-drain');
     let drained = assertOwnedLifecycleCheckpoint(await driver.clearAndDrain(), {
       featureCount: 0,
     });
@@ -381,7 +389,7 @@ export async function runCooperativeImportLifecycleCase({
     progress.warmedBaseline = warmedBaseline;
 
     for (let cycle = 1; cycle <= cycles; cycle++) {
-      progress.phase = `measured-load-${cycle}`;
+      setPhase(progress, driver, `measured-load-${cycle}`);
       const loaded = await driver.load({
         featureCount,
         kind: 'measured',
@@ -396,7 +404,7 @@ export async function runCooperativeImportLifecycleCase({
       );
       operations.completedLoads++;
       const loadedEntityIds = [...loaded.importEntityIds];
-      progress.phase = `measured-drain-${cycle}`;
+      setPhase(progress, driver, `measured-drain-${cycle}`);
       drained = assertOwnedLifecycleCheckpoint(await driver.clearAndDrain(), {
         featureCount: 0,
       });
@@ -411,7 +419,7 @@ export async function runCooperativeImportLifecycleCase({
         snapshot: drained,
       });
 
-      progress.phase = `queued-cancellation-${cycle}`;
+      setPhase(progress, driver, `queued-cancellation-${cycle}`);
       const cancellation = await driver.cancelQueued({ cycle, featureCount });
       if (
         cancellation?.status !== 'cancelled' ||
@@ -439,7 +447,7 @@ export async function runCooperativeImportLifecycleCase({
         snapshot: cancellationSnapshot,
       });
 
-      progress.phase = `queued-supersession-${cycle}`;
+      setPhase(progress, driver, `queued-supersession-${cycle}`);
       const supersession = await driver.supersedeQueued({
         cycle,
         featureCount,
@@ -477,7 +485,7 @@ export async function runCooperativeImportLifecycleCase({
         phase: 'superseded-replacement-loaded',
         snapshot: replacementSnapshot,
       });
-      progress.phase = `replacement-drain-${cycle}`;
+      setPhase(progress, driver, `replacement-drain-${cycle}`);
       const afterSupersession = await driver.clearAndDrain();
       assertOwnedLifecycleCheckpoint(afterSupersession, { featureCount: 0 });
       assertRenderedPopulation(
@@ -567,7 +575,7 @@ export async function runWorkspaceReplacementLifecycleCase({
     checkpoints,
   };
   return withCaseCleanup(driver, progress, async () => {
-    progress.phase = 'seed-workspaces';
+    setPhase(progress, driver, 'seed-workspaces');
     const identity = await driver.seed();
     if (
       typeof identity?.baselineId !== 'string' ||
@@ -593,7 +601,7 @@ export async function runWorkspaceReplacementLifecycleCase({
     assertEquivalentImportIdentities(baseline, identity.baselineId, null, null);
     progress.baseline = baseline;
     progress.workspaceIdentity = identity;
-    progress.phase = 'initial-alternate-open';
+    setPhase(progress, driver, 'initial-alternate-open');
     const initialAlternate = await driver.open(identity.alternateId);
     assertRenderedPopulation(
       initialAlternate.renderedPopulation,
@@ -628,7 +636,7 @@ export async function runWorkspaceReplacementLifecycleCase({
     progress.warmedBaseline = warmedBaseline;
 
     for (let cycle = 1; cycle <= cycles; cycle++) {
-      progress.phase = `open-alternate-${cycle}`;
+      setPhase(progress, driver, `open-alternate-${cycle}`);
       const alternateObservation = await driver.open(identity.alternateId);
       assertRenderedPopulation(
         alternateObservation.renderedPopulation,
@@ -650,7 +658,7 @@ export async function runWorkspaceReplacementLifecycleCase({
         baseline,
         identity.baselineId,
       );
-      progress.phase = `return-baseline-${cycle}`;
+      setPhase(progress, driver, `return-baseline-${cycle}`);
       const returnedObservation = await driver.open(identity.baselineId);
       assertRenderedPopulation(
         returnedObservation.renderedPopulation,
