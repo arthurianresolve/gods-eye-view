@@ -19,6 +19,7 @@ on:
             import-workspace-lifecycle,
             mission-render-demand,
             windows-profile-recovery,
+            windows-browser-shutdown,
           ]
         default: standard
       full_soak:
@@ -59,7 +60,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -108,7 +109,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -214,7 +215,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -249,7 +250,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-browser-shutdown'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -303,6 +304,42 @@ jobs:
       - name: Recovery evidence in job logs
         if: always()
         run: node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
+
+  windows-browser-shutdown:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'windows-browser-shutdown'
+    name: Windows browser shutdown controls
+    runs-on: windows-latest
+    timeout-minutes: 12
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      GEV_QA_SOFTWARE_RENDERING: '1'
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: '1'
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install pinned fixture browser
+        run: npx puppeteer browsers install chrome
+      - name: Compare blank, WebGL and Cesium shutdown controls
+        run: node scripts/qa-browser-shutdown.mjs --out qa-artifacts/browser-shutdown.json
+      - name: Preserve shutdown diagnostic
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: browser-shutdown-windows-${{ github.run_id }}
+          path: qa-artifacts/browser-shutdown.json
+          retention-days: 14
+      - name: Shutdown evidence in job logs
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/browser-shutdown.json
 
   performance-build-smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'performance-build-smoke'
