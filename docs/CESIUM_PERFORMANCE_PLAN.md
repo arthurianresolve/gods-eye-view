@@ -34,7 +34,7 @@ the earlier release requirements and historical results.
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: S54.1 plain feature records and generation-owned pick mappings; rendering representation remains unchanged | 45 focused identity/lifecycle/picking tests, format, boundaries and production build pass at `89fb2fd`; batching comparisons remain | Pending activation/memory and visual comparison |
-| S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
+| S55 tracking updates | Partial: civil tracked pose and trail share an owned display-time sample; cache-only reads and fresh fleet queries remain separate | 49 focused root checks pass at `47dbee4`; five fixed-trajectory repetitions preserve output and remove one duplicate time sample per frame; rendered candidate checks remain separate | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `0edfb8e`: fresh 12-check isolated viewer matrix passes on Windows UHD 620; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
@@ -44,6 +44,18 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S55 civil tracked-time ownership - 10 October 2026
+
+GPT-6 Luna's `47dbee47027e636e7d51e14c3a07f6e1134d7caf` gives the civil aircraft pose and trail warmup decision the same delayed render-time sample. The sample has dedicated storage, so an intervening fleet query cannot overwrite it. Cache-only trail, label and model readers retain the already-rendered pose across Cesium frame-number transitions. Missing frame numbers no longer create a permanent `-1` pose cache; a synchronous trail callback passes its sample explicitly. Target reset clears time ownership. Untracked queries continue sampling fresh time.
+
+The synthetic boundary control feeds both revisions the same 29.5/30.5-second sequence. Previously the trail could declare warmup complete while still showing the earlier pose; the candidate evaluates that pose and trail consistently. The resulting synthetic distance difference is not an observed live-aircraft jump.
+
+Root's independent comparison loads exact baseline `2bd3d12e37c6113510e1b8b4b4f4cf00496ff808` and candidate production modules. Five 124-frame fixed-input trajectories have identical position, course, trail and focus-output hashes. Including one intervening untracked query per frame, clock samples fall from 372 to 248 per repetition. These are deterministic output/count checks, not CPU latency or GPU measurements. Root's 49 focused flight/motion/ownership tests pass; Luna also passed formatting and package boundaries.
+
+[Comparison report](performance-evidence/tracked-time-comparison-47dbee4.json), SHA-256 `cf07852998c07e48322a1daa8d22dd4478f813231ea2cabddd1b2291b3dfbdbf`. [Exact-source comparison harness](performance-evidence/tracked-time-comparison.mjs), SHA-256 `ff2d969c6bbc0a8fb316d0225b9cb72183e2ced0ac2a283ae60e1648d49eed91`; fixture script SHA-256 `1de2ce20670af80935c419c3d18f26a3af46877f7fe10fecb8630910c8a0a603`. Reproduce from this candidate with locked dependencies: `node docs/performance-evidence/tracked-time-comparison.mjs 47dbee47027e636e7d51e14c3a07f6e1134d7caf`. The harness validates candidate source, unchanged dependencies, output hashes and the removed sample count.
+
+The existing hosted tracking runner needed its synchronous Puppeteer executable-path lookup corrected. Harness commit `2bd3d12` also uses bounded owned-browser cleanup and a 15-minute hosted job. Its [baseline run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38059786291) passes 109 checks, with zero failures/skips and normal 632-ms browser shutdown. [Raw output](performance-evidence/tracking-38059786291.log), SHA-256 `917c4533d20f82c3b5ca5f0bee50686fceae5328d77c5cd375e64659f78bdede`; [job results](performance-evidence/tracking-38059786291-run.json). The [candidate run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38060567798) is recorded separately. This uses hosted software rendering and bundled imagery, not the physical Windows GPU. Military time ownership, measured tracking p95 and the full S55 acceptance contract remain pending.
 
 ### S59 single-feature normalization - 10 October 2026
 
@@ -131,6 +143,8 @@ The 55 focused CCTV checks and 28 terrain service/proxy/ground checks pass;
 the 16-test source suite was rerun after making its failure wait bounded.
 Formatting and diff checks pass. Full integration for this later terrain commit
 is separate from the earlier `db298d4` evidence.
+
+Its [Windows recovery run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38059557392) passes all five saved-workspace checkpoints at the exact `a0e7b10` candidate. Chrome 152.0.7977.75 uses hosted SwiftShader WebGL-only; all five browser closes finish normally in 349-417 ms, without forced termination. [Raw recovery report](performance-evidence/profile-recovery-38059557392-windows.json), SHA-256 `78f2c8222d53792f13ab3da8781ac3ef7b334d14cf5e84df956d8442e6660607`. This is installation recovery evidence, not physical GPU or heap-plateau acceptance.
 
 ### CCTV equivalent-style reuse - 10 October 2026
 
