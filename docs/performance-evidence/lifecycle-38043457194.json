@@ -1,0 +1,2406 @@
+{
+  "schema": "gev-import-workspace-lifecycle/v1",
+  "status": "failed",
+  "phase": "failed",
+  "elapsedMs": 47911.608167,
+  "applicationCommit": "9fc5bc9b6671aae510efbe2bdd44f299e9b6dff1",
+  "harnessCommit": "9fc5bc9b6671aae510efbe2bdd44f299e9b6dff1",
+  "harnessSourceClean": true,
+  "applicationSourceClean": true,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 48586.077538,
+      "closeSettledHostMs": 48650.280184,
+      "closeElapsedMs": 64.20264600000519,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 52.590586000005715
+      },
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "environment": {
+    "platform": "linux",
+    "nodeVersion": "24.14.0",
+    "softwareRenderingRequested": true,
+    "webglOnlyRequested": true
+  },
+  "cycles": 5,
+  "drainLimitMs": 10000,
+  "fixtures": {
+    "cooperativeImportId": "cooperative-import-v1",
+    "cooperativeImportSourceId": "lifecycle-fixture",
+    "cooperativeImportCount": 512,
+    "cooperativeImportRecordIds": [
+      "lifecycle-00001",
+      "lifecycle-00002",
+      "lifecycle-00003",
+      "lifecycle-00004",
+      "lifecycle-00005",
+      "lifecycle-00006",
+      "lifecycle-00007",
+      "lifecycle-00008",
+      "lifecycle-00009",
+      "lifecycle-00010",
+      "lifecycle-00011",
+      "lifecycle-00012",
+      "lifecycle-00013",
+      "lifecycle-00014",
+      "lifecycle-00015",
+      "lifecycle-00016",
+      "lifecycle-00017",
+      "lifecycle-00018",
+      "lifecycle-00019",
+      "lifecycle-00020",
+      "lifecycle-00021",
+      "lifecycle-00022",
+      "lifecycle-00023",
+      "lifecycle-00024",
+      "lifecycle-00025",
+      "lifecycle-00026",
+      "lifecycle-00027",
+      "lifecycle-00028",
+      "lifecycle-00029",
+      "lifecycle-00030",
+      "lifecycle-00031",
+      "lifecycle-00032",
+      "lifecycle-00033",
+      "lifecycle-00034",
+      "lifecycle-00035",
+      "lifecycle-00036",
+      "lifecycle-00037",
+      "lifecycle-00038",
+      "lifecycle-00039",
+      "lifecycle-00040",
+      "lifecycle-00041",
+      "lifecycle-00042",
+      "lifecycle-00043",
+      "lifecycle-00044",
+      "lifecycle-00045",
+      "lifecycle-00046",
+      "lifecycle-00047",
+      "lifecycle-00048",
+      "lifecycle-00049",
+      "lifecycle-00050",
+      "lifecycle-00051",
+      "lifecycle-00052",
+      "lifecycle-00053",
+      "lifecycle-00054",
+      "lifecycle-00055",
+      "lifecycle-00056",
+      "lifecycle-00057",
+      "lifecycle-00058",
+      "lifecycle-00059",
+      "lifecycle-00060",
+      "lifecycle-00061",
+      "lifecycle-00062",
+      "lifecycle-00063",
+      "lifecycle-00064",
+      "lifecycle-00065",
+      "lifecycle-00066",
+      "lifecycle-00067",
+      "lifecycle-00068",
+      "lifecycle-00069",
+      "lifecycle-00070",
+      "lifecycle-00071",
+      "lifecycle-00072",
+      "lifecycle-00073",
+      "lifecycle-00074",
+      "lifecycle-00075",
+      "lifecycle-00076",
+      "lifecycle-00077",
+      "lifecycle-00078",
+      "lifecycle-00079",
+      "lifecycle-00080",
+      "lifecycle-00081",
+      "lifecycle-00082",
+      "lifecycle-00083",
+      "lifecycle-00084",
+      "lifecycle-00085",
+      "lifecycle-00086",
+      "lifecycle-00087",
+      "lifecycle-00088",
+      "lifecycle-00089",
+      "lifecycle-00090",
+      "lifecycle-00091",
+      "lifecycle-00092",
+      "lifecycle-00093",
+      "lifecycle-00094",
+      "lifecycle-00095",
+      "lifecycle-00096",
+      "lifecycle-00097",
+      "lifecycle-00098",
+      "lifecycle-00099",
+      "lifecycle-00100",
+      "lifecycle-00101",
+      "lifecycle-00102",
+      "lifecycle-00103",
+      "lifecycle-00104",
+      "lifecycle-00105",
+      "lifecycle-00106",
+      "lifecycle-00107",
+      "lifecycle-00108",
+      "lifecycle-00109",
+      "lifecycle-00110",
+      "lifecycle-00111",
+      "lifecycle-00112",
+      "lifecycle-00113",
+      "lifecycle-00114",
+      "lifecycle-00115",
+      "lifecycle-00116",
+      "lifecycle-00117",
+      "lifecycle-00118",
+      "lifecycle-00119",
+      "lifecycle-00120",
+      "lifecycle-00121",
+      "lifecycle-00122",
+      "lifecycle-00123",
+      "lifecycle-00124",
+      "lifecycle-00125",
+      "lifecycle-00126",
+      "lifecycle-00127",
+      "lifecycle-00128",
+      "lifecycle-00129",
+      "lifecycle-00130",
+      "lifecycle-00131",
+      "lifecycle-00132",
+      "lifecycle-00133",
+      "lifecycle-00134",
+      "lifecycle-00135",
+      "lifecycle-00136",
+      "lifecycle-00137",
+      "lifecycle-00138",
+      "lifecycle-00139",
+      "lifecycle-00140",
+      "lifecycle-00141",
+      "lifecycle-00142",
+      "lifecycle-00143",
+      "lifecycle-00144",
+      "lifecycle-00145",
+      "lifecycle-00146",
+      "lifecycle-00147",
+      "lifecycle-00148",
+      "lifecycle-00149",
+      "lifecycle-00150",
+      "lifecycle-00151",
+      "lifecycle-00152",
+      "lifecycle-00153",
+      "lifecycle-00154",
+      "lifecycle-00155",
+      "lifecycle-00156",
+      "lifecycle-00157",
+      "lifecycle-00158",
+      "lifecycle-00159",
+      "lifecycle-00160",
+      "lifecycle-00161",
+      "lifecycle-00162",
+      "lifecycle-00163",
+      "lifecycle-00164",
+      "lifecycle-00165",
+      "lifecycle-00166",
+      "lifecycle-00167",
+      "lifecycle-00168",
+      "lifecycle-00169",
+      "lifecycle-00170",
+      "lifecycle-00171",
+      "lifecycle-00172",
+      "lifecycle-00173",
+      "lifecycle-00174",
+      "lifecycle-00175",
+      "lifecycle-00176",
+      "lifecycle-00177",
+      "lifecycle-00178",
+      "lifecycle-00179",
+      "lifecycle-00180",
+      "lifecycle-00181",
+      "lifecycle-00182",
+      "lifecycle-00183",
+      "lifecycle-00184",
+      "lifecycle-00185",
+      "lifecycle-00186",
+      "lifecycle-00187",
+      "lifecycle-00188",
+      "lifecycle-00189",
+      "lifecycle-00190",
+      "lifecycle-00191",
+      "lifecycle-00192",
+      "lifecycle-00193",
+      "lifecycle-00194",
+      "lifecycle-00195",
+      "lifecycle-00196",
+      "lifecycle-00197",
+      "lifecycle-00198",
+      "lifecycle-00199",
+      "lifecycle-00200",
+      "lifecycle-00201",
+      "lifecycle-00202",
+      "lifecycle-00203",
+      "lifecycle-00204",
+      "lifecycle-00205",
+      "lifecycle-00206",
+      "lifecycle-00207",
+      "lifecycle-00208",
+      "lifecycle-00209",
+      "lifecycle-00210",
+      "lifecycle-00211",
+      "lifecycle-00212",
+      "lifecycle-00213",
+      "lifecycle-00214",
+      "lifecycle-00215",
+      "lifecycle-00216",
+      "lifecycle-00217",
+      "lifecycle-00218",
+      "lifecycle-00219",
+      "lifecycle-00220",
+      "lifecycle-00221",
+      "lifecycle-00222",
+      "lifecycle-00223",
+      "lifecycle-00224",
+      "lifecycle-00225",
+      "lifecycle-00226",
+      "lifecycle-00227",
+      "lifecycle-00228",
+      "lifecycle-00229",
+      "lifecycle-00230",
+      "lifecycle-00231",
+      "lifecycle-00232",
+      "lifecycle-00233",
+      "lifecycle-00234",
+      "lifecycle-00235",
+      "lifecycle-00236",
+      "lifecycle-00237",
+      "lifecycle-00238",
+      "lifecycle-00239",
+      "lifecycle-00240",
+      "lifecycle-00241",
+      "lifecycle-00242",
+      "lifecycle-00243",
+      "lifecycle-00244",
+      "lifecycle-00245",
+      "lifecycle-00246",
+      "lifecycle-00247",
+      "lifecycle-00248",
+      "lifecycle-00249",
+      "lifecycle-00250",
+      "lifecycle-00251",
+      "lifecycle-00252",
+      "lifecycle-00253",
+      "lifecycle-00254",
+      "lifecycle-00255",
+      "lifecycle-00256",
+      "lifecycle-00257",
+      "lifecycle-00258",
+      "lifecycle-00259",
+      "lifecycle-00260",
+      "lifecycle-00261",
+      "lifecycle-00262",
+      "lifecycle-00263",
+      "lifecycle-00264",
+      "lifecycle-00265",
+      "lifecycle-00266",
+      "lifecycle-00267",
+      "lifecycle-00268",
+      "lifecycle-00269",
+      "lifecycle-00270",
+      "lifecycle-00271",
+      "lifecycle-00272",
+      "lifecycle-00273",
+      "lifecycle-00274",
+      "lifecycle-00275",
+      "lifecycle-00276",
+      "lifecycle-00277",
+      "lifecycle-00278",
+      "lifecycle-00279",
+      "lifecycle-00280",
+      "lifecycle-00281",
+      "lifecycle-00282",
+      "lifecycle-00283",
+      "lifecycle-00284",
+      "lifecycle-00285",
+      "lifecycle-00286",
+      "lifecycle-00287",
+      "lifecycle-00288",
+      "lifecycle-00289",
+      "lifecycle-00290",
+      "lifecycle-00291",
+      "lifecycle-00292",
+      "lifecycle-00293",
+      "lifecycle-00294",
+      "lifecycle-00295",
+      "lifecycle-00296",
+      "lifecycle-00297",
+      "lifecycle-00298",
+      "lifecycle-00299",
+      "lifecycle-00300",
+      "lifecycle-00301",
+      "lifecycle-00302",
+      "lifecycle-00303",
+      "lifecycle-00304",
+      "lifecycle-00305",
+      "lifecycle-00306",
+      "lifecycle-00307",
+      "lifecycle-00308",
+      "lifecycle-00309",
+      "lifecycle-00310",
+      "lifecycle-00311",
+      "lifecycle-00312",
+      "lifecycle-00313",
+      "lifecycle-00314",
+      "lifecycle-00315",
+      "lifecycle-00316",
+      "lifecycle-00317",
+      "lifecycle-00318",
+      "lifecycle-00319",
+      "lifecycle-00320",
+      "lifecycle-00321",
+      "lifecycle-00322",
+      "lifecycle-00323",
+      "lifecycle-00324",
+      "lifecycle-00325",
+      "lifecycle-00326",
+      "lifecycle-00327",
+      "lifecycle-00328",
+      "lifecycle-00329",
+      "lifecycle-00330",
+      "lifecycle-00331",
+      "lifecycle-00332",
+      "lifecycle-00333",
+      "lifecycle-00334",
+      "lifecycle-00335",
+      "lifecycle-00336",
+      "lifecycle-00337",
+      "lifecycle-00338",
+      "lifecycle-00339",
+      "lifecycle-00340",
+      "lifecycle-00341",
+      "lifecycle-00342",
+      "lifecycle-00343",
+      "lifecycle-00344",
+      "lifecycle-00345",
+      "lifecycle-00346",
+      "lifecycle-00347",
+      "lifecycle-00348",
+      "lifecycle-00349",
+      "lifecycle-00350",
+      "lifecycle-00351",
+      "lifecycle-00352",
+      "lifecycle-00353",
+      "lifecycle-00354",
+      "lifecycle-00355",
+      "lifecycle-00356",
+      "lifecycle-00357",
+      "lifecycle-00358",
+      "lifecycle-00359",
+      "lifecycle-00360",
+      "lifecycle-00361",
+      "lifecycle-00362",
+      "lifecycle-00363",
+      "lifecycle-00364",
+      "lifecycle-00365",
+      "lifecycle-00366",
+      "lifecycle-00367",
+      "lifecycle-00368",
+      "lifecycle-00369",
+      "lifecycle-00370",
+      "lifecycle-00371",
+      "lifecycle-00372",
+      "lifecycle-00373",
+      "lifecycle-00374",
+      "lifecycle-00375",
+      "lifecycle-00376",
+      "lifecycle-00377",
+      "lifecycle-00378",
+      "lifecycle-00379",
+      "lifecycle-00380",
+      "lifecycle-00381",
+      "lifecycle-00382",
+      "lifecycle-00383",
+      "lifecycle-00384",
+      "lifecycle-00385",
+      "lifecycle-00386",
+      "lifecycle-00387",
+      "lifecycle-00388",
+      "lifecycle-00389",
+      "lifecycle-00390",
+      "lifecycle-00391",
+      "lifecycle-00392",
+      "lifecycle-00393",
+      "lifecycle-00394",
+      "lifecycle-00395",
+      "lifecycle-00396",
+      "lifecycle-00397",
+      "lifecycle-00398",
+      "lifecycle-00399",
+      "lifecycle-00400",
+      "lifecycle-00401",
+      "lifecycle-00402",
+      "lifecycle-00403",
+      "lifecycle-00404",
+      "lifecycle-00405",
+      "lifecycle-00406",
+      "lifecycle-00407",
+      "lifecycle-00408",
+      "lifecycle-00409",
+      "lifecycle-00410",
+      "lifecycle-00411",
+      "lifecycle-00412",
+      "lifecycle-00413",
+      "lifecycle-00414",
+      "lifecycle-00415",
+      "lifecycle-00416",
+      "lifecycle-00417",
+      "lifecycle-00418",
+      "lifecycle-00419",
+      "lifecycle-00420",
+      "lifecycle-00421",
+      "lifecycle-00422",
+      "lifecycle-00423",
+      "lifecycle-00424",
+      "lifecycle-00425",
+      "lifecycle-00426",
+      "lifecycle-00427",
+      "lifecycle-00428",
+      "lifecycle-00429",
+      "lifecycle-00430",
+      "lifecycle-00431",
+      "lifecycle-00432",
+      "lifecycle-00433",
+      "lifecycle-00434",
+      "lifecycle-00435",
+      "lifecycle-00436",
+      "lifecycle-00437",
+      "lifecycle-00438",
+      "lifecycle-00439",
+      "lifecycle-00440",
+      "lifecycle-00441",
+      "lifecycle-00442",
+      "lifecycle-00443",
+      "lifecycle-00444",
+      "lifecycle-00445",
+      "lifecycle-00446",
+      "lifecycle-00447",
+      "lifecycle-00448",
+      "lifecycle-00449",
+      "lifecycle-00450",
+      "lifecycle-00451",
+      "lifecycle-00452",
+      "lifecycle-00453",
+      "lifecycle-00454",
+      "lifecycle-00455",
+      "lifecycle-00456",
+      "lifecycle-00457",
+      "lifecycle-00458",
+      "lifecycle-00459",
+      "lifecycle-00460",
+      "lifecycle-00461",
+      "lifecycle-00462",
+      "lifecycle-00463",
+      "lifecycle-00464",
+      "lifecycle-00465",
+      "lifecycle-00466",
+      "lifecycle-00467",
+      "lifecycle-00468",
+      "lifecycle-00469",
+      "lifecycle-00470",
+      "lifecycle-00471",
+      "lifecycle-00472",
+      "lifecycle-00473",
+      "lifecycle-00474",
+      "lifecycle-00475",
+      "lifecycle-00476",
+      "lifecycle-00477",
+      "lifecycle-00478",
+      "lifecycle-00479",
+      "lifecycle-00480",
+      "lifecycle-00481",
+      "lifecycle-00482",
+      "lifecycle-00483",
+      "lifecycle-00484",
+      "lifecycle-00485",
+      "lifecycle-00486",
+      "lifecycle-00487",
+      "lifecycle-00488",
+      "lifecycle-00489",
+      "lifecycle-00490",
+      "lifecycle-00491",
+      "lifecycle-00492",
+      "lifecycle-00493",
+      "lifecycle-00494",
+      "lifecycle-00495",
+      "lifecycle-00496",
+      "lifecycle-00497",
+      "lifecycle-00498",
+      "lifecycle-00499",
+      "lifecycle-00500",
+      "lifecycle-00501",
+      "lifecycle-00502",
+      "lifecycle-00503",
+      "lifecycle-00504",
+      "lifecycle-00505",
+      "lifecycle-00506",
+      "lifecycle-00507",
+      "lifecycle-00508",
+      "lifecycle-00509",
+      "lifecycle-00510",
+      "lifecycle-00511",
+      "lifecycle-00512"
+    ],
+    "cooperativeImportSha256": "03395c6d0ce134f15f70f832968511ad1948dbf793e87e64ab215eab05a9608c",
+    "workspaceImportId": "workspace-synthetic-point-v1",
+    "workspaceImportCount": 1,
+    "workspaceImportSha256": "570ebec5fd4cf3b4937ee92de2ece70f4f12598b0c7e51910a1808d038595270"
+  },
+  "cases": [
+    {
+      "id": "cooperative-import",
+      "status": "failed",
+      "failedPhase": "worker-preflight:cooperative-import",
+      "error": "Worker network/MIME/completion preflight did not pass.",
+      "failureEvidence": {
+        "schema": "gev-lifecycle-failure-evidence/v1",
+        "caseId": "cooperative-import",
+        "failedPhase": "worker-preflight-validation",
+        "error": "Worker network/MIME/completion preflight did not pass.",
+        "workerPreflight": {
+          "network": {
+            "status": "passed",
+            "interceptedWorkerRequests": 3
+          },
+          "probe": {
+            "status": "passed",
+            "tasksTruncated": false,
+            "tasks": [
+              {
+                "id": "geometry-cold",
+                "outcome": "resolved"
+              },
+              {
+                "id": "geometry-reuse",
+                "outcome": "resolved"
+              },
+              {
+                "id": "geometry-error",
+                "outcome": "rejected-as-expected"
+              },
+              {
+                "id": "geometry-recovery",
+                "outcome": "resolved"
+              }
+            ]
+          },
+          "diagnostics": {
+            "scope": null,
+            "instrumented": true,
+            "overflow": false,
+            "pending": 3,
+            "workerCount": 5,
+            "workersTruncated": false,
+            "workers": [
+              {
+                "kind": "createVerticesFromHeightmap.js",
+                "submitted": 14,
+                "completed": 12,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "pending": 2,
+                "oldestPendingMs": 450.2,
+                "terminated": false
+              },
+              {
+                "kind": "transferTypedArrayTest.js",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "pending": 0,
+                "oldestPendingMs": 0,
+                "terminated": true
+              },
+              {
+                "kind": "incrementallyBuildTerrainPicker.js",
+                "submitted": 12,
+                "completed": 11,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "pending": 1,
+                "oldestPendingMs": 448.3,
+                "terminated": false
+              },
+              {
+                "kind": "opaque-worker",
+                "submitted": 0,
+                "completed": 0,
+                "taskErrors": 0,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "pending": 0,
+                "oldestPendingMs": 0,
+                "terminated": true
+              },
+              {
+                "kind": "createGeometry.js",
+                "submitted": 4,
+                "completed": 4,
+                "taskErrors": 1,
+                "workerErrors": 0,
+                "postErrors": 0,
+                "cancelled": 0,
+                "pending": 0,
+                "oldestPendingMs": 0,
+                "terminated": true
+              }
+            ]
+          },
+          "networkError": null,
+          "probeError": null,
+          "diagnosticSnapshotError": null
+        },
+        "pageDiagnostics": {
+          "errors": [],
+          "messages": [
+            "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+            "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+            "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+            "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+          ]
+        },
+        "setupPhase": "worker-preflight",
+        "bootProgress": [
+          "navigation",
+          "application-ready",
+          "initial-view-restore",
+          "ready"
+        ]
+      },
+      "bootProgress": [],
+      "disabledLayers": [],
+      "allLayersDisabled": false,
+      "workerPreflight": null,
+      "pageErrors": []
+    },
+    {
+      "id": "workspace-replacement",
+      "status": "passed",
+      "cycles": 5,
+      "operations": {
+        "completedWorkspaceReplacements": 5
+      },
+      "baselineWorkspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+      "alternateWorkspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+      "featureCount": 1,
+      "checkpoints": [
+        {
+          "cycle": 1,
+          "phase": "alternation",
+          "alternatedIds": [
+            "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+            "investigation-ecdf4864122d8133ba3032f603cbf688"
+          ],
+          "alternate": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 67730640,
+              "browserEventListeners": 1261
+            },
+            "renderedPopulation": {
+              "frameNumber": 60,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c"
+            }
+          },
+          "returned": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 70966492,
+              "browserEventListeners": 1303
+            },
+            "renderedPopulation": {
+              "frameNumber": 62,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+            }
+          }
+        },
+        {
+          "cycle": 2,
+          "phase": "alternation",
+          "alternatedIds": [
+            "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+            "investigation-ecdf4864122d8133ba3032f603cbf688"
+          ],
+          "alternate": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 74116716,
+              "browserEventListeners": 1345
+            },
+            "renderedPopulation": {
+              "frameNumber": 64,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c"
+            }
+          },
+          "returned": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 77360868,
+              "browserEventListeners": 1387
+            },
+            "renderedPopulation": {
+              "frameNumber": 66,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+            }
+          }
+        },
+        {
+          "cycle": 3,
+          "phase": "alternation",
+          "alternatedIds": [
+            "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+            "investigation-ecdf4864122d8133ba3032f603cbf688"
+          ],
+          "alternate": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 67036780,
+              "browserEventListeners": 1429
+            },
+            "renderedPopulation": {
+              "frameNumber": 68,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c"
+            }
+          },
+          "returned": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 70304540,
+              "browserEventListeners": 1471
+            },
+            "renderedPopulation": {
+              "frameNumber": 72,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+            }
+          }
+        },
+        {
+          "cycle": 4,
+          "phase": "alternation",
+          "alternatedIds": [
+            "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+            "investigation-ecdf4864122d8133ba3032f603cbf688"
+          ],
+          "alternate": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 73073048,
+              "browserEventListeners": 1513
+            },
+            "renderedPopulation": {
+              "frameNumber": 73,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c"
+            }
+          },
+          "returned": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 75858224,
+              "browserEventListeners": 1555
+            },
+            "renderedPopulation": {
+              "frameNumber": 75,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+            }
+          }
+        },
+        {
+          "cycle": 5,
+          "phase": "alternation",
+          "alternatedIds": [
+            "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+            "investigation-ecdf4864122d8133ba3032f603cbf688"
+          ],
+          "alternate": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-4ef5c1f112b5f61352bf0780d47e1b0c:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 65518476,
+              "browserEventListeners": 1597
+            },
+            "renderedPopulation": {
+              "frameNumber": 77,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-4ef5c1f112b5f61352bf0780d47e1b0c"
+            }
+          },
+          "returned": {
+            "imports": {
+              "featureCount": 1,
+              "pendingJobs": 0,
+              "cacheEntries": 1
+            },
+            "importEntityIds": [
+              "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+            ],
+            "importEntityRecords": [
+              {
+                "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+                "name": "Persistent fixture",
+                "position": [
+                  1342863.4568043882,
+                  -4652459.582692384,
+                  4137222.716876187
+                ]
+              }
+            ],
+            "scene": {
+              "entities": 1,
+              "dataSources": 3,
+              "primitives": 1,
+              "groundPrimitives": 1
+            },
+            "restore": {
+              "status": "applied",
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+              "error": null
+            },
+            "workerCounters": {
+              "scope": "cumulative-per-document",
+              "instrumented": true,
+              "overflow": false,
+              "pending": 0,
+              "workers": [
+                {
+                  "kind": "createVerticesFromHeightmap.js",
+                  "submitted": 117,
+                  "completed": 117,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "transferTypedArrayTest.js",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "incrementallyBuildTerrainPicker.js",
+                  "submitted": 23,
+                  "completed": 23,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": false
+                },
+                {
+                  "kind": "opaque-worker",
+                  "submitted": 0,
+                  "completed": 0,
+                  "taskErrors": 0,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                },
+                {
+                  "kind": "createGeometry.js",
+                  "submitted": 4,
+                  "completed": 4,
+                  "taskErrors": 1,
+                  "workerErrors": 0,
+                  "postErrors": 0,
+                  "cancelled": 0,
+                  "pending": 0,
+                  "oldestPendingMs": 0,
+                  "terminated": true
+                }
+              ]
+            },
+            "diagnostics": {
+              "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+              "jsHeapUsedBytes": 68194172,
+              "browserEventListeners": 1639
+            },
+            "renderedPopulation": {
+              "frameNumber": 79,
+              "importedEntityCount": 1,
+              "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+            }
+          }
+        }
+      ],
+      "baseline": {
+        "imports": {
+          "featureCount": 1,
+          "pendingJobs": 0,
+          "cacheEntries": 1
+        },
+        "importEntityIds": [
+          "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+        ],
+        "importEntityRecords": [
+          {
+            "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+            "name": "Persistent fixture",
+            "position": [
+              1342863.4568043882,
+              -4652459.582692384,
+              4137222.716876187
+            ]
+          }
+        ],
+        "scene": {
+          "entities": 1,
+          "dataSources": 3,
+          "primitives": 1,
+          "groundPrimitives": 1
+        },
+        "restore": {
+          "status": "applied",
+          "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+          "error": null
+        },
+        "workerCounters": {
+          "scope": "cumulative-per-document",
+          "instrumented": true,
+          "overflow": false,
+          "pending": 0,
+          "workers": [
+            {
+              "kind": "createVerticesFromHeightmap.js",
+              "submitted": 117,
+              "completed": 117,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": false
+            },
+            {
+              "kind": "transferTypedArrayTest.js",
+              "submitted": 0,
+              "completed": 0,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": true
+            },
+            {
+              "kind": "incrementallyBuildTerrainPicker.js",
+              "submitted": 23,
+              "completed": 23,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": false
+            },
+            {
+              "kind": "opaque-worker",
+              "submitted": 0,
+              "completed": 0,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": true
+            },
+            {
+              "kind": "createGeometry.js",
+              "submitted": 4,
+              "completed": 4,
+              "taskErrors": 1,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": true
+            }
+          ]
+        },
+        "diagnostics": {
+          "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+          "jsHeapUsedBytes": 64540148,
+          "browserEventListeners": 1219
+        },
+        "renderedPopulation": {
+          "frameNumber": 58,
+          "importedEntityCount": 1,
+          "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+        }
+      },
+      "final": {
+        "imports": {
+          "featureCount": 1,
+          "pendingJobs": 0,
+          "cacheEntries": 1
+        },
+        "importEntityIds": [
+          "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point"
+        ],
+        "importEntityRecords": [
+          {
+            "id": "gev-import:investigation-ecdf4864122d8133ba3032f603cbf688:import-1791626547791:fixture-point",
+            "name": "Persistent fixture",
+            "position": [
+              1342863.4568043882,
+              -4652459.582692384,
+              4137222.716876187
+            ]
+          }
+        ],
+        "scene": {
+          "entities": 1,
+          "dataSources": 3,
+          "primitives": 1,
+          "groundPrimitives": 1
+        },
+        "restore": {
+          "status": "applied",
+          "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688",
+          "error": null
+        },
+        "workerCounters": {
+          "scope": "cumulative-per-document",
+          "instrumented": true,
+          "overflow": false,
+          "pending": 0,
+          "workers": [
+            {
+              "kind": "createVerticesFromHeightmap.js",
+              "submitted": 117,
+              "completed": 117,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": false
+            },
+            {
+              "kind": "transferTypedArrayTest.js",
+              "submitted": 0,
+              "completed": 0,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": true
+            },
+            {
+              "kind": "incrementallyBuildTerrainPicker.js",
+              "submitted": 23,
+              "completed": 23,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": false
+            },
+            {
+              "kind": "opaque-worker",
+              "submitted": 0,
+              "completed": 0,
+              "taskErrors": 0,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": true
+            },
+            {
+              "kind": "createGeometry.js",
+              "submitted": 4,
+              "completed": 4,
+              "taskErrors": 1,
+              "workerErrors": 0,
+              "postErrors": 0,
+              "cancelled": 0,
+              "pending": 0,
+              "oldestPendingMs": 0,
+              "terminated": true
+            }
+          ]
+        },
+        "diagnostics": {
+          "scope": "point-in-time-no-forced-gc-no-plateau-claim",
+          "jsHeapUsedBytes": 68194172,
+          "browserEventListeners": 1639
+        },
+        "renderedPopulation": {
+          "frameNumber": 79,
+          "importedEntityCount": 1,
+          "workspaceId": "investigation-ecdf4864122d8133ba3032f603cbf688"
+        }
+      },
+      "workerCounters": {
+        "instrumented": true,
+        "overflow": false,
+        "pending": 0,
+        "workers": [
+          {
+            "kind": "createVerticesFromHeightmap.js",
+            "submitted": 117,
+            "completed": 117,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "transferTypedArrayTest.js",
+            "submitted": 0,
+            "completed": 0,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": true,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "incrementallyBuildTerrainPicker.js",
+            "submitted": 23,
+            "completed": 23,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": false,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "opaque-worker",
+            "submitted": 0,
+            "completed": 0,
+            "taskErrors": 0,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": true,
+            "pending": 0,
+            "oldestPendingMs": 0
+          },
+          {
+            "kind": "createGeometry.js",
+            "submitted": 4,
+            "completed": 4,
+            "taskErrors": 1,
+            "workerErrors": 0,
+            "postErrors": 0,
+            "cancelled": 0,
+            "terminated": true,
+            "pending": 0,
+            "oldestPendingMs": 0
+          }
+        ],
+        "scope": "cumulative-per-document"
+      },
+      "workerPreflight": {
+        "scope": "cumulative-per-document",
+        "status": "passed",
+        "network": {
+          "status": "passed",
+          "interceptedWorkerRequests": 3
+        },
+        "taskCount": 4,
+        "cumulativeSubmitted": 24,
+        "cumulativeCompleted": 24,
+        "cumulativeCancelled": 0,
+        "pendingAtPreflight": 0,
+        "overflow": false
+      },
+      "applicationCommit": "9fc5bc9b6671aae510efbe2bdd44f299e9b6dff1",
+      "disabledLayers": [
+        "bhote-koshi-2026",
+        "bhote-koshi-locator",
+        "flights",
+        "military",
+        "local-adsb",
+        "earthquakes",
+        "fire-perimeters",
+        "alpr-cameras",
+        "street-level",
+        "satellites",
+        "rocket-launches",
+        "traffic",
+        "cctv",
+        "radio",
+        "transit",
+        "bikeshare",
+        "directions",
+        "recent-imagery",
+        "ais-live-vessels",
+        "military-installations",
+        "military-awareness",
+        "wind",
+        "weather-radar",
+        "weather-satellite",
+        "weather-lightning",
+        "weather-cyclones",
+        "local-datacenters",
+        "local-dams",
+        "telegeography-submarine-cables",
+        "local-firms"
+      ],
+      "allLayersDisabled": true,
+      "bootProgress": [
+        "navigation",
+        "application-ready",
+        "initial-view-restore",
+        "ready"
+      ],
+      "pageErrors": []
+    }
+  ],
+  "progressEvents": [
+    {
+      "phase": "launch-browser",
+      "caseId": null,
+      "elapsedMs": 0.2871069999999918
+    },
+    {
+      "phase": "read-browser-version",
+      "caseId": null,
+      "elapsedMs": 3347.802184
+    },
+    {
+      "phase": "setup:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 3364.5312410000006
+    },
+    {
+      "phase": "create-context:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 3365.8527750000003
+    },
+    {
+      "phase": "create-page:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 3372.5484190000006
+    },
+    {
+      "phase": "prepare-page:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 3437.522529
+    },
+    {
+      "phase": "boot:cooperative-import:navigation",
+      "caseId": "cooperative-import",
+      "elapsedMs": 3442.327005
+    },
+    {
+      "phase": "boot:cooperative-import:application-ready",
+      "caseId": "cooperative-import",
+      "elapsedMs": 5308.888874
+    },
+    {
+      "phase": "boot:cooperative-import:initial-view-restore",
+      "caseId": "cooperative-import",
+      "elapsedMs": 9044.807174
+    },
+    {
+      "phase": "boot:cooperative-import:ready",
+      "caseId": "cooperative-import",
+      "elapsedMs": 9397.720854000001
+    },
+    {
+      "phase": "disable-unrelated-layers:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 9398.280962
+    },
+    {
+      "phase": "worker-preflight:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 10747.879092000001
+    },
+    {
+      "phase": "case-failed:cooperative-import",
+      "caseId": "cooperative-import",
+      "elapsedMs": 15063.913242
+    },
+    {
+      "phase": "setup:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 15064.697421
+    },
+    {
+      "phase": "create-context:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 15065.585918
+    },
+    {
+      "phase": "create-page:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 15078.903598
+    },
+    {
+      "phase": "prepare-page:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 15148.000063
+    },
+    {
+      "phase": "boot:workspace-replacement:navigation",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 15151.398002
+    },
+    {
+      "phase": "boot:workspace-replacement:application-ready",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 17152.762648
+    },
+    {
+      "phase": "boot:workspace-replacement:initial-view-restore",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 20205.077338
+    },
+    {
+      "phase": "boot:workspace-replacement:ready",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 20212.109959999998
+    },
+    {
+      "phase": "disable-unrelated-layers:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 20212.720912999997
+    },
+    {
+      "phase": "worker-preflight:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 20803.346059
+    },
+    {
+      "phase": "ready:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 23427.683565
+    },
+    {
+      "phase": "run-case:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 23428.670661999997
+    },
+    {
+      "phase": "case:workspace-replacement:seed-workspaces",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 23429.929051
+    },
+    {
+      "phase": "case:workspace-replacement:initial-alternate-open",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 37371.736267
+    },
+    {
+      "phase": "case:workspace-replacement:open-alternate-1",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 39950.079477
+    },
+    {
+      "phase": "case:workspace-replacement:return-baseline-1",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 40695.335033999996
+    },
+    {
+      "phase": "case:workspace-replacement:open-alternate-2",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 41470.009367
+    },
+    {
+      "phase": "case:workspace-replacement:return-baseline-2",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 42235.094543
+    },
+    {
+      "phase": "case:workspace-replacement:open-alternate-3",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 42991.304557999996
+    },
+    {
+      "phase": "case:workspace-replacement:return-baseline-3",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 43725.337457
+    },
+    {
+      "phase": "case:workspace-replacement:open-alternate-4",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 44849.067495999996
+    },
+    {
+      "phase": "case:workspace-replacement:return-baseline-4",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 45572.955387999995
+    },
+    {
+      "phase": "case:workspace-replacement:open-alternate-5",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 46309.51953
+    },
+    {
+      "phase": "case:workspace-replacement:return-baseline-5",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 47054.765526999996
+    },
+    {
+      "phase": "case:workspace-replacement:cleanup-owned-context",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 47793.144388
+    },
+    {
+      "phase": "case-passed:workspace-replacement",
+      "caseId": "workspace-replacement",
+      "elapsedMs": 47838.71858
+    },
+    {
+      "phase": "close-owned-browser",
+      "caseId": null,
+      "elapsedMs": 47841.236795
+    },
+    {
+      "phase": "failed",
+      "caseId": null,
+      "elapsedMs": 47911.608167
+    }
+  ],
+  "currentCase": null,
+  "error": "One or more isolated lifecycle cases failed.",
+  "failedPhase": "worker-preflight:cooperative-import"
+}
