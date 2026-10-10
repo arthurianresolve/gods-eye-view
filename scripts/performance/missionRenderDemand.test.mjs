@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { validateMissionRenderDemandReport } from './missionRenderDemand.mjs';
 
@@ -21,12 +22,26 @@ function makeTrial(scenario, variant, repeat) {
     variant === 'continuous-control' || selected ? 'continuous' : 'idle';
   const sceneEntityIds = empty
     ? []
-    : ['rocket-launch:mission-a', 'rocket-launch:mission-b'];
+    : [
+        'rocket-launch:mission-a',
+        'rocket-launch:mission-b',
+        'rocket-satellite:mission-a',
+        'rocket-satellite:mission-b',
+        'rocket-transfer:mission-a',
+        'rocket-transfer:mission-b',
+        'rocket-vehicle:mission-a',
+        'rocket-vehicle:mission-b',
+      ];
   const camera = {
     position: [1, 2, 3],
     direction: [0, 0, -1],
     up: [0, 1, 0],
   };
+  const cloneCamera = () => ({
+    position: [...camera.position],
+    direction: [...camera.direction],
+    up: [...camera.up],
+  });
   const referenceEpochMs = 1_800_000_000_000;
   const fixtureSource = {
     referenceEpochMs,
@@ -51,6 +66,25 @@ function makeTrial(scenario, variant, repeat) {
     inputsStableAcrossTrials: true,
     nativeSchedulingClockPatched: false,
   };
+  const cameraFlight = {
+    status: 'completed',
+    elapsedMs: 2_400 + repeat * 3 + (variant === 'demand-candidate' ? 11 : 0),
+  };
+  const visualSettings = {
+    viewportWidth: 960,
+    viewportHeight: 640,
+    canvasClientWidth: 960,
+    canvasClientHeight: 640,
+    canvasWidth: 960,
+    canvasHeight: 640,
+    viewerResolutionScale: 1,
+    msaaSamples: 4,
+    maximumRenderTimeChange: 'Infinity',
+    imageryLayerCount: 0,
+    globe: false,
+    skyBox: false,
+    skyAtmosphere: false,
+  };
   return {
     schema: 'gev-mission-render-demand-trial/v1',
     status: 'passed',
@@ -68,7 +102,7 @@ function makeTrial(scenario, variant, repeat) {
       renderModeAtEnd: mode,
       cesiumRequestRenderModeAtStart: mode === 'idle',
     },
-    cameraFlight: { status: 'completed', elapsedMs: 2_400 },
+    cameraFlight,
     matrixUpdates: {
       countDuringMeasurement: empty
         ? 0
@@ -94,33 +128,28 @@ function makeTrial(scenario, variant, repeat) {
     },
     before: {
       entityCount: count,
+      dataSourceCount: 1,
+      primitiveCount: 1,
       sceneEntityIds,
       visibleOrbitPrimitiveCount: empty ? 0 : selected ? 1 : 2,
-      camera,
+      canvasWidth: 960,
+      canvasHeight: 640,
+      camera: cloneCamera(),
+      visualSettings,
+      cameraFlight,
       fixtureSource,
     },
     after: {
       entityCount: count,
+      dataSourceCount: 1,
+      primitiveCount: 1,
       sceneEntityIds,
       visibleOrbitPrimitiveCount: empty ? 0 : selected ? 1 : 2,
-      camera,
+      camera: cloneCamera(),
+      fixtureEpochMs: 1_000 + (empty ? 10_000 : 3_000),
     },
-    visualSettings: {
-      viewportWidth: 960,
-      viewportHeight: 640,
-      canvasClientWidth: 960,
-      canvasClientHeight: 640,
-      canvasWidth: 960,
-      canvasHeight: 640,
-      viewerResolutionScale: 1,
-      msaaSamples: 4,
-      maximumRenderTimeChange: 'Infinity',
-      imageryLayerCount: 0,
-      globe: false,
-      skyBox: false,
-      skyAtmosphere: false,
-    },
-    cameraPose: camera,
+    visualSettings,
+    cameraPose: cloneCamera(),
     renderer: 'fixture-renderer',
     rendererClassification: 'native-metal',
     endpointPngSha256: 'a'.repeat(64),
@@ -186,6 +215,110 @@ test('summarizes complete paired real-viewer fixture observations', () => {
   );
 });
 
+test('camera comparisons allow only the shared pose-roundoff bounds and exclude setup timing', () => {
+  const rounded = validReport();
+  for (const trial of rounded.trials) {
+    const variantOffset =
+      trial.variant === 'continuous-control' ? 0.2e-6 : -0.2e-6;
+    trial.before.camera.position[0] += variantOffset;
+    trial.after.camera.position[0] += variantOffset + 0.2e-6;
+    trial.cameraPose = structuredClone(trial.after.camera);
+    const orientationOffset =
+      trial.variant === 'continuous-control' ? 1e-13 : -1e-13;
+    trial.before.camera.direction[1] += orientationOffset;
+    trial.after.camera.direction[1] += orientationOffset + 2e-13;
+    trial.cameraPose.direction[1] = trial.after.camera.direction[1];
+  }
+  assert.equal(
+    validateMissionRenderDemandReport(rounded, { repeats: 1 }).status,
+    'passed',
+  );
+
+  const changedPosition = validReport();
+  const positionTrial = changedPosition.trials.find(
+    (trial) => trial.variant === 'demand-candidate',
+  );
+  positionTrial.after.camera.position[0] += 2e-6;
+  positionTrial.cameraPose.position[0] = positionTrial.after.camera.position[0];
+  assert.throws(
+    () => validateMissionRenderDemandReport(changedPosition, { repeats: 1 }),
+    /Camera pose changed beyond bounded numeric roundoff/,
+  );
+
+  const pairedPositionDrift = validReport();
+  const pairedTrial = pairedPositionDrift.trials.find(
+    (trial) => trial.variant === 'demand-candidate',
+  );
+  for (const pose of [
+    pairedTrial.before.camera,
+    pairedTrial.after.camera,
+    pairedTrial.cameraPose,
+  ])
+    pose.position[0] += 2e-6;
+  assert.throws(
+    () =>
+      validateMissionRenderDemandReport(pairedPositionDrift, { repeats: 1 }),
+    /Paired fixture before camera changed beyond bounded roundoff/,
+  );
+
+  const changedOrientation = validReport();
+  const orientationTrial = changedOrientation.trials.find(
+    (trial) => trial.variant === 'demand-candidate',
+  );
+  orientationTrial.after.camera.direction[2] += 2e-12;
+  orientationTrial.cameraPose.direction[2] =
+    orientationTrial.after.camera.direction[2];
+  assert.throws(
+    () => validateMissionRenderDemandReport(changedOrientation, { repeats: 1 }),
+    /Camera pose changed beyond bounded numeric roundoff/,
+  );
+
+  const extraCameraField = validReport();
+  extraCameraField.trials[1].cameraPose.transform = Array(16).fill(0);
+  assert.throws(
+    () => validateMissionRenderDemandReport(extraCameraField, { repeats: 1 }),
+    /Camera pose changed beyond bounded numeric roundoff/,
+  );
+
+  const differentSetupDurations = validReport();
+  assert.notEqual(
+    differentSetupDurations.trials[0].cameraFlight.elapsedMs,
+    differentSetupDurations.trials[1].cameraFlight.elapsedMs,
+  );
+  assert.equal(
+    validateMissionRenderDemandReport(differentSetupDurations, {
+      repeats: 1,
+    }).status,
+    'passed',
+  );
+  differentSetupDurations.trials[1].cameraFlight.elapsedMs = 5_001;
+  differentSetupDurations.trials[1].before.cameraFlight.elapsedMs = 5_001;
+  assert.throws(() =>
+    validateMissionRenderDemandReport(differentSetupDurations, {
+      repeats: 1,
+    }),
+  );
+});
+
+test('retained failed hosted report passes the corrected offline trial validator', () => {
+  const retained = JSON.parse(
+    readFileSync(
+      new URL(
+        '../../docs/performance-evidence/mission-render-demand-38046523488.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  );
+  assert.equal(retained.status, 'failed');
+  const validationInput = { ...retained, status: 'running' };
+  assert.equal(
+    validateMissionRenderDemandReport(validationInput, { repeats: 5 }).status,
+    'passed',
+  );
+  assert.equal(retained.status, 'failed');
+});
+
 test('rejects missing or duplicate trials instead of filling gaps', () => {
   const report = validReport();
   report.trials.pop();
@@ -237,6 +370,32 @@ test('rejects changed pixels, viewport, and a non-rendered final frame', () => {
   ]) {
     const report = validReport();
     mutate(report);
+    assert.throws(() =>
+      validateMissionRenderDemandReport(report, { repeats: 1 }),
+    );
+  }
+});
+
+test('keeps scene identity and resource populations exact', () => {
+  for (const mutate of [
+    (trial) => {
+      trial.after.sceneEntityIds[0] = 'rocket-launch:unexpected';
+    },
+    (trial) => {
+      trial.after.dataSourceCount += 1;
+    },
+    (trial) => {
+      trial.after.primitiveCount += 1;
+    },
+  ]) {
+    const report = validReport();
+    mutate(
+      report.trials.find(
+        (trial) =>
+          trial.scenario === 'unselected-orbit' &&
+          trial.variant === 'demand-candidate',
+      ),
+    );
     assert.throws(() =>
       validateMissionRenderDemandReport(report, { repeats: 1 }),
     );

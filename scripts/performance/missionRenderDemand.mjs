@@ -1,3 +1,5 @@
+import { cameraPosesEquivalent } from './routeEquivalence.mjs';
+
 const SCENARIOS = new Set([
   'static-empty',
   'unselected-orbit',
@@ -93,16 +95,56 @@ function validateTrial(trial, expected) {
   requireCondition(
     trial.cameraFlight?.status === 'completed' &&
       Number.isFinite(trial.cameraFlight.elapsedMs) &&
-      trial.cameraFlight.elapsedMs > 0,
-    'The native mission camera flight did not complete during fixture setup.',
+      trial.cameraFlight.elapsedMs > 0 &&
+      trial.cameraFlight.elapsedMs <= 5_000 &&
+      trial.before?.cameraFlight?.status === 'completed' &&
+      Number.isFinite(trial.before.cameraFlight.elapsedMs) &&
+      trial.before.cameraFlight.elapsedMs > 0 &&
+      trial.before.cameraFlight.elapsedMs <= 5_000 &&
+      trial.before.cameraFlight.elapsedMs === trial.cameraFlight.elapsedMs,
+    'The native mission camera flight did not complete within its setup bound.',
   );
   requireCondition(
     trial.before?.entityCount === EXPECTED_POPULATIONS[trial.scenario] &&
       trial.after?.entityCount === EXPECTED_POPULATIONS[trial.scenario] &&
+      Number.isSafeInteger(trial.before?.dataSourceCount) &&
+      trial.before.dataSourceCount >= 0 &&
+      Number.isSafeInteger(trial.after?.dataSourceCount) &&
+      trial.after.dataSourceCount >= 0 &&
+      Number.isSafeInteger(trial.before?.primitiveCount) &&
+      trial.before.primitiveCount >= 0 &&
+      Number.isSafeInteger(trial.after?.primitiveCount) &&
+      trial.after.primitiveCount >= 0 &&
+      trial.before?.dataSourceCount === trial.after?.dataSourceCount &&
+      trial.before?.primitiveCount === trial.after?.primitiveCount &&
+      trial.before?.visibleOrbitPrimitiveCount ===
+        trial.after?.visibleOrbitPrimitiveCount &&
+      Array.isArray(trial.before?.sceneEntityIds) &&
+      Array.isArray(trial.after?.sceneEntityIds) &&
       stableJson(trial.before.sceneEntityIds) ===
         stableJson(trial.after.sceneEntityIds) &&
-      stableJson(trial.before.camera) === stableJson(trial.after.camera),
-    'Mission population changed during the measurement.',
+      stableJson(trial.before.sceneEntityIds) ===
+        stableJson(
+          trial.scenario === 'static-empty'
+            ? []
+            : [
+                'rocket-launch:mission-a',
+                'rocket-launch:mission-b',
+                'rocket-satellite:mission-a',
+                'rocket-satellite:mission-b',
+                'rocket-transfer:mission-a',
+                'rocket-transfer:mission-b',
+                'rocket-vehicle:mission-a',
+                'rocket-vehicle:mission-b',
+              ],
+        ),
+    'Mission population or scene resources changed during the measurement.',
+  );
+  requireCondition(
+    cameraPosesEquivalent(trial.before.camera, trial.after.camera) &&
+      cameraPosesEquivalent(trial.cameraPose, trial.before.camera) &&
+      cameraPosesEquivalent(trial.cameraPose, trial.after.camera),
+    'Camera pose changed beyond bounded numeric roundoff.',
   );
   requireCondition(
     trial.scenario === 'static-empty'
@@ -116,10 +158,18 @@ function validateTrial(trial, expected) {
     trial.fixtureClock?.startedOnce === true &&
       trial.fixtureClock?.endedClamped === true &&
       trial.fixtureClock?.endEpochMs ===
-        trial.fixtureClock.heldEpochMsBeforeMeasurement + trial.durationMs,
+        trial.fixtureClock.heldEpochMsBeforeMeasurement + trial.durationMs &&
+      trial.after?.fixtureEpochMs === trial.fixtureClock.endEpochMs,
     'Fixture time did not follow the declared monotonic interval.',
   );
   validateFixtureSource(trial.before?.fixtureSource, trial.scenario);
+  requireCondition(
+    trial.before.canvasWidth === 960 &&
+      trial.before.canvasHeight === 640 &&
+      stableJson(trial.before.visualSettings) ===
+        stableJson(trial.visualSettings),
+    'Observed pre-measurement settings differ from the trial settings.',
+  );
   requireCondition(
     trial.visualSettings?.viewportWidth === 960 &&
       trial.visualSettings?.viewportHeight === 640 &&
@@ -273,11 +323,40 @@ export function validateMissionRenderDemandReport(
           candidate.durationMs === durationMs,
         'Pair measurement durations differ from the declared scenario.',
       );
-      for (const key of ['before', 'after', 'visualSettings', 'cameraPose'])
+      const exactSnapshotFields = [
+        'entityCount',
+        'dataSourceCount',
+        'sceneEntityIds',
+        'primitiveCount',
+        'visibleOrbitPrimitiveCount',
+      ];
+      for (const phase of ['before', 'after']) {
+        for (const key of exactSnapshotFields)
+          requireCondition(
+            stableJson(control[phase][key]) ===
+              stableJson(candidate[phase][key]),
+            `Paired fixture ${phase} ${key} changed between variants.`,
+          );
         requireCondition(
-          stableJson(control[key]) === stableJson(candidate[key]),
-          `Paired fixture ${key} changed between variants.`,
+          cameraPosesEquivalent(control[phase].camera, candidate[phase].camera),
+          `Paired fixture ${phase} camera changed beyond bounded roundoff.`,
         );
+      }
+      requireCondition(
+        stableJson(control.before.fixtureSource) ===
+          stableJson(candidate.before.fixtureSource) &&
+          stableJson(control.visualSettings) ===
+            stableJson(candidate.visualSettings) &&
+          stableJson(control.before.visualSettings) ===
+            stableJson(candidate.before.visualSettings) &&
+          control.after.fixtureEpochMs === candidate.after.fixtureEpochMs &&
+          control.cameraFlight.status === candidate.cameraFlight.status,
+        'Paired fixture identity, settings, or setup state changed between variants.',
+      );
+      requireCondition(
+        cameraPosesEquivalent(control.cameraPose, candidate.cameraPose),
+        'Paired camera pose changed beyond bounded numeric roundoff.',
+      );
       requireCondition(
         control.endpointPngSha256 === candidate.endpointPngSha256 &&
           control.endpointPixels.rgbaSha256 ===

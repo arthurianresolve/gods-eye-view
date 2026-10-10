@@ -4,6 +4,45 @@ import { isDeepStrictEqual } from 'node:util';
 const POSITION_TOLERANCE_M = 1e-6;
 const ORIENTATION_TOLERANCE = 1e-12;
 
+/** Compare fixture camera vectors with the same bounded tolerances used by route validation. */
+export function cameraPosesEquivalent(actual, expected) {
+  if (
+    !actual ||
+    !expected ||
+    typeof actual !== 'object' ||
+    typeof expected !== 'object' ||
+    !isDeepStrictEqual(Object.keys(actual).sort(), [
+      'direction',
+      'position',
+      'up',
+    ]) ||
+    !isDeepStrictEqual(Object.keys(expected).sort(), [
+      'direction',
+      'position',
+      'up',
+    ])
+  )
+    return false;
+  return ['position', 'direction', 'up'].every((key, vectorIndex) => {
+    const a = actual[key];
+    const b = expected[key];
+    const tolerance =
+      vectorIndex === 0 ? POSITION_TOLERANCE_M : ORIENTATION_TOLERANCE;
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === 3 &&
+      b.length === 3 &&
+      a.every(
+        (value, index) =>
+          Number.isFinite(value) &&
+          Number.isFinite(b[index]) &&
+          Math.abs(value - b[index]) <= tolerance,
+      )
+    );
+  });
+}
+
 function vectorEquivalent(actual, expected, tolerance) {
   if (
     !actual ||
@@ -95,27 +134,57 @@ export function routeDescriptorsEquivalent(actual, expected) {
       delete copy[key];
     return copy;
   };
-  const poseEquivalent = (actualPose, expectedPose) => Boolean(actualPose && expectedPose) &&
+  const poseEquivalent = (actualPose, expectedPose) =>
+    Boolean(actualPose && expectedPose) &&
     isDeepStrictEqual(startExtras(actualPose), startExtras(expectedPose)) &&
-    vectorEquivalent(actualPose.position, expectedPose.position, POSITION_TOLERANCE_M) &&
-    vectorEquivalent(actualPose.direction, expectedPose.direction, ORIENTATION_TOLERANCE) &&
+    vectorEquivalent(
+      actualPose.position,
+      expectedPose.position,
+      POSITION_TOLERANCE_M,
+    ) &&
+    vectorEquivalent(
+      actualPose.direction,
+      expectedPose.direction,
+      ORIENTATION_TOLERANCE,
+    ) &&
     vectorEquivalent(actualPose.up, expectedPose.up, ORIENTATION_TOLERANCE) &&
     transformEquivalent(actualPose.transform, expectedPose.transform);
   const targetEquivalent = (a, b) => {
     if (!a || !b) return a === b;
-    return ['longitudeDeg', 'latitudeDeg'].every((key) =>
-      Number.isFinite(a[key]) && Number.isFinite(b[key]) && Math.abs(a[key] - b[key]) <= 1e-12) &&
-      Number.isFinite(a.heightM) && Number.isFinite(b.heightM) && Math.abs(a.heightM - b.heightM) <= POSITION_TOLERANCE_M;
+    return (
+      ['longitudeDeg', 'latitudeDeg'].every(
+        (key) =>
+          Number.isFinite(a[key]) &&
+          Number.isFinite(b[key]) &&
+          Math.abs(a[key] - b[key]) <= 1e-12,
+      ) &&
+      Number.isFinite(a.heightM) &&
+      Number.isFinite(b.heightM) &&
+      Math.abs(a.heightM - b.heightM) <= POSITION_TOLERANCE_M
+    );
   };
-  const distanceEquivalent = (a, b) => actual.id === 'entity-follow-v1'
-    ? Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= POSITION_TOLERANCE_M
-    : Object.is(a, b);
-  return poseEquivalent(actualStart, expectedStart) &&
-    ((actualEnd === undefined && expectedEnd === undefined) || poseEquivalent(actualEnd, expectedEnd)) &&
+  const distanceEquivalent = (a, b) =>
+    actual.id === 'entity-follow-v1'
+      ? Number.isFinite(a) &&
+        Number.isFinite(b) &&
+        Math.abs(a - b) <= POSITION_TOLERANCE_M
+      : Object.is(a, b);
+  return (
+    poseEquivalent(actualStart, expectedStart) &&
+    ((actualEnd === undefined && expectedEnd === undefined) ||
+      poseEquivalent(actualEnd, expectedEnd)) &&
     targetEquivalent(actualTargetStart, expectedTargetStart) &&
     targetEquivalent(actualTargetEnd, expectedTargetEnd) &&
-    ((actualMotionDistanceM === undefined && expectedMotionDistanceM === undefined) || distanceEquivalent(actualMotionDistanceM, expectedMotionDistanceM)) &&
-    ((actualObservedTargetDistanceM === undefined && expectedObservedTargetDistanceM === undefined) || distanceEquivalent(actualObservedTargetDistanceM, expectedObservedTargetDistanceM));
+    ((actualMotionDistanceM === undefined &&
+      expectedMotionDistanceM === undefined) ||
+      distanceEquivalent(actualMotionDistanceM, expectedMotionDistanceM)) &&
+    ((actualObservedTargetDistanceM === undefined &&
+      expectedObservedTargetDistanceM === undefined) ||
+      distanceEquivalent(
+        actualObservedTargetDistanceM,
+        expectedObservedTargetDistanceM,
+      ))
+  );
 }
 
 export function assertRouteDescriptorsEquivalent(actual, expected, label) {
