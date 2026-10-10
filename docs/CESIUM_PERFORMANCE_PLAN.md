@@ -45,6 +45,38 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### Rendered CCTV isolation: first failed check - 10 October 2026
+
+GPT-6 Luna's `dfec9b1` adds an isolated CCTV lifecycle runner, enabled by
+`a4a5cd2ea2cd7d0db8166538b1092a2ffa8dd270`. The
+[hosted run 38056072642](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38056072642)
+**fails** at that exact application/harness revision. Its five toggle cycles and
+disabled direct-module reinitialization execute, but execution alone does not
+satisfy the final validator. The ten local harness tests pass; they did not
+reproduce the two integration problems exposed by the rendered run.
+
+The startup Austin flight changes the configured camera pose, leaving the fixture
+camera outside the recorded view rectangle. The existing startup path only skips
+that flight when a share state is present. The next harness correction must use
+the supported share-state startup path and verify the actual pose. A single
+zero-pending worker snapshot also precedes later geometry-combination work, so
+warmup needs a bounded stable interval across native renders.
+
+Active `createGeometry` submissions increase from 8 after warmup to 12, 16, 20,
+24 and 28 after successive unchanged enables. Equivalent enabled/disabled
+ownership counts remain at 6/5 listeners, 2/0 timers, zero pending application
+jobs, one owned primitive, six owned scene entities and two cache entries.
+Repeated style-property replacement is under investigation; these observations
+do not yet establish the cause of every worker submission or the historical
+retention failure. No geometry-reuse or stability acceptance is claimed.
+
+The fixture serves two catalog, three health and four image responses, with
+fixed synthetic bytes. Worker/network preflight passes and the owned browser
+closes normally in 92.3 ms. Rendering is Linux SwiftShader, not Windows hardware.
+The [raw failed report](performance-evidence/cctv-lifecycle-38056072642.json) and
+[job results](performance-evidence/cctv-lifecycle-38056072642-run.json) are retained.
+Raw SHA-256: `b5e5382c6c385d928c1282f43d802082e639f5d75db5302ec98258be68706c95`.
+
 ### Durable Windows shutdown observation - 10 October 2026
 
 GPT-6 Luna's `ee3bb72b6fcec3d7e0f7eb620c3530bacc6e02e1` replaces the outgoing
