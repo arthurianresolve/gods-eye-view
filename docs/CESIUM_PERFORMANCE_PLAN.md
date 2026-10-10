@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`db298d42a52d9f0c491a51f78ca060dbaa8a0461` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38058220331), [job results](performance-evidence/ci-db298d4.json)),
+`a0e7b10c1d2128de1544b53154c5bdb9e59a54a5` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38059557392), [job results](performance-evidence/ci-a0e7b10.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -44,6 +44,12 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### Windows frame-delivery control - 10 October 2026, 14:44 UTC
+
+A fresh tab in the authorized Chrome profile completes the existing five-second WebGL control at older app/harness `a83dd7af30cb3b9a39095da0f081a1037725d2cd`. Chrome 154 on Windows reports Intel UHD 620 through ANGLE/D3D11. It delivers 301 native animation callbacks, with maximum frame gap 19.4 ms, and reports no context loss or visibility/focus changes. Renderer metadata is read after the observation window.
+
+[Downloaded raw report](performance-evidence/windows-webgl-control-20261010-144414.json), SHA-256 `f0fe8c29d294d49396805c2127c8f30c5fc13e9b0c5fa6a4edcf7aaac897a3f9`. This is a current scheduling control only: the diagnostic build is older than the candidate, the canvas is about 90% inside the viewport, desktop occlusion is not verified, and there is no full application workload, framebuffer validation or retained-heap measurement. It does not erase earlier failed controls, establish their cause, or qualify the candidate for performance or soak acceptance.
 
 ### S55 civil tracked-time ownership - 10 October 2026
 
@@ -141,8 +147,7 @@ ray-picking latency or prove every terrain/picking ownership path is complete.
 
 The 55 focused CCTV checks and 28 terrain service/proxy/ground checks pass;
 the 16-test source suite was rerun after making its failure wait bounded.
-Formatting and diff checks pass. Full integration for this later terrain commit
-is separate from the earlier `db298d4` evidence.
+Formatting and diff checks pass. Full integration [passes all seven jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38059557392) at this exact terrain commit, separately from the earlier `db298d4` evidence.
 
 Its [Windows recovery run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38059557392) passes all five saved-workspace checkpoints at the exact `a0e7b10` candidate. Chrome 152.0.7977.75 uses hosted SwiftShader WebGL-only; all five browser closes finish normally in 349-417 ms, without forced termination. [Raw recovery report](performance-evidence/profile-recovery-38059557392-windows.json), SHA-256 `78f2c8222d53792f13ab3da8781ac3ef7b334d14cf5e84df956d8442e6660607`. This is installation recovery evidence, not physical GPU or heap-plateau acceptance.
 
