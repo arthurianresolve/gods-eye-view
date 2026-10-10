@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import {
   deriveCesiumEmbeddedWorkerContract,
   installCesiumWorkerBlobAudit,
+  MAX_WORKER_BLOB_TOTAL_BYTES,
   summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './cesiumWorkerBlobContract.mjs';
@@ -73,6 +74,7 @@ function workerAudit(contract, { wrapper, embeddedBody } = {}) {
     blobAudit: {
       createdBlobCount: 2,
       overflowCount: 0,
+      maxRetainedBytes: MAX_WORKER_BLOB_TOTAL_BYTES,
       totalReadBytes: records.reduce(
         (sum, record) => sum + record.byteLength,
         0,
@@ -257,6 +259,12 @@ test('worker blob validator fails closed on overflow and malformed sizes', () =>
     () => validateCesiumWorkerBlobs(overflow),
     /incomplete or over its bound/,
   );
+  const wrongAggregateCap = workerAudit(contract);
+  wrongAggregateCap.blobAudit.maxRetainedBytes = 8 * 1024 * 1024;
+  assert.throws(
+    () => validateCesiumWorkerBlobs(wrongAggregateCap),
+    /incomplete or over its bound/,
+  );
   const malformed = workerAudit(contract);
   malformed.blobAudit.records[0].byteLength += 1;
   assert.throws(
@@ -399,8 +407,12 @@ test('page blob instrumentation retains bounded script blobs only and restores t
     'window.__gevCesiumWorkerBlobAuditV1.metadata()',
     context,
   );
-  assert.equal(aggregateMetadata.records.length, 4);
-  assert.equal(aggregateMetadata.overflowCount, 2);
+  assert.equal(aggregateMetadata.records.length, 5);
+  assert.equal(aggregateMetadata.overflowCount, 1);
+  assert.equal(
+    aggregateMetadata.maxRetainedBytes,
+    MAX_WORKER_BLOB_TOTAL_BYTES,
+  );
   vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context);
   assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
   assert.deepEqual(
@@ -412,6 +424,53 @@ test('page blob instrumentation retains bounded script blobs only and restores t
         ),
       ),
     ),
-    { createdBlobCount: 0, overflowCount: 0, records: [] },
+    {
+      createdBlobCount: 0,
+      overflowCount: 0,
+      maxRetainedBytes: MAX_WORKER_BLOB_TOTAL_BYTES,
+      records: [],
+    },
   );
+});
+
+test('worker blob instrumentation enforces the published 32 MiB aggregate cap', () => {
+  class SizedBlob {
+    constructor(size, type) {
+      this.size = size;
+      this.type = type;
+    }
+    async text() {
+      return '';
+    }
+  }
+  let nextId = 0;
+  class TestURL {
+    static createObjectURL() {
+      return `blob:http://127.0.0.1:4173/sized-${++nextId}`;
+    }
+  }
+  const context = vm.createContext({ window: {}, URL: TestURL, Blob: SizedBlob });
+  vm.runInContext(`(${installCesiumWorkerBlobAudit.toString()})()`, context);
+  for (let index = 0; index < 16; index += 1)
+    vm.runInContext(
+      'URL.createObjectURL(new Blob(2097152, "application/javascript"))',
+      context,
+    );
+  vm.runInContext(
+    'URL.createObjectURL(new Blob(1, "application/javascript"))',
+    context,
+  );
+  const metadata = JSON.parse(
+    JSON.stringify(
+      vm.runInContext(
+        'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+        context,
+      ),
+    ),
+  );
+  assert.equal(MAX_WORKER_BLOB_TOTAL_BYTES, 32 * 1024 * 1024);
+  assert.equal(metadata.maxRetainedBytes, MAX_WORKER_BLOB_TOTAL_BYTES);
+  assert.equal(metadata.createdBlobCount, 17);
+  assert.equal(metadata.records.length, 16);
+  assert.equal(metadata.overflowCount, 1);
 });

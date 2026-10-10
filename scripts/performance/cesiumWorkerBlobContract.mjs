@@ -11,7 +11,7 @@ const MAX_EMBEDDED_SOURCE_BYTES = 2 * 1024 * 1024;
 export const MAX_WORKER_BLOB_RECORDS = 128;
 export const MAX_WORKER_TARGETS = 64;
 export const MAX_WORKER_BLOB_BYTES = 2 * 1024 * 1024;
-export const MAX_WORKER_BLOB_TOTAL_BYTES = 8 * 1024 * 1024;
+export const MAX_WORKER_BLOB_TOTAL_BYTES = 32 * 1024 * 1024;
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
@@ -112,6 +112,7 @@ export function deriveCesiumEmbeddedWorkerContract({
 /** Install a bounded creation-time registry; returns worker bodies only on demand. */
 export function installCesiumWorkerBlobAudit() {
   const key = '__gevCesiumWorkerBlobAuditV1';
+  const maxRetainedBytes = 32 * 1024 * 1024;
   if (window[key]) return;
   const nativeCreateObjectURL = URL.createObjectURL;
   if (typeof nativeCreateObjectURL !== 'function')
@@ -131,7 +132,7 @@ export function installCesiumWorkerBlobAudit() {
       if (
         records.length >= 128 ||
         blob.size > 2 * 1024 * 1024 ||
-        retainedBytes + blob.size > 8 * 1024 * 1024
+        retainedBytes + blob.size > maxRetainedBytes
       )
         overflowCount += 1;
       else {
@@ -157,6 +158,7 @@ export function installCesiumWorkerBlobAudit() {
         return {
           createdBlobCount: createdScriptBlobCount,
           overflowCount,
+          maxRetainedBytes,
           records: records.map(({ url, type, byteLength }) => ({
             url,
             type,
@@ -178,7 +180,7 @@ export function installCesiumWorkerBlobAudit() {
             !Number.isInteger(record.byteLength) ||
             record.byteLength < 0 ||
             record.byteLength > 2 * 1024 * 1024 ||
-            totalBytes + record.byteLength > 8 * 1024 * 1024
+            totalBytes + record.byteLength > maxRetainedBytes
           )
             throw new Error('Worker blob body exceeds its audit bound.');
           totalBytes += record.byteLength;
@@ -197,6 +199,7 @@ export function installCesiumWorkerBlobAudit() {
           createdBlobCount: createdScriptBlobCount,
           overflowCount,
           totalReadBytes: totalBytes,
+          maxRetainedBytes,
           records: output,
         };
       },
@@ -291,6 +294,7 @@ export function summarizeCesiumWorkerBlobEvidence({
   return {
     schema: 'gev-cesium-worker-blob-diagnostics/v1',
     urlValuesOmitted: true,
+    retentionByteCapBytes: blobAudit.maxRetainedBytes ?? null,
     blobRequestCount,
     observedBlobCount: urls.length,
     entryCount: entries.length,
@@ -324,6 +328,7 @@ export function validateCesiumWorkerBlobs({
     !Number.isInteger(blobAudit?.createdBlobCount) ||
     blobAudit.createdBlobCount < 1 ||
     blobAudit.createdBlobCount > MAX_WORKER_BLOB_RECORDS ||
+    blobAudit.maxRetainedBytes !== MAX_WORKER_BLOB_TOTAL_BYTES ||
     !Array.isArray(blobAudit.records) ||
     blobAudit.records.length > MAX_WORKER_BLOB_RECORDS
   )
@@ -444,6 +449,7 @@ export function validateCesiumWorkerBlobs({
         .sort(),
       validatedWrapperSha256: [...wrapperHashes].sort(),
       readBytes: blobAudit.totalReadBytes,
+      retentionByteCapBytes: blobAudit.maxRetainedBytes,
     },
   };
 }
