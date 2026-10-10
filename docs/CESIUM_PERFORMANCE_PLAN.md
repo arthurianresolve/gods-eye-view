@@ -1,6 +1,18 @@
 # Cesium performance plan
 
-Updated on 11 October 2026. All seven full integration jobs pass at
+Updated on 11 October 2026. All seven full integration jobs pass at experimental
+projection-cache candidate `33d985657c8949a02cfce2f0f1ad4131d3da774c`
+([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38092679660),
+[job results](performance-evidence/s52-33d9856/ci-33d9856.json)). Its component
+visual comparison passes five alternating baseline/candidate pairs across 24
+cases, with exact pixels and interaction observations. Performance acceptance is
+still pending the complete paired CPU report and the broader hardware gates;
+the optimization has not been promoted to remote `dev`. Details and the two
+corrected harness failures are recorded below. The previous remote `dev` revision
+`d2c5aa1` also passes all seven integration jobs
+([results](performance-evidence/s52-33d9856/ci-d2c5aa1.json)).
+
+Earlier, all seven full integration jobs pass at
 `167ba62c047fe94f36d0d60066aa4d648ede7519` after the workspace save ownership fix
 ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38090393482),
 [job results](performance-evidence/ci-167ba62.json)). This covers Node 24/26,
@@ -43,7 +55,7 @@ the earlier release requirements and historical results.
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
-| S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
+| S52 overlay invalidation | Experimental pure-projection reuse at `33d9856`; earlier layout-cache experiment remains reverted; broader layout/paint invalidation still pending | 54 focused overlay tests, allocation checks and full integration CI pass; five 24-case paired browser Canvas2D comparisons preserve pixels, hit regions and accessible actions; complete CPU comparison still pending | Pending; component Canvas2D results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
@@ -56,6 +68,71 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S52 projection reuse: component correctness - 11 October 2026
+
+The experimental cache at `33d985657c8949a02cfce2f0f1ad4131d3da774c` reuses only
+the pure projection, distance, altitude and visibility calculations whose
+observed inputs are unchanged. Dynamic position and presentation callbacks,
+placement, painting, hit targets and accessible actions still execute through
+their existing paths. The comparison baseline for this individual change is
+`886b7d2927b6eb3a546c0dfaf629684973d9e501`; the overall S47 baseline remains
+`eb8c6828d0d03e1c04bda94c8c4fb99915a577b7`.
+
+The [hosted component gate](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38093700809)
+uses harness `55f0c964205f1cc658625f6b5828acc9deb796fc`, the same fixture bytes
+in both clean application checkouts, Chrome 152.0.7977.75, Node 24.14.0 and
+Ubuntu with kernel 6.17.0-1022-azure. Its browser viewport is 1024 by 768 with
+initial DPR 1; fixture cases independently vary the overlay CSS surface and DPR.
+Both application revisions use Cesium 1.138.0 and the same dependency lockfile.
+Five alternating pairs pass all 24 cases: settled output, entering/exiting fades,
+mutable and periodic positions, camera matrices, style/selection replacement,
+dynamic presentation, hide/restore, DPR-only changes, CSS resizing, UI occlusion
+and accessible activation. Within each side, repeats also match exactly.
+
+Root independently compared the named case records and verified all 240 PNG
+artifact hashes against the raw report. Source commits, source/fixture hashes,
+runtime versions, pixels, paint/hit rectangles, feature IDs and accessible actions
+are retained. All owned pages, the browser, servers and temporary fixtures clean
+up, and source checks confirm unchanged trees. No pixel masks or tolerance were
+used. The [raw report](performance-evidence/s52-33d9856/report.json), SHA-256
+`121d6c5221a7f1df1bc6d01f84846990030c568d02d5bc5c1b3168f6214fa6a0`,
+[independent review](performance-evidence/s52-33d9856/review.json),
+[terminal run metadata](performance-evidence/s52-33d9856/run.json) and all
+report-referenced PNGs are archived together.
+
+This gate exercises real browser Canvas2D with the production overlay module and
+a deterministic mock viewer, camera and render event. It does not exercise the
+Cesium WebGL scene, full application composition, physical Windows GPU, latency,
+or retained-resource plateau. Those requirements remain pending.
+
+Two earlier harness failures remain recorded. [Run 38093516108](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38093516108)
+completed the baseline's 24 cases, then rejected Chrome's reduced page user agent
+(`152.0.0.0`) because the browser API reported the full version (`152.0.7977.75`).
+The correction compares the observed major version and rechecks the full browser
+API version on every capture; it preserves both observations.
+[Run 38093593401](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38093593401)
+matched the first complete pair, then stopped on a repeat navigation's HTTP 304.
+The runner now disables browser cache reuse for each fresh page. Both
+[failed reports](performance-evidence/s52-33d9856/failed-harness-38093516108.json)
+([second report](performance-evidence/s52-33d9856/failed-harness-38093593401.json))
+are retained; neither is relabeled as a complete pass.
+
+Full integration CI at `33d9856` separately passes all seven selected jobs:
+Node 24/26 (6,973 ordinary tests passed, one skipped), 14 additional Node-24
+allocation checks, formatting, package boundaries, production builds, Windows
+onboarding, Windows/macOS/Linux recovery and the existing browser journeys.
+Published layer-token PR checks, separately dispatched tracking and 60-minute
+soaks were not part of this run. Windows recovery preserves settings, the complete
+workspace and its asset hash in all five scenarios, with no forced termination;
+browser closes take 456, 368, 314, 323 and 334 ms under the unchanged five-second
+limit. This is hosted SwiftShader recovery evidence, not physical GPU validation
+or proof of the historical shutdown failure's cause
+([raw recovery](performance-evidence/s52-33d9856/windows-recovery-33d9856.json),
+[review](performance-evidence/s52-33d9856/windows-recovery-33d9856-review.json)).
+The preceding `d2c5aa1` five-scenario recovery result is also preserved
+([raw](performance-evidence/s52-33d9856/windows-recovery-d2c5aa1.json),
+[review](performance-evidence/s52-33d9856/windows-recovery-d2c5aa1-review.json)).
 
 The full standard integration run at `61d662a870f4b1e5c82711a18676a2f3c623e847`
 [passes all seven selected jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38079112938)

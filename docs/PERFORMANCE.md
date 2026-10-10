@@ -1,6 +1,16 @@
 # Performance baseline
 
-Current status (11 October 2026): all seven full automatic CI jobs pass at
+Current status (11 October 2026): the experimental projection cache at `33d9856`
+passes all seven integration jobs and five paired 24-case component visual runs.
+The latter preserves exact Canvas2D pixels, hit regions and accessible actions
+against `886b7d2`, with 240 image hashes independently verified. CPU comparison
+acceptance is still pending; this is not a Cesium WebGL, Windows GPU or motion-p95
+result, and the optimization remains on its QA branch. The
+[plan and archived evidence](CESIUM_PERFORMANCE_PLAN.md#s52-projection-reuse-component-correctness---11-october-2026)
+record exact revisions, environments, images, cleanup and corrected harness
+failures. Remote `dev` at `d2c5aa1` also passes all seven integration jobs.
+
+Earlier, all seven full automatic CI jobs pass at
 `167ba62c047fe94f36d0d60066aa4d648ede7519`, including the mixed-use import smoke,
 Node 24/26, production builds, three-OS recovery and Windows onboarding
 ([results](performance-evidence/ci-167ba62.json)). The same-panel workspace save
