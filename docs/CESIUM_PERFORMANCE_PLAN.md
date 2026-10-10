@@ -183,6 +183,37 @@ larger native-drag camera rotation or the Windows frame-delivery delay.
 Raw report SHA-256:
 `b63d7b275f3480e292ee814f6a61f3e1d5c0ce5a9b3f49d7975c428dd11abc79`.
 
+The camera compatibility candidate is `48153a0bf3beb5d3ba271c621f7d08bafbb7ef31`.
+Its instance-owned heading/pitch/roll getters use Cesium's ENU angle formulas
+without changing the live camera transform. It applies only to Cesium 1.138 in
+3D, delegates other modes to the native getter, and restores prior descriptors
+on disposal or partial installation failure. Ten camera/viewer checks pass,
+including native-value parity at tracked, polar and near-singular poses; the
+actual engine now reports zero false changes over 600 stationary polls. Rendered
+acceptance, full integration and tracking regression are being run separately.
+
+The geometry diagnostic also observes the current public
+`DataSourceDisplay.update()` result. Cesium's `ready` property latches true
+after its first successful update and cannot prove that a later edit is ready.
+The diagnostic preserves the first captured frame and records a bounded passive
+follow-up on incomplete geometry; it never substitutes later pixels into a
+failed comparison or extends the 400 ms fresh-frame deadline.
+
+[Hosted run 38080298432](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38080298432)
+([raw report](performance-evidence/calibration-38080298432.json),
+[job result](performance-evidence/calibration-38080298432-run.json)) confirms the
+new candidate has **zero idle frames** over ten seconds; its control has 243.
+The comparison remains failed: the control still rotates slightly on native
+drag release, and the candidate's first after-drag capture precedes completion
+of its edited geometry (current update result false although latched ready is
+true). A passive natural render 12.6 ms later reports complete geometry and the
+follow-up image has 1,653 non-background pixels versus 1,495 initially. The
+control's final image has 1,655. Those later pixels remain diagnostic evidence,
+not a substituted pass. Both viewers clean up, with no page errors or external
+requests. The next comparison must observe a completed post-release geometry
+frame before applying the unchanged fresh-frame capture deadline. Raw SHA-256:
+`7c93c3f5a7644d7858956109e38a465589237b73f95cfd18daf8a3933d12fda0`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
