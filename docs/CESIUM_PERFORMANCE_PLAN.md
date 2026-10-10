@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`f2e5ae9f2f5ec56404e6372e610370eb9be007de` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38053750181), [job results](performance-evidence/ci-f2e5ae9.json)),
+`42d4be66e26e2bb2223aec8506c1b34643367526` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38056869115), [job results](performance-evidence/ci-42d4be6.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -38,7 +38,7 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `0edfb8e`: fresh 12-check isolated viewer matrix passes on Windows UHD 620; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
-| S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort and workspace completion guards; document decoding and UI maintenance remain | Local import/pack tests and paired CPU comparison pass for `42d4be6`; full integration is running. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
+| S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort and workspace completion guards; document decoding and UI maintenance remain | Local import/pack tests, paired CPU comparison and all seven full integration jobs pass at `42d4be6`. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -46,6 +46,16 @@ populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
 ### S59 single-feature normalization - 10 October 2026
+
+Windows installation/profile recovery also passes at the exact `42d4be6`
+candidate: all five prior-install, interrupted-update, rollback, upgrade and
+failed-verification checkpoints preserve the saved workspace. Chrome
+152.0.7977.75 on hosted Windows 10.0.26100 uses SwiftShader WebGL-only; the source
+is clean and unchanged. All five browser closes finish normally in 296-2,619 ms,
+without forced process termination. This is recovery evidence, not hardware
+rendering or a permanent explanation of the historical shutdown failures.
+[Retained report](performance-evidence/profile-recovery-38056869115-windows.json)
+SHA-256: `6bb310e68f15b219a31e8716462d8c4d348a1d51681bd892801d486938b79922`.
 
 GPT-6 Luna's `42d4be66e26e2bb2223aec8506c1b34643367526` removes the importer's
 per-feature stringify/UTF-8/decode round trip. Imports and the synchronous pack
@@ -59,7 +69,7 @@ Root's import/pack review passes 39 tests and the production build; Luna's final
 focused suite passes 29 tests after the additional scheduler failure-path check.
 Formatting and package boundaries pass. The commit is on remote `dev`; its
 [full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38056869115)
-is recorded separately when complete.
+passes all seven jobs. Optional diagnostic jobs remain skipped, not passed.
 
 Root independently ran the retained comparison harness in a clean detached
 worktree at that exact candidate, against
@@ -98,6 +108,32 @@ preserves every timing row and supplies checked source-byte digests. Its inline
 measurement script was not retained, so the independently reproduced report above
 is the reproducible acceptance evidence. Earlier exploratory polygon measurements
 used a rejected fixture and are not accepted performance results.
+
+### Rendered CCTV drain correction - 10 October 2026
+
+The follow-up harness at `2cc8eb8` correctly suppresses the startup flight,
+checks the real camera pose, and moves reuse validation ahead of each cycle's
+pass label. Its [hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38057708256)
+still **fails** the original ten-second warmup drain. The final observed pose
+matches the fixture, the camera is in view, and application/worker pending counts
+are zero. The harness's ten-render-sample requirement and 500-ms maximum sample
+gap inadvertently impose a rendering-speed gate on the software renderer.
+The report lacks a full drain history, so this run cannot establish how long
+its final zero-pending state remained stable.
+
+`c19f327` removes that throughput assumption: unchanged cumulative counters must
+span at least one second and three distinct completed-frame samples within the
+same ten-second deadline. Any new worker activity restarts that window. Bounded
+sample history survives all failure paths, including protocol deadlines. All
+15 focused harness tests pass, including slow native frames, delayed completed
+work and preservation of failure observations. No viewport, visual settings,
+source population or application timing is relaxed. Rendered acceptance remains
+pending the corrected baseline and separate runtime comparison.
+
+The [failed raw report](performance-evidence/cctv-lifecycle-38057708256.json) and
+[job summary](performance-evidence/cctv-lifecycle-38057708256-run.json) remain
+unchanged. Raw SHA-256:
+`2a008e37424c702d345d1fe8a72e4356457abe37952125d667e855cad0c4b2e7`.
 
 ### Rendered CCTV isolation: first failed check - 10 October 2026
 
