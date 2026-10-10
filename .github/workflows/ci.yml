@@ -16,6 +16,7 @@ on:
             hosted-macos-soak,
             hosted-collection-probe,
             performance-build-smoke,
+            import-workspace-lifecycle,
           ]
         default: standard
       full_soak:
@@ -56,7 +57,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -105,7 +106,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -211,7 +212,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -246,7 +247,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -363,6 +364,60 @@ jobs:
           if-no-files-found: warn
           retention-days: 3
 
+  import-workspace-lifecycle:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'import-workspace-lifecycle'
+    name: Isolated import and workspace lifecycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      GEV_QA_SOFTWARE_RENDERING: '1'
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: '1'
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Initialize failure evidence before browser setup
+        run: |
+          mkdir -p qa-artifacts
+          cat > qa-artifacts/import-workspace-lifecycle.json <<'JSON'
+          {"schema":"gev-import-workspace-lifecycle/v1","status":"not-run","scope":"short hosted software-rendered ownership diagnostic, not a hardware or heap-soak acceptance result","cases":[],"error":"Lifecycle runner did not complete."}
+          JSON
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Run bounded isolated ownership cases
+        run: |
+          mkdir -p qa-artifacts
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/lifecycle-server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:4174/ > /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then cat qa-artifacts/lifecycle-server.log; exit 1; fi
+          node scripts/qa-import-workspace-lifecycle.mjs --url http://localhost:4174 --cycles 5 --drain-ms 10000 --out qa-artifacts/import-workspace-lifecycle.json
+      - name: Print diagnostic evidence
+        if: always()
+        run: node scripts/print-qa-evidence.mjs qa-artifacts/import-workspace-lifecycle.json
+      - name: Preserve diagnostic evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: import-workspace-lifecycle-${{ github.run_id }}
+          path: qa-artifacts/import-workspace-lifecycle.json
+          if-no-files-found: warn
+          retention-days: 3
+
   rendered-soak:
     name: 60-minute rendered application soak
     if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode == 'standard'
@@ -406,7 +461,7 @@ jobs:
 
   hosted-gpu-probe:
     name: Native WebGL probe (${{ matrix.os }})
-    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke'
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
