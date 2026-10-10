@@ -28,8 +28,8 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace lifecycle runner; rendered CCTV/terrain/picking cases remain | Split import/workspace/cancellation lifecycle and final report pass at `7b92db4`; 141 focused CCTV checks pass for `f2e5ae9`; historical 60-minute soak at `3cdd5cb` is separate evidence | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
-| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace and CCTV lifecycle runners; terrain/picking cases remain | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; historical soak evidence remains separate | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
+| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and equal-style write suppression | Existing queue/revision tests plus 52 focused CCTV tests pass; exact evaluated styles match across eight states; five hosted toggle cycles add zero geometry jobs at `db298d4` | Full appearance and hardware build-count comparisons pending |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
@@ -108,6 +108,53 @@ preserves every timing row and supplies checked source-byte digests. Its inline
 measurement script was not retained, so the independently reproduced report above
 is the reproducible acceptance evidence. Earlier exploratory polygon measurements
 used a rejected fixture and are not accepted performance results.
+
+### CCTV equivalent-style reuse - 10 October 2026
+
+GPT-6 Luna's `db298d42a52d9f0c491a51f78ca060dbaa8a0461` avoids assigning
+semantically unchanged material, depth-fail material and width values. Cesium
+otherwise wraps those raw assignments in new property objects and invalidates
+static polyline geometry. Actual style changes, dynamic properties and custom
+dash parameters still receive the original replacement behavior. Viewshed
+lifetime, geometry, camera ownership and visual defaults are unchanged.
+
+All 52 focused CCTV tests pass. Root's independent comparison loads exact
+baseline/candidate production code into real Cesium entities and geometry
+updaters. Eight style states have identical evaluated output hashes. Five
+unchanged repetitions per state drop from 10 or 15 geometry-change events per
+refresh to zero. This is an event-count/style-equivalence comparison, not a frame
+time or GPU measurement. [Report](performance-evidence/cctv-style-comparison-db298d4.json)
+SHA-256: `b2bc03fd4a10cbc0d32692d23eb77e12cf1e2b4f62a0e5f069d2799cbcb70ba0`.
+[Reproduction script](performance-evidence/cctv-style-comparison.mjs) SHA-256:
+`1b264212caec197ee2817f798b094b5348764cdc2acfc48233975f9ebf150634`.
+Run from a clean checkout at that candidate with locked dependencies:
+`node docs/performance-evidence/cctv-style-comparison.mjs db298d42a52d9f0c491a51f78ca060dbaa8a0461`.
+
+The corrected [rendered baseline](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38057968927)
+at `c19f3271cce3655b10ff1d1abaf3acf288a762ef` fails on its first unchanged
+toggle: active `createGeometry` submissions rise from 10 to 14. Using the same
+harness and synthetic fixture, the [candidate run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38058198587)
+**passes** all five toggles with active geometry submissions fixed at 10 and all
+worker submissions fixed at their warmed value of 89. All pending counts are
+zero. Enabled/disabled resources return to 6/5 listeners, 2/0 timers, one owned
+primitive, six owned scene entities and two cache entries. Direct module
+teardown/reinitialization legitimately builds new geometry, then returns to the
+same owned-resource counts. The owned browser closes normally in 94 ms.
+
+Both runs use Linux SwiftShader, Chrome 152.0.7977.75, Cesium 1.138.0, a
+1440-by-1000 drawing buffer and the same fixture digest. Cold terrain-worker
+totals differ, so no cross-run activation-time comparison is claimed. This closes
+the isolated unchanged-CCTV-toggle reproduction, not every historical retained
+worker path or the Windows hardware/heap plateau gate. Full integration at the
+runtime candidate is [running separately](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38058220331).
+
+Retained [baseline report](performance-evidence/cctv-lifecycle-38057968927.json)
+SHA-256: `5e5d166c0ed64041e5b6d3dc8feca02a711b453d4a0e338d1f55965c44627de5`;
+[candidate report](performance-evidence/cctv-lifecycle-38058198587.json) SHA-256:
+`39c639ffb3b8629b112be517f379528e9afd7847142d3262deb3f4a5738da470`.
+Their [baseline job results](performance-evidence/cctv-lifecycle-38057968927-run.json)
+and [candidate job results](performance-evidence/cctv-lifecycle-38058198587-run.json)
+preserve exact revisions and outcomes.
 
 ### Rendered CCTV drain correction - 10 October 2026
 
