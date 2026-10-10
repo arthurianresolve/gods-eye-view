@@ -411,7 +411,9 @@ partial packet remains partial and cannot close the parent slice.
 - **S47.1 remains partial:** real capture reports do not yet emit the required
   fixture/time/full-route contract or verified served-build provenance. A passing
   pure validator is not a matched browser comparison. S47.1b-1 provides the build-provenance foundation below;
-  workload export and the baseline observer remain to be integrated. No application runtime, VM deployment or visual default changed here.
+  workload export remains to be integrated. The baseline-compatible observer and
+  capture receipt integration are implemented in S47.1b-2 below. No application
+  runtime, VM deployment or visual default changed here.
 - **S47.1b-1 implemented by GPT-6 Luna:** `69ea815` adds
   [local build provenance](../scripts/performance/buildProvenance.mjs), corrected
   in `80d7c7369ce9470a5abe7ce381ecce7f1b42968e`. The correction removes literal
@@ -422,8 +424,32 @@ partial packet remains partial and cannot close the parent slice.
   Separate loopback verification checks bounded streamed responses against that
   unsigned receipt. It neither updates VM105 nor establishes release attestation.
   The [combined focused result](performance-evidence/measurement-foundations-80d7c73.json)
-  identifies the exact tested code. Capture integration and the unchanged-baseline
-  observer remain the next implementation packet, **S47.1b-2**.
+  identifies the exact tested code. This foundation is extended by S47.1b-2 below.
+- **S47.1b-2 implemented by GPT-6 Luna:**
+  `17449d2604475f11175dc227f0c6809b9598fa0d` integrates the clean-build receipt into
+  the capture CLI and adds a shared observer using scene APIs available in the
+  unchanged baseline. It verifies served asset bytes before and after capture,
+  binds the actual harness checkout and application entry point, rejects redirects
+  outside that entry, and records effective settings, populations and the measured
+  camera route. Candidate-only runtime diagnostics remain disabled for comparisons.
+  The coordinator's [30-test focused result](performance-evidence/capture-provenance-17449d2.json)
+  passes, including local builds and negative provenance, settings and route cases.
+  These are Node/loopback checks, not an actual application browser comparison.
+  Receipts remain unsigned; browser response bytes are not independently attested.
+  The current CLI code-request audit substantiates script paths only.
+- **S47.1b remaining:** exercise both actual production builds on the same bounded
+  hosted browser path, then implement observed deterministic provider-fixture
+  delivery and the full workload/time/route contract. Until that delivery exists,
+  capture reports explicitly set `comparisonEligible: false`; the paired validator
+  rejects them. A supplied fixture hash or commit string cannot make a report
+  comparable. No hardware or performance objective pass is claimed by this packet.
+- **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
+  both Node versions because it combined the previous UTC date with hardcoded
+  midnight; around the date boundary that row correctly fell outside 24 hours.
+  `aeef1487d8ed6156c4bdee0c9e247454d11421e6` fixes the test with frozen midday and
+  midnight cases and explicit inclusive/exclusive window edges. The production
+  filter is unchanged. All 27 source/CSV tests pass; the earlier CI failure remains
+  historical evidence, not a production data-filter defect.
 - **Historical integration failure retained:** [CI at `70ca7de`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37987235260)
   passes Node 24/26, Windows onboarding and Linux/macOS recovery, but Windows
   recovery fails reopening the prior `6b896e2` application after the interrupted
