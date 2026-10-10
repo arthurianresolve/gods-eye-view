@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`42d4be66e26e2bb2223aec8506c1b34643367526` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38056869115), [job results](performance-evidence/ci-42d4be6.json)),
+`db298d42a52d9f0c491a51f78ca060dbaa8a0461` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38058220331), [job results](performance-evidence/ci-db298d4.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -109,6 +109,29 @@ measurement script was not retained, so the independently reproduced report abov
 is the reproducible acceptance evidence. Earlier exploratory polygon measurements
 used a rejected fixture and are not accepted performance results.
 
+### CCTV terrain-query cancellation - 10 October 2026
+
+GPT-6 Luna's `a0e7b10c1d2128de1544b53154c5bdb9e59a54a5` connects both catalog
+height-prior queries and active-camera footprint queries to the existing
+per-initialization abort signal. Destroy or reinitialization now cancels that
+consumer's pending terrain work. Normal cancellation does not emit a provider
+failure warning. Existing pose/revision/record-identity guards still reject late
+results from a provider that ignores abort; shared caches and workers are not
+terminated.
+
+The [recorded baseline reproduction summary](performance-evidence/cctv-terrain-abort-baseline-0467781.txt)
+identifies missing signals at `0467781`; it is a condensed account, not a raw
+browser trace. The production-factory tests exercise public camera activation,
+one synchronous ray-pick attempt, terrain request/listener cleanup, successor
+isolation and successful current geometry updates. They also verify an equal
+cached pose starts no redundant terrain lookup. This does not measure real GPU
+ray-picking latency or prove every terrain/picking ownership path is complete.
+
+The 55 focused CCTV checks and 28 terrain service/proxy/ground checks pass;
+the 16-test source suite was rerun after making its failure wait bounded.
+Formatting and diff checks pass. Full integration for this later terrain commit
+is separate from the earlier `db298d4` evidence.
+
 ### CCTV equivalent-style reuse - 10 October 2026
 
 GPT-6 Luna's `db298d42a52d9f0c491a51f78ca060dbaa8a0461` avoids assigning
@@ -146,7 +169,13 @@ Both runs use Linux SwiftShader, Chrome 152.0.7977.75, Cesium 1.138.0, a
 totals differ, so no cross-run activation-time comparison is claimed. This closes
 the isolated unchanged-CCTV-toggle reproduction, not every historical retained
 worker path or the Windows hardware/heap plateau gate. Full integration at the
-runtime candidate is [running separately](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38058220331).
+runtime candidate [passes all seven jobs](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38058220331), including Node 24/26, Windows onboarding, all three platform recovery jobs and the browser journeys. Optional diagnostic jobs were skipped. [Exact job results](performance-evidence/ci-db298d4.json).
+
+Its [Windows recovery report](performance-evidence/profile-recovery-38058220331-windows.json)
+passes all five persisted-workspace checkpoints. Browser shutdown completes
+normally in 296-472 ms without forced termination; this remains hosted
+SwiftShader recovery evidence. Report SHA-256:
+`c0ad5a4133cc9c8b12b41bd39b549c5150e0df7916443af0dbb8a8f33b5e8df5`.
 
 Retained [baseline report](performance-evidence/cctv-lifecycle-38057968927.json)
 SHA-256: `5e5d166c0ed64041e5b6d3dc8feca02a711b453d4a0e338d1f55965c44627de5`;

@@ -1,0 +1,13 @@
+﻿Recorded baseline reproduction summary (condensed from the test output)
+Baseline source commit: 0467781a682d961379d9a3820b6c7824fc63dc17
+Command: node --test --test-reporter=tap --test-name-pattern="active-camera obstruction pick" src/layers/cctv/source.test.mjs
+Observed result: FAIL, one test, 0 passed.
+
+Subtest: active-camera obstruction pick starts abortable footprint terrain work
+Assertion: assert.ok(footprintSignal instanceof AbortSignal)
+Actual: false (the production terrain resolver was called with options.signal undefined).
+The test reached the public layer.setActiveCamera('camera-a') activation path and asserted scene.pickFromRay was called once before the missing signal assertion.
+
+A second baseline reproduction through init/re-init recorded the same missing signal on resolveGroundPriors: firstSignal.aborted was undefined after superseding init, rather than true. Command: node --test --test-reporter=tap --test-name-pattern="CCTV init aborts catalog terrain-prior" src/layers/cctv/source.test.mjs.
+No application/service runtime was modified during these reproductions.
+
