@@ -20,6 +20,7 @@ on:
             cctv-lifecycle,
             mission-render-demand,
             tracking-regression,
+            mixed-use-smoke,
             windows-profile-recovery,
             windows-browser-shutdown,
           ]
@@ -62,7 +63,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -111,7 +112,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -217,7 +218,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -252,7 +253,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-browser-shutdown' && inputs.validation_mode != 'mixed-use-smoke'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -595,6 +596,51 @@ jobs:
           if-no-files-found: warn
           retention-days: 3
 
+  mixed-use-smoke:
+    name: Isolated rendered mixed-use smoke
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mixed-use-smoke'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      QA_FAIL_ON_RETRY: 1
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Start fixture application
+        run: |
+          mkdir -p qa-artifacts
+          git rev-parse HEAD > qa-artifacts/mixed-use-source.txt
+          git status --porcelain > qa-artifacts/mixed-use-source-status.txt
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/mixed-use-server.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf http://localhost:4174/ > /dev/null && exit 0
+            sleep 1
+          done
+          cat qa-artifacts/mixed-use-server.log
+          exit 1
+      - name: Run the existing bounded mixed-use smoke
+        run: |
+          set -o pipefail
+          npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json 2>&1 | tee qa-artifacts/mixed-use-smoke.log
+      - name: Preserve the report including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: mixed-use-smoke-${{ github.run_id }}
+          path: qa-artifacts/mixed-use-*
+          retention-days: 3
+
   rendered-soak:
     name: 60-minute rendered application soak
     if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode == 'standard'
@@ -638,7 +684,7 @@ jobs:
 
   hosted-gpu-probe:
     name: Native WebGL probe (${{ matrix.os }})
-    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression'
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'mixed-use-smoke'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
