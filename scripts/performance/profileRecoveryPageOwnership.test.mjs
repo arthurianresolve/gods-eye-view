@@ -165,8 +165,10 @@ test('browser close records an already-exited process and releases listeners', a
   assert.deepEqual(outcome.observation.processExit, {
     code: 0,
     signal: null,
-    elapsedMs: 0,
+    elapsedMs: null,
   });
+  assert.equal(outcome.observation.forceProcessStatus, 'not-needed');
+  assert.equal(outcome.observation.forceProcessAttempted, false);
   assert.equal(child.listenerCount('exit'), 0);
   assert.equal(outcome.observation.closeStatus, 'completed');
   assert.equal(outcome.observation.closeDeadlineMs, 25);
@@ -175,6 +177,7 @@ test('browser close records an already-exited process and releases listeners', a
 test('an exited process with an unresolved close acknowledgement remains a failure', async () => {
   const child = fakeBrowserProcess();
   const started = Date.now();
+  let forced = false;
   const outcome = await closeRecoveryBrowser(
     {
       process: () => child,
@@ -184,14 +187,23 @@ test('an exited process with an unresolved close acknowledgement remains a failu
         return new Promise(() => {});
       },
     },
-    { timeoutMs: 20, forceProcess: async () => {} },
+    {
+      timeoutMs: 20,
+      forceProcess: async () => {
+        forced = true;
+        return { confirmed: true };
+      },
+    },
   );
   assert.ok(Date.now() - started < 500);
   assert.equal(outcome.closeCompleted, false);
-  assert.equal(outcome.forcedProcessTermination, true);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(forced, false);
   assert.equal(outcome.observation.closeStatus, 'timed-out');
   assert.equal(outcome.observation.processExitedBeforeClose, false);
   assert.equal(outcome.observation.processExit.code, 0);
+  assert.equal(outcome.observation.forceProcessStatus, 'already-exited');
+  assert.equal(outcome.observation.forceProcessAttempted, false);
   assert.equal(child.listenerCount('exit'), 0);
 });
 
@@ -205,6 +217,7 @@ test('a live process timeout invokes bounded owned-process cleanup and stays fai
       timeoutMs: 20,
       forceProcess: async () => {
         forced = true;
+        return { confirmed: true };
       },
     },
   );
@@ -213,8 +226,21 @@ test('a live process timeout invokes bounded owned-process cleanup and stays fai
   assert.equal(outcome.closeCompleted, false);
   assert.equal(outcome.forcedProcessTermination, true);
   assert.equal(outcome.observation.processExit, null);
-  assert.equal(outcome.observation.forceProcessStatus, 'completed');
+  assert.equal(outcome.observation.forceProcessStatus, 'confirmed');
+  assert.equal(outcome.observation.forceProcessAttempted, true);
   assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('a resolved but unconfirmed process stop is not reported as termination', async () => {
+  const child = fakeBrowserProcess();
+  const outcome = await closeRecoveryBrowser(
+    { process: () => child, close: () => new Promise(() => {}) },
+    { timeoutMs: 20, forceProcess: async () => ({ attempted: true }) },
+  );
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(outcome.observation.forceProcessStatus, 'unconfirmed');
+  assert.equal(outcome.observation.forceProcessAttempted, true);
 });
 
 test('close rejection is distinguished and failed forced cleanup is reported', async () => {
@@ -260,6 +286,7 @@ test('successful close clears the deadline and does not invoke fallback', async 
   assert.equal(outcome.closeCompleted, true);
   assert.equal(outcome.forcedProcessTermination, false);
   assert.equal(outcome.observation.closeStatus, 'completed');
+  assert.equal(outcome.observation.forceProcessStatus, 'not-needed');
   assert.equal(forced, false);
   assert.equal(child.listenerCount('exit'), 0);
 });

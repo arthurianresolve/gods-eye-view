@@ -88,19 +88,47 @@ await mkdir(path.dirname(out), { recursive: true });
 let sequence = 0;
 
 async function stopTree(child) {
-  if (child.exitCode != null) return;
+  if (!child) return { attempted: false, confirmed: false, reason: 'missing-process' };
+  if (child.exitCode != null || child.signalCode != null)
+    return { attempted: false, confirmed: true, reason: 'already-exited' };
+  let terminationRequested = false;
   if (process.platform === 'win32') {
-    await new Promise((resolve) =>
-      spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], {
+    const result = await new Promise((resolve) => {
+      const killer = spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], {
         stdio: 'ignore',
         windowsHide: true,
-      }).once('exit', resolve),
-    );
+      });
+      killer.once('error', () => resolve(null));
+      killer.once('exit', (code) => resolve(code));
+    });
+    terminationRequested = result === 0;
   } else {
     try {
       process.kill(-child.pid, 'SIGTERM');
-    } catch {}
+      terminationRequested = true;
+    } catch {
+      terminationRequested = false;
+    }
   }
+  if (!terminationRequested)
+    return { attempted: true, confirmed: false, reason: 'request-failed' };
+  const exitObserved = await new Promise((resolve) => {
+    if (child.exitCode != null || child.signalCode != null) return resolve(true);
+    const timer = setTimeout(() => {
+      child.off('exit', onExit);
+      resolve(false);
+    }, 1500);
+    const onExit = () => {
+      clearTimeout(timer);
+      resolve(true);
+    };
+    child.once('exit', onExit);
+  });
+  return {
+    attempted: true,
+    confirmed: exitObserved,
+    reason: exitObserved ? 'process-exit-observed' : 'exit-not-observed',
+  };
 }
 
 function chromeProcessCount() {
@@ -509,11 +537,14 @@ async function reopen(label, { seed = false } = {}) {
       forcedProcessTermination: false,
       observation: null,
     };
-    if (browser)
-      browserClose = await closeRecoveryBrowser(browser, {
-        forceProcess: () => stopTree(browser.process()),
-      });
-    browserProcess?.stderr?.off('data', stderrListener);
+    try {
+      if (browser)
+        browserClose = await closeRecoveryBrowser(browser, {
+          forceProcess: () => stopTree(browser.process()),
+        });
+    } finally {
+      browserProcess?.stderr?.off('data', stderrListener);
+    }
     pageOwnership.browserCloseCompleted = browserClose.closeCompleted;
     pageOwnership.forcedBrowserProcessTermination =
       browserClose.forcedProcessTermination;

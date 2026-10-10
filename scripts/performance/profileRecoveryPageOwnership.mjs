@@ -101,7 +101,7 @@ export async function closeRecoveryBrowser(
   };
   processExit = initialExit();
   const processExitedBeforeClose = processExit !== null;
-  if (processExit) processExit = { ...processExit, elapsedMs: 0 };
+  if (processExit) processExit = { ...processExit, elapsedMs: null };
   const onExit = (code, signal) => {
     processExit = { code, signal, elapsedMs: Math.max(0, now() - startedAt) };
   };
@@ -129,6 +129,7 @@ export async function closeRecoveryBrowser(
 
   let forcedProcessTermination = false;
   let forceProcessStatus = forceProcess ? 'not-needed' : 'not-configured';
+  let forceProcessAttempted = false;
   try {
     const closeResult = await settleWithin(() => browser.close());
     const closeCompleted = closeResult.kind === 'resolved';
@@ -151,21 +152,28 @@ export async function closeRecoveryBrowser(
     }
 
     if (!closeCompleted && forceProcess) {
-      const forceStartedAt = now();
-      const forceResult = await settleWithin(forceProcess);
-      forceProcessElapsedMs = Math.max(0, now() - forceStartedAt);
-      forceProcessStatus =
-        forceResult.kind === 'resolved'
-          ? 'completed'
-          : forceResult.kind === 'timeout'
-            ? 'timed-out'
-            : 'rejected';
-      forcedProcessTermination = forceResult.kind === 'resolved';
+      const currentExit = initialExit();
+      if (currentExit) {
+        forceProcessStatus = 'already-exited';
+      } else {
+        forceProcessAttempted = true;
+        const forceStartedAt = now();
+        const forceResult = await settleWithin(forceProcess);
+        forceProcessElapsedMs = Math.max(0, now() - forceStartedAt);
+        if (forceResult.kind === 'timeout') {
+          forceProcessStatus = 'timed-out';
+        } else if (forceResult.kind === 'rejected') {
+          forceProcessStatus = 'rejected';
+        } else if (forceResult.value?.confirmed === true) {
+          forceProcessStatus = 'confirmed';
+          forcedProcessTermination = true;
+        } else {
+          forceProcessStatus = 'unconfirmed';
+        }
+      }
     }
 
     processExit ||= initialExit();
-    if (processExit && processExit.elapsedMs == null)
-      processExit = { ...processExit, elapsedMs: 0 };
     return {
       closeCompleted,
       forcedProcessTermination,
@@ -179,6 +187,7 @@ export async function closeRecoveryBrowser(
         processExitedBeforeClose,
         processExit,
         forceProcessStatus,
+        forceProcessAttempted,
         forceProcessElapsedMs,
       },
     };
