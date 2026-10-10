@@ -75,6 +75,39 @@ This measures definition-change notifications, not submitted worker jobs, GPU
 work or frame time. Frozen-commit comparison, rendered equivalence and integration
 checks remain pending. This does not complete the wider S50.1 revision audit.
 
+The frozen, clean-source [five-pair Node comparison](performance-evidence/gizmo-geometry-996a8d3.json)
+at `996a8d3b8b73da0d3f64392b993bdff81a1e857f` passes all 50 exact snapshot
+comparisons. Actual updater notifications fall from 375 to 80 across the fixed
+sequence. Root's 15 focused tests, formatting across 1,499 adopted files and
+package-boundary checks pass. [Rendered comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083654918)
+and [full integration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083652826)
+were dispatched at this revision; their results are pending. No FPS, GPU-build
+or full S50 acceptance claim follows from the Node result.
+
+### Recovery integration follow-up - 10 October 2026
+
+The [completed integration run at `aea307c`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38082567321)
+passes both Node versions, Windows onboarding and all browser journeys, but fails
+all three installation-recovery jobs ([job metadata](performance-evidence/ci-aea307c.json)).
+The current release stager attempted to copy the new Cesium patch script out of
+the historical `6b896e2` installation, where it does not exist. `e82d12a` includes
+patch support files only when the staged package declares the patch hook; current
+packages still fail staging if required support files are missing. Seven focused
+staging/recovery checks pass. The failed CI result remains failed.
+
+The [Windows-only run at `e4a163c`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083013719)
+gets past staging and preserves the same asset digest, settings and workspace in
+all five recovery checkpoints. It nevertheless **fails** the final checkpoint's
+browser shutdown. The page closes and zero pages remain; Chrome acknowledges
+`Browser.close` in 11.1 ms and disconnects in 41.9 ms, but the parent process
+exceeds the unchanged five-second deadline and needs confirmed forced cleanup.
+The first four closes complete normally in 381-625 ms. This repeats the unresolved
+Windows post-acknowledgement shutdown failure, rather than proving its cause or a
+fix. [Raw report extracted from the CI log](performance-evidence/profile-recovery-38083013719-windows.json)
+and [terminal job metadata](performance-evidence/profile-recovery-38083013719-run.json)
+retain the failure. The runner uses hosted SwiftShader; this is not physical GPU
+evidence. All-platform recovery at the new `996a8d3` candidate is pending.
+
 ### S51.4 CCTV calibration render-demand candidate - 10 October 2026
 
 The next candidate removes the permanent `cctv-adjust` render hold. Accepted

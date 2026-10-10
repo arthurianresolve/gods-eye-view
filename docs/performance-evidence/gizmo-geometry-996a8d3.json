@@ -1,0 +1,1076 @@
+{
+  "schema": "gev-cctv-gizmo-geometry-comparison/v1",
+  "generatedAt": "2026-10-10T20:24:44.933Z",
+  "runtime": {
+    "nodeVersion": "v24.16.0",
+    "platform": "win32",
+    "architecture": "x64"
+  },
+  "scope": "Node real-Cesium Entity/PolylineGeometryUpdater definition-change notifications; not GPU builds or frame-rate evidence",
+  "baselineCommit": "aea307c211e99f2f23a538a8356825723edd0097",
+  "candidateCommit": "996a8d3b8b73da0d3f64392b993bdff81a1e857f",
+  "sourceClean": true,
+  "sourceStatusEntryCount": 0,
+  "candidateSourceDirty": false,
+  "baselineSourceSha256": "7aa136666b7af844a57876d809e0f3ae77bd29e017c92ae41c23da7543e432a8",
+  "candidateSourceSha256": "0e3acb3c07722b5cef753c0e59120080db5291d99176709d35803f50bb00f12d",
+  "harnessSha256": "26ff5f958cffae0c855b907cc81d50c69b6fb6fc8c4adf814376c6b998f50a6f",
+  "cesiumVersion": "1.138.0",
+  "pairCount": 5,
+  "snapshotsCompared": 50,
+  "sceneObjects": {
+    "gizmoEntities": 8,
+    "polylineGeometryUpdaters": 5
+  },
+  "pairs": [
+    {
+      "pair": 0,
+      "stages": [
+        {
+          "name": "initial",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 0,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "unchanged-refreshes-and-toggle",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 35,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cloned-equivalent-record",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "heading-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "candidateSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 1,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "range-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "pitch-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cap-altitude-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "candidateSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "fov-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "candidateSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "mount-and-terrain",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "candidateSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "in-place-mutation",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "candidateSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "stages": [
+        {
+          "name": "initial",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 0,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "unchanged-refreshes-and-toggle",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 35,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cloned-equivalent-record",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "heading-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "candidateSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 1,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "range-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "pitch-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cap-altitude-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "candidateSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "fov-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "candidateSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "mount-and-terrain",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "candidateSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "in-place-mutation",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "candidateSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "stages": [
+        {
+          "name": "initial",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 0,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "unchanged-refreshes-and-toggle",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 35,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cloned-equivalent-record",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "heading-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "candidateSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 1,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "range-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "pitch-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cap-altitude-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "candidateSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "fov-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "candidateSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "mount-and-terrain",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "candidateSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "in-place-mutation",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "candidateSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "stages": [
+        {
+          "name": "initial",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 0,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "unchanged-refreshes-and-toggle",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 35,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cloned-equivalent-record",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "heading-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "candidateSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 1,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "range-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "pitch-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cap-altitude-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "candidateSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "fov-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "candidateSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "mount-and-terrain",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "candidateSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "in-place-mutation",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "candidateSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "stages": [
+        {
+          "name": "initial",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 0,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "unchanged-refreshes-and-toggle",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 35,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cloned-equivalent-record",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "candidateSnapshotSha256": "a4c73884751672b73d9782594ca1769b2450544e8a973ec40c3b4010b1312593",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "heading-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "candidateSnapshotSha256": "fa5def5b9831651151f81afffff6bb10b74476a048701f32bfcea1a4812abe1a",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 1,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "range-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "pitch-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "candidateSnapshotSha256": "a5f786c08a4ccadc588f6023142cb4a0a19e0af882171a1ddc70cef4a90240c6",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "cap-altitude-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "candidateSnapshotSha256": "e55e3cc9972b229dc9c2e6cc31c0599518f854f3994027d4731c85513e000e4e",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "fov-only",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "candidateSnapshotSha256": "697d97813624c350fbe9bca53440be26ec851f2b970b83a205f68db7aa4a3719",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 0,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": []
+        },
+        {
+          "name": "mount-and-terrain",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "candidateSnapshotSha256": "917a9240eb73b976b5448ec8f21786cc218a827ca197584fbbbff4e36911764c",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        },
+        {
+          "name": "in-place-mutation",
+          "geometryOutputsEqual": true,
+          "baselineSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "candidateSnapshotSha256": "005ccbff096894209d6d76a2c155e8611b2c2d19241e2e5de1a548c78bc434a4",
+          "baselineGeometryChanged": 5,
+          "candidateGeometryChanged": 5,
+          "baselineChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ],
+          "candidateChangedIds": [
+            "cctv-gizmo-move-east",
+            "cctv-gizmo-move-north",
+            "cctv-gizmo-move-up",
+            "cctv-gizmo-ring-heading",
+            "cctv-gizmo-ring-pitch"
+          ]
+        }
+      ]
+    }
+  ],
+  "totalUpdaterInvalidations": {
+    "baseline": 375,
+    "candidate": 80
+  }
+}
