@@ -228,8 +228,10 @@ export function createCalibrationGizmo({
   getActiveRecord,
   applyPatch,
   endPatch,
+  requestRender = () => {},
 }) {
   let enabled = false;
+  let destroyed = false;
   let drag = null; // { part, startCal, basePose, refs... }
   let hoveredId = null;
   let lastDragAt = 0;
@@ -300,18 +302,28 @@ export function createCalibrationGizmo({
   pointPart('handle-fov-r', COLOR_HANDLE, 10);
 
   function hideAll() {
-    for (const entity of entities.values()) entity.show = false;
+    let changed = false;
+    for (const entity of entities.values()) {
+      if (entity.show) changed = true;
+      entity.show = false;
+    }
+    return changed;
+  }
+
+  function requestSceneRender(reason) {
+    if (!destroyed) requestRender(reason);
   }
 
   /** Recomputes every handle's geometry from the active record's CURRENT pose
    * (the PINNED record while a drag is live, so handles never jump to another
    * camera mid-interaction). */
   function refresh() {
+    if (destroyed) return;
     const record = enabled ? (drag ? drag.record : getActiveRecord()) : null;
     const positions = record?.frustumPositions;
     const camera = record?.camera;
     if (!record || !positions || !camera) {
-      hideAll();
+      if (hideAll()) requestSceneRender('cctv-gizmo-hidden');
       return;
     }
     const mount = positions.mount;
@@ -373,6 +385,7 @@ export function createCalibrationGizmo({
       new Cesium.Cartesian3(),
     );
     for (const entity of entities.values()) entity.show = true;
+    requestSceneRender('cctv-gizmo-refresh');
   }
 
   /** Extracts a gizmo part name from a pick result, or null. */
@@ -456,6 +469,7 @@ export function createCalibrationGizmo({
         (name === 'handle-range' ? 13 : 10) + (hot ? 4 : 0);
     }
     setCursor(hoveredId ? 'grab' : '');
+    if (enabled) requestSceneRender('cctv-gizmo-hover');
   }
 
   /** Captures the fixed drag reference frame + start values for a part. */
@@ -676,24 +690,29 @@ export function createCalibrationGizmo({
 
   return {
     setEnabled(value) {
+      if (destroyed) return;
       enabled = !!value;
       if (!enabled) {
         if (drag) endDrag();
         setHovered(null);
-        hideAll();
+        if (hideAll()) requestSceneRender('cctv-gizmo-disabled');
       } else {
         refresh();
       }
     },
     refresh,
     destroy() {
+      if (destroyed) return;
       if (drag) endDrag();
       handler.destroy();
+      const wasVisible = [...entities.values()].some((entity) => entity.show);
       for (const entity of entities.values()) {
         viewer.entities.remove(entity);
       }
       entities.clear();
       setCursor('');
+      if (wasVisible) requestRender('cctv-gizmo-destroyed');
+      destroyed = true;
     },
     isDragging: () => !!drag,
     isEnabled: () => enabled,

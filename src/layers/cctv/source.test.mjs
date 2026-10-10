@@ -20,6 +20,7 @@ const camera = {
 function createEmptyCctvLayerWithFocusListeners(
   source = createCctvSource(),
   resolveEllipsoidalGround = async () => [],
+  render = null,
 ) {
   const focusListeners = new Set();
   const spriteUnregistrations = [];
@@ -62,7 +63,10 @@ function createEmptyCctvLayerWithFocusListeners(
         return () => focusListeners.delete(listener);
       },
     },
-    render: { holdContinuousRender: noop, releaseContinuousRender: noop },
+    render: render || {
+      holdContinuousRender: noop,
+      releaseContinuousRender: noop,
+    },
   };
   return {
     layer: createCctvLayer({ services, source }),
@@ -292,6 +296,36 @@ test('direct destroy releases the focus-appearance subscription idempotently', (
   assert.equal(focusListeners.size, 0);
 });
 
+test('calibration mode uses one-shot invalidations without a continuous hold', (t) => {
+  const requests = [];
+  const holds = [];
+  const releases = [];
+  const render = {
+    holdContinuousRender(owner) {
+      holds.push(owner);
+    },
+    releaseContinuousRender(owner) {
+      releases.push(owner);
+    },
+    governorRequestRender(reason) {
+      requests.push(reason);
+    },
+  };
+  const fixture = createEmptyCctvLayerWithFocusListeners(
+    createCctvSource(),
+    async () => [],
+    render,
+  );
+  t.after(() => fixture.layer.destroy());
+
+  fixture.layer.setParams({ calibrationMode: true });
+  fixture.layer.setParams({ calibrationMode: false });
+
+  assert.deepEqual(requests, ['cctv-adjust-enabled', 'cctv-adjust-disabled']);
+  assert.deepEqual(holds, []);
+  assert.deepEqual(releases, []);
+});
+
 test('disable then destroy and independent CCTV instances own separate focus listeners', (t) => {
   const first = createEmptyCctvLayerWithFocusListeners();
   const second = createEmptyCctvLayerWithFocusListeners();
@@ -440,6 +474,8 @@ test('camera activation pick owns footprint terrain work through re-init', async
   const previousDocument = globalThis.document;
   const previousImage = globalThis.Image;
   const previousWindow = globalThis.window;
+  const previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const previousCancelAnimationFrame = globalThis.cancelAnimationFrame;
   const context = {
     clearRect() {},
     createLinearGradient() {
@@ -464,10 +500,14 @@ test('camera activation pick owns footprint terrain work through re-init', async
     }
   };
   globalThis.window = { addEventListener() {}, removeEventListener() {} };
+  globalThis.requestAnimationFrame = () => 1;
+  globalThis.cancelAnimationFrame = () => {};
   t.after(() => {
     globalThis.document = previousDocument;
     globalThis.Image = previousImage;
     globalThis.window = previousWindow;
+    globalThis.requestAnimationFrame = previousRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = previousCancelAnimationFrame;
   });
 
   const footprintRequests = [];
@@ -486,9 +526,15 @@ test('camera activation pick owns footprint terrain work through re-init', async
     }),
     getHealth: async () => ({ cameras: [] }),
   };
+  const renderRequests = [];
   const fixture = createEmptyCctvLayerWithFocusListeners(
     source,
     resolveEllipsoidalGround,
+    {
+      holdContinuousRender() {},
+      releaseContinuousRender() {},
+      governorRequestRender: (reason) => renderRequests.push(reason),
+    },
   );
   t.after(() => fixture.layer.destroy());
   const viewer = createCctvTestViewer();
@@ -499,6 +545,7 @@ test('camera activation pick owns footprint terrain work through re-init', async
   };
 
   await fixture.layer.init(viewer);
+  fixture.layer.enable();
   fixture.layer.setParams({ showProjection: false });
   fixture.layer.setActiveCamera('camera-a');
   assert.equal(obstructionPicks, 1);
@@ -516,6 +563,7 @@ test('camera activation pick owns footprint terrain work through re-init', async
     return undefined;
   };
   await fixture.layer.init(successorViewer);
+  fixture.layer.enable();
   fixture.layer.setParams({ showProjection: false });
   fixture.layer.setActiveCamera('camera-a');
   assert.equal(successorPickCount, 1);
@@ -530,6 +578,7 @@ test('camera activation pick owns footprint terrain work through re-init', async
   );
   t.after(unsubscribe);
   const notificationsBeforeStaleCompletion = notifications.length;
+  const requestsBeforeStaleCompletion = renderRequests.length;
   const coveragePositions = () =>
     JSON.stringify(
       [...successorViewer.entities.all]
@@ -543,6 +592,7 @@ test('camera activation pick owns footprint terrain work through re-init', async
   );
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(notifications.length, notificationsBeforeStaleCompletion);
+  assert.equal(renderRequests.length, requestsBeforeStaleCompletion);
   assert.equal(coveragePositions(), beforeStaleCompletion);
   assert.equal(fixture.layer.getStats().count, 1);
   const beforeCurrentCompletion = coveragePositions();
@@ -554,6 +604,7 @@ test('camera activation pick owns footprint terrain work through re-init', async
   );
   await new Promise((resolve) => setImmediate(resolve));
   assert.ok(notifications.length > notificationsBeforeStaleCompletion);
+  assert.ok(renderRequests.includes('cctv-footprint-ground'));
   assert.notEqual(coveragePositions(), beforeCurrentCompletion);
   fixture.layer.setActiveCamera('camera-a');
   assert.equal(terrainCalls, 4);

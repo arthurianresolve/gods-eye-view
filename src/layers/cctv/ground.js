@@ -10,6 +10,7 @@ const FOOTPRINT_RETRY_MS = 60_000;
 export function createGround({ state: layerState, services, parts, source }) {
   const { resolveGroundFloorCells } = services.ground;
   const { resolveEllipsoidalGround } = services.terrain;
+  const requestRender = services.render?.governorRequestRender || (() => {});
 
   /**
    * Task 5 (height-datum fix): maps the scene's `globe.show` flag to the surface
@@ -350,6 +351,7 @@ export function createGround({ state: layerState, services, parts, source }) {
     parts.geometry.applyFrustumGeometry(record, groundAltFor(record));
     parts.rendering.refreshCoverageStyles();
     parts.presentation.notifyListeners();
+    if (layerState._enabled) requestRender('cctv-footprint-ground');
   }
 
   return {

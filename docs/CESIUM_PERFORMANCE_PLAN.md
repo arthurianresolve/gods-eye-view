@@ -45,6 +45,30 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### S51.4 CCTV calibration render-demand candidate - 10 October 2026
+
+The next candidate removes the permanent `cctv-adjust` render hold. Accepted
+calibration edits, gizmo hover/visibility changes, committed ground results and
+teardown instead invalidate the scene explicitly. The `cctv-projection` animation
+owner is unchanged. Manual visual settings and calibration geometry remain in
+force. Root's focused CCTV, camera-health, focus and native-input-driver suite
+passes 309 checks; rendered acceptance and integration CI are still pending.
+
+The new comparison constructs the production viewer and CCTV layer with one
+synthetic camera and deterministic ground. Five alternating control/candidate
+pairs each observe ten seconds of settled calibration mode and perform a native
+east-handle drag. The control adds the former continuous hold; the candidate uses
+explicit invalidation. The report retains actual picks, trusted input events,
+calibration values, camera and gizmo geometry, before/after pixels, foreground
+conditions and cleanup for every attempted viewer, including failed trials.
+Capture requests are excluded from the idle measurement. Local Windows control
+and the hosted runner use the same visible pointer instructions.
+
+This isolates idle calibration and native drag behavior. It does not establish
+full-application projection/coverage equivalence, motion p95, CPU/GPU time, or a
+60-minute retention pass. The candidate must remain unaccepted until the rendered
+comparison and applicable integration checks pass at its exact revision.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding

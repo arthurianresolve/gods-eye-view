@@ -10,6 +10,8 @@ import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
+import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
+import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
   closeRecoveryBrowser,
@@ -46,6 +48,8 @@ const url = 'http://127.0.0.1:4184/scripts/fixtures/capture-matrix.html';
 let browser;
 let vesselPage;
 let vesselSession;
+let calibrationPage;
+let calibrationSession;
 const closeOwnedBrowser = (ownedBrowser) =>
   closeRecoveryBrowser(ownedBrowser, {
     timeoutMs: 5000,
@@ -318,6 +322,78 @@ try {
         expectedCommit: commit,
       });
     }
+    if (
+      process.argv.includes('--calibration') &&
+      report.hardwareRenderingAvailable
+    ) {
+      report.calibrationPageErrors = [];
+      report.calibrationInterceptionErrors = [];
+      report.calibrationExternalRequestCount = 0;
+      report.calibrationPointerActions = [];
+      calibrationPage = await browser.newPage();
+      calibrationPage.on('pageerror', (error) => {
+        if (report.calibrationPageErrors.length < 20)
+          report.calibrationPageErrors.push(
+            String(error.message).slice(0, 500),
+          );
+      });
+      const viewport = { width: 1200, height: 960, deviceScaleFactor: 1 };
+      await calibrationPage.setViewport(viewport);
+      calibrationSession = await calibrationPage.createCDPSession();
+      await interceptFixtureSession(
+        calibrationSession,
+        new URL(url).origin,
+        (requestUrl) => {
+          if (
+            ['http:', 'https:'].includes(requestUrl.protocol) &&
+            requestUrl.origin !== new URL(url).origin
+          )
+            report.calibrationExternalRequestCount += 1;
+        },
+        (error) => {
+          if (report.calibrationInterceptionErrors.length < 20)
+            report.calibrationInterceptionErrors.push(
+              String(error.message).slice(0, 500),
+            );
+        },
+      );
+      await calibrationPage.goto(
+        url.replace('capture-matrix.html', 'cctv-calibration-demand.html'),
+        { waitUntil: 'networkidle0' },
+      );
+      await calibrationPage.click('#run');
+      const readJson = (selector) =>
+        calibrationPage.$eval(selector, (element) =>
+          element.textContent.trim() ? JSON.parse(element.textContent) : null,
+        );
+      report.calibrationRenderDemand = await driveNativePointerFixture({
+        readResult: () => readJson('#result'),
+        readInstruction: () => readJson('#pointer-instruction'),
+        mouse: calibrationPage.mouse,
+        viewport,
+        actions: report.calibrationPointerActions,
+      });
+      report.calibrationGraphics = await readBrowserGraphicsInfo(browser);
+      report.calibrationRenderingEvidence = classifyRenderer(
+        report.calibrationRenderDemand.environment?.renderer,
+        report.calibrationGraphics,
+      );
+      if (!report.calibrationRenderingEvidence.accelerationVerified)
+        throw new Error(
+          'Calibration viewer did not retain verified acceleration',
+        );
+      if (
+        report.calibrationPageErrors.length ||
+        report.calibrationInterceptionErrors.length ||
+        report.calibrationExternalRequestCount
+      )
+        throw new Error(
+          'Calibration fixture had page errors or external requests',
+        );
+      validateCctvCalibrationDemandReport(report.calibrationRenderDemand, {
+        expectedCommit: commit,
+      });
+    }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       await browser.close();
       browser = null;
@@ -345,6 +421,11 @@ try {
     }
   }
 } catch (error) {
+  if (calibrationPage && !report.calibrationRenderDemand) {
+    report.calibrationRenderDemand = await calibrationPage
+      .evaluate(() => window.__cctvCalibrationDemandResult || null)
+      .catch(() => null);
+  }
   if (vesselPage && !report.vesselRenderDemand) {
     report.vesselRenderDemand = await vesselPage
       .evaluate(() => window.__vesselRenderDemandResult || null)
@@ -354,6 +435,13 @@ try {
   report.reason = `Native renderer probe failed: ${error.message}`;
   process.exitCode = 1;
 } finally {
+  if (calibrationSession) {
+    await calibrationSession.detach().catch((error) => {
+      report.status = 'failed';
+      report.calibrationDetachError = error.message;
+      process.exitCode = 1;
+    });
+  }
   if (vesselSession) {
     await vesselSession.detach().catch((error) => {
       report.status = 'failed';
@@ -375,7 +463,8 @@ try {
   server.kill();
   if (
     process.argv.includes('--infrastructure') ||
-    process.argv.includes('--vessels')
+    process.argv.includes('--vessels') ||
+    process.argv.includes('--calibration')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

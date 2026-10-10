@@ -48,6 +48,7 @@ export function createLifecycle({
     services.picking;
   const { onFocusTargetAppear } = services.focus;
   const { releaseContinuousRender } = services.render;
+  const requestRender = services.render?.governorRequestRender || (() => {});
 
   /** Resets all module-scoped runtime state to initial values. */
 
@@ -116,6 +117,8 @@ export function createLifecycle({
       );
       layerState._billboards = null;
     }
+    if (viewer && !viewer.isDestroyed?.())
+      requestRender('cctv-owners-released');
   }
   const methods = {
     /**
@@ -492,6 +495,7 @@ export function createLifecycle({
       // source entries, pacer timer, in-flight handlers, and caches.
       parts.cards.teardownAmbientCards();
       parts.rendering.hideCctvVisuals();
+      requestRender('cctv-disabled');
       parts.presentation.notifyListeners();
     },
 

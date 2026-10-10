@@ -7,7 +7,7 @@ import {
 } from './policy.js';
 
 export function createControls({ state: layerState, services, parts, source }) {
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const requestRender = services.render?.governorRequestRender || (() => {});
   const { CCTV_ACTIVATION_RESULT } = services.activation;
 
   const methods = {
@@ -106,6 +106,7 @@ export function createControls({ state: layerState, services, parts, source }) {
             parts.ground.resolveCommittedGroundAnchor(targetRecord);
             void parts.ground.resolveFootprintGround(targetRecord);
             parts.frames.refreshProjectionImage(targetRecord, true);
+            requestRender('cctv-calibration-reset');
           }
           if (
             calibrationCfg.patch &&
@@ -151,12 +152,10 @@ export function createControls({ state: layerState, services, parts, source }) {
         if (layerState._calibrationMode) {
           parts.calibration.ensureGizmo();
           layerState._gizmo?.setEnabled(true);
-          // ADJUST mode: gizmo drags mutate entity geometry from pointer events,
-          // which don't trigger renders in requestRenderMode. (perf wave 2)
-          holdContinuousRender('cctv-adjust');
+          requestRender('cctv-adjust-enabled');
         } else {
-          releaseContinuousRender('cctv-adjust');
           layerState._gizmo?.setEnabled(false);
+          requestRender('cctv-adjust-disabled');
         }
       }
       if (params.focusSelected && layerState._activeCameraId) {

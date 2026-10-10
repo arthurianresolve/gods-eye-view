@@ -1,0 +1,1085 @@
+import * as Cesium from 'cesium';
+import 'cesium/Build/Cesium/Widgets/widgets.css';
+import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
+import { createApplicationViewer } from '../../src/app/viewer.js';
+import { createApplicationCctv } from '../../src/app/layers/cctv.js';
+import {
+  destroyWorldOverlay,
+  initWorldOverlay,
+} from '../../src/overlays/worldOverlay.js';
+import {
+  getRenderGovernorDiagnostics,
+  holdContinuousRender,
+  installRenderGovernor,
+  releaseContinuousRender,
+  uninstallRenderGovernor,
+} from '../../src/renderGovernor.js';
+import {
+  compareCctvCalibrationPair,
+  validateCctvCalibrationDemandReport,
+} from '../performance/cctvCalibrationDemand.mjs';
+
+const FIXTURE_ID = 'cctv-calibration-native-drag/v1';
+const CAMERA_ID = 'qa-cctv-calibration-camera-001';
+const PAIRS = 5;
+const IDLE_MS = 10_000;
+const FIXTURE_EPOCH_MS = Date.UTC(2026, 9, 8, 12, 0, 0);
+const OWNER = 'qa-cctv-adjust-legacy-control';
+const COMMIT =
+  typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null;
+const FRAME_DATA_URI =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWNQ7rnzH4QZYAwAVbIKKdmcsa8AAAAASUVORK5CYII=';
+const CAMERA = Object.freeze({
+  id: CAMERA_ID,
+  name: 'Calibration demand fixture',
+  city: 'Austin',
+  cityId: 'austin',
+  lat: 30.2672,
+  lon: -97.7431,
+  headingDeg: 0,
+  fovDeg: 70,
+  rangeM: 700,
+  mountHeightM: 22,
+  pitchDeg: -17,
+  groundElevationM: 0,
+  feedType: 'image',
+  provider: 'Synthetic CCTV fixture',
+  sourceKind: 'synthetic',
+  url: 'fixture://cctv-calibration-frame',
+});
+const CAMERA_SOURCE = {
+  async getCatalog() {
+    return { sources: [{ ...CAMERA }] };
+  },
+  async getHealth() {
+    return { cameras: [] };
+  },
+  getFrameUrl: () => FRAME_DATA_URI,
+  getMediaUrl: () => FRAME_DATA_URI,
+};
+const FIXTURE_SURFACE = {
+  terrain: {
+    async resolveEllipsoidalGround(points) {
+      return points.map(() => ({ ellipsoid: 0, source: 'fixture-ellipsoid' }));
+    },
+  },
+  groundFloor: {
+    async resolveGroundFloorCells() {
+      return [];
+    },
+    warmGroundFloor() {},
+    cachedGroundFloor() {
+      return 0;
+    },
+  },
+  meshFloor: {
+    sampleMeshFloorCells() {
+      return false;
+    },
+  },
+};
+const FIXTURE_SOURCE_HASH_PAYLOAD = JSON.stringify({
+  fixtureId: FIXTURE_ID,
+  epochMs: FIXTURE_EPOCH_MS,
+  camera: CAMERA,
+  frame: FRAME_DATA_URI,
+  view: { longitude: CAMERA.lon, latitude: CAMERA.lat, heightM: 3500 },
+  settings: { coverageMode: 'off', showProjection: false, autoHop: false },
+  idleMs: IDLE_MS,
+});
+
+const runButton = document.querySelector('#run');
+const downloadButton = document.querySelector('#download');
+const statusNode = document.querySelector('#status');
+const resultNode = document.querySelector('#result');
+const pointerNode = document.querySelector('#pointer-instruction');
+const viewerNode = document.querySelector('#viewer');
+const creditsNode = document.querySelector('#credits');
+let activeReport = null;
+let activeRun = null;
+let terminalReportText = null;
+
+const check = (condition, message) => {
+  if (!condition) throw new Error(message);
+};
+
+function hex(bytes) {
+  return [...bytes]
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function sha256(value) {
+  return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', value)));
+}
+
+async function sourceDigest() {
+  return sha256(new TextEncoder().encode(FIXTURE_SOURCE_HASH_PAYLOAD));
+}
+
+function updateStatus(message) {
+  statusNode.textContent = String(message).slice(0, 180);
+}
+
+function setPhase(phase) {
+  if (activeReport) activeReport.phase = phase;
+  if (activeRun?.status === 'running') activeRun.phase = phase;
+  publishPartial();
+}
+
+function publishPartial() {
+  window.__cctvCalibrationDemandResult = activeReport;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function rendererName(viewer) {
+  try {
+    const gl =
+      viewer.scene.context?._originalGLContext ||
+      viewer.scene.context?._gl ||
+      viewer.canvas.getContext('webgl2') ||
+      viewer.canvas.getContext('webgl');
+    if (!gl) return null;
+    const extension = gl.getExtension('WEBGL_debug_renderer_info');
+    const renderer = extension
+      ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
+      : gl.getParameter(gl.RENDERER);
+    const masked = gl.getParameter(gl.RENDERER);
+    return {
+      renderer: typeof renderer === 'string' ? renderer.slice(0, 240) : null,
+      maskedRenderer: typeof masked === 'string' ? masked.slice(0, 240) : null,
+      rendererIdentity: extension ? 'unmasked-extension' : 'masked-fallback',
+    };
+  } catch {
+    return {
+      renderer: null,
+      maskedRenderer: null,
+      rendererIdentity: 'unavailable',
+    };
+  }
+}
+
+function currentCalibration(layer) {
+  const values = layer.getParams()?.calibration?.values;
+  check(
+    values && Number.isFinite(values.offsetEastM),
+    'CCTV calibration state is unavailable.',
+  );
+  return {
+    offsetEastM: values.offsetEastM,
+    offsetNorthM: values.offsetNorthM,
+    headingDeg: values.headingDeg,
+    pitchDeg: values.pitchDeg,
+    fovDeg: values.fovDeg,
+    rangeScale: values.rangeScale,
+    heightM: values.heightM,
+  };
+}
+
+function frameCountListener(viewer) {
+  let count = 0;
+  const remove = viewer.scene.postRender.addEventListener(() => {
+    count = Math.min(count + 1, 10_000);
+  });
+  return {
+    read: () => count,
+    remove,
+  };
+}
+
+function cameraSnapshot(viewer, layer) {
+  const camera = viewer.camera;
+  const entities = viewer.entities.values
+    .filter((entity) => String(entity.id).startsWith('cctv-gizmo-'))
+    .map((entity) => {
+      const position = entity.position?.getValue?.(viewer.clock.currentTime);
+      const positions =
+        entity.polyline?.positions?.getValue?.(viewer.clock.currentTime) ||
+        entity.polyline?.positions;
+      return {
+        id: String(entity.id),
+        entityShow: Boolean(entity.show),
+        positionAvailable: Boolean(position),
+        visiblePosition: Boolean(entity.show && position),
+        position: position ? [position.x, position.y, position.z] : null,
+        positions: Array.isArray(positions)
+          ? positions.map((value) => [value.x, value.y, value.z])
+          : null,
+      };
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+  check(entities.length > 0, 'CCTV calibration gizmo geometry is missing.');
+  const params = layer.getParams();
+  return {
+    selectedCameraId: params.selectedCameraId,
+    position: [camera.positionWC.x, camera.positionWC.y, camera.positionWC.z],
+    direction: [
+      camera.directionWC.x,
+      camera.directionWC.y,
+      camera.directionWC.z,
+    ],
+    up: [camera.upWC.x, camera.upWC.y, camera.upWC.z],
+    geometryPayload: entities,
+  };
+}
+
+async function attachCameraGeometryDigest(run, viewer, layer) {
+  const camera = cameraSnapshot(viewer, layer);
+  run.camera = {
+    selectedCameraId: camera.selectedCameraId,
+    position: camera.position,
+    direction: camera.direction,
+    up: camera.up,
+    geometrySha256: await sha256(
+      new TextEncoder().encode(JSON.stringify(camera.geometryPayload)),
+    ),
+  };
+}
+
+function viewportSnapshot() {
+  return {
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+    visibilityState: document.visibilityState,
+    focused: document.hasFocus(),
+  };
+}
+
+function observeIdleConditions() {
+  const startedAt = performance.now();
+  const before = viewportSnapshot();
+  const events = [];
+  let eventOverflow = false;
+  let foregroundUninterrupted =
+    before.visibilityState === 'visible' && before.focused;
+  const record = (event) => {
+    const value = { type: event.type, ...viewportSnapshot() };
+    if (value.visibilityState !== 'visible' || !value.focused)
+      foregroundUninterrupted = false;
+    if (
+      value.viewportWidth !== before.viewportWidth ||
+      value.viewportHeight !== before.viewportHeight ||
+      value.devicePixelRatio !== before.devicePixelRatio
+    )
+      foregroundUninterrupted = false;
+    if (events.length < 16) events.push(value);
+    else eventOverflow = true;
+  };
+  document.addEventListener('visibilitychange', record);
+  for (const type of ['focus', 'blur', 'resize'])
+    window.addEventListener(type, record);
+  return {
+    finish({ completedPhase = 'observation' } = {}) {
+      document.removeEventListener('visibilitychange', record);
+      for (const type of ['focus', 'blur', 'resize'])
+        window.removeEventListener(type, record);
+      const after = viewportSnapshot();
+      if (after.visibilityState !== 'visible' || !after.focused)
+        foregroundUninterrupted = false;
+      return {
+        before,
+        after,
+        events,
+        eventOverflow,
+        foregroundUninterrupted,
+        durationMs: performance.now() - startedAt,
+        completedPhase,
+      };
+    },
+  };
+}
+
+async function capturePixels(viewer) {
+  const canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
+  check(canvas, 'CCTV trial could not capture a completed viewer frame.');
+  try {
+    const rgba = canvas
+      .getContext('2d')
+      ?.getImageData(0, 0, canvas.width, canvas.height).data;
+    check(rgba && rgba.length, 'CCTV pixel readback is unavailable.');
+    let nonBackgroundPixels = 0;
+    // Match the declared #09141f clear color with a small byte margin; merely
+    // counting nonzero RGB would classify every clear pixel as geometry.
+    for (let index = 0; index < rgba.length; index += 4)
+      if (
+        Math.abs(rgba[index] - 9) > 8 ||
+        Math.abs(rgba[index + 1] - 20) > 8 ||
+        Math.abs(rgba[index + 2] - 31) > 8
+      )
+        nonBackgroundPixels++;
+    check(
+      nonBackgroundPixels > 20,
+      'CCTV viewer frame contains no visible fixture geometry.',
+    );
+    const bytes = new Uint8Array(rgba.length);
+    bytes.set(rgba);
+    return {
+      sha256: await sha256(bytes),
+      width: canvas.width,
+      height: canvas.height,
+      nonBackgroundPixels,
+    };
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+}
+
+function createViewer() {
+  const viewer = createApplicationViewer({
+    container: viewerNode,
+    creditContainer: creditsNode,
+  });
+  viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#09141f');
+  viewer.scene.skyBox.show = false;
+  viewer.scene.skyAtmosphere.show = false;
+  viewer.scene.sun.show = false;
+  viewer.scene.moon.show = false;
+  viewer.scene.globe.show = false;
+  viewer.scene.requestRenderMode = true;
+  viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
+  viewer.clock.currentTime = Cesium.JulianDate.fromDate(
+    new Date(FIXTURE_EPOCH_MS),
+  );
+  viewer.clock.shouldAnimate = false;
+  viewer.clock.multiplier = 0;
+  viewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(CAMERA.lon, CAMERA.lat, 3500),
+    orientation: {
+      heading: 0,
+      pitch: -Cesium.Math.PI_OVER_TWO,
+      roll: 0,
+    },
+  });
+  installRenderGovernor(viewer);
+  initWorldOverlay(viewer);
+  return viewer;
+}
+
+async function waitForLayerReady(layer, viewer, timeoutMs = 20_000) {
+  const start = performance.now();
+  let priorSignature = null;
+  let stableSince = null;
+  let completedFrames = 0;
+  const removeFrame = viewer.scene.postRender.addEventListener(() => {
+    completedFrames = Math.min(completedFrames + 1, 10_000);
+  });
+  try {
+    while (performance.now() - start < timeoutMs) {
+      const stats = layer.getStats();
+      const diagnostics = layer.getPerformanceDiagnostics();
+      const signature = JSON.stringify({
+        stats,
+        diagnostics,
+        active: layer.getParams()?.selectedCameraId,
+      });
+      if (
+        stats.count === 1 &&
+        stats.loading === false &&
+        diagnostics.pendingJobs === 0 &&
+        diagnostics.listeners >= 1 &&
+        completedFrames >= 3
+      ) {
+        if (signature !== priorSignature) {
+          priorSignature = signature;
+          stableSince = performance.now();
+        } else if (performance.now() - stableSince >= 500) {
+          return { elapsedMs: performance.now() - start, completedFrames };
+        }
+      } else {
+        priorSignature = null;
+        stableSince = null;
+      }
+      await wait(25);
+      // This is bounded preparation, before the measured idle interval. It
+      // lets Entity/gizmo work materialize in request-render mode.
+      viewer.scene.requestRender();
+    }
+    throw new Error(
+      'CCTV trial layer did not settle within its bounded setup window.',
+    );
+  } finally {
+    removeFrame();
+  }
+}
+
+function projectHandle(viewer, part) {
+  const entity = viewer.entities.getById(`cctv-gizmo-${part}`);
+  const now = viewer.clock.currentTime;
+  const position = entity?.position?.getValue?.(now);
+  check(entity?.show && position, `CCTV gizmo handle ${part} is not visible.`);
+  const point = Cesium.SceneTransforms.worldToWindowCoordinates(
+    viewer.scene,
+    position,
+  );
+  check(
+    point && Number.isFinite(point.x) && Number.isFinite(point.y),
+    'CCTV drag handle is outside the view.',
+  );
+  const rect = viewer.canvas.getBoundingClientRect();
+  const from = { x: rect.left + point.x, y: rect.top + point.y };
+  const axisBase =
+    entity.polyline.positions?.getValue?.(now)?.[0] ||
+    entity.polyline.positions?.[0];
+  const axisTip = position;
+  check(axisBase && axisTip, 'CCTV east-handle axis is unavailable.');
+  const basePixel = Cesium.SceneTransforms.worldToWindowCoordinates(
+    viewer.scene,
+    axisBase,
+  );
+  const tipPixel = Cesium.SceneTransforms.worldToWindowCoordinates(
+    viewer.scene,
+    axisTip,
+  );
+  check(basePixel && tipPixel, 'CCTV east-handle axis cannot be projected.');
+  const dx = tipPixel.x - basePixel.x;
+  const dy = tipPixel.y - basePixel.y;
+  const length = Math.hypot(dx, dy);
+  check(length >= 4, 'CCTV east-handle axis is too small to drag safely.');
+  const to = {
+    x: from.x + (dx / length) * Math.min(18, length * 0.45),
+    y: from.y + (dy / length) * Math.min(18, length * 0.45),
+  };
+  check(
+    to.x >= rect.left &&
+      to.x < rect.right &&
+      to.y >= rect.top &&
+      to.y < rect.bottom,
+    'CCTV native drag endpoint falls outside the viewer canvas.',
+  );
+  return {
+    from,
+    to,
+    handlePosition: { x: point.x, y: point.y },
+    axisLengthPx: length,
+  };
+}
+
+function observeNativeInput(viewer, layer, targetPoint) {
+  const canvas = viewer.canvas;
+  const state = {
+    trustedPointerDown: false,
+    trustedPointerMoveCount: 0,
+    trustedPointerUp: false,
+    pickIdentity: null,
+    dragInputsDisabledObserved: false,
+    dragInputsRestoredAfterRelease: false,
+  };
+  let poll = null;
+  const timeouts = new Set();
+  const ownedTimeout = (callback) => {
+    const handle = setTimeout(() => {
+      timeouts.delete(handle);
+      sampleInputs();
+      callback?.();
+    }, 0);
+    timeouts.add(handle);
+  };
+  const sampleInputs = () => {
+    if (!viewer.isDestroyed()) {
+      if (!viewer.scene.screenSpaceCameraController.enableInputs)
+        state.dragInputsDisabledObserved = true;
+      if (
+        state.trustedPointerUp &&
+        viewer.scene.screenSpaceCameraController.enableInputs
+      )
+        state.dragInputsRestoredAfterRelease = true;
+    }
+  };
+  const onDown = (event) => {
+    if (event.isTrusted && event.button === 0) {
+      state.trustedPointerDown = true;
+      const rect = canvas.getBoundingClientRect();
+      const local = new Cesium.Cartesian2(
+        event.clientX - rect.left,
+        event.clientY - rect.top,
+      );
+      let picked = null;
+      try {
+        picked = viewer.scene.pick(local, 14, 14);
+      } catch {
+        picked = null;
+      }
+      const pickedId =
+        picked?.id?.id ??
+        picked?.id ??
+        picked?.primitive?.id?.id ??
+        picked?.primitive?.id;
+      const entityId = typeof pickedId === 'string' ? pickedId : null;
+      state.pickIdentity = {
+        entityId,
+        kind: entityId?.startsWith('cctv-gizmo-')
+          ? entityId.slice('cctv-gizmo-'.length)
+          : null,
+        cameraId: layer.getParams()?.selectedCameraId ?? null,
+        trusted: true,
+        x: event.clientX,
+        y: event.clientY,
+        targetDistancePx: Math.hypot(
+          event.clientX - targetPoint.x,
+          event.clientY - targetPoint.y,
+        ),
+      };
+    }
+    if (poll === null) poll = setInterval(sampleInputs, 1);
+    queueMicrotask(sampleInputs);
+    ownedTimeout();
+  };
+  const onMove = (event) => {
+    if (event.isTrusted && event.buttons & 1) state.trustedPointerMoveCount++;
+    sampleInputs();
+  };
+  const onUp = (event) => {
+    state.trustedPointerUp ||= event.isTrusted && event.button === 0;
+    queueMicrotask(sampleInputs);
+    ownedTimeout();
+  };
+  canvas.addEventListener('pointerdown', onDown, true);
+  canvas.addEventListener('pointermove', onMove, true);
+  canvas.addEventListener('pointerup', onUp, true);
+  return {
+    state,
+    dispose() {
+      canvas.removeEventListener('pointerdown', onDown, true);
+      canvas.removeEventListener('pointermove', onMove, true);
+      canvas.removeEventListener('pointerup', onUp, true);
+      if (poll !== null) clearInterval(poll);
+      poll = null;
+      for (const handle of timeouts) clearTimeout(handle);
+      timeouts.clear();
+    },
+  };
+}
+
+async function waitForNativeRelease(run, viewer, layer, input) {
+  // The Windows CUA path observes the visible instruction before dispatch.
+  // This bounded input wait is separate from the ten-second render window.
+  const deadline = performance.now() + 30_000;
+  const startCalibration = run.drag.calibrationBefore;
+  while (performance.now() < deadline) {
+    input.state.dragInputsDisabledObserved ||=
+      !viewer.scene.screenSpaceCameraController.enableInputs;
+    if (
+      input.state.trustedPointerUp &&
+      viewer.scene.screenSpaceCameraController.enableInputs
+    ) {
+      input.state.dragInputsRestoredAfterRelease = true;
+      await wait(120);
+      const calibrationAfter = currentCalibration(layer);
+      run.drag.calibrationAfter = calibrationAfter;
+      run.drag.changedFields = Object.keys(startCalibration).filter(
+        (field) => calibrationAfter[field] !== startCalibration[field],
+      );
+      run.drag.acceptedCalibrationChanged =
+        run.drag.changedFields.includes('offsetEastM');
+      run.drag.committedAfterRelease = run.drag.acceptedCalibrationChanged;
+      run.drag.trustedPointerDown = input.state.trustedPointerDown;
+      run.drag.trustedPointerMoveCount = input.state.trustedPointerMoveCount;
+      run.drag.trustedPointerUp = input.state.trustedPointerUp;
+      run.drag.pickIdentity = input.state.pickIdentity;
+      run.drag.dragInputsDisabledObserved =
+        input.state.dragInputsDisabledObserved;
+      run.drag.dragInputsRestoredAfterRelease =
+        input.state.dragInputsRestoredAfterRelease;
+      run.drag.instructionDelivered = true;
+      return;
+    }
+    await wait(10);
+  }
+  run.drag.trustedPointerDown = input.state.trustedPointerDown;
+  run.drag.trustedPointerMoveCount = input.state.trustedPointerMoveCount;
+  run.drag.trustedPointerUp = input.state.trustedPointerUp;
+  run.drag.pickIdentity = input.state.pickIdentity;
+  run.drag.dragInputsDisabledObserved = input.state.dragInputsDisabledObserved;
+  run.drag.dragInputsRestoredAfterRelease =
+    input.state.dragInputsRestoredAfterRelease;
+  throw new Error('Native CCTV calibration drag did not complete or release.');
+}
+
+async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
+  const trial = {
+    schema: 'gev-cctv-calibration-trial/v1',
+    status: 'running',
+    mode,
+    pair,
+    fixtureId: FIXTURE_ID,
+    fixtureSha256,
+    applicationCommit: COMMIT,
+    harnessCommit: COMMIT,
+    startedAt: new Date().toISOString(),
+    phase: 'trial-startup',
+    viewport: null,
+    environment: { renderer: null },
+    camera: null,
+    initialCalibration: null,
+    renderingSettings: null,
+    setup: null,
+    idle: null,
+    drag: null,
+    beforePixels: null,
+    afterPixels: null,
+    cleanup: {
+      layerDisabled: false,
+      layerDestroyed: false,
+      worldOverlayDestroyed: false,
+      governorUninstalled: false,
+      viewerDestroyed: false,
+      ownedEntitiesBeforeDestroy: 0,
+      ownedEntitiesAfterLayerDestroy: null,
+      governorHoldsAfterLayerDestroy: null,
+      error: null,
+    },
+  };
+  pairRecord.runs.push(trial);
+  activeReport.cleanup.trials++;
+  activeRun = trial;
+  publishPartial();
+  let viewer = null;
+  let layer = null;
+  let holdInstalled = false;
+  let idleCounter = null;
+  let idleObserver = null;
+  let inputObserver = null;
+  let interactionObserver = null;
+  const cleanupErrors = [];
+  try {
+    setPhase(`pair-${pair}-setup-${mode}`);
+    updateStatus(`Pair ${pair + 1}/5: ${mode} setup`);
+    viewer = createViewer();
+    const gl =
+      viewer.scene.context?._originalGLContext || viewer.scene.context?._gl;
+    const attrs = gl?.getContextAttributes?.() || null;
+    Object.assign(trial.environment, rendererName(viewer));
+    trial.environment.userAgent = navigator.userAgent.slice(0, 240);
+    if (!activeReport.environment.renderer) {
+      activeReport.environment.renderer = trial.environment.renderer;
+      activeReport.environment.maskedRenderer =
+        trial.environment.maskedRenderer;
+      activeReport.environment.rendererIdentity =
+        trial.environment.rendererIdentity;
+      activeReport.environment.userAgent = trial.environment.userAgent;
+    }
+    trial.viewport = {
+      width: viewer.canvas.width,
+      height: viewer.canvas.height,
+      devicePixelRatio: window.devicePixelRatio,
+      cssWidth: viewer.canvas.clientWidth,
+      cssHeight: viewer.canvas.clientHeight,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+    };
+    trial.renderingSettings = {
+      initialRequestRenderMode: true,
+      drawingBufferWidth: viewer.canvas.width,
+      drawingBufferHeight: viewer.canvas.height,
+      cssWidth: viewer.canvas.clientWidth,
+      cssHeight: viewer.canvas.clientHeight,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      devicePixelRatio: window.devicePixelRatio,
+      msaaSamples: viewer.scene.msaaSamples,
+      antialias: attrs?.antialias ?? null,
+      preserveDrawingBuffer: attrs?.preserveDrawingBuffer ?? null,
+      contextAttributes: attrs
+        ? {
+            alpha: attrs.alpha,
+            antialias: attrs.antialias,
+            depth: attrs.depth,
+            premultipliedAlpha: attrs.premultipliedAlpha,
+            preserveDrawingBuffer: attrs.preserveDrawingBuffer,
+            stencil: attrs.stencil,
+          }
+        : null,
+      requestRenderModeDuringIdle: null,
+    };
+    if (!activeReport.viewport)
+      activeReport.viewport = {
+        width: viewer.canvas.width,
+        height: viewer.canvas.height,
+        devicePixelRatio: window.devicePixelRatio,
+        cssWidth: viewer.canvas.clientWidth,
+        cssHeight: viewer.canvas.clientHeight,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    layer = createApplicationCctv({
+      surface: FIXTURE_SURFACE,
+      source: CAMERA_SOURCE,
+    });
+    await layer.init(viewer);
+    layer.setParams({
+      autoHop: false,
+      showProjection: false,
+      coverageMode: 'off',
+    });
+    layer.enable();
+    check(
+      layer.selectCamera(CAMERA_ID),
+      'The synthetic CCTV camera was not selectable.',
+    );
+    layer.setParams({ calibrationMode: true });
+    trial.setup = await waitForLayerReady(layer, viewer);
+    setPhase(`pair-${pair}-camera-pose-${mode}`);
+    const cameraPosition = Cesium.Cartesian3.fromDegrees(
+      CAMERA.lon,
+      CAMERA.lat,
+      3500,
+    );
+    viewer.camera.setView({
+      destination: cameraPosition,
+      orientation: { heading: 0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0 },
+    });
+    await captureFreshCesiumFrame(viewer, { timeoutMs: 400 }).then((canvas) => {
+      check(canvas, 'CCTV fixture camera pose did not render.');
+      canvas.width = 0;
+      canvas.height = 0;
+    });
+    await wait(100);
+    await attachCameraGeometryDigest(trial, viewer, layer);
+    trial.initialCalibration = currentCalibration(layer);
+    trial.beforePixels = await capturePixels(viewer);
+    const dragPointer = projectHandle(viewer, 'move-east');
+    trial.drag = {
+      instructionId: `calibration-${pair}-${mode}-${runIndex}`,
+      instructionDelivered: false,
+      from: dragPointer.from,
+      to: dragPointer.to,
+      handlePosition: dragPointer.handlePosition,
+      axisLengthPx: dragPointer.axisLengthPx,
+      kind: 'drag',
+      steps: 6,
+      calibrationBefore: trial.initialCalibration,
+      calibrationAfter: null,
+      changedFields: [],
+      acceptedCalibrationChanged: false,
+      committedAfterRelease: false,
+      trustedPointerDown: false,
+      trustedPointerMoveCount: 0,
+      trustedPointerUp: false,
+      dragInputsDisabledObserved: false,
+      dragInputsRestoredAfterRelease: false,
+      selectedCameraIdAfterRelease: null,
+      pickIdentity: null,
+      geometrySha256After: null,
+    };
+    if (mode === 'legacy-control') {
+      holdContinuousRender(OWNER);
+      holdInstalled = true;
+    }
+    await wait(500);
+    const initialMode = viewer.scene.requestRenderMode;
+    check(
+      initialMode === (mode === 'candidate'),
+      'CCTV governor mode does not match the trial.',
+    );
+    trial.renderingSettings.requestRenderModeDuringIdle = initialMode;
+    idleCounter = frameCountListener(viewer);
+    const idleStart = performance.now();
+    idleObserver = observeIdleConditions();
+    await wait(IDLE_MS);
+    const idleDurationMs = performance.now() - idleStart;
+    trial.idle = {
+      requestedDurationMs: IDLE_MS,
+      durationMs: idleDurationMs,
+      completedFrames: idleCounter.read(),
+      renderMode: viewer.scene.requestRenderMode,
+      forcedCaptureFramesIncluded: false,
+      conditions: idleObserver.finish(),
+    };
+    idleObserver = null;
+    idleCounter.remove();
+    idleCounter = null;
+    check(
+      trial.idle.renderMode === initialMode,
+      'CCTV demand mode changed during the idle window.',
+    );
+
+    setPhase(`pair-${pair}-${mode}-native-drag`);
+    updateStatus(`Pair ${pair + 1}/5: native drag (${mode})`);
+    interactionObserver = observeIdleConditions();
+    inputObserver = observeNativeInput(viewer, layer, trial.drag.from);
+    const instruction = {
+      id: trial.drag.instructionId,
+      kind: 'drag',
+      from: trial.drag.from,
+      to: trial.drag.to,
+      steps: 6,
+    };
+    pointerNode.textContent = JSON.stringify(instruction);
+    publishPartial();
+    await waitForNativeRelease(trial, viewer, layer, inputObserver);
+    pointerNode.textContent = '';
+    inputObserver.dispose();
+    inputObserver = null;
+    check(
+      trial.drag.pickIdentity?.entityId === 'cctv-gizmo-move-east',
+      'Native drag did not scene-pick the expected east-move gizmo.',
+    );
+    trial.drag.selectedCameraIdAfterRelease =
+      layer.getParams().selectedCameraId;
+    const cameraAfter = cameraSnapshot(viewer, layer);
+    trial.drag.geometrySha256After = await sha256(
+      new TextEncoder().encode(JSON.stringify(cameraAfter.geometryPayload)),
+    );
+    setPhase(`pair-${pair}-${mode}-after-drag-render`);
+    trial.afterPixels = await capturePixels(viewer);
+    trial.drag.conditions = interactionObserver.finish({
+      completedPhase: 'after-frame-capture',
+    });
+    interactionObserver = null;
+    check(
+      trial.beforePixels.sha256 !== trial.afterPixels.sha256,
+      'Accepted CCTV calibration drag did not change rendered pixels.',
+    );
+    trial.status = 'passed';
+    return trial;
+  } catch (error) {
+    trial.status = 'failed';
+    trial.failedPhase = trial.phase || activeReport.phase;
+    trial.error = String(error?.message || error).slice(0, 500);
+    if (trial.drag && inputObserver) {
+      Object.assign(trial.drag, inputObserver.state);
+    }
+    if (trial.drag && interactionObserver) {
+      try {
+        trial.drag.conditions = interactionObserver.finish();
+      } catch {
+        trial.drag.conditions = null;
+      }
+      interactionObserver = null;
+    }
+    throw error;
+  } finally {
+    pointerNode.textContent = '';
+    idleCounter?.remove();
+    idleObserver?.finish();
+    inputObserver?.dispose();
+    if (interactionObserver) {
+      try {
+        trial.drag && (trial.drag.conditions = interactionObserver.finish());
+      } catch {
+        if (trial.drag) trial.drag.conditions = null;
+      }
+      interactionObserver = null;
+    }
+    if (holdInstalled) {
+      try {
+        releaseContinuousRender(OWNER);
+        holdInstalled = false;
+      } catch (error) {
+        cleanupErrors.push(
+          `hold: ${String(error?.message || error).slice(0, 200)}`,
+        );
+      }
+    }
+    if (layer) {
+      trial.cleanup.ownedEntitiesBeforeDestroy =
+        viewer?.entities?.values?.filter((entity) =>
+          String(entity.id).startsWith('cctv-gizmo-'),
+        ).length ?? 0;
+      try {
+        if (layer.getStats) layer.disable();
+        trial.cleanup.layerDisabled = true;
+      } catch (error) {
+        cleanupErrors.push(
+          `disable: ${String(error?.message || error).slice(0, 200)}`,
+        );
+      }
+      try {
+        layer.destroy(viewer);
+        trial.cleanup.layerDestroyed = true;
+      } catch (error) {
+        cleanupErrors.push(
+          `layer: ${String(error?.message || error).slice(0, 200)}`,
+        );
+      }
+      trial.cleanup.ownedEntitiesAfterLayerDestroy =
+        viewer?.entities?.values?.filter((entity) =>
+          String(entity.id).startsWith('cctv-gizmo-'),
+        ).length ?? null;
+      trial.cleanup.governorHoldsAfterLayerDestroy =
+        getRenderGovernorDiagnostics().holds.length;
+    }
+    try {
+      destroyWorldOverlay();
+      trial.cleanup.worldOverlayDestroyed = true;
+    } catch (error) {
+      cleanupErrors.push(
+        `overlay: ${String(error?.message || error).slice(0, 200)}`,
+      );
+    }
+    if (viewer) {
+      try {
+        const diagnostics = getRenderGovernorDiagnostics();
+        if (diagnostics.holds.includes(OWNER)) releaseContinuousRender(OWNER);
+        uninstallRenderGovernor(viewer);
+        trial.cleanup.governorUninstalled = true;
+      } catch (error) {
+        cleanupErrors.push(
+          `governor: ${String(error?.message || error).slice(0, 200)}`,
+        );
+      }
+      try {
+        if (!viewer.isDestroyed()) viewer.destroy();
+        trial.cleanup.viewerDestroyed = viewer.isDestroyed();
+      } catch (error) {
+        cleanupErrors.push(
+          `viewer: ${String(error?.message || error).slice(0, 200)}`,
+        );
+      }
+    }
+    trial.cleanup.error = cleanupErrors.length
+      ? cleanupErrors.join('; ')
+      : null;
+    if (cleanupErrors.length && trial.status === 'passed') {
+      trial.status = 'failed';
+      trial.failedPhase = 'cleanup';
+      trial.error = trial.cleanup.error;
+    }
+    publishPartial();
+  }
+}
+
+function enableTerminalDownload(reportText) {
+  terminalReportText = reportText;
+  downloadButton.disabled = false;
+}
+
+function downloadTerminalReport() {
+  if (!terminalReportText) return;
+  const blob = new Blob([terminalReportText], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  const shortCommit = String(COMMIT || 'unknown').slice(0, 12);
+  const stamp = new Date().toISOString().replaceAll(':', '-');
+  anchor.href = url;
+  anchor.download = `cctv-calibration-${shortCommit}-${stamp}.json`;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function updateCleanupSummary() {
+  const trials = activeReport.pairs.flatMap((pair) => pair.runs || []);
+  activeReport.cleanup.trials = trials.length;
+  activeReport.cleanup.viewerDestroyedCount = trials.filter(
+    (run) => run.cleanup?.viewerDestroyed === true,
+  ).length;
+  activeReport.cleanup.governorUninstalledCount = trials.filter(
+    (run) => run.cleanup?.governorUninstalled === true,
+  ).length;
+  activeReport.cleanup.allTrialsReleased =
+    trials.length === PAIRS * 2 &&
+    trials.every(
+      (run) =>
+        run.cleanup?.viewerDestroyed === true &&
+        run.cleanup?.governorUninstalled === true,
+    );
+}
+
+async function runFixture() {
+  runButton.disabled = true;
+  downloadButton.disabled = true;
+  terminalReportText = null;
+  resultNode.textContent = '';
+  pointerNode.textContent = '';
+  activeReport = {
+    schema: 'gev-cctv-calibration-render-demand/v1',
+    fixture: {
+      id: FIXTURE_ID,
+      sha256: null,
+      cameraId: CAMERA_ID,
+      epochMs: FIXTURE_EPOCH_MS,
+      idleRequestedMs: IDLE_MS,
+    },
+    applicationCommit: COMMIT,
+    harnessCommit: COMMIT,
+    scope:
+      'isolated production CCTV layer; native calibration input and render-demand comparison',
+    status: 'running',
+    phase: 'startup',
+    pairs: [],
+    cleanup: { trials: 0, allTrialsReleased: false },
+    environment: {
+      renderer: null,
+      userAgent: navigator.userAgent.slice(0, 240),
+      desktopForegroundVerification: 'unavailable',
+    },
+    viewport: null,
+    startedAt: new Date().toISOString(),
+  };
+  publishPartial();
+  let failure = null;
+  try {
+    activeReport.fixture.sha256 = await sourceDigest();
+    check(
+      /^[a-f0-9]{40}$/.test(COMMIT || ''),
+      'Fixture requires a declared Vite application commit.',
+    );
+    let runIndex = 0;
+    for (let pairIndex = 0; pairIndex < PAIRS; pairIndex++) {
+      const order =
+        pairIndex % 2
+          ? ['candidate', 'legacy-control']
+          : ['legacy-control', 'candidate'];
+      const pair = { pair: pairIndex, order, runs: [], comparison: null };
+      activeReport.pairs.push(pair);
+      for (const mode of order) {
+        setPhase(`pair-${pairIndex}-setup-${mode}`);
+        await runTrial(
+          mode,
+          pairIndex,
+          runIndex++,
+          activeReport.fixture.sha256,
+          pair,
+        );
+        publishPartial();
+      }
+      setPhase(`pair-${pairIndex}-comparison`);
+      pair.comparison = compareCctvCalibrationPair(pair);
+      publishPartial();
+    }
+    activeReport.status = 'passed';
+    activeReport.phase = 'complete';
+    updateCleanupSummary();
+    activeReport.finishedAt = new Date().toISOString();
+    validateCctvCalibrationDemandReport(activeReport, {
+      expectedCommit: COMMIT,
+    });
+  } catch (error) {
+    failure = error;
+    activeReport.status = 'failed';
+    activeReport.failedPhase ||=
+      activeRun?.failedPhase ||
+      (activeReport.phase === 'complete'
+        ? 'report-validation'
+        : activeReport.phase);
+    activeReport.error = String(error?.message || error).slice(0, 500);
+  } finally {
+    updateCleanupSummary();
+    activeReport.finishedAt ||= new Date().toISOString();
+    if (failure && activeRun?.status === 'running') {
+      activeRun.status = 'failed';
+      activeRun.failedPhase ||= activeReport.phase;
+      activeRun.error ||= activeReport.error;
+    }
+    publishPartial();
+    terminalReportText = JSON.stringify(activeReport);
+    resultNode.textContent = terminalReportText;
+    enableTerminalDownload(terminalReportText);
+    updateStatus(
+      activeReport.status === 'passed'
+        ? 'Completed and validated.'
+        : `Failed: ${activeReport.error || 'incomplete evidence'}`,
+    );
+    runButton.disabled = false;
+  }
+}
+
+runButton.addEventListener('click', () => {
+  void runFixture();
+});
+downloadButton.addEventListener('click', downloadTerminalReport);

@@ -13,6 +13,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import {
+  createCalibrationGizmo,
   closestParamOnAxis,
   rayPlaneIntersect,
   ringAngle,
@@ -20,6 +21,58 @@ import {
 } from './cctvGizmo.js';
 
 const c3 = (x, y, z) => new Cesium.Cartesian3(x, y, z);
+
+function createGizmoViewer() {
+  const entities = new Map();
+  const listeners = new Map();
+  let picked = null;
+  const canvas = {
+    disableRootEvents: true,
+    clientWidth: 800,
+    clientHeight: 600,
+    style: {},
+    addEventListener(type, callback) {
+      const values = listeners.get(type) || new Set();
+      values.add(callback);
+      listeners.set(type, values);
+    },
+    removeEventListener(type, callback) {
+      listeners.get(type)?.delete(callback);
+    },
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 800, height: 600 };
+    },
+    dispatch(type, event) {
+      for (const callback of listeners.get(type) || []) callback(event);
+    },
+  };
+  return {
+    entities: {
+      getById(id) {
+        return entities.get(id) || null;
+      },
+      add(value) {
+        const entity = { ...value };
+        entities.set(entity.id, entity);
+        return entity;
+      },
+      remove(value) {
+        return entities.delete(value.id);
+      },
+    },
+    scene: {
+      canvas,
+      screenSpaceCameraController: { enableInputs: true },
+      pick: () => picked,
+      drillPick: () => [],
+    },
+    camera: { getPickRay: () => null },
+    _entities: entities,
+    _setPicked(value) {
+      picked = value;
+    },
+  };
+}
 
 test('closestParamOnAxis: perpendicular ray hits the axis at its own offset', () => {
   // Axis along +X from origin. Ray shooting straight down (-Z) from (10, 0, 5):
@@ -85,4 +138,70 @@ test('signedAngleDelta: shortest-path wrap', () => {
   assert.ok(Math.abs(signedAngleDelta(d2r(170), d2r(-170)) - d2r(20)) < 1e-9);
   assert.ok(Math.abs(signedAngleDelta(d2r(-170), d2r(170)) - d2r(-20)) < 1e-9);
   assert.ok(Math.abs(signedAngleDelta(d2r(10), d2r(30)) - d2r(20)) < 1e-9);
+});
+
+test('gizmo visibility refreshes request discrete frames and stop after disposal', (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    onmousewheel: null,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  t.after(() => {
+    globalThis.document = previousDocument;
+  });
+  const viewer = createGizmoViewer();
+  const requests = [];
+  const mount = Cesium.Cartesian3.fromDegrees(-97, 30, 20);
+  const positions = {
+    mount,
+    capCenter: Cesium.Cartesian3.fromDegrees(-97, 30, 720),
+    tl: Cesium.Cartesian3.fromDegrees(-97.0001, 30.0001, 720),
+    tr: Cesium.Cartesian3.fromDegrees(-96.9999, 30.0001, 720),
+    bl: Cesium.Cartesian3.fromDegrees(-97.0001, 29.9999, 720),
+    br: Cesium.Cartesian3.fromDegrees(-96.9999, 29.9999, 720),
+  };
+  const record = {
+    camera: { headingDeg: 0, pitchDeg: -17, rangeM: 700, basePose: {} },
+    frustumPositions: positions,
+    frustumGeometry: { rangeM: 700 },
+  };
+  const gizmo = createCalibrationGizmo({
+    viewer,
+    getActiveRecord: () => record,
+    applyPatch() {},
+    endPatch() {},
+    requestRender: (reason) => requests.push(reason),
+  });
+
+  gizmo.setEnabled(true);
+  assert.equal(requests.at(-1), 'cctv-gizmo-refresh');
+  assert.equal([...viewer._entities.values()].every((entity) => entity.show), true);
+  viewer._setPicked({ id: { id: 'cctv-gizmo-handle-range' } });
+  const move = () =>
+    viewer.scene.canvas.dispatch('mousemove', {
+      clientX: 20,
+      clientY: 20,
+      button: 0,
+      buttons: 0,
+      preventDefault() {},
+    });
+  const beforeHover = requests.length;
+  move();
+  assert.equal(requests.length, beforeHover + 1);
+  assert.equal(viewer._entities.get('cctv-gizmo-handle-range').point.pixelSize, 17);
+  move();
+  assert.equal(requests.length, beforeHover + 1, 'unchanged hover is throttled');
+  gizmo.refresh();
+  assert.equal(requests.length, beforeHover + 2);
+
+  gizmo.setEnabled(false);
+  assert.equal(requests.at(-1), 'cctv-gizmo-disabled');
+  assert.equal([...viewer._entities.values()].some((entity) => entity.show), false);
+  const beforeDispose = requests.length;
+  gizmo.destroy();
+  gizmo.refresh();
+  gizmo.setEnabled(true);
+  assert.equal(requests.length, beforeDispose);
+  assert.equal(viewer._entities.size, 0);
 });
