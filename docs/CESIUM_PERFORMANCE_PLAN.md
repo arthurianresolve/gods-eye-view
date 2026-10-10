@@ -1,7 +1,10 @@
 # Cesium performance plan
 
-Updated on 9 October 2026. Full runtime CI passes at
-`93caf86405a56ba56dbcca72e16eaf23a35e32d6` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37982744197)).
+Updated on 10 October 2026. Full runtime CI passes at
+`6046012b3c2575d3df429c8c1bd2d82ecdbce237` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38005697017)).
+Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
+foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
+are recorded separately from the unresolved earlier stall cause and soak gates.
 The latest isolated hosted wind/capture checks pass at
 `d905f301bd6856a21c9f648200a380f792d29968`; the 60-minute hosted Metal
 retention pass belongs to `2e839a449ce32582130b33267a1a276e8cb59224`, not the current tip.
@@ -26,10 +29,10 @@ the earlier release requirements and historical results.
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Pending | Pending slice-specific validation | Pending |
 | S55 tracking updates | Pending: existing cached-frame behavior retained | Existing regression coverage passes; planned consolidation has no new acceptance result | Pending tracking comparison |
-| S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `9b1c18e`: 12 isolated viewer capture checks pass on Windows UHD 620; full application matrix and measured benefit still pending |
+| S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `0edfb8e`: fresh 12-check isolated viewer matrix passes on Windows UHD 620; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
-| S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | Focused tests and full CI at `eb90492` pass; Linux software-rendered ten-capture comparison passes at `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; Windows UHD 620 capture fails, full interaction acceptance pending |
+| S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | Focused tests and full CI at `eb90492` pass; Linux software-rendered ten-capture comparison passes at `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
@@ -601,6 +604,24 @@ partial packet remains partial and cannot close the parent slice.
   browser or driver behavior, run a controlled manual foreground test. The
   400 ms capture limit and all application visuals/settings remain unchanged;
   this diagnostic is not a GPU speed or hardware acceptance result.
+- **10 October foreground recovery:** The requested manual WebGL control receives
+  302 callbacks in five seconds (maximum gap 17.5 ms); the immediately following
+  CUA-started control receives 301 (20.7 ms). A diagnostic paired import run then
+  passes all ten captures, followed by two normal runs without extra diagnostics
+  (20/20 captures, 6.0-22.2 ms). All 30 captures have identical pixels, 5,000
+  features and the unchanged 400 ms deadline; each run passes twelve cancelled
+  imports' cleanup checks. The 12-check isolated capture matrix also passes with
+  preservation both enabled and disabled. See the [recovery record](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
+  for raw artifacts and precise scope. No application, driver or renderer setting
+  changed between the earlier failures and this recovery. Automation and partial
+  canvas clipping alone are not sufficient explanations: both occur in the later
+  successful runs. OS-window conditions were not measured, and the user's exact
+  desktop changes are unknown. This is recovered capture correctness, not a
+  demonstrated root-cause fix, latency comparison or Windows retention pass.
+  The report-only correction at `c2d80e2` makes document visibility/focus and
+  unavailable OS-window verification explicit; its additional normal hardware
+  run passes ten captures in 5.0-17.7 ms with the same pixels and cleanup checks.
+  Twelve focused diagnostic/capture tests, syntax and formatting checks pass.
 - The [fresh hosted Metal soak](performance-evidence/hosted-mac-2e839a4.json)
   at `2e839a449ce32582130b33267a1a276e8cb59224` passes directly with the corrected
   validator: 252 cycles in 3,609,194 ms and 13 post-GC checkpoints. Final-window
@@ -739,22 +760,24 @@ partial packet remains partial and cannot close the parent slice.
   checks the stable workspace ID and navigation generation instead; the same
   correction covers duplicate and synthetic-demo completion. The existing browser
   journey remains the regression gate, with duplicate completion now observed too.
-- The Windows UHD 620 5,000-point import diagnostic remains **failed**. Saved
+- Earlier Windows UHD 620 5,000-point import diagnostics **failed**. Saved
   failures at [95dc09a](performance-evidence/import-batches-95dc09a-failed.json),
   [c61b623](performance-evidence/import-batches-c61b623-failed.json) and
   [dc01d3c](performance-evidence/import-batches-dc01d3c-failed.json) preserve partial
   samples. The last run has zero Cesium updates and zero independent animation
   callbacks during a 401 ms capture wait, despite a visible page, enabled render
-  loop, valid context and no render errors. Browser foreground/power conditions
-  were checked with a separate plain-page control: 293 animation callbacks in
-  five seconds with focus and visibility confirmed. The
+  loop, valid context and no render errors. A separate plain-page control recorded
+  293 animation callbacks in five seconds with document focus and visibility;
+  it did not verify OS-window occlusion or power conditions. The
   [synchronous-only control](performance-evidence/import-batches-50f7b68-sync-failed.json)
   fails too, so the cooperative change is not the sole cause. A
   [later detailed run](performance-evidence/import-batches-a49b221-failed.json)
   matches the first pair's pixels, then stalls on the next repetition. The cause
   is not established. Do not accept its event-loop
   improvement as a validated comparison. The 400 ms capture deadline and the
-  complete 5,000-feature population remain unchanged.
+  complete 5,000-feature population remain unchanged. The later
+  [10 October recovery](performance-evidence/WINDOWS_FRAME_RECOVERY.md) records
+  new passes without reclassifying these failed runs or establishing their cause.
 - The [96df53f framebuffer experiment](performance-evidence/import-batches-96df53f-no-preserve-failed.json)
   also fails with `preserveDrawingBuffer: false`. During its failed 401.8 ms
   capture, ordinary timers continue with at most a 9.1 ms gap while no animation

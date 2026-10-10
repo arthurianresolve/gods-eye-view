@@ -1,0 +1,97 @@
+{
+  "schema": "gev-webgl-frame-delivery/v1",
+  "appCommit": "0edfb8e905430d362a2f105d47da08bf04a757ac",
+  "harnessCommit": "0edfb8e905430d362a2f105d47da08bf04a757ac",
+  "scope": "diagnostic-only browser frame-delivery observation; not performance acceptance",
+  "mode": "webgl2",
+  "outcome": "duration-complete",
+  "startedAt": "2026-10-10T00:30:50.349Z",
+  "elapsedMs": 5000.399999976158,
+  "requestedDurationMs": 5000,
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "focusedAtStart": true,
+    "visibilityAtStart": "visible"
+  },
+  "pointCount": 5000,
+  "viewport": {
+    "width": 887,
+    "height": 529
+  },
+  "canvas": {
+    "width": 640,
+    "height": 360,
+    "rect": {
+      "left": 16,
+      "top": 200.375,
+      "right": 658,
+      "bottom": 562.375,
+      "width": 642,
+      "height": 362
+    },
+    "viewportIntersection": {
+      "width": 642,
+      "height": 328.625,
+      "fraction": 0.9078038674033149
+    }
+  },
+  "contextAttributes": {
+    "alpha": false,
+    "antialias": true,
+    "depth": true,
+    "desynchronized": false,
+    "failIfMajorPerformanceCaveat": false,
+    "powerPreference": "high-performance",
+    "premultipliedAlpha": true,
+    "preserveDrawingBuffer": true,
+    "stencil": true,
+    "xrCompatible": false
+  },
+  "renderer": {
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "rendererReadElapsedMs": 1.100000023841858
+  },
+  "rendererMetadataReadAfterWindow": true,
+  "frames": 301,
+  "firstFrameAtMs": 1.2999999523162842,
+  "buckets": [
+    {
+      "startMs": 0,
+      "endMs": 1000,
+      "frames": 61
+    },
+    {
+      "startMs": 1000,
+      "endMs": 2000,
+      "frames": 60
+    },
+    {
+      "startMs": 2000,
+      "endMs": 3000,
+      "frames": 60
+    },
+    {
+      "startMs": 3000,
+      "endMs": 4000,
+      "frames": 60
+    },
+    {
+      "startMs": 4000,
+      "endMs": 5000,
+      "frames": 60
+    }
+  ],
+  "maximumFrameGapMs": 20.699999928474426,
+  "trailingFrameGapMs": 3.100000023841858,
+  "frameClock": "performance.now sampled inside each native requestAnimationFrame callback",
+  "timer": {
+    "intervalMs": 20,
+    "ticks": 250,
+    "maximumGapMs": 22.09999990463257,
+    "trailingGapMs": 0.10000002384185791
+  },
+  "finalVisibility": "visible",
+  "finalFocused": true,
+  "contextLost": false,
+  "events": []
+}
