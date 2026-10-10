@@ -513,6 +513,12 @@ function assertRun(run, expectedCommit, report) {
       pixels.captureState?.currentVisualizerUpdateReady !== true
     )
       throw new Error('CCTV capture preceded complete visualizer geometry.');
+    for (const field of ['position', 'direction', 'up']) {
+      if (!exactJson(pixels.captureState?.[field], run.camera[field]))
+        throw new Error(
+          'CCTV calibration drag changed the viewer camera pose.',
+        );
+    }
   }
   if (
     run.beforePixels.width !== run.renderingSettings.drawingBufferWidth ||

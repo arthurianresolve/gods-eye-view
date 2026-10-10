@@ -256,6 +256,9 @@ function trial(mode, pair, globalIndex) {
       captureState: {
         dataSourceDisplayReady: true,
         currentVisualizerUpdateReady: true,
+        position: [1, 2, 3],
+        direction: [0, 0, -1],
+        up: [0, 1, 0],
       },
     },
     afterPixels: {
@@ -266,6 +269,9 @@ function trial(mode, pair, globalIndex) {
       captureState: {
         dataSourceDisplayReady: true,
         currentVisualizerUpdateReady: true,
+        position: [1, 2, 3],
+        direction: [0, 0, -1],
+        up: [0, 1, 0],
       },
     },
     cleanup: {
@@ -425,6 +431,12 @@ test('rejects instruction-induced canvas changes even with a stable window viewp
 
 test('rejects missing pointer, pixel, foreground, or cleanup evidence', () => {
   for (const mutate of [
+    (run) => {
+      run.afterPixels.captureState.up[0] = 0.002;
+    },
+    (run) => {
+      delete run.beforePixels.captureState.direction;
+    },
     (run) => {
       delete run.drag.geometrySettlement;
     },
