@@ -44,48 +44,57 @@ test('response-body completion honors cancellation without replacing records', a
   });
 });
 
-test('historical fire snapshots validate the requested time and filter future/out-of-window detections', async () => {
-  const target = Date.now() - 30_000;
-  let requestedUrl = null;
-  const source = createFirmsSource({
-    fetchImpl: async (url) => {
-      requestedUrl = url;
-      return {
-        ok: true,
-        json: async () => ({
-          historical: true,
-          targetTime: new Date(target).toISOString(),
-          fires: [
-            {
-              acqDate: new Date(target - 60 * 60_000)
-                .toISOString()
-                .slice(0, 10),
-              acqTime: '00',
-            },
-            {
-              acqDate: new Date(target + 60 * 60_000)
-                .toISOString()
-                .slice(0, 10),
-              acqTime: '2300',
-            },
-            { acqDate: '2000-01-01', acqTime: '0' },
-          ],
-        }),
+test('historical fire snapshots filter UTC window boundaries at midday and midnight', async (t) => {
+  let now = 0;
+  t.mock.method(Date, 'now', () => now);
+  const cases = [
+    { name: 'midday', target: Date.parse('2026-05-15T12:00:00Z') },
+    { name: 'midnight rollover', target: Date.parse('2026-05-15T00:00:00Z') },
+  ];
+
+  for (const { name, target } of cases) {
+    await t.test(name, async () => {
+      now = target + 30_000;
+      let requestedUrl = null;
+      const from = target - 24 * 60 * 60_000;
+      const rowAt = (time) => {
+        const date = new Date(time);
+        return {
+          acqDate: date.toISOString().slice(0, 10),
+          acqTime: String(date.getUTCHours() * 100 + date.getUTCMinutes()),
+        };
       };
-    },
-  });
-  const snapshot = await source.getSnapshotAt(target);
-  assert.match(requestedUrl, /^\/api\/firms\/history\?target=/);
-  assert.equal(
-    new URL(requestedUrl, 'https://local.test').searchParams.get('target'),
-    new Date(target).toISOString(),
-  );
-  assert.equal(snapshot.fires.length, 1);
-  assert.equal(snapshot.count, 1);
-  assert.deepEqual(snapshot.window, {
-    from: target - 24 * 60 * 60_000,
-    to: target,
-  });
+      const source = createFirmsSource({
+        fetchImpl: async (url) => {
+          requestedUrl = url;
+          return {
+            ok: true,
+            json: async () => ({
+              historical: true,
+              targetTime: new Date(target).toISOString(),
+              fires: [
+                rowAt(from),
+                rowAt(target),
+                rowAt(from - 60_000),
+                rowAt(target + 60_000),
+                { acqDate: '2000-01-01', acqTime: '0' },
+              ],
+            }),
+          };
+        },
+      });
+
+      const snapshot = await source.getSnapshotAt(target);
+      assert.match(requestedUrl, /^\/api\/firms\/history\?target=/);
+      assert.equal(
+        new URL(requestedUrl, 'https://local.test').searchParams.get('target'),
+        new Date(target).toISOString(),
+      );
+      assert.deepEqual(snapshot.fires, [rowAt(from), rowAt(target)]);
+      assert.equal(snapshot.count, 2);
+      assert.deepEqual(snapshot.window, { from, to: target });
+    });
+  }
 });
 
 test('historical fire selection never falls back to latest for an unsupported target or malformed window', async (t) => {
