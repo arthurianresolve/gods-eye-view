@@ -597,6 +597,17 @@ partial packet remains partial and cannot close the parent slice.
   to test. The strict audit remains failed; no CLI browser pass is claimed.
   Validate all created bootstrap recipes independently from observed execution,
   keeping unstarted constructions distinct from worker-target evidence.
+- **Worker construction and execution evidence separated by GPT-6 Luna:**
+  `49a220756359ec815aaaf6a042c31f0608cc39c3` validates every bounded creation record as
+  either the exact receipt-derived embedded source or an exact allowed bootstrap
+  referring to that source. Validation no longer depends on a worker target
+  already appearing in the separately sampled browser history. Unknown code,
+  absent payloads, unexpected origins/modules and inventory overflow still fail.
+  Observed worker counts remain separate from created/unobserved wrapper counts;
+  zero targets never implies that a constructed worker executed. All 23 focused
+  contract checks pass, including delayed construction and unknown-code controls.
+  [Hosted run 38035250094](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38035250094)
+  is the first end-to-end check of this correction; its result is pending.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
