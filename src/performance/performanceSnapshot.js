@@ -139,8 +139,8 @@ export function createPerformanceMonitor({
   harnessCommit = null,
   now = () => globalThis.performance?.now?.() ?? Date.now(),
 } = {}) {
-  const snapshot = new PerformanceSnapshot({ now });
-  const scene = viewer?.scene;
+  let snapshot = null;
+  let scene = null;
   let frameCount = 0;
   let previousFrameAt = null;
   let previousWasDemand = false;
@@ -162,13 +162,20 @@ export function createPerformanceMonitor({
     snapshot.count('renderedFrames');
   };
   function setEnabled(value) {
-    if (destroyed || active === Boolean(value)) return;
+    const nextEnabled = Boolean(value);
+    if (destroyed || active === nextEnabled) return;
     if (removeListener) removeListener();
     removeListener = null;
-    active = Boolean(value);
+    active = nextEnabled;
     enabled = active;
     previousFrameAt = null;
-    if (active && scene?.postRender?.addEventListener) {
+    if (!active) {
+      scene = null;
+      return;
+    }
+    if (!snapshot) snapshot = new PerformanceSnapshot({ now });
+    scene = viewer?.scene;
+    if (scene?.postRender?.addEventListener) {
       const unsubscribe = scene.postRender.addEventListener(onPostRender);
       removeListener =
         typeof unsubscribe === 'function'
@@ -176,46 +183,81 @@ export function createPerformanceMonitor({
           : () => scene.postRender.removeEventListener?.(onPostRender);
     }
   }
-  setEnabled(enabled);
+  if (enabled) setEnabled(true);
+
+  function unavailableSnapshot() {
+    return {
+      schema: 'gev-performance-snapshot/v1',
+      available: false,
+      historyScope: 'retained-samples-only',
+      retainedHistory: snapshot !== null,
+      capturedAt: null,
+      elapsedMs: null,
+      identity: {
+        appCommit: appCommit || null,
+        harnessCommit: harnessCommit || null,
+        userAgent: null,
+        renderer: null,
+        vendor: null,
+        viewport: { width: null, height: null, dpr: null },
+        drawingBuffer: { width: null, height: null },
+        layers: null,
+      },
+      settings: null,
+      scene: { renderedFrameCount: null },
+      retainedRenderedFrameCount: snapshot ? frameCount : null,
+      resources: null,
+      timings: null,
+      counters: snapshot ? Object.fromEntries(snapshot.counters) : {},
+      samples: snapshot
+        ? snapshot.samples.map((sample) => ({ ...sample }))
+        : [],
+    };
+  }
 
   return {
     setEnabled,
     getSnapshot(extra = {}) {
+      if (!active || !snapshot) return unavailableSnapshot();
       const environment = readPerformanceEnvironment({
         viewer,
         dataManager,
         appCommit,
         harnessCommit,
       });
-      return snapshot.snapshot({
-        identity: environment,
-        settings: enabled ? clone(readSettings()) || {} : {},
-        scene: {
-          renderedFrameCount: frameCount,
-          ...(clone(extra.scene) || {}),
-        },
-        resources: {
-          ...(enabled
-            ? readResourceCounts({
-                viewer,
-                dataManager,
-                diagnostics: readDiagnostics(),
-                ownership: readOwnership(),
-              })
-            : {}),
-          ...(clone(extra.resources) || {}),
-        },
-        timings: {
-          ...(enabled
-            ? {
-                gpuExecutionMs: null,
-                frameIntervalScope: 'completed-frame-wall-time',
-              }
-            : {}),
-          ...(enabled ? clone(readTimings()) || {} : {}),
-          ...(clone(extra.timings) || {}),
-        },
-      });
+      return {
+        ...snapshot.snapshot({
+          identity: environment,
+          settings: enabled ? clone(readSettings()) || {} : {},
+          scene: {
+            renderedFrameCount: frameCount,
+            ...(clone(extra.scene) || {}),
+          },
+          resources: {
+            ...(enabled
+              ? readResourceCounts({
+                  viewer,
+                  dataManager,
+                  diagnostics: readDiagnostics(),
+                  ownership: readOwnership(),
+                })
+              : {}),
+            ...(clone(extra.resources) || {}),
+          },
+          timings: {
+            ...(enabled
+              ? {
+                  gpuExecutionMs: null,
+                  frameIntervalScope: 'completed-frame-wall-time',
+                }
+              : {}),
+            ...(enabled ? clone(readTimings()) || {} : {}),
+            ...(clone(extra.timings) || {}),
+          },
+        }),
+        available: true,
+        historyScope: 'since-first-enable',
+      };
     },
     destroy() {
       if (destroyed) return;

@@ -42,7 +42,9 @@ test('performance monitor records frames and releases its listener', () => {
       dataSources: { length: 2 },
       imageryLayers: { length: 1 },
     },
-    dataManager: { getAll: () => [{ id: 'flights', enabled: true, stats: { count: 4 } }] },
+    dataManager: {
+      getAll: () => [{ id: 'flights', enabled: true, stats: { count: 4 } }],
+    },
     readSettings: () => ({ densityPct: 75 }),
     readTimings: () => ({ overlayProjectionMs: 2.5 }),
     readOwnership: () => ({
@@ -71,17 +73,22 @@ test('performance monitor records frames and releases its listener', () => {
 
 test('performance monitor can be disabled without installing a render listener', () => {
   let listeners = 0;
-  const scene = {
-    postRender: {
-      addEventListener() {
-        listeners += 1;
-        return () => {};
+  const viewer = Object.defineProperty({}, 'scene', {
+    get() {
+      throw new Error('disabled monitor must not read the viewer scene');
+    },
+  });
+  const monitor = createPerformanceMonitor({
+    viewer,
+    dataManager: {
+      get getAll() {
+        throw new Error('disabled monitor must not read data layers');
       },
     },
-  };
-  const monitor = createPerformanceMonitor({
-    viewer: { scene },
     enabled: false,
+    now: () => {
+      throw new Error('disabled monitor must not read the injected clock');
+    },
     readSettings: () => {
       throw new Error('disabled monitor must not read settings');
     },
@@ -98,27 +105,97 @@ test('performance monitor can be disabled without installing a render listener',
   const report = monitor.getSnapshot();
   monitor.destroy();
   assert.equal(listeners, 0);
-  assert.deepEqual(report.settings, {});
-  assert.deepEqual(report.resources, {});
-  assert.deepEqual(report.timings, {});
+  assert.equal(report.available, false);
+  assert.equal(report.capturedAt, null);
+  assert.equal(report.elapsedMs, null);
+  assert.equal(report.scene.renderedFrameCount, null);
+  assert.equal(report.identity.renderer, null);
+  assert.equal(report.settings, null);
+  assert.equal(report.resources, null);
+  assert.equal(report.timings, null);
+  assert.deepEqual(report.samples, []);
 });
 
 test('demand intervals identify possible idle time and disabling releases diagnostics completely', () => {
-  let clock = 0, listener, removed = 0;
-  const scene = { requestRenderMode: true, postRender: { addEventListener(fn) {
-    listener = fn;
-    return () => { removed++; listener = null; };
-  } } };
-  const monitor = createPerformanceMonitor({ viewer: { scene }, now: () => clock });
-  listener(); clock = 10000; listener();
-  assert.equal(monitor.getSnapshot().samples[0].metadata.mayIncludeIntentionalIdle, true);
+  let clock = 0,
+    listener,
+    removed = 0;
+  const scene = {
+    requestRenderMode: true,
+    postRender: {
+      addEventListener(fn) {
+        listener = fn;
+        return () => {
+          removed++;
+          listener = null;
+        };
+      },
+    },
+  };
+  const monitor = createPerformanceMonitor({
+    viewer: { scene },
+    now: () => clock,
+  });
+  listener();
+  clock = 10000;
+  listener();
+  assert.equal(
+    monitor.getSnapshot().samples[0].metadata.mayIncludeIntentionalIdle,
+    true,
+  );
   assert.equal(monitor.getSnapshot().timings.gpuExecutionMs, null);
   monitor.setEnabled(false);
   assert.equal(listener, null);
-  assert.deepEqual(monitor.getSnapshot().timings, {});
+  const disabled = monitor.getSnapshot();
+  assert.equal(disabled.available, false);
+  assert.equal(disabled.capturedAt, null);
+  assert.equal(disabled.retainedHistory, true);
+  assert.equal(disabled.historyScope, 'retained-samples-only');
+  assert.equal(disabled.samples.length, 1);
+  assert.equal(disabled.scene.renderedFrameCount, null);
+  assert.equal(disabled.retainedRenderedFrameCount, 2);
   monitor.setEnabled(true);
-  clock = 20000; listener();
-  assert.equal(monitor.getSnapshot().samples.length, 1, 'disabled interval is never added to frame samples');
-  monitor.destroy(); monitor.destroy();
+  clock = 20000;
+  listener();
+  assert.equal(
+    monitor.getSnapshot().samples.length,
+    1,
+    'disabled interval is never added to frame samples',
+  );
+  monitor.destroy();
+  monitor.destroy();
   assert.equal(removed, 2);
+});
+
+test('a disabled monitor can be enabled later without reading dormant state first', () => {
+  let clock = 25;
+  let listener = null;
+  let listenerAdds = 0;
+  const scene = {
+    postRender: {
+      addEventListener(callback) {
+        listenerAdds += 1;
+        listener = callback;
+        return () => {
+          listener = null;
+        };
+      },
+    },
+  };
+  const monitor = createPerformanceMonitor({
+    viewer: { scene },
+    enabled: false,
+    now: () => clock,
+  });
+  assert.equal(monitor.getSnapshot().available, false);
+  assert.equal(listenerAdds, 0);
+  monitor.setEnabled(true);
+  assert.equal(listenerAdds, 1);
+  listener();
+  clock = 50;
+  listener();
+  const active = monitor.getSnapshot();
+  assert.equal(active.available, true);
+  assert.equal(active.samples.length, 1);
+  monitor.destroy();
 });

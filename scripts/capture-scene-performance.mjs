@@ -37,6 +37,7 @@ import {
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
 import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
+import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -274,7 +275,12 @@ async function writeCaptureFailure(error) {
     errorActual: error?.actual,
     errorExpected: error?.expected,
     errorOperator: error?.operator,
-    current: failureProgress.current,
+    current: performanceDiagnosticsDocuments.length
+      ? {
+          ...(failureProgress.current || {}),
+          performanceDiagnosticsDocuments,
+        }
+      : failureProgress.current,
     startupSamples: failureProgress.startupSamples,
     completedSamples: failureProgress.completedSamples,
     fixtureDelivery: failureProgress.fixtureDelivery,
@@ -344,6 +350,18 @@ if (ownedBrowserPidFile) {
 
 const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
+const performanceDiagnosticsDocuments = [];
+async function disableCaptureDiagnostics(targetPage, documentRole) {
+  const status = await targetPage.evaluate(
+    disableOptionalPerformanceDiagnostics,
+  );
+  performanceDiagnosticsDocuments.push({ documentRole, ...status });
+  failureProgress.performanceDiagnosticsDocuments = [
+    ...performanceDiagnosticsDocuments,
+  ];
+  return status;
+}
+
 async function configureFlightFixturePage(
   page,
   deliveryObserver = null,
@@ -595,6 +613,7 @@ try {
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
+    await disableCaptureDiagnostics(startupPage, `startup-${run}`);
     const appReadyMs = Date.now() - startedAt;
     await startupPage.waitForFunction(
       () =>
@@ -690,6 +709,7 @@ try {
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
+  await disableCaptureDiagnostics(page, 'main-setup');
   const readyMs = Date.now();
   await page.waitForFunction(
     () =>
@@ -983,7 +1003,9 @@ try {
       `Provider-fixture mixed populations are incomplete: ${JSON.stringify(mixedLayerCounts)}`,
     );
 
+  let providerSampleDocumentIndex = 0;
   async function prepareFreshProviderDocument() {
+    providerSampleDocumentIndex += 1;
     if (!providerSampleWorkerAuditComplete)
       await auditPageWorkerBlobs(page, captureAuditState);
     await releaseFlightFixtureSession(activeFixtureSession);
@@ -1019,6 +1041,10 @@ try {
     await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
+    await disableCaptureDiagnostics(
+      page,
+      `provider-sample-${providerSampleDocumentIndex}`,
+    );
     await page.waitForFunction(
       () =>
         document.getElementById('loading-screen')?.classList.contains('hidden'),
@@ -1677,6 +1703,10 @@ try {
   });
   const report = {
     schema: 'gev-performance-capture/v1',
+    performanceDiagnostics: {
+      requested: 'disabled-when-supported-before-document-setup',
+      documents: performanceDiagnosticsDocuments,
+    },
     capturedAt: new Date().toISOString(),
     source,
     url: new URL(url).origin,
