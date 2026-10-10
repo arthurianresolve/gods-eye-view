@@ -1,0 +1,67 @@
+name: Overlay visual comparison
+
+on:
+  push:
+    branches: [qa/s52-overlay-visual]
+  workflow_dispatch:
+    inputs:
+      baseline_sha:
+        description: Immutable baseline application commit
+        type: string
+        default: 886b7d2927b6eb3a546c0dfaf629684973d9e501
+      candidate_sha:
+        description: Immutable candidate application commit
+        type: string
+        default: 33d985657c8949a02cfce2f0f1ad4131d3da774c
+
+permissions:
+  contents: read
+
+jobs:
+  paired-canvas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASELINE_SHA: ${{ inputs.baseline_sha || '886b7d2927b6eb3a546c0dfaf629684973d9e501' }}
+      CANDIDATE_SHA: ${{ inputs.candidate_sha || '33d985657c8949a02cfce2f0f1ad4131d3da774c' }}
+    steps:
+      - name: Check out the comparison harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies and fixture browser
+        run: npm ci
+      - name: Prepare two immutable source checkouts
+        shell: bash
+        run: |
+          [[ "$BASELINE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git worktree add --detach ../overlay-baseline "$BASELINE_SHA"
+          git worktree add --detach ../overlay-candidate "$CANDIDATE_SHA"
+          cmp package-lock.json ../overlay-baseline/package-lock.json
+          cmp package-lock.json ../overlay-candidate/package-lock.json
+          ln -s "$PWD/node_modules" ../overlay-baseline/node_modules
+          ln -s "$PWD/node_modules" ../overlay-candidate/node_modules
+      - name: Run five alternating pairs with unchanged component inputs
+        run: node scripts/performance/overlayVisualComparison.mjs ../overlay-baseline ../overlay-candidate qa-artifacts/overlay-visual
+      - name: Print raw evidence and image artifacts without paid storage
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, readdirSync, readFileSync } from 'node:fs';
+          const root = 'qa-artifacts/overlay-visual';
+          if (!existsSync(root + '/report.json')) {
+            console.log(JSON.stringify({ schema: 'gev-overlay-visual-comparison/v1', status: 'not-run', error: 'No completed runner report; inspect prior step failures.' }));
+          } else {
+            console.log('OVERLAY_VISUAL_REPORT ' + readFileSync(root + '/report.json', 'utf8').trim().split('\n').join(''));
+            for (const name of readdirSync(root).filter(name => /^[0-4]-(baseline|candidate)-\d+\.png$/.test(name)))
+              console.log('OVERLAY_VISUAL_IMAGE ' + JSON.stringify({ name, base64: readFileSync(root + '/' + name).toString('base64') }));
+          }
+          JS
