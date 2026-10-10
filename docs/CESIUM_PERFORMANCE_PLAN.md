@@ -152,6 +152,20 @@ boundaries pass for 1,003 modules and 78 portable entries. Rendered and full
 integration acceptance for the follow-up remain pending until their exact-commit
 runs pass.
 
+The follow-up is committed as `167ba62c047fe94f36d0d60066aa4d648ede7519`.
+Its [isolated rendered smoke](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38090185732)
+passes both warmup cycles and one measured cycle in 21,423 ms. The measured
+cycle completes four source toggles, one import, one replay seek, two workspace
+reloads, one archive failure/recovery and one camera recovery. Application,
+candidate and harness identities match, and source state remains clean and
+unchanged throughout. Root independently checked these fields and recomputed
+the unchanged stability verdict: **pending**, because this is a short smoke.
+This uses hosted Ubuntu 24 and Chrome 152.0.7977.75 with SwiftShader; it is not
+physical GPU evidence or a full integration pass.
+[Raw report](performance-evidence/mixed-use-smoke-167ba62.json),
+SHA-256 `eba6049984179fa3a13805944b7c7baeb2523f4bf07db1ddb8c6fe5d5bf720ef`;
+[terminal run metadata](performance-evidence/mixed-use-smoke-167ba62-run.json).
+
 ### Tracking fixture ground coverage correction - 10 October 2026
 
 The failed `996a8d3` tracking report observed a 192.4-m floor after initially
