@@ -88,6 +88,16 @@ overlay/Draw/font tests and all 13 existing Node 24 allocation gates pass.
 This remains experimental: exact rendered comparisons and isolated paired CPU
 results, including the detection control, are required before acceptance.
 
+The first [rendered comparison attempt](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095195178)
+at candidate `f25154a` stopped during preflight: both newer application commits
+already contain the fixture, whereas the original runner required absent paths.
+No browser observations were collected. The
+[raw log](performance-evidence/s52-layout-reuse/visual-preflight-failure.txt) and
+[run state](performance-evidence/s52-layout-reuse/visual-preflight-run.json) retain
+that failure. The runner now reuses existing files only when their bytes match
+the harness exactly, leaves those files untouched, and removes only temporary
+files it created. The retry keeps baseline `0d431f2` and candidate `f25154a` fixed.
+
 ### S52 font lifecycle: idle invalidation regression - 11 October 2026
 
 Review of layout invalidation found that `document.fonts.ready` and `loadingdone`

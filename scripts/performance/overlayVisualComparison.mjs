@@ -126,12 +126,15 @@ for (const [side, root] of Object.entries(roots)) {
     expectedCommits[side],
     `Wrong ${side} commit`,
   );
-  for (const name of files)
-    assert.equal(
-      existsSync(resolve(root, 'scripts/fixtures', name)),
-      false,
-      `Fixture path already exists in ${side}: ${name}`,
-    );
+  for (const name of files) {
+    const path = resolve(root, 'scripts/fixtures', name);
+    if (existsSync(path))
+      assert.deepEqual(
+        readFileSync(path),
+        fixtures.get(name),
+        `Existing fixture differs from the comparison harness in ${side}: ${name}`,
+      );
+  }
 }
 assert.equal(
   report.sources.baseline.lockfileSha256,
@@ -192,6 +195,13 @@ try {
   for (const [side, root] of Object.entries(roots)) {
     for (const [name, bytes] of fixtures) {
       const path = resolve(root, 'scripts/fixtures', name);
+      // Later application commits may already contain this exact fixture.
+      // Reuse identical bytes without touching a tracked file; only temporary
+      // files created by this run belong to its cleanup list.
+      if (existsSync(path)) {
+        assert.deepEqual(readFileSync(path), bytes);
+        continue;
+      }
       writeFileSync(path, bytes, { flag: 'wx' });
       copied.push(path);
     }
