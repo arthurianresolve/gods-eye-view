@@ -45,6 +45,14 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### S59.2 import form ownership - 10 October 2026
+
+GPT-6 Luna's `2b269e368efd92a39ef3f4128ea7d1d6684c8f62` gives asynchronous file reads and previews explicit ownership. A new selection clears the previous summary and disables Apply immediately. Replaced, cancelled or disposed reads cannot publish data or errors; pending workspace-bound work cannot complete into a different workspace. Completed previews remain editable when the user chooses another destination workspace. An already-started save persists its original import, while a newer selection retains control of the form and status even if the old save finishes rendering later.
+
+Twenty-one focused parser, cancellation, ownership and panel-event checks pass, alongside syntax, formatting and package boundaries. Root independently ran the same four panel-event regressions against the exact previous panel (`4170838`) and the candidate: all four reproduce stale summary/status failures before the fix and pass afterward. [Comparison record](performance-evidence/import-owner-regression-2b269e3.json), [baseline output](performance-evidence/import-owner-baseline.log), [candidate output](performance-evidence/import-owner-candidate.log). This uses a lightweight DOM and in-memory storage with the production panel, not browser timing or GPU evidence.
+
+The code is pushed to `dev`. [Full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38064518478) is pending at this exact candidate. This fixes demonstrated import ownership failures; it does not establish the cause of the earlier mixed-use timeout or complete S59 interaction/performance acceptance. CSV document decoding remains a separately measured next packet.
+
 ### Mixed-use timeout diagnosis - 10 October 2026
 
 GPT-6 Luna's harness-only `3e87cc828950441768cb04427315a40a1f2106c5` adds named workspace/import phases and bounded, URL-redacted failure diagnostics. The original 30-second operation deadlines, polling and assertions remain unchanged. Diagnostics cannot replace the primary failure and have their own 1.5-second bound. Twenty-four focused tests pass, including the serialized browser callback contract and a stalled diagnostic request.

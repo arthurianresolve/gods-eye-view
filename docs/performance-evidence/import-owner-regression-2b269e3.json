@@ -1,0 +1,48 @@
+{
+  "schema": "gev-workspace-import-regression/v1",
+  "baseline": "41708386c5e5b23b8a54d0a3551a918138d7674a",
+  "candidate": "2b269e368efd92a39ef3f4128ea7d1d6684c8f62",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "scope": "Actual workspace panel with lightweight DOM and in-memory storage; baseline panel source transplanted into unchanged dependency graph. Not browser/GPU performance evidence.",
+  "testSha256": "04af542db9c4828c15f9e6582281b9ccd2e10b22082ca832c0a7e9dc2c3c277c",
+  "baselinePanelSha256": "321177fd9a54c47b78990c34cb47882ea0270ddc740719eb9ad0ffbad0bae61c",
+  "results": {
+    "baseline": {
+      "status": 1,
+      "signal": null,
+      "summary": [
+        "# tests 4",
+        "# pass 0",
+        "# fail 4",
+        "# cancelled 0",
+        "# skipped 0",
+        "# duration_ms 283.6409"
+      ],
+      "cases": [
+        "not ok 1 - file selection clears old preview synchronously and ignores a late stale read",
+        "not ok 2 - completed CSV preview can be rerun after choosing a different workspace",
+        "not ok 3 - a started save completes without overwriting a newer file selected during-save",
+        "not ok 4 - a started save completes without overwriting a newer file selected during-render"
+      ]
+    },
+    "candidate": {
+      "status": 0,
+      "signal": null,
+      "summary": [
+        "# tests 4",
+        "# pass 4",
+        "# fail 0",
+        "# cancelled 0",
+        "# skipped 0",
+        "# duration_ms 313.7415"
+      ],
+      "cases": [
+        "ok 1 - file selection clears old preview synchronously and ignores a late stale read",
+        "ok 2 - completed CSV preview can be rerun after choosing a different workspace",
+        "ok 3 - a started save completes without overwriting a newer file selected during-save",
+        "ok 4 - a started save completes without overwriting a newer file selected during-render"
+      ]
+    }
+  }
+}
