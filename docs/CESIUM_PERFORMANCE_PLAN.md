@@ -45,6 +45,34 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### Windows frame controls after Chrome reconnection - 10 October 2026
+
+Four fresh-viewer controls used the existing frozen diagnostic build
+`7e09988616e3242eef0b2349416e36b523243441`, not the current development tip.
+Chrome 154 reports Intel UHD 620 through ANGLE/D3D11, a 640x360 drawing buffer,
+and an 888x585 viewport at DPR 2. Settings and the 400 ms deadline are unchanged.
+
+| Control (UTC) | Frame results | Raw report |
+| --- | --- | --- |
+| Globe only, no copy (17:45:36) | 3/3 delivered; 3.8-90.1 ms | [JSON](performance-evidence/wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T17-45-36-323Z.json) |
+| Paused wind, no copy (17:47:46) | 3/3 delivered; 9.8-32.5 ms | [JSON](performance-evidence/wind-frame-delivery-paused-wind-no-copy-7e09988-2026-10-10T17-47-46-921Z.json) |
+| Paused wind, copy (17:48:05) | First two copied; third failed at 412 ms | [Failure JSON](performance-evidence/wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T17-48-05-412Z.json) |
+| Globe only, copy (17:50:40) | 3/3 copied; 14.7-304.2 ms | [JSON](performance-evidence/wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T17-50-40-780Z.json) |
+
+The failed request observes no new animation-frame callback or Cesium render
+event between its before/after observations. Its preceding two pixel hashes
+match. Each control reports successful listener, diagnostic, wind and viewer
+cleanup. Page focus/visibility and canvas intersection remain positive; desktop
+foreground verification is explicitly unavailable. The failed variant was not
+retried. These short controls preserve the intermittent failure and do not prove
+its cause, current-candidate correctness, performance or Windows soak acceptance.
+
+SHA-256 values, in table order:
+`033fa3c1b56d0be3605ef3a03b72c9b894161966d7a78688b7594e80672e87d6`,
+`a74fc2b2eb746ed65324e920fae8a53d2bd6d56130fc0d2629794564bca00d7a`,
+`b40b10087dce291a029d6c405f80e988dcc44ece8478b288774f47b4f596c60d`,
+`9ef1f7fcd192569b471634615b216ffa61cebde145ebaa0c0c9fde87319caf1b`.
+
 ### S49.1 isolated terrain and picking ownership - 10 October 2026
 
 GPT-6 Luna's fixture and root's hosted integration at
