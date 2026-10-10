@@ -9,6 +9,7 @@ import {
   deriveCesiumEmbeddedWorkerContract,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_TOTAL_BYTES,
+  readAndRestoreCesiumWorkerBodies,
   summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './cesiumWorkerBlobContract.mjs';
@@ -458,10 +459,7 @@ test('page blob instrumentation retains bounded script blobs only and restores t
   assert.equal(aggregateMetadata.maxRetainedBytes, MAX_WORKER_BLOB_TOTAL_BYTES);
   const firstRestore = JSON.parse(
     JSON.stringify(
-      vm.runInContext(
-        'window.__gevCesiumWorkerBlobAuditV1.restore()',
-        context,
-      ),
+      vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context),
     ),
   );
   assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
@@ -612,10 +610,203 @@ test('worker audit restoration reports a replaced native API and releases retain
   );
 });
 
-test('prewarm worker inventory accepts only receipt-bound observed late code paths', async () => {
-  const { validatePrewarmedWorkerUse } = await import(
-    './cesiumWorkerBlobContract.mjs'
+function makeAtomicWorkerAuditPage(BlobClass) {
+  let nextId = 0;
+  class TestURL {
+    static createObjectURL() {
+      return `blob:http://127.0.0.1:4173/atomic-${++nextId}`;
+    }
+  }
+  const nativeCreateObjectURL = TestURL.createObjectURL;
+  const context = vm.createContext({
+    window: {},
+    URL: TestURL,
+    Blob: BlobClass,
+  });
+  vm.runInContext(`(${installCesiumWorkerBlobAudit.toString()})()`, context);
+  const page = {
+    async evaluate(callback, ...args) {
+      const serializedArgs = JSON.stringify(args);
+      return vm.runInContext(
+        `(${callback.toString()})(...${serializedArgs})`,
+        context,
+      );
+    },
+  };
+  return { context, page, nativeCreateObjectURL, TestURL };
+}
+
+test('prewarm body read atomically restores first and rejects a late executable blob use', async () => {
+  let lateUrl = null;
+  class TestBlob {
+    constructor(text, type = 'application/javascript') {
+      this.value = text;
+      this.type = type;
+      this.size = text.length;
+    }
+    async text() {
+      lateUrl = TestURL.createObjectURL(new TestBlob('late worker'));
+      return this.value;
+    }
+  }
+  let nextId = 0;
+  class TestURL {
+    static createObjectURL() {
+      return `blob:http://127.0.0.1:4173/late-${++nextId}`;
+    }
+  }
+  const nativeCreateObjectURL = TestURL.createObjectURL;
+  const context = vm.createContext({
+    window: {},
+    URL: TestURL,
+    Blob: TestBlob,
+  });
+  vm.runInContext(`(${installCesiumWorkerBlobAudit.toString()})()`, context);
+  const originalUrl = vm.runInContext(
+    'URL.createObjectURL(new Blob("validated worker"))',
+    context,
   );
+  const page = {
+    async evaluate(callback, ...args) {
+      return vm.runInContext(
+        `(${callback.toString()})(...${JSON.stringify(args)})`,
+        context,
+      );
+    },
+  };
+  const result = JSON.parse(
+    JSON.stringify(await readAndRestoreCesiumWorkerBodies(page, [originalUrl])),
+  );
+  assert.equal(result.readError, false);
+  assert.equal(result.createdBlobCount, 1);
+  assert.equal(result.restoration.createdScriptBlobCountAtRestore, 1);
+  assert.equal(result.restoration.nativeCreateObjectURLRestored, true);
+  assert.equal(result.records.length, 1);
+  assert.equal(result.records[0].url, originalUrl);
+  assert.ok(lateUrl);
+  assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        vm.runInContext(
+          'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+          context,
+        ),
+      ),
+    ).records,
+    [],
+  );
+
+  const { validatePrewarmedWorkerUse } =
+    await import('./cesiumWorkerBlobContract.mjs');
+  assert.throws(() =>
+    validatePrewarmedWorkerUse({
+      inventory: {
+        schema: 'gev-prewarmed-worker-inventory/v1',
+        status: 'receipt-derived-worker-blobs-validated',
+        receiptSha256: 'a'.repeat(64),
+        workerSourceSha256: 'b'.repeat(64),
+        createdScriptBlobCount: result.createdBlobCount,
+        acceptedBlobUrls: [originalUrl],
+        validatedWorkerTargetUrls: [originalUrl],
+        restoration: result.restoration,
+      },
+      expectedReceiptSha256: 'a'.repeat(64),
+      expectedWorkerSourceSha256: 'b'.repeat(64),
+      workerUrls: [lateUrl],
+      observedBlobUrls: [lateUrl],
+      workerUrlOverflow: false,
+      blobUrlOverflow: false,
+      baseUrl: BASE,
+      expectedAssetPaths: [],
+    }),
+  );
+});
+
+test('prewarm body-read failure still restores native API and clears live and frozen records', async () => {
+  class FailingBlob {
+    constructor() {
+      this.type = 'application/javascript';
+      this.size = 1;
+    }
+    async text() {
+      throw new Error('private blob read detail');
+    }
+  }
+  const { context, page, nativeCreateObjectURL, TestURL } =
+    makeAtomicWorkerAuditPage(FailingBlob);
+  vm.runInContext('URL.createObjectURL(new Blob())', context);
+  const result = JSON.parse(
+    JSON.stringify(await readAndRestoreCesiumWorkerBodies(page, [])),
+  );
+  assert.equal(result.readError, true);
+  assert.equal(result.records.length, 0);
+  assert.equal(result.totalReadBytes, 0);
+  assert.equal(result.restoration.nativeCreateObjectURLRestored, true);
+  assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        vm.runInContext(
+          'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+          context,
+        ),
+      ),
+    ).records,
+    [],
+  );
+});
+
+test('atomic prewarm read reports failure when createObjectURL was replaced', async () => {
+  class TestBlob {
+    constructor() {
+      this.type = 'application/javascript';
+      this.size = 0;
+    }
+    async text() {
+      return '';
+    }
+  }
+  const { context, page } = makeAtomicWorkerAuditPage(TestBlob);
+  vm.runInContext('URL.createObjectURL(new Blob())', context);
+  vm.runInContext(
+    'URL.createObjectURL = function substitutedCreateObjectURL() {};',
+    context,
+  );
+  const result = JSON.parse(
+    JSON.stringify(await readAndRestoreCesiumWorkerBodies(page, [])),
+  );
+  assert.equal(result.restoration.nativeCreateObjectURLRestored, false);
+  assert.equal(result.restoration.registryEmpty, true);
+  const { validatePrewarmedWorkerUse } =
+    await import('./cesiumWorkerBlobContract.mjs');
+  assert.throws(() =>
+    validatePrewarmedWorkerUse({
+      inventory: {
+        schema: 'gev-prewarmed-worker-inventory/v1',
+        status: 'receipt-derived-worker-blobs-validated',
+        receiptSha256: 'a'.repeat(64),
+        workerSourceSha256: 'b'.repeat(64),
+        createdScriptBlobCount: 1,
+        acceptedBlobUrls: ['blob:http://127.0.0.1:4173/atomic-1'],
+        validatedWorkerTargetUrls: [],
+        restoration: result.restoration,
+      },
+      expectedReceiptSha256: 'a'.repeat(64),
+      expectedWorkerSourceSha256: 'b'.repeat(64),
+      workerUrls: [],
+      observedBlobUrls: [],
+      workerUrlOverflow: false,
+      blobUrlOverflow: false,
+      baseUrl: BASE,
+      expectedAssetPaths: [],
+    }),
+  );
+});
+
+test('prewarm worker inventory accepts only receipt-bound observed late code paths', async () => {
+  const { validatePrewarmedWorkerUse } =
+    await import('./cesiumWorkerBlobContract.mjs');
   const baseUrl = 'http://127.0.0.1:4173/app/';
   const receiptSha256 = 'a'.repeat(64);
   const workerSourceSha256 = 'b'.repeat(64);
@@ -659,30 +850,44 @@ test('prewarm worker inventory accepts only receipt-bound observed late code pat
     ],
     [
       'approved target is outside accepted blobs',
-      (input) => (input.inventory.validatedWorkerTargetUrls = [`${wrapper}-other`]),
+      (input) =>
+        (input.inventory.validatedWorkerTargetUrls = [`${wrapper}-other`]),
     ],
-    ['unknown blob request', (input) => input.observedBlobUrls.push(`${embedded}-late`)],
-    ['unknown blob target', (input) => input.workerUrls.push(`${wrapper}-late`)],
+    [
+      'unknown blob request',
+      (input) => input.observedBlobUrls.push(`${embedded}-late`),
+    ],
+    [
+      'unknown blob target',
+      (input) => input.workerUrls.push(`${wrapper}-late`),
+    ],
     [
       'unexpected worker path',
-      (input) => input.workerUrls.push('http://127.0.0.1:4173/app/unreceipted.js'),
+      (input) =>
+        input.workerUrls.push('http://127.0.0.1:4173/app/unreceipted.js'),
     ],
-    ['external worker target', (input) => input.workerUrls.push('https://outside.invalid/worker.js')],
+    [
+      'external worker target',
+      (input) => input.workerUrls.push('https://outside.invalid/worker.js'),
+    ],
     ['worker overflow', (input) => (input.workerUrlOverflow = 1)],
     ['blob overflow', (input) => (input.blobUrlOverflow = 1)],
-    ['wrong receipt', (input) => (input.expectedReceiptSha256 = 'c'.repeat(64))],
-    ['wrong worker source', (input) => (input.expectedWorkerSourceSha256 = 'd'.repeat(64))],
+    [
+      'wrong receipt',
+      (input) => (input.expectedReceiptSha256 = 'c'.repeat(64)),
+    ],
+    [
+      'wrong worker source',
+      (input) => (input.expectedWorkerSourceSha256 = 'd'.repeat(64)),
+    ],
     [
       'restore count drift',
-      (input) => (input.inventory.restoration.createdScriptBlobCountAtRestore = 3),
+      (input) =>
+        (input.inventory.restoration.createdScriptBlobCountAtRestore = 3),
     ],
   ]) {
     const input = structuredClone(expected);
     mutate(input);
-    assert.throws(
-      () => validatePrewarmedWorkerUse(input),
-      undefined,
-      name,
-    );
+    assert.throws(() => validatePrewarmedWorkerUse(input), undefined, name);
   }
 });

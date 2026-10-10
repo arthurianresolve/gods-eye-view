@@ -33,6 +33,7 @@ import {
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_RECORDS,
   MAX_WORKER_TARGETS,
+  readAndRestoreCesiumWorkerBodies,
   restoreCesiumWorkerBlobAudit,
   validatePrewarmedWorkerUse,
   validateCesiumWorkerBlobs,
@@ -549,10 +550,35 @@ try {
     let metadata = null;
     let restoreAttestation = null;
     let restorationSummary = null;
+    let blobAudit = null;
     try {
-      metadata = await auditPage.evaluate(
-        () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
-      );
+      if (auditMode === 'prewarm') {
+        blobAudit = await readAndRestoreCesiumWorkerBodies(
+          auditPage,
+          workerUrls,
+        );
+        if (!blobAudit)
+          throw new Error(
+            'Receipt-verified page worker blob audit is missing.',
+          );
+        restoreAttestation = blobAudit.restoration;
+        metadata = {
+          createdBlobCount: blobAudit.createdBlobCount,
+          overflowCount: blobAudit.overflowCount,
+          maxRetainedBytes: blobAudit.maxRetainedBytes,
+          records: blobAudit.records.map(({ url, type, byteLength }) => ({
+            url,
+            type,
+            byteLength,
+          })),
+        };
+        if (blobAudit.readError)
+          throw new Error('Prewarm worker blob body read failed.');
+      } else {
+        metadata = await auditPage.evaluate(
+          () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
+        );
+      }
       if (!metadata)
         throw new Error('Receipt-verified page worker blob audit is missing.');
       const hasEvidence = !(
@@ -563,12 +589,15 @@ try {
       if (requireEvidence && !hasEvidence)
         throw new Error('Prewarm worker audit observed no executable blobs.');
       if (hasEvidence) {
-        const blobAudit = await auditPage.evaluate(async (urls) => {
-          const audit = window.__gevCesiumWorkerBlobAuditV1;
-          if (!audit)
-            throw new Error('Receipt-verified page worker audit disappeared.');
-          return audit.readWorkerBodies(urls);
-        }, workerUrls);
+        if (auditMode !== 'prewarm')
+          blobAudit = await auditPage.evaluate(async (urls) => {
+            const audit = window.__gevCesiumWorkerBlobAuditV1;
+            if (!audit)
+              throw new Error(
+                'Receipt-verified page worker audit disappeared.',
+              );
+            return audit.readWorkerBodies(urls);
+          }, workerUrls);
         validation = validateCesiumWorkerBlobs({
           contract: captureWorkerContract,
           baseUrl: buildProvenanceOptions.baseUrl,
@@ -579,9 +608,10 @@ try {
         });
       }
     } finally {
-      restoreAttestation = await auditPage.evaluate(
-        restoreCesiumWorkerBlobAudit,
-      );
+      if (!restoreAttestation)
+        restoreAttestation = await auditPage.evaluate(
+          restoreCesiumWorkerBlobAudit,
+        );
       restorationSummary = {
         nativeCreateObjectURLRestored:
           restoreAttestation?.nativeCreateObjectURLRestored === true,

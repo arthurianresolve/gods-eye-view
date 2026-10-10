@@ -149,6 +149,29 @@ export function installCesiumWorkerBlobAudit() {
     }
     return url;
   };
+  const restoreAudit = () => {
+    const createdScriptBlobCountAtRestore = createdScriptBlobCount;
+    const overflowCountAtRestore = overflowCount;
+    if (URL.createObjectURL === wrappedCreateObjectURL)
+      URL.createObjectURL = nativeCreateObjectURL;
+    records.length = 0;
+    byUrl.clear();
+    createdScriptBlobCount = 0;
+    retainedBytes = 0;
+    overflowCount = 0;
+    return {
+      nativeCreateObjectURLRestored:
+        URL.createObjectURL === nativeCreateObjectURL,
+      registryEmpty:
+        records.length === 0 &&
+        byUrl.size === 0 &&
+        retainedBytes === 0 &&
+        createdScriptBlobCount === 0 &&
+        overflowCount === 0,
+      createdScriptBlobCountAtRestore,
+      overflowCountAtRestore,
+    };
+  };
   URL.createObjectURL = wrappedCreateObjectURL;
   Object.defineProperty(window, key, {
     configurable: false,
@@ -203,6 +226,67 @@ export function installCesiumWorkerBlobAudit() {
           records: output,
         };
       },
+      async readAndRestoreWorkerBodies(workerUrls) {
+        if (!Array.isArray(workerUrls) || workerUrls.length > 64)
+          throw new Error('Worker target list exceeds its audit bound.');
+        // Freeze creation-time metadata and body references synchronously,
+        // then detach the observer before the first asynchronous Blob read.
+        const frozenRecords = records.slice();
+        const frozenCreatedBlobCount = createdScriptBlobCount;
+        const frozenOverflowCount = overflowCount;
+        const frozenByUrl = new Map(
+          frozenRecords.map((record) => [record.url, record]),
+        );
+        const requested = new Set(workerUrls);
+        const restoration = restoreAudit();
+        const output = [];
+        let totalBytes = 0;
+        let readError = false;
+        try {
+          for (const url of requested) {
+            if (!frozenByUrl.has(url))
+              throw new Error('Worker blob body was not captured.');
+          }
+          const include = async (url) => {
+            if (output.some((entry) => entry.url === url)) return;
+            const record = frozenByUrl.get(url);
+            if (!record) throw new Error('Worker blob body was not captured.');
+            if (
+              !Number.isInteger(record.byteLength) ||
+              record.byteLength < 0 ||
+              record.byteLength > 2 * 1024 * 1024 ||
+              totalBytes + record.byteLength > maxRetainedBytes
+            )
+              throw new Error('Worker blob body exceeds its audit bound.');
+            totalBytes += record.byteLength;
+            output.push({
+              url: record.url,
+              type: record.type,
+              byteLength: record.byteLength,
+              body: await record.blob.text(),
+            });
+          };
+          for (const url of requested) await include(url);
+          for (const record of frozenRecords) await include(record.url);
+        } catch {
+          output.length = 0;
+          totalBytes = 0;
+          readError = true;
+        } finally {
+          frozenRecords.length = 0;
+          frozenByUrl.clear();
+          requested.clear();
+        }
+        return {
+          createdBlobCount: frozenCreatedBlobCount,
+          overflowCount: frozenOverflowCount,
+          totalReadBytes: totalBytes,
+          maxRetainedBytes,
+          records: output,
+          readError,
+          restoration,
+        };
+      },
       reset() {
         records.length = 0;
         byUrl.clear();
@@ -211,27 +295,7 @@ export function installCesiumWorkerBlobAudit() {
         overflowCount = 0;
       },
       restore() {
-        const createdScriptBlobCountAtRestore = createdScriptBlobCount;
-        const overflowCountAtRestore = overflowCount;
-        if (URL.createObjectURL === wrappedCreateObjectURL)
-          URL.createObjectURL = nativeCreateObjectURL;
-        records.length = 0;
-        byUrl.clear();
-        createdScriptBlobCount = 0;
-        retainedBytes = 0;
-        overflowCount = 0;
-        return {
-          nativeCreateObjectURLRestored:
-            URL.createObjectURL === nativeCreateObjectURL,
-          registryEmpty:
-            records.length === 0 &&
-            byUrl.size === 0 &&
-            retainedBytes === 0 &&
-            createdScriptBlobCount === 0 &&
-            overflowCount === 0,
-          createdScriptBlobCountAtRestore,
-          overflowCountAtRestore,
-        };
+        return restoreAudit();
       },
     },
   });
@@ -251,6 +315,17 @@ export function restoreCesiumWorkerBlobAudit() {
         createdScriptBlobCountAtRestore: 0,
         overflowCountAtRestore: 0,
       };
+}
+
+/** Read frozen prewarm bodies through Puppeteer's page boundary. */
+export function readAndRestoreCesiumWorkerBodies(auditPage, workerUrls) {
+  if (!auditPage || typeof auditPage.evaluate !== 'function')
+    throw new TypeError('A browser page is required for the worker audit.');
+  return auditPage.evaluate((urls) => {
+    const audit = window.__gevCesiumWorkerBlobAuditV1;
+    if (!audit) return null;
+    return audit.readAndRestoreWorkerBodies(urls);
+  }, workerUrls);
 }
 
 /** Return bounded, URL-free metadata to diagnose a failed worker-blob audit. */
@@ -621,15 +696,15 @@ export function validatePrewarmedWorkerUse({
       : `${base.pathname}/`;
     if (parsed.pathname.startsWith(prefix)) {
       try {
-        relativePath = decodeURIComponent(
-          parsed.pathname.slice(prefix.length),
-        );
+        relativePath = decodeURIComponent(parsed.pathname.slice(prefix.length));
       } catch {
         relativePath = '';
       }
     }
     if (!relativePath || !expectedAssets.has(relativePath))
-      throw new Error('Late worker target is not in the verified build receipt.');
+      throw new Error(
+        'Late worker target is not in the verified build receipt.',
+      );
   }
   return {
     schema: 'gev-prewarmed-worker-use/v1',
