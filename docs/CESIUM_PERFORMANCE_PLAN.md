@@ -28,7 +28,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable and traffic-listener cleanup, corrected worker interception, isolated import/workspace lifecycle runner; CCTV/terrain/picking cases remain | Split import/workspace/cancellation lifecycle and final report pass at `7b92db4`; historical 60-minute soak at `3cdd5cb` is separate evidence | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace lifecycle runner; rendered CCTV/terrain/picking cases remain | Split import/workspace/cancellation lifecycle and final report pass at `7b92db4`; 141 focused CCTV checks pass for `f2e5ae9`; historical 60-minute soak at `3cdd5cb` is separate evidence | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
@@ -44,6 +44,29 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S49 CCTV lifecycle ownership - 10 October 2026
+
+GPT-6 Luna's `f2e5ae9` fixes a reproduced direct-destroy focus-listener leak and
+releases the retiring viewer's billboards, camera/click listeners, projection,
+coverage, sprite registration and transient adjustment state during reinit.
+Final destruction uses the stored resource owner even if a caller supplies a
+different viewer. Ordinary display preferences and existing UI subscriptions
+survive reinit. Late catalog/health completions cannot publish into the successor
+viewer; aborted health requests no longer announce the successor's camera.
+The existing eight-second ground-prior fallback keeps its deadline, but its
+timer and abort listener are now released after completion, timeout or abort.
+
+The production layer factory is exercised with repeated/idempotent destruction,
+independent focus subscriptions, two viewer owners, held catalog and health
+responses, preserved settings/subscribers, and wrong-viewer teardown. Root's
+review runs 141 focused CCTV tests successfully, covering geometry reuse, health,
+cards, gizmos, source behavior and lifecycle cleanup. Formatting, package
+boundaries and diff checks pass. These are Node ownership regressions, not a
+rendered soak or visual-equivalence result. The normal layer manager disables
+before destroying an enabled layer, which already releases the focus listener;
+this defect is not established as the historical Windows soak's root cause.
+Rendered CCTV, terrain and picking isolation and the Windows plateau remain open.
 
 ### Integration and isolated Windows shutdown - 10 October 2026
 
