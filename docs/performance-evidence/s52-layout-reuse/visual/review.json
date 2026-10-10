@@ -1,0 +1,28 @@
+{
+  "schema": "gev-overlay-visual-review/v1",
+  "reviewedAt": "2026-10-10T23:37:00.061Z",
+  "reportSha256": "111f1d7b8c8695808d56a9ad88b3cc95518435a34723d8c94c9c62e9e7bffda8",
+  "pairs": 5,
+  "casesPerPair": 24,
+  "imagesVerified": 240,
+  "exactWithinAndAcrossPairs": true,
+  "scope": "Browser Canvas2D component pixels, picking and accessible actions with deterministic mock Cesium viewer; no GPU, whole-scene or performance acceptance.",
+  "sources": {
+    "baseline": {
+      "commit": "0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "overlaySha256": "59c0b7f98d8a7911f2c62ddf2c95c30022a9176db8f23d4e09c2d16e6f2a43de"
+    },
+    "candidate": {
+      "commit": "f25154a61326e881e2223f2238d94b06cf231df8",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "overlaySha256": "b6344025f66949eafc84f56b40d45254d56394bbcd8cf4cb50c6f3a4e54b6e4f"
+    }
+  },
+  "cleanup": {
+    "browserClosed": true,
+    "serversClosed": true,
+    "fixturesRemoved": true,
+    "unchangedSources": true
+  }
+}

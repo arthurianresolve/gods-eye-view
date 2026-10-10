@@ -5,9 +5,12 @@ projection-cache candidate `33d985657c8949a02cfce2f0f1ad4131d3da774c`
 ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38092679660),
 [job results](performance-evidence/s52-33d9856/ci-33d9856.json)). Its component
 visual comparison passes five alternating baseline/candidate pairs across 24
-cases, with exact pixels and interaction observations. Performance acceptance is
-still pending isolated CPU confirmation and the broader hardware gates;
-the optimization has not been promoted to remote `dev`. Details and the two
+cases, with exact pixels and interaction observations. Isolated CPU confirmation
+now demonstrates repeatable benefit for stable and periodic inputs; broader
+hardware acceptance remains pending. The subsequent font wake fix passes a native
+browser failure-control comparison. Layout reuse at `f25154a` passes its component
+visual comparison and Windows recovery; its isolated CPU comparison is still running.
+The optimization has not been promoted to remote `dev`. Details and the two
 corrected harness failures are recorded below. The previous remote `dev` revision
 `d2c5aa1` also passes all seven integration jobs
 ([results](performance-evidence/s52-33d9856/ci-d2c5aa1.json)).
@@ -55,7 +58,7 @@ the earlier release requirements and historical results.
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
-| S52 overlay invalidation | Experimental pure-projection reuse at `33d9856`; earlier layout-cache experiment remains reverted; broader layout/paint invalidation still pending | 54 focused overlay tests, allocation checks and full integration CI pass; five 24-case paired browser Canvas2D comparisons preserve pixels, hit regions and accessible actions; local CPU batch complete but confounded, isolated confirmation pending | Pending; component Canvas2D results do not establish GPU or full-scene performance |
+| S52 overlay invalidation | Pure-projection reuse at `33d9856` has scoped CPU and visual evidence; idle font wake fixed at `0d431f2`; new normalized-entry layout reuse at `f25154a` remains experimental; broader paint invalidation pending | Projection's 40 isolated CPU pairs have no regression above 10%; all 20 stable/periodic pairs improve. Native font failure control passes twice. Layout's 83 focused tests, allocation checks, five 24-case visual pairs and Windows recovery pass; isolated layout CPU comparison still running | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
@@ -85,8 +88,8 @@ writes. The candidate performs none, remeasures on a font event, and retains liv
 position/scale and updated hit bounds. The companion behavior control covers all
 six card variants, source replacement and visibility restoration. All 83 focused
 overlay/Draw/font tests and all 13 existing Node 24 allocation gates pass.
-This remains experimental: exact rendered comparisons and isolated paired CPU
-results, including the detection control, are required before acceptance.
+This remains experimental pending isolated paired CPU results, including the
+detection control. The exact rendered comparison now passes as recorded below.
 
 The first [rendered comparison attempt](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095195178)
 at candidate `f25154a` stopped during preflight: both newer application commits
@@ -97,6 +100,25 @@ No browser observations were collected. The
 that failure. The runner now reuses existing files only when their bytes match
 the harness exactly, leaves those files untouched, and removes only temporary
 files it created. The retry keeps baseline `0d431f2` and candidate `f25154a` fixed.
+
+The [retry](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095302602)
+at harness `eadc099` passes five alternating pairs across all 24 cases. All 120
+comparisons and within-side repeats match exact pixels, hit rectangles, feature
+identities and accessible actions. All 240 PNG hashes were independently verified.
+The [raw report](performance-evidence/s52-layout-reuse/visual/report.json),
+[review](performance-evidence/s52-layout-reuse/visual/review.json),
+[run metadata](performance-evidence/s52-layout-reuse/visual/run.json) and images
+are retained. This is real browser Canvas2D with a mock Cesium host, not full-scene
+WebGL or hardware performance. All owned resources and temporary fixtures clean up.
+
+The [Windows recovery job](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095198493/job/114339570915)
+also passes all five scenarios at `f25154a`: settings, workspace contents and
+persisted assets survive interruption, upgrade and verification-failure rollback.
+All five browsers close normally in 235-402 ms, within the existing 5,000 ms
+deadline, without process termination. The
+[raw recovery report](performance-evidence/s52-layout-reuse/windows-recovery.json)
+has SHA-256 `7dd6be29d603cd5a23406d13dad551f65bd84c2c1a1502bef13d4ef5cef372a6`.
+This hosted Windows run uses SwiftShader and is not physical GPU evidence.
 
 ### S52 font lifecycle: idle invalidation regression - 11 October 2026
 
@@ -114,8 +136,8 @@ bounds and ignored callbacks from a destroyed or replaced host.
 The [report](performance-evidence/s52-font-wake/report.json),
 [baseline failures](performance-evidence/s52-font-wake/baseline.log) and
 [candidate results](performance-evidence/s52-font-wake/candidate.log) are retained.
-These are Node tests with a mocked host. Native font-load/render validation is
-pending; they establish neither browser acceptance nor a performance improvement.
+These Node tests use a mocked host. The separate native browser comparison below
+validates real font events and render wake; neither result establishes a speedup.
 
 The [first native attempt](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095416446)
 failed before loading the font: after a 250 ms quiet period the baseline still
@@ -126,6 +148,22 @@ second of continuous quiescence within a bounded startup period before beginning
 the unchanged zero-frame 800 ms control. Bounded request call traces record
 unexpected wakes. This changes fixture settling only, with both application
 commits fixed; it does not claim to identify the earlier startup wake's cause.
+
+The [native retry](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095572435)
+at harness `b7b96be` passes two alternating pairs of baseline `33d9856` and
+candidate `0d431f2`. All four runs deliver zero frames and request zero renders
+during the 800 ms idle control. Real FontFaceSet loading changes measured glyph
+width on both revisions. The baseline reproduces the missing wake twice, retaining
+its stale 283 px rectangle and pixel hash. The candidate wakes, repaints and
+reflows to 299 px, retaining the selected feature's hit identity. After host
+replacement only the new host wakes; the retired host has zero requests or frames.
+The [report](performance-evidence/s52-font-wake/native-report.json),
+[independent review](performance-evidence/s52-font-wake/native-review.json) and
+[terminal run metadata](performance-evidence/s52-font-wake/native-run.json) retain
+source hashes, native events, frame observations and successful cleanup. Raw SHA-256:
+`a30f41702c26795e16d8d409cbadc738bdd416cea6e3c4fc1f71efc77f3c006b`.
+This uses Chrome 152 software WebGL with a pinned test font; it is a functional
+regression check, not production font fidelity, hardware or latency acceptance.
 
 ### S52 projection reuse: local CPU diagnostic - 11 October 2026
 
@@ -147,9 +185,25 @@ with a mock canvas and fixed camera, not browser frame times or hardware evidenc
 
 The [isolated hosted confirmation](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38094279142)
 uses the same eight-workload driver at harness `1da828a`, with immutable
-baseline `886b7d2` and candidate `33d9856`. It is still pending. No other test
-workload runs concurrently in that job. Its matched pairs must be reviewed
-within their own environment; they cannot be combined with these Windows samples.
+baseline `886b7d2` and candidate `33d9856`. It completes all 40 pairs with no
+concurrent test workload. The [raw report](performance-evidence/s52-33d9856/cpu-hosted.json),
+[independent review](performance-evidence/s52-33d9856/cpu-hosted-review.json) and
+[run metadata](performance-evidence/s52-33d9856/cpu-hosted-run.json) are retained.
+Raw SHA-256: `cd4a04b63c528ca6d3cc76cd6d8b333298c3cf014faace6bbcb9d65b5ef344a6`.
+The environment is Node 24.14.0 on Linux/Xeon Platinum 8573C, using five alternating
+pairs per workload, 3,000 warmup frames per process and five instrumentation-disabled
+600-frame timed samples per side. Instrumented diagnostic samples are excluded
+from timing medians; no forced GC occurs in the timing run.
+
+All 20 fixed/periodic pairs improve by 2.62-8.78%. Paired median changes are -4.09%
+for fixed infrastructure, -7.44% for fixed radio, -7.01% for periodic infrastructure
+and -5.88% for periodic radio. Moving generic/infrastructure/radio and detection
+paired medians change by +2.40%, +1.45%, +0.98% and +1.20%; no individual regression
+exceeds 4.02%. Independent checks reproduce ratios and verify source, fixture,
+lockfile, population and before/after condition parity for every pair. This supports
+retaining the pure-projection optimization within its measured scope. It does not
+establish browser layout cost, GPU speedup, motion p95 or full S52 acceptance, and
+these Linux samples are not pooled with the confounded Windows observations.
 
 ### S52 projection reuse: component correctness - 11 October 2026
 

@@ -3,9 +3,13 @@
 Current status (11 October 2026): the experimental projection cache at `33d9856`
 passes all seven integration jobs and five paired 24-case component visual runs.
 The latter preserves exact Canvas2D pixels, hit regions and accessible actions
-against `886b7d2`, with 240 image hashes independently verified. CPU comparison
-acceptance is still pending: the completed Windows algorithm batch was confounded
-by concurrent repository work, and isolated hosted confirmation is running.
+against `886b7d2`, with 240 image hashes independently verified. Isolated hosted
+CPU confirmation now completes all 40 pairs: all 20 stable/periodic input pairs
+improve by 2.62-8.78%, and no moving/detection pair regresses more than 4.02%.
+The confounded Windows algorithm batch remains diagnostic only. The subsequent
+idle font wake fix passes a native browser failure-control comparison twice.
+Normalized-entry layout reuse at `f25154a` passes five 24-case component visual
+pairs and Windows recovery; its separate isolated CPU comparison is running.
 This is not a Cesium WebGL, Windows GPU or motion-p95
 result, and the optimization remains on its QA branch. The
 [plan and archived evidence](CESIUM_PERFORMANCE_PLAN.md#s52-projection-reuse-component-correctness---11-october-2026)
