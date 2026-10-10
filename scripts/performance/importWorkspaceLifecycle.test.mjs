@@ -408,6 +408,260 @@ test('failed worker preflight retains returned probe and counters when validatio
   );
 });
 
+test('worker preflight waits within the drain bound for unrelated terrain workers to settle', async () => {
+  const probe = {
+    status: 'passed',
+    tasks: [
+      { id: 'geometry-cold', outcome: 'resolved' },
+      { id: 'geometry-reuse', outcome: 'resolved' },
+      { id: 'geometry-error', outcome: 'rejected-as-expected' },
+      { id: 'geometry-recovery', outcome: 'resolved' },
+    ],
+  };
+  const worker = (kind, pending, submitted, completed, taskErrors = 0) => ({
+    kind,
+    submitted,
+    completed,
+    taskErrors,
+    workerErrors: 0,
+    postErrors: 0,
+    cancelled: 0,
+    terminated: kind === 'createGeometry.js',
+    pending,
+  });
+  const initial = {
+    instrumented: true,
+    overflow: false,
+    pending: 3,
+    workers: [
+      worker('createVerticesFromHeightmap.js', 2, 14, 12),
+      worker('incrementallyBuildTerrainPicker.js', 1, 12, 11),
+      worker('createGeometry.js', 0, 4, 4, 1),
+    ],
+  };
+  const settled = {
+    ...initial,
+    pending: 0,
+    workers: initial.workers.map((entry) => ({ ...entry, pending: 0 })),
+  };
+  let evaluateCalls = 0;
+  let waitCalls = 0;
+  const page = {
+    async evaluate() {
+      evaluateCalls++;
+      return evaluateCalls === 1 ? { probe, diagnostics: initial } : settled;
+    },
+    async waitForFunction(predicate, options) {
+      waitCalls++;
+      assert.equal(options.timeout, 1200);
+      assert.equal(options.polling, 50);
+      const context = vm.createContext({
+        window: { __gevSoakWorkers: { snapshot: () => initial } },
+      });
+      assert.equal(
+        vm.runInContext(`(${predicate.toString()})()`, context),
+        false,
+      );
+      context.window.__gevSoakWorkers.snapshot = () => settled;
+      assert.equal(
+        vm.runInContext(`(${predicate.toString()})()`, context),
+        true,
+      );
+    },
+  };
+
+  const result = await readWorkerPreflight(
+    page,
+    async () => ({ status: 'passed', interceptedWorkerRequests: 3 }),
+    { quiescenceTimeoutMs: 1200 },
+  );
+
+  assert.equal(waitCalls, 1);
+  assert.equal(evaluateCalls, 2);
+  assert.equal(result.pendingAtProbeCompletion, 3);
+  assert.equal(result.pendingAtPreflight, 0);
+  assert.equal(result.quiescenceTimeoutMs, 1200);
+  assert.ok(result.quiescenceWaitMs >= 0);
+  assert.equal(result.cumulativeSubmitted, 30);
+  assert.equal(result.cumulativeCompleted, 27);
+});
+
+test('worker preflight times out with the latest pending-worker evidence', async () => {
+  const diagnostics = {
+    instrumented: true,
+    overflow: false,
+    pending: 1,
+    workers: [
+      {
+        kind: 'createVerticesFromHeightmap.js',
+        submitted: 2,
+        completed: 1,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        pending: 1,
+        oldestPendingMs: 503,
+      },
+      {
+        kind: 'createGeometry.js',
+        submitted: 4,
+        completed: 4,
+        taskErrors: 1,
+        workerErrors: 0,
+        postErrors: 0,
+        pending: 0,
+        terminated: true,
+      },
+    ],
+  };
+  const probe = {
+    status: 'passed',
+    tasks: [
+      { id: 'geometry-cold', outcome: 'resolved' },
+      { id: 'geometry-reuse', outcome: 'resolved' },
+      { id: 'geometry-error', outcome: 'rejected-as-expected' },
+      { id: 'geometry-recovery', outcome: 'resolved' },
+    ],
+  };
+  let evaluateCalls = 0;
+  const page = {
+    async evaluate() {
+      evaluateCalls++;
+      return evaluateCalls === 1 ? { probe, diagnostics } : diagnostics;
+    },
+    async waitForFunction(_predicate, options) {
+      assert.equal(options.timeout, 500);
+      throw new Error('Waiting failed: 500ms exceeded');
+    },
+  };
+  await assert.rejects(
+    readWorkerPreflight(
+      page,
+      async () => ({ status: 'passed', interceptedWorkerRequests: 3 }),
+      { quiescenceTimeoutMs: 500 },
+    ),
+    (error) => {
+      const evidence = error.lifecycleFailureEvidence.workerPreflight;
+      assert.equal(
+        error.lifecycleFailureEvidence.failedPhase,
+        'worker-quiescence',
+      );
+      assert.equal(evidence.pendingAtProbeCompletion, 1);
+      assert.equal(evidence.diagnostics.pending, 1);
+      assert.equal(evidence.diagnostics.workers[0].oldestPendingMs, 503);
+      assert.equal(evidence.quiescenceTimeoutMs, 500);
+      assert.ok(evidence.quiescenceWaitMs >= 0);
+      return true;
+    },
+  );
+  assert.equal(evaluateCalls, 2);
+});
+
+test('worker preflight rejects worker errors and overflow without waiting them away', async (t) => {
+  for (const diagnostics of [
+    {
+      instrumented: true,
+      overflow: false,
+      pending: 0,
+      workers: [
+        {
+          kind: 'createGeometry.js',
+          submitted: 4,
+          completed: 4,
+          taskErrors: 1,
+          workerErrors: 1,
+          postErrors: 0,
+          pending: 0,
+        },
+      ],
+    },
+    {
+      instrumented: true,
+      overflow: true,
+      pending: 0,
+      workers: [],
+    },
+    {
+      instrumented: true,
+      overflow: false,
+      pending: 0,
+      workers: [
+        {
+          kind: 'createGeometry.js',
+          submitted: 4,
+          completed: 4,
+          taskErrors: 1,
+          workerErrors: 0,
+          postErrors: 0,
+          pending: 0,
+          terminated: true,
+        },
+        {
+          kind: 'createVerticesFromHeightmap.js',
+          submitted: 1,
+          completed: 1,
+          taskErrors: 1,
+          workerErrors: 0,
+          postErrors: 0,
+          pending: 0,
+          terminated: false,
+        },
+      ],
+    },
+  ]) {
+    await t.test(
+      diagnostics.overflow
+        ? 'overflow'
+        : diagnostics.workers.some(
+              (worker) =>
+                worker.kind === 'createVerticesFromHeightmap.js' &&
+                worker.taskErrors > 0,
+            )
+          ? 'unrelated task error'
+          : 'worker error',
+      async () => {
+        const page = {
+          async evaluate() {
+            return {
+              probe: {
+                status: 'passed',
+                tasks: [
+                  { id: 'geometry-cold', outcome: 'resolved' },
+                  { id: 'geometry-reuse', outcome: 'resolved' },
+                  {
+                    id: 'geometry-error',
+                    outcome: 'rejected-as-expected',
+                  },
+                  { id: 'geometry-recovery', outcome: 'resolved' },
+                ],
+              },
+              diagnostics,
+            };
+          },
+          async waitForFunction() {
+            assert.fail(
+              'failed diagnostics must reject before quiescence wait',
+            );
+          },
+        };
+        await assert.rejects(
+          readWorkerPreflight(page, async () => ({
+            status: 'passed',
+            interceptedWorkerRequests: 3,
+          })),
+          (error) => {
+            assert.equal(
+              error.lifecycleFailureEvidence.failedPhase,
+              'worker-preflight-validation',
+            );
+            return true;
+          },
+        );
+      },
+    );
+  }
+});
+
 test('owned browser closes when initialization fails after launch and emits durable phases', async () => {
   let closed = false;
   const browser = {
@@ -840,6 +1094,9 @@ test('checkpoint and final report reject missing resources, workers, build ident
       cumulativeSubmitted: 4,
       cumulativeCompleted: 4,
       cumulativeCancelled: 0,
+      pendingAtProbeCompletion: 0,
+      quiescenceWaitMs: 0,
+      quiescenceTimeoutMs: 10_000,
       pendingAtPreflight: 0,
       overflow: false,
     },

@@ -449,6 +449,19 @@ export function createLifecycleFailureEvidence({
           }
         : null,
       diagnostics: compactWorkerDiagnostics(diagnostics),
+      diagnosticsAtProbeCompletion: compactWorkerDiagnostics(
+        workerPreflight.diagnosticsAtProbeCompletion,
+      ),
+      pendingAtProbeCompletion: boundedCounter(
+        workerPreflight.pendingAtProbeCompletion,
+      ),
+      quiescenceWaitMs:
+        Number.isFinite(workerPreflight.quiescenceWaitMs) &&
+        workerPreflight.quiescenceWaitMs >= 0 &&
+        workerPreflight.quiescenceWaitMs <= 15_000
+          ? Math.round(workerPreflight.quiescenceWaitMs * 100) / 100
+          : null,
+      quiescenceTimeoutMs: boundedCounter(workerPreflight.quiescenceTimeoutMs),
       networkError: workerPreflight.networkError
         ? boundedError(workerPreflight.networkError)
         : null,
@@ -1009,6 +1022,14 @@ export function validateImportWorkspaceLifecycleReport(
       !Number.isSafeInteger(row.workerPreflight.cumulativeCancelled) ||
       row.workerPreflight.cumulativeCancelled >
         row.workerPreflight.cumulativeSubmitted ||
+      !Number.isSafeInteger(row.workerPreflight.pendingAtProbeCompletion) ||
+      row.workerPreflight.pendingAtProbeCompletion < 0 ||
+      !Number.isSafeInteger(row.workerPreflight.quiescenceTimeoutMs) ||
+      row.workerPreflight.quiescenceTimeoutMs < 1 ||
+      row.workerPreflight.quiescenceTimeoutMs > report.drainLimitMs ||
+      !Number.isFinite(row.workerPreflight.quiescenceWaitMs) ||
+      row.workerPreflight.quiescenceWaitMs < 0 ||
+      row.workerPreflight.quiescenceWaitMs > 15_000 ||
       !Number.isSafeInteger(row.workerPreflight.pendingAtPreflight) ||
       row.workerPreflight.pendingAtPreflight !== 0 ||
       row.workerPreflight.overflow !== false

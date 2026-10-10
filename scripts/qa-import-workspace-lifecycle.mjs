@@ -205,7 +205,7 @@ async function finishRenderedPopulationWait(page, id) {
   }
 }
 
-function assertWorkerPreflight(value) {
+function assertWorkerPreflight(value, { allowPending = false } = {}) {
   const expectedTasks = [
     ['geometry-cold', 'resolved'],
     ['geometry-reuse', 'resolved'],
@@ -223,17 +223,42 @@ function assertWorkerPreflight(value) {
     ) ||
     value?.diagnostics?.instrumented !== true ||
     value.diagnostics.overflow !== false ||
-    value.diagnostics.pending !== 0 ||
+    !Number.isSafeInteger(value.diagnostics.pending) ||
+    value.diagnostics.pending < 0 ||
+    (!allowPending && value.diagnostics.pending !== 0) ||
     !Array.isArray(value.diagnostics.workers) ||
     value.diagnostics.workers.length > 64 ||
+    value.diagnostics.workers.reduce(
+      (sum, worker) =>
+        sum + (Number.isSafeInteger(worker?.pending) ? worker.pending : 0),
+      0,
+    ) !== value.diagnostics.pending ||
+    value.diagnostics.workers.reduce(
+      (sum, worker) =>
+        sum +
+        (Number.isSafeInteger(worker?.taskErrors) ? worker.taskErrors : 0),
+      0,
+    ) > 1 ||
+    value.diagnostics.workers.some(
+      (worker) =>
+        worker?.kind !== 'createGeometry.js' && worker?.taskErrors !== 0,
+    ) ||
+    value.diagnostics.workers.some(
+      (worker) =>
+        worker?.taskErrors > 0 &&
+        (worker.kind !== 'createGeometry.js' || worker.terminated !== true),
+    ) ||
     value.diagnostics.workers.some(
       (worker) =>
         !Number.isSafeInteger(worker.submitted) ||
         !Number.isSafeInteger(worker.completed) ||
+        !Number.isSafeInteger(worker.taskErrors) ||
+        worker.taskErrors < 0 ||
         !Number.isSafeInteger(worker.pending) ||
+        worker.pending < 0 ||
         !Number.isSafeInteger(worker.workerErrors) ||
         !Number.isSafeInteger(worker.postErrors) ||
-        worker.pending !== 0 ||
+        (!allowPending && worker.pending !== 0) ||
         worker.workerErrors !== 0 ||
         worker.postErrors !== 0,
     )
@@ -261,9 +286,23 @@ function assertWorkerPreflight(value) {
   };
 }
 
-export async function readWorkerPreflight(page, verifyNetwork) {
+export async function readWorkerPreflight(
+  page,
+  verifyNetwork,
+  { quiescenceTimeoutMs = 10_000 } = {},
+) {
+  if (
+    !Number.isSafeInteger(quiescenceTimeoutMs) ||
+    quiescenceTimeoutMs < 1 ||
+    quiescenceTimeoutMs > 10_000
+  )
+    throw new RangeError('Worker preflight quiescence limit is invalid.');
   let network = null;
   let value = null;
+  let diagnosticsAtProbeCompletion = null;
+  let pendingAtProbeCompletion = null;
+  let quiescenceWaitMs = 0;
+  let quiescenceStartedAt = null;
   let phase = 'network-probe';
   let networkError = null;
   let probeError = null;
@@ -291,10 +330,75 @@ export async function readWorkerPreflight(page, verifyNetwork) {
       throw error;
     }
     phase = 'worker-preflight-validation';
-    return assertWorkerPreflight({ ...value, network });
+    pendingAtProbeCompletion = value?.diagnostics?.pending ?? null;
+    diagnosticsAtProbeCompletion = value?.diagnostics || null;
+    assertWorkerPreflight({ ...value, network }, { allowPending: true });
+    if (pendingAtProbeCompletion > 0) {
+      phase = 'worker-quiescence';
+      quiescenceStartedAt = performance.now();
+      await page.waitForFunction(
+        () => {
+          const diagnostics = window.__gevSoakWorkers?.snapshot?.();
+          if (!diagnostics?.instrumented) return true;
+          if (diagnostics.overflow) return true;
+          if (!Array.isArray(diagnostics.workers)) return true;
+          if (
+            diagnostics.workers.some(
+              (worker) =>
+                worker.workerErrors > 0 ||
+                worker.postErrors > 0 ||
+                !Number.isSafeInteger(worker.taskErrors) ||
+                worker.taskErrors < 0,
+            )
+          )
+            return true;
+          if (
+            diagnostics.workers.reduce(
+              (sum, worker) => sum + worker.taskErrors,
+              0,
+            ) > 1
+          )
+            return true;
+          if (
+            diagnostics.workers.some(
+              (worker) =>
+                worker.kind !== 'createGeometry.js' && worker.taskErrors !== 0,
+            )
+          )
+            return true;
+          if (
+            diagnostics.workers.some(
+              (worker) =>
+                worker.taskErrors > 0 &&
+                (worker.kind !== 'createGeometry.js' ||
+                  worker.terminated !== true),
+            )
+          )
+            return true;
+          return diagnostics.pending === 0;
+        },
+        { timeout: quiescenceTimeoutMs, polling: 50 },
+      );
+      quiescenceWaitMs = Math.max(0, performance.now() - quiescenceStartedAt);
+      quiescenceStartedAt = null;
+      const diagnosticsAfterQuiescence = await evaluateWithDeadline(
+        page,
+        'read-worker-preflight-quiescence',
+        () => window.__gevSoakWorkers?.snapshot() || null,
+      );
+      value = { ...value, diagnostics: diagnosticsAfterQuiescence };
+      phase = 'worker-preflight-validation';
+    }
+    const result = assertWorkerPreflight({ ...value, network });
+    return {
+      ...result,
+      pendingAtProbeCompletion,
+      quiescenceWaitMs,
+      quiescenceTimeoutMs,
+    };
   } catch (error) {
     let diagnostics = value?.diagnostics || null;
-    if (!diagnostics) {
+    if (!diagnostics || phase === 'worker-quiescence') {
       try {
         diagnostics = await withProtocolDeadline(
           () =>
@@ -306,6 +410,8 @@ export async function readWorkerPreflight(page, verifyNetwork) {
         diagnosticSnapshotError = snapshotError;
       }
     }
+    if (quiescenceStartedAt !== null)
+      quiescenceWaitMs = Math.max(0, performance.now() - quiescenceStartedAt);
     error.lifecycleFailureEvidence = createLifecycleFailureEvidence({
       caseId: 'worker-preflight',
       phase,
@@ -314,6 +420,10 @@ export async function readWorkerPreflight(page, verifyNetwork) {
         network,
         probe: value?.probe || null,
         diagnostics,
+        diagnosticsAtProbeCompletion,
+        pendingAtProbeCompletion,
+        quiescenceWaitMs,
+        quiescenceTimeoutMs,
         networkError,
         probeError,
         diagnosticSnapshotError,
@@ -326,7 +436,7 @@ export async function readWorkerPreflight(page, verifyNetwork) {
 async function setupOwnedPage(
   browser,
   base,
-  { expectedCommit, role, onProgress = () => {} },
+  { expectedCommit, role, quiescenceTimeoutMs = 10_000, onProgress = () => {} },
 ) {
   onProgress(`create-context:${role}`);
   let context = null;
@@ -390,6 +500,7 @@ async function setupOwnedPage(
     const workerPreflight = await readWorkerPreflight(
       page,
       prepared.verifyNetwork,
+      { quiescenceTimeoutMs },
     );
     onProgress(`ready:${role}`);
     return {
@@ -1220,6 +1331,7 @@ export async function runImportWorkspaceLifecycle({
         owned = await setupOwnedPage(browser, url, {
           expectedCommit,
           role: id,
+          quiescenceTimeoutMs: drainMs,
           onProgress: (phase) => emitProgress(phase, id),
         });
         const onPhase = (phase, caseProgress) =>
