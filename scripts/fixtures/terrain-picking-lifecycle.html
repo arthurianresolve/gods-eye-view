@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terrain and picking lifecycle fixture</title>
+    <link
+      rel="stylesheet"
+      href="/node_modules/cesium/Build/Cesium/Widgets/widgets.css"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font: 14px sans-serif;
+      }
+      #viewer {
+        width: 960px;
+        height: 640px;
+      }
+      #controls {
+        position: absolute;
+        z-index: 10;
+        right: 8px;
+        top: 8px;
+        padding: 8px;
+        background: #fff;
+      }
+      #result {
+        width: 360px;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="viewer"></div>
+    <section id="controls">
+      <button id="run" type="button">Run local lifecycle fixture</button>
+      <div id="status">idle</div>
+      <pre id="result"></pre>
+    </section>
+    <script
+      type="module"
+      src="/scripts/fixtures/terrain-picking-lifecycle.js"
+    ></script>
+  </body>
+</html>
