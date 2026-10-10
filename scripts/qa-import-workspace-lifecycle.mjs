@@ -1340,7 +1340,7 @@ function makeImportDriver(
     async close() {
       await closeOwnedPageAndContext(page, page.browserContext());
     },
-    async failureEvidence({ phase, error }) {
+    async failureEvidence({ phase, error, progress }) {
       await captureFailureObservation();
       return createLifecycleFailureEvidence({
         caseId: 'cooperative-import',
@@ -1349,6 +1349,7 @@ function makeImportDriver(
         operation: failureOperation,
         observation: lastFailureObservation,
         observationError: failureObservationError,
+        supersession: progress?.supersessionOutcome,
       });
     },
     workerPreflight,

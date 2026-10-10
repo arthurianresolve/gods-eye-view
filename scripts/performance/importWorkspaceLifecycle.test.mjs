@@ -1570,12 +1570,27 @@ test('queued cancellation or supersession that was not actually observed fails c
     oldStatus: 'cancelled',
     queuedObserved: false,
     oldIdsStillPresent: false,
-    replacement: loadResult(`lifecycle-replacement-${cycle}`, 2),
+    replacement: {
+      ...loadResult(`lifecycle-replacement-${cycle}`, 2),
+      omitted: 0,
+      importEntityIds: Array.from(
+        { length: 25 },
+        (_, index) =>
+          `gev-import:lifecycle-replacement-${cycle}:fixture:${index}`,
+      ),
+    },
     snapshot: snapshot({
       count: 2,
       workspaceId: `lifecycle-replacement-${cycle}`,
     }),
   });
+  supersedeDriver.failureEvidence = async ({ phase, error, progress }) =>
+    createLifecycleFailureEvidence({
+      caseId: 'cooperative-import',
+      phase,
+      error,
+      supersession: progress.supersessionOutcome,
+    });
   const superseded = await runCooperativeImportLifecycleCase({
     driver: supersedeDriver,
     cycles: 1,
@@ -1584,6 +1599,83 @@ test('queued cancellation or supersession that was not actually observed fails c
   assert.equal(superseded.status, 'failed');
   assert.equal(superseded.operations.supersededLoads, 0);
   assert.equal(superseded.failedPhase, 'queued-supersession-1');
+  assert.deepEqual(superseded.failureEvidence.supersession, {
+    cycle: 1,
+    oldStatus: 'cancelled',
+    queuedObserved: false,
+    oldIdsStillPresent: false,
+    replacement: {
+      drawn: 2,
+      omitted: 0,
+      entityIdCount: 25,
+      entityIdsTruncated: true,
+      entityIds: Array.from(
+        { length: 16 },
+        (_, index) => `gev-import:lifecycle-replacement-1:fixture:${index}`,
+      ),
+      completedRenderStatus: 'observed',
+      renderedPopulation: {
+        frameNumber: 10,
+        importedEntityCount: 2,
+        workspaceId: 'lifecycle-replacement-1',
+      },
+    },
+    snapshot: {
+      imports: { featureCount: 2, pendingJobs: 0 },
+      frameNumber: null,
+      importEntityIdCount: 2,
+      scene: {
+        entities: 4,
+        dataSources: 0,
+        primitives: 2,
+        groundPrimitives: 0,
+      },
+    },
+  });
+  assert.equal(
+    JSON.stringify(superseded.failureEvidence).includes('https://'),
+    false,
+  );
+  assert.equal(
+    superseded.supersessionOutcome.replacement.importEntityIds.length,
+    16,
+  );
+  assert.equal(
+    JSON.stringify(superseded).includes(
+      'gev-import:lifecycle-replacement-1:fixture:24',
+    ),
+    false,
+  );
+
+  const throwingSupersedeDriver = importDriver();
+  const normalSupersede = throwingSupersedeDriver.supersedeQueued;
+  let supersessionCalls = 0;
+  throwingSupersedeDriver.supersedeQueued = async (options) => {
+    supersessionCalls++;
+    if (supersessionCalls === 2)
+      throw new Error('second supersession failed before returning');
+    return normalSupersede(options);
+  };
+  throwingSupersedeDriver.failureEvidence = async ({
+    phase,
+    error,
+    progress,
+  }) =>
+    createLifecycleFailureEvidence({
+      caseId: 'cooperative-import',
+      phase,
+      error,
+      supersession: progress.supersessionOutcome,
+    });
+  const secondCycleFailure = await runCooperativeImportLifecycleCase({
+    driver: throwingSupersedeDriver,
+    cycles: 2,
+    featureCount: 2,
+  });
+  assert.equal(secondCycleFailure.status, 'failed');
+  assert.equal(secondCycleFailure.failedPhase, 'queued-supersession-2');
+  assert.equal(secondCycleFailure.supersessionOutcome, null);
+  assert.equal(secondCycleFailure.failureEvidence.supersession, null);
 });
 
 test('failed operations preserve completed counts, phase, and cleanup failures', async () => {

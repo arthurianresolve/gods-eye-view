@@ -882,6 +882,73 @@ function compactLifecycleDrainHistory(value) {
   };
 }
 
+function compactSupersessionOutcome(value) {
+  if (!value || typeof value !== 'object') return null;
+  const replacement = value.replacement || {};
+  const rendered = replacement.renderedPopulation;
+  const entityIds = Array.isArray(replacement.importEntityIds)
+    ? replacement.importEntityIds
+    : [];
+  const snapshot = value.snapshot || {};
+  const snapshotIds = Array.isArray(snapshot.importEntityIds)
+    ? snapshot.importEntityIds
+    : [];
+  const entityIdCount = boundedCounter(replacement.entityIdCount);
+  return {
+    cycle: boundedCounter(value.cycle),
+    oldStatus: boundedToken(value.oldStatus, 40),
+    queuedObserved:
+      typeof value.queuedObserved === 'boolean' ? value.queuedObserved : null,
+    oldIdsStillPresent:
+      typeof value.oldIdsStillPresent === 'boolean'
+        ? value.oldIdsStillPresent
+        : null,
+    replacement: {
+      drawn: boundedCounter(replacement.drawn),
+      omitted: boundedCounter(replacement.omitted),
+      entityIdCount:
+        entityIdCount ??
+        (Array.isArray(replacement.importEntityIds)
+          ? replacement.importEntityIds.length
+          : null),
+      entityIdsTruncated:
+        replacement.entityIdsTruncated === true || entityIds.length > 16,
+      entityIds: entityIds.slice(0, 16).map((id) => boundedToken(id, 200)),
+      completedRenderStatus:
+        Number.isSafeInteger(rendered?.frameNumber) &&
+        Number.isSafeInteger(rendered?.importedEntityCount) &&
+        typeof rendered?.workspaceId === 'string'
+          ? 'observed'
+          : rendered
+            ? 'invalid'
+            : 'missing',
+      renderedPopulation: rendered
+        ? {
+            frameNumber: boundedCounter(rendered.frameNumber),
+            importedEntityCount: boundedCounter(rendered.importedEntityCount),
+            workspaceId: boundedToken(rendered.workspaceId, 80),
+          }
+        : null,
+    },
+    snapshot: {
+      imports: {
+        featureCount: boundedCounter(snapshot.imports?.featureCount),
+        pendingJobs: boundedCounter(snapshot.imports?.pendingJobs),
+      },
+      frameNumber: boundedCounter(snapshot.frame?.frameNumber),
+      importEntityIdCount:
+        boundedCounter(snapshot.importEntityIdCount) ??
+        (Array.isArray(snapshot.importEntityIds) ? snapshotIds.length : null),
+      scene: {
+        entities: boundedCounter(snapshot.scene?.entities),
+        dataSources: boundedCounter(snapshot.scene?.dataSources),
+        primitives: boundedCounter(snapshot.scene?.primitives),
+        groundPrimitives: boundedCounter(snapshot.scene?.groundPrimitives),
+      },
+    },
+  };
+}
+
 /** Keep only small lifecycle counters and known worker-probe fields on failure. */
 export function createLifecycleFailureEvidence({
   caseId = null,
@@ -892,6 +959,7 @@ export function createLifecycleFailureEvidence({
   observationError = null,
   workerPreflight = null,
   pageDiagnostics = null,
+  supersession = null,
 } = {}) {
   const evidence = {
     schema: 'gev-lifecycle-failure-evidence/v1',
@@ -916,6 +984,8 @@ export function createLifecycleFailureEvidence({
         ? boundedError(operation.drainHistoryError)
         : null,
     };
+  if (supersession !== undefined)
+    evidence.supersession = compactSupersessionOutcome(supersession);
   if (observation && typeof observation === 'object') {
     const imports = observation.imports || {};
     const scene = observation.scene || {};
@@ -1042,6 +1112,7 @@ async function withCaseCleanup(driver, progress, run) {
       failureEvidence = await driver.failureEvidence({
         phase: primaryFailurePhase,
         error: primaryError,
+        progress,
       });
     } catch (error) {
       failureEvidenceError = boundedError(error);
@@ -1192,10 +1263,52 @@ export async function runCooperativeImportLifecycleCase({
       });
 
       setPhase(progress, driver, `queued-supersession-${cycle}`);
+      progress.supersessionOutcome = null;
       const supersession = await driver.supersedeQueued({
         cycle,
         featureCount,
       });
+      const replacement = supersession?.replacement;
+      const replacementEntityIds = Array.isArray(replacement?.importEntityIds)
+        ? replacement.importEntityIds
+        : [];
+      const supersessionSnapshot = supersession?.snapshot || {};
+      progress.supersessionOutcome = {
+        cycle,
+        oldStatus: supersession?.oldStatus,
+        queuedObserved: supersession?.queuedObserved,
+        oldIdsStillPresent: supersession?.oldIdsStillPresent,
+        replacement: replacement
+          ? {
+              drawn: replacement.drawn,
+              omitted: replacement.omitted,
+              entityIdCount: replacementEntityIds.length,
+              entityIdsTruncated: replacementEntityIds.length > 16,
+              importEntityIds: replacementEntityIds.slice(0, 16),
+              renderedPopulation: replacement.renderedPopulation
+                ? {
+                    frameNumber: replacement.renderedPopulation.frameNumber,
+                    importedEntityCount:
+                      replacement.renderedPopulation.importedEntityCount,
+                    workspaceId: replacement.renderedPopulation.workspaceId,
+                  }
+                : null,
+            }
+          : null,
+        snapshot: {
+          imports: {
+            featureCount: supersessionSnapshot.imports?.featureCount,
+            pendingJobs: supersessionSnapshot.imports?.pendingJobs,
+          },
+          frame: { frameNumber: supersessionSnapshot.frame?.frameNumber },
+          importEntityIdCount: Array.isArray(
+            supersessionSnapshot.importEntityIds,
+          )
+            ? supersessionSnapshot.importEntityIds.length
+            : null,
+          scene: supersessionSnapshot.scene,
+        },
+      };
       if (
         supersession?.oldStatus !== 'cancelled' ||
         supersession?.queuedObserved !== true ||
@@ -1224,6 +1337,7 @@ export async function runCooperativeImportLifecycleCase({
         )
       )
         throw new Error('Superseded import entities remained in the scene.');
+      progress.supersessionOutcome = null;
       checkpoints.push({
         cycle,
         phase: 'superseded-replacement-loaded',
