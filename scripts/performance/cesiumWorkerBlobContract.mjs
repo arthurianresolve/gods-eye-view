@@ -211,6 +211,8 @@ export function installCesiumWorkerBlobAudit() {
         overflowCount = 0;
       },
       restore() {
+        const createdScriptBlobCountAtRestore = createdScriptBlobCount;
+        const overflowCountAtRestore = overflowCount;
         if (URL.createObjectURL === wrappedCreateObjectURL)
           URL.createObjectURL = nativeCreateObjectURL;
         records.length = 0;
@@ -218,6 +220,18 @@ export function installCesiumWorkerBlobAudit() {
         createdScriptBlobCount = 0;
         retainedBytes = 0;
         overflowCount = 0;
+        return {
+          nativeCreateObjectURLRestored:
+            URL.createObjectURL === nativeCreateObjectURL,
+          registryEmpty:
+            records.length === 0 &&
+            byUrl.size === 0 &&
+            retainedBytes === 0 &&
+            createdScriptBlobCount === 0 &&
+            overflowCount === 0,
+          createdScriptBlobCountAtRestore,
+          overflowCountAtRestore,
+        };
       },
     },
   });
@@ -228,7 +242,15 @@ export function resetCesiumWorkerBlobAudit() {
 }
 
 export function restoreCesiumWorkerBlobAudit() {
-  window.__gevCesiumWorkerBlobAuditV1?.restore();
+  const audit = window.__gevCesiumWorkerBlobAuditV1;
+  return audit
+    ? audit.restore()
+    : {
+        nativeCreateObjectURLRestored: false,
+        registryEmpty: true,
+        createdScriptBlobCountAtRestore: 0,
+        overflowCountAtRestore: 0,
+      };
 }
 
 /** Return bounded, URL-free metadata to diagnose a failed worker-blob audit. */
@@ -317,7 +339,10 @@ export function validateCesiumWorkerBlobs({
   workerUrls,
   observedBlobUrls = [],
   blobAudit,
+  auditMode = 'diagnostic',
 } = {}) {
+  if (!['diagnostic', 'prewarm'].includes(auditMode))
+    throw new TypeError('Worker blob audit mode is invalid.');
   if (
     contract?.schema !== 'gev-cesium-embedded-worker-contract/v1' ||
     !SHA256.test(contract.workerSourceSha256 || '') ||
@@ -466,11 +491,15 @@ export function validateCesiumWorkerBlobs({
   }
   return {
     acceptedBlobUrls: [...accepted],
+    validatedWorkerTargetUrls: [...wrappers.keys()],
     observation: {
       schema: 'gev-cesium-worker-blob-audit/v1',
       status: 'receipt-derived-worker-blobs-validated',
+      auditMode,
       instrumentation:
-        'URL.createObjectURL creation observer; smoke-only diagnostic',
+        auditMode === 'prewarm'
+          ? 'prewarm URL.createObjectURL observer restored before warmup'
+          : 'URL.createObjectURL creation observer; smoke-only diagnostic',
       createdScriptBlobCount: blobAudit.createdBlobCount,
       validatedWorkerCount: new Set(workerUrls).size,
       validatedCreatedWrapperCount: wrappers.size,
@@ -489,5 +518,128 @@ export function validateCesiumWorkerBlobs({
       readBytes: blobAudit.totalReadBytes,
       retentionByteCapBytes: blobAudit.maxRetainedBytes,
     },
+  };
+}
+
+/** Validate only late code paths observed after the creation audit is restored. */
+export function validatePrewarmedWorkerUse({
+  inventory,
+  expectedReceiptSha256,
+  expectedWorkerSourceSha256,
+  workerUrls = [],
+  observedBlobUrls = [],
+  workerUrlOverflow = 0,
+  blobUrlOverflow = 0,
+  baseUrl,
+  expectedAssetPaths = [],
+} = {}) {
+  if (
+    !SHA256.test(expectedReceiptSha256 || '') ||
+    !SHA256.test(expectedWorkerSourceSha256 || '') ||
+    inventory?.schema !== 'gev-prewarmed-worker-inventory/v1' ||
+    inventory.status !== 'receipt-derived-worker-blobs-validated' ||
+    inventory.receiptSha256 !== expectedReceiptSha256 ||
+    inventory.workerSourceSha256 !== expectedWorkerSourceSha256 ||
+    inventory.restoration?.nativeCreateObjectURLRestored !== true ||
+    inventory.restoration?.registryEmpty !== true ||
+    inventory.restoration?.createdScriptBlobCountAtRestore !==
+      inventory.createdScriptBlobCount ||
+    inventory.restoration?.overflowCountAtRestore !== 0 ||
+    !Number.isInteger(inventory.createdScriptBlobCount) ||
+    inventory.createdScriptBlobCount < 1 ||
+    inventory.createdScriptBlobCount > MAX_WORKER_BLOB_RECORDS ||
+    !Array.isArray(inventory.acceptedBlobUrls) ||
+    inventory.acceptedBlobUrls.length < 1 ||
+    inventory.acceptedBlobUrls.length !== inventory.createdScriptBlobCount ||
+    inventory.acceptedBlobUrls.length > MAX_WORKER_BLOB_RECORDS ||
+    !Array.isArray(inventory.validatedWorkerTargetUrls) ||
+    inventory.validatedWorkerTargetUrls.length > MAX_WORKER_TARGETS ||
+    !Array.isArray(workerUrls) ||
+    workerUrls.length > MAX_WORKER_TARGETS ||
+    !Array.isArray(observedBlobUrls) ||
+    observedBlobUrls.length > MAX_WORKER_BLOB_RECORDS ||
+    !Array.isArray(expectedAssetPaths) ||
+    !Number.isInteger(workerUrlOverflow) ||
+    workerUrlOverflow < 0 ||
+    !Number.isInteger(blobUrlOverflow) ||
+    blobUrlOverflow < 0
+  )
+    throw new Error('Prewarm worker inventory or late audit is incomplete.');
+  if (workerUrlOverflow || blobUrlOverflow)
+    throw new Error('Late worker audit exceeded its bounded capacity.');
+
+  const base = new URL(baseUrl);
+  const acceptedBlobs = new Set(inventory.acceptedBlobUrls);
+  const approvedTargets = new Set(inventory.validatedWorkerTargetUrls);
+  const expectedAssets = new Set(expectedAssetPaths);
+  if (
+    acceptedBlobs.size !== inventory.acceptedBlobUrls.length ||
+    approvedTargets.size !== inventory.validatedWorkerTargetUrls.length
+  )
+    throw new Error('Prewarm worker inventory contains duplicate URLs.');
+  for (const target of approvedTargets) {
+    if (!acceptedBlobs.has(target))
+      throw new Error('Prewarm worker target is outside its blob inventory.');
+  }
+  for (const value of [...acceptedBlobs, ...approvedTargets]) {
+    let parsed;
+    try {
+      parsed = new URL(value);
+    } catch {
+      throw new Error('Prewarm worker inventory contains an invalid URL.');
+    }
+    if (parsed.protocol !== 'blob:' || parsed.origin !== base.origin)
+      throw new Error('Prewarm worker inventory contains an unexpected URL.');
+  }
+
+  for (const blobUrl of observedBlobUrls) {
+    if (!acceptedBlobs.has(blobUrl))
+      throw new Error('Late code request used a non-prewarmed blob URL.');
+  }
+  for (const workerUrl of workerUrls) {
+    let parsed;
+    try {
+      parsed = new URL(workerUrl);
+    } catch {
+      throw new Error('Late worker target has an invalid URL.');
+    }
+    if (parsed.protocol === 'blob:') {
+      if (!approvedTargets.has(workerUrl))
+        throw new Error('Late worker target is not a prewarmed wrapper.');
+      continue;
+    }
+    if (
+      !['http:', 'https:'].includes(parsed.protocol) ||
+      parsed.origin !== base.origin ||
+      parsed.username ||
+      parsed.password
+    )
+      throw new Error('Late worker target is outside the verified origin.');
+    let relativePath = '';
+    const prefix = base.pathname.endsWith('/')
+      ? base.pathname
+      : `${base.pathname}/`;
+    if (parsed.pathname.startsWith(prefix)) {
+      try {
+        relativePath = decodeURIComponent(
+          parsed.pathname.slice(prefix.length),
+        );
+      } catch {
+        relativePath = '';
+      }
+    }
+    if (!relativePath || !expectedAssets.has(relativePath))
+      throw new Error('Late worker target is not in the verified build receipt.');
+  }
+  return {
+    schema: 'gev-prewarmed-worker-use/v1',
+    status: 'observed-late-code-paths-within-prewarm-inventory',
+    observedWorkerTargetCount: workerUrls.length,
+    observedBlobRequestCount: observedBlobUrls.length,
+    receiptSha256: inventory.receiptSha256,
+    workerSourceSha256: inventory.workerSourceSha256,
+    workerTargetOverflowCount: workerUrlOverflow,
+    blobRequestOverflowCount: blobUrlOverflow,
+    unusedLateBlobCreationObservable: false,
   };
 }

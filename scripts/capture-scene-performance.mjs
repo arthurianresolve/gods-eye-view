@@ -34,6 +34,7 @@ import {
   MAX_WORKER_BLOB_RECORDS,
   MAX_WORKER_TARGETS,
   restoreCesiumWorkerBlobAudit,
+  validatePrewarmedWorkerUse,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
 import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
@@ -62,6 +63,9 @@ const providerFixtureTime = option(
   '--provider-fixture-time',
   '2026-10-08T12:00:00.000Z',
 );
+const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
+if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
+  throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
 if (providerFixtureMode && providerFixtureMode !== 'dense-investigation')
   throw new Error('--provider-fixture supports only dense-investigation');
 if (
@@ -137,6 +141,10 @@ if (
 if (productionFlightFixture && !buildProvenanceEnabled)
   throw new Error(
     'The production flight fixture requires verified build provenance options.',
+  );
+if (workerAuditMode === 'prewarm' && !productionFlightFixture)
+  throw new Error(
+    'Prewarm worker auditing requires the verified dense production fixture.',
   );
 if (
   hostedFixture &&
@@ -449,7 +457,10 @@ try {
   const loadedScriptAssets = new Set();
   const unexpectedScriptAssets = new Set();
   const workerBlobObservations = [];
+  const workerAuditDocuments = [];
   let providerSampleWorkerAuditComplete = false;
+  let activePrewarmedWorkerInventory = null;
+  let activePrewarmedWorkerDocument = null;
   let scriptRequestCount = 0;
   const auditPageCodeRequests = (auditPage) => {
     if (!captureProvenance)
@@ -514,7 +525,11 @@ try {
       getOverflow: () => ({ workerUrlOverflow, blobUrlOverflow }),
     };
   };
-  const auditPageWorkerBlobs = async (auditPage, auditState) => {
+  const auditPageWorkerBlobs = async (
+    auditPage,
+    auditState,
+    { documentRole, auditMode = 'diagnostic', requireEvidence = false } = {},
+  ) => {
     if (!captureProvenance) return null;
     for (const worker of auditPage.workers()) {
       if (!auditState.workerUrls.has(worker.url()))
@@ -530,36 +545,125 @@ try {
     const workerUrls = [...auditState.workerUrls].filter((value) =>
       value.startsWith('blob:'),
     );
+    let validation = null;
+    let metadata = null;
+    let restoreAttestation = null;
+    let restorationSummary = null;
     try {
-      const metadata = await auditPage.evaluate(
+      metadata = await auditPage.evaluate(
         () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
       );
       if (!metadata)
         throw new Error('Receipt-verified page worker blob audit is missing.');
-      if (
+      const hasEvidence = !(
         metadata.createdBlobCount === 0 &&
         workerUrls.length === 0 &&
         auditState.blobUrls.size === 0
-      )
-        return null;
-      const blobAudit = await auditPage.evaluate(async (urls) => {
-        const audit = window.__gevCesiumWorkerBlobAuditV1;
-        if (!audit)
-          throw new Error('Receipt-verified page worker audit disappeared.');
-        return audit.readWorkerBodies(urls);
-      }, workerUrls);
-      const validation = validateCesiumWorkerBlobs({
-        contract: captureWorkerContract,
-        baseUrl: buildProvenanceOptions.baseUrl,
-        workerUrls,
-        observedBlobUrls: [...auditState.blobUrls],
-        blobAudit,
-      });
-      workerBlobObservations.push(validation.observation);
-      return validation.observation;
+      );
+      if (requireEvidence && !hasEvidence)
+        throw new Error('Prewarm worker audit observed no executable blobs.');
+      if (hasEvidence) {
+        const blobAudit = await auditPage.evaluate(async (urls) => {
+          const audit = window.__gevCesiumWorkerBlobAuditV1;
+          if (!audit)
+            throw new Error('Receipt-verified page worker audit disappeared.');
+          return audit.readWorkerBodies(urls);
+        }, workerUrls);
+        validation = validateCesiumWorkerBlobs({
+          contract: captureWorkerContract,
+          baseUrl: buildProvenanceOptions.baseUrl,
+          workerUrls,
+          observedBlobUrls: [...auditState.blobUrls],
+          blobAudit,
+          auditMode,
+        });
+      }
     } finally {
-      await auditPage.evaluate(restoreCesiumWorkerBlobAudit);
+      restoreAttestation = await auditPage.evaluate(
+        restoreCesiumWorkerBlobAudit,
+      );
+      restorationSummary = {
+        nativeCreateObjectURLRestored:
+          restoreAttestation?.nativeCreateObjectURLRestored === true,
+        registryEmpty: restoreAttestation?.registryEmpty === true,
+        createdScriptBlobCountAtRestore:
+          restoreAttestation?.createdScriptBlobCountAtRestore ?? null,
+        overflowCountAtRestore:
+          restoreAttestation?.overflowCountAtRestore ?? null,
+        auditedCreatedScriptBlobCount: metadata?.createdBlobCount ?? null,
+        auditedOverflowCount: metadata?.overflowCount ?? null,
+        validatedCreatedScriptBlobCount:
+          validation?.observation.createdScriptBlobCount ?? null,
+        observedWorkerTargetCount: auditState.workerUrls.size,
+        observedBlobRequestCount: auditState.blobUrls.size,
+      };
+      if (failureProgress.current)
+        failureProgress.current.workerAuditRestoration = restorationSummary;
+      else failureProgress.workerAuditRestoration = restorationSummary;
     }
+    if (
+      restoreAttestation?.nativeCreateObjectURLRestored !== true ||
+      restoreAttestation?.registryEmpty !== true ||
+      restoreAttestation?.createdScriptBlobCountAtRestore !==
+        metadata?.createdBlobCount ||
+      restoreAttestation?.overflowCountAtRestore !== metadata?.overflowCount ||
+      (validation &&
+        restoreAttestation.createdScriptBlobCountAtRestore !==
+          validation.observation.createdScriptBlobCount) ||
+      restoreAttestation?.overflowCountAtRestore !== 0
+    )
+      throw new Error('Worker blob audit did not fully restore and clear.');
+    const documentAudit = {
+      documentRole: documentRole || 'unclassified',
+      mode: auditMode,
+      validation: validation?.observation || null,
+      restoration: {
+        nativeCreateObjectURLRestored:
+          restoreAttestation.nativeCreateObjectURLRestored,
+        registryEmpty: restoreAttestation.registryEmpty,
+        createdScriptBlobCountAtRestore:
+          restoreAttestation.createdScriptBlobCountAtRestore,
+        overflowCountAtRestore: restoreAttestation.overflowCountAtRestore,
+        auditedCreatedScriptBlobCount: metadata.createdBlobCount,
+        auditedOverflowCount: metadata.overflowCount,
+      },
+      observedWorkerTargetCount: auditState.workerUrls.size,
+      observedBlobRequestCount: auditState.blobUrls.size,
+    };
+    workerAuditDocuments.push(documentAudit);
+    if (validation) workerBlobObservations.push(validation.observation);
+    if (!validation)
+      return { observation: null, documentAudit, inventory: null };
+    return {
+      observation: validation.observation,
+      documentAudit,
+      inventory: {
+        schema: 'gev-prewarmed-worker-inventory/v1',
+        status: validation.observation.status,
+        receiptSha256: captureProvenance.source.receiptSha256,
+        workerSourceSha256: captureWorkerContract.workerSourceSha256,
+        createdScriptBlobCount: validation.observation.createdScriptBlobCount,
+        acceptedBlobUrls: validation.acceptedBlobUrls,
+        validatedWorkerTargetUrls: validation.validatedWorkerTargetUrls,
+        restoration: documentAudit.restoration,
+      },
+    };
+  };
+  const verifyPrewarmedWorkerUse = (auditState, inventory, documentAudit) => {
+    const overflow = auditState.getOverflow();
+    const lateUseCheck = validatePrewarmedWorkerUse({
+      inventory,
+      expectedReceiptSha256: captureProvenance.source.receiptSha256,
+      expectedWorkerSourceSha256: captureWorkerContract.workerSourceSha256,
+      workerUrls: [...auditState.workerUrls],
+      observedBlobUrls: [...auditState.blobUrls],
+      workerUrlOverflow: overflow.workerUrlOverflow,
+      blobUrlOverflow: overflow.blobUrlOverflow,
+      baseUrl: buildProvenanceOptions.baseUrl,
+      expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
+    });
+    documentAudit.lateUseCheck = lateUseCheck;
+    return lateUseCheck;
   };
   async function attachMeasuredPage(auditPage, deliveryObserver = null) {
     await auditPage.setViewport({
@@ -675,7 +779,10 @@ try {
       initialSettleMs,
       ...details,
     });
-    await auditPageWorkerBlobs(startupPage, startupAuditState);
+    await auditPageWorkerBlobs(startupPage, startupAuditState, {
+      documentRole: `startup-${run}`,
+      auditMode: 'diagnostic',
+    });
     await context.close();
     await releaseFlightFixtureSession(startupFixtureSession);
   }
@@ -1010,8 +1117,13 @@ try {
   let providerSampleDocumentIndex = 0;
   async function prepareFreshProviderDocument() {
     providerSampleDocumentIndex += 1;
-    if (!providerSampleWorkerAuditComplete)
-      await auditPageWorkerBlobs(page, captureAuditState);
+    if (!providerSampleWorkerAuditComplete) {
+      await auditPageWorkerBlobs(page, captureAuditState, {
+        documentRole: 'main-setup',
+        auditMode: 'diagnostic',
+      });
+      providerSampleWorkerAuditComplete = true;
+    }
     await releaseFlightFixtureSession(activeFixtureSession);
     if (providerContext) await providerContext.close();
     else await page.close();
@@ -1127,6 +1239,18 @@ try {
         dams: mixedLayerCounts.dams,
       },
     );
+    if (workerAuditMode === 'prewarm') {
+      const prewarm = await auditPageWorkerBlobs(page, captureAuditState, {
+        documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+        auditMode: 'prewarm',
+        requireEvidence: true,
+      });
+      if (!prewarm?.inventory || !prewarm.documentAudit.validation)
+        throw new Error('Provider sample has no validated prewarm worker set.');
+      activePrewarmedWorkerInventory = prewarm.inventory;
+      activePrewarmedWorkerDocument = prewarm.documentAudit;
+      providerSampleWorkerAuditComplete = false;
+    }
     fixtureDelivery = await summarizeFlightFixtureDelivery();
     failureProgress.fixtureDelivery = fixtureDelivery;
     await page.evaluate(() => {
@@ -1553,7 +1677,32 @@ try {
         fixtureDelivery = await summarizeFlightFixtureDelivery();
         failureProgress.fixtureDelivery = fixtureDelivery;
         sample.fixtureDelivery = fixtureDelivery;
-        await auditPageWorkerBlobs(page, captureAuditState);
+        if (workerAuditMode === 'prewarm') {
+          if (!activePrewarmedWorkerInventory || !activePrewarmedWorkerDocument)
+            throw new Error('Provider sample has no active prewarm inventory.');
+          const overflow = captureAuditState.getOverflow();
+          failureProgress.current.workerAudit = {
+            status: 'late-use-check-pending',
+            observedWorkerTargetCount: captureAuditState.workerUrls.size,
+            observedBlobRequestCount: captureAuditState.blobUrls.size,
+            workerTargetOverflowCount: overflow.workerUrlOverflow,
+            blobRequestOverflowCount: overflow.blobUrlOverflow,
+          };
+          const lateUseCheck = verifyPrewarmedWorkerUse(
+            captureAuditState,
+            activePrewarmedWorkerInventory,
+            activePrewarmedWorkerDocument,
+          );
+          failureProgress.current.workerAudit = lateUseCheck;
+          sample.workerAudit = lateUseCheck;
+          activePrewarmedWorkerInventory = null;
+          activePrewarmedWorkerDocument = null;
+        } else {
+          await auditPageWorkerBlobs(page, captureAuditState, {
+            documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+            auditMode: 'diagnostic',
+          });
+        }
         providerSampleWorkerAuditComplete = true;
       }
       const sceneAfter = await page.evaluate(observeCommonScene, {
@@ -1642,14 +1791,23 @@ try {
       throw new Error(
         'Capture did not request any receipted same-origin code assets.',
       );
-    if (!providerSampleWorkerAuditComplete)
-      await auditPageWorkerBlobs(page, captureAuditState);
+    if (!providerSampleWorkerAuditComplete) {
+      await auditPageWorkerBlobs(page, captureAuditState, {
+        documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+        auditMode: 'diagnostic',
+      });
+      providerSampleWorkerAuditComplete = true;
+    }
     source.buildProvenance.pageAssetAudit = {
       scope:
-        'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
+        workerAuditMode === 'prewarm'
+          ? 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs validated before warmup; native URL.createObjectURL restored and retained blob bodies cleared before measurement; late observed executable paths checked against bounded prewarm inventory; unused late blob creation is not observable'
+          : 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
+      workerAuditMode,
       scriptRequestCount,
       loadedAssetPaths: [...loadedScriptAssets].sort(),
       cesiumWorkerBlobAudits: workerBlobObservations,
+      workerAuditDocuments,
       unexpectedAssetPaths: [],
     };
     delete source.buildProvenance.expectedAssetPaths;
@@ -1751,10 +1909,12 @@ try {
     captures,
     diagnosticsDocuments: performanceDiagnosticsDocuments,
     workerBlobAuditInstrumented: Boolean(captureProvenance),
+    workerBlobAuditMode,
     hardwareRequired,
   });
   const report = {
     schema: 'gev-performance-capture/v1',
+    workerAuditMode,
     performanceDiagnostics: {
       requested:
         'disabled-after-app-ready-before-warmup-when-supported-per-document',

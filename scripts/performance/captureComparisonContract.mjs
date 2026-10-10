@@ -249,6 +249,7 @@ export function getCaptureComparisonIneligibilityReasons({
   captures = [],
   diagnosticsDocuments = [],
   workerBlobAuditInstrumented = false,
+  workerBlobAuditMode = 'diagnostic',
   hardwareRequired = false,
 } = {}) {
   const reasons = [];
@@ -322,9 +323,13 @@ export function getCaptureComparisonIneligibilityReasons({
     if (JSON.stringify(observedRoles) !== JSON.stringify(expectedRoles))
       reasons.push('application-diagnostics-document-coverage-is-incomplete');
   }
-  if (workerBlobAuditInstrumented)
+  if (workerBlobAuditMode === 'prewarm')
     reasons.push(
-      'receipt-worker-blob-audit-retains-bodies-and-is-instrumented',
+      'prewarm-worker-audit-does-not-observe-unused-late-blob-creations',
+    );
+  else if (workerBlobAuditInstrumented)
+    reasons.push(
+      'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
   if (fixture)
     reasons.push(

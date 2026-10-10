@@ -183,13 +183,30 @@ test('diagnostic-only captures retain explicit reasons and allow an unsupported 
   );
   assert.ok(
     reasons.includes(
-      'receipt-worker-blob-audit-retains-bodies-and-is-instrumented',
+      'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     ),
   );
   assert.ok(
     reasons.includes(
       'latency-comparison-remains-disabled-pending-uninstrumented-capture',
     ),
+  );
+});
+
+test('prewarm audit readiness names the unobservable late-creation limitation', () => {
+  const reasons = getCaptureComparisonIneligibilityReasons({
+    workerBlobAuditMode: 'prewarm',
+  });
+  assert.ok(
+    reasons.includes(
+      'prewarm-worker-audit-does-not-observe-unused-late-blob-creations',
+    ),
+  );
+  assert.equal(
+    reasons.includes(
+      'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
+    ),
+    false,
   );
 });
 

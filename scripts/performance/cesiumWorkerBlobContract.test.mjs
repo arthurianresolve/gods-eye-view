@@ -146,6 +146,9 @@ test('receipt-derived narrow worker wrapper validates its embedded body and modu
   assert.deepEqual(result.observation.validatedModuleIds, ['createGeometry']);
   assert.equal(result.observation.validatedWorkerCount, 1);
   assert.equal(result.observation.validatedCreatedWrapperCount, 1);
+  assert.deepEqual(result.validatedWorkerTargetUrls, [
+    'blob:http://127.0.0.1:4173/wrapper-id',
+  ]);
   assert.equal(result.observation.unobservedCreatedWrapperCount, 0);
   assert.equal(result.observation.validatedEmbeddedSourceCount, 1);
 });
@@ -453,8 +456,37 @@ test('page blob instrumentation retains bounded script blobs only and restores t
   assert.equal(aggregateMetadata.records.length, 5);
   assert.equal(aggregateMetadata.overflowCount, 1);
   assert.equal(aggregateMetadata.maxRetainedBytes, MAX_WORKER_BLOB_TOTAL_BYTES);
-  vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context);
+  const firstRestore = JSON.parse(
+    JSON.stringify(
+      vm.runInContext(
+        'window.__gevCesiumWorkerBlobAuditV1.restore()',
+        context,
+      ),
+    ),
+  );
   assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
+  assert.deepEqual(firstRestore, {
+    nativeCreateObjectURLRestored: true,
+    registryEmpty: true,
+    createdScriptBlobCountAtRestore: 6,
+    overflowCountAtRestore: 1,
+  });
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        vm.runInContext(
+          'window.__gevCesiumWorkerBlobAuditV1.restore()',
+          context,
+        ),
+      ),
+    ),
+    {
+      nativeCreateObjectURLRestored: true,
+      registryEmpty: true,
+      createdScriptBlobCountAtRestore: 0,
+      overflowCountAtRestore: 0,
+    },
+  );
   assert.deepEqual(
     JSON.parse(
       JSON.stringify(
@@ -517,4 +549,140 @@ test('worker blob instrumentation enforces the published 32 MiB aggregate cap', 
   assert.equal(metadata.createdBlobCount, 17);
   assert.equal(metadata.records.length, 16);
   assert.equal(metadata.overflowCount, 1);
+});
+
+test('worker audit restoration reports a replaced native API and releases retained bodies', async () => {
+  let nextId = 0;
+  class TestURL {
+    static createObjectURL() {
+      return `blob:http://127.0.0.1:4173/restore-${++nextId}`;
+    }
+  }
+  const context = vm.createContext({ window: {}, URL: TestURL, Blob });
+  vm.runInContext(`(${installCesiumWorkerBlobAudit.toString()})()`, context);
+  vm.runInContext(
+    'URL.createObjectURL(new Blob(["worker"], { type: "application/javascript" }))',
+    context,
+  );
+  vm.runInContext(
+    'URL.createObjectURL = function substitutedCreateObjectURL() {};',
+    context,
+  );
+  const result = JSON.parse(
+    JSON.stringify(
+      vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context),
+    ),
+  );
+  assert.equal(result.nativeCreateObjectURLRestored, false);
+  assert.equal(result.registryEmpty, true);
+  assert.equal(result.createdScriptBlobCountAtRestore, 1);
+  assert.equal(result.overflowCountAtRestore, 0);
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        vm.runInContext(
+          'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+          context,
+        ),
+      ),
+    ),
+    {
+      createdBlobCount: 0,
+      overflowCount: 0,
+      maxRetainedBytes: MAX_WORKER_BLOB_TOTAL_BYTES,
+      records: [],
+    },
+  );
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        await vm.runInContext(
+          'window.__gevCesiumWorkerBlobAuditV1.readWorkerBodies([])',
+          context,
+        ),
+      ),
+    ),
+    {
+      createdBlobCount: 0,
+      overflowCount: 0,
+      totalReadBytes: 0,
+      maxRetainedBytes: MAX_WORKER_BLOB_TOTAL_BYTES,
+      records: [],
+    },
+  );
+});
+
+test('prewarm worker inventory accepts only receipt-bound observed late code paths', async () => {
+  const { validatePrewarmedWorkerUse } = await import(
+    './cesiumWorkerBlobContract.mjs'
+  );
+  const baseUrl = 'http://127.0.0.1:4173/app/';
+  const receiptSha256 = 'a'.repeat(64);
+  const workerSourceSha256 = 'b'.repeat(64);
+  const embedded = 'blob:http://127.0.0.1:4173/app/embedded';
+  const wrapper = 'blob:http://127.0.0.1:4173/app/wrapper';
+  const inventory = {
+    schema: 'gev-prewarmed-worker-inventory/v1',
+    status: 'receipt-derived-worker-blobs-validated',
+    receiptSha256,
+    workerSourceSha256,
+    createdScriptBlobCount: 2,
+    acceptedBlobUrls: [embedded, wrapper],
+    validatedWorkerTargetUrls: [wrapper],
+    restoration: {
+      nativeCreateObjectURLRestored: true,
+      registryEmpty: true,
+      createdScriptBlobCountAtRestore: 2,
+      overflowCountAtRestore: 0,
+    },
+  };
+  const expected = {
+    inventory,
+    expectedReceiptSha256: receiptSha256,
+    expectedWorkerSourceSha256: workerSourceSha256,
+    workerUrls: [wrapper, 'http://127.0.0.1:4173/app/cesium/worker.js'],
+    observedBlobUrls: [embedded, wrapper],
+    baseUrl,
+    expectedAssetPaths: ['cesium/worker.js'],
+  };
+  const checked = validatePrewarmedWorkerUse(expected);
+  assert.equal(
+    checked.status,
+    'observed-late-code-paths-within-prewarm-inventory',
+  );
+  assert.equal(checked.unusedLateBlobCreationObservable, false);
+
+  for (const [name, mutate] of [
+    [
+      'created count differs from accepted blob inventory',
+      (input) => (input.inventory.createdScriptBlobCount = 3),
+    ],
+    [
+      'approved target is outside accepted blobs',
+      (input) => (input.inventory.validatedWorkerTargetUrls = [`${wrapper}-other`]),
+    ],
+    ['unknown blob request', (input) => input.observedBlobUrls.push(`${embedded}-late`)],
+    ['unknown blob target', (input) => input.workerUrls.push(`${wrapper}-late`)],
+    [
+      'unexpected worker path',
+      (input) => input.workerUrls.push('http://127.0.0.1:4173/app/unreceipted.js'),
+    ],
+    ['external worker target', (input) => input.workerUrls.push('https://outside.invalid/worker.js')],
+    ['worker overflow', (input) => (input.workerUrlOverflow = 1)],
+    ['blob overflow', (input) => (input.blobUrlOverflow = 1)],
+    ['wrong receipt', (input) => (input.expectedReceiptSha256 = 'c'.repeat(64))],
+    ['wrong worker source', (input) => (input.expectedWorkerSourceSha256 = 'd'.repeat(64))],
+    [
+      'restore count drift',
+      (input) => (input.inventory.restoration.createdScriptBlobCountAtRestore = 3),
+    ],
+  ]) {
+    const input = structuredClone(expected);
+    mutate(input);
+    assert.throws(
+      () => validatePrewarmedWorkerUse(input),
+      undefined,
+      name,
+    );
+  }
 });

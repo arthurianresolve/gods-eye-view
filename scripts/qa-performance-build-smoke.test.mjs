@@ -30,13 +30,32 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     parseSmokeArguments(['--candidate-sha', sha, '--out', 'smoke.json']),
     { candidateSha: sha, out: 'smoke.json' },
   );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--candidate-sha',
+      sha,
+      '--capture-worker-audit-mode',
+      'prewarm',
+    ]),
+    { candidateSha: sha, captureWorkerAuditMode: 'prewarm' },
+  );
   assert.throws(
     () => parseSmokeArguments(['--candidate-sha', sha, '--unknown', 'x']),
     /Unknown option/,
   );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--candidate-sha',
+        sha,
+        '--capture-worker-audit-mode',
+        'guess',
+      ]),
+    /Worker audit mode/,
+  );
 });
 
-function validCaptureCliReport() {
+function validCaptureCliReport(workerAuditMode = 'diagnostic') {
   const scenarios = ['idle', 'scripted-motion', 'selected-aircraft-tracking'];
   const generatedFixture = createProductionFlightFixture({
     count: 2500,
@@ -151,15 +170,60 @@ function validCaptureCliReport() {
       status: 'verified-local-build-and-served-assets-before-and-after',
       receiptSha256: 'd'.repeat(64),
       pageAssetAudit: {
+        workerAuditMode,
         scriptRequestCount: 12,
         loadedAssetPaths: ['assets/index.js'],
         unexpectedAssetPaths: [],
-        cesiumWorkerBlobAudits: Array.from({ length: 6 }, () => ({
+        cesiumWorkerBlobAudits: Array.from({ length: 8 }, (_, index) => ({
           status: 'receipt-derived-worker-blobs-validated',
+          auditMode:
+            workerAuditMode === 'prewarm' && index >= 2
+              ? 'prewarm'
+              : 'diagnostic',
         })),
       },
     },
   };
+  const workerAuditRoles = [
+    'startup-1',
+    'main-setup',
+    ...captures.map((sample, index) => `provider-sample-${index + 1}`),
+  ];
+  source.buildProvenance.pageAssetAudit.workerAuditDocuments =
+    workerAuditRoles.map((documentRole) => {
+      const measuredProviderDocument = documentRole.startsWith(
+        'provider-sample-',
+      );
+      const prewarm =
+        workerAuditMode === 'prewarm' && measuredProviderDocument;
+      return {
+        documentRole,
+        mode: prewarm ? 'prewarm' : 'diagnostic',
+        validation: {
+          status: 'receipt-derived-worker-blobs-validated',
+          auditMode: prewarm ? 'prewarm' : 'diagnostic',
+          createdScriptBlobCount: 8,
+        },
+        restoration: {
+          nativeCreateObjectURLRestored: true,
+          registryEmpty: true,
+          createdScriptBlobCountAtRestore: 8,
+          overflowCountAtRestore: 0,
+          auditedCreatedScriptBlobCount: 8,
+          auditedOverflowCount: 0,
+        },
+        observedWorkerTargetCount: 1,
+        observedBlobRequestCount: 1,
+        ...(prewarm
+          ? {
+              lateUseCheck: {
+                status: 'observed-late-code-paths-within-prewarm-inventory',
+                unusedLateBlobCreationObservable: false,
+              },
+            }
+          : {}),
+      };
+    });
   const workload = {
     warmupMs: 1000,
     durationPerSampleMs: 1000,
@@ -231,12 +295,14 @@ function validCaptureCliReport() {
       captures,
       diagnosticsDocuments: performanceDiagnostics.documents,
       workerBlobAuditInstrumented: true,
+      workerBlobAuditMode: workerAuditMode,
       hardwareRequired: false,
     }),
   };
   comparisonReadiness.reason = comparisonReadiness.reasons.join('; ');
   return {
     schema: 'gev-performance-capture/v1',
+    workerAuditMode,
     comparisonEligible: false,
     comparisonContract,
     comparisonReadiness,
@@ -320,6 +386,54 @@ test('capture CLI checks diagnostic status for every document and accepts legacy
   assert.doesNotThrow(() =>
     validateCaptureCliReport(baseline, { ...expected, appSha: baselineSha }),
   );
+});
+
+test('capture CLI accepts empty startup worker audits only when no worker path was observed', () => {
+  const report = validCaptureCliReport();
+  const documents =
+    report.source.buildProvenance.pageAssetAudit.workerAuditDocuments;
+  for (const entry of documents.slice(0, 2)) {
+    entry.validation = null;
+    entry.restoration.createdScriptBlobCountAtRestore = 0;
+    entry.restoration.auditedCreatedScriptBlobCount = 0;
+    entry.observedWorkerTargetCount = 0;
+    entry.observedBlobRequestCount = 0;
+  }
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+  };
+  assert.doesNotThrow(() => validateCaptureCliReport(report, expected));
+
+  documents[0].observedWorkerTargetCount = 1;
+  assert.throws(() => validateCaptureCliReport(report, expected));
+});
+
+test('capture CLI validator requires the selected worker audit mode and per-sample prewarm proof', () => {
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    workerAuditMode: 'prewarm',
+  };
+  const report = validCaptureCliReport('prewarm');
+  const result = validateCaptureCliReport(report, expected);
+  assert.equal(result.comparisonEligible, false);
+  assert.throws(
+    () => validateCaptureCliReport(report, { ...expected, workerAuditMode: 'diagnostic' }),
+  );
+  const missingLateCheck = validCaptureCliReport('prewarm');
+  delete missingLateCheck.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].lateUseCheck;
+  assert.throws(() => validateCaptureCliReport(missingLateCheck, expected));
+  const missingRestore = validCaptureCliReport('prewarm');
+  missingRestore.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].restoration.registryEmpty = false;
+  assert.throws(() => validateCaptureCliReport(missingRestore, expected));
+  const wrongPerDocumentMode = validCaptureCliReport('prewarm');
+  wrongPerDocumentMode.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].mode = 'diagnostic';
+  assert.throws(() => validateCaptureCliReport(wrongPerDocumentMode, expected));
 });
 
 test('capture CLI rejects missing, altered or unreported comparison contracts', () => {

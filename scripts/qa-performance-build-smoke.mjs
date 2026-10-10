@@ -80,6 +80,7 @@ const MIME_TYPES = {
 const OPTION_KEYS = new Map([
   ['--candidate-sha', 'candidateSha'],
   ['--out', 'out'],
+  ['--capture-worker-audit-mode', 'captureWorkerAuditMode'],
 ]);
 
 export function parseSmokeArguments(argv) {
@@ -91,6 +92,11 @@ export function parseSmokeArguments(argv) {
     const value = argv[++index];
     if (!value || value.startsWith('--'))
       throw new TypeError(`Missing value for ${flag}`);
+    if (
+      flag === '--capture-worker-audit-mode' &&
+      !['diagnostic', 'prewarm'].includes(value)
+    )
+      throw new TypeError('Worker audit mode must be diagnostic or prewarm.');
     output[key] = value;
   }
   return output;
@@ -339,6 +345,8 @@ export function runBoundedChild(
 
 export function validateCaptureCliReport(report, expected) {
   assert.equal(report?.schema, 'gev-performance-capture/v1');
+  const workerAuditMode = expected.workerAuditMode || 'diagnostic';
+  assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
   assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 6 });
   assert.equal(report.source?.appCommit, expected.appSha);
@@ -352,6 +360,7 @@ export function validateCaptureCliReport(report, expected) {
     expected.receiptSha256,
   );
   const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, workerAuditMode);
   assert.ok(
     Number.isInteger(pageAudit?.scriptRequestCount) &&
       pageAudit.scriptRequestCount > 0,
@@ -395,6 +404,51 @@ export function validateCaptureCliReport(report, expected) {
     diagnosticDocuments.map((entry) => entry.documentRole).sort(),
     expectedRoles,
   );
+  const workerAuditDocuments = pageAudit.workerAuditDocuments;
+  assert.ok(Array.isArray(workerAuditDocuments));
+  assert.deepEqual(
+    workerAuditDocuments.map((entry) => entry.documentRole).sort(),
+    expectedRoles,
+  );
+  for (const entry of workerAuditDocuments) {
+    const measuredProviderDocument = entry.documentRole.startsWith(
+      'provider-sample-',
+    );
+    assert.equal(
+      entry.mode,
+      workerAuditMode === 'prewarm' && measuredProviderDocument
+        ? 'prewarm'
+        : 'diagnostic',
+    );
+    assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+    assert.equal(entry.restoration?.registryEmpty, true);
+    assert.equal(entry.restoration.overflowCountAtRestore, 0);
+    assert.equal(
+      entry.restoration.createdScriptBlobCountAtRestore,
+      entry.restoration.auditedCreatedScriptBlobCount,
+    );
+    if (entry.validation === null) {
+      assert.equal(entry.restoration.auditedCreatedScriptBlobCount, 0);
+      assert.equal(entry.observedWorkerTargetCount, 0);
+      assert.equal(entry.observedBlobRequestCount, 0);
+      assert.equal(entry.restoration.createdScriptBlobCountAtRestore, 0);
+    } else {
+      assert.equal(
+        entry.validation.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+    }
+    if (workerAuditMode === 'prewarm' && measuredProviderDocument) {
+      assert.equal(entry.validation.auditMode, 'prewarm');
+      assert.equal(
+        entry.lateUseCheck?.status,
+        'observed-late-code-paths-within-prewarm-inventory',
+      );
+      assert.equal(entry.lateUseCheck?.unusedLateBlobCreationObservable, false);
+    } else if (entry.validation) {
+      assert.equal(entry.validation.auditMode, 'diagnostic');
+    }
+  }
   for (const entry of diagnosticDocuments) {
     assert.equal(entry.requested, true);
     if (expected.appSha === BASELINE_SHA) {
@@ -423,6 +477,7 @@ export function validateCaptureCliReport(report, expected) {
     captures: report.captures,
     diagnosticsDocuments: diagnosticDocuments,
     workerBlobAuditInstrumented: true,
+    workerBlobAuditMode: workerAuditMode,
     hardwareRequired: false,
   });
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
@@ -814,6 +869,7 @@ async function runCandidateCaptureCli({
   served,
   tempRoot,
   fixture,
+  workerAuditMode,
   startedAt,
   budgetMs,
 }) {
@@ -839,6 +895,8 @@ async function runCandidateCaptureCli({
     'dense-investigation',
     '--provider-fixture-time',
     fixture.fixedTime,
+    '--worker-audit-mode',
+    workerAuditMode,
     '--mixed-layers',
     '--quality-mode',
     'manual',
@@ -893,6 +951,7 @@ async function runCandidateCaptureCli({
       harnessSha: harnessCommit,
       receiptSha256: build.receipt.receiptSha256,
       fixtureSha256: fixture.sha256,
+      workerAuditMode,
     });
   } catch (error) {
     if (!captureReport) {
@@ -918,6 +977,7 @@ async function runRevision({
   tempRoot,
   startedAt,
   budgetMs,
+  workerAuditMode,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -1333,6 +1393,7 @@ async function runRevision({
         served,
         tempRoot,
         fixture: flightFixture,
+        workerAuditMode,
         startedAt,
         budgetMs,
       });
@@ -1469,7 +1530,11 @@ async function runRevision({
 }
 
 async function main() {
-  const { candidateSha, out } = parseSmokeArguments(process.argv.slice(2));
+  const {
+    candidateSha,
+    out,
+    captureWorkerAuditMode = 'diagnostic',
+  } = parseSmokeArguments(process.argv.slice(2));
   const outputPath = path.resolve(
     out ||
       path.join(
@@ -1501,6 +1566,7 @@ async function main() {
     baselineSha: BASELINE_SHA,
     candidateSha,
     harnessSha: harnessCommit,
+    captureWorkerAuditMode,
     startedAt: null,
     variants: [],
     limitations: [
@@ -1570,6 +1636,7 @@ async function main() {
           tempRoot: temporary.root,
           startedAt,
           budgetMs,
+          workerAuditMode: captureWorkerAuditMode,
         });
         Object.assign(variant, result);
       } catch (error) {
