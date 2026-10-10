@@ -1,0 +1,34 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "464ba3bae13e17ca5fd4f2b0e899876a83e039f9",
+  "harnessSha": "464ba3bae13e17ca5fd4f2b0e899876a83e039f9",
+  "startedAt": "2026-10-10T06:45:08.822Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Observed code blob is not a validated Cesium worker.",
+      "failureDetails": {
+        "phase": "final-page-health-and-code-path-audit",
+        "pageErrors": [],
+        "interceptionErrors": []
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Observed code blob is not a validated Cesium worker.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-10T06:46:09.108Z",
+  "durationMs": 60286
+}

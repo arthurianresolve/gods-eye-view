@@ -504,6 +504,43 @@ partial packet remains partial and cannot close the parent slice.
   needed for matched performance samples. Production-browser population checks,
   embedded-worker validation and the remaining workload registry are pending;
   reports continue to set `comparisonEligible: false`.
+- **S47.1b-5 embedded-worker provenance and dense smoke implemented by GPT-6 Luna:**
+  `67138ef` and `464ba3bae13e17ca5fd4f2b0e899876a83e039f9` derive the
+  production worker source from the hash-verified Cesium bundle, reproducing
+  browser `atob`/Blob encoding without evaluating it. Only the exact source
+  and narrow bootstrap for a receipted worker module can satisfy the blob-code
+  audit. Script Blob and target histories have count/byte limits; overflow fails
+  the run, and teardown restores the URL API and releases retained references.
+  The capture CLI uses the same diagnostic contract. The hosted smoke activates
+  the normal aircraft/datacenter/dam layers with identical fixed-epoch provider
+  bytes across revisions and verifies 2,500/4,362/716 populations before and after
+  observation. [28 focused Node checks](performance-evidence/worker-fixture-464ba3b.json)
+  pass. [Hosted integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38032000589)
+  [fails at the final code audit](performance-evidence/build-smoke-38032000589.json):
+  a blob request is outside the set associated with validated worker targets.
+  The run reaches the final audit without page/interception errors, but does not
+  preserve individual population observations on that failure path; those checks
+  are therefore not published as an independent pass. Candidate inspection does
+  not run. Hash/size and target-membership diagnostics are needed to distinguish
+  a missed short-lived target from unexpected code; no browser pass is claimed. This creation
+  audit retains bounded script references and is diagnostic instrumentation,
+  not an accepted latency/retention measurement configuration. Longer samples
+  still require deterministic timestamp/position progression and phase resets.
+- **S47.1b production integration now exercised on both immutable builds:**
+  diagnostic-only harness `a2cf58fa254ee6169f92d07d7f0cd6d7484fa7f3`
+  adds URL-free blob hashes/sizes, target membership and partial population
+  checkpoints without relaxing validation. [Run 38032346867](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38032346867)
+  [passes both builds](performance-evidence/build-smoke-38032346867.json): baseline
+  `eb8c682` and candidate `464ba3b` serve verified assets, acknowledge identical
+  fixture bytes (SHA-256 `953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8`),
+  and retain 2,500 aircraft, 4,362 datacenters and 716 dams. Each validates seven
+  worker targets using the receipt-derived embedded source. Both observations
+  retain Manual/Dense 75%, resolution scale 1, antialiasing and MSAA 4, bloom off
+  and sharpening on. This strict passing rerun does not establish why the earlier
+  unmatched-blob failure occurred; it remains an intermittent audit limitation.
+  SwiftShader and bounded Blob-retention instrumentation make this an integration
+  result only. S47 matched routes/time reset, hardware comparisons and the full
+  workload registry remain pending.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
