@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. Full runtime CI passes at
-`bc99c68e6987cd19628a4a936ab7cda548661483` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034288582), [job results](performance-evidence/ci-bc99c68.json)).
+`a22884acda007179bd0789029b462f47eef410ac` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034974692), [job results](performance-evidence/ci-a22884a.json)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -574,6 +574,7 @@ partial packet remains partial and cannot close the parent slice.
   packet is next. Samples
   remain diagnostic and `comparisonEligible: false` until the comparison
   export and full workload contracts are implemented and verified.
+- **S47 capture failure evidence implemented by GPT-6 Luna:** `e0e2e2a` writes a separate bounded partial-failure artifact before cleanup, preserving completed samples and the exact expected/actual integrity mismatch. `560cdbe` retains that artifact in the hosted wrapper and limits worker-validation failure labels to that phase. Sixteen failure/integrity/paired checks and ten wrapper/process checks pass locally. [Run 38035824487](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38035824487) was administratively canceled after review found the missing wrapper wiring; this is neither a pass nor a software failure. [Run 38036053222](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38036053222) tests the corrected wiring at `560cdbe5e5ec0f0a3b768ba0c6469894c6acda09`; its result is pending. Reports remain comparison-ineligible until integrity passes.
 - **S47.1b-7 actual capture CLI integration implemented by GPT-6 Luna:**
   `9802305d99b2a5dc871f00848a969455116f6c64` and
   `c49288e4b274c8b7b4be0f78a7ac72ab369d0551` extend the manually dispatched
