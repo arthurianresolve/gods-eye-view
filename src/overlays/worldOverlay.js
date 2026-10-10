@@ -17,6 +17,7 @@ import {
   destroyWorldOverlayDraw,
   distanceFade,
   distanceScale,
+  getWorldOverlayFontRevision,
   installWorldOverlayFontInvalidation,
   measureOverlayEntry,
   paintOverlayEntry,
@@ -1945,7 +1946,13 @@ function applyPresentation(entry, source, record) {
   }
 }
 
-function snapshotAndProject(entry, source, viewProjection, keyhole) {
+function snapshotAndProject(
+  entry,
+  source,
+  viewProjection,
+  keyhole,
+  fontRevision,
+) {
   const record = getProjectionRecord(entry);
   let position;
   try {
@@ -2118,7 +2125,14 @@ function snapshotAndProject(entry, source, viewProjection, keyhole) {
   )
     return null;
 
-  measureOverlayEntry(_ctx, entry, record.layout);
+  // Source replacement gives each normalized entry a fresh layout. Between
+  // replacements only font metrics change its unscaled geometry; presentation
+  // callbacks and placement continue to use this frame's inputs below.
+  const layout = record.layout;
+  if (layout._fontRevision !== fontRevision) {
+    measureOverlayEntry(_ctx, entry, layout);
+    layout._fontRevision = fontRevision;
+  }
   record.placementInput.anchorX = record.screen.x;
   record.placementInput.anchorY = record.screen.y;
   record.placementInput.width = record.layout.w * record.paintScale;
@@ -2219,6 +2233,7 @@ function snapshotAndProject(entry, source, viewProjection, keyhole) {
  */
 function collectFrameCandidates(keyhole, viewProjection) {
   resetFrameDomains();
+  let fontRevision = -1;
   let candidateCount = 0;
   let projectedCount = 0;
   for (let s = 0; s < _sourceList.length; s++) {
@@ -2260,11 +2275,13 @@ function collectFrameCandidates(keyhole, viewProjection) {
           )
             continue;
         }
+        if (fontRevision < 0) fontRevision = getWorldOverlayFontRevision();
         const record = snapshotAndProject(
           entry,
           source,
           viewProjection,
           keyhole,
+          fontRevision,
         );
         if (!record) continue;
         // Anchor separation runs HERE, not inside the arbiter. The shipped pass

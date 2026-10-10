@@ -1,0 +1,19 @@
+{
+  "schema": "gev-overlay-layout-work-witness/v1",
+  "capturedAt": "2026-10-10T23:28:28.137Z",
+  "node": "v24.16.0",
+  "baselineCommit": "0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb",
+  "scope": "Node mock-host layout work and behavior; CPU benefit and native visual acceptance pending",
+  "baselineExit": 1,
+  "candidateExit": 0,
+  "sourceHashes": {
+    "src/overlays/worldOverlay.js": "b6344025f66949eafc84f56b40d45254d56394bbcd8cf4cb50c6f3a4e54b6e4f",
+    "src/overlays/worldOverlayDraw.js": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d"
+  },
+  "evidenceHashes": {
+    "baseline.txt": "93bc9017886a4540fe37388c08acf236a5abddd631f6ac930f175ad517dff202",
+    "candidate.txt": "1e6a9462502f908971cff381bbd1ca688ca6c5baa14a19c50d419049463677c9"
+  },
+  "candidateValidatedAt": "2026-10-10T23:29:09.043Z",
+  "candidateScope": "Full 83-test overlay/Draw/font suite"
+}

@@ -1,0 +1,31 @@
+✖ stable entry layout avoids repeated measurement while moving presentation stays live (16.4446ms)
+✔ replacement and visibility preserve complete layout geometry for every card variant (7.4936ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3097.3228
+
+✖ failing tests:
+
+test at src\overlays\worldOverlay.test.mjs:2846:1
+✖ stable entry layout avoids repeated measurement while moving presentation stays live (16.4446ms)
+  AssertionError [ERR_ASSERTION]: unchanged text geometry is not reconstructed
+  
+  20 !== 0
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/src/overlays/worldOverlay.test.mjs:2880:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.start (node:internal/test_runner/test:1177:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 20,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

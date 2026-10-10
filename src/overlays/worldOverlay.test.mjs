@@ -11,7 +11,7 @@ import {
   setKeyholeFadeTuning,
 } from '../celestialRing.js';
 import { createCctvThumbnailOverlayEntry, createFrameSlot } from '../data/cctvCards.js';
-import { combinedOverlayAlpha } from './worldOverlayDraw.js';
+import { combinedOverlayAlpha, measureOverlayEntry } from './worldOverlayDraw.js';
 import {
   AMBIENT_CARD_COLLISION_CAPACITY,
   WORLD_OVERLAY_OCCLUDER_SELECTORS,
@@ -2841,4 +2841,98 @@ test('font loading wakes a parked static overlay to recompute layout and hit bou
     { sourceId: 'font-wake' },
   );
   assert.equal(updatedEdgeHit?.entryId, 'static');
+});
+
+test('stable entry layout avoids repeated measurement while moving presentation stays live', (t) => {
+  const env = installMockEnvironment();
+  t.after(() => env.cleanup());
+  let loadingDone;
+  env.document.fonts = {
+    ready: new Promise(() => {}),
+    addEventListener(name, listener) { if (name === 'loadingdone') loadingDone = listener; },
+    removeEventListener() {},
+  };
+  let scale = 1;
+  let presentationCalls = 0;
+  const movingPosition = position();
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('layout', [selectedEntry('moving', {
+    title: 'MOVING', interactive: true, position: () => movingPosition,
+    presentationScale: () => { presentationCalls++; return scale; },
+  })], { moving: true });
+  env.postRender.raise();
+  const firstRect = { ...getOverlayPaintRect('layout', 'moving') };
+  const entry = hitTestWorldOverlay(firstRect.x + 1, firstRect.y + 1).entry;
+  const layout = entry._overlayLayout;
+  let width = layout.w;
+  let measurementWrites = 0;
+  // Observe real measurement output writes without a runtime instrumentation counter.
+  Object.defineProperty(layout, 'w', {
+    configurable: true,
+    get: () => width,
+    set(value) { width = value; measurementWrites++; },
+  });
+  for (let i = 0; i < 10; i++) {
+    env.advanceTime(16);
+    movingPosition.x += 0.001;
+    env.postRender.raise();
+  }
+  assert.equal(measurementWrites, 0, 'unchanged text geometry is not reconstructed');
+  assert.equal(presentationCalls, 11, 'presentation remains live every frame');
+  scale = 1.5;
+  env.postRender.raise();
+  const scaledRect = { ...getOverlayPaintRect('layout', 'moving') };
+  assert.equal(scaledRect.w, firstRect.w * 1.5);
+  assert.equal(measurementWrites, 0, 'scale updates placement without remeasuring text');
+  const scaledHit = hitTestWorldOverlay(scaledRect.x + scaledRect.w - 1, scaledRect.y + 1);
+  assert.equal(scaledHit?.entryId, 'moving');
+  env.ctx.measureText = text => ({ width: String(text).length * 10 });
+  loadingDone();
+  env.postRender.raise();
+  assert.ok(measurementWrites > 0, 'font changes invalidate the measured layout');
+  assert.ok(getOverlayPaintRect('layout', 'moving').w > scaledRect.w);
+  const fontWrites = measurementWrites;
+  env.postRender.raise();
+  assert.equal(measurementWrites, fontWrites, 'new font geometry is then reused');
+});
+
+test('replacement and visibility preserve complete layout geometry for every card variant', (t) => {
+  const env = installMockEnvironment();
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  for (const variant of ['label', 'track', 'tracked', 'thumbnail', 'card', 'selected']) {
+    for (const revision of [0, 1]) {
+      const raw = selectedEntry('same', {
+        selected: variant === 'selected', variant, interactive: true,
+        title: revision ? 'A substantially longer title' : 'SHORT',
+        details: revision ? ['long detail content', 'another line'] : [],
+        cardStyle: revision ? 'tactical' : undefined,
+        thumbnailWidth: revision ? 124 : 96, thumbnailHeight: revision ? 90 : 54,
+        thumbnailPadX: revision ? 7 : 0, thumbnailPadTop: 3,
+        thumbnailPadBottom: 2, thumbnailTitleGap: 5, thumbnailTitleHeight: 13,
+      });
+      if (revision === 0) setOverlayEntries('replacement', [raw]);
+      else upsertOverlayEntry('replacement', raw);
+      env.advanceTime(1000);
+      env.postRender.raise();
+      const rect = getOverlayPaintRect('replacement', 'same');
+      assert.ok(rect, `${variant} revision ${revision} paints`);
+      const hit = hitTestWorldOverlay(rect.x + 1, rect.y + 1, { sourceId: 'replacement' });
+      assert.ok(hit, `${variant} hit is available`);
+      const expected = measureOverlayEntry(env.ctx, normalizeOverlayEntry('control', raw));
+      assert.equal(rect.w, expected.w, `${variant} full width`);
+      assert.equal(rect.h, expected.h, `${variant} full height`);
+      assert.equal(hit.entry.title, raw.title);
+      const previousLayout = hit.entry._overlayLayout;
+      setOverlaySourceVisible('replacement', false);
+      env.postRender.raise();
+      assert.equal(getOverlayPaintRect('replacement', 'same'), null);
+      setOverlaySourceVisible('replacement', true);
+      env.postRender.raise();
+      const restored = getOverlayPaintRect('replacement', 'same');
+      assert.equal(restored.w, expected.w);
+      assert.equal(restored.h, expected.h);
+      assert.equal(hitTestWorldOverlay(restored.x + 1, restored.y + 1, { sourceId: 'replacement' }).entry._overlayLayout, previousLayout);
+    }
+  }
 });

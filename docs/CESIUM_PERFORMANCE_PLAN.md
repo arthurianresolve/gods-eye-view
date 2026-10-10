@@ -69,6 +69,25 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### S52 layout reuse: separate experiment - 11 October 2026
+
+A new experiment stores the font revision with each normalized entry's existing
+layout. Source replacement creates a fresh layout; a font change invalidates it.
+Position, presentation, placement, hit testing and painting retain their existing
+per-frame behavior. Font revision is read lazily only when an ordinary candidate
+needs projection, so empty and detection-only frames gain no global counter write.
+This differs from the rejected earlier cache; that earlier detection regression
+remains recorded and must still be covered by the comparison workload.
+
+The [work witness](performance-evidence/s52-layout-reuse/report.json) fails against
+font-fix baseline `0d431f2`: ten unchanged text frames perform 20 redundant width
+writes. The candidate performs none, remeasures on a font event, and retains live
+position/scale and updated hit bounds. The companion behavior control covers all
+six card variants, source replacement and visibility restoration. All 83 focused
+overlay/Draw/font tests and all 13 existing Node 24 allocation gates pass.
+This remains experimental: exact rendered comparisons and isolated paired CPU
+results, including the detection control, are required before acceptance.
+
 ### S52 font lifecycle: idle invalidation regression - 11 October 2026
 
 Review of layout invalidation found that `document.fonts.ready` and `loadingdone`
