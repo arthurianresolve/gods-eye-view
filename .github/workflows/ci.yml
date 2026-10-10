@@ -32,7 +32,7 @@ on:
       renderer_diagnostic:
         description: Workload for the isolated hosted Mac diagnostic
         type: choice
-        options: [collections, wind]
+        options: [collections, wind, infrastructure]
         default: collections
       hosted_gpu_probe:
         description: Probe native WebGL on free standard hosted runners
@@ -735,3 +735,11 @@ jobs:
         env:
           DIAGNOSTIC: ${{ inputs.renderer_diagnostic || 'collections' }}
         run: node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
+      - name: Preserve infrastructure comparison and mismatch images
+        if: always() && inputs.renderer_diagnostic == 'infrastructure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: infrastructure-comparison-${{ github.run_id }}
+          path: qa-artifacts/hosted-native-renderer.json
+          if-no-files-found: error
+          retention-days: 3

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { mkdir, writeFile } from 'node:fs/promises';
 import puppeteer from 'puppeteer';
 import {
   classifyRenderer,
@@ -7,6 +8,7 @@ import {
 } from './performance/rendererEvidence.mjs';
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
+import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 
 if (process.env.GITHUB_ACTIONS !== 'true')
   throw new Error(
@@ -160,6 +162,41 @@ try {
           `Collection diagnostic failed: ${report.pointCollections.error || 'incomplete samples'}`,
         );
     }
+    if (
+      process.argv.includes('--infrastructure') &&
+      report.hardwareRenderingAvailable
+    ) {
+      await page.setViewport({
+        width: 1200,
+        height: 960,
+        deviceScaleFactor: 1,
+      });
+      await page.goto(
+        url.replace('capture-matrix.html', 'infrastructure-collections.html'),
+        { waitUntil: 'networkidle0' },
+      );
+      await page.click('#run');
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 360_000, polling: 100 },
+      );
+      report.infrastructureCollections = await page.$eval(
+        '#result',
+        (element) => JSON.parse(element.textContent),
+      );
+      report.infrastructureGraphics = await readBrowserGraphicsInfo(browser);
+      report.infrastructureRenderingEvidence = classifyRenderer(
+        report.infrastructureCollections.environment?.renderer,
+        report.infrastructureGraphics,
+      );
+      if (!report.infrastructureRenderingEvidence.accelerationVerified)
+        throw new Error(
+          'Infrastructure viewer did not retain verified acceleration',
+        );
+      validateInfrastructureCollectionReport(report.infrastructureCollections, {
+        expectedCommit: commit,
+      });
+    }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
       await page.goto(
         url.replace('capture-matrix.html', 'wind-restores.html'),
@@ -221,6 +258,13 @@ try {
     process.exitCode = 1;
   });
   server.kill();
+  if (process.argv.includes('--infrastructure')) {
+    await mkdir('qa-artifacts', { recursive: true });
+    await writeFile(
+      'qa-artifacts/hosted-native-renderer.json',
+      `${JSON.stringify(report, null, 2)}\n`,
+    );
+  }
   console.log('QA_EVIDENCE_BEGIN hosted-native-renderer');
   console.log(JSON.stringify(report));
   console.log('QA_EVIDENCE_END hosted-native-renderer');
