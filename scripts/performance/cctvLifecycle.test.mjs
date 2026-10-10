@@ -34,7 +34,11 @@ function validCheckpoint(enabled, probeError = false) {
   return {
     appCommit: 'a'.repeat(40),
     enabled,
-    lifecycleState: enabled ? 'enabled' : 'disabled',
+    lifecycleState: {
+      enabled,
+      lifecycleState: enabled ? 'enabled' : 'disabled',
+      uncertain: false,
+    },
     moduleEnabled: enabled,
     stats: {
       count: 1,
@@ -156,6 +160,7 @@ function validRapidGeometryRevision(applicationCommit = 'a'.repeat(40)) {
     pngBytes: 2048,
     pickCount: 5,
     pickedEntityIds: expectedVisible ? ids : Array(5).fill(null),
+    pickedCameraIds: Array(5).fill(expectedVisible ? cameraId : null),
     matchingPickCount: expectedVisible ? 5 : 0,
   });
   const controlA = makeSample(0.82, 'a', 'd');
@@ -680,7 +685,16 @@ test('CCTV geometry evidence uses the viewer clock without a Cesium global and c
         },
         dataManager: {
           layers: new Map([
-            ['cctv', { module: { getUIState: () => ({ cameras: [camera] }) } }],
+            [
+              'cctv',
+              {
+                module: {
+                  getUIState: () => ({ cameras: [camera] }),
+                  _extractPickedCameraIdForTest: (picked) =>
+                    picked?.id ? camera.id : null,
+                },
+              },
+            ],
           ]),
         },
       },
@@ -697,6 +711,10 @@ test('CCTV geometry evidence uses the viewer clock without a Cesium global and c
   assert.equal(evidence.frameNumber, 21);
   assert.equal(summary.entityCount, 5);
   assert.equal(summary.matchingPickCount, 5);
+  assert.deepEqual(
+    Array.from(summary.pickedCameraIds),
+    Array(5).fill(fixture.cameraId),
+  );
   assert.equal(summary.pngBytes > 32, true);
   assert.equal(listeners.size, 0);
   const wrongPick = structuredClone(evidence);
@@ -704,6 +722,17 @@ test('CCTV geometry evidence uses the viewer clock without a Cesium global and c
   assert.throws(
     () => summarizeCctvGeometryEvidence(wrongPick),
     /pick evidence is invalid: sample 0, expected cctv-.*-ray-tl, observed "unrelated-fixture-entity"/,
+  );
+  const planePick = structuredClone(evidence);
+  planePick.picks[0].pickedEntityId = `cctv-${fixture.cameraId}-plane`;
+  assert.equal(
+    summarizeCctvGeometryEvidence(planePick).pickedEntityIds[0],
+    `cctv-${fixture.cameraId}-plane`,
+  );
+  planePick.picks[0].pickedCameraId = null;
+  assert.throws(
+    () => summarizeCctvGeometryEvidence(planePick),
+    /pick evidence is invalid/,
   );
   const failedScene = {
     ...scene,
@@ -1222,7 +1251,43 @@ test('CCTV lifecycle report validates five exact toggles, scene resources and di
       }),
     /worker boundary/,
   );
+  const projectionPicks = structuredClone(report);
+  for (const name of ['referenceB', 'afterRelease', 'afterReenable']) {
+    projectionPicks.rapidGeometryRevision.samples[name].pickedEntityIds[0] =
+      `cctv-${fixture.cameraId}-plane`;
+  }
+  assert.doesNotThrow(() =>
+    validateCctvLifecycleReport(projectionPicks, {
+      fixtureSha256: fixture.sha256,
+    }),
+  );
+  projectionPicks.rapidGeometryRevision.samples.afterRelease.pickedCameraIds[0] =
+    'unrelated-camera';
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(projectionPicks, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /sample is invalid/,
+  );
   const changedPickedId = structuredClone(report);
+  for (const invalidState of [
+    'disabled',
+    { enabled: false, lifecycleState: 'disabled', uncertain: true },
+    { enabled: true, lifecycleState: 'disabled', uncertain: false },
+    { enabled: false, lifecycleState: 'disabling', uncertain: false },
+  ]) {
+    const invalidLifecycle = structuredClone(report);
+    invalidLifecycle.rapidGeometryRevision.checkpoints.disabledWithHeldResult.lifecycleState =
+      invalidState;
+    assert.throws(
+      () =>
+        validateCctvLifecycleReport(invalidLifecycle, {
+          fixtureSha256: fixture.sha256,
+        }),
+      /not disabled with revision A still pending/,
+    );
+  }
   changedPickedId.rapidGeometryRevision.samples.afterReenable.pickedEntityIds[0] =
     changedPickedId.rapidGeometryRevision.samples.referenceB.pickedEntityIds[1];
   assert.throws(

@@ -125,6 +125,21 @@ listeners and payload are released, and the browser closes normally in 71 ms.
 [terminal job metadata](performance-evidence/cctv-lifecycle-38086026418-run.json).
 Raw SHA-256: `adc4ad3c14292a18a1c37080db8a6fb499fa6c01dd90f39649a201e8541515d4`.
 
+The [identity diagnostic at `8c3e99a`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38086422967)
+observes `cctv-qa-cctv-lifecycle-camera-001-plane` at a ray/cap corner. This is
+the active camera's real projection Entity, recognized by the production click
+ownership resolver; restricting every pick to wireframe IDs was incorrect.
+The capture now records that resolver's camera ID and permits the projection
+plane only with matching live ownership. Missing/foreign owners still fail,
+the complete pick sequence must match the settled B reference, and disabled
+captures still require null picks. No production geometry or visual threshold
+changes. A separate review also corrects the disabled-state assertion to read
+the manager's actual `{enabled, lifecycleState, uncertain}` object; tests reject
+uncertain and incomplete transitions. Rendered validation remains pending.
+[Raw failed report](performance-evidence/cctv-lifecycle-38086422967.json),
+[terminal job metadata](performance-evidence/cctv-lifecycle-38086422967-run.json).
+Raw SHA-256: `14332f5202d97f082c1fcdec5821e6d42d2da10aec504f08a6117c6126937036`.
+
 ### S50.2 CCTV calibration handle geometry reuse - 10 October 2026
 
 The next candidate compares numeric Cartesian positions before replacing the

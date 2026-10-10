@@ -716,7 +716,12 @@ export async function readCctvGeometryEvidenceInPage(
   const camera = module
     ?.getUIState?.()
     ?.cameras?.find((item) => item.id === cameraId);
-  if (!viewer?.scene || !viewer.clock?.currentTime || !camera)
+  if (
+    !viewer?.scene ||
+    !viewer.clock?.currentTime ||
+    !camera ||
+    typeof module?._extractPickedCameraIdForTest !== 'function'
+  )
     throw new Error('CCTV geometry evidence owner is unavailable.');
   const scene = viewer.scene;
   let listener;
@@ -757,12 +762,17 @@ export async function readCctvGeometryEvidenceInPage(
               !Number.isFinite(position.x) ||
               !Number.isFinite(position.y)
             )
-              return { entityId: entity.id, pickedEntityId: null };
+              return {
+                entityId: entity.id,
+                pickedEntityId: null,
+                pickedCameraId: null,
+              };
             const picked = scene.pick(position);
             const pickedId = picked?.id?.id ?? picked?.id ?? null;
             return {
               entityId: entity.id,
               pickedEntityId: typeof pickedId === 'string' ? pickedId : null,
+              pickedCameraId: module._extractPickedCameraIdForTest(picked),
             };
           });
           resolve({
@@ -814,6 +824,9 @@ export function summarizeCctvGeometryEvidence(evidence) {
   const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
     (role) => `cctv-${FIXTURE_CAMERA_ID}-${role}`,
   );
+  // The active projection plane overlaps the cap and is also a legitimate
+  // selectable surface. Validate its real owner, not just the ID spelling.
+  const pickIds = [...ids, `cctv-${FIXTURE_CAMERA_ID}-plane`];
   if (
     evidence?.camera?.id !== FIXTURE_CAMERA_ID ||
     typeof evidence.expectedVisible !== 'boolean' ||
@@ -864,12 +877,19 @@ export function summarizeCctvGeometryEvidence(evidence) {
   const picks = evidence.picks.map((pick, index) => {
     if (
       pick?.entityId !== ids[index] ||
-      (pick.pickedEntityId !== null && !ids.includes(pick.pickedEntityId))
+      (pick.pickedEntityId !== null &&
+        (!pickIds.includes(pick.pickedEntityId) ||
+          pick.pickedCameraId !== FIXTURE_CAMERA_ID)) ||
+      (pick.pickedEntityId === null && pick.pickedCameraId !== null)
     )
       throw new Error(
         `CCTV rapid geometry pick evidence is invalid: sample ${index}, expected ${ids[index]}, observed ${JSON.stringify(pick?.pickedEntityId)?.slice(0, 160) ?? 'undefined'}.`,
       );
-    return { entityId: pick.entityId, pickedEntityId: pick.pickedEntityId };
+    return {
+      entityId: pick.entityId,
+      pickedEntityId: pick.pickedEntityId,
+      pickedCameraId: pick.pickedCameraId,
+    };
   });
   const visibleEntityCount = entities.filter((entity) => entity.show).length;
   if (
@@ -908,6 +928,7 @@ export function summarizeCctvGeometryEvidence(evidence) {
     pngBytes: png.length,
     pickCount: picks.length,
     pickedEntityIds: picks.map((pick) => pick.pickedEntityId),
+    pickedCameraIds: picks.map((pick) => pick.pickedCameraId),
     matchingPickCount: picks.filter(
       (pick) => pick.pickedEntityId === pick.entityId,
     ).length,
@@ -928,6 +949,7 @@ export function assertCctvRapidGeometryRevision(
   const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
     (role) => `cctv-${FIXTURE_CAMERA_ID}-${role}`,
   );
+  const pickIds = [...ids, `cctv-${FIXTURE_CAMERA_ID}-plane`];
   if (
     revision?.status !== 'passed' ||
     revision.scope !==
@@ -1075,7 +1097,14 @@ export function assertCctvRapidGeometryRevision(
       sample.pickCount !== 5 ||
       !Array.isArray(sample.pickedEntityIds) ||
       sample.pickedEntityIds.length !== 5 ||
-      !sample.pickedEntityIds.every((id) => id === null || ids.includes(id)) ||
+      !Array.isArray(sample.pickedCameraIds) ||
+      sample.pickedCameraIds.length !== 5 ||
+      !sample.pickedEntityIds.every((id, index) =>
+        id === null
+          ? sample.pickedCameraIds[index] === null
+          : pickIds.includes(id) &&
+            sample.pickedCameraIds[index] === FIXTURE_CAMERA_ID,
+      ) ||
       sample.canvas?.width !== revision.canvas?.width ||
       sample.canvas?.height !== revision.canvas?.height ||
       sample.canvas?.cssWidth !== revision.canvas?.cssWidth ||
@@ -1137,6 +1166,9 @@ export function assertCctvRapidGeometryRevision(
       !Array.isArray(sample.pickedEntityIds) ||
       sample.pickedEntityIds.length !== 5 ||
       sample.pickedEntityIds.some((id) => id !== null) ||
+      !Array.isArray(sample.pickedCameraIds) ||
+      sample.pickedCameraIds.length !== 5 ||
+      sample.pickedCameraIds.some((id) => id !== null) ||
       !/^[a-f0-9]{64}$/.test(sample.geometrySha256 || '') ||
       !/^[a-f0-9]{64}$/.test(sample.styleSha256 || '') ||
       !/^[a-f0-9]{64}$/.test(sample.pngSha256 || '') ||
@@ -1225,7 +1257,9 @@ export function assertCctvRapidGeometryRevision(
   if (
     heldCheckpoint?.enabled !== false ||
     heldCheckpoint?.moduleEnabled !== false ||
-    heldCheckpoint?.lifecycleState !== 'disabled' ||
+    heldCheckpoint?.lifecycleState?.enabled !== false ||
+    heldCheckpoint?.lifecycleState?.lifecycleState !== 'disabled' ||
+    heldCheckpoint?.lifecycleState?.uncertain !== false ||
     heldCheckpoint?.cameraCount !== 1 ||
     heldCheckpoint?.cameras?.[0]?.id !== FIXTURE_CAMERA_ID ||
     heldCheckpoint?.stats?.loading !== false ||
