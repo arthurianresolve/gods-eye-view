@@ -38,6 +38,10 @@ import {
   validatePrewarmedWorkerUse,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
+import {
+  runWorkerAuditAtWarmupBoundary,
+  PREWARM_WORKER_AUDIT_BOUNDARY,
+} from './performance/prewarmWorkerAuditBoundary.mjs';
 import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import {
@@ -1269,18 +1273,6 @@ try {
         dams: mixedLayerCounts.dams,
       },
     );
-    if (workerAuditMode === 'prewarm') {
-      const prewarm = await auditPageWorkerBlobs(page, captureAuditState, {
-        documentRole: `provider-sample-${providerSampleDocumentIndex}`,
-        auditMode: 'prewarm',
-        requireEvidence: true,
-      });
-      if (!prewarm?.inventory || !prewarm.documentAudit.validation)
-        throw new Error('Provider sample has no validated prewarm worker set.');
-      activePrewarmedWorkerInventory = prewarm.inventory;
-      activePrewarmedWorkerDocument = prewarm.documentAudit;
-      providerSampleWorkerAuditComplete = false;
-    }
     fixtureDelivery = await summarizeFlightFixtureDelivery();
     failureProgress.fixtureDelivery = fixtureDelivery;
     await page.evaluate(() => {
@@ -1354,26 +1346,80 @@ try {
       // Each workload/run receives the declared warmup, including tracking.
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
-      const fixtureBoundaryStart = productionFlightFixture
-        ? await page.evaluate(async () => {
-            const clock = window.__gevPhasedMonotonicWallClockV1;
-            const held = clock?.holdWarmupBoundary?.();
-            if (!held || held.phase !== 'warmup-held')
-              throw new Error(
-                'Provider fixture warmup did not reach its declared boundary.',
-              );
-            return window.__gevPhasedMonotonicWallClockV1.snapshot();
-          })
-        : null;
-      const warmupBoundarySettle = productionFlightFixture
-        ? await settleProviderRenderAtBoundary(page, 'Warmup boundary', 5000)
-        : null;
+      let fixtureBoundaryStart = null;
+      let warmupBoundarySettle = null;
+      let prewarmWorkerAuditTimingBoundary = null;
+      if (workerAuditMode === 'prewarm') {
+        failureProgress.phase = 'prewarm-worker-audit-after-warmup';
+        failureProgress.current.phase = failureProgress.phase;
+        failureProgress.current.prewarmWorkerAudit = {
+          status: 'pending',
+          timingBoundary: PREWARM_WORKER_AUDIT_BOUNDARY,
+          warmupMs,
+        };
+      }
+      const prewarm = await runWorkerAuditAtWarmupBoundary({
+        auditMode: workerAuditMode,
+        warmupMs,
+        readWarmupBoundary: async () => {
+          fixtureBoundaryStart = productionFlightFixture
+            ? await page.evaluate(async () => {
+                const clock = window.__gevPhasedMonotonicWallClockV1;
+                const held = clock?.holdWarmupBoundary?.();
+                if (!held || held.phase !== 'warmup-held')
+                  throw new Error(
+                    'Provider fixture warmup did not reach its declared boundary.',
+                  );
+                return window.__gevPhasedMonotonicWallClockV1.snapshot();
+              })
+            : null;
+          failureProgress.current.warmupBoundary = fixtureBoundaryStart;
+          return fixtureBoundaryStart;
+        },
+        settleCompletedRender: async () => {
+          warmupBoundarySettle = productionFlightFixture
+            ? await settleProviderRenderAtBoundary(
+                page,
+                'Warmup boundary',
+                5000,
+              )
+            : null;
+          failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
+          if (failureProgress.current.prewarmWorkerAudit) {
+            failureProgress.current.prewarmWorkerAudit.fixtureClockElapsedMs =
+              fixtureBoundaryStart?.elapsedMs ?? null;
+            failureProgress.current.prewarmWorkerAudit.completedRenderSettleMs =
+              warmupBoundarySettle?.settleElapsedMs ?? null;
+          }
+          return warmupBoundarySettle;
+        },
+        audit: () =>
+          auditPageWorkerBlobs(page, captureAuditState, {
+            documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+            auditMode: 'prewarm',
+            requireEvidence: true,
+          }),
+      });
+      if (workerAuditMode === 'prewarm') {
+        prewarm.documentAudit.timingBoundary = prewarm.timingBoundary;
+        activePrewarmedWorkerInventory = prewarm.inventory;
+        activePrewarmedWorkerDocument = prewarm.documentAudit;
+        providerSampleWorkerAuditComplete = false;
+        prewarmWorkerAuditTimingBoundary = prewarm.timingBoundary;
+        failureProgress.current.prewarmWorkerAudit = {
+          status: 'passed',
+          ...prewarm.timingBoundary,
+        };
+      }
       const trackingStart =
         scenario === 'selected-aircraft-tracking'
           ? await page.evaluate(observeTrackedEntityBoundary, 'flights:000001')
           : null;
       failureProgress.current.warmupBoundary = fixtureBoundaryStart;
       failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
+      if (prewarmWorkerAuditTimingBoundary)
+        failureProgress.current.prewarmWorkerAuditTimingBoundary =
+          prewarmWorkerAuditTimingBoundary;
       if (trackingStart) failureProgress.current.trackingStart = trackingStart;
       const fixtureMeasurementStart = productionFlightFixture
         ? await page.evaluate(() => ({
@@ -1831,7 +1877,7 @@ try {
     source.buildProvenance.pageAssetAudit = {
       scope:
         workerAuditMode === 'prewarm'
-          ? 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs validated before warmup; native URL.createObjectURL restored and retained blob bodies cleared before measurement; late observed executable paths checked against bounded prewarm inventory; unused late blob creation is not observable'
+          ? 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs validated after configured warmup and a completed boundary render, before measurement; native URL.createObjectURL restored and retained blob bodies cleared before measurement; late observed executable paths checked against bounded prewarm inventory; unused late blob creation is not observable'
           : 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
       workerAuditMode,
       scriptRequestCount,
@@ -1945,6 +1991,10 @@ try {
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode,
+    workerAuditTimingBoundary:
+      workerAuditMode === 'prewarm'
+        ? PREWARM_WORKER_AUDIT_BOUNDARY
+        : 'during-capture-diagnostic-instrumentation',
     performanceDiagnostics: {
       requested:
         'disabled-after-app-ready-before-warmup-when-supported-per-document',
@@ -1957,6 +2007,10 @@ try {
     ...(comparisonContract ? { comparisonContract } : {}),
     comparisonReadiness: {
       status: 'not-ready',
+      workerAuditTimingBoundary:
+        workerAuditMode === 'prewarm'
+          ? PREWARM_WORKER_AUDIT_BOUNDARY
+          : 'during-capture-diagnostic-instrumentation',
       reasons:
         comparisonReadinessReasons.length > 0
           ? comparisonReadinessReasons
@@ -1984,6 +2038,10 @@ try {
                 'fixture wall time is held during setup, advances monotonically within configured warmup/measurement phases, then stays capped at each declared boundary; native timers, RAF and performance.now are unchanged',
               boundarySettling:
                 'one completed Cesium postRender is observed at each capped boundary outside the measured interval, with host and page timeout bounds',
+              workerAuditTimingBoundary:
+                workerAuditMode === 'prewarm'
+                  ? PREWARM_WORKER_AUDIT_BOUNDARY
+                  : 'during-capture-diagnostic-instrumentation',
               trackingRoute:
                 'entity-follow-v1 observes the public trackedEntity position, camera pose and Cesium clock state at both fixture epochs',
               fixtureTimeAlignment:
