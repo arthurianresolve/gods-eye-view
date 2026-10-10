@@ -60,6 +60,26 @@ were skipped. This green integration run does not override the rendered CCTV
 comparison failures below, and does not cover subsequent camera compatibility
 changes.
 
+### Windows recovery recheck - 10 October 2026
+
+The Windows recovery job at `f59831067a27b223781956af5430afda300be569`
+[passes all five scenarios](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38087067518/job/114315686324):
+prior install, interrupted update, rollback, successful upgrade, and failed
+verification followed by rollback and reopening assets. Settings and complete
+workspace contents match at every checkpoint; the persisted asset hash remains
+`0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc`.
+Every owned application page closes, no unexpected page target appears, and all
+five browser processes exit normally without forced termination. Close durations
+are 552, 436, 344, 1,065 and 619 ms against the unchanged five-second deadline.
+
+This is a clean, unchanged candidate on hosted Windows with Node 24.14.0,
+Chrome 152.0.7977.75 and SwiftShader. It verifies recovery behavior, not physical
+GPU performance, and does not establish the cause of historical intermittent
+shutdown failures. Root independently checked each persisted-content and close
+observation. [Raw report extracted from the job log](performance-evidence/profile-recovery-38087067518-windows.json),
+SHA-256 `c6ec2f2d41dde357ea4c9b6897176687087faa4515d725dbe55c960730f2748b`;
+[terminal job metadata](performance-evidence/profile-recovery-38087067518-windows-job.json).
+
 ### Tracking fixture ground coverage correction - 10 October 2026
 
 The failed `996a8d3` tracking report observed a 192.4-m floor after initially
