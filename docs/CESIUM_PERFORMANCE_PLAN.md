@@ -113,6 +113,18 @@ pending. [Raw failed report](performance-evidence/cctv-lifecycle-38085781697.jso
 [terminal job metadata](performance-evidence/cctv-lifecycle-38085781697-run.json).
 Raw SHA-256: `7170f6c6d4d183ea6b3c5e8c71a9242e862952bf493a569c0f0fcff805d80ea3`.
 
+The [follow-up at `78e41ef`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38086026418)
+fixes the missing global and captures revision A successfully. All five toggle
+cycles pass again, but the settled B capture rejects an unexpected pick identity
+before the response gate is armed. The old error did not preserve that identity;
+the next diagnostic includes its bounded value and sample index while retaining
+the rejection. Twenty focused checks pass, including the diagnostic assertion.
+This is not delayed-response acceptance. There are no page errors; boundary
+listeners and payload are released, and the browser closes normally in 71 ms.
+[Raw failed report](performance-evidence/cctv-lifecycle-38086026418.json),
+[terminal job metadata](performance-evidence/cctv-lifecycle-38086026418-run.json).
+Raw SHA-256: `adc4ad3c14292a18a1c37080db8a6fb499fa6c01dd90f39649a201e8541515d4`.
+
 ### S50.2 CCTV calibration handle geometry reuse - 10 October 2026
 
 The next candidate compares numeric Cartesian positions before replacing the

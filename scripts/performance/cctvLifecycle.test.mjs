@@ -699,6 +699,12 @@ test('CCTV geometry evidence uses the viewer clock without a Cesium global and c
   assert.equal(summary.matchingPickCount, 5);
   assert.equal(summary.pngBytes > 32, true);
   assert.equal(listeners.size, 0);
+  const wrongPick = structuredClone(evidence);
+  wrongPick.picks[0].pickedEntityId = 'unrelated-fixture-entity';
+  assert.throws(
+    () => summarizeCctvGeometryEvidence(wrongPick),
+    /pick evidence is invalid: sample 0, expected cctv-.*-ray-tl, observed "unrelated-fixture-entity"/,
+  );
   const failedScene = {
     ...scene,
     requestRender: () => {

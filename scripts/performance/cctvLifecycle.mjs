@@ -866,7 +866,9 @@ export function summarizeCctvGeometryEvidence(evidence) {
       pick?.entityId !== ids[index] ||
       (pick.pickedEntityId !== null && !ids.includes(pick.pickedEntityId))
     )
-      throw new Error('CCTV rapid geometry pick evidence is invalid.');
+      throw new Error(
+        `CCTV rapid geometry pick evidence is invalid: sample ${index}, expected ${ids[index]}, observed ${JSON.stringify(pick?.pickedEntityId)?.slice(0, 160) ?? 'undefined'}.`,
+      );
     return { entityId: pick.entityId, pickedEntityId: pick.pickedEntityId };
   });
   const visibleEntityCount = entities.filter((entity) => entity.show).length;
