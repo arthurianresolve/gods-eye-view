@@ -91,6 +91,8 @@ async function stopTree(child) {
   if (!child) return { attempted: false, confirmed: false, reason: 'missing-process' };
   if (child.exitCode != null || child.signalCode != null)
     return { attempted: false, confirmed: true, reason: 'already-exited' };
+  if (!Number.isInteger(child.pid) || child.pid < 1)
+    return { attempted: false, confirmed: false, reason: 'missing-pid' };
   let terminationRequested = false;
   if (process.platform === 'win32') {
     const result = await new Promise((resolve) => {
@@ -98,9 +100,26 @@ async function stopTree(child) {
         stdio: 'ignore',
         windowsHide: true,
       });
-      killer.once('error', () => resolve(null));
-      killer.once('exit', (code) => resolve(code));
+      let settled = false;
+      const finish = (code) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        killer.off('error', onError);
+        killer.off('exit', onExit);
+        resolve(code);
+      };
+      const onError = () => finish(null);
+      const onExit = (code) => finish(code);
+      const timer = setTimeout(() => {
+        finish(null);
+        killer.kill();
+      }, 2000);
+      killer.once('error', onError);
+      killer.once('exit', onExit);
     });
+    if (child.exitCode != null || child.signalCode != null)
+      return { attempted: false, confirmed: true, reason: 'already-exited' };
     terminationRequested = result === 0;
   } else {
     try {

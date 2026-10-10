@@ -130,6 +130,7 @@ export async function closeRecoveryBrowser(
   let forcedProcessTermination = false;
   let forceProcessStatus = forceProcess ? 'not-needed' : 'not-configured';
   let forceProcessAttempted = false;
+  let forceProcessCallbackInvoked = false;
   try {
     const closeResult = await settleWithin(() => browser.close());
     const closeCompleted = closeResult.kind === 'resolved';
@@ -156,6 +157,7 @@ export async function closeRecoveryBrowser(
       if (currentExit) {
         forceProcessStatus = 'already-exited';
       } else {
+        forceProcessCallbackInvoked = true;
         forceProcessAttempted = true;
         const forceStartedAt = now();
         const forceResult = await settleWithin(forceProcess);
@@ -164,7 +166,17 @@ export async function closeRecoveryBrowser(
           forceProcessStatus = 'timed-out';
         } else if (forceResult.kind === 'rejected') {
           forceProcessStatus = 'rejected';
-        } else if (forceResult.value?.confirmed === true) {
+        } else if (
+          forceResult.value?.reason === 'already-exited' ||
+          (forceResult.value?.attempted === false &&
+            forceResult.value?.confirmed === true)
+        ) {
+          forceProcessAttempted = false;
+          forceProcessStatus = 'already-exited';
+        } else if (
+          forceResult.value?.attempted === true &&
+          forceResult.value?.confirmed === true
+        ) {
           forceProcessStatus = 'confirmed';
           forcedProcessTermination = true;
         } else {
@@ -188,6 +200,7 @@ export async function closeRecoveryBrowser(
         processExit,
         forceProcessStatus,
         forceProcessAttempted,
+        forceProcessCallbackInvoked,
         forceProcessElapsedMs,
       },
     };
