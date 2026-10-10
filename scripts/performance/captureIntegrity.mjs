@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
+import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
 
 const canonical = (value) => {
   if (Array.isArray(value)) return value.map(canonical);
@@ -29,6 +30,9 @@ export function assertCaptureIntegrity(
     qualityMode,
     expectedCounts = {},
     expectedDensityPct = null,
+    expectedFixture = null,
+    expectedWarmupMs = null,
+    expectedMeasurementMs = null,
   } = {},
 ) {
   assert.match(
@@ -121,6 +125,29 @@ export function assertCaptureIntegrity(
       true,
       `${label}: interrupted foreground sample`,
     );
+    assertRouteDescriptorsEquivalent(
+      sample.cameraPath,
+      sample.cameraPath,
+      `${label}: malformed route descriptor`,
+    );
+    const expectedRouteId = sample.scenario === 'scripted-motion'
+      ? 'elapsed-move-right-v1'
+      : sample.scenario === 'idle'
+        ? 'parked-v1'
+        : expectedFixture
+          ? 'entity-follow-v1'
+          : 'parked-v1';
+    assert.equal(sample.cameraPath?.id, expectedRouteId, `${label}: wrong route schema`);
+    if (sample.scenario === 'selected-aircraft-tracking' && expectedFixture) {
+      assertObservedTrackingRoute(sample.cameraPath, {
+        fixtureId: expectedFixture.id,
+        fixtureSha256: expectedFixture.sha256,
+        fixedTime: expectedFixture.fixedTime,
+        fixtureCount: expectedFixture.count,
+        warmupMs: expectedWarmupMs,
+        measurementMs: expectedMeasurementMs,
+      });
+    }
     const before = comparable(sample.conditions.before, qualityMode);
     const after = comparable(sample.conditions.after, qualityMode);
     assert.deepEqual(

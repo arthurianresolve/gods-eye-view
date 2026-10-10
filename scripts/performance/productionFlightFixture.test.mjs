@@ -7,6 +7,8 @@ import {
   createProductionFlightFixture,
   installFixedWallClock,
   installHeldMonotonicWallClock,
+  installPhasedMonotonicWallClock,
+  assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './productionFlightFixture.mjs';
 import { interceptFixtureSession } from './fixtureInterception.mjs';
@@ -281,4 +283,199 @@ test('held monotonic wall clock starts once without replacing native timers or m
   assert.equal(target.performance.now(), 150_123.5);
   assert.equal(target.setTimeout, nativeSetTimeout);
   assert.equal(target.requestAnimationFrame, nativeRequestAnimationFrame);
+});
+
+test('phased wall clock advances only through declared forward phases and caps boundaries', () => {
+  let performanceTime = 10;
+  const target = { Date, performance: { now: () => performanceTime } };
+  const fixed = Date.parse('2026-10-08T12:00:00.000Z');
+  installPhasedMonotonicWallClock(fixed, 1000, 1000, target);
+  const clock = target.__gevPhasedMonotonicWallClockV1;
+  assert.equal(target.Date.now(), fixed);
+  assert.throws(() => clock.startMeasurement(), /warmup boundary/);
+  clock.startWarmup();
+  assert.throws(() => clock.holdWarmupBoundary(), /too early/);
+  performanceTime += 1200;
+  assert.equal(target.Date.now(), fixed + 1000);
+  const warmup = clock.holdWarmupBoundary();
+  assert.equal(warmup.epochMs, fixed + 1000);
+  performanceTime += 500;
+  assert.equal(target.Date.now(), fixed + 1000, 'warmup hold cannot drift');
+  const measure = clock.startMeasurement();
+  assert.equal(measure.measurementStartCount, 1);
+  assert.throws(() => clock.finishMeasurement(), /too early/);
+  performanceTime += 1100;
+  assert.equal(target.Date.now(), fixed + 2000);
+  const completed = clock.finishMeasurement();
+  assert.equal(completed.phase, 'complete');
+  assert.equal(completed.epochMs, fixed + 2000);
+  performanceTime += 20_000;
+  assert.equal(
+    target.Date.now(),
+    fixed + 2000,
+    'completed phase remains capped',
+  );
+  assert.throws(() => clock.startWarmup(), /only once/);
+  assert.throws(() => clock.finishMeasurement(), /only once/);
+  assert.equal(target.performance.now(), performanceTime);
+});
+
+test('completed-render settling removes its listener on render, timeout, and cancellation', async () => {
+  const { settleCompletedRender } =
+    await import('./productionFlightFixture.mjs');
+  class Event {
+    handlers = new Set();
+    addEventListener(handler) {
+      this.handlers.add(handler);
+      return () => this.handlers.delete(handler);
+    }
+    removeEventListener(handler) {
+      this.handlers.delete(handler);
+    }
+    fire() {
+      for (const handler of [...this.handlers]) handler();
+    }
+  }
+  const makeViewer = (render) => {
+    const postRender = new Event();
+    return {
+      scene: {
+        postRender,
+        requestRender() {
+          if (render) queueMicrotask(() => postRender.fire());
+        },
+      },
+    };
+  };
+  const rendered = makeViewer(true);
+  const settled = await settleCompletedRender(rendered, 100);
+  assert.ok(
+    settled.settleElapsedMs === null ||
+      Number.isFinite(settled.settleElapsedMs),
+  );
+  assert.equal(rendered.scene.postRender.handlers.size, 0);
+  const timedOut = makeViewer(false);
+  await assert.rejects(settleCompletedRender(timedOut, 5), /did not settle/);
+  assert.equal(timedOut.scene.postRender.handlers.size, 0);
+  const requestFailed = makeViewer(false);
+  requestFailed.scene.requestRender = () => {
+    throw new Error('render request failed');
+  };
+  await assert.rejects(
+    settleCompletedRender(requestFailed, 100),
+    /render request failed/,
+  );
+  assert.equal(requestFailed.scene.postRender.handlers.size, 0);
+  const cancelled = makeViewer(false);
+  const controller = new AbortController();
+  const pending = settleCompletedRender(cancelled, 1000, controller.signal);
+  controller.abort(new Error('cancel test'));
+  await assert.rejects(pending, /cancel test/);
+  assert.equal(cancelled.scene.postRender.handlers.size, 0);
+});
+
+test('entity-follow route requires matching fixture epochs, fresh source, and actual target motion', () => {
+  const julian = (epoch) => {
+    const value = epoch / 86_400_000 + 2_440_587.5;
+    const dayNumber = Math.floor(value);
+    return { dayNumber, secondsOfDay: (value - dayNumber) * 86_400 };
+  };
+  const base = Date.parse('2026-10-08T12:00:00.000Z');
+  const route = {
+    id: 'entity-follow-v1',
+    fixtureId: 'opensky-dense-investigation-v1',
+    fixtureSha256: 'a'.repeat(64),
+    fixedTime: '2026-10-08T12:00:00.000Z',
+    selectedIdentity: 'flights:000001',
+    selectedIdentityEnd: 'flights:000001',
+    trajectoryId: 'opensky-dense-investigation-v1:flights:000001',
+    warmupMs: 30_000,
+    measurementMs: 60_000,
+    startEpochMs: base + 30_000,
+    endEpochMs: base + 90_000,
+    cesiumCurrentTimeStart: julian(base),
+    cesiumCurrentTimeEnd: julian(base),
+    cesiumCurrentTimeStartMs: base,
+    cesiumCurrentTimeEndMs: base,
+    cesiumClockShouldAnimateStart: false,
+    cesiumClockShouldAnimateEnd: false,
+    cesiumClockStepStart: 0,
+    cesiumClockStepEnd: 0,
+    sourceFreshness: { start: 'current', end: 'current' },
+    sourceAgeStartMs: 30_000,
+    sourceAgeEndMs: 90_000,
+    sourceLastUpdateStart: base,
+    sourceLastUpdateEnd: base,
+    sourceCountStart: 2500,
+    sourceCountEnd: 2500,
+    targetStart: { longitudeDeg: -97.7, latitudeDeg: 30.2, heightM: 1000 },
+    targetEnd: { longitudeDeg: -97.6, latitudeDeg: 30.3, heightM: 1000 },
+    start: {
+      dateEpochMs: base + 30_000,
+      position: { x: 1, y: 2, z: 3 },
+      direction: { x: 0, y: 1, z: 0 },
+      up: { x: 0, y: 0, z: 1 },
+      transform: Array(16).fill(0),
+    },
+    end: {
+      dateEpochMs: base + 90_000,
+      position: { x: 4, y: 5, z: 6 },
+      direction: { x: 0, y: 1, z: 0 },
+      up: { x: 0, y: 0, z: 1 },
+      transform: Array(16).fill(0),
+    },
+  };
+  const lat1 = (route.targetStart.latitudeDeg * Math.PI) / 180;
+  const lat2 = (route.targetEnd.latitudeDeg * Math.PI) / 180;
+  const dLat = lat2 - lat1;
+  const dLon =
+    ((route.targetEnd.longitudeDeg - route.targetStart.longitudeDeg) *
+      Math.PI) /
+    180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  route.motionDistanceM = route.observedTargetDistanceM =
+    2 * 6_371_000 * Math.asin(Math.sqrt(h));
+  const expected = {
+    fixtureId: route.fixtureId,
+    fixtureSha256: route.fixtureSha256,
+    fixedTime: route.fixedTime,
+    warmupMs: 30_000,
+    measurementMs: 60_000,
+  };
+  assert.equal(assertObservedTrackingRoute(route, expected), true);
+  for (const mutate of [
+    (copy) => {
+      copy.selectedIdentity = null;
+    },
+    (copy) => {
+      copy.selectedIdentityEnd = 'flights:000002';
+    },
+    (copy) => {
+      copy.targetEnd = structuredClone(copy.targetStart);
+    },
+    (copy) => {
+      copy.sourceAgeEndMs = 120_001;
+    },
+    (copy) => {
+      copy.sourceAgeEndMs = Number.NaN;
+    },
+    (copy) => {
+      copy.endEpochMs += 1;
+    },
+    (copy) => {
+      copy.targetEnd.latitudeDeg = Number.NaN;
+    },
+    (copy) => {
+      copy.end.transform = null;
+    },
+  ]) {
+    const invalid = structuredClone(route);
+    mutate(invalid);
+    assert.throws(
+      () => assertObservedTrackingRoute(invalid, expected),
+      /Invalid entity-follow route/,
+    );
+  }
 });

@@ -28,14 +28,51 @@ const routes = {
     motionDistanceM: 19200,
   },
   'selected-aircraft-tracking': {
-    id: 'tracked-aircraft-v1',
-    start: startPose,
+    id: 'entity-follow-v1',
+    fixtureId: 'synthetic-aircraft-ring-v1',
+    fixtureSha256: fixtureHash,
+    fixedTime: '2026-10-08T12:00:00.000Z',
+    startEpochMs: Date.parse('2026-10-08T12:00:00.000Z') + 30_000,
+    endEpochMs: Date.parse('2026-10-08T12:00:00.000Z') + 90_000,
+    cesiumCurrentTimeStart: { dayNumber: 2_460_000, secondsOfDay: 1 },
+    cesiumCurrentTimeEnd: { dayNumber: 2_460_000, secondsOfDay: 1 },
+    cesiumCurrentTimeStartMs: Date.parse('2026-10-08T12:00:00.000Z'),
+    cesiumCurrentTimeEndMs: Date.parse('2026-10-08T12:00:00.000Z'),
+    cesiumClockShouldAnimateStart: false,
+    cesiumClockShouldAnimateEnd: false,
+    cesiumClockStepStart: 0,
+    cesiumClockStepEnd: 0,
     elapsedDurationMs: 60_000,
-    motionDistanceM: 0,
+    warmupMs: 30_000,
+    measurementMs: 60_000,
+    motionDistanceM: 100,
+    observedTargetDistanceM: 100,
     selectedIdentity: 'flights:000001',
-    trajectoryId: 'synthetic-aircraft-ring-v1:000001',
+    selectedIdentityEnd: 'flights:000001',
+    trajectoryId: 'synthetic-aircraft-ring-v1:flights:000001',
+    sourceAgeStartMs: 30_000,
+    sourceAgeEndMs: 90_000,
+    sourceLastUpdateStart: Date.parse('2026-10-08T12:00:00.000Z'),
+    sourceLastUpdateEnd: Date.parse('2026-10-08T12:00:00.000Z'),
+    sourceCountStart: 2500,
+    sourceCountEnd: 2500,
+    sourceFreshness: { start: 'current', end: 'current' },
+    targetStart: { longitudeDeg: -97.7, latitudeDeg: 30.2, heightM: 1000 },
+    targetEnd: { longitudeDeg: -97.6, latitudeDeg: 30.3, heightM: 1000 },
+    start: { ...startPose, dateEpochMs: Date.parse('2026-10-08T12:00:30.000Z') },
+    end: { ...startPose, dateEpochMs: Date.parse('2026-10-08T12:01:30.000Z') },
   },
 };
+{
+  const route = routes['selected-aircraft-tracking'];
+  const radians = Math.PI / 180;
+  const latitude1 = route.targetStart.latitudeDeg * radians;
+  const latitude2 = route.targetEnd.latitudeDeg * radians;
+  const deltaLatitude = latitude2 - latitude1;
+  const deltaLongitude = (route.targetEnd.longitudeDeg - route.targetStart.longitudeDeg) * radians;
+  const haversine = Math.sin(deltaLatitude / 2) ** 2 + Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(deltaLongitude / 2) ** 2;
+  route.motionDistanceM = route.observedTargetDistanceM = 2 * 6_371_000 * Math.asin(Math.sqrt(haversine));
+}
 const populations = [
   { id: 'flights', enabled: true, count: 2500 },
   { id: 'local-datacenters', enabled: true, count: 4362 },
@@ -498,6 +535,37 @@ test('paired route checks tolerate camera pose roundoff without rounding evidenc
   const rawPosition = candidate.captures[0].cameraPath.start.position.x;
   assert.equal(validate(baseline, candidate).status, 'comparable');
   assert.equal(candidate.captures[0].cameraPath.start.position.x, rawPosition);
+});
+
+test('entity-follow endpoint jitter stays within sub-micron tolerance while real drift and phase changes fail', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  const route = candidate.comparisonContract.routes['selected-aircraft-tracking'];
+  route.start.position.x += 5e-7;
+  route.end.position.z -= 5e-7;
+  route.start.direction.y += 5e-13;
+  route.end.transform[12] += 5e-7;
+  route.targetStart.longitudeDeg += 1e-13;
+  route.targetEnd.latitudeDeg -= 1e-13;
+  for (const sample of candidate.captures.filter((row) => row.scenario === 'selected-aircraft-tracking'))
+    sample.cameraPath = structuredClone(route);
+  const preserved = candidate.captures.find((row) => row.scenario === 'selected-aircraft-tracking').cameraPath.targetEnd.latitudeDeg;
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+  assert.equal(candidate.captures.find((row) => row.scenario === 'selected-aircraft-tracking').cameraPath.targetEnd.latitudeDeg, preserved);
+
+  for (const mutate of [
+    (value) => { value.targetEnd.latitudeDeg += 1e-5; },
+    (value) => { value.end.position.x += 1; },
+    (value) => { value.measurementMs += 1; },
+    (value) => { value.endEpochMs += 1; },
+  ]) {
+    const changed = makeReport(candidateCommit);
+    const changedRoute = changed.comparisonContract.routes['selected-aircraft-tracking'];
+    mutate(changedRoute);
+    for (const sample of changed.captures.filter((row) => row.scenario === 'selected-aircraft-tracking'))
+      sample.cameraPath = structuredClone(changedRoute);
+    assert.throws(() => validate(makeReport(baselineCommit), changed));
+  }
 });
 
 test('dense-investigation cannot omit selected tracking from its objective contract', () => {

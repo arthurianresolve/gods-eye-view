@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { assertCaptureIntegrity } from './captureIntegrity.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
+import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -305,7 +306,7 @@ function validateBuildProvenance(source, side) {
   }
   return recipe;
 }
-function validateRoute(route, scenario, durationMs, label) {
+function validateRoute(route, scenario, durationMs, label, { fixture, warmupMs } = {}) {
   requireText(route?.id, `${label}: route id`);
   const start = route?.start;
   assert.ok(
@@ -350,8 +351,14 @@ function validateRoute(route, scenario, durationMs, label) {
       `${label}: idle route must remain parked`,
     );
   if (scenario === 'selected-aircraft-tracking') {
-    requireText(route.selectedIdentity, `${label}: tracked identity`);
-    requireText(route.trajectoryId, `${label}: tracked trajectory identity`);
+    assertObservedTrackingRoute(route, {
+      fixtureId: fixture?.id,
+      fixtureSha256: fixture?.sha256,
+      fixedTime: fixture?.fixedTime,
+      fixtureCount: fixture?.count,
+      warmupMs,
+      measurementMs: durationMs,
+    });
   }
 }
 const populationSignature = (populations) =>
@@ -530,6 +537,10 @@ function validateReport(report, side, expectedAppCommit) {
       scenario,
       workload.durationPerSampleMs,
       `${side}: route ${scenario}`,
+      {
+        fixture: { ...contract.fixture, count: workload.fixture?.count },
+        warmupMs: workload.warmupMs,
+      },
     );
 
   const counts = Object.fromEntries(
@@ -540,6 +551,9 @@ function validateReport(report, side, expectedAppCommit) {
     qualityMode: 'manual',
     expectedDensityPct: 75,
     expectedCounts: counts,
+    expectedFixture: { ...contract.fixture, count: workload.fixture?.count },
+    expectedWarmupMs: workload.warmupMs,
+    expectedMeasurementMs: workload.durationPerSampleMs,
   });
 
   const byScenario = new Map(

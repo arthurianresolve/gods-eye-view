@@ -15,12 +15,19 @@ import {
   createProductionFlightFixture,
   installFixedWallClock,
   installHeldMonotonicWallClock,
+  installPhasedMonotonicWallClock,
+  settleCompletedRender,
+  assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
+import {
+  createEntityFollowRoute,
+  observeTrackedEntityBoundary,
+} from './performance/trackingRoute.mjs';
 import {
   deriveCesiumEmbeddedWorkerContract,
   installCesiumWorkerBlobAudit,
@@ -340,14 +347,17 @@ const fixtureInterceptionErrors = [];
 async function configureFlightFixturePage(
   page,
   deliveryObserver = null,
-  { holdClockUntilCapture = false } = {},
+  { holdClockUntilCapture = false, phasedClock = false } = {},
 ) {
   if (!productionFlightFixture) return;
   await page.evaluateOnNewDocument(
-    holdClockUntilCapture
-      ? installHeldMonotonicWallClock
-      : installFixedWallClock,
+    phasedClock
+      ? installPhasedMonotonicWallClock
+      : holdClockUntilCapture
+        ? installHeldMonotonicWallClock
+        : installFixedWallClock,
     productionFlightFixture.fixedTimeMs,
+    ...(phasedClock ? [warmupMs, seconds * 1000] : []),
   );
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);
@@ -372,6 +382,32 @@ async function configureFlightFixturePage(
       : undefined,
   );
   return session;
+}
+
+async function settleProviderRenderAtBoundary(
+  targetPage,
+  label,
+  timeoutMs = 5000,
+) {
+  let timer;
+  try {
+    return await Promise.race([
+      targetPage.evaluate(settleCompletedRender, timeoutMs),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `${label}: host did not observe a completed render within ${timeoutMs}ms.`,
+              ),
+            ),
+          timeoutMs + 1000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function releaseFlightFixtureSession(session) {
@@ -514,7 +550,10 @@ try {
     const fixtureSession = await configureFlightFixturePage(
       auditPage,
       deliveryObserver,
-      { holdClockUntilCapture: Boolean(productionFlightFixture) },
+      {
+        phasedClock: Boolean(productionFlightFixture),
+        holdClockUntilCapture: Boolean(productionFlightFixture),
+      },
     );
     if (captureProvenance)
       await auditPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
@@ -991,11 +1030,11 @@ try {
       );
     const initialEpoch = await page.evaluate(() => ({
       now: Date.now(),
-      clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+      clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
     }));
     if (
       initialEpoch.now !== productionFlightFixture.fixedTimeMs ||
-      initialEpoch.clock?.started !== false
+      initialEpoch.clock?.phase !== 'setup'
     )
       throw new Error(
         `Provider-fixture document did not start at the held epoch: ${JSON.stringify(initialEpoch)}`,
@@ -1087,7 +1126,7 @@ try {
       failureProgress.current.phase = failureProgress.phase;
       const trackingResult = await page.evaluate(
         async ({ scenarioName, hasFixture }) => {
-          const fixtureClock = window.__gevHeldMonotonicWallClockV1;
+          const fixtureClock = window.__gevPhasedMonotonicWallClockV1;
           const app = window.__godsEyeView;
           const viewer = app.viewer;
           const flights = app.dataManager.layers.get('flights')?.module;
@@ -1120,7 +1159,7 @@ try {
           }
           // Release wall time only after fixture/tracking/camera setup has
           // settled. Warmup and capture then share one monotonic epoch.
-          const clockStart = fixtureClock?.start?.() ?? null;
+          const clockStart = fixtureClock?.startWarmup?.() ?? null;
           return { trackedAircraftId, clockStart };
         },
         { scenarioName: scenario, hasFixture: Boolean(fixture) },
@@ -1131,9 +1170,30 @@ try {
       // Each workload/run receives the declared warmup, including tracking.
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
+      const fixtureBoundaryStart = productionFlightFixture
+        ? await page.evaluate(async () => {
+            const clock = window.__gevPhasedMonotonicWallClockV1;
+            const held = clock?.holdWarmupBoundary?.();
+            if (!held || held.phase !== 'warmup-held')
+              throw new Error(
+                'Provider fixture warmup did not reach its declared boundary.',
+              );
+            return window.__gevPhasedMonotonicWallClockV1.snapshot();
+          })
+        : null;
+      const warmupBoundarySettle = productionFlightFixture
+        ? await settleProviderRenderAtBoundary(page, 'Warmup boundary', 5000)
+        : null;
+      const trackingStart =
+        scenario === 'selected-aircraft-tracking'
+          ? await page.evaluate(observeTrackedEntityBoundary, 'flights:000001')
+          : null;
+      failureProgress.current.warmupBoundary = fixtureBoundaryStart;
+      failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
+      if (trackingStart) failureProgress.current.trackingStart = trackingStart;
       const fixtureMeasurementStart = productionFlightFixture
         ? await page.evaluate(() => ({
-            clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+            clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
             wallTimeMs: Date.now(),
             flightStats:
               window.__godsEyeView?.dataManager?.layers
@@ -1148,9 +1208,9 @@ try {
       failureProgress.current.measurementStart = fixtureMeasurementStart;
       if (
         productionFlightFixture &&
-        (!fixtureMeasurementStart.clock?.started ||
+        (fixtureMeasurementStart.clock.phase !== 'warmup-held' ||
           fixtureMeasurementStart.clock.startCount !== 1 ||
-          fixtureMeasurementStart.clock.elapsedMs < warmupMs ||
+          fixtureMeasurementStart.clock.elapsedMs !== warmupMs ||
           fixtureMeasurementStart.wallTimeMs <
             productionFlightFixture.fixedTimeMs ||
           fixtureMeasurementStart.wallTimeMs -
@@ -1177,6 +1237,7 @@ try {
         async ({ durationMs, scenarioName, delay }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
+          const stagedClock = window.__gevPhasedMonotonicWallClockV1;
           let foregroundThroughout = document.hasFocus() && !document.hidden;
           const onBackground = () => {
             foregroundThroughout = false;
@@ -1216,6 +1277,11 @@ try {
           let motionFinished = Promise.resolve();
           let finishMotion = () => {};
           try {
+            if (stagedClock) stagedClock.startMeasurement();
+            const startedAt = performance.now();
+            const measurementWait = new Promise((resolve) =>
+              setTimeout(resolve, durationMs),
+            );
             if (scenarioName === 'scripted-motion') {
               // Rebuild the pose from one elapsed-time sample on every frame.
               // A timer-step route accumulates missed callbacks and makes a slow
@@ -1259,8 +1325,8 @@ try {
                 while (performance.now() - start < delay) {}
               }, 1000);
             }
-            const startedAt = performance.now();
-            await new Promise((resolve) => setTimeout(resolve, durationMs));
+            await measurementWait;
+            const clockEnd = stagedClock?.finishMeasurement?.() ?? null;
             active = false;
             await motionFinished;
             clearInterval(delayTimer);
@@ -1333,6 +1399,7 @@ try {
                 motionDistancePx: motionDistance,
                 motionDistanceM: motionDistance,
               },
+              phasedClockEnd: clockEnd,
             };
           } finally {
             active = false;
@@ -1350,7 +1417,7 @@ try {
         failureProgress.phase = 'validate-provider-fixture-clock';
         failureProgress.current.phase = failureProgress.phase;
         const clockEnd = await page.evaluate(() => ({
-          clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+          clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
           wallTimeMs: Date.now(),
           documentVisible: !document.hidden,
           documentFocused: document.hasFocus(),
@@ -1362,11 +1429,9 @@ try {
         const fixtureAgeMs =
           clockEnd.wallTimeMs - productionFlightFixture.fixedTimeMs;
         if (
-          !clockEnd.clock?.started ||
           clockEnd.clock.startCount !== 1 ||
-          clockEnd.clock.elapsedMs < warmupMs + seconds * 1000 ||
-          clockEnd.clock.elapsedMs - fixtureMeasurementStart.clock.elapsedMs <
-            seconds * 1000 ||
+          clockEnd.clock.phase !== 'complete' ||
+          clockEnd.clock.elapsedMs !== warmupMs + seconds * 1000 ||
           fixtureAgeMs < 0 ||
           fixtureAgeMs > 120_000 ||
           clockEnd.flightStats?.lastUpdate !==
@@ -1380,24 +1445,79 @@ try {
           throw new Error(
             `Provider-fixture capture clock/freshness/foreground contract failed: ${JSON.stringify({ clock: clockEnd.clock, fixtureAgeMs, flightStats: clockEnd.flightStats, documentVisible: clockEnd.documentVisible, documentFocused: clockEnd.documentFocused })}`,
           );
+        const measurementBoundarySettle = await settleProviderRenderAtBoundary(
+          page,
+          'Measurement boundary',
+          5000,
+        );
+        const trackingEnd =
+          scenario === 'selected-aircraft-tracking'
+            ? await page.evaluate(
+                observeTrackedEntityBoundary,
+                'flights:000001',
+              )
+            : null;
+        if (trackingEnd) {
+          sample.trackingObservation = {
+            start: trackingStart,
+            end: trackingEnd,
+          };
+          failureProgress.current.trackingEnd = trackingEnd;
+        }
         sample.fixtureClock = {
           schema: 'gev-provider-fixture-capture-clock/v1',
           fixedTime: productionFlightFixture.fixedTime,
           start: trackingResult.clockStart,
           measurementStart: fixtureMeasurementStart.clock,
-          actualWarmupElapsedMs: fixtureMeasurementStart.clock.elapsedMs,
+          warmupBoundary: fixtureBoundaryStart,
+          actualWarmupElapsedMs: fixtureBoundaryStart.warmupNativeElapsedMs,
+          warmupBoundarySettleNativeMs: warmupBoundarySettle.settleElapsedMs,
           ageAtMeasurementStartMs:
             fixtureMeasurementStart.wallTimeMs -
             productionFlightFixture.fixedTimeMs,
           end: clockEnd.clock,
+          configuredMeasurementMs: seconds * 1000,
+          measurementPhaseNativeElapsedMs:
+            sample.phasedClockEnd?.measurementNativeElapsedMs ?? null,
           measuredWindowElapsedMs:
-            clockEnd.clock.elapsedMs - fixtureMeasurementStart.clock.elapsedMs,
+            sample.phasedClockEnd?.measurementNativeElapsedMs ?? null,
+          measurementClockElapsedMs: seconds * 1000,
+          measurementBoundarySettleNativeMs:
+            measurementBoundarySettle.settleElapsedMs,
           ageAtEndMs: fixtureAgeMs,
           sourceFreshness: 'current',
           freshnessWindowMs: 120_000,
           appDocumentReinitialized: true,
           freshBrowserContext: true,
         };
+        if (scenario === 'selected-aircraft-tracking') {
+          const cameraPose = (boundary) => ({
+            dateEpochMs: boundary.dateEpochMs,
+            position: boundary.camera?.position,
+            direction: boundary.camera?.direction,
+            up: boundary.camera?.up,
+            transform: boundary.camera?.transform,
+          });
+          const route = createEntityFollowRoute({
+            fixtureId: productionFlightFixture.id,
+            fixtureSha256: productionFlightFixture.sha256,
+            fixedTime: productionFlightFixture.fixedTime,
+            fixtureCount: productionFlightFixture.count,
+            warmupMs,
+            measurementMs: seconds * 1000,
+            start: { ...trackingStart, camera: cameraPose(trackingStart) },
+            end: { ...trackingEnd, camera: cameraPose(trackingEnd) },
+          });
+          sample.cameraPath = route;
+          failureProgress.current.trackingRoute = route;
+          assertObservedTrackingRoute(route, {
+            fixtureId: productionFlightFixture.id,
+            fixtureSha256: productionFlightFixture.sha256,
+            fixedTime: productionFlightFixture.fixedTime,
+            warmupMs,
+            measurementMs: seconds * 1000,
+          });
+        }
         fixtureDelivery = await summarizeFlightFixtureDelivery();
         failureProgress.fixtureDelivery = fixtureDelivery;
         sample.fixtureDelivery = fixtureDelivery;
@@ -1435,13 +1555,14 @@ try {
           visible: sceneAfter.environment.visible,
         },
       };
-      sample.cameraPath = describeObservedRoute({
-        scenario,
-        start: sceneBefore.camera,
-        durationMs: seconds * 1000,
-        measurement: sample,
-        fixture,
-      });
+      if (scenario !== 'selected-aircraft-tracking' || !productionFlightFixture)
+        sample.cameraPath = describeObservedRoute({
+          scenario,
+          start: sceneBefore.camera,
+          durationMs: seconds * 1000,
+          measurement: sample,
+          fixture,
+        });
       if (
         scenario === 'selected-aircraft-tracking' &&
         (trackingSetup !== 'flights:000001' ||
@@ -1546,6 +1667,13 @@ try {
       ...(fixture ? { flights: effectiveFixtureAircraftCount } : {}),
       ...(mixedLayers ? { 'local-datacenters': 4362, 'local-dams': 716 } : {}),
     },
+    ...(productionFlightFixture
+      ? {
+          expectedFixture: productionFlightFixture,
+          expectedWarmupMs: warmupMs,
+          expectedMeasurementMs: seconds * 1000,
+        }
+      : {}),
   });
   const report = {
     schema: 'gev-performance-capture/v1',
@@ -1575,7 +1703,11 @@ try {
               scope:
                 'each measured scenario/repetition uses a newly created browser context; the earlier setup page contributes environment metadata only, not a capture sample',
               clock:
-                'held at fixture epoch from document start; starts once after setup and advances from native performance.now()',
+                'fixture wall time is held during setup, advances monotonically within configured warmup/measurement phases, then stays capped at each declared boundary; native timers, RAF and performance.now are unchanged',
+              boundarySettling:
+                'one completed Cesium postRender is observed at each capped boundary outside the measured interval, with host and page timeout bounds',
+              trackingRoute:
+                'entity-follow-v1 observes the public trackedEntity position, camera pose and Cesium clock state at both fixture epochs',
               fixtureTimeAlignment:
                 'whole-second UTC; OpenSky source and position epochs agree exactly',
               sourceFreshnessWindowMs: 120_000,
@@ -1588,7 +1720,7 @@ try {
         ? expectedDensityPct
         : null,
       cameraPath:
-        'elapsed-move-right-v1 for scripted motion; parked-v1 for idle/tracking',
+        'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
       detectionMode: fixture ? detectionMode : null,
       injectedDelayMs: delayMs,
       populationStableAcrossSamples,

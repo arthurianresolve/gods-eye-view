@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { assertCaptureIntegrity } from './captureIntegrity.mjs';
+import { createEntityFollowRoute } from './trackingRoute.mjs';
 
 const commit = 'a'.repeat(40);
 const options = {
@@ -43,7 +44,11 @@ function sample(scenario = 'scripted-motion', run = 1) {
     },
     foregroundThroughout: true,
     cameraPath: {
-      id: scenario,
+      id: scenario === 'scripted-motion'
+        ? 'elapsed-move-right-v1'
+        : scenario === 'idle'
+          ? 'parked-v1'
+          : 'entity-follow-v1',
       start: {
         position: { x: 1, y: 2, z: 3 },
         direction: { x: 0, y: 1, z: 0 },
@@ -129,6 +134,50 @@ test('repeat runs tolerate only bounded camera pose roundoff', () => {
   assert.equal(second.cameraPath.start.position.x, 1 + 5e-7);
 });
 
+test('single provider tracking sample must contain fresh observed entity-follow boundaries', () => {
+  const fixedTime = '2026-10-08T12:00:00.000Z';
+  const fixedMs = Date.parse(fixedTime);
+  const pose = { position: { x: 1, y: 2, z: 3 }, direction: { x: 0, y: 1, z: 0 }, up: { x: 0, y: 0, z: 1 }, transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] };
+  const boundary = (offsetMs, longitude) => ({
+    dateEpochMs: fixedMs + offsetMs,
+    selectedIdentity: 'flights:000001',
+    targetPosition: { longitudeDeg: longitude, latitudeDeg: 30, heightM: 1000 },
+    cesiumCurrentTime: { dayNumber: 2460000, secondsOfDay: 1 },
+    cesiumCurrentTimeEpochMs: fixedMs,
+    cesiumClockShouldAnimate: false,
+    cesiumClockStep: 0,
+    camera: pose,
+    source: { ageMs: offsetMs, lastUpdate: fixedMs, count: 2500, stale: false },
+  });
+  const fixture = { id: 'fixture-v1', sha256: 'a'.repeat(64), fixedTime, count: 2500 };
+  const route = createEntityFollowRoute({
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime,
+    warmupMs: 30_000,
+    measurementMs: 60_000,
+    start: boundary(30_000, -97.7),
+    end: boundary(90_000, -97.699),
+  });
+  const captured = sample('selected-aircraft-tracking');
+  captured.cameraPath = route;
+  const trackingOptions = {
+    ...options,
+    expectedFixture: fixture,
+    expectedWarmupMs: 30_000,
+    expectedMeasurementMs: 60_000,
+  };
+  assert.equal(assertCaptureIntegrity([captured], trackingOptions).status, 'passed');
+  const wrongIdentity = structuredClone(captured);
+  wrongIdentity.cameraPath.selectedIdentityEnd = 'flights:000002';
+  assert.throws(() => assertCaptureIntegrity([wrongIdentity], trackingOptions), /tracked identity differs/);
+  const stationary = structuredClone(captured);
+  stationary.cameraPath.targetEnd = structuredClone(stationary.cameraPath.targetStart);
+  stationary.cameraPath.motionDistanceM = 0;
+  stationary.cameraPath.observedTargetDistanceM = 0;
+  assert.throws(() => assertCaptureIntegrity([stationary], trackingOptions), /did not move/);
+});
+
 test('repeat runs reject meaningful pose, duration, and route changes', () => {
   const mutations = [
     (route) => {
@@ -158,11 +207,14 @@ test('repeat runs reject meaningful pose, duration, and route changes', () => {
     const first = sample('scripted-motion', 1);
     const second = sample('scripted-motion', 2);
     mutate(second.cameraPath);
+    const expectedMessage = Number.isNaN(second.cameraPath.start.position.x)
+      ? /malformed route descriptor/
+      : /repeated workload route changed/;
     assert.throws(
       () => assertCaptureIntegrity([first, second], options),
       (error) => {
         routeFailure ||= error;
-        assert.match(error.message, /repeated workload route changed/);
+        assert.match(error.message, expectedMessage);
         return true;
       },
     );
