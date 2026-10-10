@@ -1,0 +1,131 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "084a7710490d6f63909507a243f850eef52a5e6e",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "AMD EPYC 7763 64-Core Processor                ",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-webgl-only",
+  "rendererExperiment": null,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-10T11:31:11.584Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 5225,
+        "rendererQueryDurationMs": 442,
+        "bootPlusQueryCriticalPathMs": 5668,
+        "rendererCheckpointElapsedMs": 8008
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 181819.6715,
+          "closeSettledHostMs": 182460.9349,
+          "closeElapsedMs": 641.2633999999962,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 640.9470999999903
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        }
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "failed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 3774,
+        "rendererQueryDurationMs": 483,
+        "bootPlusQueryCriticalPathMs": 4258,
+        "rendererCheckpointElapsedMs": 4648
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": false,
+        "forcedBrowserProcessTermination": true,
+        "browserCloseObservation": {
+          "closeStatus": "timed-out",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 197504.2272,
+          "closeSettledHostMs": 202515.5811,
+          "closeElapsedMs": 5011.353900000016,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 1,
+            "signal": null,
+            "elapsedMs": 5567.1967
+          },
+          "forceProcessStatus": "confirmed",
+          "forceProcessAttempted": true,
+          "forceProcessCallbackInvoked": true,
+          "forceProcessElapsedMs": 555.9371999999858,
+          "stderr": []
+        },
+        "cleanupError": "Graceful browser close did not complete."
+      },
+      "step": "owned-page-cleanup",
+      "error": "Graceful browser close did not complete."
+    }
+  ],
+  "status": "failed",
+  "failure": {
+    "check": "interrupted-update-retained-application",
+    "step": "owned-page-cleanup",
+    "error": "Graceful browser close did not complete."
+  }
+}

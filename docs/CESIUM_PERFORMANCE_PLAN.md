@@ -1,6 +1,8 @@
 # Cesium performance plan
 
-Updated on 10 October 2026. Full runtime CI passes at
+Updated on 10 October 2026. The latest `084a771` integration run has a Windows
+recovery cleanup failure, recorded below; it is not a full CI pass. The last
+complete runtime CI pass is at
 `b5b8c92a811f2da5cf53ea08969d4352b4d0eb4c` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046733687), [job results](performance-evidence/ci-b5b8c92.json)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
@@ -43,6 +45,22 @@ populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
 ### Local S51 integration diagnostics - 10 October 2026
+
+The subsequent [integration run at `084a771`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38048418004)
+fails Windows profile recovery at graceful browser shutdown. In the
+`interrupted-update-retained-application` checkpoint, the asset digest, rendered
+feature, settings and workspace bundle all match, and the owned page closes with
+zero remaining pages. The browser process does not exit within the existing
+five-second deadline and requires confirmed termination of its owned process
+tree. The [retained raw Windows report](performance-evidence/profile-recovery-38048418004-windows.json)
+preserves that failure. This checkpoint still runs prior application `6b896e2`,
+before the candidate upgrade; it does not demonstrate a regression in the new
+infrastructure rendering code. The earlier initial recovery checkpoint closes
+normally in 641 ms. Shutdown remains unresolved; forced termination is cleanup,
+not an acceptance pass.
+The [completed job results](performance-evidence/ci-084a771.json) record six
+passing jobs: both Node versions, the complete browser journeys, Windows
+onboarding and Linux/macOS recovery. Windows recovery is the only failed job.
 
 The local Node 24 parallel suite reports 6,684 passes, one failure and ten skips.
 The failing camera-stream idle-deadline test passes all 21 tests when its file is
@@ -131,6 +149,25 @@ or completion of S51. Frame counts are render-demand observations, not CPU/GPU
 execution timings. The earlier failed CI and offline reassessment stay historical.
 
 ### S49 bounded worker-quiescence history - 10 October 2026
+
+The follow-up drain-predicate trace is implemented at `7ab0d42`, with its
+serialized failure callback corrected at `ff35e91`. All 36 focused tests pass.
+The existing ten-second drain deadline and ownership assertions remain in force;
+the trace retains bounded worker, import, frame, camera and terrain observations
+from the actual predicate. Successful drains retain compact summaries, and
+failed drains retain up to 202 samples with at most 64 worker records each.
+
+The [changed diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38049166697)
+at `ff35e919849ece701bdd52f5463fd7f55d83393d` fails a different check after
+60.1 seconds: queued supersession in cycle five. All 15 completed drains pass,
+the warmup drain observes zero workers at 624.1 ms with terrain loaded, and all
+five workspace replacements pass. Five measured loads, five cancellations and
+four supersessions complete before failure. The available assertion does not
+retain which supersession condition failed; a fast synchronous completion is a
+hypothesis, not an established cause. This run does not reproduce or resolve the
+earlier drain timeout. [Raw report](performance-evidence/lifecycle-38049166697.json)
+and [job result](performance-evidence/lifecycle-38049166697-run.json) preserve the
+failure. The browser closes normally in 55.5 ms without forced termination.
 
 GPT-6 Luna implementation `e2f65cd4b66e1e654bf1c59ca6a3c36e224d4b69` replaces
 opaque polling with an in-page timeline capped at 202 samples and 64 worker
@@ -417,7 +454,14 @@ individually and together, dense bundled populations, duplicate names and missin
 metadata. Compare repeated activation, retained ownership and full-pose pixels,
 including terrain and LOD boundaries. Exit with lower activation cost or retained
 memory, no >10% repeatable regression elsewhere, and unchanged selection/evidence.
-S54 stays unimplemented until S54.1 and an accepted rendering disposition exist.
+S54.1 is implemented at `89fb2fd`; S54 remains partial until an accepted
+rendering disposition and its comparison evidence exist. The installed Cesium
+`PointVisualizer` already uses the `EntityCluster` shared point collection, and
+`GeometryVisualizer` already batches compatible static geometry. A direct
+collection experiment must therefore measure removal of Entity/property update
+work and construction allocations; it must not assume one draw call per Entity.
+Preserve the existing ground sampling and camera-height stem behavior when
+comparing representations.
 
 **S55.1 - authoritative tracked-frame context.** Inspect
 `src/layers/flights/tracking.js`, `rendering.js`, other tracking modules and
