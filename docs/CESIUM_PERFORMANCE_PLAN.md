@@ -144,6 +144,47 @@ the separate calibrated allocation test also passes. Package boundaries and
 formatting for 1,485 adopted files pass. A fresh rendered comparison
 and integration run are required; the failed runs remain historical evidence.
 
+### S51.3 exact-endpoint comparisons pass - 10 October 2026
+
+Both independent report validations pass at exact application/harness revision
+`65fd7f3e106f214340c1bab4afcebb9c35a0cce7`. Each comparison constructs ten fresh
+viewers in five alternating control/candidate pairs. All 20 endpoint pixel
+comparisons match within their pairs, all 32 vessel billboards remain present,
+focus reaches its configured floor and release returns exactly to alpha 255.
+All ten viewers, governors and scheduled demands clean up in each environment.
+
+| Environment | Idle rendered frames, control to candidate | Evidence |
+| --- | --- | --- |
+| Physical Windows, Intel UHD 620 through ANGLE/D3D11, Chrome 154; 888x529 drawing buffer, DPR 2, MSAA 4 | 1,508 to 25 across ten idle intervals | [Raw report](performance-evidence/vessels-windows-65fd7f3-2026-10-10.json) |
+| GitHub hosted Apple paravirtual Metal, Chrome 152; supplemental virtual hardware | 502 to 25 across ten idle intervals | [Raw report](performance-evidence/vessels-38075992435.json), [run 38075992435](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075992435), [job result](performance-evidence/vessels-38075992435-run.json) |
+
+The Windows comparison ran from 18:30:06 to 18:31:25 UTC. Its before-focus
+intervals render 180-181 control frames versus three candidate frames; after
+release they render 121-122 versus two. Before/after observations and bounded
+events show unchanged viewport and visible, focused document conditions during
+every phase. Desktop foreground/occlusion verification remains unavailable.
+The renderer string is observed from the fixture's WebGL context. A separate
+current Chrome acceleration-feature-status check is unavailable: the permitted
+browser control rejects `chrome://gpu`. No browser-level status is inferred from
+that blocked check or substituted from a different browser.
+The comparison was started with native browser input after removing an unused
+blank diagnostic tab. That differs from the earlier failed Windows run and
+does not prove the cause of the historical frame-delivery failures.
+
+The hosted run has no page errors, interception errors or external requests;
+its browser closes normally in 659 ms. The shared capture and import preflights
+also pass. These are isolated billboard-only comparisons, with the shared
+overlay service excluded. Fewer completed idle frames do not establish lower
+motion p95, CPU time, GPU time, full-application stability or the 60-minute
+retention gate. The fixture uses `preserveDrawingBuffer: false`; the production
+default remains unchanged. Full integration CI at this revision is still pending.
+
+Raw SHA-256 values, in table order:
+`3db7e1672a6bb664183dd98f75350678fcd61c91731cad10ece94c4d18031a98`,
+`602cb7fa57a2fd64dd12d0f1de5bd6d20d4834bd47724f0dfbaf10fc56f24e23`.
+The earlier failed reports remain intact. The next S51 packet audits calibration
+gizmo demand while preserving CCTV projection's independent continuous ownership.
+
 ### Windows frame controls after Chrome reconnection - 10 October 2026
 
 Four fresh-viewer controls used the existing frozen diagnostic build

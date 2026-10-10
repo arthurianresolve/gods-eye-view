@@ -23,6 +23,17 @@ Windows UHD 620 capture result and repeated import-preparation CPU comparisons.
 No accepted matched comparison establishes the S47-S60 20% motion-p95 target.
 Historical results below remain evidence for their named revisions only.
 
+The S51 vessel comparison at `65fd7f3` passes five alternating pairs on this
+Windows machine (reported Intel UHD 620/ANGLE D3D11, Chrome 154) and on hosted
+paravirtual Metal. All 20 endpoint pixel comparisons match in each environment,
+including exact focus release, and every viewer and owned demand cleans up.
+Across the measured idle intervals, completed frames fall from 1,508 to 25 on
+Windows and from 502 to 25 on the hosted renderer. This is an isolated
+billboard-only result, not a motion-p95 or whole-application CPU/GPU improvement.
+The [ledger and raw reports](CESIUM_PERFORMANCE_PLAN.md#s513-exact-endpoint-comparisons-pass---10-october-2026)
+record unchanged visual settings, foreground checks, unavailable desktop
+occlusion/browser-level acceleration verification, and earlier failures.
+
 The S58 wind-image change has a narrower measured result: identical forecast
 refreshes retain the scalar image, avoiding its repeated CPU preparation and
 replacement. Three five-pair comparisons preserve exact raster bytes; the last
