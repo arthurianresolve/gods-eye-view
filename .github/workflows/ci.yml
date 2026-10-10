@@ -574,6 +574,7 @@ jobs:
           npm ci
           npx puppeteer browsers install chrome
       - name: Run existing tracking regressions with bundled imagery
+        shell: bash
         run: |
           mkdir -p qa-artifacts
           git rev-parse HEAD | tee qa-artifacts/tracking-source.txt

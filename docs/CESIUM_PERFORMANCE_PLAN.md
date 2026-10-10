@@ -5,6 +5,10 @@ Updated on 10 October 2026. All seven full integration jobs pass at
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
+The separate tracking run at that revision fails one of 109 checks. Its GitHub
+job was incorrectly green because a logging pipeline masked the test exit code;
+the raw failure and the pipeline correction are recorded below. Tracking
+acceptance at this revision remains failed.
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -128,8 +132,8 @@ pass ([terminal job metadata](performance-evidence/ci-996a8d3.json)): Node 24/26
 unit suites and production builds, formatting/package boundaries, Windows
 onboarding, all browser journeys and recovery on Windows, Linux and macOS.
 The separately selected tracking, full soak and published layer-token PR checks
-are not part of this standard run. Tracking at this exact candidate is being
-collected in [run 38084308489](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38084308489).
+are not part of this standard run. Tracking at this exact candidate fails as
+recorded below.
 
 The [Windows recovery report](performance-evidence/profile-recovery-38083652826-windows.json)
 preserves the same asset digest, settings and workspace across all five
@@ -139,6 +143,28 @@ the unchanged five-second gate. That near-limit observation is retained and does
 not establish the cause or closure of the previous intermittent process-shutdown
 failures. The report was extracted unchanged from its delimited CI log JSON;
 SHA-256 `24b4342de53193d5c4d79e54e92c0cc8ee161610bdfd4900cf080bf45d04368b`.
+
+### Tracking failure and CI exit propagation - 10 October 2026
+
+The [tracking run at `996a8d3`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38084308489)
+reports **108 passed, one failed, zero skipped** in its [raw output](performance-evidence/tracking-996a8d3.txt).
+The failed `display-floor/regime` check observes the tracked entity at 204.5 m
+with a sampled floor of 192.4 m, after the scenario had planted a 440 m floor.
+The fixture's floor ownership and expiry need investigation before attributing
+this to a runtime regression. Normal browser cleanup takes 700 ms; no forced
+termination occurs. Raw SHA-256:
+`f2684bcf11bb5f2dc650a51255149e720de08ceac28e0ed773854643efc02ba0`.
+
+The [job metadata](performance-evidence/tracking-996a8d3-run.json) nevertheless
+reports success. The tracking step used an unspecified shell and piped Node's
+output through `tee`; the pipeline returned `tee`'s successful exit status.
+The step now explicitly selects Bash, which enables `pipefail` under
+[GitHub's documented shell semantics](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell).
+An [executed negative control](performance-evidence/tracking-shell-control.json)
+reproduces exit 7 being masked as zero with the old invocation, then propagated
+as 7 with the corrected invocation; successful exit zero and logged output are
+preserved. This fixes the reporting gate, not the underlying tracking failure.
+The already-failed run remains failed acceptance evidence despite its green badge.
 
 ### S51.4 CCTV calibration render-demand candidate - 10 October 2026
 
