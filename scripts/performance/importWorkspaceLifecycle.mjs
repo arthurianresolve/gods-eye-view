@@ -10,6 +10,11 @@ const RESOURCE_KEYS = [
   'groundPrimitives',
 ];
 
+/** Read the page-owned observation through a function safe to serialize. */
+export function readLifecycleDrainObservation(options = {}) {
+  return window.__qaLifecycleDrainObservationSnapshot(options);
+}
+
 /** Install the sampler used by the existing import/worker drain predicate. */
 export function installLifecycleDrainObserver(scope = window) {
   const DRAIN_HISTORY_CAP = 202;

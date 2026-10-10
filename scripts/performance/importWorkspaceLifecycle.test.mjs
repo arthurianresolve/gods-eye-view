@@ -18,6 +18,7 @@ import {
   installLifecycleRenderWaiter,
   installLifecycleDrainObserver,
   parseImportWorkspaceLifecycleArgs,
+  readLifecycleDrainObservation,
   runCooperativeImportLifecycleCase,
   runWorkspaceReplacementLifecycleCase,
   validateImportWorkspaceLifecycleReport,
@@ -105,6 +106,34 @@ function createDrainObserverContext() {
     },
   };
 }
+
+test('serialized drain-observation reader receives timeout state as data', () => {
+  let received;
+  const context = vm.createContext({
+    window: {
+      __qaLifecycleDrainObservationSnapshot: (options) => {
+        received = options;
+        return { status: 'timed-out', options };
+      },
+    },
+  });
+  const read = vm.runInContext(
+    `(${readLifecycleDrainObservation.toString()})`,
+    context,
+  );
+  const result = read({
+    sampleAfterDeadline: true,
+    timedOut: true,
+    includeHistory: true,
+  });
+
+  assert.deepEqual(JSON.parse(JSON.stringify(received)), {
+    sampleAfterDeadline: true,
+    timedOut: true,
+    includeHistory: true,
+  });
+  assert.equal(result.status, 'timed-out');
+});
 
 async function runQuiescencePageFunction(
   snapshots,

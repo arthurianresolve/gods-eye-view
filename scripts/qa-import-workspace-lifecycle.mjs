@@ -11,6 +11,7 @@ import {
   installLifecycleRenderWaiter,
   installLifecycleDrainObserver,
   parseImportWorkspaceLifecycleArgs,
+  readLifecycleDrainObservation,
   runCooperativeImportLifecycleCase,
   runWorkspaceReplacementLifecycleCase,
   validateImportWorkspaceLifecycleReport,
@@ -1234,6 +1235,7 @@ function makeImportDriver(
         renderWaitId: waitId,
         renderWaitStatus: 'pending',
       };
+      failureDrainHistory = null;
       lastFailureObservation = null;
       failureObservationAttempted = false;
       failureObservationError = null;
@@ -1289,13 +1291,11 @@ function makeImportDriver(
         try {
           failureDrainHistory = await withProtocolDeadline(
             () =>
-              page.evaluate(() =>
-                window.__qaLifecycleDrainObservationSnapshot({
-                  sampleAfterDeadline: true,
-                  timedOut: failureOperation.status === 'timed-out',
-                  includeHistory: true,
-                }),
-              ),
+              page.evaluate(readLifecycleDrainObservation, {
+                sampleAfterDeadline: true,
+                timedOut: failureOperation.status === 'timed-out',
+                includeHistory: true,
+              }),
             'read-import-drain-history',
             FAILURE_OBSERVATION_TIMEOUT_MS,
           );
