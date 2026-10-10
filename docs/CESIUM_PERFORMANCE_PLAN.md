@@ -222,6 +222,15 @@ the existing deterministic full-application harness with bundled imagery and
 software rendering; it establishes tracking behavior, not hardware performance.
 Browser shutdown completes normally without forced process termination.
 
+The [standard integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38080324298)
+at the same `48153a0` commit also passes all seven applicable jobs
+([exact job metadata](performance-evidence/ci-48153a0.json)): Node 24/26 suites,
+formatting, package boundaries, production builds, Windows onboarding,
+Windows/macOS/Linux installation recovery, and the application browser journeys.
+Published layer-token checks and the 60-minute soak were skipped in this dispatch.
+This validates the camera-angle compatibility change at that revision; it does
+not validate the later input-handoff change or replace the failed rendered comparison.
+
 The drag-release candidate is `b80b3793cfeab8fa873c67b1332b04b90a2eeb65`.
 A production-gizmo regression with Cesium's actual input controller and event
 aggregator reproduces queued movement surviving pointer release. The fix keeps
@@ -252,6 +261,15 @@ not cover movements separated by disabled controller updates; Cesium retains
 last-movement data across its aggregator reset, making residual inertia the next
 specific reproduction to test. The handoff code is not rendered-accepted.
 Raw SHA-256: `3ee5b9a63e9ae0c8f4b14a242abf1bae5b93754a1e08e2663064188222ef1f6d`.
+
+A subsequent reproduction with the actual Cesium 1.138 controller confirms the
+residual-inertia path: five mouse moves interleaved with disabled controller
+updates leave the camera unchanged through the locked release update, but it
+moves on all eight updates after input is restored. The aggregator retains a
+valid last movement; inertia consumes it even though the drag was never applied
+to the camera. The next fix must reject that history while preserving inertia
+from ordinary manual gestures. This engine-only reproduction explains the
+missed lifecycle path; rendered acceptance still requires a new comparison.
 
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
