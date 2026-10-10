@@ -18,6 +18,10 @@ import {
   compareCctvCalibrationPair,
   validateCctvCalibrationDemandReport,
 } from '../performance/cctvCalibrationDemand.mjs';
+import {
+  createImportFrameDiagnostics,
+  observeImportFrameHealth,
+} from '../performance/importFrameDiagnostics.mjs';
 
 const FIXTURE_ID = 'cctv-calibration-native-drag/v1';
 const CAMERA_ID = 'qa-cctv-calibration-camera-001';
@@ -190,6 +194,279 @@ function frameCountListener(viewer) {
   };
 }
 
+function layoutSnapshot(viewer) {
+  const canvas = viewer.canvas;
+  const rect = canvas.getBoundingClientRect();
+  return {
+    drawingBufferWidth: canvas.width,
+    drawingBufferHeight: canvas.height,
+    cssWidth: rect.width,
+    cssHeight: rect.height,
+    cssLeft: rect.left,
+    cssTop: rect.top,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+  };
+}
+
+function sameLayout(a, b) {
+  return Boolean(
+    a &&
+    b &&
+    Object.keys(a).every((key) => Number.isFinite(a[key]) && a[key] === b[key]),
+  );
+}
+
+function applySettledLayout(trial, viewer, attrs) {
+  const layout = layoutSnapshot(viewer);
+  trial.viewport = {
+    width: layout.drawingBufferWidth,
+    height: layout.drawingBufferHeight,
+    devicePixelRatio: layout.devicePixelRatio,
+    cssWidth: layout.cssWidth,
+    cssHeight: layout.cssHeight,
+    viewportWidth: layout.viewportWidth,
+    viewportHeight: layout.viewportHeight,
+  };
+  trial.layoutEvidence = {
+    settled: layout,
+    cameraCapture: null,
+    beforePixelsCapture: null,
+    afterPixelsCapture: null,
+  };
+  trial.renderingSettings = {
+    initialRequestRenderMode: viewer.scene.requestRenderMode,
+    drawingBufferWidth: layout.drawingBufferWidth,
+    drawingBufferHeight: layout.drawingBufferHeight,
+    cssWidth: layout.cssWidth,
+    cssHeight: layout.cssHeight,
+    viewportWidth: layout.viewportWidth,
+    viewportHeight: layout.viewportHeight,
+    devicePixelRatio: layout.devicePixelRatio,
+    msaaSamples: viewer.scene.msaaSamples,
+    antialias: attrs?.antialias ?? null,
+    preserveDrawingBuffer: attrs?.preserveDrawingBuffer ?? null,
+    contextAttributes: attrs
+      ? {
+          alpha: attrs.alpha,
+          antialias: attrs.antialias,
+          depth: attrs.depth,
+          premultipliedAlpha: attrs.premultipliedAlpha,
+          preserveDrawingBuffer: attrs.preserveDrawingBuffer,
+          stencil: attrs.stencil,
+        }
+      : null,
+    requestRenderModeDuringIdle: null,
+  };
+  return layout;
+}
+
+function safeCameraState(viewer) {
+  const camera = viewer?.camera;
+  const vector = (value) =>
+    value && [value.x, value.y, value.z].every(Number.isFinite)
+      ? [value.x, value.y, value.z]
+      : null;
+  return {
+    position: vector(camera?.positionWC),
+    direction: vector(camera?.directionWC),
+    up: vector(camera?.upWC),
+  };
+}
+
+function sceneSnapshot(viewer, layer) {
+  let layerStats = null;
+  let layerDiagnostics = null;
+  try {
+    const stats = layer?.getStats?.();
+    if (stats) {
+      layerStats = {
+        count: Number.isSafeInteger(stats.count) ? stats.count : null,
+        loading: typeof stats.loading === 'boolean' ? stats.loading : null,
+      };
+    }
+    const diagnostics = layer?.getPerformanceDiagnostics?.();
+    if (diagnostics) {
+      layerDiagnostics = {
+        pendingJobs: Number.isSafeInteger(diagnostics.pendingJobs)
+          ? diagnostics.pendingJobs
+          : null,
+        listeners: Number.isSafeInteger(diagnostics.listeners)
+          ? diagnostics.listeners
+          : null,
+      };
+    }
+  } catch {
+    layerStats = null;
+    layerDiagnostics = null;
+  }
+  return {
+    layout: viewer ? layoutSnapshot(viewer) : null,
+    frameNumber: Number.isSafeInteger(viewer?.scene?.frameState?.frameNumber)
+      ? viewer.scene.frameState.frameNumber
+      : null,
+    requestRenderMode: viewer?.scene?.requestRenderMode ?? null,
+    globeVisible: viewer?.scene?.globe?.show ?? null,
+    tilesLoaded: viewer?.scene?.globe?.tilesLoaded ?? null,
+    camera: safeCameraState(viewer),
+    layerStats,
+    layerDiagnostics,
+    viewerDestroyed: viewer?.isDestroyed?.() ?? null,
+  };
+}
+
+async function collectCaptureFailureDiagnostics(
+  viewer,
+  layer,
+  phase,
+  error,
+  before,
+  after,
+) {
+  const lifecycle = createImportFrameDiagnostics({
+    windowTarget: window,
+    documentTarget: document,
+  });
+  const scene = viewer?.scene;
+  const eventNames = ['preUpdate', 'postUpdate', 'preRender', 'postRender'];
+  const sceneEvents = Object.fromEntries(eventNames.map((name) => [name, 0]));
+  const removes = [];
+  const renderErrors = [];
+  const listenerCleanupErrors = [];
+  const sceneBefore = sceneSnapshot(viewer, layer);
+  const lifecycleBefore = lifecycle.snapshotCanvas(viewer?.canvas);
+  try {
+    if (scene) {
+      for (const name of eventNames) {
+        const event = scene[name];
+        if (!event?.addEventListener) continue;
+        const remove = event.addEventListener(() => {
+          sceneEvents[name] = Math.min(sceneEvents[name] + 1, 10_000);
+        });
+        if (typeof remove === 'function') removes.push(remove);
+      }
+      if (scene.renderError?.addEventListener) {
+        const remove = scene.renderError.addEventListener((_, cause) => {
+          if (renderErrors.length < 8) {
+            renderErrors.push({
+              name: String(cause?.name || 'Error').slice(0, 80),
+              message: String(cause?.message || cause || '').slice(0, 240),
+            });
+          }
+        });
+        if (typeof remove === 'function') removes.push(remove);
+      }
+    }
+    const frameHealth = await observeImportFrameHealth({ durationMs: 1000 });
+    return {
+      phase,
+      captureTimeoutMs: 400,
+      primaryError: {
+        name: String(error?.name || 'Error').slice(0, 80),
+        message: String(error?.message || error).slice(0, 300),
+      },
+      before,
+      after,
+      lifecycleBefore,
+      lifecycleAfter: lifecycle.snapshotCanvas(viewer?.canvas),
+      lifecycleEvents: lifecycle.events(),
+      frameHealth,
+      sceneEventCounts: sceneEvents,
+      renderErrors,
+      sceneBefore,
+      sceneAfter: sceneSnapshot(viewer, layer),
+      listenerCleanupErrors,
+    };
+  } catch (diagnosticError) {
+    return {
+      phase,
+      captureTimeoutMs: 400,
+      primaryError: {
+        name: String(error?.name || 'Error').slice(0, 80),
+        message: String(error?.message || error).slice(0, 300),
+      },
+      before,
+      after,
+      diagnosticError: String(
+        diagnosticError?.message || diagnosticError,
+      ).slice(0, 240),
+      sceneEventCounts: sceneEvents,
+      renderErrors,
+      sceneBefore,
+      sceneAfter: sceneSnapshot(viewer, layer),
+      listenerCleanupErrors,
+    };
+  } finally {
+    for (const remove of removes) {
+      try {
+        remove();
+      } catch (error) {
+        if (listenerCleanupErrors.length < 8)
+          listenerCleanupErrors.push(
+            String(error?.message || error).slice(0, 160),
+          );
+      }
+    }
+    try {
+      lifecycle.dispose();
+    } catch (error) {
+      if (listenerCleanupErrors.length < 8)
+        listenerCleanupErrors.push(
+          String(error?.message || error).slice(0, 160),
+        );
+    }
+  }
+}
+
+async function captureTrialFrame(viewer, layer, trial, phase) {
+  const before = layoutSnapshot(viewer);
+  const expected = trial.layoutEvidence?.settled;
+  let canvas = null;
+  let failure = null;
+  try {
+    canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
+    check(canvas, 'Fresh viewer frame was unavailable within 400 ms.');
+  } catch (error) {
+    failure = error;
+  }
+  const after = layoutSnapshot(viewer);
+  const entry = { before, after, stable: sameLayout(before, after) };
+  if (phase === 'camera-pose') trial.layoutEvidence.cameraCapture = entry;
+  else if (phase === 'before-pixels')
+    trial.layoutEvidence.beforePixelsCapture = entry;
+  else if (phase === 'after-pixels')
+    trial.layoutEvidence.afterPixelsCapture = entry;
+  if (failure) {
+    trial.captureDiagnostics = await collectCaptureFailureDiagnostics(
+      viewer,
+      layer,
+      phase,
+      failure,
+      before,
+      after,
+    );
+    throw failure;
+  }
+  if (!entry.stable || !sameLayout(expected, after)) {
+    canvas.width = 0;
+    canvas.height = 0;
+    const error = new Error(
+      'CCTV canvas layout changed after settled fixture initialization.',
+    );
+    trial.captureDiagnostics = await collectCaptureFailureDiagnostics(
+      viewer,
+      layer,
+      phase,
+      error,
+      before,
+      after,
+    );
+    throw error;
+  }
+  return canvas;
+}
+
 function cameraSnapshot(viewer, layer) {
   const camera = viewer.camera;
   const entities = viewer.entities.values
@@ -293,9 +570,8 @@ function observeIdleConditions() {
   };
 }
 
-async function capturePixels(viewer) {
-  const canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
-  check(canvas, 'CCTV trial could not capture a completed viewer frame.');
+async function capturePixels(viewer, layer, trial, phase) {
+  const canvas = await captureTrialFrame(viewer, layer, trial, phase);
   try {
     const rgba = canvas
       .getContext('2d')
@@ -466,6 +742,7 @@ function observeNativeInput(viewer, layer, targetPoint) {
     trustedPointerMoveCount: 0,
     trustedPointerUp: false,
     pickIdentity: null,
+    pickEvidence: null,
     dragInputsDisabledObserved: false,
     dragInputsRestoredAfterRelease: false,
   };
@@ -510,6 +787,35 @@ function observeNativeInput(viewer, layer, targetPoint) {
         picked?.primitive?.id?.id ??
         picked?.primitive?.id;
       const entityId = typeof pickedId === 'string' ? pickedId : null;
+      const stringId = (value) =>
+        typeof value === 'string' ? value.slice(0, 120) : null;
+      state.pickEvidence = {
+        returnedObject: picked !== null && picked !== undefined,
+        pickedObjectType: String(picked?.constructor?.name || '').slice(0, 100),
+        idType: typeof picked?.id,
+        entityId: stringId(picked?.id?.id ?? picked?.id),
+        primitiveType: String(picked?.primitive?.constructor?.name || '').slice(
+          0,
+          100,
+        ),
+        primitiveId: stringId(
+          picked?.primitive?.id?.id ?? picked?.primitive?.id,
+        ),
+        client: { x: event.clientX, y: event.clientY },
+        canvasRect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+        cssLocal: { x: local.x, y: local.y },
+        drawingBuffer: {
+          width: canvas.width,
+          height: canvas.height,
+          x: rect.width ? (local.x * canvas.width) / rect.width : null,
+          y: rect.height ? (local.y * canvas.height) / rect.height : null,
+        },
+      };
       state.pickIdentity = {
         entityId,
         kind: entityId?.startsWith('cctv-gizmo-')
@@ -581,6 +887,7 @@ async function waitForNativeRelease(run, viewer, layer, input) {
       run.drag.trustedPointerMoveCount = input.state.trustedPointerMoveCount;
       run.drag.trustedPointerUp = input.state.trustedPointerUp;
       run.drag.pickIdentity = input.state.pickIdentity;
+      run.drag.pickEvidence = input.state.pickEvidence;
       run.drag.dragInputsDisabledObserved =
         input.state.dragInputsDisabledObserved;
       run.drag.dragInputsRestoredAfterRelease =
@@ -594,6 +901,7 @@ async function waitForNativeRelease(run, viewer, layer, input) {
   run.drag.trustedPointerMoveCount = input.state.trustedPointerMoveCount;
   run.drag.trustedPointerUp = input.state.trustedPointerUp;
   run.drag.pickIdentity = input.state.pickIdentity;
+  run.drag.pickEvidence = input.state.pickEvidence;
   run.drag.dragInputsDisabledObserved = input.state.dragInputsDisabledObserved;
   run.drag.dragInputsRestoredAfterRelease =
     input.state.dragInputsRestoredAfterRelease;
@@ -617,6 +925,8 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
     camera: null,
     initialCalibration: null,
     renderingSettings: null,
+    layoutEvidence: null,
+    captureDiagnostics: null,
     setup: null,
     idle: null,
     drag: null,
@@ -663,49 +973,6 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
         trial.environment.rendererIdentity;
       activeReport.environment.userAgent = trial.environment.userAgent;
     }
-    trial.viewport = {
-      width: viewer.canvas.width,
-      height: viewer.canvas.height,
-      devicePixelRatio: window.devicePixelRatio,
-      cssWidth: viewer.canvas.clientWidth,
-      cssHeight: viewer.canvas.clientHeight,
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
-    };
-    trial.renderingSettings = {
-      initialRequestRenderMode: true,
-      drawingBufferWidth: viewer.canvas.width,
-      drawingBufferHeight: viewer.canvas.height,
-      cssWidth: viewer.canvas.clientWidth,
-      cssHeight: viewer.canvas.clientHeight,
-      viewportWidth: window.innerWidth,
-      viewportHeight: window.innerHeight,
-      devicePixelRatio: window.devicePixelRatio,
-      msaaSamples: viewer.scene.msaaSamples,
-      antialias: attrs?.antialias ?? null,
-      preserveDrawingBuffer: attrs?.preserveDrawingBuffer ?? null,
-      contextAttributes: attrs
-        ? {
-            alpha: attrs.alpha,
-            antialias: attrs.antialias,
-            depth: attrs.depth,
-            premultipliedAlpha: attrs.premultipliedAlpha,
-            preserveDrawingBuffer: attrs.preserveDrawingBuffer,
-            stencil: attrs.stencil,
-          }
-        : null,
-      requestRenderModeDuringIdle: null,
-    };
-    if (!activeReport.viewport)
-      activeReport.viewport = {
-        width: viewer.canvas.width,
-        height: viewer.canvas.height,
-        devicePixelRatio: window.devicePixelRatio,
-        cssWidth: viewer.canvas.clientWidth,
-        cssHeight: viewer.canvas.clientHeight,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-      };
     layer = createApplicationCctv({
       surface: FIXTURE_SURFACE,
       source: CAMERA_SOURCE,
@@ -723,6 +990,17 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
     );
     layer.setParams({ calibrationMode: true });
     trial.setup = await waitForLayerReady(layer, viewer);
+    applySettledLayout(trial, viewer, attrs);
+    if (!activeReport.viewport)
+      activeReport.viewport = {
+        width: trial.viewport.width,
+        height: trial.viewport.height,
+        devicePixelRatio: trial.viewport.devicePixelRatio,
+        cssWidth: trial.viewport.cssWidth,
+        cssHeight: trial.viewport.cssHeight,
+        viewportWidth: trial.viewport.viewportWidth,
+        viewportHeight: trial.viewport.viewportHeight,
+      };
     setPhase(`pair-${pair}-camera-pose-${mode}`);
     const cameraPosition = Cesium.Cartesian3.fromDegrees(
       CAMERA.lon,
@@ -733,15 +1011,22 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       destination: cameraPosition,
       orientation: { heading: 0, pitch: -Cesium.Math.PI_OVER_TWO, roll: 0 },
     });
-    await captureFreshCesiumFrame(viewer, { timeoutMs: 400 }).then((canvas) => {
-      check(canvas, 'CCTV fixture camera pose did not render.');
-      canvas.width = 0;
-      canvas.height = 0;
-    });
+    await captureTrialFrame(viewer, layer, trial, 'camera-pose').then(
+      (canvas) => {
+        check(canvas, 'CCTV fixture camera pose did not render.');
+        canvas.width = 0;
+        canvas.height = 0;
+      },
+    );
     await wait(100);
     await attachCameraGeometryDigest(trial, viewer, layer);
     trial.initialCalibration = currentCalibration(layer);
-    trial.beforePixels = await capturePixels(viewer);
+    trial.beforePixels = await capturePixels(
+      viewer,
+      layer,
+      trial,
+      'before-pixels',
+    );
     const dragPointer = projectHandle(viewer, 'move-east');
     trial.drag = {
       instructionId: `calibration-${pair}-${mode}-${runIndex}`,
@@ -764,6 +1049,7 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       dragInputsRestoredAfterRelease: false,
       selectedCameraIdAfterRelease: null,
       pickIdentity: null,
+      pickEvidence: null,
       geometrySha256After: null,
     };
     if (mode === 'legacy-control') {
@@ -826,7 +1112,12 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       new TextEncoder().encode(JSON.stringify(cameraAfter.geometryPayload)),
     );
     setPhase(`pair-${pair}-${mode}-after-drag-render`);
-    trial.afterPixels = await capturePixels(viewer);
+    trial.afterPixels = await capturePixels(
+      viewer,
+      layer,
+      trial,
+      'after-pixels',
+    );
     trial.drag.conditions = interactionObserver.finish({
       completedPhase: 'after-frame-capture',
     });
@@ -838,6 +1129,21 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
     trial.status = 'passed';
     return trial;
   } catch (error) {
+    if (
+      viewer &&
+      !trial.captureDiagnostics &&
+      /setup|camera-pose/.test(String(trial.phase || ''))
+    ) {
+      const layout = layoutSnapshot(viewer);
+      trial.captureDiagnostics = await collectCaptureFailureDiagnostics(
+        viewer,
+        layer,
+        trial.phase || 'setup',
+        error,
+        layout,
+        layout,
+      );
+    }
     trial.status = 'failed';
     trial.failedPhase = trial.phase || activeReport.phase;
     trial.error = String(error?.message || error).slice(0, 500);

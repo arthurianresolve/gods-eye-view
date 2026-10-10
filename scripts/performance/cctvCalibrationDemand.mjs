@@ -71,6 +71,52 @@ function assertViewport(value, label) {
     throw new Error(`CCTV calibration ${label} device pixel ratio is invalid.`);
 }
 
+const LAYOUT_FIELDS = [
+  'drawingBufferWidth',
+  'drawingBufferHeight',
+  'cssWidth',
+  'cssHeight',
+  'cssLeft',
+  'cssTop',
+  'viewportWidth',
+  'viewportHeight',
+  'devicePixelRatio',
+];
+
+function assertStableLayoutEvidence(run) {
+  const evidence = run.layoutEvidence;
+  const settled = evidence?.settled;
+  if (!settled || typeof settled !== 'object')
+    throw new Error('CCTV settled canvas layout evidence is missing.');
+  for (const field of LAYOUT_FIELDS) finite(settled[field], `layout.${field}`);
+  if (
+    settled.drawingBufferWidth !== run.viewport.width ||
+    settled.drawingBufferHeight !== run.viewport.height ||
+    settled.cssWidth !== run.viewport.cssWidth ||
+    settled.cssHeight !== run.viewport.cssHeight ||
+    settled.viewportWidth !== run.viewport.viewportWidth ||
+    settled.viewportHeight !== run.viewport.viewportHeight ||
+    settled.devicePixelRatio !== run.viewport.devicePixelRatio
+  )
+    throw new Error('CCTV settled layout differs from the recorded viewport.');
+  for (const phase of [
+    'cameraCapture',
+    'beforePixelsCapture',
+    'afterPixelsCapture',
+  ]) {
+    const capture = evidence[phase];
+    if (
+      !capture ||
+      capture.stable !== true ||
+      !capture.before ||
+      !capture.after ||
+      !exactJson(capture.before, settled) ||
+      !exactJson(capture.after, settled)
+    )
+      throw new Error(`CCTV ${phase} layout was not stable after setup.`);
+  }
+}
+
 function assertCleanup(cleanup, label) {
   if (
     cleanup?.layerDisabled !== true ||
@@ -89,6 +135,7 @@ function assertCleanup(cleanup, label) {
 
 function assertRunEnvironment(run, report) {
   assertViewport(run.viewport, 'trial');
+  assertStableLayoutEvidence(run);
   if (
     run.viewport.width !== report.viewport.width ||
     run.viewport.height !== report.viewport.height ||
@@ -257,6 +304,13 @@ function assertRun(run, expectedCommit, report) {
     drag.pickIdentity?.entityId !== 'cctv-gizmo-move-east' ||
     drag.pickIdentity?.kind !== 'move-east' ||
     drag.pickIdentity?.cameraId !== report.fixture.cameraId ||
+    drag.pickEvidence?.returnedObject !== true ||
+    drag.pickEvidence?.entityId !== 'cctv-gizmo-move-east' ||
+    drag.pickEvidence?.drawingBuffer?.width !== run.viewport.width ||
+    drag.pickEvidence?.drawingBuffer?.height !== run.viewport.height ||
+    !drag.pickEvidence?.canvasRect ||
+    !drag.pickEvidence?.cssLocal ||
+    !drag.pickEvidence?.drawingBuffer ||
     !Number.isFinite(drag.pickIdentity?.targetDistancePx) ||
     drag.pickIdentity.targetDistancePx > 2 ||
     !Array.isArray(drag.changedFields)
@@ -264,6 +318,52 @@ function assertRun(run, expectedCommit, report) {
     throw new Error('CCTV native calibration drag was not accepted.');
   finite(drag.pickIdentity.x, 'picked pointer x');
   finite(drag.pickIdentity.y, 'picked pointer y');
+  for (const axis of ['x', 'y']) {
+    finite(drag.pickEvidence.client?.[axis], `pick.client.${axis}`);
+    finite(
+      drag.pickEvidence.canvasRect?.[axis === 'x' ? 'left' : 'top'],
+      `pick.canvasRect.${axis}`,
+    );
+    finite(
+      drag.pickEvidence.canvasRect?.[axis === 'x' ? 'width' : 'height'],
+      `pick.canvasRect.${axis}Size`,
+    );
+    finite(drag.pickEvidence.cssLocal?.[axis], `pick.cssLocal.${axis}`);
+    finite(
+      drag.pickEvidence.drawingBuffer?.[axis],
+      `pick.drawingBuffer.${axis}`,
+    );
+    if (
+      drag.pickEvidence.client[axis] !== drag.pickIdentity[axis] ||
+      Math.abs(
+        drag.pickEvidence.cssLocal[axis] -
+          (drag.pickEvidence.client[axis] -
+            drag.pickEvidence.canvasRect[axis === 'x' ? 'left' : 'top']),
+      ) > 0.01
+    )
+      throw new Error('CCTV scene-pick coordinate evidence is inconsistent.');
+  }
+  const pickRect = drag.pickEvidence.canvasRect;
+  if (
+    Math.abs(pickRect.left - run.layoutEvidence.settled.cssLeft) > 0.01 ||
+    Math.abs(pickRect.top - run.layoutEvidence.settled.cssTop) > 0.01 ||
+    Math.abs(pickRect.width - run.layoutEvidence.settled.cssWidth) > 0.01 ||
+    Math.abs(pickRect.height - run.layoutEvidence.settled.cssHeight) > 0.01
+  )
+    throw new Error('CCTV pick was sampled against a different canvas layout.');
+  for (const [axis, size, rectSize] of [
+    ['x', run.viewport.width, pickRect.width],
+    ['y', run.viewport.height, pickRect.height],
+  ]) {
+    const expectedBufferCoordinate =
+      (drag.pickEvidence.cssLocal[axis] * size) / rectSize;
+    if (
+      Math.abs(
+        drag.pickEvidence.drawingBuffer[axis] - expectedBufferCoordinate,
+      ) > 0.02
+    )
+      throw new Error('CCTV pick drawing-buffer mapping is inconsistent.');
+  }
   for (const key of ['from', 'to']) {
     finite(drag[key]?.x, `drag.${key}.x`);
     finite(drag[key]?.y, `drag.${key}.y`);
@@ -486,6 +586,10 @@ export function validateCctvCalibrationDemandReport(
       if (referenceRun) {
         if (
           !exactJson(run.viewport, referenceRun.viewport) ||
+          !exactJson(
+            run.layoutEvidence?.settled,
+            referenceRun.layoutEvidence?.settled,
+          ) ||
           !exactJson(
             equivalentMeasuredSettings(run),
             equivalentMeasuredSettings(referenceRun),

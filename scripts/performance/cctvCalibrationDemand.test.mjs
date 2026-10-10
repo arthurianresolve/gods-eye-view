@@ -9,6 +9,7 @@ const commit = 'a'.repeat(40);
 const digest = (character) => character.repeat(64);
 const fixtureId = 'cctv-calibration-native-drag/v1';
 const cameraId = 'qa-cctv-calibration-camera-001';
+
 const viewport = {
   width: 960,
   height: 640,
@@ -53,6 +54,17 @@ const calibration = (offsetEastM) => ({
 function trial(mode, pair, globalIndex) {
   const before = calibration(0);
   const after = calibration(8);
+  const settledLayout = {
+    drawingBufferWidth: viewport.width,
+    drawingBufferHeight: viewport.height,
+    cssWidth: viewport.cssWidth,
+    cssHeight: viewport.cssHeight,
+    cssLeft: 0,
+    cssTop: 0,
+    viewportWidth: viewport.viewportWidth,
+    viewportHeight: viewport.viewportHeight,
+    devicePixelRatio: viewport.devicePixelRatio,
+  };
   return {
     schema: 'gev-cctv-calibration-trial/v1',
     status: 'passed',
@@ -65,6 +77,24 @@ function trial(mode, pair, globalIndex) {
     startedAt: new Date(Date.UTC(2026, 9, 8, 12, globalIndex)).toISOString(),
     phase: `pair-${pair}-${mode}-after-drag-render`,
     viewport: { ...viewport },
+    layoutEvidence: {
+      settled: settledLayout,
+      cameraCapture: {
+        before: { ...settledLayout },
+        after: { ...settledLayout },
+        stable: true,
+      },
+      beforePixelsCapture: {
+        before: { ...settledLayout },
+        after: { ...settledLayout },
+        stable: true,
+      },
+      afterPixelsCapture: {
+        before: { ...settledLayout },
+        after: { ...settledLayout },
+        stable: true,
+      },
+    },
     environment: {
       renderer: 'Synthetic deterministic test renderer',
       maskedRenderer: 'WebKit WebGL',
@@ -131,6 +161,24 @@ function trial(mode, pair, globalIndex) {
         x: 140,
         y: 160,
         targetDistancePx: 0,
+      },
+      pickEvidence: {
+        returnedObject: true,
+        entityId: 'cctv-gizmo-move-east',
+        client: { x: 140, y: 160 },
+        canvasRect: {
+          left: 0,
+          top: 0,
+          width: viewport.cssWidth,
+          height: viewport.cssHeight,
+        },
+        cssLocal: { x: 140, y: 160 },
+        drawingBuffer: {
+          width: viewport.width,
+          height: viewport.height,
+          x: 140,
+          y: (160 * viewport.height) / viewport.cssHeight,
+        },
       },
       conditions: {
         before: {
@@ -263,6 +311,37 @@ test('rejects shortened idle observation, missing frames, and capture-contaminat
       validateCctvCalibrationDemandReport(report, { expectedCommit: commit }),
     );
   }
+});
+
+test('rejects missing or changing post-setup canvas layout evidence', () => {
+  for (const mutate of [
+    (run) => {
+      delete run.layoutEvidence.cameraCapture;
+    },
+    (run) => {
+      run.layoutEvidence.afterPixelsCapture.stable = false;
+    },
+    (run) => {
+      run.layoutEvidence.beforePixelsCapture.after.cssHeight -= 1;
+    },
+    (run) => {
+      run.layoutEvidence.settled.drawingBufferHeight -= 1;
+    },
+  ]) {
+    const report = validReport();
+    mutate(report.pairs[0].runs[0]);
+    assert.throws(() =>
+      validateCctvCalibrationDemandReport(report, { expectedCommit: commit }),
+    );
+  }
+});
+
+test('rejects pick evidence from a mismatched canvas coordinate mapping', () => {
+  const report = validReport();
+  report.pairs[0].runs[0].drag.pickEvidence.drawingBuffer.y += 3;
+  assert.throws(() =>
+    validateCctvCalibrationDemandReport(report, { expectedCommit: commit }),
+  );
 });
 
 test('rejects missing pointer, pixel, foreground, or cleanup evidence', () => {
