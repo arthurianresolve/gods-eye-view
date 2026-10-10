@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`a0e7b10c1d2128de1544b53154c5bdb9e59a54a5` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38059557392), [job results](performance-evidence/ci-a0e7b10.json)),
+`2b269e368efd92a39ef3f4128ea7d1d6684c8f62` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38064518478), [job results](performance-evidence/ci-2b269e3.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -38,12 +38,29 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
-| S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort and workspace completion guards; document decoding and UI maintenance remain | Local import/pack tests, paired CPU comparison and all seven full integration jobs pass at `42d4be6`. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
+| S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards and header-only CSV setup; full document decoding and wider UI maintenance remain | All seven integration jobs pass at `2b269e3`; CSV header setup at `9a665b2` passes 24 focused checks and an exact-source 5-pair CPU comparison; its CI is pending. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S59.1 CSV column setup - 10 October 2026
+
+GPT-6 Luna's `9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` adds a header-only mode to the existing CSV scanner. Column mapping no longer materializes every data row merely to discover the column names. The public full decoder and preview retain complete body validation, output ordering, quoted multiline/BOM handling and existing error precedence. A malformed body is still rejected when the user requests a preview; header setup deliberately validates only the header. Twenty-four focused parser, cancellation and import panel checks pass in the root review, and package boundaries pass.
+
+Root's independent [exact-source comparison](performance-evidence/csv-header-comparison-9a665b2.json) uses baseline `2b269e3` and the clean candidate on Windows/Node 24.16.0. Each of four workloads has two warmups per variant and five alternating pairs over the same 50,000-row, 2,892,263-byte fixture. All 40 timed samples match their complete expected output hash. No forced GC or profiler is active. [Reproduction harness](performance-evidence/csv-header-comparison.mjs).
+
+| Local CPU workload | Baseline median | Candidate median | Change |
+| --- | ---: | ---: | ---: |
+| Column-name discovery | 87.77 ms | 0.024 ms | Removes the redundant body scan |
+| Column setup plus full preview | 433.15 ms | 327.29 ms | 24.4% lower |
+| Standalone full preview | 346.26 ms | 339.48 ms | 2.0% lower |
+| Public full decoder | 74.62 ms | 79.43 ms | 6.4% higher; within the 10% investigation threshold |
+
+Report SHA-256: `b272baad50b091ab2f0c197f45e7e07cde1e7800930ce8d6ae62809fb45ff6ce`; harness SHA-256: `5233ff694d80309addb67c7dc8f1a4df6f5d460bfcbcca06f2231e09611c8d43`. Run `node docs/performance-evidence/csv-header-comparison.mjs 9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` from that clean checkout with the retained harness and locked dependencies.
+
+This accepts the narrow redundant-scan removal, not full CSV cooperative decoding or browser interaction/GPU acceptance. The separate cooperative prototype was not retained. Its early exploratory median summaries used incorrect alternating-sample grouping and are invalid; they do not establish a regression or acceptance. A future cooperative design requires new, versioned measurements, including repeated preview without header setup. The code is pushed to `dev`; its exact-candidate [full CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38065661135) is pending.
 
 ### S59.2 import form ownership - 10 October 2026
 
@@ -51,7 +68,9 @@ GPT-6 Luna's `2b269e368efd92a39ef3f4128ea7d1d6684c8f62` gives asynchronous file 
 
 Twenty-one focused parser, cancellation, ownership and panel-event checks pass, alongside syntax, formatting and package boundaries. Root independently ran the same four panel-event regressions against the exact previous panel (`4170838`) and the candidate: all four reproduce stale summary/status failures before the fix and pass afterward. [Comparison record](performance-evidence/import-owner-regression-2b269e3.json), [baseline output](performance-evidence/import-owner-baseline-output.json), [candidate output](performance-evidence/import-owner-candidate-output.json). This uses a lightweight DOM and in-memory storage with the production panel, not browser timing or GPU evidence.
 
-The code is pushed to `dev`. [Full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38064518478) is pending at this exact candidate. This fixes demonstrated import ownership failures; it does not establish the cause of the earlier mixed-use timeout or complete S59 interaction/performance acceptance. CSV document decoding remains a separately measured next packet.
+The code is pushed to `dev`. All seven jobs in the exact-candidate [full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38064518478) pass ([job results](performance-evidence/ci-2b269e3.json)), including every browser journey and the previously failing mixed-use smoke. Node 24 passes 6,821 tests with one declared skip, plus all 14 separate allocation checks; Node 26 and both production builds pass. Installation recovery passes on Linux, macOS and Windows. The [Windows recovery report](performance-evidence/profile-recovery-38064518478-windows.json) passes all five persisted-settings/workspace checkpoints with normal browser shutdown and no forced termination (SHA-256 `be53a298038d88853ca24ecbab86ea42ccea12ccd8a7dbef4856b12a9cb1d31a`). This uses hosted SwiftShader and is not physical GPU evidence.
+
+The patch fixes demonstrated import ownership failures. This successful run does not establish the cause of the earlier intermittent mixed-use timeout or complete S59 interaction/performance acceptance. The CSV header optimization is recorded separately above.
 
 ### Mixed-use timeout diagnosis - 10 October 2026
 
