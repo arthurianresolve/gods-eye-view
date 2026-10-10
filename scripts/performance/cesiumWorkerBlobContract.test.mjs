@@ -1,0 +1,317 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFile, readdir } from 'node:fs/promises';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+import {
+  deriveCesiumEmbeddedWorkerContract,
+  installCesiumWorkerBlobAudit,
+  validateCesiumWorkerBlobs,
+} from './cesiumWorkerBlobContract.mjs';
+
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const BASE = 'http://127.0.0.1:4173/';
+
+function makeContract(workerSource = 'self.postMessage("ready");') {
+  const encoded = Buffer.from(workerSource, 'utf8').toString('base64');
+  const bundleBytes = Buffer.from(
+    `globalThis.CESIUM_WORKERS=atob("${encoded}");`,
+    'utf8',
+  );
+  return deriveCesiumEmbeddedWorkerContract({
+    bundlePath: 'cesium/Cesium.js',
+    bundleBytes,
+    assets: [
+      {
+        path: 'cesium/Cesium.js',
+        bytes: bundleBytes.length,
+        sha256: sha256(bundleBytes),
+      },
+      {
+        path: 'cesium/Workers/createGeometry.js',
+        bytes: 1,
+        sha256: '0'.repeat(64),
+      },
+      {
+        path: 'cesium/Workers/transferTypedArrayTest.js',
+        bytes: 1,
+        sha256: '0'.repeat(64),
+      },
+    ],
+  });
+}
+
+function workerAudit(contract, { wrapper, embeddedBody } = {}) {
+  const wrapperUrl = 'blob:http://127.0.0.1:4173/wrapper-id';
+  const embeddedUrl = 'blob:http://127.0.0.1:4173/embedded-id';
+  const body =
+    wrapper ??
+    `\n      importScripts("${embeddedUrl}");\n      CesiumWorkers["createGeometry"]();\n    `;
+  const parent = embeddedBody ?? contract.embeddedWorkerSource;
+  const records = [
+    {
+      url: wrapperUrl,
+      type: 'application/javascript',
+      byteLength: Buffer.byteLength(body),
+      body,
+    },
+    {
+      url: embeddedUrl,
+      type: 'application/javascript',
+      byteLength: Buffer.byteLength(parent),
+      body: parent,
+    },
+  ];
+  return {
+    contract,
+    baseUrl: BASE,
+    workerUrls: [wrapperUrl],
+    observedBlobUrls: [wrapperUrl, embeddedUrl],
+    blobAudit: {
+      createdBlobCount: 2,
+      overflowCount: 0,
+      totalReadBytes: records.reduce(
+        (sum, record) => sum + record.byteLength,
+        0,
+      ),
+      records,
+    },
+  };
+}
+
+test('installed locked Cesium bundle derives worker bytes and IDs from receipt assets', async () => {
+  const repoRoot = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../..',
+  );
+  const bundlePath = path.join(
+    repoRoot,
+    'node_modules/cesium/Build/Cesium/Cesium.js',
+  );
+  const bundleBytes = await readFile(bundlePath);
+  const workersRoot = path.join(
+    repoRoot,
+    'node_modules/cesium/Build/Cesium/Workers',
+  );
+  const workerFiles = (await readdir(workersRoot, { withFileTypes: true }))
+    .filter(
+      (entry) => entry.isFile() && /^[A-Za-z0-9_$-]+\.js$/.test(entry.name),
+    )
+    .map((entry) => ({
+      path: `cesium/Workers/${entry.name}`,
+      bytes: 1,
+      sha256: '0'.repeat(64),
+    }));
+  const bundleAsset = {
+    path: 'cesium/Cesium.js',
+    bytes: bundleBytes.length,
+    sha256: sha256(bundleBytes),
+  };
+  const contract = deriveCesiumEmbeddedWorkerContract({
+    bundlePath: bundleAsset.path,
+    bundleBytes,
+    assets: [bundleAsset, ...workerFiles],
+  });
+  assert.ok(contract.workerSourceBytes > 0);
+  assert.ok(contract.workerSourceSha256.match(/^[a-f0-9]{64}$/));
+  assert.ok(contract.allowedModuleIds.includes('createGeometry'));
+  assert.ok(contract.allowedModuleIds.includes('transferTypedArrayTest'));
+});
+
+test('embedded atob source hashing matches Latin-1 string to UTF-8 Blob conversion', () => {
+  const contract = makeContract('self.name = "café";');
+  const atobString = Buffer.from('self.name = "café";', 'utf8').toString(
+    'latin1',
+  );
+  const expectedBlobText = Buffer.from(atobString, 'utf8').toString('utf8');
+  assert.equal(contract.embeddedWorkerSource, expectedBlobText);
+  assert.notEqual(contract.embeddedWorkerSource, 'self.name = "café";');
+  assert.equal(
+    contract.workerSourceSha256,
+    sha256(Buffer.from(expectedBlobText, 'utf8')),
+  );
+});
+
+test('receipt-derived narrow worker wrapper validates its embedded body and module ID', () => {
+  const result = validateCesiumWorkerBlobs(workerAudit(makeContract()));
+  assert.equal(
+    result.observation.status,
+    'receipt-derived-worker-blobs-validated',
+  );
+  assert.deepEqual(result.observation.validatedModuleIds, ['createGeometry']);
+  assert.equal(result.observation.validatedWorkerCount, 1);
+});
+
+test('worker blob contract rejects malformed, noncanonical, duplicate and unbounded derivations', () => {
+  const assets = [
+    { path: 'cesium/Cesium.js', bytes: 0, sha256: sha256(Buffer.alloc(0)) },
+    { path: 'cesium/Workers/createGeometry.js' },
+  ];
+  for (const bundleText of [
+    'globalThis.CESIUM_WORKERS=atob("%%%=");',
+    'globalThis.CESIUM_WORKERS=atob("YQ=="); globalThis.CESIUM_WORKERS=atob("Yg==");',
+  ]) {
+    const bytes = Buffer.from(bundleText);
+    assert.throws(() =>
+      deriveCesiumEmbeddedWorkerContract({
+        bundlePath: 'cesium/Cesium.js',
+        bundleBytes: bytes,
+        assets: [
+          { ...assets[0], bytes: bytes.length, sha256: sha256(bytes) },
+          assets[1],
+        ],
+      }),
+    );
+  }
+  const overflowBytes = Buffer.from(
+    `globalThis.CESIUM_WORKERS=atob("${'A'.repeat(2_800_000)}");`,
+  );
+  assert.throws(
+    () =>
+      deriveCesiumEmbeddedWorkerContract({
+        bundlePath: 'cesium/Cesium.js',
+        bundleBytes: overflowBytes,
+        assets: [
+          {
+            ...assets[0],
+            bytes: overflowBytes.length,
+            sha256: sha256(overflowBytes),
+          },
+          assets[1],
+        ],
+      }),
+    /bound|canonical/,
+  );
+});
+
+test('worker blob validator rejects wrong parent, wrapper recipe and module IDs', () => {
+  const contract = makeContract();
+  assert.throws(
+    () =>
+      validateCesiumWorkerBlobs(
+        workerAudit(contract, { embeddedBody: 'wrong bytes' }),
+      ),
+    /differs from receipt-derived bytes/,
+  );
+  assert.throws(
+    () =>
+      validateCesiumWorkerBlobs(
+        workerAudit(contract, {
+          wrapper:
+            'importScripts("https://provider.invalid/worker.js"); CesiumWorkers["createGeometry"]();',
+        }),
+      ),
+    /does not match the allowed recipe/,
+  );
+  assert.throws(
+    () =>
+      validateCesiumWorkerBlobs(
+        workerAudit(contract, {
+          wrapper:
+            '\nimportScripts("blob:http://127.0.0.1:4173/embedded-id"); CesiumWorkers["evil"]();',
+        }),
+      ),
+    /absent from the receipt/,
+  );
+});
+
+test('worker blob validator rejects escaped parents, missing records, and arbitrary observed blobs', () => {
+  const contract = makeContract();
+  const audit = workerAudit(contract);
+  audit.blobAudit.records[0].body =
+    'importScripts("blob:https://elsewhere.invalid/p"); CesiumWorkers["createGeometry"]();';
+  audit.blobAudit.records[0].byteLength = Buffer.byteLength(
+    audit.blobAudit.records[0].body,
+  );
+  audit.blobAudit.totalReadBytes = audit.blobAudit.records.reduce(
+    (sum, record) => sum + record.byteLength,
+    0,
+  );
+  assert.throws(() => validateCesiumWorkerBlobs(audit), /missing/);
+
+  const missing = workerAudit(contract);
+  missing.blobAudit.records.pop();
+  missing.blobAudit.createdBlobCount = 1;
+  missing.blobAudit.totalReadBytes = missing.blobAudit.records.reduce(
+    (sum, record) => sum + record.byteLength,
+    0,
+  );
+  assert.throws(() => validateCesiumWorkerBlobs(missing), /missing/);
+
+  const arbitrary = workerAudit(contract);
+  arbitrary.observedBlobUrls.push('blob:http://127.0.0.1:4173/unrelated');
+  assert.throws(
+    () => validateCesiumWorkerBlobs(arbitrary),
+    /not a validated Cesium worker/,
+  );
+});
+
+test('worker blob validator fails closed on overflow and malformed sizes', () => {
+  const contract = makeContract();
+  const overflow = workerAudit(contract);
+  overflow.blobAudit.overflowCount = 1;
+  assert.throws(
+    () => validateCesiumWorkerBlobs(overflow),
+    /incomplete or over its bound/,
+  );
+  const malformed = workerAudit(contract);
+  malformed.blobAudit.records[0].byteLength += 1;
+  assert.throws(
+    () => validateCesiumWorkerBlobs(malformed),
+    /byte length changed/,
+  );
+});
+
+test('page blob instrumentation retains bounded script blobs only and restores the native API', async () => {
+  let nextId = 0;
+  class TestURL {
+    static createObjectURL() {
+      return `blob:http://127.0.0.1:4173/test-${++nextId}`;
+    }
+  }
+  const nativeCreateObjectURL = TestURL.createObjectURL;
+  const context = vm.createContext({ window: {}, URL: TestURL, Blob });
+  vm.runInContext(`(${installCesiumWorkerBlobAudit.toString()})()`, context);
+  vm.runInContext(
+    'URL.createObjectURL(new Blob(["worker"], { type: "application/javascript" }))',
+    context,
+  );
+  vm.runInContext(
+    'URL.createObjectURL(new Blob(["image"], { type: "image/png" }))',
+    context,
+  );
+  const metadata = vm.runInContext(
+    'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+    context,
+  );
+  assert.equal(metadata.createdBlobCount, 1);
+  assert.equal(metadata.records.length, 1);
+  assert.equal(metadata.records[0].type, 'application/javascript');
+
+  vm.runInContext(
+    'URL.createObjectURL(new Blob(["x".repeat(2 * 1024 * 1024 + 1)], { type: "application/javascript" }))',
+    context,
+  );
+  assert.equal(
+    vm.runInContext(
+      'window.__gevCesiumWorkerBlobAuditV1.metadata().overflowCount',
+      context,
+    ),
+    1,
+  );
+  vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context);
+  assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        vm.runInContext(
+          'window.__gevCesiumWorkerBlobAuditV1.metadata()',
+          context,
+        ),
+      ),
+    ),
+    { createdBlobCount: 0, overflowCount: 0, records: [] },
+  );
+});
