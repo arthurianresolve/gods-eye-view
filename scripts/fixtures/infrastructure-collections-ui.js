@@ -41,6 +41,17 @@ async function sha256(bytes) {
     .join('');
 }
 
+async function hashAndReleaseFrame(canvas) {
+  try {
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    return await sha256(
+      context.getImageData(0, 0, canvas.width, canvas.height).data,
+    );
+  } finally {
+    canvas.width = canvas.height = 0;
+  }
+}
+
 async function sourceDigest() {
   const response = await fetch(INFRASTRUCTURE_DATA_URLS['local-dams']);
   check(response.ok, `Bundled dams payload returned HTTP ${response.status}.`);
@@ -647,7 +658,7 @@ async function waitForRepresentationTransition({
       throw error;
     }
     if (!canvas) break;
-    canvas.width = canvas.height = 0;
+    const pixelSha256 = await hashAndReleaseFrame(canvas);
     completedFrames++;
     const surfaces = observedSurfaces(
       mode,
@@ -656,14 +667,16 @@ async function waitForRepresentationTransition({
       collections,
       Cesium.JulianDate.now(),
     );
-    const signature = JSON.stringify(
-      surfaces.map((surface) => [
-        surface.entityId,
-        surface.positionFingerprint,
-        surface.styleFingerprint,
-        surface.entityShow,
-      ]),
-    );
+    const signature =
+      pixelSha256 +
+      JSON.stringify(
+        surfaces.map((surface) => [
+          surface.entityId,
+          surface.positionFingerprint,
+          surface.styleFingerprint,
+          surface.entityShow,
+        ]),
+      );
     stableFrames = signature === previousSignature ? stableFrames + 1 : 1;
     previousSignature = signature;
     const target = surfaces.find(
@@ -678,6 +691,8 @@ async function waitForRepresentationTransition({
     lastObservation = {
       completedFrames,
       stableFrames,
+      pixelSha256,
+      stabilityIncludesPixels: true,
       dataSourceReady: viewer.dataSourceDisplay?.ready === true,
       dataSourceLoading: dataSource.isLoading === true,
       expectedSurfaceCount,
@@ -855,6 +870,7 @@ async function runDiagnostic() {
     let stableReadinessFrames = 0;
     let readyWithoutPickTarget = 0;
     let previousReadinessSignature = null;
+    let initialPixelSha256 = null;
     const readyDeadline = performance.now() + 8000;
     while (performance.now() < readyDeadline && completedFrames < 64) {
       const canvas = await captureFreshCesiumFrame(viewer, {
@@ -864,7 +880,7 @@ async function runDiagnostic() {
         canvas,
         'Loaded Entity visualizers did not complete a native render.',
       );
-      canvas.width = canvas.height = 0;
+      initialPixelSha256 = await hashAndReleaseFrame(canvas);
       completedFrames++;
       check(
         dataSource.isLoading !== true,
@@ -876,14 +892,16 @@ async function runDiagnostic() {
         layerId: 'local-dams',
         time: Cesium.JulianDate.now(),
       });
-      const signature = JSON.stringify(
-        currentSurfaces.map((surface) => [
-          surface.entityId,
-          surface.positionFingerprint,
-          surface.styleFingerprint,
-          surface.entityShow,
-        ]),
-      );
+      const signature =
+        initialPixelSha256 +
+        JSON.stringify(
+          currentSurfaces.map((surface) => [
+            surface.entityId,
+            surface.positionFingerprint,
+            surface.styleFingerprint,
+            surface.entityShow,
+          ]),
+        );
       stableReadinessFrames =
         signature === previousReadinessSignature
           ? stableReadinessFrames + 1
@@ -905,6 +923,8 @@ async function runDiagnostic() {
       completedFrames,
       stableReadinessFrames,
       readyWithoutPickTarget,
+      pixelSha256: initialPixelSha256,
+      stabilityIncludesPixels: true,
       pointAndStemPickTargetResolved: Boolean(target),
       dataSourceReady: viewer.dataSourceDisplay?.ready === true,
       timeoutMs: 8000,
