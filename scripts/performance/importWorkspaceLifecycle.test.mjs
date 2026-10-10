@@ -16,6 +16,7 @@ import {
   assertOwnedLifecycleCheckpoint,
   createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
+  installLifecycleDrainObserver,
   parseImportWorkspaceLifecycleArgs,
   runCooperativeImportLifecycleCase,
   runWorkspaceReplacementLifecycleCase,
@@ -26,6 +27,84 @@ const appSha = 'a'.repeat(40);
 const harnessSha = 'b'.repeat(40);
 const importSha = 'c'.repeat(64);
 const workspaceSha = 'd'.repeat(64);
+
+function createDrainState({
+  imports = { featureCount: 0, pendingJobs: 0, cacheEntries: 0 },
+  pending = 0,
+  workerPending = pending,
+  overflow = false,
+  instrumented = true,
+  workers = [
+    {
+      kind: 'terrain/heightmap.js',
+      submitted: 2,
+      completed: 2 - workerPending,
+      taskErrors: 0,
+      workerErrors: 0,
+      postErrors: 0,
+      cancelled: 0,
+      pending: workerPending,
+      oldestPendingMs: workerPending ? 40 : 0,
+      terminated: false,
+    },
+  ],
+  tilesLoaded = true,
+  frameNumber = 1,
+  position = [1, 2, 3],
+  direction = [0, 0, -1],
+} = {}) {
+  return {
+    __godsEyeView: {
+      importedGeometryLayer: {
+        getState: () => imports,
+        getPerformanceDiagnostics: () => ({
+          cacheEntries: imports.cacheEntries,
+        }),
+      },
+      viewer: {
+        scene: {
+          frameState: { frameNumber },
+          requestRenderMode: true,
+          _renderRequested: false,
+          globe: { tilesLoaded },
+        },
+        camera: {
+          positionWC: { x: position[0], y: position[1], z: position[2] },
+          directionWC: { x: direction[0], y: direction[1], z: direction[2] },
+          upWC: { x: 0, y: 1, z: 0 },
+        },
+      },
+    },
+    __gevSoakWorkers: {
+      snapshot: () => ({ instrumented, overflow, pending, workers }),
+    },
+  };
+}
+
+function createDrainObserverContext() {
+  let now = 0;
+  let timerId = 0;
+  const context = vm.createContext({
+    performance: { now: () => now },
+    window: createDrainState(),
+    setTimeout: () => ++timerId,
+    clearTimeout: () => {},
+  });
+  const install = vm.runInContext(
+    `(${installLifecycleDrainObserver.toString()})`,
+    context,
+  );
+  install(context.window);
+  return {
+    context,
+    setTime(value) {
+      now = value;
+    },
+    setState(state) {
+      Object.assign(context.window, state);
+    },
+  };
+}
 
 async function runQuiescencePageFunction(
   snapshots,
@@ -229,6 +308,273 @@ function importDriver({ failMeasured = false, cleanupFailure = false } = {}) {
     },
   };
 }
+
+test('import drain sampler records the same bounded predicate and camera/tile timeline', () => {
+  const { context, setTime, setState } = createDrainObserverContext();
+  const page = context.window;
+  page.__qaLifecycleStartDrainObservation(500);
+
+  setState(
+    createDrainState({
+      imports: { featureCount: 0, pendingJobs: 1, cacheEntries: 0 },
+      pending: 0,
+      tilesLoaded: false,
+      frameNumber: 2,
+    }),
+  );
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+
+  setTime(50);
+  setState(
+    createDrainState({
+      imports: { featureCount: 0, pendingJobs: 0, cacheEntries: 0 },
+      pending: 1,
+      workerPending: 1,
+      tilesLoaded: false,
+      frameNumber: 3,
+    }),
+  );
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+
+  setTime(100);
+  setState(
+    createDrainState({
+      imports: { featureCount: 0, pendingJobs: 0, cacheEntries: 0 },
+      pending: 0,
+      tilesLoaded: true,
+      frameNumber: 4,
+      position: [4, 6, 3],
+      direction: [0.01, 0, -1],
+      workers: [
+        {
+          kind: 'https://private.invalid/terrain.js?token=secret',
+          submitted: 2,
+          completed: 2,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          pending: 0,
+          oldestPendingMs: 0,
+          terminated: false,
+          payload: 'must not serialize',
+        },
+      ],
+    }),
+  );
+  assert.equal(page.__qaLifecycleSampleDrain(), true);
+  const trace = page.__qaLifecycleDrainObservationSnapshot();
+  assert.equal(trace.status, 'settled');
+  assert.equal(trace.firstWorkerZeroMs, 0);
+  assert.equal(trace.firstQualifyingZeroMs, 100);
+  assert.equal(trace.pollCount, 3);
+  assert.equal(trace.maxPollingGapMs, 50);
+  assert.equal(trace.tilesLoadedTransitionCount, 1);
+  assert.equal(trace.firstTilesLoadedTransitionMs, 100);
+  assert.equal(trace.lastTilesLoadedTransitionMs, 100);
+  assert.equal(trace.cameraMoved, true);
+  assert.equal(trace.cameraMaxDisplacementM, 5);
+  assert.equal(trace.history[1].predicateSatisfied, false);
+  assert.equal(trace.history[1].workerCounters.pending, 1);
+  assert.equal(trace.history[2].camera.position[0], 4);
+  assert.equal(
+    trace.history[2].workerCounters.workers[0].kind,
+    'opaque-worker',
+  );
+  const summary = page.__qaLifecycleDrainObservationSnapshot({
+    includeHistory: false,
+  });
+  assert.equal(summary.history.length, 0);
+  assert.equal(summary.historyIncluded, false);
+  assert.equal(summary.historySampleCount, 3);
+  assert.equal(summary.firstQualifyingZeroMs, 100);
+  assert.equal(summary.maxPollingGapMs, 50);
+  assert.equal(JSON.stringify(trace).includes('secret'), false);
+  assert.equal(JSON.stringify(trace).includes('must not serialize'), false);
+  page.__qaLifecycleClearDrainObservation();
+  assert.equal(page.__qaLifecycleDrainObservationSnapshot(), null);
+  const unavailableCamera = createDrainState();
+  unavailableCamera.__godsEyeView.viewer.camera.positionWC = null;
+  setState(unavailableCamera);
+  page.__qaLifecycleStartDrainObservation(500);
+  assert.equal(page.__qaLifecycleSampleDrain(), true);
+  const unavailableTrace = page.__qaLifecycleDrainObservationSnapshot();
+  assert.equal(unavailableTrace.cameraMoved, null);
+  assert.equal(unavailableTrace.cameraMaxDisplacementM, null);
+});
+
+test('import drain sampler never accepts a qualifying zero observed after deadline', () => {
+  const { context, setTime, setState } = createDrainObserverContext();
+  const page = context.window;
+  page.__qaLifecycleStartDrainObservation(100);
+  setState(createDrainState({ pending: 1, workerPending: 1 }));
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+  setTime(150);
+  setState(createDrainState());
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+  const trace = page.__qaLifecycleDrainObservationSnapshot();
+  assert.equal(trace.status, 'timed-out');
+  assert.equal(trace.firstQualifyingZeroMs, null);
+  assert.equal(trace.lateZeroElapsedMs, 150);
+});
+
+test('timeout snapshot records a late zero separately from predicate history', () => {
+  const { context, setTime, setState } = createDrainObserverContext();
+  const page = context.window;
+  page.__qaLifecycleStartDrainObservation(100);
+  setState(createDrainState({ pending: 1, workerPending: 1 }));
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+  setTime(150);
+  setState(createDrainState());
+  const trace = page.__qaLifecycleDrainObservationSnapshot({
+    sampleAfterDeadline: true,
+    timedOut: true,
+  });
+  assert.equal(trace.status, 'timed-out');
+  assert.equal(trace.firstQualifyingZeroMs, null);
+  assert.equal(trace.lateZeroElapsedMs, 150);
+  assert.equal(trace.history.length, 1);
+  assert.equal(trace.postDeadlineObservation.afterDeadline, true);
+  assert.equal(trace.postDeadlineObservation.predicateSatisfied, true);
+});
+
+test('import drain sampler rejects invalid snapshots and caps history without accepting later zero', () => {
+  const { context, setTime, setState } = createDrainObserverContext();
+  const page = context.window;
+  page.__qaLifecycleStartDrainObservation(10_000);
+  setState(
+    createDrainState({
+      workers: [
+        {
+          kind: 'createGeometry.js',
+          submitted: 1,
+          completed: 1,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          pending: -1,
+          oldestPendingMs: 0,
+          terminated: false,
+        },
+      ],
+    }),
+  );
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+  assert.equal(
+    page.__qaLifecycleDrainObservationSnapshot().history[0].valid,
+    false,
+  );
+  setState(createDrainState({ overflow: true }));
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+  assert.equal(
+    page.__qaLifecycleDrainObservationSnapshot().history[1].valid,
+    false,
+  );
+  setState(createDrainState({ pending: 1, workerPending: 1 }));
+  for (let index = 0; index < 202; index++) {
+    setTime(index * 50);
+    assert.equal(page.__qaLifecycleSampleDrain(), false);
+  }
+  setTime(10_100);
+  assert.equal(page.__qaLifecycleSampleDrain(), false);
+  const trace = page.__qaLifecycleDrainObservationSnapshot();
+  assert.equal(trace.history.length, 202);
+  assert.equal(trace.pollCount, 203);
+  assert.equal(trace.historyTruncated, true);
+  assert.equal(trace.status, 'history-overflow');
+  assert.equal(trace.firstQualifyingZeroMs, null);
+});
+
+test('failure evidence serializes a bounded drain timeline without URLs or payloads', () => {
+  const history = Array.from({ length: 203 }, (_, index) => ({
+    elapsedMs: index * 50,
+    valid: true,
+    predicateSatisfied: false,
+    imports: { featureCount: 0, pendingJobs: 0, cacheEntries: 0 },
+    workerCounters: {
+      instrumented: true,
+      overflow: false,
+      pending: 1,
+      workers: [
+        {
+          kind: 'https://private.invalid/worker.js?token=secret',
+          submitted: 2,
+          completed: 1,
+          pending: 1,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          oldestPendingMs: 12,
+          payload: 'must not serialize',
+        },
+      ],
+    },
+    frame: {
+      frameNumber: index,
+      requestRenderMode: true,
+      renderRequested: false,
+    },
+    globe: { available: true, tilesLoaded: false },
+    camera: {
+      position: [1, 2, 3],
+      direction: [0, 0, -1],
+      up: [0, 1, 0],
+    },
+  }));
+  const evidence = createLifecycleFailureEvidence({
+    phase: 'warmup-drain',
+    error: 'drain timed out',
+    operation: {
+      name: 'clear-and-drain',
+      status: 'timed-out',
+      drainHistory: {
+        status: 'timed-out',
+        timeoutMs: 10_000,
+        elapsedMs: 10_050,
+        firstWorkerZeroMs: null,
+        firstQualifyingZeroMs: null,
+        lateZeroElapsedMs: 10_050,
+        pollCount: 203,
+        maxPollingGapMs: 50,
+        historyTruncated: true,
+        history,
+      },
+    },
+  });
+  const drainHistory = evidence.operation.drainHistory;
+  assert.equal(drainHistory.history.length, 202);
+  assert.equal(drainHistory.historyTruncated, true);
+  assert.equal(drainHistory.lateZeroElapsedMs, 10_050);
+  assert.equal(
+    drainHistory.history[0].workerCounters.workers[0].kind,
+    'opaque-worker',
+  );
+  assert.equal(JSON.stringify(evidence).includes('secret'), false);
+  assert.equal(JSON.stringify(evidence).includes('must not serialize'), false);
+});
+
+test('failure evidence prefers the captured observation timeline without duplicating it', () => {
+  const history = {
+    status: 'timed-out',
+    timeoutMs: 100,
+    elapsedMs: 150,
+    pollCount: 2,
+    history: [],
+  };
+  const evidence = createLifecycleFailureEvidence({
+    phase: 'warmup-drain',
+    error: 'drain timed out',
+    operation: { name: 'clear-and-drain', drainHistory: history },
+    observation: {
+      imports: { featureCount: 0, pendingJobs: 0, cacheEntries: 0 },
+      drainHistory: history,
+    },
+  });
+  assert.equal(evidence.observation.drainHistory.status, 'timed-out');
+  assert.equal(evidence.operation.drainHistory, undefined);
+});
 
 test('runner options are bounded and require an HTTP(S) target and full expected SHA', () => {
   assert.deepEqual(parseImportWorkspaceLifecycleArgs([]), {

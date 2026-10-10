@@ -9,6 +9,7 @@ import {
   assertOwnedLifecycleCheckpoint,
   createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
+  installLifecycleDrainObserver,
   parseImportWorkspaceLifecycleArgs,
   runCooperativeImportLifecycleCase,
   runWorkspaceReplacementLifecycleCase,
@@ -767,6 +768,11 @@ async function setupOwnedPage(
       'install-render-waiter',
       installLifecycleRenderWaiter,
     );
+    await evaluateWithDeadline(
+      page,
+      'install-drain-observer',
+      installLifecycleDrainObserver,
+    );
     setupPhase = 'read-application-identity';
     const identity = await evaluateWithDeadline(
       page,
@@ -1069,6 +1075,7 @@ function makeImportDriver(
   let lastFailureObservation = null;
   let failureObservationAttempted = false;
   let failureObservationError = null;
+  let failureDrainHistory = null;
   const captureFailureObservation = async () => {
     if (failureObservationAttempted) return;
     failureObservationAttempted = true;
@@ -1236,25 +1243,38 @@ function makeImportDriver(
           app.importedGeometryLayer.clear();
           app.viewer.scene.requestRender();
         });
-        await page.waitForFunction(
-          () => {
-            const state =
-              window.__godsEyeView?.importedGeometryLayer?.getState?.();
-            const workers = window.__gevSoakWorkers?.snapshot?.();
-            return (
-              state?.pendingJobs === 0 &&
-              state.featureCount === 0 &&
-              workers?.pending === 0 &&
-              workers.overflow === false
-            );
-          },
-          { timeout: drainMs, polling: 50 },
+        await evaluateWithDeadline(
+          page,
+          'start-import-drain-observation',
+          (timeoutMs) => window.__qaLifecycleStartDrainObservation(timeoutMs),
+          drainMs,
         );
+        await page.waitForFunction(() => window.__qaLifecycleSampleDrain(), {
+          timeout: drainMs,
+          polling: WORKER_QUIESCENCE_POLL_MS,
+        });
+        failureOperation.drainHistory = await withProtocolDeadline(
+          () =>
+            page.evaluate(() =>
+              window.__qaLifecycleDrainObservationSnapshot({
+                includeHistory: false,
+              }),
+            ),
+          'read-import-drain-summary',
+        );
+        if (failureOperation.drainHistory?.status !== 'settled')
+          throw new Error(
+            'Import drain predicate returned without a settled observation.',
+          );
         const renderedPopulation = await finishRenderedPopulationWait(
           page,
           waitId,
         );
-        const result = { ...(await pageSnapshot(page)), renderedPopulation };
+        const result = {
+          ...(await pageSnapshot(page)),
+          renderedPopulation,
+          drainHistory: failureOperation.drainHistory,
+        };
         failureOperation.status = 'completed';
         failureOperation.renderWaitStatus = 'completed';
         failureOperation = null;
@@ -1266,7 +1286,27 @@ function makeImportDriver(
           ? 'timed-out'
           : 'failed';
         failureOperation.error = error;
+        try {
+          failureDrainHistory = await withProtocolDeadline(
+            () =>
+              page.evaluate(() =>
+                window.__qaLifecycleDrainObservationSnapshot({
+                  sampleAfterDeadline: true,
+                  timedOut: failureOperation.status === 'timed-out',
+                  includeHistory: true,
+                }),
+              ),
+            'read-import-drain-history',
+            FAILURE_OBSERVATION_TIMEOUT_MS,
+          );
+          if (failureDrainHistory)
+            failureOperation.drainHistory = failureDrainHistory;
+        } catch (drainHistoryError) {
+          failureOperation.drainHistoryError = drainHistoryError;
+        }
         await captureFailureObservation();
+        if (lastFailureObservation)
+          lastFailureObservation.drainHistory = failureDrainHistory;
         const waiter = lastFailureObservation?.frame?.renderWaiters?.find(
           (item) => item.id === waitId,
         );
@@ -1282,6 +1322,13 @@ function makeImportDriver(
           1000,
         ).catch(() => {});
         throw error;
+      } finally {
+        await withProtocolDeadline(
+          () =>
+            page.evaluate(() => window.__qaLifecycleClearDrainObservation?.()),
+          'clear-import-drain-observation',
+          1000,
+        ).catch(() => {});
       }
     },
     async workerCounters() {

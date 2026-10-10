@@ -10,6 +10,333 @@ const RESOURCE_KEYS = [
   'groundPrimitives',
 ];
 
+/** Install the sampler used by the existing import/worker drain predicate. */
+export function installLifecycleDrainObserver(scope = window) {
+  const DRAIN_HISTORY_CAP = 202;
+  const DRAIN_WORKER_CAP = 64;
+  let observation = null;
+
+  const readCounter = (value) =>
+    Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const readVector = (value, digits = 3) => {
+    if (
+      !value ||
+      !Number.isFinite(value.x) ||
+      !Number.isFinite(value.y) ||
+      !Number.isFinite(value.z)
+    )
+      return null;
+    const scale = 10 ** digits;
+    return [value.x, value.y, value.z].map(
+      (component) => Math.round(component * scale) / scale,
+    );
+  };
+  const readKind = (value) => {
+    const name = typeof value === 'string' ? value.split(/[\\/?#]/).at(-1) : '';
+    return /^[a-zA-Z][a-zA-Z0-9_-]{0,70}\.js$/.test(name)
+      ? name
+      : 'opaque-worker';
+  };
+  const poseDistance = (left, right) => {
+    if (!left || !right) return null;
+    return Math.sqrt(
+      left.reduce(
+        (sum, component, index) => sum + (component - right[index]) ** 2,
+        0,
+      ),
+    );
+  };
+
+  function readSample(elapsedMs) {
+    const app = scope.__godsEyeView;
+    const viewer = app?.viewer;
+    const scene = viewer?.scene;
+    const importState = app?.importedGeometryLayer?.getState?.();
+    const importDiagnostics =
+      app?.importedGeometryLayer?.getPerformanceDiagnostics?.();
+    const rawWorkers = scope.__gevSoakWorkers?.snapshot?.() || null;
+    const rawWorkerRows = Array.isArray(rawWorkers?.workers)
+      ? rawWorkers.workers
+      : null;
+    const workersTruncated =
+      rawWorkerRows === null ||
+      rawWorkerRows.length > DRAIN_WORKER_CAP ||
+      rawWorkers?.workersTruncated === true;
+    const workers = rawWorkerRows
+      ? rawWorkerRows.slice(0, DRAIN_WORKER_CAP).map((worker) => ({
+          kind: readKind(worker?.kind),
+          submitted: readCounter(worker?.submitted),
+          completed: readCounter(worker?.completed),
+          taskErrors: readCounter(worker?.taskErrors),
+          workerErrors: readCounter(worker?.workerErrors),
+          postErrors: readCounter(worker?.postErrors),
+          cancelled: readCounter(worker?.cancelled),
+          pending: readCounter(worker?.pending),
+          oldestPendingMs:
+            Number.isFinite(worker?.oldestPendingMs) &&
+            worker.oldestPendingMs >= 0 &&
+            worker.oldestPendingMs <= 86_400_000
+              ? Math.round(worker.oldestPendingMs * 100) / 100
+              : null,
+          terminated:
+            typeof worker?.terminated === 'boolean' ? worker.terminated : null,
+        }))
+      : [];
+    const imports = {
+      featureCount: readCounter(importState?.featureCount),
+      pendingJobs: readCounter(importState?.pendingJobs),
+      cacheEntries: readCounter(importDiagnostics?.cacheEntries),
+    };
+    const workerPending = readCounter(rawWorkers?.pending);
+    const workerRowsValid =
+      !workersTruncated &&
+      workers.every((worker) =>
+        [
+          worker.submitted,
+          worker.completed,
+          worker.taskErrors,
+          worker.workerErrors,
+          worker.postErrors,
+          worker.cancelled,
+          worker.pending,
+        ].every((value) => value !== null),
+      );
+    const workerPendingSum = workers.reduce(
+      (sum, worker) => sum + (worker.pending ?? 0),
+      0,
+    );
+    const valid =
+      imports.featureCount !== null &&
+      imports.pendingJobs !== null &&
+      rawWorkers?.instrumented === true &&
+      rawWorkers?.overflow === false &&
+      workerPending !== null &&
+      workerRowsValid &&
+      workerPendingSum === workerPending;
+    const camera = viewer?.camera;
+    const position = readVector(camera?.positionWC);
+    const direction = readVector(camera?.directionWC, 6);
+    const up = readVector(camera?.upWC, 6);
+    const cameraPose =
+      position && direction && up ? { position, direction, up } : null;
+    const globe = scene?.globe;
+    return {
+      elapsedMs: Math.round(Math.max(0, elapsedMs) * 100) / 100,
+      valid,
+      invalidReason: valid
+        ? null
+        : workersTruncated
+          ? 'missing-or-truncated-worker-rows'
+          : 'missing-or-invalid-drain-counters',
+      imports,
+      workerCounters: {
+        instrumented: rawWorkers?.instrumented === true,
+        overflow: rawWorkers?.overflow === true,
+        pending: workerPending,
+        workerCount: Number.isSafeInteger(rawWorkers?.workerCount)
+          ? rawWorkers.workerCount
+          : (rawWorkerRows?.length ?? null),
+        workersTruncated,
+        workers,
+      },
+      predicateSatisfied:
+        valid &&
+        imports.pendingJobs === 0 &&
+        imports.featureCount === 0 &&
+        workerPending === 0 &&
+        rawWorkers.overflow === false,
+      frame: {
+        frameNumber: readCounter(scene?.frameState?.frameNumber),
+        requestRenderMode:
+          typeof scene?.requestRenderMode === 'boolean'
+            ? scene.requestRenderMode
+            : null,
+        renderRequested:
+          typeof scene?._renderRequested === 'boolean'
+            ? scene._renderRequested
+            : null,
+      },
+      globe: {
+        available: Boolean(globe),
+        tilesLoaded:
+          typeof globe?.tilesLoaded === 'boolean' ? globe.tilesLoaded : null,
+      },
+      camera: cameraPose,
+    };
+  }
+
+  const updateSummary = (sample) => {
+    const previous = observation.history.at(-2) || null;
+    observation.pollCount = observation.history.length;
+    if (previous)
+      observation.maxPollingGapMs = Math.max(
+        observation.maxPollingGapMs,
+        sample.elapsedMs - previous.elapsedMs,
+      );
+    if (sample.camera) {
+      observation.firstCamera ??= sample.camera;
+      sample.cameraDisplacementM = poseDistance(
+        observation.firstCamera.position,
+        sample.camera.position,
+      );
+      const directionDelta = poseDistance(
+        observation.firstCamera.direction,
+        sample.camera.direction,
+      );
+      const upDelta = poseDistance(
+        observation.firstCamera.up,
+        sample.camera.up,
+      );
+      sample.cameraOrientationDelta =
+        directionDelta === null || upDelta === null
+          ? null
+          : Math.max(directionDelta, upDelta);
+      sample.cameraMoved =
+        sample.cameraDisplacementM === null ||
+        sample.cameraOrientationDelta === null
+          ? null
+          : sample.cameraDisplacementM > 0.001 ||
+            sample.cameraOrientationDelta > 0.000001;
+      observation.cameraMaxDisplacementM =
+        sample.cameraDisplacementM === null
+          ? observation.cameraMaxDisplacementM
+          : Math.max(
+              observation.cameraMaxDisplacementM ?? 0,
+              sample.cameraDisplacementM,
+            );
+      observation.cameraMaxOrientationDelta =
+        sample.cameraOrientationDelta === null
+          ? observation.cameraMaxOrientationDelta
+          : Math.max(
+              observation.cameraMaxOrientationDelta ?? 0,
+              sample.cameraOrientationDelta,
+            );
+      observation.cameraMoved =
+        observation.cameraMaxDisplacementM === null ||
+        observation.cameraMaxOrientationDelta === null
+          ? null
+          : observation.cameraMaxDisplacementM > 0.001 ||
+            observation.cameraMaxOrientationDelta > 0.000001;
+    }
+    if (
+      previous &&
+      sample.globe.tilesLoaded !== null &&
+      previous.globe.tilesLoaded !== null &&
+      sample.globe.tilesLoaded !== previous.globe.tilesLoaded
+    ) {
+      observation.tilesLoadedTransitionCount++;
+      observation.firstTilesLoadedTransitionMs ??= sample.elapsedMs;
+      observation.lastTilesLoadedTransitionMs = sample.elapsedMs;
+    }
+    observation.last = sample;
+    return observation;
+  };
+
+  scope.__qaLifecycleStartDrainObservation = (timeoutMs) => {
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10_000)
+      throw new RangeError('Lifecycle drain observer timeout is invalid.');
+    observation = {
+      status: 'running',
+      timeoutMs,
+      startedAtPerformanceMs: performance.now(),
+      elapsedMs: 0,
+      firstWorkerZeroMs: null,
+      firstQualifyingZeroMs: null,
+      lateZeroElapsedMs: null,
+      pollCount: 0,
+      maxPollingGapMs: 0,
+      historyTruncated: false,
+      cameraMoved: null,
+      cameraMaxDisplacementM: null,
+      cameraMaxOrientationDelta: null,
+      firstCamera: null,
+      tilesLoadedTransitionCount: 0,
+      firstTilesLoadedTransitionMs: null,
+      lastTilesLoadedTransitionMs: null,
+      history: [],
+      last: null,
+      postDeadlineObservation: null,
+    };
+    return observation.startedAtPerformanceMs;
+  };
+
+  scope.__qaLifecycleSampleDrain = () => {
+    if (!observation || observation.status !== 'running') return false;
+    const elapsedMs = Math.max(
+      0,
+      performance.now() - observation.startedAtPerformanceMs,
+    );
+    if (observation.history.length >= DRAIN_HISTORY_CAP) {
+      observation.status = 'history-overflow';
+      observation.historyTruncated = true;
+      observation.pollCount = observation.history.length + 1;
+      return false;
+    }
+    const sample = readSample(elapsedMs);
+    observation.history.push(sample);
+    observation.elapsedMs = sample.elapsedMs;
+    if (
+      sample.workerCounters.instrumented &&
+      sample.workerCounters.pending === 0 &&
+      observation.firstWorkerZeroMs === null
+    )
+      observation.firstWorkerZeroMs = sample.elapsedMs;
+    if (sample.predicateSatisfied) {
+      if (elapsedMs <= observation.timeoutMs) {
+        observation.firstQualifyingZeroMs ??= sample.elapsedMs;
+        observation.status = 'settled';
+      } else {
+        observation.lateZeroElapsedMs ??= sample.elapsedMs;
+        observation.status = 'timed-out';
+      }
+    } else if (elapsedMs > observation.timeoutMs) {
+      observation.status = 'timed-out';
+    }
+    updateSummary(sample);
+    return observation.status === 'settled';
+  };
+
+  scope.__qaLifecycleDrainObservationSnapshot = ({
+    sampleAfterDeadline = false,
+    timedOut = false,
+    includeHistory = true,
+  } = {}) => {
+    if (!observation) return null;
+    if (sampleAfterDeadline && observation.status === 'running') {
+      const elapsedMs = Math.max(
+        0,
+        performance.now() - observation.startedAtPerformanceMs,
+      );
+      const sample = readSample(elapsedMs);
+      observation.elapsedMs = sample.elapsedMs;
+      observation.postDeadlineObservation = {
+        ...sample,
+        afterDeadline: elapsedMs > observation.timeoutMs,
+      };
+      if (sample.predicateSatisfied && elapsedMs > observation.timeoutMs)
+        observation.lateZeroElapsedMs ??= sample.elapsedMs;
+      if (elapsedMs > observation.timeoutMs || timedOut)
+        observation.status = 'timed-out';
+      if (elapsedMs > observation.timeoutMs && sample.predicateSatisfied)
+        observation.lateZeroElapsedMs ??= sample.elapsedMs;
+    }
+    const summary = { ...observation };
+    delete summary.firstCamera;
+    return {
+      ...summary,
+      history: includeHistory
+        ? observation.history.slice(0, DRAIN_HISTORY_CAP)
+        : [],
+      historySampleCount: observation.history.length,
+      historyIncluded: includeHistory,
+    };
+  };
+
+  scope.__qaLifecycleClearDrainObservation = () => {
+    observation = null;
+  };
+}
+
 /** Install a bounded observer that resolves only after Cesium actually rendered the target imports. */
 export function installLifecycleRenderWaiter(scope = window) {
   let nextId = 0;
@@ -413,6 +740,143 @@ function compactWorkerQuiescenceHistory(value) {
   };
 }
 
+function compactLifecycleDrainHistory(value) {
+  if (!value || typeof value !== 'object') return null;
+  const compactSample = (sample) => {
+    const vector = (value) =>
+      Array.isArray(value) && value.length === 3 && value.every(Number.isFinite)
+        ? value.map(
+            (component) => Math.round(component * 1_000_000) / 1_000_000,
+          )
+        : null;
+    return {
+      elapsedMs:
+        Number.isFinite(sample?.elapsedMs) && sample.elapsedMs >= 0
+          ? Math.round(sample.elapsedMs * 100) / 100
+          : null,
+      valid: sample?.valid === true,
+      invalidReason: boundedToken(sample?.invalidReason, 60),
+      predicateSatisfied: sample?.predicateSatisfied === true,
+      imports: {
+        featureCount: boundedCounter(sample?.imports?.featureCount),
+        pendingJobs: boundedCounter(sample?.imports?.pendingJobs),
+        cacheEntries: boundedCounter(sample?.imports?.cacheEntries),
+      },
+      workerCounters: compactWorkerDiagnostics({
+        scope: 'cumulative-per-document',
+        instrumented: sample?.workerCounters?.instrumented,
+        overflow: sample?.workerCounters?.overflow,
+        pending: sample?.workerCounters?.pending,
+        workerCount: sample?.workerCounters?.workerCount,
+        workersTruncated: sample?.workerCounters?.workersTruncated,
+        workers: sample?.workerCounters?.workers,
+      }),
+      frame: {
+        frameNumber: boundedCounter(sample?.frame?.frameNumber),
+        requestRenderMode:
+          typeof sample?.frame?.requestRenderMode === 'boolean'
+            ? sample.frame.requestRenderMode
+            : null,
+        renderRequested:
+          typeof sample?.frame?.renderRequested === 'boolean'
+            ? sample.frame.renderRequested
+            : null,
+      },
+      globe: {
+        available:
+          typeof sample?.globe?.available === 'boolean'
+            ? sample.globe.available
+            : null,
+        tilesLoaded:
+          typeof sample?.globe?.tilesLoaded === 'boolean'
+            ? sample.globe.tilesLoaded
+            : null,
+      },
+      camera: {
+        position: vector(sample?.camera?.position),
+        direction: vector(sample?.camera?.direction),
+        up: vector(sample?.camera?.up),
+      },
+      cameraMoved:
+        typeof sample?.cameraMoved === 'boolean' ? sample.cameraMoved : null,
+      cameraDisplacementM:
+        Number.isFinite(sample?.cameraDisplacementM) &&
+        sample.cameraDisplacementM >= 0
+          ? Math.round(sample.cameraDisplacementM * 1_000) / 1_000
+          : null,
+      cameraOrientationDelta:
+        Number.isFinite(sample?.cameraOrientationDelta) &&
+        sample.cameraOrientationDelta >= 0
+          ? Math.round(sample.cameraOrientationDelta * 1_000_000) / 1_000_000
+          : null,
+    };
+  };
+  const history = Array.isArray(value.history) ? value.history : [];
+  return {
+    status: boundedToken(value.status, 40),
+    timeoutMs: boundedCounter(value.timeoutMs),
+    elapsedMs:
+      Number.isFinite(value.elapsedMs) && value.elapsedMs >= 0
+        ? Math.round(value.elapsedMs * 100) / 100
+        : null,
+    firstWorkerZeroMs:
+      Number.isFinite(value.firstWorkerZeroMs) && value.firstWorkerZeroMs >= 0
+        ? Math.round(value.firstWorkerZeroMs * 100) / 100
+        : null,
+    firstQualifyingZeroMs:
+      Number.isFinite(value.firstQualifyingZeroMs) &&
+      value.firstQualifyingZeroMs >= 0
+        ? Math.round(value.firstQualifyingZeroMs * 100) / 100
+        : null,
+    lateZeroElapsedMs:
+      Number.isFinite(value.lateZeroElapsedMs) && value.lateZeroElapsedMs >= 0
+        ? Math.round(value.lateZeroElapsedMs * 100) / 100
+        : null,
+    pollCount: boundedCounter(value.pollCount),
+    maxPollingGapMs:
+      Number.isFinite(value.maxPollingGapMs) && value.maxPollingGapMs >= 0
+        ? Math.round(value.maxPollingGapMs * 100) / 100
+        : null,
+    historyTruncated: value.historyTruncated === true || history.length > 202,
+    historyIncluded: value.historyIncluded !== false,
+    historySampleCount:
+      boundedCounter(value.historySampleCount) ?? history.length,
+    cameraMoved:
+      typeof value.cameraMoved === 'boolean' ? value.cameraMoved : null,
+    cameraMaxDisplacementM:
+      Number.isFinite(value.cameraMaxDisplacementM) &&
+      value.cameraMaxDisplacementM >= 0
+        ? Math.round(value.cameraMaxDisplacementM * 1_000) / 1_000
+        : null,
+    cameraMaxOrientationDelta:
+      Number.isFinite(value.cameraMaxOrientationDelta) &&
+      value.cameraMaxOrientationDelta >= 0
+        ? Math.round(value.cameraMaxOrientationDelta * 1_000_000) / 1_000_000
+        : null,
+    tilesLoadedTransitionCount: boundedCounter(
+      value.tilesLoadedTransitionCount,
+    ),
+    firstTilesLoadedTransitionMs:
+      Number.isFinite(value.firstTilesLoadedTransitionMs) &&
+      value.firstTilesLoadedTransitionMs >= 0
+        ? Math.round(value.firstTilesLoadedTransitionMs * 100) / 100
+        : null,
+    lastTilesLoadedTransitionMs:
+      Number.isFinite(value.lastTilesLoadedTransitionMs) &&
+      value.lastTilesLoadedTransitionMs >= 0
+        ? Math.round(value.lastTilesLoadedTransitionMs * 100) / 100
+        : null,
+    history: history.slice(0, 202).map(compactSample),
+    last: value.last ? compactSample(value.last) : null,
+    postDeadlineObservation: value.postDeadlineObservation
+      ? {
+          ...compactSample(value.postDeadlineObservation),
+          afterDeadline: value.postDeadlineObservation.afterDeadline === true,
+        }
+      : null,
+  };
+}
+
 /** Keep only small lifecycle counters and known worker-probe fields on failure. */
 export function createLifecycleFailureEvidence({
   caseId = null,
@@ -438,6 +902,14 @@ export function createLifecycleFailureEvidence({
       renderWaitId: boundedCounter(operation.renderWaitId),
       workspaceId: boundedToken(operation.workspaceId, 80),
       error: operation.error ? boundedError(operation.error) : null,
+      ...(!observation?.drainHistory
+        ? {
+            drainHistory: compactLifecycleDrainHistory(operation.drainHistory),
+          }
+        : {}),
+      drainHistoryError: operation.drainHistoryError
+        ? boundedError(operation.drainHistoryError)
+        : null,
     };
   if (observation && typeof observation === 'object') {
     const imports = observation.imports || {};
@@ -449,6 +921,7 @@ export function createLifecycleFailureEvidence({
         cacheEntries: boundedCounter(imports.cacheEntries),
       },
       workerCounters: compactWorkerDiagnostics(observation.workerCounters),
+      drainHistory: compactLifecycleDrainHistory(observation.drainHistory),
       frame: {
         frameNumber: boundedCounter(observation.frame?.frameNumber),
         requestRenderMode:
