@@ -38,12 +38,66 @@ the earlier release requirements and historical results.
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `0edfb8e`: fresh 12-check isolated viewer matrix passes on Windows UHD 620; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
-| S59 cooperative ingestion | Partial: bounded render cohort, four-ms normalization/entity/CCTV batches, cancellation ownership and workspace completion guards | Focused tests and full CI at `eb90492` pass; Linux software-rendered ten-capture comparison passes at `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
+| S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort and workspace completion guards; document decoding and UI maintenance remain | Local import/pack tests and paired CPU comparison pass for `42d4be6`; full integration is running. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S59 single-feature normalization - 10 October 2026
+
+GPT-6 Luna's `42d4be66e26e2bb2223aec8506c1b34643367526` removes the importer's
+per-feature stringify/UTF-8/decode round trip. Imports and the synchronous pack
+decoder now share strict geometry validation. Large geometry yields at small
+coordinate checkpoints through the existing four-ms consumer, and validated
+bounds/time summaries avoid a second full traversal. The initial normalization
+wake is owned by that consumer and cancels immediately on abort. Existing ID,
+coordinate, altitude, ring, aggregate-limit, timestamp and rejection rules remain.
+
+Root's import/pack review passes 39 tests and the production build; Luna's final
+focused suite passes 29 tests after the additional scheduler failure-path check.
+Formatting and package boundaries pass. The commit is on remote `dev`; its
+[full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38056869115)
+is recorded separately when complete.
+
+Root independently ran the retained comparison harness in a clean detached
+worktree at that exact candidate, against
+`c7785169cb1d05dec2b133ade87c624db84eabed`. Each workload has five alternating
+baseline/candidate pairs with equal output hashes and the expected accepted
+population. This is Node 24.16.0 on Windows 10, Intel i7-8665U; it measures local
+import completion, without a browser, GPU or forced GC.
+
+| Valid workload | Baseline median | Candidate median |
+| --- | --- | --- |
+| One 40,000-position line | 65.97 ms | 43.79 ms |
+| One 30,000-position polygon with a hole | 56.49 ms | 31.03 ms |
+| 10,000 point features | 423.19 ms | 99.29 ms |
+| Synchronous 40,000-position pack decoder | 12.59 ms | 12.48 ms |
+
+All five candidate queued-cancellation trials reject with `AbortError`; every
+baseline trial completes before its queued abort runs. Candidate settlement after
+the abort task is observed is 0.11-0.50 ms. Total cancellation time is 11.86-68.00 ms,
+including synchronous decoding/parsing and scheduling; those costs remain visible.
+The four-ms setting is a batch target, not a measured maximum in this report.
+This packet does not establish browser interaction percentiles, rendering gains,
+or completion of all S59 work.
+
+The [reproduced report](performance-evidence/s59-42d4be6-reproduced.json) and
+[exact executed harness](performance-evidence/s59-42d4be6-reproduction.mjs) are
+retained. Run the harness with the clean measured candidate as the working
+directory; it extracts baseline importer, geometry decoder and scheduler copies
+from Git and removes only its own temporary files. Report SHA-256:
+`8078d6cf92611df04334e6451a930795eba2c218d408737eecfc2ac2b2e5db5f`;
+harness SHA-256: `c8007f2540fd50f9918b3783fdd48e8900516b0eece74576e2d71f55630b6450`.
+
+Luna's earlier [raw observation](performance-evidence/s59-42d4be6-original.json)
+and [metadata correction](performance-evidence/s59-42d4be6.json) remain supporting
+evidence. That original report mislabeled Git blob IDs as SHA-256; the correction
+preserves every timing row and supplies checked source-byte digests. Its inline
+measurement script was not retained, so the independently reproduced report above
+is the reproducible acceptance evidence. Earlier exploratory polygon measurements
+used a rejected fixture and are not accepted performance results.
 
 ### Rendered CCTV isolation: first failed check - 10 October 2026
 

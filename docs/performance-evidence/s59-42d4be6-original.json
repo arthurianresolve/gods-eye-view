@@ -1,0 +1,505 @@
+{
+  "schema": "s59-geojson-incremental-final/v1",
+  "measuredAtUtc": "2026-10-10T13:43:12.028Z",
+  "baselineCommit": "c7785169cb1d05dec2b133ade87c624db84eabed",
+  "candidateCommit": "42d4be66e26e2bb2223aec8506c1b34643367526",
+  "sourceCleanAtStart": true,
+  "sourceCleanAtEnd": true,
+  "candidateSourceSha256": {
+    "src/director/packs/geojson.js": "737c3b0c3e1d7885d90faa7b32c3a3ed3b25c182",
+    "src/imports/geojsonCsv.js": "9513fcccb6ecbd99ae7b370d4b198fc64401fc1c",
+    "src/imports/cooperative.js": "80c2bafc865c821d8c873361b7f9466c7dc8417c"
+  },
+  "harnessSha256": "ce2f85f2dafe63bc4d09b645f51ab780241fdcc9cc85f3733f22a3c6f91a0f38",
+  "harnessName": "s59-geojson-final-benchmark.mjs",
+  "runtime": "v24.16.0",
+  "platform": "win32",
+  "arch": "x64",
+  "osRelease": "Microsoft Windows [Version 10.0.19045.7725]",
+  "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+  "fixture": {
+    "encoding": "UTF-8 GeoJSON FeatureCollection; generated coordinates are deterministic",
+    "timeField": "time",
+    "order": "five pairs; AB, BA, AB, BA, AB",
+    "outputs": "SHA-256 of JSON.stringify(preview report); each pair asserted equal"
+  },
+  "workloads": {
+    "line-40000": {
+      "inputBytes": 915766,
+      "expectedRecords": 1,
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 47.449100000000044,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          },
+          "candidate": {
+            "elapsedMs": 29.629199999999855,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 35.52110000000016,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          },
+          "baseline": {
+            "elapsedMs": 77.53949999999986,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 54.51139999999987,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          },
+          "candidate": {
+            "elapsedMs": 32.54410000000007,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 26.27420000000029,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          },
+          "baseline": {
+            "elapsedMs": 47.41210000000001,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 37.664900000000216,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          },
+          "candidate": {
+            "elapsedMs": 16.090999999999894,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe783bac3c4dc4ff1b56be36be5453c659851735542f368712842c24ce31323b"
+          }
+        }
+      ]
+    },
+    "polygon-hole-30000": {
+      "inputBytes": 1183458,
+      "expectedRecords": 1,
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 45.87339999999995,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          },
+          "candidate": {
+            "elapsedMs": 25.909900000000107,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 18.928699999999935,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          },
+          "baseline": {
+            "elapsedMs": 36.60109999999986,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 27.251800000000003,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          },
+          "candidate": {
+            "elapsedMs": 25.516200000000026,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 16.806500000000142,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          },
+          "baseline": {
+            "elapsedMs": 29.8429000000001,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 30.187000000000353,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          },
+          "candidate": {
+            "elapsedMs": 23.91800000000012,
+            "records": 1,
+            "rejected": 0,
+            "outputSha256": "fe14560f33b89ad9459eae1f7f5ade54a58efb23dc1abeb29af6e3ccaf4838eb"
+          }
+        }
+      ]
+    },
+    "many-points-10000": {
+      "inputBytes": 1517921,
+      "expectedRecords": 10000,
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 375.47620000000006,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          },
+          "candidate": {
+            "elapsedMs": 91.68650000000025,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 62.84349999999995,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          },
+          "baseline": {
+            "elapsedMs": 298.77099999999973,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 287.9629,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          },
+          "candidate": {
+            "elapsedMs": 90.6810000000005,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 65.8082000000004,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          },
+          "baseline": {
+            "elapsedMs": 245.33340000000044,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 253.14689999999973,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          },
+          "candidate": {
+            "elapsedMs": 77.82909999999993,
+            "records": 10000,
+            "rejected": 0,
+            "outputSha256": "d33acf561f7442b603fb18193fadaff6c66a986eec5baa8163d7d92442d44777"
+          }
+        }
+      ]
+    }
+  },
+  "cancellation": [
+    {
+      "pair": 1,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "outcome": "fulfilled",
+        "elapsedMs": 48.93809999999985,
+        "abortAtMs": null,
+        "abortToSettlementMs": null
+      },
+      "candidate": {
+        "outcome": "AbortError",
+        "elapsedMs": 7.334999999999582,
+        "abortAtMs": 7.015699999999924,
+        "abortToSettlementMs": 0.3192999999996573
+      }
+    },
+    {
+      "pair": 2,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "outcome": "AbortError",
+        "elapsedMs": 8.23909999999978,
+        "abortAtMs": 8.13650000000007,
+        "abortToSettlementMs": 0.10259999999971114
+      },
+      "baseline": {
+        "outcome": "fulfilled",
+        "elapsedMs": 33.60680000000002,
+        "abortAtMs": null,
+        "abortToSettlementMs": null
+      }
+    },
+    {
+      "pair": 3,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "outcome": "fulfilled",
+        "elapsedMs": 40.739900000000034,
+        "abortAtMs": null,
+        "abortToSettlementMs": null
+      },
+      "candidate": {
+        "outcome": "AbortError",
+        "elapsedMs": 10.104699999999866,
+        "abortAtMs": 9.999699999999848,
+        "abortToSettlementMs": 0.10500000000001819
+      }
+    },
+    {
+      "pair": 4,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "outcome": "AbortError",
+        "elapsedMs": 7.855799999999817,
+        "abortAtMs": 7.780999999999949,
+        "abortToSettlementMs": 0.0747999999998683
+      },
+      "baseline": {
+        "outcome": "fulfilled",
+        "elapsedMs": 40.47870000000012,
+        "abortAtMs": null,
+        "abortToSettlementMs": null
+      }
+    },
+    {
+      "pair": 5,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "outcome": "fulfilled",
+        "elapsedMs": 35.03740000000016,
+        "abortAtMs": null,
+        "abortToSettlementMs": null
+      },
+      "candidate": {
+        "outcome": "AbortError",
+        "elapsedMs": 40.98540000000003,
+        "abortAtMs": 40.802400000000034,
+        "abortToSettlementMs": 0.18299999999999272
+      }
+    }
+  ],
+  "syncPackDecode": [
+    {
+      "pair": 1,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "elapsedMs": 11.81840000000011,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      },
+      "candidate": {
+        "elapsedMs": 12.149900000000343,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      }
+    },
+    {
+      "pair": 2,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "elapsedMs": 24.83219999999983,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      },
+      "baseline": {
+        "elapsedMs": 10.5621000000001,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      }
+    },
+    {
+      "pair": 3,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "elapsedMs": 9.672900000000482,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      },
+      "candidate": {
+        "elapsedMs": 8.680000000000291,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      }
+    },
+    {
+      "pair": 4,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "elapsedMs": 9.462999999999738,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      },
+      "baseline": {
+        "elapsedMs": 8.089100000000144,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      }
+    },
+    {
+      "pair": 5,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "elapsedMs": 7.390000000000327,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      },
+      "candidate": {
+        "elapsedMs": 7.3661999999994805,
+        "outputSha256": "139d48e60651d3b977b814bfe3c6a2c43a9e4494301717eb14d5ea119d143388"
+      }
+    }
+  ]
+}
