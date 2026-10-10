@@ -36,6 +36,11 @@ on:
         type: string
         required: false
         default: ''
+      capture_worker_audit_mode:
+        description: Keep worker auditing diagnostic, or restore it before capture warmup
+        type: choice
+        options: [diagnostic, prewarm]
+        default: diagnostic
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -332,9 +337,11 @@ jobs:
       - name: Build and inspect both immutable application revisions
         env:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
         run: >-
           node scripts/qa-performance-build-smoke.mjs
           --candidate-sha "$CANDIDATE_SHA"
+          --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
           --out "$RUNNER_TEMP/performance-build-smoke.json"
 
       - name: Print bounded smoke evidence
