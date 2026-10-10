@@ -471,6 +471,23 @@ function assertRun(run, expectedCommit, report) {
   )
     throw new Error('CCTV drag changed-field evidence does not match values.');
   digest(drag.geometrySha256After, 'post-drag gizmo geometry');
+  const settlement = drag.geometrySettlement;
+  if (
+    settlement?.status !== 'passed' ||
+    settlement.timeoutMs !== 2000 ||
+    settlement.forcedFrames !== 0 ||
+    !Number.isFinite(settlement.releaseAtMs) ||
+    !Number.isFinite(settlement.readyFrameAtMs) ||
+    settlement.readyFrameAtMs < settlement.releaseAtMs ||
+    settlement.readyFrameAtMs - settlement.releaseAtMs >=
+      settlement.timeoutMs ||
+    !Number.isFinite(settlement.elapsedMs) ||
+    settlement.elapsedMs < 0 ||
+    settlement.elapsedMs >= settlement.timeoutMs
+  )
+    throw new Error(
+      'CCTV edited geometry did not settle naturally after release.',
+    );
   assertForegroundConditions(
     drag.conditions,
     {

@@ -110,7 +110,7 @@ function observeVisualizerUpdates(viewer) {
   const display = viewer.dataSourceDisplay;
   const own = Object.getOwnPropertyDescriptor(display, 'update');
   const original = display.update;
-  const state = { ready: null, updates: 0 };
+  const state = { ready: null, updates: 0, lastReadyFrameAtMs: null };
   // DataSourceDisplay.ready is latched after its first success. The public
   // update() result describes this update, including geometry rebuilt later.
   function observedUpdate(...args) {
@@ -120,8 +120,12 @@ function observeVisualizerUpdates(viewer) {
     return result;
   }
   display.update = observedUpdate;
+  const removeRender = viewer.scene.postRender.addEventListener(() => {
+    if (state.ready === true) state.lastReadyFrameAtMs = performance.now();
+  });
   visualizerUpdates.set(viewer, state);
   return () => {
+    removeRender();
     if (display.update === observedUpdate) {
       if (own) Object.defineProperty(display, 'update', own);
       else delete display.update;
@@ -1229,6 +1233,8 @@ function observeNativeInput(viewer, layer, targetPoint) {
   };
   const onUp = (event) => {
     state.trustedPointerUp ||= event.isTrusted && event.button === 0;
+    if (event.isTrusted && event.button === 0)
+      state.releasedAtMs = performance.now();
     queueMicrotask(sampleInputs);
     ownedTimeout();
   };
@@ -1262,7 +1268,6 @@ async function waitForNativeRelease(run, viewer, layer, input) {
       viewer.scene.screenSpaceCameraController.enableInputs
     ) {
       input.state.dragInputsRestoredAfterRelease = true;
-      await wait(120);
       const calibrationAfter = currentCalibration(layer);
       run.drag.calibrationAfter = calibrationAfter;
       run.drag.changedFields = Object.keys(startCalibration).filter(
@@ -1297,6 +1302,41 @@ async function waitForNativeRelease(run, viewer, layer, input) {
   run.drag.dragInputsRestoredAfterRelease =
     input.state.dragInputsRestoredAfterRelease;
   throw new Error('Native CCTV calibration drag did not complete or release.');
+}
+
+async function waitForEditedGeometry(viewer, layer, trial, releasedAtMs) {
+  check(Number.isFinite(releasedAtMs), 'Missing native release timestamp.');
+  const timeoutMs = 2000;
+  const startedAt = performance.now();
+  const report = {
+    status: 'pending',
+    releaseAtMs: releasedAtMs,
+    readyFrameAtMs: null,
+    timeoutMs,
+    elapsedMs: 0,
+    forcedFrames: 0,
+  };
+  trial.drag.geometrySettlement = report;
+  // Observe automatic worker-completion rendering. A fresh frame can precede
+  // asynchronous entity rebuilding, so capture only a completed edited scene.
+  // Never drive extra frames to make the production render-demand path pass.
+  while (performance.now() - releasedAtMs < timeoutMs) {
+    const state = visualizerUpdates.get(viewer);
+    if (
+      state?.ready === true &&
+      state.lastReadyFrameAtMs >= releasedAtMs &&
+      layer.getPerformanceDiagnostics().pendingJobs === 0
+    ) {
+      report.status = 'passed';
+      report.readyFrameAtMs = state.lastReadyFrameAtMs;
+      report.elapsedMs = performance.now() - startedAt;
+      return;
+    }
+    await wait(10);
+  }
+  report.status = 'failed';
+  report.elapsedMs = performance.now() - startedAt;
+  throw new Error('Edited CCTV geometry did not finish in a natural render.');
 }
 
 async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
@@ -1542,6 +1582,12 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       );
     publishPartial();
     await waitForNativeRelease(trial, viewer, layer, inputObserver);
+    await waitForEditedGeometry(
+      viewer,
+      layer,
+      trial,
+      inputObserver.state.releasedAtMs,
+    );
     pointerNode.textContent = '';
     inputObserver.dispose();
     inputObserver = null;

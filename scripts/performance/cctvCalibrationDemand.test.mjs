@@ -176,6 +176,14 @@ function trial(mode, pair, globalIndex) {
       dragInputsRestoredAfterRelease: true,
       acceptedCalibrationChanged: true,
       committedAfterRelease: true,
+      geometrySettlement: {
+        status: 'passed',
+        releaseAtMs: 11000,
+        readyFrameAtMs: 11020,
+        timeoutMs: 2000,
+        elapsedMs: 20,
+        forcedFrames: 0,
+      },
       selectedCameraIdAfterRelease: cameraId,
       pickIdentity: {
         trusted: true,
@@ -417,6 +425,21 @@ test('rejects instruction-induced canvas changes even with a stable window viewp
 
 test('rejects missing pointer, pixel, foreground, or cleanup evidence', () => {
   for (const mutate of [
+    (run) => {
+      delete run.drag.geometrySettlement;
+    },
+    (run) => {
+      run.drag.geometrySettlement.readyFrameAtMs = 10999;
+    },
+    (run) => {
+      run.drag.geometrySettlement.readyFrameAtMs = 13001;
+    },
+    (run) => {
+      run.drag.geometrySettlement.forcedFrames = 1;
+    },
+    (run) => {
+      delete run.afterPixels.captureState.currentVisualizerUpdateReady;
+    },
     (run) => {
       delete run.drag.trustedPointerMoveCount;
     },
