@@ -1,6 +1,7 @@
 import { parentPort } from 'node:worker_threads';
 import { previewCSV, previewGeoJSON } from '../../src/imports/geojsonCsv.js';
 import { previewKML } from '../../src/imports/kmlGpx.js';
+import { packPreviewCoordinates } from './s59CoordinateTransfer.mjs';
 
 if (!parentPort) throw new Error('This module must run inside a worker.');
 
@@ -37,7 +38,7 @@ parentPort.on('message', (message) => {
 
 parentPort.postMessage({ type: 'ready' });
 
-async function run({ id, kind, input, options }) {
+async function run({ id, kind, input, options, transport = 'clone' }) {
   const controller = new AbortController();
   active.set(id, controller);
   let previousTick = performance.now();
@@ -49,23 +50,47 @@ async function run({ id, kind, input, options }) {
   }, 1);
   const startedAt = performance.now();
   try {
+    const previewStartedAt = performance.now();
     const preview = await decodePreview(kind, input, {
       ...options,
       signal: controller.signal,
     });
+    const previewDurationMs = performance.now() - previewStartedAt;
+    let payload = { type: 'result', preview };
+    let packDurationMs = 0;
+    let transferList = [];
+    if (transport === 'transfer') {
+      const packStartedAt = performance.now();
+      const packet = packPreviewCoordinates(preview);
+      packDurationMs = performance.now() - packStartedAt;
+      payload = { type: 'transfer-result', ...packet };
+      transferList = [
+        packet.packedRecords.buffer,
+        packet.shapeBuffer.buffer,
+        packet.coordinateBuffer.buffer,
+      ];
+    } else if (transport !== 'clone') {
+      throw Object.assign(new Error('Unsupported diagnostic transport.'), {
+        code: 'unsupported-transport',
+      });
+    }
     const durationMs = performance.now() - startedAt;
     // Let the timer observe any long synchronous segment before stopping it;
     // the extra checkpoint is excluded from the reported task duration.
     await new Promise((resolve) => setTimeout(resolve, 0));
     clearInterval(heartbeat);
     active.delete(id);
-    parentPort.postMessage({
-      type: 'result',
-      id,
-      preview,
-      durationMs,
-      maxEventLoopGapMs,
-    });
+    parentPort.postMessage(
+      {
+        ...payload,
+        id,
+        durationMs,
+        previewDurationMs,
+        packDurationMs,
+        maxEventLoopGapMs,
+      },
+      transferList,
+    );
   } catch (error) {
     const durationMs = performance.now() - startedAt;
     await new Promise((resolve) => setTimeout(resolve, 0));

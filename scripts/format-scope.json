@@ -1030,6 +1030,8 @@
   "scripts/performance/s59DocumentDecodeComparison.mjs",
   "scripts/performance/s59DocumentDecodeComparison.test.mjs",
   "scripts/performance/s59DocumentDecodeWorker.mjs",
+  "scripts/performance/s59CoordinateTransfer.mjs",
+  "scripts/performance/s59CoordinateTransfer.test.mjs",
   "scripts/performance/militaryTrackedFrameTimeRepro.mjs",
   "scripts/performance/militaryTrackedFrameTimeRepro.test.mjs",
   "scripts/performance/windFrameProbe.mjs",

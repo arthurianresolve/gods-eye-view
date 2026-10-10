@@ -14,6 +14,7 @@ import { Worker } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { previewCSV, previewGeoJSON } from '../../src/imports/geojsonCsv.js';
 import { previewKML } from '../../src/imports/kmlGpx.js';
+import { rehydratePreviewCoordinates } from './s59CoordinateTransfer.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WORKER_URL = new URL('./s59DocumentDecodeWorker.mjs', import.meta.url);
@@ -219,7 +220,7 @@ function createDecodeWorker() {
   let readyResolve = null;
   let readyReject = null;
   let readyTimeout = null;
-  worker.on('message', (message) => {
+  worker.on('message', async (message) => {
     if (message?.type === 'ready') {
       readyReceived = true;
       clearTimeout(readyTimeout);
@@ -229,32 +230,84 @@ function createDecodeWorker() {
     }
     const entry = pending.get(message?.id);
     if (!entry) return;
-    pending.delete(message.id);
-    clearTimeout(entry.timeout);
-    entry.signal?.removeEventListener('abort', entry.onAbort);
     if (entry.signal?.aborted) {
+      finishEntry(message.id, entry);
       entry.reject(
         entry.signal.reason || new DOMException('Aborted', 'AbortError'),
       );
       return;
     }
-    if (message.type === 'result') {
-      entry.resolve({
-        preview: message.preview,
-        workerDurationMs: message.durationMs,
-        workerMaxEventLoopGapMs: message.maxEventLoopGapMs,
-      });
-    } else {
-      entry.reject(
-        Object.assign(new Error(message.message || 'Worker preview failed.'), {
-          name: message.name || 'Error',
-          code: message.code || undefined,
+    try {
+      if (
+        message.type === 'transfer-result' &&
+        entry.transport === 'transfer'
+      ) {
+        const rehydrationStartedAt = performance.now();
+        entry.onRehydrationStart?.();
+        const restored = await rehydratePreviewCoordinates(
+          {
+            metadata: message.metadata,
+            packedRecords: message.packedRecords,
+            shapeBuffer: message.shapeBuffer,
+            coordinateBuffer: message.coordinateBuffer,
+          },
+          {
+            signal: entry.rehydrationController.signal,
+            budgetMs: 4,
+            scheduleTimer: entry.rehydrationScheduleTimer,
+          },
+        );
+        if (pending.get(message.id) !== entry) return;
+        if (entry.signal?.aborted)
+          throw (
+            entry.signal.reason || new DOMException('Aborted', 'AbortError')
+          );
+        finishEntry(message.id, entry);
+        entry.resolve({
+          preview: restored.preview,
           workerDurationMs: message.durationMs,
+          workerPreviewDurationMs: message.previewDurationMs,
+          workerPackDurationMs: message.packDurationMs,
           workerMaxEventLoopGapMs: message.maxEventLoopGapMs,
-        }),
-      );
+          rehydrationDurationMs: performance.now() - rehydrationStartedAt,
+          rehydrationBatches: restored.batches,
+          maximumRehydrationBatchDurationMs: restored.maximumBatchDurationMs,
+        });
+      } else if (message.type === 'result' && entry.transport === 'clone') {
+        finishEntry(message.id, entry);
+        entry.resolve({
+          preview: message.preview,
+          workerDurationMs: message.durationMs,
+          workerPreviewDurationMs: message.previewDurationMs,
+          workerPackDurationMs: message.packDurationMs,
+          workerMaxEventLoopGapMs: message.maxEventLoopGapMs,
+        });
+      } else {
+        finishEntry(message.id, entry);
+        entry.reject(
+          Object.assign(
+            new Error(message.message || 'Worker preview failed.'),
+            {
+              name: message.name || 'Error',
+              code: message.code || undefined,
+              workerDurationMs: message.durationMs,
+              workerMaxEventLoopGapMs: message.maxEventLoopGapMs,
+            },
+          ),
+        );
+      }
+    } catch (error) {
+      finishEntry(message.id, entry);
+      entry.reject(error);
     }
   });
+
+  function finishEntry(id, entry) {
+    if (pending.get(id) !== entry) return;
+    pending.delete(id);
+    clearTimeout(entry.timeout);
+    entry.signal?.removeEventListener('abort', entry.onAbort);
+  }
   worker.on('error', (error) => {
     terminalError = error;
     clearTimeout(readyTimeout);
@@ -276,6 +329,7 @@ function createDecodeWorker() {
     for (const entry of pending.values()) {
       clearTimeout(entry.timeout);
       entry.signal?.removeEventListener('abort', entry.onAbort);
+      entry.rehydrationController.abort(error);
       entry.reject(error);
     }
     pending.clear();
@@ -302,7 +356,13 @@ function createDecodeWorker() {
       kind,
       input,
       options = {},
-      { signal, timeoutMs = TASK_TIMEOUT_MS } = {},
+      {
+        signal,
+        timeoutMs = TASK_TIMEOUT_MS,
+        transport = 'clone',
+        onRehydrationStart = null,
+        rehydrationScheduleTimer = null,
+      } = {},
     ) {
       if (terminalError) return Promise.reject(terminalError);
       if (disposed)
@@ -324,11 +384,35 @@ function createDecodeWorker() {
           rejectAll(error);
           termination = worker.terminate();
         }, timeoutMs);
-        const onAbort = () => worker.postMessage({ type: 'cancel', id });
-        pending.set(id, { resolve, reject, timeout, signal, onAbort });
+        const rehydrationController = new AbortController();
+        const onAbort = () => {
+          rehydrationController.abort(
+            signal.reason || new DOMException('Aborted', 'AbortError'),
+          );
+          worker.postMessage({ type: 'cancel', id });
+        };
+        const entry = {
+          resolve,
+          reject,
+          timeout,
+          signal,
+          onAbort,
+          transport,
+          rehydrationController,
+          onRehydrationStart,
+          rehydrationScheduleTimer,
+        };
+        pending.set(id, entry);
         signal?.addEventListener('abort', onAbort, { once: true });
         try {
-          worker.postMessage({ type: 'run', id, kind, input, options });
+          worker.postMessage({
+            type: 'run',
+            id,
+            kind,
+            input,
+            options,
+            transport,
+          });
         } catch (error) {
           pending.delete(id);
           clearTimeout(timeout);
@@ -407,9 +491,10 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
     'src/imports/kmlGpx.js',
     'src/imports/cooperative.js',
     'src/director/packs/geojson.js',
+    'scripts/performance/s59CoordinateTransfer.mjs',
   ];
   const report = {
-    schema: 'gev-s59-document-decode-comparison/v1',
+    schema: 'gev-s59-document-decode-comparison/v2',
     status: 'running',
     capturedAt: new Date().toISOString(),
     candidateCommit: git(['rev-parse', 'HEAD']),
@@ -440,12 +525,17 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
     workerStartupMs: null,
     warmup: [],
     scope:
-      'Node main-thread public preview APIs versus the same APIs in a persistent worker_threads diagnostic prototype. Includes transfer/clone costs in worker total completion. Maximum 1ms-interval event-loop timer gap is a responsiveness observation, not an application CPU-task duration. Not a browser Web Worker, application, rendering, GPU, or production-default comparison.',
+      'Diagnostic comparison of public preview APIs on the main thread and in a persistent Node worker_threads worker using structured clone or transferable coordinate buffers. Transfer mode clones record metadata and rehydrates coordinates on the main thread in consumeInBatches with a 4ms target. Total completion minus worker execution is combined clone, delivery, main-thread reconstruction, and scheduling; it is not clone-only attribution. Maximum 1ms timer gap is a responsiveness observation, not application CPU duration. Not a browser, rendering, GPU, or production-default comparison.',
     bounds: {
       maxVerticesPerGeometry: 50_000,
       maxCsvRows: 50_000,
       maxPairs: 5,
       maxWorkerTasksInFlight: 1,
+      maxRecords: 50_000,
+      maxCoordinates: 50_000,
+      maxTransferValues: 150_000,
+      maxShapeInstructions: 200_000,
+      rehydrationBatchTargetMs: 4,
       taskTimeoutMs: TASK_TIMEOUT_MS,
       comparisonTimeoutMs: COMPARISON_TIMEOUT_MS,
       timerIntervalMs: 1,
@@ -487,13 +577,29 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
         workload.options,
       );
       const workerWarmupMs = performance.now() - workerWarmupStartedAt;
+      const transferWarmupStartedAt = performance.now();
+      const warmTransfer = await worker.run(
+        workload.kind,
+        workload.input,
+        workload.options,
+        { transport: 'transfer' },
+      );
+      const transferWarmupMs = performance.now() - transferWarmupStartedAt;
       const warmHash = stablePreviewHash(warmMain);
       assert.equal(stablePreviewHash(warmWorker.preview), warmHash);
+      assert.equal(stablePreviewHash(warmTransfer.preview), warmHash);
       report.warmup.push({
         workload: workload.id,
         mainCompletionMs: mainWarmupMs,
         workerCompletionMs: workerWarmupMs,
         workerExecutionMs: warmWorker.workerDurationMs,
+        transferCompletionMs: transferWarmupMs,
+        transferWorkerExecutionMs: warmTransfer.workerDurationMs,
+        transferPreviewExecutionMs: warmTransfer.workerPreviewDurationMs,
+        transferPackExecutionMs: warmTransfer.workerPackDurationMs,
+        transferRehydrationMs: warmTransfer.rehydrationDurationMs,
+        transferRehydrationMaximumBatchMs:
+          warmTransfer.maximumRehydrationBatchDurationMs,
         outputSha256: warmHash,
       });
       for (let pair = 0; pair < pairs; pair++) {
@@ -501,7 +607,10 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
           performance.now() - comparisonStartedAt <= COMPARISON_TIMEOUT_MS,
           'S59 comparison exceeded its overall 10-minute bound.',
         );
-        const order = pair % 2 ? ['worker', 'main'] : ['main', 'worker'];
+        const baseOrder = ['main', 'clone', 'transfer'];
+        const order = baseOrder.map(
+          (_, index) => baseOrder[(index + pair) % baseOrder.length],
+        );
         const pairSamples = {};
         for (const variant of order) {
           const sample = await measured(async () =>
@@ -517,6 +626,7 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
                   workload.kind,
                   workload.input,
                   workload.options,
+                  { transport: variant === 'transfer' ? 'transfer' : 'clone' },
                 ),
           );
           const preview = sample.value.preview;
@@ -531,26 +641,47 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
             totalCompletionMs: sample.totalCompletionMs,
             maxMainThreadGapMs: sample.maxMainThreadGapMs,
             workerDurationMs:
-              variant === 'worker' ? sample.value.workerDurationMs : null,
-            workerMaxEventLoopGapMs:
-              variant === 'worker'
-                ? sample.value.workerMaxEventLoopGapMs
+              variant === 'main' ? null : sample.value.workerDurationMs,
+            workerPreviewDurationMs:
+              variant === 'main'
+                ? null
+                : (sample.value.workerPreviewDurationMs ??
+                  sample.value.workerDurationMs),
+            workerPackDurationMs:
+              variant === 'transfer' ? sample.value.workerPackDurationMs : null,
+            combinedCloneDeliveryReconstructionSchedulingMs:
+              variant !== 'main'
+                ? sample.totalCompletionMs - sample.value.workerDurationMs
                 : null,
+            rehydrationDurationMs:
+              variant === 'transfer'
+                ? sample.value.rehydrationDurationMs
+                : null,
+            rehydrationBatches:
+              variant === 'transfer' ? sample.value.rehydrationBatches : null,
+            maximumRehydrationBatchDurationMs:
+              variant === 'transfer'
+                ? sample.value.maximumRehydrationBatchDurationMs
+                : null,
+            workerMaxEventLoopGapMs:
+              variant !== 'main' ? sample.value.workerMaxEventLoopGapMs : null,
             ...observed,
           };
           report.samples.push({ workload: workload.id, ...row });
           pairSamples[variant] = row;
         }
-        assert.equal(
-          pairSamples.main.outputSha256,
-          pairSamples.worker.outputSha256,
-          `${workload.id} pair ${pair} output parity`,
-        );
-        assert.equal(
-          pairSamples.main.accepted,
-          pairSamples.worker.accepted,
-          `${workload.id} pair ${pair} accepted parity`,
-        );
+        for (const variant of ['clone', 'transfer']) {
+          assert.equal(
+            pairSamples.main.outputSha256,
+            pairSamples[variant].outputSha256,
+            `${workload.id} pair ${pair} ${variant} output parity`,
+          );
+          assert.equal(
+            pairSamples.main.accepted,
+            pairSamples[variant].accepted,
+            `${workload.id} pair ${pair} ${variant} accepted parity`,
+          );
+        }
       }
       const samplesFor = (variant, field) =>
         report.samples
@@ -564,17 +695,38 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
         inputBytes: workload.inputBytes,
         outputSha256: warmHash,
         mainMedianCompletionMs: median(samplesFor('main', 'totalCompletionMs')),
-        workerMedianCompletionMs: median(
-          samplesFor('worker', 'totalCompletionMs'),
+        cloneMedianCompletionMs: median(
+          samplesFor('clone', 'totalCompletionMs'),
+        ),
+        transferMedianCompletionMs: median(
+          samplesFor('transfer', 'totalCompletionMs'),
         ),
         mainMedianMaxTaskGapMs: median(
           samplesFor('main', 'maxMainThreadGapMs'),
         ),
-        workerMedianMaxMainTaskGapMs: median(
-          samplesFor('worker', 'maxMainThreadGapMs'),
+        cloneMedianMaxMainTaskGapMs: median(
+          samplesFor('clone', 'maxMainThreadGapMs'),
         ),
-        workerMedianWorkerTaskGapMs: median(
-          samplesFor('worker', 'workerMaxEventLoopGapMs'),
+        transferMedianMaxMainTaskGapMs: median(
+          samplesFor('transfer', 'maxMainThreadGapMs'),
+        ),
+        cloneMedianWorkerTaskGapMs: median(
+          samplesFor('clone', 'workerMaxEventLoopGapMs'),
+        ),
+        transferMedianWorkerTaskGapMs: median(
+          samplesFor('transfer', 'workerMaxEventLoopGapMs'),
+        ),
+        transferMedianWorkerExecutionMs: median(
+          samplesFor('transfer', 'workerDurationMs'),
+        ),
+        transferMedianPackMs: median(
+          samplesFor('transfer', 'workerPackDurationMs'),
+        ),
+        transferMedianRehydrationMs: median(
+          samplesFor('transfer', 'rehydrationDurationMs'),
+        ),
+        transferMaximumBatchMs: Math.max(
+          ...samplesFor('transfer', 'maximumRehydrationBatchDurationMs'),
         ),
       });
     }
@@ -594,6 +746,12 @@ async function runComparison({ outputPath, pairs = DEFAULT_PAIRS } = {}) {
       pendingJobs: worker.pendingCount,
     };
   }
+  report.candidateCommitAtEnd = git(['rev-parse', 'HEAD']);
+  report.sourceCleanAtEnd = git(['status', '--porcelain']).length === 0;
+  report.sourceIdentityStable =
+    report.candidateCommitAtEnd === report.candidateCommit &&
+    report.sourceClean &&
+    report.sourceCleanAtEnd;
   if (outputPath) {
     const resolved = path.resolve(outputPath);
     await mkdir(path.dirname(resolved), { recursive: true });

@@ -9,6 +9,36 @@ import {
   summarizePreview,
 } from './s59DocumentDecodeComparison.mjs';
 
+function controlledRehydrationScheduler() {
+  const callbacks = new Map();
+  let nextId = 0;
+  let firstScheduledResolve;
+  const firstScheduled = new Promise((resolve) => {
+    firstScheduledResolve = resolve;
+  });
+  let cancelled = 0;
+  const scheduleTimer = (callback) => {
+    const id = ++nextId;
+    callbacks.set(id, callback);
+    firstScheduledResolve?.();
+    firstScheduledResolve = null;
+    return id;
+  };
+  scheduleTimer.cancel = (id) => {
+    if (callbacks.delete(id)) cancelled++;
+  };
+  return {
+    scheduleTimer,
+    firstScheduled,
+    get pendingCallbacks() {
+      return callbacks.size;
+    },
+    get cancelled() {
+      return cancelled;
+    },
+  };
+}
+
 test('diagnostic fixtures preserve requested vertex and row populations', () => {
   const workloads = buildWorkloads(40, 35);
   assert.deepEqual(
@@ -47,7 +77,17 @@ test('same public GeoJSON, CSV and KML previews match in diagnostic worker', asy
       workload.input,
       workload.options,
     );
+    const transferred = await worker.run(
+      workload.kind,
+      workload.input,
+      workload.options,
+      { transport: 'transfer' },
+    );
     assert.equal(stablePreviewHash(offThread.preview), stablePreviewHash(main));
+    assert.equal(
+      stablePreviewHash(transferred.preview),
+      stablePreviewHash(main),
+    );
     assert.deepEqual(
       summarizePreview(offThread.preview),
       summarizePreview(main),
@@ -132,6 +172,67 @@ test('worker cancellation rejects without publishing and leaves no pending reque
   assert.equal(worker.pendingCount, 0);
 });
 
+test('transfer cancellation during main-thread rehydration releases worker ownership', async (t) => {
+  const worker = createDecodeWorker();
+  t.after(() => worker.dispose());
+  await worker.ready();
+  const workload = buildWorkloads(10_000, 1)[0];
+  const controller = new AbortController();
+  const pending = worker.run(workload.kind, workload.input, workload.options, {
+    transport: 'transfer',
+    signal: controller.signal,
+    onRehydrationStart: () => controller.abort(),
+  });
+  await assert.rejects(pending, { name: 'AbortError' });
+  assert.equal(worker.pendingCount, 0);
+  const next = await worker.run('geojson', buildWorkloads(40, 1)[0].input);
+  assert.equal(next.preview.accepted, 1);
+});
+
+test('worker disposal during transfer rehydration cancels its owned wake', async () => {
+  const worker = createDecodeWorker();
+  await worker.ready();
+  const scheduler = controlledRehydrationScheduler();
+  const workload = buildWorkloads(40, 1)[0];
+  const pending = worker.run(workload.kind, workload.input, workload.options, {
+    transport: 'transfer',
+    rehydrationScheduleTimer: scheduler.scheduleTimer,
+  });
+  await scheduler.firstScheduled;
+  assert.equal(worker.pendingCount, 1);
+  const rejection = assert.rejects(pending, /disposed/);
+  await worker.dispose();
+  await rejection;
+  assert.equal(worker.pendingCount, 0);
+  assert.equal(scheduler.pendingCallbacks, 0);
+  assert.equal(scheduler.cancelled, 1);
+});
+
+test('worker task timeout during transfer rehydration cancels and does not publish', async () => {
+  const worker = createDecodeWorker();
+  await worker.ready();
+  const scheduler = controlledRehydrationScheduler();
+  const workload = buildWorkloads(40, 1)[0];
+  let published = false;
+  const pending = worker
+    .run(workload.kind, workload.input, workload.options, {
+      transport: 'transfer',
+      timeoutMs: 1_000,
+      rehydrationScheduleTimer: scheduler.scheduleTimer,
+    })
+    .then((value) => {
+      published = true;
+      return value;
+    });
+  await scheduler.firstScheduled;
+  await assert.rejects(pending, /timed out/);
+  assert.equal(published, false);
+  assert.equal(worker.pendingCount, 0);
+  assert.equal(scheduler.pendingCallbacks, 0);
+  assert.equal(scheduler.cancelled, 1);
+  await worker.dispose();
+});
+
 test('worker owns at most one task and a task timeout terminates it', async (t) => {
   const worker = createDecodeWorker();
   t.after(() => worker.dispose());
@@ -206,8 +307,8 @@ test('unexpected idle zero-code exit is remembered before the next task', async 
 });
 
 test('event-loop timer-gap probe observes a synchronous blocked segment', async () => {
-  const startedAt = performance.now();
   const observation = await measured(() => {
+    const startedAt = performance.now();
     while (performance.now() - startedAt < 25) {}
     return 'complete';
   });
