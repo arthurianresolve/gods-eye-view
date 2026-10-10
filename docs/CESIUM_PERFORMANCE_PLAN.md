@@ -85,6 +85,9 @@ for the continuous control; unselected orbit trials render six versus 78-96 in
 three seconds. Selected live missions retain continuous rendering. Owner/viewer
 cleanup succeeds and normal browser close takes 455.57 ms without forced cleanup.
 These observations use hosted Apple Paravirtual Metal, not the Windows desktop.
+The [retained image manifest](performance-evidence/mission-render-demand-38046523488-images/manifest.json)
+maps all 30 images to three unedited, byte-identical retained files, preserving
+reviewable image evidence beyond the hosted artifact retention period.
 
 The validator incorrectly groups exact camera-vector equality with population
 integrity: render-time floating-point differences around `2e-16` trigger its
@@ -93,6 +96,23 @@ controlled inputs. Correcting the validator requires bounded existing pose
 tolerances and separate setup-timing validation, while preserving strict
 population, settings and image checks. The failed run is not an acceptance pass;
 the runtime pilot remains pending that correction and end-to-end verification.
+
+### S49 bounded worker-quiescence history - 10 October 2026
+
+GPT-6 Luna implementation `e2f65cd4b66e1e654bf1c59ca6a3c36e224d4b69` replaces
+opaque polling with an in-page timeline capped at 202 samples and 64 worker
+records per sample. It records per-kind submitted/completed/pending counts,
+pending age, first observed zero, maximum polling gap and a second zero check.
+Negative, missing, overflowed or inconsistent counters fail validation. Transient
+zero followed by new work fails; zero observed after the original ten-second
+deadline stays a timeout. Host failure cancels the owned poll before collecting
+available evidence. No provider payloads or worker URLs are retained.
+
+All 29 focused lifecycle tests pass, including late-zero, resumed-work,
+bounded-history, invalid-counter and cancellation cases; syntax, targeted format
+and diff checks pass. The [changed hosted lifecycle diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38047474920)
+tests this exact commit. Its result is pending. This is diagnostic implementation,
+not proof that the earlier terrain activity or retained-resource failure is fixed.
 
 ## Completion execution plan - 9 October 2026
 
