@@ -10,6 +10,7 @@ import {
   createRecoveryPageTargetGuard,
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
+  stopOwnedRecoveryProcessTree,
 } from './profileRecoveryPageOwnership.mjs';
 
 const BASE = 'http://127.0.0.1:4173';
@@ -146,10 +147,89 @@ test('a passed workspace check still fails when cleanup leaves a page open', () 
 
 function fakeBrowserProcess({ exitCode = null, signalCode = null } = {}) {
   const child = new EventEmitter();
+  child.pid = 1234;
   child.exitCode = exitCode;
   child.signalCode = signalCode;
   return child;
 }
+
+test('owned process stop distinguishes pre-existing exit from confirmed taskkill', async () => {
+  const exited = fakeBrowserProcess({ exitCode: 0 });
+  let spawnCalls = 0;
+  assert.deepEqual(
+    await stopOwnedRecoveryProcessTree(exited, {
+      platform: 'win32',
+      spawnImpl: () => {
+        spawnCalls += 1;
+      },
+    }),
+    { attempted: false, confirmed: true, reason: 'already-exited' },
+  );
+  assert.equal(spawnCalls, 0);
+
+  const child = fakeBrowserProcess();
+  const killer = new EventEmitter();
+  killer.kill = () => false;
+  const stopped = await stopOwnedRecoveryProcessTree(child, {
+    platform: 'win32',
+    spawnImpl: () => {
+      queueMicrotask(() => {
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        killer.emit('exit', 0);
+      });
+      return killer;
+    },
+  });
+  assert.deepEqual(stopped, {
+    attempted: true,
+    confirmed: true,
+    reason: 'process-exit-observed',
+  });
+  assert.equal(killer.listenerCount('exit'), 0);
+  assert.equal(killer.listenerCount('error'), 0);
+});
+
+test('owned process stop does not claim an exit after failed taskkill and bounds a stuck helper', async () => {
+  const child = fakeBrowserProcess();
+  const failedKiller = new EventEmitter();
+  failedKiller.kill = () => false;
+  const failed = await stopOwnedRecoveryProcessTree(child, {
+    platform: 'win32',
+    spawnImpl: () => {
+      queueMicrotask(() => {
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        failedKiller.emit('exit', 1);
+      });
+      return failedKiller;
+    },
+  });
+  assert.deepEqual(failed, {
+    attempted: true,
+    confirmed: false,
+    reason: 'exit-during-failed-request',
+  });
+
+  const stuckChild = fakeBrowserProcess();
+  const stuckKiller = new EventEmitter();
+  let killed = false;
+  stuckKiller.kill = () => {
+    killed = true;
+    return true;
+  };
+  const timeout = await stopOwnedRecoveryProcessTree(stuckChild, {
+    platform: 'win32',
+    helperTimeoutMs: 10,
+    spawnImpl: () => stuckKiller,
+  });
+  assert.equal(timeout.reason, 'request-failed');
+  assert.equal(timeout.confirmed, false);
+  assert.equal(killed, true);
+  assert.equal(stuckKiller.listenerCount('exit'), 0);
+  assert.equal(stuckKiller.listenerCount('error'), 0);
+  assert.equal(stuckChild.listenerCount('exit'), 0);
+});
 
 test('browser close records an already-exited process and releases listeners', async () => {
   const child = fakeBrowserProcess({ exitCode: 0 });

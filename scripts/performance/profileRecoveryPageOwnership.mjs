@@ -1,3 +1,4 @@
+import { spawn as defaultSpawn } from 'node:child_process';
 import { withHostTimeout } from './startupDiagnostics.mjs';
 
 function applicationPages(pages, baseUrl) {
@@ -84,6 +85,96 @@ export async function closeOwnedRecoveryPage(page, browser, timeoutMs = 2000) {
   return {
     closeCompleted: true,
     openPageCount: Array.isArray(remainingPages) ? remainingPages.length : null,
+  };
+}
+
+/** Stop only the supplied browser process tree and report observed confirmation. */
+export async function stopOwnedRecoveryProcessTree(
+  child,
+  {
+    platform = process.platform,
+    spawnImpl = defaultSpawn,
+    killProcess = process.kill,
+    helperTimeoutMs = 2000,
+    exitTimeoutMs = 1500,
+  } = {},
+) {
+  if (!child)
+    return { attempted: false, confirmed: false, reason: 'missing-process' };
+  if (child.exitCode != null || child.signalCode != null)
+    return { attempted: false, confirmed: true, reason: 'already-exited' };
+  if (!Number.isInteger(child.pid) || child.pid < 1)
+    return { attempted: false, confirmed: false, reason: 'missing-pid' };
+
+  let terminationRequested = false;
+  if (platform === 'win32') {
+    const code = await new Promise((resolve) => {
+      let killer;
+      let settled = false;
+      let timer;
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        killer?.off('error', onError);
+        killer?.off('exit', onExit);
+        resolve(result);
+      };
+      const onError = () => finish(null);
+      const onExit = (value) => finish(value);
+      try {
+        killer = spawnImpl('taskkill', ['/PID', String(child.pid), '/T', '/F'], {
+          stdio: 'ignore',
+          windowsHide: true,
+        });
+      } catch {
+        finish(null);
+        return;
+      }
+      timer = setTimeout(() => {
+        finish(null);
+        try {
+          killer.kill();
+        } catch {}
+      }, helperTimeoutMs);
+      killer.once('error', onError);
+      killer.once('exit', onExit);
+    });
+    terminationRequested = code === 0;
+    if (!terminationRequested)
+      return {
+        attempted: true,
+        confirmed: false,
+        reason:
+          child.exitCode != null || child.signalCode != null
+            ? 'exit-during-failed-request'
+            : 'request-failed',
+      };
+  } else {
+    try {
+      killProcess(-child.pid, 'SIGTERM');
+      terminationRequested = true;
+    } catch {
+      return { attempted: true, confirmed: false, reason: 'request-failed' };
+    }
+  }
+
+  const exitObserved = await new Promise((resolve) => {
+    if (child.exitCode != null || child.signalCode != null) return resolve(true);
+    const timer = setTimeout(() => {
+      child.off('exit', onExit);
+      resolve(false);
+    }, exitTimeoutMs);
+    const onExit = () => {
+      clearTimeout(timer);
+      resolve(true);
+    };
+    child.once('exit', onExit);
+  });
+  return {
+    attempted: terminationRequested,
+    confirmed: exitObserved,
+    reason: exitObserved ? 'process-exit-observed' : 'exit-not-observed',
   };
 }
 

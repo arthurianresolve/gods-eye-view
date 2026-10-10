@@ -40,6 +40,7 @@ import {
   createRecoveryPageTargetGuard,
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
+  stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
 import {
   cleanupEarlyCesiumRendererProbe,
@@ -86,69 +87,6 @@ const installation = path.join(scratch, 'installation');
 const out = path.resolve(value('--out', 'qa-artifacts/profile-recovery.json'));
 await mkdir(path.dirname(out), { recursive: true });
 let sequence = 0;
-
-async function stopTree(child) {
-  if (!child) return { attempted: false, confirmed: false, reason: 'missing-process' };
-  if (child.exitCode != null || child.signalCode != null)
-    return { attempted: false, confirmed: true, reason: 'already-exited' };
-  if (!Number.isInteger(child.pid) || child.pid < 1)
-    return { attempted: false, confirmed: false, reason: 'missing-pid' };
-  let terminationRequested = false;
-  if (process.platform === 'win32') {
-    const result = await new Promise((resolve) => {
-      const killer = spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], {
-        stdio: 'ignore',
-        windowsHide: true,
-      });
-      let settled = false;
-      const finish = (code) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        killer.off('error', onError);
-        killer.off('exit', onExit);
-        resolve(code);
-      };
-      const onError = () => finish(null);
-      const onExit = (code) => finish(code);
-      const timer = setTimeout(() => {
-        finish(null);
-        killer.kill();
-      }, 2000);
-      killer.once('error', onError);
-      killer.once('exit', onExit);
-    });
-    if (child.exitCode != null || child.signalCode != null)
-      return { attempted: false, confirmed: true, reason: 'already-exited' };
-    terminationRequested = result === 0;
-  } else {
-    try {
-      process.kill(-child.pid, 'SIGTERM');
-      terminationRequested = true;
-    } catch {
-      terminationRequested = false;
-    }
-  }
-  if (!terminationRequested)
-    return { attempted: true, confirmed: false, reason: 'request-failed' };
-  const exitObserved = await new Promise((resolve) => {
-    if (child.exitCode != null || child.signalCode != null) return resolve(true);
-    const timer = setTimeout(() => {
-      child.off('exit', onExit);
-      resolve(false);
-    }, 1500);
-    const onExit = () => {
-      clearTimeout(timer);
-      resolve(true);
-    };
-    child.once('exit', onExit);
-  });
-  return {
-    attempted: true,
-    confirmed: exitObserved,
-    reason: exitObserved ? 'process-exit-observed' : 'exit-not-observed',
-  };
-}
 
 function chromeProcessCount() {
   if (process.platform !== 'win32') return null;
@@ -223,12 +161,15 @@ async function command(
         );
         if (!ready) {
           interrupted = true;
-          await stopTree(child);
+          await stopOwnedRecoveryProcessTree(child);
         }
         checking = false;
       }, 25)
     : null;
-  const timeout = setTimeout(() => void stopTree(child), 12 * 60_000);
+  const timeout = setTimeout(
+    () => void stopOwnedRecoveryProcessTree(child),
+    12 * 60_000,
+  );
   let code;
   try {
     code = await new Promise((resolve, reject) => {
@@ -559,7 +500,8 @@ async function reopen(label, { seed = false } = {}) {
     try {
       if (browser)
         browserClose = await closeRecoveryBrowser(browser, {
-          forceProcess: () => stopTree(browser.process()),
+          forceProcess: () =>
+            stopOwnedRecoveryProcessTree(browser.process()),
         });
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);
