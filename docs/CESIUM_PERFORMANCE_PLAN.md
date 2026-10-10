@@ -189,6 +189,23 @@ Report SHA-256 `aa60c9e8b3db8850a073e43985f163eaf3d59ebd06e5998ad062abc119482535
 This validates hosted Windows/SwiftShader recovery at this revision, not the
 root cause of the earlier intermittent shutdown failure or physical GPU behavior.
 
+The dedicated workspace journey added in
+`886b7d2927b6eb3a546c0dfaf629684973d9e501` also passes in the
+[isolated hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38091408792).
+It opens a second independent application page against the same IndexedDB
+origin, saves a newer revision through its UI, and verifies that the stale
+first-page Save reports a conflict without changing the stored revision,
+document or chunks. Save as, duplicate/open, GeoJSON import and reload,
+command-palette dismissal and the synthetic demo also pass. The accompanying
+mixed-use smoke completes two warmups and one 21,777-ms measured cycle with
+clean, unchanged application/harness identities. This is hosted SwiftShader
+functional evidence; the 60-minute stability verdict remains **pending**.
+[Reviewed assertions and environment](performance-evidence/workspace-browser-886b7d2-review.json),
+[raw smoke](performance-evidence/mixed-use-smoke-886b7d2.json),
+[terminal steps](performance-evidence/mixed-use-smoke-886b7d2-run.json).
+Raw smoke SHA-256:
+`054a8210603eabbde67cc1bdb5ae054983cbc8875b17c609afc017a9e4522133`.
+
 ### Tracking fixture ground coverage correction - 10 October 2026
 
 The failed `996a8d3` tracking report observed a 192.4-m floor after initially

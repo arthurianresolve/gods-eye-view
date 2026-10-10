@@ -6,6 +6,9 @@ Node 24/26, production builds, three-OS recovery and Windows onboarding
 ([results](performance-evidence/ci-167ba62.json)). The same-panel workspace save
 race is fixed without bypassing genuine external revision conflicts. The earlier
 `f598310` failure remains [historical evidence](performance-evidence/ci-f598310.json).
+The dedicated two-page IndexedDB conflict journey passes at `886b7d2`, including
+exact preservation of the competing document and chunks after a stale UI Save
+([review](performance-evidence/workspace-browser-886b7d2-review.json)).
 The corrected `3cdd5cb` software-rendered retention soak and the fresh `996a8d3`
 hosted paravirtual Metal retention soak passed. The latter completed 252 cycles
 and 13 post-GC checkpoints, with 40 unchanged resource gauges, final pending
