@@ -190,7 +190,7 @@ function readRendererOnce(viewer) {
   return rendererInfo;
 }
 
-function waitFor(predicate, timeoutMs, label) {
+function waitFor(predicate, timeoutMs, label, onPoll = null) {
   const started = performance.now();
   return new Promise((resolve, reject) => {
     const poll = () => {
@@ -209,13 +209,39 @@ function waitFor(predicate, timeoutMs, label) {
         reject(new Error(`${label} exceeded ${timeoutMs}ms.`));
         return;
       }
+      try {
+        onPoll?.();
+      } catch (error) {
+        reject(error);
+        return;
+      }
       setTimeout(poll, 50);
     };
     poll();
   });
 }
 
-async function waitForStableScene(viewer, label, timeoutMs = lifecycleDrainMs) {
+function boundedErrorDetails(error, depth = 0) {
+  if (!error || depth > 2) return null;
+  const sanitizeMessage = (value) =>
+    String(value || 'Unknown failure')
+      .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+      .replace(/[\r\n\t]+/g, ' ')
+      .slice(0, 300);
+  const detail = {
+    name: String(error.name || 'Error').slice(0, 80),
+    message: sanitizeMessage(error.message || error),
+  };
+  if (error.cause) detail.cause = boundedErrorDetails(error.cause, depth + 1);
+  return detail;
+}
+
+async function waitForStableScene(
+  viewer,
+  label,
+  timeoutMs = lifecycleDrainMs,
+  onSample = null,
+) {
   const started = performance.now();
   const history = [];
   let stableSince = null;
@@ -230,10 +256,12 @@ async function waitForStableScene(viewer, label, timeoutMs = lifecycleDrainMs) {
       tilesLoaded: viewer.scene.globe.tilesLoaded,
       dataSourceDisplayReady: viewer.dataSourceDisplay.ready,
       pending: workers.pending,
+      workerCounters: workers,
       workerSignature: workerSignature(workers),
       camera: pose,
     };
     if (history.length < 64) history.push(sample);
+    onSample?.(sample);
     const stable =
       sample.tilesLoaded === true &&
       viewer.dataSourceDisplay.ready === true &&
@@ -474,12 +502,30 @@ async function runFixture() {
   };
   const publish = () => {
     try {
+      window.__terrainPickingLifecycleProgress = {
+        status: report.status,
+        phase: report.phase || report.failedPhase || 'initialization',
+        failedPhase: report.failedPhase || null,
+        currentObservation: report.currentObservation || null,
+      };
       window.__terrainPickingLifecycleResult = JSON.parse(
         JSON.stringify(report),
       );
     } catch {}
   };
   publish();
+  let lastObservationPublishedAt = 0;
+  const observe = (stage, observation, force = false) => {
+    report.currentObservation = { stage, ...observation };
+    const now = performance.now();
+    if (force || now - lastObservationPublishedAt >= 250) {
+      lastObservationPublishedAt = now;
+      publish();
+    }
+  };
+  const sceneObserver = (label) => (sample) => observe(label, sample);
+  const waitForScene = (label, timeoutMs = lifecycleDrainMs) =>
+    waitForStableScene(viewer, label, timeoutMs, sceneObserver(label));
   let viewer;
   let controller;
   let cableLayer;
@@ -561,6 +607,11 @@ async function runFixture() {
 
     report.phase = 'initial-local-terrain-and-entity-warmup';
     publish();
+    observe(
+      report.phase,
+      diagnosticSnapshot(viewer, controller, cableLayer),
+      true,
+    );
     await controller.setStack('qa-terrain-flat');
     await waitFor(
       () =>
@@ -568,8 +619,24 @@ async function runFixture() {
         cableLayer.getStats().count === 2,
       lifecycleDrainMs,
       'local cable load',
+      () => {
+        const workers = snapshotWorkers();
+        observe('local-cable-load', {
+          cableStats: cableLayer.getStats(),
+          workerCounters: workers,
+          frameNumber: viewer.scene.frameState.frameNumber,
+          tilesLoaded: viewer.scene.globe.tilesLoaded,
+          dataSourceDisplayReady: viewer.dataSourceDisplay.ready,
+          camera: cameraPose(viewer),
+        });
+      },
     );
-    await waitForStableScene(viewer, report.phase, READY_MS);
+    await waitForStableScene(
+      viewer,
+      report.phase,
+      READY_MS,
+      sceneObserver(report.phase),
+    );
     report.initialReadiness = diagnosticSnapshot(
       viewer,
       controller,
@@ -644,7 +711,7 @@ async function runFixture() {
     };
     publish();
     await controller.setStack('qa-terrain-relief');
-    await waitForStableScene(viewer, report.phase, lifecycleDrainMs);
+    await waitForScene(report.phase);
     const firstTerrainAfter = diagnosticSnapshot(
       viewer,
       controller,
@@ -681,11 +748,7 @@ async function runFixture() {
         'The first local heightmap transition did not produce tile requests and completed worker activity.',
       );
     await controller.setStack('qa-terrain-flat');
-    await waitForStableScene(
-      viewer,
-      'return-to-flat-baseline',
-      lifecycleDrainMs,
-    );
+    await waitForScene('return-to-flat-baseline');
     const baseline = diagnosticSnapshot(viewer, controller, cableLayer);
     if (
       baseline.map.pendingJobs ||
@@ -702,11 +765,7 @@ async function runFixture() {
       report.cycles.push(row);
       publish();
       await controller.setStack('qa-terrain-relief');
-      row.relief = await waitForStableScene(
-        viewer,
-        `cycle-${cycle}-relief`,
-        lifecycleDrainMs,
-      );
+      row.relief = await waitForScene(`cycle-${cycle}-relief`);
       row.reliefSnapshot = diagnosticSnapshot(viewer, controller, cableLayer);
       if (
         row.reliefSnapshot.scene.terrainProviderKind !==
@@ -714,11 +773,7 @@ async function runFixture() {
       )
         throw new Error(`Cycle ${cycle} did not install local relief terrain.`);
       await controller.setStack('qa-terrain-flat');
-      row.flat = await waitForStableScene(
-        viewer,
-        `cycle-${cycle}-flat`,
-        lifecycleDrainMs,
-      );
+      row.flat = await waitForScene(`cycle-${cycle}-flat`);
       row.flatSnapshot = diagnosticSnapshot(viewer, controller, cableLayer);
       if (!boundsMatch(row.flatSnapshot, baseline))
         throw new Error(
@@ -741,11 +796,7 @@ async function runFixture() {
     await delayedStarted;
     const replacement = controller.setStack('qa-terrain-relief');
     await replacement;
-    await waitForStableScene(
-      viewer,
-      'stale-terrain-replacement',
-      lifecycleDrainMs,
-    );
+    await waitForScene('stale-terrain-replacement');
     const providerBeforeLate = viewer.terrainProvider;
     delayed.resolve({ provider: new Cesium.EllipsoidTerrainProvider() });
     await staleSwitch;
@@ -796,11 +847,7 @@ async function runFixture() {
         lifecycleDrainMs,
         `cable re-enable ${cycle}`,
       );
-      await waitForStableScene(
-        viewer,
-        `cable-reenabled-${cycle}`,
-        lifecycleDrainMs,
-      );
+      await waitForScene(`cable-reenabled-${cycle}`);
       const activeEntity = viewer.scene.pick(center)?.id;
       if (!activeEntity || activeEntity === retiredEntity)
         throw new Error(
@@ -815,11 +862,7 @@ async function runFixture() {
           `Current pick ${cycle} did not select its active cable entity.`,
         );
       resetFixtureCamera(viewer);
-      await waitForStableScene(
-        viewer,
-        `selection-camera-reset-${cycle}`,
-        lifecycleDrainMs,
-      );
+      await waitForScene(`selection-camera-reset-${cycle}`);
       const beforeRetiredClick = cameraFlights;
       viewer.scene.pick = () => ({ id: retiredEntity });
       handler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
@@ -923,14 +966,17 @@ async function runFixture() {
     report.status = 'passed';
   } catch (error) {
     report.status = 'failed';
+    report.failedPhase = report.phase || 'initialization';
     report.error = String(error?.message || error)
       .replace(/https?:\/\/[^\s]+/g, '[url]')
       .slice(0, 500);
+    report.errorDetails = boundedErrorDetails(error);
     report.failureEvidence = {
-      phase: report.phase || 'initialization',
+      phase: report.failedPhase,
       sceneHistory: Array.isArray(error?.sceneHistory)
         ? error.sceneHistory.slice(-32)
         : [],
+      currentObservation: report.currentObservation || null,
       snapshot:
         viewer && controller && cableLayer
           ? (() => {

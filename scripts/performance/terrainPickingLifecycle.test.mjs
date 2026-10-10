@@ -5,7 +5,10 @@ import {
   parseTerrainPickingLifecycleArgs,
   validateTerrainPickingLifecycleReport,
 } from './terrainPickingLifecycle.mjs';
-import { runTerrainPickingLifecycle } from '../qa-terrain-picking-lifecycle.mjs';
+import {
+  runTerrainPickingLifecycle,
+  waitForTerrainFixtureCompletion,
+} from '../qa-terrain-picking-lifecycle.mjs';
 
 function snapshot({
   terrainKind = 'EllipsoidTerrainProvider',
@@ -242,6 +245,12 @@ function fixtureResult(status = 'passed') {
   report.cleanup = report.fixtureCleanup;
   delete report.fixtureCleanup;
   report.status = status;
+  report.phase = 'first-heightmap-transition';
+  report.currentObservation = {
+    stage: 'first-heightmap-transition',
+    workerCounters: snapshot().workerCounters,
+    frameNumber: 100,
+  };
   if (status !== 'passed') {
     report.error = 'synthetic local terrain failure';
     report.failedPhase = 'first-heightmap-transition';
@@ -255,6 +264,7 @@ function runnerDependencies({
   navigationError = null,
   browserCloseError = null,
   failFinalWrite = false,
+  completionError = null,
 } = {}) {
   const state = {
     written: [],
@@ -271,6 +281,16 @@ function runnerDependencies({
     async waitForSelector() {},
     async evaluate(fn) {
       const source = String(fn);
+      if (
+        source.includes('__terrainPickingLifecycleProgress') &&
+        completionError
+      )
+        throw completionError;
+      if (source.includes('__terrainPickingLifecycleProgress'))
+        return {
+          status: result?.status || 'running',
+          phase: result?.phase || null,
+        };
       if (source.includes('navigator.userAgent'))
         return 'Mozilla/5.0 Chrome/152.0.0.0';
       if (source.includes('__terrainPickingBuildIdentity'))
@@ -407,5 +427,86 @@ test('runner preserves fixture identity, partial evidence, and owned cleanup', a
   assert.match(
     writeFailure.state.failedWriteReport.error,
     /Final evidence report write failed/,
+  );
+
+  const protocolError = new Error('Waiting failed', {
+    cause: new Error('Protocol call exceeded configured bound'),
+  });
+  const waitFailure = runnerDependencies({ completionError: protocolError });
+  await assert.rejects(
+    runTerrainPickingLifecycle({ out: 'ignored.json', deps: waitFailure.deps }),
+    /Waiting failed/,
+  );
+  const waitFailureReport = waitFailure.state.written.at(-1);
+  assert.equal(waitFailureReport.errorDetails.name, 'Error');
+  assert.equal(
+    waitFailureReport.errorDetails.cause.message,
+    'Protocol call exceeded configured bound',
+  );
+  assert.equal(waitFailureReport.progress.currentObservation.frameNumber, 100);
+});
+
+test('fixture completion uses repeated bounded synchronous status polls', async () => {
+  let clock = 0;
+  let polls = 0;
+  const page = {
+    async evaluate(fn) {
+      polls++;
+      if (String(fn).includes('__terrainPickingLifecycleProgress'))
+        return { status: polls >= 3 ? 'passed' : 'running', phase: 'test' };
+      return { status: 'passed', applicationCommit: 'a'.repeat(40) };
+    },
+    async waitForFunction() {
+      throw new Error('Long remote-awaited wait must not be used.');
+    },
+  };
+  const complete = await waitForTerrainFixtureCompletion(page, 1000, {
+    pollIntervalMs: 100,
+    now: () => clock,
+    pause: async (ms) => {
+      clock += ms;
+    },
+  });
+  assert.equal(complete.progress.status, 'passed');
+  assert.equal(complete.report.status, 'passed');
+  assert.equal(polls, 4);
+});
+
+test('fixture completion retains last phase and observation when a bounded poll fails', async () => {
+  let polls = 0;
+  const page = {
+    async evaluate(fn) {
+      if (!String(fn).includes('__terrainPickingLifecycleProgress'))
+        return null;
+      polls++;
+      if (polls === 1)
+        return {
+          status: 'running',
+          phase: 'initial-local-terrain-and-entity-warmup',
+          currentObservation: {
+            frameNumber: 12,
+            workerCounters: snapshot().workerCounters,
+          },
+        };
+      throw new Error('bounded synchronous evaluation failed');
+    },
+  };
+  await assert.rejects(
+    waitForTerrainFixtureCompletion(page, 1000, {
+      pollIntervalMs: 10,
+      now: (() => {
+        let time = 0;
+        return () => time;
+      })(),
+      pause: async () => {},
+    }),
+    (error) => {
+      assert.equal(
+        error.fixtureProgress.phase,
+        'initial-local-terrain-and-entity-warmup',
+      );
+      assert.equal(error.fixtureProgress.currentObservation.frameNumber, 12);
+      return true;
+    },
   );
 });

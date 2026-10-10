@@ -45,6 +45,71 @@ function sanitize(error) {
     .slice(0, 500);
 }
 
+function errorDetails(error, depth = 0) {
+  if (!error || depth > 2) return null;
+  const detail = {
+    name: String(error.name || 'Error').slice(0, 80),
+    message: sanitize(error),
+  };
+  if (error.cause) detail.cause = errorDetails(error.cause, depth + 1);
+  return detail;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function waitForTerrainFixtureCompletion(
+  page,
+  timeoutMs = PAGE_WAIT_MS,
+  { pollIntervalMs = 250, now = () => performance.now(), pause = sleep } = {},
+) {
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > PAGE_WAIT_MS ||
+    !Number.isSafeInteger(pollIntervalMs) ||
+    pollIntervalMs < 1 ||
+    pollIntervalMs > 1000
+  )
+    throw new RangeError('Fixture polling bounds are invalid.');
+  const started = now();
+  let lastProgress = null;
+  while (now() - started < timeoutMs) {
+    try {
+      lastProgress = await page.evaluate(
+        () => window.__terrainPickingLifecycleProgress || null,
+      );
+    } catch (error) {
+      error.fixtureProgress = lastProgress;
+      throw error;
+    }
+    if (
+      lastProgress?.status === 'passed' ||
+      lastProgress?.status === 'failed'
+    ) {
+      return {
+        progress: lastProgress,
+        report: await page.evaluate(
+          () => window.__terrainPickingLifecycleResult || null,
+        ),
+      };
+    }
+    await pause(
+      Math.min(pollIntervalMs, Math.max(0, timeoutMs - (now() - started))),
+    );
+  }
+  throw Object.assign(
+    new Error(
+      `Terrain fixture did not report completion within ${timeoutMs}ms.`,
+    ),
+    {
+      name: 'TerrainFixtureCompletionTimeout',
+      progress: lastProgress,
+    },
+  );
+}
+
 export function assertServedBuildIdentity(servedIdentity, expectedCommit) {
   if (
     !servedIdentity ||
@@ -215,16 +280,20 @@ export async function runTerrainPickingLifecycle({
       { cycles, drainMs },
     );
     await page.click('#run');
-    await page.waitForFunction(
-      () =>
-        ['passed', 'failed'].includes(
-          document.querySelector('#status')?.textContent,
-        ),
-      { timeout: PAGE_WAIT_MS },
-    );
-    const result = await page.evaluate(
-      () => window.__terrainPickingLifecycleResult || null,
-    );
+    let completion;
+    try {
+      completion = await waitForTerrainFixtureCompletion(page, PAGE_WAIT_MS);
+    } catch (error) {
+      const fixtureProgress = error?.progress || error?.fixtureProgress;
+      if (fixtureProgress)
+        report.progress = {
+          phase: fixtureProgress.phase || 'fixture-wait-failure',
+          fixtureStatus: fixtureProgress.status || 'unknown',
+          currentObservation: fixtureProgress.currentObservation || null,
+        };
+      throw error;
+    }
+    const result = completion.report;
     if (!result)
       throw new Error('Fixture finished without a lifecycle report.');
     if (
@@ -261,7 +330,16 @@ export async function runTerrainPickingLifecycle({
     primaryError = error;
     report.status = 'failed';
     report.error ||= sanitize(error);
-    report.progress ||= { phase: 'startup' };
+    report.errorDetails = errorDetails(error);
+    const observedProgress = error?.progress || error?.fixtureProgress || null;
+    report.progress ||= observedProgress
+      ? {
+          phase: observedProgress.phase || 'fixture-wait-failure',
+          fixtureStatus: observedProgress.status || 'unknown',
+          currentObservation: observedProgress.currentObservation || null,
+        }
+      : { phase: 'startup' };
+    report.failedPhase ||= observedProgress?.phase || null;
     if (page) {
       const partial = await page
         .evaluate(() => window.__terrainPickingLifecycleResult || null)
@@ -275,6 +353,17 @@ export async function runTerrainPickingLifecycle({
           externalRequestCount: report.externalRequestCount,
           pageErrors: [...errors],
           error: report.error || partial.error || sanitize(error),
+          errorDetails: errorDetails(error),
+          failedPhase:
+            partial.failedPhase ||
+            observedProgress?.phase ||
+            partial.phase ||
+            null,
+          progress: {
+            phase: partial.phase || partial.failedPhase || 'fixture-failure',
+            fixtureStatus: partial.status || 'unknown',
+            currentObservation: partial.currentObservation || null,
+          },
           fixtureCleanup: partial.cleanup || report.fixtureCleanup || null,
           cleanup: report.cleanup,
         });

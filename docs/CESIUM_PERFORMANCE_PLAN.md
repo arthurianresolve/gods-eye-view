@@ -28,7 +28,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace and CCTV lifecycle runners; terrain/picking cases remain | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; historical soak evidence remains separate | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; terrain/picking runner fails at `79f319f` before measured cycles | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and equal-style write suppression | Existing queue/revision tests plus 52 focused CCTV tests pass; exact evaluated styles match across eight states; five hosted toggle cycles add zero geometry jobs at `db298d4` | Full appearance and hardware build-count comparisons pending |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
@@ -44,6 +44,49 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S49.1 isolated terrain and picking ownership - 10 October 2026
+
+GPT-6 Luna's fixture and root's hosted integration at
+`79f319fb7cd10bc30c985acae313b040b46981e3` exercise the production map controller
+and submarine-cable layer with local heightmap terrain, local imagery and
+synthetic GeoJSON. Five relief/ellipsoid cycles compare equivalent warmed
+resource checkpoints after completed rendering and bounded worker drain. The
+first heightmap transition must produce actual tile requests and additional
+worker submissions and completions. Startup/cable work is reported separately;
+these cumulative counters include all fixture work and are not exclusive terrain
+CPU timings.
+
+Native Cesium picks invoke the production click handler, followed by camera reset
+and settled rendering. Three disable/re-enable cycles reject injected retired
+Entities and accept current native picks. Delayed terrain completion cannot
+replace a newer selected stack; destruction aborts pending creation. The late
+Ellipsoid provider's disposal hook is fixture-owned because that Cesium provider
+has no native `destroy()` method; it does not prove native terrain reclamation.
+
+Six focused tests cover installed Cesium constructors, report validation, wrong
+served commits, partial failures and runner cleanup. Root repeated them and
+passed formatting and package boundaries. The isolated
+[hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38071843269)
+fails before initial readiness, with no measured cycles. Its top-level error is
+`Waiting failed`; no page errors or external requests are recorded, and owned
+browser/server cleanup succeeds. [Partial raw report](performance-evidence/terrain-picking-38071843269.json),
+SHA-256 `bcf294b99c0e6468f30a3a38db279877642ae0bc5be55bdd30e9a039ff9b2618`;
+[run metadata](performance-evidence/terrain-picking-38071843269-run.json).
+
+Inspection of the installed Puppeteer identifies a harness timeout conflict:
+`waitForFunction` awaits the poller's result through one `Runtime.callFunctionOn`
+command, whose 15-second connection timeout is shorter than the fixture wait.
+Changing its polling mode alone cannot fix this. The original report does not
+retain the nested cause, so it cannot independently establish which protocol
+command failed. A correction must use short synchronous status reads, retain
+bounded causes on failure, and preserve the existing fixture/command deadlines.
+No application retention conclusion follows from this failed run.
+
+This fixture uses one-sample MSAA and continuous rendering for
+ownership observation; it is not a visual-equivalence or performance comparison,
+quantized-mesh/network-provider test, physical Windows result or heap-soak pass.
+Production visual settings and the VM deployment are unchanged.
 
 ### S60.1 raw performance evidence ingestion - 10 October 2026
 
