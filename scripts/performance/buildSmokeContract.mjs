@@ -7,6 +7,7 @@ export function createApplicationCodeRequestAudit({ limit = 4000 } = {}) {
     throw new TypeError('Application code audit limit is invalid.');
   let active = false;
   let requestCount = 0;
+  let droppedCodeRequestCount = 0;
   const requests = [];
   const add = (url, resourceType, countRequest) => {
     if (!active) return;
@@ -17,11 +18,12 @@ export function createApplicationCodeRequestAudit({ limit = 4000 } = {}) {
     } catch {
       codePath = false;
     }
-    if (
-      requests.length < limit &&
-      (CODE_RESOURCE_TYPES.has(resourceType) || codePath)
-    )
-      requests.push({ url, resourceType });
+    if (!(CODE_RESOURCE_TYPES.has(resourceType) || codePath)) return;
+    if (requests.length >= limit) {
+      droppedCodeRequestCount += 1;
+      return;
+    }
+    requests.push({ url, resourceType });
   };
   return {
     begin() {
@@ -34,7 +36,11 @@ export function createApplicationCodeRequestAudit({ limit = 4000 } = {}) {
       add(url, 'worker', false);
     },
     snapshot() {
-      return { requestCount, requests: requests.slice() };
+      return {
+        requestCount,
+        requests: requests.slice(),
+        droppedCodeRequestCount,
+      };
     },
   };
 }

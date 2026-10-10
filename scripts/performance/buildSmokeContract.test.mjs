@@ -224,7 +224,11 @@ test('application code audit opens after preflight and still rejects an app blob
   const preflightBlob = 'blob:http://127.0.0.1:4173/harness-worker';
   audit.observeRequest(preflightBlob, 'script');
   audit.observeWorker(preflightBlob);
-  assert.deepEqual(audit.snapshot(), { requestCount: 0, requests: [] });
+  assert.deepEqual(audit.snapshot(), {
+    requestCount: 0,
+    requests: [],
+    droppedCodeRequestCount: 0,
+  });
 
   audit.begin();
   audit.observeRequest('http://127.0.0.1:4173/assets/main.js', 'script');
@@ -241,4 +245,14 @@ test('application code audit opens after preflight and still rejects an app blob
       }),
     /build-root integrity/,
   );
+});
+
+test('application code audit reports bounded overflow instead of silently dropping code paths', () => {
+  const audit = createApplicationCodeRequestAudit({ limit: 1 });
+  audit.begin();
+  audit.observeRequest('https://app.example/assets/one.js', 'script');
+  audit.observeRequest('https://app.example/assets/two.js', 'script');
+  const snapshot = audit.snapshot();
+  assert.equal(snapshot.requests.length, 1);
+  assert.equal(snapshot.droppedCodeRequestCount, 1);
 });

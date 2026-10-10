@@ -392,8 +392,8 @@ async function runRevision({
         `Harness preflight worker target remained after termination (${preflightTargetDisposal.remainingCount}).`,
       );
     preflightPhase.active = false;
-    // Begin observing after every harness-only request and worker target has
-    // settled, so delayed protocol events cannot cross the audit boundary.
+    // Ignore preflight-phase events and begin app collection after its settle
+    // window, so harness-only requests cannot enter the app code audit.
     requestAudit.begin();
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
@@ -465,6 +465,10 @@ async function runRevision({
       if (['worker', 'service_worker'].includes(target.type()))
         requestAudit.observeWorker(target.url());
     const finalAuditSnapshot = requestAudit.snapshot();
+    if (finalAuditSnapshot.droppedCodeRequestCount > 0)
+      throw new Error(
+        'Application code request audit exceeded its bounded event capacity.',
+      );
     const finalCodeAudit = auditReceiptedCodeRequests({
       requests: finalAuditSnapshot.requests,
       baseUrl: served.baseUrl,
