@@ -45,6 +45,30 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### Windows fresh-viewer controls - 10 October 2026, 15:14-15:16 UTC
+
+GPT-6 Luna's fixture-only `7e09988616e3242eef0b2349416e36b523243441` creates one fresh viewer for each selected control, preserving the 400-ms deadline and stopping on the first failed request. Copy mode separately times the wait/copy, pixel extraction and hashing. A bounded follow-up observation cannot convert failure into success. Five helper tests and 12 existing capture/diagnostic checks pass; syntax and targeted formatting pass.
+
+All four downloaded reports identify UHD 620/ANGLE/D3D11 and Chrome 154, a 640x360 drawing buffer, normal 888x585 viewport, DPR 2, antialiasing and preservation enabled. Each reports complete fixture cleanup. Desktop foreground/occlusion remains externally unverified.
+
+| Control | Observations | Raw report |
+| --- | --- | --- |
+| globe-only / copy | Three completed frame requests | [JSON](performance-evidence/windows-wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T15-14-49-910Z.json) |
+| globe-only / no-copy | Three completed frame requests | [JSON](performance-evidence/windows-wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T15-14-36-081Z.json) |
+| paused-wind / copy | Three completed frame requests | [JSON](performance-evidence/windows-wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T15-16-18-682Z.json) |
+| paused-wind / no-copy | First frame request failed; no RAF delivered during 411 ms wait | [JSON](performance-evidence/windows-wind-frame-delivery-paused-wind-no-copy-7e09988-2026-10-10T15-15-34-029Z.json) |
+
+The paused-wind/no-copy failure occurs without any preceding pixel copy, readback or hash in its fresh viewer. Copying is therefore not required to trigger this failure. The separate wind-copy run then completes three requests; that does not erase the failure or identify its browser/OS/compositor cause. No production rendering change, deadline increase, hardware soak pass or performance improvement follows from these controls. Globe-only omits both wind geometry and its generated imagery, so this is not a pure geometry comparison.
+
+Report checksums:
+
+- `windows-wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T15-14-49-910Z.json`: `752e834200c7ac2e0eed96307003ba8f7b5daf8034bb5ee7ad0aa39418958ef0`.
+- `windows-wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T15-14-36-081Z.json`: `d850c25eebf6bdd39b4b779aee2e9f4935358b2363b1e31868e4cdee143667fe`.
+- `windows-wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T15-16-18-682Z.json`: `4414fe3f0164d08f7deb2291eec28808c36f8ecb265d847350b70d49153941b0`.
+- `windows-wind-frame-delivery-paused-wind-no-copy-7e09988-2026-10-10T15-15-34-029Z.json`: `d3b37fef0eed426275885ac4c4ed4d68a27f91064590ba724e87081032facd69`.
+
+The exact `afe83bc` Windows installation-recovery [report](performance-evidence/profile-recovery-38062012141-windows.json) passes all five settings/workspace checkpoints with normal 312-437 ms shutdown and no forced termination. It is hosted SwiftShader evidence, not physical GPU evidence. SHA-256: `57db6f0b8ac384136650c5ba68d494d7728c46bf90892d2f060cf4e82a1c7f00`.
+
 ### Windows candidate capture correctness - 10 October 2026, 14:48 UTC
 
 The clean frozen `47dbee47027e636e7d51e14c3a07f6e1134d7caf` checkout was served locally with matching build identity and exercised through the existing capture-matrix UI in the authorized Chrome profile. All 12 checks pass on Intel UHD 620 through ANGLE/D3D11, Chrome 154, with four MSAA samples. Both framebuffer-preservation settings pass idle, moving, portrait, resized, restored and destroy-pending cases. Fresh expected colour pixels, actual dimensions and listener cleanup are checked. [Downloaded report](performance-evidence/windows-capture-matrix-47dbee4.json), SHA-256 `84428d0e61ec5e7509e6a311fabf5393766d7525ad6f474ec8acbbdfadf48b0c`.
@@ -71,7 +95,7 @@ GPT-6 Luna's `afe83bc3584e0ef276fe10c7446c568a98ec4d22` extends the owned timest
 
 The root's [independent comparison](performance-evidence/military-tracked-time-comparison-afe83bc.json) uses exact production factories from baseline `df9c3ab` and candidate `afe83bc`. Five repetitions each have identical fixed-trajectory output hashes across 124 frames. Clock reads fall from 372 to 248 with a fresh untracked sample interleaved in every frame. Separate boundary diagnostics reproduce and fix callback-order disagreement; the synthetic ~94-m offset represents an intentionally injected one-second clock jump, not a measured live-aircraft jump. No frame-time or GPU improvement is claimed. Report SHA-256: `f0ae15a9f8d30f9bcb4d868e84353f3d0f8d500d6b5fd7014c3a37badf198aba`; [comparison harness](performance-evidence/military-tracked-time-comparison.mjs) SHA-256: `0d40fd6ef2d05fa06bcba5440f1e69be583f3b77764c0e01d759ec1510aa31ed`.
 
-Thirty-four civil/military/readout tests, formatting and package boundaries pass. [Full integration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38062012141) and [hosted tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38062025493) are pending at this revision. A separate local full-suite attempt was stopped because its parallel processes exhausted available Windows memory and disrupted Chrome; it is not a pass. Hardware controls run separately from that load.
+Thirty-four civil/military/readout tests, formatting and package boundaries pass. [Full integration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38062012141) completes with six passing jobs and one failure ([job results](performance-evidence/ci-afe83bc.json)). Node 24 and 26 each pass 6,803 tests with one declared skip; the additional 14 Node 24 allocation checks and both production builds pass. All three OS installation-recovery jobs and Windows onboarding pass. The browser job fails its mixed-use smoke during the second workspace/import cycle with a 30-second wait timeout ([failure JSON from the job log](performance-evidence/mixed-use-smoke-38062012141-failure.json)); its other journeys pass. This remains an integration failure until diagnosed. [Hosted tracking](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38062025493) passes 109 checks with zero failures/skips and normal 792-ms browser shutdown ([raw output](performance-evidence/tracking-38062025493.log), [job results](performance-evidence/tracking-38062025493-run.json)). A separate local full-suite attempt was stopped because its parallel processes exhausted available Windows memory and disrupted Chrome; it is not a pass. Hardware controls run separately from that load.
 
 ### Windows wind frame attribution - 10 October 2026, 15:02 UTC
 

@@ -1,0 +1,168 @@
+
+3D Tracking Regression Harness
+  App URL : http://localhost:4174
+  Mode    : headless
+
+  Imagery : bundled NaturalEarthII fixture (tile images only)
+  Browser : /home/runner/.cache/puppeteer/chrome/linux-152.0.7977.75/chrome-linux64/chrome
+
+  Browser version: Chrome/152.0.7977.75
+Loading app...
+  App globals ready.
+
+Invariant 4 — init clean
+  [[32mPASS[0m] init: >=12 layers registered  — 30 layers [bhote-koshi-2026, bhote-koshi-locator, flights, military, local-adsb, earthquakes, fire-perimeters, alpr-cameras, street-level, satellites, rocket-launches, traffic, cctv, radio, transit, bikeshare, directions, recent-imagery, ais-live-vessels, military-installations, military-awareness, wind, weather-radar, weather-satellite, weather-lightning, weather-cyclones, local-datacenters, local-dams, telegeography-submarine-cables, local-firms]
+  [[32mPASS[0m] init: flights + military layers present  — flights=true military=true
+  [[32mPASS[0m] init: [Detection] Initialized logged
+  [[32mPASS[0m] init: [TrackedReadout] Initialized logged
+  [[32mPASS[0m] init: no console errors during boot  — clean
+  GLB capability control: ready (ready)
+
+Enabling flights + military layers (synthetic feed)...
+  flights enabled=true count=3 | military enabled=true count=2
+  shim hits: opensky=2 mil=3
+  [[32mPASS[0m] inject: synthetic flights ingested (count>0)  — flights count=3
+  [[32mPASS[0m] inject: synthetic military ingested (count>0)  — military count=2
+  [[32mPASS[0m] DISPLAY-rail 3D toggle drives both aircraft layers, both directions  — on: button=true flights=true military=true | off: button=false flights=false military=false
+
+Share Link v2 — tracked aircraft survives a full reload
+  [[32mPASS[0m] share-v2: explicit aircraft selection reaches the generated URL  — http://localhost:4174/#v=2&lat=30.2672&lon=-97.7431&alt=600&heading=15&pitch=-30&roll=360&style=normal&bloom=0&sharpen=1&bi=0&bv=2&si=49&hud=tactical&hv=1&dm=DENSE&dd=75&da=elastic&kf=7&ko=1&cr=0&sc=1&scf=11&map=esri-imagery&l=f&lo=f.e.1_f.t.aaa001_k.o.n&ui=c.c.1_c.p.0_l.c.1_l.p.0_d.c.1_v.c.1_i.c.0_t.c.1_r.c.1_s.c.1_g.c.1_p.c.1_m.c.0
+  [[32mPASS[0m] share-v2: full reload restores the selected logical aircraft  — {"flightsEnabled":true,"trackedId":"aaa001","durableId":"aaa001","viewerTrackedId":"flights:aaa001"}
+  [[32mPASS[0m] share-v2: restored aircraft owns the Cesium follow camera  — viewerTrackedId=flights:aaa001
+  [[32mPASS[0m] share-v2: clean recipient magic link restores the selected aircraft  — {"flightsEnabled":true,"trackedId":"aaa001","durableId":"aaa001","viewerTrackedId":"flights:aaa001"}
+  [[32mPASS[0m] share-v2: a not-yet-arrived subject is held pending, with no failure notice  — {"tracked":null,"notice":"ACQUIRING","noticeShown":true}
+  [[32mPASS[0m] share-v2: the pending subject latches on when it arrives on a later poll  — {"tracked":"aaa001","viewerTrackedId":"flights:aaa001"}
+
+Voice entity context — a click-selected contact answers scope:selected
+  [[32mPASS[0m] voice-context: click-selected aircraft answers scope:selected  — {"scope":"selected","layerId":"flights","id":"aaa001","name":"SYN001","latitude":30.267184043498936,"callsign":"SYN001"}
+  [[32mPASS[0m] voice-context: the selected contact carries its identity and position  — {"scope":"selected","layerId":"flights","id":"aaa001","name":"SYN001","latitude":30.267184043498936,"callsign":"SYN001"}
+  [[32mPASS[0m] voice-context: switching contacts moves the subject and leaves no stale record  — {"scope":"selected","id":"aaa002","flightRecordIds":["aaa002"]}
+  [[32mPASS[0m] voice-context: click-selected military contact answers scope:selected  — {"scope":"selected","layerId":"military","id":"bbb101","name":"MIL101"}
+  [[32mPASS[0m] voice-context: deselecting releases the subject back to in_view  — {"scope":"in_view","selected":null}
+
+Voice entity context — a tracked satellite is a selected subject
+  [[32mPASS[0m] voice-context: a tracked satellite answers scope:selected with its identity  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+  [[32mPASS[0m] voice-context: switching satellites moves the subject and leaves no stale orbit  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+  [[32mPASS[0m] voice-context: the subject survives a catalog rebuild under the same id  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+  [[32mPASS[0m] voice-context: a subject missing while ANOTHER potential carrier failed is preserved  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+  [[32mPASS[0m] voice-context: a subject that does not survive the rebuild releases the slot  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+  [[32mPASS[0m] voice-context: a failed DENSE load preserves its subject, even though the mode reverts  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+  [[32mPASS[0m] voice-context: deselecting a satellite releases the subject  — {"tracked":true,"scope":"selected","layerId":"satellites","id":"25544","name":"ISS (ZARYA)","latitude":-5.467374172741609,"switchedId":"20580","satelliteRecordIds":["20580"],"releasedScope":"in_view","releasedSelected":null,"rebuiltScope":"selected","rebuiltId":"25544","rebuiltLatitude":-5.285933984760303,"goneScope":"in_view","goneSelected":null,"partialScope":"selected","partialId":"25544","denseTracked":true,"denseSelectedId":"44713","denseFailureScope":"selected","denseFailureId":"44713","catalogModeAfterFailure":"core"}
+
+Panel === spoken — one number, through both real call sites
+  [[32mPASS[0m] panel===spoken: the Contacts panel and the voice count are one number  — {"subject":"SYN001","panelAircraft":4,"spokenCount":4,"spokenEngine":"contacts-window","spokenCenteredOn":"SYN001"}
+  [[32mPASS[0m] panel===spoken: the spoken answer names the subject whose window it read  — {"subject":"SYN001","panelAircraft":4,"spokenCount":4,"spokenEngine":"contacts-window","spokenCenteredOn":"SYN001"}
+
+Context vocabulary — state output speaks the tools' own words
+  [[32mPASS[0m] context-vocab: a manually activated Contacts reports as "contacts", not its internal id  — {"internalMode":"flights","reportedMode":"contacts","reportedInternal":"flights","active":true}
+  [[32mPASS[0m] context-vocab: the reported mode round-trips back through set_context_mode  — {"ok":true,"error":null,"resultMode":"contacts","resultInternal":"flights","stateMode":"contacts"}
+  [[32mPASS[0m] context-vocab: no context reports as "off", never a bare null  — {"resultMode":"off","stateMode":"off","stateInternal":null}
+
+Analyst handoff — a looked-up contact can actually be tracked
+  [[32mPASS[0m] analyst-handoff: a callsign-less contact is named by the tail number the app shows  — {"militaryEnabled":true,"militaryCount":3,"itemCount":3,"itemFound":true,"itemId":"6606","itemIcao":"bbb777","trackOk":true,"trackError":null,"trackedIcao":"bbb777"}
+  [[32mPASS[0m] analyst-handoff: the identity the analyst returned is trackable, first try  — {"militaryEnabled":true,"militaryCount":3,"itemCount":3,"itemFound":true,"itemId":"6606","itemIcao":"bbb777","trackOk":true,"trackError":null,"trackedIcao":"bbb777"}
+  [[32mPASS[0m] analyst-handoff: the result carries the hex key the tracker keys on  — {"militaryEnabled":true,"militaryCount":3,"itemCount":3,"itemFound":true,"itemId":"6606","itemIcao":"bbb777","trackOk":true,"trackError":null,"trackedIcao":"bbb777"}
+
+Invariant 1 — no jitter (model visual centre === detectable pos)
+  [[32mPASS[0m] 3D: tracked commercial model becomes ready through the DISPLAY toggle  — ready+shown id=aaa001
+  [[32mPASS[0m] jitter: max|visual centre − detectable| ≈ 0 over frames  — max=0.000 m over 30 frames (tol 5 m, mode=model-matrix)
+
+Invariant 2 — no pull-out on track switch
+  [[32mPASS[0m] pull-out: camera stays in follow band on switch (no ~80 km spike)  — maxHeight=16.6 km (before=15.8 km, ceil 50 km)
+  [[32mPASS[0m] pull-out: track switch actually landed on plane B  — tracking B
+
+Invariant 3 — no cross-layer orphan
+  [[32mPASS[0m] orphan: military clears when commercial is tracked  — mil before=true mil after=false fl after=true
+  [[32mPASS[0m] orphan: commercial clears when military is tracked  — fl before=true fl after=false mil after=true
+  [[32mPASS[0m] no console errors during tracking exercises  — clean
+
+Regression H1 — click on the tracked plane is a no-op
+  [[32mPASS[0m] H1: tracked standalone model exposes its pick id  — model.id="aaa001" (want "aaa001")
+  [[32mPASS[0m] H1: click on tracked plane keeps tracking (no deselect)  — picked via icao-pick; still tracking=true
+  [[32mPASS[0m] H1: click on tracked plane does not pull the camera out  — maxHeight=15.8 km (before=15.8 km, ceil 50 km)
+
+Regression M3 — tracked plane age-out releases the camera in place
+  [[32mPASS[0m] M3: tracking cleared after the tracked plane ages out (getTrackedInfo null)  — before=true trackedAfter=false
+  [[32mPASS[0m] M3: camera released after age-out (viewer.trackedEntity undefined)  — viewerTracked=false
+  [[32mPASS[0m] M3: camera stayed in place after age-out — altitude Δ < 2 km  — Δalt=0.00 km (tol 2 km; ageOut=15.8 km, final=15.8 km)
+  [[32mPASS[0m] M3: camera stayed in place after age-out — horizontal Δ < 2 km  — Δhoriz=0.00 km (tol 2 km)
+
+Change 2a — landing-ghost fast cull (1 missed poll; cruise grace intact)
+  [[32mPASS[0m] fast-cull: landed low+slow synthetics ingested (both layers)  — flights=true military=true
+  [[32mPASS[0m] fast-cull: landed plane removed after ONE missed poll (flights)  — gone=true (grace skipped, was 3 polls)
+  [[32mPASS[0m] fast-cull: landed plane removed after ONE missed poll (military)  — gone=true (grace skipped, was 3 polls)
+  [[32mPASS[0m] fast-cull: cruise plane keeps the 3-poll grace (present after 1 miss)  — present=true
+
+Change 2b — tracked readout STALE cue during missed-poll grace
+  [[32mPASS[0m] stale-readout: tracked label carries STALE cue during grace  — fresh="SYN003" stale="SYN003"
+  [[32mPASS[0m] stale-readout: STALE cue clears when the plane reappears  — recovered="SYN003"
+
+Change 3 — ground traffic: full-alpha style, in-place transitions, fast cull
+  [[32mPASS[0m] ground: on-ground plane renders full-alpha white at ground scale + detectable (flights)  — show=true scale=0.800 rgba=(1.00,1.00,1.00,1.00) detectable=true
+  [[32mPASS[0m] ground: military mirror — alt_baro "ground" renders full-alpha amber  — show=true scale=0.482 rgba=(1.00,0.72,0.00,1.00)
+  [[32mPASS[0m] ground: takeoff flip restyles in place (white, full alpha, full scale)  — show=true scale=1.000 rgba=(1.00,1.00,1.00,1.00)
+  [[32mPASS[0m] ground: landing flip returns to ground scale in place (no removal, still full alpha)  — show=true scale=0.800 rgba=(1.00,1.00,1.00,1.00)
+  [[32mPASS[0m] ground: landing ghost fast-culls after ONE missed poll; born-parked contact survives the flap (round 7)  — flights(landed ghost) gone=true military(born parked) gone=false (want true/false)
+  [[32mPASS[0m] ground: depth test disabled for EVERY contact (always visible), incl. across ground flips  — flights=inf mil=inf takeoff=inf landing=inf
+
+Ground 3D — grounded planes are model-eligible + snapped to the sampled skin
+  [[32mPASS[0m] ground-3d: sampleHeight stub installed + tiles-ready forced  — {"tilesForced":true,"priorModels3d":{"flights":true,"military":true}}
+  [[32mPASS[0m] ground-3d: grounded synthetics ingested  — bb radii fl=6372861.4 mil=6372737.8
+  [[32mPASS[0m] ground-3d: grounded planes are model-eligible and modeled (both layers)  — fleet models up (ready+shown)
+  [[32mPASS[0m] ground-3d: flights model height = sampled skin + belly offset (airliner)  — Δradial=71.12 m want=71.12 m (stub 187.5 + offset 6.72 − alt 123.10 [150 baro + -26.90 geoidN])
+  [[32mPASS[0m] ground-3d: military model height = sampled skin + belly offset (turboprop)  — Δradial=191.31 m want=191.31 m (stub 187.5 + offset 3.81 − alt 0)
+  [[32mPASS[0m] ground-3d: billboard→model handoff holds on the ground (icons hidden once models render)  — fl bb.show=false mil bb.show=false
+  [[32mPASS[0m] ground-3d: both grounded synthetic contacts reached the sampling seam  — sample hits near distinct fixture cells: flights=1, military=1
+  [[32mPASS[0m] weld: flights grounded detection anchor === rendered model visual centre (20 frames)  — samples=20 missing=0 maxΔ=0.000 m (tol 2 m)
+  [[32mPASS[0m] weld: military grounded detection anchor === rendered model visual centre (20 frames)  — samples=20 missing=0 maxΔ=0.000 m (tol 2 m)
+  [[32mPASS[0m] ground-3d: fleet sampling window completed all 60 requested frames  — frames=60/60 timedOut=false
+  [[32mPASS[0m] ground-3d: fleet ground sampling is one-shot/per-poll bounded (no per-frame sampling)  — sampleHeight calls: before=3, growth over 60 verified frames=1 (per-frame would be ~60+)
+  [[32mPASS[0m] ground-3d: tracked loading/ownership sampling window completed all 30 requested frames  — frames=30/30 timedOut=false
+  [[32mPASS[0m] ground-3d: tracked loading/ownership ground sampling is bounded (no per-frame sampling)  — sampleHeight growth from before trackById across 30 verified frames=0 (per-frame would be ~30+)
+  [[32mPASS[0m] ground-3d: TRACKED grounded plane gets the standalone tracked model, ground-snapped  — tracked model up; Δradial=71.12 m want=71.12 m
+  [[32mPASS[0m] ground-3d: tracked ready-state sampling window completed all 30 requested frames  — frames=30/30 timedOut=false
+  [[32mPASS[0m] ground-3d: tracked ready-state ground sampling is bounded (no per-frame sampling)  — sampleHeight growth over 30 verified ready-state frames=0 (per-frame would be ~30+)
+  [[32mPASS[0m] weld: TRACKED card anchor === rendered tracked model visual centre  — visualΔ=0.000 m (tol 2 m), accessor=true
+  [[32mPASS[0m] weld: gevDisplayPosition still reports the dead-reckoned position (anti-jitter intact)  — displayΔ=72.775 m (must stay > 0.25 m — the ground-snap split)
+  [[32mPASS[0m] ground-3d: scenario completed without an unhandled fixture error  — primary path completed
+  [[32mPASS[0m] ground-3d: fixture cleanup completed without errors  — all owned fixture state released
+
+Change 4 — arrival rotation: moveEnd settle pass + horizon-reveal pass
+  [[32mPASS[0m] arrival: moveEnd + reveal both re-aim within 4 frames, flights (tamper was 86°)  — settle-err=0.0° reveal-err=0.0° shown=true flipFrame=1 hasModel=false
+  [[32mPASS[0m] arrival: moveEnd + reveal both re-aim within 4 frames, military (tamper was 86°)  — settle-err=0.0° reveal-err=0.0° shown=true flipFrame=1 hasModel=false
+
+Display floor — grounded contacts never render below the cell they drifted onto
+  [[32mPASS[0m] display-floor: ground-floor service owner found  — {"candidates":1}
+  [[32mPASS[0m] display-floor: harness reached the app's own groundFloor module instance  — a 400 m fix-cell seed put the sprite at 400.0 m (application surface)
+  [[32mPASS[0m] display-floor: the displayed position really has drifted off the fix cell  — displayed 331 m from the fix (render delay × taxi speed)
+  [[32mPASS[0m] display-floor: a grounded sprite never renders below the cell it drifted onto  — 400.0 m → 431.5 m against a 430.0 m floor (needs >= floor + 1.5 m)
+  [[32mPASS[0m] display-floor: the lift came from the display path (fix cell still cold)  — fix cell mesh=null floor=109.3672356866829 vs seeded 430.0 m
+  [[32mPASS[0m] display-floor: an AIRBORNE contact over the same cells is not lifted  — airborne renders at 123.1 m (seeded floor 430.0 m)
+  [[32mPASS[0m] display-floor/corridor: the display cell is not the fix cell, and started cold  — display {"lat":30.3,"lon":-97.803} vs fix {"lat":30.3,"lon":-97.8}, started at null — the fix-cell collection cannot reach the display cell
+  [[32mPASS[0m] display-floor/corridor: polling warms the ground the contact is DISPLAYED over  — display-cell floor = 173.57929067753358 (nothing was pre-seeded — only corridor collection can produce this)
+  [[32mPASS[0m] display-floor/corridor: the corridor reaches PAST the fix, along the direction of travel  — cell ~250 m beyond the fix ({"lat":30.3,"lon":-97.797}, distinct from fix {"lat":30.3,"lon":-97.8}: true) floor = 181.81012519792728 — a fix-aimed corridor never offers it
+  [[32mPASS[0m] display-floor/corridor: an off-path control cell stays cold (not ambient warming)  — control cell floor = null
+  [[32mPASS[0m] display-floor/corridor: the height sample clears cell-boundary hysteresis  — the sampled coordinate lies inside one unambiguous floor cell
+  [[32mPASS[0m] display-floor/corridor: the sprite rides the corridor-warmed floor  — 197.2 m → 181.8 m on a 180.3 m floor
+  [[32mPASS[0m] display-floor: the fleet billboard lifts onto the planted floor (control for the tracked check)  — billboard 181.8 m → 441.5 m (floor 440.0 m)
+  [[32mPASS[0m] display-floor/gate: with NO resolved ground the grounded model is withheld and the billboard is floored  — cold skin: 0 aaa097 model(s) rendering / 0 shown (placed height none — never placed), billboard at 441.5 m on a 440.0 m floor
+  [[32mPASS[0m] display-floor/placement: a resolved grounded model stands ON the floor, not under it and not hidden  — warm skin: 1 aaa097 model(s) rendering at 446.7 m on a 440.0 m floor (belly headroom 12 m; raw feed altitude was 181.8 m)
+  [[32mPASS[0m] display-floor/regime: the TRACKED grounded contact is floored exactly when the billboard is the visual  — IN @ 2 km (< 150 km enter): 1 aaa097 model(s) rendering, entity left at -26.8 m under a 440.0 m floor (groundSnap owns it); OUT @ 178 km (> 172.5 km exit): 0 aaa097 model(s) rendering, billboard owns it again, -26.8 m → 441.5 m on a 440.0 m floor
+  [[32mPASS[0m] display-floor/regime: data APIs report sensor truth in BOTH regimes, floored or not  — getTrackedInfo().altitudeM = 0 zoomed in / 0 zoomed out (feed baro), while the floored visual reads 441.5 m — the split is deliberate
+  [[32mPASS[0m] display-floor/T7: while the tracked MODEL is the visual, the clamp stands aside  — 1 aaa097 model(s) rendering at 3 km with the 3D toggle OFF; entity at 204.5 m (ground-snap owns it)
+  [[32mPASS[0m] display-floor/regime: the 3D toggle governs the FLEET only — the tracked model follows the zoom  — toggle OFF throughout: at 3 km (< 150 km enter) 1 aaa097 model(s) rendering; at 178 km (> 172.5 km exit) 0 shown / 1 retained-hidden
+  [[32mPASS[0m] display-floor: a retained-but-hidden tracked model does NOT suppress the floor  — 441.5 m → 478.0 m on a 476.5 m floor (1 model object(s) still retained, hidden by the zoom regime)
+  [[32mPASS[0m] display-floor/loading: a fleet model that is shown-but-not-ready does not own the visual  — model show=true ready=false, billboard visible=true at 524.5 m on a 523.0 m floor
+  [[32mPASS[0m] display-floor/loading: tracked regime active with no rendering model stays floored  — rendering models during load=0, entity at 571.0 m on a 569.5 m floor
+  [[32mPASS[0m] display-floor/hold: the taxi really does invalidate, and the far step really does exceed the bound  — taxi 96.2 m (> 50 m invalidate, < 250 m bound), far step 384.8 m (> 250 m bound)
+  [[32mPASS[0m] display-floor/hold: a taxi-invalidated ground snap holds the model through the resample backoff  — fresh owns=true after 2 positive base sample(s), on a MEASURED floor at 637.7 m; tiles gone + 96.2 m taxi → owns=true at 637.7 m, billboard shown=false (want owns=true, bb=false: no 3D→2D pop). Independent mesh floor: base=569.5 m, taxi=569.5 m
+  [[32mPASS[0m] display-floor/hold: past the drift bound the hold is released and the model is withheld  — 384.8 m from the sample: model owns=false, billboard back at shown=true
+  [[32mPASS[0m] no console errors across the FULL run (late groups included)  — clean
+  [[32mPASS[0m] no HTTP 5xx responses across the FULL run  — clean
+
+────────────────────────────────────────────────────────────
+  RESULT: 109 passed, 0 failed, 0 skipped
+────────────────────────────────────────────────────────────
+
+  Bundled imagery tiles served: 18
+  Browser cleanup: {"closeCompleted":true,"forcedProcessTermination":false,"observation":{"closeStatus":"completed","closeDeadlineMs":5000,"closeStartHostMs":349278.455776,"closeSettledHostMs":350070.54473,"closeElapsedMs":792.0889540000353,"closeRejectionName":null,"processExitedBeforeClose":false,"processExit":{"code":0,"signal":null,"elapsedMs":761.0318570000236},"protocolCloseTrace":null,"forceProcessStatus":"not-needed","forceProcessAttempted":false,"forceProcessCallbackInvoked":false,"forceProcessElapsedMs":null}}
