@@ -118,6 +118,30 @@ function run(mode, frameFactor = 1) {
       endMinAlpha: name === 'focusActive' ? 64 : 255,
       endDimmedVesselCount: name === 'focusActive' ? 1 : 0,
       requestRenderModeAtEnd: candidate,
+      conditions: {
+        before: {
+          visibility: 'visible',
+          focused: true,
+          viewportWidth: 1200,
+          viewportHeight: 960,
+          devicePixelRatio: 1,
+          drawingBufferWidth: 1200,
+          drawingBufferHeight: 960,
+        },
+        after: {
+          visibility: 'visible',
+          focused: true,
+          viewportWidth: 1200,
+          viewportHeight: 960,
+          devicePixelRatio: 1,
+          drawingBufferWidth: 1200,
+          drawingBufferHeight: 960,
+        },
+        events: [],
+        overflow: false,
+        foregroundUninterrupted: true,
+        desktopForegroundVerification: 'unavailable',
+      },
       nonBackgroundPixels,
       rgbaSha256: image,
     }),
@@ -362,6 +386,57 @@ test('vessel report rejects missing contacts and contradictory focus endpoints',
           expectedCommit: commit,
         }),
       /did not remain dimmed/,
+    );
+    changed.phases[1].endMinAlpha = 64;
+    changed.phases[2].endMinAlpha = 254;
+    assert.throws(
+      () =>
+        compareVesselRenderDemandRuns(control, candidate, {
+          expectedCommit: commit,
+        }),
+      /did not restore/,
+    );
+  }
+});
+
+test('vessel phase rejects missing, hidden, interrupted, resized or overflowing conditions', () => {
+  for (const corrupt of [
+    (phase) => {
+      delete phase.conditions;
+    },
+    (phase) => {
+      phase.conditions.before.visibility = 'hidden';
+    },
+    (phase) => {
+      phase.conditions.after.focused = false;
+    },
+    (phase) => {
+      phase.conditions.foregroundUninterrupted = false;
+    },
+    (phase) => {
+      phase.conditions.after.viewportWidth = 800;
+    },
+    (phase) => {
+      phase.conditions.after.drawingBufferWidth = 800;
+    },
+    (phase) => {
+      phase.conditions.overflow = true;
+    },
+    (phase) => {
+      phase.conditions.events.push({
+        ...phase.conditions.before,
+        visibility: 'hidden',
+      });
+    },
+  ]) {
+    const control = run('control');
+    corrupt(control.phases[0]);
+    assert.throws(
+      () =>
+        compareVesselRenderDemandRuns(control, run('candidate', 0.2), {
+          expectedCommit: commit,
+        }),
+      /foreground|viewport/,
     );
   }
 });

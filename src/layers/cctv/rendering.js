@@ -109,7 +109,14 @@ export function createRendering({
       if (focus.active) activeCount += 1;
       const base = baseColorFor(record);
       const alpha = base.alpha * focus.factor;
-      if (focusAlphaNeedsWrite(bb.color?.alpha, alpha, params)) {
+      if (
+        focusAlphaNeedsWrite(
+          bb.color?.alpha,
+          alpha,
+          params,
+          focus.endpointCompleted,
+        )
+      ) {
         // Order-independent narrow amendment to always-visible icons: CCTV
         // contacts retain a non-zero floor while yielding near the tracked target.
         bb.color = base.withAlpha(alpha);

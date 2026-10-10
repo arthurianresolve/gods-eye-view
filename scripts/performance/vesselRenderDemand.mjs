@@ -34,6 +34,37 @@ function phaseName(value, mode) {
   );
 }
 
+function validateConditions(conditions, viewport) {
+  if (
+    !conditions ||
+    conditions.foregroundUninterrupted !== true ||
+    conditions.overflow !== false ||
+    conditions.desktopForegroundVerification !== 'unavailable' ||
+    !Array.isArray(conditions.events) ||
+    conditions.events.length > 16
+  )
+    throw new Error(
+      'Vessel phase foreground evidence is missing or interrupted',
+    );
+  const before = conditions.before;
+  for (const value of [before, conditions.after, ...conditions.events]) {
+    if (
+      value?.visibility !== 'visible' ||
+      value?.focused !== true ||
+      !Number.isFinite(value.viewportWidth) ||
+      value.viewportWidth <= 0 ||
+      !Number.isFinite(value.viewportHeight) ||
+      value.viewportHeight <= 0 ||
+      value.devicePixelRatio !== viewport.devicePixelRatio ||
+      value.drawingBufferWidth !== viewport.width ||
+      value.drawingBufferHeight !== viewport.height ||
+      value.viewportWidth !== before.viewportWidth ||
+      value.viewportHeight !== before.viewportHeight
+    )
+      throw new Error('Vessel phase lost foreground or changed viewport');
+  }
+}
+
 function validatePhase(phase, plan, population, mode) {
   if (!phase || phase.name !== plan.name)
     throw new Error(`Missing vessel render-demand phase: ${plan.name}`);
@@ -89,7 +120,7 @@ function validatePhase(phase, plan, population, mode) {
     );
   if (
     plan.name !== 'focusActive' &&
-    (phase.endMinAlpha < 250 || phase.endDimmedVesselCount !== 0)
+    (phase.endMinAlpha !== 255 || phase.endDimmedVesselCount !== 0)
   )
     throw new Error(`Vessel focus alpha did not restore by ${plan.name}`);
   if (typeof phase.requestRenderModeAtEnd !== 'boolean')
@@ -142,13 +173,15 @@ function validateRun(report, expected = {}) {
     throw new Error('Vessel rendering settings or drawing buffer are missing');
   if (!Array.isArray(report.phases) || report.phases.length !== PAIRS.length)
     throw new Error('Vessel fixture phase inventory is incomplete');
-  for (let index = 0; index < PAIRS.length; index++)
+  for (let index = 0; index < PAIRS.length; index++) {
     validatePhase(
       report.phases[index],
       PAIRS[index],
       report.population,
       report.mode,
     );
+    validateConditions(report.phases[index].conditions, report.viewport);
+  }
   if (report.mode === 'candidate') validateCandidateCadence(report);
   if (
     report.cleanup?.layerDestroyed !== true ||

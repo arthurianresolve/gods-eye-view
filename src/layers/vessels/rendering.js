@@ -330,7 +330,14 @@ export function createRendering({
       });
       transitioning ||= focus.transitioning;
       if (focus.active) activeCount += 1;
-      if (focusAlphaNeedsWrite(bb.color?.alpha, focus.factor, params)) {
+      if (
+        focusAlphaNeedsWrite(
+          bb.color?.alpha,
+          focus.factor,
+          params,
+          focus.endpointCompleted,
+        )
+      ) {
         // Narrow always-visible amendment: the ship chevron remains present at
         // the non-zero floor while it competes with the tracked target. Preserve
         // the billboard's existing base RGB, matching the other layer patterns,

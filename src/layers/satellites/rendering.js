@@ -308,7 +308,14 @@ export function createRendering({
       if (focus.active) activeCount += 1;
       const base = baseColorFor(noradId);
       const alpha = base.alpha * focus.factor;
-      if (focusAlphaNeedsWrite(point.color?.alpha, alpha, params)) {
+      if (
+        focusAlphaNeedsWrite(
+          point.color?.alpha,
+          alpha,
+          params,
+          focus.endpointCompleted,
+        )
+      ) {
         // Point stays continuously present at the non-zero emphasis floor; its
         // own alpha yields around the tracked target, independent of draw order.
         point.color = base.withAlpha(alpha);

@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`20e53bebe83d7a6f9598969b9dda3048649dfaad` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38070091246), [job results](performance-evidence/ci-20e53be.json)),
+`fdf0bbd33c16a4a8f891157383b3a12d36adf8e9` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38074637763), [job results](performance-evidence/ci-fdf0bbd.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -88,7 +88,11 @@ remain false because the comparison stopped early. Normal browser close takes
 Windows coverage. The failed raw report is preserved without changing dimming
 gates or frame deadlines. Raw SHA-256:
 `0b8b45fa47cf8437872e97a254840571b343c667dbed41ee7b9ce77c34b17720`.
-Full integration remains in progress at this revision.
+All seven standard integration jobs pass at this revision: Node 24/26 tests and
+builds, Windows onboarding, Linux/macOS/Windows install recovery, and browser
+journeys. Node 24 records 6,867 passes, one skip, zero failures, plus 14
+separate allocation checks. The PR-only layer-token and dedicated aircraft tracking jobs were
+skipped. This CI pass does not override the failed rendered comparison.
 
 The fixture correction places the synthetic target halfway along the camera ray
 to a visible vessel. The former 10 km height difference was inside the default
@@ -98,6 +102,47 @@ from the production focus helper. No focus tuning, phase duration or capture
 deadline changes. Report validation also rejects missing contacts and contradictory
 focus endpoints. Six focused tests pass, including the old geometry negative
 control; a fresh rendered comparison is required.
+
+### S51.3 corrected focus geometry exposes endpoint and Windows failures
+
+At `4782c1822c7c5b3e4874ae2519c61f07d424b821`,
+[hosted run 38075273339](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075273339)
+fails its second pair ([raw](performance-evidence/vessels-38075273339.json),
+[job result](performance-evidence/vessels-38075273339-run.json)). All 32 vessels
+now qualify for focus treatment under unchanged production settings. The first
+pair matches all four endpoint images; the second candidate releases only to
+alpha 254 while the control reaches 255, producing different pixels that persist
+in the following idle phase. The existing epsilon-based completion and alpha-write
+deadbands can stop the shared fade before its exact endpoint. This is a production
+correctness issue, not a reason to relax image-equivalence checks. Four viewers
+and their demands clean up; page/interception errors and external requests remain
+zero. Raw SHA-256:
+`b722f4c97e3e933fb254454dfc04deb0990ee2eb7222c5020639a0d0a98c3877`.
+
+The same revision also fails one Windows UHD 620/ANGLE D3D11 comparison
+([raw](performance-evidence/vessels-windows-4782c18-2026-10-10T18-19-56.json)).
+The control renders two frames during release and still has all 32 vessels dimmed
+at its deadline, recovering later. The candidate performs ten focus updates but
+records zero completed frames during its 800 ms focus-active interval. Both
+viewers and owned demands are destroyed. The 888x529 drawing buffer, DPR 2, four
+MSAA samples and renderer are recorded; browser-version and phase foreground
+conditions were not captured by this fixture revision. These observations do not
+establish the cause of the Windows frame gaps or a performance pass. Raw SHA-256:
+`7fbf7ca5596c45fedb075a116188d10a594e27bf3b18becfe64d81f73f131d23`.
+
+The next comparison adds bounded visibility/focus/resize observations before,
+during and after each phase, actual user-agent identity, and strict endpoint
+validation. Desktop occlusion remains explicitly unavailable. Hidden, unfocused,
+resized or incomplete samples fail. The shared fade endpoint fix keeps ownership through the configured endpoint
+and delivers one final color write before releasing it, including composed base
+alpha in CCTV and satellites. Attack, partial-focus and release values retain
+their existing timing and ordinary intermediate write suppression. The helper
+resets its shared completion flag on every return path. Root
+passes 130 focused tests across the three production consumers, the exact failed
+timestamp sequence, scheduler ownership, tracking refresh, and report integrity;
+the separate calibrated allocation test also passes. Package boundaries and
+formatting for 1,485 adopted files pass. A fresh rendered comparison
+and integration run are required; the failed runs remain historical evidence.
 
 ### Windows frame controls after Chrome reconnection - 10 October 2026
 

@@ -37,6 +37,7 @@ const _advanceResult = {
   transitioning: false,
   active: false,
   desired: 1,
+  endpointCompleted: false,
 };
 
 function clamp(value, min, max) {
@@ -382,7 +383,7 @@ export function smoothFocusEmphasis(current, target, elapsedMs, params) {
  *
  * IMPORTANT: the returned object is a module-owned mutable singleton. Consume
  * every needed property before the next call; never retain it as a snapshot.
- * @returns {{factor:number, changed:boolean, transitioning:boolean,active:boolean,desired:number}}
+ * @returns {{factor:number, changed:boolean, transitioning:boolean,active:boolean,desired:number,endpointCompleted:boolean}}
  */
 export function advanceSpriteFocus(
   sprite,
@@ -405,6 +406,7 @@ export function advanceSpriteFocus(
       _advanceResult.transitioning = false;
       _advanceResult.active = false;
       _advanceResult.desired = 1;
+      _advanceResult.endpointCompleted = false;
       return _advanceResult;
     }
     state = {
@@ -451,14 +453,17 @@ export function advanceSpriteFocus(
     elapsedMs,
     tuning,
   );
+  const endpointCompleted = next === desired && state.factor !== next;
   const changed = Math.abs(next - state.factor) > tuning.writeEpsilon;
   state.factor = next;
   state.desired = desired;
   state.wasFarther =
     tuning.nearerBehavior !== 'dim' &&
     Math.abs(desired - tuning.dimFloor) <= tuning.writeEpsilon;
-  const transitioning = Math.abs(next - desired) > tuning.writeEpsilon;
-  const active = Math.abs(next - 1) > tuning.writeEpsilon;
+  // Keep ownership through the configured duration. The write deadband is for
+  // suppressing intermediate color updates; it must not end the release early.
+  const transitioning = next !== desired;
+  const active = next !== 1 || transitioning;
 
   if (!target && !transitioning && next === 1) _spriteStates.delete(sprite);
   _advanceResult.factor = next;
@@ -466,6 +471,7 @@ export function advanceSpriteFocus(
   _advanceResult.transitioning = transitioning;
   _advanceResult.active = active;
   _advanceResult.desired = desired;
+  _advanceResult.endpointCompleted = endpointCompleted;
   return _advanceResult;
 }
 
@@ -481,7 +487,7 @@ export function advanceSpriteFocus(
  * @param {Partial<typeof DEFAULT_FOCUS_DEEMPHASIS_PARAMS>} [params]
  * @param {number} [spriteHalfWidthPx=0]
  * @param {number} [spriteHalfHeightPx=spriteHalfWidthPx]
- * @returns {{factor:number, changed:boolean, transitioning:boolean,active:boolean,desired:number}}
+ * @returns {{factor:number, changed:boolean, transitioning:boolean,active:boolean,desired:number,endpointCompleted:boolean}}
  */
 export function advanceProjectedSpriteFocus(
   sprite,
@@ -506,6 +512,7 @@ export function advanceProjectedSpriteFocus(
     _advanceResult.transitioning = false;
     _advanceResult.active = false;
     _advanceResult.desired = 1;
+    _advanceResult.endpointCompleted = false;
     return _advanceResult;
   }
   const screen =
@@ -594,12 +601,21 @@ export function forgetSpriteFocus(sprite) {
  * @param {number} currentAlpha
  * @param {number} nextAlpha
  * @param {Partial<typeof DEFAULT_FOCUS_DEEMPHASIS_PARAMS>} [params]
+ * @param {boolean} [endpointCompleted=false] Exact transition to a focus endpoint.
  * @returns {boolean}
  */
-export function focusAlphaNeedsWrite(currentAlpha, nextAlpha, params) {
+export function focusAlphaNeedsWrite(
+  currentAlpha,
+  nextAlpha,
+  params,
+  endpointCompleted = false,
+) {
   const tuning = resolvedParams(params);
   return (
     !Number.isFinite(currentAlpha) ||
+    (endpointCompleted &&
+      Number.isFinite(nextAlpha) &&
+      currentAlpha !== nextAlpha) ||
     Math.abs(currentAlpha - nextAlpha) > tuning.writeEpsilon
   );
 }

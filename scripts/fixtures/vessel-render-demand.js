@@ -229,6 +229,19 @@ function recordPostRender() {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function pageConditions() {
+  const canvas = viewer.scene.canvas;
+  return {
+    visibility: document.visibilityState,
+    focused: document.hasFocus(),
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+    drawingBufferWidth: canvas.width,
+    drawingBufferHeight: canvas.height,
+  };
+}
+
 async function capturePixels() {
   const canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
   if (!canvas) throw new Error(`No completed output frame for ${phaseName}`);
@@ -261,6 +274,28 @@ async function capturePixels() {
 async function measurePhase(run, name, durationMs) {
   phaseName = name;
   const phaseStartElapsedMs = performance.now() - run.startedAtMonotonic;
+  const before = pageConditions();
+  const conditions = {
+    before,
+    after: null,
+    events: [],
+    overflow: false,
+    foregroundUninterrupted: before.visibility === 'visible' && before.focused,
+    desktopForegroundVerification: 'unavailable',
+  };
+  // Browser visibility/focus is observable; desktop occlusion is not.
+  run.currentPhaseConditions = conditions;
+  const observeConditions = (event) => {
+    const value = pageConditions();
+    if (value.visibility !== 'visible' || !value.focused)
+      conditions.foregroundUninterrupted = false;
+    if (conditions.events.length < 16)
+      conditions.events.push({ type: event.type, ...value });
+    else conditions.overflow = true;
+  };
+  document.addEventListener('visibilitychange', observeConditions);
+  for (const event of ['focus', 'blur', 'resize'])
+    window.addEventListener(event, observeConditions);
   measurement = {
     startedAt: performance.now(),
     frameTimes: [],
@@ -271,7 +306,16 @@ async function measurePhase(run, name, durationMs) {
     minAlpha: null,
   };
   const active = measurement;
-  await wait(durationMs);
+  try {
+    await wait(durationMs);
+  } finally {
+    document.removeEventListener('visibilitychange', observeConditions);
+    for (const event of ['focus', 'blur', 'resize'])
+      window.removeEventListener(event, observeConditions);
+    conditions.after = pageConditions();
+    if (conditions.after.visibility !== 'visible' || !conditions.after.focused)
+      conditions.foregroundUninterrupted = false;
+  }
   const endedAt = performance.now();
   const endMinAlpha = minimumAlpha();
   const endDimmedVesselCount = dimmedVesselCount();
@@ -291,6 +335,7 @@ async function measurePhase(run, name, durationMs) {
     endMinAlpha,
     endDimmedVesselCount,
     requestRenderModeAtEnd: viewer.scene.requestRenderMode,
+    conditions,
     alphaChanges: active.alphaChanges,
     alphaOverflow: active.alphaOverflow,
     ...pixels,
@@ -689,7 +734,7 @@ async function runFixture() {
     fixtureClock: { epochMs: FIXTURE_EPOCH_MS, shouldAnimate: false },
     scope: 'isolated synthetic billboard-only layer; shared overlays excluded',
     population: FIXTURE_ROWS.length,
-    environment: { renderer: null },
+    environment: { renderer: null, userAgent: navigator.userAgent },
     viewport: null,
     renderingSettings: null,
     cadencePolicyMs: {
