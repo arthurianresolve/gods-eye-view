@@ -38,6 +38,8 @@ const PAGE_CONTEXT_CLEANUP_TIMEOUT_MS = 2_000;
 const FAILURE_OBSERVATION_TIMEOUT_MS = 1_500;
 const BROWSER_CLOSE_TIMEOUT_MS = 5_000;
 const PROGRESS_EVENT_CAP = 64;
+const WORKER_QUIESCENCE_POLL_MS = 50;
+const WORKER_QUIESCENCE_SAMPLE_CAP = 202;
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -251,13 +253,19 @@ function assertWorkerPreflight(value, { allowPending = false } = {}) {
     value.diagnostics.workers.some(
       (worker) =>
         !Number.isSafeInteger(worker.submitted) ||
+        worker.submitted < 0 ||
         !Number.isSafeInteger(worker.completed) ||
+        worker.completed < 0 ||
         !Number.isSafeInteger(worker.taskErrors) ||
         worker.taskErrors < 0 ||
         !Number.isSafeInteger(worker.pending) ||
         worker.pending < 0 ||
         !Number.isSafeInteger(worker.workerErrors) ||
+        worker.workerErrors < 0 ||
         !Number.isSafeInteger(worker.postErrors) ||
+        worker.postErrors < 0 ||
+        !Number.isSafeInteger(worker.cancelled) ||
+        worker.cancelled < 0 ||
         (!allowPending && worker.pending !== 0) ||
         worker.workerErrors !== 0 ||
         worker.postErrors !== 0,
@@ -286,6 +294,271 @@ function assertWorkerPreflight(value, { allowPending = false } = {}) {
   };
 }
 
+/** Serialized into the fixture page to retain a bounded worker-pending timeline. */
+export async function observeWorkerQuiescenceInPage({
+  timeoutMs,
+  pollMs = 50,
+  maxSamples = 202,
+} = {}) {
+  const startedAt = performance.now();
+  const history = [];
+  let firstObservedZeroMs = null;
+  let postZeroVerification = null;
+  let status = 'running';
+  let reason = null;
+  let timer = null;
+  let wakeDelay = null;
+  let cancelled = false;
+
+  const safeWorker = (worker) => ({
+    kind:
+      typeof worker?.kind === 'string' &&
+      /^[a-zA-Z0-9_.-]{1,80}$/.test(worker.kind)
+        ? worker.kind
+        : 'opaque-worker',
+    submitted: Number.isSafeInteger(worker?.submitted)
+      ? worker.submitted
+      : null,
+    completed: Number.isSafeInteger(worker?.completed)
+      ? worker.completed
+      : null,
+    taskErrors: Number.isSafeInteger(worker?.taskErrors)
+      ? worker.taskErrors
+      : null,
+    workerErrors: Number.isSafeInteger(worker?.workerErrors)
+      ? worker.workerErrors
+      : null,
+    postErrors: Number.isSafeInteger(worker?.postErrors)
+      ? worker.postErrors
+      : null,
+    cancelled: Number.isSafeInteger(worker?.cancelled)
+      ? worker.cancelled
+      : null,
+    pending: Number.isSafeInteger(worker?.pending) ? worker.pending : null,
+    oldestPendingMs:
+      Number.isFinite(worker?.oldestPendingMs) && worker.oldestPendingMs >= 0
+        ? Math.round(worker.oldestPendingMs * 100) / 100
+        : null,
+    terminated:
+      typeof worker?.terminated === 'boolean' ? worker.terminated : null,
+  });
+  const publish = (elapsedMs, diagnostics) => {
+    const sample = {
+      elapsedMs: Math.round(elapsedMs * 100) / 100,
+      instrumented: diagnostics?.instrumented === true,
+      overflow: diagnostics?.overflow === true,
+      pending: Number.isSafeInteger(diagnostics?.pending)
+        ? diagnostics.pending
+        : null,
+      workersTruncated:
+        !Array.isArray(diagnostics?.workers) || diagnostics.workers.length > 64,
+      workers: Array.isArray(diagnostics?.workers)
+        ? diagnostics.workers.slice(0, 64).map(safeWorker)
+        : [],
+    };
+    history.push(sample);
+    window.__qaWorkerQuiescenceTrace = {
+      status,
+      reason,
+      startedAtPerformanceMs: startedAt,
+      elapsedMs: sample.elapsedMs,
+      firstObservedZeroMs,
+      maxPollingGapMs: history.reduce(
+        (maximum, row, index) =>
+          index === 0
+            ? maximum
+            : Math.max(maximum, row.elapsedMs - history[index - 1].elapsedMs),
+        0,
+      ),
+      pollCount: history.length,
+      historyTruncated: false,
+      postZeroVerification,
+      history: [...history],
+      final: sample,
+    };
+    return sample;
+  };
+
+  const cancel = () => {
+    cancelled = true;
+    status = 'cancelled';
+    reason = 'cancelled-by-host';
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    wakeDelay?.();
+    wakeDelay = null;
+    if (window.__qaWorkerQuiescenceTrace) {
+      window.__qaWorkerQuiescenceTrace.status = status;
+      window.__qaWorkerQuiescenceTrace.reason = reason;
+    }
+  };
+  window.__qaWorkerQuiescenceCancel = cancel;
+
+  try {
+    while (true) {
+      const diagnostics = window.__gevSoakWorkers?.snapshot?.() || null;
+      const elapsedMs = Math.max(0, performance.now() - startedAt);
+      if (history.length >= maxSamples) {
+        status = 'history-overflow';
+        reason = 'sample-cap';
+        break;
+      }
+      const sample = publish(elapsedMs, diagnostics);
+      if (
+        sample.instrumented !== true ||
+        sample.overflow ||
+        sample.workersTruncated ||
+        sample.pending === null ||
+        sample.pending < 0 ||
+        sample.workers.some(
+          (worker) =>
+            worker.pending === null ||
+            worker.submitted === null ||
+            worker.completed === null ||
+            worker.taskErrors === null ||
+            worker.workerErrors === null ||
+            worker.postErrors === null ||
+            worker.cancelled === null,
+        )
+      ) {
+        status = 'invalid';
+        reason = 'missing-or-overflowed-diagnostics';
+        break;
+      }
+      if (
+        sample.workers.some((worker) =>
+          [
+            worker.submitted,
+            worker.completed,
+            worker.taskErrors,
+            worker.workerErrors,
+            worker.postErrors,
+            worker.cancelled,
+            worker.pending,
+          ].some((count) => count < 0),
+        )
+      ) {
+        status = 'invalid';
+        reason = 'negative-worker-counter';
+        break;
+      }
+      if (
+        sample.workers.some(
+          (worker) =>
+            worker.workerErrors > 0 ||
+            worker.postErrors > 0 ||
+            (worker.taskErrors > 0 &&
+              (worker.kind !== 'createGeometry.js' ||
+                worker.taskErrors !== 1 ||
+                worker.terminated !== true)),
+        ) ||
+        sample.workers.reduce((sum, worker) => sum + worker.taskErrors, 0) > 1
+      ) {
+        status = 'invalid';
+        reason = 'worker-error';
+        break;
+      }
+      if (
+        sample.workers.reduce((sum, worker) => sum + worker.pending, 0) !==
+        sample.pending
+      ) {
+        status = 'invalid';
+        reason = 'pending-count-mismatch';
+        break;
+      }
+      if (elapsedMs > timeoutMs) {
+        if (sample.pending === 0 && firstObservedZeroMs === null)
+          firstObservedZeroMs = elapsedMs;
+        status = 'timed-out';
+        reason = 'quiescence-deadline';
+        break;
+      }
+      if (sample.pending === 0) {
+        if (firstObservedZeroMs === null) {
+          firstObservedZeroMs = elapsedMs;
+        } else {
+          postZeroVerification = {
+            elapsedMs: sample.elapsedMs,
+            pending: sample.pending,
+            overflow: sample.overflow,
+            workersTruncated: sample.workersTruncated,
+          };
+          if (elapsedMs > timeoutMs) {
+            status = 'timed-out';
+            reason = 'quiescence-deadline';
+          } else {
+            status = 'settled';
+          }
+          break;
+        }
+      } else if (firstObservedZeroMs !== null) {
+        postZeroVerification = {
+          elapsedMs: sample.elapsedMs,
+          pending: sample.pending,
+          overflow: sample.overflow,
+          workersTruncated: sample.workersTruncated,
+        };
+        status = 'pending-resumed';
+        reason = 'pending-after-zero-observation';
+        break;
+      }
+      if (elapsedMs >= timeoutMs) {
+        status = 'timed-out';
+        reason = 'quiescence-deadline';
+        break;
+      }
+      await new Promise((resolve) => {
+        wakeDelay = resolve;
+        timer = setTimeout(
+          () => {
+            timer = null;
+            wakeDelay = null;
+            resolve();
+          },
+          Math.min(pollMs, timeoutMs - elapsedMs),
+        );
+      });
+      if (cancelled) {
+        status = 'cancelled';
+        reason = 'cancelled-by-host';
+        break;
+      }
+    }
+  } finally {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    wakeDelay = null;
+    window.__qaWorkerQuiescenceCancel = null;
+  }
+
+  const elapsedMs = Math.max(0, performance.now() - startedAt);
+  const maxPollingGapMs = history.reduce(
+    (maximum, row, index) =>
+      index === 0
+        ? maximum
+        : Math.max(maximum, row.elapsedMs - history[index - 1].elapsedMs),
+    0,
+  );
+  const result = {
+    status,
+    reason,
+    startedAtPerformanceMs: startedAt,
+    elapsedMs: Math.round(elapsedMs * 100) / 100,
+    firstObservedZeroMs:
+      firstObservedZeroMs === null
+        ? null
+        : Math.round(firstObservedZeroMs * 100) / 100,
+    maxPollingGapMs: Math.round(maxPollingGapMs * 100) / 100,
+    pollCount: history.length,
+    historyTruncated: status === 'history-overflow',
+    postZeroVerification,
+    history,
+    final: history.at(-1) || null,
+  };
+  window.__qaWorkerQuiescenceTrace = result;
+  return result;
+}
+
 export async function readWorkerPreflight(
   page,
   verifyNetwork,
@@ -307,6 +580,7 @@ export async function readWorkerPreflight(
   let networkError = null;
   let probeError = null;
   let diagnosticSnapshotError = null;
+  let quiescenceHistory = null;
   try {
     try {
       network = await verifyNetwork();
@@ -336,56 +610,45 @@ export async function readWorkerPreflight(
     if (pendingAtProbeCompletion > 0) {
       phase = 'worker-quiescence';
       quiescenceStartedAt = performance.now();
-      await page.waitForFunction(
-        () => {
-          const diagnostics = window.__gevSoakWorkers?.snapshot?.();
-          if (!diagnostics?.instrumented) return true;
-          if (diagnostics.overflow) return true;
-          if (!Array.isArray(diagnostics.workers)) return true;
-          if (
-            diagnostics.workers.some(
-              (worker) =>
-                worker.workerErrors > 0 ||
-                worker.postErrors > 0 ||
-                !Number.isSafeInteger(worker.taskErrors) ||
-                worker.taskErrors < 0,
-            )
-          )
-            return true;
-          if (
-            diagnostics.workers.reduce(
-              (sum, worker) => sum + worker.taskErrors,
-              0,
-            ) > 1
-          )
-            return true;
-          if (
-            diagnostics.workers.some(
-              (worker) =>
-                worker.kind !== 'createGeometry.js' && worker.taskErrors !== 0,
-            )
-          )
-            return true;
-          if (
-            diagnostics.workers.some(
-              (worker) =>
-                worker.taskErrors > 0 &&
-                (worker.kind !== 'createGeometry.js' ||
-                  worker.terminated !== true),
-            )
-          )
-            return true;
-          return diagnostics.pending === 0;
-        },
-        { timeout: quiescenceTimeoutMs, polling: 50 },
-      );
-      quiescenceWaitMs = Math.max(0, performance.now() - quiescenceStartedAt);
-      quiescenceStartedAt = null;
-      const diagnosticsAfterQuiescence = await evaluateWithDeadline(
+      quiescenceHistory = await evaluateWithDeadline(
         page,
-        'read-worker-preflight-quiescence',
-        () => window.__gevSoakWorkers?.snapshot() || null,
+        'worker-quiescence-history',
+        observeWorkerQuiescenceInPage,
+        {
+          timeoutMs: quiescenceTimeoutMs,
+          pollMs: WORKER_QUIESCENCE_POLL_MS,
+          maxSamples: WORKER_QUIESCENCE_SAMPLE_CAP,
+        },
       );
+      quiescenceWaitMs = quiescenceHistory.elapsedMs;
+      quiescenceStartedAt = null;
+      if (quiescenceHistory.status !== 'settled') {
+        const error = new Error(
+          `Worker pool did not quiesce: ${quiescenceHistory.status}/${quiescenceHistory.reason}.`,
+        );
+        error.workerQuiescenceHistory = quiescenceHistory;
+        throw error;
+      }
+      for (const sample of quiescenceHistory.history)
+        assertWorkerPreflight(
+          {
+            ...value,
+            network,
+            diagnostics: {
+              instrumented: sample.instrumented,
+              overflow: sample.overflow,
+              pending: sample.pending,
+              workers: sample.workers,
+            },
+          },
+          { allowPending: true },
+        );
+      const diagnosticsAfterQuiescence = {
+        instrumented: quiescenceHistory.final.instrumented,
+        overflow: quiescenceHistory.final.overflow,
+        pending: quiescenceHistory.final.pending,
+        workers: quiescenceHistory.final.workers,
+      };
       value = { ...value, diagnostics: diagnosticsAfterQuiescence };
       phase = 'worker-preflight-validation';
     }
@@ -395,17 +658,36 @@ export async function readWorkerPreflight(
       pendingAtProbeCompletion,
       quiescenceWaitMs,
       quiescenceTimeoutMs,
+      quiescenceHistory,
     };
   } catch (error) {
     let diagnostics = value?.diagnostics || null;
-    if (!diagnostics || phase === 'worker-quiescence') {
+    if (error.workerQuiescenceHistory) {
+      quiescenceHistory = error.workerQuiescenceHistory;
+      diagnostics = quiescenceHistory.final
+        ? {
+            instrumented: quiescenceHistory.final.instrumented,
+            overflow: quiescenceHistory.final.overflow,
+            pending: quiescenceHistory.final.pending,
+            workers: quiescenceHistory.final.workers,
+          }
+        : diagnostics;
+    } else if (!diagnostics || phase === 'worker-quiescence') {
       try {
-        diagnostics = await withProtocolDeadline(
+        const failureSnapshot = await withProtocolDeadline(
           () =>
-            page.evaluate(() => window.__gevSoakWorkers?.snapshot() || null),
+            page.evaluate(() => {
+              window.__qaWorkerQuiescenceCancel?.();
+              return {
+                diagnostics: window.__gevSoakWorkers?.snapshot() || null,
+                quiescenceHistory: window.__qaWorkerQuiescenceTrace || null,
+              };
+            }),
           'read-preflight-failure-workers',
           FAILURE_OBSERVATION_TIMEOUT_MS,
         );
+        diagnostics = failureSnapshot.diagnostics || diagnostics;
+        quiescenceHistory = failureSnapshot.quiescenceHistory;
       } catch (snapshotError) {
         diagnosticSnapshotError = snapshotError;
       }
@@ -424,6 +706,7 @@ export async function readWorkerPreflight(
         pendingAtProbeCompletion,
         quiescenceWaitMs,
         quiescenceTimeoutMs,
+        quiescenceHistory,
         networkError,
         probeError,
         diagnosticSnapshotError,

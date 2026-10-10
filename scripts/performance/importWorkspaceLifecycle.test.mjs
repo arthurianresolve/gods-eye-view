@@ -7,6 +7,7 @@ import {
   createLifecycleReport,
   finalizeLifecycleReportStatus,
   readWorkerPreflight,
+  observeWorkerQuiescenceInPage,
   runImportWorkspaceLifecycle,
   validateLifecycleCandidate,
   WORKSPACE_IMPORT_FIXTURE_SHA256,
@@ -25,6 +26,48 @@ const appSha = 'a'.repeat(40);
 const harnessSha = 'b'.repeat(40);
 const importSha = 'c'.repeat(64);
 const workspaceSha = 'd'.repeat(64);
+
+async function runQuiescencePageFunction(
+  snapshots,
+  {
+    timeoutMs = 1_200,
+    pollMs = 50,
+    maxSamples = 202,
+    lateByMs = 0,
+    cancelAfterFirstWait = false,
+  } = {},
+) {
+  let now = 0;
+  let snapshotIndex = 0;
+  let timerId = 0;
+  const clearedTimers = [];
+  const context = vm.createContext({
+    performance: { now: () => now },
+    window: {
+      __gevSoakWorkers: {
+        snapshot: () =>
+          snapshots[Math.min(snapshotIndex++, snapshots.length - 1)],
+      },
+    },
+    setTimeout(callback, delay) {
+      const id = ++timerId;
+      now += delay + lateByMs;
+      if (cancelAfterFirstWait && id === 1)
+        queueMicrotask(() => context.window.__qaWorkerQuiescenceCancel?.());
+      else queueMicrotask(callback);
+      return id;
+    },
+    clearTimeout(id) {
+      clearedTimers.push(id);
+    },
+  });
+  const serialized = vm.runInContext(
+    `(${observeWorkerQuiescenceInPage.toString()})`,
+    context,
+  );
+  const result = await serialized({ timeoutMs, pollMs, maxSamples });
+  return { result, context, clearedTimers };
+}
 
 function workerCounters() {
   return {
@@ -303,6 +346,38 @@ test('failure evidence keeps bounded URL-free import, worker, frame, and preflig
         })),
       },
       diagnostics: workerCounters(),
+      quiescenceHistory: {
+        status: 'timed-out',
+        reason: 'quiescence-deadline',
+        elapsedMs: 10_001,
+        firstObservedZeroMs: null,
+        maxPollingGapMs: 50,
+        pollCount: 203,
+        historyTruncated: true,
+        history: Array.from({ length: 203 }, (_, index) => ({
+          elapsedMs: index * 50,
+          instrumented: true,
+          overflow: false,
+          pending: 2,
+          workersTruncated: false,
+          workers: [
+            {
+              kind: 'createVerticesFromHeightmap.js',
+              submitted: 14,
+              completed: 12,
+              taskErrors: 0,
+              workerErrors: 0,
+              postErrors: 0,
+              cancelled: 0,
+              pending: 2,
+              oldestPendingMs: index * 50,
+              url: 'https://secret.example/terrain.js',
+            },
+          ],
+        })),
+        postZeroVerification: null,
+        final: null,
+      },
       probeError: new Error('https://secret.example/body?secret=1'),
     },
     pageDiagnostics: {
@@ -317,6 +392,11 @@ test('failure evidence keeps bounded URL-free import, worker, frame, and preflig
   assert.equal(evidence.observation.frame.renderWaiters.length, 8);
   assert.equal(evidence.workerPreflight.probe.tasks.length, 4);
   assert.equal(evidence.workerPreflight.probe.tasksTruncated, true);
+  assert.equal(evidence.workerPreflight.quiescenceHistory.history.length, 202);
+  assert.equal(
+    evidence.workerPreflight.quiescenceHistory.historyTruncated,
+    true,
+  );
   assert.equal(evidence.pageDiagnostics.errors.length, 4);
   assert.doesNotMatch(
     serialized,
@@ -408,7 +488,56 @@ test('failed worker preflight retains returned probe and counters when validatio
   );
 });
 
-test('worker preflight waits within the drain bound for unrelated terrain workers to settle', async () => {
+test('zero-pending preflight still rejects negative worker counters', async () => {
+  const probe = {
+    status: 'passed',
+    tasks: [
+      { id: 'geometry-cold', outcome: 'resolved' },
+      { id: 'geometry-reuse', outcome: 'resolved' },
+      { id: 'geometry-error', outcome: 'rejected-as-expected' },
+      { id: 'geometry-recovery', outcome: 'resolved' },
+    ],
+  };
+  const diagnostics = {
+    instrumented: true,
+    overflow: false,
+    pending: 0,
+    workers: [
+      {
+        kind: 'createGeometry.js',
+        submitted: 4,
+        completed: 4,
+        taskErrors: 1,
+        workerErrors: 0,
+        postErrors: 0,
+        cancelled: -1,
+        pending: 0,
+        terminated: true,
+      },
+    ],
+  };
+  const page = { evaluate: async () => ({ probe, diagnostics }) };
+  await assert.rejects(
+    readWorkerPreflight(page, async () => ({
+      status: 'passed',
+      interceptedWorkerRequests: 3,
+    })),
+    (error) => {
+      assert.equal(
+        error.lifecycleFailureEvidence.failedPhase,
+        'worker-preflight-validation',
+      );
+      assert.equal(
+        error.lifecycleFailureEvidence.workerPreflight.diagnostics.workers[0]
+          .cancelled,
+        null,
+      );
+      return true;
+    },
+  );
+});
+
+test('worker preflight polls unrelated terrain to zero and verifies zero again', async () => {
   const probe = {
     status: 'passed',
     tasks: [
@@ -439,34 +568,28 @@ test('worker preflight waits within the drain bound for unrelated terrain worker
       worker('createGeometry.js', 0, 4, 4, 1),
     ],
   };
+  const partlySettled = {
+    ...initial,
+    pending: 1,
+    workers: initial.workers.map((entry, index) => ({
+      ...entry,
+      pending: index === 0 ? 1 : 0,
+    })),
+  };
   const settled = {
     ...initial,
     pending: 0,
     workers: initial.workers.map((entry) => ({ ...entry, pending: 0 })),
   };
   let evaluateCalls = 0;
-  let waitCalls = 0;
   const page = {
-    async evaluate() {
+    async evaluate(fn) {
       evaluateCalls++;
-      return evaluateCalls === 1 ? { probe, diagnostics: initial } : settled;
-    },
-    async waitForFunction(predicate, options) {
-      waitCalls++;
-      assert.equal(options.timeout, 1200);
-      assert.equal(options.polling, 50);
-      const context = vm.createContext({
-        window: { __gevSoakWorkers: { snapshot: () => initial } },
-      });
-      assert.equal(
-        vm.runInContext(`(${predicate.toString()})()`, context),
-        false,
-      );
-      context.window.__gevSoakWorkers.snapshot = () => settled;
-      assert.equal(
-        vm.runInContext(`(${predicate.toString()})()`, context),
-        true,
-      );
+      if (evaluateCalls === 1) return { probe, diagnostics: initial };
+      assert.equal(fn, observeWorkerQuiescenceInPage);
+      return runQuiescencePageFunction([partlySettled, settled, settled], {
+        timeoutMs: 1200,
+      }).then(({ result }) => result);
     },
   };
 
@@ -476,7 +599,6 @@ test('worker preflight waits within the drain bound for unrelated terrain worker
     { quiescenceTimeoutMs: 1200 },
   );
 
-  assert.equal(waitCalls, 1);
   assert.equal(evaluateCalls, 2);
   assert.equal(result.pendingAtProbeCompletion, 3);
   assert.equal(result.pendingAtPreflight, 0);
@@ -484,9 +606,13 @@ test('worker preflight waits within the drain bound for unrelated terrain worker
   assert.ok(result.quiescenceWaitMs >= 0);
   assert.equal(result.cumulativeSubmitted, 30);
   assert.equal(result.cumulativeCompleted, 27);
+  assert.equal(result.quiescenceHistory.history.length, 3);
+  assert.equal(result.quiescenceHistory.firstObservedZeroMs, 50);
+  assert.equal(result.quiescenceHistory.postZeroVerification.pending, 0);
+  assert.equal(result.quiescenceHistory.maxPollingGapMs, 50);
 });
 
-test('worker preflight times out with the latest pending-worker evidence', async () => {
+test('worker preflight times out with bounded last-poll evidence', async () => {
   const diagnostics = {
     instrumented: true,
     overflow: false,
@@ -499,6 +625,7 @@ test('worker preflight times out with the latest pending-worker evidence', async
         taskErrors: 0,
         workerErrors: 0,
         postErrors: 0,
+        cancelled: 0,
         pending: 1,
         oldestPendingMs: 503,
       },
@@ -509,6 +636,7 @@ test('worker preflight times out with the latest pending-worker evidence', async
         taskErrors: 1,
         workerErrors: 0,
         postErrors: 0,
+        cancelled: 0,
         pending: 0,
         terminated: true,
       },
@@ -525,13 +653,13 @@ test('worker preflight times out with the latest pending-worker evidence', async
   };
   let evaluateCalls = 0;
   const page = {
-    async evaluate() {
+    async evaluate(fn) {
       evaluateCalls++;
-      return evaluateCalls === 1 ? { probe, diagnostics } : diagnostics;
-    },
-    async waitForFunction(_predicate, options) {
-      assert.equal(options.timeout, 500);
-      throw new Error('Waiting failed: 500ms exceeded');
+      if (evaluateCalls === 1) return { probe, diagnostics };
+      assert.equal(fn, observeWorkerQuiescenceInPage);
+      return runQuiescencePageFunction([diagnostics, diagnostics], {
+        timeoutMs: 500,
+      }).then(({ result }) => result);
     },
   };
   await assert.rejects(
@@ -551,10 +679,161 @@ test('worker preflight times out with the latest pending-worker evidence', async
       assert.equal(evidence.diagnostics.workers[0].oldestPendingMs, 503);
       assert.equal(evidence.quiescenceTimeoutMs, 500);
       assert.ok(evidence.quiescenceWaitMs >= 0);
+      assert.equal(evidence.quiescenceHistory.status, 'timed-out');
+      assert.equal(evidence.quiescenceHistory.final.pending, 1);
+      assert.ok(evidence.quiescenceHistory.maxPollingGapMs <= 50);
       return true;
     },
   );
   assert.equal(evaluateCalls, 2);
+});
+
+test('worker preflight rejects a transient zero followed by new terrain work', async () => {
+  const probe = {
+    status: 'passed',
+    tasks: [
+      { id: 'geometry-cold', outcome: 'resolved' },
+      { id: 'geometry-reuse', outcome: 'resolved' },
+      { id: 'geometry-error', outcome: 'rejected-as-expected' },
+      { id: 'geometry-recovery', outcome: 'resolved' },
+    ],
+  };
+  const worker = (kind, pending, submitted, completed, taskErrors = 0) => ({
+    kind,
+    submitted,
+    completed,
+    taskErrors,
+    workerErrors: 0,
+    postErrors: 0,
+    cancelled: 0,
+    terminated: kind === 'createGeometry.js',
+    pending,
+  });
+  const diagnostics = (terrainPending) => ({
+    instrumented: true,
+    overflow: false,
+    pending: terrainPending,
+    workers: [
+      worker(
+        'createVerticesFromHeightmap.js',
+        terrainPending,
+        2,
+        2 - terrainPending,
+      ),
+      worker('createGeometry.js', 0, 4, 4, 1),
+    ],
+  });
+  let evaluateCalls = 0;
+  const page = {
+    async evaluate(fn) {
+      evaluateCalls++;
+      if (evaluateCalls === 1) return { probe, diagnostics: diagnostics(1) };
+      assert.equal(fn, observeWorkerQuiescenceInPage);
+      return runQuiescencePageFunction([diagnostics(0), diagnostics(1)], {
+        timeoutMs: 500,
+      }).then(({ result }) => result);
+    },
+  };
+  await assert.rejects(
+    readWorkerPreflight(
+      page,
+      async () => ({ status: 'passed', interceptedWorkerRequests: 3 }),
+      { quiescenceTimeoutMs: 500 },
+    ),
+    (error) => {
+      const evidence = error.lifecycleFailureEvidence.workerPreflight;
+      assert.equal(evidence.quiescenceHistory.status, 'pending-resumed');
+      assert.equal(evidence.quiescenceHistory.postZeroVerification.pending, 1);
+      assert.equal(evidence.diagnostics.pending, 1);
+      return true;
+    },
+  );
+});
+
+test('worker quiescence deadline rejects a zero snapshot delivered late', async () => {
+  const pending = {
+    instrumented: true,
+    overflow: false,
+    pending: 1,
+    workers: [
+      {
+        kind: 'createVerticesFromHeightmap.js',
+        submitted: 1,
+        completed: 0,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        cancelled: 0,
+        pending: 1,
+      },
+    ],
+  };
+  const zero = {
+    ...pending,
+    pending: 0,
+    workers: pending.workers.map((worker) => ({
+      ...worker,
+      completed: 1,
+      pending: 0,
+    })),
+  };
+  const { result } = await runQuiescencePageFunction([pending, zero], {
+    timeoutMs: 40,
+    pollMs: 50,
+    lateByMs: 1,
+  });
+  assert.equal(result.status, 'timed-out');
+  assert.equal(result.firstObservedZeroMs, 41);
+  assert.equal(result.final.pending, 0);
+});
+
+test('worker quiescence bounds samples, rejects invalid counters, and cancels its timer', async (t) => {
+  const diagnostic = (pending, overrides = {}) => ({
+    instrumented: true,
+    overflow: false,
+    pending,
+    workers: [
+      {
+        kind: 'createVerticesFromHeightmap.js',
+        submitted: 2,
+        completed: 2 - pending,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        cancelled: 0,
+        pending,
+        ...overrides,
+      },
+    ],
+  });
+
+  await t.test('sample cap fails closed', async () => {
+    const { result } = await runQuiescencePageFunction([diagnostic(1)], {
+      maxSamples: 2,
+      timeoutMs: 1000,
+    });
+    assert.equal(result.status, 'history-overflow');
+    assert.equal(result.history.length, 2);
+    assert.equal(result.historyTruncated, true);
+  });
+
+  await t.test('negative counters are invalid', async () => {
+    const { result } = await runQuiescencePageFunction([
+      diagnostic(0, { submitted: -1 }),
+    ]);
+    assert.equal(result.status, 'invalid');
+    assert.equal(result.reason, 'negative-worker-counter');
+  });
+
+  await t.test('cancel clears the owned timer and hook', async () => {
+    const { result, context, clearedTimers } = await runQuiescencePageFunction(
+      [diagnostic(1)],
+      { cancelAfterFirstWait: true },
+    );
+    assert.equal(result.status, 'cancelled');
+    assert.deepEqual(clearedTimers, [1]);
+    assert.equal(context.window.__qaWorkerQuiescenceCancel, null);
+  });
 });
 
 test('worker preflight rejects worker errors and overflow without waiting them away', async (t) => {

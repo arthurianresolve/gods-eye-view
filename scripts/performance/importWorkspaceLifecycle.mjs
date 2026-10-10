@@ -359,6 +359,60 @@ function compactWorkerDiagnostics(value) {
   };
 }
 
+function compactWorkerQuiescenceHistory(value) {
+  if (!value || typeof value !== 'object') return null;
+  const history = Array.isArray(value.history) ? value.history : [];
+  const compactSample = (sample) => ({
+    elapsedMs:
+      Number.isFinite(sample?.elapsedMs) && sample.elapsedMs >= 0
+        ? Math.round(sample.elapsedMs * 100) / 100
+        : null,
+    instrumented:
+      typeof sample?.instrumented === 'boolean' ? sample.instrumented : null,
+    overflow: typeof sample?.overflow === 'boolean' ? sample.overflow : null,
+    pending: boundedCounter(sample?.pending),
+    workersTruncated: sample?.workersTruncated === true,
+    workers:
+      compactWorkerDiagnostics({
+        workers: Array.isArray(sample?.workers) ? sample.workers : [],
+      })?.workers || [],
+  });
+  return {
+    status: boundedToken(value.status, 40),
+    reason: boundedToken(value.reason, 80),
+    elapsedMs:
+      Number.isFinite(value.elapsedMs) && value.elapsedMs >= 0
+        ? Math.round(value.elapsedMs * 100) / 100
+        : null,
+    firstObservedZeroMs:
+      Number.isFinite(value.firstObservedZeroMs) &&
+      value.firstObservedZeroMs >= 0
+        ? Math.round(value.firstObservedZeroMs * 100) / 100
+        : null,
+    maxPollingGapMs:
+      Number.isFinite(value.maxPollingGapMs) && value.maxPollingGapMs >= 0
+        ? Math.round(value.maxPollingGapMs * 100) / 100
+        : null,
+    pollCount: boundedCounter(value.pollCount),
+    historyTruncated: value.historyTruncated === true || history.length > 202,
+    history: history.slice(0, 202).map(compactSample),
+    postZeroVerification: value.postZeroVerification
+      ? {
+          elapsedMs:
+            Number.isFinite(value.postZeroVerification.elapsedMs) &&
+            value.postZeroVerification.elapsedMs >= 0
+              ? Math.round(value.postZeroVerification.elapsedMs * 100) / 100
+              : null,
+          pending: boundedCounter(value.postZeroVerification.pending),
+          overflow: value.postZeroVerification.overflow === true,
+          workersTruncated:
+            value.postZeroVerification.workersTruncated === true,
+        }
+      : null,
+    final: value.final ? compactSample(value.final) : null,
+  };
+}
+
 /** Keep only small lifecycle counters and known worker-probe fields on failure. */
 export function createLifecycleFailureEvidence({
   caseId = null,
@@ -462,6 +516,9 @@ export function createLifecycleFailureEvidence({
           ? Math.round(workerPreflight.quiescenceWaitMs * 100) / 100
           : null,
       quiescenceTimeoutMs: boundedCounter(workerPreflight.quiescenceTimeoutMs),
+      quiescenceHistory: compactWorkerQuiescenceHistory(
+        workerPreflight.quiescenceHistory,
+      ),
       networkError: workerPreflight.networkError
         ? boundedError(workerPreflight.networkError)
         : null,
@@ -1029,12 +1086,52 @@ export function validateImportWorkspaceLifecycleReport(
       row.workerPreflight.quiescenceTimeoutMs > report.drainLimitMs ||
       !Number.isFinite(row.workerPreflight.quiescenceWaitMs) ||
       row.workerPreflight.quiescenceWaitMs < 0 ||
-      row.workerPreflight.quiescenceWaitMs > 15_000 ||
+      row.workerPreflight.quiescenceWaitMs >
+        row.workerPreflight.quiescenceTimeoutMs ||
       !Number.isSafeInteger(row.workerPreflight.pendingAtPreflight) ||
       row.workerPreflight.pendingAtPreflight !== 0 ||
       row.workerPreflight.overflow !== false
     )
       throw new Error(`Worker preflight evidence is incomplete: ${id}.`);
+    if (
+      row.workerPreflight.pendingAtProbeCompletion > 0 &&
+      (row.workerPreflight.quiescenceHistory?.status !== 'settled' ||
+        row.workerPreflight.quiescenceHistory?.historyTruncated !== false ||
+        !Array.isArray(row.workerPreflight.quiescenceHistory?.history) ||
+        row.workerPreflight.quiescenceHistory.history.length < 2 ||
+        row.workerPreflight.quiescenceHistory.history.length > 202 ||
+        row.workerPreflight.quiescenceHistory.pollCount !==
+          row.workerPreflight.quiescenceHistory.history.length ||
+        !Number.isFinite(
+          row.workerPreflight.quiescenceHistory?.firstObservedZeroMs,
+        ) ||
+        row.workerPreflight.quiescenceHistory.firstObservedZeroMs < 0 ||
+        row.workerPreflight.quiescenceHistory.firstObservedZeroMs >
+          row.workerPreflight.quiescenceHistory.elapsedMs ||
+        !Number.isFinite(
+          row.workerPreflight.quiescenceHistory?.maxPollingGapMs,
+        ) ||
+        row.workerPreflight.quiescenceHistory.maxPollingGapMs < 0 ||
+        !Number.isFinite(row.workerPreflight.quiescenceHistory?.elapsedMs) ||
+        row.workerPreflight.quiescenceHistory.elapsedMs < 0 ||
+        row.workerPreflight.quiescenceHistory.elapsedMs >
+          row.workerPreflight.quiescenceTimeoutMs ||
+        !Number.isFinite(
+          row.workerPreflight.quiescenceHistory?.postZeroVerification
+            ?.elapsedMs,
+        ) ||
+        row.workerPreflight.quiescenceHistory.postZeroVerification.elapsedMs <
+          row.workerPreflight.quiescenceHistory.firstObservedZeroMs ||
+        row.workerPreflight.quiescenceHistory.postZeroVerification.elapsedMs >
+          row.workerPreflight.quiescenceTimeoutMs ||
+        row.workerPreflight.quiescenceHistory?.postZeroVerification?.pending !==
+          0 ||
+        row.workerPreflight.quiescenceHistory?.postZeroVerification
+          ?.overflow !== false ||
+        row.workerPreflight.quiescenceHistory?.postZeroVerification
+          ?.workersTruncated !== false)
+    )
+      throw new Error(`Worker quiescence history is incomplete: ${id}.`);
     if (
       !Array.isArray(row.checkpoints) ||
       row.checkpoints.length === 0 ||
