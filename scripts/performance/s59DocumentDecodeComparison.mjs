@@ -455,8 +455,10 @@ function createDecodeWorker() {
 async function measured(operation) {
   let previousTick = performance.now();
   let maxMainThreadGapMs = 0;
+  let timerObservations = 0;
   const heartbeat = setInterval(() => {
     const now = performance.now();
+    timerObservations++;
     maxMainThreadGapMs = Math.max(maxMainThreadGapMs, now - previousTick);
     previousTick = now;
   }, 1);
@@ -471,7 +473,8 @@ async function measured(operation) {
     return {
       value,
       totalCompletionMs,
-      maxMainThreadGapMs,
+      maxMainThreadGapMs: timerObservations ? maxMainThreadGapMs : null,
+      timerObservations,
     };
   } finally {
     clearInterval(heartbeat);

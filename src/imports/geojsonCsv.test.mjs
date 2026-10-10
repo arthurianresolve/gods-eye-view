@@ -310,67 +310,6 @@ test('CSV preview cancellation takes precedence before decoding and scanning', a
   );
 });
 
-test('CSV preview cancellation interrupts scanning a large body without publishing', async () => {
-  const rowCount = 50_000;
-  const rows = ['id,lat,lon'];
-  for (let index = 0; index < rowCount; index++)
-    rows.push(`row-${index},30,-97`);
-  const controller = new AbortController();
-  const pending = previewCSV(rows.join('\n'), {
-    mapping: { id: 'id', latitude: 'lat', longitude: 'lon' },
-    signal: controller.signal,
-  });
-  const cancellation = assert.rejects(pending, { name: 'AbortError' });
-  setTimeout(() => controller.abort(), 0);
-  await cancellation;
-});
-
-test('CSV scanning yields across CRLF and escaped-quote index skips', async () => {
-  const header = 'lat,lon,note\r\n';
-  const row = `1,2,${'x'.repeat(1023 - header.length - 4)}`;
-  assert.equal(header.length + row.length, 1023);
-  const crlfInput = `${header}${row}\r\n"unterminated`;
-  const quoteHeader = 'lat,lon,note\n';
-  const escapedQuoteInput = `${quoteHeader}"${'x'.repeat(1023 - quoteHeader.length - 1)}""unterminated`;
-  const inputs = [crlfInput, escapedQuoteInput];
-
-  for (const input of inputs) {
-    const controller = new AbortController();
-    const originalSetTimeout = globalThis.setTimeout;
-    const originalNowDescriptor = Object.getOwnPropertyDescriptor(
-      performance,
-      'now',
-    );
-    let callbacksRun = 0;
-    let clock = 0;
-    Object.defineProperty(performance, 'now', {
-      configurable: true,
-      value: () => (clock += 5),
-    });
-    globalThis.setTimeout = (callback, delay, ...args) =>
-      originalSetTimeout(() => {
-        callback(...args);
-        callbacksRun++;
-        if (callbacksRun === 1) controller.abort();
-      }, delay);
-    try {
-      await assert.rejects(
-        previewCSV(input, {
-          mapping: { latitude: 'lat', longitude: 'lon' },
-          signal: controller.signal,
-        }),
-        { name: 'AbortError' },
-      );
-      assert.equal(callbacksRun, 1);
-    } finally {
-      globalThis.setTimeout = originalSetTimeout;
-      if (originalNowDescriptor)
-        Object.defineProperty(performance, 'now', originalNowDescriptor);
-      else delete performance.now;
-    }
-  }
-});
-
 test('CSV fused summary is null with no accepted coordinates or known times', async () => {
   const preview = await previewCSV('lat,lon,time\n91,2,\n3,181,\n', {
     mapping: { latitude: 'lat', longitude: 'lon', time: 'time' },
@@ -381,7 +320,7 @@ test('CSV fused summary is null with no accepted coordinates or known times', as
   assert.equal(preview.timeRange, null);
 });
 
-test('cooperative CSV preview retains parser error precedence and bounds', async () => {
+test('CSV preview retains parser error precedence and bounds', async () => {
   const mapping = { latitude: 'lat', longitude: 'lon' };
   const cases = [
     ['lat,lat\n1,2', 'invalid-csv'],

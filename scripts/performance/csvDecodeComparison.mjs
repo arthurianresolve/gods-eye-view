@@ -23,7 +23,9 @@ const git = (...args) =>
     maxBuffer: 8 * 1024 * 1024,
   });
 const median = (values) =>
-  [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
+  values.length
+    ? [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]
+    : null;
 
 export function createCsvDecodeFixtures() {
   const ordinary = ['id,latitude,longitude,time,note'];
@@ -79,12 +81,17 @@ export function summarizeCsvComparison(samples) {
         Number.isFinite(row.totalCompletionMs) && row.totalCompletionMs >= 0,
       );
       assert.ok(
-        Number.isFinite(row.maxMainThreadGapMs) && row.maxMainThreadGapMs >= 0,
+        row.maxMainThreadGapMs === null ||
+          (Number.isFinite(row.maxMainThreadGapMs) &&
+            row.maxMainThreadGapMs >= 0),
       );
     }
   }
   const values = (variant, field) =>
-    samples.filter((row) => row.variant === variant).map((row) => row[field]);
+    samples
+      .filter((row) => row.variant === variant)
+      .map((row) => row[field])
+      .filter(Number.isFinite);
   const baselineMedianMs = median(values('baseline', 'totalCompletionMs'));
   const candidateMedianMs = median(values('candidate', 'totalCompletionMs'));
   return {

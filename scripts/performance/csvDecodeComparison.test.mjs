@@ -38,6 +38,12 @@ test('CSV comparison rejects missing, duplicate, mismatched and invalid samples'
   assert.ok(
     Math.abs(summarizeCsvComparison(samples).changeRatio - 0.2) < 1e-12,
   );
+  assert.equal(
+    summarizeCsvComparison(
+      samples.map((sample) => ({ ...sample, maxMainThreadGapMs: null })),
+    ).candidateMedianTimerGapMs,
+    null,
+  );
   assert.throws(() => summarizeCsvComparison(samples.slice(1)));
   assert.throws(() =>
     summarizeCsvComparison(

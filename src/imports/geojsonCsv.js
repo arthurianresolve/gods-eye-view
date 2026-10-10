@@ -11,8 +11,6 @@ export const IMPORT_LIMITS = Object.freeze({
   rejectedPreview: 100,
 });
 
-const CSV_SCAN_CHUNK_CHARS = 1_024;
-
 function fail(code, message) {
   throw Object.assign(new Error(message), { code });
 }
@@ -242,8 +240,8 @@ export async function previewGeoJSON(
   );
 }
 
-/** RFC 4180-style bounded CSV scanner supporting quoted commas and newlines. */
-function* scanCsvSteps(text, headersOnly = false) {
+/** RFC 4180-style bounded CSV decoder supporting quoted commas and newlines. */
+function scanCsv(text, headersOnly = false) {
   const rows = [];
   let row = [],
     cell = '',
@@ -269,12 +267,7 @@ function* scanCsvSteps(text, headersOnly = false) {
     return null;
   };
   const source = text.replace(/^\uFEFF/, '');
-  let nextYieldIndex = CSV_SCAN_CHUNK_CHARS;
   for (let i = 0; i < source.length; i++) {
-    if (i >= nextYieldIndex) {
-      nextYieldIndex = i + CSV_SCAN_CHUNK_CHARS;
-      yield;
-    }
     const char = source[i];
     if (quoted) {
       if (char === '"' && source[i + 1] === '"') {
@@ -307,13 +300,6 @@ function* scanCsvSteps(text, headersOnly = false) {
   return headersOnly ? headers : { headers, rows: rows.slice(1) };
 }
 
-function scanCsv(text, headersOnly = false) {
-  const scanner = scanCsvSteps(text, headersOnly);
-  let step = scanner.next();
-  while (!step.done) step = scanner.next();
-  return step.value;
-}
-
 function validateCsvHeaders(row) {
   const headers = row.map((header) => header.trim());
   if (
@@ -341,10 +327,7 @@ export async function previewCSV(
   signal?.throwIfAborted();
   const text = decodeImportText(input);
   signal?.throwIfAborted();
-  const { headers, rows } = await consumeInBatches(scanCsvSteps(text), {
-    signal,
-    deferStart: true,
-  });
+  const { headers, rows } = scanCsv(text);
   const column = (field) => {
     const selected = mapping[field];
     if (Number.isInteger(selected)) return selected;
@@ -438,7 +421,7 @@ export async function previewCSV(
         }
       }
     })(),
-    { signal, deferStart: true },
+    { signal },
   );
   return buildImportPreview(
     {
