@@ -214,13 +214,31 @@ export function runBoundedChild(
       clearTimeout(stopTimer);
       clearTimeout(finalTimer);
     };
-    const progressLines = () =>
-      Buffer.concat(outputChunks)
+    const childDiagnostics = () => {
+      const allOutputLines = Buffer.concat(outputChunks)
         .toString('utf8')
         .split(/\r?\n/)
-        .filter(Boolean)
-        .slice(-4)
-        .map((line) => sanitizeError(line).slice(0, 200));
+        .filter(Boolean);
+      const progress = allOutputLines.filter((line) =>
+        line.includes('[performance]'),
+      );
+      return {
+        stderrLines: Buffer.concat(chunks.stderr)
+          .toString('utf8')
+          .split(/\r?\n/)
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((line) => sanitizeError(line).slice(0, 200)),
+        progressLines: (progress.length ? progress : allOutputLines)
+          .slice(-4)
+          .map((line) =>
+            sanitizeError(line.replace(/(\d+)\/(\d+)/g, '$1 of $2')).slice(
+              0,
+              200,
+            ),
+          ),
+      };
+    };
     const rejectAfterStop = (reason) => {
       if (stopReason) return;
       stopReason = reason;
@@ -246,7 +264,7 @@ export function runBoundedChild(
           const error = new Error(
             `Child process ${stopReason}; cleanup unconfirmed; pipes released.`,
           );
-          error.childDiagnostics = { progressLines: progressLines() };
+          error.childDiagnostics = childDiagnostics();
           reject(error);
         }, 2000);
       }, 5000);
@@ -298,18 +316,12 @@ export function runBoundedChild(
             cleanupConfirmed = false;
         }
         settled = true;
+        const diagnostics = childDiagnostics();
+        const detail = diagnostics.stderrLines.join(' ').slice(0, 500);
         const error = new Error(
-          `Child process ${stopReason || `exited ${code}`}; cleanup ${cleanupConfirmed ? 'confirmed' : 'unconfirmed'} (${signal || code}).`,
+          `Child process ${stopReason || `exited ${code}`}; ${detail || diagnostics.progressLines.join(' | ') || 'no child diagnostics'}; cleanup ${cleanupConfirmed ? 'confirmed' : 'unconfirmed'} (${signal || code}).`,
         );
-        error.childDiagnostics = { progressLines: progressLines() };
-        reject(error);
-      } else if (code !== 0) {
-        settled = true;
-        const detail = sanitizeError(
-          output.stderr || output.stdout || `exit ${code}`,
-        );
-        const error = new Error(`Child process failed: ${detail}`);
-        error.childDiagnostics = { progressLines: progressLines() };
+        error.childDiagnostics = diagnostics;
         reject(error);
       } else {
         settled = true;

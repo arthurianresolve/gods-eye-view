@@ -173,7 +173,7 @@ test('bounded child runner stops an owned process on timeout', async () => {
       timeoutMs: 150,
       maxOutputBytes: 2048,
     }),
-    /timed out; cleanup confirmed/,
+    /timed out; .*cleanup confirmed/,
   );
   assert.ok(Date.now() - started < 5000);
 });
@@ -188,7 +188,7 @@ test('bounded child runner stops an owned process when output exceeds its cap', 
       ],
       { timeoutMs: 3000, maxOutputBytes: 2048 },
     ),
-    /output limit exceeded; cleanup confirmed/,
+    /output limit exceeded; .*cleanup confirmed/,
   );
 });
 
@@ -222,7 +222,7 @@ test('bounded child runner stops a separately owned browser process', async (t) 
       maxOutputBytes: 2048,
       ownedPidFile: pidPath,
     }),
-    /timed out; cleanup confirmed/,
+    /timed out; .*cleanup confirmed/,
   );
   ownedPid = Number((await readFile(pidPath, 'utf8')).trim());
   if (process.platform !== 'win32')
@@ -259,11 +259,32 @@ test('bounded child runner cleans the owned browser when the CLI exits with fail
       maxOutputBytes: 2048,
       ownedPidFile: pidPath,
     }),
-    /exited 17; cleanup confirmed/,
+    /exited 17; .*cleanup confirmed/,
   );
   ownedPid = Number((await readFile(pidPath, 'utf8')).trim());
   if (process.platform !== 'win32')
     assert.throws(() => process.kill(ownedPid, 0), { code: 'ESRCH' });
+});
+
+test('bounded child failure keeps sanitized stderr and the latest capture progress', async () => {
+  await assert.rejects(
+    runBoundedChild(
+      process.execPath,
+      [
+        '-e',
+        'console.log("[performance] startup 1/1"); console.error("fixture failed at https://secret.invalid/token"); process.exit(2)',
+      ],
+      { timeoutMs: 3000, maxOutputBytes: 2048 },
+    ),
+    (error) => {
+      assert.match(error.message, /fixture failed at \[url\]/);
+      assert.doesNotMatch(error.message, /secret\.invalid/);
+      assert.deepEqual(error.childDiagnostics.progressLines, [
+        '[performance] startup 1 of 1',
+      ]);
+      return true;
+    },
+  );
 });
 
 test('invalid smoke input writes a bounded failure artifact without launching a browser', async (t) => {
