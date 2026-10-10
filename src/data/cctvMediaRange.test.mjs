@@ -605,10 +605,12 @@ function pipeTarget({ drains = true } = {}) {
     // One byte is enough to leave a target that never empties its buffer
     // permanently in need of a drain.
     highWaterMark: drains ? undefined : 1,
-    write(_chunk, _encoding, callback) {
+    write(chunk, _encoding, callback) {
+      res.receivedBytes += chunk.length;
       if (drains) callback();
     },
   });
+  res.receivedBytes = 0;
   res.writeHead = (status, headers) => {
     res.statusCode = status;
     res.headers = headers || {};
@@ -616,12 +618,19 @@ function pipeTarget({ drains = true } = {}) {
   return res;
 }
 
+async function flushStreamEvents(turns = 3) {
+  for (let index = 0; index < turns; index += 1) {
+    await Promise.resolve();
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+}
+
 /**
  * An upstream that answers with headers, sends one chunk, and then either
  * keeps producing every `everyMs` or goes silent. `released` reports the body's
  * own cleanup: a cancelled fetch body lands in the web stream's cancel hook.
  */
-function mediaUpstream({ everyMs = 0 } = {}) {
+function mediaUpstream({ everyMs = 0, unrefTicker = true } = {}) {
   const state = { produced: 0, released: false };
   let ticker = null;
   const body = new ReadableStream({
@@ -633,7 +642,7 @@ function mediaUpstream({ everyMs = 0 } = {}) {
       send();
       if (everyMs > 0) {
         ticker = setInterval(send, everyMs);
-        ticker.unref();
+        if (unrefTicker) ticker.unref();
       }
     },
     cancel() {
@@ -641,6 +650,10 @@ function mediaUpstream({ everyMs = 0 } = {}) {
       if (ticker) clearInterval(ticker);
     },
   });
+  state.stop = () => {
+    if (ticker) clearInterval(ticker);
+    ticker = null;
+  };
   state.upstream = {
     ok: true,
     status: 200,
@@ -655,14 +668,25 @@ function mediaUpstream({ everyMs = 0 } = {}) {
 }
 
 test('an upstream that goes silent after its headers is released at the idle deadline', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   const feed = mediaUpstream();
   const res = pipeTarget();
-  t.after(() => res.destroy());
+  t.after(async () => {
+    res.destroy();
+    await flushStreamEvents();
+    assert.equal(feed.released, true, 'silent feed teardown completed');
+  });
   await proxyMediaResponse(res, feed.upstream, { idleTimeoutMs: 40 });
-
-  await new Promise((resolve) => setTimeout(resolve, 20));
+  await flushStreamEvents();
+  assert.ok(
+    feed.produced >= 1 && res.receivedBytes > 0,
+    'initial bytes were delivered',
+  );
+  t.mock.timers.tick(39);
+  await flushStreamEvents();
   assert.equal(feed.released, false, 'released before the deadline was due');
-  await new Promise((resolve) => setTimeout(resolve, 120));
+  t.mock.timers.tick(1);
+  await flushStreamEvents();
   // Without the deadline this stream is held open against the camera host for
   // as long as that host will keep the socket, with no bytes ever arriving.
   assert.equal(feed.released, true, 'the silent upstream was never released');
@@ -670,34 +694,82 @@ test('an upstream that goes silent after its headers is released at the idle dea
 });
 
 test('a live feed that keeps producing is not cut off by the idle deadline', async (t) => {
-  const feed = mediaUpstream({ everyMs: 10 });
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const feed = mediaUpstream({ everyMs: 10, unrefTicker: false });
   const res = pipeTarget();
-  t.after(() => res.destroy());
+  t.after(async () => {
+    res.destroy();
+    await flushStreamEvents();
+    assert.equal(feed.released, true, 'live feed teardown completed');
+  });
   await proxyMediaResponse(res, feed.upstream, { idleTimeoutMs: 40 });
-
-  await new Promise((resolve) => setTimeout(resolve, 250));
+  for (let step = 0; step < 25; step += 1) {
+    t.mock.timers.tick(10);
+    await flushStreamEvents();
+  }
   assert.equal(feed.released, false, 'a healthy feed was torn down');
   assert.equal(res.writableEnded, false, 'a healthy feed was ended early');
   assert.ok(
-    feed.produced > 5,
+    feed.produced > 5 && res.receivedBytes > 20,
     `the feed stopped producing (${feed.produced} chunks)`,
   );
 });
 
 test('a client that cannot keep up is not mistaken for a stalled upstream', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   // Nothing arrives from upstream while the pipe is paused, which looks exactly
   // like silence unless the response is asked whether it is still draining.
-  const feed = mediaUpstream({ everyMs: 10 });
+  const feed = mediaUpstream({ everyMs: 10, unrefTicker: false });
   const res = pipeTarget({ drains: false });
-  t.after(() => res.destroy());
+  t.after(async () => {
+    res.destroy();
+    await flushStreamEvents();
+    assert.equal(feed.released, true, 'paused feed teardown completed');
+  });
   await proxyMediaResponse(res, feed.upstream, { idleTimeoutMs: 30 });
-
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await flushStreamEvents();
+  for (let step = 0; step < 20; step += 1) {
+    t.mock.timers.tick(10);
+    await flushStreamEvents();
+  }
   assert.equal(
     res.writableNeedDrain,
     true,
     'the client was not the bottleneck',
   );
+  assert.ok(
+    feed.produced > 5 && res.receivedBytes > 0,
+    `upstream bytes were produced and reached the paused pipe (produced=${feed.produced}, received=${res.receivedBytes})`,
+  );
   assert.equal(feed.released, false, 'a slow viewer tore down a healthy feed');
   assert.equal(res.writableEnded, false, 'a slow viewer ended the response');
+});
+
+test('the idle deadline is renewed by the latest delivered chunk then expires', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const feed = mediaUpstream({ everyMs: 10, unrefTicker: false });
+  const res = pipeTarget();
+  t.after(async () => {
+    res.destroy();
+    await flushStreamEvents();
+    assert.equal(feed.released, true, 'renewed feed teardown completed');
+  });
+  await proxyMediaResponse(res, feed.upstream, { idleTimeoutMs: 40 });
+  for (let step = 0; step < 3; step += 1) {
+    t.mock.timers.tick(10);
+    await flushStreamEvents();
+  }
+  assert.ok(feed.produced >= 4 && res.receivedBytes >= 16);
+  feed.stop();
+  t.mock.timers.tick(39);
+  await flushStreamEvents();
+  assert.equal(feed.released, false, 'latest delivery renewed the idle window');
+  t.mock.timers.tick(1);
+  await flushStreamEvents();
+  assert.equal(
+    feed.released,
+    true,
+    'silence after the renewed deadline was released',
+  );
+  assert.equal(res.writableEnded, true);
 });
