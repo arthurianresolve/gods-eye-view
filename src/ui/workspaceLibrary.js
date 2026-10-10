@@ -20,6 +20,10 @@ import {
   previewGPX,
   previewKML,
 } from '../imports/index.js';
+import {
+  createWorkspaceImportReadOwner,
+  readOwnedWorkspaceFile,
+} from './workspaceImportRead.js';
 
 const safeJson = (value) => JSON.stringify(value ?? null);
 
@@ -157,6 +161,9 @@ export function createWorkspaceLibraryPanel({
   let stagedFile = null;
   let stagedText = null;
   let stagedPreview = null;
+  const importReadOwner = createWorkspaceImportReadOwner();
+  let stagedImportOwner = null;
+  let importInputGeneration = 0;
   let importController = null;
   let applyingImport = false;
   let renderController = null;
@@ -169,6 +176,47 @@ export function createWorkspaceLibraryPanel({
   function cancelImportRendering() {
     renderController?.abort();
     renderController = null;
+  }
+  function importOwnerIsCurrent(owner = stagedImportOwner) {
+    return importReadOwner.isCurrent(owner, {
+      workspaceId: active?.id ?? null,
+      workspaceGeneration: openGeneration,
+      disposed,
+    });
+  }
+  function resetStagedImport({ status = null, clearFile = false } = {}) {
+    importInputGeneration++;
+    importReadOwner.invalidate();
+    stagedImportOwner = null;
+    importController?.abort('import-input-invalidated');
+    importController = null;
+    stagedFile = null;
+    stagedText = null;
+    stagedPreview = null;
+    importReview.hidden = true;
+    importSummary.textContent = '';
+    applyImportButton.disabled = true;
+    csvMapping.hidden = true;
+    if (clearFile) geoFile.value = '';
+    if (status) importStatus.textContent = status;
+    syncImportApplyButton();
+  }
+  function invalidateWorkspaceOwnedPendingImport() {
+    if (
+      !stagedImportOwner ||
+      stagedPreview ||
+      stagedImportOwner.workspaceId == null
+    )
+      return;
+    if (importOwnerIsCurrent()) return;
+    resetStagedImport({
+      status: 'Import preview cancelled because its workspace changed.',
+      clearFile: true,
+    });
+  }
+  function syncImportApplyButton() {
+    applyImportButton.disabled =
+      applyingImport || !active || !stagedPreview?.accepted;
   }
   async function renderImportedData(imports, options) {
     cancelImportRendering();
@@ -482,6 +530,7 @@ export function createWorkspaceLibraryPanel({
 
   async function showOfflineDemo() {
     const generation = ++openGeneration;
+    invalidateWorkspaceOwnedPendingImport();
     restore.cancel('synthetic-demo');
     cancelImportRendering();
     applying = false;
@@ -727,6 +776,8 @@ export function createWorkspaceLibraryPanel({
           chunks: stored?.chunks || {},
         }
       : null;
+    invalidateWorkspaceOwnedPendingImport();
+    syncImportApplyButton();
     history.bindWorkspace(active?.id, shareLinkManager.getCurrentView());
     refreshHistoryControls();
     renderSavedQueries();
@@ -773,6 +824,8 @@ export function createWorkspaceLibraryPanel({
         pinnedEvidence: saved.document.pinnedEvidence,
         chunks: saved.chunks || {},
       };
+      invalidateWorkspaceOwnedPendingImport();
+      syncImportApplyButton();
       select.value = active.id;
       await refresh();
       setStatus(
@@ -795,6 +848,7 @@ export function createWorkspaceLibraryPanel({
 
   async function openSelected(revision = null) {
     const generation = ++openGeneration;
+    invalidateWorkspaceOwnedPendingImport();
     const workspaceId = select.value;
     cancelImportRendering();
     if (!select.value)
@@ -852,6 +906,8 @@ export function createWorkspaceLibraryPanel({
             chunks: stored?.chunks || {},
           }
         : active;
+      invalidateWorkspaceOwnedPendingImport();
+      syncImportApplyButton();
       if (
         disposed ||
         generation !== openGeneration ||
@@ -907,6 +963,8 @@ export function createWorkspaceLibraryPanel({
           title: copy.document.title,
           revision: 1,
         };
+        invalidateWorkspaceOwnedPendingImport();
+        syncImportApplyButton();
         const owner = active;
         await refresh();
         if (
@@ -945,6 +1003,8 @@ export function createWorkspaceLibraryPanel({
       history.forget(select.value);
       history.bindWorkspace(null);
       active = null;
+      invalidateWorkspaceOwnedPendingImport();
+      syncImportApplyButton();
       await refresh();
       if (!(await renderImportedData([], { workspaceId: null }))) return;
       setStatus('Investigation deleted.');
@@ -998,7 +1058,11 @@ export function createWorkspaceLibraryPanel({
     return result;
   }
 
-  function showPreview(preview) {
+  function showPreview(preview, owner) {
+    if (!importOwnerIsCurrent(owner)) return;
+    // Once file contents have been previewed, they belong to the import form,
+    // not to the workspace that happened to be open when the file was read.
+    stagedImportOwner = importReadOwner.begin(owner.file);
     stagedPreview = preview;
     importReview.hidden = false;
     const bounds =
@@ -1014,39 +1078,55 @@ export function createWorkspaceLibraryPanel({
       ? ` Notes: ${preview.warnings.join(' ')}`
       : '';
     importSummary.textContent = `${preview.accepted} accepted, ${preview.rejected} rejected. Bounds [west, south, east, north]: ${bounds}. ${preview.timeInterpretation}${timeRange}${warnings}${rejected}`;
-    applyImportButton.disabled =
-      applyingImport || !active || preview.accepted === 0;
+    syncImportApplyButton();
     importStatus.textContent = active
       ? 'Review counts, bounds, time interpretation, and attribution, then choose Apply to save this layer.'
       : 'Preview ready. Open or save a workspace before applying the import.';
   }
 
   async function previewStagedImport() {
-    if (!stagedText || !stagedFile) return;
+    const owner = stagedImportOwner;
+    if (
+      !stagedText ||
+      !stagedFile ||
+      !owner ||
+      owner.file !== stagedFile ||
+      !importOwnerIsCurrent(owner)
+    )
+      return;
+    const text = stagedText;
+    const file = stagedFile;
+    stagedPreview = null;
+    importReview.hidden = true;
+    importSummary.textContent = '';
+    syncImportApplyButton();
+    importStatus.textContent = 'Preparing import preview…';
     importController?.abort('superseded-preview');
     importController = new AbortController();
     const signal = importController.signal;
     const attribution = root.querySelector('[data-attribution]').value;
     try {
-      const extension = stagedFile.name.split('.').at(-1).toLowerCase();
+      const extension = file.name.split('.').at(-1).toLowerCase();
       const preview =
         extension === 'csv'
-          ? await previewCSV(stagedText, {
+          ? await previewCSV(text, {
               signal,
               attribution,
               mapping: selectedCsvMapping(),
             })
           : extension === 'kml'
-            ? await previewKML(stagedText, { signal, attribution })
+            ? await previewKML(text, { signal, attribution })
             : extension === 'gpx'
-              ? await previewGPX(stagedText, { signal, attribution })
-              : await previewGeoJSON(stagedText, { signal, attribution });
-      if (!signal.aborted) showPreview(preview);
+              ? await previewGPX(text, { signal, attribution })
+              : await previewGeoJSON(text, { signal, attribution });
+      if (!signal.aborted && importOwnerIsCurrent(owner))
+        showPreview(preview, owner);
     } catch (error) {
-      if (signal.aborted) return;
+      if (signal.aborted || !importOwnerIsCurrent(owner)) return;
       importStatus.textContent = `Preview failed: ${error.message}`;
       stagedPreview = null;
       importReview.hidden = true;
+      syncImportApplyButton();
     }
   }
 
@@ -1057,6 +1137,8 @@ export function createWorkspaceLibraryPanel({
     const cancelButton = root.querySelector('[data-action="cancel-import"]');
     cancelButton.disabled = true;
     const previewOwner = stagedPreview;
+    const inputOwner = stagedImportOwner;
+    const inputGeneration = importInputGeneration;
     const owner = active;
     const generation = openGeneration;
     const current = () =>
@@ -1088,10 +1170,16 @@ export function createWorkspaceLibraryPanel({
       if (!current()) return;
       active.revision = result.manifest.revision;
       active.chunks = chunks;
-      if (stagedPreview === previewOwner) {
+      const stillOwnsInput =
+        stagedImportOwner === inputOwner && stagedPreview === previewOwner;
+      let completionGeneration = inputGeneration;
+      if (stillOwnsInput) {
         importReview.hidden = true;
         geoFile.value = '';
         stagedFile = stagedText = stagedPreview = null;
+        stagedImportOwner = null;
+        importReadOwner.invalidate();
+        completionGeneration = ++importInputGeneration;
       }
       await refresh();
       if (!current()) return;
@@ -1100,53 +1188,63 @@ export function createWorkspaceLibraryPanel({
       )
         return;
       if (!current()) return;
-      importStatus.textContent = `Imported ${entry.accepted} features in workspace revision ${active.revision}.`;
+      if (stillOwnsInput && importInputGeneration === completionGeneration)
+        importStatus.textContent = `Imported ${entry.accepted} features in workspace revision ${active.revision}.`;
     } catch (error) {
       if (!current()) return;
-      importStatus.textContent =
-        error.code === 'revision-conflict'
-          ? 'Import was not applied because another tab saved a newer revision. Reopen the workspace and preview again.'
-          : `Import was not applied: ${error.message}`;
+      if (
+        stagedImportOwner === inputOwner &&
+        importInputGeneration === inputGeneration
+      )
+        importStatus.textContent =
+          error.code === 'revision-conflict'
+            ? 'Import was not applied because another tab saved a newer revision. Reopen the workspace and preview again.'
+            : `Import was not applied: ${error.message}`;
     } finally {
       applyingImport = false;
       cancelButton.disabled = false;
-      applyImportButton.disabled = !active || !stagedPreview?.accepted;
+      syncImportApplyButton();
     }
   }
 
   function cancelStagedImport() {
     if (applyingImport) return;
-    importController?.abort('user-cancelled');
-    importController = null;
-    stagedFile = null;
-    stagedText = null;
-    stagedPreview = null;
-    geoFile.value = '';
-    csvMapping.hidden = true;
-    importReview.hidden = true;
-    importStatus.textContent =
-      'Import cancelled. The workspace was not changed.';
+    resetStagedImport({
+      status: 'Import cancelled. The workspace was not changed.',
+      clearFile: true,
+    });
   }
 
   geoFile.addEventListener('change', async () => {
-    importController?.abort('superseded-file');
-    importController = null;
-    stagedFile = null;
-    stagedText = null;
-    stagedPreview = null;
-    importReview.hidden = true;
     const file = geoFile.files?.[0];
-    if (!file) return;
+    resetStagedImport({ clearFile: !file });
+    if (!file) {
+      importStatus.textContent = '';
+      return;
+    }
     if (file.size > IMPORT_LIMITS.bytes) {
       importStatus.textContent = `Import files are limited to ${IMPORT_LIMITS.bytes / 1024 / 1024} MiB.`;
       return;
     }
+    const owner = importReadOwner.begin(file, {
+      workspaceId: active?.id ?? null,
+      workspaceGeneration: openGeneration,
+    });
+    stagedImportOwner = owner;
     stagedFile = file;
+    importStatus.textContent = 'Reading import file…';
     try {
-      stagedText = await file.text();
-      const extension = file.name.split('.').at(-1).toLowerCase();
+      const read = await readOwnedWorkspaceFile(file, () =>
+        importOwnerIsCurrent(owner),
+      );
+      if (read.status === 'superseded') return;
+      if (read.status === 'failed') throw read.error;
+      if (!importOwnerIsCurrent(owner)) return;
+      stagedText = read.text;
+      const extension = owner.file.name.split('.').at(-1).toLowerCase();
       if (extension === 'csv') {
-        const { headers } = parseCsv(stagedText);
+        const { headers } = parseCsv(read.text);
+        if (!importOwnerIsCurrent(owner)) return;
         for (const field of ['latitude', 'longitude', 'id', 'time']) {
           const selectColumn = root.querySelector(`[data-column="${field}"]`);
           selectColumn.replaceChildren();
@@ -1185,8 +1283,10 @@ export function createWorkspaceLibraryPanel({
         await previewStagedImport();
       }
     } catch (error) {
-      importStatus.textContent = `Could not read file: ${error.message}`;
-      stagedText = null;
+      if (!importOwnerIsCurrent(owner)) return;
+      resetStagedImport({
+        status: `Could not read file: ${error.message}`,
+      });
     }
   });
 
@@ -1296,6 +1396,8 @@ export function createWorkspaceLibraryPanel({
     cancelImportRendering();
     applying = false;
     active = null;
+    invalidateWorkspaceOwnedPendingImport();
+    syncImportApplyButton();
     lastAuthoredSignature = authoredSignature();
   });
   root
@@ -1405,9 +1507,9 @@ export function createWorkspaceLibraryPanel({
       disposed = true;
       openGeneration++;
       cancelImportRendering();
+      resetStagedImport({ clearFile: true });
       clearTimeout(autosaveTimer);
       clearTimeout(historyTimer);
-      importController?.abort('panel-destroyed');
       queryController?.abort('panel-destroyed');
       unsubscribe();
       document.removeEventListener('keydown', onHistoryShortcut);

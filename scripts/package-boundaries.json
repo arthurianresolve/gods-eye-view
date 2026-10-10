@@ -1546,6 +1546,7 @@
       "src/data/bhoteKoshiEvent.js",
       "src/ui/imagerySplit.js",
       "src/ui/workspaceLibrary.js",
+      "src/ui/workspaceImportRead.js",
       "src/ui/diagnosticsPanel.js",
       "src/diagnostics/portable.js",
       "src/voice/realtimeDiagnostics.js",
