@@ -82,7 +82,7 @@ preserves settings and workspace contents through all five checkpoints, includin
 interrupted update, rollback and failed verification. All owned browsers close
 normally in 289-435 ms with no forced termination. Its renderer is SwiftShader;
 this is functional recovery evidence, not physical GPU evidence. Extracted report
-SHA-256: `0d77f20d075db1fe55d13744900a38c779dc0ea93b238d30ed453305f56a8834`.
+SHA-256 of the committed UTF-8/LF report: `942ac8e5edd1d3ac0dedb6725ea19b92b667e5987e1ffde4f0eec02edb562f9d`.
 Later fixture and documentation commits are distinct from this tested revision.
 
 ### S54.2 Entity-compatible color encoding - 10 October 2026
