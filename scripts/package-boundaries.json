@@ -104,6 +104,7 @@
     "exports": ["./application/viewer"],
     "modules": [
       "src/app/viewer.js",
+      "src/app/cameraAnglesCompat.js",
       "src/app/atmosphereCompat.js",
       "src/freshFrame.js"
     ],
@@ -1630,6 +1631,7 @@
       "src/app/tools.js",
       "src/performance/performanceSnapshot.js",
       "src/app/viewer.js",
+      "src/app/cameraAnglesCompat.js",
       "src/app/atmosphereCompat.js",
       "src/bloom.js",
       "src/camera.js",

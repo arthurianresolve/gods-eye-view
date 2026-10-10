@@ -50,6 +50,8 @@
   "src/app/mapLifecycle.test.mjs",
   "src/app/startupCamera.test.mjs",
   "src/app/viewer.js",
+  "src/app/cameraAnglesCompat.js",
+  "src/app/cameraAnglesCompat.test.mjs",
   "src/app/viewer.test.mjs",
   "src/app/webglRecovery.js",
   "src/app/webglRecovery.test.mjs",

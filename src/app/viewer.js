@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { applyModelAtmosphereWorkaround } from './atmosphereCompat.js';
+import { installCesium138CameraAnglesCompat } from './cameraAnglesCompat.js';
 import { cancelPendingFrameCaptures } from '../freshFrame.js';
 
 const PINCH_ZOOM_MULTIPLIER = 8;
@@ -286,6 +287,7 @@ export function createApplicationViewer({
     // becoming the default. The fresh-frame path works with either setting.
     contextOptions: { webgl: { preserveDrawingBuffer } },
   });
+  let cameraAnglesCompat;
   try {
     viewer.targetFrameRate = 60;
     // Before any tile builds a draw command: Cesium's per-vertex model
@@ -297,15 +299,18 @@ export function createApplicationViewer({
     viewer.scene.skyAtmosphere.atmosphereLightIntensity = 18;
     viewer.scene.skyAtmosphere.saturationShift = -0.12;
     viewer.scene.skyAtmosphere.brightnessShift = -0.08;
+    cameraAnglesCompat = installCesium138CameraAnglesCompat(viewer);
     const resolutionGuard = installResolutionScaleGuard(viewer);
     const originalDestroy = viewer.destroy;
     viewer.destroy = function destroyWithResolutionGuard(...args) {
       cancelPendingFrameCaptures(viewer);
+      cameraAnglesCompat?.dispose();
       resolutionGuard.destroy();
       return originalDestroy.apply(this, args);
     };
     return viewer;
   } catch (error) {
+    cameraAnglesCompat?.dispose();
     viewer.destroy();
     throw error;
   }
