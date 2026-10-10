@@ -1,10 +1,16 @@
 # Performance baseline
 
-Current status (10 October 2026): full automatic CI passes at `65fd7f3`, including
-Node 24/26, three-OS recovery and browser journeys ([results](performance-evidence/ci-65fd7f3.json)). The corrected `3cdd5cb`
-software-rendered retention soak and the fresh `2e839a4` hosted paravirtual Metal
-retention soak passed. These validate their exact revisions, not the later
-candidate. Windows UHD 620 dense-import capture recovered at `0edfb8e` after
+Current status (10 October 2026): the latest full automatic CI at `f598310`
+fails its mixed-use import smoke with a workspace revision conflict. Node 24/26,
+three-OS recovery and Windows onboarding pass ([results](performance-evidence/ci-f598310.json)).
+The corrected `3cdd5cb` software-rendered retention soak and the fresh `996a8d3`
+hosted paravirtual Metal retention soak passed. The latter completed 252 cycles
+and 13 post-GC checkpoints, with 40 unchanged resource gauges, final pending
+workers zero, listeners returning to 629 and 1.70% final-window heap growth
+([raw report](performance-evidence/hosted-mac-996a8d3.json),
+[independent review](performance-evidence/hosted-mac-996a8d3-review.json)).
+These validate their exact revisions, not the later candidate or the failed
+`f598310` smoke. Windows UHD 620 dense-import capture recovered at `0edfb8e` after
 the requested manual foreground check: two normal ten-capture runs and the
 12-check capture matrix pass with unchanged application code and deadlines.
 The [foreground recovery evidence](performance-evidence/WINDOWS_FRAME_RECOVERY.md)

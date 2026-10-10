@@ -208,3 +208,16 @@ pending workers are zero. The [raw report](performance-evidence/hosted-mac-2e839
 retains the actual Apple M1 virtual runner and Chrome 152 environment. It predates
 the later density fixes, supplies no physical Windows result, and does not
 complete S44 or S46 for a newer candidate.
+
+The [latest hosted Metal soak at `996a8d3`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38084725843)
+also passes: 252 cycles over 3,603,211 ms, 13 post-GC checkpoints, 40 unchanged
+application resource gauges and 1.70% final-window retained-heap growth. Browser
+listeners return to 629 and final pending workers are zero; five intermediate
+checkpoints observe one terrain task only 10.0–15.5 ms old. The
+[raw report](performance-evidence/hosted-mac-996a8d3.json),
+[independent review](performance-evidence/hosted-mac-996a8d3-review.json) and
+[terminal metadata](performance-evidence/hosted-mac-996a8d3-run.json) retain the
+exact revision and virtual Apple M1/Metal, macOS 26, Chrome 152 environment.
+This does not establish physical Windows coverage or clear the subsequent
+`f598310` mixed-use import failure. S44 and S46 remain incomplete for a final
+candidate; successful operations on one revision are not evidence for another.

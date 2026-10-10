@@ -20,8 +20,8 @@ The subsequent Windows wind check at `a83dd7a` fails its fresh-frame deadline;
 the standalone WebGL control also exhibits long frame gaps. The earlier recovery
 does not establish a permanent fix; see the new evidence below.
 The latest isolated hosted wind/capture checks pass at
-`d905f301bd6856a21c9f648200a380f792d29968`; the 60-minute hosted Metal
-retention pass belongs to `2e839a449ce32582130b33267a1a276e8cb59224`, not the current tip.
+`d905f301bd6856a21c9f648200a380f792d29968`; the latest 60-minute hosted Metal
+retention pass belongs to `996a8d3b8b73da0d3f64392b993bdff81a1e857f`, not the current tip.
 The comparison baseline remains
 `eb8c6828d0d03e1c04bda94c8c4fb99915a577b7` (Cesium 1.138.0).
 
@@ -36,7 +36,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
@@ -62,6 +62,36 @@ selected tracking and 60-minute soak jobs, and published layer-token PR checks,
 were skipped. This green integration run does not override the rendered CCTV
 comparison failures below, and does not cover subsequent camera compatibility
 changes.
+
+### Hosted accelerated retention recheck - 10 October 2026
+
+The [60-minute hosted Metal run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38084725843)
+passes at `996a8d3b8b73da0d3f64392b993bdff81a1e857f`: 252 measured cycles in
+3,603,211 ms, including 1,008 source toggles, 252 imports, 252 replay seeks,
+504 workspace reloads, 252 archive failures and 252 camera recoveries. Across
+13 post-GC checkpoints, all 40 declared application resource gauges equal the
+warmed baseline. Browser listeners return from 629 to 629, with intermediate
+counts up to 639. Five checkpoints contain one newly submitted terrain worker
+task aged 10.0–15.5 ms; all final tasks are completed and none are pending. This
+does not claim every intermediate snapshot has zero work.
+
+Final-window retained heap grows 1.70%, below the unchanged 5% limit; peak growth
+in that window is also 1.70%. The complete retained-heap range is 75,301,404 to
+82,050,228 bytes, with a separately sampled peak heap of 110,911,592 bytes.
+Root independently checked checkpoint chronology, collection completion,
+worker conservation, resource equality, operation totals and the heap window,
+then recomputed the existing stability verdict without changing its thresholds.
+The preliminary capture matrix also passes all 12 checks.
+
+The environment is GitHub's macOS 26 image `20260907.0351.1`, Apple M1 (Virtual),
+three logical CPUs, approximately 7 GiB RAM, Chrome 152.0.7977.75 and verified
+Apple paravirtual Metal. This is a forced-GC retention diagnostic, not a latency
+measurement or physical Windows acceptance. It does not clear the later
+`f598310` import smoke failure or validate subsequent commits.
+[Raw log-extracted report](performance-evidence/hosted-mac-996a8d3.json),
+SHA-256 `dad43a0a25013dd621f9e1b4e0b9060c5ca57d1ad0162a9764646b76c125177b`;
+[independent review](performance-evidence/hosted-mac-996a8d3-review.json);
+[terminal run metadata](performance-evidence/hosted-mac-996a8d3-run.json).
 
 ### Windows recovery recheck - 10 October 2026
 
