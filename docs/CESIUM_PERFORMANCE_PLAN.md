@@ -27,7 +27,7 @@ the earlier release requirements and historical results.
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable and traffic-listener cleanup, corrected worker interception, isolated import/workspace lifecycle runner; CCTV/terrain/picking cases remain | Worker completion/network preflights and 60-minute retention soak pass at `3cdd5cb`; corrected-validator reassessment passes at `5328e25` | Fresh hosted paravirtual Metal retention run passes at `2e839a4`; Windows UHD 620 plateau pending |
+| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable and traffic-listener cleanup, corrected worker interception, isolated import/workspace lifecycle runner; CCTV/terrain/picking cases remain | Split import/workspace/cancellation lifecycle and final report pass at `7b92db4`; historical 60-minute soak at `3cdd5cb` is separate evidence | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget and existing geometry reuse | 62 focused CCTV tests pass, including mid-drain edits, cancellation and budget yielding; nine additional source/pose/terrain/parameter reuse cases pass; visual validation remains | Pending appearance and build-count comparisons |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence and accepted mission scheduling pilot; full layer rollout remains pending | Deadline/cancellation/teardown and focused integrity tests pass; 30 isolated real-viewer trials pass at `7c68cdc` | Hosted Metal mission image/cadence comparison passes at `7c68cdc`; four isolated UHD 620 governor checks pass at `3664f4f`; full application/Windows cadence remains pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
@@ -215,6 +215,24 @@ and [job result](performance-evidence/lifecycle-38051341534-run.json) retain thi
 failure. Correct the report assembly and test the actual generated case result
 before rerunning. This is Linux software-rendered lifecycle evidence, not a
 hardware performance or historical Windows retention acceptance result.
+
+The report assembly is corrected at
+`7b92db45d56e3b171f3d65482166fe725a6791bd`: the controlled case now supplies its
+observed cumulative worker checkpoint, and the test assembles the final report
+from the generated case result. Root repeats 51 passing lifecycle tests.
+The changed [hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38051679663)
+**passes**, including final validation, in 134.3 seconds. All three cases complete
+five cycles with zero pending workers at the final checkpoints. Readiness takes
+21.9, 20.1 and 21.2 seconds; every startup observer is disposed. Controlled owner
+cleanup reports no timers, held callbacks, render waiters, overlay entries or
+context records, with the application import owner unchanged. Browser shutdown
+completes in 76.4 ms without forced termination. The [raw report](performance-evidence/lifecycle-38051679663.json)
+and [job result](performance-evidence/lifecycle-38051679663-run.json) identify
+Chrome 152.0.7977.75 on the Linux software-rendered runner. This accepts the
+bounded isolated lifecycle packet at that revision; S49's other reproductions
+and the current Windows long-run plateau remain outstanding. The earlier failed
+report remains unchanged. The reviewed code was pushed to remote `dev` at
+`7b92db4`; its standard integration suite is tracked separately.
 
 ### S49 deterministic cancellation coverage - 10 October 2026
 
