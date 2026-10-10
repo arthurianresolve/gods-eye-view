@@ -147,6 +147,32 @@ delivery without establishing a browser, desktop-occlusion or GPU cause.
 Manual foreground verification is requested before another Windows run.
 Raw SHA-256: `336ccfcdc8a9e6cee3011078a432924ace19e25b365d62403363a98881dd8e56`.
 
+The next [hosted diagnostic, 38079510733](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38079510733),
+tests `a5c400f2c3bdd8da5b38637700899fb823ff27f5`
+([raw report with mismatch PNGs](performance-evidence/calibration-38079510733.json),
+[job result](performance-evidence/calibration-38079510733-run.json)). Exact
+comparison finds **1,299 differing pixels**, not the one-pixel difference that
+could incorrectly be inferred from the earlier non-background population counts.
+Decoded PNG bytes reproduce the stored RGBA hashes. The candidate image lacks
+the visible central polyline rings despite equal geometry and material hashes.
+The control camera's up vector also changes during the drag; these are separate
+leads requiring validation of visualizer completion and pointer ownership.
+
+The candidate renders 18 idle frames. Its 16 observed explicit render requests
+come from camera-move notifications through the world overlay and CCTV horizon
+cull/card refresh paths, with no governor requests. Independent reproduction
+against the installed Cesium 1.138.0 finds that 600 stationary
+`Camera._updateCameraChanged()` calls preserve the camera without change
+listeners but drift its direction by approximately 2.61e-14 with a listener.
+The actual engine `View.checkForCameraUpdates` reports **25 false camera
+changes** over those 600 calls. The engine's heading/roll getters temporarily
+change and restore the live camera transform. A scoped compatibility fix is
+being validated; removing listeners or increasing motion tolerances is not the
+proposed remedy. This engine reproduction does not establish the cause of the
+larger native-drag camera rotation or the Windows frame-delivery delay.
+Raw report SHA-256:
+`b63d7b275f3480e292ee814f6a61f3e1d5c0ce5a9b3f49d7975c428dd11abc79`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
