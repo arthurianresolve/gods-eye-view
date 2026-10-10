@@ -162,6 +162,32 @@ equivalence, latency improvement, a Windows hardware result, the final 20% targe
 or completion of S51. Frame counts are render-demand observations, not CPU/GPU
 execution timings. The earlier failed CI and offline reassessment stay historical.
 
+### S49 deterministic cancellation coverage - 10 October 2026
+
+GPT-6 Luna implemented `fe97950f45f8279f660b6901efc8beb5eb7edbc8`.
+The version-2 lifecycle runner requires three independently owned cases: five
+native full-application import load/clear cycles, five workspace replacements,
+and five controlled cancellation/supersession cycles. The controlled case uses
+the real import-layer constructor with an instance-local batch clock and
+scheduler; it proves that a continuation was queued before cancelling or
+superseding it. Evidence timestamps retain their normal clock. It does not
+replace the application's import owner or claim native timing measurements.
+
+Completed renders, exact replacement identities, empty checkpoints, unchanged
+application ownership, and disposal of timers, render listeners, context records
+and overlay entries are required. Version-1 reports retain their original
+two-case validation contract; version-2 reports cannot pass without the separate
+controlled case. The original feature population and ten-second operation drain
+limit remain unchanged.
+
+Root independently passed 44 lifecycle tests and eight import runtime/cooperative
+tests on Node 24.16.0. Syntax, targeted formatting, package boundaries and diff
+checks pass. Review added a regression for the browser-serialized synchronous
+render-waiter factory and unconditional context cleanup on disposal failure.
+The code packet is implemented and unit validated. Browser execution remains
+pending the separate cold-scene readiness correction; this does not establish
+retention acceptance, hardware performance or completion of S49.
+
 ### S49 bounded worker-quiescence history - 10 October 2026
 
 The follow-up drain-predicate trace is implemented at `7ab0d42`, with its
