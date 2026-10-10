@@ -129,6 +129,7 @@ const RING_RADIUS_MAX_M = 40;
 const ARROW_LENGTH_FACTOR = 1.6;
 const DRAG_THROTTLE_MS = 16;
 const HOVER_THROTTLE_MS = 120;
+const cameraInputLeases = new WeakMap();
 
 const COLOR_RING_HEADING = Cesium.Color.fromCssColorString('#35d8ff');
 const COLOR_RING_PITCH = Cesium.Color.fromCssColorString('#ff5fd0');
@@ -136,6 +137,98 @@ const COLOR_MOVE_EAST = Cesium.Color.fromCssColorString('#ff5252');
 const COLOR_MOVE_NORTH = Cesium.Color.fromCssColorString('#52ff7a');
 const COLOR_MOVE_UP = Cesium.Color.fromCssColorString('#5b8cff');
 const COLOR_HANDLE = Cesium.Color.fromCssColorString('#ffd97a');
+
+function restoreCameraInputLease(controller, lease) {
+  cameraInputLeases.delete(controller);
+  const descriptor = Object.getOwnPropertyDescriptor(
+    controller,
+    'enableInputs',
+  );
+  if (
+    lease.accessorInstalled &&
+    descriptor?.get === lease.getter &&
+    descriptor?.set === lease.setter
+  ) {
+    if (lease.originalDescriptor) {
+      Object.defineProperty(controller, 'enableInputs', {
+        ...lease.originalDescriptor,
+        value: lease.requestedEnableInputs,
+      });
+    } else {
+      delete controller.enableInputs;
+    }
+  } else if (!lease.accessorInstalled && controller.enableInputs === false) {
+    controller.enableInputs = lease.requestedEnableInputs;
+  }
+}
+
+function acquireCameraInputLease(controller, owner) {
+  let lease = cameraInputLeases.get(controller);
+  if (!lease) {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(
+      controller,
+      'enableInputs',
+    );
+    lease = {
+      controller,
+      originalDescriptor,
+      requestedEnableInputs: controller.enableInputs,
+      owners: new Set(),
+      removePostUpdate: null,
+      accessorInstalled: false,
+      getter: null,
+      setter: null,
+    };
+    if (originalDescriptor?.configurable && 'value' in originalDescriptor) {
+      // Other owners may set enableInputs while this gizmo owns the drag.
+      // Record their requested value, but keep Cesium's read false until the
+      // postUpdate handoff so the controller cannot consume queued movement.
+      lease.getter = () => false;
+      lease.setter = (value) => {
+        lease.requestedEnableInputs = Boolean(value);
+      };
+      Object.defineProperty(controller, 'enableInputs', {
+        configurable: true,
+        enumerable: originalDescriptor.enumerable,
+        get: lease.getter,
+        set: lease.setter,
+      });
+      lease.accessorInstalled = true;
+    } else {
+      controller.enableInputs = false;
+    }
+    cameraInputLeases.set(controller, lease);
+  }
+
+  lease.removePostUpdate?.();
+  lease.removePostUpdate = null;
+  lease.owners.add(owner);
+  return lease;
+}
+
+function releaseCameraInputLease(
+  scene,
+  controller,
+  lease,
+  owner,
+  requestRender,
+) {
+  if (!lease || !lease.owners.delete(owner) || lease.owners.size > 0) return;
+
+  const restore = () => {
+    lease.removePostUpdate?.();
+    lease.removePostUpdate = null;
+    if (lease.owners.size === 0) restoreCameraInputLease(controller, lease);
+  };
+
+  if (typeof scene.postUpdate?.addEventListener === 'function') {
+    lease.removePostUpdate = scene.postUpdate.addEventListener(restore);
+    requestRender('cctv-gizmo-camera-input-release');
+    return;
+  }
+
+  restore();
+}
 
 const toRadians = (deg) => (deg * Math.PI) / 180;
 const toDeg = (rad) => (rad * 180) / Math.PI;
@@ -233,6 +326,11 @@ export function createCalibrationGizmo({
   let enabled = false;
   let destroyed = false;
   let drag = null; // { part, startCal, basePose, refs... }
+  // `enableInputs` is sampled by Cesium's camera controller once per scene
+  // update. Keep this gizmo's lock through that update after pointer release,
+  // so the controller cannot consume the drag's already-aggregated movement.
+  const cameraInputOwner = {};
+  let cameraInputLease = null;
   let hoveredId = null;
   let lastDragAt = 0;
   let lastHoverAt = 0;
@@ -312,6 +410,25 @@ export function createCalibrationGizmo({
 
   function requestSceneRender(reason) {
     if (!destroyed) requestRender(reason);
+  }
+
+  function lockCameraInputs() {
+    const controller = scene.screenSpaceCameraController;
+    if (!controller) return;
+    cameraInputLease = acquireCameraInputLease(controller, cameraInputOwner);
+  }
+
+  function releaseCameraInputs() {
+    if (!cameraInputLease) return;
+    const lease = cameraInputLease;
+    cameraInputLease = null;
+    releaseCameraInputLease(
+      scene,
+      lease.controller,
+      lease,
+      cameraInputOwner,
+      requestSceneRender,
+    );
   }
 
   /** Recomputes every handle's geometry from the active record's CURRENT pose
@@ -548,9 +665,7 @@ export function createCalibrationGizmo({
 
     drag = state;
     setCursor('grabbing');
-    if (scene.screenSpaceCameraController) {
-      scene.screenSpaceCameraController.enableInputs = false;
-    }
+    lockCameraInputs();
     return true;
   }
 
@@ -630,9 +745,7 @@ export function createCalibrationGizmo({
     if (!drag) return;
     const record = drag.record;
     drag = null;
-    if (scene.screenSpaceCameraController) {
-      scene.screenSpaceCameraController.enableInputs = true;
-    }
+    releaseCameraInputs();
     setCursor(hoveredId ? 'grab' : '');
     endPatch(record);
   }

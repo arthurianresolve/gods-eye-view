@@ -296,6 +296,43 @@ test('direct destroy releases the focus-appearance subscription idempotently', (
   assert.equal(focusListeners.size, 0);
 });
 
+test('destroy preserves camera input state owned outside the CCTV layer', async (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    hidden: false,
+    onmousewheel: undefined,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  t.after(() => {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  });
+  const source = {
+    ...createCctvSource(),
+    getCatalog: async () => ({
+      sources: [{ id: 'camera-a', name: 'A', lat: 30, lon: -97 }],
+    }),
+    getHealth: async () => ({ cameras: [] }),
+  };
+  const fixture = createEmptyCctvLayerWithFocusListeners(
+    source,
+    async () => [],
+  );
+  const viewer = createCctvTestViewer();
+  viewer.scene.screenSpaceCameraController.enableInputs = false;
+  t.after(() => fixture.layer.destroy(viewer));
+
+  await fixture.layer.init(viewer);
+  fixture.layer.destroy(viewer);
+
+  assert.equal(
+    viewer.scene.screenSpaceCameraController.enableInputs,
+    false,
+    'CCTV teardown must not release a camera lock it did not acquire',
+  );
+});
+
 test('calibration mode uses one-shot invalidations without a continuous hold', (t) => {
   const requests = [];
   const holds = [];

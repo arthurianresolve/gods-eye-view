@@ -107,8 +107,6 @@ export function createLifecycle({
       layerState._gizmo.destroy();
       layerState._gizmo = null;
     }
-    if (viewer.scene.screenSpaceCameraController)
-      viewer.scene.screenSpaceCameraController.enableInputs = true;
     if (layerState._billboards) {
       viewer.scene.primitives.remove(layerState._billboards);
       services.sprites.unregisterSpriteCollection?.(

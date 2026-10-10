@@ -74,6 +74,76 @@ function createGizmoViewer() {
   };
 }
 
+function createEngineControllerGizmoViewer() {
+  const listeners = new Map();
+  const canvas = {
+    disableRootEvents: true,
+    clientWidth: 800,
+    clientHeight: 600,
+    drawingBufferWidth: 800,
+    drawingBufferHeight: 600,
+    onwheel: null,
+    style: {},
+    addEventListener(type, callback) {
+      const values = listeners.get(type) || new Set();
+      values.add(callback);
+      listeners.set(type, values);
+    },
+    removeEventListener(type, callback) {
+      listeners.get(type)?.delete(callback);
+    },
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 800, height: 600 };
+    },
+    dispatch(type, event) {
+      for (const callback of listeners.get(type) || []) callback(event);
+    },
+  };
+  const scene = {
+    canvas,
+    drawingBufferWidth: 800,
+    drawingBufferHeight: 600,
+    mapProjection: new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84),
+    ellipsoid: Cesium.Ellipsoid.WGS84,
+  };
+  const camera = new Cesium.Camera(scene);
+  camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(-97.7, 30.3, 10_000_000),
+    orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+  });
+  Object.assign(scene, {
+    camera,
+    globe: undefined,
+    mode: Cesium.SceneMode.SCENE3D,
+    verticalExaggeration: 1,
+    verticalExaggerationRelativeHeight: 0,
+    cameraUnderground: false,
+    postUpdate: new Cesium.Event(),
+    pick: () => ({ id: { id: 'cctv-gizmo-move-east' } }),
+    drillPick: () => [],
+  });
+  const controller = new Cesium.ScreenSpaceCameraController(scene);
+  controller.enableCollisionDetection = false;
+  scene.screenSpaceCameraController = controller;
+  const entities = new Map();
+  const viewer = {
+    scene,
+    camera: { getPickRay: () => null },
+    entities: {
+      getById: (id) => entities.get(id) || null,
+      add(value) {
+        const entity = { ...value };
+        entities.set(entity.id, entity);
+        return entity;
+      },
+      remove(value) {
+        return entities.delete(value.id);
+      },
+    },
+  };
+  return { viewer, entities, controller };
+}
+
 test('closestParamOnAxis: perpendicular ray hits the axis at its own offset', () => {
   // Axis along +X from origin. Ray shooting straight down (-Z) from (10, 0, 5):
   // nearest axis point is x=10 → t=10.
@@ -323,4 +393,198 @@ test('native release commits the final pointer position skipped by drag throttli
     'existing edits commit to the original record',
   );
   assert.equal(viewer.scene.screenSpaceCameraController.enableInputs, true);
+});
+
+test('gizmo lock drains actual Cesium camera input before restoring its owner value', (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = { onmousewheel: undefined };
+  t.after(() => {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  });
+
+  const { viewer, controller } = createEngineControllerGizmoViewer();
+  const mount = Cesium.Cartesian3.fromDegrees(0, 0, 0);
+  const record = {
+    camera: {
+      headingDeg: 0,
+      pitchDeg: -17,
+      calibration: { offsetEastM: 0 },
+      basePose: { rangeM: 700, fovDeg: 70 },
+    },
+    frustumPositions: {
+      mount,
+      capCenter: c3(mount.x + 700, 0, 0),
+      tl: mount,
+      tr: mount,
+      bl: mount,
+      br: mount,
+    },
+    frustumGeometry: { rangeM: 700 },
+  };
+  viewer.camera.getPickRay = (position) => ({
+    origin: c3(mount.x + 100, position.x, 0),
+    direction: c3(-1, 0, 0),
+  });
+  const gizmo = createCalibrationGizmo({
+    viewer,
+    getActiveRecord: () => record,
+    applyPatch(patch, target) {
+      Object.assign(target.camera.calibration, patch);
+    },
+    endPatch() {},
+  });
+  t.after(() => {
+    gizmo.destroy();
+    controller.destroy();
+  });
+  gizmo.setEnabled(true);
+
+  const originalDescriptor = Object.getOwnPropertyDescriptor(
+    controller,
+    'enableInputs',
+  );
+  const beforePosition = Cesium.Cartesian3.clone(
+    viewer.scene.camera.positionWC,
+  );
+  const beforeDirection = Cesium.Cartesian3.clone(
+    viewer.scene.camera.directionWC,
+  );
+  const input = (type, x, y, buttons) =>
+    viewer.scene.canvas.dispatch(type, {
+      clientX: x,
+      clientY: y,
+      button: 0,
+      buttons,
+      preventDefault() {},
+    });
+
+  input('mousedown', 400, 300, 1);
+  input('mousemove', 440, 330, 1);
+  input('mouseup', 440, 330, 0);
+  assert.equal(controller.enableInputs, false);
+  assert.equal(
+    controller._aggregator.isMoving(Cesium.CameraEventType.LEFT_DRAG),
+    true,
+  );
+  controller.update();
+  assert.equal(
+    Cesium.Cartesian3.distance(beforePosition, viewer.scene.camera.positionWC),
+    0,
+  );
+  assert.equal(
+    Cesium.Cartesian3.distance(
+      beforeDirection,
+      viewer.scene.camera.directionWC,
+    ),
+    0,
+  );
+  viewer.scene.postUpdate.raiseEvent(viewer.scene, Cesium.JulianDate.now());
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(controller, 'enableInputs'),
+    originalDescriptor,
+  );
+
+  // A cockpit-style lock requested while the gizmo owns the drag is retained.
+  input('mousedown', 400, 300, 1);
+  input('mousemove', 420, 310, 1);
+  controller.enableInputs = false;
+  assert.equal(controller.enableInputs, false);
+  input('mouseup', 420, 310, 0);
+  controller.update();
+  viewer.scene.postUpdate.raiseEvent(viewer.scene, Cesium.JulianDate.now());
+  assert.equal(controller.enableInputs, false);
+  assert.equal(
+    Object.getOwnPropertyDescriptor(controller, 'enableInputs').value,
+    false,
+  );
+
+  // A later request to enable is delayed until the queued camera event is drained.
+  input('mousedown', 400, 300, 1);
+  input('mousemove', 425, 315, 1);
+  controller.enableInputs = true;
+  assert.equal(controller.enableInputs, false);
+  input('mouseup', 425, 315, 0);
+  controller.update();
+  assert.equal(controller.enableInputs, false);
+  viewer.scene.postUpdate.raiseEvent(viewer.scene, Cesium.JulianDate.now());
+  assert.equal(controller.enableInputs, true);
+  assert.deepEqual(
+    Object.getOwnPropertyDescriptor(controller, 'enableInputs'),
+    originalDescriptor,
+  );
+});
+
+test('replacement gizmo cancels a destroyed owners pending camera restore', (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = { onmousewheel: undefined };
+  t.after(() => {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  });
+
+  const { viewer, controller } = createEngineControllerGizmoViewer();
+  const mount = Cesium.Cartesian3.fromDegrees(0, 0, 0);
+  const record = {
+    camera: {
+      headingDeg: 0,
+      pitchDeg: -17,
+      calibration: { offsetEastM: 0 },
+      basePose: { rangeM: 700, fovDeg: 70 },
+    },
+    frustumPositions: {
+      mount,
+      capCenter: c3(mount.x + 700, 0, 0),
+      tl: mount,
+      tr: mount,
+      bl: mount,
+      br: mount,
+    },
+    frustumGeometry: { rangeM: 700 },
+  };
+  viewer.camera.getPickRay = (position) => ({
+    origin: c3(mount.x + 100, position.x, 0),
+    direction: c3(-1, 0, 0),
+  });
+  const makeGizmo = () =>
+    createCalibrationGizmo({
+      viewer,
+      getActiveRecord: () => record,
+      applyPatch() {},
+      endPatch() {},
+    });
+  const oldGizmo = makeGizmo();
+  const nextGizmo = makeGizmo();
+  t.after(() => {
+    oldGizmo.destroy();
+    nextGizmo.destroy();
+    controller.destroy();
+  });
+  oldGizmo.setEnabled(true);
+  const input = (type, x, y, buttons) =>
+    viewer.scene.canvas.dispatch(type, {
+      clientX: x,
+      clientY: y,
+      button: 0,
+      buttons,
+      preventDefault() {},
+    });
+
+  input('mousedown', 400, 300, 1);
+  input('mousemove', 410, 310, 1);
+  oldGizmo.destroy();
+  input('mouseup', 410, 310, 0);
+  assert.equal(viewer.scene.postUpdate.numberOfListeners, 1);
+
+  nextGizmo.setEnabled(true);
+  input('mousedown', 400, 300, 1);
+  assert.equal(nextGizmo.isDragging(), true);
+  assert.equal(viewer.scene.postUpdate.numberOfListeners, 0);
+  input('mousemove', 420, 315, 1);
+  input('mouseup', 420, 315, 0);
+  assert.equal(viewer.scene.postUpdate.numberOfListeners, 1);
+  controller.update();
+  viewer.scene.postUpdate.raiseEvent(viewer.scene, Cesium.JulianDate.now());
+  assert.equal(controller.enableInputs, true);
+  assert.equal(viewer.scene.postUpdate.numberOfListeners, 0);
 });
