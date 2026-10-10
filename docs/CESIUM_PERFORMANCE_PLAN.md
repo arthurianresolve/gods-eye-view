@@ -59,6 +59,28 @@ were skipped. This green integration run does not override the rendered CCTV
 comparison failures below, and does not cover subsequent camera compatibility
 changes.
 
+### S50.3 asynchronous CCTV revision validation - 10 October 2026
+
+The lifecycle runner now has a version-2 acceptance path for rapid calibration
+changes. It first captures separately settled revisions A and B, then withholds
+one real `createGeometry.js` response before normal main-thread delivery, applies
+B, and releases the original response unchanged. A second case disables the
+layer while A remains outstanding, releases A while disabled, then re-enables B.
+The fixture checks pixels, geometry, styles, picked identities, worker-counter
+conservation and settled resource ownership. Disabled reference captures detect
+unexpected visible geometry during and after late delivery. Only fixture-owned
+listeners and held data are released; shared workers are not terminated.
+
+This tests delayed delivery of a completed worker result; it does not claim
+overlapping worker computation. Legacy version-1 reports retain their original
+validation scope and cannot supply this new acceptance evidence. Root's 20
+focused checks pass, including cleanup failures, mismatched worker ownership,
+visible resurrection, stale pixels and legacy report compatibility. The archived
+version-1 pass at `db298d4` also validates through the legacy path. Package
+boundaries pass. The rendered version-2 run remains pending.
+No production geometry change or broader S50 completion is claimed by adding
+this fixture.
+
 ### S50.2 CCTV calibration handle geometry reuse - 10 October 2026
 
 The next candidate compares numeric Cartesian positions before replacing the
@@ -150,7 +172,7 @@ The [tracking run at `996a8d3`](https://github.com/arthurianresolve/gods-eye-vie
 reports **108 passed, one failed, zero skipped** in its [raw output](performance-evidence/tracking-996a8d3.txt).
 The failed `display-floor/regime` check observes the tracked entity at 204.5 m
 with a sampled floor of 192.4 m, after the scenario had planted a 440 m floor.
-The fixture's floor ownership and expiry need investigation before attributing
+The fixture's floor ownership and seeded-cell coverage need investigation before attributing
 this to a runtime regression. Normal browser cleanup takes 700 ms; no forced
 termination occurs. Raw SHA-256:
 `f2684bcf11bb5f2dc650a51255149e720de08ceac28e0ed773854643efc02ba0`.

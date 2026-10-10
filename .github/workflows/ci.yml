@@ -484,7 +484,7 @@ jobs:
         run: |
           mkdir -p qa-artifacts
           cat > qa-artifacts/cctv-lifecycle.json <<'JSON'
-          {"schema":"gev-cctv-lifecycle/v1","status":"not-run","scope":"short hosted software-rendered ownership diagnostic, not a hardware or heap-soak acceptance result","cases":[],"error":"Lifecycle runner did not complete."}
+          {"schema":"gev-cctv-lifecycle/v2","status":"not-run","scope":"short hosted software-rendered ownership diagnostic, not a hardware or heap-soak acceptance result","cases":[],"error":"Lifecycle runner did not complete."}
           JSON
       - name: Install locked dependencies and fixture browser
         run: |

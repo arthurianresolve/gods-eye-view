@@ -7,17 +7,23 @@ import {
   assertCctvCheckpoint,
   assertCctvCameraPose,
   assertCctvCycleReuse,
+  assertCctvRapidGeometryRevision,
+  createCctvGeometryWorkerBoundaryInstaller,
   cctvLifecycleShareHash,
   cctvTaskErrorSignature,
   configureCctvLifecycleSceneInPage,
   createCctvLifecycleFixture,
   parseCctvLifecycleArgs,
   readCctvLifecycleCheckpointInPage,
+  installCctvGeometryWorkerBoundaryInPage,
   reinitializeDisabledCctvModuleInPage,
+  readCctvGeometryEvidenceInPage,
   setCctvLifecycleEnabledInPage,
+  summarizeCctvGeometryEvidence,
   validateCctvLifecycleReport,
   waitForCctvLifecycleRenderInPage,
 } from './cctvLifecycle.mjs';
+import { installWorkerDiagnostics } from './workerDiagnostics.mjs';
 import {
   captureCctvFixtureResponse,
   runCctvLifecycle,
@@ -117,13 +123,186 @@ function validCheckpoint(enabled, probeError = false) {
   };
 }
 
+function validRapidGeometryRevision(applicationCommit = 'a'.repeat(40)) {
+  const cameraId = createCctvLifecycleFixture().cameraId;
+  const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
+    (role) => `cctv-${cameraId}-${role}`,
+  );
+  const makeSample = (
+    rangeScale,
+    geometryFill,
+    pngFill,
+    expectedVisible = true,
+  ) => ({
+    cameraCommit: applicationCommit,
+    camera: {
+      id: cameraId,
+      rangeM: 800 * rangeScale,
+      calibration: { rangeScale },
+    },
+    frameNumber: 12,
+    canvas: {
+      width: 1440,
+      height: 1000,
+      cssWidth: 1440,
+      cssHeight: 1000,
+    },
+    entityCount: 5,
+    expectedVisible,
+    visibleEntityCount: expectedVisible ? 5 : 0,
+    geometrySha256: geometryFill.repeat(64),
+    styleSha256: 'c'.repeat(64),
+    pngSha256: pngFill.repeat(64),
+    pngBytes: 2048,
+    pickCount: 5,
+    pickedEntityIds: expectedVisible ? ids : Array(5).fill(null),
+    matchingPickCount: expectedVisible ? 5 : 0,
+  });
+  const controlA = makeSample(0.82, 'a', 'd');
+  const referenceB = makeSample(1.12, 'b', 'e');
+  const disabledReferenceB = makeSample(1.12, 'f', '7', false);
+  const checkpointEnabled = validCheckpoint(true, true);
+  const checkpointDisabled = validCheckpoint(false, true);
+  const checkpointDisabledHeld = structuredClone(checkpointDisabled);
+  checkpointDisabledHeld.render.elapsedMs = 6;
+  checkpointDisabledHeld.boundaryRender = { frameNumber: 21, elapsedMs: 6 };
+  checkpointDisabledHeld.worker.pending = 1;
+  checkpointDisabledHeld.worker.workers[1].pending = 1;
+  checkpointDisabledHeld.worker.workers[1].completed--;
+  const workerAtHold = {
+    instrumented: true,
+    overflow: false,
+    pending: 1,
+    workers: [
+      {
+        kind: 'heightmap.js',
+        submitted: 0,
+        completed: 0,
+        cancelled: 0,
+        pending: 0,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        terminated: false,
+      },
+      {
+        kind: 'createGeometry.js',
+        submitted: 1,
+        completed: 0,
+        cancelled: 0,
+        pending: 1,
+        taskErrors: 0,
+        workerErrors: 0,
+        postErrors: 0,
+        terminated: false,
+      },
+    ],
+  };
+  return {
+    status: 'passed',
+    scope: 'held-worker-result; no worker-compute overlap claimed',
+    applicationCommit,
+    canvas: structuredClone(controlA.canvas),
+    revisionA: { calibration: { rangeScale: 0.82 }, rangeM: 656 },
+    revisionB: { calibration: { rangeScale: 1.12 }, rangeM: 896 },
+    boundary: {
+      enabledRelease: {
+        arm: { status: 'armed', armedAtMs: 1 },
+        held: {
+          status: 'held',
+          armedAtMs: 1,
+          heldAtMs: 2,
+          taskId: 91,
+          workerKind: 'createGeometry.js',
+          workerOrdinal: 1,
+          submittedAtArm: 3,
+          workerSubmittedAfterArm: 1,
+          pendingAtHold: 1,
+          overflow: false,
+          workerAtHold: structuredClone(workerAtHold),
+        },
+        whileRevisionB: {
+          status: 'held',
+          taskId: 91,
+          workerSubmissionsWhileHeld: 1,
+          workerOrdinal: 1,
+          workerKind: 'createGeometry.js',
+          overflow: false,
+          workerAtHold: structuredClone(workerAtHold),
+        },
+        released: { status: 'released', taskId: 91, releasedAtMs: 4 },
+      },
+      disabledRelease: {
+        arm: { status: 'armed', armedAtMs: 5 },
+        held: {
+          status: 'held',
+          armedAtMs: 5,
+          heldAtMs: 6,
+          taskId: 92,
+          workerKind: 'createGeometry.js',
+          workerOrdinal: 1,
+          submittedAtArm: 3,
+          workerSubmittedAfterArm: 1,
+          pendingAtHold: 1,
+          overflow: false,
+          workerAtHold: structuredClone(workerAtHold),
+        },
+        whileRevisionB: {
+          status: 'held',
+          taskId: 92,
+          workerSubmissionsWhileHeld: 1,
+          workerOrdinal: 1,
+          workerKind: 'createGeometry.js',
+          overflow: false,
+          workerAtHold: structuredClone(workerAtHold),
+        },
+        disabledBeforeRelease: checkpointDisabledHeld,
+        disabledAtElapsedMs: checkpointDisabledHeld.render.elapsedMs,
+        released: { status: 'released', taskId: 92, releasedAtMs: 7 },
+      },
+      final: {
+        status: 'released',
+        releasedAtMs: 8,
+        taskId: 92,
+        disposed: true,
+        boundaryDisabled: true,
+        listenersReleased: true,
+        heldPayloadReleased: true,
+        listenerCleanupErrors: 0,
+        releaseError: null,
+        diagnosticWorkerConstructorRetained: true,
+        nativeWorkerConstructorRestored: false,
+        disposedWithHeldResult: false,
+      },
+    },
+    samples: {
+      controlA,
+      referenceB,
+      afterRelease: structuredClone(referenceB),
+      afterReenable: structuredClone(referenceB),
+      disabledReferenceB,
+      disabledWithHeldResult: structuredClone(disabledReferenceB),
+      disabledAfterRelease: structuredClone(disabledReferenceB),
+    },
+    checkpoints: {
+      settledAfterRelease: structuredClone(checkpointEnabled),
+      disabledWithHeldResult: checkpointDisabledHeld,
+      disabledReferenceB: structuredClone(checkpointDisabled),
+      disabledAfterRace: structuredClone(checkpointDisabled),
+      settledAfterDisableRelease: structuredClone(checkpointDisabled),
+      reenabledAfterRace: structuredClone(checkpointEnabled),
+      finalDisabled: structuredClone(checkpointDisabled),
+    },
+  };
+}
+
 function validReport(cycles = 5) {
   const fixture = createCctvLifecycleFixture();
   const enabled = validCheckpoint(true, true);
   const disabled = validCheckpoint(false, true);
   const direct = structuredClone(disabled);
   return {
-    schema: 'gev-cctv-lifecycle/v1',
+    schema: 'gev-cctv-lifecycle/v2',
     status: 'passed',
     validationStatus: 'passed',
     applicationCommit: 'a'.repeat(40),
@@ -217,6 +396,7 @@ function validReport(cycles = 5) {
       rewarmedEnabled: structuredClone(enabled),
       checkpoint: direct,
     },
+    rapidGeometryRevision: validRapidGeometryRevision(),
     fixtureDelivery: {
       id: fixture.id,
       sha256: fixture.sha256,
@@ -251,6 +431,290 @@ function validReport(cycles = 5) {
     error: null,
   };
 }
+
+test('serialized CCTV worker boundary holds the exact submitted geometry result and restores diagnostics', () => {
+  let now = 10;
+  class FakeWorker extends EventTarget {
+    constructor(url) {
+      super();
+      this.url = url;
+      this.removedListeners = 0;
+    }
+    postMessage() {}
+    terminate() {}
+    removeEventListener(...args) {
+      this.removedListeners++;
+      return super.removeEventListener(...args);
+    }
+  }
+  const scope = {
+    Worker: FakeWorker,
+    MessageEvent,
+    performance: { now: () => now },
+  };
+  const installer = createCctvGeometryWorkerBoundaryInstaller(
+    installWorkerDiagnostics,
+  );
+  vm.runInNewContext(`(${installer.toString()})()`, { window: scope });
+  const boundary = scope.__qaCctvGeometryBoundary;
+  const other = new scope.Worker('/workers/heightmap.js');
+  const geometry = new scope.Worker('/workers/createGeometry.js');
+  const diagnosticPostMessage = geometry.postMessage;
+  assert.equal(boundary.arm().status, 'armed');
+  other.postMessage({ id: 7 });
+  other.dispatchEvent(new MessageEvent('message', { data: { id: 7 } }));
+  const payload = { id: 91, error: 'fixture task error payload' };
+  geometry.postMessage(payload);
+  now = 12;
+  geometry.dispatchEvent(new MessageEvent('message', { data: payload }));
+  const held = boundary.snapshot();
+  assert.equal(held.status, 'held');
+  assert.equal(held.workerKind, 'createGeometry.js');
+  assert.equal(held.workerOrdinal, 1);
+  assert.equal(held.taskId, 91);
+  assert.equal(held.pendingAtHold, 1);
+  assert.equal(held.workerSubmittedAfterArm, 1);
+  assert.equal(Object.hasOwn(held, 'data'), false);
+  assert.equal(boundary.held.data, payload);
+  assert.equal(boundary.release(), true);
+  const afterRelease = scope.__gevSoakWorkers.snapshot();
+  assert.equal(afterRelease.pending, 0);
+  assert.equal(
+    afterRelease.workers.find((worker) => worker.kind === 'createGeometry.js')
+      .taskErrors,
+    1,
+  );
+  const final = boundary.dispose();
+  assert.equal(final.status, 'released');
+  assert.equal(final.boundaryDisabled, true);
+  assert.equal(final.listenersReleased, true);
+  assert.equal(final.heldPayloadReleased, true);
+  assert.equal(final.diagnosticWorkerConstructorRetained, true);
+  assert.equal(final.nativeWorkerConstructorRestored, false);
+  assert.equal(scope.__qaCctvGeometryBoundary, null);
+  assert.notEqual(geometry.postMessage, diagnosticPostMessage);
+  geometry.postMessage({ id: 92 });
+  geometry.dispatchEvent(new MessageEvent('message', { data: { id: 92 } }));
+  assert.equal(scope.__gevSoakWorkers.snapshot().pending, 0);
+  assert.equal(Object.hasOwn(geometry, '__cctvSubmittedAfterArm'), false);
+  assert.equal(geometry.removedListeners, 1);
+  assert.equal(final.disposedWithHeldResult, false);
+  assert.equal(boundary.release(), false);
+  boundary.dispose();
+  assert.equal(geometry.removedListeners, 1);
+});
+
+test('CCTV worker boundary rejects a result from a different worker/task and cleans up', () => {
+  let now = 4;
+  class FakeWorker extends EventTarget {
+    constructor(url) {
+      super();
+      this.url = url;
+    }
+    postMessage() {}
+    terminate() {}
+  }
+  const scope = {
+    Worker: FakeWorker,
+    MessageEvent,
+    performance: { now: () => now },
+  };
+  installCctvGeometryWorkerBoundaryInPage(scope, installWorkerDiagnostics);
+  const owner = new scope.Worker('/workers/createGeometry.js');
+  const wrong = new scope.Worker('/workers/createGeometry.js');
+  const gate = scope.__qaCctvGeometryBoundary;
+  gate.arm();
+  owner.postMessage({ id: 301 });
+  now = 5;
+  wrong.dispatchEvent(new MessageEvent('message', { data: { id: 301 } }));
+  assert.equal(gate.snapshot().status, 'armed');
+  assert.equal(gate.snapshot().taskId, null);
+  assert.equal(gate.snapshot().overflow, true);
+  owner.terminate();
+  const final = gate.dispose();
+  assert.equal(final.listenersReleased, true);
+  assert.equal(final.heldPayloadReleased, true);
+  assert.equal(scope.__qaCctvGeometryBoundary, null);
+  assert.equal(scope.__gevSoakWorkers.snapshot().pending, 0);
+});
+
+test('CCTV worker boundary installation rollback preserves the original error and releases partial ownership', () => {
+  class FakeWorker extends EventTarget {
+    constructor() {
+      super();
+      this.removed = 0;
+    }
+    postMessage() {}
+    removeEventListener(...args) {
+      this.removed++;
+      return super.removeEventListener(...args);
+    }
+  }
+  let created;
+  const scope = {
+    Worker: FakeWorker,
+    MessageEvent,
+    performance: { now: () => 1 },
+  };
+  const originalError = new Error('diagnostics install failed');
+  assert.throws(
+    () =>
+      installCctvGeometryWorkerBoundaryInPage(scope, (target) => {
+        created = new target.Worker('/workers/createGeometry.js');
+        created.postMessage = () => {};
+        throw originalError;
+      }),
+    (error) => error === originalError,
+  );
+  assert.equal(scope.Worker, FakeWorker);
+  assert.equal(Object.hasOwn(created, '__cctvSubmittedAfterArm'), false);
+  assert.equal(Object.hasOwn(created, '__cctvWorkerKind'), false);
+  assert.equal(scope.__qaCctvGeometryBoundary, undefined);
+  assert.equal(created.removed, 1);
+});
+
+test('CCTV worker boundary reports incomplete native listener cleanup instead of passing', () => {
+  class FakeWorker extends EventTarget {
+    postMessage() {}
+    removeEventListener() {
+      throw new Error('listener removal failed');
+    }
+  }
+  const scope = {
+    Worker: FakeWorker,
+    MessageEvent,
+    performance: { now: () => 1 },
+  };
+  installCctvGeometryWorkerBoundaryInPage(scope, installWorkerDiagnostics);
+  new scope.Worker('/workers/createGeometry.js');
+  const final = scope.__qaCctvGeometryBoundary.dispose();
+  assert.equal(final.boundaryDisabled, true);
+  assert.equal(final.listenersReleased, false);
+  assert.ok(final.listenerCleanupErrors > 0);
+  assert.equal(final.diagnosticWorkerConstructorRetained, true);
+  assert.equal(final.nativeWorkerConstructorRestored, false);
+  assert.equal(scope.__qaCctvGeometryBoundary, null);
+});
+
+test('CCTV geometry evidence captures pixels and picks inside a fresh postRender and releases its listener', async () => {
+  const fixture = createCctvLifecycleFixture();
+  const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
+    (role) => `cctv-${fixture.cameraId}-${role}`,
+  );
+  const listeners = new Set();
+  const scene = {
+    frameState: { frameNumber: 20 },
+    postRender: {
+      addEventListener(listener) {
+        listeners.add(listener);
+      },
+      removeEventListener(listener) {
+        listeners.delete(listener);
+      },
+    },
+    requestRender() {
+      scene.frameState.frameNumber++;
+      for (const listener of [...listeners]) listener();
+    },
+    cartesianToCanvasCoordinates(position) {
+      return { x: position.x, y: 2 };
+    },
+    pick(position) {
+      return {
+        id: { id: ids[Math.max(0, Math.min(4, Math.round(position.x) - 1))] },
+      };
+    },
+    canvas: {
+      width: 1440,
+      height: 1000,
+      getBoundingClientRect: () => ({ width: 1440, height: 1000 }),
+      toDataURL: () => `data:image/png;base64,${fixture.framePngBase64}`,
+    },
+  };
+  const entities = new Map(
+    ids.map((id, index) => [
+      id,
+      {
+        id,
+        show: true,
+        polyline: {
+          show: { getValue: () => true },
+          width: { getValue: () => 2 },
+          positions: {
+            getValue: () => [
+              { x: index, y: 0, z: 0 },
+              { x: index + 1, y: 0, z: 0 },
+            ],
+          },
+          material: {
+            color: {
+              getValue: () => ({ toCssColorString: () => 'rgba(1,2,3,1)' }),
+            },
+          },
+        },
+      },
+    ]),
+  );
+  const camera = {
+    id: fixture.cameraId,
+    lat: 30,
+    lon: -97,
+    headingDeg: 0,
+    pitchDeg: -20,
+    fovDeg: 60,
+    rangeM: 800,
+    mountHeightM: 10,
+    calibration: { rangeScale: 1 },
+  };
+  const context = vm.createContext({
+    window: {
+      Cesium: {
+        Cartesian3: class Cartesian3 {
+          constructor(x, y, z) {
+            Object.assign(this, { x, y, z });
+          }
+        },
+        JulianDate: { now: () => ({}) },
+      },
+      __godsEyeView: {
+        viewer: { scene, entities: { getById: (id) => entities.get(id) } },
+        dataManager: {
+          layers: new Map([
+            ['cctv', { module: { getUIState: () => ({ cameras: [camera] }) } }],
+          ]),
+        },
+      },
+    },
+    setTimeout,
+    clearTimeout,
+    performance: { now: () => 1 },
+  });
+  const evidence = await vm.runInContext(
+    `(${readCctvGeometryEvidenceInPage.toString()})(${JSON.stringify(fixture.cameraId)})`,
+    context,
+  );
+  const summary = summarizeCctvGeometryEvidence(evidence);
+  assert.equal(evidence.frameNumber, 21);
+  assert.equal(summary.entityCount, 5);
+  assert.equal(summary.matchingPickCount, 5);
+  assert.equal(summary.pngBytes > 32, true);
+  assert.equal(listeners.size, 0);
+  const failedScene = {
+    ...scene,
+    requestRender: () => {
+      throw new Error('render failed');
+    },
+  };
+  context.window.__godsEyeView.viewer.scene = failedScene;
+  await assert.rejects(
+    vm.runInContext(
+      `(${readCctvGeometryEvidenceInPage.toString()})(${JSON.stringify(fixture.cameraId)})`,
+      context,
+    ),
+    /render failed/,
+  );
+  assert.equal(listeners.size, 0);
+});
 
 test('CCTV lifecycle args constrain cycles, drain deadline and origin URL', () => {
   assert.deepEqual(
@@ -606,6 +1070,14 @@ test('CCTV lifecycle report validates five exact toggles, scene resources and di
       .status,
     'passed',
   );
+  const legacyV1 = structuredClone(report);
+  legacyV1.schema = 'gev-cctv-lifecycle/v1';
+  delete legacyV1.rapidGeometryRevision;
+  assert.equal(
+    validateCctvLifecycleReport(legacyV1, { fixtureSha256: fixture.sha256 })
+      .status,
+    'passed',
+  );
   const missingCycle = structuredClone(report);
   missingCycle.cycles.pop();
   assert.throws(
@@ -704,6 +1176,74 @@ test('CCTV lifecycle report validates five exact toggles, scene resources and di
         fixtureSha256: fixture.sha256,
       }),
     /stable one-second/,
+  );
+  const wrongWorker = structuredClone(report);
+  wrongWorker.rapidGeometryRevision.boundary.enabledRelease.held.workerKind =
+    'heightmap.js';
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(wrongWorker, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /worker identity/,
+  );
+  const wrongTask = structuredClone(report);
+  wrongTask.rapidGeometryRevision.boundary.disabledRelease.whileRevisionB
+    .taskId++;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(wrongTask, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /release ordering/,
+  );
+  const noBSubmission = structuredClone(report);
+  noBSubmission.rapidGeometryRevision.boundary.enabledRelease.whileRevisionB.workerSubmissionsWhileHeld = 0;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(noBSubmission, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /release ordering/,
+  );
+  const releasedBeforeDisable = structuredClone(report);
+  releasedBeforeDisable.rapidGeometryRevision.checkpoints.disabledWithHeldResult.worker.pending = 0;
+  releasedBeforeDisable.rapidGeometryRevision.checkpoints.disabledWithHeldResult.worker.workers[1].pending = 0;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(releasedBeforeDisable, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /worker boundary/,
+  );
+  const changedPickedId = structuredClone(report);
+  changedPickedId.rapidGeometryRevision.samples.afterReenable.pickedEntityIds[0] =
+    changedPickedId.rapidGeometryRevision.samples.referenceB.pickedEntityIds[1];
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(changedPickedId, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /pick identities/,
+  );
+  const disabledResurrection = structuredClone(report);
+  disabledResurrection.rapidGeometryRevision.samples.disabledAfterRelease.pngSha256 =
+    '9'.repeat(64);
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(disabledResurrection, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /resurrected/,
+  );
+  const noCleanup = structuredClone(report);
+  noCleanup.rapidGeometryRevision.boundary.final.listenersReleased = false;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(noCleanup, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /worker boundary/,
   );
 });
 
@@ -967,6 +1507,15 @@ function createCctvRunnerDependencies({
     installLifecycleRenderWaiter: () => {},
     installLifecycleDrainObserver: () => {},
     installLifecycleSceneReadinessObserver: () => {},
+    runRapidGeometryRevision: async (_page, report) => {
+      order.push('rapid-geometry-revision');
+      const revision = validRapidGeometryRevision(report.applicationCommit);
+      assertCctvRapidGeometryRevision(revision, {
+        expectedTaskErrors: report.workerPreflight.expectedTaskErrorWorkers,
+        warmup: report.warmup,
+      });
+      return revision;
+    },
     waitForLifecycleSceneReadiness: async () => {
       order.push('scene-ready');
       return { status: 'ready', elapsedMs: 1 };

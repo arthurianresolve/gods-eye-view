@@ -357,6 +357,934 @@ export async function setCctvLifecycleEnabledInPage(enabled) {
   return true;
 }
 
+/**
+ * Fixture-only boundary for one real Cesium createGeometry worker response.
+ * The native worker computes and posts the untouched result; the boundary
+ * pauses delivery on the main thread before worker diagnostics and Cesium's
+ * normal response handler, then re-dispatches that same data after revision B
+ * has been applied. No worker is terminated and no result payload is changed.
+ * @param {Window} scope Browser window.
+ * @param {(scope: Window) => void} installDiagnostics Existing worker observer.
+ */
+export function installCctvGeometryWorkerBoundaryInPage(
+  scope,
+  installDiagnostics,
+) {
+  if (!scope || typeof installDiagnostics !== 'function')
+    throw new TypeError('CCTV geometry boundary installer is unavailable.');
+  const NativeWorker = scope.Worker;
+  if (typeof NativeWorker !== 'function')
+    throw new Error('Native Worker is unavailable for the CCTV fixture.');
+
+  const listeners = [];
+  let instrumentedWorker = null;
+  let disposed = false;
+  const gate = {
+    status: 'installed',
+    armedAtMs: null,
+    heldAtMs: null,
+    releasedAtMs: null,
+    taskId: null,
+    workerKind: null,
+    workerOrdinal: null,
+    workerSubmittedAfterArm: null,
+    workerSubmissionsWhileHeld: 0,
+    pendingAtHold: null,
+    submittedAtArm: null,
+    held: null,
+    overflow: false,
+    boundaryDisabled: false,
+    nativeWorkerConstructorRestored: false,
+    diagnosticWorkerConstructorRetained: false,
+    listenersReleased: false,
+    heldPayloadReleased: false,
+    releaseError: null,
+    listenerCleanupErrors: 0,
+    arm() {
+      if (disposed || !['installed', 'released'].includes(this.status))
+        throw new Error('CCTV geometry boundary cannot be armed.');
+      const current = scope.__gevSoakWorkers?.snapshot?.();
+      if (
+        !current ||
+        current.instrumented !== true ||
+        current.overflow !== false ||
+        current.pending !== 0 ||
+        !Array.isArray(current.workers) ||
+        current.workers.length > 64 ||
+        current.workers.some((worker) =>
+          [
+            worker.submitted,
+            worker.completed,
+            worker.cancelled,
+            worker.pending,
+            worker.taskErrors,
+            worker.workerErrors,
+            worker.postErrors,
+          ].some((value) => !Number.isSafeInteger(value) || value < 0),
+        )
+      )
+        throw new Error('CCTV geometry boundary requires settled workers.');
+      for (const { worker } of listeners)
+        worker.__cctvSubmittedAfterArm?.clear?.();
+      this.heldAtMs = null;
+      this.releasedAtMs = null;
+      this.taskId = null;
+      this.workerKind = null;
+      this.workerOrdinal = null;
+      this.workerSubmittedAfterArm = null;
+      this.workerSubmissionsWhileHeld = 0;
+      this.pendingAtHold = null;
+      this.held = null;
+      this.overflow = false;
+      this.submittedAtArm = current.workers
+        .filter((worker) => worker.kind === 'createGeometry.js')
+        .reduce((sum, worker) => sum + worker.submitted, 0);
+      this.armedAtMs = scope.performance.now();
+      this.status = 'armed';
+      return this.snapshot();
+    },
+    snapshot() {
+      return {
+        status: this.status,
+        armedAtMs: this.armedAtMs,
+        heldAtMs: this.heldAtMs,
+        releasedAtMs: this.releasedAtMs,
+        taskId: this.taskId,
+        workerKind: this.workerKind,
+        workerOrdinal: this.workerOrdinal,
+        workerSubmittedAfterArm: this.workerSubmittedAfterArm,
+        workerSubmissionsWhileHeld: this.workerSubmissionsWhileHeld,
+        pendingAtHold: this.pendingAtHold,
+        submittedAtArm: this.submittedAtArm,
+        overflow: this.overflow,
+        disposed,
+        boundaryDisabled: this.boundaryDisabled,
+        nativeWorkerConstructorRestored: this.nativeWorkerConstructorRestored,
+        diagnosticWorkerConstructorRetained:
+          this.diagnosticWorkerConstructorRetained,
+        listenersReleased: this.listenersReleased,
+        heldPayloadReleased: this.heldPayloadReleased,
+        disposedWithHeldResult: this.disposedWithHeldResult ?? false,
+        releaseError: this.releaseError,
+        listenerCleanupErrors: this.listenerCleanupErrors,
+      };
+    },
+    release() {
+      if (!this.held) return false;
+      const held = this.held;
+      this.held = null;
+      this.releasedAtMs = scope.performance.now();
+      this.status = 'released';
+      // Reuse the worker's exact structured-clone result object. This event
+      // only resumes ordinary main-thread delivery after revision B is set.
+      try {
+        const event = new scope.MessageEvent('message', {
+          data: held.data,
+          origin: held.origin,
+          lastEventId: held.lastEventId,
+          ports: held.ports,
+        });
+        held.worker.dispatchEvent(event);
+      } catch (error) {
+        this.releaseError = String(error?.message || error).slice(0, 160);
+        throw error;
+      } finally {
+        held.worker.__cctvSubmittedAfterArm?.delete?.(held.taskId);
+      }
+      return true;
+    },
+    dispose() {
+      if (disposed) return this.snapshot();
+      let releasedOnDispose = false;
+      try {
+        releasedOnDispose = this.release();
+      } catch {}
+      const cleanupRows = listeners.splice(0);
+      for (const { worker, listener, diagnosticPostMessage } of cleanupRows) {
+        try {
+          worker.removeEventListener('message', listener);
+        } catch {
+          this.listenerCleanupErrors = Math.min(
+            64,
+            this.listenerCleanupErrors + 1,
+          );
+        }
+        try {
+          worker.__cctvSubmittedAfterArm?.clear?.();
+          delete worker.__cctvSubmittedAfterArm;
+          delete worker.__cctvWorkerKind;
+          delete worker.__cctvPostMessage;
+          if (typeof diagnosticPostMessage === 'function')
+            Object.defineProperty(worker, 'postMessage', {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: diagnosticPostMessage,
+            });
+        } catch {
+          this.listenerCleanupErrors = Math.min(
+            64,
+            this.listenerCleanupErrors + 1,
+          );
+        }
+      }
+      if (this.status === 'held') this.status = 'disposed';
+      else if (releasedOnDispose) this.status = 'released-during-dispose';
+      else if (this.status === 'installed' || this.status === 'armed')
+        this.status = 'disposed';
+      this.nativeWorkerConstructorRestored = scope.Worker === NativeWorker;
+      this.diagnosticWorkerConstructorRetained =
+        !!instrumentedWorker && scope.Worker === instrumentedWorker;
+      this.boundaryDisabled = true;
+      this.listenersReleased = this.listenerCleanupErrors === 0;
+      this.heldPayloadReleased = this.held === null;
+      scope.__qaCctvGeometryBoundary = null;
+      disposed = true;
+      this.disposedWithHeldResult = releasedOnDispose;
+      return this.snapshot();
+    },
+  };
+
+  class CctvBoundaryWorker extends NativeWorker {
+    constructor(url, options) {
+      super(url, options);
+      if (disposed) return;
+      if (listeners.length >= 64) {
+        gate.overflow = true;
+        return;
+      }
+      const name = String(url).split(/[?#]/)[0].split('/').at(-1);
+      const workerOrdinal = listeners.length;
+      this.__cctvWorkerKind = name;
+      this.__cctvSubmittedAfterArm = new Set();
+      const listener = (event) => {
+        if (
+          gate.status !== 'armed' ||
+          gate.held ||
+          name !== 'createGeometry.js'
+        )
+          return;
+        if (
+          !Number.isSafeInteger(event.data?.id) ||
+          !this.__cctvSubmittedAfterArm.has(event.data.id)
+        ) {
+          gate.overflow = true;
+          return;
+        }
+        const current = scope.__gevSoakWorkers?.snapshot?.();
+        if (
+          current?.overflow !== false ||
+          !Number.isSafeInteger(current?.pending) ||
+          current.pending < 1
+        ) {
+          gate.overflow = true;
+          return;
+        }
+        gate.held = {
+          worker: this,
+          data: event.data,
+          taskId: event.data.id,
+          origin: event.origin,
+          lastEventId: event.lastEventId,
+          ports: event.ports,
+        };
+        gate.status = 'held';
+        gate.heldAtMs = scope.performance.now();
+        gate.taskId = event.data.id;
+        gate.workerKind = name;
+        gate.workerOrdinal = workerOrdinal;
+        gate.pendingAtHold = current.pending;
+        gate.workerSubmittedAfterArm = this.__cctvSubmittedAfterArm.size;
+        event.stopImmediatePropagation();
+      };
+      this.addEventListener('message', listener);
+      listeners.push({ worker: this, listener, diagnosticPostMessage: null });
+    }
+
+    get postMessage() {
+      return this.__cctvPostMessage || NativeWorker.prototype.postMessage;
+    }
+
+    set postMessage(diagnosticPostMessage) {
+      const row = listeners.find((entry) => entry.worker === this);
+      if (row) row.diagnosticPostMessage = diagnosticPostMessage;
+      this.__cctvPostMessage = function (...args) {
+        const taskId = args[0]?.id;
+        if (
+          gate.status === 'armed' &&
+          this.__cctvWorkerKind === 'createGeometry.js' &&
+          Number.isSafeInteger(taskId)
+        ) {
+          if (this.__cctvSubmittedAfterArm.size >= 1024) {
+            gate.overflow = true;
+          } else {
+            this.__cctvSubmittedAfterArm.add(taskId);
+          }
+        } else if (
+          gate.status === 'held' &&
+          this.__cctvWorkerKind === 'createGeometry.js' &&
+          Number.isSafeInteger(taskId)
+        ) {
+          gate.workerSubmissionsWhileHeld = Math.min(
+            1024,
+            gate.workerSubmissionsWhileHeld + 1,
+          );
+        }
+        return diagnosticPostMessage.apply(this, args);
+      };
+    }
+  }
+
+  try {
+    scope.Worker = CctvBoundaryWorker;
+    installDiagnostics(scope);
+    instrumentedWorker = scope.Worker;
+    scope.__qaCctvGeometryBoundary = gate;
+  } catch (error) {
+    scope.Worker = NativeWorker;
+    for (const { worker, listener, diagnosticPostMessage } of listeners) {
+      try {
+        worker.removeEventListener('message', listener);
+      } catch {}
+      try {
+        delete worker.__cctvSubmittedAfterArm;
+        delete worker.__cctvWorkerKind;
+        delete worker.__cctvPostMessage;
+        if (typeof diagnosticPostMessage === 'function')
+          Object.defineProperty(worker, 'postMessage', {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: diagnosticPostMessage,
+          });
+      } catch {}
+    }
+    throw error;
+  }
+  return gate.snapshot();
+}
+
+/** Build a self-contained callback for Puppeteer's evaluateOnNewDocument. */
+export function createCctvGeometryWorkerBoundaryInstaller(installDiagnostics) {
+  if (typeof installDiagnostics !== 'function')
+    throw new TypeError('Worker diagnostics installer is unavailable.');
+  const source = `return function installCctvWorkerBoundaryAndDiagnostics() {
+    const installDiagnostics = (${installDiagnostics.toString()});
+    (${installCctvGeometryWorkerBoundaryInPage.toString()})(window, installDiagnostics);
+  };`;
+  return new Function(source)();
+}
+
+/** Read only the bounded test gate and public aggregate worker counters. */
+export function readCctvGeometryWorkerBoundaryInPage() {
+  const boundary = window.__qaCctvGeometryBoundary;
+  const workerDiagnostics = window.__gevSoakWorkers?.snapshot?.();
+  if (!boundary || !workerDiagnostics)
+    throw new Error('CCTV geometry worker boundary is unavailable.');
+  return {
+    boundary: boundary.snapshot(),
+    worker: workerDiagnostics,
+  };
+}
+
+/** Apply one public calibration patch without reaching into layer internals. */
+export function applyCctvLifecycleCalibrationInPage({ cameraId, patch }) {
+  const module = window.__godsEyeView?.dataManager?.layers?.get('cctv')?.module;
+  if (!module?.setParams || typeof cameraId !== 'string' || !patch)
+    throw new Error('CCTV calibration fixture API is unavailable.');
+  module.setParams({ calibration: { cameraId, patch } });
+  const camera = module
+    .getUIState?.()
+    ?.cameras?.find((item) => item.id === cameraId);
+  if (!camera) throw new Error('CCTV calibration fixture camera is missing.');
+  return {
+    rangeM: camera.rangeM,
+    calibration: camera.calibration,
+    groundPriorM: camera.groundPriorM,
+  };
+}
+
+/** Capture actual public Entity positions and canvas pixels for race comparison. */
+export async function readCctvGeometryEvidenceInPage(
+  cameraId,
+  expectedVisible = true,
+) {
+  const timeoutMs = 5000;
+  const debug = window.__godsEyeView;
+  const viewer = debug?.viewer;
+  const module = debug?.dataManager?.layers?.get('cctv')?.module;
+  const camera = module
+    ?.getUIState?.()
+    ?.cameras?.find((item) => item.id === cameraId);
+  if (!viewer?.scene || !camera)
+    throw new Error('CCTV geometry evidence owner is unavailable.');
+  const scene = viewer.scene;
+  let listener;
+  let timer;
+  try {
+    return await new Promise((resolve, reject) => {
+      listener = () => {
+        try {
+          const roles = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'];
+          const entities = roles.map((role) => {
+            const entity = viewer.entities.getById(`cctv-${cameraId}-${role}`);
+            const value = entity?.polyline?.positions?.getValue?.(
+              window.Cesium?.JulianDate?.now?.(),
+            );
+            if (!entity || !Array.isArray(value) || value.length < 2)
+              throw new Error(`CCTV ${role} Entity positions are unavailable.`);
+            return {
+              id: entity.id,
+              show:
+                entity.show !== false &&
+                entity.polyline.show?.getValue?.() !== false,
+              width: entity.polyline.width?.getValue?.() ?? null,
+              material:
+                entity.polyline.material?.color
+                  ?.getValue?.()
+                  ?.toCssColorString?.() || null,
+              positions: value.map(({ x, y, z }) => [x, y, z]),
+            };
+          });
+          const canvas = scene.canvas;
+          const rect = canvas.getBoundingClientRect();
+          const picks = entities.map((entity) => {
+            const points = entity.positions;
+            const middle = points[Math.floor(points.length / 2)];
+            const world = new window.Cesium.Cartesian3(...middle);
+            const position = scene.cartesianToCanvasCoordinates(world);
+            if (
+              !position ||
+              !Number.isFinite(position.x) ||
+              !Number.isFinite(position.y)
+            )
+              return { entityId: entity.id, pickedEntityId: null };
+            const picked = scene.pick(position);
+            const pickedId = picked?.id?.id ?? picked?.id ?? null;
+            return {
+              entityId: entity.id,
+              pickedEntityId: typeof pickedId === 'string' ? pickedId : null,
+            };
+          });
+          resolve({
+            expectedVisible,
+            camera: {
+              id: camera.id,
+              lat: camera.lat,
+              lon: camera.lon,
+              headingDeg: camera.headingDeg,
+              pitchDeg: camera.pitchDeg,
+              fovDeg: camera.fovDeg,
+              rangeM: camera.rangeM,
+              mountHeightM: camera.mountHeightM,
+              calibration: camera.calibration,
+            },
+            frameNumber: Number.isSafeInteger(scene.frameState?.frameNumber)
+              ? scene.frameState.frameNumber
+              : null,
+            canvas: {
+              width: canvas.width,
+              height: canvas.height,
+              cssWidth: rect.width,
+              cssHeight: rect.height,
+              png: canvas.toDataURL('image/png'),
+            },
+            entities,
+            picks,
+          });
+        } catch (error) {
+          reject(error);
+        }
+      };
+      scene.postRender.addEventListener(listener);
+      timer = setTimeout(
+        () =>
+          reject(new Error('CCTV fresh geometry capture deadline exceeded.')),
+        timeoutMs,
+      );
+      scene.requestRender();
+    });
+  } finally {
+    clearTimeout(timer);
+    if (listener) scene.postRender.removeEventListener(listener);
+  }
+}
+
+/** Reduce a fresh-render sample to bounded pixel, geometry and pick evidence. */
+export function summarizeCctvGeometryEvidence(evidence) {
+  const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
+    (role) => `cctv-${FIXTURE_CAMERA_ID}-${role}`,
+  );
+  if (
+    evidence?.camera?.id !== FIXTURE_CAMERA_ID ||
+    typeof evidence.expectedVisible !== 'boolean' ||
+    !Number.isSafeInteger(evidence.frameNumber) ||
+    evidence.frameNumber < 1 ||
+    !Number.isSafeInteger(evidence.canvas?.width) ||
+    evidence.canvas.width < 1 ||
+    !Number.isSafeInteger(evidence.canvas?.height) ||
+    evidence.canvas.height < 1 ||
+    !Number.isFinite(evidence.canvas?.cssWidth) ||
+    evidence.canvas.cssWidth < 1 ||
+    !Number.isFinite(evidence.canvas?.cssHeight) ||
+    evidence.canvas.cssHeight < 1 ||
+    !/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(
+      evidence.canvas.png || '',
+    ) ||
+    !Array.isArray(evidence.entities) ||
+    evidence.entities.length !== ids.length ||
+    !Array.isArray(evidence.picks) ||
+    evidence.picks.length !== ids.length
+  )
+    throw new Error('CCTV rapid geometry evidence is incomplete.');
+  const entities = evidence.entities.map((entity, index) => {
+    if (
+      entity?.id !== ids[index] ||
+      typeof entity.show !== 'boolean' ||
+      !Number.isFinite(entity.width) ||
+      entity.width <= 0 ||
+      typeof entity.material !== 'string' ||
+      !Array.isArray(entity.positions) ||
+      entity.positions.length < 2 ||
+      entity.positions.some(
+        (position) =>
+          !Array.isArray(position) ||
+          position.length !== 3 ||
+          !position.every(Number.isFinite),
+      )
+    )
+      throw new Error('CCTV rapid geometry Entity evidence is invalid.');
+    return {
+      id: entity.id,
+      show: entity.show,
+      width: entity.width,
+      material: entity.material,
+      positions: entity.positions,
+    };
+  });
+  const picks = evidence.picks.map((pick, index) => {
+    if (
+      pick?.entityId !== ids[index] ||
+      (pick.pickedEntityId !== null && !ids.includes(pick.pickedEntityId))
+    )
+      throw new Error('CCTV rapid geometry pick evidence is invalid.');
+    return { entityId: pick.entityId, pickedEntityId: pick.pickedEntityId };
+  });
+  const visibleEntityCount = entities.filter((entity) => entity.show).length;
+  if (
+    (evidence.expectedVisible && visibleEntityCount !== entities.length) ||
+    (!evidence.expectedVisible && visibleEntityCount !== 0) ||
+    (!evidence.expectedVisible && picks.some((pick) => pick.pickedEntityId))
+  )
+    throw new Error('CCTV rapid geometry visibility evidence is invalid.');
+  const png = Buffer.from(evidence.canvas.png.slice(22), 'base64');
+  if (png.length < 32 || png.length > 4_000_000)
+    throw new Error('CCTV rapid geometry PNG evidence is outside its bound.');
+  const geometryBytes = JSON.stringify(entities);
+  const styleBytes = JSON.stringify(
+    entities.map(({ id, show, width, material }) => ({
+      id,
+      show,
+      width,
+      material,
+    })),
+  );
+  return {
+    camera: evidence.camera,
+    frameNumber: evidence.frameNumber,
+    canvas: {
+      width: evidence.canvas.width,
+      height: evidence.canvas.height,
+      cssWidth: evidence.canvas.cssWidth,
+      cssHeight: evidence.canvas.cssHeight,
+    },
+    entityCount: entities.length,
+    expectedVisible: evidence.expectedVisible,
+    visibleEntityCount,
+    geometrySha256: createHash('sha256').update(geometryBytes).digest('hex'),
+    styleSha256: createHash('sha256').update(styleBytes).digest('hex'),
+    pngSha256: createHash('sha256').update(png).digest('hex'),
+    pngBytes: png.length,
+    pickCount: picks.length,
+    pickedEntityIds: picks.map((pick) => pick.pickedEntityId),
+    matchingPickCount: picks.filter(
+      (pick) => pick.pickedEntityId === pick.entityId,
+    ).length,
+  };
+}
+
+export function assertCctvRapidGeometryRevision(
+  revision,
+  { expectedTaskErrors = null, warmup = null } = {},
+) {
+  const enabledCase = revision?.boundary?.enabledRelease;
+  const disabledCase = revision?.boundary?.disabledRelease;
+  const gate = enabledCase?.held;
+  const afterB = enabledCase?.whileRevisionB;
+  const disabledHeld = disabledCase?.held;
+  const disabledAfterB = disabledCase?.whileRevisionB;
+  const final = revision?.boundary?.final;
+  const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
+    (role) => `cctv-${FIXTURE_CAMERA_ID}-${role}`,
+  );
+  if (
+    revision?.status !== 'passed' ||
+    revision.scope !==
+      'held-worker-result; no worker-compute overlap claimed' ||
+    !revision.revisionA ||
+    !revision.revisionB ||
+    equalJson(revision.revisionA.calibration, revision.revisionB.calibration) ||
+    enabledCase?.arm?.status !== 'armed' ||
+    gate?.status !== 'held' ||
+    afterB?.status !== 'held' ||
+    enabledCase?.released?.status !== 'released' ||
+    enabledCase.released.taskId !== gate.taskId ||
+    disabledHeld?.status !== 'held' ||
+    disabledAfterB?.status !== 'held' ||
+    disabledCase?.arm?.status !== 'armed' ||
+    disabledCase?.released?.status !== 'released' ||
+    disabledCase.released.taskId !== disabledHeld.taskId ||
+    disabledCase?.disabledBeforeRelease?.enabled !== false ||
+    !Number.isSafeInteger(
+      disabledCase?.disabledBeforeRelease?.worker?.pending,
+    ) ||
+    disabledCase.disabledBeforeRelease.worker.pending < 1 ||
+    !Array.isArray(disabledCase?.disabledBeforeRelease?.worker?.workers) ||
+    disabledCase.disabledBeforeRelease.worker.workers.reduce(
+      (sum, worker) => sum + worker.pending,
+      0,
+    ) !== disabledCase.disabledBeforeRelease.worker.pending ||
+    disabledCase?.disabledAtElapsedMs !==
+      disabledCase?.disabledBeforeRelease?.boundaryRender?.elapsedMs ||
+    enabledCase?.arm?.armedAtMs !== gate?.armedAtMs ||
+    disabledCase?.arm?.armedAtMs !== disabledHeld?.armedAtMs ||
+    final?.status !== 'released' ||
+    !finiteNonnegative(gate.armedAtMs) ||
+    !finiteNonnegative(gate.heldAtMs) ||
+    gate.heldAtMs < gate.armedAtMs ||
+    !finiteNonnegative(final.releasedAtMs) ||
+    !finiteNonnegative(enabledCase.released.releasedAtMs) ||
+    !finiteNonnegative(disabledCase.released.releasedAtMs) ||
+    !Number.isSafeInteger(gate.submittedAtArm) ||
+    !final?.disposed ||
+    final.boundaryDisabled !== true ||
+    final.listenersReleased !== true ||
+    final.heldPayloadReleased !== true ||
+    final.listenerCleanupErrors !== 0 ||
+    final.releaseError !== null ||
+    final.diagnosticWorkerConstructorRetained !== true ||
+    final.nativeWorkerConstructorRestored !== false ||
+    final.disposedWithHeldResult !== false
+  )
+    throw new Error('CCTV rapid geometry worker boundary evidence is invalid.');
+  for (const [sampleGate, isHeldObservation] of [
+    [gate, true],
+    [afterB, false],
+    [disabledHeld, true],
+    [disabledAfterB, false],
+  ]) {
+    const workerRows = sampleGate?.workerAtHold?.workers;
+    const workerRecord = workerRows?.[sampleGate?.workerOrdinal];
+    if (
+      sampleGate?.workerKind !== 'createGeometry.js' ||
+      !Number.isSafeInteger(sampleGate.taskId) ||
+      !Number.isSafeInteger(sampleGate.workerOrdinal) ||
+      sampleGate.workerOrdinal < 0 ||
+      (isHeldObservation &&
+        (!Number.isSafeInteger(sampleGate.pendingAtHold) ||
+          sampleGate.pendingAtHold < 1 ||
+          !Number.isSafeInteger(sampleGate.workerSubmittedAfterArm) ||
+          sampleGate.workerSubmittedAfterArm < 1)) ||
+      sampleGate.overflow !== false ||
+      !Array.isArray(workerRows) ||
+      workerRows.length > 64 ||
+      sampleGate.workerAtHold?.overflow !== false ||
+      !Number.isSafeInteger(sampleGate.workerAtHold?.pending) ||
+      sampleGate.workerAtHold.pending < 1 ||
+      sampleGate.workerAtHold.pending !==
+        workerRows.reduce((sum, worker) => sum + worker.pending, 0) ||
+      sampleGate.workerAtHold.instrumented !== true ||
+      workerRows.some(
+        (worker) =>
+          ![
+            worker.submitted,
+            worker.completed,
+            worker.cancelled,
+            worker.pending,
+            worker.taskErrors,
+            worker.workerErrors,
+            worker.postErrors,
+          ].every((value) => Number.isSafeInteger(value) && value >= 0) ||
+          worker.workerErrors !== 0 ||
+          worker.postErrors !== 0 ||
+          worker.submitted !==
+            worker.completed + worker.cancelled + worker.pending,
+      ) ||
+      workerRecord?.kind !== 'createGeometry.js' ||
+      ![
+        workerRecord?.submitted,
+        workerRecord?.completed,
+        workerRecord?.cancelled,
+        workerRecord?.pending,
+        workerRecord?.postErrors,
+      ].every((value) => Number.isSafeInteger(value) && value >= 0) ||
+      workerRecord.pending < 1 ||
+      workerRecord.submitted !==
+        workerRecord.completed +
+          workerRecord.cancelled +
+          workerRecord.pending ||
+      workerRecord.postErrors !== 0
+    )
+      throw new Error('CCTV held result worker identity is invalid.');
+  }
+  if (
+    gate.taskId !== afterB.taskId ||
+    disabledHeld.taskId !== disabledAfterB.taskId ||
+    disabledCase.released.taskId !== disabledHeld.taskId ||
+    final.taskId !== disabledHeld.taskId ||
+    !Number.isSafeInteger(afterB.workerSubmissionsWhileHeld) ||
+    afterB.workerSubmissionsWhileHeld < 1 ||
+    !Number.isSafeInteger(disabledAfterB.workerSubmissionsWhileHeld) ||
+    disabledAfterB.workerSubmissionsWhileHeld < 1 ||
+    enabledCase.released.releasedAtMs < gate.heldAtMs ||
+    disabledCase.released.releasedAtMs < disabledHeld.heldAtMs ||
+    disabledCase.released.releasedAtMs < disabledCase.disabledAtElapsedMs
+  )
+    throw new Error('CCTV late-result release ordering is invalid.');
+  const names = ['controlA', 'referenceB', 'afterRelease', 'afterReenable'];
+  for (const name of names) {
+    const sample = revision.samples?.[name];
+    if (
+      sample?.camera?.id !== FIXTURE_CAMERA_ID ||
+      !SHA1.test(sample?.cameraCommit || '') ||
+      sample.cameraCommit !== revision.applicationCommit ||
+      !Number.isSafeInteger(sample.frameNumber) ||
+      sample.frameNumber < 1 ||
+      !Number.isFinite(sample.camera?.rangeM) ||
+      !sample.camera?.calibration ||
+      sample.entityCount !== 5 ||
+      sample.expectedVisible !== true ||
+      sample.visibleEntityCount !== 5 ||
+      !/^[a-f0-9]{64}$/.test(sample.geometrySha256 || '') ||
+      !/^[a-f0-9]{64}$/.test(sample.styleSha256 || '') ||
+      !/^[a-f0-9]{64}$/.test(sample.pngSha256 || '') ||
+      !Number.isSafeInteger(sample.pngBytes) ||
+      sample.pngBytes < 32 ||
+      sample.pngBytes > 4_000_000 ||
+      sample.pickCount !== 5 ||
+      !Array.isArray(sample.pickedEntityIds) ||
+      sample.pickedEntityIds.length !== 5 ||
+      !sample.pickedEntityIds.every((id) => id === null || ids.includes(id)) ||
+      sample.canvas?.width !== revision.canvas?.width ||
+      sample.canvas?.height !== revision.canvas?.height ||
+      sample.canvas?.cssWidth !== revision.canvas?.cssWidth ||
+      sample.canvas?.cssHeight !== revision.canvas?.cssHeight
+    )
+      throw new Error(`CCTV rapid geometry ${name} sample is invalid.`);
+  }
+  const reference = revision.samples.referenceB;
+  const controlA = revision.samples.controlA;
+  const expectedPicks = reference.pickedEntityIds;
+  if (
+    equalJson(controlA.camera.calibration, reference.camera.calibration) ||
+    controlA.geometrySha256 === reference.geometrySha256 ||
+    controlA.pngSha256 === reference.pngSha256
+  )
+    throw new Error(
+      'CCTV settled revision A and B controls do not prove distinct visible output.',
+    );
+  if (!equalJson(reference.camera.calibration, revision.revisionB.calibration))
+    throw new Error('CCTV reference sample does not show revision B.');
+  if (!expectedPicks.some((id) => id !== null))
+    throw new Error('CCTV revision B has no observed native pick identity.');
+  for (const name of ['afterRelease', 'afterReenable']) {
+    const sample = revision.samples[name];
+    for (const key of [
+      'geometrySha256',
+      'styleSha256',
+      'pngSha256',
+      'pngBytes',
+      'visibleEntityCount',
+    ])
+      if (sample[key] !== reference[key])
+        throw new Error(`CCTV revision B did not match ${name} ${key}.`);
+    if (!equalJson(sample.pickedEntityIds, reference.pickedEntityIds))
+      throw new Error(`CCTV revision B pick identities changed in ${name}.`);
+    if (!equalJson(sample.camera.calibration, revision.revisionB.calibration))
+      throw new Error(`CCTV revision B calibration changed in ${name}.`);
+  }
+  if (
+    !equalJson(revision.samples.afterRelease.pickedEntityIds, expectedPicks) ||
+    !equalJson(revision.samples.afterReenable.pickedEntityIds, expectedPicks)
+  )
+    throw new Error('CCTV revision B pick identities changed after release.');
+  const disabledNames = [
+    'disabledReferenceB',
+    'disabledWithHeldResult',
+    'disabledAfterRelease',
+  ];
+  for (const name of disabledNames) {
+    const sample = revision.samples?.[name];
+    if (
+      sample?.camera?.id !== FIXTURE_CAMERA_ID ||
+      sample.cameraCommit !== revision.applicationCommit ||
+      sample.expectedVisible !== false ||
+      !Number.isSafeInteger(sample.frameNumber) ||
+      sample.frameNumber < 1 ||
+      sample.entityCount !== 5 ||
+      sample.visibleEntityCount !== 0 ||
+      !Array.isArray(sample.pickedEntityIds) ||
+      sample.pickedEntityIds.length !== 5 ||
+      sample.pickedEntityIds.some((id) => id !== null) ||
+      !/^[a-f0-9]{64}$/.test(sample.geometrySha256 || '') ||
+      !/^[a-f0-9]{64}$/.test(sample.styleSha256 || '') ||
+      !/^[a-f0-9]{64}$/.test(sample.pngSha256 || '') ||
+      sample.canvas?.width !== revision.canvas?.width ||
+      sample.canvas?.height !== revision.canvas?.height ||
+      sample.canvas?.cssWidth !== revision.canvas?.cssWidth ||
+      sample.canvas?.cssHeight !== revision.canvas?.cssHeight ||
+      !equalJson(sample.camera.calibration, revision.revisionB.calibration)
+    )
+      throw new Error(
+        `CCTV rapid geometry ${name} disabled sample is invalid: ${JSON.stringify(
+          {
+            expectedVisible: sample?.expectedVisible,
+            visibleEntityCount: sample?.visibleEntityCount,
+            pickedEntityIds: sample?.pickedEntityIds,
+            cameraCalibration: sample?.camera?.calibration,
+            revisionCalibration: revision.revisionB.calibration,
+            sampleCanvas: sample?.canvas,
+            revisionCanvas: revision.canvas,
+            cameraId: sample?.camera?.id,
+            cameraCommit: sample?.cameraCommit,
+            revisionCommit: revision.applicationCommit,
+            frameNumber: sample?.frameNumber,
+            entityCount: sample?.entityCount,
+            hashes: [
+              sample?.geometrySha256,
+              sample?.styleSha256,
+              sample?.pngSha256,
+            ],
+          },
+        )}`,
+      );
+  }
+  const disabledReference = revision.samples.disabledReferenceB;
+  for (const name of ['disabledWithHeldResult', 'disabledAfterRelease']) {
+    const sample = revision.samples[name];
+    for (const key of ['geometrySha256', 'styleSha256', 'pngSha256'])
+      if (sample[key] !== disabledReference[key])
+        throw new Error(`Disabled CCTV output resurrected during ${name}.`);
+  }
+  const settledKeys = [
+    'settledAfterRelease',
+    'disabledReferenceB',
+    'disabledAfterRace',
+    'settledAfterDisableRelease',
+    'reenabledAfterRace',
+    'finalDisabled',
+  ];
+  if (
+    !settledKeys.every((key) => {
+      const checkpoint = revision.checkpoints?.[key];
+      return (
+        checkpoint &&
+        checkpoint.worker?.pending === 0 &&
+        checkpoint.diagnostics?.pendingJobs === 0 &&
+        checkpoint.stats?.loading === false
+      );
+    }) ||
+    revision.checkpoints.disabledAfterRace.enabled !== false ||
+    revision.checkpoints.reenabledAfterRace.enabled !== true ||
+    revision.checkpoints.finalDisabled.enabled !== false
+  )
+    throw new Error('CCTV rapid geometry lifecycle checkpoints are invalid.');
+  if (!warmup?.enabled || !warmup?.disabled)
+    throw new Error('CCTV rapid geometry ownership baselines are missing.');
+  for (const [key, enabled, baseline] of [
+    ['settledAfterRelease', true, warmup.enabled],
+    ['disabledReferenceB', false, warmup.disabled],
+    ['disabledAfterRace', false, warmup.disabled],
+    ['settledAfterDisableRelease', false, warmup.disabled],
+    ['reenabledAfterRace', true, warmup.enabled],
+    ['finalDisabled', false, warmup.disabled],
+  ]) {
+    const checkpoint = revision.checkpoints[key];
+    if (
+      checkpoint.enabled !== enabled ||
+      checkpoint.appCommit !== revision.applicationCommit ||
+      !equalJson(checkpoint.scene, baseline.scene) ||
+      !equalJson(checkpoint.diagnostics, baseline.diagnostics)
+    )
+      throw new Error(`CCTV rapid geometry ${key} ownership changed.`);
+    if (key !== 'disabledWithHeldResult')
+      assertCctvCheckpoint(checkpoint, { expectedTaskErrors });
+  }
+  const heldCheckpoint = revision.checkpoints.disabledWithHeldResult;
+  if (
+    heldCheckpoint?.enabled !== false ||
+    heldCheckpoint?.moduleEnabled !== false ||
+    heldCheckpoint?.lifecycleState !== 'disabled' ||
+    heldCheckpoint?.cameraCount !== 1 ||
+    heldCheckpoint?.cameras?.[0]?.id !== FIXTURE_CAMERA_ID ||
+    heldCheckpoint?.stats?.loading !== false ||
+    heldCheckpoint.worker?.instrumented !== true ||
+    heldCheckpoint.worker?.overflow !== false ||
+    heldCheckpoint.worker?.workersTruncated !== false ||
+    heldCheckpoint.worker?.workerCount !==
+      heldCheckpoint.worker?.workers?.length ||
+    !Number.isSafeInteger(heldCheckpoint.worker?.pending) ||
+    heldCheckpoint.worker.pending < 1 ||
+    !Array.isArray(heldCheckpoint.worker.workers) ||
+    heldCheckpoint.worker.workers.length > 64 ||
+    heldCheckpoint.worker.workers.some(
+      (worker) =>
+        ![
+          worker.pending,
+          worker.submitted,
+          worker.completed,
+          worker.cancelled,
+          worker.taskErrors,
+          worker.workerErrors,
+          worker.postErrors,
+        ].every((value) => Number.isSafeInteger(value) && value >= 0) ||
+        worker.postErrors !== 0 ||
+        worker.submitted !==
+          worker.completed + worker.cancelled + worker.pending,
+    ) ||
+    heldCheckpoint.worker.workers.reduce(
+      (sum, worker) => sum + worker.pending,
+      0,
+    ) !== heldCheckpoint.worker.pending ||
+    heldCheckpoint.worker.workers[disabledHeld.workerOrdinal]?.kind !==
+      'createGeometry.js' ||
+    heldCheckpoint.worker.workers[disabledHeld.workerOrdinal]?.pending < 1 ||
+    !Number.isSafeInteger(heldCheckpoint.diagnostics?.pendingJobs) ||
+    heldCheckpoint.diagnostics.pendingJobs < 0 ||
+    !finiteNonnegative(heldCheckpoint.boundaryRender?.elapsedMs) ||
+    !Number.isSafeInteger(heldCheckpoint.boundaryRender?.frameNumber) ||
+    disabledCase.disabledAtElapsedMs !==
+      heldCheckpoint.boundaryRender.elapsedMs ||
+    heldCheckpoint.stats?.loading !== false
+  )
+    throw new Error('CCTV was not disabled with revision A still pending.');
+  const workerBaseline = cctvGeometryTotals(
+    revision.checkpoints.settledAfterDisableRelease,
+  );
+  for (const key of [
+    'disabledAfterRace',
+    'reenabledAfterRace',
+    'finalDisabled',
+  ])
+    if (
+      !equalJson(cctvGeometryTotals(revision.checkpoints[key]), workerBaseline)
+    )
+      throw new Error(
+        `CCTV rapid geometry added work during ${key} toggle reuse.`,
+      );
+  return true;
+}
+
 /** Explicit disabled module.init path, distinct from normal manager toggles. */
 export async function reinitializeDisabledCctvModuleInPage() {
   const debug = window.__godsEyeView;
@@ -497,7 +1425,9 @@ export function validateCctvLifecycleReport(
   report,
   { cycles = 5, fixtureSha256 } = {},
 ) {
-  if (report?.schema !== 'gev-cctv-lifecycle/v1')
+  if (
+    !['gev-cctv-lifecycle/v1', 'gev-cctv-lifecycle/v2'].includes(report?.schema)
+  )
     throw new Error('Unsupported CCTV lifecycle report schema.');
   if (report.status !== 'passed' || report.validationStatus !== 'passed')
     throw new Error(
@@ -747,6 +1677,20 @@ export function validateCctvLifecycleReport(
     throw new Error(
       'CCTV direct module reinitialization did not rematerialize fixture geometry.',
     );
+  if (report.schema === 'gev-cctv-lifecycle/v2') {
+    if (
+      report.rapidGeometryRevision?.applicationCommit !==
+      report.applicationCommit
+    )
+      throw new Error(
+        'CCTV rapid geometry evidence application identity is missing.',
+      );
+    assertCctvRapidGeometryRevision(report.rapidGeometryRevision, {
+      expectedTaskErrors:
+        report.workerPreflight?.expectedTaskErrorWorkers ?? null,
+      warmup: report.warmup,
+    });
+  }
   if (
     report.fixtureDelivery?.id !== FIXTURE_ID ||
     report.fixtureDelivery?.sha256 !== report.fixture.sha256 ||

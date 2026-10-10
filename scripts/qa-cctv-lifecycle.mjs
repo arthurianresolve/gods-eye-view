@@ -9,15 +9,21 @@ import {
   assertCctvCheckpoint,
   assertCctvCycleReuse,
   assertCctvStableDrain,
+  assertCctvRapidGeometryRevision,
   assertExpectedCctvProbeResidue,
   cctvLifecycleShareHash,
   cctvGeometryTotals,
   cctvTaskErrorSignature,
   configureCctvLifecycleSceneInPage,
+  applyCctvLifecycleCalibrationInPage,
+  createCctvGeometryWorkerBoundaryInstaller,
   createCctvLifecycleFixture,
   parseCctvLifecycleArgs,
   readCctvLifecycleCheckpointInPage,
+  readCctvGeometryEvidenceInPage,
+  readCctvGeometryWorkerBoundaryInPage,
   reinitializeDisabledCctvModuleInPage,
+  summarizeCctvGeometryEvidence,
   setCctvLifecycleEnabledInPage,
   validateCctvLifecycleReport,
   waitForCctvLifecycleRenderInPage,
@@ -417,6 +423,384 @@ async function renderAndDrain(
   };
 }
 
+const waitMs = (delayMs) =>
+  new Promise((resolve) => setTimeout(resolve, delayMs));
+
+async function waitForCctvHeldGeometryResult(page, timeoutMs) {
+  const startedAt = Date.now();
+  let last = null;
+  while (Date.now() - startedAt <= timeoutMs) {
+    last = await withDeadline(
+      () => page.evaluate(readCctvGeometryWorkerBoundaryInPage),
+      'read CCTV geometry worker boundary',
+    );
+    if (last.boundary.overflow)
+      throw new Error(
+        'CCTV worker boundary overflowed before holding a result.',
+      );
+    if (last.boundary.status === 'held') return last;
+    await waitMs(25);
+  }
+  const error = new Error(
+    'CCTV geometry result was not held before the bounded deadline.',
+  );
+  error.boundarySnapshot = last;
+  throw error;
+}
+
+async function waitForCctvGeometrySubmittedWhileHeld(page, timeoutMs) {
+  const startedAt = Date.now();
+  let last = null;
+  while (Date.now() - startedAt <= timeoutMs) {
+    last = await withDeadline(
+      () => page.evaluate(readCctvGeometryWorkerBoundaryInPage),
+      'observe CCTV revision B worker submission',
+    );
+    if (last.boundary.overflow)
+      throw new Error(
+        'CCTV worker boundary overflowed while revision B was set.',
+      );
+    if (
+      last.boundary.status === 'held' &&
+      last.boundary.workerSubmissionsWhileHeld > 0
+    )
+      return last;
+    await waitMs(25);
+  }
+  const error = new Error(
+    'Revision B did not submit geometry while revision A result was held.',
+  );
+  error.boundarySnapshot = last;
+  throw error;
+}
+
+async function captureCctvGeometrySample(
+  page,
+  cameraId,
+  applicationCommit,
+  expectedVisible = true,
+) {
+  const raw = await withDeadline(
+    () =>
+      page.evaluate(readCctvGeometryEvidenceInPage, cameraId, expectedVisible),
+    'capture fresh CCTV geometry and pixels',
+  );
+  const sample = summarizeCctvGeometryEvidence(raw);
+  sample.cameraCommit = applicationCommit;
+  return sample;
+}
+
+async function runCctvRapidGeometryRevision(
+  page,
+  report,
+  drainMs,
+  expectedTaskErrors,
+  onProgress,
+) {
+  const cameraId = report.fixture.cameraId;
+  const patchA = { rangeScale: 0.82 };
+  const patchB = { rangeScale: 1.12 };
+  const row = {
+    status: 'running',
+    scope: 'held-worker-result; no worker-compute overlap claimed',
+    applicationCommit: report.applicationCommit,
+    canvas: null,
+    revisionA: null,
+    revisionB: null,
+    boundary: { enabledRelease: null, disabledRelease: null, final: null },
+    samples: {},
+    checkpoints: {},
+    error: null,
+  };
+  report.rapidGeometryRevision = row;
+  let boundaryInstalled = true;
+  let operationError = null;
+  const settle = async (phase) =>
+    renderAndDrain(
+      page,
+      report,
+      phase,
+      drainMs,
+      expectedTaskErrors,
+      onProgress,
+    );
+  const apply = (patch) =>
+    withDeadline(
+      () =>
+        page.evaluate(applyCctvLifecycleCalibrationInPage, { cameraId, patch }),
+      'apply CCTV calibration fixture revision',
+    );
+  try {
+    report.phase = 'rapid-geometry-revision:enable-control';
+    await withDeadline(
+      () => page.evaluate(setCctvLifecycleEnabledInPage, true),
+      'enable CCTV for rapid geometry fixture',
+    );
+    await settle('rapid-revision-enable-control');
+
+    const controlA = await apply(patchA);
+    row.revisionA = {
+      calibration: controlA.calibration,
+      rangeM: controlA.rangeM,
+    };
+    row.checkpoints.controlA = await settle('rapid-revision-settle-control-a');
+    row.samples.controlA = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+    );
+    row.canvas = row.samples.controlA.canvas;
+
+    const controlB = await apply(patchB);
+    row.revisionB = {
+      calibration: controlB.calibration,
+      rangeM: controlB.rangeM,
+    };
+    row.checkpoints.referenceB = await settle(
+      'rapid-revision-settle-reference-b',
+    );
+    row.samples.referenceB = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+    );
+    await withDeadline(
+      () => page.evaluate(setCctvLifecycleEnabledInPage, false),
+      'disable CCTV for settled revision B visibility reference',
+    );
+    row.checkpoints.disabledReferenceB = await settle(
+      'rapid-revision-settle-disabled-reference-b',
+    );
+    row.samples.disabledReferenceB = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+      false,
+    );
+    await withDeadline(
+      () => page.evaluate(setCctvLifecycleEnabledInPage, true),
+      're-enable CCTV after disabled visibility reference',
+    );
+    await settle('rapid-revision-reenable-after-disabled-reference-b');
+
+    const beginHeldRevision = async (phase) => {
+      report.phase = `rapid-geometry-revision:${phase}-arm`;
+      const arm = await withDeadline(
+        () => page.evaluate(() => window.__qaCctvGeometryBoundary?.arm?.()),
+        `arm CCTV worker-result boundary for ${phase}`,
+      );
+      const a = await apply(patchA);
+      if (
+        JSON.stringify(a.calibration) !==
+        JSON.stringify(row.revisionA.calibration)
+      )
+        throw new Error('CCTV revision A did not match its settled control.');
+      const held = await waitForCctvHeldGeometryResult(page, drainMs);
+      if (
+        held.boundary.workerKind !== 'createGeometry.js' ||
+        held.boundary.status !== 'held' ||
+        held.boundary.pendingAtHold < 1 ||
+        held.boundary.workerSubmittedAfterArm < 1 ||
+        !Number.isSafeInteger(held.boundary.taskId)
+      )
+        throw new Error(
+          'CCTV revision A was not an observed pending createGeometry worker result.',
+        );
+      report.phase = `rapid-geometry-revision:${phase}-publish-b`;
+      const b = await apply(patchB);
+      if (
+        JSON.stringify(b.calibration) !==
+        JSON.stringify(row.revisionB.calibration)
+      )
+        throw new Error('CCTV revision B did not match its settled control.');
+      const whileB = await waitForCctvGeometrySubmittedWhileHeld(page, drainMs);
+      await withDeadline(
+        () => page.evaluate(waitForCctvLifecycleRenderInPage, 5000),
+        `render revision B during ${phase} held-result case`,
+        7000,
+      );
+      const stillHeld = await withDeadline(
+        () => page.evaluate(readCctvGeometryWorkerBoundaryInPage),
+        `verify held result during ${phase}`,
+      );
+      if (
+        stillHeld.boundary.status !== 'held' ||
+        stillHeld.boundary.taskId !== held.boundary.taskId ||
+        stillHeld.boundary.workerSubmissionsWhileHeld < 1
+      )
+        throw new Error('CCTV held result ownership changed before release.');
+      return {
+        arm,
+        held: { ...held.boundary, workerAtHold: held.worker },
+        whileRevisionB: {
+          ...whileB.boundary,
+          workerAtHold: whileB.worker,
+        },
+      };
+    };
+    const releaseHeldRevision = async (phase) => {
+      const result = await withDeadline(
+        () => page.evaluate(() => window.__qaCctvGeometryBoundary?.release?.()),
+        `release exact held CCTV result during ${phase}`,
+      );
+      if (result !== true)
+        throw new Error(
+          'CCTV held worker result was not released exactly once.',
+        );
+      const state = await withDeadline(
+        () => page.evaluate(readCctvGeometryWorkerBoundaryInPage),
+        `verify released CCTV result during ${phase}`,
+      );
+      return state.boundary;
+    };
+
+    row.boundary.enabledRelease = await beginHeldRevision('enabled-release');
+    report.phase = 'rapid-geometry-revision:enabled-release-a';
+    row.boundary.enabledRelease.released = await releaseHeldRevision(
+      'enabled publication',
+    );
+    row.checkpoints.settledAfterRelease = await settle(
+      'rapid-revision-settle-after-enabled-release',
+    );
+    row.samples.afterRelease = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+    );
+
+    row.boundary.disabledRelease = await beginHeldRevision('disabled-release');
+    report.phase = 'rapid-geometry-revision:disable-while-a-held';
+    await withDeadline(
+      () => page.evaluate(setCctvLifecycleEnabledInPage, false),
+      'disable CCTV while revision A result is held',
+    );
+    const disabledRender = await withDeadline(
+      () => page.evaluate(waitForCctvLifecycleRenderInPage, 5000),
+      'render CCTV disabled while revision A result remains held',
+      7000,
+    );
+    row.checkpoints.disabledWithHeldResult = await readCheckpoint(page, {
+      requireSettled: false,
+      fixtureView: report.fixture.view,
+    });
+    row.checkpoints.disabledWithHeldResult.boundaryRender = disabledRender;
+    row.boundary.disabledRelease.disabledBeforeRelease =
+      row.checkpoints.disabledWithHeldResult;
+    row.boundary.disabledRelease.disabledAtElapsedMs = disabledRender.elapsedMs;
+    if (
+      row.checkpoints.disabledWithHeldResult.enabled !== false ||
+      row.boundary.disabledRelease.held.status !== 'held' ||
+      row.boundary.disabledRelease.held.taskId === null
+    )
+      throw new Error('CCTV was not disabled while revision A remained held.');
+    row.samples.disabledWithHeldResult = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+      false,
+    );
+    const stillHeldAfterDisabledCapture = await withDeadline(
+      () => page.evaluate(readCctvGeometryWorkerBoundaryInPage),
+      'verify held CCTV result survived disabled reference capture',
+    );
+    if (
+      stillHeldAfterDisabledCapture.boundary.status !== 'held' ||
+      stillHeldAfterDisabledCapture.boundary.taskId !==
+        row.boundary.disabledRelease.held.taskId
+    )
+      throw new Error('CCTV disabled capture changed held-result ownership.');
+    row.boundary.disabledRelease.released = await releaseHeldRevision(
+      'disabled publication',
+    );
+    row.checkpoints.disabledAfterRace = await settle(
+      'rapid-revision-disabled-after-late-release',
+    );
+    row.samples.disabledAfterRelease = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+      false,
+    );
+    if (
+      JSON.stringify(row.checkpoints.disabledAfterRace.diagnostics) !==
+      JSON.stringify(report.warmup.disabled.diagnostics)
+    )
+      throw new Error(
+        'CCTV resources did not return to the disabled baseline.',
+      );
+    row.checkpoints.settledAfterDisableRelease =
+      row.checkpoints.disabledAfterRace;
+
+    report.phase = 'rapid-geometry-revision:reenable-after-disabled-release';
+    await withDeadline(
+      () => page.evaluate(setCctvLifecycleEnabledInPage, true),
+      're-enable CCTV after disabled stale geometry response',
+    );
+    row.checkpoints.reenabledAfterRace = await settle(
+      'rapid-revision-reenabled-after-disabled-release',
+    );
+    if (
+      JSON.stringify(row.checkpoints.reenabledAfterRace.diagnostics) !==
+      JSON.stringify(report.warmup.enabled.diagnostics)
+    )
+      throw new Error('CCTV resources changed after re-enable.');
+    row.samples.afterReenable = await captureCctvGeometrySample(
+      page,
+      cameraId,
+      report.applicationCommit,
+    );
+
+    report.phase = 'rapid-geometry-revision:final-disable';
+    await withDeadline(
+      () => page.evaluate(setCctvLifecycleEnabledInPage, false),
+      'restore disabled CCTV lifecycle state',
+    );
+    row.checkpoints.finalDisabled = await settle(
+      'rapid-revision-final-disabled',
+    );
+    if (
+      JSON.stringify(row.checkpoints.finalDisabled.diagnostics) !==
+      JSON.stringify(report.warmup.disabled.diagnostics)
+    )
+      throw new Error('CCTV final disabled resources changed from baseline.');
+    row.status = 'passed';
+  } catch (error) {
+    operationError = error;
+    row.status = 'failed';
+    row.error = boundedText(error);
+    if (error?.boundarySnapshot)
+      row.boundary.lastObserved = error.boundarySnapshot;
+  } finally {
+    if (boundaryInstalled) {
+      try {
+        row.boundary.final = await withDeadline(
+          () =>
+            page.evaluate(() => window.__qaCctvGeometryBoundary?.dispose?.()),
+          'dispose CCTV worker-result boundary',
+        );
+      } catch (error) {
+        row.cleanupError = boundedText(error);
+        operationError ||= error;
+        row.status = 'failed';
+      }
+    }
+  }
+  if (!operationError) {
+    try {
+      assertCctvRapidGeometryRevision(row, {
+        expectedTaskErrors,
+        warmup: report.warmup,
+      });
+    } catch (error) {
+      operationError = error;
+      row.status = 'failed';
+      row.error = boundedText(error);
+    }
+  }
+  if (operationError) throw operationError;
+  return row;
+}
+
 function captureFixtureDelivery(fixture, counts) {
   return {
     id: fixture.id,
@@ -455,12 +839,13 @@ export async function runCctvLifecycle({
     closeOwnedRecoveryPage,
     closeRecoveryBrowser,
     stopOwnedRecoveryProcessTree,
+    runRapidGeometryRevision: runCctvRapidGeometryRevision,
     ...dependencies,
   };
   const fixture = createCctvLifecycleFixture();
   const initialIdentity = deps.gitIdentity();
   const report = {
-    schema: 'gev-cctv-lifecycle/v1',
+    schema: 'gev-cctv-lifecycle/v2',
     status: 'running',
     validationStatus: 'pending',
     startedAt: new Date().toISOString(),
@@ -495,6 +880,7 @@ export async function runCctvLifecycle({
     warmup: null,
     cycles: [],
     directReinit: null,
+    rapidGeometryRevision: null,
     fixtureDelivery: null,
     pageErrors: [],
     browserClose: null,
@@ -506,6 +892,7 @@ export async function runCctvLifecycle({
   let page = null;
   let pageErrors = [];
   let browserCloseStarted = false;
+  let workerBoundaryQueued = false;
   const fixtureCounts = { sources: 0, health: 0, frames: 0 };
   report.applicationCommit = initialIdentity.commit;
   report.applicationSourceCleanAtStart = initialIdentity.clean;
@@ -532,7 +919,11 @@ export async function runCctvLifecycle({
     );
     context = await browser.createBrowserContext();
     page = await context.newPage();
-    await page.evaluateOnNewDocument(deps.installWorkerDiagnostics);
+    const workerBoundaryInstaller = createCctvGeometryWorkerBoundaryInstaller(
+      deps.installWorkerDiagnostics,
+    );
+    await page.evaluateOnNewDocument(workerBoundaryInstaller);
+    workerBoundaryQueued = true;
     const prepared = await deps.prepareFixturePage(browser, base, {
       page,
       viewport: VIEWPORT,
@@ -825,6 +1216,14 @@ export async function runCctvLifecycle({
         'CCTV direct reinitialization changed warmed worker or scene ownership.',
       );
     report.directReinit.status = 'passed';
+    report.phase = 'rapid-geometry-revision';
+    report.rapidGeometryRevision = await deps.runRapidGeometryRevision(
+      page,
+      report,
+      drainMs,
+      expectedTaskErrors,
+      (event) => progress(event),
+    );
     report.fixtureDelivery = captureFixtureDelivery(fixture, fixtureCounts);
     if (
       report.fixtureDelivery.sourceResponses < 2 ||
@@ -850,6 +1249,31 @@ export async function runCctvLifecycle({
     if (error?.sceneReadiness) report.sceneReadiness = error.sceneReadiness;
   } finally {
     if (page) {
+      if (
+        workerBoundaryQueued &&
+        !report.rapidGeometryRevision?.boundary?.final
+      ) {
+        try {
+          const boundaryCleanup = await withDeadline(
+            () =>
+              page.evaluate(
+                () => window.__qaCctvGeometryBoundary?.dispose?.() ?? null,
+              ),
+            'release CCTV geometry worker boundary during cleanup',
+          );
+          report.workerBoundaryCleanup = boundaryCleanup
+            ? { status: 'disposed', snapshot: boundaryCleanup }
+            : { status: 'not-installed' };
+        } catch (error) {
+          report.workerBoundaryCleanup = {
+            status: 'failed',
+            error: boundedText(error),
+          };
+          report.status = 'failed';
+          report.error ||= report.workerBoundaryCleanup.error;
+          report.failedPhase ||= 'worker-boundary-cleanup';
+        }
+      }
       report.pageErrors = pageErrors
         .slice(0, 16)
         .map((error) => boundedText(error));
@@ -980,7 +1404,7 @@ const invoked = process.argv[1]
 if (import.meta.url === invoked) {
   let options;
   let report = {
-    schema: 'gev-cctv-lifecycle/v1',
+    schema: 'gev-cctv-lifecycle/v2',
     status: 'failed',
     validationStatus: 'failed',
     phase: 'arguments',
