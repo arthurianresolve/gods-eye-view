@@ -118,7 +118,15 @@ export function classifyBrowserShutdownControl(result) {
     result.closeTrace?.protocolObservationComplete !== true ||
     result.error != null ||
     !Number.isSafeInteger(result.pageErrorCount) ||
-    result.pageErrorCount !== 0
+    result.pageErrorCount !== 0 ||
+    !Array.isArray(result.pageErrors) ||
+    result.pageErrors.length > 8 ||
+    result.pageErrors.length > result.pageErrorCount ||
+    result.pageErrors.some(
+      (message) => typeof message !== 'string' || message.length > 300,
+    ) ||
+    result.pageErrorsTruncated !==
+      result.pageErrorCount > result.pageErrors.length
   )
     return 'failed';
   if (result.document === 'blank' && result.readiness?.blank !== true)
@@ -164,6 +172,15 @@ function hasUsableRenderingContext(readiness) {
     readiness.renderingContext.vendor.length > 0 &&
     typeof readiness.renderingContext.renderer === 'string' &&
     readiness.renderingContext.renderer.length > 0 &&
+    typeof readiness.renderingContext.debugRendererInfoAvailable ===
+      'boolean' &&
+    (readiness.renderingContext.debugRendererInfoAvailable
+      ? typeof readiness.renderingContext.unmaskedVendor === 'string' &&
+        readiness.renderingContext.unmaskedVendor.length > 0 &&
+        typeof readiness.renderingContext.unmaskedRenderer === 'string' &&
+        readiness.renderingContext.unmaskedRenderer.length > 0
+      : readiness.renderingContext.unmaskedVendor === null &&
+        readiness.renderingContext.unmaskedRenderer === null) &&
     Number.isFinite(readiness.renderingContext.rendererQueryDurationMs) &&
     readiness.renderingContext.rendererQueryDurationMs >= 0 &&
     typeof readiness.renderingContext.antialias === 'boolean' &&
@@ -255,6 +272,9 @@ export function validateBrowserShutdownReport(report) {
       row.id !== expected.id ||
       row.document !== expected.document ||
       row.treatment !== expected.treatment ||
+      row.browserVersionConsistent !==
+        (typeof row.browserVersion === 'string' &&
+          row.browserVersion === report.identity.browserVersion) ||
       row.status !== classifyBrowserShutdownControl(row)
     )
       throw new Error(`Browser shutdown control is invalid: ${expected.id}.`);

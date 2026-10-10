@@ -52,6 +52,59 @@ const DOCUMENT_TIMEOUT_MS = 20_000;
 const PROCESS_EXIT_OBSERVATION_MS = 1_000;
 let activeReport = null;
 
+export function preserveInterruptedShutdownReport(
+  initialReport,
+  latestReport,
+  error,
+) {
+  const report =
+    latestReport && Array.isArray(latestReport.controls)
+      ? latestReport
+      : initialReport;
+  report.status = 'failed';
+  report.failure ||= `control-matrix-interrupted: ${safeError(error)}`;
+  return report;
+}
+
+export async function cleanupScratchProfile(
+  scratch,
+  {
+    retain = false,
+    resolvePath = realpath,
+    removeOwned = rm,
+    tempDirectory = os.tmpdir(),
+  } = {},
+) {
+  if (retain) return { status: 'retained-unconfirmed-owned-process' };
+  if (!scratch) return { status: 'not-created' };
+  try {
+    const canonicalTemp = await resolvePath(tempDirectory);
+    const canonicalScratch = await resolvePath(scratch);
+    if (
+      canonicalScratch !== scratch ||
+      !isWithin(canonicalTemp, canonicalScratch)
+    )
+      return {
+        status: 'retained-path-validation-failed',
+        failure: 'temporary-profile-root-escaped',
+      };
+    await removeOwned(canonicalScratch, { recursive: true, force: false });
+    return { status: 'removed' };
+  } catch {
+    return {
+      status: 'retained-cleanup-failed',
+      failure: 'temporary-profile-cleanup-failed',
+    };
+  }
+}
+
+function recordShutdownCleanupFailure(report, failure) {
+  report.status = 'failed';
+  report.failure ||= failure;
+  if (!Array.isArray(report.cleanupFailures)) report.cleanupFailures = [];
+  if (report.cleanupFailures.length < 4) report.cleanupFailures.push(failure);
+}
+
 function parseArgs(argv) {
   let out = 'qa-artifacts/browser-shutdown.json';
   for (let index = 0; index < argv.length; index++) {
@@ -206,17 +259,37 @@ async function startFixtureServer() {
   };
 }
 
-async function closeServer(server) {
-  if (!server?.listening) return true;
-  return (
-    (await withHostTimeout(
-      () =>
-        new Promise((resolve, reject) =>
-          server.close((error) => (error ? reject(error) : resolve(true))),
-        ),
-      2_000,
-    )) === true
-  );
+export async function closeFixtureServer(server) {
+  if (!server?.listening)
+    return { completed: true, closeAllConnectionsUsed: false };
+  return new Promise((resolve) => {
+    let settled = false;
+    let closeAllConnectionsUsed = false;
+    const finish = (completed) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(forceTimer);
+      clearTimeout(deadlineTimer);
+      resolve({ completed, closeAllConnectionsUsed });
+    };
+    const forceTimer = setTimeout(() => {
+      if (settled) return;
+      if (typeof server.closeAllConnections === 'function') {
+        closeAllConnectionsUsed = true;
+        try {
+          server.closeAllConnections();
+        } catch {
+          finish(false);
+        }
+      }
+    }, 250);
+    const deadlineTimer = setTimeout(() => finish(false), 2_000);
+    try {
+      server.close((error) => finish(!error));
+    } catch {
+      finish(false);
+    }
+  });
 }
 
 async function waitForChildExit(child, timeoutMs) {
@@ -397,6 +470,12 @@ function sanitizeRenderingContext(value) {
     version: cleanText(value.version),
     vendor: cleanText(value.vendor),
     renderer: cleanText(value.renderer),
+    debugRendererInfoAvailable:
+      typeof value.debugRendererInfoAvailable === 'boolean'
+        ? value.debugRendererInfoAvailable
+        : null,
+    unmaskedVendor: cleanText(value.unmaskedVendor),
+    unmaskedRenderer: cleanText(value.unmaskedRenderer),
     rendererQueryDurationMs: finiteNonnegative(value.rendererQueryDurationMs),
     antialias: typeof value.antialias === 'boolean' ? value.antialias : null,
     alpha: typeof value.alpha === 'boolean' ? value.alpha : null,
@@ -650,6 +729,7 @@ function waitForPageHide(readCount, previousCount, timeoutMs) {
 }
 
 export async function main() {
+  activeReport = null;
   if (process.platform !== 'win32')
     throw new Error('Browser shutdown controls are Windows-only.');
   if (
@@ -713,35 +793,46 @@ export async function main() {
   let server = null;
   let origin = null;
   let scratchRetained = false;
+  let primaryFailure = null;
   try {
     scratch = await realpath(
       await mkdtemp(path.join(os.tmpdir(), 'gev-browser-shutdown-')),
     );
     ({ server, origin } = await startFixtureServer());
-    const matrix = await runBrowserShutdownControlMatrix({
-      identity,
-      runControl: (specification) =>
-        executeControl({
-          specification,
-          scratch,
-          origin,
-          expectedBrowserVersion: identity.browserVersion,
-        }),
-      onControl: async (row, partial) => {
-        activeReport = partial;
-        console.log(
-          JSON.stringify({
-            phase: 'browser-shutdown-control',
-            id: row.id,
-            status: row.status,
-            processExitConfirmed: row.processExitConfirmed,
-            browserCloseCompleted: row.browserCloseCompleted,
-            forcedProcessTermination: row.forcedProcessTermination,
+    let matrix;
+    try {
+      matrix = await runBrowserShutdownControlMatrix({
+        identity,
+        runControl: (specification) =>
+          executeControl({
+            specification,
+            scratch,
+            origin,
+            expectedBrowserVersion: identity.browserVersion,
           }),
-        );
-        await persist(out, partial);
-      },
-    });
+        onControl: async (row, partial) => {
+          activeReport = partial;
+          console.log(
+            JSON.stringify({
+              phase: 'browser-shutdown-control',
+              id: row.id,
+              status: row.status,
+              processExitConfirmed: row.processExitConfirmed,
+              browserCloseCompleted: row.browserCloseCompleted,
+              forcedProcessTermination: row.forcedProcessTermination,
+            }),
+          );
+          await persist(out, partial);
+        },
+      });
+    } catch (error) {
+      activeReport = preserveInterruptedShutdownReport(
+        report,
+        activeReport,
+        error,
+      );
+      throw error;
+    }
     identity.browserVersion = matrix.identity.browserVersion;
     identity.sourceCleanAtEnd = gitText(['status', '--porcelain']) === '';
     const sourceCommitAtEnd = gitText(['rev-parse', 'HEAD']);
@@ -756,43 +847,53 @@ export async function main() {
     validateBrowserShutdownReport(report);
     await persist(out, report);
     if (report.status !== 'passed') process.exitCode = 1;
+  } catch (error) {
+    primaryFailure = error;
+    activeReport = preserveInterruptedShutdownReport(
+      report,
+      activeReport,
+      error,
+    );
+    throw error;
   } finally {
+    const finalReport = activeReport || report;
     const allExited =
-      report.controls.length > 0 &&
-      report.controls.every((row) => row.processExitConfirmed === true);
+      finalReport.controls.length > 0 &&
+      finalReport.controls.every((row) => row.processExitConfirmed === true);
     if (!allExited) scratchRetained = true;
     try {
-      const serverClosed = await closeServer(server);
-      if (!serverClosed) {
-        report.status = 'failed';
-        report.failure = 'fixture-server-close-unconfirmed';
+      const serverClose = await closeFixtureServer(server);
+      finalReport.fixtureServerClose = serverClose;
+      if (!serverClose.completed) {
+        recordShutdownCleanupFailure(
+          finalReport,
+          'fixture-server-close-unconfirmed',
+        );
         process.exitCode = 1;
       }
     } catch {
-      report.status = 'failed';
-      report.failure = 'fixture-server-close-failed';
+      recordShutdownCleanupFailure(finalReport, 'fixture-server-close-failed');
       process.exitCode = 1;
     }
-    report.scratchProfileCleanup = scratchRetained
-      ? 'retained-unconfirmed-owned-process'
-      : 'removed-after-owned-process-exits';
-    if (!scratchRetained && scratch) {
-      const root = await realpath(scratch);
-      if (root !== scratch || !isWithin(await realpath(os.tmpdir()), root)) {
-        report.status = 'failed';
-        report.failure = 'temporary-profile-root-escaped';
-        process.exitCode = 1;
-      } else {
-        try {
-          await rm(root, { recursive: true, force: false });
-        } catch {
-          report.status = 'failed';
-          report.failure = 'temporary-profile-cleanup-failed';
-          process.exitCode = 1;
-        }
-      }
+    const scratchCleanup = await cleanupScratchProfile(scratch, {
+      retain: scratchRetained,
+    });
+    finalReport.scratchProfileCleanup = scratchCleanup.status;
+    if (scratchCleanup.failure) {
+      recordShutdownCleanupFailure(finalReport, scratchCleanup.failure);
+      process.exitCode = 1;
     }
-    await persist(out, report);
+    activeReport = finalReport;
+    try {
+      await persist(out, finalReport);
+    } catch (error) {
+      recordShutdownCleanupFailure(
+        finalReport,
+        'shutdown-report-final-persist-failed',
+      );
+      process.exitCode = 1;
+      if (!primaryFailure) throw error;
+    }
   }
   console.log(
     JSON.stringify({

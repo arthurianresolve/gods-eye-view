@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { createServer, get } from 'node:http';
+import { mkdtemp, rm, stat } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import {
   BROWSER_SHUTDOWN_CONTROLS,
   classifyBrowserShutdownControl,
@@ -15,7 +19,13 @@ import {
   WEBGL_DOCUMENT,
   inlineScripts,
 } from './browserShutdownFixtures.mjs';
-import { main, setupDocument } from '../qa-browser-shutdown.mjs';
+import {
+  closeFixtureServer,
+  cleanupScratchProfile,
+  main,
+  preserveInterruptedShutdownReport,
+  setupDocument,
+} from '../qa-browser-shutdown.mjs';
 
 const identity = () => ({
   sourceCommit: 'a'.repeat(40),
@@ -59,6 +69,9 @@ function successfulResult(specification, overrides = {}) {
             version: 'WebGL 2.0',
             vendor: 'WebKit',
             renderer: 'SwiftShader',
+            debugRendererInfoAvailable: true,
+            unmaskedVendor: 'Google Inc. (Intel)',
+            unmaskedRenderer: 'ANGLE (Intel UHD Graphics)',
             rendererQueryDurationMs: 0.2,
             antialias: true,
             alpha: false,
@@ -74,6 +87,7 @@ function successfulResult(specification, overrides = {}) {
     browserVersionConsistent: true,
     pageErrorCount: 0,
     pageErrors: [],
+    pageErrorsTruncated: false,
     error: null,
     pageCloseCompleted: true,
     openPageCountAfterClose: 0,
@@ -204,6 +218,14 @@ test('validator rejects missing control evidence, changed identity, or false for
   forced.controls[0].forcedProcessTermination = true;
   assert.throws(() => validateBrowserShutdownReport(forced));
 
+  const wrongVersion = structuredClone(report);
+  wrongVersion.controls[0].browserVersion = 'Chrome/151.0.0.0';
+  assert.throws(() => validateBrowserShutdownReport(wrongVersion));
+
+  const contradictoryErrors = structuredClone(report);
+  contradictoryErrors.controls[0].pageErrors = ['unreported page error'];
+  assert.throws(() => validateBrowserShutdownReport(contradictoryErrors));
+
   assert.throws(
     () =>
       createBrowserShutdownReport({
@@ -243,6 +265,206 @@ test('fixture inline scripts retain valid regex escapes and compile as browser s
     for (const source of scripts)
       assert.doesNotThrow(() => new vm.Script(source));
   }
+});
+
+test('WebGL fixture performs one ready-frame renderer query and records unmasked identity', () => {
+  const source = inlineScripts(WEBGL_DOCUMENT)[0];
+  const calls = { extensions: 0, parameters: 0, frames: 0 };
+  let frameCallback;
+  const extension = {
+    UNMASKED_VENDOR_WEBGL: 10,
+    UNMASKED_RENDERER_WEBGL: 11,
+  };
+  const gl = {
+    VERSION: 1,
+    VENDOR: 2,
+    RENDERER: 3,
+    COLOR_BUFFER_BIT: 4,
+    getExtension(name) {
+      calls.extensions++;
+      assert.equal(name, 'WEBGL_debug_renderer_info');
+      return extension;
+    },
+    getParameter(parameter) {
+      calls.parameters++;
+      return new Map([
+        [1, 'WebGL 2.0'],
+        [2, 'WebKit'],
+        [3, 'WebKit Renderer'],
+        [10, 'Actual Vendor'],
+        [11, 'Actual Renderer'],
+      ]).get(parameter);
+    },
+    getContextAttributes: () => ({ antialias: true, alpha: false }),
+    viewport() {},
+    clearColor() {},
+    clear() {},
+  };
+  const canvas = {
+    width: 640,
+    height: 480,
+    getContext: () => gl,
+  };
+  const context = {
+    document: { getElementById: () => canvas },
+    window: {},
+    performance: { now: () => 10 },
+    requestAnimationFrame(callback) {
+      calls.frames++;
+      frameCallback = callback;
+    },
+  };
+  vm.runInNewContext(source, context);
+  assert.equal(calls.frames, 1);
+  frameCallback();
+  assert.equal(calls.extensions, 1);
+  assert.equal(calls.parameters, 5);
+  assert.equal(
+    context.window.__shutdownReady.renderingContext.vendor,
+    'WebKit',
+  );
+  assert.equal(
+    context.window.__shutdownReady.renderingContext.unmaskedVendor,
+    'Actual Vendor',
+  );
+  assert.equal(
+    context.window.__shutdownReady.renderingContext.unmaskedRenderer,
+    'Actual Renderer',
+  );
+});
+
+test('Cesium fixture samples renderer once from one completed postRender and removes its listener', () => {
+  const source = inlineScripts(CESIUM_DOCUMENT).at(-1);
+  const calls = { extensions: 0, parameters: 0, listeners: 0, removed: 0 };
+  let postRenderCallback;
+  const extension = {
+    UNMASKED_VENDOR_WEBGL: 10,
+    UNMASKED_RENDERER_WEBGL: 11,
+  };
+  const gl = {
+    VERSION: 1,
+    VENDOR: 2,
+    RENDERER: 3,
+    getExtension(name) {
+      calls.extensions++;
+      assert.equal(name, 'WEBGL_debug_renderer_info');
+      return extension;
+    },
+    getParameter(parameter) {
+      calls.parameters++;
+      return new Map([
+        [1, 'WebGL 2.0'],
+        [2, 'WebKit'],
+        [3, 'WebKit Renderer'],
+        [10, 'Actual Vendor'],
+        [11, 'Actual Renderer'],
+      ]).get(parameter);
+    },
+    getContextAttributes: () => ({ antialias: true, alpha: false }),
+  };
+  const viewer = {
+    canvas: { width: 640, height: 480 },
+    scene: {
+      globe: {},
+      context: { _originalGLContext: gl },
+      postRender: {
+        addEventListener(callback) {
+          calls.listeners++;
+          postRenderCallback = callback;
+          return () => calls.removed++;
+        },
+      },
+      requestRender() {},
+    },
+  };
+  const context = {
+    window: {},
+    performance: { now: () => 25 },
+    Cesium: {
+      Viewer: function Viewer() {
+        return viewer;
+      },
+      EllipsoidTerrainProvider: function EllipsoidTerrainProvider() {},
+    },
+  };
+  vm.runInNewContext(source, context);
+  assert.equal(calls.listeners, 1);
+  assert.equal(typeof postRenderCallback, 'function');
+  postRenderCallback();
+  postRenderCallback();
+  assert.equal(calls.removed, 1);
+  assert.equal(calls.extensions, 1);
+  assert.equal(calls.parameters, 5);
+  assert.equal(
+    context.window.__shutdownReady.renderingContext.unmaskedRenderer,
+    'Actual Renderer',
+  );
+});
+
+test('report finalization retains interrupted matrix rows and the primary error', () => {
+  const initial = createBrowserShutdownReport(identity());
+  const latest = createBrowserShutdownReport(identity());
+  latest.controls.push(successfulResult(BROWSER_SHUTDOWN_CONTROLS[0]));
+  const preserved = preserveInterruptedShutdownReport(
+    initial,
+    latest,
+    new Error('matrix callback failed'),
+  );
+  assert.equal(preserved, latest);
+  assert.equal(preserved.controls.length, 1);
+  assert.equal(preserved.status, 'failed');
+  assert.match(preserved.failure, /matrix callback failed/);
+  assert.equal(
+    preserveInterruptedShutdownReport(initial, latest, new Error('later'))
+      .failure,
+    preserved.failure,
+  );
+});
+
+test('owned fixture server closes active connections within its bounded cleanup', async () => {
+  const server = createServer((_request, _response) => {});
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const request = get(`http://127.0.0.1:${server.address().port}`);
+  await new Promise((resolve, reject) => {
+    server.once('request', resolve);
+    request.once('error', reject);
+  });
+  const closed = await closeFixtureServer(server);
+  assert.deepEqual(closed, {
+    completed: true,
+    closeAllConnectionsUsed: true,
+  });
+  assert.equal(server.listening, false);
+  request.destroy();
+});
+
+test('scratch profile cleanup reports removal only after successful deletion', async () => {
+  const scratch = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-shutdown-cleanup-'),
+  );
+  const removed = await cleanupScratchProfile(scratch);
+  assert.deepEqual(removed, { status: 'removed' });
+  await assert.rejects(stat(scratch));
+
+  const failedRemoval = await cleanupScratchProfile(scratch, {
+    resolvePath: async (value) => value,
+    removeOwned: async () => {
+      throw new Error('denied');
+    },
+    tempDirectory: path.dirname(scratch),
+  });
+  assert.deepEqual(failedRemoval, {
+    status: 'retained-cleanup-failed',
+    failure: 'temporary-profile-cleanup-failed',
+  });
+  await rm(scratch, { recursive: true, force: true });
+
+  const rejectedPath = await cleanupScratchProfile('elsewhere', {
+    resolvePath: async (value) =>
+      value === os.tmpdir() ? value : path.join(value, 'canonical'),
+    removeOwned: async () => assert.fail('unsafe path must not be removed'),
+  });
+  assert.equal(rejectedPath.status, 'retained-path-validation-failed');
 });
 
 test('shutdown CLI can be imported for fixture tests without launching Chrome', () => {
@@ -366,6 +588,20 @@ test('WebGL and Cesium controls require observed live context and renderer data'
   const missingRenderer = successfulResult(webgl);
   missingRenderer.readiness.renderingContext.renderer = null;
   assert.equal(classifyBrowserShutdownControl(missingRenderer), 'failed');
+  const unavailableDebugExtension = successfulResult(webgl);
+  unavailableDebugExtension.readiness.renderingContext.debugRendererInfoAvailable = false;
+  unavailableDebugExtension.readiness.renderingContext.unmaskedVendor = null;
+  unavailableDebugExtension.readiness.renderingContext.unmaskedRenderer = null;
+  assert.equal(
+    classifyBrowserShutdownControl(unavailableDebugExtension),
+    'passed',
+  );
+  unavailableDebugExtension.readiness.renderingContext.unmaskedRenderer =
+    'inferred from launch flags';
+  assert.equal(
+    classifyBrowserShutdownControl(unavailableDebugExtension),
+    'failed',
+  );
 });
 
 test('shutdown fixture identity requires the declared WebGL-only SwiftShader launch', () => {

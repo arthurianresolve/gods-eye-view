@@ -10,10 +10,15 @@ const frameStarted=performance.now();
 requestAnimationFrame(()=>{
   const queryStarted=performance.now();
   const clean=value=>String(value||'').replace(/[\r\n\t]+/g,' ').slice(0,128);
+  let debugInfo=null;
+  try{debugInfo=gl?.getExtension('WEBGL_debug_renderer_info')||null;}catch{}
   window.__shutdownReady={ready:true,webgl2:!!gl,canvasWidth:canvas.width,canvasHeight:canvas.height,
     readyFrameElapsedMs:Math.max(0,performance.now()-frameStarted),
     renderingContext:gl?{version:clean(gl.getParameter(gl.VERSION)),vendor:clean(gl.getParameter(gl.VENDOR)),
-      renderer:clean(gl.getParameter(gl.RENDERER)),antialias:gl.getContextAttributes()?.antialias===true,
+      renderer:clean(gl.getParameter(gl.RENDERER)),debugRendererInfoAvailable:!!debugInfo,
+      unmaskedVendor:debugInfo?clean(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)):null,
+      unmaskedRenderer:debugInfo?clean(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)):null,
+      antialias:gl.getContextAttributes()?.antialias===true,
       alpha:gl.getContextAttributes()?.alpha===true,
       rendererQueryDurationMs:Math.max(0,performance.now()-queryStarted)}:null};
 });
@@ -31,17 +36,25 @@ try{
     requestRenderMode:true,maximumRenderTimeChange:Infinity});
   viewer.scene.globe.show=false;
   const frameStarted=performance.now();
+  let postRenderCaptured=false;
   let removePostRender;
   removePostRender=viewer.scene.postRender.addEventListener(()=>{
+    if(postRenderCaptured)return;
+    postRenderCaptured=true;
     removePostRender?.();
     const queryStarted=performance.now();
     const gl=viewer.scene.context?._originalGLContext||viewer.scene.context?._gl||null;
     const clean=value=>String(value||'').replace(/[\r\n\t]+/g,' ').slice(0,128);
+    let debugInfo=null;
+    try{debugInfo=gl?.getExtension('WEBGL_debug_renderer_info')||null;}catch{}
     window.__shutdownReady={ready:true,cesium:true,canvasWidth:viewer.canvas.width,canvasHeight:viewer.canvas.height,
       contextAvailable:!!viewer.scene.context,
       readyFrameElapsedMs:Math.max(0,performance.now()-frameStarted),
       renderingContext:gl?{version:clean(gl.getParameter(gl.VERSION)),vendor:clean(gl.getParameter(gl.VENDOR)),
-        renderer:clean(gl.getParameter(gl.RENDERER)),antialias:gl.getContextAttributes()?.antialias===true,
+        renderer:clean(gl.getParameter(gl.RENDERER)),debugRendererInfoAvailable:!!debugInfo,
+        unmaskedVendor:debugInfo?clean(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)):null,
+        unmaskedRenderer:debugInfo?clean(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)):null,
+        antialias:gl.getContextAttributes()?.antialias===true,
         alpha:gl.getContextAttributes()?.alpha===true,
         rendererQueryDurationMs:Math.max(0,performance.now()-queryStarted)}:null};
   });
