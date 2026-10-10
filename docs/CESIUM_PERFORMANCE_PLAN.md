@@ -97,6 +97,17 @@ tolerances and separate setup-timing validation, while preserving strict
 population, settings and image checks. The failed run is not an acceptance pass;
 the runtime pilot remains pending that correction and end-to-end verification.
 
+GPT-6 Luna's validator correction is committed at
+`7c68cdcd1fb57259a57ff30588ed1e60009007b1`. It separates flight setup duration from
+controlled inputs, retains its five-second bound, applies existing `1e-6` metre
+position and `1e-12` orientation tolerances, and verifies exact identities,
+resource counts, source epochs, dimensions, visual settings and image hashes.
+All 59 combined lifecycle, mission, capture-integrity and paired-report tests
+pass. The [offline reassessment](performance-evidence/mission-render-demand-38046523488-reassessment.json)
+passes for the original `2e1245e` observations without rewriting their failed CI
+status or claiming a new measurement. The [fresh end-to-end run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38047705551)
+tests `7c68cdc`; acceptance remains pending its result.
+
 ### S49 bounded worker-quiescence history - 10 October 2026
 
 GPT-6 Luna implementation `e2f65cd4b66e1e654bf1c59ca6a3c36e224d4b69` replaces
@@ -111,8 +122,21 @@ available evidence. No provider payloads or worker URLs are retained.
 All 29 focused lifecycle tests pass, including late-zero, resumed-work,
 bounded-history, invalid-counter and cancellation cases; syntax, targeted format
 and diff checks pass. The [changed hosted lifecycle diagnostic](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38047474920)
-tests this exact commit. Its result is pending. This is diagnostic implementation,
-not proof that the earlier terrain activity or retained-resource failure is fixed.
+tests this exact commit and fails after 75.6 seconds. Both preflights had zero
+pending work immediately, so the new poll-history path was not exercised in
+this particular run. Workspace replacement passes all five cycles with unchanged
+owned scene resources and feature identities. Cooperative import completes its
+warmup load but times out in the ten-second `warmup-drain` gate before measured
+cycles. The later failure observation has zero import features/jobs/cache entries
+and zero pending workers; that later snapshot cannot satisfy the expired gate.
+Heightmap submissions rose from 7 to 87 and terrain-picker submissions from 7 to
+23 between the initial and failure snapshots. The empty-population render had
+completed. Browser close succeeds normally in 94.82 ms without forced termination.
+[Raw report](performance-evidence/lifecycle-38047474920.json) and
+[job result](performance-evidence/lifecycle-38047474920-run.json) retain the failure.
+Further diagnosis must observe the drain predicate during its existing deadline;
+an unchanged rerun or longer timeout is not a fix. The earlier retention failure
+remains unresolved while independent implementation proceeds.
 
 ## Completion execution plan - 9 October 2026
 

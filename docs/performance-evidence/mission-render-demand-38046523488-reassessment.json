@@ -1,0 +1,160 @@
+{
+  "schema": "gev-fixture-offline-reassessment/v1",
+  "recordedAt": "2026-10-10T11:15:05.750Z",
+  "kind": "offline-report-validation-only",
+  "originalReport": "mission-render-demand-38046523488.json",
+  "originalReportSha256": "a694b0f8a2bc555c027eeefe10f009151deda15435a013cbd9cbd92d29104eb1",
+  "originalRunStatus": "failed",
+  "originalRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488",
+  "testedApplicationCommit": "2e1245e6eab0e504bfbad922807aca5693e8c33d",
+  "originalHarnessCommit": "2e1245e6eab0e504bfbad922807aca5693e8c33d",
+  "validatorCommit": "7c68cdcd1fb57259a57ff30588ed1e60009007b1",
+  "newBrowserRun": false,
+  "hardwareAcceptance": false,
+  "note": "Validation input is a copy with the active-report status expected by the pure validator. The original failed report remains unchanged. Setup duration stays measured and bounded but is excluded from pair equality; position/orientation use established 1e-6m/1e-12 numeric tolerances. All image comparisons stay exact.",
+  "summary": {
+    "schema": "gev-mission-render-demand-summary/v1",
+    "status": "passed",
+    "scope": "isolated real mission layer on a Cesium viewer; full application UI and world overlays are omitted",
+    "hardwareAcceptance": false,
+    "pairs": [
+      {
+        "scenario": "static-empty",
+        "repeat": 1,
+        "controlFrames": 260,
+        "candidateFrames": 0,
+        "matrixUpdatesDuringMeasurement": 0,
+        "endpointPngSha256": "91770cf2849682792f10712fd36fea73098485b786b239126471e898d83882f8"
+      },
+      {
+        "scenario": "static-empty",
+        "repeat": 2,
+        "controlFrames": 256,
+        "candidateFrames": 0,
+        "matrixUpdatesDuringMeasurement": 0,
+        "endpointPngSha256": "91770cf2849682792f10712fd36fea73098485b786b239126471e898d83882f8"
+      },
+      {
+        "scenario": "static-empty",
+        "repeat": 3,
+        "controlFrames": 275,
+        "candidateFrames": 0,
+        "matrixUpdatesDuringMeasurement": 0,
+        "endpointPngSha256": "91770cf2849682792f10712fd36fea73098485b786b239126471e898d83882f8"
+      },
+      {
+        "scenario": "static-empty",
+        "repeat": 4,
+        "controlFrames": 292,
+        "candidateFrames": 0,
+        "matrixUpdatesDuringMeasurement": 0,
+        "endpointPngSha256": "91770cf2849682792f10712fd36fea73098485b786b239126471e898d83882f8"
+      },
+      {
+        "scenario": "static-empty",
+        "repeat": 5,
+        "controlFrames": 292,
+        "candidateFrames": 0,
+        "matrixUpdatesDuringMeasurement": 0,
+        "endpointPngSha256": "91770cf2849682792f10712fd36fea73098485b786b239126471e898d83882f8"
+      },
+      {
+        "scenario": "unselected-orbit",
+        "repeat": 1,
+        "controlFrames": 78,
+        "candidateFrames": 6,
+        "matrixUpdatesDuringMeasurement": 6,
+        "endpointPngSha256": "ebaea509a9a5cf2997c860a1b498c5c18981a31756ecd9b01edfd1bbe6ee1f60"
+      },
+      {
+        "scenario": "unselected-orbit",
+        "repeat": 2,
+        "controlFrames": 96,
+        "candidateFrames": 6,
+        "matrixUpdatesDuringMeasurement": 6,
+        "endpointPngSha256": "ebaea509a9a5cf2997c860a1b498c5c18981a31756ecd9b01edfd1bbe6ee1f60"
+      },
+      {
+        "scenario": "unselected-orbit",
+        "repeat": 3,
+        "controlFrames": 94,
+        "candidateFrames": 6,
+        "matrixUpdatesDuringMeasurement": 6,
+        "endpointPngSha256": "ebaea509a9a5cf2997c860a1b498c5c18981a31756ecd9b01edfd1bbe6ee1f60"
+      },
+      {
+        "scenario": "unselected-orbit",
+        "repeat": 4,
+        "controlFrames": 80,
+        "candidateFrames": 6,
+        "matrixUpdatesDuringMeasurement": 6,
+        "endpointPngSha256": "ebaea509a9a5cf2997c860a1b498c5c18981a31756ecd9b01edfd1bbe6ee1f60"
+      },
+      {
+        "scenario": "unselected-orbit",
+        "repeat": 5,
+        "controlFrames": 89,
+        "candidateFrames": 6,
+        "matrixUpdatesDuringMeasurement": 6,
+        "endpointPngSha256": "ebaea509a9a5cf2997c860a1b498c5c18981a31756ecd9b01edfd1bbe6ee1f60"
+      },
+      {
+        "scenario": "selected-live",
+        "repeat": 1,
+        "controlFrames": 58,
+        "candidateFrames": 69,
+        "matrixUpdatesDuringMeasurement": 3,
+        "endpointPngSha256": "a660bddae9f35c5dca139b7b1299c482d4fe334ddda0e29693bff0c3d4ada81e"
+      },
+      {
+        "scenario": "selected-live",
+        "repeat": 2,
+        "controlFrames": 74,
+        "candidateFrames": 80,
+        "matrixUpdatesDuringMeasurement": 3,
+        "endpointPngSha256": "a660bddae9f35c5dca139b7b1299c482d4fe334ddda0e29693bff0c3d4ada81e"
+      },
+      {
+        "scenario": "selected-live",
+        "repeat": 3,
+        "controlFrames": 61,
+        "candidateFrames": 77,
+        "matrixUpdatesDuringMeasurement": 2,
+        "endpointPngSha256": "a660bddae9f35c5dca139b7b1299c482d4fe334ddda0e29693bff0c3d4ada81e"
+      },
+      {
+        "scenario": "selected-live",
+        "repeat": 4,
+        "controlFrames": 66,
+        "candidateFrames": 76,
+        "matrixUpdatesDuringMeasurement": 3,
+        "endpointPngSha256": "a660bddae9f35c5dca139b7b1299c482d4fe334ddda0e29693bff0c3d4ada81e"
+      },
+      {
+        "scenario": "selected-live",
+        "repeat": 5,
+        "controlFrames": 76,
+        "candidateFrames": 73,
+        "matrixUpdatesDuringMeasurement": 3,
+        "endpointPngSha256": "a660bddae9f35c5dca139b7b1299c482d4fe334ddda0e29693bff0c3d4ada81e"
+      }
+    ],
+    "byScenario": {
+      "static-empty": {
+        "medianControlFrames": 275,
+        "medianCandidateFrames": 0,
+        "medianCandidateMatrixUpdates": 0
+      },
+      "unselected-orbit": {
+        "medianControlFrames": 89,
+        "medianCandidateFrames": 6,
+        "medianCandidateMatrixUpdates": 6
+      },
+      "selected-live": {
+        "medianControlFrames": 66,
+        "medianCandidateFrames": 76,
+        "medianCandidateMatrixUpdates": 3
+      }
+    }
+  }
+}
