@@ -185,6 +185,10 @@ jobs:
         if: success() || failure()
         run: node scripts/qa-visual-settings.mjs --url http://localhost:4174
 
+      - name: Durable workspace library and cross-page conflict journey
+        if: success() || failure()
+        run: npm run qa:workspaces -- --url http://localhost:4174
+
       - name: Rendered application mixed-use smoke
         if: success() || failure()
         run: npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json
@@ -672,6 +676,8 @@ jobs:
         run: |
           set -o pipefail
           npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json 2>&1 | tee qa-artifacts/mixed-use-smoke.log
+      - name: Run durable workspace library and cross-page conflict journey
+        run: npm run qa:workspaces -- --url http://localhost:4174
       - name: Preserve the report including failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

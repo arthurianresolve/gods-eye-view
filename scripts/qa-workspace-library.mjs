@@ -1,37 +1,41 @@
 #!/usr/bin/env node
 /** Browser acceptance for durable workspace library controls and conflict recovery. */
 import assert from 'node:assert/strict';
-import puppeteer from 'puppeteer';
+import {
+  cleanupFixturePageDiagnostics,
+  launchFixtureBrowser,
+  prepareFixturePage,
+} from './qa-application-fixtures.mjs';
 
 const args = process.argv.slice(2);
 const urlIndex = args.indexOf('--url');
 const url = urlIndex >= 0 ? args[urlIndex + 1] : 'http://localhost:4173';
-const browser = await puppeteer.launch({
-  headless: true,
-  executablePath:
-    process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath()),
-  args: ['--no-sandbox', '--disable-dev-shm-usage'],
-});
-const errors = [];
-const resourceErrors = [];
+const browser = await launchFixtureBrowser();
+const pages = [];
+const fixtures = [];
 try {
-  const page = await browser.newPage();
-  page.on('pageerror', (error) => errors.push(error.stack || error.message));
-  page.on('console', (message) => {
-    if (message.type() === 'error') resourceErrors.push(message.text());
-  });
+  const openFixturePage = async () => {
+    const page = await browser.newPage();
+    pages.push(page);
+    const fixture = await prepareFixturePage(browser, url, { page });
+    fixtures.push(fixture);
+    page.setDefaultTimeout(30000);
+    page.setDefaultNavigationTimeout(90_000);
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(
+      () => window.__godsEyeView?.workspaceLibraryPanel,
+      { timeout: 90000 },
+    );
+    await fixture.verifyNetwork();
+    await page.waitForSelector('.workspace-library [data-workspace-select]');
+    return page;
+  };
+  const page = await openFixturePage();
   const click = async (selector) =>
     page.evaluate(
       (target) => document.querySelector(target)?.click(),
       selector,
     );
-  page.setDefaultNavigationTimeout(90_000);
-  await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(
-    () => window.__godsEyeView?.workspaceLibraryPanel,
-    { timeout: 90_000 },
-  );
-  await page.waitForSelector('.workspace-library [data-workspace-select]');
   await page.evaluate(() => {
     window.__gevPromptQueue = ['Workspace QA'];
     window.prompt = () => window.__gevPromptQueue.shift() ?? 'Workspace QA';
@@ -179,29 +183,92 @@ try {
     { kind: 'geojson', count: 1, drawn: 1 },
   );
 
-  // Simulate a second tab winning the revision race. UI Save must surface the
-  // conflict instead of overwriting that complete revision.
-  await page.evaluate(async (workspaceId) => {
-    const panel = window.__godsEyeView.workspaceLibraryPanel;
-    const record = await panel.library.getWorkspace(workspaceId);
-    await panel.library.save(
-      {
-        title: record.document.title,
-        view: record.document.view,
-        filters: record.document.filters,
-        annotations: record.document.annotations,
-        pinnedEvidence: record.document.pinnedEvidence,
-        assetRefs: record.document.assetRefs,
-        directorProjectRef: record.document.directorProjectRef,
-      },
-      { id: workspaceId, expectedRevision: record.manifest.revision },
-    );
-  }, id);
+  // Open the same durable workspace in a second page, which has an independent
+  // application/library client but shares this browser's IndexedDB origin.
+  const conflictPage = await openFixturePage();
+  await conflictPage.waitForFunction(
+    (workspaceId) =>
+      [
+        ...document.querySelectorAll(
+          '.workspace-library [data-workspace-select] option',
+        ),
+      ].some((option) => option.value === workspaceId),
+    { timeout: 12000 },
+    id,
+  );
+  await conflictPage.select('.workspace-library [data-workspace-select]', id);
+  await conflictPage.evaluate(() => {
+    window.confirm = () => true;
+  });
+  await conflictPage.evaluate(() => {
+    const panel = document.querySelector('.workspace-library');
+    if (!panel.open) panel.querySelector('summary')?.click();
+  });
+  await conflictPage.evaluate(() =>
+    document.querySelector('.workspace-library [data-action="open"]')?.click(),
+  );
+  await conflictPage.waitForFunction(
+    () =>
+      document
+        .querySelector('.workspace-library [data-status]')
+        ?.textContent.includes('Opened'),
+    { timeout: 12000 },
+  );
+  const beforeExternalSave = await page.evaluate(
+    (workspaceId) =>
+      window.__godsEyeView.workspaceStorage.getWorkspace(workspaceId),
+    id,
+  );
+  await conflictPage.evaluate(() =>
+    document.querySelector('.workspace-library [data-action="save"]')?.click(),
+  );
+  await conflictPage.waitForFunction(
+    () =>
+      document
+        .querySelector('.workspace-library [data-status]')
+        ?.textContent.includes('complete revision'),
+    { timeout: 12000 },
+  );
+  const afterExternalSave = await page.evaluate(
+    (workspaceId) =>
+      window.__godsEyeView.workspaceStorage.getWorkspace(workspaceId),
+    id,
+  );
+  assert.ok(
+    afterExternalSave.manifest.revision > beforeExternalSave.manifest.revision,
+    'the second browser page committed a newer IndexedDB revision',
+  );
+  assert.deepEqual(
+    afterExternalSave.chunks,
+    beforeExternalSave.chunks,
+    'the second page Save preserved all stored chunks exactly',
+  );
+  await page.bringToFront();
   await click('.workspace-library [data-action="save"]');
   await page.waitForFunction(() =>
     document
       .querySelector('.workspace-library [data-status]')
       ?.textContent.includes('newer revision'),
+  );
+  const afterStaleSave = await page.evaluate(
+    (workspaceId) =>
+      window.__godsEyeView.workspaceStorage.getWorkspace(workspaceId),
+    id,
+  );
+  assert.equal(
+    afterStaleSave.manifest.revision,
+    afterExternalSave.manifest.revision,
+    'the stale first-page save did not advance the competing revision',
+  );
+  assert.deepEqual(
+    afterStaleSave.document,
+    afterExternalSave.document,
+    'the stale first-page save did not replace the competing document',
+  );
+  assert.deepEqual(
+    afterStaleSave.chunks,
+    afterExternalSave.chunks,
+    'the stale first-page save did not replace the competing chunks',
   );
 
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -270,7 +337,7 @@ try {
     { timeout: 12_000 },
   );
   assert.deepEqual(
-    errors,
+    fixtures.flatMap((fixture) => fixture.errors),
     [],
     'the workspace UI has no uncaught browser errors',
   );
@@ -285,10 +352,13 @@ try {
   console.log(
     'PASS offline demo is clearly synthetic and saved as its own workspace',
   );
-  if (resourceErrors.length)
-    console.log(
-      `NOTE ${resourceErrors.length} browser resource errors were observed (not script exceptions)`,
-    );
+  console.log(
+    'PASS a separate same-origin browser page commits IndexedDB revision and stale UI Save surfaces the conflict',
+  );
 } finally {
-  await browser.close();
+  try {
+    for (const page of pages) await cleanupFixturePageDiagnostics(page);
+  } finally {
+    await browser.close();
+  }
 }
