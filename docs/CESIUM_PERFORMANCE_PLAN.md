@@ -240,6 +240,19 @@ fresh-frame deadline and exact-pixel comparison remain unchanged. The validator
 also requires that calibration leave the viewer's position, direction and up
 vector unchanged, even if both representations would otherwise drift equally.
 
+[Run 38081150864](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38081150864)
+at `b80b379` remains **failed**
+([raw report](performance-evidence/calibration-38081150864.json),
+[job metadata](performance-evidence/calibration-38081150864-run.json)). Both
+post-release captures now have a successful current geometry update and natural
+completion evidence. The candidate again has zero idle frames (control 276),
+but the control's camera up vector still changes and 712 pixels differ. Geometry
+and style hashes agree, and cleanup succeeds. The queued-input regression did
+not cover movements separated by disabled controller updates; Cesium retains
+last-movement data across its aggregator reset, making residual inertia the next
+specific reproduction to test. The handoff code is not rendered-accepted.
+Raw SHA-256: `3ee5b9a63e9ae0c8f4b14a242abf1bae5b93754a1e08e2663064188222ef1f6d`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
