@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. Full runtime CI passes at
-`3e9a1f859d58fe2434b3dfa28b055f45c25c5e79` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38032631999), [job results](performance-evidence/ci-3e9a1f8.json)).
+`bc99c68e6987cd19628a4a936ab7cda548661483` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034288582), [job results](performance-evidence/ci-bc99c68.json)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -574,6 +574,21 @@ partial packet remains partial and cannot close the parent slice.
   packet is next. Samples
   remain diagnostic and `comparisonEligible: false` until the comparison
   export and full workload contracts are implemented and verified.
+- **S47.1b-7 actual capture CLI integration implemented by GPT-6 Luna:**
+  `9802305d99b2a5dc871f00848a969455116f6c64` and
+  `c49288e4b274c8b7b4be0f78a7ac72ab369d0551` extend the manually dispatched
+  production-build smoke to execute the real capture command against the verified
+  candidate server. It requests one cold startup and two repetitions of idle,
+  motion and selected-aircraft tracking, each with one-second warmup and capture.
+  These short software-rendered samples are integration diagnostics only. The
+  validator requires six isolated samples, matching commit/receipt/fixture identity,
+  exact populations, Manual/Dense 75%, foreground continuity, tracking identity,
+  successful integrity checks and receipt-derived worker audits. The artifact
+  retains the raw successful CLI report. Time and output bounds stop only the
+  owned CLI/browser processes; errors retain bounded, redacted stderr and sample
+  progress, with observed cleanup separated from unconfirmed cleanup. Eight
+  focused tests and syntax checks pass locally. [The first full CLI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38034906382)
+  is running at candidate/harness `c49288e`; a browser pass is not yet claimed.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
