@@ -168,7 +168,9 @@ export function createWorkspaceLibraryPanel({
   let applyingImport = false;
   let renderController = null;
   let openGeneration = 0;
+  let refreshGeneration = 0;
   let autosaveTimer = null;
+  let workspaceSaveTail = Promise.resolve();
   let historyTimer = null;
   let pendingHistoryView = null;
   let lastAuthoredSignature = '';
@@ -217,6 +219,34 @@ export function createWorkspaceLibraryPanel({
   function syncImportApplyButton() {
     applyImportButton.disabled =
       applyingImport || !active || !stagedPreview?.accepted;
+  }
+  function serializeWorkspaceSave(operation) {
+    const result = workspaceSaveTail.then(operation);
+    workspaceSaveTail = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+  function captureWorkspaceSaveOwner() {
+    return {
+      owner: active,
+      workspaceId: active?.id ?? null,
+      generation: openGeneration,
+    };
+  }
+  function workspaceSaveOwnerIsCurrent(owner) {
+    return (
+      !disposed &&
+      owner.generation === openGeneration &&
+      owner.owner === active &&
+      owner.workspaceId === (active?.id ?? null)
+    );
+  }
+  function enqueueWorkspaceSave(owner, operation) {
+    return serializeWorkspaceSave(() =>
+      workspaceSaveOwnerIsCurrent(owner) ? operation() : null,
+    );
   }
   async function renderImportedData(imports, options) {
     cancelImportRendering();
@@ -312,33 +342,44 @@ export function createWorkspaceLibraryPanel({
     for (const item of values)
       savedQuerySelect.append(new Option(item.name, item.id));
   }
-  async function persistWorkspace({
-    chunks,
-    pinnedEvidence = active?.pinnedEvidence,
-  } = {}) {
-    if (!active) throw new Error('Save or open a workspace first.');
-    const owner = active;
-    const saved = await library.save(
-      snapshot(owner.title, { chunks, pinnedEvidence }),
-      {
-        id: owner.id,
-        expectedRevision: owner.revision,
-      },
-    );
-    if (active?.id === owner.id) {
-      active.revision = saved.manifest.revision;
-      active.chunks = saved.chunks || chunks || active.chunks;
-      if (pinnedEvidence) active.pinnedEvidence = pinnedEvidence;
-      await refresh();
-    }
-    return saved;
+  async function persistWorkspace({ chunks, pinnedEvidence } = {}) {
+    const saveOwner = captureWorkspaceSaveOwner();
+    return enqueueWorkspaceSave(saveOwner, async () => {
+      if (!active) throw new Error('Save or open a workspace first.');
+      const owner = active;
+      const nextChunks = typeof chunks === 'function' ? chunks(owner) : chunks;
+      const nextPinnedEvidence =
+        pinnedEvidence === undefined
+          ? owner.pinnedEvidence
+          : typeof pinnedEvidence === 'function'
+            ? pinnedEvidence(owner)
+            : pinnedEvidence;
+      const saved = await library.save(
+        snapshot(owner.title, {
+          chunks: nextChunks,
+          pinnedEvidence: nextPinnedEvidence,
+        }),
+        {
+          id: owner.id,
+          expectedRevision: owner.revision,
+        },
+      );
+      if (workspaceSaveOwnerIsCurrent(saveOwner)) {
+        active.revision = saved.manifest.revision;
+        active.chunks = saved.chunks || nextChunks || active.chunks;
+        if (nextPinnedEvidence)
+          active.pinnedEvidence = saved.document.pinnedEvidence;
+        await refresh();
+      } else return null;
+      return saved;
+    });
   }
 
   async function saveQuery() {
     try {
       if (!active)
         throw new Error('Save or open a workspace before saving query intent.');
-      const existing = parseSavedQueryList(active.chunks?.savedQueries || []);
+      const saveOwner = captureWorkspaceSaveOwner();
       const id = savedQuerySelect.value || `query-${now()}`;
       const query = parseSavedQuery({
         version: 1,
@@ -347,12 +388,24 @@ export function createWorkspaceLibraryPanel({
         updatedAt: now(),
         query: readQueryIntent(),
       });
-      const savedQueries = [
-        ...existing.filter((item) => item.id !== id),
-        query,
-      ];
-      const chunks = { ...active.chunks, savedQueries };
-      await persistWorkspace({ chunks });
+      const saved = await persistWorkspace({
+        chunks: (owner) => {
+          const existing = parseSavedQueryList(
+            owner.chunks?.savedQueries || [],
+          );
+          return {
+            ...owner.chunks,
+            savedQueries: [...existing.filter((item) => item.id !== id), query],
+          };
+        },
+      });
+      if (
+        !saved ||
+        disposed ||
+        saveOwner.generation !== openGeneration ||
+        active?.id !== saved.document.id
+      )
+        return;
       savedQuerySelect.value = id;
       queryStatus.textContent = `Saved query “${query.name}” with explicit layer, filter, order and time intent.`;
     } catch (error) {
@@ -530,6 +583,7 @@ export function createWorkspaceLibraryPanel({
 
   async function showOfflineDemo() {
     const generation = ++openGeneration;
+    const saveOwner = captureWorkspaceSaveOwner();
     invalidateWorkspaceOwnedPendingImport();
     restore.cancel('synthetic-demo');
     cancelImportRendering();
@@ -582,20 +636,24 @@ export function createWorkspaceLibraryPanel({
           ],
         },
       ];
-      const saved = await library.save(
-        snapshot('Synthetic offline demo', { chunks: { imports } }),
-      );
-      if (disposed || generation !== openGeneration) return;
-      active = {
-        id: saved.document.id,
-        title: saved.document.title,
-        revision: saved.manifest.revision,
-        pinnedEvidence: [],
-        chunks: { imports },
-      };
+      const saved = await enqueueWorkspaceSave(saveOwner, async () => {
+        const result = await library.save(
+          snapshot('Synthetic offline demo', { chunks: { imports } }),
+        );
+        if (!workspaceSaveOwnerIsCurrent(saveOwner)) return null;
+        active = {
+          id: result.document.id,
+          title: result.document.title,
+          revision: result.manifest.revision,
+          pinnedEvidence: [],
+          chunks: { imports },
+        };
+        select.value = active.id;
+        await refresh();
+        return result;
+      });
+      if (!saved || disposed || generation !== openGeneration) return;
       const owner = active;
-      select.value = owner.id;
-      await refresh();
       if (disposed || generation !== openGeneration || active?.id !== owner.id)
         return;
       if (!(await renderImportedData(imports, { workspaceId: owner.id })))
@@ -630,7 +688,10 @@ export function createWorkspaceLibraryPanel({
     },
     prepare: (document) => document,
     captureCurrent: async () => shareLinkManager.getCurrentView(),
-    apply: async (document, { signal, availability, navigationToken }) => {
+    apply: async (
+      document,
+      { signal, availability, navigationToken, stored },
+    ) => {
       signal?.throwIfAborted();
       const result = await shareLinkManager.applyView(document.view, {
         navigationToken,
@@ -640,7 +701,7 @@ export function createWorkspaceLibraryPanel({
         document.view,
         { signal },
       );
-      return { result, layers, availability };
+      return { result, layers, availability, stored };
     },
     rollback: async (view) => {
       if (view) {
@@ -717,7 +778,7 @@ export function createWorkspaceLibraryPanel({
     const target = direction === 'undo' ? history.undo() : history.redo();
     if (!target) return;
     const currentView = shareLinkManager.getCurrentView();
-    const owner = active;
+    const saveOwner = captureWorkspaceSaveOwner();
     applying = true;
     try {
       await shareLinkManager.applyView({
@@ -726,14 +787,24 @@ export function createWorkspaceLibraryPanel({
       });
       await shareRestoration?.restoreWorkspaceView?.(target);
       lastAuthoredSignature = authoredSignature();
-      const saved = await library.save(snapshot(owner.title), {
-        id: owner.id,
-        expectedRevision: owner.revision,
-      });
-      if (active?.id === owner.id) {
-        active.revision = saved.manifest.revision;
+      const saved = await enqueueWorkspaceSave(saveOwner, async () => {
+        const currentOwner = active;
+        const result = await library.save(snapshot(currentOwner.title), {
+          id: currentOwner.id,
+          expectedRevision: currentOwner.revision,
+        });
+        if (!workspaceSaveOwnerIsCurrent(saveOwner)) return null;
+        active.revision = result.manifest.revision;
         await refresh();
-      }
+        return result;
+      });
+      if (
+        !saved ||
+        disposed ||
+        saveOwner.generation !== openGeneration ||
+        active?.id !== saved.document.id
+      )
+        return;
       setStatus(
         `${direction === 'undo' ? 'Undid' : 'Redid'} the authored change and saved revision ${saved.manifest.revision}.`,
         'saved',
@@ -751,8 +822,19 @@ export function createWorkspaceLibraryPanel({
 
   async function refresh() {
     if (disposed) return;
+    const refreshId = ++refreshGeneration;
+    const generation = openGeneration;
+    const owner = active;
+    const ownerId = owner?.id || select.value;
+    const isCurrent = () =>
+      !disposed &&
+      refreshId === refreshGeneration &&
+      generation === openGeneration &&
+      owner === active &&
+      ownerId === (active?.id || select.value);
     const rows = await library.list();
-    const prior = active?.id || select.value;
+    if (!isCurrent()) return;
+    const prior = ownerId;
     select.replaceChildren();
     const placeholder = document.createElement('option');
     placeholder.value = '';
@@ -767,21 +849,17 @@ export function createWorkspaceLibraryPanel({
       select.append(option);
     }
     if (rows.some((row) => row.id === prior)) select.value = prior;
-    const row = rows.find((item) => item.id === select.value);
-    const stored = row ? await library.getWorkspace(row.id) : null;
-    active = row
-      ? {
-          ...row,
-          pinnedEvidence: stored?.document?.pinnedEvidence || [],
-          chunks: stored?.chunks || {},
-        }
-      : null;
+    if (!isCurrent()) return;
     invalidateWorkspaceOwnedPendingImport();
     syncImportApplyButton();
     history.bindWorkspace(active?.id, shareLinkManager.getCurrentView());
     refreshHistoryControls();
     renderSavedQueries();
-    const points = active ? await library.history(active.id) : [];
+    const historyWorkspaceId = active?.id || null;
+    const points = historyWorkspaceId
+      ? await library.history(historyWorkspaceId)
+      : [];
+    if (!isCurrent() || historyWorkspaceId !== (active?.id || null)) return;
     revisions.replaceChildren();
     const noRevision = document.createElement('option');
     noRevision.value = '';
@@ -796,6 +874,7 @@ export function createWorkspaceLibraryPanel({
       revisions.append(option);
     }
     const estimate = await library.estimate();
+    if (!isCurrent()) return;
     usage.textContent =
       estimate?.usage != null && estimate?.quota != null
         ? `Local storage: ${Math.round(estimate.usage / 1024 / 1024)} MiB used of ${Math.round(estimate.quota / 1024 / 1024)} MiB.`
@@ -809,25 +888,50 @@ export function createWorkspaceLibraryPanel({
       : active?.title ||
         window.prompt('Name this investigation', 'New investigation');
     if (title == null) return;
+    const saveOwner = captureWorkspaceSaveOwner();
     applying = true;
     try {
-      const saved = await library.save(
-        snapshot(title),
-        active && !as
-          ? { id: active.id, expectedRevision: active.revision }
-          : {},
-      );
-      active = {
-        id: saved.document.id,
-        title: saved.document.title,
-        revision: saved.manifest.revision,
-        pinnedEvidence: saved.document.pinnedEvidence,
-        chunks: saved.chunks || {},
-      };
-      invalidateWorkspaceOwnedPendingImport();
-      syncImportApplyButton();
-      select.value = active.id;
-      await refresh();
+      const saved = await enqueueWorkspaceSave(saveOwner, async () => {
+        const currentOwner = active;
+        const saveSnapshot = snapshot(title, {
+          chunks: currentOwner?.chunks || {},
+          pinnedEvidence: currentOwner?.pinnedEvidence || [],
+        });
+        const result = await library.save(
+          saveSnapshot,
+          currentOwner && !as
+            ? { id: currentOwner.id, expectedRevision: currentOwner.revision }
+            : {},
+        );
+        if (!workspaceSaveOwnerIsCurrent(saveOwner)) return null;
+        if (currentOwner && !as && result.document.id === currentOwner.id) {
+          currentOwner.title = result.document.title;
+          currentOwner.revision = result.manifest.revision;
+          currentOwner.pinnedEvidence = result.document.pinnedEvidence || [];
+          currentOwner.chunks = saveSnapshot.chunks || {};
+          active = currentOwner;
+        } else {
+          active = {
+            id: result.document.id,
+            title: result.document.title,
+            revision: result.manifest.revision,
+            pinnedEvidence: result.document.pinnedEvidence || [],
+            chunks: saveSnapshot.chunks || {},
+          };
+        }
+        invalidateWorkspaceOwnedPendingImport();
+        syncImportApplyButton();
+        select.value = active.id;
+        await refresh();
+        return result;
+      });
+      if (
+        !saved ||
+        disposed ||
+        saveOwner.generation !== openGeneration ||
+        active?.id !== saved.document.id
+      )
+        return;
       setStatus(
         saved.saved
           ? `Saved “${active.title}” as complete revision ${active.revision}.`
@@ -851,33 +955,92 @@ export function createWorkspaceLibraryPanel({
     invalidateWorkspaceOwnedPendingImport();
     const workspaceId = select.value;
     cancelImportRendering();
-    if (!select.value)
-      return setStatus('Choose an investigation first.', 'warning');
+    if (!select.value) {
+      setStatus('Choose an investigation first.', 'warning');
+      return false;
+    }
     setStatus('Opening investigation…');
     applying = true;
     const token = navigation?._beginDeferredNavigation?.('workspace restore', {
       cancelPendingSelection: false,
     });
     let result;
+    let restoredWorkspace = null;
+    const restoreAndHydrate = async () => {
+      const restored = await restore.restore(workspaceId, {
+        navigationToken: token,
+      });
+      if (restored.status !== 'applied') return restored;
+      if (
+        disposed ||
+        generation !== openGeneration ||
+        select.value !== workspaceId
+      )
+        return { status: 'missing' };
+      const stored = restored.result?.stored;
+      if (
+        disposed ||
+        generation !== openGeneration ||
+        select.value !== workspaceId
+      )
+        return { status: 'missing' };
+      if (!stored || stored.document?.id !== restored.document?.id)
+        return { status: 'missing' };
+      const row = {
+        id: restored.document.id,
+        title: restored.document.title,
+        revision: stored.manifest.revision,
+      };
+      active = {
+        ...row,
+        pinnedEvidence: stored.document?.pinnedEvidence || [],
+        chunks: stored.chunks || {},
+      };
+      restoredWorkspace = { row, stored };
+      return restored;
+    };
     try {
       result =
         revision == null
-          ? await restore.restore(select.value, { navigationToken: token })
+          ? await serializeWorkspaceSave(() =>
+              disposed ||
+              generation !== openGeneration ||
+              select.value !== workspaceId
+                ? { status: 'missing' }
+                : restoreAndHydrate(),
+            )
           : await (async () => {
-              const record = await library.getWorkspace(select.value, {
-                revision,
+              return serializeWorkspaceSave(async () => {
+                if (
+                  disposed ||
+                  generation !== openGeneration ||
+                  select.value !== workspaceId
+                )
+                  return null;
+                const record = await library.getWorkspace(workspaceId, {
+                  revision,
+                });
+                if (!record) return { status: 'missing' };
+                const current = await library.getWorkspace(workspaceId);
+                if (!current) return { status: 'missing' };
+                // Read the current revision after earlier same-tab saves drain.
+                const result = await library.recover(workspaceId, revision, {
+                  expectedRevision: current.manifest.revision,
+                });
+                if (!result) return { status: 'missing' };
+                if (
+                  disposed ||
+                  generation !== openGeneration ||
+                  select.value !== workspaceId
+                )
+                  return { status: 'missing' };
+                if (active?.id === workspaceId) {
+                  active.revision = result.manifest.revision;
+                  active.pinnedEvidence = result.document.pinnedEvidence || [];
+                  active.chunks = record.chunks || {};
+                }
+                return restoreAndHydrate();
               });
-              if (!record) return { status: 'missing' };
-              const tempId = record.document.id;
-              const current = await library.getWorkspace(tempId);
-              if (!current) return { status: 'missing' };
-              // Recovery writes a new current revision from the selected complete snapshot.
-              const recovered = await library.recover(tempId, revision, {
-                expectedRevision: current.manifest.revision,
-              });
-              return recovered
-                ? restore.restore(tempId, { navigationToken: token })
-                : { status: 'missing' };
             })();
     } finally {
       if (generation === openGeneration) applying = false;
@@ -887,25 +1050,10 @@ export function createWorkspaceLibraryPanel({
       generation !== openGeneration ||
       select.value !== workspaceId
     )
-      return;
+      return false;
     if (result.status === 'applied') {
-      const row = (await library.list()).find(
-        (item) => item.id === select.value,
-      );
-      const stored = row ? await library.getWorkspace(row.id) : null;
-      if (
-        disposed ||
-        generation !== openGeneration ||
-        select.value !== workspaceId
-      )
-        return;
-      active = row
-        ? {
-            ...row,
-            pinnedEvidence: stored?.document?.pinnedEvidence || [],
-            chunks: stored?.chunks || {},
-          }
-        : active;
+      const { stored } = restoredWorkspace || {};
+      if (!stored) return false;
       invalidateWorkspaceOwnedPendingImport();
       syncImportApplyButton();
       if (
@@ -913,7 +1061,7 @@ export function createWorkspaceLibraryPanel({
         generation !== openGeneration ||
         select.value !== workspaceId
       )
-        return;
+        return false;
       if (
         stored &&
         !(await renderImportedData(stored.chunks?.imports || [], {
@@ -930,12 +1078,14 @@ export function createWorkspaceLibraryPanel({
           ? `Opened with unavailable references: ${missing}.`
           : `Opened “${active?.title || 'investigation'}”.`,
       );
+      return true;
     } else
       setStatus(
         result.error?.message ||
           `Could not open investigation (${result.status}).`,
         'error',
       );
+    return false;
   }
 
   async function act(action) {
@@ -952,36 +1102,51 @@ export function createWorkspaceLibraryPanel({
       return setStatus('Choose an investigation first.', 'warning');
     if (action === 'duplicate') {
       const generation = ++openGeneration;
+      const sourceId = select.value;
       restore.cancel('workspace-duplicate');
       cancelImportRendering();
       applying = false;
-      const copy = await library.duplicate(select.value);
-      if (disposed || generation !== openGeneration) return;
-      if (copy) {
-        active = {
-          id: copy.document.id,
-          title: copy.document.title,
-          revision: 1,
+      const copy = await serializeWorkspaceSave(async () => {
+        if (
+          disposed ||
+          generation !== openGeneration ||
+          select.value !== sourceId
+        )
+          return null;
+        const duplicated = await library.duplicate(sourceId);
+        if (
+          !duplicated ||
+          disposed ||
+          generation !== openGeneration ||
+          select.value !== sourceId
+        )
+          return null;
+        const stored = await library.getWorkspace(duplicated.document.id);
+        if (
+          !stored ||
+          disposed ||
+          generation !== openGeneration ||
+          select.value !== sourceId
+        )
+          return null;
+        const duplicateOwner = {
+          ...duplicated.document,
+          revision: duplicated.manifest.revision,
+          pinnedEvidence: stored.document?.pinnedEvidence || [],
+          chunks: stored.chunks || {},
         };
+        active = duplicateOwner;
+        select.value = duplicateOwner.id;
         invalidateWorkspaceOwnedPendingImport();
         syncImportApplyButton();
-        const owner = active;
+        renderSavedQueries();
         await refresh();
-        if (
-          disposed ||
-          generation !== openGeneration ||
-          active?.id !== owner.id
-        )
+        return { owner: duplicateOwner };
+      });
+      if (disposed || generation !== openGeneration) return;
+      if (copy) {
+        if (disposed || generation !== openGeneration || active !== copy.owner)
           return;
-        select.value = owner.id;
-        const stored = await library.getWorkspace(owner.id);
-        if (
-          disposed ||
-          generation !== openGeneration ||
-          active?.id !== owner.id
-        )
-          return;
-        active.chunks = stored?.chunks || {};
         if (
           !(await renderImportedData(active.chunks.imports || [], {
             workspaceId: active.id,
@@ -997,15 +1162,37 @@ export function createWorkspaceLibraryPanel({
         )
       )
         return;
-      await library.remove(select.value, {
-        expectedRevision: active?.revision,
+      const ownerToken = captureWorkspaceSaveOwner();
+      const workspaceId = select.value;
+      const removed = await enqueueWorkspaceSave(ownerToken, async () => {
+        if (select.value !== workspaceId) return false;
+        let expectedRevision;
+        if (active?.id === workspaceId) expectedRevision = active.revision;
+        else {
+          const current = await library.getWorkspace(workspaceId);
+          if (disposed || ownerToken.generation !== openGeneration)
+            return false;
+          if (!current) return false;
+          expectedRevision = current.manifest.revision;
+        }
+        const result = await library.remove(workspaceId, { expectedRevision });
+        if (
+          !result ||
+          disposed ||
+          ownerToken.generation !== openGeneration ||
+          select.value !== workspaceId
+        )
+          return false;
+        history.forget(workspaceId);
+        history.bindWorkspace(null);
+        if (active?.id === workspaceId) active = null;
+        select.value = '';
+        invalidateWorkspaceOwnedPendingImport();
+        syncImportApplyButton();
+        await refresh();
+        return true;
       });
-      history.forget(select.value);
-      history.bindWorkspace(null);
-      active = null;
-      invalidateWorkspaceOwnedPendingImport();
-      syncImportApplyButton();
-      await refresh();
+      if (!removed) return;
       if (!(await renderImportedData([], { workspaceId: null }))) return;
       setStatus('Investigation deleted.');
     } else if (action === 'export') {
@@ -1018,10 +1205,11 @@ export function createWorkspaceLibraryPanel({
     } else if (action === 'recover') {
       if (!revisions.value)
         return setStatus('Choose a complete prior revision first.', 'warning');
-      await openSelected(Number(revisions.value));
-      setStatus(
-        'Recovered the selected complete revision as a new current revision.',
-      );
+      const recovered = await openSelected(Number(revisions.value));
+      if (recovered && active?.id === select.value)
+        setStatus(
+          'Recovered the selected complete revision as a new current revision.',
+        );
     } else if (action === 'pin-a' || action === 'pin-b') {
       await pinEvidence(action === 'pin-a' ? 'A' : 'B');
     } else if (action === 'compare') {
@@ -1140,9 +1328,8 @@ export function createWorkspaceLibraryPanel({
     const inputOwner = stagedImportOwner;
     const inputGeneration = importInputGeneration;
     const owner = active;
-    const generation = openGeneration;
-    const current = () =>
-      !disposed && generation === openGeneration && active?.id === owner.id;
+    const saveOwner = captureWorkspaceSaveOwner();
+    const current = () => workspaceSaveOwnerIsCurrent(saveOwner);
     const entry = {
       id: `import-${now()}`,
       kind: stagedPreview.kind,
@@ -1158,18 +1345,29 @@ export function createWorkspaceLibraryPanel({
       timeRange: stagedPreview.timeRange,
       records: stagedPreview.records,
     };
-    const chunks = {
-      ...(active.chunks || {}),
-      imports: [...(active.chunks?.imports || []), entry],
-    };
     try {
-      const result = await library.save(snapshot(active.title, { chunks }), {
-        id: active.id,
-        expectedRevision: active.revision,
+      const outcome = await enqueueWorkspaceSave(saveOwner, async () => {
+        const currentOwner = active;
+        const chunks = {
+          ...(currentOwner.chunks || {}),
+          imports: [...(currentOwner.chunks?.imports || []), entry],
+        };
+        const result = await library.save(
+          snapshot(currentOwner.title, { chunks }),
+          {
+            id: currentOwner.id,
+            expectedRevision: currentOwner.revision,
+          },
+        );
+        if (!current()) return null;
+        active.revision = result.manifest.revision;
+        active.chunks = chunks;
+        await refresh();
+        return { result, chunks };
       });
+      if (!outcome) return;
+      const { result, chunks } = outcome;
       if (!current()) return;
-      active.revision = result.manifest.revision;
-      active.chunks = chunks;
       const stillOwnsInput =
         stagedImportOwner === inputOwner && stagedPreview === previewOwner;
       let completionGeneration = inputGeneration;
@@ -1181,8 +1379,6 @@ export function createWorkspaceLibraryPanel({
         importReadOwner.invalidate();
         completionGeneration = ++importInputGeneration;
       }
-      await refresh();
-      if (!current()) return;
       if (
         !(await renderImportedData(chunks.imports, { workspaceId: owner.id }))
       )
@@ -1291,15 +1487,14 @@ export function createWorkspaceLibraryPanel({
   });
 
   async function pinEvidence(slot) {
+    const evidence = latestEvidence;
+    const saveOwner = captureWorkspaceSaveOwner();
     if (!active)
       return setStatus(
         'Save or open a workspace before pinning comparison evidence.',
         'warning',
       );
-    if (
-      !latestEvidence?.entityRef?.layerKey ||
-      latestEvidence.entityRef.id == null
-    )
+    if (!evidence?.entityRef?.layerKey || evidence.entityRef.id == null)
       return setStatus(
         'Select a record with an evidence reference first.',
         'warning',
@@ -1312,31 +1507,24 @@ export function createWorkspaceLibraryPanel({
         capturedAt: now(),
         temporal: view?.temporal,
         scope: { layers: view?.layers || [], map: view?.map || null },
-        coverage: latestEvidence.coverage,
-        records: [latestEvidence],
-        sourceLinks: [latestEvidence.sourceUrl].filter(Boolean),
-        limitations: latestEvidence.limitations,
+        coverage: evidence.coverage,
+        records: [evidence],
+        sourceLinks: [evidence.sourceUrl].filter(Boolean),
+        limitations: evidence.limitations,
       });
-      const pinnedEvidence = (active.pinnedEvidence || []).filter(
-        (item) => item.slot !== slot,
-      );
-      pinnedEvidence.push({
-        id: `comparison-${slot}`,
-        slot,
-        sourceId: latestEvidence.sourceId || latestEvidence.entityRef.layerKey,
-        capturedAt: captured.capturedAt,
-        snapshot: captured,
+      const saved = await persistWorkspace({
+        pinnedEvidence: (owner) => [
+          ...(owner.pinnedEvidence || []).filter((item) => item.slot !== slot),
+          {
+            id: `comparison-${slot}`,
+            slot,
+            sourceId: evidence.sourceId || evidence.entityRef.layerKey,
+            capturedAt: captured.capturedAt,
+            snapshot: captured,
+          },
+        ],
       });
-      const saved = await library.save(
-        snapshot(active.title, { pinnedEvidence }),
-        {
-          id: active.id,
-          expectedRevision: active.revision,
-        },
-      );
-      active.revision = saved.manifest.revision;
-      active.pinnedEvidence = pinnedEvidence;
-      await refresh();
+      if (!saved || !workspaceSaveOwnerIsCurrent(saveOwner)) return;
       root.querySelector('[data-comparison-source]').textContent =
         `Pinned selected evidence as ${slot}.`;
       setStatus(
@@ -1405,12 +1593,19 @@ export function createWorkspaceLibraryPanel({
     .addEventListener('change', async (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
+      const generation = openGeneration;
       try {
         if (file.size > 50 * 1024 * 1024)
           throw new Error('Backup exceeds the 50 MiB limit.');
         const imported = await library.importBackup(await file.text());
+        if (disposed || generation !== openGeneration) return;
         await refresh();
+        if (disposed || generation !== openGeneration) return;
         select.value = imported.document.id;
+        if (select.value !== imported.document.id)
+          throw new Error('Imported workspace could not be selected.');
+        if (!(await openSelected())) return;
+        if (disposed || select.value !== imported.document.id) return;
         setStatus(`Imported “${imported.document.title}”.`);
       } catch (error) {
         setStatus(`Import failed: ${error.message}`, 'error');
@@ -1423,19 +1618,26 @@ export function createWorkspaceLibraryPanel({
     const signature = authoredSignature(view);
     if (!signature || signature === lastAuthoredSignature) return;
     lastAuthoredSignature = signature;
+    const saveOwner = captureWorkspaceSaveOwner();
     queueHistory(view);
     clearTimeout(autosaveTimer);
     autosaveTimer = setTimeout(async () => {
-      if (disposed || applying || !active) return;
-      const owner = active;
+      autosaveTimer = null;
+      if (disposed || applying || !workspaceSaveOwnerIsCurrent(saveOwner))
+        return;
       try {
-        const saved = await library.save(snapshot(owner.title), {
-          id: owner.id,
-          expectedRevision: owner.revision,
+        const saved = await enqueueWorkspaceSave(saveOwner, async () => {
+          const owner = active;
+          const result = await library.save(snapshot(owner.title), {
+            id: owner.id,
+            expectedRevision: owner.revision,
+          });
+          if (!workspaceSaveOwnerIsCurrent(saveOwner)) return null;
+          active.revision = result.manifest.revision;
+          await refresh();
+          return result;
         });
-        if (active?.id !== owner.id) return;
-        active.revision = saved.manifest.revision;
-        await refresh();
+        if (!saved || !workspaceSaveOwnerIsCurrent(saveOwner)) return;
         setStatus(
           saved.saved
             ? `Autosaved revision ${active.revision}.`

@@ -1,6 +1,6 @@
 # Cesium performance plan
 
-Updated on 10 October 2026. The latest full integration at `f598310` fails the
+Updated on 11 October 2026. The latest full integration at `f598310` fails the
 mixed-use import smoke with a workspace revision conflict; the other six jobs
 pass ([job results](performance-evidence/ci-f598310.json)). The failure is recorded
 below and is not cleared by isolated passing checks. All seven full integration jobs pass at
@@ -124,14 +124,33 @@ and focused. This is a failed save operation, not evidence of a retained worker
 or a frame deadline problem. The harness waits for success until its unchanged
 30-second limit.
 
-The autosave and import handlers currently call the same optimistic-revision
-save independently. Their potential same-tab overlap needs a deterministic
-reproduction and an ownership fix; the error text alone does not prove another
-tab actually wrote the revision. Genuine cross-tab conflict protection must
-remain. No rerun or timeout increase clears this failure. Node 24/26, three-OS
+The autosave and import handlers in that revision call the same optimistic-revision
+save independently. Deterministic delayed-commit tests reproduce overlap in both
+orders against the unchanged parent implementation; both writers try to commit
+the same expected revision. Another negative control shows that refreshing the
+list could adopt an external revision without restoring its view, bypassing the
+next save's conflict protection. Root independently reproduced all three
+failures against `1a1688c`, whose workspace panel source matches `f598310`.
+No rerun or timeout increase clears the historical failure. Node 24/26, three-OS
 recovery and Windows onboarding pass at this SHA, but the integration result is
 **failed**. [Raw failure extracted from the job log](performance-evidence/mixed-use-smoke-f598310.json),
 SHA-256 `a4bcaad72e57f71b5e5420a162eb7fc1b827b8eb137d13839769b77c8fab3b18`.
+
+The follow-up patch gives panel writes an ordered queue. It captures workspace
+identity and generation at enqueue time, builds snapshots and content patches
+from that owner's latest state at execution, and publishes the saved revision
+and chunks before releasing the next writer. Autosave, imports, saved queries,
+evidence pins, manual Save, history recovery and duplicate operations share this
+ordering. Refresh only updates the listing; it cannot silently adopt a newer
+external revision. Reopening drains earlier writes, and backup imports restore
+their own view before becoming an active save target. Superseded or disposed
+owners cannot redirect queued writes into another workspace. Real external
+revision conflicts remain failures without retries. The focused workspace,
+import, history, restore and storage suite passes 44/44 checks, including 19
+panel tests. Repository formatting passes for 1,508 source files, and package
+boundaries pass for 1,003 modules and 78 portable entries. Rendered and full
+integration acceptance for the follow-up remain pending until their exact-commit
+runs pass.
 
 ### Tracking fixture ground coverage correction - 10 October 2026
 
