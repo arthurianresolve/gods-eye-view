@@ -143,7 +143,7 @@ async function readSourceIdentity(root, label, expectedCommit) {
   return { root: canonicalRoot, commit };
 }
 
-async function packageRecipe(root, npmConfig) {
+async function packageRecipe(root, npmConfig, timeoutMs) {
   const packageBytes = await readFile(path.join(root, 'package.json'));
   const lockBytes = await readFile(path.join(root, 'package-lock.json'));
   const packageJson = JSON.parse(packageBytes.toString('utf8'));
@@ -158,7 +158,7 @@ async function packageRecipe(root, npmConfig) {
     buildInvocation:
       'npm run build -- --outDir <new-empty-task-owned-directory>',
     nodeVersion: process.version,
-    npmVersion: await npmVersion(root, npmConfig),
+    npmVersion: await npmVersion(root, npmConfig, timeoutMs),
   };
 }
 
@@ -241,7 +241,7 @@ function buildEnvironment(npmConfig) {
 async function runNpm(
   root,
   args,
-  { captureOutput = false, npmConfig } = {},
+  { captureOutput = false, npmConfig, timeoutMs = 10 * 60 * 1000 } = {},
 ) {
   const cli = npmCliPath();
   try {
@@ -249,7 +249,7 @@ async function runNpm(
       cwd: root,
       encoding: 'utf8',
       stdio: captureOutput ? ['ignore', 'pipe', 'ignore'] : 'ignore',
-      timeout: 10 * 60 * 1000,
+      timeout: timeoutMs,
       maxBuffer: 32 * 1024,
       windowsHide: true,
       env: buildEnvironment(npmConfig),
@@ -262,10 +262,11 @@ async function runNpm(
   }
 }
 
-async function npmVersion(root, npmConfig) {
+async function npmVersion(root, npmConfig, timeoutMs) {
   const output = await runNpm(root, ['--version'], {
     captureOutput: true,
     npmConfig,
+    timeoutMs,
   });
   if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(output))
     throw new Error('npm version could not be verified.');
@@ -374,12 +375,21 @@ export async function createLocalBuildReceipt({
   buildOutDir,
   expectedAppCommit,
   expectedHarnessCommit,
+  commandTimeoutMs = 10 * 60 * 1000,
 } = {}) {
   text(checkoutRoot, 'Explicit build checkout');
   text(harnessRoot, 'Explicit harness checkout');
   text(buildOutDir, 'New build output path');
   assertSha(expectedAppCommit, SHA1, 'Expected application commit');
   assertSha(expectedHarnessCommit, SHA1, 'Expected harness commit');
+  if (
+    !Number.isInteger(commandTimeoutMs) ||
+    commandTimeoutMs < 1000 ||
+    commandTimeoutMs > 10 * 60 * 1000
+  )
+    throw new TypeError(
+      'Build command timeout must be between one second and ten minutes.',
+    );
 
   const appBefore = await readSourceIdentity(
     checkoutRoot,
@@ -425,13 +435,19 @@ export async function createLocalBuildReceipt({
 
   const npmConfig = await createNpmConfig();
   try {
-    const recipe = await packageRecipe(appBefore.root, npmConfig);
+    const recipe = await packageRecipe(
+      appBefore.root,
+      npmConfig,
+      commandTimeoutMs,
+    );
     await runNpm(appBefore.root, ['ci', '--no-audit', '--no-fund'], {
       npmConfig,
+      timeoutMs: commandTimeoutMs,
     });
     const buildArg = `--outDir=${canonicalOut}`;
     await runNpm(appBefore.root, ['run', 'build', '--', buildArg], {
       npmConfig,
+      timeoutMs: commandTimeoutMs,
     });
 
     const appAfter = await readSourceIdentity(
@@ -448,7 +464,11 @@ export async function createLocalBuildReceipt({
       throw new Error('Application source revision changed during the build.');
     if (harnessAfter.commit !== harness.commit)
       throw new Error('Harness source revision changed during the build.');
-    const afterRecipe = await packageRecipe(appAfter.root, npmConfig);
+    const afterRecipe = await packageRecipe(
+      appAfter.root,
+      npmConfig,
+      commandTimeoutMs,
+    );
     compareRecord(afterRecipe, recipe, 'Build recipe');
     const assets = await inventory(actualOut);
     const body = {

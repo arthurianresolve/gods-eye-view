@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       validation_mode:
-        description: Full validation, free native-renderer probe, or hosted Mac soak
+        description: Full validation, hosted diagnostics, or performance build smoke
         type: choice
         options:
           [
@@ -15,6 +15,7 @@ on:
             hosted-native-probe,
             hosted-macos-soak,
             hosted-collection-probe,
+            performance-build-smoke,
           ]
         default: standard
       full_soak:
@@ -30,6 +31,11 @@ on:
         description: Probe native WebGL on free standard hosted runners
         type: boolean
         default: false
+      candidate_sha:
+        description: Full immutable application SHA for the performance build smoke
+        type: string
+        required: false
+        default: ''
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -45,7 +51,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -94,7 +100,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -200,7 +206,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -235,7 +241,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -290,6 +296,66 @@ jobs:
         if: always()
         run: node scripts/print-qa-evidence.mjs qa-artifacts/profile-recovery.json
 
+  performance-build-smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'performance-build-smoke'
+    name: Baseline-compatible performance build smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+    steps:
+      - name: Check out harness and reachable commits
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+
+      - name: Initialize bounded smoke artifact and clock
+        run: |
+          mkdir -p "$RUNNER_TEMP"
+          cat > "$RUNNER_TEMP/performance-build-smoke.json" <<'JSON'
+          {"schema":"gev-performance-build-smoke/v1","scope":"hosted-browser integration smoke only; no hardware performance result or paired acceptance","status":"not-run","failure":{"phase":"runner-setup","message":"Smoke script did not complete."}}
+          JSON
+          echo "GEV_PERF_SMOKE_STARTED_AT_MS=$(date +%s%3N)" >> "$GITHUB_ENV"
+
+      - name: Install harness dependencies and headless Chrome
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+
+      - name: Build and inspect both immutable application revisions
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: >-
+          node scripts/qa-performance-build-smoke.mjs
+          --candidate-sha "$CANDIDATE_SHA"
+          --out "$RUNNER_TEMP/performance-build-smoke.json"
+
+      - name: Print bounded smoke evidence
+        if: always()
+        run: |
+          evidence="$RUNNER_TEMP/performance-build-smoke.json"
+          if [ -f "$evidence" ]; then
+            cat "$evidence"
+          else
+            echo 'Performance build smoke report was not created.'
+          fi
+
+      - name: Preserve smoke evidence, including failed runs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: performance-build-smoke-${{ github.run_id }}
+          path: ${{ runner.temp }}/performance-build-smoke.json
+          if-no-files-found: warn
+          retention-days: 3
+
   rendered-soak:
     name: 60-minute rendered application soak
     if: github.event_name == 'workflow_dispatch' && inputs.full_soak && inputs.validation_mode == 'standard'
@@ -333,7 +399,7 @@ jobs:
 
   hosted-gpu-probe:
     name: Native WebGL probe (${{ matrix.os }})
-    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak'
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:

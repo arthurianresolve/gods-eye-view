@@ -38,6 +38,21 @@ await writeFile(path.join(out, 'index.html'), '<main>fixture app</main>');
 await writeFile(path.join(out, 'assets', 'app.js'), await readFile('src/app.js'));
 `;
 
+test('build command timeout override stays within its bounded range', async () => {
+  for (const commandTimeoutMs of [999, 10 * 60 * 1000 + 1])
+    await assert.rejects(
+      createLocalBuildReceipt({
+        checkoutRoot: 'checkout',
+        harnessRoot: 'harness',
+        buildOutDir: 'output',
+        expectedAppCommit: 'a'.repeat(40),
+        expectedHarnessCommit: 'b'.repeat(40),
+        commandTimeoutMs,
+      }),
+      /between one second and ten minutes/,
+    );
+});
+
 async function fixture(t, { staleDist = false } = {}) {
   const tempRoot = await realpath(os.tmpdir());
   const tmpRoot = await mkdtemp(
