@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. All seven full integration jobs pass at
-`65fd7f3e106f214340c1bab4afcebb9c35a0cce7` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075994264), [job results](performance-evidence/ci-65fd7f3.json)),
+`996a8d3b8b73da0d3f64392b993bdff81a1e857f` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083652826), [job results](performance-evidence/ci-996a8d3.json)),
 including Windows recovery. The earlier Windows shutdown failures at `084a771`
 and `0940b57` remain historical evidence; this successful run does not establish
 their cause or a permanent fix. Subsequent code requires its own applicable checks.
@@ -30,7 +30,7 @@ the earlier release requirements and historical results.
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; five unchanged hosted toggles add zero geometry jobs at `db298d4` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; async rapid-edit publication, full appearance and Windows build-count comparisons remain |
-| S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot and vessel scheduling with exact focus endpoints; full layer rollout remains pending | Full integration CI passes at `65fd7f3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Five vessel pairs on reported UHD 620 and five on hosted Metal preserve endpoint pixels and reduce idle frames at `65fd7f3`; full application cadence and Windows browser-level acceleration verification remain pending |
+| S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
@@ -72,8 +72,8 @@ in-place pose edits. The reproducible comparison is
 It compares five pairs of ten exact numerical entity snapshots against
 `aea307c211e99f2f23a538a8356825723edd0097`, recording source hashes and dirty state.
 This measures definition-change notifications, not submitted worker jobs, GPU
-work or frame time. Frozen-commit and rendered results follow below; integration
-is pending. This does not complete the wider S50.1 revision audit.
+work or frame time. Frozen-commit, rendered and integration results follow below.
+This does not complete the wider S50.1 revision audit.
 
 The frozen, clean-source [five-pair Node comparison](performance-evidence/gizmo-geometry-996a8d3.json)
 at `996a8d3b8b73da0d3f64392b993bdff81a1e857f` passes all 50 exact snapshot
@@ -81,8 +81,7 @@ comparisons. Actual updater notifications fall from 375 to 80 across the fixed
 sequence. Root's 15 focused tests, formatting across 1,499 adopted files and
 package-boundary checks pass. [Rendered comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083654918)
 and [full integration](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083652826)
-were dispatched at this revision. The rendered run passes; integration remains
-pending. No FPS, GPU-build or full S50 acceptance claim follows from the Node
+both pass at this revision. No FPS, GPU-build or full S50 acceptance claim follows from the Node
 result.
 
 The [raw rendered report](performance-evidence/calibration-38083654918.json)
@@ -122,7 +121,24 @@ Windows post-acknowledgement shutdown failure, rather than proving its cause or 
 fix. [Raw report extracted from the CI log](performance-evidence/profile-recovery-38083013719-windows.json)
 and [terminal job metadata](performance-evidence/profile-recovery-38083013719-run.json)
 retain the failure. The runner uses hosted SwiftShader; this is not physical GPU
-evidence. All-platform recovery at the new `996a8d3` candidate is pending.
+evidence.
+
+All seven selected jobs in the subsequent [full integration at `996a8d3`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38083652826)
+pass ([terminal job metadata](performance-evidence/ci-996a8d3.json)): Node 24/26
+unit suites and production builds, formatting/package boundaries, Windows
+onboarding, all browser journeys and recovery on Windows, Linux and macOS.
+The separately selected tracking, full soak and published layer-token PR checks
+are not part of this standard run. Tracking at this exact candidate is being
+collected in [run 38084308489](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38084308489).
+
+The [Windows recovery report](performance-evidence/profile-recovery-38083652826-windows.json)
+preserves the same asset digest, settings and workspace across all five
+checkpoints, with no forced termination. Four browser closes take 323-536 ms;
+the final failed-verification rollback closes normally in 4,383 ms, still within
+the unchanged five-second gate. That near-limit observation is retained and does
+not establish the cause or closure of the previous intermittent process-shutdown
+failures. The report was extracted unchanged from its delimited CI log JSON;
+SHA-256 `24b4342de53193d5c4d79e54e92c0cc8ee161610bdfd4900cf080bf45d04368b`.
 
 ### S51.4 CCTV calibration render-demand candidate - 10 October 2026
 
