@@ -776,6 +776,7 @@ async function capturePixels(viewer, layer, trial, phase) {
   const canvas = await captureTrialFrame(viewer, layer, trial, phase);
   try {
     const sampledCamera = cameraSnapshot(viewer, layer);
+    const dataSourceDisplayReady = viewer.dataSourceDisplay?.ready ?? null;
     const rgba = canvas
       .getContext('2d')
       ?.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -797,6 +798,7 @@ async function capturePixels(viewer, layer, trial, phase) {
     const bytes = new Uint8Array(rgba.length);
     bytes.set(rgba);
     const captureState = {
+      dataSourceDisplayReady,
       selectedCameraId: sampledCamera.selectedCameraId,
       position: sampledCamera.position,
       direction: sampledCamera.direction,
@@ -826,6 +828,53 @@ async function capturePixels(viewer, layer, trial, phase) {
   } finally {
     canvas.width = 0;
     canvas.height = 0;
+  }
+}
+
+async function observeIncompleteVisualizers(viewer, layer, trial) {
+  if (trial.afterPixels?.captureState?.dataSourceDisplayReady !== false) return;
+  const startedAt = performance.now();
+  const report = {
+    scope:
+      'Diagnostic only: passive completion after the original captured frame; never replaces its acceptance pixels',
+    initialReady: false,
+    completedFrames: 0,
+    readyObserved: false,
+    readyElapsedMs: null,
+    finalPixels: null,
+    error: null,
+  };
+  trial.visualizerFollowup = report;
+  let remove = null;
+  let timeout = null;
+  try {
+    await new Promise((resolve) => {
+      remove = viewer.scene.postRender.addEventListener(() => {
+        report.completedFrames++;
+        if (viewer.dataSourceDisplay.ready === true) {
+          report.readyObserved = true;
+          report.readyElapsedMs = performance.now() - startedAt;
+          resolve();
+        }
+      });
+      timeout = setTimeout(resolve, 2000);
+    });
+  } finally {
+    remove?.();
+    clearTimeout(timeout);
+    report.elapsedMs = performance.now() - startedAt;
+  }
+  if (report.readyObserved) {
+    try {
+      report.finalPixels = await capturePixels(
+        viewer,
+        layer,
+        trial,
+        'diagnostic-ready-pixels',
+      );
+    } catch (error) {
+      report.error = String(error?.message || error).slice(0, 240);
+    }
   }
 }
 
@@ -1490,6 +1539,7 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
       completedPhase: 'after-frame-capture',
     });
     interactionObserver = null;
+    await observeIncompleteVisualizers(viewer, layer, trial);
     check(
       trial.beforePixels.sha256 !== trial.afterPixels.sha256,
       'Accepted CCTV calibration drag did not change rendered pixels.',

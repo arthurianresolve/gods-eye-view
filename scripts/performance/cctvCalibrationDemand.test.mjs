@@ -245,12 +245,14 @@ function trial(mode, pair, globalIndex) {
       width: viewport.width,
       height: viewport.height,
       nonBackgroundPixels: 1800,
+      captureState: { dataSourceDisplayReady: true },
     },
     afterPixels: {
       sha256: digest('2'),
       width: viewport.width,
       height: viewport.height,
       nonBackgroundPixels: 1820,
+      captureState: { dataSourceDisplayReady: true },
     },
     cleanup: {
       layerDisabled: true,
@@ -414,6 +416,13 @@ test('rejects missing pointer, pixel, foreground, or cleanup evidence', () => {
     },
     (run) => {
       delete run.beforePixels.nonBackgroundPixels;
+    },
+    (run) => {
+      run.afterPixels.captureState.dataSourceDisplayReady = false;
+      run.visualizerFollowup = { readyObserved: true };
+    },
+    (run) => {
+      delete run.beforePixels.captureState.dataSourceDisplayReady;
     },
     (run) => {
       run.idle.conditions.before.focused = false;
