@@ -33,7 +33,7 @@ the earlier release requirements and historical results.
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `2e839a4`; current Windows UHD 620 plateau pending |
-| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; five unchanged hosted toggles add zero geometry jobs at `db298d4` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; async rapid-edit publication, full appearance and Windows build-count comparisons remain |
+| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
 | S52 overlay invalidation | Layout-cache experiment reverted; broader revision invalidation remains pending | Five-pair Node comparisons improve three fixtures but regress detection; no optimization accepted | Pending |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
@@ -97,7 +97,7 @@ validation scope and cannot supply this new acceptance evidence. Root's 20
 focused checks pass, including cleanup failures, mismatched worker ownership,
 visible resurrection, stale pixels and legacy report compatibility. The archived
 version-1 pass at `db298d4` also validates through the legacy path. Package
-boundaries pass. The rendered version-2 run remains pending.
+boundaries pass. The rendered version-2 run now passes at `4206611`, as recorded below.
 No production geometry change or broader S50 completion is claimed by adding
 this fixture.
 
@@ -139,6 +139,27 @@ uncertain and incomplete transitions. Rendered validation remains pending.
 [Raw failed report](performance-evidence/cctv-lifecycle-38086422967.json),
 [terminal job metadata](performance-evidence/cctv-lifecycle-38086422967-run.json).
 Raw SHA-256: `14332f5202d97f082c1fcdec5821e6d42d2da10aec504f08a6117c6126937036`.
+
+The [rendered version-2 run at `4206611`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38086695433)
+passes all five unchanged toggles, disabled reinitialization and both delayed
+response cases. Root independently recomputed report validation. Revision B's
+geometry, style, PNG and exact pick sequence match its settled reference after
+enabled late delivery and after disabled delivery/re-enable. Both disabled
+captures match the hidden reference, with zero visible coverage entities and
+null picks/owners. Each held task belongs to a real `createGeometry.js` worker;
+B submits six geometry jobs while its prior response remains held. After drain,
+worker pending jobs are zero and scene/module ownership equals the warmed
+enabled/disabled baselines. All fixture listeners and held payloads are released,
+there are no page errors, and normal browser close takes 69 ms.
+
+[Raw passed report](performance-evidence/cctv-lifecycle-38086695433.json),
+[terminal job metadata](performance-evidence/cctv-lifecycle-38086695433-run.json).
+Raw SHA-256: `d604a6b0900fa27c56aa0a07934d1c5fb241160230cbdae3f0c981d611e896ac`.
+The source was clean at exact commit `4206611abc06c6fa3161c0f88e99a86624201ebf`.
+Twenty fixture tests, four existing production pick/ownership tests, formatting
+across 1,501 source files and package boundaries pass. This is hosted SwiftShader
+lifecycle evidence, not a physical GPU performance result. Pose/terrain revision
+coverage, full visual comparisons and the broader S50 acceptance remain open.
 
 ### S50.2 CCTV calibration handle geometry reuse - 10 October 2026
 
