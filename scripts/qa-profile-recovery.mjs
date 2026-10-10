@@ -37,6 +37,7 @@ import {
   assertOwnedRecoveryPage,
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
+  createRecoveryBrowserCloseTrace,
   createRecoveryPageTargetGuard,
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
@@ -249,8 +250,10 @@ async function reopen(label, { seed = false } = {}) {
     progress(step);
   };
   timedProgress('launch');
+  const browserCloseTrace = createRecoveryBrowserCloseTrace();
   browser = await launchFixtureBrowser({
     userDataDir: path.join(scratch, 'browser-profile'),
+    logger: browserCloseTrace.logger,
   });
   const pageTargetGuard = createRecoveryPageTargetGuard(browser);
   const diagnosticMode = process.env.GEV_PROFILE_RECOVERY_DIAGNOSTICS === '1';
@@ -500,8 +503,8 @@ async function reopen(label, { seed = false } = {}) {
     try {
       if (browser)
         browserClose = await closeRecoveryBrowser(browser, {
-          forceProcess: () =>
-            stopOwnedRecoveryProcessTree(browser.process()),
+          forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
+          closeTrace: browserCloseTrace,
         });
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);

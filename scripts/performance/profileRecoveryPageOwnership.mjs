@@ -88,6 +88,121 @@ export async function closeOwnedRecoveryPage(page, browser, timeoutMs = 2000) {
   };
 }
 
+const CDP_SEND_PREFIX = 'puppeteer:protocol:SEND';
+const CDP_RECEIVE_PREFIX = 'puppeteer:protocol:RECV';
+const MAX_CLOSE_PROTOCOL_MESSAGES = 64;
+const MAX_CLOSE_PROTOCOL_MESSAGE_LENGTH = 32_768;
+
+/** Keep only bounded Browser.close protocol milestones while close is active. */
+export function createRecoveryBrowserCloseTrace({
+  now = () => performance.now(),
+} = {}) {
+  let active = false;
+  let startedAt = null;
+  let messageCount = 0;
+  let overflow = false;
+  let malformedCloseMessage = false;
+  let browserCloseRequestId = null;
+  let requestElapsedMs = null;
+  let acknowledgementElapsedMs = null;
+  let acknowledgementError = null;
+  let disconnectedElapsedMs = null;
+  let finished = false;
+
+  const elapsed = () => Math.max(0, now() - startedAt);
+  const logProtocol = (direction, args) => {
+    if (!active) return;
+    if (messageCount >= MAX_CLOSE_PROTOCOL_MESSAGES) {
+      overflow = true;
+      return;
+    }
+    messageCount += 1;
+    const raw = args[0];
+    if (
+      typeof raw !== 'string' ||
+      raw.length > MAX_CLOSE_PROTOCOL_MESSAGE_LENGTH
+    ) {
+      overflow = true;
+      return;
+    }
+    let message;
+    try {
+      message = JSON.parse(raw);
+    } catch {
+      if (raw.includes('Browser.close')) malformedCloseMessage = true;
+      return;
+    }
+    if (direction === 'send' && message?.method === 'Browser.close') {
+      if (
+        !Number.isSafeInteger(message.id) ||
+        message.id < 0 ||
+        message.sessionId !== undefined
+      ) {
+        malformedCloseMessage = true;
+        return;
+      }
+      browserCloseRequestId = message.id;
+      requestElapsedMs ??= elapsed();
+      return;
+    }
+    if (
+      direction === 'receive' &&
+      browserCloseRequestId !== null &&
+      message?.sessionId === undefined &&
+      message?.method === undefined &&
+      Number.isSafeInteger(message?.id) &&
+      message.id >= 0 &&
+      message?.id === browserCloseRequestId &&
+      (Object.hasOwn(message, 'result') || Object.hasOwn(message, 'error'))
+    ) {
+      acknowledgementElapsedMs ??= elapsed();
+      acknowledgementError ??= Object.hasOwn(message, 'error');
+    }
+  };
+
+  return {
+    logger(prefix) {
+      if (typeof prefix !== 'string') return undefined;
+      if (prefix.startsWith(CDP_SEND_PREFIX))
+        return (...args) => logProtocol('send', args);
+      if (prefix.startsWith(CDP_RECEIVE_PREFIX))
+        return (...args) => logProtocol('receive', args);
+      return undefined;
+    },
+    begin() {
+      if (active || finished) throw new Error('Close trace is not reusable.');
+      startedAt = now();
+      active = true;
+    },
+    recordDisconnected() {
+      if (active) disconnectedElapsedMs ??= elapsed();
+    },
+    finish(deadlineMs = null) {
+      if (finished) return null;
+      active = false;
+      finished = true;
+      return {
+        scope: 'owned-browser-close-only',
+        browserCloseRequestSeen: requestElapsedMs !== null,
+        browserCloseRequestElapsedMs: requestElapsedMs,
+        browserCloseAcknowledgementSeen: acknowledgementElapsedMs !== null,
+        browserCloseAcknowledgementElapsedMs: acknowledgementElapsedMs,
+        browserCloseAcknowledgementLate:
+          acknowledgementElapsedMs !== null &&
+          Number.isFinite(deadlineMs) &&
+          acknowledgementElapsedMs > deadlineMs,
+        browserCloseAcknowledgementError: acknowledgementError,
+        browserDisconnected: disconnectedElapsedMs !== null,
+        browserDisconnectedElapsedMs: disconnectedElapsedMs,
+        malformedCloseMessage,
+        protocolMessageCount: messageCount,
+        protocolMessageOverflow: overflow,
+        protocolObservationComplete: !overflow,
+      };
+    },
+  };
+}
+
 /** Stop only the supplied browser process tree and report observed confirmation. */
 export async function stopOwnedRecoveryProcessTree(
   child,
@@ -123,10 +238,14 @@ export async function stopOwnedRecoveryProcessTree(
       const onError = () => finish(null);
       const onExit = (value) => finish(value);
       try {
-        killer = spawnImpl('taskkill', ['/PID', String(child.pid), '/T', '/F'], {
-          stdio: 'ignore',
-          windowsHide: true,
-        });
+        killer = spawnImpl(
+          'taskkill',
+          ['/PID', String(child.pid), '/T', '/F'],
+          {
+            stdio: 'ignore',
+            windowsHide: true,
+          },
+        );
       } catch {
         finish(null);
         return;
@@ -160,7 +279,8 @@ export async function stopOwnedRecoveryProcessTree(
   }
 
   const exitObserved = await new Promise((resolve) => {
-    if (child.exitCode != null || child.signalCode != null) return resolve(true);
+    if (child.exitCode != null || child.signalCode != null)
+      return resolve(true);
     const timer = setTimeout(() => {
       child.off('exit', onExit);
       resolve(false);
@@ -180,7 +300,12 @@ export async function stopOwnedRecoveryProcessTree(
 
 export async function closeRecoveryBrowser(
   browser,
-  { timeoutMs = 5000, forceProcess, now = () => performance.now() } = {},
+  {
+    timeoutMs = 5000,
+    forceProcess,
+    now = () => performance.now(),
+    closeTrace = null,
+  } = {},
 ) {
   const child = browser.process?.() ?? null;
   const startedAt = now();
@@ -197,6 +322,7 @@ export async function closeRecoveryBrowser(
     processExit = { code, signal, elapsedMs: Math.max(0, now() - startedAt) };
   };
   if (!processExit) child?.once?.('exit', onExit);
+  const onDisconnected = () => closeTrace?.recordDisconnected?.();
 
   const settleWithin = async (operation) => {
     let timer;
@@ -223,6 +349,8 @@ export async function closeRecoveryBrowser(
   let forceProcessAttempted = false;
   let forceProcessCallbackInvoked = false;
   try {
+    browser.on?.('disconnected', onDisconnected);
+    closeTrace?.begin?.();
     const closeResult = await settleWithin(() => browser.close());
     const closeCompleted = closeResult.kind === 'resolved';
     const closeStatus = closeCompleted
@@ -277,6 +405,7 @@ export async function closeRecoveryBrowser(
     }
 
     processExit ||= initialExit();
+    const protocolCloseTrace = closeTrace?.finish?.(timeoutMs) ?? null;
     return {
       closeCompleted,
       forcedProcessTermination,
@@ -289,6 +418,7 @@ export async function closeRecoveryBrowser(
         closeRejectionName,
         processExitedBeforeClose,
         processExit,
+        protocolCloseTrace,
         forceProcessStatus,
         forceProcessAttempted,
         forceProcessCallbackInvoked,
@@ -296,6 +426,8 @@ export async function closeRecoveryBrowser(
       },
     };
   } finally {
+    closeTrace?.finish?.(timeoutMs);
+    browser.off?.('disconnected', onDisconnected);
     child?.off?.('exit', onExit);
   }
 }

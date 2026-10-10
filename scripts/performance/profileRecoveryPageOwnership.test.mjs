@@ -7,6 +7,7 @@ import {
   assertOwnedRecoveryPage,
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
+  createRecoveryBrowserCloseTrace,
   createRecoveryPageTargetGuard,
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
@@ -252,6 +253,120 @@ test('browser close records an already-exited process and releases listeners', a
   assert.equal(child.listenerCount('exit'), 0);
   assert.equal(outcome.observation.closeStatus, 'completed');
   assert.equal(outcome.observation.closeDeadlineMs, 25);
+});
+
+test('close trace ignores unrelated and pre-close protocol text without retaining it', () => {
+  let now = 10;
+  const trace = createRecoveryBrowserCloseTrace({ now: () => now });
+  const send = trace.logger('puppeteer:protocol:SEND ▶');
+  const receive = trace.logger('puppeteer:protocol:RECV ◀');
+  const unrelated = trace.logger('puppeteer:error');
+  assert.equal(unrelated, undefined);
+  send(JSON.stringify({ method: 'Browser.close', id: 4, secret: 'before' }));
+  trace.begin();
+  send(JSON.stringify({ method: 'Page.navigate', id: 5, url: 'secret-url' }));
+  receive(JSON.stringify({ id: 5, result: { secret: 'response' } }));
+  now = 15;
+  send(JSON.stringify({ method: 'Browser.close', id: 6 }));
+  receive(JSON.stringify({ id: 6, sessionId: 'worker-session', result: {} }));
+  receive(JSON.stringify({ id: 6, method: 'Target.attachedToTarget' }));
+  const summary = trace.finish(5);
+  assert.equal(summary.browserCloseRequestSeen, true);
+  assert.equal(summary.browserCloseAcknowledgementSeen, false);
+  assert.equal(summary.protocolMessageCount, 5);
+  assert.equal(JSON.stringify(summary).includes('secret'), false);
+  send(JSON.stringify({ method: 'Browser.close', id: 6 }));
+  assert.equal(trace.finish(5), null);
+});
+
+test('close trace correlates Browser.close acknowledgement but keeps process wait separate', async () => {
+  const child = fakeBrowserProcess();
+  const trace = createRecoveryBrowserCloseTrace();
+  const send = trace.logger('puppeteer:protocol:SEND ▶');
+  const receive = trace.logger('puppeteer:protocol:RECV ◀');
+  const browser = new EventEmitter();
+  browser.process = () => child;
+  browser.close = () => {
+    send(
+      JSON.stringify({
+        method: 'Browser.close',
+        id: 42,
+        params: { secretUrl: 'https://private.invalid/?token=secret' },
+      }),
+    );
+    receive(JSON.stringify({ id: 42, result: {} }));
+    browser.emit('disconnected');
+    return new Promise(() => {});
+  };
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 20,
+    closeTrace: trace,
+    forceProcess: async () => {
+      child.exitCode = 0;
+      child.emit('exit', 0, null);
+      return { attempted: true, confirmed: true };
+    },
+  });
+  const protocol = outcome.observation.protocolCloseTrace;
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.observation.closeStatus, 'timed-out');
+  assert.equal(protocol.browserCloseRequestSeen, true);
+  assert.equal(protocol.browserCloseAcknowledgementSeen, true);
+  assert.equal(protocol.browserCloseAcknowledgementError, false);
+  assert.equal(protocol.browserCloseAcknowledgementLate, false);
+  assert.equal(protocol.protocolObservationComplete, true);
+  assert.equal(protocol.browserDisconnected, true);
+  assert.equal(outcome.observation.processExit.code, 0);
+  assert.equal(browser.listenerCount('disconnected'), 0);
+  assert.equal(child.listenerCount('exit'), 0);
+  assert.equal(JSON.stringify(protocol).includes('secret'), false);
+});
+
+test('close trace distinguishes missing and late acknowledgements and bounds messages', () => {
+  let now = 0;
+  const trace = createRecoveryBrowserCloseTrace({ now: () => now });
+  const send = trace.logger('puppeteer:protocol:SEND ▶');
+  const receive = trace.logger('puppeteer:protocol:RECV ◀');
+  trace.begin();
+  send(JSON.stringify({ method: 'Browser.close', id: 12 }));
+  now = 25;
+  receive(JSON.stringify({ id: 12, result: {} }));
+  const late = trace.finish(20);
+  assert.equal(late.browserCloseAcknowledgementSeen, true);
+  assert.equal(late.browserCloseAcknowledgementLate, true);
+
+  const errorTrace = createRecoveryBrowserCloseTrace({ now: () => now });
+  const errorSend = errorTrace.logger('puppeteer:protocol:SEND ▶');
+  const errorReceive = errorTrace.logger('puppeteer:protocol:RECV ◀');
+  errorTrace.begin();
+  errorSend(JSON.stringify({ method: 'Browser.close', id: 13 }));
+  errorReceive(
+    JSON.stringify({ id: 13, error: { message: 'sensitive protocol error' } }),
+  );
+  const rejectedAck = errorTrace.finish(100);
+  assert.equal(rejectedAck.browserCloseAcknowledgementSeen, true);
+  assert.equal(rejectedAck.browserCloseAcknowledgementError, true);
+  assert.equal(JSON.stringify(rejectedAck).includes('sensitive'), false);
+
+  const missingTrace = createRecoveryBrowserCloseTrace({ now: () => now });
+  const missingSend = missingTrace.logger('puppeteer:protocol:SEND ▶');
+  missingTrace.begin();
+  missingSend('{ malformed Browser.close');
+  const missing = missingTrace.finish(20);
+  assert.equal(missing.browserCloseRequestSeen, false);
+  assert.equal(missing.browserCloseAcknowledgementSeen, false);
+  assert.equal(missing.malformedCloseMessage, true);
+  assert.equal(missing.protocolObservationComplete, true);
+
+  const boundedTrace = createRecoveryBrowserCloseTrace({ now: () => now });
+  const boundedSend = boundedTrace.logger('puppeteer:protocol:SEND ▶');
+  boundedTrace.begin();
+  for (let index = 0; index < 65; index++)
+    boundedSend(JSON.stringify({ method: 'Page.reload', id: index }));
+  const bounded = boundedTrace.finish(20);
+  assert.equal(bounded.protocolMessageCount, 64);
+  assert.equal(bounded.protocolMessageOverflow, true);
+  assert.equal(bounded.protocolObservationComplete, false);
 });
 
 test('an exited process with an unresolved close acknowledgement remains a failure', async () => {
