@@ -4,7 +4,12 @@ import * as Cesium from 'cesium';
 export function createLaunchRenderDemand(render, state) {
   const makeOwner =
     render?.registerRenderDemand ||
-    (() => ({ setContinuous() {}, schedule: () => () => {}, dispose() {} }));
+    (() => ({
+      setContinuous() {},
+      schedule: () => () => {},
+      invalidate() {},
+      dispose() {},
+    }));
   let owner = makeOwner('rocket-launches');
   const cameraFlights = new Set();
   let active = false;

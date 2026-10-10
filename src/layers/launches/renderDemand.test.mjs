@@ -102,6 +102,16 @@ test('mission camera demand owns overlapping flights and preserves callbacks', (
   assert.equal(calls.at(-1)[1], false);
 });
 
+test('fallback mission render owner safely accepts invalidation', () => {
+  const demand = createLaunchRenderDemand(null, {
+    _selectedLaunchId: null,
+    _replayCameraLaunchId: null,
+  });
+  assert.doesNotThrow(() => demand.invalidate());
+  demand.dispose();
+  assert.doesNotThrow(() => demand.invalidate());
+});
+
 test('camera-flight demand releases on throw, disable, and stale completion', () => {
   const { calls, owner } = makeRenderOwner();
   const state = { _selectedLaunchId: null, _replayCameraLaunchId: null };
