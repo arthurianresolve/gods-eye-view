@@ -4,6 +4,7 @@ import * as Cesium from 'cesium';
 import { createCctvSource, createCctvLayer } from './index.js';
 import { raceWithFallbackTimeout } from './lifecycle.js';
 import { createHealth } from './health.js';
+import { CCTV_ACTIVATION_RESULT } from '../../cctvFocusRequest.js';
 
 const camera = {
   id: 'pack/camera ?x',
@@ -16,7 +17,10 @@ const camera = {
   pitchDeg: -12,
 };
 
-function createEmptyCctvLayerWithFocusListeners(source = createCctvSource()) {
+function createEmptyCctvLayerWithFocusListeners(
+  source = createCctvSource(),
+  resolveEllipsoidalGround = async () => [],
+) {
   const focusListeners = new Set();
   const spriteUnregistrations = [];
   let spriteRestoreCount = 0;
@@ -37,16 +41,19 @@ function createEmptyCctvLayerWithFocusListeners(source = createCctvSource()) {
         spriteUnregistrations.push({ owner, collection });
       },
     },
-    activation: {},
+    activation: { CCTV_ACTIVATION_RESULT },
     locations: { CITY_POIS: {} },
     picking: {
       resolvePickId: () => null,
       registerPickOwner: noop,
       unregisterPickOwner: noop,
     },
-    terrain: { resolveEllipsoidalGround: async () => [] },
-    ground: {},
-    mesh: {},
+    terrain: { resolveEllipsoidalGround },
+    ground: {
+      warmGroundFloor: noop,
+      cachedGroundFloor: () => null,
+    },
+    mesh: { sampleMeshFloorCells: noop },
     focus: {
       focusPassIsNeeded: () => false,
       getFocusTarget: () => null,
@@ -116,6 +123,7 @@ function createCctvTestViewer() {
     },
     isDestroyed: () => false,
     entities: {
+      all: entitySet,
       add(value) {
         const entity = { ...value };
         entitySet.add(entity);
@@ -128,6 +136,14 @@ function createCctvTestViewer() {
     primitives,
     canvasListeners,
   };
+}
+
+async function waitForTestCondition(predicate, message) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (predicate()) return;
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  assert.fail(message);
 }
 
 test('camera catalog and health use fixed source routes and caller cancellation', async () => {
@@ -297,6 +313,251 @@ test('disable then destroy and independent CCTV instances own separate focus lis
 
   second.layer.destroy();
   assert.equal(second.focusListeners.size, 0);
+});
+
+test('CCTV init aborts catalog terrain-prior work on destroy and re-init', async (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    hidden: false,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  t.after(() => {
+    globalThis.document = previousDocument;
+  });
+
+  const pending = [];
+  const resolveEllipsoidalGround = (_coords, options) =>
+    new Promise((resolve) =>
+      pending.push({ resolve, signal: options?.signal }),
+    );
+  const source = {
+    ...createCctvSource(),
+    getCatalog: async () => ({
+      sources: [{ id: 'camera-a', name: 'A', lat: 30, lon: -97 }],
+    }),
+    getHealth: async () => ({ cameras: [] }),
+  };
+  const fixture = createEmptyCctvLayerWithFocusListeners(
+    source,
+    resolveEllipsoidalGround,
+  );
+  t.after(() => {
+    fixture.layer.destroy();
+    for (const request of pending) request.resolve([]);
+  });
+  const firstViewer = createCctvTestViewer();
+  const secondViewer = createCctvTestViewer();
+
+  const firstInit = fixture.layer.init(firstViewer);
+  await waitForTestCondition(
+    () => pending.length === 1,
+    'first prior did not start',
+  );
+  const firstSignal = pending[0].signal;
+  const secondInit = fixture.layer.init(secondViewer);
+  await assert.rejects(firstInit, { name: 'AbortError' });
+  await waitForTestCondition(
+    () => pending.length === 2,
+    'successor prior did not start',
+  );
+  assert.ok(firstSignal instanceof AbortSignal);
+  assert.equal(firstSignal.aborted, true);
+
+  pending[1].resolve([{ ellipsoid: 10, source: 'reearth' }]);
+  await secondInit;
+  assert.equal(pending[1].signal.aborted, false);
+  assert.equal(fixture.layer.getStats().count, 1);
+  assert.equal(secondViewer.primitives.size, 1);
+});
+
+test('destroy aborts the terrain consumer and releases its abort listener', async (t) => {
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    hidden: false,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  t.after(() => {
+    globalThis.document = previousDocument;
+  });
+
+  let requestStarted = false;
+  let activeRequests = 0;
+  let abortListeners = 0;
+  const resolveEllipsoidalGround = (_coords, { signal } = {}) => {
+    activeRequests++;
+    return new Promise((resolve, reject) => {
+      const onAbort = () => {
+        signal.removeEventListener('abort', onAbort);
+        abortListeners--;
+        activeRequests--;
+        reject(signal.reason);
+      };
+      abortListeners++;
+      signal.addEventListener('abort', onAbort, { once: true });
+      requestStarted = true;
+    });
+  };
+  const source = {
+    ...createCctvSource(),
+    getCatalog: async () => ({
+      sources: [{ id: 'camera-a', name: 'A', lat: 30, lon: -97 }],
+    }),
+    getHealth: async () => ({ cameras: [] }),
+  };
+  const fixture = createEmptyCctvLayerWithFocusListeners(
+    source,
+    resolveEllipsoidalGround,
+  );
+  const viewer = createCctvTestViewer();
+  t.after(() => fixture.layer.destroy(viewer));
+  let initSettled = false;
+  const initializing = fixture.layer.init(viewer).then(
+    () => {
+      initSettled = true;
+      return null;
+    },
+    (error) => {
+      initSettled = true;
+      return error;
+    },
+  );
+  await waitForTestCondition(
+    () => requestStarted || initSettled,
+    'terrain request did not start or initialization did not settle',
+  );
+  assert.equal(requestStarted, true);
+  assert.equal(activeRequests, 1);
+  assert.equal(abortListeners, 1);
+  fixture.layer.destroy(viewer);
+  assert.equal((await initializing)?.name, 'AbortError');
+  assert.equal(activeRequests, 0);
+  assert.equal(abortListeners, 0);
+});
+
+test('camera activation pick owns footprint terrain work through re-init', async (t) => {
+  const previousDocument = globalThis.document;
+  const previousImage = globalThis.Image;
+  const previousWindow = globalThis.window;
+  const context = {
+    clearRect() {},
+    createLinearGradient() {
+      return { addColorStop() {} };
+    },
+    fillRect() {},
+    strokeRect() {},
+    fillText() {},
+  };
+  globalThis.document = {
+    hidden: false,
+    addEventListener() {},
+    removeEventListener() {},
+    createElement: () => ({ getContext: () => context }),
+  };
+  globalThis.Image = class {
+    set src(value) {
+      this._src = value;
+    }
+    get src() {
+      return this._src;
+    }
+  };
+  globalThis.window = { addEventListener() {}, removeEventListener() {} };
+  t.after(() => {
+    globalThis.document = previousDocument;
+    globalThis.Image = previousImage;
+    globalThis.window = previousWindow;
+  });
+
+  const footprintRequests = [];
+  let terrainCalls = 0;
+  const resolveEllipsoidalGround = (coords, options) => {
+    terrainCalls++;
+    if (coords.length === 1) return Promise.resolve([]);
+    return new Promise((resolve) => {
+      footprintRequests.push({ coords, resolve, signal: options?.signal });
+    });
+  };
+  const source = {
+    ...createCctvSource(),
+    getCatalog: async () => ({
+      sources: [{ id: 'camera-a', name: 'A', lat: 30, lon: -97 }],
+    }),
+    getHealth: async () => ({ cameras: [] }),
+  };
+  const fixture = createEmptyCctvLayerWithFocusListeners(
+    source,
+    resolveEllipsoidalGround,
+  );
+  t.after(() => fixture.layer.destroy());
+  const viewer = createCctvTestViewer();
+  let obstructionPicks = 0;
+  viewer.scene.pickFromRay = () => {
+    obstructionPicks++;
+    return undefined;
+  };
+
+  await fixture.layer.init(viewer);
+  fixture.layer.setParams({ showProjection: false });
+  fixture.layer.setActiveCamera('camera-a');
+  assert.equal(obstructionPicks, 1);
+  assert.equal(terrainCalls, 2);
+  const staleRequest = footprintRequests[0];
+  assert.equal(staleRequest.coords.length, 9);
+  assert.ok(staleRequest.signal instanceof AbortSignal);
+  assert.equal(staleRequest.signal.aborted, false);
+
+  fixture.layer.destroy(viewer);
+  const successorViewer = createCctvTestViewer();
+  let successorPickCount = 0;
+  successorViewer.scene.pickFromRay = () => {
+    successorPickCount++;
+    return undefined;
+  };
+  await fixture.layer.init(successorViewer);
+  fixture.layer.setParams({ showProjection: false });
+  fixture.layer.setActiveCamera('camera-a');
+  assert.equal(successorPickCount, 1);
+  assert.equal(staleRequest.signal.aborted, true);
+  const currentRequest = footprintRequests[1];
+  assert.equal(currentRequest.coords.length, 9);
+  assert.ok(currentRequest.signal instanceof AbortSignal);
+  assert.equal(currentRequest.signal.aborted, false);
+  const notifications = [];
+  const unsubscribe = fixture.layer.subscribe((state) =>
+    notifications.push(state),
+  );
+  t.after(unsubscribe);
+  const notificationsBeforeStaleCompletion = notifications.length;
+  const coveragePositions = () =>
+    JSON.stringify(
+      [...successorViewer.entities.all]
+        .map((entity) => entity.polyline?.positions)
+        .filter(Boolean)
+        .map((positions) => positions.map(({ x, y, z }) => [x, y, z])),
+    );
+  const beforeStaleCompletion = coveragePositions();
+  staleRequest.resolve(
+    Array.from({ length: 9 }, () => ({ ellipsoid: 500, source: 'reearth' })),
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(notifications.length, notificationsBeforeStaleCompletion);
+  assert.equal(coveragePositions(), beforeStaleCompletion);
+  assert.equal(fixture.layer.getStats().count, 1);
+  const beforeCurrentCompletion = coveragePositions();
+  currentRequest.resolve(
+    Array.from({ length: 9 }, (_, index) => ({
+      ellipsoid: 500 + index,
+      source: 'reearth',
+    })),
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(notifications.length > notificationsBeforeStaleCompletion);
+  assert.notEqual(coveragePositions(), beforeCurrentCompletion);
+  fixture.layer.setActiveCamera('camera-a');
+  assert.equal(terrainCalls, 4);
+  assert.equal(successorViewer.primitives.size, 1);
 });
 
 test('ground-prior fallback timeout is cleared on resolve and source abort', async () => {

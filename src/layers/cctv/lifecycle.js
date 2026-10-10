@@ -191,7 +191,10 @@ export function createLifecycle({
       // records are normally built WITH their prior (correct first paint in
       // every regime); a cold/slow upstream loses the race and the batch
       // applies post-hoc via applyLateGroundPriors instead of hanging init.
-      const priorsPromise = parts.ground.resolveGroundPriors(catalog);
+      const priorsPromise = parts.ground.resolveGroundPriors(
+        catalog,
+        sourceAbort.signal,
+      );
       const priors = await raceWithFallbackTimeout(
         priorsPromise,
         GROUND_PRIOR_INIT_WAIT_MS,

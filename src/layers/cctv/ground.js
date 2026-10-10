@@ -160,7 +160,7 @@ export function createGround({ state: layerState, services, parts, source }) {
    * @returns {Promise<Array<{ellipsoid:number, source:string}>|null>}
    */
 
-  async function resolveGroundPriors(catalog) {
+  async function resolveGroundPriors(catalog, signal) {
     try {
       const coords = catalog.map((camera) => {
         const ortho = Number(camera.groundElevationM);
@@ -170,8 +170,9 @@ export function createGround({ state: layerState, services, parts, source }) {
           ...(Number.isFinite(ortho) ? { sourceOrthometricM: ortho } : {}),
         };
       });
-      return await resolveEllipsoidalGround(coords);
+      return await resolveEllipsoidalGround(coords, { signal });
     } catch (error) {
+      if (signal?.aborted || error?.name === 'AbortError') return null;
       console.warn(
         '[Data:CCTV] ground-prior batch failed (keeping catalog fallbacks):',
         error?.message || error,
@@ -300,6 +301,10 @@ export function createGround({ state: layerState, services, parts, source }) {
    */
   async function resolveFootprintGround(record) {
     if (!record?.camera) return;
+    // Capture the per-init owner before yielding. Re-init/destroy aborts this
+    // consumer's terrain request; record revision/identity checks below still
+    // protect providers that finish despite cancellation.
+    const signal = layerState._sourceAbort?.signal;
     const pose = parts.geometry.footprintPose(record);
     const hash = poseHash(pose);
     const existing = record.footprintGround;
@@ -318,7 +323,7 @@ export function createGround({ state: layerState, services, parts, source }) {
     }));
     let results = null;
     try {
-      results = await resolveEllipsoidalGround(coords);
+      results = await resolveEllipsoidalGround(coords, { signal });
     } catch {
       results = null;
     }
