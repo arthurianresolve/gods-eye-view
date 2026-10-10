@@ -607,7 +607,14 @@ partial packet remains partial and cannot close the parent slice.
   zero targets never implies that a constructed worker executed. All 23 focused
   contract checks pass, including delayed construction and unknown-code controls.
   [Hosted run 38035250094](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38035250094)
-  is the first end-to-end check of this correction; its result is pending.
+  [passes baseline and candidate worker checks](performance-evidence/build-smoke-38035250094.json),
+  then reaches all six candidate capture windows. Final report validation rejects
+  `idle run 2: repeated workload changed`; the overall run stays failed and no
+  performance comparison is accepted. Owned child/browser cleanup is confirmed.
+  The next diagnostic must retain the assertion's actual/expected signatures and
+  partial samples to distinguish camera, population and settings mismatches. The
+  old generic failure field also labels this later CLI error as a worker validation
+  failure; the phase/progress evidence places it after successful worker audits.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.

@@ -1,0 +1,903 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "49a220756359ec815aaaf6a042c31f0608cc39c3",
+  "harnessSha": "49a220756359ec815aaaf6a042c31f0608cc39c3",
+  "startedAt": "2026-10-10T07:41:00.658Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "passed",
+      "receiptSha256": "9f991539311c1fd1dece6d87f1328d82ffb73476e9f8ddb1f03baf36d12fb97a",
+      "assetCount": 434,
+      "totalAssetBytes": 43912979,
+      "servedBefore": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "9f991539311c1fd1dece6d87f1328d82ffb73476e9f8ddb1f03baf36d12fb97a",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "servedAfter": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "9f991539311c1fd1dece6d87f1328d82ffb73476e9f8ddb1f03baf36d12fb97a",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "loadedCodePathAudit": {
+        "status": "receipt-backed-paths-observed",
+        "paths": [
+          "assets/egm96-universal.esm-D6y_VLZc.js",
+          "assets/index-DFXg4IQ_.js",
+          "cesium/Cesium.js"
+        ],
+        "externalCodeRequestsObserved": 0,
+        "validatedWorkerBlobCount": 20,
+        "cesiumWorkerBlobs": {
+          "schema": "gev-cesium-worker-blob-audit/v1",
+          "status": "receipt-derived-worker-blobs-validated",
+          "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+          "createdScriptBlobCount": 14,
+          "validatedWorkerCount": 7,
+          "validatedCreatedWrapperCount": 7,
+          "unobservedCreatedWrapperCount": 0,
+          "validatedEmbeddedSourceCount": 7,
+          "validatedModuleIds": [
+            "combineGeometry",
+            "createGeometry",
+            "createVerticesFromHeightmap",
+            "incrementallyBuildTerrainPicker",
+            "transferTypedArrayTest"
+          ],
+          "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+          "scriptBlobSha256": [
+            "26931c04fdc1e1a4c666602ea41cb02da337548b81ab5b178e368007d7043cae",
+            "362c99e0a588c136fd01a56fca8c48e0cffab139b9de0174593629a9196b004c",
+            "45e20ff3d2e7e6f8d4be10334bd881b29cbf3d7e2a4fc92c5c1e0bccd7087291",
+            "55804f6bb2b334775f0db7ed4eca0f2f194e42cad73c937c9ac66c67f3b3d5de",
+            "c426e0a97996002f09e90956886b6ba8c5854add72522094b4174c808f04203d",
+            "c5e82d8f25a19053c7ae7fc8dcdf6ffc29befc47b4b419e2c11ad82657831ce4",
+            "d2ce63c3f831695911eb75fe2886381e848f8e777fb3617b9d87613a115eae86",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+          ],
+          "validatedWrapperSha256": [
+            "26931c04fdc1e1a4c666602ea41cb02da337548b81ab5b178e368007d7043cae",
+            "362c99e0a588c136fd01a56fca8c48e0cffab139b9de0174593629a9196b004c",
+            "45e20ff3d2e7e6f8d4be10334bd881b29cbf3d7e2a4fc92c5c1e0bccd7087291",
+            "55804f6bb2b334775f0db7ed4eca0f2f194e42cad73c937c9ac66c67f3b3d5de",
+            "c426e0a97996002f09e90956886b6ba8c5854add72522094b4174c808f04203d",
+            "c5e82d8f25a19053c7ae7fc8dcdf6ffc29befc47b4b419e2c11ad82657831ce4",
+            "d2ce63c3f831695911eb75fe2886381e848f8e777fb3617b9d87613a115eae86"
+          ],
+          "readBytes": 6428769,
+          "retentionByteCapBytes": 33554432
+        },
+        "requestCount": 74,
+        "coverage": "receipt-backed request-path audit with smoke-only Cesium worker blob instrumentation; browser response bytes are not independently attested and the smoke is not performance evidence"
+      },
+      "providerInterception": {
+        "status": "worker-aware-external-blocking-probe-passed",
+        "preflight": {
+          "status": "passed",
+          "scope": "harness-generated same-origin inert document; excluded from app code audit",
+          "workerNetworkProbe": {
+            "status": "passed",
+            "interceptedWorkerRequests": 3
+          },
+          "discardedAudit": {
+            "requestCount": 0,
+            "codeRequestCount": 0
+          },
+          "targetDisposal": {
+            "closed": true,
+            "remainingCount": 0,
+            "waitMs": 101.74270700000125
+          }
+        },
+        "sameOriginOnlyStaticServer": true
+      },
+      "denseProviderFixture": {
+        "scope": "real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence",
+        "expectedLayerCounts": {
+          "flights": 2500,
+          "local-datacenters": 4362,
+          "local-dams": 716
+        },
+        "observedLayerPopulation": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        },
+        "flightFixture": {
+          "schema": "gev-fixture-delivery-observation/v1",
+          "status": "observed",
+          "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+          "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+          "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "fulfilledResponseCount": 1,
+          "observedFlightsCount": 2500
+        },
+        "captureClock": {
+          "schema": "gev-provider-fixture-capture-clock/v1",
+          "scope": "hosted integration smoke only; one short route check, not a performance measurement",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "start": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460800000,
+            "elapsedMs": 0
+          },
+          "end": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460805549,
+            "elapsedMs": 5549.5
+          },
+          "ageAtEndMs": 5549,
+          "freshnessWindowMs": 120000,
+          "sourceFreshness": "current"
+        },
+        "comparisonEligible": false,
+        "comparisonIneligibilityReason": "This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract."
+      },
+      "serviceWorker": {
+        "controlled": false
+      },
+      "browser": {
+        "softwareRenderingRequested": true,
+        "flags": [
+          "--use-gl=angle",
+          "--use-angle=swiftshader",
+          "--enable-unsafe-swiftshader"
+        ],
+        "observedRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "observedVendor": "Google Inc. (Google)"
+      },
+      "route": {
+        "id": "integration-smoke-idle",
+        "start": {
+          "position": {
+            "x": -744923.3470301853,
+            "y": -5478530.828302955,
+            "z": 3205069.543685176
+          },
+          "direction": {
+            "x": 0.15310902957813655,
+            "y": 0.961765185053242,
+            "z": -0.22708006050982246
+          },
+          "up": {
+            "x": 0.10123102214540185,
+            "y": 0.21331597977237884,
+            "z": 0.9717245355187587
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 2004.3999999999942,
+        "motionDistanceM": 0
+      },
+      "observerBefore": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -744923.3470301853,
+            "y": -5478530.828302955,
+            "z": 3205069.543685176
+          },
+          "direction": {
+            "x": 0.15310902957813655,
+            "y": 0.961765185053242,
+            "z": -0.22708006050982246
+          },
+          "up": {
+            "x": 0.10123102214540185,
+            "y": 0.21331597977237884,
+            "z": 0.9717245355187587
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "observerAfter": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -742897.2382877241,
+            "y": -5463629.833118254,
+            "z": 3196293.52591379
+          },
+          "direction": {
+            "x": 0.3370901126365865,
+            "y": 0.8154931692376242,
+            "z": 0.4704690711294732
+          },
+          "up": {
+            "x": 0.0602517138324918,
+            "y": -0.5173780701589545,
+            "z": 0.8536332136807022
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "durationMs": 37323
+    },
+    {
+      "revision": "49a220756359ec815aaaf6a042c31f0608cc39c3",
+      "label": "candidate",
+      "status": "failed",
+      "failure": "Child process exited 1; node:internal[path]     triggerUncaughtException(     ^ AssertionError [ERR_ASSERTION]: idle run 2: repeated workload changed; cleanup confirmed (1).",
+      "failureDetails": {
+        "phase": "candidate-capture-cli-integration",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "workerBlobDiagnostics": {
+          "schema": "gev-cesium-worker-blob-diagnostics/v1",
+          "urlValuesOmitted": true,
+          "retentionByteCapBytes": 33554432,
+          "blobRequestCount": 20,
+          "observedBlobCount": 14,
+          "entryCount": 14,
+          "omittedEntryCount": 0,
+          "entries": [
+            {
+              "index": 0,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 148,
+              "bodySha256": "6265ddef1ba600fa75add075140841dd4c8362b1e4cdf31e637da50d115d4962",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 1,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 143,
+              "bodySha256": "09816c1e985ae441f9690d5669b749c4a82570728bb48d67cc1db3d197ea364d",
+              "requestCount": 2,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 2,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "46b0eacaaaf23b81ac0b3d1d53073e6bc3245f66ea601d763883057a808ea889",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 3,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "7a411a93b9300e4564237d96aa0bed269babeb39c49a759ff35fafe04a1d72fd",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 4,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "966a949b72ea6d3d92821287d1f1ae40d386413c1d3cd7d8d3731e1073c23e19",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 5,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 152,
+              "bodySha256": "aa38476862549033ff01d6a69cee57f5b4b490c2fcdeac948de9b2a611452851",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 6,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 136,
+              "bodySha256": "f01bf3db8d47ed7c1b59f200f2ecfacc524d3c9b252a7686312e5e65a28b6514",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 7,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 8,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 9,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 10,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 11,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 12,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 13,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            }
+          ]
+        },
+        "workerBlobValidationFailure": "Child process exited 1; node:internal[path]     triggerUncaughtException(     ^ AssertionError [ERR_ASSERTION]: idle run 2: repeated workload changed; cleanup confirmed (1).",
+        "captureCliFailure": {
+          "diagnostics": {
+            "stderrLines": [
+              "node:internal[path]",
+              "    triggerUncaughtException(",
+              "    ^",
+              "AssertionError [ERR_ASSERTION]: idle run 2: repeated workload changed"
+            ],
+            "progressLines": [
+              "[performance] scripted-motion 1 of 2",
+              "[performance] scripted-motion 2 of 2",
+              "[performance] selected-aircraft-tracking 1 of 2",
+              "[performance] selected-aircraft-tracking 2 of 2"
+            ]
+          }
+        },
+        "densePopulationObservations": [
+          {
+            "checkpoint": "initial",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          },
+          {
+            "checkpoint": "final-before-code-validation",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Child process exited 1; node:internal[path]     triggerUncaughtException(     ^ AssertionError [ERR_ASSERTION]: idle run 2: repeated workload changed; cleanup confirmed (1).",
+    "phase": "candidate"
+  },
+  "finishedAt": "2026-10-10T07:44:34.837Z",
+  "durationMs": 214179
+}
