@@ -145,6 +145,46 @@ test('receipt-derived narrow worker wrapper validates its embedded body and modu
   );
   assert.deepEqual(result.observation.validatedModuleIds, ['createGeometry']);
   assert.equal(result.observation.validatedWorkerCount, 1);
+  assert.equal(result.observation.validatedCreatedWrapperCount, 1);
+  assert.equal(result.observation.unobservedCreatedWrapperCount, 0);
+  assert.equal(result.observation.validatedEmbeddedSourceCount, 1);
+});
+
+test('a valid created wrapper remains validated when worker target publication is delayed', () => {
+  const audit = workerAudit(makeContract());
+  const embeddedUrl = audit.blobAudit.records[1].url;
+  const url = 'blob:http://127.0.0.1:4173/unstarted-wrapper';
+  const body = `importScripts("${embeddedUrl}"); CesiumWorkers["transferTypedArrayTest"]();`;
+  const byteLength = Buffer.byteLength(body);
+  audit.blobAudit.records.push({
+    url,
+    type: 'application/javascript',
+    byteLength,
+    body,
+  });
+  audit.blobAudit.createdBlobCount += 1;
+  audit.blobAudit.totalReadBytes += byteLength;
+
+  const result = validateCesiumWorkerBlobs(audit);
+  assert.equal(result.observation.validatedWorkerCount, 1);
+  assert.equal(result.observation.validatedCreatedWrapperCount, 2);
+  assert.equal(result.observation.unobservedCreatedWrapperCount, 1);
+  assert.deepEqual(result.observation.validatedModuleIds, [
+    'createGeometry',
+    'transferTypedArrayTest',
+  ]);
+  assert.ok(result.acceptedBlobUrls.includes(url));
+});
+
+test('created source validation does not invent worker-target evidence', () => {
+  const audit = workerAudit(makeContract());
+  audit.workerUrls = [];
+
+  const result = validateCesiumWorkerBlobs(audit);
+  assert.equal(result.observation.validatedCreatedWrapperCount, 1);
+  assert.equal(result.observation.validatedEmbeddedSourceCount, 1);
+  assert.equal(result.observation.validatedWorkerCount, 0);
+  assert.equal(result.observation.unobservedCreatedWrapperCount, 1);
 });
 
 test('worker blob contract rejects malformed, noncanonical, duplicate and unbounded derivations', () => {
@@ -206,7 +246,7 @@ test('worker blob validator rejects wrong parent, wrapper recipe and module IDs'
             'importScripts("https://provider.invalid/worker.js"); CesiumWorkers["createGeometry"]();',
         }),
       ),
-    /does not match the allowed recipe/,
+    /not a validated Cesium worker/,
   );
   assert.throws(
     () =>
@@ -232,7 +272,7 @@ test('worker blob validator rejects escaped parents, missing records, and arbitr
     (sum, record) => sum + record.byteLength,
     0,
   );
-  assert.throws(() => validateCesiumWorkerBlobs(audit), /missing/);
+  assert.throws(() => validateCesiumWorkerBlobs(audit), /no captured payload/);
 
   const missing = workerAudit(contract);
   missing.blobAudit.records.pop();
@@ -241,7 +281,10 @@ test('worker blob validator rejects escaped parents, missing records, and arbitr
     (sum, record) => sum + record.byteLength,
     0,
   );
-  assert.throws(() => validateCesiumWorkerBlobs(missing), /missing/);
+  assert.throws(
+    () => validateCesiumWorkerBlobs(missing),
+    /no captured payload/,
+  );
 
   const arbitrary = workerAudit(contract);
   arbitrary.observedBlobUrls.push('blob:http://127.0.0.1:4173/unrelated');
@@ -282,7 +325,7 @@ test('worker blob validator fails closed on overflow and malformed sizes', () =>
   );
 });
 
-test('validator rejects a created script blob that is unrelated to a receipt worker', () => {
+test('validator rejects an unobserved created script blob unrelated to a receipt worker', () => {
   const contract = makeContract();
   const audit = workerAudit(contract);
   const url = 'blob:http://127.0.0.1:4173/unrelated-script';
@@ -297,7 +340,7 @@ test('validator rejects a created script blob that is unrelated to a receipt wor
   audit.blobAudit.totalReadBytes += Buffer.byteLength(body);
   assert.throws(
     () => validateCesiumWorkerBlobs(audit),
-    /not a validated Cesium worker/,
+    /Created JavaScript blob is not a validated Cesium worker/,
   );
 });
 
@@ -409,10 +452,7 @@ test('page blob instrumentation retains bounded script blobs only and restores t
   );
   assert.equal(aggregateMetadata.records.length, 5);
   assert.equal(aggregateMetadata.overflowCount, 1);
-  assert.equal(
-    aggregateMetadata.maxRetainedBytes,
-    MAX_WORKER_BLOB_TOTAL_BYTES,
-  );
+  assert.equal(aggregateMetadata.maxRetainedBytes, MAX_WORKER_BLOB_TOTAL_BYTES);
   vm.runInContext('window.__gevCesiumWorkerBlobAuditV1.restore()', context);
   assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
   assert.deepEqual(
@@ -449,7 +489,11 @@ test('worker blob instrumentation enforces the published 32 MiB aggregate cap', 
       return `blob:http://127.0.0.1:4173/sized-${++nextId}`;
     }
   }
-  const context = vm.createContext({ window: {}, URL: TestURL, Blob: SizedBlob });
+  const context = vm.createContext({
+    window: {},
+    URL: TestURL,
+    Blob: SizedBlob,
+  });
   vm.runInContext(`(${installCesiumWorkerBlobAudit.toString()})()`, context);
   for (let index = 0; index < 16; index += 1)
     vm.runInContext(

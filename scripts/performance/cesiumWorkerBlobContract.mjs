@@ -251,7 +251,9 @@ export function summarizeCesiumWorkerBlobEvidence({
     throw new TypeError('Worker blob diagnostic inputs are invalid.');
 
   const workerSet = new Set(workerUrls);
-  const records = new Map(blobAudit.records.map((record) => [record.url, record]));
+  const records = new Map(
+    blobAudit.records.map((record) => [record.url, record]),
+  );
   const requestCounts = new Map();
   let blobRequestCount = 0;
   for (const request of requests) {
@@ -271,12 +273,15 @@ export function summarizeCesiumWorkerBlobEvidence({
     ...new Set([
       ...observedBlobUrls,
       ...workerUrls,
-      ...blobAudit.records.map((record) => record?.url).filter((url) => typeof url === 'string'),
+      ...blobAudit.records
+        .map((record) => record?.url)
+        .filter((url) => typeof url === 'string'),
     ]),
   ];
   const entries = urls.slice(0, maxEntries).map((url, index) => {
     const record = records.get(url);
-    const body = typeof record?.body === 'string' ? Buffer.from(record.body) : null;
+    const body =
+      typeof record?.body === 'string' ? Buffer.from(record.body) : null;
     const request = requestCounts.get(url);
     return {
       index,
@@ -287,7 +292,9 @@ export function summarizeCesiumWorkerBlobEvidence({
         : null,
       bodySha256: body ? sha256(body) : null,
       requestCount: request?.count || 0,
-      requestResourceTypes: [...(request?.resourceTypes || [])].sort().slice(0, 8),
+      requestResourceTypes: [...(request?.resourceTypes || [])]
+        .sort()
+        .slice(0, 8),
       workerTargetHistoryMember: workerSet.has(url),
     };
   });
@@ -303,7 +310,7 @@ export function summarizeCesiumWorkerBlobEvidence({
   };
 }
 
-/** Validate every observed script blob worker against receipt-derived Cesium bytes. */
+/** Validate created worker source/wrappers separately from observed worker targets. */
 export function validateCesiumWorkerBlobs({
   contract,
   baseUrl,
@@ -320,7 +327,6 @@ export function validateCesiumWorkerBlobs({
     throw new TypeError('Receipt-derived Cesium worker contract is required.');
   if (
     !Array.isArray(workerUrls) ||
-    workerUrls.length < 1 ||
     workerUrls.length > MAX_WORKER_TARGETS ||
     !Array.isArray(observedBlobUrls) ||
     observedBlobUrls.length > MAX_WORKER_BLOB_RECORDS ||
@@ -375,7 +381,66 @@ export function validateCesiumWorkerBlobs({
   const accepted = new Set();
   const acceptedModules = new Set();
   const wrapperHashes = new Set();
-  for (const workerUrl of new Set(workerUrls)) {
+  const wrappers = new Map();
+
+  // Validate every creation record independently. Target publication is
+  // asynchronous, so a valid Cesium worker wrapper can exist before Puppeteer
+  // emits workercreated (or before Cesium starts it at all).
+  for (const record of records.values()) {
+    const url = new URL(record.url);
+    if (url.protocol !== 'blob:' || url.origin !== base.origin)
+      throw new Error('Created Cesium worker blob has an unexpected origin.');
+    if (record.type !== 'application/javascript')
+      throw new Error(
+        'Created Cesium worker blob has an unexpected MIME type.',
+      );
+    if (
+      record.body === contract.embeddedWorkerSource &&
+      record.sha256 === contract.workerSourceSha256
+    ) {
+      accepted.add(record.url);
+      continue;
+    }
+
+    const wrapper = record.body.match(WORKER_WRAPPER);
+    if (!wrapper)
+      throw new Error(
+        'Created JavaScript blob is not a validated Cesium worker.',
+      );
+    const embeddedUrl = wrapper[2];
+    const moduleId = wrapper[4];
+    if (!WORKER_MODULE_ID.test(moduleId) || !allowedModules.has(moduleId))
+      throw new Error(
+        'Created Cesium worker module is absent from the receipt.',
+      );
+    const embeddedUrlRecord = records.get(embeddedUrl);
+    if (!embeddedUrlRecord)
+      throw new Error('Created Cesium worker wrapper has no captured payload.');
+    const embeddedParsedUrl = new URL(embeddedUrl);
+    if (
+      embeddedParsedUrl.protocol !== 'blob:' ||
+      embeddedParsedUrl.origin !== base.origin
+    )
+      throw new Error(
+        'Created Cesium embedded worker payload has an unexpected origin.',
+      );
+    if (
+      embeddedUrlRecord.type !== 'application/javascript' ||
+      embeddedUrlRecord.body !== contract.embeddedWorkerSource ||
+      embeddedUrlRecord.sha256 !== contract.workerSourceSha256
+    )
+      throw new Error(
+        'Created Cesium embedded worker payload differs from receipt-derived bytes.',
+      );
+    wrappers.set(record.url, { moduleId, sha256: record.sha256 });
+    accepted.add(record.url);
+    accepted.add(embeddedUrl);
+    acceptedModules.add(moduleId);
+    wrapperHashes.add(record.sha256);
+  }
+
+  const targetUrls = new Set(workerUrls);
+  for (const workerUrl of targetUrls) {
     const workerRecord = records.get(workerUrl);
     if (!workerRecord)
       throw new Error('Observed Cesium worker target has no captured blob.');
@@ -384,44 +449,10 @@ export function validateCesiumWorkerBlobs({
       throw new Error(
         'Observed Cesium worker target has an unexpected origin.',
       );
-    if (workerRecord.type !== 'application/javascript')
+    if (!wrappers.has(workerUrl))
       throw new Error(
-        'Observed Cesium worker wrapper has an unexpected MIME type.',
+        'Observed Cesium worker target is not a validated wrapper.',
       );
-    const wrapper = workerRecord.body.match(WORKER_WRAPPER);
-    if (!wrapper)
-      throw new Error(
-        'Observed Cesium worker wrapper does not match the allowed recipe.',
-      );
-    const embeddedUrl = wrapper[2];
-    const moduleId = wrapper[4];
-    if (!WORKER_MODULE_ID.test(moduleId) || !allowedModules.has(moduleId))
-      throw new Error(
-        'Observed Cesium worker module is absent from the receipt.',
-      );
-    const embeddedUrlRecord = records.get(embeddedUrl);
-    if (!embeddedUrlRecord)
-      throw new Error('Observed Cesium embedded worker payload is missing.');
-    const embeddedParsedUrl = new URL(embeddedUrl);
-    if (
-      embeddedParsedUrl.protocol !== 'blob:' ||
-      embeddedParsedUrl.origin !== base.origin
-    )
-      throw new Error(
-        'Observed Cesium embedded worker payload has an unexpected origin.',
-      );
-    if (
-      embeddedUrlRecord.type !== 'application/javascript' ||
-      embeddedUrlRecord.body !== contract.embeddedWorkerSource ||
-      embeddedUrlRecord.sha256 !== contract.workerSourceSha256
-    )
-      throw new Error(
-        'Observed Cesium embedded worker payload differs from receipt-derived bytes.',
-      );
-    accepted.add(workerUrl);
-    accepted.add(embeddedUrl);
-    acceptedModules.add(moduleId);
-    wrapperHashes.add(workerRecord.sha256);
   }
   for (const url of observedBlobUrls) {
     if (!accepted.has(url))
@@ -442,6 +473,13 @@ export function validateCesiumWorkerBlobs({
         'URL.createObjectURL creation observer; smoke-only diagnostic',
       createdScriptBlobCount: blobAudit.createdBlobCount,
       validatedWorkerCount: new Set(workerUrls).size,
+      validatedCreatedWrapperCount: wrappers.size,
+      unobservedCreatedWrapperCount: [...wrappers.keys()].filter(
+        (url) => !targetUrls.has(url),
+      ).length,
+      validatedEmbeddedSourceCount: [...accepted].filter(
+        (url) => records.get(url)?.body === contract.embeddedWorkerSource,
+      ).length,
       validatedModuleIds: [...acceptedModules].sort(),
       embeddedWorkerSourceSha256: contract.workerSourceSha256,
       scriptBlobSha256: [...records.values()]
