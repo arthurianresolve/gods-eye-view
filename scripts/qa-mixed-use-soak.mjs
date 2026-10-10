@@ -150,7 +150,7 @@ if (
   }).trim();
   const dirty = () =>
     Boolean(
-      execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], {
+      execFileSync('git', ['status', '--porcelain'], {
         encoding: 'utf8',
       }).trim(),
     );
@@ -187,11 +187,14 @@ if (
     };
   }
   report.candidateCommit = commit;
+  report.harnessCommit = commit;
   report.sourceDirtyAtStart = sourceDirtyAtStart;
+  report.harnessDirtyAtStart = sourceDirtyAtStart;
   report.sourceChangedDuringRun =
     dirty() ||
     execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() !==
       commit;
+  report.harnessChangedDuringRun = report.sourceChangedDuringRun;
   const out = value('--out', null);
   if (out) {
     await mkdir(path.dirname(out), { recursive: true });

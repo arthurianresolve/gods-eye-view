@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { evaluateManifestPerformanceEvidence } from './performance/candidatePerformanceEvidence.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -38,9 +39,9 @@ export function readValidationManifest(
 ) {
   if (!filePath) return null;
   const raw = JSON.parse(readFileSync(filePath, 'utf8'));
-  if (!raw || raw.schemaVersion !== 1 || !Array.isArray(raw.checks))
+  if (!raw || ![1, 2].includes(raw.schemaVersion) || !Array.isArray(raw.checks))
     throw new TypeError(
-      'Validation manifest must have schemaVersion 1 and checks.',
+      'Validation manifest must have schemaVersion 1 or 2 and checks.',
     );
   if (!['pre-release', 'post-publication'].includes(phase))
     throw new TypeError(`Unsupported validation phase: ${phase}`);
@@ -61,6 +62,10 @@ export function readValidationManifest(
   seen.clear();
   const checks = raw.checks.map((item) => {
     const id = String(item?.id || '').trim();
+    if (id === 'performance-comparison' || id === 'performance-retention')
+      throw new Error(
+        `${id} is derived from raw evidence and cannot be manually certified.`,
+      );
     if (!EXTERNAL_CHECK_IDS.has(id))
       throw new Error(`Unknown validation check: ${id || '(missing)'}`);
     if (id === 'release-tag-match' && phase !== 'post-publication')
@@ -125,12 +130,37 @@ export function readValidationManifest(
       notes: typeof item.notes === 'string' ? item.notes.slice(0, 500) : '',
     });
   });
-  return Object.freeze({
-    schemaVersion: 1,
+  const manifest = {
+    schemaVersion: raw.schemaVersion,
     phase,
     candidateCommit,
     checks: Object.freeze(checks),
-  });
+  };
+  if (raw.schemaVersion === 2) {
+    manifest.performanceEvidence = evaluateManifestPerformanceEvidence(
+      raw.performanceEvidence,
+      { manifestPath: filePath, candidateCommit },
+    );
+  }
+  return Object.freeze(manifest);
+}
+
+export function requiresPerformanceEvidence(
+  env = process.env,
+  manifestPath = '',
+) {
+  if (
+    ['1', 'true'].includes(
+      String(env.GEV_REQUIRE_PERFORMANCE_EVIDENCE || '').toLowerCase(),
+    )
+  )
+    return true;
+  if (!manifestPath) return false;
+  try {
+    return JSON.parse(readFileSync(manifestPath, 'utf8')).schemaVersion === 2;
+  } catch {
+    return false;
+  }
 }
 
 function commandCheck(label, command, args, { env = process.env } = {}) {
@@ -168,11 +198,18 @@ export async function runCandidateMatrix({
   const phase = env.GEV_VALIDATION_PHASE || 'pre-release';
   if (!['pre-release', 'post-publication'].includes(phase))
     throw new TypeError('Unsupported validation phase.');
-  const tree = spawnSync(
-    'git',
-    ['status', '--porcelain', '--untracked-files=no'],
-    { cwd: ROOT, encoding: 'utf8' },
+  const manifestPath = String(env.GEV_VALIDATION_MANIFEST || '').trim();
+  const performanceEvidenceRequired = requiresPerformanceEvidence(
+    env,
+    manifestPath,
   );
+  const statusArgs = performanceEvidenceRequired
+    ? ['status', '--porcelain']
+    : ['status', '--porcelain', '--untracked-files=no'];
+  const tree = spawnSync('git', statusArgs, {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
   checks.push({
     id: 'exact-commit',
     required: true,
@@ -214,6 +251,23 @@ export async function runCandidateMatrix({
     });
   }
 
+  if (performanceEvidenceRequired) {
+    checks.push(
+      {
+        id: 'performance-comparison',
+        required: true,
+        status: 'pending',
+        summary: 'Awaiting hash-bound paired raw performance reports.',
+      },
+      {
+        id: 'performance-retention',
+        required: true,
+        status: 'pending',
+        summary: 'Awaiting a hash-bound raw full-duration retention report.',
+      },
+    );
+  }
+
   for (const [id, summary] of [
     [
       'platform-installs',
@@ -239,7 +293,6 @@ export async function runCandidateMatrix({
     checks.push({ id, required: true, status: 'pending', summary });
 
   let validationManifest = null;
-  const manifestPath = String(env.GEV_VALIDATION_MANIFEST || '').trim();
   if (manifestPath) {
     try {
       validationManifest = readValidationManifest(manifestPath, {
@@ -256,6 +309,29 @@ export async function runCandidateMatrix({
         check.summary = `${check.summary} (${validationManifest.phase}; ${evidence.environment})`;
         check.validation = evidence;
       }
+      const performanceEvidence = validationManifest.performanceEvidence;
+      if (performanceEvidence) {
+        const comparisonCheck = checks.find(
+          (check) => check.id === 'performance-comparison',
+        );
+        const retentionCheck = checks.find(
+          (check) => check.id === 'performance-retention',
+        );
+        comparisonCheck.status = performanceEvidence.comparison.status;
+        comparisonCheck.summary = [
+          ...performanceEvidence.comparison.failures,
+          ...performanceEvidence.comparison.pending,
+          `Observed workloads: ${performanceEvidence.comparison.workloadIds.join(', ') || 'none'}.`,
+        ].join(' ');
+        comparisonCheck.result = performanceEvidence.comparison;
+        retentionCheck.status = performanceEvidence.retentionOutcome.status;
+        retentionCheck.summary = [
+          ...performanceEvidence.retentionOutcome.failures,
+          ...performanceEvidence.retentionOutcome.pending,
+          `Observed environments: ${performanceEvidence.retentionOutcome.environments.length}.`,
+        ].join(' ');
+        retentionCheck.result = performanceEvidence.retentionOutcome;
+      }
     } catch (error) {
       checks.push({
         id: 'validation-manifest',
@@ -265,14 +341,10 @@ export async function runCandidateMatrix({
       });
     }
   }
-  const finalTree = spawnSync(
-    'git',
-    ['status', '--porcelain', '--untracked-files=no'],
-    {
-      cwd: ROOT,
-      encoding: 'utf8',
-    },
-  );
+  const finalTree = spawnSync('git', statusArgs, {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
   if (
     finalTree.status !== 0 ||
     finalTree.stdout.trim() ||
@@ -298,6 +370,7 @@ export async function runCandidateMatrix({
     generatedAt: now().toISOString(),
     commit,
     phase,
+    performanceEvidenceRequired,
     validationManifest,
     phases: {
       preRelease: preReleaseReadiness,
@@ -317,7 +390,10 @@ async function main(args) {
   const outputIndex = args.indexOf('--out');
   const output =
     outputIndex >= 0 ? path.resolve(args[outputIndex + 1] || '') : null;
-  const report = await runCandidateMatrix();
+  const env = { ...process.env };
+  if (args.includes('--require-performance-evidence'))
+    env.GEV_REQUIRE_PERFORMANCE_EVIDENCE = '1';
+  const report = await runCandidateMatrix({ env });
   if (output) {
     await mkdir(path.dirname(output), { recursive: true });
     await writeFile(output, `${JSON.stringify(report, null, 2)}\n`, {

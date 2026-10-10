@@ -25,6 +25,10 @@ import {
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
 import {
+  readBrowserGraphicsInfo,
+  readHostEnvironment,
+} from './performance/rendererEvidence.mjs';
+import {
   createEntityFollowRoute,
   observeTrackedEntityBoundary,
 } from './performance/trackingRoute.mjs';
@@ -1988,6 +1992,10 @@ try {
     workerAuditMode,
     hardwareRequired,
   });
+  // These host/browser identity reads happen after all timed samples. Keep
+  // browser-reported platform separate from the machine that launched Chrome.
+  const hostEnvironment = readHostEnvironment();
+  const graphics = await readBrowserGraphicsInfo(browser);
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode,
@@ -2021,6 +2029,8 @@ try {
     },
     ...(fixtureDelivery ? { fixtureDelivery } : {}),
     environment,
+    hostEnvironment,
+    graphics,
     integrity,
     workload: {
       warmupMs,

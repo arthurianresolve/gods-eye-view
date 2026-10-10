@@ -39,11 +39,37 @@ the earlier release requirements and historical results.
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
 | S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards and header-only CSV setup; full document decoding and wider UI maintenance remain | All seven integration jobs pass at `9a665b2`; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
-| S60 final candidate | Pending remaining slices | All CI gates and 60-minute software-rendered soak pass at `3cdd5cb`; subsequent changes require their own exact-commit validation | Pending all required hardware environments |
+| S60 final candidate | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S60.1 raw performance evidence ingestion - 10 October 2026
+
+The candidate runner accepts version-2 manifests with SHA-256-bound raw paired
+captures and retention reports; [the contract and invocation](PERFORMANCE_EVIDENCE.md)
+describe required provenance and pending/failure behavior. Version-1 manifests
+retain their existing behavior. Version 2 automatically enables computed
+comparison and retention gates; an explicit flag enables them before evidence is
+available. Cached success summaries and manual certificates cannot satisfy them.
+
+Raw comparisons use the existing five-run validator, require a complete recorded
+physical Windows environment, and keep software/hosted evidence supplemental.
+Partial workload sets from different Windows machines cannot be combined.
+Retention recomputes ownership and heap stability from chronological, completed
+post-GC checkpoints, requires the full duration and positive mixed-use operations,
+and binds application and harness to the candidate. Invalid supplemental artifacts
+remain failures. Producers now record bounded host/graphics metadata outside timed
+capture samples and successful GC completion at retained checkpoints.
+
+This packet does not complete visual or interaction acceptance, remaining runtime
+optimizations, the physical Windows soak, or final candidate qualification.
+Synthetic acceptance tests verify the consumer and do not constitute hardware
+evidence. Root repeated the focused manifest, paired-report, build-provenance,
+capture-integrity and soak tests: 68 passed. Formatting passes for 1,476 adopted
+files; package boundaries, modified-script syntax and diff checks also pass.
+Full integration validation for this packet is recorded separately below.
 
 ### S54.2 native infrastructure comparison - 10 October 2026
 

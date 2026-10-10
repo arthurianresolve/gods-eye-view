@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   evaluateCandidateReadiness,
+  requiresPerformanceEvidence,
   readValidationManifest,
 } from './qa-candidate.mjs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
@@ -192,5 +193,58 @@ test('publication verification stays separate from pre-release readiness', async
     () =>
       readValidationManifest(manifestPath, { candidateCommit: 'a'.repeat(40) }),
     /post-publication/,
+  );
+});
+
+test('v2 manifests automatically require computed performance gates; v1 remains compatible', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-v2-'));
+  const manifestPath = path.join(dir, 'manifest.json');
+  const candidate = 'a'.repeat(40);
+  const v1 = {
+    schemaVersion: 1,
+    candidateCommit: candidate,
+    checks: [],
+  };
+  await writeFile(manifestPath, JSON.stringify(v1));
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), false);
+  assert.equal(
+    requiresPerformanceEvidence({ GEV_REQUIRE_PERFORMANCE_EVIDENCE: '1' }),
+    true,
+  );
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      ...v1,
+      schemaVersion: 2,
+      performanceEvidence: { comparisons: [], retention: [] },
+    }),
+  );
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), true);
+  const parsed = readValidationManifest(manifestPath, {
+    candidateCommit: candidate,
+  });
+  assert.equal(parsed.schemaVersion, 2);
+  assert.equal(parsed.performanceEvidence.comparison.status, 'pending');
+  assert.equal(parsed.performanceEvidence.retentionOutcome.status, 'pending');
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 2,
+      candidateCommit: candidate,
+      checks: [
+        {
+          id: 'performance-retention',
+          status: 'passed',
+          environment: 'self-certified',
+          timestamp: '2026-10-08T12:00:00Z',
+          artifacts: ['report.json'],
+        },
+      ],
+      performanceEvidence: { comparisons: [], retention: [] },
+    }),
+  );
+  assert.throws(
+    () => readValidationManifest(manifestPath, { candidateCommit: candidate }),
+    /derived from raw evidence/,
   );
 });

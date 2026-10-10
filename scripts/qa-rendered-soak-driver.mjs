@@ -565,6 +565,10 @@ export async function createRenderedSoakDriver(
           ...(await session.send('Memory.getDOMCounters')),
           application,
           renderedFrames: previousFrames,
+          garbageCollection: {
+            status: 'completed',
+            method: 'HeapProfiler.collectGarbage',
+          },
         };
       },
       async close() {
