@@ -19,6 +19,7 @@ on:
             import-workspace-lifecycle,
             cctv-lifecycle,
             mission-render-demand,
+            tracking-regression,
             windows-profile-recovery,
             windows-browser-shutdown,
           ]
@@ -61,7 +62,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -110,7 +111,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -216,7 +217,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-profile-recovery' && inputs.validation_mode != 'windows-browser-shutdown'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -251,7 +252,7 @@ jobs:
         run: npm run build
 
   install-recovery:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-browser-shutdown'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression' && inputs.validation_mode != 'windows-browser-shutdown'
     name: Install and update recovery (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -512,6 +513,51 @@ jobs:
           if-no-files-found: warn
           retention-days: 3
 
+  tracking-regression:
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'tracking-regression'
+    name: Aircraft tracking regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+    steps:
+      - name: Check out immutable diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies and fixture browser
+        run: |
+          npm ci
+          npx puppeteer browsers install chrome
+      - name: Run existing tracking regressions with bundled imagery
+        run: |
+          mkdir -p qa-artifacts
+          git rev-parse HEAD | tee qa-artifacts/tracking-source.txt
+          git status --porcelain --untracked-files=no | tee qa-artifacts/tracking-source-status.txt
+          npx vite --host 127.0.0.1 --port 4174 --strictPort > qa-artifacts/tracking-server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:4174/ > /dev/null; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != true ]; then cat qa-artifacts/tracking-server.log; exit 1; fi
+          node scripts/track-regression.mjs --url http://localhost:4174 --offline-imagery 2>&1 | tee qa-artifacts/tracking-regression.log
+      - name: Preserve regression evidence including failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tracking-regression-${{ github.run_id }}
+          path: qa-artifacts/tracking-*
+          if-no-files-found: warn
+          retention-days: 3
+
   mission-render-demand:
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mission-render-demand'
     name: Isolated mission render-demand correctness
@@ -592,7 +638,7 @@ jobs:
 
   hosted-gpu-probe:
     name: Native WebGL probe (${{ matrix.os }})
-    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand'
+    if: github.event_name == 'workflow_dispatch' && (inputs.hosted_gpu_probe || inputs.validation_mode == 'hosted-native-probe') && inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'cctv-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'tracking-regression'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:

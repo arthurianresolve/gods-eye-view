@@ -94,6 +94,7 @@
 
 import fs from 'node:fs';
 import puppeteer from 'puppeteer';
+import { closeRecoveryBrowser, stopOwnedRecoveryProcessTree } from './performance/profileRecoveryPageOwnership.mjs';
 import { classifyAircraft, CLASS_SCALE_3D, CLASS_MODEL_REAL } from '../src/data/aircraftClass.js';
 import { ensureGeoidReady, geoidHeight } from '../src/data/geoid.js';
 
@@ -122,7 +123,7 @@ const CHROME_EXECUTABLE_CANDIDATES = [
   // tile-gated drain budget under SwiftShader on 2026-07-30 — six
   // false-negative qa-cctv-v2 runs against a healthy build). A deterministic
   // pinned browser beats the newest one for regression harnesses.
-  await puppeteer.executablePath().catch(() => null),
+  await Promise.resolve().then(() => puppeteer.executablePath()).catch(() => null),
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
   '/Applications/Chromium.app/Contents/MacOS/Chromium',
@@ -261,6 +262,7 @@ async function main() {
   const sawLog = { detection: false, readout: false };
 
   try {
+    console.log(`  Browser version: ${await browser.version()}`);
     const page = await browser.newPage();
   await page.evaluateOnNewDocument((base) => { window.__gevQaSourceBase = base; }, SOURCE_BASE);
     await page.setViewport({ width: 1280, height: 800 });
@@ -4127,7 +4129,15 @@ async function main() {
   } finally {
     if (OFFLINE_IMAGERY) console.log(`  Bundled imagery tiles served: ${offlineImageryRequests}`);
     if (!KEEP_OPEN) {
-      await browser.close();
+      const close = await closeRecoveryBrowser(browser, {
+        timeoutMs: 5000,
+        forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
+      });
+      console.log(`  Browser cleanup: ${JSON.stringify(close)}`);
+      if (!close.closeCompleted || close.forcedProcessTermination) {
+        process.exitCode = 1;
+        console.error('Tracking fixture browser did not close normally.');
+      }
     } else {
       console.log('\n--keep-open set; leaving browser running. Ctrl-C to exit.');
     }
