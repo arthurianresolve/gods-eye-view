@@ -18,6 +18,7 @@ on:
             performance-build-smoke,
             import-workspace-lifecycle,
             mission-render-demand,
+            windows-profile-recovery,
           ]
         default: standard
       full_soak:
@@ -58,7 +59,7 @@ concurrency:
 
 jobs:
   verify:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery'
     name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -107,7 +108,7 @@ jobs:
         run: npm run build
 
   street-level-browser:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery'
     # Hermetic: every Mapillary request is answered from fixtures, so the
     # dummy token below never leaves the page.
     name: Street Level browser gate
@@ -213,7 +214,7 @@ jobs:
           retention-days: 14
 
   windows-onboarding:
-    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand'
+    if: inputs.validation_mode != 'hosted-macos-soak' && inputs.validation_mode != 'hosted-native-probe' && inputs.validation_mode != 'hosted-collection-probe' && inputs.validation_mode != 'performance-build-smoke' && inputs.validation_mode != 'import-workspace-lifecycle' && inputs.validation_mode != 'mission-render-demand' && inputs.validation_mode != 'windows-profile-recovery'
     name: Windows onboarding
     runs-on: windows-latest
     timeout-minutes: 20
@@ -255,7 +256,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && '["windows-latest"]' || '["windows-latest","macos-latest","ubuntu-latest"]') }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
       # Exercise recovery with a deterministic software renderer on GPU-less bots.
