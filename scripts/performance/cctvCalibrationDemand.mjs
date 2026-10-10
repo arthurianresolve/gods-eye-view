@@ -491,7 +491,10 @@ function assertRun(run, expectedCommit, report) {
     integer(pixels.width, 'pixel width', { min: 1 });
     integer(pixels.height, 'pixel height', { min: 1 });
     integer(pixels.nonBackgroundPixels, 'non-background pixel', { min: 1 });
-    if (pixels.captureState?.dataSourceDisplayReady !== true)
+    if (
+      pixels.captureState?.dataSourceDisplayReady !== true ||
+      pixels.captureState?.currentVisualizerUpdateReady !== true
+    )
       throw new Error('CCTV capture preceded complete visualizer geometry.');
   }
   if (

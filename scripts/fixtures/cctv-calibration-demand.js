@@ -104,6 +104,31 @@ const viewerNode = document.querySelector('#viewer');
 const creditsNode = document.querySelector('#credits');
 let activeReport = null;
 let activeRun = null;
+const visualizerUpdates = new WeakMap();
+
+function observeVisualizerUpdates(viewer) {
+  const display = viewer.dataSourceDisplay;
+  const own = Object.getOwnPropertyDescriptor(display, 'update');
+  const original = display.update;
+  const state = { ready: null, updates: 0 };
+  // DataSourceDisplay.ready is latched after its first success. The public
+  // update() result describes this update, including geometry rebuilt later.
+  function observedUpdate(...args) {
+    const result = original.apply(this, args);
+    state.ready = result;
+    state.updates++;
+    return result;
+  }
+  display.update = observedUpdate;
+  visualizerUpdates.set(viewer, state);
+  return () => {
+    if (display.update === observedUpdate) {
+      if (own) Object.defineProperty(display, 'update', own);
+      else delete display.update;
+    }
+    visualizerUpdates.delete(viewer);
+  };
+}
 let terminalReportText = null;
 
 const check = (condition, message) => {
@@ -799,6 +824,8 @@ async function capturePixels(viewer, layer, trial, phase) {
     bytes.set(rgba);
     const captureState = {
       dataSourceDisplayReady,
+      currentVisualizerUpdateReady:
+        visualizerUpdates.get(viewer)?.ready ?? null,
       selectedCameraId: sampledCamera.selectedCameraId,
       position: sampledCamera.position,
       direction: sampledCamera.direction,
@@ -832,7 +859,8 @@ async function capturePixels(viewer, layer, trial, phase) {
 }
 
 async function observeIncompleteVisualizers(viewer, layer, trial) {
-  if (trial.afterPixels?.captureState?.dataSourceDisplayReady !== false) return;
+  if (trial.afterPixels?.captureState?.currentVisualizerUpdateReady !== false)
+    return;
   const startedAt = performance.now();
   const report = {
     scope:
@@ -851,7 +879,7 @@ async function observeIncompleteVisualizers(viewer, layer, trial) {
     await new Promise((resolve) => {
       remove = viewer.scene.postRender.addEventListener(() => {
         report.completedFrames++;
-        if (viewer.dataSourceDisplay.ready === true) {
+        if (visualizerUpdates.get(viewer)?.ready === true) {
           report.readyObserved = true;
           report.readyElapsedMs = performance.now() - startedAt;
           resolve();
@@ -1318,11 +1346,13 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
   let idleObserver = null;
   let inputObserver = null;
   let interactionObserver = null;
+  let disposeVisualizerObserver = null;
   const cleanupErrors = [];
   try {
     setPhase(`pair-${pair}-setup-${mode}`);
     updateStatus(`Pair ${pair + 1}/5: ${mode} setup`);
     viewer = createViewer();
+    disposeVisualizerObserver = observeVisualizerUpdates(viewer);
     const gl =
       viewer.scene.context?._originalGLContext || viewer.scene.context?._gl;
     const attrs = gl?.getContextAttributes?.() || null;
@@ -1648,6 +1678,7 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
         );
       }
       try {
+        disposeVisualizerObserver?.();
         if (!viewer.isDestroyed()) viewer.destroy();
         trial.cleanup.viewerDestroyed = viewer.isDestroyed();
       } catch (error) {
