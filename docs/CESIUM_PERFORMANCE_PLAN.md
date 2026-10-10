@@ -301,6 +301,20 @@ remain stageable. Seven focused release/recovery tests pass after this correctio
 including rejection of a new package with a missing applier. The existing CI
 failures remain failures; a new exact-commit recovery run is required.
 
+The [rendered calibration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38082567573)
+at `aea307c` subsequently **passes all five pairs**
+([raw report](performance-evidence/calibration-38082567573.json),
+[exact job metadata](performance-evidence/calibration-38082567573-run.json)).
+Each candidate renders zero frames during its ten-second settled observation;
+the corresponding controls render 271, 258, 262, 251 and 234 frames. Every pair
+has exact before/after pixel agreement, completed edited geometry, and unchanged
+camera pose. All ten viewers and governors dispose successfully, with zero page
+errors or external requests. Root revalidated the downloaded report against its
+exact application/harness commit. This proves the isolated calibration-demand
+comparison on hosted Apple paravirtual Metal, not physical Windows performance,
+full-application equivalence, or long-run resource stability. Raw SHA-256:
+`f98a6a036d050cb13cec7cb6bebd8e0c50622efd898cd2ab1aa14f54b7c00aed`.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding
