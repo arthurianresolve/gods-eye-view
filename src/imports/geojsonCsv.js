@@ -11,6 +11,8 @@ export const IMPORT_LIMITS = Object.freeze({
   rejectedPreview: 100,
 });
 
+const CSV_SCAN_CHUNK_CHARS = 1_024;
+
 function fail(code, message) {
   throw Object.assign(new Error(message), { code });
 }
@@ -240,8 +242,8 @@ export async function previewGeoJSON(
   );
 }
 
-/** RFC 4180-style bounded CSV decoder supporting quoted commas and newlines. */
-function scanCsv(text, headersOnly = false) {
+/** RFC 4180-style bounded CSV scanner supporting quoted commas and newlines. */
+function* scanCsvSteps(text, headersOnly = false) {
   const rows = [];
   let row = [],
     cell = '',
@@ -267,7 +269,12 @@ function scanCsv(text, headersOnly = false) {
     return null;
   };
   const source = text.replace(/^\uFEFF/, '');
+  let nextYieldIndex = CSV_SCAN_CHUNK_CHARS;
   for (let i = 0; i < source.length; i++) {
+    if (i >= nextYieldIndex) {
+      nextYieldIndex = i + CSV_SCAN_CHUNK_CHARS;
+      yield;
+    }
     const char = source[i];
     if (quoted) {
       if (char === '"' && source[i + 1] === '"') {
@@ -300,6 +307,13 @@ function scanCsv(text, headersOnly = false) {
   return headersOnly ? headers : { headers, rows: rows.slice(1) };
 }
 
+function scanCsv(text, headersOnly = false) {
+  const scanner = scanCsvSteps(text, headersOnly);
+  let step = scanner.next();
+  while (!step.done) step = scanner.next();
+  return step.value;
+}
+
 function validateCsvHeaders(row) {
   const headers = row.map((header) => header.trim());
   if (
@@ -324,7 +338,13 @@ export async function previewCSV(
   input,
   { signal, mapping = {}, attribution = '' } = {},
 ) {
-  const { headers, rows } = parseCsv(decodeImportText(input));
+  signal?.throwIfAborted();
+  const text = decodeImportText(input);
+  signal?.throwIfAborted();
+  const { headers, rows } = await consumeInBatches(scanCsvSteps(text), {
+    signal,
+    deferStart: true,
+  });
   const column = (field) => {
     const selected = mapping[field];
     if (Number.isInteger(selected)) return selected;
@@ -344,6 +364,9 @@ export async function previewCSV(
   const records = [];
   const rejected = [];
   const ids = new Set();
+  const bounds = [Infinity, Infinity, -Infinity, -Infinity];
+  let minTime = Infinity;
+  let maxTime = -Infinity;
   await consumeInBatches(
     (function* () {
       for (let i = 0; i < rows.length; i++) {
@@ -398,21 +421,37 @@ export async function previewCSV(
             properties[header] = cells[index].slice(0, 500);
         }
         ids.add(id);
-        records.push({
+        const record = {
           id,
           geometry: { type: 'Point', coordinates: [longitude, latitude] },
           properties,
           timeMs,
-        });
+        };
+        records.push(record);
+        bounds[0] = Math.min(bounds[0], longitude);
+        bounds[1] = Math.min(bounds[1], latitude);
+        bounds[2] = Math.max(bounds[2], longitude);
+        bounds[3] = Math.max(bounds[3], latitude);
+        if (Number.isSafeInteger(timeMs)) {
+          minTime = Math.min(minTime, timeMs);
+          maxTime = Math.max(maxTime, timeMs);
+        }
       }
     })(),
-    { signal },
+    { signal, deferStart: true },
   );
-  return createImportPreview({
-    kind: 'csv',
-    records,
-    rejected,
-    attribution,
-    timeField: timeColumn >= 0 ? headers[timeColumn] : null,
-  });
+  return buildImportPreview(
+    {
+      kind: 'csv',
+      records,
+      rejected,
+      attribution,
+      timeField: timeColumn >= 0 ? headers[timeColumn] : null,
+    },
+    {
+      bounds: records.length ? bounds : null,
+      minTime,
+      maxTime,
+    },
+  );
 }

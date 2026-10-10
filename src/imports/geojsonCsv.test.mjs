@@ -183,6 +183,32 @@ test('CSV preview supports quoted cells and rejects ambiguous local dates and ba
   assert.equal(preview.records[0].geometry.coordinates[0], 179);
 });
 
+test('CSV preview fuses bounds and time summary with accepted-row normalization', async () => {
+  const preview = await previewCSV(
+    [
+      'id,lat,lon,time,note',
+      'first,10,20,2026-01-02T00:00:00Z,kept',
+      'bad-lat,91,30,2026-01-01T00:00:00Z,rejected',
+      'second,-4,-8,2026-01-01T00:00:00Z,also kept',
+      'bad-time,2,3,local time,rejected',
+    ].join('\n'),
+    {
+      mapping: { id: 'id', latitude: 'lat', longitude: 'lon', time: 'time' },
+    },
+  );
+  assert.equal(preview.accepted, 2);
+  assert.equal(preview.rejected, 2);
+  assert.deepEqual(preview.bounds, [-8, -4, 20, 10]);
+  assert.deepEqual(preview.timeRange, [
+    Date.parse('2026-01-01T00:00:00Z'),
+    Date.parse('2026-01-02T00:00:00Z'),
+  ]);
+  assert.deepEqual(
+    preview.records.map((record) => record.id),
+    ['first', 'second'],
+  );
+});
+
 test('CSV parsing rejects missing mapping, malformed quoting and oversized files', async () => {
   await assert.rejects(previewCSV('a,b\n1,2'), { code: 'mapping-required' });
   await assert.rejects(
@@ -269,4 +295,101 @@ test('import previews honor cancellation before applying any records', async () 
     }),
     { name: 'AbortError' },
   );
+});
+
+test('CSV preview cancellation takes precedence before decoding and scanning', async () => {
+  const controller = new AbortController();
+  controller.abort(new DOMException('User cancelled', 'AbortError'));
+  await assert.rejects(
+    previewCSV(new Uint8Array([0xff]), { signal: controller.signal }),
+    { name: 'AbortError' },
+  );
+  await assert.rejects(
+    previewCSV('lat,lon\n"unterminated', { signal: controller.signal }),
+    { name: 'AbortError' },
+  );
+});
+
+test('CSV preview cancellation interrupts scanning a large body without publishing', async () => {
+  const rowCount = 50_000;
+  const rows = ['id,lat,lon'];
+  for (let index = 0; index < rowCount; index++)
+    rows.push(`row-${index},30,-97`);
+  const controller = new AbortController();
+  const pending = previewCSV(rows.join('\n'), {
+    mapping: { id: 'id', latitude: 'lat', longitude: 'lon' },
+    signal: controller.signal,
+  });
+  const cancellation = assert.rejects(pending, { name: 'AbortError' });
+  setTimeout(() => controller.abort(), 0);
+  await cancellation;
+});
+
+test('CSV scanning yields across CRLF and escaped-quote index skips', async () => {
+  const header = 'lat,lon,note\r\n';
+  const row = `1,2,${'x'.repeat(1023 - header.length - 4)}`;
+  assert.equal(header.length + row.length, 1023);
+  const crlfInput = `${header}${row}\r\n"unterminated`;
+  const quoteHeader = 'lat,lon,note\n';
+  const escapedQuoteInput = `${quoteHeader}"${'x'.repeat(1023 - quoteHeader.length - 1)}""unterminated`;
+  const inputs = [crlfInput, escapedQuoteInput];
+
+  for (const input of inputs) {
+    const controller = new AbortController();
+    const originalSetTimeout = globalThis.setTimeout;
+    const originalNowDescriptor = Object.getOwnPropertyDescriptor(
+      performance,
+      'now',
+    );
+    let callbacksRun = 0;
+    let clock = 0;
+    Object.defineProperty(performance, 'now', {
+      configurable: true,
+      value: () => (clock += 5),
+    });
+    globalThis.setTimeout = (callback, delay, ...args) =>
+      originalSetTimeout(() => {
+        callback(...args);
+        callbacksRun++;
+        if (callbacksRun === 1) controller.abort();
+      }, delay);
+    try {
+      await assert.rejects(
+        previewCSV(input, {
+          mapping: { latitude: 'lat', longitude: 'lon' },
+          signal: controller.signal,
+        }),
+        { name: 'AbortError' },
+      );
+      assert.equal(callbacksRun, 1);
+    } finally {
+      globalThis.setTimeout = originalSetTimeout;
+      if (originalNowDescriptor)
+        Object.defineProperty(performance, 'now', originalNowDescriptor);
+      else delete performance.now;
+    }
+  }
+});
+
+test('CSV fused summary is null with no accepted coordinates or known times', async () => {
+  const preview = await previewCSV('lat,lon,time\n91,2,\n3,181,\n', {
+    mapping: { latitude: 'lat', longitude: 'lon', time: 'time' },
+  });
+  assert.equal(preview.accepted, 0);
+  assert.equal(preview.rejected, 2);
+  assert.equal(preview.bounds, null);
+  assert.equal(preview.timeRange, null);
+});
+
+test('cooperative CSV preview retains parser error precedence and bounds', async () => {
+  const mapping = { latitude: 'lat', longitude: 'lon' };
+  const cases = [
+    ['lat,lat\n1,2', 'invalid-csv'],
+    ['lat,lon\n1,2\n"unterminated', 'invalid-csv'],
+    [`lat,lon\n${'1,2\n'.repeat(50_001)}`, 'too-many-rows'],
+    [`lat,lon\n"${'x'.repeat(4097)}"`, 'cell-too-large'],
+    [`${Array(65).fill('c').join(',')}\n`, 'too-many-columns'],
+  ];
+  for (const [input, code] of cases)
+    await assert.rejects(previewCSV(input, { mapping }), { code });
 });
