@@ -236,6 +236,11 @@ run.addEventListener('click', async () => {
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     capturedAt: new Date().toISOString(),
+    documentVisibleAtStart: document.visibilityState === 'visible',
+    documentFocusedAtStart: document.hasFocus(),
+    desktopForegroundVerification: 'unavailable',
+    foregroundUninterruptedScope:
+      'document visibility only; does not verify desktop foreground or occlusion',
     fixture: 'synthetic-5000-import-points/v1',
     workload,
     viewerConstruction: requestedViewer,
@@ -487,7 +492,7 @@ run.addEventListener('click', async () => {
       });
     check(
       !backgrounded,
-      'Foreground interrupted; rerun for valid measurements.',
+      'Document visibility changed; rerun for valid measurements.',
     );
     report.status = 'passed';
   } catch (error) {
@@ -498,6 +503,8 @@ run.addEventListener('click', async () => {
     if (viewer) uninstallRenderGovernor(viewer);
     viewer?.destroy();
     document.removeEventListener('visibilitychange', visibility);
+    report.documentVisibleThroughout = !backgrounded;
+    report.documentFocusedAtEnd = document.hasFocus();
     report.foregroundUninterrupted = !backgrounded;
     if (frameDiagnostics) {
       report.browserLifecycleEvents = frameDiagnostics.events();

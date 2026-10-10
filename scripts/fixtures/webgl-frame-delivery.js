@@ -206,6 +206,7 @@ runButton.addEventListener('click', () => {
       startedAt: wallStartedAt,
       elapsedMs: endedAt - start,
       requestedDurationMs: DURATION_MS,
+      desktopForegroundVerification: 'unavailable',
       browser: {
         userAgent: navigator.userAgent.slice(0, 300),
         focusedAtStart,
