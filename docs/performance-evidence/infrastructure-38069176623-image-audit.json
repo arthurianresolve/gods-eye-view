@@ -1,0 +1,24 @@
+{
+  "schema": "gev-infrastructure-image-audit/v1",
+  "candidateCommit": "dc94ddfd4dc9982da78c2365e13dbf35d26d45dd",
+  "sourceReport": "infrastructure-38069176623.json",
+  "sourceReportSha256": "10ca03f767acb6108a5f780500b5b7a0bf505d6d4af10a0356f73440466407e6",
+  "caseId": "focused-alpha-style",
+  "pair": 0,
+  "method": "Decode the two embedded PNGs without modification; compare every ARGB pixel using System.Drawing.Bitmap.GetPixel on Windows.",
+  "dimensions": { "width": 960, "height": 640 },
+  "comparedPixels": 614400,
+  "differentPixels": 184,
+  "differenceBoundsInclusive": { "minX": 798, "minY": 503, "maxX": 836, "maxY": 534 },
+  "changedChannels": ["blue"],
+  "maximumAbsoluteChannelDifference": 1,
+  "rgbPairs": [
+    { "entity": [0, 74, 196], "collection": [0, 74, 197], "count": 180 },
+    { "entity": [148, 203, 104], "collection": [148, 203, 105], "count": 1 },
+    { "entity": [9, 81, 189], "collection": [9, 81, 190], "count": 1 },
+    { "entity": [104, 158, 125], "collection": [104, 158, 126], "count": 1 },
+    { "entity": [164, 212, 90], "collection": [164, 212, 91], "count": 1 }
+  ],
+  "interpretation": "Differences lie along the selected translucent stem. Cesium's Entity static color batch quantizes ColorGeometryInstanceAttribute to unsigned bytes, while the candidate PolylineCollection supplies a floating-point material color. This is consistent with an alpha-precision difference, but an alternative renderer has not yet been tested to establish causality.",
+  "disposition": "The direct-collection prototype fails exact visual equivalence and is not enabled in production. No pixels are masked and no tolerance is relaxed."
+}
