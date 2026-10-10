@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { createReadStream } from 'node:fs';
+import { createReadStream, readFileSync } from 'node:fs';
 import {
   lstat,
   mkdtemp,
@@ -54,6 +54,7 @@ const ROOT = await realpath(
 );
 const DEFAULT_BUDGET_MS = 12 * 60 * 1000;
 const BUILD_COMMAND_TIMEOUT_MS = 150 * 1000;
+const CAPTURE_CLI_TIMEOUT_MS = 180 * 1000;
 const SHA1 = /^[a-f0-9]{40}$/;
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -88,6 +89,386 @@ export function parseSmokeArguments(argv) {
     output[key] = value;
   }
   return output;
+}
+
+/** Run an owned CLI process with bounded output and process-tree cleanup. */
+export function runBoundedChild(
+  command,
+  args,
+  { timeoutMs, maxOutputBytes = 64 * 1024, ownedPidFile = null } = {},
+) {
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1)
+    throw new TypeError('Child timeout must be a positive integer.');
+  if (!Number.isInteger(maxOutputBytes) || maxOutputBytes < 1024)
+    throw new TypeError('Child output bound must be at least 1024 bytes.');
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: ROOT,
+      detached: process.platform !== 'win32',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    const chunks = { stdout: [], stderr: [] };
+    const outputChunks = [];
+    let capturedBytes = 0;
+    let stopReason = null;
+    let stopTimer = null;
+    let finalTimer = null;
+    let timeoutTimer = null;
+    let settled = false;
+    let ownedBrowserPid = null;
+
+    const rememberOwnedBrowserPid = () => {
+      if (!ownedPidFile) return;
+      try {
+        const value = Number(readFileSync(ownedPidFile, 'utf8').trim());
+        if (Number.isSafeInteger(value) && value > 0) ownedBrowserPid = value;
+      } catch {
+        // The CLI may not have launched Chromium yet, or may have cleaned up.
+      }
+    };
+    const terminatePid = (pid, signal) => {
+      if (!Number.isSafeInteger(pid) || pid < 1) return false;
+      if (process.platform === 'win32') {
+        const result = spawnSync(
+          'taskkill',
+          ['/PID', String(pid), '/T', '/F'],
+          {
+            encoding: 'utf8',
+            stdio: 'ignore',
+            timeout: 1500,
+            windowsHide: true,
+          },
+        );
+        if (result.error) return false;
+        return result.status === 0;
+      }
+      try {
+        process.kill(pid, signal);
+        return true;
+      } catch (error) {
+        if (error.code === 'ESRCH') return true;
+        return false;
+      }
+    };
+
+    const signalOwnedTree = (signal) => {
+      if (!child.pid) return;
+      rememberOwnedBrowserPid();
+      if (process.platform === 'win32') {
+        terminatePid(child.pid, signal);
+      } else {
+        try {
+          process.kill(-child.pid, signal);
+        } catch (error) {
+          if (error.code !== 'ESRCH') throw error;
+        }
+      }
+      if (ownedBrowserPid && ownedBrowserPid !== child.pid) {
+        if (process.platform === 'win32') {
+          terminatePid(ownedBrowserPid, signal);
+        } else {
+          try {
+            process.kill(-ownedBrowserPid, signal);
+          } catch (error) {
+            if (error.code === 'ESRCH') terminatePid(ownedBrowserPid, signal);
+            else throw error;
+          }
+        }
+      }
+    };
+    const isProcessPresent = (pid, group) => {
+      if (!Number.isSafeInteger(pid) || pid < 1) return false;
+      if (process.platform === 'win32') {
+        const result = spawnSync(
+          'tasklist',
+          ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'],
+          {
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+            timeout: 1000,
+            windowsHide: true,
+          },
+        );
+        if (result.error || result.status !== 0) return null;
+        return result.stdout.includes(`"${pid}"`);
+      }
+      try {
+        process.kill(group ? -pid : pid, 0);
+        return true;
+      } catch (error) {
+        return error.code === 'ESRCH' ? false : null;
+      }
+    };
+    const waitForProcessExit = async (pid, group) => {
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        const present = isProcessPresent(pid, group);
+        if (present === false) return true;
+        if (present === null) return false;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return false;
+    };
+    const cleanupTimers = () => {
+      clearTimeout(timeoutTimer);
+      clearTimeout(stopTimer);
+      clearTimeout(finalTimer);
+    };
+    const progressLines = () =>
+      Buffer.concat(outputChunks)
+        .toString('utf8')
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .slice(-4)
+        .map((line) => sanitizeError(line).slice(0, 200));
+    const rejectAfterStop = (reason) => {
+      if (stopReason) return;
+      stopReason = reason;
+      try {
+        signalOwnedTree('SIGTERM');
+      } catch {
+        // The child may have exited between the event and signal.
+      }
+      stopTimer = setTimeout(() => {
+        try {
+          signalOwnedTree('SIGKILL');
+        } catch {
+          // The child tree may already be gone.
+        }
+        finalTimer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          cleanupTimers();
+          child.stdout?.destroy();
+          child.stderr?.destroy();
+          child.stdin?.destroy();
+          child.unref();
+          const error = new Error(
+            `Child process ${stopReason}; cleanup unconfirmed; pipes released.`,
+          );
+          error.childDiagnostics = { progressLines: progressLines() };
+          reject(error);
+        }, 2000);
+      }, 5000);
+    };
+    const append = (stream, chunk) => {
+      capturedBytes += chunk.length;
+      if (capturedBytes <= maxOutputBytes) {
+        chunks[stream].push(chunk);
+        outputChunks.push(chunk);
+      } else rejectAfterStop('output limit exceeded');
+    };
+    child.stdout.on('data', (chunk) => append('stdout', chunk));
+    child.stderr.on('data', (chunk) => append('stderr', chunk));
+    child.once('error', (error) => {
+      if (settled) return;
+      settled = true;
+      cleanupTimers();
+      reject(
+        new Error(`Child process could not start: ${sanitizeError(error)}`),
+      );
+    });
+    child.once('close', async (code, signal) => {
+      if (settled) return;
+      rememberOwnedBrowserPid();
+      if (stopReason || code !== 0 || ownedBrowserPid) {
+        try {
+          signalOwnedTree('SIGKILL');
+        } catch {
+          // The owned process group may already have exited.
+        }
+      }
+      cleanupTimers();
+      const output = {
+        code,
+        signal,
+        stdout: Buffer.concat(chunks.stdout).toString('utf8'),
+        stderr: Buffer.concat(chunks.stderr).toString('utf8'),
+      };
+      if (stopReason || code !== 0 || ownedBrowserPid) {
+        const ownedTargets = [
+          ...(process.platform !== 'win32'
+            ? [{ pid: child.pid, group: true }]
+            : [{ pid: child.pid, group: false }]),
+          ...(ownedBrowserPid ? [{ pid: ownedBrowserPid, group: true }] : []),
+        ];
+        let cleanupConfirmed = true;
+        for (const target of ownedTargets) {
+          if (!(await waitForProcessExit(target.pid, target.group)))
+            cleanupConfirmed = false;
+        }
+        settled = true;
+        const error = new Error(
+          `Child process ${stopReason || `exited ${code}`}; cleanup ${cleanupConfirmed ? 'confirmed' : 'unconfirmed'} (${signal || code}).`,
+        );
+        error.childDiagnostics = { progressLines: progressLines() };
+        reject(error);
+      } else if (code !== 0) {
+        settled = true;
+        const detail = sanitizeError(
+          output.stderr || output.stdout || `exit ${code}`,
+        );
+        const error = new Error(`Child process failed: ${detail}`);
+        error.childDiagnostics = { progressLines: progressLines() };
+        reject(error);
+      } else {
+        settled = true;
+        resolve(output);
+      }
+    });
+    timeoutTimer = setTimeout(() => rejectAfterStop('timed out'), timeoutMs);
+  });
+}
+
+export function validateCaptureCliReport(report, expected) {
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 6 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  for (const workerAudit of pageAudit.cesiumWorkerBlobAudits || [])
+    assert.equal(workerAudit.status, 'receipt-derived-worker-blobs-validated');
+  assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6);
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.equal(report.environment?.startup?.runCount, 1);
+  assert.equal(
+    report.environment?.startup?.measurement,
+    'cache-disabled fresh browser contexts',
+  );
+  assert.deepEqual(report.workload?.scenarios, [
+    'idle',
+    'scripted-motion',
+    'selected-aircraft-tracking',
+  ]);
+  assert.match(report.environment?.renderer || '', /swiftshader/i);
+  assert.equal(report.environment?.hardwareEligible, false);
+  assert.equal(report.captures?.length, 6);
+  assert.equal(report.fixtureDelivery?.status, 'observed');
+  assert.equal(report.fixtureDelivery?.fixtureSha256, expected.fixtureSha256);
+  assert.equal(report.fixtureDelivery?.observedFlightsCount, 2500);
+  assert.ok(report.fixtureDelivery.fulfilledResponseCount >= 1);
+  for (const scenario of report.workload.scenarios) {
+    const samples = report.captures.filter(
+      (sample) => sample.scenario === scenario,
+    );
+    assert.equal(samples.length, 2, `Expected two ${scenario} captures.`);
+    assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
+    for (const sample of samples) {
+      assert.equal(sample.fixtureClock?.freshBrowserContext, true);
+      assert.equal(sample.fixtureClock?.start?.startCount, 1);
+      assert.equal(sample.fixtureClock?.sourceFreshness, 'current');
+      assert.ok(sample.fixtureClock?.actualWarmupElapsedMs >= 1000);
+      assert.ok(sample.fixtureClock?.measuredWindowElapsedMs >= 1000);
+      assert.ok(sample.fixtureClock?.ageAtMeasurementStartMs >= 0);
+      assert.ok(sample.fixtureClock?.ageAtEndMs <= 120_000);
+      assert.equal(sample.fixtureDelivery?.status, 'observed');
+      assert.equal(
+        sample.fixtureDelivery?.fixtureSha256,
+        expected.fixtureSha256,
+      );
+      assert.equal(sample.fixtureDelivery?.observedFlightsCount, 2500);
+      assert.ok(sample.fixtureDelivery?.fulfilledResponseCount >= 1);
+      const population = Object.fromEntries(
+        (sample.layers || [])
+          .filter((layer) =>
+            ['flights', 'local-datacenters', 'local-dams'].includes(layer.id),
+          )
+          .map((layer) => [
+            layer.id,
+            { enabled: layer.enabled, count: layer.count },
+          ]),
+      );
+      assert.deepEqual(population, {
+        flights: { enabled: true, count: 2500 },
+        'local-datacenters': { enabled: true, count: 4362 },
+        'local-dams': { enabled: true, count: 716 },
+      });
+      assert.equal(sample.conditions?.before?.visible, true);
+      assert.equal(sample.conditions?.before?.focused, true);
+      assert.equal(sample.conditions?.after?.visible, true);
+      assert.equal(sample.conditions?.after?.focused, true);
+      assert.equal(sample.foregroundThroughout, true);
+      assert.equal(sample.settings?.before?.qualityMode, 'manual');
+      assert.equal(sample.settings?.before?.densityPct, 75);
+      assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+      assert.equal(sample.settings?.after?.qualityMode, 'manual');
+      assert.equal(sample.settings?.after?.densityPct, 75);
+      assert.equal(sample.settings?.after?.detectionMode, 'DENSE');
+      if (scenario === 'selected-aircraft-tracking')
+        assert.equal(sample.trackedAircraftId, 'flights:000001');
+    }
+  }
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    renderer: report.environment.renderer,
+    fixtureSha256: report.fixtureDelivery.fixtureSha256,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    captures: report.captures.map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      fixtureDelivery: sample.fixtureDelivery,
+      fixtureClock: sample.fixtureClock,
+      layers: sample.layers,
+      conditions: sample.conditions,
+    })),
+    rawReport: report,
+    limitations: [
+      'Hosted software-rendering CLI integration only; not hardware or paired performance evidence.',
+      'The static production flight fixture verifies source delivery and populations, not a complete moving trajectory contract.',
+    ],
+  };
+}
+
+function compactCaptureCliFailure(report) {
+  if (!report || typeof report !== 'object') return null;
+  return {
+    schema: report.schema || null,
+    status: report.status || null,
+    failure: report.failure
+      ? sanitizeError(report.failure.message || JSON.stringify(report.failure))
+      : null,
+    phase: report.failure?.phase || null,
+    source: {
+      appCommit: report.source?.appCommit || null,
+      harnessCommit: report.source?.harnessCommit || null,
+      provenanceStatus: report.source?.provenanceStatus || null,
+    },
+    fixtureDelivery: report.fixtureDelivery
+      ? {
+          status: report.fixtureDelivery.status,
+          fixtureSha256: report.fixtureDelivery.fixtureSha256,
+          observedFlightsCount: report.fixtureDelivery.observedFlightsCount,
+          fulfilledResponseCount: report.fixtureDelivery.fulfilledResponseCount,
+        }
+      : null,
+    captures: (report.captures || []).slice(0, 6).map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      fixtureClock: sample.fixtureClock || null,
+      fixtureDelivery: sample.fixtureDelivery || null,
+    })),
+  };
 }
 
 function git(args) {
@@ -278,6 +659,109 @@ function simplifyObservation(observed) {
     },
     camera: observed.camera,
   };
+}
+
+async function runCandidateCaptureCli({
+  build,
+  checkout,
+  commit,
+  harnessCommit,
+  served,
+  tempRoot,
+  fixture,
+  startedAt,
+  budgetMs,
+}) {
+  const remainingMs = budgetMs - (Date.now() - startedAt);
+  if (remainingMs < CAPTURE_CLI_TIMEOUT_MS + 15_000)
+    throw new Error(
+      'Insufficient outer smoke budget for capture CLI integration.',
+    );
+  const receiptPath = path.join(tempRoot, 'capture-cli-build-receipt.json');
+  const reportPath = path.join(tempRoot, 'capture-cli-report.json');
+  const browserPidPath = path.join(tempRoot, 'capture-cli-browser.pid');
+  await writeFile(receiptPath, `${JSON.stringify(build.receipt)}\n`, 'utf8');
+  const scriptPath = path.join(
+    ROOT,
+    'scripts',
+    'capture-scene-performance.mjs',
+  );
+  const args = [
+    scriptPath,
+    '--url',
+    served.baseUrl,
+    '--provider-fixture',
+    'dense-investigation',
+    '--provider-fixture-time',
+    fixture.fixedTime,
+    '--mixed-layers',
+    '--quality-mode',
+    'manual',
+    '--detection-mode',
+    'DENSE',
+    '--expected-density',
+    '75',
+    '--runs',
+    '2',
+    '--startup-runs',
+    '1',
+    '--warmup-ms',
+    '1000',
+    '--seconds',
+    '1',
+    '--fixture-timeout-ms',
+    '60000',
+    '--protocol-timeout-ms',
+    '120000',
+    '--headless',
+    '--software-rendering',
+    '--hosted-fixture',
+    '--owned-browser-pid-file',
+    browserPidPath,
+    '--build-receipt',
+    receiptPath,
+    '--app-checkout',
+    checkout,
+    '--harness-checkout',
+    ROOT,
+    '--build-root',
+    build.buildRoot,
+    '--expected-app-sha',
+    commit,
+    '--expected-harness-sha',
+    harnessCommit,
+    '--served-base-url',
+    served.baseUrl,
+    '--out',
+    reportPath,
+  ];
+  let captureReport = null;
+  try {
+    await runBoundedChild(process.execPath, args, {
+      timeoutMs: Math.min(CAPTURE_CLI_TIMEOUT_MS, remainingMs - 15_000),
+      maxOutputBytes: 64 * 1024,
+      ownedPidFile: browserPidPath,
+    });
+    captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
+    return validateCaptureCliReport(captureReport, {
+      appSha: commit,
+      harnessSha: harnessCommit,
+      receiptSha256: build.receipt.receiptSha256,
+      fixtureSha256: fixture.sha256,
+    });
+  } catch (error) {
+    if (!captureReport) {
+      try {
+        captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
+      } catch {
+        // Preserve the bounded process error when no report was written.
+      }
+    }
+    error.captureCliFailure = compactCaptureCliFailure(captureReport) || {
+      diagnostics: error.childDiagnostics || null,
+    };
+    throw error;
+  }
 }
 
 async function runRevision({
@@ -559,11 +1043,11 @@ async function runRevision({
       clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
       wallTimeMs: Date.now(),
       flightStats:
-        window.__godsEyeView?.dataManager?.layers?.get('flights')?.module?.getStats?.() ??
-        null,
+        window.__godsEyeView?.dataManager?.layers
+          ?.get('flights')
+          ?.module?.getStats?.() ?? null,
     }));
-    const fixtureAgeMs =
-      fixtureClockEnd.wallTimeMs - flightFixture.fixedTimeMs;
+    const fixtureAgeMs = fixtureClockEnd.wallTimeMs - flightFixture.fixedTimeMs;
     if (
       !fixtureClockEnd.clock?.started ||
       fixtureClockEnd.clock.startCount !== 1 ||
@@ -671,6 +1155,40 @@ async function runRevision({
     const flightFixtureObservation = flightFixtureDelivery.summarize(
       finalDenseLayerPopulation.flights.count,
     );
+    let captureCliDiagnostic = null;
+    if (label === 'candidate') {
+      phase = 'capture-cli-preparation-cleanup';
+      await withTimeout(
+        page.evaluate(restoreCesiumWorkerBlobAudit),
+        3000,
+        'Cesium worker blob audit cleanup before capture CLI',
+      );
+      await withTimeout(
+        cleanupFixturePageDiagnostics(page),
+        3000,
+        'Page diagnostic cleanup before capture CLI',
+      );
+      await withTimeout(
+        context.close(),
+        5000,
+        'Smoke browser context cleanup before capture CLI',
+      );
+      context = null;
+      page = null;
+      fixturePage = null;
+      phase = 'candidate-capture-cli-integration';
+      captureCliDiagnostic = await runCandidateCaptureCli({
+        build,
+        checkout,
+        commit,
+        harnessCommit,
+        served,
+        tempRoot,
+        fixture: flightFixture,
+        startedAt,
+        budgetMs,
+      });
+    }
     result = {
       revision: commit,
       status: 'passed',
@@ -715,6 +1233,7 @@ async function runRevision({
         comparisonIneligibilityReason:
           'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
       },
+      ...(captureCliDiagnostic ? { captureCliDiagnostic } : {}),
       serviceWorker: serviceWorkerState,
       browser: {
         softwareRenderingRequested: true,
@@ -743,6 +1262,9 @@ async function runRevision({
             workerBlobDiagnostics,
             workerBlobValidationFailure: sanitizeError(error),
           }
+        : {}),
+      ...(error.captureCliFailure
+        ? { captureCliFailure: error.captureCliFailure }
         : {}),
       densePopulationObservations,
     };

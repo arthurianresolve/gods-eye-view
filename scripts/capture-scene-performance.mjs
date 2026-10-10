@@ -91,7 +91,14 @@ const fixtureTimeoutMs = Math.max(
   Math.min(180_000, Number(option('--fixture-timeout-ms', '90000')) || 90_000),
 );
 const out = option('--out', null);
+const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
+const softwareRendering = args.includes('--software-rendering');
+const hostedFixture = args.includes('--hosted-fixture');
+if (hardwareRequired && softwareRendering)
+  throw new Error(
+    '--hardware-required cannot be combined with --software-rendering',
+  );
 const appCommitOverride = option('--app-commit', null);
 const appWorktreeStateOverride = option('--app-worktree-state', null);
 const buildProvenanceOptions = {
@@ -116,6 +123,13 @@ if (
 if (productionFlightFixture && !buildProvenanceEnabled)
   throw new Error(
     'The production flight fixture requires verified build provenance options.',
+  );
+if (
+  hostedFixture &&
+  (!productionFlightFixture || !softwareRendering || !buildProvenanceEnabled)
+)
+  throw new Error(
+    '--hosted-fixture requires the verified production fixture and explicit software rendering.',
   );
 const actualHarnessRoot = await fs.realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
@@ -243,8 +257,27 @@ const browser = await puppeteer.launch({
     '--disable-backgrounding-occluded-windows',
     '--disable-renderer-backgrounding',
     '--disable-background-timer-throttling',
+    ...(hostedFixture ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
+    ...(softwareRendering
+      ? [
+          '--use-gl=angle',
+          '--use-angle=swiftshader',
+          '--enable-unsafe-swiftshader',
+        ]
+      : []),
   ],
 });
+if (ownedBrowserPidFile) {
+  const browserPid = browser.process()?.pid;
+  try {
+    if (!Number.isInteger(browserPid) || browserPid < 1)
+      throw new Error('Owned browser process ID is unavailable.');
+    await fs.writeFile(ownedBrowserPidFile, `${browserPid}\n`, 'utf8');
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
+  }
+}
 
 const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
@@ -1472,5 +1505,10 @@ try {
     await session.send('Fetch.disable').catch(() => {});
     await session.detach().catch(() => {});
   }
-  await browser.close();
+  try {
+    await browser.close();
+  } finally {
+    if (ownedBrowserPidFile)
+      await fs.rm(ownedBrowserPidFile, { force: true }).catch(() => {});
+  }
 }
