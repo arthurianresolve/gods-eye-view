@@ -6,7 +6,7 @@ projection-cache candidate `33d985657c8949a02cfce2f0f1ad4131d3da774c`
 [job results](performance-evidence/s52-33d9856/ci-33d9856.json)). Its component
 visual comparison passes five alternating baseline/candidate pairs across 24
 cases, with exact pixels and interaction observations. Performance acceptance is
-still pending the complete paired CPU report and the broader hardware gates;
+still pending isolated CPU confirmation and the broader hardware gates;
 the optimization has not been promoted to remote `dev`. Details and the two
 corrected harness failures are recorded below. The previous remote `dev` revision
 `d2c5aa1` also passes all seven integration jobs
@@ -55,7 +55,7 @@ the earlier release requirements and historical results.
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
-| S52 overlay invalidation | Experimental pure-projection reuse at `33d9856`; earlier layout-cache experiment remains reverted; broader layout/paint invalidation still pending | 54 focused overlay tests, allocation checks and full integration CI pass; five 24-case paired browser Canvas2D comparisons preserve pixels, hit regions and accessible actions; complete CPU comparison still pending | Pending; component Canvas2D results do not establish GPU or full-scene performance |
+| S52 overlay invalidation | Experimental pure-projection reuse at `33d9856`; earlier layout-cache experiment remains reverted; broader layout/paint invalidation still pending | 54 focused overlay tests, allocation checks and full integration CI pass; five 24-case paired browser Canvas2D comparisons preserve pixels, hit regions and accessible actions; local CPU batch complete but confounded, isolated confirmation pending | Pending; component Canvas2D results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
@@ -68,6 +68,30 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S52 projection reuse: local CPU diagnostic - 11 October 2026
+
+The [complete Windows CPU report](performance-evidence/s52-33d9856/cpu-windows.json)
+contains all 40 baseline/candidate pairs across eight workloads. The
+[independent review](performance-evidence/s52-33d9856/cpu-windows-review.json)
+recomputes the medians and verifies identical fixture populations, positions,
+camera inputs and settings before and after each sample. The report's SHA-256 is
+`1817f9b19fd5f1d0933c08e406fc180297b080b398112de5246c0120928d277f`.
+The source checkouts remained unchanged and their temporary harnesses were removed.
+
+This batch is **diagnostic only**: repository checkout, formatting and Git/file
+inspection ran concurrently on the Windows host. Pair timing spread is large;
+for example, periodic infrastructure ranges from -25.76% to +29.87%, and
+periodic radio has a +5.68% paired median. Fixed radio has a -16.65% paired
+median, but that does not make the confounded batch acceptable. All samples,
+including regressions, remain in the report. These are Node algorithm timings
+with a mock canvas and fixed camera, not browser frame times or hardware evidence.
+
+The [isolated hosted confirmation](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38094279142)
+uses the same eight-workload driver at harness `1da828a`, with immutable
+baseline `886b7d2` and candidate `33d9856`. It is still pending. No other test
+workload runs concurrently in that job. Its matched pairs must be reviewed
+within their own environment; they cannot be combined with these Windows samples.
 
 ### S52 projection reuse: component correctness - 11 October 2026
 
