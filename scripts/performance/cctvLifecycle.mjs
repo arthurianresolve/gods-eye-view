@@ -108,9 +108,21 @@ export function createCctvLifecycleFixture() {
   });
 }
 
-/** Apply one public Cesium view and disable CCTV auto-hop before readiness. */
+/** Finite share state suppresses the app's unrelated startup Austin flight. */
+export function cctvLifecycleShareHash(view = FIXTURE_VIEW) {
+  return `#${new URLSearchParams({
+    lat: String(view.latitude),
+    lon: String(view.longitude),
+  })}`;
+}
+
+/** Apply one public Cesium view after the incoming share state has settled. */
 export async function configureCctvLifecycleSceneInPage(view) {
   const debug = window.__godsEyeView;
+  const initialRestore = debug?.styleManager?.initialRestorePromise;
+  if (!initialRestore || typeof initialRestore.then !== 'function')
+    throw new Error('CCTV fixture share-state restoration is unavailable.');
+  await initialRestore;
   const manager = debug?.dataManager;
   const viewer = debug?.viewer;
   const ellipsoid = viewer?.scene?.globe?.ellipsoid;
@@ -184,6 +196,7 @@ export function readCctvLifecycleCheckpointInPage({
     } catch {}
   }
   let cameraView = null;
+  let cameraPose = null;
   if (fixtureView) {
     try {
       const rectangle = viewer.camera.computeViewRectangle(
@@ -207,6 +220,21 @@ export function readCctvLifecycleCheckpointInPage({
             longitudeInside &&
             fixtureView.latitude >= south &&
             fixtureView.latitude <= north,
+        };
+      }
+    } catch {}
+    try {
+      const cartographic = scene.globe.ellipsoid.cartesianToCartographic(
+        viewer.camera.positionWC,
+      );
+      if (cartographic) {
+        cameraPose = {
+          longitude: (cartographic.longitude * 180) / Math.PI,
+          latitude: (cartographic.latitude * 180) / Math.PI,
+          heightM: cartographic.height,
+          headingRadians: viewer.camera.heading,
+          pitchRadians: viewer.camera.pitch,
+          rollRadians: viewer.camera.roll,
         };
       }
     } catch {}
@@ -269,6 +297,7 @@ export function readCctvLifecycleCheckpointInPage({
       contextAttributes,
     },
     cameraView,
+    cameraPose,
     canvas: (() => {
       const rect = scene.canvas?.getBoundingClientRect?.();
       return rect
@@ -346,6 +375,95 @@ function finiteNonnegative(value) {
 
 function equalJson(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export function assertCctvCameraPose(checkpoint, expectedView = FIXTURE_VIEW) {
+  const pose = checkpoint?.cameraPose;
+  const angleDistance = (left, right) =>
+    Math.abs(Math.atan2(Math.sin(left - right), Math.cos(left - right)));
+  if (
+    !pose ||
+    ![
+      pose.longitude,
+      pose.latitude,
+      pose.heightM,
+      pose.headingRadians,
+      pose.pitchRadians,
+      pose.rollRadians,
+    ].every(Number.isFinite) ||
+    Math.abs(pose.longitude - expectedView.longitude) > 0.001 ||
+    Math.abs(pose.latitude - expectedView.latitude) > 0.001 ||
+    Math.abs(pose.heightM - expectedView.heightM) > 5 ||
+    angleDistance(pose.headingRadians, expectedView.headingRadians) > 0.0001 ||
+    Math.abs(pose.pitchRadians - expectedView.pitchRadians) > 0.0001 ||
+    angleDistance(pose.rollRadians, expectedView.rollRadians) > 0.0001
+  )
+    throw new Error('CCTV camera pose differs from the declared fixture view.');
+  return pose;
+}
+
+export function assertCctvStableDrain(checkpoint) {
+  const stable = checkpoint?.drainStability;
+  if (
+    stable?.status !== 'stable' ||
+    !Number.isSafeInteger(stable.sampleCount) ||
+    stable.sampleCount < 10 ||
+    !Number.isFinite(stable.windowMs) ||
+    stable.windowMs < 1000 ||
+    !Number.isSafeInteger(stable.firstFrameNumber) ||
+    !Number.isSafeInteger(stable.lastFrameNumber) ||
+    stable.lastFrameNumber <= stable.firstFrameNumber ||
+    !Number.isFinite(stable.maximumSampleGapMs) ||
+    stable.maximumSampleGapMs < 0 ||
+    stable.maximumSampleGapMs > 500
+  )
+    throw new Error(
+      'CCTV checkpoint lacks a stable one-second native-render drain window.',
+    );
+  return stable;
+}
+
+export function assertCctvCycleReuse(cycle, warmup) {
+  if (
+    !cycle ||
+    cycle.enabled?.enabled !== true ||
+    cycle.disabled?.enabled !== false ||
+    cycle.enabled?.cameraCount !== 1 ||
+    cycle.disabled?.cameraCount !== 1 ||
+    cycle.enabled.cameras?.[0]?.id !== FIXTURE_CAMERA_ID ||
+    cycle.disabled.cameras?.[0]?.id !== FIXTURE_CAMERA_ID ||
+    cycle.enabled.activeCameraId !== FIXTURE_CAMERA_ID
+  )
+    throw new Error(`CCTV fixture ownership changed in cycle ${cycle?.cycle}.`);
+  assertCctvStableDrain(cycle.enabled);
+  assertCctvStableDrain(cycle.disabled);
+  if (
+    !equalJson(cycle.enabled.diagnostics, warmup.enabled.diagnostics) ||
+    !equalJson(cycle.disabled.diagnostics, warmup.disabled.diagnostics)
+  )
+    throw new Error(`CCTV diagnostics changed in cycle ${cycle.cycle}.`);
+  if (
+    !equalJson(cycle.enabled.scene, warmup.enabled.scene) ||
+    !equalJson(cycle.disabled.scene, warmup.disabled.scene)
+  )
+    throw new Error(`CCTV scene resources changed in cycle ${cycle.cycle}.`);
+  const warmEnabledGeometry = cctvGeometryTotals(warmup.enabled);
+  const warmDisabledGeometry = cctvGeometryTotals(warmup.disabled);
+  const enabledGeometry = cctvGeometryTotals(cycle.enabled);
+  const disabledGeometry = cctvGeometryTotals(cycle.disabled);
+  if (
+    !equalJson(warmEnabledGeometry, warmDisabledGeometry) ||
+    cycle.createGeometrySubmitted !==
+      warmEnabledGeometry.activeCreateGeometrySubmitted ||
+    !equalJson(cycle.enabledWorkerTotals, enabledGeometry) ||
+    !equalJson(cycle.disabledWorkerTotals, disabledGeometry) ||
+    !equalJson(enabledGeometry, warmEnabledGeometry) ||
+    !equalJson(disabledGeometry, warmDisabledGeometry)
+  )
+    throw new Error(
+      `CCTV toggle resubmitted settled createGeometry work in cycle ${cycle.cycle}.`,
+    );
+  return true;
 }
 
 export function cctvGeometryTotals(checkpoint) {
@@ -519,8 +637,12 @@ export function validateCctvLifecycleReport(
     );
   const requireRenderedFrame = (checkpoint, expectedTotals = null) => {
     if (
+      !Number.isSafeInteger(checkpoint?.boundaryRender?.frameNumber) ||
+      checkpoint.boundaryRender.frameNumber < 1 ||
+      !finiteNonnegative(checkpoint.boundaryRender?.elapsedMs) ||
       !Number.isSafeInteger(checkpoint?.render?.frameNumber) ||
       checkpoint.render.frameNumber < 1 ||
+      checkpoint.render.frameNumber <= checkpoint.boundaryRender.frameNumber ||
       !finiteNonnegative(checkpoint.render?.elapsedMs)
     )
       throw new Error(
@@ -533,11 +655,14 @@ export function validateCctvLifecycleReport(
       );
     if (!checkpoint.cameraView?.containsFixture)
       throw new Error('CCTV synthetic camera left the declared scene view.');
+    assertCctvCameraPose(checkpoint, report.fixture.view);
+    assertCctvStableDrain(checkpoint);
   };
   for (const row of snapshots) requireRenderedFrame(row);
   requireRenderedFrame(report.warmup.enabled, warmEnabledGeometry);
   requireRenderedFrame(report.warmup.disabled, warmDisabledGeometry);
   for (const cycle of report.cycles) {
+    assertCctvCycleReuse(cycle, report.warmup);
     if (
       cycle.enabled.enabled !== true ||
       cycle.disabled.enabled !== false ||

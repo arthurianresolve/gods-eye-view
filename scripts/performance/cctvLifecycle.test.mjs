@@ -5,6 +5,10 @@ import sharp from 'sharp';
 import { createCctvSource } from '../../src/layers/cctv/source.js';
 import {
   assertCctvCheckpoint,
+  assertCctvCameraPose,
+  assertCctvCycleReuse,
+  cctvLifecycleShareHash,
+  cctvTaskErrorSignature,
   configureCctvLifecycleSceneInPage,
   createCctvLifecycleFixture,
   parseCctvLifecycleArgs,
@@ -17,6 +21,7 @@ import {
 import {
   captureCctvFixtureResponse,
   runCctvLifecycle,
+  waitForCctvLifecycleDrain,
 } from '../qa-cctv-lifecycle.mjs';
 
 function validCheckpoint(enabled, probeError = false) {
@@ -51,7 +56,24 @@ function validCheckpoint(enabled, probeError = false) {
       north: 31,
       containsFixture: true,
     },
-    render: { frameNumber: 12, elapsedMs: 100 },
+    cameraPose: {
+      longitude: -97.7431,
+      latitude: 30.2672,
+      heightM: 25_000,
+      headingRadians: 0,
+      pitchRadians: -1.2,
+      rollRadians: 0,
+    },
+    boundaryRender: { frameNumber: 11, elapsedMs: 90 },
+    render: { frameNumber: 22, elapsedMs: 1100 },
+    drainStability: {
+      status: 'stable',
+      windowMs: 1000,
+      sampleCount: 11,
+      firstFrameNumber: 12,
+      lastFrameNumber: 22,
+      maximumSampleGapMs: 100,
+    },
     worker: {
       instrumented: true,
       overflow: false,
@@ -347,6 +369,7 @@ test('serialized checkpoint callback reads the actual module, scene, worker and 
               globe: {
                 ellipsoid: {
                   cartographicToCartesian: (point) => point,
+                  cartesianToCartographic: (point) => point,
                 },
               },
               primitives: { length: 3 },
@@ -359,6 +382,14 @@ test('serialized checkpoint callback reads the actual module, scene, worker and 
             },
             camera: {
               setView: () => {},
+              positionWC: {
+                longitude: (-97.7431 * Math.PI) / 180,
+                latitude: (30.2672 * Math.PI) / 180,
+                height: 25_000,
+              },
+              heading: 0,
+              pitch: -1.2,
+              roll: 0,
               computeViewRectangle: () => ({
                 west: (-98 * Math.PI) / 180,
                 east: (-97 * Math.PI) / 180,
@@ -388,37 +419,61 @@ test('serialized checkpoint callback reads the actual module, scene, worker and 
   assert.equal(result.cameraCount, 1);
   assert.equal(result.scene.primitives, 3);
   assert.equal(result.cameraView.containsFixture, true);
+  assert.ok(Math.abs(result.cameraPose.longitude - -97.7431) < 1e-10);
+  assert.ok(Math.abs(result.cameraPose.latitude - 30.2672) < 1e-10);
+  assert.equal(result.cameraPose.heightM, 25_000);
   assertCctvCheckpoint(result);
   const configured = [];
-  const sceneConfiguration = await vm.runInNewContext(
-    `(${configureCctvLifecycleSceneInPage.toString()})(${JSON.stringify(createCctvLifecycleFixture().view)})`,
-    {
-      window: {
-        __godsEyeView: {
-          dataManager: {
-            setLayerParams: () => true,
-            layers: new Map([
-              ['cctv', { module: { getUIState: () => ({ autoHop: false }) } }],
-            ]),
+  const ordered = [];
+  let resolveRestore;
+  const initialRestorePromise = new Promise((resolve) => {
+    resolveRestore = resolve;
+  });
+  const configContext = vm.createContext({
+    window: {
+      __godsEyeView: {
+        styleManager: { initialRestorePromise },
+        dataManager: {
+          setLayerParams: () => {
+            ordered.push('params');
+            return true;
           },
-          viewer: {
-            scene: {
-              globe: {
-                ellipsoid: { cartographicToCartesian: (point) => point },
-              },
+          layers: new Map([
+            ['cctv', { module: { getUIState: () => ({ autoHop: false }) } }],
+          ]),
+        },
+        viewer: {
+          scene: {
+            globe: {
+              ellipsoid: { cartographicToCartesian: (point) => point },
             },
-            camera: { setView: (value) => configured.push(value) },
           },
+          camera: { setView: (value) => configured.push(value) },
         },
       },
-      Math,
     },
+    Math,
+    Promise,
+    Error,
+  });
+  const configPromise = vm.runInContext(
+    `(${configureCctvLifecycleSceneInPage.toString()})(${JSON.stringify(createCctvLifecycleFixture().view)})`,
+    configContext,
   );
+  assert.deepEqual(ordered, []);
+  resolveRestore();
+  const sceneConfiguration = await configPromise;
   assert.deepEqual(JSON.parse(JSON.stringify(sceneConfiguration)), {
     ...createCctvLifecycleFixture().view,
     applied: true,
   });
   assert.equal(configured.length, 1);
+  assert.deepEqual(ordered, ['params']);
+});
+
+test('CCTV share hash has finite camera coordinates and suppresses the unrelated startup flight', () => {
+  assert.equal(cctvLifecycleShareHash(), '#lat=30.2672&lon=-97.7431');
+  assert.match(cctvLifecycleShareHash(), /lat=-?\d+(?:\.\d+)?&lon=-?\d/);
 });
 
 test('synthetic CCTV frame is a decodable 2x2 PNG and its bytes match the fixture digest', async () => {
@@ -542,6 +597,10 @@ test('CCTV checkpoint rejects pending/errors/invalid counters', () => {
 test('CCTV lifecycle report validates five exact toggles, scene resources and direct disabled reinit', () => {
   const report = validReport();
   const fixture = createCctvLifecycleFixture();
+  assert.equal(assertCctvCycleReuse(report.cycles[0], report.warmup), true);
+  const wrappedHeading = structuredClone(report.cycles[0].enabled);
+  wrappedHeading.cameraPose.headingRadians = Math.PI * 2;
+  assertCctvCameraPose(wrappedHeading, fixture.view);
   assert.equal(
     validateCctvLifecycleReport(report, { fixtureSha256: fixture.sha256 })
       .status,
@@ -628,9 +687,31 @@ test('CCTV lifecycle report validates five exact toggles, scene resources and di
       }),
     /delivery/,
   );
+  const startupFlight = structuredClone(report);
+  startupFlight.cycles[0].enabled.cameraPose.latitude += 1;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(startupFlight, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /camera pose/,
+  );
+  const unstableCheckpoint = structuredClone(report);
+  unstableCheckpoint.cycles[0].disabled.drainStability.windowMs = 999;
+  assert.throws(
+    () =>
+      validateCctvLifecycleReport(unstableCheckpoint, {
+        fixtureSha256: fixture.sha256,
+      }),
+    /stable one-second/,
+  );
 });
 
-function createCctvRunnerDependencies({ failBoot = false } = {}) {
+function createCctvRunnerDependencies({
+  failBoot = false,
+  resubmitOnFirstCycle = false,
+  extraDirectReinitBuilds = false,
+} = {}) {
   const order = [];
   const commit = 'a'.repeat(40);
   const fixture = createCctvLifecycleFixture();
@@ -639,9 +720,11 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
     'http://localhost:4174',
   ).href;
   let enabled = false;
+  let enableCalls = 0;
   let onFulfilled;
   let rendererReads = 0;
   let pageClosed = false;
+  let bootHash = null;
   const worker = {
     instrumented: true,
     overflow: false,
@@ -702,6 +785,10 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
       cacheEntries: 0,
     }),
     init: async () => {
+      if (extraDirectReinitBuilds) {
+        worker.workers[1].submitted += 2;
+        worker.workers[1].completed += 2;
+      }
       fulfill('/api/cctv/sources');
       fulfill('/api/cctv/health');
     },
@@ -722,6 +809,11 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
       order.push(value ? 'enable' : 'disable');
       enabled = value;
       if (value) {
+        enableCalls++;
+        if (resubmitOnFirstCycle && enableCalls === 2) {
+          worker.workers[1].submitted++;
+          worker.workers[1].completed++;
+        }
         fulfill('/api/cctv/sources');
         fulfill('/api/cctv/health');
         fulfill(fixtureFrameUrl);
@@ -748,7 +840,10 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
     frameState: { frameNumber: 1 },
     context: { _originalGLContext: gl },
     globe: {
-      ellipsoid: { cartographicToCartesian: (position) => position },
+      ellipsoid: {
+        cartographicToCartesian: (position) => position,
+        cartesianToCartographic: (position) => position,
+      },
     },
     primitives: { length: 8 },
     groundPrimitives: { length: 0 },
@@ -767,7 +862,20 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
     viewer: {
       scene,
       camera: {
-        setView: () => {},
+        setView: ({ destination, orientation }) => {
+          debug.viewer.camera.positionWC = destination;
+          debug.viewer.camera.heading = orientation.heading;
+          debug.viewer.camera.pitch = orientation.pitch;
+          debug.viewer.camera.roll = orientation.roll;
+        },
+        positionWC: {
+          longitude: (-97.7431 * Math.PI) / 180,
+          latitude: (30.2672 * Math.PI) / 180,
+          height: 25_000,
+        },
+        heading: 0,
+        pitch: -1.2,
+        roll: 0,
         computeViewRectangle: () => ({
           west: (-98 * Math.PI) / 180,
           east: (-97 * Math.PI) / 180,
@@ -778,6 +886,7 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
       entities: { values: [1] },
       dataSources: { length: 0 },
     },
+    styleManager: { initialRestorePromise: Promise.resolve() },
     getPerformanceEnvironment: () => ({ appCommit: commit }),
   };
   const page = {
@@ -841,8 +950,13 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
       onFulfilled = options.onFulfilled;
       return { page, errors: [], verifyNetwork: async () => true };
     },
-    bootFixturePage: async (_page, _base, { onProgress: bootProgress }) => {
+    bootFixturePage: async (
+      _page,
+      _base,
+      { hash, onProgress: bootProgress },
+    ) => {
       order.push('boot');
+      bootHash = hash;
       bootProgress('ready');
       if (failBoot) throw new Error('synthetic boot failure');
     },
@@ -884,14 +998,21 @@ function createCctvRunnerDependencies({ failBoot = false } = {}) {
     dependencies,
     order,
     commit,
+    page,
+    worker,
     get rendererReads() {
       return rendererReads;
+    },
+    get bootHash() {
+      return bootHash;
     },
   };
 }
 
 test('CCTV runner completes the full serialized lifecycle and closes owned resources', async () => {
-  const runner = createCctvRunnerDependencies();
+  const runner = createCctvRunnerDependencies({
+    extraDirectReinitBuilds: true,
+  });
   const { dependencies, order, commit } = runner;
   const progressSnapshots = [];
   const report = await runCctvLifecycle({
@@ -906,10 +1027,31 @@ test('CCTV runner completes the full serialized lifecycle and closes owned resou
   assert.equal(report.status, 'passed', report.error);
   assert.equal(report.validationStatus, 'passed');
   assert.equal(report.cycles.length, 2);
+  for (const row of [
+    report.warmup.enabled,
+    report.warmup.disabled,
+    ...report.cycles.flatMap((cycle) => [cycle.enabled, cycle.disabled]),
+    report.directReinit.initializedDisabled,
+    report.directReinit.rewarmedEnabled,
+    report.directReinit.checkpoint,
+  ]) {
+    assert.equal(row.drainStability.status, 'stable');
+    assert.ok(row.drainStability.windowMs >= 1000);
+    assert.ok(row.drainStability.sampleCount >= 10);
+    assert.ok(
+      row.drainStability.lastFrameNumber > row.drainStability.firstFrameNumber,
+    );
+  }
   assert.equal(report.fixtureDelivery.frameResponses, 4);
+  assert.ok(
+    report.directReinit.rewarmedEnabled.worker.workers[1].submitted >
+      report.warmup.enabled.worker.workers[1].submitted,
+    'direct module init may legitimately build geometry after destroying its prior state',
+  );
   assert.equal(report.pageClose.scope, 'owned-context-only');
   assert.equal(report.pageClose.openPageCount, 0);
   assert.equal(report.environment.browserVersion, 'HeadlessChrome/152.0.0.0');
+  assert.equal(runner.bootHash, '#lat=30.2672&lon=-97.7431');
   assert.ok(report.environment.host.osRelease);
   assert.equal(
     runner.rendererReads,
@@ -929,6 +1071,48 @@ test('CCTV runner completes the full serialized lifecycle and closes owned resou
   assert.equal(progressSnapshots.at(-1)[1], 'running');
 });
 
+test('CCTV stable drain restarts its window when new work appears after initial quiescence', async () => {
+  const { page, worker } = createCctvRunnerDependencies();
+  const fixture = createCctvLifecycleFixture();
+  const initialCheckpoint = await page.evaluate(
+    readCctvLifecycleCheckpointInPage,
+    { fixtureView: fixture.view },
+  );
+  const expectedTaskErrors = cctvTaskErrorSignature(initialCheckpoint);
+  const observations = [];
+  let injected = false;
+  let delayedWork;
+  const result = await waitForCctvLifecycleDrain(page, 3000, {
+    expectedTaskErrors,
+    fixtureView: fixture.view,
+    stableWindowMs: 1000,
+    sampleIntervalMs: 100,
+    onObservation: (observation, checkpoint) => {
+      observations.push({
+        elapsedMs: observation.elapsedMs,
+        stableElapsedMs: observation.stableElapsedMs,
+        submitted: checkpoint.worker.workers[1].submitted,
+        pending: checkpoint.worker.pending,
+      });
+      if (!injected) {
+        injected = true;
+        delayedWork = setTimeout(() => {
+          worker.workers[1].submitted++;
+          worker.workers[1].completed++;
+        }, 350);
+      }
+    },
+  });
+  clearTimeout(delayedWork);
+
+  assert.equal(observations[0].pending, 0);
+  assert.equal(observations[0].stableElapsedMs, 0);
+  assert.ok(observations.some((sample) => sample.submitted === 4));
+  assert.equal(result.checkpoint.worker.workers[1].submitted, 4);
+  assert.ok(result.stability.windowMs >= 1000);
+  assert.ok(result.elapsedMs >= 1300);
+});
+
 test('CCTV runner retains the original phase/error and closes acquired resources on failure', async () => {
   const { dependencies, order, commit } = createCctvRunnerDependencies({
     failBoot: true,
@@ -944,4 +1128,21 @@ test('CCTV runner retains the original phase/error and closes acquired resources
   assert.ok(order.includes('page-close'));
   assert.ok(order.includes('context-close'));
   assert.ok(order.includes('browser-close'));
+});
+
+test('CCTV runner does not mark a toggle passed before warmed-resource reuse is verified', async () => {
+  const { dependencies, commit } = createCctvRunnerDependencies({
+    resubmitOnFirstCycle: true,
+  });
+  const report = await runCctvLifecycle({
+    url: 'http://localhost:4174',
+    cycles: 1,
+    drainMs: 2000,
+    expectedCommit: commit,
+    dependencies,
+  });
+  assert.equal(report.status, 'failed');
+  assert.equal(report.failedPhase, 'cycle-1:reuse-validation');
+  assert.equal(report.cycles[0].status, 'running');
+  assert.match(report.error, /resubmitted settled createGeometry/);
 });

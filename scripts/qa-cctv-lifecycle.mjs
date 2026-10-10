@@ -5,8 +5,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  assertCctvCameraPose,
   assertCctvCheckpoint,
+  assertCctvCycleReuse,
+  assertCctvStableDrain,
   assertExpectedCctvProbeResidue,
+  cctvLifecycleShareHash,
   cctvGeometryTotals,
   cctvTaskErrorSignature,
   configureCctvLifecycleSceneInPage,
@@ -203,11 +207,35 @@ function validDrainCandidate(snapshot, expectedTaskErrors) {
     throw new Error(
       'CCTV worker error history changed during lifecycle drain.',
     );
+  for (const worker of snapshot.worker.workers)
+    if (
+      worker.submitted !==
+      worker.completed + worker.cancelled + worker.pending
+    )
+      throw new Error('CCTV worker task counters do not balance.');
   return (
     snapshot.diagnostics?.pendingJobs === 0 &&
     snapshot.stats?.loading === false &&
     snapshot.worker.pending === 0
   );
+}
+
+function cctvDrainSignature(snapshot) {
+  return JSON.stringify({
+    appCommit: snapshot.appCommit,
+    enabled: snapshot.enabled,
+    lifecycleState: snapshot.lifecycleState,
+    moduleEnabled: snapshot.moduleEnabled,
+    stats: snapshot.stats,
+    cameras: snapshot.cameras,
+    cameraCount: snapshot.cameraCount,
+    activeCameraId: snapshot.activeCameraId,
+    diagnostics: snapshot.diagnostics,
+    scene: snapshot.scene,
+    worker: snapshot.worker,
+    cameraView: snapshot.cameraView,
+    cameraPose: snapshot.cameraPose,
+  });
 }
 
 export async function waitForCctvLifecycleDrain(
@@ -217,36 +245,126 @@ export async function waitForCctvLifecycleDrain(
     expectedTaskErrors = [],
     onObservation = () => {},
     fixtureView = null,
+    stableWindowMs = 1000,
+    sampleIntervalMs = 100,
   } = {},
 ) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10_000)
     throw new RangeError('CCTV drain timeout must be between 1 and 10000ms.');
+  if (
+    !Number.isSafeInteger(stableWindowMs) ||
+    stableWindowMs < 1000 ||
+    stableWindowMs > 5000 ||
+    !Number.isSafeInteger(sampleIntervalMs) ||
+    sampleIntervalMs < 50 ||
+    sampleIntervalMs > 500
+  )
+    throw new RangeError('CCTV stable drain sampling options are invalid.');
   const startedAt = performance.now();
   let last = null;
+  let stableStartedAt = null;
+  let stableSignature = null;
+  let stableSamples = 0;
+  let firstStableFrame = null;
+  let lastStableFrame = null;
+  let maxPollGapMs = 0;
+  let priorSampleAt = null;
   while (performance.now() - startedAt <= timeoutMs) {
-    last = await readCheckpoint(page, { requireSettled: false, fixtureView });
+    const remaining = timeoutMs - (performance.now() - startedAt);
+    if (remaining <= 0) break;
+    const renderTimeoutMs = Math.max(1, Math.min(5000, remaining));
+    const render = await withDeadline(
+      () => page.evaluate(waitForCctvLifecycleRenderInPage, renderTimeoutMs),
+      'wait for CCTV drain sample render',
+      remaining,
+    );
+    const afterRenderRemaining = timeoutMs - (performance.now() - startedAt);
+    if (afterRenderRemaining <= 0) break;
+    last = await withDeadline(
+      () => readCheckpoint(page, { requireSettled: false, fixtureView }),
+      'read CCTV stable drain sample',
+      afterRenderRemaining,
+    );
+    last.render = render;
+    if (fixtureView) assertCctvCameraPose(last, fixtureView);
     const ready = validDrainCandidate(last, expectedTaskErrors);
     const elapsedMs = Math.max(0, performance.now() - startedAt);
+    const signature = ready ? cctvDrainSignature(last) : null;
+    if (!ready || signature !== stableSignature) {
+      stableStartedAt = ready ? elapsedMs : null;
+      stableSignature = signature;
+      stableSamples = ready ? 1 : 0;
+      firstStableFrame = ready ? render.frameNumber : null;
+      lastStableFrame = ready ? render.frameNumber : null;
+      maxPollGapMs = 0;
+      priorSampleAt = ready ? elapsedMs : null;
+    } else {
+      const sampleGapMs =
+        priorSampleAt === null ? 0 : elapsedMs - priorSampleAt;
+      if (sampleGapMs > 500) {
+        stableStartedAt = elapsedMs;
+        stableSamples = 1;
+        firstStableFrame = render.frameNumber;
+        maxPollGapMs = 0;
+      } else {
+        stableSamples++;
+        maxPollGapMs = Math.max(maxPollGapMs, sampleGapMs);
+      }
+      priorSampleAt = elapsedMs;
+      lastStableFrame = render.frameNumber;
+    }
+    const stableElapsedMs =
+      stableStartedAt === null ? 0 : Math.max(0, elapsedMs - stableStartedAt);
     onObservation(
       {
         elapsedMs: Math.round(elapsedMs),
         pendingJobs: last.diagnostics.pendingJobs,
         workerPending: last.worker.pending,
+        frameNumber: render.frameNumber,
+        stableElapsedMs: Math.round(stableElapsedMs),
+        stableSamples,
       },
       last,
     );
-    if (ready && elapsedMs <= timeoutMs) {
+    if (
+      ready &&
+      elapsedMs <= timeoutMs &&
+      stableElapsedMs >= stableWindowMs &&
+      stableSamples >= Math.ceil(stableWindowMs / sampleIntervalMs)
+    ) {
       assertCctvCheckpoint(last, { expectedTaskErrors });
-      return { checkpoint: last, elapsedMs };
+      last.drainStability = {
+        status: 'stable',
+        windowMs: Math.round(stableElapsedMs),
+        sampleCount: stableSamples,
+        firstFrameNumber: firstStableFrame,
+        lastFrameNumber: lastStableFrame,
+        maximumSampleGapMs: Math.round(maxPollGapMs),
+      };
+      assertCctvStableDrain(last);
+      return { checkpoint: last, elapsedMs, stability: last.drainStability };
     }
+    const remainingAfterSample = timeoutMs - (performance.now() - startedAt);
+    if (remainingAfterSample <= 0) break;
     await new Promise((resolve) =>
-      setTimeout(resolve, Math.min(100, timeoutMs)),
+      setTimeout(resolve, Math.min(sampleIntervalMs, remainingAfterSample)),
     );
   }
   const error = new Error(
     `CCTV lifecycle did not drain within ${timeoutMs}ms.`,
   );
   error.lastCheckpoint = last;
+  error.drainStability = {
+    status: 'timed-out',
+    stableWindowMs:
+      stableStartedAt === null
+        ? 0
+        : Math.max(0, performance.now() - startedAt - stableStartedAt),
+    sampleCount: stableSamples,
+    firstFrameNumber: firstStableFrame,
+    lastFrameNumber: lastStableFrame,
+    maximumSampleGapMs: Math.round(maxPollGapMs),
+  };
   throw error;
 }
 
@@ -260,7 +378,7 @@ async function renderAndDrain(
 ) {
   report.phase = `${phase}:completed-render`;
   onProgress?.({ phase: report.phase }, report);
-  const render = await withDeadline(
+  const boundaryRender = await withDeadline(
     () => page.evaluate(waitForCctvLifecycleRenderInPage, 5000),
     `${phase} completed render`,
     7000,
@@ -282,8 +400,9 @@ async function renderAndDrain(
   });
   return {
     ...result.checkpoint,
-    render,
+    boundaryRender,
     drainElapsedMs: result.elapsedMs,
+    drainStability: result.stability,
   };
 }
 
@@ -444,6 +563,7 @@ export async function runCctvLifecycle({
     pageErrors = prepared.errors;
     report.phase = 'application-boot';
     await deps.bootFixturePage(page, base, {
+      hash: cctvLifecycleShareHash(fixture.view),
       onProgress: (phase) => {
         report.phase = `application-boot:${phase}`;
         progress({ phase: report.phase });
@@ -569,6 +689,13 @@ export async function runCctvLifecycle({
         workerTotals(warmEnabled).activeCreateGeometrySubmitted,
       workerTotals: workerTotals(warmEnabled),
     };
+    if (
+      JSON.stringify(workerTotals(warmEnabled)) !==
+      JSON.stringify(workerTotals(warmDisabled))
+    )
+      throw new Error(
+        'CCTV createGeometry work changed while establishing warmup baselines.',
+      );
     progress({ phase: 'warmup-complete', enabled: true, disabled: true });
 
     for (let cycle = 1; cycle <= cycles; cycle++) {
@@ -607,6 +734,9 @@ export async function runCctvLifecycle({
       row.disabledWorkerTotals = workerTotals(row.disabled);
       row.createGeometrySubmitted =
         row.enabledWorkerTotals.activeCreateGeometrySubmitted;
+      row.phase = 'reuse-validation';
+      report.phase = `cycle-${cycle}:reuse-validation`;
+      assertCctvCycleReuse(row, report.warmup);
       row.status = 'passed';
       report.fixtureDelivery = captureFixtureDelivery(fixture, fixtureCounts);
       if (pageErrors.length)
@@ -658,7 +788,6 @@ export async function runCctvLifecycle({
       expectedTaskErrors,
       progress,
     );
-    report.directReinit.status = 'passed';
     if (
       report.directReinit.checkpoint.enabled ||
       report.directReinit.checkpoint.cameraCount !== 1 ||
@@ -667,6 +796,24 @@ export async function runCctvLifecycle({
       throw new Error(
         'CCTV direct disabled-module reinitialization changed owner state or fixture identity.',
       );
+    if (
+      JSON.stringify(workerTotals(report.directReinit.checkpoint)) !==
+        JSON.stringify(workerTotals(report.directReinit.rewarmedEnabled)) ||
+      workerTotals(report.directReinit.rewarmedEnabled)
+        .activeCreateGeometrySubmitted < 1 ||
+      JSON.stringify(report.directReinit.rewarmedEnabled.diagnostics) !==
+        JSON.stringify(report.warmup.enabled.diagnostics) ||
+      JSON.stringify(report.directReinit.checkpoint.diagnostics) !==
+        JSON.stringify(report.warmup.disabled.diagnostics) ||
+      JSON.stringify(report.directReinit.rewarmedEnabled.scene) !==
+        JSON.stringify(report.warmup.enabled.scene) ||
+      JSON.stringify(report.directReinit.checkpoint.scene) !==
+        JSON.stringify(report.warmup.disabled.scene)
+    )
+      throw new Error(
+        'CCTV direct reinitialization changed warmed worker or scene ownership.',
+      );
+    report.directReinit.status = 'passed';
     report.fixtureDelivery = captureFixtureDelivery(fixture, fixtureCounts);
     if (
       report.fixtureDelivery.sourceResponses < 2 ||
@@ -687,6 +834,7 @@ export async function runCctvLifecycle({
     report.error = boundedText(error);
     report.failedPhase = report.phase;
     if (error?.lastCheckpoint) report.lastCheckpoint = error.lastCheckpoint;
+    if (error?.drainStability) report.lastDrainStability = error.drainStability;
     if (error?.sceneReadiness) report.sceneReadiness = error.sceneReadiness;
   } finally {
     if (page) {
@@ -787,6 +935,7 @@ export async function runCctvLifecycle({
       report.failedPhase ||= report.phase;
     }
     if (report.status !== 'failed') {
+      report.phase = 'report-validation';
       try {
         validateCctvLifecycleReport(
           { ...report, status: 'passed', validationStatus: 'passed' },
@@ -798,7 +947,7 @@ export async function runCctvLifecycle({
         report.status = 'failed';
         report.validationStatus = 'failed';
         report.error = boundedText(primaryError || error);
-        report.failedPhase ||= report.phase;
+        report.failedPhase ||= 'report-validation';
       }
     } else report.validationStatus = 'failed';
     report.endedAt = new Date().toISOString();
