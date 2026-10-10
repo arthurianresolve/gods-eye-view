@@ -1,19 +1,19 @@
 # Cesium performance plan
 
-Updated on 11 October 2026. All seven full integration jobs pass at experimental
-projection-cache candidate `33d985657c8949a02cfce2f0f1ad4131d3da774c`
-([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38092679660),
-[job results](performance-evidence/s52-33d9856/ci-33d9856.json)). Its component
-visual comparison passes five alternating baseline/candidate pairs across 24
-cases, with exact pixels and interaction observations. Isolated CPU confirmation
-now demonstrates repeatable benefit for stable and periodic inputs; broader
-hardware acceptance remains pending. The subsequent font wake fix passes a native
-browser failure-control comparison. Layout reuse at `f25154a` passes its component
-visual comparison and Windows recovery; its isolated CPU comparison is still running.
-The optimization has not been promoted to remote `dev`. Details and the two
-corrected harness failures are recorded below. The previous remote `dev` revision
-`d2c5aa1` also passes all seven integration jobs
-([results](performance-evidence/s52-33d9856/ci-d2c5aa1.json)).
+Updated on 11 October 2026. All seven full integration jobs pass at
+`f25154a61326e881e2223f2238d94b06cf231df8`
+([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095198493),
+[job results](performance-evidence/s52-layout-reuse/ci-run.json)). The projection
+and normalized-entry layout optimizations now have repeatable isolated CPU benefit,
+five paired 24-case exact-pixel comparisons for each change, and applicable unit,
+allocation and integration checks. The idle font wake fix also passes native
+browser failure-control comparisons, including with layout reuse enabled.
+These component optimizations are retained. Placement reuse, conditional painting,
+full-scene latency and physical Windows acceptance remain unfinished. Details,
+raw evidence and earlier failures are preserved below; this is not full S52
+acceptance. Earlier `33d9856` and remote `dev` revision `d2c5aa1` also pass all seven
+integration jobs ([projection results](performance-evidence/s52-33d9856/ci-33d9856.json),
+[previous dev results](performance-evidence/s52-33d9856/ci-d2c5aa1.json)).
 
 Earlier, all seven full integration jobs pass at
 `167ba62c047fe94f36d0d60066aa4d648ede7519` after the workspace save ownership fix
@@ -58,7 +58,7 @@ the earlier release requirements and historical results.
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
-| S52 overlay invalidation | Pure-projection reuse at `33d9856` has scoped CPU and visual evidence; idle font wake fixed at `0d431f2`; new normalized-entry layout reuse at `f25154a` remains experimental; broader paint invalidation pending | Projection's 40 isolated CPU pairs have no regression above 10%; all 20 stable/periodic pairs improve. Native font failure control passes twice. Layout's 83 focused tests, allocation checks, five 24-case visual pairs and Windows recovery pass; isolated layout CPU comparison still running | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
+| S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, and normalized-entry layout reuse at `f25154a`; placement reuse and conditional painting remain | Both optimizations pass isolated 40-pair CPU comparisons and five 24-case visual pairs. Layout's 35 ordinary pairs all improve; detection median +0.50%, maximum individual +4.57%. 83 focused checks, allocation checks and all seven integration jobs pass; native font failure control passes with and without layout reuse | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
@@ -72,7 +72,7 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
-### S52 layout reuse: separate experiment - 11 October 2026
+### S52 layout reuse: accepted component optimization - 11 October 2026
 
 A new experiment stores the font revision with each normalized entry's existing
 layout. Source replacement creates a fresh layout; a font change invalidates it.
@@ -88,8 +88,8 @@ writes. The candidate performs none, remeasures on a font event, and retains liv
 position/scale and updated hit bounds. The companion behavior control covers all
 six card variants, source replacement and visibility restoration. All 83 focused
 overlay/Draw/font tests and all 13 existing Node 24 allocation gates pass.
-This remains experimental pending isolated paired CPU results, including the
-detection control. The exact rendered comparison now passes as recorded below.
+The isolated CPU and rendered comparisons now pass as recorded below. The change
+is retained within that measured scope; broader S52 acceptance remains pending.
 
 The first [rendered comparison attempt](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095195178)
 at candidate `f25154a` stopped during preflight: both newer application commits
@@ -132,6 +132,34 @@ after the run, and removes only its temporary copies. Both ownership paths pass.
 The preceding [cancelled dispatch](performance-evidence/s52-layout-reuse/native-font-cancelled-run.json)
 used an incorrectly shortened candidate SHA; it was cancelled and replaced with
 the full immutable SHA. It provides no application acceptance evidence.
+
+The [isolated CPU run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095196924)
+compares baseline `0d431f2` against candidate/harness `f25154a` on Node 24.14.0,
+Linux 6.17.0-1022-azure and AMD EPYC 9V74. All 40 alternating pairs complete with
+identical fixture trajectories, populations and before/after conditions. Root
+independently verifies source, lockfile, fixture and harness hashes and recomputes
+every median and ratio from the five instrumentation-disabled timed samples.
+The [raw report](performance-evidence/s52-layout-reuse/cpu-report.json),
+[review](performance-evidence/s52-layout-reuse/cpu-review.json) and
+[run metadata](performance-evidence/s52-layout-reuse/cpu-run.json) are retained;
+raw SHA-256 `9dd53e5152e246e5eb05d99262626285cbfea99494dab7702554ad6be681cd5a`.
+
+All 35 ordinary-overlay pairs improve by 6.01-17.34%. Paired median changes for
+moving generic/infrastructure/radio are -16.30%, -11.24% and -9.25%; fixed
+infrastructure/radio are -12.96% and -11.37%; periodic infrastructure/radio are
+-12.37% and -9.88%. The 5,000-observation detection control has a +0.50% paired
+median and a -0.99% to +4.57% individual range, below the 10% regression threshold.
+This is synchronous Node algorithm CPU with a mock canvas, not a browser/GPU result.
+Do not multiply or pool it with the earlier projection experiment: that used a
+different comparison baseline and Intel Xeon host.
+
+All seven [full integration jobs](performance-evidence/s52-layout-reuse/ci-run.json)
+pass at `f25154a`: Node 24/26 each report 6,980 tests, 6,979 passing, one skipped
+and zero failures. Node 24 additionally passes one isolated check and 13 allocation
+checks. Formatting, package boundaries, production builds, Windows onboarding,
+three-OS update recovery and the browser journeys pass. The workflow's
+published-layer-token check is PR-only and was skipped by this dispatch; this
+run does not satisfy the separate representative-PR requirement.
 
 ### S52 font lifecycle: idle invalidation regression - 11 October 2026
 

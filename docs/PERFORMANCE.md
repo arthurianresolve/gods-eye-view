@@ -1,17 +1,19 @@
 # Performance baseline
 
-Current status (11 October 2026): the experimental projection cache at `33d9856`
-passes all seven integration jobs and five paired 24-case component visual runs.
-The latter preserves exact Canvas2D pixels, hit regions and accessible actions
-against `886b7d2`, with 240 image hashes independently verified. Isolated hosted
-CPU confirmation now completes all 40 pairs: all 20 stable/periodic input pairs
-improve by 2.62-8.78%, and no moving/detection pair regresses more than 4.02%.
-The confounded Windows algorithm batch remains diagnostic only. The subsequent
-idle font wake fix passes a native browser failure-control comparison twice.
-Normalized-entry layout reuse at `f25154a` passes five 24-case component visual
-pairs and Windows recovery; its separate isolated CPU comparison is running.
-This is not a Cesium WebGL, Windows GPU or motion-p95
-result, and the optimization remains on its QA branch. The
+Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
+layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel
+comparisons and isolated CPU comparisons. Layout's 35 ordinary-overlay pairs all
+improve synchronous CPU by 6.01-17.34%; the detection control has a +0.50% paired
+median and no individual regression over 4.57%. All seven full integration jobs
+pass at `f25154a`, including Node 24/26 and three-OS recovery. The native font
+failure-control comparison also passes with layout reuse enabled.
+
+The earlier projection experiment improves all 20 stable/periodic input CPU pairs
+by 2.62-8.78%, with no moving/detection pair regressing more than 4.02%. These runs
+use different baselines and CPU hosts; their percentages must not be pooled or
+multiplied. The confounded Windows batch remains diagnostic only. Neither CPU
+comparison establishes a browser, Cesium WebGL, physical Windows GPU or motion-p95
+result. The
 [plan and archived evidence](CESIUM_PERFORMANCE_PLAN.md#s52-projection-reuse-component-correctness---11-october-2026)
 record exact revisions, environments, images, cleanup and corrected harness
 failures. Remote `dev` at `d2c5aa1` also passes all seven integration jobs.
