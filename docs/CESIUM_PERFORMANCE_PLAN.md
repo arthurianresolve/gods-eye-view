@@ -3216,6 +3216,28 @@ motion p95. Allocation/forced-GC diagnostics remain separate from timing runs.
 
 ## S52 experiment disposition and S59 continuation
 
+The 11 October follow-up census tests whether moving finite-distance rejection
+ahead of screen/horizon checks has an opportunity in the existing fixtures.
+Across 6,000 measured frames per profile, generic has 250 unbounded entries,
+infrastructure has 320 finite-range entries, and all-live/radio has 515 finite
+plus 349 unbounded entries per frame. None are rejected by distance or visibility.
+Detection uses its custom path, so this projection metric is unavailable there.
+These fixtures cannot establish a benefit for the proposed reorder; production
+projection remains unchanged. S52 revision-based reuse is still outstanding.
+
+The [raw census](performance-evidence/overlay-range-census-438245c.json)
+records actual commit `438245c` and a non-clean worktree (the untracked diagnostic).
+Root verified that both measured module blobs match `167ba62` and their recorded
+byte hashes. The later [synthetic counter control](performance-evidence/overlay-range-control-438245c.json)
+exercises the instrumented production projection path, verifies nonzero range,
+viewport and safe-top rejection counters, and excludes unbounded offscreen entries
+from the added finite-distance work count. It records the diagnostic harness hash.
+These are Node/mock-Canvas counts, not timing or visual-equivalence evidence.
+The utility is `scripts/performance/overlayRangeDiagnostic.mjs`; use a new output
+path and append `--control-only` for the instrumentation check. Report SHA-256s
+are `3fd87c0ee20a757049701047aee154e5b985c8ffb14901bd6857fa3c2d7d9465`
+and `65d4b9e0f92b310cfcea18c140ef5e99fc4aa37c73882ccfbc5222391a95dc88`.
+
 The layout-cache experiment `a63096b` is reverted by `3d8eaba` and is not enabled.
 The [paired raw report](performance-evidence/overlay-layout-experiment-a63096b.json)
 compares it with `82a1951` using five alternating pairs per workload, each child
