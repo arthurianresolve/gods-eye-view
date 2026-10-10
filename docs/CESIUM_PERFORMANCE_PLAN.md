@@ -5,6 +5,9 @@ Updated on 10 October 2026. Full runtime CI passes at
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
+The subsequent Windows wind check at `a83dd7a` fails its fresh-frame deadline;
+the standalone WebGL control also exhibits long frame gaps. The earlier recovery
+does not establish a permanent fix; see the new evidence below.
 The latest isolated hosted wind/capture checks pass at
 `d905f301bd6856a21c9f648200a380f792d29968`; the 60-minute hosted Metal
 retention pass belongs to `2e839a449ce32582130b33267a1a276e8cb59224`, not the current tip.
@@ -450,6 +453,32 @@ partial packet remains partial and cannot close the parent slice.
   midnight cases and explicit inclusive/exclusive window edges. The production
   filter is unchanged. All 27 source/CSV tests pass; the earlier CI failure remains
   historical evidence, not a production data-filter defect.
+- **Integration outcomes remain revision-specific:** all seven standard jobs pass
+  at `aeef148` ([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38027448162)).
+  The subsequent [run at `a83dd7a`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38028444120)
+  fails Windows recovery during graceful browser shutdown after the rollback
+  workspace check. The [raw report](performance-evidence/recovery-a83dd7a-windows-close-failure.json)
+  records matching workspace bytes/settings and one rendered feature, with the
+  owned page closed and zero remaining pages. Browser close exceeded its bounded
+  deadline and required owned-process termination, so the stage stays failed.
+  This is distinct from the earlier startup/renderer-query timeout. Its top-level
+  `failure.step` still says `verify-persisted-workspace`; the check's own
+  `owned-page-cleanup` step and error identify the actual failed operation.
+- **Windows wind validation remains failed:** a clean isolated checkout of
+  `a83dd7af30cb3b9a39095da0f081a1037725d2cd`, served by Vite on loopback, produced
+  [a fresh-frame timeout](performance-evidence/wind-a83dd7a-windows-capture-failure.json)
+  before the first wind pixel comparison on Intel UHD 620 / Chrome 154. The
+  400 ms deadline was unchanged; there are zero completed wind checks, so visual
+  equivalence has not passed. The immediate [standalone WebGL control](performance-evidence/webgl-a83dd7a-windows-wind-control.json)
+  delivers 54 frames in five seconds, with a 533.3 ms maximum frame gap, while its
+  20 ms timer delivers 250 ticks with a 21.9 ms maximum gap. Both pages report
+  visibility; the control reports focus, no context loss and no visibility events.
+  Desktop occlusion remains unverified. This reproduces irregular browser frame
+  delivery without Cesium or wind, but does not identify a browser/driver defect.
+  Local implementation checks were also underway, so these diagnostic observations
+  are not latency comparisons. Preserve the failure and continue independent
+  implementation; do not loosen the deadline or convert the earlier recovery to
+  permanent hardware acceptance.
 - **Historical integration failure retained:** [CI at `70ca7de`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37987235260)
   passes Node 24/26, Windows onboarding and Linux/macOS recovery, but Windows
   recovery fails reopening the prior `6b896e2` application after the interrupted
