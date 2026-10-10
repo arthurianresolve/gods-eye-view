@@ -150,6 +150,36 @@ function validateContract(report, label) {
   return contract;
 }
 
+function validateFixtureDelivery(report, contract, label) {
+  assert.equal(
+    report.comparisonEligible,
+    true,
+    `${label}: capture is not marked comparison-eligible`,
+  );
+  const delivery = report.fixtureDelivery;
+  assert.equal(
+    delivery?.schema,
+    'gev-fixture-delivery-observation/v1',
+    `${label}: observed fixture delivery is required`,
+  );
+  assert.equal(
+    delivery.status,
+    'observed',
+    `${label}: fixture delivery was not observed`,
+  );
+  requireText(delivery.method, `${label}: fixture delivery method`);
+  assert.equal(
+    delivery.fixtureSha256,
+    contract.fixture.sha256,
+    `${label}: observed fixture hash mismatch`,
+  );
+  assert.equal(
+    delivery.fixedTime,
+    contract.fixture.fixedTime,
+    `${label}: observed fixture time mismatch`,
+  );
+}
+
 function layerSignature(layers, label) {
   assert.ok(Array.isArray(layers), `${label}: layer populations are missing`);
   const enabled = layers.filter((layer) => layer?.enabled === true);
@@ -160,6 +190,119 @@ function layerSignature(layers, label) {
       return { id: layer.id, enabled: true, count: layer.count };
     })
     .sort((a, b) => a.id.localeCompare(b.id));
+}
+function validateBuildProvenance(source, side) {
+  const provenance = source?.buildProvenance;
+  assert.equal(
+    provenance?.schema,
+    'gev-capture-build-provenance/v1',
+    `${side}: verified build provenance is required`,
+  );
+  assert.equal(
+    provenance.status,
+    'verified-local-build-and-served-assets-before-and-after',
+    `${side}: build and served-byte checks must bracket capture`,
+  );
+  assert.match(
+    provenance.receiptSha256 || '',
+    SHA256,
+    `${side}: receipt hash is missing`,
+  );
+  assert.equal(
+    provenance.appCommit,
+    source.appCommit,
+    `${side}: receipt app SHA mismatch`,
+  );
+  assert.equal(
+    provenance.harnessCommit,
+    source.harnessCommit,
+    `${side}: receipt harness SHA mismatch`,
+  );
+  assert.match(
+    provenance.scope || '',
+    /browser response bytes are not independently attested/,
+    `${side}: build provenance limitations are not declared`,
+  );
+  const recipe = provenance.buildRecipe;
+  for (const name of [
+    'nodeVersion',
+    'npmVersion',
+    'dependencyInstall',
+    'buildInvocation',
+  ])
+    requireText(recipe?.[name], `${side}: build recipe ${name}`);
+  for (const name of [
+    'packageJsonSha256',
+    'packageLockSha256',
+    'buildScriptSha256',
+  ])
+    assert.match(
+      recipe?.[name] || '',
+      SHA256,
+      `${side}: build recipe ${name} is missing`,
+    );
+  const validateServed = (record, phase) => {
+    assert.equal(
+      record?.schema,
+      'gev-served-assets-verification/v1',
+      `${side}: ${phase} served check schema`,
+    );
+    assert.equal(
+      record?.status,
+      'served-assets-match',
+      `${side}: ${phase} served check failed`,
+    );
+    assert.equal(
+      record.receiptSha256,
+      provenance.receiptSha256,
+      `${side}: ${phase} receipt hash mismatch`,
+    );
+    assert.ok(
+      Number.isInteger(record.assetCount) && record.assetCount > 0,
+      `${side}: ${phase} asset count is invalid`,
+    );
+    assert.ok(
+      Number.isInteger(record.totalAssetBytes) && record.totalAssetBytes > 0,
+      `${side}: ${phase} asset byte count is invalid`,
+    );
+  };
+  validateServed(provenance.before, 'pre-capture');
+  validateServed(provenance.after, 'post-capture');
+  assert.deepEqual(
+    provenance.after,
+    provenance.before,
+    `${side}: served build changed during capture`,
+  );
+  const pageAssets = provenance.pageAssetAudit;
+  assert.ok(
+    Number.isInteger(pageAssets?.scriptRequestCount) &&
+      pageAssets.scriptRequestCount > 0,
+    `${side}: receipted script requests are missing`,
+  );
+  assert.ok(
+    Array.isArray(pageAssets.loadedAssetPaths) &&
+      pageAssets.loadedAssetPaths.length > 0,
+    `${side}: loaded asset paths are missing`,
+  );
+  assert.equal(
+    new Set(pageAssets.loadedAssetPaths).size,
+    pageAssets.loadedAssetPaths.length,
+    `${side}: duplicate loaded asset path`,
+  );
+  assert.deepEqual(
+    pageAssets.unexpectedAssetPaths,
+    [],
+    `${side}: unreceipted same-origin code asset was requested`,
+  );
+  for (const assetPath of pageAssets.loadedAssetPaths) {
+    requireText(assetPath, `${side}: loaded asset path`);
+    assert.equal(
+      assetPath.includes('..'),
+      false,
+      `${side}: unsafe loaded asset path`,
+    );
+  }
+  return recipe;
 }
 function validateRoute(route, scenario, durationMs, label) {
   requireText(route?.id, `${label}: route id`);
@@ -256,8 +399,10 @@ function validateReport(report, side, expectedAppCommit) {
     null,
     `${side}: source revision is not verifiable`,
   );
+  const buildRecipe = validateBuildProvenance(report.source, side);
 
   const contract = validateContract(report, side);
+  validateFixtureDelivery(report, contract, side);
   const { workload, environment, captures } = report;
   assert.equal(
     workload?.warmupMs,
@@ -543,7 +688,7 @@ function validateReport(report, side, expectedAppCommit) {
       `${side}: ${scenario} run ids must be 1 through 5`,
     );
   }
-  return { contract, byScenario };
+  return { contract, byScenario, buildRecipe };
 }
 
 const median = (values) => {
@@ -592,10 +737,26 @@ export function validatePairedPerformanceReports({
     candidate.source.harnessCommit,
     'Harness revisions must match',
   );
+  for (const key of [
+    'nodeVersion',
+    'npmVersion',
+    'dependencyInstall',
+    'buildInvocation',
+  ])
+    assert.equal(
+      base.buildRecipe[key],
+      next.buildRecipe[key],
+      `Build toolchain differs: ${key}`,
+    );
   equal(
     base.contract,
     next.contract,
     'Baseline and candidate comparison contracts differ',
+  );
+  equal(
+    baseline.fixtureDelivery,
+    candidate.fixtureDelivery,
+    'Observed fixture delivery differs between builds',
   );
   equal(
     baseline.workload.scenarios,

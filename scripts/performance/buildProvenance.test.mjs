@@ -18,6 +18,7 @@ import {
   createLocalBuildReceipt,
   verifyServedBuildAssets,
 } from './buildProvenance.mjs';
+import { beginCaptureBuildProvenance } from './captureBuildProvenance.mjs';
 
 const BUILD_SCRIPT = `
 import { existsSync } from 'node:fs';
@@ -172,11 +173,12 @@ async function serve(
     server.once('error', reject);
     server.listen(0, '127.0.0.1', resolve);
   });
-  t.after(() =>
-    new Promise((resolve) => {
-      server.closeAllConnections();
-      server.close(resolve);
-    }),
+  t.after(
+    () =>
+      new Promise((resolve) => {
+        server.closeAllConnections();
+        server.close(resolve);
+      }),
   );
   return `http://127.0.0.1:${server.address().port}/`;
 }
@@ -324,6 +326,17 @@ test('served verification checks loopback bytes and rejects changed, missing, re
   assert.equal(result.status, 'served-assets-match');
   assert.equal(result.receiptSha256, receipt.receiptSha256);
   assert.equal(Object.hasOwn(result, 'url'), false);
+  const capture = await beginCaptureBuildProvenance({
+    ...servedOptions(fx, receipt, baseUrl),
+    actualHarnessRoot: fx.harness,
+    captureUrl: baseUrl,
+  });
+  assert.equal(capture.source.status, 'pre-capture-served-assets-verified');
+  await capture.verifyAfterCapture();
+  assert.equal(
+    capture.source.status,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
 
   const changedUrl = await serve(t, fx.buildRoot, {
     changedPath: 'assets/app.js',

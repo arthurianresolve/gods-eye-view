@@ -103,6 +103,44 @@ function makeReport(
       harnessCommit,
       harnessDirtyWorktree: false,
       reason: null,
+      buildProvenance: {
+        schema: 'gev-capture-build-provenance/v1',
+        status: 'verified-local-build-and-served-assets-before-and-after',
+        scope:
+          'unsigned local build and served-byte checks; browser response bytes are not independently attested',
+        receiptSha256: (commit === baselineCommit ? '1' : '2').repeat(64),
+        appCommit: commit,
+        harnessCommit,
+        buildRecipe: {
+          nodeVersion: 'v24.0.0',
+          npmVersion: '11.0.0',
+          dependencyInstall: 'npm ci --no-audit --no-fund',
+          buildInvocation:
+            'npm run build -- --outDir <new-empty-task-owned-directory>',
+          packageJsonSha256: '3'.repeat(64),
+          packageLockSha256: '4'.repeat(64),
+          buildScriptSha256: '5'.repeat(64),
+        },
+        before: {
+          schema: 'gev-served-assets-verification/v1',
+          status: 'served-assets-match',
+          receiptSha256: (commit === baselineCommit ? '1' : '2').repeat(64),
+          assetCount: 10,
+          totalAssetBytes: 1_000_000,
+        },
+        after: {
+          schema: 'gev-served-assets-verification/v1',
+          status: 'served-assets-match',
+          receiptSha256: (commit === baselineCommit ? '1' : '2').repeat(64),
+          assetCount: 10,
+          totalAssetBytes: 1_000_000,
+        },
+        pageAssetAudit: {
+          scriptRequestCount: 1,
+          loadedAssetPaths: ['assets/app.js'],
+          unexpectedAssetPaths: [],
+        },
+      },
     },
     comparisonContract: {
       schema: 'gev-performance-comparison-contract/v1',
@@ -117,6 +155,14 @@ function makeReport(
       populations: structuredClone(populations),
       visual: { qualityMode: 'manual', detectionMode: 'DENSE', densityPct: 75 },
       objectiveScenarios: ['scripted-motion', 'selected-aircraft-tracking'],
+    },
+    comparisonEligible: true,
+    fixtureDelivery: {
+      schema: 'gev-fixture-delivery-observation/v1',
+      status: 'observed',
+      method: 'controlled-provider-boundary-v1',
+      fixtureSha256: fixtureHash,
+      fixedTime: '2026-10-08T12:00:00.000Z',
     },
     environment: {
       appCommit: commit,
@@ -204,6 +250,58 @@ test('valid paired reports calculate scenario medians, objective and regressions
   assert.deepEqual(regressedResult.regressionsOver10Pct, ['scripted-motion']);
 });
 
+test('paired reports reject absent, mismatched or drifting build provenance', () => {
+  const base = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  delete candidate.source.buildProvenance;
+  assert.throws(() => validate(base, candidate), /verified build provenance/);
+
+  const wrongHarness = makeReport(candidateCommit);
+  wrongHarness.source.buildProvenance.harnessCommit = 'd'.repeat(40);
+  assert.throws(
+    () => validate(base, wrongHarness),
+    /receipt harness SHA mismatch/,
+  );
+
+  const changedAssets = makeReport(candidateCommit);
+  changedAssets.source.buildProvenance.after.totalAssetBytes += 1;
+  assert.throws(
+    () => validate(base, changedAssets),
+    /served build changed during capture/,
+  );
+
+  const changedToolchain = makeReport(candidateCommit);
+  changedToolchain.source.buildProvenance.buildRecipe.npmVersion = '10.0.0';
+  assert.throws(
+    () => validate(base, changedToolchain),
+    /Build toolchain differs/,
+  );
+});
+
+test('paired reports reject a caller-only fixture descriptor without observed delivery', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  delete candidate.fixtureDelivery;
+  assert.throws(
+    () => validate(baseline, candidate),
+    /observed fixture delivery/,
+  );
+
+  const mismatch = makeReport(candidateCommit);
+  mismatch.fixtureDelivery.fixtureSha256 = 'e'.repeat(64);
+  assert.throws(
+    () => validate(baseline, mismatch),
+    /observed fixture hash mismatch/,
+  );
+
+  const markedIneligible = makeReport(candidateCommit);
+  markedIneligible.comparisonEligible = false;
+  assert.throws(
+    () => validate(baseline, markedIneligible),
+    /not marked comparison-eligible/,
+  );
+});
+
 test('an unreported required tracking workload does not create a global objective claim', () => {
   const baseline = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);
@@ -236,6 +334,8 @@ test('infrastructure-only workloads remain comparable without aircraft populatio
       sha256: 'e'.repeat(64),
       fixedTime: '2026-10-08T12:00:00.000Z',
     };
+    report.fixtureDelivery.fixtureSha256 = 'e'.repeat(64);
+    report.fixtureDelivery.fixedTime = '2026-10-08T12:00:00.000Z';
     report.comparisonContract.populations = [
       { id: 'local-datacenters', enabled: true, count: 4362 },
       { id: 'local-dams', enabled: true, count: 716 },

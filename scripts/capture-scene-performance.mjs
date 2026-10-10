@@ -3,9 +3,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
+import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
+import {
+  describeObservedRoute,
+  observeCommonScene,
+} from './performance/commonSceneObserver.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -51,10 +57,32 @@ const out = option('--out', null);
 const hardwareRequired = args.includes('--hardware-required');
 const appCommitOverride = option('--app-commit', null);
 const appWorktreeStateOverride = option('--app-worktree-state', null);
-function harnessSourceRevision() {
+const buildProvenanceOptions = {
+  receipt: option('--build-receipt', null),
+  checkoutRoot: option('--app-checkout', null),
+  harnessRoot: option('--harness-checkout', null),
+  buildRoot: option('--build-root', null),
+  expectedAppCommit: option('--expected-app-sha', null),
+  expectedHarnessCommit: option('--expected-harness-sha', null),
+  baseUrl: option('--served-base-url', null),
+};
+const buildProvenanceEnabled = Object.values(buildProvenanceOptions).some(
+  Boolean,
+);
+if (
+  buildProvenanceEnabled &&
+  Object.values(buildProvenanceOptions).some((value) => !value)
+)
+  throw new Error(
+    'Verified capture requires --build-receipt, --app-checkout, --harness-checkout, --build-root, --expected-app-sha, --expected-harness-sha and --served-base-url together.',
+  );
+const actualHarnessRoot = await fs.realpath(
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
+);
+function harnessSourceRevision(root) {
   try {
     const runGit = (gitArgs) =>
-      execFileSync('git', gitArgs, {
+      execFileSync('git', ['-C', root, ...gitArgs], {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],
       }).trim();
@@ -71,12 +99,53 @@ function harnessSourceRevision() {
     };
   }
 }
-const harnessSource = harnessSourceRevision();
+const harnessSource = harnessSourceRevision(actualHarnessRoot);
+let captureProvenance = null;
+if (buildProvenanceEnabled) {
+  const receipt = JSON.parse(
+    await fs.readFile(buildProvenanceOptions.receipt, 'utf8'),
+  );
+  const requestedHarnessRoot = await fs.realpath(
+    buildProvenanceOptions.harnessRoot,
+  );
+  if (requestedHarnessRoot !== actualHarnessRoot)
+    throw new Error(
+      'Explicit harness checkout is not the checkout containing this capture script.',
+    );
+  if (buildProvenanceOptions.expectedHarnessCommit !== harnessSource.commit)
+    throw new Error(
+      'Expected harness SHA does not match the capture checkout.',
+    );
+  if (harnessSource.dirtyWorktree !== false)
+    throw new Error('Verified capture requires a clean harness checkout.');
+  if (
+    appCommitOverride &&
+    appCommitOverride !== buildProvenanceOptions.expectedAppCommit
+  )
+    throw new Error(
+      '--app-commit differs from the verified build receipt SHA.',
+    );
+  captureProvenance = await beginCaptureBuildProvenance({
+    ...buildProvenanceOptions,
+    receipt,
+    harnessRoot: requestedHarnessRoot,
+    actualHarnessRoot,
+    captureUrl: url,
+  });
+  if (effectiveFixtureAircraftCount)
+    throw new Error(
+      'The aircraft fixture uses a Vite development-only injection seam and is not comparable with a local production build receipt.',
+    );
+}
 const source = {
   harnessCommit: harnessSource.commit,
   harnessDirtyWorktree: harnessSource.dirtyWorktree,
-  appCommit: appCommitOverride || harnessSource.commit,
+  appCommit:
+    captureProvenance?.source.appCommit ||
+    appCommitOverride ||
+    harnessSource.commit,
   appWorktreeState:
+    (captureProvenance ? 'clean' : null) ||
     appWorktreeStateOverride ||
     (appCommitOverride && appCommitOverride !== harnessSource.commit
       ? 'unknown'
@@ -85,6 +154,10 @@ const source = {
         : harnessSource.dirtyWorktree
           ? 'dirty'
           : 'clean'),
+  buildProvenance: captureProvenance?.source || null,
+  provenanceStatus: captureProvenance
+    ? captureProvenance.source.status
+    : 'unverified-exploratory-capture',
   reason: harnessSource.reason,
 };
 if (
@@ -125,6 +198,44 @@ try {
   const startupUrl = new URL(url);
   startupUrl.searchParams.set('welcome', '0');
   const startupSamples = [];
+  const loadedScriptAssets = new Set();
+  const unexpectedScriptAssets = new Set();
+  let scriptRequestCount = 0;
+  const auditPageCodeRequests = (auditPage) => {
+    if (!captureProvenance) return;
+    const base = new URL(buildProvenanceOptions.baseUrl);
+    const prefix = base.pathname.endsWith('/')
+      ? base.pathname
+      : `${base.pathname}/`;
+    const expected = new Set(captureProvenance.source.expectedAssetPaths);
+    auditPage.on('request', (request) => {
+      if (
+        !['script', 'worker', 'serviceworker'].includes(request.resourceType())
+      )
+        return;
+      let requested;
+      try {
+        requested = new URL(request.url());
+      } catch {
+        return;
+      }
+      if (requested.origin !== base.origin) return;
+      let relative = '';
+      if (requested.pathname.startsWith(prefix)) {
+        try {
+          relative = decodeURIComponent(
+            requested.pathname.slice(prefix.length),
+          );
+        } catch {
+          relative = '';
+        }
+      }
+      if (relative && expected.has(relative)) {
+        scriptRequestCount += 1;
+        loadedScriptAssets.add(relative);
+      } else unexpectedScriptAssets.add(requested.pathname);
+    });
+  };
   for (let run = 1; run <= startupRuns; run += 1) {
     process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
     const context = await browser.createBrowserContext();
@@ -135,8 +246,21 @@ try {
       deviceScaleFactor: 1,
     });
     await startupPage.setCacheEnabled(false);
+    await startupPage.setBypassServiceWorker(true);
+    auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
+    if (captureProvenance) {
+      const servedBase = new URL(buildProvenanceOptions.baseUrl);
+      const actualPage = new URL(startupPage.url());
+      if (
+        actualPage.origin !== servedBase.origin ||
+        !captureProvenance.source.entryPaths.includes(actualPage.pathname)
+      )
+        throw new Error(
+          'Startup navigation redirected outside the verified application entry point.',
+        );
+    }
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
@@ -146,6 +270,15 @@ try {
         document.getElementById('loading-screen')?.classList.contains('hidden'),
       { timeout: 90_000 },
     );
+    if (
+      captureProvenance &&
+      (await startupPage.evaluate(() =>
+        Boolean(navigator.serviceWorker?.controller),
+      ))
+    )
+      throw new Error(
+        'Verified startup page is controlled by a service worker.',
+      );
     const initialSettleMs = Date.now() - startedAt;
     const details = await startupPage.evaluate(() => {
       const viewer = window.__godsEyeView.viewer;
@@ -194,7 +327,21 @@ try {
   process.stdout.write('[performance] preparing measured scene\n');
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
+  await page.setCacheEnabled(false);
+  await page.setBypassServiceWorker(true);
+  auditPageCodeRequests(page);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
+  if (captureProvenance) {
+    const servedBase = new URL(buildProvenanceOptions.baseUrl);
+    const actualPage = new URL(page.url());
+    if (
+      actualPage.origin !== servedBase.origin ||
+      !captureProvenance.source.entryPaths.includes(actualPage.pathname)
+    )
+      throw new Error(
+        'Capture navigation redirected outside the verified application entry point.',
+      );
+  }
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
@@ -204,6 +351,11 @@ try {
       document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 90_000 },
   );
+  if (
+    captureProvenance &&
+    (await page.evaluate(() => Boolean(navigator.serviceWorker?.controller)))
+  )
+    throw new Error('Verified capture page is controlled by a service worker.');
   const mainStartupElapsedMs = Date.now() - readyMs;
 
   const fixture = effectiveFixtureAircraftCount
@@ -391,56 +543,10 @@ try {
       transform: camera.transform.clone(),
     };
   });
-  const environment = await page.evaluate(() => {
-    const viewer = window.__godsEyeView.viewer;
-    const canvas = viewer.scene.canvas;
-    const gl =
-      viewer.scene.context?._gl ||
-      canvas.getContext('webgl2') ||
-      canvas.getContext('webgl');
-    const extension = gl?.getExtension('WEBGL_debug_renderer_info');
-    const renderer = extension
-      ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
-      : gl?.getParameter(gl.RENDERER) || null;
-    const layers = (window.__godsEyeView.dataManager?.getAll?.() || []).map(
-      (layer) => ({
-        id: layer.id,
-        enabled: Boolean(layer.enabled),
-        count: Number.isFinite(layer.stats?.count) ? layer.stats.count : null,
-      }),
-    );
-    return {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      renderer,
-      vendor: extension
-        ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL)
-        : gl?.getParameter(gl.VENDOR) || null,
-      viewport: {
-        width: innerWidth,
-        height: innerHeight,
-        dpr: devicePixelRatio,
-      },
-      drawingBuffer: {
-        width: canvas.width,
-        height: canvas.height,
-      },
-      focused: document.hasFocus(),
-      visible: !document.hidden,
-      layers,
-      totalObjects: layers.reduce(
-        (total, layer) => total + (layer.count || 0),
-        0,
-      ),
-      appCommit:
-        window.__godsEyeView?.getPerformanceEnvironment?.()?.appCommit || null,
-    };
+  const commonScene = await page.evaluate(observeCommonScene, {
+    appCommit: source.appCommit,
   });
-  if (environment.appCommit !== source.appCommit) {
-    throw new Error(
-      `Performance capture used the wrong application commit: ${JSON.stringify({ expected: source.appCommit, actual: environment.appCommit })}`,
-    );
-  }
+  const environment = commonScene.environment;
   environment.startup = {
     runs: startupSamples,
     runCount: startupSamples.length,
@@ -497,43 +603,14 @@ try {
       // Each workload/run receives the declared warmup, including tracking.
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
+      const sceneBefore = await page.evaluate(observeCommonScene, {
+        appCommit: source.appCommit,
+      });
       const sample = await page.evaluate(
         async ({ durationMs, scenarioName, delay }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
-          const style = window.__godsEyeView.styleManager;
-          const readSettings = () => ({
-            qualityMode:
-              window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
-              null,
-            densityPct:
-              window.__godsEyeView?.styleManager?.services?.getDetectionTuning?.()
-                ?.densityPct ?? null,
-            detectionMode:
-              window.__godsEyeView?.styleManager?.services?.getDetectionMode?.() ||
-              null,
-            resolutionScale: viewer.resolutionScale,
-            antialias:
-              scene.context?._gl?.getContextAttributes()?.antialias ?? null,
-            msaaSamples: scene.msaaSamples ?? null,
-            fxaa: scene.postProcessStages.fxaa.enabled,
-            bloom: style.bloomEnabled,
-            bloomIntensity: style.bloomIntensity,
-            sharpen: style.sharpenEnabled,
-            sharpenIntensity: style.sharpenIntensity,
-            style: style.shareLinkManager?.getCurrentView?.()?.style ?? null,
-            map: style.shareLinkManager?.getCurrentView?.()?.map ?? null,
-            visualState: style.getVisualState?.() || null,
-          });
-          const readConditions = () => ({
-            settings: readSettings(),
-            environment: window.__godsEyeView.getPerformanceEnvironment(),
-            focused: document.hasFocus(),
-            visible: !document.hidden,
-          });
-          const conditionsBefore = readConditions();
-          let foregroundThroughout =
-            conditionsBefore.focused && conditionsBefore.visible;
+          let foregroundThroughout = document.hasFocus() && !document.hidden;
           const onBackground = () => {
             foregroundThroughout = false;
           };
@@ -542,7 +619,6 @@ try {
           };
           window.addEventListener('blur', onBackground);
           document.addEventListener('visibilitychange', onVisibility);
-          const settingsBefore = readSettings();
           const intervals = [];
           const longTasks = [];
           let previous = null;
@@ -639,25 +715,8 @@ try {
                   usedJsHeapBytes: null,
                   reason: 'performance.memory is unavailable in this browser',
                 };
-            const counts = (
-              window.__godsEyeView.dataManager?.getAll?.() || []
-            ).map((layer) => ({
-              id: layer.id,
-              enabled: Boolean(layer.enabled),
-              count: Number.isFinite(layer.stats?.count)
-                ? layer.stats.count
-                : null,
-            }));
-            const detectionDiagnostics =
-              window.__godsEyeView?.styleManager?.services?.readDetectionDiagnostics?.();
-            const settingsAfter = readSettings();
-            const conditionsAfter = readConditions();
             window.removeEventListener('blur', onBackground);
             document.removeEventListener('visibilitychange', onVisibility);
-            const performanceSnapshot =
-              window.__godsEyeView?.getPerformanceSnapshot?.({
-                scene: { workload: scenarioName },
-              }) || null;
             observer
               ?.takeRecords?.()
               .forEach((entry) => longTasks.push(entry.duration));
@@ -680,48 +739,22 @@ try {
                 maxMs: longTasks.length ? Math.max(...longTasks) : null,
               },
               memory,
-              layers: counts,
-              totalObjects: counts.reduce(
-                (total, layer) => total + (layer.count || 0),
-                0,
-              ),
+              layers: [],
+              totalObjects: null,
               focused: document.hasFocus(),
               visible: !document.hidden,
               trackedAircraftId: viewer.trackedEntity?.gevTrackedId || null,
               injectedDelayMs: delay || 0,
-              quality: {
-                mode:
-                  window.__godsEyeView?.styleManager?._adaptiveQuality?.getMode() ||
-                  null,
-                densityPct:
-                  window.__godsEyeView?.styleManager?.services?.getDetectionTuning?.()
-                    ?.densityPct ?? null,
-                p95FrameMs:
-                  window.__godsEyeView?.styleManager?._adaptiveQuality?.policy
-                    ?.lastP95Ms ?? null,
+              quality: null,
+              detection: {
+                mode: null,
+                reason:
+                  'Candidate-only detection diagnostics are disabled for comparable capture.',
               },
-              detection: detectionDiagnostics
-                ? {
-                    mode: detectionDiagnostics.profile,
-                    densityPct: detectionDiagnostics.densityPct,
-                    observationCount: detectionDiagnostics.observationCount,
-                    candidateCount: detectionDiagnostics.candidateCount,
-                    selectedCount: detectionDiagnostics.selectedCount,
-                    visibleCount: detectionDiagnostics.visibleCount,
-                    protectedVisibleCount:
-                      detectionDiagnostics.protectedVisibleCount,
-                    labelsByLayer: detectionDiagnostics.labelsByLayer,
-                  }
-                : {
-                    mode: null,
-                    observationCount: null,
-                    candidateCount: null,
-                    reason: 'detection diagnostics are unavailable',
-                  },
-              performanceSnapshot,
-              conditions: { before: conditionsBefore, after: conditionsAfter },
+              performanceSnapshot: null,
+              performanceSnapshotReason:
+                'Candidate-only runtime snapshots are disabled for comparable capture.',
               foregroundThroughout,
-              settings: { before: settingsBefore, after: settingsAfter },
               cameraPath: {
                 id:
                   scenarioName === 'scripted-motion'
@@ -742,6 +775,41 @@ try {
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
       );
+      const sceneAfter = await page.evaluate(observeCommonScene, {
+        appCommit: source.appCommit,
+      });
+      sample.layers = sceneAfter.environment.layers;
+      sample.totalObjects = sceneAfter.environment.totalObjects;
+      sample.quality = {
+        mode: sceneAfter.settings.qualityMode,
+        densityPct: sceneAfter.settings.densityPct,
+        p95FrameMs: null,
+      };
+      sample.settings = {
+        before: sceneBefore.settings,
+        after: sceneAfter.settings,
+      };
+      sample.conditions = {
+        before: {
+          environment: sceneBefore.environment,
+          settings: sceneBefore.settings,
+          focused: sceneBefore.environment.focused,
+          visible: sceneBefore.environment.visible,
+        },
+        after: {
+          environment: sceneAfter.environment,
+          settings: sceneAfter.settings,
+          focused: sceneAfter.environment.focused,
+          visible: sceneAfter.environment.visible,
+        },
+      };
+      sample.cameraPath = describeObservedRoute({
+        scenario,
+        start: sceneBefore.camera,
+        durationMs: seconds * 1000,
+        measurement: sample,
+        fixture,
+      });
       if (
         scenario === 'selected-aircraft-tracking' &&
         (trackingSetup !== 'flights:000001' ||
@@ -755,11 +823,6 @@ try {
   }
 
   for (const sample of captures) {
-    if (!sample.performanceSnapshot) {
-      throw new Error(
-        `Performance instrumentation is unavailable for ${sample.scenario} run ${sample.run}; refusing an uninstrumented report`,
-      );
-    }
     const before = sample.settings?.before;
     const after = sample.settings?.after;
     if (!before || !after || before.qualityMode !== after.qualityMode) {
@@ -777,6 +840,30 @@ try {
         `Performance sample used the wrong quality mode: ${JSON.stringify({ scenario: sample.scenario, run: sample.run, expected: qualityMode, actual: sample.quality?.mode })}`,
       );
     }
+  }
+
+  if (captureProvenance) {
+    source.buildProvenance.after = await captureProvenance.verifyAfterCapture();
+    if (await page.evaluate(() => Boolean(navigator.serviceWorker?.controller)))
+      throw new Error(
+        'Verified capture page became controlled by a service worker.',
+      );
+    if (unexpectedScriptAssets.size)
+      throw new Error(
+        `Capture requested same-origin code outside its build receipt: ${JSON.stringify([...unexpectedScriptAssets].sort())}`,
+      );
+    if (!loadedScriptAssets.size)
+      throw new Error(
+        'Capture did not request any receipted same-origin code assets.',
+      );
+    source.buildProvenance.pageAssetAudit = {
+      scriptRequestCount,
+      loadedAssetPaths: [...loadedScriptAssets].sort(),
+      unexpectedAssetPaths: [],
+    };
+    delete source.buildProvenance.expectedAssetPaths;
+    delete source.buildProvenance.entryPaths;
+    source.provenanceStatus = source.buildProvenance.status;
   }
 
   const stableWithinScenario = (read) => {
@@ -812,6 +899,12 @@ try {
     capturedAt: new Date().toISOString(),
     source,
     url: new URL(url).origin,
+    comparisonEligible: false,
+    comparisonReadiness: {
+      status: 'not-ready',
+      reason:
+        'Versioned fixture delivery and observed comparison-contract export are not implemented in this packet.',
+    },
     environment,
     integrity,
     workload: {
