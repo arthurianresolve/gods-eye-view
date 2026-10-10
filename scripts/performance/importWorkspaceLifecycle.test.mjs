@@ -6,12 +6,14 @@ import {
   createLifecycleImportFixture,
   createLifecycleReport,
   finalizeLifecycleReportStatus,
+  readWorkerPreflight,
   runImportWorkspaceLifecycle,
   validateLifecycleCandidate,
   WORKSPACE_IMPORT_FIXTURE_SHA256,
 } from '../qa-import-workspace-lifecycle.mjs';
 import {
   assertOwnedLifecycleCheckpoint,
+  createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
   parseImportWorkspaceLifecycleArgs,
   runCooperativeImportLifecycleCase,
@@ -230,6 +232,182 @@ test('report initializer includes the actual workspace fixture digest', () => {
   assert.equal(report.phase, 'initialize');
 });
 
+test('failure evidence keeps bounded URL-free import, worker, frame, and preflight observations', () => {
+  const evidence = createLifecycleFailureEvidence({
+    caseId: 'workspace-replacement',
+    phase: 'worker-preflight-validation',
+    error: new Error('failed at https://secret.example/path?token=abc'),
+    operation: {
+      name: 'open-workspace',
+      status: 'timed-out',
+      renderWaitStatus: 'pending',
+      renderWaitId: 4,
+      workspaceId: 'workspace-synthetic',
+    },
+    observation: {
+      imports: { featureCount: 19, pendingJobs: 1, cacheEntries: 3 },
+      workerCounters: {
+        scope: 'cumulative-per-document',
+        instrumented: true,
+        overflow: true,
+        pending: 2,
+        workers: Array.from({ length: 70 }, (_, index) => ({
+          kind:
+            index === 0
+              ? 'https://secret.example/worker.js'
+              : 'createGeometry.js',
+          submitted: 10,
+          completed: 8,
+          taskErrors: 0,
+          workerErrors: 0,
+          postErrors: 0,
+          cancelled: 0,
+          pending: 2,
+          oldestPendingMs: 27.129,
+          terminated: false,
+          payload: 'must not be serialized',
+        })),
+      },
+      frame: {
+        frameNumber: 42,
+        requestRenderMode: true,
+        renderRequested: false,
+        renderWaiters: Array.from({ length: 12 }, (_, id) => ({
+          id,
+          status: 'pending',
+          workspaceId: 'workspace-synthetic',
+          count: 512,
+          startingFrame: 40,
+          url: 'https://secret.example',
+        })),
+      },
+      scene: {
+        entities: 20,
+        dataSources: 0,
+        primitives: 4,
+        groundPrimitives: 0,
+      },
+    },
+    workerPreflight: {
+      network: {
+        status: 'passed',
+        interceptedWorkerRequests: 3,
+        url: 'https://secret.example',
+      },
+      probe: {
+        status: 'failed',
+        tasks: Array.from({ length: 8 }, (_, index) => ({
+          id: `task-${index}`,
+          outcome: 'rejected-as-expected',
+          body: 'must not be serialized',
+        })),
+      },
+      diagnostics: workerCounters(),
+      probeError: new Error('https://secret.example/body?secret=1'),
+    },
+    pageDiagnostics: {
+      errors: Array.from({ length: 10 }, () => 'https://secret.example/error'),
+      messages: Array.from({ length: 10 }, () => 'bounded warning'),
+    },
+  });
+  const serialized = JSON.stringify(evidence);
+  assert.equal(evidence.schema, 'gev-lifecycle-failure-evidence/v1');
+  assert.equal(evidence.observation.workerCounters.workers.length, 64);
+  assert.equal(evidence.observation.workerCounters.workersTruncated, true);
+  assert.equal(evidence.observation.frame.renderWaiters.length, 8);
+  assert.equal(evidence.workerPreflight.probe.tasks.length, 4);
+  assert.equal(evidence.workerPreflight.probe.tasksTruncated, true);
+  assert.equal(evidence.pageDiagnostics.errors.length, 4);
+  assert.doesNotMatch(
+    serialized,
+    /secret\.example|token=abc|must not be serialized|payload/,
+  );
+});
+
+test('failed worker preflight preserves available rejected inputs when extra diagnostics fail', async () => {
+  let evaluateCalls = 0;
+  const page = {
+    async evaluate() {
+      evaluateCalls++;
+      if (evaluateCalls === 1) throw new Error('Fixture network worker failed');
+      throw new Error('diagnostic snapshot unavailable');
+    },
+  };
+  const network = {
+    status: 'passed',
+    interceptedWorkerRequests: 3,
+    url: 'https://must-not-appear.example',
+  };
+  await assert.rejects(
+    readWorkerPreflight(page, async () => network),
+    (error) => {
+      assert.equal(error.lifecycleFailureEvidence.failedPhase, 'worker-probe');
+      assert.equal(
+        error.lifecycleFailureEvidence.workerPreflight.network.status,
+        'passed',
+      );
+      assert.equal(
+        error.lifecycleFailureEvidence.workerPreflight.diagnosticSnapshotError,
+        'diagnostic snapshot unavailable',
+      );
+      assert.doesNotMatch(
+        JSON.stringify(error.lifecycleFailureEvidence),
+        /must-not-appear\.example/,
+      );
+      return true;
+    },
+  );
+  assert.equal(evaluateCalls, 2);
+});
+
+test('failed worker preflight retains returned probe and counters when validation rejects them', async () => {
+  const value = {
+    probe: {
+      status: 'failed',
+      tasks: [{ id: 'geometry-cold', outcome: 'timed-out' }],
+    },
+    diagnostics: {
+      instrumented: true,
+      overflow: false,
+      pending: 1,
+      workers: [
+        {
+          kind: 'createGeometry.js',
+          submitted: 4,
+          completed: 3,
+          cancelled: 0,
+          pending: 1,
+          workerErrors: 0,
+          postErrors: 0,
+        },
+      ],
+    },
+  };
+  const page = {
+    async evaluate() {
+      return value;
+    },
+  };
+  await assert.rejects(
+    readWorkerPreflight(page, async () => ({
+      status: 'passed',
+      interceptedWorkerRequests: 3,
+    })),
+    (error) => {
+      const evidence = error.lifecycleFailureEvidence.workerPreflight;
+      assert.equal(
+        error.lifecycleFailureEvidence.failedPhase,
+        'worker-preflight-validation',
+      );
+      assert.equal(evidence.probe.status, 'failed');
+      assert.equal(evidence.probe.tasks[0].outcome, 'timed-out');
+      assert.equal(evidence.diagnostics.pending, 1);
+      assert.equal(evidence.diagnostics.workers[0].completed, 3);
+      return true;
+    },
+  );
+});
+
 test('owned browser closes when initialization fails after launch and emits durable phases', async () => {
   let closed = false;
   const browser = {
@@ -349,6 +527,15 @@ test('completed-render waiter retains a render that fires before its consumer aw
   scope.__godsEyeView.viewer.scene.frameState.frameNumber++;
   for (const listener of [...listeners]) listener();
   assert.equal(listeners.size, 0);
+  assert.deepEqual(scope.__qaLifecycleRenderWaitSnapshot(), [
+    {
+      id,
+      status: 'completed',
+      workspaceId: 'ws',
+      count: 1,
+      startingFrame: 10,
+    },
+  ]);
   assert.deepEqual(await scope.__qaLifecycleWaitForRender(id), {
     frameNumber: 11,
     importedEntityCount: 1,
@@ -429,6 +616,7 @@ test('completed-render timeout remains observable when it fires before wait and 
   });
   await new Promise((resolve) => setTimeout(resolve, 15));
   assert.equal(listeners.size, 0);
+  assert.equal(scope.__qaLifecycleRenderWaitSnapshot()[0].status, 'failed');
   await assert.rejects(scope.__qaLifecycleWaitForRender(id), /not observed/);
   assert.equal(scope.__qaLifecycleCancelRenderWait(id), undefined);
   assert.equal(listeners.size, 0);
@@ -492,6 +680,26 @@ test('queued cancellation or supersession that was not actually observed fails c
 
 test('failed operations preserve completed counts, phase, and cleanup failures', async () => {
   const driver = importDriver({ failMeasured: true, cleanupFailure: true });
+  let evidenceReadBeforeCleanup = false;
+  driver.failureEvidence = async ({ phase, error }) => {
+    evidenceReadBeforeCleanup = !driver.closed;
+    return createLifecycleFailureEvidence({
+      caseId: 'cooperative-import',
+      phase,
+      error,
+      observation: {
+        imports: { featureCount: 0, pendingJobs: 0, cacheEntries: 0 },
+        workerCounters: workerCounters(),
+        frame: { frameNumber: 5 },
+        scene: {
+          entities: 4,
+          dataSources: 0,
+          primitives: 2,
+          groundPrimitives: 0,
+        },
+      },
+    });
+  };
   const result = await runCooperativeImportLifecycleCase({
     driver,
     cycles: 1,
@@ -503,6 +711,9 @@ test('failed operations preserve completed counts, phase, and cleanup failures',
   assert.equal(result.failedPhase, 'measured-load-1');
   assert.match(result.error, /measured operation failed/);
   assert.match(result.cleanupError, /cleanup failed/);
+  assert.equal(evidenceReadBeforeCleanup, true);
+  assert.equal(result.failureEvidence.failedPhase, 'measured-load-1');
+  assert.equal(result.failureEvidence.observation.frame.frameNumber, 5);
   assert.equal(driver.closeCount, 1);
 });
 

@@ -14,10 +14,11 @@ const RESOURCE_KEYS = [
 export function installLifecycleRenderWaiter(scope = window) {
   let nextId = 0;
   const waits = new Map();
-  function settle(id, error, value) {
+  function settle(id, error, value, status = null) {
     const row = waits.get(id);
     if (!row || row.settled) return;
     row.settled = true;
+    row.status = status || (error ? 'failed' : 'completed');
     clearTimeout(row.timer);
     row.scene.postRender.removeEventListener(row.listener);
     if (error) row.reject(error);
@@ -87,6 +88,10 @@ export function installLifecycleRenderWaiter(scope = window) {
       reject,
       promise,
       settled: false,
+      status: 'pending',
+      workspaceId,
+      count,
+      startingFrame,
     });
     scene.postRender.addEventListener(listener);
     return id;
@@ -103,12 +108,25 @@ export function installLifecycleRenderWaiter(scope = window) {
   scope.__qaLifecycleCancelRenderWait = (id) => {
     const row = waits.get(id);
     if (!row) return;
-    settle(id, new Error('Completed-render wait was cancelled.'));
+    settle(
+      id,
+      new Error('Completed-render wait was cancelled.'),
+      null,
+      'cancelled',
+    );
     waits.delete(id);
   };
+  scope.__qaLifecycleRenderWaitSnapshot = () =>
+    [...waits.entries()].slice(0, 8).map(([id, row]) => ({
+      id,
+      status: row.status,
+      workspaceId: row.workspaceId,
+      count: row.count,
+      startingFrame: row.startingFrame,
+    }));
   scope.__qaLifecycleCancelAll = () => {
     for (const id of [...waits.keys()]) {
-      settle(id, new Error('Lifecycle page is closing.'));
+      settle(id, new Error('Lifecycle page is closing.'), null, 'cancelled');
       waits.delete(id);
     }
   };
@@ -290,6 +308,170 @@ function boundedError(error) {
     .slice(0, 500);
 }
 
+function boundedToken(value, limit = 120) {
+  return typeof value === 'string'
+    ? value.replace(/[^a-zA-Z0-9_.:-]/g, '_').slice(0, limit)
+    : null;
+}
+
+function boundedCounter(value) {
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+function boundedWorkerKind(value) {
+  const name = typeof value === 'string' ? value.split(/[\\/?#]/).at(-1) : '';
+  return /^[a-zA-Z][a-zA-Z0-9_-]{0,70}\.js$/.test(name)
+    ? name
+    : 'opaque-worker';
+}
+
+function compactWorkerDiagnostics(value) {
+  if (!value || typeof value !== 'object') return null;
+  const workers = Array.isArray(value.workers) ? value.workers : [];
+  return {
+    scope: value.scope === 'cumulative-per-document' ? value.scope : null,
+    instrumented:
+      typeof value.instrumented === 'boolean' ? value.instrumented : null,
+    overflow: typeof value.overflow === 'boolean' ? value.overflow : null,
+    pending: boundedCounter(value.pending),
+    workerCount: Number.isSafeInteger(value.workerCount)
+      ? Math.max(0, value.workerCount)
+      : workers.length,
+    workersTruncated: workers.length > 64 || value.workersTruncated === true,
+    workers: workers.slice(0, 64).map((worker) => ({
+      kind: boundedWorkerKind(worker?.kind),
+      submitted: boundedCounter(worker?.submitted),
+      completed: boundedCounter(worker?.completed),
+      taskErrors: boundedCounter(worker?.taskErrors),
+      workerErrors: boundedCounter(worker?.workerErrors),
+      postErrors: boundedCounter(worker?.postErrors),
+      cancelled: boundedCounter(worker?.cancelled),
+      pending: boundedCounter(worker?.pending),
+      oldestPendingMs:
+        Number.isFinite(worker?.oldestPendingMs) &&
+        worker.oldestPendingMs >= 0 &&
+        worker.oldestPendingMs <= 86_400_000
+          ? Math.round(worker.oldestPendingMs * 100) / 100
+          : null,
+      terminated:
+        typeof worker?.terminated === 'boolean' ? worker.terminated : null,
+    })),
+  };
+}
+
+/** Keep only small lifecycle counters and known worker-probe fields on failure. */
+export function createLifecycleFailureEvidence({
+  caseId = null,
+  phase,
+  error,
+  operation = null,
+  observation = null,
+  observationError = null,
+  workerPreflight = null,
+  pageDiagnostics = null,
+} = {}) {
+  const evidence = {
+    schema: 'gev-lifecycle-failure-evidence/v1',
+    caseId: boundedToken(caseId),
+    failedPhase: boundedToken(phase) || 'unknown',
+    error: boundedError(error),
+  };
+  if (operation && typeof operation === 'object')
+    evidence.operation = {
+      name: boundedToken(operation.name),
+      status: boundedToken(operation.status),
+      renderWaitStatus: boundedToken(operation.renderWaitStatus),
+      renderWaitId: boundedCounter(operation.renderWaitId),
+      workspaceId: boundedToken(operation.workspaceId, 80),
+      error: operation.error ? boundedError(operation.error) : null,
+    };
+  if (observation && typeof observation === 'object') {
+    const imports = observation.imports || {};
+    const scene = observation.scene || {};
+    evidence.observation = {
+      imports: {
+        featureCount: boundedCounter(imports.featureCount),
+        pendingJobs: boundedCounter(imports.pendingJobs),
+        cacheEntries: boundedCounter(imports.cacheEntries),
+      },
+      workerCounters: compactWorkerDiagnostics(observation.workerCounters),
+      frame: {
+        frameNumber: boundedCounter(observation.frame?.frameNumber),
+        requestRenderMode:
+          typeof observation.frame?.requestRenderMode === 'boolean'
+            ? observation.frame.requestRenderMode
+            : null,
+        renderRequested:
+          typeof observation.frame?.renderRequested === 'boolean'
+            ? observation.frame.renderRequested
+            : null,
+        renderWaiters: Array.isArray(observation.frame?.renderWaiters)
+          ? observation.frame.renderWaiters.slice(0, 8).map((waiter) => ({
+              id: boundedCounter(waiter?.id),
+              status: boundedToken(waiter?.status, 40),
+              workspaceId: boundedToken(waiter?.workspaceId, 80),
+              count: boundedCounter(waiter?.count),
+              startingFrame: boundedCounter(waiter?.startingFrame),
+            }))
+          : null,
+      },
+      scene: {
+        entities: boundedCounter(scene.entities),
+        dataSources: boundedCounter(scene.dataSources),
+        primitives: boundedCounter(scene.primitives),
+        groundPrimitives: boundedCounter(scene.groundPrimitives),
+      },
+    };
+  }
+  if (observationError)
+    evidence.observationError = boundedError(observationError);
+  if (workerPreflight && typeof workerPreflight === 'object') {
+    const probe = workerPreflight.probe || {};
+    const tasks = Array.isArray(probe.tasks) ? probe.tasks : [];
+    const diagnostics = workerPreflight.diagnostics;
+    evidence.workerPreflight = {
+      network: workerPreflight.network
+        ? {
+            status: boundedToken(workerPreflight.network.status, 40),
+            interceptedWorkerRequests: boundedCounter(
+              workerPreflight.network.interceptedWorkerRequests,
+            ),
+          }
+        : null,
+      probe: workerPreflight.probe
+        ? {
+            status: boundedToken(probe.status, 40),
+            tasksTruncated: tasks.length > 4,
+            tasks: tasks.slice(0, 4).map((task) => ({
+              id: boundedToken(task?.id, 40),
+              outcome: boundedToken(task?.outcome, 40),
+            })),
+          }
+        : null,
+      diagnostics: compactWorkerDiagnostics(diagnostics),
+      networkError: workerPreflight.networkError
+        ? boundedError(workerPreflight.networkError)
+        : null,
+      probeError: workerPreflight.probeError
+        ? boundedError(workerPreflight.probeError)
+        : null,
+      diagnosticSnapshotError: workerPreflight.diagnosticSnapshotError
+        ? boundedError(workerPreflight.diagnosticSnapshotError)
+        : null,
+    };
+  }
+  if (pageDiagnostics && typeof pageDiagnostics === 'object')
+    evidence.pageDiagnostics = {
+      errors: Array.isArray(pageDiagnostics.errors)
+        ? pageDiagnostics.errors.slice(-4).map((item) => boundedError(item))
+        : [],
+      messages: Array.isArray(pageDiagnostics.messages)
+        ? pageDiagnostics.messages.slice(-4).map((item) => boundedError(item))
+        : [],
+    };
+  return evidence;
+}
+
 function setPhase(progress, driver, phase) {
   progress.phase = phase;
   driver.onPhase?.(phase, progress);
@@ -305,6 +487,18 @@ async function withCaseCleanup(driver, progress, run) {
     primaryError = error;
     primaryFailurePhase = progress.phase || 'unknown';
   }
+  let failureEvidence = null;
+  let failureEvidenceError = null;
+  if (primaryError && typeof driver.failureEvidence === 'function') {
+    try {
+      failureEvidence = await driver.failureEvidence({
+        phase: primaryFailurePhase,
+        error: primaryError,
+      });
+    } catch (error) {
+      failureEvidenceError = boundedError(error);
+    }
+  }
   let cleanupError = null;
   try {
     setPhase(progress, driver, 'cleanup-owned-context');
@@ -319,6 +513,8 @@ async function withCaseCleanup(driver, progress, run) {
       status: 'failed',
       failedPhase: primaryFailurePhase || progress.phase || 'unknown',
       error: boundedError(primaryError || cleanupError),
+      ...(failureEvidence ? { failureEvidence } : {}),
+      ...(failureEvidenceError ? { failureEvidenceError } : {}),
       ...(cleanupError ? { cleanupError: boundedError(cleanupError) } : {}),
     };
   }

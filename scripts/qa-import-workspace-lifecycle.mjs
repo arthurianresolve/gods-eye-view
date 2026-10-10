@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   assertOwnedLifecycleCheckpoint,
+  createLifecycleFailureEvidence,
   installLifecycleRenderWaiter,
   parseImportWorkspaceLifecycleArgs,
   runCooperativeImportLifecycleCase,
@@ -19,6 +20,7 @@ import {
   clickControl,
   launchFixtureBrowser,
   openWorkspace,
+  readFixturePageDiagnostics,
   prepareFixturePage,
   seedPersistentWorkspace,
 } from './qa-application-fixtures.mjs';
@@ -33,6 +35,7 @@ const FEATURE_COUNT = 512;
 const SHA1 = /^[a-f0-9]{40}$/i;
 const HOST_PROTOCOL_TIMEOUT_MS = 15_000;
 const PAGE_CONTEXT_CLEANUP_TIMEOUT_MS = 2_000;
+const FAILURE_OBSERVATION_TIMEOUT_MS = 1_500;
 const BROWSER_CLOSE_TIMEOUT_MS = 5_000;
 const PROGRESS_EVENT_CAP = 64;
 
@@ -258,22 +261,66 @@ function assertWorkerPreflight(value) {
   };
 }
 
-async function readWorkerPreflight(page, verifyNetwork) {
-  const network = await verifyNetwork();
-  const value = await evaluateWithDeadline(
-    page,
-    'worker-preflight',
-    async () => {
-      const { runCesiumWorkerProbe } =
-        await import('/scripts/fixtures/cesium-worker-probe.js');
-      const probe = await runCesiumWorkerProbe();
-      return {
-        probe,
-        diagnostics: window.__gevSoakWorkers?.snapshot() || null,
-      };
-    },
-  );
-  return assertWorkerPreflight({ ...value, network });
+export async function readWorkerPreflight(page, verifyNetwork) {
+  let network = null;
+  let value = null;
+  let phase = 'network-probe';
+  let networkError = null;
+  let probeError = null;
+  let diagnosticSnapshotError = null;
+  try {
+    try {
+      network = await verifyNetwork();
+    } catch (error) {
+      networkError = error;
+      throw error;
+    }
+    phase = 'worker-probe';
+    try {
+      value = await evaluateWithDeadline(page, 'worker-preflight', async () => {
+        const { runCesiumWorkerProbe } =
+          await import('/scripts/fixtures/cesium-worker-probe.js');
+        const probe = await runCesiumWorkerProbe();
+        return {
+          probe,
+          diagnostics: window.__gevSoakWorkers?.snapshot() || null,
+        };
+      });
+    } catch (error) {
+      probeError = error;
+      throw error;
+    }
+    phase = 'worker-preflight-validation';
+    return assertWorkerPreflight({ ...value, network });
+  } catch (error) {
+    let diagnostics = value?.diagnostics || null;
+    if (!diagnostics) {
+      try {
+        diagnostics = await withProtocolDeadline(
+          () =>
+            page.evaluate(() => window.__gevSoakWorkers?.snapshot() || null),
+          'read-preflight-failure-workers',
+          FAILURE_OBSERVATION_TIMEOUT_MS,
+        );
+      } catch (snapshotError) {
+        diagnosticSnapshotError = snapshotError;
+      }
+    }
+    error.lifecycleFailureEvidence = createLifecycleFailureEvidence({
+      caseId: 'worker-preflight',
+      phase,
+      error,
+      workerPreflight: {
+        network,
+        probe: value?.probe || null,
+        diagnostics,
+        networkError,
+        probeError,
+        diagnosticSnapshotError,
+      },
+    });
+    throw error;
+  }
 }
 
 async function setupOwnedPage(
@@ -284,14 +331,18 @@ async function setupOwnedPage(
   onProgress(`create-context:${role}`);
   let context = null;
   let page = null;
+  let setupPhase = 'create-context';
+  const progress = [];
   try {
     context = await browser.createBrowserContext();
+    setupPhase = 'create-page';
     onProgress(`create-page:${role}`);
     page = await context.newPage();
     await page.evaluateOnNewDocument(installWorkerDiagnostics);
+    setupPhase = 'prepare-page';
     onProgress(`prepare-page:${role}`);
     const prepared = await prepareFixturePage(browser, base, { page });
-    const progress = [];
+    setupPhase = 'boot';
     await bootFixturePage(page, base, {
       onProgress: (phase) => {
         progress.push(phase);
@@ -300,6 +351,7 @@ async function setupOwnedPage(
       hash: `#qa-lifecycle-${role}`,
     });
     page.setDefaultTimeout(HOST_PROTOCOL_TIMEOUT_MS);
+    setupPhase = 'disable-unrelated-layers';
     onProgress(`disable-unrelated-layers:${role}`);
     const disabledLayers = await evaluateWithDeadline(
       page,
@@ -322,6 +374,7 @@ async function setupOwnedPage(
       'install-render-waiter',
       installLifecycleRenderWaiter,
     );
+    setupPhase = 'read-application-identity';
     const identity = await evaluateWithDeadline(
       page,
       'read-application-identity',
@@ -332,6 +385,7 @@ async function setupOwnedPage(
       throw new Error(
         'Served application commit does not match the expected build.',
       );
+    setupPhase = 'worker-preflight';
     onProgress(`worker-preflight:${role}`);
     const workerPreflight = await readWorkerPreflight(
       page,
@@ -349,9 +403,21 @@ async function setupOwnedPage(
       workerPreflight,
     };
   } catch (error) {
+    const existingEvidence = error.lifecycleFailureEvidence;
+    const failureEvidence = createLifecycleFailureEvidence({
+      caseId: role,
+      phase: existingEvidence?.failedPhase || setupPhase,
+      error,
+      workerPreflight: existingEvidence?.workerPreflight || null,
+      pageDiagnostics: page ? readFixturePageDiagnostics(page) : null,
+    });
+    failureEvidence.setupPhase = setupPhase;
+    failureEvidence.bootProgress = progress.slice(0, 16);
+    error.lifecycleFailureEvidence = failureEvidence;
     try {
       await closeOwnedPageAndContext(page, context);
     } catch (cleanupError) {
+      failureEvidence.cleanupError = boundedText(cleanupError);
       error.message += `; cleanup failed: ${boundedText(cleanupError)}`;
     }
     throw error;
@@ -524,6 +590,79 @@ async function pageSnapshot(page) {
   return snapshot;
 }
 
+async function readFailureObservation(page) {
+  return withProtocolDeadline(
+    () =>
+      page.evaluate(() => {
+        const app = window.__godsEyeView;
+        const layer = app?.importedGeometryLayer;
+        const importState = layer?.getState?.();
+        const importDiagnostics = layer?.getPerformanceDiagnostics?.();
+        const scene = app?.viewer?.scene;
+        const workers = window.__gevSoakWorkers?.snapshot?.() || null;
+        const safeInteger = (value) =>
+          Number.isSafeInteger(value) && value >= 0 ? value : null;
+        return {
+          imports: {
+            featureCount: safeInteger(importState?.featureCount),
+            pendingJobs: safeInteger(importState?.pendingJobs),
+            cacheEntries: safeInteger(importDiagnostics?.cacheEntries),
+          },
+          workerCounters: workers
+            ? {
+                scope: 'cumulative-per-document',
+                instrumented: workers.instrumented,
+                overflow: workers.overflow,
+                pending: safeInteger(workers.pending),
+                workerCount: Array.isArray(workers.workers)
+                  ? workers.workers.length
+                  : 0,
+                workers: (Array.isArray(workers.workers) ? workers.workers : [])
+                  .slice(0, 64)
+                  .map((worker) => ({
+                    kind: worker.kind,
+                    submitted: worker.submitted,
+                    completed: worker.completed,
+                    taskErrors: worker.taskErrors,
+                    workerErrors: worker.workerErrors,
+                    postErrors: worker.postErrors,
+                    cancelled: worker.cancelled,
+                    pending: worker.pending,
+                    oldestPendingMs: Number.isFinite(worker.oldestPendingMs)
+                      ? worker.oldestPendingMs
+                      : null,
+                    terminated: worker.terminated,
+                  })),
+                workersTruncated:
+                  Array.isArray(workers.workers) && workers.workers.length > 64,
+              }
+            : null,
+          frame: {
+            frameNumber: safeInteger(scene?.frameState?.frameNumber),
+            requestRenderMode:
+              typeof scene?.requestRenderMode === 'boolean'
+                ? scene.requestRenderMode
+                : null,
+            renderRequested:
+              typeof scene?._renderRequested === 'boolean'
+                ? scene._renderRequested
+                : null,
+            renderWaiters:
+              window.__qaLifecycleRenderWaitSnapshot?.().slice(0, 8) || null,
+          },
+          scene: {
+            entities: safeInteger(app?.viewer?.entities?.values?.length),
+            dataSources: safeInteger(app?.viewer?.dataSources?.length),
+            primitives: safeInteger(scene?.primitives?.length),
+            groundPrimitives: safeInteger(scene?.groundPrimitives?.length),
+          },
+        };
+      }),
+    'read-lifecycle-failure-observation',
+    FAILURE_OBSERVATION_TIMEOUT_MS,
+  );
+}
+
 function makeImportDriver(
   page,
   fixture,
@@ -532,6 +671,19 @@ function makeImportDriver(
   applicationCommit,
   onPhase,
 ) {
+  let failureOperation = null;
+  let lastFailureObservation = null;
+  let failureObservationAttempted = false;
+  let failureObservationError = null;
+  const captureFailureObservation = async () => {
+    if (failureObservationAttempted) return;
+    failureObservationAttempted = true;
+    try {
+      lastFailureObservation = await readFailureObservation(page);
+    } catch (error) {
+      failureObservationError = error;
+    }
+  };
   return {
     onPhase,
     async checkpoint() {
@@ -675,6 +827,15 @@ function makeImportDriver(
         0,
         drainMs,
       );
+      failureOperation = {
+        name: 'clear-and-drain',
+        status: 'waiting-for-empty-import-and-idle-workers',
+        renderWaitId: waitId,
+        renderWaitStatus: 'pending',
+      };
+      lastFailureObservation = null;
+      failureObservationAttempted = false;
+      failureObservationError = null;
       try {
         await evaluateWithDeadline(page, 'clear-import-and-drain', () => {
           const app = window.__godsEyeView;
@@ -699,8 +860,24 @@ function makeImportDriver(
           page,
           waitId,
         );
-        return { ...(await pageSnapshot(page)), renderedPopulation };
+        const result = { ...(await pageSnapshot(page)), renderedPopulation };
+        failureOperation.status = 'completed';
+        failureOperation.renderWaitStatus = 'completed';
+        failureOperation = null;
+        return result;
       } catch (error) {
+        failureOperation.status = /timed out|timeout|\b\d+ms exceeded\b/i.test(
+          String(error?.message || error),
+        )
+          ? 'timed-out'
+          : 'failed';
+        failureOperation.error = error;
+        await captureFailureObservation();
+        const waiter = lastFailureObservation?.frame?.renderWaiters?.find(
+          (item) => item.id === waitId,
+        );
+        failureOperation.renderWaitStatus =
+          waiter?.status || 'not-observed-before-cancel';
         await withProtocolDeadline(
           () =>
             page.evaluate(
@@ -722,6 +899,17 @@ function makeImportDriver(
     async close() {
       await closeOwnedPageAndContext(page, page.browserContext());
     },
+    async failureEvidence({ phase, error }) {
+      await captureFailureObservation();
+      return createLifecycleFailureEvidence({
+        caseId: 'cooperative-import',
+        phase,
+        error,
+        operation: failureOperation,
+        observation: lastFailureObservation,
+        observationError: failureObservationError,
+      });
+    },
     workerPreflight,
     applicationCommit,
   };
@@ -734,6 +922,9 @@ function makeWorkspaceDriver(
   applicationCommit,
   onPhase,
 ) {
+  let failureOperation = null;
+  let lastFailureObservation = null;
+  let failureObservationError = null;
   return {
     onPhase,
     async seed() {
@@ -769,6 +960,15 @@ function makeWorkspaceDriver(
         drainMs,
         true,
       );
+      failureOperation = {
+        name: 'open-workspace',
+        status: 'waiting-for-workspace-restore',
+        renderWaitId: waitId,
+        renderWaitStatus: 'pending',
+        workspaceId: id,
+      };
+      lastFailureObservation = null;
+      failureObservationError = null;
       try {
         await openWorkspace(page, id, { timeoutMs: drainMs });
         await page.waitForFunction(
@@ -791,18 +991,37 @@ function makeWorkspaceDriver(
           page,
           waitId,
         );
-        return { ...(await pageSnapshot(page)), renderedPopulation };
+        const result = { ...(await pageSnapshot(page)), renderedPopulation };
+        failureOperation = null;
+        return result;
       } catch (error) {
-        await withProtocolDeadline(
-          () =>
-            page.evaluate(
-              (id) => window.__qaLifecycleCancelRenderWait(id),
-              waitId,
-            ),
-          'cancel-render-wait-after-workspace-failure',
-          1000,
-        ).catch(() => {});
+        failureOperation.status = /timed out|timeout|\b\d+ms exceeded\b/i.test(
+          String(error?.message || error),
+        )
+          ? 'timed-out'
+          : 'failed';
+        failureOperation.error = error;
+        try {
+          lastFailureObservation = await readFailureObservation(page);
+        } catch (snapshotError) {
+          failureObservationError = snapshotError;
+        }
         throw error;
+      } finally {
+        if (failureOperation) {
+          const waitIdToCancel = failureOperation.renderWaitId;
+          failureOperation.renderWaitStatus =
+            'cancelled-after-operation-failure';
+          await withProtocolDeadline(
+            () =>
+              page.evaluate(
+                (id) => window.__qaLifecycleCancelRenderWait(id),
+                waitIdToCancel,
+              ),
+            'cancel-render-wait-after-workspace-failure',
+            1000,
+          ).catch(() => {});
+        }
       }
     },
     async workerCounters() {
@@ -814,6 +1033,26 @@ function makeWorkspaceDriver(
           return value ? { ...value, scope: 'cumulative-per-document' } : null;
         },
       );
+    },
+    async failureEvidence({ phase, error }) {
+      let observation = null;
+      if (lastFailureObservation) {
+        observation = lastFailureObservation;
+      } else if (!failureObservationError) {
+        try {
+          observation = await readFailureObservation(page);
+        } catch (snapshotError) {
+          failureObservationError = snapshotError;
+        }
+      }
+      return createLifecycleFailureEvidence({
+        caseId: 'workspace-replacement',
+        phase,
+        error,
+        operation: failureOperation,
+        observation,
+        observationError: failureObservationError,
+      });
     },
     async close() {
       await closeOwnedPageAndContext(page, page.browserContext());
@@ -1035,6 +1274,7 @@ export async function runImportWorkspaceLifecycle({
           status: 'failed',
           failedPhase: report.activeCase?.phase || report.phase,
           error: boundedText(error),
+          failureEvidence: error.lifecycleFailureEvidence || null,
           bootProgress: owned?.progress?.slice(0, 16) || [],
           disabledLayers: owned?.disabledLayers || [],
           allLayersDisabled: owned?.allLayersDisabled === true,
