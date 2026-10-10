@@ -54,6 +54,29 @@ not replace it. [Counts, log digests and scope](performance-evidence/local-s51-c
 record these working-tree diagnostics. The full suite overlapped edits, so these
 results do not certify an immutable candidate or establish GPU performance.
 
+Follow-up implementation by GPT-6 Luna: `b5b8c92a811f2da5cf53ea08969d4352b4d0eb4c`
+replaces deadline-test wall-clock sleeps with controlled timer advancement while
+retaining real Web/Node streams and backpressure. It verifies delivered bytes,
+renewal from the latest chunk, subsequent silent expiration, and awaited cleanup.
+No production deadline changed. The camera file passes all 22 tests; root's
+combined camera, render-demand and fixture checks pass 37/37. The separate
+`8ca3356a5881297fdaa7b94c536524973587d944` supplies the missing fallback-owner
+invalidation method and covers it with a regression. The new exact-commit
+[full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046733687)
+targets `b5b8c92`; its result is pending and does not replace the failed local run.
+
+The isolated S51 mission comparison is implemented in
+`93bebfc3da5ff4c015ac1578036bf73f4dd47b85` with workflow integration at
+`2e1245e6eab0e504bfbad922807aca5693e8c33d`. It exercises the real mission layer
+and governor in a minimal Cesium viewer, compares five alternating-order pairs
+for empty, unselected-orbit and selected-live scenarios, and retains bounded
+fresh-frame pixels, frame counts, source timestamp mappings and cleanup evidence.
+Application/harness revisions and the Vite development-fixture recipe are explicit.
+Full application UI/world-overlay rendering and physical desktop foreground checks
+are outside this fixture. Nine fixture/runner checks pass. The
+[frozen native hosted comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38046523488)
+tests `2e1245e` and remains pending; the runtime pilot is not yet accepted.
+
 ## Completion execution plan - 9 October 2026
 
 This section is the forward work order. The ledger above reports delivered work;
