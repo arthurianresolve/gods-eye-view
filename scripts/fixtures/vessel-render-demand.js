@@ -467,6 +467,7 @@ async function runTrial(mode, pair) {
     phases: [],
     startedAtMonotonic: performance.now(),
     focusPasses: [],
+    focusGeometry: null,
     visibilityPasses: [],
     scheduledUpdates: updates,
     cleanup: {
@@ -494,12 +495,24 @@ async function runTrial(mode, pair) {
 
     run.phases.push(await measurePhase(run, 'idleBefore', 3000));
     report.phase = phaseName = `${mode}-focus-active`;
-    const focusPosition = Cesium.Cartesian3.fromDegrees(
-      FIXTURE_ROWS[0].lon,
-      FIXTURE_ROWS[0].lat,
-      10_000,
+    const collection = vesselCollection();
+    let focusBillboard = null;
+    for (let index = 0; collection && index < collection.length; index++) {
+      const candidate = collection.get(index);
+      if (candidate.show && candidate.position) {
+        focusBillboard = candidate;
+        break;
+      }
+    }
+    if (!focusBillboard)
+      throw new Error('No visible vessel is available as a focus-ray target');
+    const focusPosition = Cesium.Cartesian3.lerp(
+      viewer.camera.positionWC,
+      focusBillboard.position,
+      0.5,
+      new Cesium.Cartesian3(),
     );
-    focus.publishFocusTargetFromCachedPosition({
+    const focusTarget = focus.publishFocusTargetFromCachedPosition({
       ownerLayer: 'vessel-render-demand-fixture',
       id: 'fixture-focus',
       scene: viewer.scene,
@@ -508,6 +521,91 @@ async function runTrial(mode, pair) {
       widthPx: 46,
       heightPx: 46,
     });
+    if (!focusTarget)
+      throw new Error('Synthetic focus target could not be projected');
+    const targetParams = focus.getFocusDeemphasisParams();
+    const fartherThresholdM =
+      focusTarget.cameraDistance * (1 + targetParams.distanceHysteresisRatio);
+    let minimumVisibleVesselDistanceM = Number.POSITIVE_INFINITY;
+    let distanceEligibleVesselCount = 0;
+    let overlappingVesselCount = 0;
+    let focusCompetingVesselCount = 0;
+    for (let index = 0; collection && index < collection.length; index++) {
+      const billboard = collection.get(index);
+      if (!billboard.show || !billboard.position) continue;
+      const distanceM = Cesium.Cartesian3.distance(
+        viewer.camera.positionWC,
+        billboard.position,
+      );
+      minimumVisibleVesselDistanceM = Math.min(
+        minimumVisibleVesselDistanceM,
+        distanceM,
+      );
+      const farther = distanceM >= fartherThresholdM;
+      if (farther) distanceEligibleVesselCount++;
+      const screen = Cesium.SceneTransforms.worldToWindowCoordinates(
+        viewer.scene,
+        billboard.position,
+      );
+      if (!screen) continue;
+      const halfWidth = ((billboard.width || 32) * (billboard.scale || 1)) / 2;
+      const halfHeight =
+        ((billboard.height || 32) * (billboard.scale || 1)) / 2;
+      const overlaps =
+        focus.focusTargetEmphasis(
+          screen,
+          Number.POSITIVE_INFINITY,
+          focusTarget,
+          undefined,
+          false,
+          halfWidth,
+          halfHeight,
+        ) < 1;
+      if (overlaps) overlappingVesselCount++;
+      if (
+        focus.focusTargetEmphasis(
+          screen,
+          distanceM,
+          focusTarget,
+          undefined,
+          false,
+          halfWidth,
+          halfHeight,
+        ) < 1
+      )
+        focusCompetingVesselCount++;
+    }
+    run.focusGeometry = {
+      sourceVesselId: String(
+        focusBillboard.id?.mmsi ?? focusBillboard.id,
+      ).slice(0, 80),
+      cameraRayFraction: 0.5,
+      cameraWorldPosition: [
+        viewer.camera.positionWC.x,
+        viewer.camera.positionWC.y,
+        viewer.camera.positionWC.z,
+      ],
+      targetWorldPosition: [focusPosition.x, focusPosition.y, focusPosition.z],
+      targetBillboardWorldPosition: [
+        focusBillboard.position.x,
+        focusBillboard.position.y,
+        focusBillboard.position.z,
+      ],
+      targetCameraDistanceM: focusTarget.cameraDistance,
+      fartherThresholdM,
+      minimumVisibleVesselDistanceM: Number.isFinite(
+        minimumVisibleVesselDistanceM,
+      )
+        ? minimumVisibleVesselDistanceM
+        : null,
+      distanceEligibleVesselCount,
+      overlappingVesselCount,
+      focusCompetingVesselCount,
+    };
+    if (focusCompetingVesselCount === 0)
+      throw new Error(
+        'Synthetic focus target has no visible vessel inside its production distance and screen-overlap bounds',
+      );
     run.phases.push(await measurePhase(run, 'focusActive', 800));
 
     report.phase = phaseName = `${mode}-focus-release`;

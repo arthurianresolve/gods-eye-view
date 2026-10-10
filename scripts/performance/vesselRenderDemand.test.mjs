@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as Cesium from 'cesium';
 import {
   FOCUS_UPDATE_MS,
   VISIBILITY_UPDATE_MS,
 } from '../../src/layers/vessels/policy.js';
+import {
+  focusTargetEmphasis,
+  getFocusDeemphasisParams,
+} from '../../src/data/focusDeemphasis.js';
 import {
   compareVesselRenderDemandRuns,
   validateVesselRenderDemandReport,
@@ -18,6 +23,74 @@ const phasePlan = [
   ['focusRelease', 1000, 45, 10, 3800],
   ['idleAfter', 2000, 35, 5, 4800],
 ];
+
+test('AIS fixture focus ray clears production distance hysteresis', () => {
+  const cameraPosition = Cesium.Cartesian3.fromDegrees(-122.3, 37.8, 1_300_000);
+  const sourcePosition = Cesium.Cartesian3.fromDegrees(-122.3, 37.7725, 3);
+  const params = getFocusDeemphasisParams();
+  const screenRect = { left: 0, top: 0, right: 100, bottom: 100 };
+  const ambientDistance = Cesium.Cartesian3.distance(
+    cameraPosition,
+    sourcePosition,
+  );
+  const previousTargetPosition = Cesium.Cartesian3.fromDegrees(
+    -122.3,
+    37.7725,
+    10_000,
+  );
+  const previousTarget = {
+    cameraDistance: Cesium.Cartesian3.distance(
+      cameraPosition,
+      previousTargetPosition,
+    ),
+    paddingPx: params.paddingPx,
+    screenRect,
+  };
+  const fixtureTargetPosition = Cesium.Cartesian3.lerp(
+    cameraPosition,
+    sourcePosition,
+    0.5,
+    new Cesium.Cartesian3(),
+  );
+  const fixtureTarget = {
+    cameraDistance: Cesium.Cartesian3.distance(
+      cameraPosition,
+      fixtureTargetPosition,
+    ),
+    paddingPx: params.paddingPx,
+    screenRect,
+  };
+
+  assert.ok(
+    ambientDistance <
+      previousTarget.cameraDistance * (1 + params.distanceHysteresisRatio),
+    'the former target is inside the production farther-distance band',
+  );
+  assert.ok(
+    ambientDistance >=
+      fixtureTarget.cameraDistance * (1 + params.distanceHysteresisRatio),
+    'the fixture target must clear the production farther-distance band',
+  );
+  assert.equal(
+    focusTargetEmphasis(
+      { x: 50, y: 50 },
+      ambientDistance,
+      previousTarget,
+      params,
+    ),
+    1,
+    'the old target does not actually trigger the production dimming path',
+  );
+  assert.equal(
+    focusTargetEmphasis(
+      { x: 50, y: 50 },
+      ambientDistance,
+      fixtureTarget,
+      params,
+    ),
+    params.dimFloor,
+  );
+});
 
 function run(mode, frameFactor = 1) {
   const candidate = mode === 'candidate';
@@ -42,7 +115,7 @@ function run(mode, frameFactor = 1) {
       alphaOverflow: false,
       visibleVesselCount: 32,
       minAlpha: name === 'focusActive' ? 120 : 255,
-      endMinAlpha: 255,
+      endMinAlpha: name === 'focusActive' ? 64 : 255,
       endDimmedVesselCount: name === 'focusActive' ? 1 : 0,
       requestRenderModeAtEnd: candidate,
       nonBackgroundPixels,
@@ -266,6 +339,31 @@ test('vessel phase evidence requires focused dimming, restored alpha, visible ou
       }),
     /timing/,
   );
+});
+
+test('vessel report rejects missing contacts and contradictory focus endpoints', () => {
+  for (const mode of ['control', 'candidate']) {
+    const control = run('control');
+    const candidate = run('candidate', 0.2);
+    const changed = mode === 'control' ? control : candidate;
+    changed.phases[0].visibleVesselCount = 31;
+    assert.throws(
+      () =>
+        compareVesselRenderDemandRuns(control, candidate, {
+          expectedCommit: commit,
+        }),
+      /visible population changed/,
+    );
+    changed.phases[0].visibleVesselCount = 32;
+    changed.phases[1].endMinAlpha = 255;
+    assert.throws(
+      () =>
+        compareVesselRenderDemandRuns(control, candidate, {
+          expectedCommit: commit,
+        }),
+      /did not remain dimmed/,
+    );
+  }
 });
 
 test('candidate cadence uses observed production passes and permits setup/interleaved wakes', () => {

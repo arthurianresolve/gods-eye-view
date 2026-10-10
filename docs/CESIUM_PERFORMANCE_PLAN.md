@@ -69,9 +69,35 @@ Root's broader vessel, analyst, evidence, source, label, focus and governor suit
 passes 136 tests; the runner's cleanup/interception suite passes 19 tests.
 Four fixture-contract tests pass, including a settled release tail returning to
 the normal visibility cadence. Formatting passes for 1,485 adopted files, and
-package boundaries and syntax checks pass. Rendered comparison and full integration
-are pending at the frozen candidate; this is not yet an accepted optimization or
-a performance claim.
+package boundaries and syntax checks pass. This is not yet an accepted
+optimization or a performance claim.
+
+The first rendered comparison at exact app/harness
+`fdf0bbd33c16a4a8f891157383b3a12d36adf8e9` fails
+([run 38074635334](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38074635334),
+[raw report](performance-evidence/vessels-38074635334.json),
+[job result](performance-evidence/vessels-38074635334-run.json)). Both modes keep
+all 32 billboards at alpha 255 during the required focus phase; the five-pair
+comparison stops after its first pair. Although that pair reports 72 versus 3
+frames before focus and 52 versus 2 afterward, the missing focus/release exercise
+prevents acceptance. Capture preflight (12 checks), import preflight (10 samples),
+zero page/interception errors and zero external requests are recorded separately.
+Both constructed viewers are destroyed; the overall ten-viewer completion flags
+remain false because the comparison stopped early. Normal browser close takes
+548 ms. The renderer is hosted Apple paravirtual Metal/Chrome 152, not physical
+Windows coverage. The failed raw report is preserved without changing dimming
+gates or frame deadlines. Raw SHA-256:
+`0b8b45fa47cf8437872e97a254840571b343c667dbed41ee7b9ce77c34b17720`.
+Full integration remains in progress at this revision.
+
+The fixture correction places the synthetic target halfway along the camera ray
+to a visible vessel. The former 10 km height difference was inside the default
+8% camera-distance hysteresis band, so production correctly kept it undimmed.
+The corrected preflight records actual positions, distances and competing counts
+from the production focus helper. No focus tuning, phase duration or capture
+deadline changes. Report validation also rejects missing contacts and contradictory
+focus endpoints. Six focused tests pass, including the old geometry negative
+control; a fresh rendered comparison is required.
 
 ### Windows frame controls after Chrome reconnection - 10 October 2026
 

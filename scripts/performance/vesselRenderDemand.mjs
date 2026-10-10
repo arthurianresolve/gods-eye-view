@@ -51,8 +51,11 @@ function validatePhase(phase, plan, population, mode) {
     throw new Error(
       `Invalid vessel phase timing or rendered-frame evidence: ${plan.name}`,
     );
-  if (!validCount(phase.visibleVesselCount) || phase.visibleVesselCount < 1)
-    throw new Error(`No visible vessel data in phase: ${plan.name}`);
+  if (
+    !validCount(phase.visibleVesselCount) ||
+    phase.visibleVesselCount !== population
+  )
+    throw new Error(`Vessel visible population changed in phase: ${plan.name}`);
   if (
     !validDigest(phase.rgbaSha256) ||
     !validCount(phase.nonBackgroundPixels) ||
@@ -77,7 +80,10 @@ function validatePhase(phase, plan, population, mode) {
     phase.endDimmedVesselCount > population
   )
     throw new Error(`Invalid dimmed vessel count: ${plan.name}`);
-  if (plan.name === 'focusActive' && phase.endDimmedVesselCount < 1)
+  if (
+    plan.name === 'focusActive' &&
+    (phase.endDimmedVesselCount < 1 || phase.endMinAlpha >= 245)
+  )
     throw new Error(
       'Focused vessels did not remain dimmed at the phase endpoint',
     );
