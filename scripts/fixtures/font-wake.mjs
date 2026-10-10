@@ -36,9 +36,19 @@ function appCommit() {
 function installRenderCounter(scene) {
   const descriptor = Object.getOwnPropertyDescriptor(scene, 'requestRender');
   const original = scene.requestRender;
-  const counter = { calls: 0 };
+  const counter = { calls: 0, trace: [] };
   scene.requestRender = function countedRequestRender(...args) {
     counter.calls++;
+    if (counter.trace.length < 64)
+      counter.trace.push({
+        atMs: performance.now(),
+        callers: new Error().stack
+          .split('\n')
+          .slice(2, 6)
+          .map((line) =>
+            line.replace(/http:\/\/127\.0\.0\.1:\d+/g, '<fixture>'),
+          ),
+      });
     return original.apply(this, args);
   };
   return {
@@ -127,8 +137,8 @@ function waitForPostRender(viewer, predicate, timeoutMs = 3000) {
 function waitForQuietScene(
   viewer,
   readFrameCount,
-  quietMs = 250,
-  timeoutMs = 4000,
+  quietMs = 1000,
+  timeoutMs = 8000,
 ) {
   return new Promise((resolve) => {
     const startedAt = performance.now();
@@ -375,6 +385,7 @@ async function runDiagnostic() {
       frameCount: frames - idleFrameStart,
       requestRenderCalls: renderCounter.counter.calls - idleRequestStart,
       framesAtStart: idleFrameStart,
+      requestTrace: renderCounter.counter.trace.slice(idleRequestStart),
       requestRenderMode: viewer.scene.requestRenderMode,
     };
     window.__s52FontWakeResult = report;
@@ -608,6 +619,9 @@ async function runDiagnostic() {
       report.status = 'failed';
     }
     report.finishedAt = new Date().toISOString();
+    report.requestTrace = renderCounter?.counter.trace || [];
+    report.replacementRequestTrace =
+      replacementRenderCounter?.counter.trace || [];
     report.environment.finalVisibilityState = document.visibilityState;
     report.environment.backgrounded = backgrounded;
     report.environment.viewportChanged = viewportChanged;

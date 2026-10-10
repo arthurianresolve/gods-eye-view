@@ -88,6 +88,16 @@ The [report](performance-evidence/s52-font-wake/report.json),
 These are Node tests with a mocked host. Native font-load/render validation is
 pending; they establish neither browser acceptance nor a performance improvement.
 
+The [first native attempt](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095416446)
+failed before loading the font: after a 250 ms quiet period the baseline still
+requested and delivered one frame during the required 800 ms idle control.
+The [raw report](performance-evidence/s52-font-wake/native-startup-failure.json)
+preserves the failure and successful cleanup. The fixture now requires a full
+second of continuous quiescence within a bounded startup period before beginning
+the unchanged zero-frame 800 ms control. Bounded request call traces record
+unexpected wakes. This changes fixture settling only, with both application
+commits fixed; it does not claim to identify the earlier startup wake's cause.
+
 ### S52 projection reuse: local CPU diagnostic - 11 October 2026
 
 The [complete Windows CPU report](performance-evidence/s52-33d9856/cpu-windows.json)
