@@ -114,6 +114,8 @@ export async function stageRelease({
       'DATA_SOURCES.md',
       'docs/UPDATE-RECOVERY.md',
       'scripts/verify-release.mjs',
+      'scripts/apply-cesium-patches.mjs',
+      'patches/cesium-1.138.0-inertia.json',
     ].map((relative) => ({
       absolute: path.join(source, relative),
       relative,

@@ -271,6 +271,24 @@ to the camera. The next fix must reject that history while preserving inertia
 from ordinary manual gestures. This engine-only reproduction explains the
 missed lifecycle path; rendered acceptance still requires a new comparison.
 
+The next candidate applies a narrowly scoped, hash-guarded dependency patch to
+the locked Cesium version. A disabled input update cancels the affected inertia
+state; a fresh enabled gesture restores it through Cesium's existing path. The
+same insertion covers engine source and all four distributed browser/CommonJS
+bundles. Installation, development, test and build hooks apply the patch; release
+staging includes its applier and manifest. See
+[patch scope and removal guidance](CESIUM_DEPENDENCY_PATCHES.md).
+
+Thirty-four focused checks pass, including the real controller regression across
+all five distributions, exact stock/candidate camera-pose comparisons for manual
+rotate/zoom/tilt and action transitions, subsequent navigation after unlocking,
+installer guards and release recovery. The original reproduction now leaves the
+camera unchanged through all eight enabled updates. Package boundaries and a
+production build pass; the built browser bundle's hash matches the patched
+distribution. These are implementation and automated checks only. A fresh
+rendered calibration comparison and exact-commit integration run are still
+required before accepting the candidate.
+
 ### S51.3 vessel render-demand candidate - 10 October 2026
 
 The vessel layer can use the governor's owned scheduler instead of holding

@@ -15,10 +15,15 @@ async function fixture(t) {
   await mkdir(path.join(root, 'dist'));
   await mkdir(path.join(root, 'docs'));
   await mkdir(path.join(root, 'scripts'));
+  await mkdir(path.join(root, 'patches'));
   await writeFile(path.join(root, 'dist', 'index.html'), '<main>app</main>');
   await writeFile(
     path.join(root, 'package.json'),
-    JSON.stringify({ version: '1.2.3', engines: { node: '>=24' } }),
+    JSON.stringify({
+      version: '1.2.3',
+      engines: { node: '>=24' },
+      scripts: { postinstall: 'node scripts/apply-cesium-patches.mjs' },
+    }),
   );
   await writeFile(path.join(root, 'package-lock.json'), '{}');
   for (const file of ['README.md', 'CHANGELOG.md', 'DATA_SOURCES.md'])
@@ -27,6 +32,14 @@ async function fixture(t) {
   await writeFile(
     path.join(root, 'scripts', 'verify-release.mjs'),
     '/* verifier */',
+  );
+  await writeFile(
+    path.join(root, 'scripts', 'apply-cesium-patches.mjs'),
+    '/* dependency patch applier */',
+  );
+  await writeFile(
+    path.join(root, 'patches', 'cesium-1.138.0-inertia.json'),
+    '{"fixture":true}',
   );
   return root;
 }
@@ -49,12 +62,38 @@ test('release staging creates a verified versioned manifest and refuses replacem
   assert.equal(
     (await verifyReleaseDirectory(path.join(root, 'staging'))).artifactFiles
       .length,
-    8,
+    10,
   );
   await assert.rejects(
     stageRelease({ root, out: 'staging' }),
     /already exists/,
   );
+});
+
+test('release retains and checksums the dependency postinstall support files', async (t) => {
+  const root = await fixture(t);
+  const manifest = await stageRelease({ root, out: 'staging' });
+  const staged = path.join(root, 'staging');
+  const pkg = JSON.parse(await readFile(path.join(staged, 'package.json')));
+  assert.equal(
+    pkg.scripts.postinstall,
+    'node scripts/apply-cesium-patches.mjs',
+  );
+  for (const file of [
+    'scripts/apply-cesium-patches.mjs',
+    'patches/cesium-1.138.0-inertia.json',
+  ]) {
+    assert.deepEqual(
+      await readFile(path.join(staged, file)),
+      await readFile(path.join(root, file)),
+    );
+    assert.ok(manifest.artifactFiles.some((entry) => entry.path === file));
+  }
+  await writeFile(
+    path.join(staged, 'patches', 'cesium-1.138.0-inertia.json'),
+    '{}',
+  );
+  await assert.rejects(verifyReleaseDirectory(staged), /checksum mismatch/);
 });
 
 test('stable staging requires the exact version tag in CI, independently of the host workflow', async (t) => {

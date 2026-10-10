@@ -1152,5 +1152,9 @@
   "src/workspaces/document.js",
   "src/workspaces/index.js",
   "src/workspaces/restore.js",
-  "src/sources/tle.test.mjs"
+  "src/sources/tle.test.mjs",
+  "scripts/apply-cesium-patches.mjs",
+  "scripts/apply-cesium-patches.test.mjs",
+  "patches/cesium-1.138.0-inertia.json",
+  "scripts/performance/cesiumDisabledInputInertia.test.mjs"
 ]
