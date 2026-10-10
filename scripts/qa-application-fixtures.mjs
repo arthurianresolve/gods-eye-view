@@ -164,6 +164,224 @@ export function readFixturePageDiagnostics(page) {
     : { errors: [], messages: [] };
 }
 
+/** Bounded, URL-free state for a named workspace/import wait failure. */
+export function collectWorkspaceImportDiagnostics(input) {
+  const scope = globalThis;
+  const phase = typeof input === 'string' ? input : input?.phase;
+  const targetWorkspaceId =
+    typeof input === 'object' && input ? input.targetWorkspaceId : undefined;
+  const app = scope.__godsEyeView;
+  const safeCall = (read) => {
+    try {
+      return read() ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const root = scope.document.querySelector('.workspace-library');
+  const selectedId = root?.querySelector('[data-workspace-select]')?.value;
+  const options = root?.querySelectorAll('[data-workspace-select] option');
+  const restore = safeCall(() =>
+    app?.workspaceLibraryPanel?.restore?.getState(),
+  );
+  const text = (selector, limit = 240) => {
+    const value = root?.querySelector(selector)?.textContent;
+    return typeof value === 'string'
+      ? value.replace(/https?:\/\/[^\s"'<>]+/g, '[url]').slice(0, limit)
+      : null;
+  };
+  const workers = safeCall(() => scope.__gevSoakWorkers?.snapshot());
+  const layers = safeCall(() => [
+    ...(app?.dataManager?.layers?.entries?.() || []),
+  ]);
+  const importLayer = safeCall(() => app?.importedGeometryLayer?.getState());
+  return {
+    phase: String(phase).slice(0, 80),
+    document: {
+      readyState: scope.document.readyState,
+      visibility: scope.document.visibilityState,
+      focused: safeCall(() => scope.document.hasFocus()),
+    },
+    workspace: {
+      status: text('[data-status]'),
+      expectedWorkspaceId: /^[A-Za-z0-9_-]{1,100}$/.test(
+        targetWorkspaceId || '',
+      )
+        ? targetWorkspaceId
+        : null,
+      selectedId: /^[A-Za-z0-9_-]{1,100}$/.test(selectedId || '')
+        ? selectedId
+        : null,
+      optionCount: Math.min(256, options?.length ?? 0),
+      requestedOptionPresent:
+        targetWorkspaceId == null || !options
+          ? null
+          : [...options].some((option) => option.value === targetWorkspaceId),
+      importSummary: text('[data-import-summary]'),
+      importStatus: text('[data-import-status]'),
+      importButtonDisabled:
+        root?.querySelector('[data-action="apply-import"]')?.disabled ?? null,
+      restore: restore
+        ? {
+            status: String(restore.status || '').slice(0, 32),
+            workspaceId: /^[A-Za-z0-9_-]{1,100}$/.test(
+              restore.workspaceId || '',
+            )
+              ? restore.workspaceId
+              : null,
+          }
+        : null,
+    },
+    importLayer: importLayer
+      ? {
+          featureCount: Number.isSafeInteger(importLayer.featureCount)
+            ? importLayer.featureCount
+            : null,
+          pendingJobs: Number.isSafeInteger(importLayer.pendingJobs)
+            ? importLayer.pendingJobs
+            : null,
+          destroyed:
+            typeof importLayer.destroyed === 'boolean'
+              ? importLayer.destroyed
+              : null,
+        }
+      : null,
+    workers: workers
+      ? {
+          instrumented: Boolean(workers.instrumented),
+          overflow: Boolean(workers.overflow),
+          workerCountObserved: Array.isArray(workers.workers)
+            ? workers.workers.length
+            : null,
+          workersTruncated:
+            Array.isArray(workers.workers) && workers.workers.length > 32,
+          pending: Number.isSafeInteger(workers.pending)
+            ? workers.pending
+            : null,
+          workers: (Array.isArray(workers.workers) ? workers.workers : [])
+            .slice(0, 32)
+            .map((worker) => ({
+              kind: String(worker.kind || 'unknown').slice(0, 40),
+              pending: Number.isSafeInteger(worker.pending)
+                ? worker.pending
+                : null,
+              oldestPendingMs: Number.isFinite(worker.oldestPendingMs)
+                ? worker.oldestPendingMs
+                : null,
+              submitted: Number.isSafeInteger(worker.submitted)
+                ? worker.submitted
+                : null,
+              completed: Number.isSafeInteger(worker.completed)
+                ? worker.completed
+                : null,
+              cancelled: Number.isSafeInteger(worker.cancelled)
+                ? worker.cancelled
+                : null,
+              taskErrors: Number.isSafeInteger(worker.taskErrors)
+                ? worker.taskErrors
+                : null,
+              workerErrors: Number.isSafeInteger(worker.workerErrors)
+                ? worker.workerErrors
+                : null,
+              postErrors: Number.isSafeInteger(worker.postErrors)
+                ? worker.postErrors
+                : null,
+            })),
+        }
+      : null,
+    layerCountObserved: Array.isArray(layers) ? layers.length : null,
+    layersTruncated: Array.isArray(layers) && layers.length > 32,
+    layers: (Array.isArray(layers) ? layers : [])
+      .slice(0, 32)
+      .map(([id, entry]) => ({
+        id: String(id).slice(0, 80),
+        enabled: Boolean(entry.enabled),
+        lifecycleState: String(entry.lifecycleState || '').slice(0, 40),
+        uncertain: Boolean(entry.lifecycleUncertain),
+        intentEpoch: Number.isSafeInteger(entry.visibilityIntentEpoch)
+          ? entry.visibilityIntentEpoch
+          : null,
+        intentEnabled:
+          typeof entry.visibilityIntentEnabled === 'boolean'
+            ? entry.visibilityIntentEnabled
+            : null,
+        queuedIntent: entry.latestQueuedAbsoluteIntent
+          ? {
+              enabled: Boolean(entry.latestQueuedAbsoluteIntent.enabled),
+              epoch: Number.isSafeInteger(
+                entry.latestQueuedAbsoluteIntent.epoch,
+              )
+                ? entry.latestQueuedAbsoluteIntent.epoch
+                : null,
+            }
+          : null,
+      })),
+    viewer: {
+      entities: app?.viewer?.entities?.values?.length ?? null,
+      dataSources: app?.viewer?.dataSources?.length ?? null,
+      primitives: app?.viewer?.scene?.primitives?.length ?? null,
+      groundPrimitives: app?.viewer?.scene?.groundPrimitives?.length ?? null,
+      frameNumber: app?.viewer?.scene?.frameState?.frameNumber ?? null,
+      renderRequested: app?.viewer?.scene?._renderRequested ?? null,
+    },
+  };
+}
+
+/** Add phase context without replacing the original browser-operation error. */
+export async function runWorkspaceFixturePhase(
+  page,
+  phase,
+  operation,
+  {
+    onProgress = () => {},
+    diagnosticContext = null,
+    diagnosticTimeoutMs = 1500,
+  } = {},
+) {
+  onProgress(phase + ':start');
+  try {
+    const result = await operation();
+    onProgress(phase + ':complete');
+    return result;
+  } catch (error) {
+    onProgress(phase + ':failed');
+    let diagnostic = null;
+    let timer;
+    try {
+      diagnostic = await Promise.race([
+        page.evaluate(collectWorkspaceImportDiagnostics, {
+          phase,
+          ...(diagnosticContext || {}),
+        }),
+        new Promise((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error('diagnostic deadline exceeded')),
+            diagnosticTimeoutMs,
+          );
+        }),
+      ]);
+    } catch (diagnosticError) {
+      diagnostic = {
+        phase,
+        unavailable: true,
+        reason:
+          diagnosticError?.message === 'diagnostic deadline exceeded'
+            ? 'deadline-exceeded'
+            : 'evaluation-failed',
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+    const detail = JSON.stringify({
+      phase,
+      page: readFixturePageDiagnostics(page),
+      state: diagnostic,
+    }).slice(0, 8000);
+    error.message = `${error.message}; workspace/import phase ${phase}; diagnostics: ${detail}`;
+    throw error;
+  }
+}
+
 export async function bootFixturePage(
   page,
   base,
@@ -245,102 +463,140 @@ export const clickControl = (page, selector) =>
     element.click();
   }, selector);
 
-export async function openWorkspace(page, id, { timeoutMs = 30_000 } = {}) {
-  await page.waitForFunction(
-    (key) =>
-      [
-        ...document.querySelectorAll(
-          '.workspace-library [data-workspace-select] option',
-        ),
-      ].some((option) => option.value === key),
-    { timeout: timeoutMs, polling: 50 },
-    id,
+export async function openWorkspace(
+  page,
+  id,
+  { timeoutMs = 30_000, onProgress = () => {} } = {},
+) {
+  await runWorkspaceFixturePhase(
+    page,
+    'workspace-option-wait',
+    () =>
+      page.waitForFunction(
+        (key) =>
+          [
+            ...document.querySelectorAll(
+              '.workspace-library [data-workspace-select] option',
+            ),
+          ].some((option) => option.value === key),
+        { timeout: timeoutMs, polling: 50 },
+        id,
+      ),
+    {
+      onProgress,
+      diagnosticContext: { targetWorkspaceId: id },
+    },
   );
-  await page.select('.workspace-library [data-workspace-select]', id);
-  try {
-    // Puppeteer serializes the supplied function into the page. Passing the
-    // imported function directly keeps its browser-side `window` default in
-    // scope; a wrapper cannot close over this module binding.
-    await page.evaluate(clickAndWaitForWorkspaceOpen, undefined, timeoutMs);
-  } catch (error) {
-    const diagnostics = await page.evaluate(() => {
-      const app = window.__godsEyeView;
-      const layers = [...(app?.dataManager?.layers?.entries?.() || [])].map(
-        ([id, entry]) => ({
-          id,
-          enabled: entry.enabled,
-          lifecycleState: entry.lifecycleState,
-          uncertain: entry.lifecycleUncertain,
-          intentEpoch: entry.visibilityIntentEpoch,
-          intentEnabled: entry.visibilityIntentEnabled,
-          queuedIntent: entry.latestQueuedAbsoluteIntent || null,
-        }),
-      );
-      return {
-        status: document.querySelector('.workspace-library [data-status]')
-          ?.textContent,
-        restore: app?.workspaceLibraryPanel?.restore.getState(),
-        workers: window.__gevSoakWorkers?.snapshot() || null,
-        viewer: {
-          entities: app?.viewer?.entities?.values?.length ?? null,
-          dataSources: app?.viewer?.dataSources?.length ?? null,
-          primitives: app?.viewer?.scene?.primitives?.length ?? null,
-          groundPrimitives:
-            app?.viewer?.scene?.groundPrimitives?.length ?? null,
-        },
-        performance: app?.getPerformanceSnapshot?.() || null,
-        layers,
-      };
-    });
-    error.message += `; workspace diagnostics: ${JSON.stringify(diagnostics)}`;
-    throw error;
-  }
+  await runWorkspaceFixturePhase(
+    page,
+    'workspace-option-select',
+    () => page.select('.workspace-library [data-workspace-select]', id),
+    { onProgress },
+  );
+  // Puppeteer serializes the supplied function into the page. Passing the
+  // imported function directly keeps its browser-side `window` default in
+  // scope; a wrapper cannot close over this module binding.
+  await runWorkspaceFixturePhase(
+    page,
+    'workspace-restore',
+    () => page.evaluate(clickAndWaitForWorkspaceOpen, undefined, timeoutMs),
+    { onProgress },
+  );
 }
 
-export async function importFixtureGeometry(page, name = 'Persistent fixture') {
-  await page.waitForSelector('.workspace-library [data-geo-file]', {
-    visible: true,
-  });
-  await page.evaluate((label) => {
-    const input = document.querySelector('.workspace-library [data-geo-file]');
-    if (!input) throw new Error('Import file control is unavailable');
-    input.value = '';
-    const file = new File(
-      [
-        JSON.stringify({
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              id: 'fixture-point',
-              properties: { name: label },
-              geometry: { type: 'Point', coordinates: [-73.9, 40.7] },
-            },
-          ],
-        }),
-      ],
-      `fixture-${Date.now()}.geojson`,
-      { type: 'application/geo+json' },
-    );
-    const transfer = new DataTransfer();
-    transfer.items.add(file);
-    input.files = transfer.files;
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-  }, name);
-  await page.waitForFunction(() =>
-    document
-      .querySelector('.workspace-library [data-import-summary]')
-      ?.textContent.includes('1 accepted'),
-  );
-  await clickControl(page, '.workspace-library [data-action="apply-import"]');
-  await page.waitForFunction(() =>
-    document
-      .querySelector('.workspace-library [data-import-status]')
-      ?.textContent.includes('Imported 1 features'),
-  );
-  await page.waitForFunction(
+export async function importFixtureGeometry(
+  page,
+  name = 'Persistent fixture',
+  { timeoutMs = 30_000, onProgress = () => {} } = {},
+) {
+  const phaseOptions = { onProgress };
+  await runWorkspaceFixturePhase(
+    page,
+    'import-control-wait',
     () =>
-      window.__godsEyeView.importedGeometryLayer.getState().featureCount >= 1,
+      page.waitForSelector('.workspace-library [data-geo-file]', {
+        visible: true,
+        timeout: timeoutMs,
+      }),
+    phaseOptions,
+  );
+  await runWorkspaceFixturePhase(
+    page,
+    'import-file-stage',
+    () =>
+      page.evaluate((label) => {
+        const input = document.querySelector(
+          '.workspace-library [data-geo-file]',
+        );
+        if (!input) throw new Error('Import file control is unavailable');
+        input.value = '';
+        const file = new File(
+          [
+            JSON.stringify({
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  id: 'fixture-point',
+                  properties: { name: label },
+                  geometry: { type: 'Point', coordinates: [-73.9, 40.7] },
+                },
+              ],
+            }),
+          ],
+          `fixture-${Date.now()}.geojson`,
+          { type: 'application/geo+json' },
+        );
+        const transfer = new DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }, name),
+    phaseOptions,
+  );
+  await runWorkspaceFixturePhase(
+    page,
+    'import-preview-wait',
+    () =>
+      page.waitForFunction(
+        () =>
+          document
+            .querySelector('.workspace-library [data-import-summary]')
+            ?.textContent.includes('1 accepted'),
+        { timeout: timeoutMs },
+      ),
+    phaseOptions,
+  );
+  await runWorkspaceFixturePhase(
+    page,
+    'import-apply-click',
+    () => clickControl(page, '.workspace-library [data-action="apply-import"]'),
+    phaseOptions,
+  );
+  await runWorkspaceFixturePhase(
+    page,
+    'import-apply-status-wait',
+    () =>
+      page.waitForFunction(
+        () =>
+          document
+            .querySelector('.workspace-library [data-import-status]')
+            ?.textContent.includes('Imported 1 features'),
+        { timeout: timeoutMs },
+      ),
+    phaseOptions,
+  );
+  await runWorkspaceFixturePhase(
+    page,
+    'import-layer-state-wait',
+    () =>
+      page.waitForFunction(
+        () =>
+          window.__godsEyeView.importedGeometryLayer.getState().featureCount >=
+          1,
+        { timeout: timeoutMs },
+      ),
+    phaseOptions,
   );
 }
 

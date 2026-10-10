@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import test from 'node:test';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { probeWorkerCompletion } from './performance/workerProbe.mjs';
-import { bootFixturePage } from './qa-application-fixtures.mjs';
+import {
+  bootFixturePage,
+  collectWorkspaceImportDiagnostics,
+  runWorkspaceFixturePhase,
+} from './qa-application-fixtures.mjs';
 import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs';
 import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
@@ -22,6 +27,178 @@ const metrics = (heap = 100, listeners = 20, pendingJobs = 0) => ({
     workers: { instrumented: true, overflow: false, pending: 0, workers: [] },
     resources: { primitives: 3, ownerResources: { fixture: { pendingJobs } } },
   },
+});
+
+test('workspace/import phase diagnostics serialize and omit URLs and payloads', () => {
+  const scope = {
+    __godsEyeView: {
+      importedGeometryLayer: {
+        getState: () => ({ featureCount: 1, pendingJobs: 0 }),
+      },
+      workspaceLibraryPanel: {
+        restore: {
+          getState: () => ({ status: 'applied', workspaceId: 'ws1' }),
+        },
+      },
+      dataManager: {
+        layers: {
+          entries: () => [
+            ['flights', { enabled: true, visibilityIntentEpoch: 2 }],
+          ],
+        },
+      },
+      viewer: { scene: { frameState: { frameNumber: 42 } } },
+    },
+    __gevSoakWorkers: {
+      snapshot: () => ({
+        instrumented: true,
+        pending: 1,
+        overflow: false,
+        workers: [
+          {
+            kind: 'createGeometry',
+            pending: 1,
+            oldestPendingMs: 27,
+            submitted: 2,
+            completed: 1,
+            cancelled: 0,
+            taskErrors: 0,
+            workerErrors: 0,
+            postErrors: 0,
+            url: 'https://private.test/worker?token=secret',
+            payload: 'must not be retained',
+          },
+        ],
+      }),
+    },
+    document: {
+      readyState: 'complete',
+      visibilityState: 'visible',
+      hasFocus: () => true,
+      querySelector: (selector) =>
+        selector === '.workspace-library'
+          ? {
+              querySelector: (child) => ({
+                textContent: child.includes('import-summary')
+                  ? '1 accepted'
+                  : 'Ready',
+                value: 'ws1',
+                disabled: false,
+              }),
+              querySelectorAll: () => [{ value: 'ws1' }, { value: 'ws2' }],
+            }
+          : null,
+      querySelectorAll: () => [{}, {}],
+    },
+  };
+  const serialized = vm.runInNewContext(
+    `(${collectWorkspaceImportDiagnostics.toString()})(input)`,
+    {
+      ...scope,
+      input: {
+        phase: 'workspace-option-wait',
+        targetWorkspaceId: 'ws2',
+      },
+    },
+  );
+  assert.equal(serialized.phase, 'workspace-option-wait');
+  assert.equal(serialized.workspace.expectedWorkspaceId, 'ws2');
+  assert.equal(serialized.workspace.requestedOptionPresent, true);
+  assert.equal(serialized.importLayer.featureCount, 1);
+  assert.equal(serialized.workers.workers[0].oldestPendingMs, 27);
+  assert.equal(serialized.viewer.frameNumber, 42);
+  assert.doesNotMatch(
+    JSON.stringify(serialized),
+    /private\.test|secret|payload/,
+  );
+});
+
+test('named workspace phase preserves primary timeout and captures bounded state', async () => {
+  const progress = [];
+  const primary = new Error('Waiting failed: 30000ms exceeded');
+  let evaluateCalls = 0;
+  const browserGlobal = {
+    document: {
+      readyState: 'complete',
+      visibilityState: 'visible',
+      hasFocus: () => true,
+      querySelector: () => ({
+        querySelector: () => ({ textContent: 'Opening…', value: 'ws1' }),
+        querySelectorAll: () => [{ value: 'ws1' }],
+      }),
+    },
+    __godsEyeView: {},
+  };
+  const page = {
+    evaluate: async (callback, context) => {
+      evaluateCalls++;
+      assert.equal(callback, collectWorkspaceImportDiagnostics);
+      return vm.runInNewContext(`(${callback.toString()})(input)`, {
+        ...browserGlobal,
+        input: context,
+      });
+    },
+  };
+  await assert.rejects(
+    runWorkspaceFixturePhase(
+      page,
+      'import-apply-status-wait',
+      async () => {
+        throw primary;
+      },
+      { onProgress: (phase) => progress.push(phase) },
+    ),
+    (error) => {
+      assert.equal(error, primary);
+      assert.match(error.message, /phase import-apply-status-wait/);
+      assert.match(error.message, /Opening/);
+      assert.ok(error.message.length < 8500);
+      return true;
+    },
+  );
+  assert.equal(evaluateCalls, 1);
+  assert.deepEqual(progress, [
+    'import-apply-status-wait:start',
+    'import-apply-status-wait:failed',
+  ]);
+});
+
+test('a hung diagnostics evaluation cannot replace the primary phase failure', async () => {
+  const primary = new Error('workspace option wait failed');
+  await assert.rejects(
+    runWorkspaceFixturePhase(
+      { evaluate: () => new Promise(() => {}) },
+      'workspace-option-wait',
+      async () => {
+        throw primary;
+      },
+      { diagnosticTimeoutMs: 5 },
+    ),
+    (error) => {
+      assert.equal(error, primary);
+      assert.match(error.message, /workspace option wait failed/);
+      assert.match(error.message, /deadline-exceeded/);
+      return true;
+    },
+  );
+});
+
+test('successful named workspace phase reports completion without diagnostics', async () => {
+  const progress = [];
+  const page = {
+    evaluate: async () =>
+      assert.fail('success path must not query diagnostics'),
+  };
+  assert.equal(
+    await runWorkspaceFixturePhase(page, 'workspace-restore', async () => 17, {
+      onProgress: (phase) => progress.push(phase),
+    }),
+    17,
+  );
+  assert.deepEqual(progress, [
+    'workspace-restore:start',
+    'workspace-restore:complete',
+  ]);
 });
 
 test('workspace completion is latched even when autosave replaces it before polling', async () => {

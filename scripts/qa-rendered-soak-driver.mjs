@@ -281,8 +281,12 @@ export async function createRenderedSoakDriver(
           { id: key, expectedRevision: record.manifest.revision },
         );
       }, id);
-      await openWorkspace(page, id);
-      await importFixtureGeometry(page, 'Rendered soak ' + iteration);
+      const onWorkspacePhase = (phase) =>
+        console.log('SOAK phase ' + iteration + ' ' + phase);
+      await openWorkspace(page, id, { onProgress: onWorkspacePhase });
+      await importFixtureGeometry(page, 'Rendered soak ' + iteration, {
+        onProgress: onWorkspacePhase,
+      });
       await page.evaluate(async () => {
         const app = window.__godsEyeView;
         for (const enabled of [false, true])
