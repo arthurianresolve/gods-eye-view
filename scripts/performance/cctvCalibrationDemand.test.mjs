@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   compareCctvCalibrationPair,
+  summarizeCctvRgbaDifference,
   validateCctvCalibrationDemandReport,
 } from './cctvCalibrationDemand.mjs';
 
@@ -9,6 +10,26 @@ const commit = 'a'.repeat(40);
 const digest = (character) => character.repeat(64);
 const fixtureId = 'cctv-calibration-native-drag/v1';
 const cameraId = 'qa-cctv-calibration-camera-001';
+
+test('exact RGBA diagnostics locate mismatches without visual tolerance', () => {
+  const left = new Uint8Array(3 * 2 * 4);
+  const right = left.slice();
+  right[4] = 1;
+  right[23] = 2;
+  assert.deepEqual(summarizeCctvRgbaDifference(left, left, 3, 2), {
+    differenceCount: 0,
+    bounds: null,
+  });
+  assert.deepEqual(summarizeCctvRgbaDifference(left, right, 3, 2), {
+    differenceCount: 2,
+    bounds: { left: 1, top: 0, right: 2, bottom: 1, width: 2, height: 2 },
+  });
+});
+
+test('RGBA diagnostics reject malformed and oversized evidence', () => {
+  assert.throws(() => summarizeCctvRgbaDifference([0], [0], 1, 1));
+  assert.throws(() => summarizeCctvRgbaDifference([], [], 1200, 801));
+});
 
 const viewport = {
   width: 960,

@@ -16,6 +16,7 @@ import {
 } from '../../src/renderGovernor.js';
 import {
   compareCctvCalibrationPair,
+  summarizeCctvRgbaDifference,
   validateCctvCalibrationDemandReport,
 } from '../performance/cctvCalibrationDemand.mjs';
 import {
@@ -28,6 +29,7 @@ const FIXTURE_ID = 'cctv-calibration-native-drag/v1';
 const CAMERA_ID = 'qa-cctv-calibration-camera-001';
 const PAIRS = 5;
 const IDLE_MS = 10_000;
+const MAX_FAILURE_PNG_DATA_URL_CHARS = 1_500_000;
 const FIXTURE_EPOCH_MS = Date.UTC(2026, 9, 8, 12, 0, 0);
 const OWNER = 'qa-cctv-adjust-legacy-control';
 const COMMIT =
@@ -186,11 +188,23 @@ function currentCalibration(layer) {
 
 function frameCountListener(viewer) {
   let count = 0;
+  let overflowCount = 0;
+  const startedAt = performance.now();
+  const elapsedMs = [];
   const remove = viewer.scene.postRender.addEventListener(() => {
     count = Math.min(count + 1, 10_000);
+    if (elapsedMs.length < 32)
+      elapsedMs.push(Math.max(0, performance.now() - startedAt));
+    else overflowCount = Math.min(overflowCount + 1, Number.MAX_SAFE_INTEGER);
   });
   return {
     read: () => count,
+    samples: () => ({
+      scope: 'Completed postRender timestamps from listener attachment',
+      sampleLimit: 32,
+      elapsedMs: [...elapsedMs],
+      overflowCount,
+    }),
     remove,
   };
 }
@@ -273,6 +287,156 @@ function safeCameraState(viewer) {
     position: vector(camera?.positionWC),
     direction: vector(camera?.directionWC),
     up: vector(camera?.upWC),
+  };
+}
+
+function propertyValue(property, time) {
+  try {
+    return property?.getValue ? property.getValue(time) : property;
+  } catch {
+    return null;
+  }
+}
+
+function colorState(value) {
+  return value &&
+    [value.red, value.green, value.blue, value.alpha].every(Number.isFinite)
+    ? [value.red, value.green, value.blue, value.alpha]
+    : null;
+}
+
+function materialState(property, time) {
+  if (!property) return null;
+  const resolved = propertyValue(property, time);
+  return {
+    type: String(property.constructor?.name || 'unknown').slice(0, 80),
+    color: colorState(resolved?.color || resolved),
+  };
+}
+
+function gizmoStyleSnapshot(viewer) {
+  const time = viewer.clock.currentTime;
+  return viewer.entities.values
+    .filter((entity) => String(entity.id).startsWith('cctv-gizmo-'))
+    .map((entity) => {
+      const point = entity.point;
+      const polyline = entity.polyline;
+      return {
+        id: String(entity.id),
+        entityShow: Boolean(entity.show),
+        point: point
+          ? {
+              show: propertyValue(point.show, time) ?? null,
+              pixelSize: propertyValue(point.pixelSize, time) ?? null,
+              color: colorState(propertyValue(point.color, time)),
+              outlineColor: colorState(propertyValue(point.outlineColor, time)),
+              outlineWidth: propertyValue(point.outlineWidth, time) ?? null,
+            }
+          : null,
+        polyline: polyline
+          ? {
+              show: propertyValue(polyline.show, time) ?? null,
+              width: propertyValue(polyline.width, time) ?? null,
+              material: materialState(polyline.material, time),
+              depthFailMaterial: materialState(
+                polyline.depthFailMaterial,
+                time,
+              ),
+            }
+          : null,
+      };
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function safeRequestStack(stack) {
+  return String(stack || '')
+    .split('\n')
+    .slice(2, 8)
+    .map((line) => {
+      const functionName =
+        line.match(/^\s*at\s+([^\s(]+)(?:\s+\(|$)/)?.[1] || 'anonymous';
+      const location = line.match(/\(([^()]*)\)\s*$/)?.[1] || line.trim();
+      const source = location
+        .split(/[?#]/, 1)[0]
+        .split(/[\\/]/)
+        .pop()
+        ?.replace(/:\d+:\d+$/, '');
+      return {
+        function: /^[\w.$<>-]{1,100}$/.test(functionName)
+          ? functionName
+          : 'anonymous',
+        source: /^[\w.-]{1,100}$/.test(source || '') ? source : null,
+      };
+    })
+    .filter((frame) => frame.function !== 'anonymous' || frame.source);
+}
+
+function observeSceneRenderRequests(scene) {
+  const original = scene?.requestRender;
+  if (typeof original !== 'function') return null;
+  const descriptor = Object.getOwnPropertyDescriptor(scene, 'requestRender');
+  const startedAt = performance.now();
+  const startedAtEpochMs = Date.now();
+  let calls = 0;
+  let overflowCount = 0;
+  const samples = [];
+  const wrapper = function (...args) {
+    calls = Math.min(calls + 1, Number.MAX_SAFE_INTEGER);
+    if (samples.length < 32) {
+      samples.push({
+        elapsedMs: Math.max(0, performance.now() - startedAt),
+        epochMs: Date.now(),
+        callers: safeRequestStack(new Error().stack),
+      });
+    } else {
+      overflowCount = Math.min(overflowCount + 1, Number.MAX_SAFE_INTEGER);
+    }
+    return original.apply(this, args);
+  };
+  try {
+    scene.requestRender = wrapper;
+  } catch {
+    return null;
+  }
+  if (scene.requestRender !== wrapper) return null;
+  let disposed = false;
+  return {
+    startedAtEpochMs,
+    snapshot() {
+      return {
+        scope: 'Observed scene.requestRender calls; not a render or GPU timing',
+        startedAtEpochMs,
+        endedAtEpochMs: Date.now(),
+        totalCalls: calls,
+        sampleLimit: 32,
+        sampleOverflowCount: overflowCount,
+        samples: [...samples],
+      };
+    },
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      if (scene.requestRender !== wrapper) return;
+      if (descriptor) Object.defineProperty(scene, 'requestRender', descriptor);
+      else delete scene.requestRender;
+    },
+  };
+}
+
+function renderGovernorSnapshot() {
+  const diagnostics = getRenderGovernorDiagnostics();
+  return {
+    capturedAtEpochMs: Date.now(),
+    installed: diagnostics.installed,
+    mode: diagnostics.mode,
+    holds: [...diagnostics.holds].slice(0, 32),
+    scheduledUpdates: [...diagnostics.scheduledUpdates].slice(0, 32),
+    recentRequests: diagnostics.recentRequests.slice(-16).map((request) => ({
+      reason: String(request.reason || '').slice(0, 80),
+      at: Number.isFinite(request.at) ? request.at : null,
+    })),
+    recentRequestCapacity: 16,
   };
 }
 
@@ -526,6 +690,7 @@ function cameraSnapshot(viewer, layer) {
     ],
     up: [camera.upWC.x, camera.upWC.y, camera.upWC.z],
     geometryPayload: entities,
+    stylePayload: gizmoStyleSnapshot(viewer),
   };
 }
 
@@ -610,6 +775,7 @@ function observeIdleConditions(viewer) {
 async function capturePixels(viewer, layer, trial, phase) {
   const canvas = await captureTrialFrame(viewer, layer, trial, phase);
   try {
+    const sampledCamera = cameraSnapshot(viewer, layer);
     const rgba = canvas
       .getContext('2d')
       ?.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -630,15 +796,121 @@ async function capturePixels(viewer, layer, trial, phase) {
     );
     const bytes = new Uint8Array(rgba.length);
     bytes.set(rgba);
-    return {
+    const captureState = {
+      selectedCameraId: sampledCamera.selectedCameraId,
+      position: sampledCamera.position,
+      direction: sampledCamera.direction,
+      up: sampledCamera.up,
+      geometrySha256: await sha256(
+        new TextEncoder().encode(JSON.stringify(sampledCamera.geometryPayload)),
+      ),
+      styleSha256: await sha256(
+        new TextEncoder().encode(JSON.stringify(sampledCamera.stylePayload)),
+      ),
+      stylePayload: sampledCamera.stylePayload,
+    };
+    const result = {
       sha256: await sha256(bytes),
       width: canvas.width,
       height: canvas.height,
       nonBackgroundPixels,
+      captureState,
     };
+    if (phase === 'after-pixels')
+      Object.defineProperty(result, 'rgbaEvidence', {
+        configurable: true,
+        enumerable: false,
+        value: bytes,
+      });
+    return result;
   } finally {
     canvas.width = 0;
     canvas.height = 0;
+  }
+}
+
+function renderRgbaFailurePng(rgba, width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  try {
+    const context = canvas.getContext('2d');
+    check(context, 'Could not create bounded CCTV mismatch image canvas.');
+    const image = context.createImageData(width, height);
+    image.data.set(rgba);
+    context.putImageData(image, 0, 0);
+    const dataUrl = canvas.toDataURL('image/png');
+    check(
+      dataUrl.startsWith('data:image/png;base64,'),
+      'Invalid mismatch PNG.',
+    );
+    if (dataUrl.length > MAX_FAILURE_PNG_DATA_URL_CHARS) return null;
+    return dataUrl.slice('data:image/png;base64,'.length);
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+}
+
+async function pairPixelFailureEvidence(pair) {
+  const control = pair.runs.find((run) => run.mode === 'legacy-control');
+  const candidate = pair.runs.find((run) => run.mode === 'candidate');
+  const controlPixels = control?.afterPixels;
+  const candidatePixels = candidate?.afterPixels;
+  if (
+    !controlPixels?.rgbaEvidence ||
+    !candidatePixels?.rgbaEvidence ||
+    controlPixels.width !== candidatePixels.width ||
+    controlPixels.height !== candidatePixels.height
+  )
+    return {
+      status: 'unavailable',
+      reason: 'Both bounded after-pixel RGBA surfaces were not retained.',
+    };
+  const summary = summarizeCctvRgbaDifference(
+    controlPixels.rgbaEvidence,
+    candidatePixels.rgbaEvidence,
+    controlPixels.width,
+    controlPixels.height,
+  );
+  if (summary.differenceCount === 0) return null;
+  const evidence = {
+    status: 'mismatch',
+    ...summary,
+    width: controlPixels.width,
+    height: controlPixels.height,
+    controlPngBase64: null,
+    candidatePngBase64: null,
+    pngOmitted: null,
+  };
+  try {
+    evidence.controlPngBase64 = renderRgbaFailurePng(
+      controlPixels.rgbaEvidence,
+      controlPixels.width,
+      controlPixels.height,
+    );
+    evidence.candidatePngBase64 = renderRgbaFailurePng(
+      candidatePixels.rgbaEvidence,
+      candidatePixels.width,
+      candidatePixels.height,
+    );
+    if (!evidence.controlPngBase64 || !evidence.candidatePngBase64) {
+      evidence.controlPngBase64 = null;
+      evidence.candidatePngBase64 = null;
+      evidence.pngOmitted = 'A failure PNG exceeded the bounded report size.';
+    }
+  } catch (error) {
+    evidence.controlPngBase64 = null;
+    evidence.candidatePngBase64 = null;
+    evidence.pngOmitted = String(error?.message || error).slice(0, 160);
+  }
+  return evidence;
+}
+
+function releasePairRgbaEvidence(pair) {
+  for (const run of pair.runs || []) {
+    if (run.afterPixels && Object.hasOwn(run.afterPixels, 'rgbaEvidence'))
+      delete run.afterPixels.rgbaEvidence;
   }
 }
 
@@ -1108,17 +1380,49 @@ async function runTrial(mode, pair, runIndex, fixtureSha256, pairRecord) {
     );
     trial.renderingSettings.requestRenderModeDuringIdle = initialMode;
     idleCounter = frameCountListener(viewer);
+    const sceneRequestObservation = observeSceneRenderRequests(viewer.scene);
+    const renderDemandBefore = renderGovernorSnapshot();
+    const idleStartEpochMs = Date.now();
     const idleStart = performance.now();
     idleObserver = observeIdleConditions(viewer);
-    await wait(IDLE_MS);
+    let renderDemandAfter;
+    let sceneRequestRenderCalls;
+    try {
+      await wait(IDLE_MS);
+    } finally {
+      try {
+        renderDemandAfter = renderGovernorSnapshot();
+        sceneRequestRenderCalls = sceneRequestObservation?.snapshot() || null;
+      } finally {
+        sceneRequestObservation?.dispose();
+      }
+    }
     const idleDurationMs = performance.now() - idleStart;
+    const idleEndEpochMs = Date.now();
     trial.idle = {
       requestedDurationMs: IDLE_MS,
       durationMs: idleDurationMs,
       completedFrames: idleCounter.read(),
+      completedFrameSamples: idleCounter.samples(),
       renderMode: viewer.scene.requestRenderMode,
       forcedCaptureFramesIncluded: false,
       conditions: idleObserver.finish(),
+      renderDemand: {
+        startedAtEpochMs: idleStartEpochMs,
+        endedAtEpochMs: idleEndEpochMs,
+        governorBefore: renderDemandBefore,
+        governorAfter: renderDemandAfter,
+        governorRequestsDuringIdle: renderDemandAfter.recentRequests.filter(
+          (request) =>
+            Number.isFinite(request.at) &&
+            request.at >= idleStartEpochMs &&
+            request.at <= idleEndEpochMs,
+        ),
+        governorRecentRequestWindowMayBeTruncated:
+          renderDemandAfter.recentRequests.length >=
+          renderDemandAfter.recentRequestCapacity,
+        sceneRequestRenderCalls,
+      },
     };
     idleObserver = null;
     idleCounter.remove();
@@ -1395,7 +1699,13 @@ async function runFixture() {
         pairIndex % 2
           ? ['candidate', 'legacy-control']
           : ['legacy-control', 'candidate'];
-      const pair = { pair: pairIndex, order, runs: [], comparison: null };
+      const pair = {
+        pair: pairIndex,
+        order,
+        runs: [],
+        comparison: null,
+        visualMismatch: null,
+      };
       activeReport.pairs.push(pair);
       for (const mode of order) {
         setPhase(`pair-${pairIndex}-setup-${mode}`);
@@ -1409,7 +1719,12 @@ async function runFixture() {
         publishPartial();
       }
       setPhase(`pair-${pairIndex}-comparison`);
-      pair.comparison = compareCctvCalibrationPair(pair);
+      try {
+        pair.visualMismatch = await pairPixelFailureEvidence(pair);
+        pair.comparison = compareCctvCalibrationPair(pair);
+      } finally {
+        releasePairRgbaEvidence(pair);
+      }
       publishPartial();
     }
     activeReport.status = 'passed';
@@ -1429,6 +1744,7 @@ async function runFixture() {
         : activeReport.phase);
     activeReport.error = String(error?.message || error).slice(0, 500);
   } finally {
+    for (const pair of activeReport.pairs || []) releasePairRgbaEvidence(pair);
     updateCleanupSummary();
     activeReport.finishedAt ||= new Date().toISOString();
     if (failure && activeRun?.status === 'running') {

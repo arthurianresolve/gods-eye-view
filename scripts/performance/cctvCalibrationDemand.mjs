@@ -5,6 +5,7 @@ const RUN_COUNT = PAIR_COUNT * 2;
 const IDLE_REQUESTED_MS = 10_000;
 const IDLE_CLOCK_TOLERANCE_MS = 1;
 const IDLE_MAX_MS = 11_500;
+export const CCTV_RGBA_DIFF_PIXEL_LIMIT = 960_000;
 const CALIBRATION_FIELDS = [
   'offsetEastM',
   'offsetNorthM',
@@ -36,6 +37,58 @@ function finite(value, label) {
 
 function exactJson(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** Exact pixel-level comparison used only for bounded failure diagnostics. */
+export function summarizeCctvRgbaDifference(left, right, width, height) {
+  if (
+    !Number.isSafeInteger(width) ||
+    width <= 0 ||
+    !Number.isSafeInteger(height) ||
+    height <= 0 ||
+    width * height > CCTV_RGBA_DIFF_PIXEL_LIMIT ||
+    !left ||
+    !right ||
+    left.length !== width * height * 4 ||
+    right.length !== width * height * 4
+  )
+    throw new Error('CCTV RGBA evidence has an invalid bounded shape.');
+  let differenceCount = 0;
+  let leftEdge = width;
+  let topEdge = height;
+  let rightEdge = -1;
+  let bottomEdge = -1;
+  for (let pixel = 0; pixel < width * height; pixel++) {
+    const offset = pixel * 4;
+    if (
+      left[offset] === right[offset] &&
+      left[offset + 1] === right[offset + 1] &&
+      left[offset + 2] === right[offset + 2] &&
+      left[offset + 3] === right[offset + 3]
+    )
+      continue;
+    differenceCount++;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    leftEdge = Math.min(leftEdge, x);
+    topEdge = Math.min(topEdge, y);
+    rightEdge = Math.max(rightEdge, x);
+    bottomEdge = Math.max(bottomEdge, y);
+  }
+  return {
+    differenceCount,
+    bounds:
+      differenceCount > 0
+        ? {
+            left: leftEdge,
+            top: topEdge,
+            right: rightEdge,
+            bottom: bottomEdge,
+            width: rightEdge - leftEdge + 1,
+            height: bottomEdge - topEdge + 1,
+          }
+        : null,
+  };
 }
 
 function equivalentMeasuredSettings(run) {
