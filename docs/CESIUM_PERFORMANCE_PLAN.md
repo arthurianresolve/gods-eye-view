@@ -1,7 +1,7 @@
 # Cesium performance plan
 
 Updated on 10 October 2026. Full runtime CI passes at
-`6046012b3c2575d3df429c8c1bd2d82ecdbce237` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38005697017)).
+`ac9cbc09e08438242c4feaf5b50e5d73acb885ba` ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38029099999)).
 Windows UHD 620 isolated capture checks recovered at `0edfb8e` after the manual
 foreground check; [raw evidence and limitations](performance-evidence/WINDOWS_FRAME_RECOVERY.md)
 are recorded separately from the unresolved earlier stall cause and soak gates.
@@ -446,6 +446,36 @@ partial packet remains partial and cannot close the parent slice.
   capture reports explicitly set `comparisonEligible: false`; the paired validator
   rejects them. A supplied fixture hash or commit string cannot make a report
   comparable. No hardware or performance objective pass is claimed by this packet.
+- **S47.1b-3 hosted integration runner implemented by GPT-6 Luna:**
+  `7b925c096f1051a6da6c657df4cbbf7b5b29d517` adds a bounded, manually dispatched
+  `performance-build-smoke` CI mode on standard `ubuntu-latest`. It builds isolated
+  immutable baseline/candidate checkouts, uses one explicitly software-rendered
+  Chrome, and exercises shared receipt, observer and route interfaces without
+  adding application runtime hooks. Failed artifacts are retained. The initial
+  [hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38029107526)
+  fails before application navigation: the worker-network preflight ran on the
+  initial `about:blank` page and its worker failed. The [raw artifact](performance-evidence/build-smoke-38029107526.json)
+  identifies baseline `eb8c682`, candidate `7b925c0` and harness `ac9cbc0`. The
+  baseline build and pre-capture served-byte verification completed, but neither
+  production-page observation nor candidate inspection passed. Fix the preflight
+  origin/order before repeating; do not count this as browser compatibility.
+- **S47.1b-3 second hosted attempt:** `64c1c87` moves the worker-network
+  preflight to an exact same-origin inert page and excludes its deliberately
+  generated requests from application auditing. All seven focused contract tests
+  pass. The [next hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38029434755)
+  passes that preflight and reaches the baseline application and shared scene
+  observer, but fails the final code-path audit. The [raw failure](performance-evidence/build-smoke-38029434755.json)
+  has no page or interception errors. It does not yet identify the offending
+  request; worker provenance needs diagnosis before this integration can pass.
+  Candidate inspection still has not executed. No application runtime changed.
+- **S47.1b-3 target-disposal control:** `c49f553` requires the preflight's
+  worker targets to disappear before application navigation. Ten focused tests
+  pass. The [hosted control](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38029942820)
+  passes the new disposal check but still fails the audit, now identifying a
+  same-origin `blob:` script request. The [raw artifact](performance-evidence/build-smoke-38029942820.json)
+  leaves its exact source unresolved. Delayed preflight request events remain a
+  hypothesis; isolate application event collection at the navigation boundary
+  before changing any code-provenance policy.
 - **Integration test correction:** CI at `0e766a8` failed the FIRMS history test on
   both Node versions because it combined the previous UTC date with hardcoded
   midnight; around the date boundary that row correctly fell outside 24 hours.
@@ -464,6 +494,14 @@ partial packet remains partial and cannot close the parent slice.
   This is distinct from the earlier startup/renderer-query timeout. Its top-level
   `failure.step` still says `verify-persisted-workspace`; the check's own
   `owned-page-cleanup` step and error identify the actual failed operation.
+- **Subsequent Windows recovery passes at `ac9cbc0`:** the
+  [run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38029099999)
+  completes all five stages with matching settings and persisted workspace bytes,
+  one rendered feature, one owned application page and successful graceful close
+  at every stage. The [raw result](performance-evidence/recovery-ac9cbc0-windows.json)
+  records SwiftShader on hosted Windows; it is not GPU evidence. This passing
+  rerun predates the new close diagnostics and does not establish the cause of
+  the earlier shutdown failure.
 - **Windows wind validation remains failed:** a clean isolated checkout of
   `a83dd7af30cb3b9a39095da0f081a1037725d2cd`, served by Vite on loopback, produced
   [a fresh-frame timeout](performance-evidence/wind-a83dd7a-windows-capture-failure.json)
