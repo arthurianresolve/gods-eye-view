@@ -175,6 +175,7 @@ try {
         url.replace('capture-matrix.html', 'infrastructure-collections.html'),
         { waitUntil: 'networkidle0' },
       );
+      await page.select('#color-encoding', 'entity-color-attribute-byte');
       await page.click('#run');
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
@@ -192,6 +193,13 @@ try {
       if (!report.infrastructureRenderingEvidence.accelerationVerified)
         throw new Error(
           'Infrastructure viewer did not retain verified acceleration',
+        );
+      if (
+        report.infrastructureCollections.candidateRepresentation
+          ?.stemColorEncoding !== 'entity-color-attribute-byte'
+      )
+        throw new Error(
+          'Infrastructure run did not execute the explicitly selected RGBA8 candidate',
         );
       validateInfrastructureCollectionReport(report.infrastructureCollections, {
         expectedCommit: commit,

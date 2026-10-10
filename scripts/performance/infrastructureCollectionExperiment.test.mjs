@@ -5,9 +5,14 @@ import {
   compareInfrastructureSurfaceSamples,
   createInfrastructurePrimitiveCollections,
   INFRASTRUCTURE_COLLECTION_CASES,
+  INFRASTRUCTURE_COLLECTION_COLOR_ENCODINGS,
   INFRASTRUCTURE_COLLECTION_PAIRS,
   INFRASTRUCTURE_COLLECTION_SCHEMA,
+  infrastructureCollectionRepresentationId,
+  infrastructureEffectiveColorBytes,
+  infrastructureEntityEncodedColor,
   infrastructurePickCartesian,
+  infrastructureSurfaceStyleEvidence,
   infrastructureModeTransitionReady,
   matchesInfrastructureCollectionPick,
   snapshotInfrastructureSurfaces,
@@ -71,6 +76,14 @@ function sample(caseId, pair, mode) {
     identitySha256: digest,
     positionSha256: digest,
     styleSha256: digest,
+    sourceStyleSha256: digest,
+    pointStyleSha256: digest,
+    stemNonColorStyleSha256: digest,
+    effectiveStemColorSha256: digest,
+    effectiveStemColorEncoding:
+      mode === 'entity'
+        ? 'cesium-static-rgba8-attribute'
+        : 'rgba8-normalized-material-uniform',
     sourceGeometryKindsSha256: digest,
     renderEntityKindsSha256: digest,
     pixelSha256: digest,
@@ -138,6 +151,14 @@ function report() {
     schema: INFRASTRUCTURE_COLLECTION_SCHEMA,
     applicationCommit: 'b'.repeat(40),
     harnessCommit: 'b'.repeat(40),
+    candidateRepresentation: {
+      id: infrastructureCollectionRepresentationId(
+        'entity-color-attribute-byte',
+      ),
+      stemColorEncoding: 'entity-color-attribute-byte',
+      styleHash:
+        'Raw RGBA source/style hashes stay strict; effective stem encoding is reported separately and full-frame pixels remain exact.',
+    },
     status: 'passed',
     caseCount: INFRASTRUCTURE_COLLECTION_CASES.length,
     pairsPerCase: INFRASTRUCTURE_COLLECTION_PAIRS,
@@ -281,6 +302,155 @@ test('real Cesium collections preserve values across non-destroying detach and r
     restoreDomTypes();
   }
   assert.equal(collections.isDestroyed(), true);
+});
+
+test('Entity color-attribute encoding maps focused alpha through Cesium RGBA8 bytes', () => {
+  const focusedColor = new Cesium.Color(0, 0.29, 0.77, 0.55);
+  const encoded = infrastructureEntityEncodedColor(Cesium, [
+    focusedColor.red,
+    focusedColor.green,
+    focusedColor.blue,
+    focusedColor.alpha,
+  ]);
+  const expectedBytes =
+    Cesium.ColorGeometryInstanceAttribute.toValue(focusedColor);
+  assert.deepEqual(encoded.toBytes(), [...expectedBytes]);
+  assert.equal(expectedBytes[3], 140);
+  assert.equal(encoded.alpha, 140 / 255);
+  assert.deepEqual(infrastructureEffectiveColorBytes(Cesium, focusedColor), [
+    ...expectedBytes,
+  ]);
+  assert.deepEqual(INFRASTRUCTURE_COLLECTION_COLOR_ENCODINGS, [
+    'direct-float-uniform',
+    'entity-color-attribute-byte',
+  ]);
+  assert.throws(
+    () => infrastructureCollectionRepresentationId('unknown'),
+    /unsupported/,
+  );
+});
+
+test('real collection candidate applies Entity-compatible focused stem alpha when selected', () => {
+  const restoreDomTypes = installCesiumDomTypeShims();
+  const focused = entity();
+  focused.point.color = property(color(0, 0.29, 0.77, 1));
+  focused.polyline.material = {
+    color: property(color(0, 0.29, 0.77, 1)),
+  };
+  const surfaces = snapshotInfrastructureSurfaces({
+    entities: [focused],
+    analystRecords: [analystRecord()],
+    layerId: 'local-dams',
+    time: {},
+  });
+  let byteEncoded;
+  let directFloat;
+  try {
+    byteEncoded = createInfrastructurePrimitiveCollections(Cesium, surfaces, {
+      focusedEntityId: 'osm:dam:1',
+      stemColorEncoding: 'entity-color-attribute-byte',
+    });
+    directFloat = createInfrastructurePrimitiveCollections(Cesium, surfaces, {
+      focusedEntityId: 'osm:dam:1',
+      stemColorEncoding: 'direct-float-uniform',
+    });
+    assert.equal(
+      readInfrastructurePrimitiveSurfaces(byteEncoded)[0].stem.color[3],
+      140 / 255,
+    );
+    assert.equal(
+      readInfrastructurePrimitiveSurfaces(directFloat)[0].stem.color[3],
+      0.55,
+    );
+  } finally {
+    byteEncoded?.destroy();
+    directFloat?.destroy();
+    restoreDomTypes();
+  }
+});
+
+test('style evidence preserves raw RGBA arrays and separates encoded material values', () => {
+  const restoreDomTypes = installCesiumDomTypeShims();
+  const focused = entity();
+  focused.point.color = property(color(0, 0.29, 0.77, 0.55));
+  focused.point.outlineColor = property(color(1, 1, 0, 1));
+  focused.polyline.material = {
+    color: property(color(0, 0.29, 0.77, 0.55)),
+  };
+  const surfaces = snapshotInfrastructureSurfaces({
+    entities: [focused],
+    analystRecords: [analystRecord()],
+    layerId: 'local-dams',
+    time: {},
+  });
+  let collections;
+  try {
+    collections = createInfrastructurePrimitiveCollections(Cesium, surfaces, {
+      focusedEntityId: 'osm:dam:1',
+      stemColorEncoding: 'entity-color-attribute-byte',
+    });
+    const actual = readInfrastructurePrimitiveSurfaces(collections)[0];
+    const entityEvidence = infrastructureSurfaceStyleEvidence(
+      Cesium,
+      surfaces,
+      'entity',
+      'entity-color-attribute-byte',
+    );
+    const collectionSurface = {
+      ...surfaces[0],
+      sourcePointStyle: surfaces[0].pointStyle,
+      sourceLineStyle: surfaces[0].lineStyle,
+      sourceEntityShow: surfaces[0].entityShow,
+      pointStyle: {
+        ...surfaces[0].pointStyle,
+        color: actual.point.color,
+        outlineColor: actual.point.outlineColor,
+        show: actual.point.show,
+      },
+      lineStyle: {
+        ...surfaces[0].lineStyle,
+        color: actual.stem.color,
+        width: actual.stem.width,
+        show: actual.stem.show,
+      },
+    };
+    const collectionEvidence = infrastructureSurfaceStyleEvidence(
+      Cesium,
+      [collectionSurface],
+      'collection',
+      'entity-color-attribute-byte',
+    );
+    assert.deepEqual(
+      entityEvidence.styles[0].stem.color,
+      [0, 0.29, 0.77, 0.55],
+    );
+    assert.deepEqual(
+      entityEvidence.sourceStyles,
+      collectionEvidence.sourceStyles,
+    );
+    assert.deepEqual(
+      entityEvidence.pointStyles,
+      collectionEvidence.pointStyles,
+    );
+    assert.deepEqual(
+      entityEvidence.stemNonColorStyles,
+      collectionEvidence.stemNonColorStyles,
+    );
+    assert.notDeepEqual(entityEvidence.styles, collectionEvidence.styles);
+    assert.deepEqual(
+      entityEvidence.effectiveStemColors,
+      collectionEvidence.effectiveStemColors,
+    );
+    assert.deepEqual(collectionEvidence.effectiveStemColors[0], [
+      0,
+      74 / 255,
+      197 / 255,
+      140 / 255,
+    ]);
+  } finally {
+    collections?.destroy();
+    restoreDomTypes();
+  }
 });
 
 test('real Cesium item pick IDs resolve individual point and polyline items', () => {
@@ -598,6 +768,98 @@ test('matched samples require exact source, pose, style, pixel, pick, and cleanu
       }),
     /pixelSha256 is missing/,
   );
+  assert.throws(
+    () =>
+      compareInfrastructureSurfaceSamples(
+        { ...left, styleSha256: undefined },
+        { ...right, styleSha256: undefined },
+      ),
+    /styleSha256 is invalid/,
+  );
+  assert.equal(
+    compareInfrastructureSurfaceSamples(left, {
+      ...right,
+      effectiveStemColorSha256: 'd'.repeat(64),
+    }),
+    true,
+  );
+});
+
+test('RGBA8 experiment preserves raw style hashes and proves exact effective stem encoding', () => {
+  const entityRow = sample('focused-alpha-style', 0, 'entity');
+  const collectionRow = sample('focused-alpha-style', 0, 'collection');
+  collectionRow.styleSha256 = 'c'.repeat(64);
+  assert.equal(
+    compareInfrastructureSurfaceSamples(entityRow, collectionRow, {
+      stemColorEncoding: 'entity-color-attribute-byte',
+    }),
+    true,
+  );
+  assert.notEqual(entityRow.styleSha256, collectionRow.styleSha256);
+  assert.throws(
+    () =>
+      compareInfrastructureSurfaceSamples(entityRow, collectionRow, {
+        stemColorEncoding: 'direct-float-uniform',
+      }),
+    /styleSha256 differs/,
+  );
+  assert.throws(
+    () =>
+      compareInfrastructureSurfaceSamples(
+        entityRow,
+        {
+          ...collectionRow,
+          sourceStyleSha256: 'd'.repeat(64),
+        },
+        {
+          stemColorEncoding: 'entity-color-attribute-byte',
+        },
+      ),
+    /sourceStyleSha256 differs/,
+  );
+  for (const field of ['pointStyleSha256', 'stemNonColorStyleSha256'])
+    assert.throws(
+      () =>
+        compareInfrastructureSurfaceSamples(
+          entityRow,
+          {
+            ...collectionRow,
+            [field]: 'd'.repeat(64),
+          },
+          {
+            stemColorEncoding: 'entity-color-attribute-byte',
+          },
+        ),
+      /RGBA8 effective stem encoding evidence differs/,
+    );
+  assert.throws(
+    () =>
+      compareInfrastructureSurfaceSamples(
+        entityRow,
+        {
+          ...collectionRow,
+          effectiveStemColorSha256: 'e'.repeat(64),
+        },
+        {
+          stemColorEncoding: 'entity-color-attribute-byte',
+        },
+      ),
+    /RGBA8 effective stem encoding evidence differs/,
+  );
+  assert.throws(
+    () =>
+      compareInfrastructureSurfaceSamples(
+        entityRow,
+        {
+          ...collectionRow,
+          effectiveStemColorEncoding: 'float-polyline-material',
+        },
+        {
+          stemColorEncoding: 'entity-color-attribute-byte',
+        },
+      ),
+    /RGBA8 effective stem encoding evidence differs/,
+  );
 });
 
 test('report validator checks complete unique pair inventory and rejects weak evidence', () => {
@@ -607,6 +869,16 @@ test('report validator checks complete unique pair inventory and rejects weak ev
       expectedCommit: 'b'.repeat(40),
     }),
     true,
+  );
+  const wrongRepresentation = structuredClone(value);
+  wrongRepresentation.candidateRepresentation.id =
+    'point-polyline-collections/direct-float-uniform/v1';
+  assert.throws(
+    () =>
+      validateInfrastructureCollectionReport(wrongRepresentation, {
+        expectedCommit: 'b'.repeat(40),
+      }),
+    /representation identity is invalid/,
   );
   const noChecks = { ...value, checks: [] };
   assert.throws(

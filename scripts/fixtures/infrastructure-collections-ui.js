@@ -10,8 +10,12 @@ import {
   compareInfrastructureSurfaceSamples,
   createInfrastructurePrimitiveCollections,
   INFRASTRUCTURE_COLLECTION_CASES,
+  INFRASTRUCTURE_COLLECTION_COLOR_ENCODINGS,
   INFRASTRUCTURE_COLLECTION_PAIRS,
   INFRASTRUCTURE_COLLECTION_SCHEMA,
+  infrastructureCollectionRepresentationId,
+  infrastructureEntityEncodedColor,
+  infrastructureSurfaceStyleEvidence,
   infrastructurePickCartesian,
   infrastructureModeTransitionReady,
   matchesInfrastructureCollectionPick,
@@ -25,6 +29,7 @@ const MAX_RECORDS = 2000;
 const MAX_MISMATCH_PNG_BYTES = 2 * 1024 * 1024;
 const run = document.querySelector('#run');
 const download = document.querySelector('#download');
+const colorEncoding = document.querySelector('#color-encoding');
 const status = document.querySelector('#status');
 const output = document.querySelector('#result');
 const container = document.querySelector('#viewer');
@@ -195,7 +200,12 @@ function setFocusedEntityStyle(surface, focused) {
   );
 }
 
-function setFocusedCollectionStyle(collections, surface, focused) {
+function setFocusedCollectionStyle(
+  collections,
+  surface,
+  focused,
+  stemColorEncoding,
+) {
   if (!surface) return;
   const index = collections.indexByEntityId.get(surface.entityId);
   const point = collections.points.get(index);
@@ -212,7 +222,18 @@ function setFocusedCollectionStyle(collections, surface, focused) {
   }
   point.color = originalPoint;
   point.outlineColor = originalOutline;
-  stem.material = Cesium.Material.fromType('Color', { color: originalStem });
+  const stemRenderColor =
+    stemColorEncoding === 'entity-color-attribute-byte'
+      ? infrastructureEntityEncodedColor(Cesium, [
+          originalStem.red,
+          originalStem.green,
+          originalStem.blue,
+          originalStem.alpha,
+        ])
+      : originalStem;
+  stem.material = Cesium.Material.fromType('Color', {
+    color: stemRenderColor,
+  });
 }
 
 async function snapshotPixels(
@@ -480,6 +501,9 @@ function observedSurfaces(mode, dataSource, layer, collections, time) {
         color: row.stem.color,
         show: row.stem.show,
       },
+      sourcePointStyle: source.pointStyle,
+      sourceLineStyle: source.lineStyle,
+      sourceEntityShow: source.entityShow,
       entityShow: source.entityShow,
       position: row.point.position,
       positions: row.stem.positions,
@@ -506,7 +530,7 @@ function observedSurfaces(mode, dataSource, layer, collections, time) {
   });
 }
 
-async function surfaceHashes(surfaces) {
+async function surfaceHashes(surfaces, mode, stemColorEncoding) {
   const identity = surfaces.map((surface) => ({
     layerId: surface.layerId,
     entityId: surface.entityId,
@@ -522,24 +546,23 @@ async function surfaceHashes(surfaces) {
       ? JSON.parse(surface.positionFingerprint).stem
       : surface.positions,
   }));
-  const styles = surfaces.map((surface) => ({
-    entityId: surface.entityId,
-    entityShow: surface.entityShow,
-    point: {
-      ...surface.pointStyle,
-      show: surface.entityShow && surface.pointStyle.show,
-    },
-    stem: {
-      ...surface.lineStyle,
-      show: surface.entityShow && surface.lineStyle.show,
-    },
-  }));
+  const evidence = infrastructureSurfaceStyleEvidence(
+    Cesium,
+    surfaces,
+    mode,
+    stemColorEncoding,
+  );
   const hash = async (value) =>
     sha256(new TextEncoder().encode(JSON.stringify(value)));
   return {
     identitySha256: await hash(identity),
     positionSha256: await hash(positions),
-    styleSha256: await hash(styles),
+    styleSha256: await hash(evidence.styles),
+    sourceStyleSha256: await hash(evidence.sourceStyles),
+    pointStyleSha256: await hash(evidence.pointStyles),
+    stemNonColorStyleSha256: await hash(evidence.stemNonColorStyles),
+    effectiveStemColorSha256: await hash(evidence.effectiveStemColors),
+    effectiveStemColorEncoding: evidence.effectiveStemColorEncoding,
   };
 }
 
@@ -738,12 +761,22 @@ function makeCheck(name, passed, details = {}) {
   return { name, passed: passed === true, ...details };
 }
 
-async function runDiagnostic() {
+async function runDiagnostic(stemColorEncoding) {
+  check(
+    INFRASTRUCTURE_COLLECTION_COLOR_ENCODINGS.includes(stemColorEncoding),
+    'Unsupported collection stem color encoding.',
+  );
   report = {
     schema: INFRASTRUCTURE_COLLECTION_SCHEMA,
     fixture: 'bundled-local-dams-entity-vs-primitive-surfaces/v1',
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
+    candidateRepresentation: {
+      id: infrastructureCollectionRepresentationId(stemColorEncoding),
+      stemColorEncoding,
+      styleHash:
+        'Raw RGBA source/style hashes remain exact; effective stem encoding is reported separately; full-frame pixels remain exact.',
+    },
     capturedAt: new Date().toISOString(),
     status: 'running',
     scope: {
@@ -1005,6 +1038,7 @@ async function runDiagnostic() {
     collections = createInfrastructurePrimitiveCollections(
       Cesium,
       currentSurfaces,
+      { stemColorEncoding },
     );
     addCollections(collectionParent, collections);
     collectionObservers = instrumentCollectionUpdates(collections);
@@ -1138,6 +1172,7 @@ async function runDiagnostic() {
           currentSurfaces,
           {
             focusedEntityId: target.surface.entityId,
+            stemColorEncoding,
           },
         );
         addCollections(collectionParent, collections);
@@ -1172,7 +1207,12 @@ async function runDiagnostic() {
           caseId === 'focused-alpha-style' &&
           surface.entityId === focusedSurface.entityId
         )
-          setFocusedCollectionStyle(collections, surface, true);
+          setFocusedCollectionStyle(
+            collections,
+            surface,
+            true,
+            stemColorEncoding,
+          );
       }
       if (focusedSurface) {
         removeCollections(collectionParent, collections);
@@ -1332,7 +1372,11 @@ async function runDiagnostic() {
               dataSource,
               sourceIdentity,
             );
-            const hashes = await surfaceHashes(actualSurfaces);
+            const hashes = await surfaceHashes(
+              actualSurfaces,
+              mode,
+              stemColorEncoding,
+            );
             const pointPick = capturePick(
               viewer,
               target.surface,
@@ -1435,6 +1479,7 @@ async function runDiagnostic() {
           const matched = compareInfrastructureSurfaceSamples(
             entitySide.row,
             collectionSide.row,
+            { stemColorEncoding },
           );
           report.checks.push(
             makeCheck(`${caseId}-pair-${pair + 1}-exact-match`, matched, {
@@ -1578,12 +1623,16 @@ run.addEventListener('click', async () => {
   download.disabled = true;
   status.textContent = 'Running native Entity/collection comparisons…';
   try {
-    report = await runDiagnostic();
+    report = await runDiagnostic(colorEncoding.value);
   } catch (error) {
     report = {
       schema: INFRASTRUCTURE_COLLECTION_SCHEMA,
       applicationCommit: __GEV_APP_COMMIT__,
       harnessCommit: __GEV_APP_COMMIT__,
+      candidateRepresentation: {
+        id: infrastructureCollectionRepresentationId(colorEncoding.value),
+        stemColorEncoding: colorEncoding.value,
+      },
       status: 'failed',
       failedPhase: 'outer-fixture',
       error: String(error?.message || error).slice(0, 1000),
@@ -1604,7 +1653,7 @@ download.addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `infrastructure-collections-${report.applicationCommit.slice(0, 7)}.json`;
+  link.download = `infrastructure-collections-${report.candidateRepresentation?.stemColorEncoding || 'unknown'}-${report.applicationCommit.slice(0, 7)}.json`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 });

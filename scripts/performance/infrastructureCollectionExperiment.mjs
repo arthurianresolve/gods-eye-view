@@ -5,6 +5,16 @@ export const INFRASTRUCTURE_COLLECTION_CASES = Object.freeze([
   'focused-alpha-style',
 ]);
 export const INFRASTRUCTURE_COLLECTION_PAIRS = 5;
+export const INFRASTRUCTURE_COLLECTION_COLOR_ENCODINGS = Object.freeze([
+  'direct-float-uniform',
+  'entity-color-attribute-byte',
+]);
+
+export function infrastructureCollectionRepresentationId(encoding) {
+  if (!INFRASTRUCTURE_COLLECTION_COLOR_ENCODINGS.includes(encoding))
+    throw new TypeError('Infrastructure stem color encoding is unsupported.');
+  return `point-polyline-collections/${encoding}/v1`;
+}
 
 function propertyValue(property, time) {
   return typeof property?.getValue === 'function'
@@ -13,8 +23,10 @@ function propertyValue(property, time) {
 }
 
 function finiteColor(color, label) {
-  const value = [color?.red, color?.green, color?.blue, color?.alpha];
-  if (!value.every(Number.isFinite))
+  const value = Array.isArray(color)
+    ? color
+    : [color?.red, color?.green, color?.blue, color?.alpha];
+  if (value.length !== 4 || !value.every(Number.isFinite))
     throw new Error(`${label} is not a finite Cesium color.`);
   return value;
 }
@@ -37,16 +49,113 @@ function cesiumColor(Cesium, rgba) {
   return new Cesium.Color(rgba[0], rgba[1], rgba[2], rgba[3]);
 }
 
+/** Match the RGBA8 attribute encoding used by Cesium's static polyline batch. */
+export function infrastructureEntityEncodedColor(Cesium, rgba) {
+  const color = cesiumColor(Cesium, rgba);
+  const bytes = Cesium.ColorGeometryInstanceAttribute.toValue(color);
+  return Cesium.Color.fromBytes(bytes[0], bytes[1], bytes[2], bytes[3]);
+}
+
+/** Return Cesium's effective RGBA8 channel mapping for a color value. */
+export function infrastructureEffectiveColorBytes(Cesium, color) {
+  const rgba = finiteColor(color, 'Effective render color');
+  return rgba.map((component) => Cesium.Color.floatToByte(component));
+}
+
+/** Preserve raw RGBA arrays while separating source, observed, and encoded styles. */
+export function infrastructureSurfaceStyleEvidence(
+  Cesium,
+  surfaces,
+  mode,
+  stemColorEncoding,
+) {
+  if (!Array.isArray(surfaces) || !['entity', 'collection'].includes(mode))
+    throw new TypeError(
+      'Observed infrastructure surfaces and mode are required.',
+    );
+  const rgba = (value, label) => finiteColor(value, label);
+  const styles = surfaces.map((surface) => ({
+    entityId: surface.entityId,
+    entityShow: surface.entityShow,
+    point: {
+      ...surface.pointStyle,
+      color: rgba(surface.pointStyle.color, 'Observed point color'),
+      outlineColor: rgba(
+        surface.pointStyle.outlineColor,
+        'Observed point outline color',
+      ),
+      show: surface.entityShow && surface.pointStyle.show,
+    },
+    stem: {
+      ...surface.lineStyle,
+      color: rgba(surface.lineStyle.color, 'Observed stem color'),
+      show: surface.entityShow && surface.lineStyle.show,
+    },
+  }));
+  const sourceStyles = surfaces.map((surface) => {
+    const pointStyle = surface.sourcePointStyle ?? surface.pointStyle;
+    const lineStyle = surface.sourceLineStyle ?? surface.lineStyle;
+    return {
+      entityId: surface.entityId,
+      point: {
+        pixelSize: pointStyle.pixelSize,
+        color: rgba(pointStyle.color, 'Source point color'),
+        outlineColor: rgba(
+          pointStyle.outlineColor,
+          'Source point outline color',
+        ),
+        outlineWidth: pointStyle.outlineWidth,
+        disableDepthTestDistance: pointStyle.disableDepthTestDistance,
+      },
+      stem: {
+        width: lineStyle.width,
+        color: rgba(lineStyle.color, 'Source stem color'),
+      },
+    };
+  });
+  const effectiveStemColors = surfaces.map((surface) => {
+    const raw = rgba(surface.lineStyle.color, 'Observed stem color');
+    return mode === 'entity'
+      ? finiteColor(
+          infrastructureEntityEncodedColor(Cesium, raw),
+          'Encoded Entity stem color',
+        )
+      : raw;
+  });
+  return {
+    styles,
+    sourceStyles,
+    pointStyles: styles.map(({ entityId, entityShow, point }) => ({
+      entityId,
+      entityShow,
+      point,
+    })),
+    stemNonColorStyles: styles.map(({ entityId, stem }) => ({
+      entityId,
+      width: stem.width,
+      show: stem.show,
+    })),
+    effectiveStemColors,
+    effectiveStemColorEncoding:
+      mode === 'entity'
+        ? 'cesium-static-rgba8-attribute'
+        : stemColorEncoding === 'entity-color-attribute-byte'
+          ? 'rgba8-normalized-material-uniform'
+          : 'float-polyline-material',
+  };
+}
+
 /** Build fixture-owned primitive surfaces from the actual loaded Entity values. */
 export function createInfrastructurePrimitiveCollections(
   Cesium,
   surfaces,
-  { focusedEntityId = null } = {},
+  { focusedEntityId = null, stemColorEncoding = 'direct-float-uniform' } = {},
 ) {
   if (!Cesium?.PointPrimitiveCollection || !Cesium?.PolylineCollection)
     throw new TypeError('Cesium point and polyline collections are required.');
   if (!Array.isArray(surfaces) || surfaces.length === 0)
     throw new TypeError('Loaded Entity surfaces are required.');
+  infrastructureCollectionRepresentationId(stemColorEncoding);
   const startedAt = globalThis.performance?.now?.() ?? Date.now();
   let points = null;
   let stems = null;
@@ -70,6 +179,15 @@ export function createInfrastructurePrimitiveCollections(
         Cesium.Color.clone(Cesium.Color.YELLOW, pointOutlineColor);
         stemColor.alpha = 0.55;
       }
+      const collectionStemColor =
+        stemColorEncoding === 'entity-color-attribute-byte'
+          ? infrastructureEntityEncodedColor(Cesium, [
+              stemColor.red,
+              stemColor.green,
+              stemColor.blue,
+              stemColor.alpha,
+            ])
+          : stemColor;
       const pointId = {
         layerId: surface.layerId,
         sourceRecordId: surface.sourceRecordId,
@@ -99,7 +217,9 @@ export function createInfrastructurePrimitiveCollections(
         id: stemId,
         positions: surface.positions,
         width: surface.lineStyle.width,
-        material: Cesium.Material.fromType('Color', { color: stemColor }),
+        material: Cesium.Material.fromType('Color', {
+          color: collectionStemColor,
+        }),
         show: surface.lineStyle.show && surface.entityShow,
       });
       pointIds.set(surface.entityId, pointId);
@@ -355,7 +475,11 @@ export function snapshotInfrastructureSurfaces({
 }
 
 /** Compare a matched entity/collection sample without numeric pixel tolerance. */
-export function compareInfrastructureSurfaceSamples(entity, collection) {
+export function compareInfrastructureSurfaceSamples(
+  entity,
+  collection,
+  { stemColorEncoding = 'direct-float-uniform' } = {},
+) {
   if (entity?.mode !== 'entity' || collection?.mode !== 'collection')
     throw new Error('A matched entity/collection sample pair is required.');
   for (const field of [
@@ -370,7 +494,6 @@ export function compareInfrastructureSurfaceSamples(entity, collection) {
     'polygonEntityCount',
     'identitySha256',
     'positionSha256',
-    'styleSha256',
     'sourceGeometryKindsSha256',
     'renderEntityKindsSha256',
     'pixelSha256',
@@ -380,6 +503,53 @@ export function compareInfrastructureSurfaceSamples(entity, collection) {
     if (entity[field] !== collection[field])
       throw new Error(`Entity/collection ${field} differs.`);
   }
+  if (
+    !/^[a-f0-9]{64}$/.test(entity.styleSha256 || '') ||
+    !/^[a-f0-9]{64}$/.test(collection.styleSha256 || '')
+  )
+    throw new Error('Entity/collection styleSha256 is invalid.');
+  if (
+    entity.sourceStyleSha256 !== undefined ||
+    collection.sourceStyleSha256 !== undefined
+  ) {
+    if (
+      !/^[a-f0-9]{64}$/.test(entity.sourceStyleSha256 || '') ||
+      !/^[a-f0-9]{64}$/.test(collection.sourceStyleSha256 || '') ||
+      entity.sourceStyleSha256 !== collection.sourceStyleSha256
+    )
+      throw new Error('Entity/collection sourceStyleSha256 differs.');
+  }
+  if (stemColorEncoding === 'entity-color-attribute-byte') {
+    const effectiveEncodingMatches =
+      entity.effectiveStemColorEncoding === 'cesium-static-rgba8-attribute' &&
+      collection.effectiveStemColorEncoding ===
+        'rgba8-normalized-material-uniform';
+    if (
+      !effectiveEncodingMatches ||
+      entity.sourceStyleSha256 === undefined ||
+      entity.sourceStyleSha256 !== collection.sourceStyleSha256 ||
+      entity.pointStyleSha256 === undefined ||
+      entity.pointStyleSha256 !== collection.pointStyleSha256 ||
+      entity.stemNonColorStyleSha256 === undefined ||
+      entity.stemNonColorStyleSha256 !== collection.stemNonColorStyleSha256 ||
+      entity.effectiveStemColorSha256 === undefined ||
+      entity.effectiveStemColorSha256 !== collection.effectiveStemColorSha256
+    )
+      throw new Error('RGBA8 effective stem encoding evidence differs.');
+  }
+  if (
+    entity.styleSha256 !== collection.styleSha256 &&
+    stemColorEncoding !== 'entity-color-attribute-byte'
+  )
+    throw new Error('Entity/collection styleSha256 differs.');
+  for (const field of [
+    'effectiveStemColorSha256',
+    'pointStyleSha256',
+    'stemNonColorStyleSha256',
+  ])
+    for (const sample of [entity, collection])
+      if (sample[field] !== undefined && !/^[a-f0-9]{64}$/.test(sample[field]))
+        throw new Error(`Entity/collection ${field} is invalid.`);
   if (
     entity.pointPick?.sourceRecordId !== collection.pointPick?.sourceRecordId ||
     entity.pointPick?.entityId !== collection.pointPick?.entityId ||
@@ -430,6 +600,17 @@ export function validateInfrastructureCollectionReport(
     throw new Error('Infrastructure collection source identity changed.');
   if (report.status !== 'passed' || report.error || report.failedPhase)
     throw new Error('Infrastructure collection diagnostic did not pass.');
+  if (
+    report.candidateRepresentation != null &&
+    (report.candidateRepresentation.id !==
+      infrastructureCollectionRepresentationId(
+        report.candidateRepresentation.stemColorEncoding,
+      ) ||
+      !report.candidateRepresentation.styleHash?.includes('RGBA'))
+  )
+    throw new Error(
+      'Infrastructure candidate representation identity is invalid.',
+    );
   if (
     report.caseCount !== expectedCases.length ||
     report.pairsPerCase !== INFRASTRUCTURE_COLLECTION_PAIRS ||
@@ -548,6 +729,24 @@ export function validateInfrastructureCollectionReport(
           !/^[a-f0-9]{64}$/.test(sample.identitySha256) ||
           !/^[a-f0-9]{64}$/.test(sample.positionSha256) ||
           !/^[a-f0-9]{64}$/.test(sample.styleSha256) ||
+          (report.candidateRepresentation != null &&
+            (!/^[a-f0-9]{64}$/.test(sample.sourceStyleSha256 || '') ||
+              !/^[a-f0-9]{64}$/.test(sample.pointStyleSha256 || '') ||
+              !/^[a-f0-9]{64}$/.test(sample.stemNonColorStyleSha256 || '') ||
+              !/^[a-f0-9]{64}$/.test(sample.effectiveStemColorSha256 || '') ||
+              ![
+                'cesium-static-rgba8-attribute',
+                'rgba8-normalized-material-uniform',
+                'float-polyline-material',
+              ].includes(sample.effectiveStemColorEncoding))) ||
+          (report.candidateRepresentation != null &&
+            sample.effectiveStemColorEncoding !==
+              (sample.mode === 'entity'
+                ? 'cesium-static-rgba8-attribute'
+                : report.candidateRepresentation.stemColorEncoding ===
+                    'entity-color-attribute-byte'
+                  ? 'rgba8-normalized-material-uniform'
+                  : 'float-polyline-material')) ||
           !/^[a-f0-9]{64}$/.test(sample.sourceGeometryKindsSha256) ||
           !/^[a-f0-9]{64}$/.test(sample.renderEntityKindsSha256) ||
           !/^[a-f0-9]{64}$/.test(sample.pixelSha256)
@@ -575,7 +774,11 @@ export function validateInfrastructureCollectionReport(
             );
         }
       }
-      compareInfrastructureSurfaceSamples(entity, collection);
+      compareInfrastructureSurfaceSamples(entity, collection, {
+        stemColorEncoding:
+          report.candidateRepresentation?.stemColorEncoding ||
+          'direct-float-uniform',
+      });
     }
   }
   if (

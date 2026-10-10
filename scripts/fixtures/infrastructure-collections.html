@@ -40,6 +40,15 @@
       This is an isolated representation comparison, not full-application
       acceptance or a GPU-time claim.
     </p>
+    <label for="color-encoding">Candidate stem color:</label>
+    <select id="color-encoding">
+      <option value="direct-float-uniform" selected>
+        Direct float uniform (original)
+      </option>
+      <option value="entity-color-attribute-byte">
+        Match Entity RGBA8 attribute
+      </option>
+    </select>
     <button id="run">Run comparison</button>
     <button id="download" disabled>Download report</button>
     <p id="status" role="status">Ready</p>
