@@ -67,6 +67,30 @@ export function featureLabel(feature) {
   return String(props.name || props.id || feature?.id || '').trim();
 }
 
+/**
+ * Plain source identity shared by analyst/pick paths and Cesium render objects.
+ * It deliberately contains no Entity or graphics state, so rebuilding a data
+ * source cannot make an old render object resolve as the active feature.
+ */
+export function createCableFeatureRecord(feature, kind, reference) {
+  if (!feature || !reference || !['cable', 'landing-point'].includes(kind))
+    return null;
+  const id = String(feature.id || feature.properties?.id || '');
+  if (!id) return null;
+  const stableReference = Object.freeze({
+    lon: reference.lon,
+    lat: reference.lat,
+  });
+  return Object.freeze({
+    id,
+    featureId: id,
+    identity: `${kind}:${id}`,
+    kind,
+    label: featureLabel(feature),
+    reference: stableReference,
+  });
+}
+
 export function normalizeFeatures(json, kind) {
   const features = Array.isArray(json?.features) ? json.features : [];
   return features.map((feature, index) => {

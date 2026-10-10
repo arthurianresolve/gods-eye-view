@@ -39,6 +39,7 @@ export function createRendering({ state }) {
     state._landingDataSource = null;
     state._referenceDataSource = null;
     state._referenceRecords = [];
+    state._featureRecords = [];
     state._surfaceRecords = [];
     state._pickByEntity = new WeakMap();
     state._referenceLabelCount = 0;
@@ -139,7 +140,7 @@ export function createRendering({ state }) {
     entity.show = true;
   }
 
-  function addReferenceStem({ reference, label, kind, color, feature }) {
+  function addReferenceStem({ reference, label, kind, color, featureRecord }) {
     if (!state._referenceDataSource || !reference) return;
 
     const base = Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0);
@@ -148,12 +149,9 @@ export function createRendering({ state }) {
       reference.lat,
       2500,
     );
-    const info = {
-      kind,
-      reference,
-      label,
-      featureId: feature?.id || feature?.properties?.id || null,
-    };
+    const info = featureRecord
+      ? featureRecord
+      : { kind, reference, label, featureId: null };
     const pointColor = color.withAlpha(kind === 'cable' ? 0.84 : 0.94);
     const stemColor = color.withAlpha(kind === 'cable' ? 0.58 : 0.68);
     // Constant properties on the sweep cadence, never per-frame callbacks:
@@ -180,7 +178,6 @@ export function createRendering({ state }) {
       },
     });
 
-    entity.__gevTeleGeography = info;
     state._pickByEntity.set(entity, info);
     const record = {
       id: entity.id,

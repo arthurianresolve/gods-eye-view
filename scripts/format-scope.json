@@ -442,6 +442,8 @@
   "src/layers/launches/selection.js",
   "src/layers/launches/camera.js",
   "src/data/localGeojson.analyst.test.mjs",
+  "src/layers/submarineCables/geometry.test.mjs",
+  "src/layers/submarineCables/interaction.test.mjs",
   "src/data/satellites.analyst.test.mjs",
   "src/data/layerSnapshot.test.mjs",
   "src/data/satellitePass.test.mjs",

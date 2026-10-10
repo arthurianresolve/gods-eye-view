@@ -337,6 +337,7 @@ export function createLocalGeoJsonLayer(
   let _preRenderRemover = null;
   let _cameraMoveEndRemover = null;
   let _stemRecords = [];
+  let _pickFeatureByEntity = new WeakMap();
   let _stemGeometryDirty = true;
   let _lastVisibilityUpdate = 0;
   let _destroyed = false;
@@ -442,6 +443,7 @@ export function createLocalGeoJsonLayer(
     const source = _dataSource;
     _dataSource = null;
     _stemRecords = [];
+    _pickFeatureByEntity = new WeakMap();
     _stemGeometryDirty = true;
     _lastVisibilityUpdate = Number.NEGATIVE_INFINITY;
     removeEntityContextsForLayer(id);
@@ -548,18 +550,7 @@ export function createLocalGeoJsonLayer(
       for (let i = 0; i < _stemRecords.length; i++) {
         if (result.length >= limit) break;
         const record = _stemRecords[i];
-        const carto = record.carto;
-        result.push(
-          mapAnalystRecord(
-            {
-              id: record.id,
-              lat: carto ? Cesium.Math.toDegrees(carto.latitude) : null,
-              lon: carto ? Cesium.Math.toDegrees(carto.longitude) : null,
-              properties: propertyObject(record.entity),
-            },
-            id,
-          ),
-        );
+        result.push(mapAnalystRecord(record.featureRecord, id));
       }
       return result;
     },
@@ -662,6 +653,7 @@ export function createLocalGeoJsonLayer(
               const entities = loaded.entities.values;
               _count = entities.length;
               _stemRecords = [];
+              _pickFeatureByEntity = new WeakMap();
               _stemGeometryDirty = true;
 
               for (let i = 0; i < entities.length; i++) {
@@ -710,6 +702,18 @@ export function createLocalGeoJsonLayer(
                 );
                 const properties = propertyObject(feature);
                 const recordId = String(feature.id ?? i);
+                // Keep one source-facing feature record independent of the
+                // Cesium entity. Entity properties are render state and may
+                // be released/rebuilt; analyst identity and OSM evidence must
+                // remain stable across that lifecycle.
+                const featureRecord = {
+                  id: recordId,
+                  lat: Cesium.Math.toDegrees(carto.latitude),
+                  lon: Cesium.Math.toDegrees(carto.longitude),
+                  properties,
+                };
+                _pickFeatureByEntity.set(feature, featureRecord);
+                const analystRecord = mapAnalystRecord(featureRecord, id);
 
                 // Store references for bounded stem scaling and native picking.
                 feature.__localBaseCarto = carto;
@@ -719,18 +723,10 @@ export function createLocalGeoJsonLayer(
                   layerId: id,
                   layerName: name,
                   source,
-                  evidence: mapAnalystRecord(
-                    {
-                      id: properties.osm_id ?? recordId,
-                      properties,
-                      lat: Cesium.Math.toDegrees(carto.latitude),
-                      lon: Cesium.Math.toDegrees(carto.longitude),
-                    },
-                    id,
-                  ).evidence,
+                  evidence: analystRecord.evidence,
                   dataSource: loaded,
                   label: featureLabelFromProperties(properties, id),
-                  properties,
+                  properties: featureRecord.properties,
                   latitude: Number(
                     Cesium.Math.toDegrees(carto.latitude).toFixed(6),
                   ),
@@ -765,6 +761,7 @@ export function createLocalGeoJsonLayer(
                 const priority = labelPriorityFromProperties(properties, id);
                 _stemRecords.push({
                   id: recordId,
+                  featureRecord,
                   entity: feature,
                   carto,
                   base,
@@ -818,6 +815,7 @@ export function createLocalGeoJsonLayer(
               removeEntityContextsForLayer(id);
               _count = 0;
               _stemRecords = [];
+              _pickFeatureByEntity = new WeakMap();
               console.error(`Failed to load ${id}:`, e);
             }
 
@@ -833,7 +831,11 @@ export function createLocalGeoJsonLayer(
                 if (!_enabled) return;
                 const picked = viewer.scene.pick(click.position);
 
-                if (picked && picked.id && picked.id.__localLayerId === id) {
+                if (
+                  picked?.id &&
+                  _pickFeatureByEntity.has(picked.id) &&
+                  picked.id.__localLayerId === id
+                ) {
                   const entity = picked.id;
                   viewer.selectedEntity = entity;
                   selectEntityContext(entity);

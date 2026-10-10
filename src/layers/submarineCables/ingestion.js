@@ -1,6 +1,7 @@
 import {
   featureLabel,
   featureReference,
+  createCableFeatureRecord,
   normalizeFeatures,
 } from './geometry.js';
 import * as Cesium from 'cesium';
@@ -136,18 +137,22 @@ export function createIngestion({ state, parts, source }) {
       state._pickByEntity = new WeakMap();
       state._referenceRecords = [];
       state._surfaceRecords = [];
+      state._featureRecords = [];
 
       cableEntities.forEach((entity, index) => {
         const feature = cableFeatures[index];
         const reference = featureReference(feature);
         if (!reference) return;
+        const featureRecord = createCableFeatureRecord(
+          feature,
+          'cable',
+          reference,
+        );
+        if (!featureRecord) return;
+        state._featureRecords.push(featureRecord);
 
         parts.rendering.styleCableEntity(entity, feature);
-        parts.interaction.registerPickEntity(entity, {
-          kind: 'cable',
-          reference,
-          label: featureLabel(feature),
-        });
+        parts.interaction.registerPickEntity(entity, featureRecord);
         state._surfaceRecords.push({
           entity,
           base: Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0),
@@ -157,7 +162,7 @@ export function createIngestion({ state, parts, source }) {
           label: featureLabel(feature),
           kind: 'cable',
           color: state.cableColor,
-          feature,
+          featureRecord,
         });
       });
 
@@ -165,13 +170,16 @@ export function createIngestion({ state, parts, source }) {
         const feature = landingFeatures[index];
         const reference = featureReference(feature);
         if (!reference) return;
+        const featureRecord = createCableFeatureRecord(
+          feature,
+          'landing-point',
+          reference,
+        );
+        if (!featureRecord) return;
+        state._featureRecords.push(featureRecord);
 
         parts.rendering.styleLandingEntity(entity, feature);
-        parts.interaction.registerPickEntity(entity, {
-          kind: 'landing-point',
-          reference,
-          label: featureLabel(feature),
-        });
+        parts.interaction.registerPickEntity(entity, featureRecord);
         state._surfaceRecords.push({
           entity,
           base: Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0),
@@ -181,7 +189,7 @@ export function createIngestion({ state, parts, source }) {
           label: featureLabel(feature),
           kind: 'landing-point',
           color: state.landingColor,
-          feature,
+          featureRecord,
         });
       });
 
@@ -190,12 +198,28 @@ export function createIngestion({ state, parts, source }) {
       state._lastUpdate = Date.now();
       state._loadingLabel = '';
       parts.rendering.updateVisibility();
+      if (state._enabled) state._overlayPublisher.show();
       state._referenceSweepGate.markDirty();
       viewer.scene.requestRender?.();
     } catch (error) {
       // A stale or aborted load reports nothing: its failure belongs to a
       // lifecycle the user already left.
       if (owns() && error?.name !== 'AbortError') {
+        // If the source handoff committed before this error, release its
+        // generation-owned render objects before a later retry can rebuild.
+        try {
+          parts.rendering.releaseDataSources(viewer);
+        } catch {
+          /* clear identity ownership even if viewer teardown raced cleanup */
+        }
+        state._featureRecords = [];
+        state._pickByEntity = new WeakMap();
+        state._referenceRecords = [];
+        state._surfaceRecords = [];
+        state._count = 0;
+        state._loaded = false;
+        parts.rendering.resetPublishSignature();
+        state._overlayPublisher.hide();
         state._error = error?.message || 'TeleGeography load failed';
         console.warn(
           '[Data:telegeography-submarine-cables]',

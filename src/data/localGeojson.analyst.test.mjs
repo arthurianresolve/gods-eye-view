@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import { createLocalGeoJsonLayer, mapAnalystRecord } from './localGeojson.js';
+import { createLocalGeoJsonLayer as createCoreLocalGeoJsonLayer } from './localGeojsonCore.js';
 
 const DC_RAW = {
   id: '1176042553',
@@ -223,6 +224,224 @@ test('infra getAnalystRecords: enabled layer snapshots loaded stems; disable ret
       [],
       'destroy releases analyst records',
     );
+    globalThis.fetch = originalFetch;
+    if (originalWindow === undefined) delete globalThis.window;
+    else globalThis.window = originalWindow;
+  }
+});
+
+test('source identities survive render rebuilds, duplicate names, and detached snapshots', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalWindow = globalThis.window;
+  const features = [
+    {
+      type: 'Feature',
+      id: 'way/101',
+      properties: {
+        osm_id: '101',
+        tags: { name: 'Shared Facility', operator: 'Operator A' },
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-97.72, 30.2],
+            [-97.68, 30.2],
+            [-97.68, 30.22],
+            [-97.72, 30.2],
+          ],
+        ],
+      },
+    },
+    {
+      type: 'Feature',
+      id: 'way/202',
+      properties: {
+        osm_id: '202',
+        tags: { name: 'Shared Facility', operator: 'Operator B' },
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-97.6, 30.3],
+            [-97.59, 30.3],
+            [-97.59, 30.31],
+            [-97.6, 30.3],
+          ],
+        ],
+      },
+    },
+  ];
+  const sourceText = features
+    .map((feature) => JSON.stringify(feature))
+    .join('\n');
+  let fetchCount = 0;
+  let pickedEntity = null;
+  let clickAction = null;
+  const selectedEntities = [];
+  const contexts = new Map();
+  const viewer = {
+    selectedEntity: undefined,
+    dataSources: {
+      sources: [],
+      add(dataSource) {
+        this.sources.push(dataSource);
+        return dataSource;
+      },
+      remove(dataSource) {
+        this.sources = this.sources.filter((source) => source !== dataSource);
+        return true;
+      },
+    },
+    camera: {
+      positionWC: Cesium.Cartesian3.fromDegrees(-97.7, 30.25, 100_000),
+      frustum: { fov: Math.PI / 3 },
+      moveEnd: new MockLayerEvent(),
+      flyTo() {},
+    },
+    scene: {
+      canvas: { clientWidth: 800, clientHeight: 600 },
+      preRender: new MockLayerEvent(),
+      sampleHeightSupported: false,
+      screenSpaceCameraController: { enableInputs: true },
+      pick() {
+        return pickedEntity ? { id: pickedEntity } : null;
+      },
+      requestRender() {},
+    },
+  };
+  globalThis.window = { dispatchEvent() {} };
+  globalThis.fetch = async () => {
+    fetchCount++;
+    return { ok: true, status: 200, text: async () => sourceText };
+  };
+  const layer = createCoreLocalGeoJsonLayer(
+    {
+      id: 'local-datacenters',
+      url: '/duplicate-datacenters.geojsonl',
+      name: 'Datacenters',
+      color: '#00ffff',
+      source: 'OpenStreetMap contributors',
+      osmDerived: true,
+      labels: false,
+      screenSpaceEventHandlerFactory: () => ({
+        setInputAction(handler) {
+          clickAction = handler;
+        },
+        destroy() {
+          clickAction = null;
+        },
+      }),
+    },
+    {
+      overlayHost: { setVisible() {}, setEntries() {}, clearSource() {} },
+      registerEntityContext(entity, metadata) {
+        contexts.set(metadata.id, { entity, ...metadata });
+      },
+      removeEntityContextsForLayer(layerId) {
+        for (const [contextId, context] of contexts) {
+          if (context.layerId === layerId) contexts.delete(contextId);
+        }
+      },
+      clearSelectedEntityContextForLayer() {},
+      selectEntityContext(entity) {
+        selectedEntities.push(entity);
+      },
+    },
+  );
+
+  try {
+    await layer.enable(viewer);
+    const first = layer.getAnalystRecords();
+    assert.deepEqual(
+      first.map((record) => record.id),
+      ['Shared Facility', 'Shared Facility'],
+    );
+    assert.deepEqual(
+      first.map((record) => record.sourceRecordId),
+      ['101', '202'],
+    );
+    assert.equal(first[0].operator, 'Operator A');
+    assert.equal(first[1].operator, 'Operator B');
+    assert.equal(first[0].evidence.references[0].kind, 'peeringdb');
+    const stableRows = JSON.parse(JSON.stringify(first));
+    assert.equal(contexts.size, 2);
+    assert.deepEqual(
+      [...contexts.keys()],
+      ['local-datacenters:way/101', 'local-datacenters:way/202'],
+    );
+    const oldRenderEntity = contexts.get('local-datacenters:way/101').entity;
+    pickedEntity = oldRenderEntity;
+    clickAction({ position: { x: 1, y: 1 } });
+    assert.equal(viewer.selectedEntity, oldRenderEntity);
+    assert.equal(selectedEntities.length, 1);
+
+    // Analyst snapshots are detached; changing one query result cannot
+    // mutate the canonical source record used by the next query.
+    const originalEvidence = stableRows[0].evidence;
+    const nextSnapshot = layer.getAnalystRecords()[0];
+    assert.notEqual(first[0].evidence, nextSnapshot.evidence);
+    assert.notEqual(
+      first[0].evidence.references,
+      nextSnapshot.evidence.references,
+    );
+    assert.throws(() => {
+      first[0].evidence.references[0].title = 'mutated by caller';
+    }, TypeError);
+    first[0].operator = 'mutated by caller';
+    contexts.get('local-datacenters:way/101').entity.properties = undefined;
+    const detachedSnapshot = layer.getAnalystRecords()[0];
+    assert.equal(detachedSnapshot.operator, 'Operator A');
+    assert.deepEqual(detachedSnapshot.evidence, originalEvidence);
+
+    const expectedCenter = Cesium.Cartographic.fromCartesian(
+      Cesium.BoundingSphere.fromPoints(
+        features[0].geometry.coordinates[0].map(([lon, lat]) =>
+          Cesium.Cartesian3.fromDegrees(lon, lat),
+        ),
+      ).center,
+    );
+    const beforeDisable = layer.getAnalystRecords()[0];
+    assert.ok(
+      Math.abs(
+        beforeDisable.lat - Cesium.Math.toDegrees(expectedCenter.latitude),
+      ) < 1e-10,
+    );
+    assert.ok(
+      Math.abs(
+        beforeDisable.lon - Cesium.Math.toDegrees(expectedCenter.longitude),
+      ) < 1e-10,
+    );
+
+    layer.disable(viewer);
+    assert.equal(contexts.size, 0);
+    assert.equal(viewer.selectedEntity, undefined);
+    assert.deepEqual(layer.getAnalystRecords(), []);
+    await layer.enable(viewer);
+    const rebuilt = layer.getAnalystRecords();
+    assert.deepEqual(rebuilt, stableRows);
+    assert.equal(fetchCount, 1, 'rebuild reuses parsed source data');
+    assert.equal(contexts.size, 2);
+    const currentRenderEntity = contexts.get(
+      'local-datacenters:way/101',
+    ).entity;
+    assert.notEqual(currentRenderEntity, oldRenderEntity);
+    viewer.selectedEntity = undefined;
+    pickedEntity = oldRenderEntity;
+    clickAction({ position: { x: 1, y: 1 } });
+    assert.equal(viewer.selectedEntity, undefined);
+    assert.equal(selectedEntities.length, 1, 'old render entity is inert');
+    pickedEntity = currentRenderEntity;
+    clickAction({ position: { x: 1, y: 1 } });
+    assert.equal(viewer.selectedEntity, currentRenderEntity);
+    assert.equal(
+      selectedEntities.length,
+      2,
+      'current render entity still picks',
+    );
+  } finally {
+    layer.destroy(viewer);
     globalThis.fetch = originalFetch;
     if (originalWindow === undefined) delete globalThis.window;
     else globalThis.window = originalWindow;
