@@ -268,11 +268,18 @@ try {
           expectedCases,
           'Incomplete or reordered case matrix',
         );
-        assert.ok(
-          result.runtime.userAgent.includes(
-            report.environment.browserVersion.split('/')[1],
-          ),
-          'Runtime browser identity differs',
+        // Chrome reduces the page UA to major.0.0.0. Keep it as observed,
+        // compare its major, and verify the full version through the same
+        // browser connection on every capture rather than inventing UA detail.
+        assert.equal(
+          result.runtime.userAgent.match(/(?:Headless)?Chrome\/(\d+)\./)?.[1],
+          report.environment.browserVersion.match(/Chrome\/(\d+)\./)?.[1],
+          'Runtime browser major differs',
+        );
+        assert.equal(
+          await browser.version(),
+          report.environment.browserVersion,
+          'Full browser version changed during capture',
         );
         assert.equal(
           result.runtime.cesiumVersion,
