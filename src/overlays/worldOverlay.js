@@ -221,6 +221,19 @@ const _domainList = [];
 const _records = new Map();
 const _scratchViewProjection = new Cesium.Matrix4();
 const _viewProjectionScalars = {};
+const _projectionCacheState = {
+  revision: 0,
+  valid: false,
+  matrix: new Array(12).fill(Number.NaN),
+  cameraX: Number.NaN,
+  cameraY: Number.NaN,
+  cameraZ: Number.NaN,
+  cameraAltitude: Number.NaN,
+  sceneMode: undefined,
+  width: -1,
+  height: -1,
+  dpr: -1,
+};
 const _viewport = { width: 0, height: 0 };
 let _occluder = null;
 let _occluderCameraX = Number.NaN;
@@ -840,6 +853,7 @@ function getOrCreateSource(sourceId, options = {}) {
     source = {
       id,
       entries: new Map(),
+      projectionRevision: 0,
       cohortDomainIds: [],
       cohortLists: [],
       cohortCount: 0,
@@ -951,6 +965,7 @@ export function setOverlayEntries(sourceId, entries, options = {}) {
   if (!Array.isArray(entries))
     throw new TypeError('WorldOverlay entries must be an array');
   const source = getOrCreateSource(sourceId, options);
+  source.projectionRevision++;
   const normalized = entries.map((entry) =>
     normalizeOverlayEntry(source.id, entry),
   );
@@ -976,6 +991,7 @@ export function setOverlayEntries(sourceId, entries, options = {}) {
 export function upsertOverlayEntry(sourceId, entry) {
   if (_destroyed) return;
   const source = getOrCreateSource(sourceId);
+  source.projectionRevision++;
   const normalized = normalizeOverlayEntry(source.id, entry);
   source.entries.set(normalized.id, normalized);
   rebuildSourceCohorts(source);
@@ -996,6 +1012,7 @@ export function removeOverlayEntry(sourceId, entryId) {
   const id = String(entryId);
   const removed = source.entries.delete(id);
   if (!removed) return false;
+  source.projectionRevision++;
   _records.delete(entryKey(source.id, id));
   rebuildSourceCohorts(source);
   updateEntryDiagnostics();
@@ -1014,6 +1031,7 @@ export function clearOverlaySource(sourceId) {
   if (!source) return false;
   for (const entry of source.entries.values())
     _records.delete(entry._overlayKey);
+  source.projectionRevision++;
   source.entries.clear();
   source.cohortDomainIds.length = 0;
   source.cohortLists.length = 0;
@@ -1035,6 +1053,7 @@ export function setOverlaySourceVisible(sourceId, visible) {
   const next = visible !== false;
   if (source.options.visible === next) return;
   source.options.visible = next;
+  source.projectionRevision++;
   invalidateHost();
 }
 
@@ -1716,6 +1735,57 @@ function prepareProjectionMatrix() {
   return _viewProjectionScalars;
 }
 
+const PROJECTION_CACHE_MATRIX_FIELDS = [
+  'm0',
+  'm1',
+  'm3',
+  'm4',
+  'm5',
+  'm7',
+  'm8',
+  'm9',
+  'm11',
+  'm12',
+  'm13',
+  'm15',
+];
+
+/** Advance one shared revision when any pure projection input changes. */
+function updateProjectionCacheRevision(viewProjection, camera) {
+  const state = _projectionCacheState;
+  const position = camera.positionWC;
+  const altitude = camera.positionCartographic?.height;
+  const sceneMode = _viewer.scene.mode;
+  let changed = !state.valid;
+  for (let i = 0; i < PROJECTION_CACHE_MATRIX_FIELDS.length; i++) {
+    const value = viewProjection[PROJECTION_CACHE_MATRIX_FIELDS[i]];
+    if (!Object.is(state.matrix[i], value)) changed = true;
+    state.matrix[i] = value;
+  }
+  if (
+    !Object.is(state.cameraX, position.x) ||
+    !Object.is(state.cameraY, position.y) ||
+    !Object.is(state.cameraZ, position.z) ||
+    !Object.is(state.cameraAltitude, altitude) ||
+    !Object.is(state.sceneMode, sceneMode) ||
+    state.width !== _canvasWidth ||
+    state.height !== _canvasHeight ||
+    state.dpr !== _canvasDpr
+  )
+    changed = true;
+  state.cameraX = position.x;
+  state.cameraY = position.y;
+  state.cameraZ = position.z;
+  state.cameraAltitude = altitude;
+  state.sceneMode = sceneMode;
+  state.width = _canvasWidth;
+  state.height = _canvasHeight;
+  state.dpr = _canvasDpr;
+  state.valid = true;
+  if (changed) state.revision++;
+  return state.revision;
+}
+
 function prepareCustomPaintFrame(timestamp, keyhole) {
   const viewProjection = prepareProjectionMatrix();
   const camera = _viewer.camera.positionWC;
@@ -1729,6 +1799,7 @@ function prepareCustomPaintFrame(timestamp, keyhole) {
     _occluderCameraY = camera.y;
     _occluderCameraZ = camera.z;
   }
+  updateProjectionCacheRevision(viewProjection, _viewer.camera);
   _customPaintFrame.canvas = _canvas;
   _customPaintFrame.surface = _canvas;
   _customPaintFrame.ctx = _ctx;
@@ -1761,6 +1832,17 @@ function getProjectionRecord(entry) {
       contentAlpha: 1,
       altitudeAlpha: 1,
       sourceAlpha: 1,
+      projectionEntry: null,
+      projectionSourceRevision: -1,
+      projectionViewRevision: -1,
+      projectionPositionX: Number.NaN,
+      projectionPositionY: Number.NaN,
+      projectionPositionZ: Number.NaN,
+      projectionValid: false,
+      projectedDistance: 0,
+      projectedDistanceAlpha: 1,
+      projectedPaintScale: 1,
+      projectedAltitudeAlpha: 1,
       protectedPlacement: null,
       distanceOptions: {},
       altitudeOptions: {},
@@ -1879,113 +1961,142 @@ function snapshotAndProject(entry, source, viewProjection, keyhole) {
   ) {
     return null;
   }
-  record.position.x = position.x;
-  record.position.y = position.y;
-  record.position.z = position.z;
+  const positionX = position.x;
+  const positionY = position.y;
+  const positionZ = position.z;
+  const cacheMatches =
+    record.projectionEntry === entry &&
+    record.projectionSourceRevision === source.projectionRevision &&
+    record.projectionViewRevision === _projectionCacheState.revision &&
+    Object.is(record.projectionPositionX, positionX) &&
+    Object.is(record.projectionPositionY, positionY) &&
+    Object.is(record.projectionPositionZ, positionZ);
+  if (!cacheMatches) {
+    record.projectionEntry = entry;
+    record.projectionSourceRevision = source.projectionRevision;
+    record.projectionViewRevision = _projectionCacheState.revision;
+    record.projectionPositionX = positionX;
+    record.projectionPositionY = positionY;
+    record.projectionPositionZ = positionZ;
+    record.projectionValid = false;
+    record.position.x = positionX;
+    record.position.y = positionY;
+    record.position.z = positionZ;
 
-  const { x: px, y: py, z: pz } = record.position;
-  const clipW =
-    viewProjection.m3 * px +
-    viewProjection.m7 * py +
-    viewProjection.m11 * pz +
-    viewProjection.m15;
-  if (!(clipW > 0)) return null;
-  const invW = 1 / clipW;
-  record.screen.x =
-    ((viewProjection.m0 * px +
-      viewProjection.m4 * py +
-      viewProjection.m8 * pz +
-      viewProjection.m12) *
-      invW *
-      0.5 +
-      0.5) *
-    _canvasWidth;
-  record.screen.y =
-    (0.5 -
-      (viewProjection.m1 * px +
-        viewProjection.m5 * py +
-        viewProjection.m9 * pz +
-        viewProjection.m13) *
+    const { x: px, y: py, z: pz } = record.position;
+    const clipW =
+      viewProjection.m3 * px +
+      viewProjection.m7 * py +
+      viewProjection.m11 * pz +
+      viewProjection.m15;
+    if (!(clipW > 0)) return null;
+    const invW = 1 / clipW;
+    record.screen.x =
+      ((viewProjection.m0 * px +
+        viewProjection.m4 * py +
+        viewProjection.m8 * pz +
+        viewProjection.m12) *
         invW *
+        0.5 +
         0.5) *
-    _canvasHeight;
-  if (
-    entry.safeTopRatio > 0 &&
-    !(entry.pinned && entry.pinnedBypassesSafeTop)
-  ) {
-    const safeTop = Math.min(
-      entry.safeTopMaxPx,
-      _canvasHeight * entry.safeTopRatio,
-    );
-    if (record.screen.y < safeTop) return null;
-  }
-  if (
-    !isOverlayPointVisible(
-      entry,
-      record.position,
-      record.screen,
-      _viewport,
-      _occluder,
-    )
-  )
-    return null;
-
-  // Doubles crossing a non-inlined call boundary are boxed, so the two hot
-  // scalar steps stay local: the range is computed inline, and the common
-  // "no far limit" fade policy resolves without calling out at all. Both are
-  // exact restatements of `Cartesian3.distance` / `distanceFade`.
-  const cameraPosition = _viewer.camera.positionWC;
-  const rangeX = cameraPosition.x - record.position.x;
-  const rangeY = cameraPosition.y - record.position.y;
-  const rangeZ = cameraPosition.z - record.position.z;
-  const distance = Math.sqrt(
-    rangeX * rangeX + rangeY * rangeY + rangeZ * rangeZ,
-  );
-  record.distanceAlpha =
-    entry.maxDistance === Number.POSITIVE_INFINITY
-      ? distance >= entry.minDistance
-        ? 1
-        : 0
-      : distanceFade(distance, record.distanceOptions);
-  const cameraAltitude = _viewer.camera.positionCartographic?.height;
-  record.paintScale = entry.distanceScale
-    ? distanceScale(distance, entry.distanceScale)
-    : 1;
-  // Keep the source-configurable piecewise curve local to the projection hot
-  // path. Passing its five doubles through a non-inlined helper boxed them for
-  // every thumbnail candidate and broke the shared 154 B/candidate gate.
-  const altitudeCurve = entry.altitudeScale;
-  if (altitudeCurve && Number.isFinite(cameraAltitude)) {
-    let altitudeFactor = 1;
-    if (cameraAltitude > altitudeCurve.fullEnd) {
-      if (cameraAltitude <= altitudeCurve.midEnd) {
-        const span = Math.max(1, altitudeCurve.midEnd - altitudeCurve.fullEnd);
-        let progress = Math.max(
-          0,
-          Math.min(1, (cameraAltitude - altitudeCurve.fullEnd) / span),
-        );
-        if (altitudeCurve.smoothToMid)
-          progress = progress * progress * (3 - 2 * progress);
-        altitudeFactor = 1 + (altitudeCurve.midValue - 1) * progress;
-      } else if (cameraAltitude >= altitudeCurve.end) {
-        altitudeFactor = altitudeCurve.endValue;
-      } else {
-        const progress =
-          (cameraAltitude - altitudeCurve.midEnd) /
-          Math.max(1, altitudeCurve.end - altitudeCurve.midEnd);
-        altitudeFactor =
-          altitudeCurve.midValue +
-          (altitudeCurve.endValue - altitudeCurve.midValue) * progress;
-      }
+      _canvasWidth;
+    record.screen.y =
+      (0.5 -
+        (viewProjection.m1 * px +
+          viewProjection.m5 * py +
+          viewProjection.m9 * pz +
+          viewProjection.m13) *
+          invW *
+          0.5) *
+      _canvasHeight;
+    if (
+      entry.safeTopRatio > 0 &&
+      !(entry.pinned && entry.pinnedBypassesSafeTop)
+    ) {
+      const safeTop = Math.min(
+        entry.safeTopMaxPx,
+        _canvasHeight * entry.safeTopRatio,
+      );
+      if (record.screen.y < safeTop) return null;
     }
-    record.paintScale *= altitudeFactor;
+    if (
+      !isOverlayPointVisible(
+        entry,
+        record.position,
+        record.screen,
+        _viewport,
+        _occluder,
+      )
+    )
+      return null;
+
+    // Doubles crossing a non-inlined call boundary are boxed, so the two hot
+    // scalar steps stay local: the range is computed inline, and the common
+    // "no far limit" fade policy resolves without calling out at all. Both are
+    // exact restatements of `Cartesian3.distance` / `distanceFade`.
+    const cameraPosition = _viewer.camera.positionWC;
+    const rangeX = cameraPosition.x - record.position.x;
+    const rangeY = cameraPosition.y - record.position.y;
+    const rangeZ = cameraPosition.z - record.position.z;
+    const distance = Math.sqrt(
+      rangeX * rangeX + rangeY * rangeY + rangeZ * rangeZ,
+    );
+    record.projectedDistanceAlpha =
+      entry.maxDistance === Number.POSITIVE_INFINITY
+        ? distance >= entry.minDistance
+          ? 1
+          : 0
+        : distanceFade(distance, record.distanceOptions);
+    record.projectedDistance = distance;
+    const cameraAltitude = _viewer.camera.positionCartographic?.height;
+    record.projectedPaintScale = entry.distanceScale
+      ? distanceScale(distance, entry.distanceScale)
+      : 1;
+    // Keep the source-configurable piecewise curve local to the projection hot
+    // path. Passing its five doubles through a non-inlined helper boxed them for
+    // every thumbnail candidate and broke the shared 154 B/candidate gate.
+    const altitudeCurve = entry.altitudeScale;
+    if (altitudeCurve && Number.isFinite(cameraAltitude)) {
+      let altitudeFactor = 1;
+      if (cameraAltitude > altitudeCurve.fullEnd) {
+        if (cameraAltitude <= altitudeCurve.midEnd) {
+          const span = Math.max(
+            1,
+            altitudeCurve.midEnd - altitudeCurve.fullEnd,
+          );
+          let progress = Math.max(
+            0,
+            Math.min(1, (cameraAltitude - altitudeCurve.fullEnd) / span),
+          );
+          if (altitudeCurve.smoothToMid)
+            progress = progress * progress * (3 - 2 * progress);
+          altitudeFactor = 1 + (altitudeCurve.midValue - 1) * progress;
+        } else if (cameraAltitude >= altitudeCurve.end) {
+          altitudeFactor = altitudeCurve.endValue;
+        } else {
+          const progress =
+            (cameraAltitude - altitudeCurve.midEnd) /
+            Math.max(1, altitudeCurve.end - altitudeCurve.midEnd);
+          altitudeFactor =
+            altitudeCurve.midValue +
+            (altitudeCurve.endValue - altitudeCurve.midValue) * progress;
+        }
+      }
+      record.projectedPaintScale *= altitudeFactor;
+    }
+    record.projectedAltitudeAlpha =
+      entry.altitudeFadeEnd === Number.POSITIVE_INFINITY
+        ? Number.isFinite(cameraAltitude) && cameraAltitude < entry.minAltitude
+          ? 0
+          : 1
+        : altitudeFade(cameraAltitude, record.altitudeOptions);
+    record.projectionValid = true;
   }
-  record.altitudeAlpha =
-    entry.altitudeFadeEnd === Number.POSITIVE_INFINITY
-      ? Number.isFinite(cameraAltitude) && cameraAltitude < entry.minAltitude
-        ? 0
-        : 1
-      : altitudeFade(cameraAltitude, record.altitudeOptions);
+  if (!record.projectionValid) return null;
+  record.distanceAlpha = record.projectedDistanceAlpha;
+  record.paintScale = record.projectedPaintScale;
+  record.altitudeAlpha = record.projectedAltitudeAlpha;
+  const distance = record.projectedDistance;
   record.leaderProgress = 1;
   record.contentAlpha = 1;
   if (
@@ -2838,6 +2949,8 @@ export function destroyWorldOverlay() {
   _occludersUpdatedAt = Number.NEGATIVE_INFINITY;
   _canvasWidth = 0;
   _canvasHeight = 0;
+  _projectionCacheState.valid = false;
+  _projectionCacheState.revision++;
   _viewport.width = 0;
   _viewport.height = 0;
   _canvasDpr = 1;

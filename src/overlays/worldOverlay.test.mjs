@@ -896,6 +896,479 @@ test('chrome observers scope: body is childList discovery; occluder attributes a
   env.cleanup();
 });
 
+test('stable projection inputs reuse actual visibility work while callbacks stay live', () => {
+  const env = installMockEnvironment({ width: 400, height: 300, dpr: 1 });
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  const paintedAlphas = [];
+  Object.defineProperty(env.ctx, 'globalAlpha', {
+    configurable: true,
+    get() {
+      return paintedAlphas.at(-1) ?? 1;
+    },
+    set(value) {
+      paintedAlphas.push(value);
+    },
+  });
+  try {
+    initWorldOverlay(env.viewer);
+    const mutablePosition = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    let positionReads = 0;
+    let alphaReads = 0;
+    let scaleReads = 0;
+    let alpha = 1;
+    let scale = 1;
+    const entry = selectedEntry('projection-cache', {
+      interactive: true,
+      horizonCull: true,
+      position: () => {
+        positionReads++;
+        return mutablePosition;
+      },
+      sourceAlpha: () => {
+        alphaReads++;
+        return alpha;
+      },
+      presentationScale: () => {
+        scaleReads++;
+        return scale;
+      },
+    });
+    setOverlayEntries('projection-cache-source', [entry]);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      1,
+      'first frame evaluates real horizon visibility',
+    );
+    const firstRect = getOverlayPaintRect(
+      'projection-cache-source',
+      'projection-cache',
+    );
+    assert.ok(firstRect);
+    const firstWidth = firstRect.w;
+
+    env.advanceTime(200);
+    alpha = 0.4;
+    scale = 0.5;
+    paintedAlphas.length = 0;
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      1,
+      'unchanged pure projection inputs skip visibility work',
+    );
+    assert.equal(
+      positionReads,
+      2,
+      'dynamic position callback still runs every frame',
+    );
+    assert.equal(
+      alphaReads,
+      2,
+      'dynamic alpha callback still runs every frame',
+    );
+    assert.equal(
+      scaleReads,
+      2,
+      'dynamic presentation callback still runs every frame',
+    );
+    assert.ok(Math.abs(paintedAlphas.at(-1) - 0.4) < 1e-12);
+    const scaledRect = getOverlayPaintRect(
+      'projection-cache-source',
+      'projection-cache',
+    );
+    assert.ok(
+      scaledRect && scaledRect.w < firstWidth,
+      'presentation scale is refreshed on a cache hit',
+    );
+    const scaledAnchorX = scaledRect.anchorX;
+
+    mutablePosition.x = 0.2;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'a mutation of the returned position object invalidates',
+    );
+    const movedRect = getOverlayPaintRect(
+      'projection-cache-source',
+      'projection-cache',
+    );
+    assert.ok(movedRect && movedRect.anchorX > scaledAnchorX);
+
+    env.viewer.camera.frustum.projectionMatrix[0] = 2;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 3, 'camera projection changes invalidate');
+
+    env.viewer.camera.positionWC.x = 1;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 4, 'camera position changes invalidate');
+
+    env.viewer.camera.positionCartographic.height++;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 5, 'camera altitude changes invalidate');
+
+    env.viewer.scene.mode = Cesium.SceneMode.SCENE2D;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 6, 'scene mode changes invalidate');
+
+    env.viewer.canvas.clientWidth = 800;
+    env.viewer.canvas.clientHeight = 600;
+    env.window.devicePixelRatio = 1.5;
+    env.window.dispatch('resize');
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 7, 'viewport and DPR changes invalidate');
+
+    env.window.devicePixelRatio = 2;
+    env.window.dispatch('resize');
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 8, 'DPR-only changes invalidate');
+
+    env.viewer.camera.viewMatrix[12] += 0.1;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 9, 'view-matrix-only changes invalidate');
+
+    setOverlayEntries(
+      'projection-cache-source',
+      [{ ...entry, title: 'changed style', selected: false, protected: false }],
+      { alpha: 0.75 },
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      10,
+      'source and entry/style replacement invalidates',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('cached negative projection decisions retry after their owning input changes', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  let visible = false;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return visible ? originalIsPointVisible.apply(this, args) : false;
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const atCenter = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    const visibilityEntry = selectedEntry('visibility', {
+      interactive: true,
+      horizonCull: true,
+      position: atCenter,
+    });
+    setOverlayEntries('projection-negative-visibility', [visibilityEntry]);
+    env.postRender.raise();
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1, 'a stable hidden result is reused');
+    assert.equal(
+      getOverlayPaintRect('projection-negative-visibility', 'visibility'),
+      null,
+    );
+
+    visible = true;
+    setOverlayEntries('projection-negative-visibility', [visibilityEntry]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 2, 'entry revision retries visibility');
+    assert.ok(
+      getOverlayPaintRect('projection-negative-visibility', 'visibility'),
+    );
+    clearOverlaySource('projection-negative-visibility');
+
+    const safeTopEntry = selectedEntry('safe-top', {
+      interactive: true,
+      horizonCull: true,
+      safeTopRatio: 0.9,
+      position: atCenter,
+    });
+    setOverlayEntries('projection-negative-safe-top', [safeTopEntry]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    const afterSafeTopReject = visibilityChecks;
+    assert.equal(
+      getOverlayPaintRect('projection-negative-safe-top', 'safe-top'),
+      null,
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterSafeTopReject,
+      'a stable safe-top rejection avoids the visibility test',
+    );
+    setOverlayEntries('projection-negative-safe-top', [
+      { ...safeTopEntry, safeTopRatio: 0 },
+    ]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterSafeTopReject + 1,
+      'a safe-top policy revision reruns projection and visibility',
+    );
+    assert.ok(
+      getOverlayPaintRect('projection-negative-safe-top', 'safe-top'),
+    );
+    clearOverlaySource('projection-negative-safe-top');
+
+    const behindCameraEntry = selectedEntry('behind-camera', {
+      interactive: true,
+      horizonCull: true,
+      position: atCenter,
+    });
+    env.viewer.camera.viewMatrix[15] = -1;
+    setOverlayEntries('projection-negative-behind-camera', [
+      behindCameraEntry,
+    ]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    const afterBehindCameraReject = visibilityChecks;
+    assert.equal(
+      getOverlayPaintRect(
+        'projection-negative-behind-camera',
+        'behind-camera',
+      ),
+      null,
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterBehindCameraReject,
+      'a stable behind-camera result is reused',
+    );
+    env.viewer.camera.viewMatrix[15] = 1;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      afterBehindCameraReject + 1,
+      'view-matrix change re-evaluates a behind-camera entry',
+    );
+    assert.ok(
+      getOverlayPaintRect(
+        'projection-negative-behind-camera',
+        'behind-camera',
+      ),
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('invalid dynamic position samples do not poison a later valid sample', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const validPosition = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    let sample = 'valid';
+    setOverlayEntries('projection-invalid-position', [
+      selectedEntry('position', {
+        interactive: true,
+        horizonCull: true,
+        position: () => {
+          if (sample === 'throw') throw new Error('temporary position failure');
+          return sample === null ? null : validPosition;
+        },
+      }),
+    ]);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1, 'the initial valid sample is projected');
+    assert.ok(getOverlayPaintRect('projection-invalid-position', 'position'));
+
+    sample = null;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      getOverlayPaintRect('projection-invalid-position', 'position'),
+      null,
+      'an unavailable sample immediately withdraws the stale hit rect',
+    );
+
+    sample = 'throw';
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      getOverlayPaintRect('projection-invalid-position', 'position'),
+      null,
+      'a failed sample does not republish the stale hit rect',
+    );
+    sample = 'valid';
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1);
+    assert.ok(
+      getOverlayPaintRect('projection-invalid-position', 'position'),
+      'the same valid position safely reuses its cached pure projection',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('projection cache isolates duplicate identities and clears across remove/re-add and visibility changes', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const surfacePosition = new Cesium.Cartesian3(
+      0,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    const makeEntry = () =>
+      selectedEntry('same-id', {
+        horizonCull: true,
+        position: () => surfacePosition,
+      });
+    setOverlayEntries('projection-source-a', [makeEntry()]);
+    setOverlayEntries('projection-source-b', [makeEntry()]);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'same entry IDs in different sources are separate records',
+    );
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'both records reuse stable projection inputs',
+    );
+
+    assert.equal(removeOverlayEntry('projection-source-a', 'same-id'), true);
+    setOverlayEntries('projection-source-a', [makeEntry()]);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      3,
+      'remove and re-add starts with a fresh cache record',
+    );
+
+    setOverlaySourceVisible('projection-source-b', false);
+    env.advanceTime(16);
+    env.postRender.raise();
+    const hiddenCount = visibilityChecks;
+    setOverlaySourceVisible('projection-source-b', true);
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      hiddenCount + 1,
+      'source visibility restoration invalidates its record',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
+test('an out-of-view position can become visible without changing entry identity', () => {
+  const env = installMockEnvironment();
+  const originalIsPointVisible =
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible;
+  let visibilityChecks = 0;
+  Cesium.EllipsoidalOccluder.prototype.isPointVisible = function (...args) {
+    visibilityChecks++;
+    return originalIsPointVisible.apply(this, args);
+  };
+  try {
+    initWorldOverlay(env.viewer);
+    const mutablePosition = new Cesium.Cartesian3(
+      2,
+      0,
+      Cesium.Ellipsoid.WGS84.maximumRadius,
+    );
+    setOverlayEntries('projection-visibility-transition', [
+      selectedEntry('moving', {
+        interactive: true,
+        horizonCull: true,
+        position: () => mutablePosition,
+      }),
+    ]);
+    env.postRender.raise();
+    assert.equal(visibilityChecks, 1);
+    assert.equal(
+      getOverlayPaintRect('projection-visibility-transition', 'moving'),
+      null,
+      'off-viewport entry is not published',
+    );
+
+    mutablePosition.x = 0;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(
+      visibilityChecks,
+      2,
+      'the changed exact position is re-evaluated',
+    );
+    assert.ok(
+      getOverlayPaintRect('projection-visibility-transition', 'moving'),
+      'same entry identity becomes visible after moving in view',
+    );
+  } finally {
+    Cesium.EllipsoidalOccluder.prototype.isPointVisible =
+      originalIsPointVisible;
+    env.cleanup();
+  }
+});
+
 test('projection records never retain keys for entries that are no longer live', () => {
   const originalSet = Map.prototype.set;
   let recordMap = null;
