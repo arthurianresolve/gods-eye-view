@@ -426,6 +426,7 @@
   "src/layers/launches/panel.js",
   "src/layers/launches/source.js",
   "src/layers/launches/policyHelpers.js",
+  "src/layers/launches/renderDemand.js",
   "src/layers/launches/replay.js",
   "src/layers/launches/launchPad.js",
   "src/layers/launches/state.js",
