@@ -1,0 +1,41 @@
+{
+  "schema": "gev-font-wake-review/v1",
+  "reviewedAt": "2026-10-10T23:46:36.826Z",
+  "rawSha256": "8c18f88672d57e63509386571fa335753b4abd2821c6288d9c0bb0e998a81557",
+  "baseline": "33d985657c8949a02cfce2f0f1ad4131d3da774c",
+  "candidate": "fee5ed66e6a6f28ceeae9be315d1c5d7c82bf844",
+  "pairs": 2,
+  "sourceHashesIndependentlyVerified": true,
+  "zeroIdleFramesInAllRuns": true,
+  "baselineMissingWakeReproducedTwice": true,
+  "candidateNativeFontWakePassedTwice": true,
+  "oldHostWakes": 0,
+  "rectWidths": {
+    "before": 283,
+    "baselineAfter": 283,
+    "candidateAfter": 299
+  },
+  "fixtureOwnership": {
+    "baseline": {
+      "font-wake.html": "temporary",
+      "font-wake.mjs": "temporary",
+      "font-wake.ttf": "temporary",
+      "OFL.txt": "temporary"
+    },
+    "candidate": {
+      "font-wake.html": "existing",
+      "font-wake.mjs": "existing",
+      "font-wake.ttf": "existing",
+      "OFL.txt": "existing"
+    }
+  },
+  "cleanup": {
+    "browserClosed": true,
+    "pagesClosed": true,
+    "sessionsDetached": true,
+    "serversClosed": true,
+    "fixtureFilesRemoved": true,
+    "sourceTreesUnchanged": true
+  },
+  "scope": "Two-pair hosted correctness comparison of real FontFaceSet events and Cesium request-render wake; software WebGL scene, no performance claim."
+}

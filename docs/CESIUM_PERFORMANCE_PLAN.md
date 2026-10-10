@@ -120,6 +120,19 @@ deadline, without process termination. The
 has SHA-256 `7dd6be29d603cd5a23406d13dad551f65bd84c2c1a1502bef13d4ef5cef372a6`.
 This hosted Windows run uses SwiftShader and is not physical GPU evidence.
 
+The [combined layout/font check](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38096074317)
+also passes two native FontFaceSet pairs at `fee5ed6` (production files identical
+to `f25154a`). Baseline `33d9856` still fails both missing-wake controls; the
+candidate reflows from 283 to 299 px after the actual font change, while retired
+hosts stay idle. The [raw report](performance-evidence/s52-layout-reuse/native-font-report.json)
+and [independent review](performance-evidence/s52-layout-reuse/native-font-review.json)
+verify source hashes, four zero-frame idle controls and complete cleanup.
+The harness now reuses byte-identical committed fixtures, validates them again
+after the run, and removes only its temporary copies. Both ownership paths pass.
+The preceding [cancelled dispatch](performance-evidence/s52-layout-reuse/native-font-cancelled-run.json)
+used an incorrectly shortened candidate SHA; it was cancelled and replaced with
+the full immutable SHA. It provides no application acceptance evidence.
+
 ### S52 font lifecycle: idle invalidation regression - 11 October 2026
 
 Review of layout invalidation found that `document.fonts.ready` and `loadingdone`
