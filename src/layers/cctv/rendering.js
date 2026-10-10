@@ -189,6 +189,46 @@ export function createRendering({
     parts.projection.pauseInactiveProjectionFeeds(null);
   }
 
+  // Reassigning equal raw values creates fresh Cesium properties and signals
+  // geometryChanged; keep the existing constant wrapper when style is equal.
+  function materialColorMatches(property, color, dashed) {
+    const expectedType = dashed
+      ? Cesium.PolylineDashMaterialProperty
+      : Cesium.ColorMaterialProperty;
+    if (!(property instanceof expectedType)) return false;
+    if (
+      dashed &&
+      (property.gapColor !== undefined ||
+        property.dashLength !== undefined ||
+        property.dashPattern !== undefined)
+    )
+      return false;
+    if (!(property.color instanceof Cesium.ConstantProperty)) return false;
+    return Cesium.Color.equals(property.color.getValue(), color);
+  }
+
+  function setCoverageMaterial(polyline, key, color, dashed) {
+    const current = polyline[key];
+    if (color === undefined) {
+      if (current !== undefined) polyline[key] = undefined;
+      return;
+    }
+    if (materialColorMatches(current, color, dashed)) return;
+    polyline[key] = dashed
+      ? new Cesium.PolylineDashMaterialProperty({ color })
+      : color;
+  }
+
+  function setCoverageWidth(polyline, width) {
+    const current = polyline.width;
+    if (
+      current instanceof Cesium.ConstantProperty &&
+      current.getValue() === width
+    )
+      return;
+    polyline.width = width;
+  }
+
   /** Applies coverage visibility/style state and lazily builds eligible sets. */
 
   function refreshCoverageStyles() {
@@ -239,10 +279,6 @@ export function createRendering({
       // rather than rendering identically to a surveyed one (#639). Colors,
       // widths, and the active/idle emphasis are unchanged.
       const bearingEstimated = isHeadingEstimated(record.camera);
-      const lineMaterial = (color) =>
-        bearingEstimated
-          ? new Cesium.PolylineDashMaterialProperty({ color })
-          : color;
       for (const entity of record.coverageEntities || []) {
         // The frustum wireframe is part of the projection representation —
         // force it on for the active camera and let it read through geometry
@@ -256,39 +292,51 @@ export function createRendering({
         // adjacent cones read as distinct coverage claims (design §3b); the
         // active camera keeps its width/alpha emphasis in both schemes.
         const hue = viewshedOn ? record.viewshedColors : null;
+        let materialColor;
+        let depthFailColor;
+        let width;
         if (entity._coverageRole === 'cap') {
-          entity.polyline.material = lineMaterial(
-            hue
-              ? isActive
-                ? hue.lineActive
-                : hue.line
-              : isActive
-                ? ACTIVE_COVERAGE_CENTER
-                : IDLE_COVERAGE_CENTER_MUTED,
-          );
-          entity.polyline.width = isActive ? 2.2 : 1.0;
-          entity.polyline.depthFailMaterial = planeShowing
+          materialColor = hue
+            ? isActive
+              ? hue.lineActive
+              : hue.line
+            : isActive
+              ? ACTIVE_COVERAGE_CENTER
+              : IDLE_COVERAGE_CENTER_MUTED;
+          width = isActive ? 2.2 : 1.0;
+          depthFailColor = planeShowing
             ? hue
               ? hue.line.withAlpha(0.26)
               : ACTIVE_COVERAGE_CENTER_DEPTHFAIL
             : undefined;
         } else {
-          entity.polyline.material = lineMaterial(
-            hue
-              ? isActive
-                ? hue.lineActive
-                : hue.line.withAlpha(0.6)
-              : isActive
-                ? ACTIVE_COVERAGE_EDGE
-                : IDLE_COVERAGE_EDGE_MUTED,
-          );
-          entity.polyline.width = isActive ? 1.8 : 0.9;
-          entity.polyline.depthFailMaterial = planeShowing
+          materialColor = hue
+            ? isActive
+              ? hue.lineActive
+              : hue.line.withAlpha(0.6)
+            : isActive
+              ? ACTIVE_COVERAGE_EDGE
+              : IDLE_COVERAGE_EDGE_MUTED;
+          width = isActive ? 1.8 : 0.9;
+          depthFailColor = planeShowing
             ? hue
               ? hue.line.withAlpha(0.18)
               : ACTIVE_COVERAGE_EDGE_DEPTHFAIL
             : undefined;
         }
+        setCoverageMaterial(
+          entity.polyline,
+          'material',
+          materialColor,
+          bearingEstimated,
+        );
+        setCoverageWidth(entity.polyline, width);
+        setCoverageMaterial(
+          entity.polyline,
+          'depthFailMaterial',
+          depthFailColor,
+          false,
+        );
       }
 
       // Viewshed volume lifecycle: exists iff enabled + viewshed mode + in the
