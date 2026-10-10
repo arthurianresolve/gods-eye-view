@@ -63,6 +63,7 @@ adapted = replaceOnce(
     const overlay = getWorldOverlayDiagnostics();
     return ({
     frame, positionUpdates, positionCount: positions.length,
+    viewport: [env.viewer.canvas.clientWidth, env.viewer.canvas.clientHeight, window.devicePixelRatio],
     candidates: detectionActive ? detection.observationCount : overlay.candidateCount,
     painted: detectionActive ? detection.visibleCount : overlay.paintedCount,
     paintedBySource: overlay.paintedBySource,
@@ -103,6 +104,10 @@ const report = {
   osRelease: os.release(),
   cpuModel: os.cpus()[0]?.model || null,
   harnessSha256: hash(readFileSync(fileURLToPath(import.meta.url))),
+  harnessCommit: git(dirname(fileURLToPath(import.meta.url)), [
+    'rev-parse',
+    'HEAD',
+  ]),
   fixtureSha256: hash(fixture),
   adapterSha256: hash(adapted),
   conditions: {
