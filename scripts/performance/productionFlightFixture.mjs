@@ -15,6 +15,8 @@ export function createProductionFlightFixture({
   const fixedTimeMs = Date.parse(fixedTime);
   if (!Number.isFinite(fixedTimeMs) || new Date(fixedTimeMs).toISOString() !== fixedTime)
     throw new TypeError('Flight fixture time must be canonical ISO-8601 UTC.');
+  if (fixedTimeMs % 1000 !== 0)
+    throw new TypeError('Flight fixture time must be aligned to a whole second.');
   const epochSeconds = Math.floor(fixedTimeMs / 1000);
   const states = Array.from({ length: count }, (_, index) => {
     const angle = index * 2.399963229728653;
@@ -161,4 +163,72 @@ export function installFixedWallClock(fixedTimeMs, target = globalThis) {
     value: FixedDate,
   });
   return now();
+}
+
+/** Install a capture-only wall clock held at one epoch until a one-shot start. */
+export function installHeldMonotonicWallClock(
+  fixedTimeMs,
+  target = globalThis,
+) {
+  if (!Number.isSafeInteger(fixedTimeMs) || fixedTimeMs < 1)
+    throw new TypeError('Held wall clock epoch must be a positive integer.');
+  const NativeDate = target.Date;
+  const nativePerformanceNow = target.performance?.now?.bind(target.performance);
+  if (typeof nativePerformanceNow !== 'function')
+    throw new Error('Native performance clock is required for held wall time.');
+  let startedAt = null;
+  const now = () =>
+    fixedTimeMs +
+    (startedAt === null
+      ? 0
+      : Math.max(0, nativePerformanceNow() - startedAt));
+  const FixedDate = new Proxy(NativeDate, {
+    apply(dateConstructor) {
+      return new dateConstructor(now()).toString();
+    },
+    construct(dateConstructor, args, newTarget) {
+      return Reflect.construct(
+        dateConstructor,
+        args.length ? args : [now()],
+        newTarget,
+      );
+    },
+    get(dateConstructor, property) {
+      if (property === 'now') return () => Math.floor(now());
+      return Reflect.get(dateConstructor, property, dateConstructor);
+    },
+  });
+  Object.defineProperty(target, 'Date', {
+    configurable: true,
+    writable: true,
+    value: FixedDate,
+  });
+  const clock = Object.freeze({
+    schema: 'gev-held-monotonic-wall-clock/v1',
+    start() {
+      if (startedAt !== null)
+        throw new Error('Held capture clock can start only once.');
+      startedAt = nativePerformanceNow();
+      return this.snapshot();
+    },
+    snapshot() {
+      const elapsedMs =
+        startedAt === null
+          ? null
+          : Math.max(0, nativePerformanceNow() - startedAt);
+      return {
+        schema: 'gev-held-monotonic-wall-clock/v1',
+        started: startedAt !== null,
+        startCount: startedAt === null ? 0 : 1,
+        epochMs: Math.floor(now()),
+        elapsedMs,
+      };
+    },
+  });
+  Object.defineProperty(target, '__gevHeldMonotonicWallClockV1', {
+    configurable: false,
+    enumerable: false,
+    value: clock,
+  });
+  return clock.snapshot();
 }

@@ -13,6 +13,7 @@ import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installFixedWallClock,
+  installHeldMonotonicWallClock,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
 import {
@@ -247,10 +248,16 @@ const browser = await puppeteer.launch({
 
 const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
-async function configureFlightFixturePage(page, deliveryObserver = null) {
+async function configureFlightFixturePage(
+  page,
+  deliveryObserver = null,
+  { holdClockUntilCapture = false } = {},
+) {
   if (!productionFlightFixture) return;
   await page.evaluateOnNewDocument(
-    installFixedWallClock,
+    holdClockUntilCapture
+      ? installHeldMonotonicWallClock
+      : installFixedWallClock,
     productionFlightFixture.fixedTimeMs,
   );
   const session = await page.createCDPSession();
@@ -275,6 +282,15 @@ async function configureFlightFixturePage(page, deliveryObserver = null) {
       ? { onFulfilled: deliveryObserver.onFulfilled }
       : undefined,
   );
+  return session;
+}
+
+async function releaseFlightFixtureSession(session) {
+  if (!session) return;
+  const index = fixtureInterceptionSessions.indexOf(session);
+  if (index >= 0) fixtureInterceptionSessions.splice(index, 1);
+  await session.send('Fetch.disable').catch(() => {});
+  await session.detach().catch(() => {});
 }
 
 try {
@@ -284,6 +300,7 @@ try {
   const loadedScriptAssets = new Set();
   const unexpectedScriptAssets = new Set();
   const workerBlobObservations = [];
+  let providerSampleWorkerAuditComplete = false;
   let scriptRequestCount = 0;
   const auditPageCodeRequests = (auditPage) => {
     if (!captureProvenance)
@@ -395,6 +412,26 @@ try {
       await auditPage.evaluate(restoreCesiumWorkerBlobAudit);
     }
   };
+  async function attachMeasuredPage(auditPage, deliveryObserver = null) {
+    await auditPage.setViewport({
+      width: 1440,
+      height: 900,
+      deviceScaleFactor: 1,
+    });
+    await auditPage.setCacheEnabled(false);
+    await auditPage.setBypassServiceWorker(true);
+    const fixtureSession = await configureFlightFixturePage(
+      auditPage,
+      deliveryObserver,
+      { holdClockUntilCapture: Boolean(productionFlightFixture) },
+    );
+    if (captureProvenance)
+      await auditPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
+    return {
+      fixtureSession,
+      auditState: auditPageCodeRequests(auditPage),
+    };
+  }
   for (let run = 1; run <= startupRuns; run += 1) {
     process.stdout.write(`[performance] startup ${run}/${startupRuns}\n`);
     const context = await browser.createBrowserContext();
@@ -406,7 +443,7 @@ try {
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
-    await configureFlightFixturePage(startupPage);
+    const startupFixtureSession = await configureFlightFixturePage(startupPage);
     if (captureProvenance)
       await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     const startupAuditState = auditPageCodeRequests(startupPage);
@@ -485,23 +522,24 @@ try {
     });
     await auditPageWorkerBlobs(startupPage, startupAuditState);
     await context.close();
+    await releaseFlightFixtureSession(startupFixtureSession);
   }
 
   process.stdout.write('[performance] preparing measured scene\n');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
-  await page.setCacheEnabled(false);
-  await page.setBypassServiceWorker(true);
-  const flightFixtureDelivery = productionFlightFixture
+  let page = await browser.newPage();
+  let providerContext = null;
+  let flightFixtureDelivery = productionFlightFixture
     ? createFlightFixtureDeliveryObserver(
         productionFlightFixture,
         new URL(url).origin + '/',
       )
     : null;
-  await configureFlightFixturePage(page, flightFixtureDelivery);
-  if (captureProvenance)
-    await page.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
-  const captureAuditState = auditPageCodeRequests(page);
+  const initialPageAttachment = await attachMeasuredPage(
+    page,
+    flightFixtureDelivery,
+  );
+  let activeFixtureSession = initialPageAttachment.fixtureSession;
+  let captureAuditState = initialPageAttachment.auditState;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   if (captureProvenance) {
     const servedBase = new URL(buildProvenanceOptions.baseUrl);
@@ -779,14 +817,164 @@ try {
   const scenarios = ['idle', 'scripted-motion'];
   if (fixture) scenarios.push('selected-aircraft-tracking');
   const captures = [];
+  const mixedLayerCounts = productionFlightFixture
+    ? await page.evaluate(() => {
+        const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
+        return {
+          datacenters:
+            layers.find((entry) => entry.id === 'local-datacenters')?.stats
+              ?.count ?? null,
+          dams:
+            layers.find((entry) => entry.id === 'local-dams')?.stats?.count ??
+            null,
+        };
+      })
+    : null;
+  if (
+    productionFlightFixture &&
+    (mixedLayerCounts.datacenters !== 4362 || mixedLayerCounts.dams !== 716)
+  )
+    throw new Error(
+      `Provider-fixture mixed populations are incomplete: ${JSON.stringify(mixedLayerCounts)}`,
+    );
+
+  async function prepareFreshProviderDocument() {
+    if (!providerSampleWorkerAuditComplete)
+      await auditPageWorkerBlobs(page, captureAuditState);
+    await releaseFlightFixtureSession(activeFixtureSession);
+    if (providerContext) await providerContext.close();
+    else await page.close();
+    providerContext = await browser.createBrowserContext();
+    page = await providerContext.newPage();
+    flightFixtureDelivery = createFlightFixtureDeliveryObserver(
+      productionFlightFixture,
+      new URL(url).origin + '/',
+    );
+    const pageAttachment = await attachMeasuredPage(
+      page,
+      flightFixtureDelivery,
+    );
+    activeFixtureSession = pageAttachment.fixtureSession;
+    captureAuditState = pageAttachment.auditState;
+    captureAuditState.workerUrls.clear();
+    captureAuditState.blobUrls.clear();
+    providerSampleWorkerAuditComplete = false;
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    if (captureProvenance) {
+      const servedBase = new URL(buildProvenanceOptions.baseUrl);
+      const actualPage = new URL(page.url());
+      if (
+        actualPage.origin !== servedBase.origin ||
+        !captureProvenance.source.entryPaths.includes(actualPage.pathname)
+      )
+        throw new Error(
+          'Provider-fixture navigation redirected outside the verified application entry point.',
+        );
+    }
+    await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
+      timeout: 90_000,
+    });
+    await page.waitForFunction(
+      () =>
+        document.getElementById('loading-screen')?.classList.contains('hidden'),
+      { timeout: 90_000 },
+    );
+    if (await page.evaluate(() => Boolean(navigator.serviceWorker?.controller)))
+      throw new Error(
+        'Provider-fixture page is controlled by a service worker.',
+      );
+    const initialEpoch = await page.evaluate(() => ({
+      now: Date.now(),
+      clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+    }));
+    if (
+      initialEpoch.now !== productionFlightFixture.fixedTimeMs ||
+      initialEpoch.clock?.started !== false
+    )
+      throw new Error(
+        `Provider-fixture document did not start at the held epoch: ${JSON.stringify(initialEpoch)}`,
+      );
+    await page.evaluate(
+      async ({ qualityMode: mode, detectionMode: requestedDetectionMode }) => {
+        const app = window.__godsEyeView;
+        const manager = app.dataManager;
+        if (!manager.isEnabled('flights'))
+          await manager.setEnabled('flights', true);
+        const controller = app.styleManager?._adaptiveQuality;
+        if (controller && !controller.setMode(mode))
+          throw new Error('Presentation quality controller is unavailable');
+        if (!controller && mode !== 'manual')
+          throw new Error('Requested quality profile is unavailable');
+        const services = app.styleManager?.services;
+        if (typeof services?.setDetectionModeByLabel !== 'function')
+          throw new Error('Detection workload controls are unavailable');
+        services.setDetectionModeByLabel(requestedDetectionMode);
+        if (services.getDetectionMode() !== requestedDetectionMode)
+          throw new Error('Detection workload mode did not match the request');
+        for (const id of ['local-datacenters', 'local-dams']) {
+          const entry = manager.layers.get(id);
+          if (!entry) throw new Error(`Missing required mixed layer ${id}`);
+          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+        }
+        const viewer = app.viewer;
+        const destination =
+          viewer.scene.globe.ellipsoid.cartographicToCartesian({
+            longitude: (-97.7431 * Math.PI) / 180,
+            latitude: (30.2672 * Math.PI) / 180,
+            height: 130_000,
+          });
+        viewer.camera.cancelFlight?.();
+        viewer.camera.setView({
+          destination,
+          orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+        });
+        viewer.scene.requestRender();
+      },
+      { qualityMode, detectionMode },
+    );
+    await page.waitForFunction(
+      (counts) => {
+        const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
+        const getLayer = (id) => layers.find((entry) => entry.id === id);
+        return (
+          ['flights', 'local-datacenters', 'local-dams'].every(
+            (id) => getLayer(id)?.enabled === true,
+          ) &&
+          getLayer('flights')?.stats?.count === counts.flights &&
+          getLayer('local-datacenters')?.stats?.count === counts.datacenters &&
+          getLayer('local-dams')?.stats?.count === counts.dams
+        );
+      },
+      { timeout: fixtureTimeoutMs, polling: 100 },
+      {
+        flights: productionFlightFixture.count,
+        datacenters: mixedLayerCounts.datacenters,
+        dams: mixedLayerCounts.dams,
+      },
+    );
+    fixtureDelivery = await summarizeFlightFixtureDelivery();
+    await page.evaluate(() => {
+      const camera = window.__godsEyeView.viewer.camera;
+      window.__gevPerformanceHome = {
+        position: camera.position.clone(),
+        direction: camera.direction.clone(),
+        up: camera.up.clone(),
+        transform: camera.transform.clone(),
+      };
+    });
+  }
+
   for (const scenario of scenarios) {
     for (let run = 1; run <= runs; run += 1) {
       process.stdout.write(`[performance] ${scenario} ${run}/${runs}\n`);
-      const trackingSetup = await page.evaluate(
+      if (productionFlightFixture) await prepareFreshProviderDocument();
+      const trackingResult = await page.evaluate(
         async ({ scenarioName, hasFixture }) => {
+          const fixtureClock = window.__gevHeldMonotonicWallClockV1;
           const app = window.__godsEyeView;
           const viewer = app.viewer;
           const flights = app.dataManager.layers.get('flights')?.module;
+          let trackedAircraftId = null;
           if (viewer.trackedEntity) flights?.stopTracking?.();
           if (scenarioName === 'selected-aircraft-tracking') {
             if (!hasFixture || typeof flights?.trackById !== 'function')
@@ -802,23 +990,61 @@ try {
             await new Promise((resolve) =>
               requestAnimationFrame(() => requestAnimationFrame(resolve)),
             );
-            return viewer.trackedEntity.gevTrackedId;
+            trackedAircraftId = viewer.trackedEntity.gevTrackedId;
+          } else {
+            viewer.camera.cancelFlight?.();
+            const home = window.__gevPerformanceHome;
+            viewer.camera.setView({
+              destination: home.position,
+              orientation: { direction: home.direction, up: home.up },
+              endTransform: home.transform,
+            });
+            viewer.scene.requestRender();
           }
-          viewer.camera.cancelFlight?.();
-          const home = window.__gevPerformanceHome;
-          viewer.camera.setView({
-            destination: home.position,
-            orientation: { direction: home.direction, up: home.up },
-            endTransform: home.transform,
-          });
-          viewer.scene.requestRender();
-          return null;
+          // Release wall time only after fixture/tracking/camera setup has
+          // settled. Warmup and capture then share one monotonic epoch.
+          const clockStart = fixtureClock?.start?.() ?? null;
+          return { trackedAircraftId, clockStart };
         },
         { scenarioName: scenario, hasFixture: Boolean(fixture) },
       );
+      const trackingSetup = trackingResult?.trackedAircraftId ?? null;
       // Each workload/run receives the declared warmup, including tracking.
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
+      const fixtureMeasurementStart = productionFlightFixture
+        ? await page.evaluate(() => ({
+            clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+            wallTimeMs: Date.now(),
+            flightStats:
+              window.__godsEyeView?.dataManager?.layers
+                ?.get('flights')
+                ?.module?.getStats?.() ?? null,
+            documentVisible: !document.hidden,
+            documentFocused: document.hasFocus(),
+          }))
+        : null;
+      if (
+        productionFlightFixture &&
+        (!fixtureMeasurementStart.clock?.started ||
+          fixtureMeasurementStart.clock.startCount !== 1 ||
+          fixtureMeasurementStart.clock.elapsedMs < warmupMs ||
+          fixtureMeasurementStart.wallTimeMs <
+            productionFlightFixture.fixedTimeMs ||
+          fixtureMeasurementStart.wallTimeMs -
+            productionFlightFixture.fixedTimeMs >
+            120_000 ||
+          fixtureMeasurementStart.flightStats?.lastUpdate !==
+            productionFlightFixture.fixedTimeMs ||
+          fixtureMeasurementStart.flightStats?.stale !== false ||
+          fixtureMeasurementStart.flightStats?.count !==
+            productionFlightFixture.count ||
+          !fixtureMeasurementStart.documentVisible ||
+          !fixtureMeasurementStart.documentFocused)
+      )
+        throw new Error(
+          `Provider fixture was stale or unfocused at measurement start: ${JSON.stringify(fixtureMeasurementStart)}`,
+        );
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
@@ -991,6 +1217,61 @@ try {
         },
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
       );
+      if (productionFlightFixture) {
+        const clockEnd = await page.evaluate(() => ({
+          clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+          wallTimeMs: Date.now(),
+          documentVisible: !document.hidden,
+          documentFocused: document.hasFocus(),
+          flightStats:
+            window.__godsEyeView?.dataManager?.layers
+              ?.get('flights')
+              ?.module?.getStats?.() ?? null,
+        }));
+        const fixtureAgeMs =
+          clockEnd.wallTimeMs - productionFlightFixture.fixedTimeMs;
+        if (
+          !clockEnd.clock?.started ||
+          clockEnd.clock.startCount !== 1 ||
+          clockEnd.clock.elapsedMs < warmupMs + seconds * 1000 ||
+          clockEnd.clock.elapsedMs - fixtureMeasurementStart.clock.elapsedMs <
+            seconds * 1000 ||
+          fixtureAgeMs < 0 ||
+          fixtureAgeMs > 120_000 ||
+          clockEnd.flightStats?.lastUpdate !==
+            productionFlightFixture.fixedTimeMs ||
+          clockEnd.flightStats?.stale !== false ||
+          clockEnd.flightStats?.count !== productionFlightFixture.count ||
+          !sample.foregroundThroughout ||
+          !clockEnd.documentVisible ||
+          !clockEnd.documentFocused
+        )
+          throw new Error(
+            `Provider-fixture capture clock/freshness/foreground contract failed: ${JSON.stringify({ clock: clockEnd.clock, fixtureAgeMs, flightStats: clockEnd.flightStats, documentVisible: clockEnd.documentVisible, documentFocused: clockEnd.documentFocused })}`,
+          );
+        sample.fixtureClock = {
+          schema: 'gev-provider-fixture-capture-clock/v1',
+          fixedTime: productionFlightFixture.fixedTime,
+          start: trackingResult.clockStart,
+          measurementStart: fixtureMeasurementStart.clock,
+          actualWarmupElapsedMs: fixtureMeasurementStart.clock.elapsedMs,
+          ageAtMeasurementStartMs:
+            fixtureMeasurementStart.wallTimeMs -
+            productionFlightFixture.fixedTimeMs,
+          end: clockEnd.clock,
+          measuredWindowElapsedMs:
+            clockEnd.clock.elapsedMs - fixtureMeasurementStart.clock.elapsedMs,
+          ageAtEndMs: fixtureAgeMs,
+          sourceFreshness: 'current',
+          freshnessWindowMs: 120_000,
+          appDocumentReinitialized: true,
+          freshBrowserContext: true,
+        };
+        fixtureDelivery = await summarizeFlightFixtureDelivery();
+        sample.fixtureDelivery = fixtureDelivery;
+        await auditPageWorkerBlobs(page, captureAuditState);
+        providerSampleWorkerAuditComplete = true;
+      }
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
@@ -1072,7 +1353,8 @@ try {
       throw new Error(
         'Capture did not request any receipted same-origin code assets.',
       );
-    await auditPageWorkerBlobs(page, captureAuditState);
+    if (!providerSampleWorkerAuditComplete)
+      await auditPageWorkerBlobs(page, captureAuditState);
     source.buildProvenance.pageAssetAudit = {
       scope:
         'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
@@ -1139,6 +1421,19 @@ try {
       startupRuns: startupSamples.length,
       scenarios,
       fixture,
+      ...(productionFlightFixture
+        ? {
+            providerFixtureLifecycle: {
+              scope:
+                'each measured scenario/repetition uses a newly created browser context; the earlier setup page contributes environment metadata only, not a capture sample',
+              clock:
+                'held at fixture epoch from document start; starts once after setup and advances from native performance.now()',
+              fixtureTimeAlignment:
+                'whole-second UTC; OpenSky source and position epochs agree exactly',
+              sourceFreshnessWindowMs: 120_000,
+            },
+          }
+        : {}),
       mixedLayers: mixedLayerFixture,
       qualityMode,
       expectedDensityPct: Number.isFinite(expectedDensityPct)

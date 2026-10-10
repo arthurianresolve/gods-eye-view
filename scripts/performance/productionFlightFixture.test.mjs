@@ -6,6 +6,7 @@ import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installFixedWallClock,
+  installHeldMonotonicWallClock,
   respondToProductionFlightFixture,
 } from './productionFlightFixture.mjs';
 import { interceptFixtureSession } from './fixtureInterception.mjs';
@@ -34,6 +35,16 @@ test('production flight fixture is deterministic, bounded OpenSky payload data',
   );
 });
 
+test('production fixture rejects subsecond epochs that OpenSky rows cannot represent', () => {
+  assert.throws(
+    () =>
+      createProductionFlightFixture({
+        fixedTime: '2026-10-08T12:00:00.001Z',
+      }),
+    /whole second/,
+  );
+});
+
 test('real flight source accepts all generated vectors and applies its freshness window', async () => {
   const fixture = createProductionFlightFixture();
   const payload = JSON.parse(fixture.body);
@@ -56,6 +67,20 @@ test('real flight source accepts all generated vectors and applies its freshness
   assert.equal(snapshot.records[0].latitude, payload.states[0][6]);
   assert.equal(snapshot.records[0].longitude, payload.states[0][5]);
   assert.equal(snapshot.freshness, 'current');
+
+  const sourceNearMeasurementEnd = createFlightSource({
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: async () => payload,
+    }),
+    now: () => fixture.fixedTimeMs + 90_000,
+  });
+  const lateSnapshot = await sourceNearMeasurementEnd.getSnapshot();
+  assert.equal(lateSnapshot.ageMs, 90_000);
+  assert.equal(lateSnapshot.freshness, 'current');
+  assert.equal(lateSnapshot.records[0].positionTimeMs, fixture.fixedTimeMs);
 
   const sourceAfterFreshnessWindow = createFlightSource({
     fetchImpl: async () => ({
@@ -218,4 +243,42 @@ test('fixed page clock changes Date wall time without replacing performance time
   assert.equal(Number.isInteger(target.Date.now()), true);
   assert.equal(new target.Date().getTime(), fixed + 1500);
   assert.equal(target.performance.now(), 1623.5);
+});
+
+test('held monotonic wall clock starts once without replacing native timers or monotonic time', () => {
+  let performanceTime = 123.5;
+  const nativeSetTimeout = () => 'timer';
+  const nativeRequestAnimationFrame = () => 'raf';
+  const target = {
+    Date,
+    performance: { now: () => performanceTime },
+    setTimeout: nativeSetTimeout,
+    requestAnimationFrame: nativeRequestAnimationFrame,
+  };
+  const fixed = Date.parse('2026-10-08T12:00:00.000Z');
+  const clockBeforeStart = installHeldMonotonicWallClock(fixed, target);
+  assert.deepEqual(clockBeforeStart, {
+    schema: 'gev-held-monotonic-wall-clock/v1',
+    started: false,
+    startCount: 0,
+    epochMs: fixed,
+    elapsedMs: null,
+  });
+  assert.equal(target.Date.now(), fixed);
+  performanceTime += 60_000;
+  assert.equal(target.Date.now(), fixed, 'the held epoch does not drift');
+  const started = target.__gevHeldMonotonicWallClockV1.start();
+  assert.equal(started.started, true);
+  assert.equal(started.startCount, 1);
+  assert.equal(started.epochMs, fixed);
+  performanceTime += 90_000;
+  assert.equal(target.Date.now(), fixed + 90_000);
+  assert.equal(Number.isInteger(target.Date.now()), true);
+  assert.throws(
+    () => target.__gevHeldMonotonicWallClockV1.start(),
+    /only once/,
+  );
+  assert.equal(target.performance.now(), 150_123.5);
+  assert.equal(target.setTimeout, nativeSetTimeout);
+  assert.equal(target.requestAnimationFrame, nativeRequestAnimationFrame);
 });

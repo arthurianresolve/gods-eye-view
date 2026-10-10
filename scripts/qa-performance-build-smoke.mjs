@@ -36,7 +36,7 @@ import {
 import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
-  installFixedWallClock,
+  installHeldMonotonicWallClock,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
 import {
@@ -455,7 +455,7 @@ async function runRevision({
     requestAudit.begin();
     await page.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     await page.evaluateOnNewDocument(
-      installFixedWallClock,
+      installHeldMonotonicWallClock,
       flightFixture.fixedTimeMs,
     );
     phase = 'application-navigation';
@@ -536,6 +536,14 @@ async function runRevision({
       layers: denseLayerPopulation,
     });
 
+    phase = 'provider-fixture-clock-start';
+    const fixtureClockStart = await page.evaluate(() => {
+      const clock = window.__gevHeldMonotonicWallClockV1;
+      if (!clock || Date.now() !== clock.snapshot().epochMs)
+        throw new Error('Fixture wall clock was not held at the source epoch.');
+      return clock.start();
+    });
+
     phase = 'shared-scene-and-route-observation';
     const before = await page.evaluate(observeCommonScene, {
       appCommit: commit,
@@ -547,6 +555,28 @@ async function runRevision({
       appCommit: commit,
     });
     const routeEndMs = await page.evaluate(() => performance.now());
+    const fixtureClockEnd = await page.evaluate(() => ({
+      clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
+      wallTimeMs: Date.now(),
+      flightStats:
+        window.__godsEyeView?.dataManager?.layers?.get('flights')?.module?.getStats?.() ??
+        null,
+    }));
+    const fixtureAgeMs =
+      fixtureClockEnd.wallTimeMs - flightFixture.fixedTimeMs;
+    if (
+      !fixtureClockEnd.clock?.started ||
+      fixtureClockEnd.clock.startCount !== 1 ||
+      fixtureClockEnd.clock.elapsedMs < routeEndMs - routeStartMs ||
+      fixtureAgeMs < 0 ||
+      fixtureAgeMs > 120_000 ||
+      fixtureClockEnd.flightStats?.lastUpdate !== flightFixture.fixedTimeMs ||
+      fixtureClockEnd.flightStats?.stale !== false ||
+      fixtureClockEnd.flightStats?.count !== flightFixture.count
+    )
+      throw new Error(
+        `Provider fixture clock/freshness check failed: ${JSON.stringify({ clock: fixtureClockEnd.clock, fixtureAgeMs, flightStats: fixtureClockEnd.flightStats })}`,
+      );
     const route = describeObservedRoute({
       scenario: 'idle',
       start: routeStart,
@@ -670,6 +700,17 @@ async function runRevision({
         expectedLayerCounts,
         observedLayerPopulation: finalDenseLayerPopulation,
         flightFixture: flightFixtureObservation,
+        captureClock: {
+          schema: 'gev-provider-fixture-capture-clock/v1',
+          scope:
+            'hosted integration smoke only; one short route check, not a performance measurement',
+          fixedTime: flightFixture.fixedTime,
+          start: fixtureClockStart,
+          end: fixtureClockEnd.clock,
+          ageAtEndMs: fixtureAgeMs,
+          freshnessWindowMs: 120_000,
+          sourceFreshness: 'current',
+        },
         comparisonEligible: false,
         comparisonIneligibilityReason:
           'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
