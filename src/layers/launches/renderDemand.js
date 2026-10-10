@@ -37,21 +37,21 @@ export function createLaunchRenderDemand(render, state) {
     };
     const complete = options?.complete;
     const cancel = options?.cancel;
+    const invokeOwnedCallback = (callback, receiver, callbackArgs) => {
+      if (!cameraFlights.has(token)) return;
+      try {
+        callback?.apply(receiver, callbackArgs);
+      } finally {
+        release();
+      }
+    };
     const wrappedOptions = {
       ...options,
       complete(...args) {
-        try {
-          complete?.apply(this, args);
-        } finally {
-          release();
-        }
+        invokeOwnedCallback(complete, this, args);
       },
       cancel(...args) {
-        try {
-          cancel?.apply(this, args);
-        } finally {
-          release();
-        }
+        invokeOwnedCallback(cancel, this, args);
       },
     };
     try {

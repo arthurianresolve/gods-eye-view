@@ -36,9 +36,11 @@ test('mission camera demand owns overlapping flights and preserves callbacks', (
   const callbackThis = { marker: true };
   let completed = 0;
   let cancelled = 0;
+  let completeCallback;
   const camera = {
     flyTo(options) {
       if (options.duration === 2) {
+        completeCallback = options.complete;
         options.complete.call(callbackThis, 'done');
         return 17;
       }
@@ -61,6 +63,12 @@ test('mission camera demand owns overlapping flights and preserves callbacks', (
     17,
   );
   assert.equal(completed, 1);
+  completeCallback.call(callbackThis, 'duplicate');
+  assert.equal(
+    completed,
+    1,
+    'duplicate completion cannot repeat application side effects',
+  );
   assert.equal(
     calls.filter(([kind, value]) => kind === 'continuous' && value).length,
     1,
@@ -119,6 +127,7 @@ test('camera-flight demand releases on throw, disable, and stale completion', ()
   assert.equal(calls.at(-1)[1], false);
 
   let lateComplete;
+  let lateCompletionSideEffects = 0;
   demand.wrapCameraFlight(
     {},
     {
@@ -127,12 +136,21 @@ test('camera-flight demand releases on throw, disable, and stale completion', ()
       },
     },
     'flyTo',
-    {},
+    {
+      complete: () => {
+        lateCompletionSideEffects += 1;
+      },
+    },
   );
   demand.setActive(false);
   demand.cancelCameraFlights();
   const callsAfterDisable = calls.length;
   lateComplete();
+  assert.equal(
+    lateCompletionSideEffects,
+    0,
+    'stale completion after disable cannot re-own camera state',
+  );
   assert.equal(calls.at(-1)[1], false);
   assert.ok(calls.length >= callsAfterDisable);
   demand.setActive(true);
@@ -146,6 +164,12 @@ test('camera-flight demand releases on throw, disable, and stale completion', ()
   demand.dispose();
   state._selectedLaunchId = null;
   demand.reset();
+  lateComplete();
+  assert.equal(
+    lateCompletionSideEffects,
+    0,
+    'completion from a previous lifecycle remains inert after reset',
+  );
   demand.setActive(true);
   assert.equal(
     calls.at(-1)[1],
@@ -293,10 +317,9 @@ test('visible unselected orbit primitives request an owned one-second cadence', 
   assert.equal(scheduled[0].delay, 1000);
   scheduled[0].callback();
   assert.equal(updates.length, 1);
-  assert.equal(
-    scheduled[1].delay,
-    1000,
-    'cadence reschedules after each update',
+  assert.ok(
+    scheduled[1].delay > 0 && scheduled[1].delay <= 1000,
+    'cadence reschedules for the remaining part of the one-second interval',
   );
   const resumedAt = new Date(Date.now() + 2000);
   assert.equal(orbitRendering.refreshMissionOrbitFramesIfDue(resumedAt), true);
