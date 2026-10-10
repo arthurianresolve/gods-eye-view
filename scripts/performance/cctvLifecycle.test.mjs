@@ -596,12 +596,13 @@ test('CCTV worker boundary reports incomplete native listener cleanup instead of
   assert.equal(scope.__qaCctvGeometryBoundary, null);
 });
 
-test('CCTV geometry evidence captures pixels and picks inside a fresh postRender and releases its listener', async () => {
+test('CCTV geometry evidence uses the viewer clock without a Cesium global and captures inside postRender', async () => {
   const fixture = createCctvLifecycleFixture();
   const ids = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'].map(
     (role) => `cctv-${fixture.cameraId}-${role}`,
   );
   const listeners = new Set();
+  const timeSample = { dayNumber: 2461324, secondsOfDay: 100 };
   const scene = {
     frameState: { frameNumber: 20 },
     postRender: {
@@ -641,10 +642,13 @@ test('CCTV geometry evidence captures pixels and picks inside a fresh postRender
           show: { getValue: () => true },
           width: { getValue: () => 2 },
           positions: {
-            getValue: () => [
-              { x: index, y: 0, z: 0 },
-              { x: index + 1, y: 0, z: 0 },
-            ],
+            getValue: (time) => {
+              assert.equal(time, timeSample);
+              return [
+                { x: index, y: 0, z: 0 },
+                { x: index + 1, y: 0, z: 0 },
+              ];
+            },
           },
           material: {
             color: {
@@ -668,16 +672,12 @@ test('CCTV geometry evidence captures pixels and picks inside a fresh postRender
   };
   const context = vm.createContext({
     window: {
-      Cesium: {
-        Cartesian3: class Cartesian3 {
-          constructor(x, y, z) {
-            Object.assign(this, { x, y, z });
-          }
-        },
-        JulianDate: { now: () => ({}) },
-      },
       __godsEyeView: {
-        viewer: { scene, entities: { getById: (id) => entities.get(id) } },
+        viewer: {
+          scene,
+          clock: { currentTime: timeSample },
+          entities: { getById: (id) => entities.get(id) },
+        },
         dataManager: {
           layers: new Map([
             ['cctv', { module: { getUIState: () => ({ cameras: [camera] }) } }],

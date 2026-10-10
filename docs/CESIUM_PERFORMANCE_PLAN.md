@@ -81,6 +81,18 @@ boundaries pass. The rendered version-2 run remains pending.
 No production geometry change or broader S50 completion is claimed by adding
 this fixture.
 
+The first [rendered version-2 run at `1125996`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38085781697)
+fails before arming the response gate: its fresh-capture helper assumed a
+`window.Cesium` global, which the Vite module application does not expose. The
+five existing toggle cycles pass, and fixture cleanup releases all boundary
+listeners with normal 77-ms browser close. The capture helper now reads the
+viewer's authoritative clock and projects Cartesian coordinate records without
+a global namespace. The focused capture test explicitly omits that namespace
+and passes; formatting passes. Rendered validation of the correction remains
+pending. [Raw failed report](performance-evidence/cctv-lifecycle-38085781697.json),
+[terminal job metadata](performance-evidence/cctv-lifecycle-38085781697-run.json).
+Raw SHA-256: `7170f6c6d4d183ea6b3c5e8c71a9242e862952bf493a569c0f0fcff805d80ea3`.
+
 ### S50.2 CCTV calibration handle geometry reuse - 10 October 2026
 
 The next candidate compares numeric Cartesian positions before replacing the

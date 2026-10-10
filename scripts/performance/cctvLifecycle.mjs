@@ -716,7 +716,7 @@ export async function readCctvGeometryEvidenceInPage(
   const camera = module
     ?.getUIState?.()
     ?.cameras?.find((item) => item.id === cameraId);
-  if (!viewer?.scene || !camera)
+  if (!viewer?.scene || !viewer.clock?.currentTime || !camera)
     throw new Error('CCTV geometry evidence owner is unavailable.');
   const scene = viewer.scene;
   let listener;
@@ -725,23 +725,22 @@ export async function readCctvGeometryEvidenceInPage(
     return await new Promise((resolve, reject) => {
       listener = () => {
         try {
+          const time = viewer.clock.currentTime;
           const roles = ['ray-tl', 'ray-tr', 'ray-br', 'ray-bl', 'cap'];
           const entities = roles.map((role) => {
             const entity = viewer.entities.getById(`cctv-${cameraId}-${role}`);
-            const value = entity?.polyline?.positions?.getValue?.(
-              window.Cesium?.JulianDate?.now?.(),
-            );
+            const value = entity?.polyline?.positions?.getValue?.(time);
             if (!entity || !Array.isArray(value) || value.length < 2)
               throw new Error(`CCTV ${role} Entity positions are unavailable.`);
             return {
               id: entity.id,
               show:
                 entity.show !== false &&
-                entity.polyline.show?.getValue?.() !== false,
-              width: entity.polyline.width?.getValue?.() ?? null,
+                entity.polyline.show?.getValue?.(time) !== false,
+              width: entity.polyline.width?.getValue?.(time) ?? null,
               material:
                 entity.polyline.material?.color
-                  ?.getValue?.()
+                  ?.getValue?.(time)
                   ?.toCssColorString?.() || null,
               positions: value.map(({ x, y, z }) => [x, y, z]),
             };
@@ -751,7 +750,7 @@ export async function readCctvGeometryEvidenceInPage(
           const picks = entities.map((entity) => {
             const points = entity.positions;
             const middle = points[Math.floor(points.length / 2)];
-            const world = new window.Cesium.Cartesian3(...middle);
+            const world = { x: middle[0], y: middle[1], z: middle[2] };
             const position = scene.cartesianToCanvasCoordinates(world);
             if (
               !position ||
