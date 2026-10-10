@@ -4,6 +4,10 @@ import { createApplicationViewer } from '../../src/app/viewer.js';
 import { createWindRendering } from '../../src/layers/wind/rendering.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
+import {
+  createImportFrameDiagnostics,
+  observeImportFrameHealth,
+} from '../performance/importFrameDiagnostics.mjs';
 
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
@@ -36,9 +40,15 @@ run.addEventListener('click', async () => {
     scope:
       'Same-build forced construction versus retained-image equivalence at a fixed pose; isolated globe host, paused real GPU wind geometry. No FPS, latency or soak claim.',
     checks: [],
+    captureAttempts: [],
     status: 'running',
   };
   let viewer, rendering;
+  const frameDiagnostics = createImportFrameDiagnostics();
+  const removes = [];
+  const sceneEvents = { preUpdate: 0, preRender: 0, postRender: 0 };
+  const renderErrors = [];
+  const contextEvents = [];
   let backgrounded = document.hidden;
   const visibility = () => {
     if (document.hidden) backgrounded = true;
@@ -53,6 +63,28 @@ run.addEventListener('click', async () => {
       container: document.querySelector('#viewer'),
       creditContainer: document.querySelector('#credits'),
     });
+    for (const name of ['webglcontextlost', 'webglcontextrestored']) {
+      const listener = () => {
+        if (contextEvents.length < 8)
+          contextEvents.push({ type: name, atMs: performance.now() });
+      };
+      const canvas = viewer.scene.canvas;
+      canvas.addEventListener(name, listener);
+      removes.push(() => canvas.removeEventListener(name, listener));
+    }
+    for (const name of Object.keys(sceneEvents))
+      removes.push(
+        viewer.scene[name].addEventListener(() => sceneEvents[name]++),
+      );
+    removes.push(
+      viewer.scene.renderError.addEventListener((_scene, error) => {
+        if (renderErrors.length < 8)
+          renderErrors.push({
+            name: error?.name,
+            message: String(error?.message).slice(0, 500),
+          });
+      }),
+    );
     for (const item of ['skyBox', 'skyAtmosphere', 'sun', 'moon'])
       viewer.scene[item].show = false;
     viewer.scene.globe.show = true;
@@ -88,8 +120,20 @@ run.addEventListener('click', async () => {
       } while (performance.now() < deadline);
       throw new Error('Wind geometry or imagery did not settle');
     };
-    const pixels = async () => {
+    const pixels = async (phase) => {
+      const attempt = {
+        phase,
+        startedAtMs: performance.now(),
+        before: { ...sceneEvents },
+        visibility: frameDiagnostics.snapshotCanvas(viewer.scene.canvas),
+      };
+      report.captureAttempts.push(attempt);
       const canvas = await captureFreshCesiumFrame(viewer);
+      attempt.elapsedMs = performance.now() - attempt.startedAtMs;
+      attempt.after = { ...sceneEvents };
+      attempt.copied = Boolean(canvas);
+      attempt.viewerLoopEnabled = viewer.useDefaultRenderLoop;
+      attempt.contextDestroyed = viewer.scene.context?.isDestroyed?.() === true;
       check(canvas, 'Fresh capture did not complete');
       try {
         const rgba = canvas
@@ -123,8 +167,8 @@ run.addEventListener('click', async () => {
       rendering.start();
       await ready();
       const image = viewer.imageryLayers.get(0);
-      const expected = await pixels();
-      const control = await pixels();
+      const expected = await pixels(`${overlay}:constructed`);
+      const control = await pixels(`${overlay}:control`);
       check(expected === control, `${overlay}: repeated control pixels differ`);
       const before = rendering.getDiagnostics();
       rendering.setField({
@@ -137,7 +181,7 @@ run.addEventListener('click', async () => {
         },
       });
       await ready();
-      const observed = await pixels();
+      const observed = await pixels(`${overlay}:retained`);
       const after = rendering.getDiagnostics();
       const entry = {
         overlay,
@@ -168,7 +212,15 @@ run.addEventListener('click', async () => {
   } catch (error) {
     report.status = 'failed';
     report.error = error.message;
+    if (viewer && !viewer.isDestroyed())
+      report.failureFrameHealth = await observeImportFrameHealth();
   } finally {
+    report.sceneEvents = { ...sceneEvents };
+    report.renderErrors = renderErrors;
+    report.contextEvents = contextEvents;
+    report.lifecycleEvents = frameDiagnostics.events();
+    for (const remove of removes) remove();
+    frameDiagnostics.dispose();
     rendering?.destroy();
     viewer?.destroy();
     document.removeEventListener('visibilitychange', visibility);
