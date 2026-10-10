@@ -47,6 +47,7 @@ import {
   summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
+import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 const ROOT = await realpath(
@@ -452,34 +453,59 @@ export function validateCaptureCliReport(report, expected) {
   };
 }
 
-function compactCaptureCliFailure(report) {
+export function compactCaptureCliFailure(report) {
   if (!report || typeof report !== 'object') return null;
+  const serialized = `${JSON.stringify(report, null, 2)}\n`;
+  const preservesBoundedFailureReport =
+    report.schema === 'gev-performance-capture-failure/v1' &&
+    report.status === 'failed' &&
+    Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES;
   return {
-    schema: report.schema || null,
-    status: report.status || null,
-    failure: report.failure
-      ? sanitizeError(report.failure.message || JSON.stringify(report.failure))
-      : null,
-    phase: report.failure?.phase || null,
-    source: {
-      appCommit: report.source?.appCommit || null,
-      harnessCommit: report.source?.harnessCommit || null,
-      provenanceStatus: report.source?.provenanceStatus || null,
+    schema: 'gev-smoke-capture-cli-failure/v1',
+    summary: {
+      reportSchema: report.schema || null,
+      status: report.status || null,
+      failure: report.failure
+        ? {
+            message: sanitizeError(report.failure.message || 'Capture failed.'),
+            phase: report.failure.phase || null,
+            scenario: report.failure.scenario || null,
+            run: Number.isInteger(report.failure.run)
+              ? report.failure.run
+              : null,
+            operator: report.failure.operator || null,
+            actual: report.failure.actual ?? null,
+            expected: report.failure.expected ?? null,
+          }
+        : null,
+      source: {
+        appCommit: report.source?.appCommit || null,
+        harnessCommit: report.source?.harnessCommit || null,
+        provenanceStatus: report.source?.provenanceStatus || null,
+      },
+      fixtureDelivery: report.fixtureDelivery
+        ? {
+            status: report.fixtureDelivery.status,
+            fixtureSha256: report.fixtureDelivery.fixtureSha256,
+            observedFlightsCount: report.fixtureDelivery.observedFlightsCount,
+            fulfilledResponseCount: report.fixtureDelivery.fulfilledResponseCount,
+          }
+        : null,
+      completedSampleCount:
+        report.progress?.completedSampleCount ?? report.captures?.length ?? 0,
+      completedSamplesRetained:
+        report.progress?.completedSamplesRetained ??
+        report.progress?.completedSamples?.length ??
+        report.captures?.length ??
+        0,
+      evidenceTruncated: report.evidenceTruncated ?? null,
     },
-    fixtureDelivery: report.fixtureDelivery
-      ? {
-          status: report.fixtureDelivery.status,
-          fixtureSha256: report.fixtureDelivery.fixtureSha256,
-          observedFlightsCount: report.fixtureDelivery.observedFlightsCount,
-          fulfilledResponseCount: report.fixtureDelivery.fulfilledResponseCount,
-        }
-      : null,
-    captures: (report.captures || []).slice(0, 6).map((sample) => ({
-      scenario: sample.scenario,
-      run: sample.run,
-      fixtureClock: sample.fixtureClock || null,
-      fixtureDelivery: sample.fixtureDelivery || null,
-    })),
+    ...(preservesBoundedFailureReport
+      ? { rawReport: report }
+      : {
+          rawReportUnavailable:
+            'CLI report was not the recognized bounded failure schema.',
+        }),
   };
 }
 
@@ -1121,6 +1147,7 @@ async function runRevision({
         'Application worker target audit exceeded its bounded capacity.',
       );
     const workerUrls = [...workerTargetUrls];
+    phase = 'cesium-worker-blob-collection';
     const blobAudit = await withTimeout(
       page.evaluate(async (urls) => {
         const audit = window.__gevCesiumWorkerBlobAuditV1;
@@ -1136,6 +1163,7 @@ async function runRevision({
       blobAudit,
       requests: finalAuditSnapshot.requests,
     });
+    phase = 'cesium-worker-blob-validation';
     workerBlobValidation = validateCesiumWorkerBlobs({
       contract: workerContract,
       baseUrl: served.baseUrl,
@@ -1143,6 +1171,7 @@ async function runRevision({
       observedBlobUrls: [...new Set([...blobCodeRequests, ...workerUrls])],
       blobAudit,
     });
+    phase = 'receipted-code-request-audit';
     const finalCodeAudit = auditReceiptedCodeRequests({
       requests: finalAuditSnapshot.requests,
       baseUrl: served.baseUrl,
@@ -1269,11 +1298,9 @@ async function runRevision({
       interceptionErrors: (fixturePage?.errors || [])
         .slice(0, 4)
         .map(sanitizeError),
-      ...(workerBlobDiagnostics
-        ? {
-            workerBlobDiagnostics,
-            workerBlobValidationFailure: sanitizeError(error),
-          }
+      ...(workerBlobDiagnostics ? { workerBlobDiagnostics } : {}),
+      ...(phase === 'cesium-worker-blob-validation'
+        ? { workerBlobValidationFailure: sanitizeError(error) }
         : {}),
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }

@@ -6,10 +6,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  compactCaptureCliFailure,
   parseSmokeArguments,
   runBoundedChild,
   validateCaptureCliReport,
 } from './qa-performance-build-smoke.mjs';
+import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -164,6 +166,59 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
       }),
     /sampleCount/,
   );
+});
+
+test('smoke compaction preserves the complete bounded capture failure report and mismatch evidence', () => {
+  const rawReport = {
+    schema: 'gev-performance-capture-failure/v1',
+    status: 'failed',
+    comparisonEligible: false,
+    source: { appCommit: 'b'.repeat(40), harnessCommit: 'c'.repeat(40) },
+    fixtureDelivery: { status: 'observed', fulfilledResponseCount: 3 },
+    failure: {
+      phase: 'repeated-workload-check',
+      scenario: 'idle',
+      run: 2,
+      message: 'Repeated workload changed.',
+      operator: 'deepStrictEqual',
+      actual: { camera: { x: 4 } },
+      expected: { camera: { x: 3 } },
+    },
+    progress: {
+      completedSampleCount: 2,
+      completedSamplesRetained: 2,
+      completedSamples: [
+        { scenario: 'idle', run: 1, frameCount: 60 },
+        { scenario: 'scripted-motion', run: 1, frameCount: 60 },
+      ],
+    },
+    evidenceTruncated: false,
+  };
+  const serialized = `${JSON.stringify(rawReport, null, 2)}\n`;
+  assert.ok(Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES);
+
+  const compacted = compactCaptureCliFailure(rawReport);
+  assert.equal(compacted.schema, 'gev-smoke-capture-cli-failure/v1');
+  assert.deepEqual(compacted.rawReport, rawReport);
+  assert.equal(compacted.summary.failure.phase, 'repeated-workload-check');
+  assert.equal(compacted.summary.failure.operator, 'deepStrictEqual');
+  assert.deepEqual(compacted.summary.failure.actual, { camera: { x: 4 } });
+  assert.deepEqual(compacted.summary.failure.expected, { camera: { x: 3 } });
+  assert.equal(compacted.summary.completedSampleCount, 2);
+  assert.equal(compacted.summary.completedSamplesRetained, 2);
+  assert.equal(compacted.summary.evidenceTruncated, false);
+});
+
+test('smoke compaction does not label an unbounded or unrecognized report as raw failure evidence', () => {
+  const compacted = compactCaptureCliFailure({
+    schema: 'legacy-capture-report',
+    status: 'failed',
+    failure: { message: 'legacy failure' },
+    progress: { completedSampleCount: 1, completedSamples: [{ run: 1 }] },
+  });
+  assert.equal(compacted.rawReport, undefined);
+  assert.match(compacted.rawReportUnavailable, /bounded failure schema/);
+  assert.equal(compacted.summary.completedSampleCount, 1);
 });
 
 test('bounded child runner stops an owned process on timeout', async () => {
