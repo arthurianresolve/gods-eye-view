@@ -225,6 +225,19 @@ export function createFlightState({ source, services }) {
 
   flightState._scratchRenderTime = new Cesium.JulianDate();
 
+  /** Delayed time paired with the last tracked pose. It has separate storage
+   *  from `_scratchRenderTime`, which untracked fleet/query samples reuse. A
+   *  frame key of -1 is not a position-cache key; this time only identifies the
+   *  already-computed pose for cache-only observers when frameNumber is absent. */
+
+  flightState._trackedFrameRenderTime = new Cesium.JulianDate();
+
+  flightState._scratchTrackedRenderTime = new Cesium.JulianDate();
+
+  flightState._trackedFrameTimeFrame = -1;
+
+  flightState._trackedFrameTimeIcao = null;
+
   flightState._scratchFleetPos = new Cesium.Cartesian3();
 
   flightState._scratchSonarScreen = new Cesium.Cartesian2();
