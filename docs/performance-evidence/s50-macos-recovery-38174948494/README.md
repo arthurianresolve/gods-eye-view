@@ -58,12 +58,22 @@ Follow-up `46ed790b` extends the existing ordered renderer comparison to the
 three supported operating systems, rejects mixed/unsupported platform evidence,
 and retains the platform in its result. Forty-one focused tests pass. The
 [AB/BA macOS comparison 38176631829](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38176631829)
-is running on this frozen revision, using both driver/WebGL and WebGL/driver
-orders. Default recovery matrix settings have not changed. This checks whether
-the backend result repeats within matched hosts before adoption; one successful
-alternative does not identify a specific Chrome/ANGLE defect.
+passes on this frozen revision in both driver/WebGL and WebGL/driver orders.
+The independently recomputed [AB packet](renderer-38176631829/AB-packet.json)
+and [BA packet](renderer-38176631829/BA-packet.json) show 57.93% and 49.28%
+lower median boot-plus-query time, respectively. All five recovery stages
+improve in both orders. Raw driver and WebGL reports are retained alongside
+each packet. Every process closes naturally within the unchanged five-second
+deadline; WebGL-only closes take 83.5-430.4 ms. Protocol acknowledgements,
+disconnects, process exits, settings, workspaces and asset digests all pass.
+
+The QA workflow now selects WebGL-only SwiftShader for ordinary macOS recovery
+and matching shutdown controls. Windows keeps this backend and Linux keeps its
+existing full-driver backend. The ordered experiment still supports both modes.
+This remedies the measured configuration cost; it does not prove a specific
+Chrome/ANGLE defect. Full standard CI must pass before production promotion.
 
 Implementation status: diagnostic platform mismatch fixed. Automated status:
 focused tests and the alternative-backend macOS recovery pass; the original
-full-driver failure remains recorded and counterbalanced comparison is pending. Hardware
+full-driver failure remains recorded; both counterbalanced sequences pass. Hardware
 status: no new physical GPU validation. Production dev remains `ba7c8738`.

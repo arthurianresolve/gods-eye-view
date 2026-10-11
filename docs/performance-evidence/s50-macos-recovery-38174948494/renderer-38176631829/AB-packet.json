@@ -1,0 +1,96 @@
+{
+  "scope": "same-runner-ordered-renderer-recovery-experiment",
+  "status": "passed",
+  "order": "AB",
+  "expectedCommit": "46ed790bc0ebe71f1f7fd64abdc3d408a3347fe2",
+  "sequence": [
+    "driver-late",
+    "webgl-late"
+  ],
+  "runId": "AB-46ed790bc0eb-3852",
+  "processResults": [
+    {
+      "variant": "driver-late",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "reportFile": "driver-late.json",
+      "logFile": "driver-late.log"
+    },
+    {
+      "variant": "webgl-late",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "reportFile": "webgl-late.json",
+      "logFile": "webgl-late.log"
+    }
+  ],
+  "reportFiles": [
+    "driver-late.json",
+    "webgl-late.json"
+  ],
+  "logFiles": [
+    "driver-late.log",
+    "webgl-late.log"
+  ],
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "same-host profile-recovery timing experiment; not hardware-performance acceptance",
+    "adoptionEligibilityScope": "within-sequence only; confirm the same candidate in the counterbalanced other order",
+    "order": "AB",
+    "expectedCommit": "46ed790bc0ebe71f1f7fd64abdc3d408a3347fe2",
+    "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+    "platform": "darwin",
+    "hostEnvironment": {
+      "cpuModel": "Apple M1 (Virtual)",
+      "logicalCpus": 3,
+      "totalMemoryBytes": 7516192768
+    },
+    "persistedWorkspaceAssetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+    "stageIds": [
+      "prior-install-saves-browser-workspace",
+      "interrupted-update-retained-application",
+      "prior-install-rollback-same-profile",
+      "upgraded-application-same-profile",
+      "failed-verification-rolls-back-and-reopens-assets"
+    ],
+    "comparisons": {
+      "webgl-late": {
+        "status": "comparable",
+        "baselineMedianMs": 14890,
+        "candidateMedianMs": 6264,
+        "criticalPathImprovementFraction": 0.5793149764942915,
+        "stageChanges": [
+          {
+            "stage": "prior-install-saves-browser-workspace",
+            "changeFraction": -0.42868641339343205
+          },
+          {
+            "stage": "interrupted-update-retained-application",
+            "changeFraction": -0.5793149764942915
+          },
+          {
+            "stage": "prior-install-rollback-same-profile",
+            "changeFraction": -0.6969549836997988
+          },
+          {
+            "stage": "upgraded-application-same-profile",
+            "changeFraction": -0.49259566402085064
+          },
+          {
+            "stage": "failed-verification-rolls-back-and-reopens-assets",
+            "changeFraction": -0.6825730101164345
+          }
+        ],
+        "objectiveMet": true,
+        "stageRegressionOver10Percent": [],
+        "adoptionEligible": true
+      }
+    },
+    "adoptionEligibleByVariant": {
+      "webgl-late": true
+    }
+  },
+  "validationError": null
+}

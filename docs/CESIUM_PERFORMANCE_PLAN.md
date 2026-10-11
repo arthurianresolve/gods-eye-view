@@ -77,9 +77,12 @@ Windows/macOS/Linux shutdown controls with validated software-renderer flags;
 controls `38176248222` pass. Whole-application WebGL-only recovery
 `38176373283` passes all five stages, retaining settings/workspaces/assets and
 closing naturally in 121-290 ms. Counterbalanced same-host backend sequences
-`38176631829` now test repeatability at `46ed790b`; the ordinary recovery
-renderer default remains unchanged pending that evidence. These software
-checks do not establish physical GPU acceptance.
+[38176631829](performance-evidence/s50-macos-recovery-38174948494/README.md)
+pass in both orders at `46ed790b`. WebGL-only reduces median recovery boot
+plus renderer-query time by 57.93% (AB) and 49.28% (BA), with no stage regression.
+QA now adopts this backend for macOS recovery; Linux keeps its existing backend.
+Full standard CI on the adoption commit is required before production promotion.
+These software checks do not establish physical GPU acceptance.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
