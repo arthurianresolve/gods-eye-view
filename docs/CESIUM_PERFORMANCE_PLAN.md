@@ -3972,3 +3972,20 @@ pairs, all seven ordinary integration jobs and all 111 tracking checks pass.
 The runtime traffic change is accepted; fleet scheduling remains excluded.
 [Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
 retain separate code, automated and hosted/physical hardware status.
+
+## S58 regional weather bitmap cleanup - 11 October 2026
+
+The regional infrared provider now releases its displaced decoded bitmap after
+copying it to the canvas returned to Cesium, including processing failures.
+Raw imagery and late pass-through results retain their existing ownership.
+Code is implemented at `f90e24f`; focused automatic validation and all seven
+standard CI jobs pass at `e0a13cc6f7a6be11fa45e19bd911dc5b3022d7fa`.
+The tests include 30 equivalent transfers, processed pixels, failure cleanup,
+raw pass-through and orientation. All 15 hosted recovery records retain settings
+and workspace contents and exit naturally within the existing shutdown deadline.
+
+[Evidence and review scope](performance-evidence/s58-weather-image-ownership/README.md)
+separate this accepted resource-release correction from unmeasured benefits.
+Hardware validation, full weather/effect comparisons and the current-candidate
+60-minute retained-memory plateau remain pending. This success does not establish
+the cause of previous intermittent Windows browser shutdown failures.
