@@ -20,6 +20,19 @@ function same(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function sameDatacenterPick(left, right) {
+  const identity = (pick) =>
+    pick && {
+      kind: pick.kind,
+      layerId: pick.layerId,
+      ownerVerified: pick.ownerVerified,
+      entityId: pick.entityId,
+      sourceRecordId: pick.sourceRecordId,
+      screen: pick.screen,
+    };
+  return same(identity(left), identity(right));
+}
+
 function validateLifetime(lifetime, report, layer) {
   if (
     !['entities', 'primitive-collections'].includes(lifetime?.mode) ||
@@ -183,12 +196,41 @@ function validateLifetime(lifetime, report, layer) {
         fail(
           'Candidate is not the sole production-owned collection representation.',
         );
+      const datacenterPickValid = (pick, kind) => {
+        const collection = lifetime.mode === 'primitive-collections';
+        const validPrimitiveType =
+          kind === 'point'
+            ? pick?.primitiveType === 'PointPrimitive'
+            : collection
+              ? pick?.primitiveType === 'Polyline'
+              : pick?.primitiveType === 'GroundPolylinePrimitive' ||
+                (pick?.primitiveType === 'Primitive' &&
+                  [
+                    'PolylineColorAppearance',
+                    'PolylineMaterialAppearance',
+                  ].includes(pick.appearanceType));
+        return (
+          pick?.kind === kind &&
+          pick.layerId === layer.layerId &&
+          pick.ownerVerified === true &&
+          typeof pick.entityId === 'string' &&
+          pick.entityId.length > 0 &&
+          typeof pick.sourceRecordId === 'string' &&
+          pick.sourceRecordId.length > 0 &&
+          validPrimitiveType
+        );
+      };
+      const datacenter = layer.layerId === 'local-datacenters';
       if (
         row.pointPick?.kind !== 'point' ||
         row.stemPick?.kind !== 'stem' ||
-        row.pointPick.entityId !== row.stemPick.entityId ||
-        row.pointPick.sourceRecordId !== row.stemPick.sourceRecordId ||
-        row.entitySelectionIdentity !== row.pointPick.entityId ||
+        (!datacenter &&
+          (row.pointPick.entityId !== row.stemPick.entityId ||
+            row.pointPick.sourceRecordId !== row.stemPick.sourceRecordId)) ||
+        row.entitySelectionIdentity !== row.stemPick.entityId ||
+        (datacenter &&
+          (!datacenterPickValid(row.pointPick, 'point') ||
+            !datacenterPickValid(row.stemPick, 'stem'))) ||
         ![row.pointPick, row.stemPick].every(
           (pick) =>
             Array.isArray(pick.screen) &&
@@ -398,9 +440,12 @@ export function compareInfrastructureRuntimeLifetimes(baseline, candidate) {
         JSON.stringify(right.ownership.preservedGraphics)
       )
         fail('Preserved source geometry inventory differs between renderers.');
-      const picksEqual =
-        JSON.stringify(left.pointPick) === JSON.stringify(right.pointPick) &&
-        JSON.stringify(left.stemPick) === JSON.stringify(right.stemPick);
+      const datacenter = left.pointPick?.layerId === 'local-datacenters';
+      const picksEqual = datacenter
+        ? sameDatacenterPick(left.pointPick, right.pointPick) &&
+          sameDatacenterPick(left.stemPick, right.stemPick)
+        : JSON.stringify(left.pointPick) === JSON.stringify(right.pointPick) &&
+          JSON.stringify(left.stemPick) === JSON.stringify(right.stemPick);
       const framebufferEqual =
         left.frame.width === right.frame.width &&
         left.frame.height === right.frame.height;

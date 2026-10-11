@@ -23,6 +23,29 @@ const renderClock = {
 function sample(mode, caseId, pair, layer = infrastructureFixtureLayer()) {
   const collection = mode === 'primitive-collections';
   const id = `${caseId}-surface-${pair}`;
+  const datacenter = layer.layerId === 'local-datacenters';
+  const pointId = datacenter ? `${id}-point-owner` : id;
+  const stemId = datacenter ? `${id}-stem-owner` : id;
+  const ownerPick = (kind, entityId, screen) => ({
+    entityId,
+    sourceRecordId: `${entityId}-source`,
+    kind,
+    screen,
+    ...(datacenter
+      ? {
+          layerId: layer.layerId,
+          ownerVerified: true,
+          primitiveType:
+            kind === 'point'
+              ? 'PointPrimitive'
+              : collection
+                ? 'Polyline'
+                : 'Primitive',
+          appearanceType:
+            kind === 'stem' && !collection ? 'PolylineColorAppearance' : null,
+        }
+      : {}),
+  });
   return {
     caseId,
     pair,
@@ -31,12 +54,12 @@ function sample(mode, caseId, pair, layer = infrastructureFixtureLayer()) {
     sourceFeatureCount: layer.sourceFeatureCount,
     surfaceCount: layer.surfaceCount,
     entityCount: layer.entityCount,
-    entitySelectionIdentity: id,
+    entitySelectionIdentity: stemId,
     identitySha256: digest,
     geometrySha256: digest,
     styleSha256: digest,
     styleAudit: {
-      entityId: id,
+      entityId: stemId,
       entityShow: true,
       point: {
         rawColor: [0, 0.5333333333, 1, 1],
@@ -62,17 +85,9 @@ function sample(mode, caseId, pair, layer = infrastructureFixtureLayer()) {
       cameraPosition: [1, 2, 3],
     },
     pointPick: {
-      entityId: id,
-      sourceRecordId: id,
-      kind: 'point',
-      screen: [100, 110],
+      ...ownerPick('point', pointId, [100, 110]),
     },
-    stemPick: {
-      entityId: id,
-      sourceRecordId: id,
-      kind: 'stem',
-      screen: [102, 120],
-    },
+    stemPick: ownerPick('stem', stemId, [102, 120]),
     ownership: {
       renderer: mode,
       datasourcePresent: true,
@@ -287,6 +302,41 @@ test('runtime report binds the complete datacenter source and Entity inventory',
         expectedLayerId: 'local-datacenters',
       }),
     /camera contract is missing or invalid/,
+  );
+  const missingOwner = structuredClone(report);
+  delete missingOwner.lifetimes[0].samples[0].pointPick.ownerVerified;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(missingOwner, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /invalid native scene pick/,
+  );
+  const wrongSelection = structuredClone(report);
+  wrongSelection.lifetimes[0].samples[0].entitySelectionIdentity =
+    wrongSelection.lifetimes[0].samples[0].pointPick.entityId;
+  wrongSelection.lifetimes[0].samples[0].styleAudit.entityId =
+    wrongSelection.lifetimes[0].samples[0].pointPick.entityId;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(wrongSelection, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /invalid native scene pick/,
+  );
+  const mismatchedOwner = structuredClone(report);
+  const candidateSample = mismatchedOwner.lifetimes[1].samples[0];
+  candidateSample.pointPick.entityId = 'different-valid-point-owner';
+  candidateSample.pointPick.sourceRecordId = 'different-valid-source';
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(mismatchedOwner, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /differs between production renderers/,
   );
 });
 

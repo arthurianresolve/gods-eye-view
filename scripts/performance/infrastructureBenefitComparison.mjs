@@ -57,6 +57,26 @@ function same(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function sameDatacenterTarget(left, right) {
+  const pick = (value) =>
+    value && {
+      kind: value.kind,
+      layerId: value.layerId,
+      ownerVerified: value.ownerVerified,
+      entityId: value.entityId,
+      sourceRecordId: value.sourceRecordId,
+      screen: value.screen,
+    };
+  return (
+    left?.layerId === right?.layerId &&
+    left?.entityId === right?.entityId &&
+    same(left?.pointScreen, right?.pointScreen) &&
+    same(left?.stemScreen, right?.stemScreen) &&
+    same(pick(left?.point), pick(right?.point)) &&
+    same(pick(left?.stem), pick(right?.stem))
+  );
+}
+
 function metricSample(run, phase) {
   const sample = run?.memory?.[phase];
   return (
@@ -221,6 +241,45 @@ function validateRun(run, mode, suite, expectedCommit, layer) {
     fail(
       `${mode}/${suite} activation or first-usable-frame evidence is invalid.`,
     );
+  if (layer.layerId === 'local-datacenters') {
+    const target = run.firstUsable.target;
+    const validPick = (pick, kind, screen) => {
+      const collection = mode === 'primitive-collections';
+      const validPrimitiveType =
+        kind === 'point'
+          ? pick?.primitiveType === 'PointPrimitive'
+          : collection
+            ? pick?.primitiveType === 'Polyline'
+            : pick?.primitiveType === 'GroundPolylinePrimitive' ||
+              (pick?.primitiveType === 'Primitive' &&
+                [
+                  'PolylineColorAppearance',
+                  'PolylineMaterialAppearance',
+                ].includes(pick.appearanceType));
+      return (
+        pick?.kind === kind &&
+        pick.layerId === layer.layerId &&
+        pick.ownerVerified === true &&
+        typeof pick.entityId === 'string' &&
+        pick.entityId.length > 0 &&
+        typeof pick.sourceRecordId === 'string' &&
+        pick.sourceRecordId.length > 0 &&
+        validPrimitiveType &&
+        Array.isArray(pick.screen) &&
+        pick.screen.length === 2 &&
+        pick.screen.every(Number.isFinite) &&
+        same(pick.screen, screen)
+      );
+    };
+    if (
+      target?.layerId !== layer.layerId ||
+      !validPick(target.point, 'point', target.pointScreen) ||
+      !validPick(target.stem, 'stem', target.stemScreen) ||
+      target.entityId !== target.stem.entityId ||
+      run.firstUsable.selectedEntityIdentity !== target.stem.entityId
+    )
+      fail(`${mode}/${suite} datacenter native-pick ownership is invalid.`);
+  }
   if (
     !run.environment?.renderer ||
     !run.environment?.cesiumVersion ||
@@ -430,6 +489,7 @@ export function validateInfrastructureBenefitReport(
     requiredSourcePaths.push(
       'scripts/fixtures/infrastructureFixtureLayer.mjs',
       'scripts/fixtures/infrastructureFixtureCamera.mjs',
+      'scripts/fixtures/infrastructureNativePickOwnership.mjs',
     );
   const dependencyBytes = report.provenance?.installedDependencyBytes;
   if (
@@ -507,6 +567,16 @@ export function validateInfrastructureBenefitReport(
       )
         fail(
           `${suite} pair ${index + 1} changed settings, render clock, or camera contract.`,
+        );
+      if (
+        layer.layerId === 'local-datacenters' &&
+        !sameDatacenterTarget(
+          baseline.firstUsable.target,
+          candidate.firstUsable.target,
+        )
+      )
+        fail(
+          `${suite} pair ${index + 1} changed actual datacenter point/stem picks.`,
         );
       for (const path of [
         'source.payloadSha256',
@@ -610,6 +680,16 @@ export function validateInfrastructureBenefitReport(
         fail(
           `${pair.suite} pair ${pair.index + 1} changed across fresh viewers.`,
         );
+      if (
+        layer.layerId === 'local-datacenters' &&
+        !sameDatacenterTarget(
+          run.firstUsable.target,
+          referenceRun.firstUsable.target,
+        )
+      )
+        fail(
+          `${pair.suite} pair ${pair.index + 1} changed datacenter picks across viewers.`,
+        );
     }
   }
   if (
@@ -704,6 +784,7 @@ if (isMain) {
     'src/performance/performanceSnapshot.js',
     'scripts/fixtures/infrastructure-benefit.html',
     'scripts/fixtures/infrastructure-benefit.mjs',
+    'scripts/fixtures/infrastructureNativePickOwnership.mjs',
     'scripts/fixtures/infrastructureFixtureLayer.mjs',
     'scripts/fixtures/infrastructureFixtureCamera.mjs',
     'scripts/performance/infrastructureBenefitComparison.mjs',

@@ -1,0 +1,35 @@
+{
+  "commit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "command": "node scripts/run-unit-tests.mjs",
+  "startedAt": "2026-10-11T09:11:55.013Z",
+  "finishedAt": "2026-10-11T09:26:12.481Z",
+  "code": 0,
+  "signal": null,
+  "scope": "General tests launched at7cf682d and completed before test/registry camera updates; infrastructure comparison tests completed before their validator edits. Production runtime and allocation files remained unchanged. Later camera packet separately passes29 focused checks. Not an exact final-candidate hardware result.",
+  "suites": [
+    {
+      "name": "general",
+      "tests": 7022,
+      "passed": 7012,
+      "failed": 0,
+      "skipped": 10
+    },
+    {
+      "name": "focus allocations",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "overlay allocations",
+      "tests": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "logSha256": "57d89981e5a7774891c312b2ffeb590e6d77c10d15665cb4ca9e33846e8a1f2b"
+}

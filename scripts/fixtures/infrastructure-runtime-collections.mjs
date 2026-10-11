@@ -12,6 +12,7 @@ import {
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
+import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
@@ -132,6 +133,7 @@ function readEntitySurfaces(dataSource, records, time, layerId) {
     );
     rows.push({
       entity,
+      layerId,
       entityId: String(entity.id),
       sourceRecordId: identityFor(entity, bySource, time, layerId),
       entityShow: entity.show !== false,
@@ -211,6 +213,7 @@ function readCollectionSurfaces(
     );
     rows.push({
       entity,
+      layerId,
       entityId: String(entity.id),
       sourceRecordId: identityFor(entity, bySource, time, layerId),
       entityShow: entity.show !== false,
@@ -365,6 +368,9 @@ function captureNativePick(
   row,
   kind,
   collections,
+  rowsByEntity,
+  primitivesByEntity,
+  layerId,
   screen,
   diagnostics,
 ) {
@@ -383,51 +389,56 @@ function captureNativePick(
       });
     return null;
   };
-  if (picked?.id !== row.entity) return miss('source-entity-mismatch');
-  if (collections) {
-    const collection =
-      kind === 'point' ? collections.points : collections.stems;
-    let expected = null;
-    for (let index = 0; index < collection.length; index++) {
-      if (collection.get(index)?.id === row.entity) {
-        expected = collection.get(index);
-        break;
-      }
-    }
-    if (!expected || picked.primitive !== expected)
-      return miss('collection-primitive-mismatch');
-  } else if (kind === 'point') {
-    if (!(picked.primitive instanceof Cesium.PointPrimitive))
-      return miss('default-point-type');
-  } else {
-    const primitive = picked.primitive;
-    const defaultStemPrimitive =
-      primitive instanceof Cesium.GroundPolylinePrimitive ||
-      (primitive instanceof Cesium.Primitive &&
-        (primitive.appearance instanceof Cesium.PolylineColorAppearance ||
-          primitive.appearance instanceof Cesium.PolylineMaterialAppearance));
-    if (!defaultStemPrimitive) return miss('default-stem-type');
-  }
+  const owner = resolveInfrastructureNativePickOwner({
+    picked,
+    kind,
+    requestedEntity: row.entity,
+    rowsByEntity,
+    primitivesByEntity,
+    layerId,
+    mode: collections ? 'primitive-collections' : 'entities',
+    Cesium,
+  });
+  if (!owner) return miss('picked-owner-kind-or-layer-mismatch');
+  const actualRow = owner.row;
   viewer.selectedEntity = picked.id;
   check(
-    viewer.selectedEntity === row.entity,
+    viewer.selectedEntity === actualRow.entity,
     'Native selectedEntity did not retain picked source Entity.',
   );
-  return {
-    entityId: String(picked.id.id),
-    sourceRecordId: row.sourceRecordId,
+  const result = {
+    entityId: actualRow.entityId,
+    sourceRecordId: actualRow.sourceRecordId,
     kind,
     screen: [screen.x, screen.y],
   };
+  if (layerId === 'local-datacenters') {
+    result.layerId = layerId;
+    result.ownerVerified = true;
+    result.primitiveType = owner.primitiveType;
+    result.appearanceType = owner.appearanceType;
+  }
+  return { pick: result, row: actualRow };
 }
 
 function findNativePickTarget(
   viewer,
   rows,
   collections,
+  layerId,
   preferredEntityId = null,
   diagnostics,
 ) {
+  const rowsByEntity = new Map(rows.map((row) => [row.entity, row]));
+  const primitivesByEntity = new Map();
+  if (collections) {
+    for (let index = 0; index < collections.points.length; index++) {
+      const point = collections.points.get(index);
+      const stem = collections.stems.get(index);
+      if (point?.id && point.id === stem?.id)
+        primitivesByEntity.set(point.id, { point, stem });
+    }
+  }
   const orderedRows = preferredEntityId
     ? [
         ...rows.filter((row) => row.entityId === preferredEntityId),
@@ -453,24 +464,37 @@ function findNativePickTarget(
       diagnostics.coincident++;
       continue;
     }
-    const pointPick = captureNativePick(
+    const pointHit = captureNativePick(
       viewer,
       row,
       'point',
       collections,
+      rowsByEntity,
+      primitivesByEntity,
+      layerId,
       pointScreen,
       diagnostics,
     );
-    if (!pointPick) continue;
-    const stemPick = captureNativePick(
+    if (!pointHit) continue;
+    const stemHit = captureNativePick(
       viewer,
       row,
       'stem',
       collections,
+      rowsByEntity,
+      primitivesByEntity,
+      layerId,
       stemScreen,
       diagnostics,
     );
-    if (stemPick) return { row, pointPick, stemPick };
+    if (stemHit)
+      return {
+        row: stemHit.row,
+        pointRow: pointHit.row,
+        stemRow: stemHit.row,
+        pointPick: pointHit.pick,
+        stemPick: stemHit.pick,
+      };
   }
   return null;
 }
@@ -754,6 +778,7 @@ async function runLayerLifetime(
             viewer,
             rows,
             collections,
+            targetLayer.layerId,
             preferredPickEntityId,
             pickDiagnostics,
           );
