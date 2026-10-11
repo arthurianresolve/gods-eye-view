@@ -351,7 +351,7 @@ export function validateImportGeometryLoadProfileReport(report, expected = {}) {
   }
   if (
     sample?.capture?.completed !== true ||
-    !HASH.test(sample?.pixelSha256 || '') ||
+    !HASH.test(sample?.capture?.pixelSha256 || '') ||
     sample?.geometrySha256 !== fixture?.geometrySha256 ||
     sample?.positionCount !== 50_000 ||
     sample?.readiness?.pickedEntityId !== sample?.entityId ||

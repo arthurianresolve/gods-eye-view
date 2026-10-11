@@ -155,8 +155,7 @@ function validReport() {
       entityId: 'sample-entity',
       positionCount: 50_000,
       geometrySha256: geometryHash,
-      pixelSha256: hash,
-      capture: { completed: true },
+      capture: { completed: true, pixelSha256: hash },
       readiness: { pickedEntityId: 'sample-entity' },
       cleanup: { featureCount: 0, pendingJobs: 0, schedulerPendingCount: 0 },
     },
@@ -224,6 +223,22 @@ test('validator preserves and checks the observed page build identities', () => 
   assert.ok(
     validation.errors.includes(
       'fixture identity, fidelity or profile separation is invalid',
+    ),
+  );
+});
+
+test('validator reads the pixel digest from the browser capture object', () => {
+  const forged = validReport();
+  delete forged.sample.capture.pixelSha256;
+  forged.sample.pixelSha256 = hash;
+  const validation = validateImportGeometryLoadProfileReport(forged, {
+    commit,
+    geometrySha256: geometryHash,
+  });
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.includes(
+      'post-profile fidelity or cleanup witness is invalid',
     ),
   );
 });
