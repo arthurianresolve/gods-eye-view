@@ -4052,3 +4052,21 @@ span names, process/thread IDs and wall intervals are retained; event arguments
 and unrelated categories are excluded. Missing/incomplete trace evidence remains
 explicit. Twenty-nine focused recovery/trace tests pass; the hosted result is
 pending. These spans may overlap and must not be summed as CPU execution time.
+
+### Windows shutdown trace limitation - 11 October 2026
+
+[Instrumented run 38139321059](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38139321059)
+at `650b4631ef14e90179826cedba79646f502a0898` failed its first, prior-build
+recovery close. The saved workspace, settings and imported asset passed before
+cleanup. The [report](performance-evidence/windows-shutdown-trace-38139321059/profile-recovery.json)
+records natural code-zero exit at 5524.7 ms, acknowledgement at 11.2 ms and
+browser disconnection at 5065.0 ms. No force was used. This disconnection timing
+differs from the preceding uninstrumented timeout, so do not assume the two
+failures share a cause or count this as uninstrumented latency evidence.
+
+The trace contains 42 shutdown-category events and 41 complete spans; its
+longest observed span is only 1.3 ms. It does not cover or identify the cause of
+the multi-second delay. Browser trace finalization may itself affect shutdown,
+which remains an inference requiring a separate control. Keep the original
+uninstrumented failure and the post-deadline natural-exit evidence authoritative;
+do not claim that a root cause or fix has been established by this trace.

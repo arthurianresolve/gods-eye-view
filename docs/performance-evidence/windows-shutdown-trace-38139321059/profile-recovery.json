@@ -1,0 +1,447 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "650b4631ef14e90179826cedba79646f502a0898",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "AMD EPYC 7763 64-Core Processor                ",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-webgl-only",
+  "rendererExperiment": null,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "postTimeoutObservationMs": 15000,
+  "shutdownTracing": true,
+  "closeRepetitionPlan": [
+    {
+      "id": "shutdown-repeat-prior-1",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-1",
+      "variant": "candidate",
+      "servedCommit": "650b4631ef14e90179826cedba79646f502a0898"
+    },
+    {
+      "id": "shutdown-repeat-prior-2",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-2",
+      "variant": "candidate",
+      "servedCommit": "650b4631ef14e90179826cedba79646f502a0898"
+    },
+    {
+      "id": "shutdown-repeat-prior-3",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-3",
+      "variant": "candidate",
+      "servedCommit": "650b4631ef14e90179826cedba79646f502a0898"
+    },
+    {
+      "id": "shutdown-repeat-prior-4",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-4",
+      "variant": "candidate",
+      "servedCommit": "650b4631ef14e90179826cedba79646f502a0898"
+    }
+  ],
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-11T12:31:54.446Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "failed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 6263,
+        "rendererQueryDurationMs": 66,
+        "bootPlusQueryCriticalPathMs": 6329,
+        "rendererCheckpointElapsedMs": 8284
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": false,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "timed-out",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 171384.4164,
+          "closeSettledHostMs": 176392.6195,
+          "closeElapsedMs": 5008.203100000013,
+          "closeRejectionName": null,
+          "postTimeoutObservation": {
+            "budgetMs": 15000,
+            "elapsedMs": 516.8867000000027,
+            "status": "settled",
+            "closeOperationStatus": "pending",
+            "processExitBeforeForce": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 5524.689400000003
+            }
+          },
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 5524.689400000003
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.40129999999771826,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 11.200899999996182,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 5065.03330000001,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 5,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "already-exited",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "shutdownTrace": {
+          "schema": "gev-chromium-shutdown-attribution/v1",
+          "scope": "Chromium shutdown-category wall intervals; nested spans overlap; tracing may affect timing; not application performance acceptance",
+          "status": "observed",
+          "shutdownEventCount": 42,
+          "completedSpanCount": 41,
+          "openSpans": 0,
+          "unmatchedEnds": 0,
+          "longestSpans": [
+            {
+              "name": "Compositor::destructor",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372216689,
+              "durationMs": 1.311
+            },
+            {
+              "name": "RenderProcessHostImpl",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 350732440,
+              "durationMs": 0.163
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221477,
+              "durationMs": 0.146
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Starting cleanup.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221482,
+              "durationMs": 0.141
+            },
+            {
+              "name": "RenderProcessHostImpl",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372219433,
+              "durationMs": 0.131
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221916,
+              "durationMs": 0.11
+            },
+            {
+              "name": "RenderProcessHostImpl",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351004344,
+              "durationMs": 0.104
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Starting cleanup.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221921,
+              "durationMs": 0.104
+            },
+            {
+              "name": "RenderProcessHostImpl",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 350738985,
+              "durationMs": 0.095
+            },
+            {
+              "name": "BrowserContext::BrowserContext",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 349885081,
+              "durationMs": 0.092
+            },
+            {
+              "name": "~RenderProcessHostImpl",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372223561,
+              "durationMs": 0.045
+            },
+            {
+              "name": "RenderProcessHostImpl::RemoveRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372193922,
+              "durationMs": 0.043
+            },
+            {
+              "name": "RenderProcessHostImpl::RemoveRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351369647,
+              "durationMs": 0.03
+            },
+            {
+              "name": "RenderProcessHostImpl::RemoveRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351370194,
+              "durationMs": 0.026
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351370201,
+              "durationMs": 0.018
+            },
+            {
+              "name": "RenderProcessHostImpl::RemoveRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372195039,
+              "durationMs": 0.017
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351369660,
+              "durationMs": 0.016
+            },
+            {
+              "name": "~RenderProcessHostImpl",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372223856,
+              "durationMs": 0.015
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Has listeners.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351370205,
+              "durationMs": 0.014
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221185,
+              "durationMs": 0.014
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372196447,
+              "durationMs": 0.013
+            },
+            {
+              "name": "RenderProcessHostImpl::AddRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351093561,
+              "durationMs": 0.012
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372193954,
+              "durationMs": 0.01
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372195046,
+              "durationMs": 0.01
+            },
+            {
+              "name": "RenderProcessHostImpl::RegisterHost",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 350732471,
+              "durationMs": 0.007
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Has listeners.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351369668,
+              "durationMs": 0.007
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221746,
+              "durationMs": 0.007
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : within_process_died_observer",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221192,
+              "durationMs": 0.006
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Have pending_reuse_ref.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372195050,
+              "durationMs": 0.005
+            },
+            {
+              "name": "WindowEventDispatcher::Destructor",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372218438,
+              "durationMs": 0.005
+            },
+            {
+              "name": "RenderProcessHostImpl::UnregisterHost",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221616,
+              "durationMs": 0.005
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Has listeners.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372193959,
+              "durationMs": 0.004
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : Have pending_reuse_ref.",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372196455,
+              "durationMs": 0.004
+            },
+            {
+              "name": "RenderProcessHostImpl::UnregisterHost",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372222020,
+              "durationMs": 0.004
+            },
+            {
+              "name": "RenderProcessHostImpl::AddRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 350732728,
+              "durationMs": 0.003
+            },
+            {
+              "name": "RenderProcessHostImpl::RegisterHost",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351004367,
+              "durationMs": 0.003
+            },
+            {
+              "name": "RenderProcessHostImpl::AddRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 351093602,
+              "durationMs": 0.003
+            },
+            {
+              "name": "RenderProcessHostImpl::RegisterHost",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372219455,
+              "durationMs": 0.003
+            },
+            {
+              "name": "RenderProcessHostImpl::Cleanup : within_process_died_observer",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 372221750,
+              "durationMs": 0.002
+            },
+            {
+              "name": "RenderProcessHostImpl::AddRoute",
+              "processId": 8488,
+              "threadId": 8596,
+              "startedAtUs": 350732781,
+              "durationMs": 0.001
+            }
+          ],
+          "truncatedSpans": 1,
+          "traceArgumentsRetained": false,
+          "fileBytes": 80827
+        },
+        "cleanupError": "Graceful browser close did not complete."
+      },
+      "step": "owned-page-cleanup",
+      "error": "Graceful browser close did not complete."
+    }
+  ],
+  "status": "failed",
+  "failure": {
+    "check": "prior-install-saves-browser-workspace",
+    "step": "owned-page-cleanup",
+    "error": "Graceful browser close did not complete."
+  }
+}
