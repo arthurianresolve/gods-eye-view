@@ -1,21 +1,21 @@
 # Cesium performance plan
 
-S47/S59 diagnostic checkpoint (11 October 2026): observer run `38168778561`
-misses the five-second completed-render deadline before its first sample. Startup
-observer attribution was overwritten; `6721940d` preserves it independently and
-passes nine focused checks. [Original failure](performance-evidence/s47-observer-read-38168778561/README.md)
-remains failed; corrected run `38169235037` also fails, after two idle samples.
-Its [preserved read costs](performance-evidence/s47-read-cost-38169235037/README.md)
-attribute 2.1-4.1 seconds to synchronous renderer/vendor observation. Opt-in
-early identity reuse is implemented at `681e704a`, passes 40 focused checks,
-and awaits hosted run `38170201283`; hardware acceptance remains pending.
+S47/S59 diagnostic checkpoint (11 October 2026): early renderer identity reuse
+at `681e704a` reduces recorded observer reads to 0.7-1.4 ms from the prior
+2.1-4.1 seconds. Four samples complete before the unchanged child deadline;
+this [failed run](performance-evidence/s47-early-probe-38170201283/README.md)
+remains incomplete. Timing-window isolation at `e9ebce8b` passes 90 focused
+checks. Its [hosted run](performance-evidence/s47-window-38171176892/README.md)
+finds a diagnostic worker-audit race before sampling. Fix `c266634f` freezes
+all audit boundaries atomically; 109 focused checks pass, and exact-SHA smoke
+`38171616725` is pending. No hardware or full-scene speedup is claimed.
 
-The S59 CPU profile at `a6ff8485` completes a 50,000-position line load and natural
-cleanup but fails trace completeness because two flow-event identities were not
-retained. [Original profile and limits](performance-evidence/s59-load-profile-38168887546/README.md)
-remain incomplete. A separate pixel-digest field mismatch is fixed at `d6131adf`
-with 14 report checks passing; flow retention needs correction before another
-profile. No large-geometry runtime optimization is accepted by these diagnostics.
+The S59 flow records now retain identity, but [run 38170388678](performance-evidence/s59-load-profile-38170388678/README.md)
+fails because a short trace has no periodic buffer sample. Follow-up `15f00672`
+retains the protocol's explicit completion/data-loss witness while keeping
+missing buffer telemetry unavailable and malformed payloads failed. Twenty-nine
+focused checks pass; CPU diagnostic `38171589957` is pending. Historical
+incomplete reports remain failed and no geometry prototype is accepted.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
@@ -30,20 +30,16 @@ line pairs and four of five polygon pairs regress by more than 10%). Its thirty
 decoded images remain identical; it is recorded in the same evidence packet.
 Separate active-cost profiling is the next step, with neither prototype merged.
 
-Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
-Point integration passes all seven standard jobs and fifteen recovery stages at
-`1a8d4928`. Frozen candidate `fca2f991` also passes collection-specific native
-import, workspace replacement, cancellation and supersession checks, including
-the enforced teardown census. Its 60-minute hosted soak completes 252 cycles,
-with all 40 resource gauges unchanged and 1.183% maximum final-window heap growth.
-Missing browser-shutdown observations keep that envelope pending. The ownership
-reporting fix `7cea7aac` passes 84 focused tests and all seven standard jobs in
-`38167173641`. Corrected soak `38167171204` is still in progress. Registration
-of the new helper tests in the full suites is checked by `38168624015` at
-`806d4d3c`: all seven jobs pass, including Node 24/26, onboarding, all three
-recovery jobs and the browser journey. [Exact CI evidence](performance-evidence/import-point-current-dev/validation-38168624015-ci.json)
-is preserved. Promotion remains pending the corrected soak.
-[Raw report and reporting fix](performance-evidence/hosted-soak-38162032244/README.md).
+Current checkpoint (11 October 2026): point collection integration is accepted
+for promotion after the corrected frozen soak at `7cea7aac`. All 252 cycles
+complete; 40 gauges remain constant at 13 post-GC checkpoints, listeners stay
+629, all workers drain, and maximum final-window heap growth is 1.937%. Both
+browser owners close naturally within five seconds. [Raw evidence and independent review](performance-evidence/hosted-soak-38167171204/README.md)
+pass the intact-envelope supplemental gate. All seven standard jobs at `806d4d3c`
+pass, with no intervening runtime change. This closes the point-integration
+retention gate; physical Windows and final-candidate acceptance remain pending.
+The earlier [missing-cleanup report](performance-evidence/hosted-soak-38162032244/README.md)
+remains historical and incomplete. Numbered slices retain their full scope.
 
 S47 stage diagnostic `38165977957` fails at the unchanged child deadline during
 the fourth sample's layer/camera setup. The first three worker audits finish;
@@ -71,8 +67,8 @@ The imported-point collection candidate passes five current-dev hosted pairs at
 `eb2d6d95ab35bdbbf964eea305226cae763b8a48`. Cooperative imports improve in all
 five pairs (median paired change -56.9%); independent decoding confirms 55 exact
 image pairs and matching native picks. The asynchronous application import path
-now selects this renderer on the QA branch; current-candidate soak review remains
-pending before promotion because the frozen soak lacks shutdown observations.
+selects this renderer. The corrected frozen soak above supplies both shutdown
+observations and passes the integration retention gate.
 [Raw comparison and limits](performance-evidence/import-point-current-dev/README.md)
 record slower synchronous capture waits separately. This is not full S59/S60,
 capture-speed, physical Windows or retained-heap acceptance.

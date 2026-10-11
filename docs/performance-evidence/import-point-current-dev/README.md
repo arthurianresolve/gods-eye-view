@@ -184,3 +184,15 @@ growth over the final window is 1.183%. Its raw envelope omits browser cleanup,
 so candidate ingestion correctly remains pending. The reporting handoff is fixed
 at `7cea7aac`; a corrected run is in progress. [Original evidence and review](../hosted-soak-38162032244/README.md)
 keep measurement results separate from acceptance and physical Windows coverage.
+
+
+## Corrected retention gate
+
+[Run 38167171204](../hosted-soak-38167171204/README.md) at `7cea7aac`
+passes 252 cycles with 40 constant resource gauges, 13 post-GC checkpoints,
+629 listeners and no pending worker tasks. Maximum final-window heap growth
+is 1.937%. Both browser owners close naturally within one second. All seven
+standard CI jobs pass at `806d4d3c`; later integration changes are documentation
+and test registration only. The earlier incomplete report above remains
+historical. This accepts the point collection integration, without asserting
+physical Windows or full-scene performance acceptance.

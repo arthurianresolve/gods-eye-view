@@ -7,17 +7,19 @@ polygons. Their measured active spans also remain above the 4 ms target.
 [Paired timings, raw artifacts and limits](performance-evidence/import-geometry-wake-current-dev/README.md)
 record the result without changing production scheduling or preparation.
 
-Latest checkpoint (11 October 2026): the isolated imported-point comparison
-shows a -56.9% median paired cooperative-load change across five hosted pairs,
-with 55 exact image pairs and matching native picks. [Full results and limits](performance-evidence/import-point-current-dev/README.md)
-include slower synchronous capture waits; no full-scene motion claim is made.
-Integration CI and fifteen recovery stages pass at `1a8d4928`; collection-specific
-lifecycle and teardown validation pass at `fca2f991`. The frozen candidate's
-60-minute hosted soak (`38162032244`) completes 252 cycles with unchanged
-ownership gauges and 1.183% maximum final-window retained-heap growth. Its
-missing browser-shutdown fields keep acceptance pending. Fix `7cea7aac` records
-both owners; a corrected run is in progress before promotion to dev.
-[Original evidence and limits](performance-evidence/hosted-soak-38162032244/README.md).
+Latest checkpoint (11 October 2026): imported-point collection integration is
+accepted after five hosted comparison pairs (median cooperative-load change
+-56.9%), 55 exact image pairs, native picking, full integration CI, and the
+corrected 60-minute retention gate. [Comparison details](performance-evidence/import-point-current-dev/README.md)
+keep slower synchronous capture waits separate; no full-scene claim is made.
+
+The corrected soak at `7cea7aac` completes 252 cycles with all 40 gauges
+unchanged at 13 post-GC checkpoints, 629 listeners, no pending workers and 1.937%
+maximum final-window heap growth. Both browser owners close naturally in under
+one second. [Original report and independent checks](performance-evidence/hosted-soak-38167171204/README.md)
+pass as supplemental hosted Apple paravirtual Metal evidence. Physical Windows,
+full paired workloads and final candidate acceptance remain pending. Historical
+reports with missing cleanup fields remain incomplete.
 
 S47's [stage diagnostic](performance-evidence/s47-stage-diagnostic-38165977957/README.md)
 still hits its 180-second child cap during scene setup after three samples.
