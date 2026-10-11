@@ -1,0 +1,43 @@
+﻿{
+    "schema":  "gev-import-order-fix-review/v1",
+    "run":  38144007546,
+    "commit":  "c930766dd7590660bbf897e605defa2832f015ba",
+    "status":  "passed",
+    "platform":  "darwin",
+    "reportSha256":  "609f73c466516a54b6cd534a48e8d7c540005e86e5f65855eb84c4c46bd9c4cc",
+    "pixelCorrectness":  {
+                             "samples":  10,
+                             "alternatingPairs":  5,
+                             "uniquePixelSha256":  "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+                             "allPixelsMatch":  true,
+                             "retainedPngArtifacts":  0
+                         },
+    "pointVisualState":  {
+                             "version":  "1.138.0",
+                             "samples":  10,
+                             "entityOrderAndStateSha256":  "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+                             "entityToPrimitiveAssignmentSha256":  "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+                             "primitiveDrawOrderAndStateSha256":  "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+                             "allSamplesMatch":  true
+                         },
+    "largeGeometry":  {
+                          "lineStringCoordinates":  50000,
+                          "polygonCoordinates":  50000,
+                          "exactOutputParity":  true
+                      },
+    "cancellation":  {
+                         "attempts":  12,
+                         "aborts":  12,
+                         "pendingJobsAfter":  0,
+                         "ownershipReleased":  true
+                     },
+    "cleanup":  {
+                    "browserCloseCompleted":  true,
+                    "forcedProcessTermination":  false
+                },
+    "claimLimits":  [
+                        "Correctness evidence only; no speed claim.",
+                        "Hosted Metal renderer; no physical-hardware claim."
+                    ],
+    "rawReportPath":  "hosted-native-renderer.json"
+}

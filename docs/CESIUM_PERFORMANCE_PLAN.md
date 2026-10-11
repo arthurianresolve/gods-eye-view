@@ -4091,3 +4091,24 @@ Do not adopt a scheduler optimization solely from this profile.
 The profile summarizer now accepts its already-sanitized local source paths so
 independent artifact review is repeatable. Round-trip summary and cleanup tests
 pass. The hosted source remains bound to the preceding immutable commit.
+
+### S59 imported point clearing correctness - 11 October 2026
+
+Hosted run [38144007546](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144007546)
+passes the strict import-batch correctness validator at
+`c930766dd7590660bbf897e605defa2832f015ba`. Five alternating synchronous and
+cooperative pairs produced ten identical pixel hashes. The version-pinned
+Cesium 1.138.0 Entity order/state, Entity-to-PointPrimitive assignment, and
+primitive draw-order hashes also match across all ten captures. The run retains
+50,000-coordinate LineString and Polygon parity, passes all twelve cancellation
+cleanup repetitions, and closes the browser without forced termination. The
+[raw report and bounded review](performance-evidence/s59-import-order-fix-38144007546/)
+are archived; successful-run PNGs were not retained.
+
+This is correctness evidence only. It makes no speed or physical-hardware
+claim. The import-clear batch optimization was rejected because the preceding
+rendered comparison failed pixel equality and real-Cesium diagnostics showed
+that bulk removal changes point-primitive reuse order. Production clearing
+continues to use ownership-checked forward per-ID removals. The earlier Node
+removal timings remain historical results for the rejected helper and are not
+attributed to the current implementation.
