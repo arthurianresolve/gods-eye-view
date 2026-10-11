@@ -4,7 +4,7 @@ import * as Cesium from 'cesium';
 import { createImportedGeometryLayer } from './runtimeLayer.js';
 import { getContextStore } from '../data/contextStore.js';
 
-function fixture(t) {
+function fixture(t, { advancePreparationClock = false } = {}) {
   const previous = globalThis.window;
   globalThis.window = { dispatchEvent() {} };
   let clock = 0,
@@ -30,7 +30,7 @@ function fixture(t) {
     },
     now: () => 1000,
     batchOptions: {
-      now: () => clock,
+      now: () => (advancePreparationClock ? (clock += 2) : clock),
       schedule(fn) {
         timers.set(++timerId, fn);
         return timerId;
@@ -158,4 +158,90 @@ test('already aborted, malformed and empty loads leave no orphaned task or geome
   assert.equal(env.entities.values.length, 0);
   assert.equal(env.timers.size, 0);
   assert.equal(env.layer.getState().pendingJobs, 0);
+});
+
+const coordinateRing = (count, radius = 0.1) => {
+  const points = Array.from({ length: count - 1 }, (_, index) => {
+    const angle = (index / (count - 1)) * Math.PI * 2;
+    return [-97 + Math.cos(angle) * radius, 30 + Math.sin(angle) * radius, 25];
+  });
+  return [...points, [...points[0]]];
+};
+
+for (const type of ['LineString', 'Polygon']) {
+  test(`${type} 256-coordinate chunks preserve complete geometry and identity`, async (t) => {
+    const env = fixture(t, { advancePreparationClock: true });
+    const coordinates =
+      type === 'LineString'
+        ? coordinateRing(513)
+        : [coordinateRing(513), coordinateRing(257, 0.02)];
+    const input = [
+      {
+        id: 'chunked',
+        kind: 'geojson',
+        records: [{ id: 'shape', geometry: { type, coordinates } }],
+      },
+    ];
+    env.layer.load(input, { workspaceId: 'same' });
+    const expectedEntity = env.entities.values[0];
+    const expected =
+      type === 'LineString'
+        ? expectedEntity.polyline.positions
+            .getValue()
+            .map((point) => [point.x, point.y, point.z])
+        : expectedEntity.polygon.hierarchy.getValue();
+
+    const pending = env.layer.loadAsync(input, { workspaceId: 'same' });
+    assert.equal(env.entities.values.length, 0);
+    assert.equal(env.timers.size, 1, 'coordinate work yielded mid-feature');
+    env.flush();
+    assert.deepEqual(await pending, { drawn: 1, omitted: 0 });
+    const actualEntity = env.entities.values[0];
+    assert.equal(actualEntity.id, expectedEntity.id);
+    if (type === 'LineString') {
+      assert.deepEqual(
+        actualEntity.polyline.positions
+          .getValue()
+          .map((point) => [point.x, point.y, point.z]),
+        expected,
+      );
+    } else {
+      assert.deepEqual(actualEntity.polygon.hierarchy.getValue(), expected);
+    }
+    assert.equal(env.timers.size, 0);
+    assert.equal(env.layer.getState().pendingJobs, 0);
+  });
+}
+
+test('cancellation during one large feature never publishes partial geometry', async (t) => {
+  const env = fixture(t, { advancePreparationClock: true });
+  const input = [
+    {
+      id: 'chunked',
+      kind: 'geojson',
+      records: [
+        {
+          id: 'cancelled',
+          geometry: { type: 'LineString', coordinates: coordinateRing(513) },
+        },
+      ],
+    },
+  ];
+  const pending = env.layer.loadAsync(input, { workspaceId: 'old' });
+  const rejected = assert.rejects(pending, { name: 'AbortError' });
+  assert.equal(env.entities.values.length, 0);
+  assert.equal(env.timers.size, 1);
+  const lateTimer = [...env.timers.values()][0];
+  const replacement = env.layer.loadAsync(records(1), { workspaceId: 'new' });
+  lateTimer();
+  env.flush();
+  await rejected;
+  await replacement;
+  assert.deepEqual(
+    env.entities.values.map((entity) => entity.id),
+    ['gev-import:new:fixture:0'],
+  );
+  assert.equal(getContextStore().entities.size, 1);
+  assert.equal(env.layer.getState().pendingJobs, 0);
+  assert.equal(env.timers.size, 0);
 });

@@ -1104,6 +1104,8 @@
   "src/ui/workspaceImportRead.test.mjs",
   "src/ui/workspaceLibraryImport.test.mjs",
   "src/imports/runtimeLayer.js",
+  "src/imports/runtimeLayer.test.mjs",
+  "scripts/performance/importGeometry.mjs",
   "src/imports/index.js",
   "src/ui/styles/workspaceLibrary.css",
   "src/ui/diagnosticsPanel.js",
