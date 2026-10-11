@@ -10,6 +10,15 @@ the 10% limit. This tradeoff and the limits of Node/component measurements are
 explicit below. Conditional painting, full-scene performance and hardware
 acceptance remain unfinished; this does not complete S52 or S47-S60.
 
+Further conditional-paint review reproduced two callback-lifecycle failures in
+an unpublished prototype. A per-frame callback guard fixes both in the revised
+prototype; production already passes the same controls. Both new production
+regressions and the focused suite pass (90/90). The expanded 44-case browser
+fixture still requires its native-pixel control. [Raw failure controls and
+source snapshots](performance-evidence/s52-paint-callback-regressions/README.md)
+preserve the rejected result separately from the corrected experimental result.
+No conditional-paint runtime is accepted by these unit checks alone.
+
 The subsequent `dev` run at `e89715c3d46414107cc7996cce98d34aa1a09e8f`
 also passes all seven ordinary integration jobs, including Windows recovery and
 the final browser journey ([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38103646706),

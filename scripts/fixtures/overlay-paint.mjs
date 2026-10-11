@@ -1002,6 +1002,161 @@ async function run() {
     'Selection promotion and demotion must each produce distinct pixels',
   );
 
+  // A source below the shared paint threshold remains in the candidate
+  // population while publishing no pixels, hit target or accessible action.
+  // Raising and lowering the same entry again exercises stable cached output
+  // and prevents a stale snapshot alpha from resurrecting an invisible item.
+  const lowAlphaSource = 's52-low-alpha-stable';
+  const lowAlphaId = 'low-alpha-action';
+  const lowAlphaLabel = 'Low-alpha action must stay hidden';
+  let lowAlphaOpacity = 0.0005;
+  setOverlayEntries(
+    lowAlphaSource,
+    [
+      entry(lowAlphaId, -0.32, 0.18, {
+        variant: 'selected',
+        selected: true,
+        sourceAlpha: () => lowAlphaOpacity,
+        edgeFade: 'none',
+        accessibilityLabel: lowAlphaLabel,
+      }),
+    ],
+    { visible: true, moving: false },
+  );
+  let lastVisibleLowAlphaRect = null;
+  let lowAlphaEntryIdentity = null;
+  const publishLowAlpha = async (phase, sourceAlpha, elapsed = 16) => {
+    lowAlphaOpacity = sourceAlpha;
+    tick(elapsed);
+    const rectLive = getOverlayPaintRect(lowAlphaSource, lowAlphaId);
+    const rect = rectLive ? { ...rectLive } : null;
+    let sameNormalizedEntry = null;
+    if (rectLive?.entry) {
+      if (!lowAlphaEntryIdentity) lowAlphaEntryIdentity = rectLive.entry;
+      sameNormalizedEntry = rectLive.entry === lowAlphaEntryIdentity;
+    }
+    const hitLive = rect
+      ? hitTestWorldOverlay(
+          rect.x + rect.w / 2,
+          rect.y + rect.h / 2,
+          { sourceId: lowAlphaSource },
+        )
+      : null;
+    const diagnostics = getWorldOverlayDiagnostics();
+    fixtureState = {
+      paintControl: 'low-alpha-stable-recovery',
+      phase,
+      sourceAlpha,
+      candidateCount: diagnostics.candidateCount,
+      sameNormalizedEntry,
+      retainedRectIdentity:
+        rectLive && lastVisibleLowAlphaRect
+          ? rectLive === lastVisibleLowAlphaRect
+          : null,
+      lowAlphaRect: rect
+        ? [rect.x, rect.y, rect.w, rect.h]
+        : null,
+      lowAlphaHit: hitLive
+        ? [hitLive.sourceId, hitLive.entryId]
+        : null,
+    };
+    await captureCase(cases, `low-alpha-${phase}`);
+    if (rectLive) lastVisibleLowAlphaRect = rectLive;
+  };
+  const assertLowAlphaHidden = (name) => {
+    const row = sample(name);
+    assert(
+      row.diagnostics.entriesBySource[lowAlphaSource] === 1,
+      `${name} must retain one normalized source entry`,
+    );
+    assertEqual(row.inputState.lowAlphaRect, null, `${name} must not publish a rect`);
+    assertEqual(row.inputState.lowAlphaHit, null, `${name} must not publish a hit`);
+    assert(
+      !row.actions.some((item) => item.label === lowAlphaLabel),
+      `${name} must not publish an accessible action`,
+    );
+  };
+  await publishLowAlpha('initial', 0.0005);
+  assertLowAlphaHidden('low-alpha-initial');
+  await publishLowAlpha('stable', 0.0005, 100);
+  assertLowAlphaHidden('low-alpha-stable');
+  assertEqual(
+    sample('low-alpha-stable').pixelsSha256,
+    sample('low-alpha-initial').pixelsSha256,
+    'Consecutive stable low-alpha frames must retain identical visible pixels',
+  );
+  await publishLowAlpha('recovery', 0.72);
+  const lowAlphaRecovery = sample('low-alpha-recovery');
+  assert(
+    lowAlphaRecovery.diagnostics.entriesBySource[lowAlphaSource] === 1 &&
+      lowAlphaRecovery.inputState.sameNormalizedEntry === true &&
+      lowAlphaRecovery.inputState.lowAlphaRect?.[2] > 0 &&
+      lowAlphaRecovery.inputState.lowAlphaRect?.[3] > 0 &&
+      lowAlphaRecovery.inputState.lowAlphaHit?.[0] === lowAlphaSource &&
+      lowAlphaRecovery.inputState.lowAlphaHit?.[1] === lowAlphaId &&
+      lowAlphaRecovery.actions.filter((item) => item.label === lowAlphaLabel)
+        .length === 1,
+    'Raising alpha must restore the same source entry as one visible, hittable and accessible item',
+  );
+  assertNotEqual(
+    lowAlphaRecovery.pixelsSha256,
+    sample('low-alpha-stable').pixelsSha256,
+    'Raising alpha must change actual Canvas2D pixels',
+  );
+  await publishLowAlpha('recovery-stable', 0.72, 100);
+  const lowAlphaRecoveryHold = sample('low-alpha-recovery-stable');
+  assert(
+    lowAlphaRecoveryHold.inputState.sameNormalizedEntry === true &&
+      lowAlphaRecoveryHold.inputState.lowAlphaHit?.[0] === lowAlphaSource &&
+      lowAlphaRecoveryHold.inputState.lowAlphaHit?.[1] === lowAlphaId &&
+      lowAlphaRecoveryHold.actions.filter((item) => item.label === lowAlphaLabel)
+        .length === 1,
+    'A stable visible recovery must retain the same source entry, hit and accessible action',
+  );
+  assertEqual(
+    lowAlphaRecoveryHold.pixelsSha256,
+    lowAlphaRecovery.pixelsSha256,
+    'Consecutive stable recovery frames must retain identical visible pixels',
+  );
+  assertEqual(
+    lowAlphaRecoveryHold.inputState.retainedRectIdentity,
+    true,
+    'A stable visible recovery must retain its pooled rectangle identity',
+  );
+  await publishLowAlpha('hidden-again', 0.0005);
+  assertLowAlphaHidden('low-alpha-hidden-again');
+  await publishLowAlpha('hidden-again-stable', 0.0005, 100);
+  assertLowAlphaHidden('low-alpha-hidden-again-stable');
+  assert(
+    [
+      'low-alpha-initial',
+      'low-alpha-stable',
+      'low-alpha-recovery',
+      'low-alpha-recovery-stable',
+      'low-alpha-hidden-again',
+      'low-alpha-hidden-again-stable',
+    ].every(
+      (name) =>
+        sample(name).inputState.candidateCount ===
+        sample('low-alpha-initial').inputState.candidateCount,
+    ),
+    'Alpha changes must not remove the source entry or alter overall candidate population',
+  );
+  assertEqual(
+    sample('low-alpha-hidden-again').pixelsSha256,
+    sample('low-alpha-stable').pixelsSha256,
+    'Lowering alpha again must restore the stable invisible pixels',
+  );
+  assertEqual(
+    sample('low-alpha-hidden-again-stable').pixelsSha256,
+    sample('low-alpha-stable').pixelsSha256,
+    'A second unchanged invisible frame must keep the same pixels',
+  );
+  assertEqual(
+    lowAlphaRecovery.inputState.retainedRectIdentity,
+    null,
+    'The first visible recovery has no previous visible rectangle to retain',
+  );
   report.status = 'passed';
   report.final = {
     activationCount,

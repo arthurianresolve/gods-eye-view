@@ -93,6 +93,12 @@ const expectedCases = [
   'selection-transition-selected-hold',
   'selection-transition-ambient-again',
   'selection-transition-ambient-hold',
+  'low-alpha-initial',
+  'low-alpha-stable',
+  'low-alpha-recovery',
+  'low-alpha-recovery-stable',
+  'low-alpha-hidden-again',
+  'low-alpha-hidden-again-stable',
 ];
 const fixtures = new Map(
   files.map((name) => [name, readFileSync(resolve(fixtureDir, name))]),

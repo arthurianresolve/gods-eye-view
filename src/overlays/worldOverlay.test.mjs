@@ -3289,3 +3289,46 @@ test('entries below the paint threshold stay noninteractive across stable frames
     }
   }
 });
+
+test('retiring a shared painter clears its pixels on the next frame', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('self-releasing-shared', [selectedEntry('retained-label', {
+    position: positionAtScreen(252, 174, 500, 360), title: 'LABEL', edgeFade: 'none',
+  })]);
+  const painter = registerWorldOverlayPaintLane('selected', (frame) => {
+    frame.ctx.fillRect(1, 2, 3, 4);
+    painter.unregister();
+  }, { id: 'self-releasing-marker', active: true, target: 'shared' });
+  env.postRender.raise();
+  const isMarker = ([name, ...args]) => name === 'fillRect' && JSON.stringify(args) === '[1,2,3,4]';
+  assert.ok(env.ctx.calls.some(isMarker), 'first frame draws the custom marker');
+  env.ctx.calls.length = 0;
+  env.advanceTime(16);
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name]) => name === 'clearRect'), 'next frame removes retired painter pixels');
+  assert.ok(env.ctx.calls.some(([name]) => name === 'fillText'), 'retained label is repainted after clear');
+  assert.equal(env.ctx.calls.some(isMarker), false, 'retired painter does not run again');
+});
+
+test('a self-releasing late callback mutation is painted on the next frame', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('self-releasing-late', [selectedEntry('mutable-label', {
+    position: positionAtScreen(252, 174, 500, 360), title: 'ALPHA', edgeFade: 'none',
+  })]);
+  const painter = registerWorldOverlayPaintLane('tracked', () => {
+    const rect = getOverlayPaintRect('self-releasing-late', 'mutable-label');
+    assert.ok(rect?.entry, 'later callback sees the already painted label');
+    rect.entry.title = 'OMEGA';
+    painter.unregister();
+  }, { id: 'self-releasing-late-callback', active: true, target: 'detection' });
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name, text]) => name === 'fillText' && text === 'ALPHA'));
+  env.ctx.calls.length = 0;
+  env.advanceTime(16);
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name, text]) => name === 'fillText' && text === 'OMEGA'), 'next frame paints the post-label mutation');
+});

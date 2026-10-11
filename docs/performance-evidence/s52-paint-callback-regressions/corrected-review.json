@@ -1,0 +1,30 @@
+{
+  "schema": "gev-corrected-paint-regression-review/v1",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "appendixSha256": "e8b4b4e0f5ad7e68c804e3a8880938c7cca5ea3bf945a997815df8423b524bb8",
+  "productionTestSha256": "3169b0cc5087ae4d04c6a8967088b8efefc2d7b96188f755ea5ae58f5ded55f2",
+  "scope": "Independent unit failure controls and production focused checks; no native-pixel, GPU or performance claim.",
+  "rows": [
+    {
+      "name": "corrected-prototype",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0,
+      "sourceSha256": "2cf2d2c0cbaa22e17e6b32736c461c8a05331129bc7809ceeea5d680bfa1c523",
+      "stdoutSha256": "cbd8f4990b750fd49c27a526358affb7c9368d012017cd5d583ce76e6d9941c8",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "production-focused",
+      "tests": 90,
+      "pass": 90,
+      "fail": 0,
+      "skipped": 0,
+      "sourceSha256": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+      "stdoutSha256": "7aaba766c38863133647be2ada5e7f0455728a9274cc4790e56556914f3488ef",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
