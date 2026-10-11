@@ -1,0 +1,147 @@
+{
+  "schema": "gev-ci-review/v1",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405",
+  "testedCommit": "c930766dd7590660bbf897e605defa2832f015ba",
+  "status": "passed",
+  "jobs": [
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730595"
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730647"
+    },
+    {
+      "name": "Street Level browser gate",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730678"
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730708"
+    },
+    {
+      "name": "Node 26.x",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730738"
+    },
+    {
+      "name": "Windows onboarding",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730762"
+    },
+    {
+      "name": "Node 24.14.0",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405/job/114484730778"
+    }
+  ],
+  "skippedJobs": [
+    "Isolated CCTV lifecycle",
+    "Isolated mission render-demand correctness",
+    "Windows browser shutdown controls",
+    "Free hosted Mac rendering diagnostic",
+    "Baseline-compatible performance build smoke",
+    "Isolated import and workspace lifecycle",
+    "60-minute rendered application soak",
+    "Isolated rendered mixed-use smoke",
+    "Isolated terrain and picking lifecycle",
+    "Aircraft tracking regression",
+    "Free hosted Mac accelerated retention diagnostic",
+    "Native WebGL probe (${{ matrix.os }})"
+  ],
+  "publishedLayerTokenCheck": "skipped on workflow_dispatch; no representative pull-request claim",
+  "recovery": [
+    {
+      "platform": "windows",
+      "file": "windows-recovery.json",
+      "sha256": "b74d793646f7d10301c845a6f5564046dc0725a59e06ccdc3ddc1edb1a5b9624",
+      "candidateCommit": "c930766dd7590660bbf897e605defa2832f015ba",
+      "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+      "status": "passed",
+      "checkIds": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "settingsAndWorkspacePreserved": true,
+      "allFiveOwnedBrowsersExitedNaturally": true,
+      "browserCloseMs": [
+        612.07,
+        660.47,
+        375.5,
+        401.35,
+        436.49
+      ],
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "browserVersion": "Chrome/152.0.7977.75",
+      "hardwareRenderingValidated": false
+    },
+    {
+      "platform": "ubuntu",
+      "file": "ubuntu-recovery.json",
+      "sha256": "291a33d524c246209a4fb58bd9717a932095e39df135c40c0dfbe65e8e9073b7",
+      "candidateCommit": "c930766dd7590660bbf897e605defa2832f015ba",
+      "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+      "status": "passed",
+      "checkIds": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "settingsAndWorkspacePreserved": true,
+      "allFiveOwnedBrowsersExitedNaturally": true,
+      "browserCloseMs": [
+        547.15,
+        516.78,
+        298.1,
+        627.97,
+        517.04
+      ],
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "browserVersion": "Chrome/152.0.7977.75",
+      "hardwareRenderingValidated": false
+    },
+    {
+      "platform": "macos",
+      "file": "macos-recovery.json",
+      "sha256": "06be7039b57570ca3b9ba3614718a43e5cc9da9a1fdc14b3d30d03b2ca2e7196",
+      "candidateCommit": "c930766dd7590660bbf897e605defa2832f015ba",
+      "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+      "status": "passed",
+      "checkIds": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "settingsAndWorkspacePreserved": true,
+      "allFiveOwnedBrowsersExitedNaturally": true,
+      "browserCloseMs": [
+        875.02,
+        1169.87,
+        808.65,
+        1253.99,
+        955.08
+      ],
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "browserVersion": "Chrome/152.0.7977.75",
+      "hardwareRenderingValidated": false
+    }
+  ],
+  "limitations": [
+    "Full standard CI covers c930766 only, not subsequent optional diagnostics.",
+    "Recovery uses hosted software rendering and does not establish physical hardware performance.",
+    "This is separate evidence from intermittent 5-second browser-exit failures on the main-integration branch. Those remain unresolved.",
+    "S59 correctness passes; individual application-work budget and hardware acceptance remain open."
+  ]
+}

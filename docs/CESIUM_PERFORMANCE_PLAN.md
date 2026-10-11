@@ -4134,3 +4134,21 @@ before choosing a runtime change. Reducing all batch sizes or restoring the
 rejected bulk-clear path is not supported by these observations. Code and
 automatic correctness are recorded separately from the unresolved four-ms,
 interaction, throughput and physical-hardware acceptance requirements.
+
+### S59 correction integration gates — 11 October 2026
+
+[Standard CI 38144438405](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144438405)
+passed all seven standard jobs at `c930766dd7590660bbf897e605defa2832f015ba`:
+Node 24/26 suites and builds, Windows onboarding, Linux/macOS/Windows install
+and profile recovery, and the browser journeys. Each platform's five recovery
+checks preserved settings, workspace contents and the imported asset. All
+fifteen owned browser processes exited naturally within the unchanged five-second
+deadline. Windows close times were 375–661 ms. The
+[raw recovery reports, workflow metadata and review](performance-evidence/s59-ci-38144438405/)
+are retained with file hashes and the exact tested revision.
+
+These checks cover the import-order correction, not later optional attribution
+code. Recovery used software rendering; published layer-token checks and the
+separate soak/tracking jobs were not selected by this workflow dispatch. This
+pass neither resolves the intermittent shutdown failure on the separate
+main-integration candidate nor closes S59's work-budget and hardware gates.
