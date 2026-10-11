@@ -18,7 +18,8 @@ import {
 } from '../../data/cctvFootprint.js';
 
 export function createGeometry({ state: layerState, services, parts, source }) {
-  const { warmGroundFloor, cachedGroundFloor } = services.ground;
+  const { warmGroundFloor, cachedGroundFloor, cachedMeshFloor } =
+    services.ground;
   const { sampleMeshFloorCells } = services.mesh;
 
   /**
@@ -498,16 +499,18 @@ export function createGeometry({ state: layerState, services, parts, source }) {
       });
     }
 
+    const cachedMesh = cachedMeshFloor?.(point.lat, point.lon);
     const cachedFloor = cachedGroundFloor(point.lat, point.lon);
-    const ground = Number.isFinite(cachedFloor)
-      ? cachedFloor
-      : parts.ground.groundAltFor(record, 'google-3d');
+    const ground = Number.isFinite(cachedMesh)
+      ? cachedMesh
+      : Number.isFinite(cachedFloor)
+        ? cachedFloor
+        : parts.ground.groundAltFor(record, 'google-3d');
     applyFrustumGeometry(record, ground);
 
-    record.groundResolved['google-3d'] = Number.isFinite(cachedFloor);
-    if (Number.isFinite(cachedFloor)) {
-      record.groundSamples['google-3d'] = ground;
-    }
+    record.groundResolved['google-3d'] =
+      Number.isFinite(cachedMesh) || !parts.model.hasProjectionTileset();
+    if (Number.isFinite(cachedMesh)) record.groundSamples['google-3d'] = ground;
   }
 
   /**
@@ -643,6 +646,23 @@ export function createGeometry({ state: layerState, services, parts, source }) {
   function runActivationObstructionProbe(record) {
     record.probeClampRangeM = null;
     const scene = layerState._viewer?.scene;
+    const surfaceSource = services.mesh?.reconcileMeshFloorSource?.(scene);
+    if (surfaceSource?.pending) {
+      record.probeClampSource = null;
+      record.probeClampPendingSource = null;
+      record.probeClampPendingMapSwitch = true;
+      return;
+    }
+    record.probeClampPendingMapSwitch = false;
+    record.probeClampSource = surfaceSource?.source || null;
+    if (
+      record.probeClampSource &&
+      parts.model.projectionTilesReady?.() === false
+    ) {
+      record.probeClampPendingSource = record.probeClampSource;
+      return;
+    }
+    record.probeClampPendingSource = null;
     if (!scene || typeof scene.pickFromRay !== 'function') return;
     const camera = record.camera;
     const rangeScale = parts.calibration.normalizeCalibration(
@@ -681,8 +701,13 @@ export function createGeometry({ state: layerState, services, parts, source }) {
    */
 
   function clearProbeClampOnDeactivation(record, rewriteGeometry) {
-    if (!record || !Number.isFinite(record.probeClampRangeM)) return false;
+    if (!record) return false;
+    const hadClamp = Number.isFinite(record.probeClampRangeM);
     record.probeClampRangeM = null;
+    record.probeClampSource = null;
+    record.probeClampPendingSource = null;
+    record.probeClampPendingMapSwitch = false;
+    if (!hadClamp) return false;
     rewriteGeometry?.(record);
     return true;
   }

@@ -130,6 +130,11 @@ export function createState({ services }) {
 
   layerState._lastAppliedRegime = null;
 
+  // Identity of the last visible Google 3D tileset that owned runtime mesh
+  // ground samples. DEM and shipped footprint samples have separate owners.
+  layerState._googleGroundSource = null;
+  layerState._hasGoogleGroundSource = false;
+
   // Task 5: window listener handle for the 'gev:map-stack-changed' CustomEvent
   // main.js dispatches from MapStackController's onChange (removed in destroy).
 

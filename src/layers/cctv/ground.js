@@ -245,13 +245,127 @@ export function createGround({ state: layerState, services, parts, source }) {
    * Event-driven only — never called on a timer.
    */
 
-  function handleMapStackChanged() {
+  function updatePendingGoogleProbe() {
+    if (!layerState._enabled || currentSurfaceRegime() !== 'google-3d')
+      return false;
+    const active = layerState._recordById.get(layerState._activeCameraId);
+    for (const record of layerState._records) {
+      if (record !== active) record.probeClampPendingSource = null;
+    }
+    const pendingSource = active?.probeClampPendingSource;
+    if (!active || !pendingSource) return false;
+    const observed = services.mesh?.reconcileMeshFloorSource?.(
+      layerState._viewer?.scene,
+    );
+    if (
+      !observed ||
+      observed.source !== pendingSource ||
+      layerState._googleGroundSource !== pendingSource
+    ) {
+      active.probeClampPendingSource = null;
+      return false;
+    }
+    if (parts.model.projectionTilesReady?.() === false) return false;
+    parts.geometry.runActivationObstructionProbe(active);
+    if (active.probeClampPendingSource) return false;
+    parts.geometry.applyFrustumGeometry(
+      active,
+      groundAltFor(active, 'google-3d'),
+    );
+    void resolveFootprintGround(active);
+    parts.presentation.notifyListeners();
+    requestRender('cctv-ground-source-ready');
+    return true;
+  }
+
+  function handleMapStackChanged(event) {
+    if (event?.detail?.status === 'switching') return;
     if (!layerState._viewer || !layerState._records.length) return;
     const regime = currentSurfaceRegime();
-    if (regime === layerState._lastAppliedRegime) return;
+    const previousGoogleSource = layerState._googleGroundSource;
+    let googleSourceChanged = false;
+    const detail = event?.detail;
+    const activeRecord = layerState._recordById.get(layerState._activeCameraId);
+    const probeAwaitingSettledOwner =
+      !!activeRecord?.probeClampPendingMapSwitch;
+    const observed =
+      detail?.surfaceOwnerKnown === true
+        ? { source: detail.surfaceOwner }
+        : services.mesh?.reconcileMeshFloorSource?.(layerState._viewer.scene);
+    if (observed) {
+      googleSourceChanged =
+        layerState._hasGoogleGroundSource &&
+        observed.source !== previousGoogleSource;
+      layerState._googleGroundSource = observed.source;
+      layerState._hasGoogleGroundSource = true;
+      if (googleSourceChanged) parts.model.refreshProjectionTileset?.();
+    }
+    const regimeChanged = regime !== layerState._lastAppliedRegime;
+    if (!regimeChanged && !googleSourceChanged && !probeAwaitingSettledOwner)
+      return;
     layerState._lastAppliedRegime = regime;
 
+    if (probeAwaitingSettledOwner && activeRecord) {
+      activeRecord.probeClampPendingMapSwitch = false;
+      activeRecord.probeClampPendingSource =
+        regime === 'google-3d' && layerState._enabled
+          ? observed?.source || null
+          : null;
+    }
+
+    const sourceInvalidated = [];
+    const sourceInvalidatedSet = new Set();
+    const geometryInvalidatedSet = new Set();
+    let activeProbeInvalidated = false;
+    if (googleSourceChanged) {
+      for (const record of layerState._records) {
+        record.probeClampPendingSource = null;
+        if (record.probeClampSource === previousGoogleSource) {
+          record.probeClampRangeM = null;
+          record.probeClampSource = null;
+          geometryInvalidatedSet.add(record);
+          if (record.camera?.id === layerState._activeCameraId)
+            activeProbeInvalidated = true;
+        }
+        // Shipped samples and Re:Earth DEM footprint samples are not owned by
+        // the live Cesium tileset. Only runtime mesh-floor values are scoped to
+        // its identity and need a fresh one-shot sample.
+        if (record.camera?.groundHeights) continue;
+        delete record.groundSamples['google-3d'];
+        record.groundResolved['google-3d'] = false;
+        sourceInvalidated.push(record);
+        sourceInvalidatedSet.add(record);
+        geometryInvalidatedSet.add(record);
+      }
+    }
+
     for (const record of layerState._records) {
+      if (
+        googleSourceChanged &&
+        geometryInvalidatedSet.has(record) &&
+        regime === 'google-3d'
+      ) {
+        // Keep the prior/DEM footprint visible while the replacement tileset
+        // streams; the geometry queue will sample and publish the new mesh.
+        parts.geometry.applyFrustumGeometry(record, groundPriorAltFor(record));
+        continue;
+      }
+      if (
+        googleSourceChanged &&
+        geometryInvalidatedSet.has(record) &&
+        regime === 'terrain-globe'
+      ) {
+        if (regimeChanged) {
+          record.groundSamples['terrain-globe'] = groundPriorAltFor(record);
+          record.groundResolved['terrain-globe'] = true;
+        }
+        parts.geometry.applyFrustumGeometry(
+          record,
+          groundAltFor(record, 'terrain-globe'),
+        );
+        continue;
+      }
+      if (!regimeChanged) continue;
       if (regime === 'terrain-globe') {
         // Prior IS the resolution — latch it (zero scene queries).
         record.groundSamples['terrain-globe'] = groundPriorAltFor(record);
@@ -274,6 +388,18 @@ export function createGround({ state: layerState, services, parts, source }) {
       parts.geometry.applyFrustumGeometry(record, ground);
     }
 
+    if (
+      googleSourceChanged &&
+      regime === 'google-3d' &&
+      observed?.source &&
+      layerState._enabled
+    ) {
+      const active = layerState._recordById.get(layerState._activeCameraId);
+      if (active) {
+        active.probeClampPendingSource = observed.source;
+      }
+    }
+
     if (regime === 'google-3d') {
       // Fresh google-3d session: let update()'s ONE-SHOT completion pass
       // re-enqueue records without an accepted sample once the (re-shown)
@@ -282,10 +408,24 @@ export function createGround({ state: layerState, services, parts, source }) {
       // under the ≤1-per-(camera, session) ceiling.
       layerState._tilesReadyReenqueued = false;
     }
+    if (googleSourceChanged && layerState._enabled && sourceInvalidated.length)
+      parts.geometryQueue.enqueueGeometryRefresh(sourceInvalidated);
     // The active camera may have just lost its shipped footprint (globe
     // regime) — resolve its DEM footprint for the new surface.
+    let probeResolved = false;
+    if (
+      (googleSourceChanged || probeAwaitingSettledOwner) &&
+      regime === 'google-3d'
+    )
+      probeResolved = updatePendingGoogleProbe();
     const active = layerState._recordById.get(layerState._activeCameraId);
-    if (active) void resolveFootprintGround(active);
+    if (active && !probeResolved) void resolveFootprintGround(active);
+    if (activeProbeInvalidated && regime === 'terrain-globe') {
+      if (active) {
+        active.probeClampPendingSource = null;
+        active.probeClampPendingMapSwitch = false;
+      }
+    }
     parts.presentation.notifyListeners();
   }
   /**
@@ -361,6 +501,7 @@ export function createGround({ state: layerState, services, parts, source }) {
     groundPriorAltFor,
     isGroundResolved,
     groundAltFor,
+    updatePendingGoogleProbe,
     rearmGroundResolution,
     resolveCommittedGroundAnchor,
     resolveGroundPriors,
