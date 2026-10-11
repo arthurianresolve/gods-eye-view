@@ -4011,3 +4011,16 @@ The strict datacenter rerun at `db49092` passes all twenty samples within the un
 ### Combined S54 candidate
 
 The infrastructure QA branch now combines the separately tested dam/datacenter and cable reference implementations. This is an isolated candidate; the application still defaults to Entity rendering. [Cable correctness and readiness evidence](performance-evidence/s54-cable-reference-collections/rendered-38135671321/review.json) preserves twenty independently decoded images and ten exact pairs. The earlier cable failure came from sampling ready source metadata while replacement geometry was still unready; the explicit public-owner readiness gate corrects that fixture distinction within the existing deadline. Full combined checks, cable activation/memory comparisons, and physical Windows evidence remain separate requirements.
+
+
+The combined S54 candidate `d1ee4e80776f0611bff2673f250746724925159e`
+passed all seven applicable jobs in
+[CI 38136119166](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38136119166):
+Node 24/26 suites and production builds, Windows onboarding, Windows/macOS/Linux
+installation recovery, and the full browser gate including portable-panel
+checks. [Exact job record](performance-evidence/s54-production-collections/ci-d1ee4e8.json)
+retains skipped optional diagnostics separately. This workflow dispatch did not
+exercise pull-request-only published layer-token allocation checks. It does not
+supply cable activation/memory benefit, resolve variable dam activation latency,
+or supply physical Windows GPU evidence; those gates remain open. The default
+rendering mode is still Entity and this candidate remains isolated from dev.
