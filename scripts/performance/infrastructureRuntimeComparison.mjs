@@ -391,3 +391,25 @@ export function countInfrastructureGraphics(entities, surfaceEntities) {
   }
   return { surfaceGraphics, preservedGraphics };
 }
+
+/** A failed native pick is retried only after a new stable rendered state. */
+export function createInfrastructureSampleReadiness() {
+  let previous = null;
+  let stableFrames = 0;
+  let pickAttempted = false;
+  return {
+    observe(signature) {
+      if (signature !== previous) {
+        stableFrames = 1;
+        pickAttempted = false;
+      } else stableFrames++;
+      previous = signature;
+      return stableFrames;
+    },
+    takePickAttempt() {
+      if (stableFrames < 3 || pickAttempted) return false;
+      pickAttempted = true;
+      return true;
+    },
+  };
+}

@@ -8,6 +8,7 @@ import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
   countInfrastructureGraphics,
+  createInfrastructureSampleReadiness,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
   INFRASTRUCTURE_RUNTIME_SCHEMA,
@@ -338,9 +339,30 @@ function projectNativePick(viewer, row, kind) {
   return screen;
 }
 
-function captureNativePick(viewer, row, kind, collections, screen) {
+function captureNativePick(
+  viewer,
+  row,
+  kind,
+  collections,
+  screen,
+  diagnostics,
+) {
   const picked = viewer.scene.pick(new Cesium.Cartesian2(screen.x, screen.y));
-  if (picked?.id !== row.entity) return null;
+  const miss = (reason) => {
+    diagnostics[`${kind}Misses`]++;
+    if (diagnostics.rejections.length < 4)
+      diagnostics.rejections.push({
+        kind,
+        reason,
+        expectedEntityId: row.entityId,
+        actualEntityId: picked?.id?.id ? String(picked.id.id) : null,
+        primitiveType: picked?.primitive?.constructor?.name || null,
+        appearanceType:
+          picked?.primitive?.appearance?.constructor?.name || null,
+      });
+    return null;
+  };
+  if (picked?.id !== row.entity) return miss('source-entity-mismatch');
   if (collections) {
     const collection =
       kind === 'point' ? collections.points : collections.stems;
@@ -351,9 +373,11 @@ function captureNativePick(viewer, row, kind, collections, screen) {
         break;
       }
     }
-    if (!expected || picked.primitive !== expected) return null;
+    if (!expected || picked.primitive !== expected)
+      return miss('collection-primitive-mismatch');
   } else if (kind === 'point') {
-    if (!(picked.primitive instanceof Cesium.PointPrimitive)) return null;
+    if (!(picked.primitive instanceof Cesium.PointPrimitive))
+      return miss('default-point-type');
   } else {
     const primitive = picked.primitive;
     const defaultStemPrimitive =
@@ -361,7 +385,7 @@ function captureNativePick(viewer, row, kind, collections, screen) {
       (primitive instanceof Cesium.Primitive &&
         (primitive.appearance instanceof Cesium.PolylineColorAppearance ||
           primitive.appearance instanceof Cesium.PolylineMaterialAppearance));
-    if (!defaultStemPrimitive) return null;
+    if (!defaultStemPrimitive) return miss('default-stem-type');
   }
   viewer.selectedEntity = picked.id;
   check(
@@ -381,6 +405,7 @@ function findNativePickTarget(
   rows,
   collections,
   preferredEntityId = null,
+  diagnostics,
 ) {
   const orderedRows = preferredEntityId
     ? [
@@ -389,21 +414,31 @@ function findNativePickTarget(
       ]
     : rows;
   for (const row of orderedRows) {
-    if (!row.entityShow || !row.point.show || !row.stem.show) continue;
+    diagnostics.examined++;
+    if (!row.entityShow || !row.point.show || !row.stem.show) {
+      diagnostics.hidden++;
+      continue;
+    }
     const pointScreen = projectNativePick(viewer, row, 'point');
     const stemScreen = projectNativePick(viewer, row, 'stem');
-    if (!pointScreen || !stemScreen) continue;
+    if (!pointScreen || !stemScreen) {
+      diagnostics.offscreen++;
+      continue;
+    }
     if (
       Math.hypot(pointScreen.x - stemScreen.x, pointScreen.y - stemScreen.y) <=
       8
-    )
+    ) {
+      diagnostics.coincident++;
       continue;
+    }
     const pointPick = captureNativePick(
       viewer,
       row,
       'point',
       collections,
       pointScreen,
+      diagnostics,
     );
     if (!pointPick) continue;
     const stemPick = captureNativePick(
@@ -412,6 +447,7 @@ function findNativePickTarget(
       'stem',
       collections,
       stemScreen,
+      diagnostics,
     );
     if (stemPick) return { row, pointPick, stemPick };
   }
@@ -604,31 +640,43 @@ async function runLayerLifetime(
       recordSample = true,
     ) => {
       const deadline = performance.now() + 8000;
-      let previous = null;
+      const readiness = createInfrastructureSampleReadiness();
+      let completedCaptures = 0;
+      let pickSearches = 0;
+      let pickDiagnostics = null;
       let stableFrames = 0;
       let finalFrame;
       let pointPick;
       let stemPick;
       let pickRow;
-      let attemptedPickSearch = false;
       let selectionRendered = false;
       while (performance.now() < deadline) {
         finalFrame = await captureFrame(viewer);
+        completedCaptures++;
         if (pickRow) selectionRendered = true;
         rows = readRows();
         const hash = await sha256(
           new TextEncoder().encode(JSON.stringify(geometrySnapshot(rows))),
         );
         const signature = `${finalFrame.pixelSha256}:${hash}`;
-        stableFrames = signature === previous ? stableFrames + 1 : 1;
-        previous = signature;
-        if (stableFrames >= 3 && !attemptedPickSearch) {
-          attemptedPickSearch = true;
+        stableFrames = readiness.observe(signature);
+        if (readiness.takePickAttempt()) {
+          pickSearches++;
+          pickDiagnostics = {
+            examined: 0,
+            hidden: 0,
+            offscreen: 0,
+            coincident: 0,
+            pointMisses: 0,
+            stemMisses: 0,
+            rejections: [],
+          };
           const target = findNativePickTarget(
             viewer,
             rows,
             collections,
             preferredPickEntityId,
+            pickDiagnostics,
           );
           pointPick = target?.pointPick;
           stemPick = target?.stemPick;
@@ -637,6 +685,33 @@ async function runLayerLifetime(
         }
         if (stableFrames >= 3 && pointPick && stemPick && selectionRendered)
           break;
+      }
+      if (!(stableFrames >= 3 && pointPick && stemPick && pickRow)) {
+        lifetime.failedSample = {
+          caseId,
+          pair,
+          stableFrames,
+          completedCaptures,
+          pickSearches,
+          pickDiagnostics,
+          pointPick: pointPick || null,
+          stemPick: stemPick || null,
+          surfaceCount: rows.length,
+          visibleSurfaces: rows.filter(
+            (row) => row.entityShow && row.point.show && row.stem.show,
+          ).length,
+          sourceReady: viewer.dataSourceDisplay.ready,
+          ownership: renderState(),
+          clock: snapshotClock(viewer),
+          lastFrame: finalFrame
+            ? {
+                width: finalFrame.width,
+                height: finalFrame.height,
+                pixelSha256: finalFrame.pixelSha256,
+                pngBase64: finalFrame.pngBase64,
+              }
+            : null,
+        };
       }
       check(
         stableFrames >= 3 && pointPick && stemPick && pickRow,

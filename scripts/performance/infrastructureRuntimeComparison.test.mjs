@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   countInfrastructureGraphics,
+  createInfrastructureSampleReadiness,
   compareInfrastructureRuntimeLifetimes,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
@@ -359,4 +360,23 @@ test('runtime report requires observed renderer identity and drawing-buffer dime
       validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
     /incomplete render or ownership evidence/,
   );
+});
+
+test('late geometry completion permits a fresh native pick without polling unchanged frames', () => {
+  const gate = createInfrastructureSampleReadiness();
+  gate.observe('points-ready-stems-pending');
+  assert.equal(gate.takePickAttempt(), false);
+  gate.observe('points-ready-stems-pending');
+  gate.observe('points-ready-stems-pending');
+  assert.equal(gate.takePickAttempt(), true);
+  for (let i = 0; i < 5; i++) {
+    gate.observe('points-ready-stems-pending');
+    assert.equal(gate.takePickAttempt(), false);
+  }
+  assert.equal(gate.observe('points-and-stems-ready'), 1);
+  assert.equal(gate.takePickAttempt(), false);
+  gate.observe('points-and-stems-ready');
+  gate.observe('points-and-stems-ready');
+  assert.equal(gate.takePickAttempt(), true);
+  assert.equal(gate.takePickAttempt(), false);
 });
