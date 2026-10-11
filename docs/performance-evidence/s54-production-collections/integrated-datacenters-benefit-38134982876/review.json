@@ -1,0 +1,13 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38134982876",
+  "commit": "db49092254816f58171bfb4fff69bd004c964f10",
+  "rawSha256": "cf992d4a51ecebed2860c7d41f0f14cf7c1157980f5a16e0129abf0bb3b24f3d",
+  "verifiedImages": 40,
+  "uniqueDecodedPngs": 1,
+  "exactPhasePairs": 20,
+  "sourceReadyMedianChangePercent": -0.9042954031592387,
+  "firstUsableMedianChangePercent": -47.46341845118549,
+  "enabledHeapDeltaMedianChangePercent": -16.04770858188368,
+  "scope": "Five hosted latency pairs and five separate forced-GC JS-heap pairs. No physical Windows, motion p95, GPU/native/process memory or full soak claim. Default remains Entity pending remaining validation.",
+  "strictValidator": "passed"
+}

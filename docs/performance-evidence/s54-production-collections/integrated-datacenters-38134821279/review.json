@@ -1,0 +1,13 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38134821279",
+  "commit": "db49092254816f58171bfb4fff69bd004c964f10",
+  "rawSha256": "808b221a60f85508b37827a4690b0e357be26a409ac367137720fc5585531437",
+  "strictValidator": "passed",
+  "samplingContract": "owned-ready-selected-frame/8s-v1",
+  "verifiedImages": 20,
+  "uniqueDecodedPngs": 2,
+  "exactPairs": 10,
+  "maximumSettledElapsedMs": 6767.799999999988,
+  "allSelectionRendered": true,
+  "scope": "Hosted paravirtual Metal correctness only. All samples meet the corrected 8-second readiness and selected-frame contract. No physical Windows, motion-performance or soak acceptance."
+}
