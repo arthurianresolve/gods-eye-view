@@ -19,6 +19,14 @@ export const MAX_RENDERED_IMPORT_FEATURES = 5_000;
 const MAX_IMPORTED_OVERLAY_LABELS = 180;
 const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
 
+function validateCoordinatePreparationChunkSize(value) {
+  if (!Number.isSafeInteger(value) || value < 0)
+    throw new RangeError(
+      'coordinatePreparationChunkSize must be a non-negative safe integer.',
+    );
+  return value;
+}
+
 function position(coordinate) {
   return Cesium.Cartesian3.fromDegrees(
     coordinate[0],
@@ -31,10 +39,20 @@ function positions(coordinates) {
   return coordinates.map(position);
 }
 
+function* positionsInChunks(coordinates, chunkSize) {
+  const result = new Array(coordinates.length);
+  for (let index = 0; index < coordinates.length; index++) {
+    result[index] = position(coordinates[index]);
+    if (index + 1 < coordinates.length && (index + 1) % chunkSize === 0) yield;
+  }
+  return result;
+}
+
 /** Render a bounded user-imported cohort with the shared evidence inspector. */
 export function createImportedGeometryLayer({
   viewer,
   pointRepresentation = 'entity',
+  coordinatePreparationChunkSize = 0,
   now = () => Date.now(),
   batchOptions = {},
   screenSpaceEventHandlerFactory = (canvas) =>
@@ -44,6 +62,7 @@ export function createImportedGeometryLayer({
     throw new TypeError('A Cesium viewer is required.');
   if (!POINT_REPRESENTATIONS.has(pointRepresentation))
     throw new TypeError('Unknown imported point representation.');
+  validateCoordinatePreparationChunkSize(coordinatePreparationChunkSize);
   if (
     pointRepresentation === 'primitive-collection' &&
     (typeof viewer.scene.primitives?.add !== 'function' ||
@@ -181,7 +200,13 @@ export function createImportedGeometryLayer({
       ) {
         shape = {
           polyline: {
-            positions: positions(geometry.coordinates),
+            positions:
+              coordinatePreparationChunkSize === 0
+                ? positions(geometry.coordinates)
+                : yield* positionsInChunks(
+                    geometry.coordinates,
+                    coordinatePreparationChunkSize,
+                  ),
             width: 3,
             material: Cesium.Color.CYAN,
             clampToGround: true,
@@ -191,14 +216,35 @@ export function createImportedGeometryLayer({
         geometry?.type === 'Polygon' &&
         geometry.coordinates?.[0]?.length >= 4
       ) {
+        let hierarchy;
+        if (coordinatePreparationChunkSize === 0) {
+          hierarchy = new Cesium.PolygonHierarchy(
+            positions(geometry.coordinates[0]),
+            geometry.coordinates
+              .slice(1)
+              .map((ring) => new Cesium.PolygonHierarchy(positions(ring))),
+          );
+        } else {
+          const outer = yield* positionsInChunks(
+            geometry.coordinates[0],
+            coordinatePreparationChunkSize,
+          );
+          const holes = [];
+          for (let index = 1; index < geometry.coordinates.length; index++) {
+            holes.push(
+              new Cesium.PolygonHierarchy(
+                yield* positionsInChunks(
+                  geometry.coordinates[index],
+                  coordinatePreparationChunkSize,
+                ),
+              ),
+            );
+          }
+          hierarchy = new Cesium.PolygonHierarchy(outer, holes);
+        }
         shape = {
           polygon: {
-            hierarchy: new Cesium.PolygonHierarchy(
-              positions(geometry.coordinates[0]),
-              geometry.coordinates
-                .slice(1)
-                .map((ring) => new Cesium.PolygonHierarchy(positions(ring))),
-            ),
+            hierarchy,
             material: Cesium.Color.CYAN.withAlpha(0.18),
             outline: true,
             outlineColor: Cesium.Color.CYAN,

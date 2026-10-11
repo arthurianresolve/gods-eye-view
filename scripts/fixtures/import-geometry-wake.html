@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Large imported geometry wake comparison</title>
+  <style>
+    body {
+      font:
+        14px system-ui,
+        sans-serif;
+      margin: 16px;
+    }
+    #viewer {
+      width: 960px;
+      height: 640px;
+    }
+    #credits {
+      display: none;
+    }
+  </style>
+  <body>
+    <h1>Large imported geometry wake comparison</h1>
+    <p>One deterministic 50,000-position imported feature per page.</p>
+    <div id="viewer"></div>
+    <div id="credits"></div>
+    <pre id="result">starting</pre>
+    <script type="module" src="./import-geometry-wake.js"></script>
+  </body>
+</html>

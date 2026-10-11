@@ -9,7 +9,11 @@ import {
 
 function fixture(
   t,
-  { advancePreparationClock = false, pointRepresentation = 'entity' } = {},
+  {
+    advancePreparationClock = false,
+    coordinatePreparationChunkSize = 0,
+    pointRepresentation = 'entity',
+  } = {},
 ) {
   const previous = globalThis.window;
   globalThis.window = { dispatchEvent() {} };
@@ -40,6 +44,7 @@ function fixture(
   const layer = createImportedGeometryLayer({
     viewer,
     pointRepresentation,
+    coordinatePreparationChunkSize,
     now: () => 1000,
     batchOptions: {
       now: () => (advancePreparationClock ? (clock += 2) : clock),
@@ -308,6 +313,87 @@ test('cooperative imports yield after four ms and preserve complete entity and e
   assert.equal(env.timers.size, 0);
 });
 
+const largeRing = (count, radius = 0.1) => {
+  const points = Array.from({ length: count - 1 }, (_, index) => {
+    const angle = (index / (count - 1)) * Math.PI * 2;
+    return [-97 + Math.cos(angle) * radius, 30 + Math.sin(angle) * radius, 25];
+  });
+  return [...points, [...points[0]]];
+};
+
+function geometryFixture(type, coordinates) {
+  return [
+    {
+      id: 'large-geometry',
+      kind: 'geojson',
+      attribution: 'S59 deterministic geometry fixture',
+      records: [{ id: 'shape', geometry: { type, coordinates } }],
+    },
+  ];
+}
+
+function geometryValues(entity, type) {
+  if (type === 'LineString')
+    return entity.polyline.positions.getValue().map(({ x, y, z }) => [x, y, z]);
+  const hierarchy = entity.polygon.hierarchy.getValue();
+  return [hierarchy.positions, ...hierarchy.holes.map((hole) => hole.positions)].map(
+    (ring) => ring.map(({ x, y, z }) => [x, y, z]),
+  );
+}
+
+for (const type of ['LineString', 'Polygon']) {
+  test(`${type} opt-in coordinate chunks preserve every position and delay Entity publication`, async (t) => {
+    const env = fixture(t, {
+      advancePreparationClock: true,
+      coordinatePreparationChunkSize: 64,
+    });
+    const coordinates =
+      type === 'LineString'
+        ? largeRing(1025)
+        : [largeRing(1025), largeRing(513, 0.02)];
+    const input = geometryFixture(type, coordinates);
+    env.layer.load(input, { workspaceId: 'reference' });
+    const expected = geometryValues(env.entities.values[0], type);
+    env.layer.clear();
+
+    const pending = env.layer.loadAsync(input, { workspaceId: 'chunked' });
+    assert.equal(env.entities.values.length, 0);
+    assert.equal(getContextStore().entities.size, 0);
+    assert.equal(env.timers.size, 1);
+    env.flush();
+    assert.deepEqual(await pending, { drawn: 1, omitted: 0 });
+
+    const current = env.entities.values[0];
+    assert.equal(current.id, 'gev-import:chunked:large-geometry:shape');
+    assert.deepEqual(geometryValues(current, type), expected);
+    assert.equal(getContextStore().entities.size, 1);
+    assert.equal(env.timers.size, 0);
+  });
+}
+
+test('chunked coordinate preparation rejects invalid chunk sizes', (t) => {
+  const previous = globalThis.window;
+  globalThis.window = { dispatchEvent() {} };
+  t.after(() => {
+    if (previous === undefined) delete globalThis.window;
+    else globalThis.window = previous;
+  });
+  const entities = new Cesium.EntityCollection();
+  for (const value of [-1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1])
+    assert.throws(
+      () =>
+        createImportedGeometryLayer({
+          viewer: { entities, scene: { canvas: {} } },
+          coordinatePreparationChunkSize: value,
+          screenSpaceEventHandlerFactory: () => ({
+            setInputAction() {},
+            destroy() {},
+          }),
+        }),
+      RangeError,
+    );
+});
+
 test('superseded imports cannot remove or repopulate the replacement workspace', async (t) => {
   const env = fixture(t);
   const old = env.layer.loadAsync(records(20), { workspaceId: 'old' });
@@ -322,6 +408,33 @@ test('superseded imports cannot remove or repopulate the replacement workspace',
     env.entities.values.every((e) => e.id.startsWith('gev-import:new:')),
   );
   assert.equal(getContextStore().entities.size, 3);
+  assert.equal(env.timers.size, 0);
+});
+
+test('superseding chunked geometry cancels the old wake before publishing replacement', async (t) => {
+  const env = fixture(t, {
+    advancePreparationClock: true,
+    coordinatePreparationChunkSize: 64,
+  });
+  const old = env.layer.loadAsync(
+    geometryFixture('Polygon', [largeRing(1025)]),
+    { workspaceId: 'old' },
+  );
+  const rejected = assert.rejects(old, { name: 'AbortError' });
+  const staleWake = [...env.timers.values()][0];
+  assert.ok(staleWake);
+  const replacement = env.layer.loadAsync(records(1), {
+    workspaceId: 'replacement',
+  });
+  staleWake();
+  env.flush();
+  await rejected;
+  await replacement;
+  assert.deepEqual(
+    env.entities.values.map((entity) => entity.id),
+    ['gev-import:replacement:fixture:0'],
+  );
+  assert.equal(env.layer.getState().pendingJobs, 0);
   assert.equal(env.timers.size, 0);
 });
 
