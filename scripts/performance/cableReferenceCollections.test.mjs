@@ -87,6 +87,22 @@ function sample(mode, caseId, sampleIndex) {
     pixelSha256: hash,
     pngBase64: 'iVBORw0KGgo=',
     camera: localCamera,
+    cameraSweep:
+      caseId === 'camera-change'
+        ? {
+            status: 'swept',
+            frameNumber: 42,
+            finalPoseVerified: true,
+            flightCompleteVerified: true,
+            cameraEventWaitMs: 500,
+          }
+        : {
+            status: 'not-required',
+            frameNumber: null,
+            finalPoseVerified: null,
+            flightCompleteVerified: null,
+            cameraEventWaitMs: null,
+          },
     classification: {
       terrain: 'TERRAIN',
       photoreal: 'CESIUM_3D_TILE',
@@ -382,6 +398,55 @@ test('rejects missing camera/stability evidence, stale settings hashes, and clea
         expectedCommit: commit,
       }),
     /environment is incomplete/,
+  );
+
+  const skippedSweep = validReport();
+  delete skippedSweep.lifetimes[0].samples[0].cameraSweep;
+  assert.throws(
+    () =>
+      validateCableReferenceCollectionsReport(skippedSweep, {
+        expectedCommit: commit,
+      }),
+    /sample 1 is incomplete/,
+  );
+
+  const prematureSweep = validReport();
+  const cameraChangedRow = prematureSweep.lifetimes[0].samples.find(
+    (row) => row.caseId === 'camera-change',
+  );
+  cameraChangedRow.cameraSweep.frameNumber = 0;
+  assert.throws(
+    () =>
+      validateCableReferenceCollectionsReport(prematureSweep, {
+        expectedCommit: commit,
+      }),
+    /camera-change sample 1 is incomplete/,
+  );
+
+  const missingMoveEndWindow = validReport();
+  const noCameraWait = missingMoveEndWindow.lifetimes[0].samples.find(
+    (row) => row.caseId === 'camera-change',
+  );
+  noCameraWait.cameraSweep.cameraEventWaitMs = null;
+  assert.throws(
+    () =>
+      validateCableReferenceCollectionsReport(missingMoveEndWindow, {
+        expectedCommit: commit,
+      }),
+    /camera-change sample 1 is incomplete/,
+  );
+
+  const unverifiedFinalPose = validReport();
+  const unverifiedRow = unverifiedFinalPose.lifetimes[0].samples.find(
+    (row) => row.caseId === 'camera-change',
+  );
+  unverifiedRow.cameraSweep.finalPoseVerified = false;
+  assert.throws(
+    () =>
+      validateCableReferenceCollectionsReport(unverifiedFinalPose, {
+        expectedCommit: commit,
+      }),
+    /camera-change sample 1 is incomplete/,
   );
 });
 

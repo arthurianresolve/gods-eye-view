@@ -190,6 +190,19 @@ function validateLifetime(lifetime, report, modeIndex) {
         !sha256(row.overlaySha256) ||
         !sha256(row.cameraSha256) ||
         row.cameraSha256 !== jsonSha256(row.camera) ||
+        (caseId === 'camera-change' &&
+          (row.cameraSweep?.status !== 'swept' ||
+            !Number.isSafeInteger(row.cameraSweep.frameNumber) ||
+            row.cameraSweep.frameNumber <= 0 ||
+            row.cameraSweep.finalPoseVerified !== true ||
+            row.cameraSweep.flightCompleteVerified !== true ||
+            row.cameraSweep.cameraEventWaitMs !== 500)) ||
+        (caseId === 'default-style' &&
+          (row.cameraSweep?.status !== 'not-required' ||
+            row.cameraSweep.frameNumber !== null ||
+            row.cameraSweep.finalPoseVerified !== null ||
+            row.cameraSweep.flightCompleteVerified !== null ||
+            row.cameraSweep.cameraEventWaitMs !== null)) ||
         !Number.isSafeInteger(row.frame?.width) ||
         !Number.isSafeInteger(row.frame?.height) ||
         row.frame.width <= 0 ||

@@ -1,0 +1,16 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38132781148",
+  "commit": "e88a1a75eeb90b58e5e43127d5c76b400c7de760",
+  "status": "failed",
+  "reason": "Error: entities could not obtain native point and stem picks for camera-change.\n    at assert (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:35:25)\n    at runLifetime (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:1107:7)\n    at async runComparison (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:1433:24)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:1578:16)",
+  "failedPhase": "entities-lifetime",
+  "samples": [
+    {
+      "mode": "entities",
+      "status": "failed",
+      "samples": 5
+    }
+  ],
+  "candidateRan": false,
+  "reportSha256": "a87b8f09a2a6d8a8f866dba2e6aa159a2c3c9ea14c49fac0c6bfa973184a8d47"
+}

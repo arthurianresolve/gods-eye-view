@@ -6,6 +6,7 @@ import { featureReference } from '../../src/layers/submarineCables/geometry.js';
 import { createSubmarineCableLayer } from '../../src/layers/submarineCables/index.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
+import { createCableCameraSweepGate } from './cableCameraSweep.mjs';
 import {
   CABLE_REFERENCE_RENDER_CASES,
   CABLE_REFERENCE_RENDER_POPULATION,
@@ -365,6 +366,22 @@ function cameraVector(viewer) {
   };
 }
 
+function sameCameraPose(left, right) {
+  if (!left || !right) return false;
+  for (const key of ['position', 'direction', 'up']) {
+    const a = left[key];
+    const b = right[key];
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== 3) return false;
+    const tolerance = key === 'position' ? 1e-6 : 1e-12;
+    for (let index = 0; index < 3; index += 1) {
+      if (!Number.isFinite(a[index]) || !Number.isFinite(b[index]))
+        return false;
+      if (Math.abs(a[index] - b[index]) > tolerance) return false;
+    }
+  }
+  return true;
+}
+
 function waitForPostRender(viewer, timeoutMs = 1000) {
   return new Promise((resolve, reject) => {
     let timer;
@@ -428,12 +445,23 @@ async function waitForPopulation(viewer, layer, sourceRecords) {
   throw new Error('Bundled cable population/readiness deadline expired.');
 }
 
-async function waitForStableScene(viewer, layer, mode, sourceRecords) {
-  const deadline = performance.now() + STABLE_TIMEOUT_MS;
+async function waitForStableScene(
+  viewer,
+  layer,
+  mode,
+  sourceRecords,
+  deadline = performance.now() + STABLE_TIMEOUT_MS,
+) {
   let previous = null;
   let stableFrames = 0;
   while (performance.now() < deadline) {
-    await waitForPostRender(viewer, 1000);
+    const remainingMs = deadline - performance.now();
+    try {
+      await waitForPostRender(viewer, Math.min(1000, remainingMs));
+    } catch (error) {
+      if (performance.now() >= deadline) break;
+      throw error;
+    }
     if (
       viewer.dataSourceDisplay.ready !== true ||
       viewer.scene.globe.tilesLoaded !== true
@@ -522,7 +550,7 @@ function pickedEntity(picked) {
   return null;
 }
 
-function probePick(viewer, screen, referencesById, kind) {
+function probePick(viewer, screen, referencesById, kind, trace = null) {
   const offsets =
     kind === 'point'
       ? [
@@ -549,17 +577,30 @@ function probePick(viewer, screen, referencesById, kind) {
     const picked = viewer.scene.pick(new Cesium.Cartesian2(x, y));
     const entity = pickedEntity(picked);
     const owner = entity && referencesById.get(entity.id);
-    if (!owner || owner.entity !== entity) continue;
-    const primitiveType = picked.primitive?.constructor?.name || 'unknown';
+    const primitiveType = picked?.primitive?.constructor?.name || null;
     const appearanceType =
-      picked.primitive?.appearance?.constructor?.name || null;
-    if (kind === 'point' && primitiveType !== 'PointPrimitive') continue;
+      picked?.primitive?.appearance?.constructor?.name || null;
+    if (trace) {
+      trace.scenePickCount += 1;
+      if (trace.observations.length < 12)
+        trace.observations.push({
+          screen: [x, y],
+          primitiveType,
+          appearanceType,
+          entityId: typeof entity?.id === 'string' ? entity.id : null,
+          ownerVerified: Boolean(owner && owner.entity === entity),
+        });
+    }
+    if (!owner || owner.entity !== entity) continue;
+    const verifiedPrimitiveType = primitiveType || 'unknown';
+    if (kind === 'point' && verifiedPrimitiveType !== 'PointPrimitive')
+      continue;
     if (
       kind === 'stem' &&
-      primitiveType !== 'Polyline' &&
-      primitiveType !== 'PolylineCollection' &&
+      verifiedPrimitiveType !== 'Polyline' &&
+      verifiedPrimitiveType !== 'PolylineCollection' &&
       !(
-        primitiveType === 'Primitive' &&
+        verifiedPrimitiveType === 'Primitive' &&
         appearanceType === 'PolylineColorAppearance'
       )
     )
@@ -567,7 +608,7 @@ function probePick(viewer, screen, referencesById, kind) {
     return {
       owner,
       screen: [x, y],
-      primitiveType,
+      primitiveType: verifiedPrimitiveType,
       appearanceType,
       ownerVerified: true,
       picked,
@@ -583,20 +624,66 @@ function nativeTargets(viewer, layer, mode, sourceRecords, expected = null) {
   const referencesById = new Map(
     references.items.map((item) => [item.entityId, item]),
   );
+  const diagnostics = {
+    mode,
+    visibleReferences: references.items.filter((item) => item.visible).length,
+    onCanvasPointCandidates: 0,
+    onCanvasStemCandidates: 0,
+    pointProbeCount: 0,
+    stemProbeCount: 0,
+    pointScenePickCount: 0,
+    stemScenePickCount: 0,
+    pointCandidates: [],
+    stemCandidates: [],
+    pointOutcomes: [],
+    stemOutcomes: [],
+  };
+  const onCanvas = (screen) =>
+    screen &&
+    screen[0] >= FIXTURE_PIXEL_MARGIN &&
+    screen[0] < width - FIXTURE_PIXEL_MARGIN &&
+    screen[1] >= FIXTURE_PIXEL_MARGIN &&
+    screen[1] < height - FIXTURE_PIXEL_MARGIN;
   let point = null;
   for (const item of references.items) {
     if (!item.visible || !item.pointPosition || !item.stemPositions?.length)
       continue;
     const pointScreen = worldToScreen(viewer, item.pointPosition);
-    if (
-      !pointScreen ||
-      pointScreen[0] < FIXTURE_PIXEL_MARGIN ||
-      pointScreen[0] >= width - FIXTURE_PIXEL_MARGIN ||
-      pointScreen[1] < FIXTURE_PIXEL_MARGIN ||
-      pointScreen[1] >= height - FIXTURE_PIXEL_MARGIN
-    )
-      continue;
-    const pointHit = probePick(viewer, pointScreen, referencesById, 'point');
+    if (!onCanvas(pointScreen)) continue;
+    diagnostics.onCanvasPointCandidates += 1;
+    if (diagnostics.pointCandidates.length < 8)
+      diagnostics.pointCandidates.push({
+        entityId: item.entityId,
+        sourceKind: item.sourceKind,
+        sourceRecordId: item.sourceRecordId,
+        screen: pointScreen,
+      });
+    const pointTrace = { scenePickCount: 0, observations: [] };
+    const pointHit = probePick(
+      viewer,
+      pointScreen,
+      referencesById,
+      'point',
+      pointTrace,
+    );
+    diagnostics.pointProbeCount += 1;
+    diagnostics.pointScenePickCount += pointTrace.scenePickCount;
+    if (diagnostics.pointOutcomes.length < 8)
+      diagnostics.pointOutcomes.push({
+        entityId: item.entityId,
+        sourceKind: item.sourceKind,
+        screen: pointScreen,
+        observations: pointTrace.observations,
+        hit: pointHit
+          ? {
+              entityId: pointHit.owner.entityId,
+              sourceKind: pointHit.owner.sourceKind,
+              sourceRecordId: pointHit.owner.sourceRecordId,
+              primitiveType: pointHit.primitiveType,
+              appearanceType: pointHit.appearanceType,
+            }
+          : null,
+      });
     if (
       pointHit &&
       (!expected || pointHit.owner.entityId === expected.point.entityId)
@@ -618,8 +705,43 @@ function nativeTargets(viewer, layer, mode, sourceRecords, expected = null) {
         new Cesium.Cartesian3(),
       );
       const stemScreen = worldToScreen(viewer, sample);
-      if (!stemScreen) continue;
-      const stemHit = probePick(viewer, stemScreen, referencesById, 'stem');
+      if (!onCanvas(stemScreen)) continue;
+      diagnostics.onCanvasStemCandidates += 1;
+      if (diagnostics.stemCandidates.length < 8)
+        diagnostics.stemCandidates.push({
+          entityId: item.entityId,
+          sourceKind: item.sourceKind,
+          sourceRecordId: item.sourceRecordId,
+          fraction,
+          screen: stemScreen,
+        });
+      const stemTrace = { scenePickCount: 0, observations: [] };
+      const stemHit = probePick(
+        viewer,
+        stemScreen,
+        referencesById,
+        'stem',
+        stemTrace,
+      );
+      diagnostics.stemProbeCount += 1;
+      diagnostics.stemScenePickCount += stemTrace.scenePickCount;
+      if (diagnostics.stemOutcomes.length < 8)
+        diagnostics.stemOutcomes.push({
+          entityId: item.entityId,
+          sourceKind: item.sourceKind,
+          fraction,
+          screen: stemScreen,
+          observations: stemTrace.observations,
+          hit: stemHit
+            ? {
+                entityId: stemHit.owner.entityId,
+                sourceKind: stemHit.owner.sourceKind,
+                sourceRecordId: stemHit.owner.sourceRecordId,
+                primitiveType: stemHit.primitiveType,
+                appearanceType: stemHit.appearanceType,
+              }
+            : null,
+        });
       if (
         stemHit &&
         (!expected || stemHit.owner.entityId === expected.stem.entityId)
@@ -630,12 +752,12 @@ function nativeTargets(viewer, layer, mode, sourceRecords, expected = null) {
     }
     if (stem) break;
   }
-  if (!point || !stem) return null;
   return {
-    pointOwner: point.owner,
-    stemOwner: stem.owner,
-    point: { ...point, kind: 'point' },
-    stem: { ...stem, kind: 'stem' },
+    pointOwner: point?.owner || null,
+    stemOwner: stem?.owner || null,
+    point: point ? { ...point, kind: 'point' } : null,
+    stem: stem ? { ...stem, kind: 'stem' } : null,
+    diagnostics,
   };
 }
 
@@ -1072,27 +1194,90 @@ async function runLifetime({
       'camera-change': targets.cameraChange,
     };
     const cameraContracts = {};
+    const cameraSweeps = {};
     for (const caseId of CABLE_REFERENCE_RENDER_CASES) {
       const targetCase = caseTargets[caseId];
+      const readinessDeadline = performance.now() + STABLE_TIMEOUT_MS;
+      let sweep = null;
       if (caseId === 'default-style') {
         resetView(viewer, targetCase.cartesian, CASES[caseId].rangeMeters);
         viewer.scene.requestRender();
       } else {
-        viewer.camera.setView({
-          destination: new Cesium.Cartesian3(...startingCamera.position),
-          orientation: {
-            heading: viewer.camera.heading,
-            pitch: viewer.camera.pitch,
-            roll: viewer.camera.roll,
+        const sweepGate = createCableCameraSweepGate(
+          viewer.camera,
+          viewer.scene,
+          {
+            timeoutMs: Math.max(0.1, readinessDeadline - performance.now()),
+            readPose: () => cameraVector(viewer),
+            samePose: sameCameraPose,
           },
-        });
-        await flyToCameraCase(
-          viewer,
-          targetCase.cartesian,
-          CASES[caseId].rangeMeters,
         );
+        const sweepOutcomePromise = sweepGate.promise.then(
+          (value) => ({ kind: 'sweep', value }),
+          (error) => ({ kind: 'sweep-error', error }),
+        );
+        try {
+          viewer.camera.setView({
+            destination: new Cesium.Cartesian3(...startingCamera.position),
+            orientation: {
+              heading: viewer.camera.heading,
+              pitch: viewer.camera.pitch,
+              roll: viewer.camera.roll,
+            },
+          });
+          const flightOutcomePromise = flyToCameraCase(
+            viewer,
+            targetCase.cartesian,
+            CASES[caseId].rangeMeters,
+          ).then(
+            () => ({ kind: 'flight', finalPose: cameraVector(viewer) }),
+            (error) => ({ kind: 'flight-error', error }),
+          );
+          const first = await Promise.race([
+            flightOutcomePromise,
+            sweepOutcomePromise,
+          ]);
+          if (first.kind === 'flight-error' || first.kind === 'sweep-error')
+            throw first.error;
+          assert(
+            first.kind === 'flight',
+            'Camera final-pose sweep completed before flight completion.',
+          );
+          sweepGate.markFlightComplete(first.finalPose);
+          const completedSweep = await sweepOutcomePromise;
+          if (completedSweep.kind === 'sweep-error') throw completedSweep.error;
+          sweep = completedSweep.value;
+        } catch (error) {
+          try {
+            viewer.camera.cancelFlight();
+          } catch (cancelError) {
+            lifetime.cameraFlightCancelError = String(
+              cancelError?.message || cancelError,
+            ).slice(0, 1000);
+          }
+          throw error;
+        } finally {
+          sweepGate.cancel();
+        }
+        assert(
+          sweep?.status === 'swept' &&
+            sweep.finalPoseVerified === true &&
+            sweep.flightCompleteVerified === true &&
+            Number.isSafeInteger(sweep.frameNumber),
+          'Camera motion did not produce a completed post-sweep frame.',
+        );
+        cameraSweeps[caseId] = {
+          ...sweep,
+          cameraEventWaitMs: viewer.scene.cameraEventWaitTime,
+        };
       }
-      await waitForStableScene(viewer, layer, mode, sourceRecords);
+      await waitForStableScene(
+        viewer,
+        layer,
+        mode,
+        sourceRecords,
+        readinessDeadline,
+      );
       cameraContracts[caseId] = cameraContract(
         viewer,
         targetCase.cartesian,
@@ -1107,8 +1292,64 @@ async function runLifetime({
         sourceRecords,
         mode === 'entities' ? null : baselineTarget,
       );
+      if (!selected.pointOwner || !selected.stemOwner) {
+        lifetime.nativePickFailure = {
+          caseId,
+          camera: cameraContracts[caseId],
+          cameraAfterSearch: cameraVector(viewer),
+          cameraSweep: cameraSweeps[caseId] || null,
+          scene: {
+            dataSourceDisplayReady: viewer.dataSourceDisplay.ready === true,
+            globeTilesLoaded: viewer.scene.globe.tilesLoaded === true,
+            frameNumber: viewer.scene.frameState?.frameNumber ?? null,
+            lod: layer.getLodDiagnostics(),
+          },
+          visibleReferenceCount: selected.diagnostics.visibleReferences,
+          population: CABLE_REFERENCE_RENDER_POPULATION.referenceRecords,
+          search: selected.diagnostics,
+          pointPick:
+            selected.point && selected.pointOwner
+              ? cleanPick(selected.point, selected.pointOwner)
+              : null,
+          stemPick:
+            selected.stem && selected.stemOwner
+              ? cleanPick(selected.stem, selected.stemOwner)
+              : null,
+        };
+        try {
+          const lastFrame = await capturePixels(viewer);
+          lifetime.nativePickFailure.lastFrame = {
+            width: lastFrame.width,
+            height: lastFrame.height,
+            pixelSha256: lastFrame.pixelSha256,
+            ...(lastFrame.pngBase64.length <= 4_000_000
+              ? { pngBase64: lastFrame.pngBase64 }
+              : { pngOmittedReason: 'PNG exceeds the 4 MB evidence cap.' }),
+          };
+        } catch (captureError) {
+          lifetime.nativePickFailure.lastFrameError = String(
+            captureError?.message || captureError,
+          ).slice(0, 1000);
+        }
+        try {
+          const current = await sourceGeometryHash();
+          lifetime.nativePickFailure.geometrySha256 = current.geometrySha256;
+          lifetime.nativePickFailure.styleSha256 = current.styleSha256;
+          lifetime.nativePickFailure.overlaySha256 = current.overlaySha256;
+          lifetime.nativePickFailure.visibleReferenceCount =
+            current.view.referenceData.items.filter(
+              (item) => item.visible,
+            ).length;
+          lifetime.nativePickFailure.population =
+            current.view.referenceData.items.length;
+        } catch (diagnosticError) {
+          lifetime.nativePickFailure.geometryDiagnosticError = String(
+            diagnosticError?.message || diagnosticError,
+          ).slice(0, 1000);
+        }
+      }
       assert(
-        selected,
+        selected.pointOwner && selected.stemOwner,
         `${mode} could not obtain native point and stem picks for ${caseId}.`,
       );
       if (mode === 'entities') {
@@ -1167,6 +1408,11 @@ async function runLifetime({
           styleSha256: freshHashes.styleSha256,
           overlaySha256: freshHashes.overlaySha256,
           cameraSha256: await shaJson(cameraContracts[caseId]),
+          cameraSweep: cameraSweeps[caseId] || {
+            status: 'not-required',
+            frameNumber: null,
+            cameraEventWaitMs: null,
+          },
           frame: { width: frame.width, height: frame.height },
           pixelSha256: frame.pixelSha256,
           pngBase64: frame.pngBase64,
