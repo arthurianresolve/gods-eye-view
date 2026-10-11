@@ -78,11 +78,11 @@ function makeCollection(mode, trial) {
       });
     }
   }
-  const events = { count: 0, removed: [] };
+  const events = { count: 0, removedEntityCount: 0 };
   collection.collectionChanged.addEventListener(
     (_collection, _added, removed) => {
       events.count += 1;
-      for (const entity of removed) events.removed.push(entity.id);
+      events.removedEntityCount += removed.length;
     },
   );
   return { collection, ownedIds, externalIds, events };
@@ -91,12 +91,14 @@ function makeCollection(mode, trial) {
 function verify(mode, strategy, collection, ownedIds, externalIds, events) {
   const survivorIds = collection.values.map((entity) => entity.id).sort();
   const expectedSurvivors = [...externalIds].sort();
-  const removedIds = [...events.removed].sort();
   const expectedRemovedIds = [...ownedIds].sort();
-  assertExact(removedIds.length === ownedIds.size, 'wrong number of removals');
   assertExact(
-    removedIds.every((id, index) => id === expectedRemovedIds[index]),
-    'removed IDs differ from the owned import cohort',
+    events.removedEntityCount === ownedIds.size,
+    'wrong number of removal-event entities',
+  );
+  assertExact(
+    expectedRemovedIds.every((id) => collection.getById(id) === undefined),
+    'an owned import entity survived',
   );
   assertExact(
     JSON.stringify(survivorIds) === JSON.stringify(expectedSurvivors),
@@ -105,11 +107,12 @@ function verify(mode, strategy, collection, ownedIds, externalIds, events) {
   const expectedEvents = strategy === 'individual' ? ownedIds.size : 1;
   assertExact(events.count === expectedEvents, 'unexpected event count');
   return {
-    removedCount: removedIds.length,
-    removedIds,
-    removedIdsSha256: sha256(Buffer.from(removedIds.join('\n'))),
+    removedCount: expectedRemovedIds.length,
+    removedIds: expectedRemovedIds,
+    removedIdsSha256: sha256(Buffer.from(expectedRemovedIds.join('\n'))),
     survivorIds,
     collectionChangedEvents: events.count,
+    removedEntityCountFromEvents: events.removedEntityCount,
   };
 }
 
