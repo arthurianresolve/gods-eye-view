@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  assertEquivalentOwnedResources,
   assertOwnedLifecycleCheckpoint,
   closeControlledOwnerAndContext,
   createLifecycleFailureEvidence,
@@ -2202,6 +2203,8 @@ function makeControlledImportDriver(
   const driver = {
     onPhase,
     cleanup: null,
+    initialSnapshot: null,
+    warmedEmptySnapshot: null,
     async initialize() {
       await evaluateWithDeadline(
         page,
@@ -2209,12 +2212,14 @@ function makeControlledImportDriver(
         installControlledRenderWaiterFactory,
       );
       try {
-        return await evaluateWithDeadline(
+        const initialized = await evaluateWithDeadline(
           page,
           'install-controlled-import-owner',
           installControlledImportOwner,
           { featureCount: fixture.count },
         );
+        driver.initialSnapshot = initialized.snapshot;
+        return initialized;
       } catch (error) {
         try {
           await evaluateWithDeadline(
@@ -2275,12 +2280,14 @@ function makeControlledImportDriver(
       );
     },
     async clearAndDrain() {
-      return evaluateWithDeadline(
+      const snapshot = await evaluateWithDeadline(
         page,
         'controlled-import-clear-and-render',
         runControlledImportOperation,
         { action: 'clear', timeoutMs: drainMs },
       );
+      driver.warmedEmptySnapshot = snapshot;
+      return snapshot;
     },
     async workerCounters() {
       return evaluateWithDeadline(
@@ -2336,6 +2343,13 @@ function makeControlledImportDriver(
             cleanup.snapshot?.importEntityIds?.length !== 0
           )
             throw new Error('Controlled import owner cleanup was incomplete.');
+          const emptyBaseline =
+            driver.warmedEmptySnapshot || driver.initialSnapshot;
+          if (!emptyBaseline)
+            throw new Error(
+              'Controlled import owner empty resource baseline is missing.',
+            );
+          assertEquivalentOwnedResources(cleanup.snapshot, emptyBaseline);
         },
         closeContext: () =>
           closeOwnedPageAndContext(page, page.browserContext()),

@@ -2681,6 +2681,10 @@ export function validateImportWorkspaceLifecycleV2Report(
     !untouchedAppOwner(controlled.cleanup.snapshot)
   )
     throw new Error('Controlled owner changed the full-app import owner.');
+  assertEquivalentOwnedResources(
+    controlled.cleanup.snapshot,
+    controlled.baseline,
+  );
   assertEquivalentOwnedResources(controlled.final, controlled.baseline);
   for (let cycle = 1; cycle <= report.cycles; cycle++) {
     const loaded = controlled.checkpoints[(cycle - 1) * 2];

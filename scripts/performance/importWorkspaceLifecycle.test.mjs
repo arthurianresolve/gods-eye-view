@@ -2760,6 +2760,24 @@ test('v2 lifecycle contract requires native cycles and separate controlled race 
     () => validateImportWorkspaceLifecycleReport(cleanupWaiterLeak, expected),
     /Controlled scheduler lifecycle/,
   );
+  const leakedEmptyPointCollection = structuredClone(report);
+  leakedEmptyPointCollection.cases[2].cleanup.snapshot.scene.primitives++;
+  assert.equal(
+    leakedEmptyPointCollection.cases[2].cleanup.snapshot.imports.featureCount,
+    0,
+  );
+  assert.deepEqual(
+    leakedEmptyPointCollection.cases[2].cleanup.snapshot.importEntityIds,
+    [],
+  );
+  assert.throws(
+    () =>
+      validateImportWorkspaceLifecycleReport(
+        leakedEmptyPointCollection,
+        expected,
+      ),
+    /scene resource counts changed/,
+  );
   const badPostZero = structuredClone(report);
   badPostZero.cases[0].workerPreflight.pendingAtProbeCompletion = 1;
   badPostZero.cases[0].workerPreflight.quiescenceHistory = {
