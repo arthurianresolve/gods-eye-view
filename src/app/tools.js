@@ -73,7 +73,10 @@ export async function createApplicationTools({
   defer(() => sceneDirector.destroy());
   await sceneDirector.restorePersistedProject({ signal });
   signal.throwIfAborted();
-  const importedGeometryLayer = createImportedGeometryLayer({ viewer });
+  const importedGeometryLayer = createImportedGeometryLayer({
+    viewer,
+    pointRepresentation: 'primitive-collection',
+  });
   defer(() => importedGeometryLayer.destroy());
   const analystEngine = createAnalystEngine({
     now: () => investigationTime?.now?.() ?? Date.now(),

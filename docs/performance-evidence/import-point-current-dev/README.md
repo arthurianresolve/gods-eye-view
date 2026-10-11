@@ -1,0 +1,83 @@
+# Imported point rendering: current-dev comparison
+
+The same-source comparison at `eb2d6d95ab35bdbbf964eea305226cae763b8a48`
+passes five fresh, alternating Entity/primitive-collection pairs in
+[run 38159001839](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38159001839).
+This base includes the accepted exact-Entity ownership fix `82e2b0b1` and the
+current production timer scheduler and whole-feature coordinate preparation.
+It does not import the rejected scheduler/chunking experiment.
+
+The application integration in this change selects the collection renderer for
+its existing asynchronous workspace-import path. The layer's default remains
+Entity-compatible for other callers. Full application integration checks must
+pass before promotion to dev. The comparison alone does not complete S59/S60.
+
+## Measured benefit
+
+Each browser run contains five synchronous and five cooperative loads of the
+same 5,000 points. Inner samples are summarized within each run before comparing
+the five outer pairs; they are not treated as 50 independent trials.
+
+| Pair | Order | Cooperative Entity median (ms) | Collection median (ms) | Change |
+| --- | --- | ---: | ---: | ---: |
+| 0 | Entity, collection | 217.8 | 55.9 | -74.3% |
+| 1 | Collection, Entity | 138.4 | 71.8 | -48.1% |
+| 2 | Entity, collection | 136.5 | 58.8 | -56.9% |
+| 3 | Collection, Entity | 169.3 | 65.1 | -61.5% |
+| 4 | Entity, collection | 156.8 | 68.9 | -56.1% |
+
+Median paired changes are -56.9% for cooperative load time, -20.8% for synchronous
+load time, and -96.4%/-95.9% for their respective synchronous clear-call costs.
+Cold activation improves in all five pairs. After clear, the Entity visualizer
+retains 5,000 reusable point slots with zero active entity owners; the owned
+collection releases all its points. Equivalent checkpoints do not grow. These
+are live resource counts, not retained-heap measurements or a leak diagnosis.
+
+Capture waits are a limitation: synchronous median paired capture time increases
+172.4%, with four of five outer pairs slower. Cooperative capture waits are
+variable (two pairs slower, median change -4.3%). The capture operation includes
+waiting for a completed frame; this experiment does not establish the reason
+for those differences. It supports faster asynchronous import and clear work,
+not faster captures or a full-scene frame-time claim. The application already
+uses `loadAsync`; its scheduling, capture implementation and visual settings
+are unchanged.
+
+## Independent correctness review
+
+Root decoded all 110 PNGs and recomputed their RGBA hashes: all 55 image pairs
+are byte-identical. This covers ten dense captures and one mixed point/line/
+polygon capture per outer pair. Each dense sample has nine natural imported
+point hits with identical results between renderers. The grid overlaps, so a
+pick can resolve to a nearer overlapping point rather than the targeted center.
+The three separated mixed-geometry picks match their exact expected IDs.
+Mixed geometry and native-pick JSON hashes were independently recomputed.
+The complete 5,000-row state hashes match, but the bounded reports do not contain
+all rows, so that full state cannot be independently reconstructed offline.
+
+Every renderer run passes twelve capture-matrix checks and twelve cancelled
+imports, ending with zero pending jobs, imported features and owned point
+primitives. Metadata Entities retain IDs, styles, evidence and inspector
+identity while only point rendering moves out of Cesium's general Entity
+visualizer. Lines and polygons continue using the original Entity path.
+
+## Environment and evidence
+
+The runner reports Chrome 152 and verified Apple paravirtual Metal rendering.
+The matched drawing buffer is 640 x 360, antialiasing is enabled, requested MSAA
+is four, framebuffer preservation remains enabled and the camera is identical.
+This is supplemental hosted evidence, not physical Windows GPU coverage.
+No forced GC or GPU execution timing was used. Production cooperative batch
+durations/wake timing are explicitly unavailable; no 4 ms batch result is inferred.
+
+- [Full nested comparison](report.json) and `pair-*-*.json` retain raw results.
+- [Independent review](independent-review.json) records hashes, image inventory
+  and independently calculated paired metrics.
+- [Review script](independent-review.mjs) decodes the images and checks raw hashes.
+  Run it against a fresh copy of the evidence directory from a checkout with
+  `sharp` installed; it refuses to overwrite an existing review JSON.
+- `decoded-review/` retains the 110 original PNG witnesses.
+- [Workflow record](ci-run.json) binds the completed job to the tested SHA.
+
+Large-feature preparation, raw document decoding, full application motion
+benchmarks, the primary physical Windows soak and full S47-S60 acceptance remain
+outstanding. No available hosted report substitutes for those requirements.

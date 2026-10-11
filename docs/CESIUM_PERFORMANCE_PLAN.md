@@ -1,5 +1,14 @@
 # Cesium performance plan
 
+The imported-point collection candidate passes five current-dev hosted pairs at
+`eb2d6d95ab35bdbbf964eea305226cae763b8a48`. Cooperative imports improve in all
+five pairs (median paired change -56.9%); independent decoding confirms 55 exact
+image pairs and matching native picks. The asynchronous application import path
+now selects this renderer on the QA branch, pending full integration checks.
+[Raw comparison and limits](performance-evidence/import-point-current-dev/README.md)
+record slower synchronous capture waits separately. This is not full S59/S60,
+capture-speed, physical Windows or retained-heap acceptance.
+
 Imported Entity cleanup is corrected at
 `82e2b0b1da8ac517710cdbdd8468cc3b502330c4`: clearing an import preserves an
 external replacement that reuses an imported ID. All seven standard CI jobs and
