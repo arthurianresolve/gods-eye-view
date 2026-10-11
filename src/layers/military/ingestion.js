@@ -6,6 +6,7 @@ export function createIngestion({
   applySnapshot,
   setSourceLabel,
   applyPendingTrackingRestore,
+  requestFleetTick,
 }) {
   const methods = {
     async update(viewer, { signal = null } = {}) {
@@ -53,6 +54,7 @@ export function createIngestion({
           ids: accepted.ids,
           source: feed._lastSource,
         };
+        requestFleetTick?.();
         console.log(`[Data:Military] Updated: ${feed._count} aircraft`);
         applyPendingTrackingRestore();
       } catch (e) {

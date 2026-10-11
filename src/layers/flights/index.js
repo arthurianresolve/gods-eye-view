@@ -53,6 +53,7 @@ export function createCivilFlightLayer({
     },
     applyPendingTrackingRestore: () =>
       parts.tracking._applyPendingTrackingRestore(),
+    requestFleetTick: () => parts.lifecycle.methods.requestFleetTick(),
     onAcceptedSnapshot,
     onSourceUnavailable,
   });

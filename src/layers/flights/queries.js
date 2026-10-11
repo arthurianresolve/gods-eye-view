@@ -369,6 +369,7 @@ export function createQueries({
           parts.tracking._applyPendingTrackingRestore();
         }
       }
+      parts.lifecycle.methods.requestFleetTick();
       return true;
     },
 

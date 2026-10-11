@@ -244,6 +244,7 @@ export function createTracking({
       parts.rendering._applyFleetBillboardPresentation(icao24, bb);
     flightState._lastCamPoseSig = '';
     flightState._lastFleetTickMs = 0;
+    parts.lifecycle.methods.requestFleetTick();
   }
 
   function _applyCockpitState(detail = {}) {
@@ -864,6 +865,7 @@ export function createTracking({
     parts.rendering._releaseTrackedModel();
     _resetTrackedSelectionState(); // the zoom band + load-failure budget belong to the selection we just dropped
     flightState._trackedIcao = null;
+    parts.lifecycle.methods.syncRenderDemand();
     parts.rendering._applyFleetBillboardPresentation(
       clearedIcao,
       flightState._billboards.get(clearedIcao),
@@ -919,6 +921,7 @@ export function createTracking({
     if (!bb || !info) return;
 
     flightState._trackedIcao = icao24;
+    parts.lifecycle.methods.syncRenderDemand();
     _resetTrackedSelectionState(); // fresh selection: enter at the ENTER ceiling, full load-retry budget
     flightState._cachedDRFrame = -1;
     flightState._lastTrackedRotation = bb.rotation || 0;

@@ -44,6 +44,7 @@ export function createMilitaryFlightLayer({
     },
     applyPendingTrackingRestore: () =>
       parts.tracking._applyPendingTrackingRestore(),
+    requestFleetTick: () => parts.lifecycle.methods.requestFleetTick(),
   });
 
   Object.assign(

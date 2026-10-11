@@ -1,5 +1,9 @@
 import * as Cesium from 'cesium';
-import { PLANE_MODEL_URL } from './policy.js';
+import { FLEET_DR_INTERVAL_MS, PLANE_MODEL_URL } from './policy.js';
+import {
+  createFleetRenderDemand,
+  createFleetTickCallback,
+} from '../fleetRenderDemand.js';
 
 export function createLifecycle({
   flightState,
@@ -15,7 +19,32 @@ export function createLifecycle({
     restoreSpriteOrderOnEnable,
   } = services.sprites;
   const { onMilitaryLayerActiveChange } = services.militaryRegistry;
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
+  let renderDemandEnabled = false;
+  let fleetRenderDemand = null;
+  function ensureFleetRenderDemand() {
+    if (fleetRenderDemand) return fleetRenderDemand;
+    fleetRenderDemand = createFleetRenderDemand(services.render, {
+      owner: 'flights-fleet',
+      intervalMs: FLEET_DR_INTERVAL_MS,
+      isEnabled: () => renderDemandEnabled,
+      isTracked: () => Boolean(flightState._trackedIcao),
+      remainingDelayMs: () => {
+        const productionNowMs = Date.now();
+        const nowMs =
+          services.focus.focusNowMs?.(productionNowMs) ?? productionNowMs;
+        return (
+          FLEET_DR_INTERVAL_MS -
+          (nowMs - (flightState._lastFleetTickMs || nowMs))
+        );
+      },
+    });
+    return fleetRenderDemand;
+  }
+  const fleetTick = createFleetTickCallback({
+    rendering: parts.rendering,
+    state: flightState,
+    demand: { noteFrame: () => fleetRenderDemand?.noteFrame() },
+  });
   const { ensureGeoidReady } = services.geoid;
   const { registerPickOwner, unregisterPickOwner } = services.picking;
 
@@ -32,6 +61,16 @@ export function createLifecycle({
       this.source = flightState.feed._lastSource;
     },
 
+    /** Reconcile the bounded fleet cadence with tracked per-frame ownership. */
+    syncRenderDemand() {
+      fleetRenderDemand?.sync();
+    },
+
+    /** Wake the existing preRender fleet pass for a forced visual refresh. */
+    requestFleetTick() {
+      fleetRenderDemand?.invalidate();
+    },
+
     /**
      * Initialize the flights layer.
      * Creates the BillboardCollection, resets all state, and installs the
@@ -45,6 +84,7 @@ export function createLifecycle({
         throw new TypeError('A snapshot source is required');
       if (flightState.lifetime.signal.aborted)
         flightState.lifetime = new AbortController();
+      ensureFleetRenderDemand();
       clearFocusTarget('flights');
       flightState._focusEvidenceIds.clear();
       flightState._viewer = viewer;
@@ -134,9 +174,11 @@ export function createLifecycle({
      * @param {Cesium.Viewer} viewer
      */
     enable(viewer) {
+      ensureFleetRenderDemand();
+      renderDemandEnabled = true;
+      fleetRenderDemand.setEnabled(true);
       if (flightState._billboardCollection)
         flightState._billboardCollection.show = true;
-      holdContinuousRender('flights'); // per-frame animator (perf wave 2)
       if (flightState._modelCollection)
         flightState._modelCollection.show = true;
       parts.tracking._setCockpitContactMode(
@@ -162,9 +204,8 @@ export function createLifecycle({
       // Force a fresh rotation pass on the first tick after re-enable
       flightState._lastCamPoseSig = '';
       if (!flightState._preRenderRemove && viewer?.scene) {
-        flightState._preRenderRemove = viewer.scene.preRender.addEventListener(
-          parts.rendering._fleetTick,
-        );
+        flightState._preRenderRemove =
+          viewer.scene.preRender.addEventListener(fleetTick);
       }
       if (!flightState._trackedModelPreUpdateRemove && viewer?.scene) {
         flightState._trackedModelPreUpdateRemove =
@@ -186,6 +227,7 @@ export function createLifecycle({
           () => {
             flightState._lastCamPoseSig = '';
             flightState._lastFleetTickMs = 0;
+            fleetRenderDemand.invalidate();
           },
         );
       }
@@ -198,14 +240,16 @@ export function createLifecycle({
      * @param {Cesium.Viewer} viewer
      */
     disable(viewer) {
+      renderDemandEnabled = false;
+      fleetRenderDemand?.setEnabled(false);
       parts.controller._abortActiveUpdates();
       parts.tracking._cancelPendingTrackingRestore();
       if (flightState._billboardCollection)
         flightState._billboardCollection.show = false;
-      releaseContinuousRender('flights');
       parts.rendering._releaseModels();
       if (flightState._modelCollection)
         flightState._modelCollection.show = false;
+      services.render.governorRequestRender?.('flights-disable');
       parts.tracking._clearTracking();
       parts.tracking._destroyTrail();
       // Remove click handler + keydown listener while disabled to avoid
@@ -240,11 +284,13 @@ export function createLifecycle({
      * @param {Cesium.Viewer} viewer
      */
     destroy(viewer) {
+      renderDemandEnabled = false;
+      fleetRenderDemand?.dispose();
+      fleetRenderDemand = null;
       flightState.lifetime.abort();
       flightState._enrichActive = 0;
       flightState._enrichLastDispatchMs = 0;
       parts.controller._abortActiveUpdates();
-      releaseContinuousRender('flights'); // direct-destroy path (perf wave 2 fix)
       parts.tracking._clearTracking();
       parts.tracking._destroyTrail();
       parts.tracking._cancelPendingTrackingRestore();
@@ -290,6 +336,7 @@ export function createLifecycle({
         viewer.scene.primitives.remove(flightState._modelCollection); // removing destroys it + its models
         flightState._modelCollection = null;
       }
+      services.render.governorRequestRender?.('flights-destroy');
       flightState._modelEpoch += 1; // invalidate any in-flight load from this lifecycle (settles post-destroy)
       flightState._modelPending.clear();
       flightState._modelGen.clear();

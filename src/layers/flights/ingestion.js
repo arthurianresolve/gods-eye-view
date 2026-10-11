@@ -7,6 +7,7 @@ export function createIngestion({
   applySnapshot,
   setSourceLabel,
   applyPendingTrackingRestore,
+  requestFleetTick,
   onAcceptedSnapshot,
   onSourceUnavailable,
 }) {
@@ -63,6 +64,7 @@ export function createIngestion({
           source: feed._lastSource,
           coverage: feed._lastCoverage,
         };
+        requestFleetTick?.();
         try {
           await onAcceptedSnapshot?.(snapshot);
         } catch (error) {

@@ -1,0 +1,337 @@
+import { execFileSync, spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createServer } from 'vite';
+import puppeteer from 'puppeteer';
+import {
+  classifyRenderer,
+  readBrowserGraphicsInfo,
+  readHostEnvironment,
+} from './performance/rendererEvidence.mjs';
+import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import {
+  closeRecoveryBrowser,
+  stopOwnedRecoveryProcessTree,
+} from './performance/profileRecoveryPageOwnership.mjs';
+import { validateFleetComparison } from './performance/fleetComparison.mjs';
+
+// A local user's Chrome is controlled exclusively through the visible browser
+// tool. This driver owns only the disposable browser in a standard hosted job.
+if (process.env.GITHUB_ACTIONS !== 'true')
+  throw new Error(
+    'Run the comparison in GitHub Actions; use the visible fixture locally.',
+  );
+const BASELINE = 'e6ab561ad0e77a49219627e97573199f1db0af62';
+const git = (cwd, args) =>
+  execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    maxBuffer: 8 * 1024 * 1024,
+  }).trim();
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const files = [
+  'scripts/fixtures/fleet-render-demand.html',
+  'scripts/fixtures/fleet-render-demand.mjs',
+];
+
+if (process.argv[2] === '--serve') {
+  const [root, commit, port, cacheDir] = process.argv.slice(3);
+  if (git(root, ['rev-parse', 'HEAD']) !== commit)
+    throw new Error('Wrong server source checkout');
+  process.chdir(root);
+  const { createBrowserViteConfig } = await import(
+    pathToFileURL(path.join(root, 'build/vite.js'))
+  );
+  const config = createBrowserViteConfig({
+    appCommit: commit,
+    host: '127.0.0.1',
+    port,
+    command: 'serve',
+  });
+  const server = await createServer({
+    ...config,
+    root,
+    configFile: false,
+    cacheDir,
+    server: {
+      ...config.server,
+      strictPort: true,
+      fs: {
+        ...config.server.fs,
+        allow: [
+          root,
+          path.dirname(fileURLToPath(import.meta.url)),
+          path.dirname(fileURLToPath(import.meta.url)) + '/../node_modules',
+        ],
+      },
+    },
+  });
+  await server.listen();
+  process.send?.({ ready: true });
+  process.on('SIGTERM', async () => {
+    await server.close();
+    process.exit(0);
+  });
+} else {
+  const candidateRoot = path.resolve('.');
+  const candidate = git(candidateRoot, ['rev-parse', 'HEAD']);
+  if (!/^[a-f0-9]{40}$/.test(candidate) || candidate !== process.env.GITHUB_SHA)
+    throw new Error('Candidate must equal the immutable workflow revision');
+  if (git(candidateRoot, ['status', '--porcelain', '--untracked-files=no']))
+    throw new Error('Candidate tracked source is dirty');
+  const ownedDirectory = await mkdtemp(path.join(tmpdir(), 'gev-fleet-pair-'));
+  const baselineRoot = path.join(ownedDirectory, 'baseline');
+  const script = fileURLToPath(import.meta.url);
+  const servers = [];
+  let browser,
+    worktreeAdded = false;
+  const report = {
+    schema: 'gev-hosted-fleet-comparison/v1',
+    baseline: BASELINE,
+    candidate,
+    harness: candidate,
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    environment: readHostEnvironment(),
+    pairs: [],
+    fixtureHashes: {},
+    sourceHashes: {},
+    serverErrors: [],
+    scope:
+      'Actual fleet layers: fixed-time pixel/position equivalence and real-time untracked render cadence. Hosted acceleration is not physical desktop evidence or full-app motion-p95 acceptance.',
+  };
+  async function startServer(root, commit, port, label) {
+    const child = spawn(
+      process.execPath,
+      [
+        script,
+        '--serve',
+        root,
+        commit,
+        String(port),
+        path.join(ownedDirectory, `cache-${label}`),
+      ],
+      {
+        cwd: root,
+        detached: process.platform !== 'win32',
+        stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+        env: { ...process.env, GEV_APP_COMMIT: commit },
+      },
+    );
+    servers.push(child);
+    child.stderr.on('data', (data) => {
+      if (report.serverErrors.length < 30)
+        report.serverErrors.push({
+          label,
+          message: String(data).slice(0, 1000),
+        });
+    });
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error(`${label} fixture server timed out`)),
+        90000,
+      );
+      child.once('message', (message) => {
+        if (message?.ready) {
+          clearTimeout(timer);
+          resolve();
+        }
+      });
+      child.once('error', (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.once('exit', (code) => {
+        clearTimeout(timer);
+        reject(new Error(`${label} server exited ${code}`));
+      });
+    });
+    return `http://127.0.0.1:${port}`;
+  }
+  async function sample(base, implementation, commit, mode) {
+    const page = await browser.newPage();
+    let session;
+    const errors = [];
+    try {
+      await page.setViewport({ width: 960, height: 640, deviceScaleFactor: 1 });
+      page.on('pageerror', (error) =>
+        errors.push(String(error.message).slice(0, 500)),
+      );
+      session = await page.createCDPSession();
+      await interceptFixtureSession(session, base, null, (error) =>
+        errors.push(String(error.message).slice(0, 500)),
+      );
+      const query = new URLSearchParams({
+        implementation,
+        appCommit: commit,
+        harness: candidate,
+        mode,
+      });
+      await page.goto(
+        `${base}/scripts/fixtures/fleet-render-demand.html?${query}`,
+        { waitUntil: 'networkidle0', timeout: 60000 },
+      );
+      await page.click('#run');
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 60000, polling: 100 },
+      );
+      const result = await page.$eval('#result', (element) =>
+        JSON.parse(element.textContent),
+      );
+      result.pageErrors = errors;
+      return result;
+    } finally {
+      // Complete page teardown before disposing the browser; never leave a
+      // renderer waiting for a detached interception session.
+      await session?.send('Fetch.disable').catch(() => {});
+      await page.close({ runBeforeUnload: false });
+      await session?.detach().catch(() => {});
+    }
+  }
+  try {
+    git(candidateRoot, [
+      'fetch',
+      '--no-tags',
+      'https://github.com/arthurianresolve/gods-eye-view.git',
+      BASELINE,
+    ]);
+    git(candidateRoot, ['worktree', 'add', '--detach', baselineRoot, BASELINE]);
+    worktreeAdded = true;
+    const lock = await readFile(path.join(candidateRoot, 'package-lock.json'));
+    if (
+      hash(lock) !==
+      hash(await readFile(path.join(baselineRoot, 'package-lock.json')))
+    )
+      throw new Error('Comparison requires identical locked dependencies');
+    report.lockfileSha256 = hash(lock);
+    await symlink(
+      path.join(candidateRoot, 'node_modules'),
+      path.join(baselineRoot, 'node_modules'),
+      'dir',
+    );
+    for (const file of files) {
+      await cp(path.join(candidateRoot, file), path.join(baselineRoot, file));
+      report.fixtureHashes[file] = hash(
+        await readFile(path.join(candidateRoot, file)),
+      );
+      if (
+        report.fixtureHashes[file] !==
+        hash(await readFile(path.join(baselineRoot, file)))
+      )
+        throw new Error('Fixture copy differs');
+    }
+    for (const [label, root] of Object.entries({
+      baseline: baselineRoot,
+      candidate: candidateRoot,
+    })) {
+      report.sourceHashes[label] = {};
+      // Hash the complete tracked runtime, not just the proposed helper.
+      for (const file of git(root, [
+        'ls-files',
+        'src',
+        'build',
+        'public/models',
+      ])
+        .split('\n')
+        .filter(Boolean))
+        report.sourceHashes[label][file] = hash(
+          await readFile(path.join(root, file)),
+        );
+    }
+    const baselineUrl = await startServer(
+      baselineRoot,
+      BASELINE,
+      4185,
+      'baseline',
+    );
+    const candidateUrl = await startServer(
+      candidateRoot,
+      candidate,
+      4186,
+      'candidate',
+    );
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox'],
+      timeout: 30000,
+    });
+    report.browserVersion = await browser.version();
+    report.graphics = await readBrowserGraphicsInfo(browser);
+    for (let i = 0; i < 5; i++) {
+      const pair = {
+        pair: i + 1,
+        order: i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
+        correctness: {},
+        cadence: {},
+      };
+      report.pairs.push(pair);
+      for (const mode of ['correctness', 'cadence']) {
+        for (const implementation of pair.order) {
+          const result = await sample(
+            implementation === 'baseline' ? baselineUrl : candidateUrl,
+            implementation,
+            implementation === 'baseline' ? BASELINE : candidate,
+            mode,
+          );
+          pair[mode][implementation] = result;
+          if (result.status !== 'passed' || result.pageErrors.length)
+            throw new Error(
+              `${implementation}/${mode}: ${result.error || result.pageErrors.join('; ') || 'fixture failed'}`,
+            );
+          const renderer = classifyRenderer(
+            result.settings?.environment?.renderer,
+            report.graphics,
+          );
+          report.rendering = renderer;
+          if (!renderer.accelerationVerified)
+            throw new Error('Hosted accelerated rendering is unavailable');
+        }
+      }
+      process.stdout.write(`Completed actual-source fleet pair ${i + 1}/5\n`);
+    }
+    report.comparison = await validateFleetComparison(report);
+    report.status = 'passed';
+  } catch (error) {
+    report.status = 'failed';
+    report.error = String(error.stack || error).slice(0, 4000);
+  } finally {
+    if (browser) {
+      report.browserCleanup = await closeRecoveryBrowser(browser, {
+        timeoutMs: 5000,
+        forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
+      });
+      if (!report.browserCleanup.closeCompleted) report.status = 'failed';
+    }
+    for (const child of servers) await stopOwnedRecoveryProcessTree(child);
+    if (worktreeAdded) {
+      // The only extra files are our two fixtures and dependency symlink in
+      // this mkdtemp-owned checkout. No user checkout is removed.
+      try {
+        git(candidateRoot, ['worktree', 'remove', '--force', baselineRoot]);
+      } catch (error) {
+        report.worktreeCleanupError = String(error.message).slice(0, 500);
+        report.status = 'failed';
+      }
+    }
+    await mkdir('qa-artifacts', { recursive: true });
+    await writeFile(
+      'qa-artifacts/fleet-render-demand.json',
+      JSON.stringify(report, null, 2) + '\n',
+    );
+    process.stdout.write(
+      `QA_EVIDENCE_BEGIN fleet-render-demand\n${JSON.stringify(report, null, 2)}\nQA_EVIDENCE_END fleet-render-demand\n`,
+    );
+    if (report.status !== 'passed') process.exitCode = 1;
+  }
+}

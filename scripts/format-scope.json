@@ -1166,5 +1166,12 @@
   "scripts/apply-cesium-patches.test.mjs",
   "patches/cesium-1.138.0-inertia.json",
   "scripts/performance/cesiumDisabledInputInertia.test.mjs",
-  "scripts/qa-cctv-gizmo-geometry.mjs"
+  "scripts/qa-cctv-gizmo-geometry.mjs",
+  "src/layers/fleetRenderDemand.js",
+  "src/layers/fleetRenderDemand.test.mjs",
+  "scripts/fixtures/fleet-render-demand.html",
+  "scripts/fixtures/fleet-render-demand.mjs",
+  "scripts/qa-fleet-render-demand.mjs",
+  "scripts/performance/fleetComparison.mjs",
+  "scripts/performance/fleetComparison.test.mjs"
 ]
