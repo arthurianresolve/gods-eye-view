@@ -209,7 +209,7 @@ if (process.argv[2] === '--serve') {
         () => document.querySelector('#result')?.textContent,
         // Cold model readiness has its own bounded phases in the fixture.
         // This transport deadline is not a frame-delivery/performance gate.
-        { timeout: 180000, polling: 100 },
+        { timeout: 300000, polling: 100 },
       );
       const result = await page.$eval('#result', (element) =>
         JSON.parse(element.textContent),

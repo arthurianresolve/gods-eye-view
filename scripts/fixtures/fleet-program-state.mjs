@@ -141,6 +141,93 @@ export function snapshotFleetModelReadiness(
   return { items, truncated };
 }
 
+/**
+ * Find the actual Cesium billboard used as the camera-framing fallback for a
+ * tracked fleet entity. The Entity's `gevTrackedId` is application-owned
+ * identity; its BillboardVisualizer has already resolved CallbackProperties
+ * into this primitive's current color/show fields. Reading those fields avoids
+ * evaluating the callback (which can itself consult or mutate runtime state).
+ */
+export function snapshotFleetTrackedBillboards(
+  viewer,
+  {
+    maxPrimitives = 8192,
+    maxCollectionDepth = DEFAULT_LIMITS.collectionDepth,
+  } = {},
+) {
+  if (!viewer?.scene?.primitives)
+    throw new TypeError('Cesium viewer scene primitives required');
+  if (!Number.isInteger(maxPrimitives) || maxPrimitives < 0)
+    throw new TypeError('Invalid maxPrimitives limit');
+  if (!Number.isInteger(maxCollectionDepth) || maxCollectionDepth < 0)
+    throw new TypeError('Invalid maxCollectionDepth limit');
+
+  const visited = new Set();
+  const items = [];
+  let visitedPrimitives = 0;
+  let truncated = false;
+
+  function visit(collection, path, depth, ancestorsShown) {
+    if (!collection || visited.has(collection)) return;
+    visited.add(collection);
+    if (!(collection instanceof Cesium.PrimitiveCollection)) return;
+    if (depth > maxCollectionDepth) {
+      truncated = true;
+      return;
+    }
+    const shown = ancestorsShown && collection.show !== false;
+    for (let index = 0; index < collection.length; index++) {
+      if (visitedPrimitives >= maxPrimitives) {
+        truncated = true;
+        return;
+      }
+      visitedPrimitives++;
+      const primitive = collection.get(index);
+      const childPath = [...path, index];
+      if (primitive instanceof Cesium.BillboardCollection) {
+        const billboardCount = primitive.length;
+        for (
+          let billboardIndex = 0;
+          billboardIndex < billboardCount;
+          billboardIndex++
+        ) {
+          if (visitedPrimitives >= maxPrimitives) {
+            truncated = true;
+            return;
+          }
+          visitedPrimitives++;
+          const billboard = primitive.get(billboardIndex);
+          const identity = billboard?.id?.gevTrackedId;
+          if (typeof identity !== 'string') continue;
+          const match = /^(flights|military):([a-f0-9]{6})$/.exec(identity);
+          if (!match) continue;
+          const [, layer, id] = match;
+          const alpha = billboard.color?.alpha;
+          items.push({
+            id,
+            layer,
+            ready: billboard.ready === true,
+            collectionReady: primitive.ready === true,
+            show: billboard.show === true,
+            collectionShow: primitive.show !== false,
+            effectiveShow: Boolean(
+              shown && primitive.show !== false && billboard.show === true,
+            ),
+            alpha: Number.isFinite(alpha) ? alpha : null,
+            collectionPath: childPath,
+            billboardIndex,
+          });
+        }
+      } else if (primitive instanceof Cesium.PrimitiveCollection) {
+        visit(primitive, childPath, depth + 1, shown);
+      }
+    }
+  }
+
+  visit(viewer.scene.primitives, [], 0, true);
+  return { items, truncated, visitedPrimitives };
+}
+
 function coefficients(values, limit) {
   if (!Array.isArray(values)) return null;
   return {
@@ -322,6 +409,41 @@ function collectModels(scene, programLimits) {
 
   visit(scene.primitives, [], 0, true);
   return { models, modelByObject, truncated };
+}
+
+/** Read-only cold-resource drain witness for the pinned Cesium version. */
+export function snapshotFleetEnvironmentReadiness(viewer) {
+  if (!viewer?.scene) throw new TypeError('Cesium viewer scene required');
+  const collected = collectModels(viewer.scene, DEFAULT_LIMITS);
+  const manager = Cesium.DynamicEnvironmentMapManager;
+  return {
+    cesiumVersion: Cesium.VERSION,
+    truncated: collected.truncated,
+    globalQueue: {
+      active: manager?._activeComputeCommandCount ?? null,
+      queued: manager?._nextFrameCommandQueue?.length ?? null,
+      maximumActive: manager?._maximumComputeCommandCount ?? null,
+    },
+    items: collected.models.map((model) => {
+      const state = model.environmentMapManager;
+      return {
+        id: model.id,
+        enabled: state?.enabled ?? null,
+        shouldUpdate: state?.shouldUpdate ?? null,
+        dirty: state?.dirty ?? null,
+        pending: state
+          ? Object.fromEntries(
+              Object.entries(state.pendingComputeCommands).map(
+                ([key, value]) => [
+                  key,
+                  value.status === 'read' ? value.pendingCount : null,
+                ],
+              ),
+            )
+          : null,
+      };
+    }),
+  };
 }
 
 function renderStateSnapshot(state) {

@@ -154,6 +154,39 @@ function validReport() {
                     observedFrame: 24,
                     models: structuredClone(models),
                   })),
+                  ...FLEET_SHOTS.slice(9, 13).map((name) => ({
+                    name,
+                    kind: 'lighting-readiness',
+                    logicalTimeMs:
+                      Date.UTC(2026, 9, 8, 12) + FLEET_OFFSETS[name],
+                    maxWaitMs: 30000,
+                    elapsedMs: 2000,
+                    startFrame: 25,
+                    observedFrame: 30,
+                    state: {
+                      cesiumVersion: '1.138.0',
+                      truncated: false,
+                      globalQueue: { active: 0, queued: 0, maximumActive: 13 },
+                      items: models.items.map((m) => ({
+                        id: m.id,
+                        enabled: true,
+                        shouldUpdate: true,
+                        dirty: Object.fromEntries(
+                          [
+                            'radianceMap',
+                            'radianceCommands',
+                            'convolutionsCommands',
+                            'irradianceCommand',
+                            'irradianceTexture',
+                            'sphericalHarmonics',
+                            'regenerateShaders',
+                            'reset',
+                          ].map((key) => [key, false]),
+                        ),
+                        pending: { radiance: 0, convolution: 0, irradiance: 0 },
+                      })),
+                    },
+                  })),
                 ]
               : [],
           cleanup: {
@@ -173,12 +206,26 @@ function validReport() {
                         : null;
                     fleet.billboards.forEach((b) => {
                       b.collectionShow = name !== 'disabled';
+                      b.show = !FLEET_SHOTS.slice(9, 13).includes(name);
                     });
                   }
                   const offset = FLEET_OFFSETS[name];
                   return {
                     name,
                     output: visible,
+                    trackedBillboards: {
+                      truncated: false,
+                      items: ['civil', 'military']
+                        .filter((kind) => name === `${kind}-tracked`)
+                        .map((kind) => ({
+                          id: visible[kind].billboards[0].id,
+                          layer: kind === 'civil' ? 'flights' : 'military',
+                          ready: true,
+                          show: true,
+                          effectiveShow: true,
+                          alpha: 0,
+                        })),
+                    },
                     camera: { position: [1, 2, 3] },
                     logicalTimeMs: Date.UTC(2026, 9, 8, 12) + offset,
                     sourceEpochMs:
@@ -226,6 +273,67 @@ test('valid five-pair evidence decodes all images and quantifies frame savings',
   assert.equal(result.medianRenderedFrameReduction, 0.76);
 });
 const invalidCases = [
+  [
+    'pending lighting compute work',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'lighting-readiness',
+      );
+      p.state.globalQueue.active = 1;
+    },
+  ],
+  [
+    'unfinished model irradiance texture',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'lighting-readiness',
+      );
+      p.state.items[0].dirty.irradianceTexture = true;
+    },
+  ],
+  [
+    'unavailable model lighting metric posing as zero',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'lighting-readiness',
+      );
+      p.state.items[0].pending.convolution = null;
+    },
+  ],
+  [
+    'visible fleet fallback alongside models',
+    (r) => {
+      r.pairs[0].correctness.candidate.samples.find(
+        (s) => s.name === 'civil-tracked',
+      ).output.civil.billboards[0].show = true;
+    },
+  ],
+  [
+    'opaque tracked fallback alongside model',
+    (r) => {
+      r.pairs[0].correctness.candidate.samples.find(
+        (s) => s.name === 'civil-tracked',
+      ).trackedBillboards.items[0].alpha = 1;
+    },
+  ],
+  [
+    'missing tracked fallback observation',
+    (r) => {
+      delete r.pairs[0].correctness.candidate.samples.find(
+        (s) => s.name === 'civil-tracked',
+      ).trackedBillboards;
+    },
+  ],
+  [
+    'retained released tracked billboard',
+    (r) => {
+      const samples = r.pairs[0].correctness.candidate.samples;
+      samples.find((s) => s.name === 'civil-released').trackedBillboards =
+        structuredClone(
+          samples.find((s) => s.name === 'civil-tracked').trackedBillboards,
+        );
+    },
+  ],
   [
     'missing model readiness barrier',
     (r) => {

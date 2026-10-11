@@ -81,6 +81,42 @@ function modelPopulation(state, requireShown = false) {
   }
 }
 
+function visualHandoff(sample) {
+  if (!MODEL_PHASES.includes(sample.name)) return;
+  for (const fleet of Object.values(sample.output)) {
+    assert.ok(
+      fleet.billboards.every((b) => b.show === false),
+      'Fleet fallback must be hidden once models own the visual',
+    );
+  }
+  const tracked = sample.trackedBillboards;
+  assert.equal(tracked?.truncated, false);
+  const kind =
+    sample.name === 'civil-tracked'
+      ? 'civil'
+      : sample.name === 'military-tracked'
+        ? 'military'
+        : null;
+  if (kind === null) {
+    assert.deepEqual(
+      tracked.items,
+      [],
+      'Released tracked billboard must be removed',
+    );
+  } else {
+    assert.equal(tracked.items.length, 1);
+    const billboard = tracked.items[0];
+    assert.equal(billboard.id, expectedIds(kind)[0]);
+    assert.equal(billboard.layer, kind === 'civil' ? 'flights' : 'military');
+    assert.equal(billboard.ready, true);
+    assert.equal(
+      billboard.alpha,
+      0,
+      'Tracked fallback must be transparent after model handoff',
+    );
+  }
+}
+
 function settings(value) {
   assert.ok(value?.context);
   assert.equal(value.resolutionScale, 1);
@@ -264,6 +300,7 @@ function validateSample(sample, report, implementation, mode) {
   assert.equal(sample.settings.environment.appCommit, report[implementation]);
   assert.equal(sample.settings.environment.harnessCommit, report.harness);
   if (mode === 'correctness') {
+    for (const shot of sample.samples) visualHandoff(shot);
     const settled = sample.phases.filter((p) => p.kind === 'settled');
     assert.deepEqual(
       settled.map((p) => p.name),
@@ -303,6 +340,56 @@ function validateSample(sample, report, implementation, mode) {
           phase.observedFrame > phase.startFrame,
       );
       modelPopulation(phase.models);
+    }
+    const lighting = sample.phases.filter(
+      (p) => p.kind === 'lighting-readiness',
+    );
+    assert.deepEqual(
+      lighting.map((p) => p.name),
+      MODEL_PHASES,
+    );
+    for (const phase of lighting) {
+      assert.equal(phase.maxWaitMs, 30000);
+      assert.ok(
+        Number.isFinite(phase.elapsedMs) &&
+          phase.elapsedMs >= 0 &&
+          phase.elapsedMs < 30000,
+      );
+      assert.equal(
+        phase.logicalTimeMs,
+        sample.epochMs + FLEET_OFFSETS[phase.name],
+      );
+      assert.ok(Number.isInteger(phase.startFrame) && phase.startFrame >= 0);
+      assert.ok(
+        Number.isInteger(phase.observedFrame) &&
+          phase.observedFrame > phase.startFrame,
+      );
+      assert.equal(phase.state.cesiumVersion, '1.138.0');
+      assert.equal(phase.state.truncated, false);
+      assert.equal(phase.state.globalQueue.active, 0);
+      assert.equal(phase.state.globalQueue.queued, 0);
+      assert.ok(phase.state.globalQueue.maximumActive > 0);
+      assert.deepEqual(
+        phase.state.items.map((m) => m.id).sort(),
+        [...expectedIds('civil'), ...expectedIds('military')].sort(),
+      );
+      for (const model of phase.state.items) {
+        assert.equal(model.enabled, true);
+        assert.equal(model.shouldUpdate, true);
+        for (const key of [
+          'radianceMap',
+          'radianceCommands',
+          'convolutionsCommands',
+          'irradianceCommand',
+          'irradianceTexture',
+          'sphericalHarmonics',
+          'regenerateShaders',
+          'reset',
+        ])
+          assert.equal(model.dirty?.[key], false);
+        for (const key of ['radiance', 'convolution', 'irradiance'])
+          assert.equal(model.pending?.[key], 0);
+      }
     }
     const movement = sample.phases.filter((p) => p.kind === 'movement');
     assert.deepEqual(

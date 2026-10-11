@@ -17,6 +17,8 @@ import { runFleetEmptyLifecycle } from './fleet-empty-lifecycle.mjs';
 import {
   snapshotFleetModelProgramState,
   snapshotFleetModelReadiness,
+  snapshotFleetTrackedBillboards,
+  snapshotFleetEnvironmentReadiness,
 } from './fleet-program-state.mjs';
 
 const EPOCH = Date.UTC(2026, 9, 8, 12);
@@ -462,6 +464,64 @@ async function createFixture(clock) {
         remove();
       }
     }
+    async function lightingReady(name) {
+      const start = performance.now();
+      const phase = {
+        name,
+        kind: 'lighting-readiness',
+        logicalTimeMs: clock.now(),
+        maxWaitMs: 30000,
+        startFrame: frames.length,
+        observations: [],
+      };
+      phases.push(phase);
+      let latest = null,
+        lastSignature = null;
+      const remove = viewer.scene.postRender.addEventListener(() => {
+        latest = snapshotFleetEnvironmentReadiness(viewer);
+        const signature = JSON.stringify(latest);
+        if (signature !== lastSignature && phase.observations.length < 60) {
+          phase.observations.push({
+            elapsedMs: performance.now() - start,
+            frame: frames.length,
+            state: latest,
+          });
+          lastSignature = signature;
+        }
+      });
+      try {
+        while (performance.now() - start < phase.maxWaitMs) {
+          check(errors.length === 0, errors.join(';'));
+          if (
+            latest &&
+            !latest.truncated &&
+            latest.items.length === 20 &&
+            latest.globalQueue.active === 0 &&
+            latest.globalQueue.queued === 0 &&
+            latest.items.every(
+              (m) =>
+                m.enabled === true &&
+                m.shouldUpdate === true &&
+                m.dirty &&
+                Object.values(m.dirty).every((v) => v === false) &&
+                m.pending &&
+                Object.values(m.pending).every((v) => v === 0),
+            )
+          ) {
+            phase.elapsedMs = performance.now() - start;
+            phase.observedFrame = frames.length;
+            phase.state = latest;
+            return;
+          }
+          await sleep(20);
+        }
+        phase.elapsedMs = performance.now() - start;
+        phase.state = latest;
+        throw new Error(`${name}: environment lighting work did not drain`);
+      } finally {
+        remove();
+      }
+    }
     async function settle(name, { expectModels = false } = {}) {
       const start = performance.now();
       let last = null,
@@ -561,6 +621,7 @@ async function createFixture(clock) {
         camera: cameraPose(),
         demand: governor.getRenderGovernorDiagnostics(),
         modelState: snapshotFleetModelProgramState(viewer),
+        lightingReadiness: snapshotFleetEnvironmentReadiness(viewer),
       };
       await encodeProgramSources(state.modelState);
       return state;
@@ -578,6 +639,7 @@ async function createFixture(clock) {
           cameraMoveEnds: cameraEvents.length,
           renderState: renderState(),
           modelState: snapshotFleetModelProgramState(viewer),
+          trackedBillboards: snapshotFleetTrackedBillboards(viewer),
         };
         // Read the completed default framebuffer without changing bindings.
         // Compare this with the production Canvas2D copy to separate renderer
@@ -754,6 +816,7 @@ async function createFixture(clock) {
       awaitMovement,
       settle,
       modelsReady,
+      lightingReady,
       advance(time) {
         clock.set(time);
         viewer.clock.currentTime = Cesium.JulianDate.fromDate(new Date(time));
@@ -992,6 +1055,7 @@ async function run() {
         // run. Never call a private tick or use camera events as a load barrier.
         await fixture.modelsReady(`${kind}-tracked`);
         fixture.advance(EPOCH + prepareOffset + 80);
+        await fixture.lightingReady(`${kind}-tracked`);
         await fixture.settle(`${kind}-tracked`, { expectModels: true });
         assertCheck(
           `${kind}-tracked-id`,
@@ -1003,6 +1067,7 @@ async function run() {
         await fixture.ready();
         await fixture.modelsReady(`${kind}-released`);
         fixture.advance(EPOCH + prepareOffset + 240);
+        await fixture.lightingReady(`${kind}-released`);
         await fixture.settle(`${kind}-released`, { expectModels: true });
         assertCheck(
           `${kind}-untracked`,
