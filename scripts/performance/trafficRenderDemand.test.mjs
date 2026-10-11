@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
 import {
   compareTrafficRenderDemandRuns,
   validateTrafficRenderDemandRun,
@@ -354,4 +356,107 @@ test('heatline control proves visible pixels change and parameters restore', () 
   );
   candidate.heatlineVisualWitness.effectiveRestoredParams.densityScale = 0.2;
   assert.equal(validateTrafficRenderDemandRun(candidate).mode, 'candidate');
+});
+
+// Execute the fixture's real run/cleanup path, with only construction replaced.
+// This catches teardown references that node --check cannot detect.
+async function runBrokenFixture(Viewer) {
+  const source = (
+    await readFile(
+      new URL('../fixtures/traffic-render-demand.mjs', import.meta.url),
+      'utf8',
+    )
+  ).replaceAll('\r\n', '\n');
+  const start = source.indexOf('async function run() {');
+  const end = source.indexOf('\nrun()\n', start);
+  assert.ok(start >= 0 && end > start);
+  const dateNow = () => 123;
+  const random = () => 0.5;
+  const context = {
+    Cesium: { Viewer, EllipsoidTerrainProvider: class {} },
+    Date: { now: dateNow },
+    Math: Object.assign(Object.create(Math), { random }),
+    performance: { now: () => 42 },
+    FIXTURE_EPOCH: EPOCH,
+    MODE: 'baseline',
+    APP_COMMIT: BASE,
+    CASES: names,
+    logicalNow: EPOCH,
+    viewer: null,
+    layer: null,
+    disposed: false,
+    sourceCalls: [],
+    listenersRemoved: false,
+    removeTileVisibleListener: null,
+    getRenderGovernorDiagnostics: () => ({ installed: false }),
+    report: null,
+  };
+  vm.createContext(context);
+  const run = vm.runInContext(source.slice(start, end) + '\nrun', context);
+  let failure;
+  try {
+    await run();
+  } catch (error) {
+    failure = error;
+  }
+  assert.equal(context.Date.now, dateNow);
+  assert.equal(context.Math.random, random);
+  assert.equal(context.disposed, true);
+  return { failure, report: context.report };
+}
+
+test('fixture construction failure survives cleanup and restores clock/random', async () => {
+  const original = new Error('injected viewer construction failure');
+  const result = await runBrokenFixture(
+    class {
+      constructor() {
+        throw original;
+      }
+    },
+  );
+  assert.equal(result.failure, original);
+  assert.equal(result.report.cleanup.viewerDestroyed, true);
+  assert.equal(result.report.cleanup.governorUninstalled, true);
+  assert.equal(result.report.cleanup.errors.length, 0);
+});
+
+test('fixture disposal failure is recorded without hiding the setup error', async () => {
+  const original = new Error('injected scene setup failure');
+  let destructionAttempted = false;
+  const result = await runBrokenFixture(
+    class {
+      set resolutionScale(value) {
+        throw original;
+      }
+      isDestroyed() {
+        return false;
+      }
+      destroy() {
+        destructionAttempted = true;
+        throw new Error('injected disposal failure');
+      }
+    },
+  );
+  assert.equal(result.failure, original);
+  assert.equal(destructionAttempted, true);
+  assert.equal(result.report.cleanup.viewerDestroyed, false);
+  assert.equal(result.report.cleanup.errors[0].owner, 'viewer');
+  assert.equal(
+    result.report.cleanup.errors[0].message,
+    'injected disposal failure',
+  );
+});
+
+test('failed setup reports its cause before missing renderer evidence', () => {
+  assert.throws(
+    () =>
+      validateTrafficRenderDemandRun({
+        schema: 'gev-traffic-render-demand/v1',
+        mode: 'baseline',
+        status: 'failed',
+        error: { message: 'Local fixture tiles did not settle' },
+        captures: [],
+      }),
+    /Traffic fixture failed: Local fixture tiles did not settle/,
+  );
 });

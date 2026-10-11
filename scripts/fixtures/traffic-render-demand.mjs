@@ -570,6 +570,7 @@ async function run() {
     return randomState / 0x1_0000_0000;
   };
   let surfaceUrls = [];
+  let primaryError = null;
   try {
     report = {
       schema: 'gev-traffic-render-demand/v1',
@@ -946,40 +947,61 @@ async function run() {
       }),
     );
     report.status = 'passed';
+  } catch (error) {
+    primaryError = error;
+    throw error;
   } finally {
     disposed = true;
-    postRenderRemove?.();
-    try {
-      if (layer && viewer) layer.destroy(viewer);
-    } catch {}
-    layer = null;
-    for (const url of surfaceUrls) URL.revokeObjectURL(url);
-    if (viewer && getRenderGovernorDiagnostics().installed)
-      uninstallRenderGovernor(viewer);
-    removeTileVisibleListener?.();
-    removeTileVisibleListener = null;
-    const governorUninstalled =
-      getRenderGovernorDiagnostics().installed === false;
-    if (viewer && !viewer.isDestroyed()) viewer.destroy();
+    // Restore process-wide fixture overrides even if any owner fails disposal.
     Date.now = originalDateNow;
     Math.random = originalRandom;
+    const cleanupErrors = [];
+    const clean = (owner, action) => {
+      try {
+        return action();
+      } catch (error) {
+        cleanupErrors.push({ owner, message: String(error?.message || error) });
+        return false;
+      }
+    };
+    clean('traffic-layer', () => {
+      if (layer && viewer) layer.destroy(viewer);
+    });
+    layer = null;
+    for (const url of surfaceUrls)
+      clean('surface-url', () => URL.revokeObjectURL(url));
+    clean('tile-visible-listener', () => removeTileVisibleListener?.());
+    removeTileVisibleListener = null;
+    const governorUninstalled = clean('render-governor', () => {
+      if (viewer && getRenderGovernorDiagnostics().installed)
+        uninstallRenderGovernor(viewer);
+      return getRenderGovernorDiagnostics().installed === false;
+    });
+    const viewerDestroyed = clean('viewer', () => {
+      if (viewer && !viewer.isDestroyed()) viewer.destroy();
+      return !viewer || viewer.isDestroyed();
+    });
     report.cleanup = {
       disposed,
-      viewerDestroyed: !viewer || viewer.isDestroyed(),
+      viewerDestroyed,
       listenersRemoved,
       governorUninstalled,
+      errors: cleanupErrors,
     };
-    if (report)
-      report.sourceCalls = sourceCalls.map(
-        ({ startedAt, resolvedAt, aborted, majorOnly }) => ({
-          startedAt: Number(startedAt.toFixed(3)),
-          resolvedAt:
-            resolvedAt === null ? null : Number(resolvedAt.toFixed(3)),
-          aborted,
-          majorOnly,
-        }),
-      );
+    report.sourceCalls = sourceCalls.map(
+      ({ startedAt, resolvedAt, aborted, majorOnly }) => ({
+        startedAt: Number(startedAt.toFixed(3)),
+        resolvedAt: resolvedAt === null ? null : Number(resolvedAt.toFixed(3)),
+        aborted,
+        majorOnly,
+      }),
+    );
     report.endedAtMonotonic = performance.now();
+    // A disposal failure is a failure, but must never replace the original cause.
+    if (!primaryError && cleanupErrors.length)
+      throw new Error(
+        'Traffic fixture cleanup failed: ' + JSON.stringify(cleanupErrors),
+      );
   }
 }
 

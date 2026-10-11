@@ -419,6 +419,11 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
       classification: classifyRenderer(renderer, graphicsInfo),
     };
     await onRawResult(run);
+    // Validate fixture status first: a setup failure has no capture renderer.
+    validateTrafficRenderDemandRun(run, {
+      expectedCommit: commits[side],
+      mode: side,
+    });
     assert.deepEqual(
       externalRequests,
       [],
@@ -430,10 +435,6 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
       true,
       `${side} renderer acceleration was not verified`,
     );
-    validateTrafficRenderDemandRun(run, {
-      expectedCommit: commits[side],
-      mode: side,
-    });
     const runDirectory = resolve(
       output,
       `pair-${String(pair).padStart(2, '0')}`,
