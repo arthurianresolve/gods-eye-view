@@ -96,6 +96,8 @@ function validateLifetime(lifetime, report) {
         !Number.isSafeInteger(row.frame?.completedStableFrames) ||
         row.frame.completedStableFrames < 3 ||
         JSON.stringify(row.clock) !== JSON.stringify(report.renderClock) ||
+        row.sceneReadiness?.dataSourcesReady !== true ||
+        row.sceneReadiness?.globeTilesLoaded !== true ||
         !infrastructureCameraRevisionReady(
           row.lodDiagnostics,
           row.cameraPosition,

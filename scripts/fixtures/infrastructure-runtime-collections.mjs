@@ -655,6 +655,7 @@ async function runLayerLifetime(
       let observedGeometry = null;
       let lodDiagnostics = null;
       let cameraPosition = null;
+      let sceneReadiness = null;
       while (performance.now() < deadline) {
         finalFrame = await captureFrame(viewer);
         completedCaptures++;
@@ -667,9 +668,15 @@ async function runLayerLifetime(
         observedGeometry = hash;
         lodDiagnostics = dams.getLodDiagnostics();
         cameraPosition = finitePosition(viewer.camera.positionWC);
+        sceneReadiness = {
+          dataSourcesReady: viewer.dataSourceDisplay.ready,
+          globeTilesLoaded: viewer.scene.globe.tilesLoaded,
+        };
         geometryReady =
           (!changedGeometryFrom || hash !== changedGeometryFrom) &&
-          infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition);
+          infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition) &&
+          sceneReadiness.dataSourcesReady === true &&
+          sceneReadiness.globeTilesLoaded === true;
         stableFrames = readiness.observe(signature, {
           inputsReady: geometryReady,
         });
@@ -712,6 +719,7 @@ async function runLayerLifetime(
           changedGeometryFrom,
           lodDiagnostics,
           cameraPosition,
+          sceneReadiness,
           pointPick: pointPick || null,
           stemPick: stemPick || null,
           surfaceCount: rows.length,
@@ -769,6 +777,7 @@ async function runLayerLifetime(
         styleAudit,
         lodDiagnostics,
         cameraPosition,
+        sceneReadiness,
         pixelSha256: finalFrame.pixelSha256,
         pngBase64: finalFrame.pngBase64,
         pixelDifferenceCount: finalFrame.pixelsDifferentFromCorner,

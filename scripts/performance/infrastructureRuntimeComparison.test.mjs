@@ -54,6 +54,7 @@ function sample(mode, caseId, pair) {
     pixelDifferenceCount: 1000,
     frame: { width: 960, height: 640, completedStableFrames: 3 },
     clock: { ...renderClock },
+    sceneReadiness: { dataSourcesReady: true, globeTilesLoaded: true },
     cameraPosition: [1, 2, 3],
     lodDiagnostics: {
       computed: true,
@@ -433,4 +434,16 @@ test('camera readiness requires consumed geometry and the current finite pose', 
       validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
     /incomplete render or ownership/,
   );
+});
+
+test('native picks do not establish completion of the remaining scene geometry', () => {
+  for (const key of ['dataSourcesReady', 'globeTilesLoaded']) {
+    const report = validReport();
+    report.lifetimes[1].samples[0].sceneReadiness[key] = false;
+    assert.throws(
+      () =>
+        validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+      /incomplete render or ownership/,
+    );
+  }
 });
