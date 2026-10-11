@@ -1,0 +1,27 @@
+{
+  "conclusion": "failure",
+  "createdAt": "2026-10-11T21:16:13Z",
+  "headSha": "022945de22e00274d0baa0f837403f07d67dd3a7",
+  "jobs": [
+    {
+      "name": "Browser shutdown controls (macos-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "databaseId": 114577404320,
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38175664689/job/114577404320",
+      "startedAt": "2026-10-11T21:16:22Z",
+      "completedAt": "2026-10-11T21:16:52Z",
+      "failedSteps": [
+        {
+          "name": "Compare blank, WebGL and Cesium shutdown controls",
+          "number": 6
+        }
+      ]
+    }
+  ],
+  "status": "completed",
+  "updatedAt": "2026-10-11T21:16:53Z",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38175664689",
+  "observedFailure": "Browser shutdown controls are Windows-only.",
+  "browserControlsExercised": false
+}

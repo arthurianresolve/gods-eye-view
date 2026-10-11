@@ -67,8 +67,14 @@ disposer cannot unsubscribe the replacement, old callbacks cannot publish under
 its owner, and equal generations across controllers do not suppress the new
 state. The regression failed before the repair; 31 focused checks and package
 boundaries pass afterward. This runtime change requires its own integrated CI
-result before production promotion. Standard CI `38174948494` is running at
-docs-inclusive `0c7d678b`; dev remains `ba7c8738` until that validation completes.
+result before production promotion. Standard CI `38174948494` completed at
+docs-inclusive `0c7d678b`: six of seven jobs pass. macOS preserved settings,
+workspace contents and the rendered asset but failed Chrome's five-second
+shutdown deadline. [The failure and diagnostic setup corrections](performance-evidence/s50-macos-recovery-38174948494/README.md)
+remain explicit; dev stays `ba7c8738`. QA follow-up `ee45f9e1` supports matched
+Windows/macOS/Linux shutdown controls with validated software-renderer flags;
+49 focused checks pass. The unchanged deadline is being tested on macOS in
+`38176078163`; that diagnostic does not itself complete application recovery.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
