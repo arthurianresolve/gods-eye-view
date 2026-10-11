@@ -1,0 +1,4396 @@
+{
+  "testedCommit": "cac088465714e7c92c9509fb9986e427b105e107",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38155510473",
+  "status": "hosted-component-parity-passed",
+  "acceptedForDev": false,
+  "hardwareValidated": false,
+  "performanceAcceptanceEligible": false,
+  "independentlyDecodedPngs": 22,
+  "matchingCapturePairs": 11,
+  "comparison": {
+    "valid": true,
+    "errors": [],
+    "summary": {
+      "schema": "gev-import-point-representation-comparison/v1",
+      "applicationCommit": "cac088465714e7c92c9509fb9986e427b105e107",
+      "fixtureCommit": "cac088465714e7c92c9509fb9986e427b105e107",
+      "representationPairs": 1,
+      "synchronousCooperativePairsPerRepresentation": 5,
+      "pixelSamplesCompared": 10,
+      "pointStateSamplesCompared": 10,
+      "pngWitnessCount": 22,
+      "mixedGeometryPixelParity": true,
+      "mixedGeometryNativePickCount": 3,
+      "geometryParity": true,
+      "cancellationCleanup": true,
+      "performanceAcceptanceEligible": false
+    }
+  },
+  "artifacts": [
+    {
+      "file": "import-point-entity.json",
+      "sha256": "e61da730f7c8e7171e4e231da1cf762df1c0bd57caebde45876d48758ed1769b"
+    },
+    {
+      "file": "import-point-collection.json",
+      "sha256": "d2e3daa5830af44fae84e80c8313339708ccf4d93d95e3fea07d68627fb9ca1d"
+    }
+  ],
+  "images": [
+    {
+      "file": "entity-0-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-0-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-1-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-1-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-2-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-2-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-3-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-3-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-4-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-4-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "entity-mixed.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "88f5aac14b1664ebc43317f502e8e7947b73c30ea6f74c03ba9df80bc1380058",
+      "pngSha256": "d344ac6d17edc8d4c31384256c450e997815e96a5d662e72b878765719b7f940"
+    },
+    {
+      "file": "collection-0-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-0-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-1-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-1-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-2-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-2-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-3-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-3-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-4-synchronous.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-4-cooperative.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+      "pngSha256": "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e"
+    },
+    {
+      "file": "collection-mixed.png",
+      "width": 640,
+      "height": 360,
+      "pixelSha256": "88f5aac14b1664ebc43317f502e8e7947b73c30ea6f74c03ba9df80bc1380058",
+      "pngSha256": "d344ac6d17edc8d4c31384256c450e997815e96a5d662e72b878765719b7f940"
+    }
+  ],
+  "runs": [
+    {
+      "renderer": "entity",
+      "captureChecks": 12,
+      "captureMatrixPassed": true,
+      "mixedReadinessMs": 2103.0999999999767,
+      "mixedNativePicks": [
+        {
+          "shape": "point",
+          "screen": [
+            320,
+            180.0000000000001
+          ],
+          "onCanvas": true,
+          "expectedEntityId": "gev-import:mixed-parity:mixed-parity:point",
+          "pickedEntityId": "gev-import:mixed-parity:mixed-parity:point"
+        },
+        {
+          "shape": "line",
+          "screen": [
+            359.9214220963589,
+            158.3704458322295
+          ],
+          "onCanvas": true,
+          "expectedEntityId": "gev-import:mixed-parity:mixed-parity:line",
+          "pickedEntityId": "gev-import:mixed-parity:mixed-parity:line"
+        },
+        {
+          "shape": "polygon",
+          "screen": [
+            280.0781646034401,
+            180.00000000000014
+          ],
+          "onCanvas": true,
+          "expectedEntityId": "gev-import:mixed-parity:mixed-parity:polygon",
+          "pickedEntityId": "gev-import:mixed-parity:mixed-parity:polygon"
+        }
+      ],
+      "pointStates": [
+        {
+          "pair": 0,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 0,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 1,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 1,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 2,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 2,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 3,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 3,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 4,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 4,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "entity",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 5000,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        }
+      ],
+      "warmedPopulation": {
+        "heapBytes": 120945719,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "pointPrimitiveCount": 5000,
+        "importedFeatureCount": 5000,
+        "pointRepresentation": "entity",
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          },
+          {
+            "type": "EntityClusterPointPrimitiveCollection",
+            "count": 5000,
+            "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+          }
+        ]
+      },
+      "renderingEvidence": [
+        {
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": false
+        },
+        {
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": false
+        }
+      ],
+      "browserClose": {
+        "closeCompleted": true,
+        "forcedProcessTermination": false,
+        "observation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 31757.309,
+          "closeSettledHostMs": 32308.14075,
+          "closeElapsedMs": 550.8317499999976,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 520.0431250000001
+          },
+          "protocolCloseTrace": null,
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null
+        }
+      }
+    },
+    {
+      "renderer": "collection",
+      "captureChecks": 12,
+      "captureMatrixPassed": true,
+      "mixedReadinessMs": 1534.2999999999884,
+      "mixedNativePicks": [
+        {
+          "shape": "point",
+          "screen": [
+            320,
+            180.0000000000001
+          ],
+          "onCanvas": true,
+          "expectedEntityId": "gev-import:mixed-parity:mixed-parity:point",
+          "pickedEntityId": "gev-import:mixed-parity:mixed-parity:point"
+        },
+        {
+          "shape": "line",
+          "screen": [
+            359.9214220963589,
+            158.3704458322295
+          ],
+          "onCanvas": true,
+          "expectedEntityId": "gev-import:mixed-parity:mixed-parity:line",
+          "pickedEntityId": "gev-import:mixed-parity:mixed-parity:line"
+        },
+        {
+          "shape": "polygon",
+          "screen": [
+            280.0781646034401,
+            180.00000000000014
+          ],
+          "onCanvas": true,
+          "expectedEntityId": "gev-import:mixed-parity:mixed-parity:polygon",
+          "pickedEntityId": "gev-import:mixed-parity:mixed-parity:polygon"
+        }
+      ],
+      "pointStates": [
+        {
+          "pair": 0,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 0,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 1,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 1,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 2,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 2,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 3,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 3,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 4,
+          "mode": "synchronous",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        },
+        {
+          "pair": 4,
+          "mode": "cooperative",
+          "state": {
+            "available": true,
+            "version": "1.138.0",
+            "renderer": "primitive-collection",
+            "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+            "expectedCount": 5000,
+            "entityCount": 5000,
+            "visualizerItemCount": 0,
+            "primitiveCount": 5000,
+            "blendOption": 2,
+            "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+            "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+            "primitiveDrawOrderAndStateSha256": "4dc1a9b698fd034ae48e139f85fff5972082ddaeb86287cbf17f743e89be04a2",
+            "nativePickWitness": {
+              "scope": "post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality",
+              "candidates": 9,
+              "tested": 9,
+              "importedHits": 9,
+              "rows": [
+                {
+                  "targetId": "gev-import:fixture:fixture:0",
+                  "screen": [
+                    211.1536433544822,
+                    234.05894151527832
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:103"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:1",
+                  "screen": [
+                    213.32947978288337,
+                    234.05949182739727
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:104"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:49",
+                  "screen": [
+                    317.82251085000485,
+                    234.07283616384345
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:349"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:50",
+                  "screen": [
+                    320,
+                    234.07284172535913
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:350"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:499",
+                  "screen": [
+                    426.67255168649035,
+                    225.41083030207852
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:500",
+                  "screen": [
+                    211.15110856521576,
+                    223.24815144956648
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:603"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2499",
+                  "screen": [
+                    426.67740985831904,
+                    182.16251810382528
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2596"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:2500",
+                  "screen": [
+                    211.146601984901,
+                    180.00000000000014
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:2503"
+                },
+                {
+                  "targetId": "gev-import:fixture:fixture:4999",
+                  "screen": [
+                    426.6710611987679,
+                    128.1026269723709
+                  ],
+                  "pickedEntityId": "gev-import:fixture:fixture:4896"
+                }
+              ]
+            },
+            "firstEntity": {
+              "id": "gev-import:fixture:fixture:0",
+              "name": "Fixture 0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "lastEntity": {
+              "id": "gev-import:fixture:fixture:4999",
+              "name": "Fixture 4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "pixelSize": 9,
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1
+            },
+            "firstPrimitive": {
+              "id": "gev-import:fixture:fixture:0",
+              "position": [
+                6378109.714698836,
+                -16697.890334769083,
+                -8293.068365857716
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            },
+            "lastPrimitive": {
+              "id": "gev-import:fixture:fixture:4999",
+              "position": [
+                6378111.005793527,
+                16363.934360085377,
+                7961.345805893219
+              ],
+              "color": [
+                0,
+                1,
+                1,
+                1
+              ],
+              "outlineColor": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "outlineWidth": 1,
+              "pixelSize": 9,
+              "disableDepthTestDistance": 0,
+              "splitDirection": 0,
+              "scaleByDistance": null,
+              "translucencyByDistance": null,
+              "distanceDisplayCondition": null,
+              "show": true
+            }
+          }
+        }
+      ],
+      "warmedPopulation": {
+        "heapBytes": 76587669,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 0,
+        "pointPrimitiveCount": 5000,
+        "importedFeatureCount": 5000,
+        "pointRepresentation": "primitive-collection",
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PointPrimitiveCollection",
+            "count": 5000
+          }
+        ]
+      },
+      "renderingEvidence": [
+        {
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": false
+        },
+        {
+          "kind": "apple-paravirtual-metal",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": false
+        }
+      ],
+      "browserClose": {
+        "closeCompleted": true,
+        "forcedProcessTermination": false,
+        "observation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 17953.503875,
+          "closeSettledHostMs": 18185.378834,
+          "closeElapsedMs": 231.87495900000067,
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 211.8492920000026
+          },
+          "protocolCloseTrace": null,
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null
+        }
+      }
+    }
+  ]
+}

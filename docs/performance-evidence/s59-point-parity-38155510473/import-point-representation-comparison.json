@@ -1,0 +1,19 @@
+{
+  "valid": true,
+  "errors": [],
+  "summary": {
+    "schema": "gev-import-point-representation-comparison/v1",
+    "applicationCommit": "cac088465714e7c92c9509fb9986e427b105e107",
+    "fixtureCommit": "cac088465714e7c92c9509fb9986e427b105e107",
+    "representationPairs": 1,
+    "synchronousCooperativePairsPerRepresentation": 5,
+    "pixelSamplesCompared": 10,
+    "pointStateSamplesCompared": 10,
+    "pngWitnessCount": 22,
+    "mixedGeometryPixelParity": true,
+    "mixedGeometryNativePickCount": 3,
+    "geometryParity": true,
+    "cancellationCleanup": true,
+    "performanceAcceptanceEligible": false
+  }
+}
