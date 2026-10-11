@@ -464,7 +464,8 @@ try {
   if (
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--vessels') ||
-    process.argv.includes('--calibration')
+    process.argv.includes('--calibration') ||
+    process.argv.includes('--imports')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

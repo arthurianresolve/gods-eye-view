@@ -4023,3 +4023,23 @@ exceptions. The dedicated hosted `imports` diagnostic runs the capture matrix
 and import fixture without unrelated point-collection experiments. The earlier
 CPU reports remain bound to their original commits; they do not establish
 performance of this newer validation packet. Hosted validation is pending.
+
+
+S59 hosted review at `b370d75c0cc52cdb078727bd6b65f5c230dabfee`:
+[run 38138123088](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38138123088)
+passed its capture matrix and import browser diagnostic, but the workflow failed
+because the new imports upload step expected a report file that the runner had
+only written to the job log. The exact
+[raw report](performance-evidence/s59-hosted-scheduler-38138123088/hosted-native-renderer.json)
+and [failed CI record](performance-evidence/s59-hosted-scheduler-38138123088/ci.json)
+are preserved. The runner now writes the same JSON for this explicit workload.
+
+The browser report observes 123 scheduler.postTask wakes, five alternating
+5,000-point synchronous/cooperative pixel pairs, complete 50,000-coordinate line
+and polygon-with-hole parity, twelve cancellations, and natural browser cleanup.
+This is hosted Apple paravirtual Metal correctness evidence, not physical desktop
+coverage. It is also not a matched old-timer/new-scheduler performance comparison.
+Point-batch active maxima of 12.8-26.3 ms exceeded the four-ms target; one large
+geometry wake waited 390.1 ms. These results do not close S59 interaction or
+performance acceptance. Keep the historical CPU improvement report limited to its
+own commit, workloads and environment. Artifact delivery revalidation is pending.
