@@ -4,7 +4,11 @@ S47/S59 diagnostic checkpoint (11 October 2026): observer run `38168778561`
 misses the five-second completed-render deadline before its first sample. Startup
 observer attribution was overwritten; `6721940d` preserves it independently and
 passes nine focused checks. [Original failure](performance-evidence/s47-observer-read-38168778561/README.md)
-remains failed; corrected run `38169235037` is in progress.
+remains failed; corrected run `38169235037` also fails, after two idle samples.
+Its [preserved read costs](performance-evidence/s47-read-cost-38169235037/README.md)
+attribute 2.1-4.1 seconds to synchronous renderer/vendor observation. Opt-in
+early identity reuse is implemented at `681e704a`, passes 40 focused checks,
+and awaits hosted run `38170201283`; hardware acceptance remains pending.
 
 The S59 CPU profile at `a6ff8485` completes a 50,000-position line load and natural
 cleanup but fails trace completeness because two flow-event identities were not
@@ -36,8 +40,9 @@ Missing browser-shutdown observations keep that envelope pending. The ownership
 reporting fix `7cea7aac` passes 84 focused tests and all seven standard jobs in
 `38167173641`. Corrected soak `38167171204` is still in progress. Registration
 of the new helper tests in the full suites is checked by `38168624015` at
-`806d4d3c`: Node 24/26, onboarding and all three recovery jobs pass; the browser
-journey is still running. Promotion remains pending the final results.
+`806d4d3c`: all seven jobs pass, including Node 24/26, onboarding, all three
+recovery jobs and the browser journey. [Exact CI evidence](performance-evidence/import-point-current-dev/validation-38168624015-ci.json)
+is preserved. Promotion remains pending the corrected soak.
 [Raw report and reporting fix](performance-evidence/hosted-soak-38162032244/README.md).
 
 S47 stage diagnostic `38165977957` fails at the unchanged child deadline during
