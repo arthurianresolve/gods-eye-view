@@ -2,9 +2,32 @@ import {
   featureLabel,
   featureReference,
   createCableFeatureRecord,
+  clearSourceOrdinalAnnotations,
+  groupEntitiesBySourceOrdinal,
   normalizeFeatures,
+  withSourceOrdinals,
 } from './geometry.js';
 import * as Cesium from 'cesium';
+
+// Bind and remove transient metadata before any data source is published, even
+// when a generation was superseded while Cesium was loading its geometry.
+async function loadBoundDataSource(features, options) {
+  const binding = withSourceOrdinals(features);
+  try {
+    const dataSource = await Cesium.GeoJsonDataSource.load(
+      { type: 'FeatureCollection', features: binding.features },
+      options,
+    );
+    const entitiesByFeature = groupEntitiesBySourceOrdinal(
+      dataSource.entities.values,
+      binding,
+    );
+    return { dataSource, entitiesByFeature };
+  } finally {
+    // Cesium descriptions can retain the supplied GeoJSON properties.
+    clearSourceOrdinalAnnotations(binding);
+  }
+}
 
 export function createIngestion({ state, parts, source }) {
   async function load(viewer) {
@@ -47,33 +70,32 @@ export function createIngestion({ state, parts, source }) {
 
       const cableFeatures = normalizeFeatures(cableJson, 'cable');
       const landingFeatures = normalizeFeatures(landingJson, 'landing');
-
-      const cableDataSource = await Cesium.GeoJsonDataSource.load(
-        { type: 'FeatureCollection', features: cableFeatures },
-        {
-          clampToGround: true,
-          stroke: state.cableColor.withAlpha(0.95),
-          fill: state.cableColor.withAlpha(0.18),
-          strokeWidth: 2,
-          markerColor: state.cableColor,
-          markerSize: 6,
-        },
-      );
+      const {
+        dataSource: cableDataSource,
+        entitiesByFeature: cableEntitiesByFeature,
+      } = await loadBoundDataSource(cableFeatures, {
+        clampToGround: true,
+        stroke: state.cableColor.withAlpha(0.95),
+        fill: state.cableColor.withAlpha(0.18),
+        strokeWidth: 2,
+        markerColor: state.cableColor,
+        markerSize: 6,
+      });
       if (!owns()) {
         cableDataSource.destroy?.();
         return;
       }
-      const landingDataSource = await Cesium.GeoJsonDataSource.load(
-        { type: 'FeatureCollection', features: landingFeatures },
-        {
-          clampToGround: true,
-          stroke: state.landingColor.withAlpha(0.9),
-          fill: state.landingColor.withAlpha(0.35),
-          strokeWidth: 2,
-          markerColor: state.landingColor,
-          markerSize: 6,
-        },
-      );
+      const {
+        dataSource: landingDataSource,
+        entitiesByFeature: landingEntitiesByFeature,
+      } = await loadBoundDataSource(landingFeatures, {
+        clampToGround: true,
+        stroke: state.landingColor.withAlpha(0.9),
+        fill: state.landingColor.withAlpha(0.35),
+        strokeWidth: 2,
+        markerColor: state.landingColor,
+        markerSize: 6,
+      });
       if (!owns()) {
         cableDataSource.destroy?.();
         landingDataSource.destroy?.();
@@ -132,15 +154,12 @@ export function createIngestion({ state, parts, source }) {
       state._landingDataSource = landingDataSource;
       state._referenceDataSource = referenceDataSource;
 
-      const cableEntities = state._cableDataSource.entities.values;
-      const landingEntities = state._landingDataSource.entities.values;
       state._pickByEntity = new WeakMap();
       state._referenceRecords = [];
       state._surfaceRecords = [];
       state._featureRecords = [];
 
-      cableEntities.forEach((entity, index) => {
-        const feature = cableFeatures[index];
+      cableFeatures.forEach((feature, index) => {
         const reference = featureReference(feature);
         if (!reference) return;
         const featureRecord = createCableFeatureRecord(
@@ -149,14 +168,21 @@ export function createIngestion({ state, parts, source }) {
           reference,
         );
         if (!featureRecord) return;
+        const featureEntities = cableEntitiesByFeature[index];
+        if (featureEntities.length === 0) return;
         state._featureRecords.push(featureRecord);
-
-        parts.rendering.styleCableEntity(entity, feature);
-        parts.interaction.registerPickEntity(entity, featureRecord);
-        state._surfaceRecords.push({
-          entity,
-          base: Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0),
-        });
+        for (const entity of featureEntities) {
+          parts.rendering.styleCableEntity(entity, feature);
+          parts.interaction.registerPickEntity(entity, featureRecord);
+          state._surfaceRecords.push({
+            entity,
+            base: Cesium.Cartesian3.fromDegrees(
+              reference.lon,
+              reference.lat,
+              0,
+            ),
+          });
+        }
         parts.rendering.addReferenceStem({
           reference,
           label: featureLabel(feature),
@@ -166,8 +192,7 @@ export function createIngestion({ state, parts, source }) {
         });
       });
 
-      landingEntities.forEach((entity, index) => {
-        const feature = landingFeatures[index];
+      landingFeatures.forEach((feature, index) => {
         const reference = featureReference(feature);
         if (!reference) return;
         const featureRecord = createCableFeatureRecord(
@@ -176,14 +201,21 @@ export function createIngestion({ state, parts, source }) {
           reference,
         );
         if (!featureRecord) return;
+        const featureEntities = landingEntitiesByFeature[index];
+        if (featureEntities.length === 0) return;
         state._featureRecords.push(featureRecord);
-
-        parts.rendering.styleLandingEntity(entity, feature);
-        parts.interaction.registerPickEntity(entity, featureRecord);
-        state._surfaceRecords.push({
-          entity,
-          base: Cesium.Cartesian3.fromDegrees(reference.lon, reference.lat, 0),
-        });
+        for (const entity of featureEntities) {
+          parts.rendering.styleLandingEntity(entity, feature);
+          parts.interaction.registerPickEntity(entity, featureRecord);
+          state._surfaceRecords.push({
+            entity,
+            base: Cesium.Cartesian3.fromDegrees(
+              reference.lon,
+              reference.lat,
+              0,
+            ),
+          });
+        }
         parts.rendering.addReferenceStem({
           reference,
           label: featureLabel(feature),
