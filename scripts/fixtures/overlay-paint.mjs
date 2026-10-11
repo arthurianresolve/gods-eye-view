@@ -820,7 +820,10 @@ async function run() {
   const fontWidthBefore = metricContext.measureText(fontText).width;
   const fontRevisionBefore = getWorldOverlayFontRevision();
   tick(16);
-  const fontRectBefore = getOverlayPaintRect(fontSource, fontEntryId);
+  // The production rectangle is pooled and valid only until the next frame.
+  // Preserve this observation before font loading drives another render.
+  const fontRectBeforeLive = getOverlayPaintRect(fontSource, fontEntryId);
+  const fontRectBefore = fontRectBeforeLive ? { ...fontRectBeforeLive } : null;
   const fontHitBefore = fontRectBefore
     ? hitTestWorldOverlay(
         fontRectBefore.x + fontRectBefore.w / 2,
@@ -853,7 +856,8 @@ async function run() {
   const fontWidthAfter = metricContext.measureText(fontText).width;
   const fontRevisionAfter = getWorldOverlayFontRevision();
   tick(16);
-  const fontRectAfter = getOverlayPaintRect(fontSource, fontEntryId);
+  const fontRectAfterLive = getOverlayPaintRect(fontSource, fontEntryId);
+  const fontRectAfter = fontRectAfterLive ? { ...fontRectAfterLive } : null;
   const fontHitAfter = fontRectAfter
     ? hitTestWorldOverlay(
         fontRectAfter.x + fontRectAfter.w / 2,
