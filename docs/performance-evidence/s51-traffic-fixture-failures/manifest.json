@@ -78,6 +78,19 @@
         "message": "Traffic fixture failed: Timed out waiting for heatline geometry ready for visual control"
       },
       "completedTrials": 0
+    },
+    {
+      "run": "38121758352",
+      "commit": "52b32d1330cb488061dd785e6a6b03cfeb3ed43f",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121758352",
+      "file": "traffic-38121758352.json",
+      "sha256": "47ff0df321ac26cc2f754c6817b817ce13f9d040f5f12d8353cdc0cba2b51390",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Timed out waiting for heatline geometry ready for visual control"
+      },
+      "completedTrials": 0
     }
   ],
   "acceptance": "None of these failed runs provides a completed traffic optimization comparison or physical desktop hardware acceptance."

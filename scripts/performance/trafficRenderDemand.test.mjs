@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import { EventEmitter } from 'node:events';
+import { installTrafficFixtureInterception } from './trafficFixtureInterception.mjs';
 import {
   compareTrafficRenderDemandRuns,
   validateTrafficRenderDemandRun,
@@ -529,4 +531,83 @@ test('traffic teardown rejects a leaked ground heatline primitive', () => {
     () => validateTrafficRenderDemandRun(run),
     /cleanup evidence is incomplete/,
   );
+});
+
+test('traffic interception resolves unpaired geometry worker fetches and blocks external destinations', async () => {
+  const session = new EventEmitter();
+  const commands = [];
+  session.send = async (method, params) => {
+    commands.push({ method, params });
+  };
+  const evidence = {
+    externalRequests: [],
+    interceptionErrors: [],
+    workerRequestsObserved: 0,
+  };
+  await installTrafficFixtureInterception(
+    { createCDPSession: async () => session },
+    'http://127.0.0.1:4174',
+    evidence,
+  );
+  const pause = async (requestId, url) => {
+    const count = commands.length;
+    session.emit('Fetch.requestPaused', {
+      requestId,
+      request: { url, method: 'GET' },
+    });
+    for (let i = 0; i < 10 && commands.length === count; i++)
+      await new Promise((resolve) => setImmediate(resolve));
+    return commands.at(-1);
+  };
+  assert.deepEqual(
+    await pause(
+      'unpaired-geometry',
+      'http://127.0.0.1:4174/cesium/Workers/createGroundPolylineGeometry.js',
+    ),
+    {
+      method: 'Fetch.continueRequest',
+      params: { requestId: 'unpaired-geometry' },
+    },
+  );
+  assert.equal(session.listenerCount('Network.requestWillBeSent'), 0);
+  assert.equal(evidence.workerRequestsObserved, 1);
+  assert.deepEqual(
+    await pause(
+      'external-geometry',
+      'https://provider.invalid/geometry.js?credential=must-not-retain',
+    ),
+    {
+      method: 'Fetch.failRequest',
+      params: {
+        requestId: 'external-geometry',
+        errorReason: 'BlockedByClient',
+      },
+    },
+  );
+  assert.deepEqual(evidence.externalRequests, ['https://provider.invalid']);
+  assert.deepEqual(evidence.interceptionErrors, []);
+});
+
+test('traffic interception releases its session after setup failure', async () => {
+  let detached = false;
+  const session = new EventEmitter();
+  session.send = async () => {
+    throw Error('injected setup failure');
+  };
+  session.detach = async () => {
+    detached = true;
+  };
+  await assert.rejects(
+    installTrafficFixtureInterception(
+      { createCDPSession: async () => session },
+      'http://localhost',
+      {
+        externalRequests: [],
+        interceptionErrors: [],
+        workerRequestsObserved: 0,
+      },
+    ),
+    /injected setup failure/,
+  );
+  assert.equal(detached, true);
 });

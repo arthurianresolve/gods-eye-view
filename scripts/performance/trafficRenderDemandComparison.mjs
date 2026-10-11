@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 import { installWorkerDiagnostics } from './workerDiagnostics.mjs';
+import { installTrafficFixtureInterception } from './trafficFixtureInterception.mjs';
 import {
   classifyRenderer,
   readBrowserGraphicsInfo,
@@ -120,6 +121,14 @@ const report = {
   harness: {
     commit: git(rootDir, ['rev-parse', 'HEAD']),
     runnerSha256: hash(await readFile(new URL(import.meta.url))),
+    interceptionSha256: hash(
+      await readFile(
+        new URL('./trafficFixtureInterception.mjs', import.meta.url),
+      ),
+    ),
+    interceptionTransportSha256: hash(
+      await readFile(new URL('./fixtureInterception.mjs', import.meta.url)),
+    ),
     workerDiagnosticsSha256: hash(
       await readFile(new URL('./workerDiagnostics.mjs', import.meta.url)),
     ),
@@ -380,6 +389,12 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
     ? assertInitialRecoveryPage(initialPages, url)
     : await browser.newPage();
   const externalRequests = [];
+  const transportEvidence = {
+    externalRequests,
+    interceptionErrors: [],
+    workerRequestsObserved: 0,
+  };
+  let fixtureSession = null;
   const pageErrors = [];
   const loadFailures = [];
   const consoleErrors = [];
@@ -424,19 +439,11 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
     page.setDefaultNavigationTimeout(90_000);
     page.setDefaultTimeout(110_000);
     await page.setCacheEnabled(false);
-    await page.setRequestInterception(true);
-    page.on('request', (request) => {
-      const protocol = new URL(request.url()).protocol;
-      if (
-        request.url().startsWith(`${origin}/`) ||
-        ['data:', 'blob:'].includes(protocol)
-      )
-        void request.continue();
-      else {
-        externalRequests.push(request.url());
-        void request.abort();
-      }
-    });
+    fixtureSession = await installTrafficFixtureInterception(
+      page,
+      origin,
+      transportEvidence,
+    );
     const response = await page.goto(`${url}?mode=${side}`, {
       waitUntil: 'domcontentloaded',
     });
@@ -450,6 +457,7 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
     );
     run.pageErrors = pageErrors;
     run.loadFailures = loadFailures;
+    run.transportEvidence = transportEvidence;
     run.consoleErrors = consoleErrors;
     await onRawResult(run);
     run.externalRequests = externalRequests;
@@ -471,6 +479,11 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
       `${side} fixture made external requests`,
     );
     assert.deepEqual(pageErrors, [], `${side} fixture raised a page error`);
+    assert.deepEqual(
+      transportEvidence.interceptionErrors,
+      [],
+      `${side} fixture interception failed`,
+    );
     assert.equal(
       run.rendererEvidence.classification.accelerationVerified,
       true,
@@ -525,6 +538,7 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
     return run;
   } finally {
     const close = await closeOwnedRecoveryPage(page, browser);
+    await fixtureSession?.detach().catch(() => {});
     report.cleanup.pageCloseResults.push(close);
     report.cleanup.pagesClosed = report.cleanup.pageCloseResults.every(
       (result) => result.closeCompleted && result.openPageCount === 0,
