@@ -9,7 +9,11 @@ import {
 
 function fixture(
   t,
-  { advancePreparationClock = false, pointRepresentation = 'entity' } = {},
+  {
+    advancePreparationClock = false,
+    pointRepresentation = 'entity',
+    coordinateKernel = 'cesium',
+  } = {},
 ) {
   const previous = globalThis.window;
   globalThis.window = { dispatchEvent() {} };
@@ -40,6 +44,7 @@ function fixture(
   const layer = createImportedGeometryLayer({
     viewer,
     pointRepresentation,
+    coordinateKernel,
     now: () => 1000,
     batchOptions: {
       now: () => (advancePreparationClock ? (clock += 2) : clock),
@@ -88,6 +93,109 @@ function fixture(
     renders: () => renders,
   };
 }
+
+test('opt-in scalar Cartesian kernel exactly matches Cesium across 50k full-detail vertices and default ellipsoids', (t) => {
+  const env = fixture(t, { coordinateKernel: 'scalar-experiment' });
+  const previousEllipsoid = Cesium.Ellipsoid.default;
+  const coordinates = new Array(50_000);
+  const shared = [-122.4194, 37.7749, -12.5];
+  for (let index = 0; index < coordinates.length; index++) {
+    if (index % 7 === 0) {
+      coordinates[index] = shared;
+      continue;
+    }
+    const longitude = -179.5 + ((index * 7919) % 359_000) / 1000;
+    const latitude = -89.5 + ((index * 3571) % 179_000) / 1000;
+    const height = [0, -42.25, 173.5, Number.NaN][index % 4];
+    coordinates[index] = [longitude, latitude, height];
+  }
+  const imported = [
+    {
+      id: 'full-detail',
+      kind: 'geojson',
+      records: [
+        {
+          id: '50k-line',
+          properties: { name: 'Full detail line' },
+          geometry: { type: 'LineString', coordinates },
+        },
+        {
+          id: 'shared-point',
+          geometry: { type: 'Point', coordinates: shared },
+        },
+        {
+          id: 'polygon-rings',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [shared, [-122.4, 37.8, 0], [-122.3, 37.8, -3], shared],
+              [shared, [-122.41, 37.78, 4], [-122.42, 37.78, 0], shared],
+            ],
+          },
+        },
+      ],
+    },
+  ];
+
+  try {
+    Cesium.Ellipsoid.default = Cesium.Ellipsoid.MOON;
+    env.layer.load(imported, { workspaceId: 'scalar-kernel' });
+    const entity = env.entities.getById(
+      'gev-import:scalar-kernel:full-detail:50k-line',
+    );
+    const actual = entity.polyline.positions.getValue();
+    assert.equal(actual.length, coordinates.length);
+    assert.equal(new Set(actual).size, coordinates.length);
+    for (let index = 0; index < coordinates.length; index++) {
+      const coordinate = coordinates[index];
+      const expected = Cesium.Cartesian3.fromDegrees(
+        coordinate[0],
+        coordinate[1],
+        Number.isFinite(coordinate[2]) ? coordinate[2] : 0,
+      );
+      assert.deepEqual(actual[index], expected, `Cartesian vertex ${index}`);
+    }
+    const pointEntity = env.entities.getById(
+      'gev-import:scalar-kernel:full-detail:shared-point',
+    );
+    assert.deepEqual(
+      pointEntity.position.getValue(),
+      Cesium.Cartesian3.fromDegrees(...shared),
+    );
+    const polygonEntity = env.entities.getById(
+      'gev-import:scalar-kernel:full-detail:polygon-rings',
+    );
+    const polygon = polygonEntity.polygon.hierarchy.getValue();
+    const ringPositions = [
+      polygon.positions,
+      ...polygon.holes.map((hole) => hole.positions),
+    ];
+    const expectedRings = [
+      [shared, [-122.4, 37.8, 0], [-122.3, 37.8, -3], shared],
+      [shared, [-122.41, 37.78, 4], [-122.42, 37.78, 0], shared],
+    ].map((ring) =>
+      ring.map((coordinate) =>
+        Cesium.Cartesian3.fromDegrees(
+          coordinate[0],
+          coordinate[1],
+          Number.isFinite(coordinate[2]) ? coordinate[2] : 0,
+        ),
+      ),
+    );
+    assert.deepEqual(ringPositions, expectedRings);
+    assert.equal(
+      new Set([
+        ...actual,
+        pointEntity.position.getValue(),
+        ...ringPositions.flat(),
+      ]).size,
+      actual.length + 9,
+      'repeated source coordinates still produce independent output objects',
+    );
+  } finally {
+    Cesium.Ellipsoid.default = previousEllipsoid;
+  }
+});
 const records = (count) => [
   {
     id: 'fixture',

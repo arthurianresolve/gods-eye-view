@@ -18,6 +18,7 @@ export const IMPORTED_LAYER_ID = 'user-imports';
 export const MAX_RENDERED_IMPORT_FEATURES = 5_000;
 const MAX_IMPORTED_OVERLAY_LABELS = 180;
 const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
+const COORDINATE_KERNELS = new Set(['cesium', 'scalar-experiment']);
 
 function position(coordinate) {
   return Cesium.Cartesian3.fromDegrees(
@@ -27,14 +28,66 @@ function position(coordinate) {
   );
 }
 
-function positions(coordinates) {
+/**
+ * Experimental scalar equivalent of Cesium.Cartesian3.fromDegrees. This is
+ * kept opt-in so its result and cost can be compared against the locked engine
+ * path. Operation order follows Cesium 1.138 Cartesian3.fromRadians exactly;
+ * output allocation remains one independent Cartesian3 per input position.
+ */
+function scalarPosition(coordinate, radiiSquared) {
+  const longitude = coordinate?.[0];
+  const latitude = coordinate?.[1];
+  if (typeof longitude !== 'number' || typeof latitude !== 'number')
+    return position(coordinate);
+
+  const radiansPerDegree = Cesium.Math.RADIANS_PER_DEGREE;
+  const longitudeRadians = longitude * radiansPerDegree;
+  const latitudeRadians = latitude * radiansPerDegree;
+  const cosLatitude = Math.cos(latitudeRadians);
+  let nx = cosLatitude * Math.cos(longitudeRadians);
+  let ny = cosLatitude * Math.sin(longitudeRadians);
+  let nz = Math.sin(latitudeRadians);
+  const magnitude = Math.sqrt(nx * nx + ny * ny + nz * nz);
+  nx /= magnitude;
+  ny /= magnitude;
+  nz /= magnitude;
+
+  let kx = radiiSquared.x * nx;
+  let ky = radiiSquared.y * ny;
+  let kz = radiiSquared.z * nz;
+  const gamma = Math.sqrt(nx * kx + ny * ky + nz * kz);
+  kx /= gamma;
+  ky /= gamma;
+  kz /= gamma;
+  const height = Number.isFinite(coordinate[2]) ? coordinate[2] : 0;
+  nx *= height;
+  ny *= height;
+  nz *= height;
+  return new Cesium.Cartesian3(kx + nx, ky + ny, kz + nz);
+}
+
+function positions(coordinates, coordinateKernel) {
+  if (coordinateKernel === 'scalar-experiment') {
+    // Conversion is synchronous, so one snapshot preserves Cesium's current
+    // default-ellipsoid semantics without repeating the getter per vertex.
+    const radiiSquared = Cesium.Ellipsoid.default.radiiSquared;
+    return coordinates.map((coordinate) =>
+      scalarPosition(coordinate, radiiSquared),
+    );
+  }
   return coordinates.map(position);
+}
+
+function shapePosition(coordinate, coordinateKernel) {
+  if (coordinateKernel !== 'scalar-experiment') return position(coordinate);
+  return scalarPosition(coordinate, Cesium.Ellipsoid.default.radiiSquared);
 }
 
 /** Render a bounded user-imported cohort with the shared evidence inspector. */
 export function createImportedGeometryLayer({
   viewer,
   pointRepresentation = 'entity',
+  coordinateKernel = 'cesium',
   now = () => Date.now(),
   batchOptions = {},
   screenSpaceEventHandlerFactory = (canvas) =>
@@ -44,6 +97,8 @@ export function createImportedGeometryLayer({
     throw new TypeError('A Cesium viewer is required.');
   if (!POINT_REPRESENTATIONS.has(pointRepresentation))
     throw new TypeError('Unknown imported point representation.');
+  if (!COORDINATE_KERNELS.has(coordinateKernel))
+    throw new TypeError('Unknown imported coordinate kernel.');
   if (
     pointRepresentation === 'primitive-collection' &&
     (typeof viewer.scene.primitives?.add !== 'function' ||
@@ -167,7 +222,7 @@ export function createImportedGeometryLayer({
       const geometry = feature.geometry;
       if (geometry?.type === 'Point') {
         shape = {
-          position: position(geometry.coordinates),
+          position: shapePosition(geometry.coordinates, coordinateKernel),
           point: {
             pixelSize: 9,
             color: Cesium.Color.CYAN,
@@ -181,7 +236,7 @@ export function createImportedGeometryLayer({
       ) {
         shape = {
           polyline: {
-            positions: positions(geometry.coordinates),
+            positions: positions(geometry.coordinates, coordinateKernel),
             width: 3,
             material: Cesium.Color.CYAN,
             clampToGround: true,
@@ -194,10 +249,15 @@ export function createImportedGeometryLayer({
         shape = {
           polygon: {
             hierarchy: new Cesium.PolygonHierarchy(
-              positions(geometry.coordinates[0]),
+              positions(geometry.coordinates[0], coordinateKernel),
               geometry.coordinates
                 .slice(1)
-                .map((ring) => new Cesium.PolygonHierarchy(positions(ring))),
+                .map(
+                  (ring) =>
+                    new Cesium.PolygonHierarchy(
+                      positions(ring, coordinateKernel),
+                    ),
+                ),
             ),
             material: Cesium.Color.CYAN.withAlpha(0.18),
             outline: true,
@@ -218,7 +278,7 @@ export function createImportedGeometryLayer({
       if (anchor && overlayEntries.length < MAX_IMPORTED_OVERLAY_LABELS)
         overlayEntries.push({
           id,
-          position: position(anchor),
+          position: shapePosition(anchor, coordinateKernel),
           variant: 'label',
           title: label.slice(0, 48),
           priority: overlayEntries.length,
@@ -331,6 +391,7 @@ export function createImportedGeometryLayer({
       cacheEntries: ownedEntities.size,
       pointRepresentation,
       pointPrimitiveCount: pointPrimitiveCollection?.length || 0,
+      coordinateKernel,
     }),
     getPointRendererSnapshot() {
       if (pointRepresentation !== 'primitive-collection') return null;
