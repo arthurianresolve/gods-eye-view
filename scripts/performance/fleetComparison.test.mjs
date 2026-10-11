@@ -37,6 +37,7 @@ const darkImage = {
 };
 function validReport() {
   const report = {
+    schema: 'gev-hosted-fleet-comparison/v1',
     baseline: 'a'.repeat(40),
     candidate: 'b'.repeat(40),
     harness: 'b'.repeat(40),
@@ -266,12 +267,142 @@ function validReport() {
   return report;
 }
 
+function extendedReport() {
+  const report = validReport();
+  report.schema = 'gev-hosted-fleet-component-extended/v1';
+  report.diagnosticOnly = false;
+  report.protocol = {
+    id: 'gev-s51-component-cadence/v1',
+    warmupMs: 30000,
+    measurementMs: 60000,
+    repeatPairs: 5,
+    scope:
+      '20-aircraft component evidence; not S47 full-application acceptance',
+    instrumentedTimingTrace: false,
+  };
+  const identityBefore = {
+    civil: report.pairs[0].cadence.baseline.cadence.output.civil.billboards.map(
+      (item) => item.id,
+    ),
+    military:
+      report.pairs[0].cadence.baseline.cadence.output.military.billboards.map(
+        (item) => item.id,
+      ),
+  };
+  for (const pair of report.pairs)
+    for (const implementation of ['baseline', 'candidate']) {
+      const sample = pair.cadence[implementation];
+      sample.mode = 'cadence-extended';
+      sample.cadence.durationMs = 60000;
+      sample.cadence.frameTimesMs = Array.from(
+        { length: implementation === 'baseline' ? 3000 : 750 },
+        (_, index) => index * (implementation === 'baseline' ? 20 : 80),
+      );
+      sample.cadence.fleetUpdateTimesMs = {
+        civil: Array.from({ length: 750 }, (_, index) => index * 80),
+        military: Array.from({ length: 750 }, (_, index) => index * 80),
+      };
+      sample.cadence.protocol = {
+        id: report.protocol.id,
+        warmupMs: report.protocol.warmupMs,
+        measurementMs: report.protocol.measurementMs,
+        scope: report.protocol.scope,
+        warmupElapsedMs: 30010,
+        measurementElapsedMs: 60000,
+        settingsBefore: structuredClone(sample.settings),
+        settingsAfter: structuredClone(sample.settings),
+        identityBefore: structuredClone(identityBefore),
+        identityAfter: structuredClone(identityBefore),
+      };
+    }
+  return report;
+}
+
 test('valid five-pair evidence decodes all images and quantifies frame savings', async () => {
   const result = await validateFleetComparison(validReport());
   assert.equal(result.status, 'passed');
   assert.equal(result.decodedImages, 150);
   assert.equal(result.medianRenderedFrameReduction, 0.76);
 });
+
+test('accepts exact five-pair extended component cadence protocol', async () => {
+  const result = await validateFleetComparison(extendedReport());
+  assert.equal(result.status, 'passed');
+  assert.equal(result.decodedImages, 150);
+});
+
+const extendedInvalidCases = [
+  [
+    'missing explicit protocol',
+    (report) => {
+      delete report.protocol;
+    },
+  ],
+  [
+    'wrong protocol identity',
+    (report) => {
+      report.protocol.id = 'other';
+    },
+  ],
+  [
+    'short warmup',
+    (report) => {
+      report.pairs[0].cadence.candidate.cadence.protocol.warmupElapsedMs = 29999;
+    },
+  ],
+  [
+    'missing measurement duration',
+    (report) => {
+      delete report.pairs[0].cadence.baseline.cadence.protocol
+        .measurementElapsedMs;
+    },
+  ],
+  [
+    'mismatched before and after settings',
+    (report) => {
+      report.pairs[1].cadence.candidate.cadence.protocol.settingsAfter.msaaSamples = 2;
+    },
+  ],
+  [
+    'different identity after cadence sample',
+    (report) => {
+      report.pairs[2].cadence.baseline.cadence.protocol.identityAfter.civil.pop();
+    },
+  ],
+  [
+    'short 60-second sample',
+    (report) => {
+      report.pairs[3].cadence.candidate.cadence.durationMs = 59000;
+      report.pairs[3].cadence.candidate.cadence.protocol.measurementElapsedMs = 59000;
+    },
+  ],
+  [
+    'excess measurement duration',
+    (report) => {
+      const sample = report.pairs[0].cadence.candidate.cadence;
+      sample.durationMs = 61500;
+      sample.protocol.measurementElapsedMs = 61500;
+    },
+  ],
+  [
+    'timing profiler trace in acceptance sample',
+    (report) => {
+      report.pairs[0].cadence.candidate.timingTrace = { enabled: true };
+    },
+  ],
+  [
+    'wrong cadence mode',
+    (report) => {
+      report.pairs[4].cadence.baseline.mode = 'cadence';
+    },
+  ],
+];
+for (const [name, mutate] of extendedInvalidCases)
+  test(`reject extended cadence with ${name}`, async () => {
+    const report = extendedReport();
+    mutate(report);
+    await assert.rejects(validateFleetComparison(report));
+  });
 const invalidCases = [
   [
     'pending lighting compute work',

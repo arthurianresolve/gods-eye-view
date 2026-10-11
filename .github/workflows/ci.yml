@@ -41,6 +41,7 @@ on:
             vessels,
             calibration,
             fleets,
+            fleets-extended,
             fleets-timing,
           ]
         default: collections
@@ -776,7 +777,7 @@ jobs:
     name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.renderer_diagnostic == 'fleets-extended' && 45 || 10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -791,6 +792,8 @@ jobs:
         run: |
           if [ "$DIAGNOSTIC" = "fleets" ]; then
             node scripts/qa-fleet-render-demand.mjs
+          elif [ "$DIAGNOSTIC" = "fleets-extended" ]; then
+            FLEET_EXTENDED=1 node scripts/qa-fleet-render-demand.mjs
           elif [ "$DIAGNOSTIC" = "fleets-timing" ]; then
             FLEET_TIMING_DIAGNOSTIC=1 node scripts/qa-fleet-render-demand.mjs
           else
@@ -805,7 +808,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Preserve fleet comparison evidence after success or failure
-        if: always() && (inputs.renderer_diagnostic == 'fleets' || inputs.renderer_diagnostic == 'fleets-timing')
+        if: always() && (inputs.renderer_diagnostic == 'fleets' || inputs.renderer_diagnostic == 'fleets-extended' || inputs.renderer_diagnostic == 'fleets-timing')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}

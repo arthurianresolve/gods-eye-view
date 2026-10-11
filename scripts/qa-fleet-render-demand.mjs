@@ -98,6 +98,11 @@ if (process.argv[2] === '--serve') {
   const candidateRoot = await realpath(path.resolve('.'));
   const candidate = git(candidateRoot, ['rev-parse', 'HEAD']);
   const diagnosticOnly = process.env.FLEET_TIMING_DIAGNOSTIC === '1';
+  const extendedCadence = process.env.FLEET_EXTENDED === '1';
+  if (diagnosticOnly && extendedCadence)
+    throw new Error(
+      'Extended acceptance cadence cannot include timing instrumentation.',
+    );
   if (!/^[a-f0-9]{40}$/.test(candidate) || candidate !== process.env.GITHUB_SHA)
     throw new Error('Candidate must equal the immutable workflow revision');
   if (git(candidateRoot, ['status', '--porcelain', '--untracked-files=no']))
@@ -115,8 +120,23 @@ if (process.argv[2] === '--serve') {
   const report = {
     schema: diagnosticOnly
       ? 'gev-hosted-fleet-timing/v1'
-      : 'gev-hosted-fleet-comparison/v1',
+      : extendedCadence
+        ? 'gev-hosted-fleet-component-extended/v1'
+        : 'gev-hosted-fleet-comparison/v1',
     diagnosticOnly,
+    ...(extendedCadence
+      ? {
+          protocol: {
+            id: 'gev-s51-component-cadence/v1',
+            warmupMs: 30000,
+            measurementMs: 60000,
+            repeatPairs: 5,
+            scope:
+              '20-aircraft component evidence; not S47 full-application acceptance',
+            instrumentedTimingTrace: false,
+          },
+        }
+      : {}),
     baseline: BASELINE,
     candidate,
     harness: candidate,
@@ -130,7 +150,9 @@ if (process.argv[2] === '--serve') {
     serverErrors: [],
     scope: diagnosticOnly
       ? 'Instrumented timer and CPU attribution only. No latency, visual-equivalence or performance acceptance claim. Both revisions use common candidate dependencies.'
-      : 'Actual fleet layers: fixed-time pixel/position equivalence and real-time untracked render cadence. Hosted acceleration is not physical desktop evidence or full-app motion-p95 acceptance.',
+      : extendedCadence
+        ? 'Unprofiled 20-aircraft component comparison: exact fixed-time pixels plus five alternating 30-second warmup/60-second cadence pairs. Not S47 full-application, dense-load, or physical-hardware acceptance.'
+        : 'Actual fleet layers: fixed-time pixel/position equivalence and real-time untracked render cadence. Hosted acceleration is not physical desktop evidence or full-app motion-p95 acceptance.',
   };
   async function persistReport() {
     await mkdir('qa-artifacts', { recursive: true });
@@ -436,7 +458,10 @@ if (process.argv[2] === '--serve') {
           cadence: {},
         };
         report.pairs.push(pair);
-        for (const mode of ['correctness', 'cadence']) {
+        for (const [slot, mode] of [
+          ['correctness', 'correctness'],
+          ['cadence', extendedCadence ? 'cadence-extended' : 'cadence'],
+        ]) {
           for (const implementation of pair.order) {
             const result = await sample(
               implementation === 'baseline' ? baselineUrl : candidateUrl,
@@ -444,7 +469,7 @@ if (process.argv[2] === '--serve') {
               implementation === 'baseline' ? BASELINE : candidate,
               mode,
             );
-            pair[mode][implementation] = result;
+            pair[slot][implementation] = result;
             await persistReport();
             if (result.status !== 'passed' || result.pageErrors.length)
               throw new Error(

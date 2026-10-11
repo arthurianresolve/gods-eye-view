@@ -28,6 +28,12 @@ const IDS = {
   civil: Array.from({ length: 12 }, (_, i) => (0xa10000 + i).toString(16)),
   military: Array.from({ length: 8 }, (_, i) => (0xa20000 + i).toString(16)),
 };
+const EXTENDED_CADENCE_PROTOCOL = {
+  id: 'gev-s51-component-cadence/v1',
+  warmupMs: 30000,
+  measurementMs: 60000,
+  scope: '20-aircraft component evidence; not S47 full-application acceptance',
+};
 const params = new URL(location.href).searchParams;
 const implementation = params.get('implementation');
 const mode = params.get('mode') || 'correctness';
@@ -903,6 +909,7 @@ async function run() {
     [
       'correctness',
       'cadence',
+      'cadence-extended',
       'cadence-diagnostic',
       'empty-lifecycle',
     ].includes(mode),
@@ -971,9 +978,33 @@ async function run() {
         setSourceIds: fixture.setSourceIds,
         errors: () => fixture.errors,
       });
-    } else if (mode === 'cadence' || mode === 'cadence-diagnostic') {
+    } else if (
+      mode === 'cadence' ||
+      mode === 'cadence-extended' ||
+      mode === 'cadence-diagnostic'
+    ) {
       clock.start();
-      await sleep(500);
+      const extendedCadence = mode === 'cadence-extended';
+      let warmupElapsedMs = null;
+      if (extendedCadence) {
+        const warmupStart = performance.now();
+        await sleep(EXTENDED_CADENCE_PROTOCOL.warmupMs);
+        warmupElapsedMs = performance.now() - warmupStart;
+      } else {
+        await sleep(500);
+      }
+      let settingsBefore;
+      let identityBefore;
+      if (extendedCadence) {
+        settingsBefore = fixture.settings();
+        const outputBefore = fixture.output();
+        identityBefore = Object.fromEntries(
+          Object.entries(outputBefore).map(([kind, fleet]) => [
+            kind,
+            fleet.billboards.map((item) => item.id),
+          ]),
+        );
+      }
       const frameStart = fixture.frames.length,
         start = performance.now();
       const observer = fixture.observeFleetCadence(start);
@@ -986,13 +1017,47 @@ async function run() {
           });
           timing.report.cadenceStartOffsetMs = timing.report.start - start;
         }
-        await sleep(mode === 'cadence-diagnostic' ? 10000 : 3000);
+        const measurementRequestedMs = extendedCadence
+          ? EXTENDED_CADENCE_PROTOCOL.measurementMs
+          : mode === 'cadence-diagnostic'
+            ? 10000
+            : 3000;
+        await sleep(measurementRequestedMs);
+        const measurementElapsedMs = performance.now() - start;
+        const measurementEndFrame = fixture.frames.length;
+        let fleetUpdateTimesMs;
+        if (extendedCadence) fleetUpdateTimesMs = observer.stop();
+        const demand = governor.getRenderGovernorDiagnostics();
+        const outputAfter = fixture.output();
+        const settingsAfter = extendedCadence ? fixture.settings() : null;
+        if (!extendedCadence) fleetUpdateTimesMs = observer.stop();
+        const identityAfter = Object.fromEntries(
+          Object.entries(outputAfter).map(([kind, fleet]) => [
+            kind,
+            fleet.billboards.map((item) => item.id),
+          ]),
+        );
         result.cadence = {
-          durationMs: performance.now() - start,
-          frameTimesMs: fixture.frames.slice(frameStart).map((t) => t - start),
-          demand: governor.getRenderGovernorDiagnostics(),
-          output: fixture.output(),
-          fleetUpdateTimesMs: observer.stop(),
+          durationMs: measurementElapsedMs,
+          frameTimesMs: fixture.frames
+            .slice(frameStart, measurementEndFrame)
+            .map((t) => t - start),
+          demand,
+          output: outputAfter,
+          fleetUpdateTimesMs,
+          ...(extendedCadence
+            ? {
+                protocol: {
+                  ...EXTENDED_CADENCE_PROTOCOL,
+                  warmupElapsedMs,
+                  measurementElapsedMs,
+                  settingsBefore,
+                  settingsAfter,
+                  identityBefore,
+                  identityAfter,
+                },
+              }
+            : {}),
         };
       } finally {
         observer.stop();
@@ -1009,6 +1074,18 @@ async function run() {
           : result.cadence.demand.holds.length === 0 &&
               result.cadence.demand.scheduledUpdates.length === 2,
       );
+      if (extendedCadence) {
+        check(
+          JSON.stringify(settingsBefore) ===
+            JSON.stringify(result.cadence.protocol.settingsAfter),
+          'Effective settings changed during extended cadence measurement',
+        );
+        check(
+          JSON.stringify(identityBefore) ===
+            JSON.stringify(result.cadence.protocol.identityAfter),
+          'Source identities changed during extended cadence measurement',
+        );
+      }
     } else {
       await fixture.settle('initial');
       result.samples.push(await fixture.capture('initial'));

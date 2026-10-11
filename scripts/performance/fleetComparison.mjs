@@ -60,6 +60,14 @@ export const FLEET_CHECKS = [
   'foreground',
   'no-render-errors',
 ];
+const EXTENDED_CADENCE_PROTOCOL = {
+  id: 'gev-s51-component-cadence/v1',
+  warmupMs: 30000,
+  measurementMs: 60000,
+  repeatPairs: 5,
+  scope: '20-aircraft component evidence; not S47 full-application acceptance',
+  instrumentedTimingTrace: false,
+};
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const median = (values) =>
   [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
@@ -478,6 +486,15 @@ export async function validateFleetComparison(report) {
   assert.match(report.candidate, /^[a-f0-9]{40}$/);
   assert.notEqual(report.baseline, report.candidate);
   assert.equal(report.harness, report.candidate);
+  const extendedCadence = report.protocol !== undefined;
+  if (extendedCadence) {
+    assert.equal(report.schema, 'gev-hosted-fleet-component-extended/v1');
+    assert.deepEqual(report.protocol, EXTENDED_CADENCE_PROTOCOL);
+    assert.equal(report.diagnosticOnly, false);
+  } else {
+    assert.equal(report.schema, 'gev-hosted-fleet-comparison/v1');
+  }
+  const cadenceMode = extendedCadence ? 'cadence-extended' : 'cadence';
   assert.equal(report.pairs.length, 5);
   assert.equal(
     report.baselineRepeat?.length,
@@ -499,7 +516,7 @@ export async function validateFleetComparison(report) {
           pair[mode][implementation],
           report,
           implementation,
-          mode,
+          mode === 'cadence' ? cadenceMode : mode,
         );
       assert.deepEqual(
         settings(pair[mode].baseline.settings),
@@ -578,7 +595,58 @@ export async function validateFleetComparison(report) {
     for (const implementation of ['baseline', 'candidate']) {
       const sample = pair.cadence[implementation].cadence;
       population(sample.output);
-      assert.ok(sample.durationMs >= 2900 && sample.durationMs < 5000);
+      if (extendedCadence) {
+        const protocol = sample.protocol;
+        assert.equal(
+          pair.cadence[implementation].timingTrace,
+          undefined,
+          'Extended cadence must not include timing instrumentation',
+        );
+        assert.equal(protocol?.id, EXTENDED_CADENCE_PROTOCOL.id);
+        assert.equal(protocol.scope, EXTENDED_CADENCE_PROTOCOL.scope);
+        assert.equal(protocol.warmupMs, EXTENDED_CADENCE_PROTOCOL.warmupMs);
+        assert.equal(
+          protocol.measurementMs,
+          EXTENDED_CADENCE_PROTOCOL.measurementMs,
+        );
+        assert.ok(
+          Number.isFinite(protocol.warmupElapsedMs) &&
+            protocol.warmupElapsedMs >= EXTENDED_CADENCE_PROTOCOL.warmupMs &&
+            protocol.warmupElapsedMs <
+              EXTENDED_CADENCE_PROTOCOL.warmupMs + 1000,
+          'Extended cadence warmup is missing or shorter than specified',
+        );
+        assert.ok(
+          Number.isFinite(protocol.measurementElapsedMs) &&
+            protocol.measurementElapsedMs >=
+              EXTENDED_CADENCE_PROTOCOL.measurementMs &&
+            protocol.measurementElapsedMs <
+              EXTENDED_CADENCE_PROTOCOL.measurementMs + 1000,
+          'Extended cadence measurement is missing or shorter than specified',
+        );
+        assert.ok(
+          Number.isFinite(sample.durationMs) &&
+            sample.durationMs >= EXTENDED_CADENCE_PROTOCOL.measurementMs &&
+            sample.durationMs < EXTENDED_CADENCE_PROTOCOL.measurementMs + 1000,
+        );
+        assert.equal(sample.durationMs, protocol.measurementElapsedMs);
+        assert.deepEqual(
+          settings(protocol.settingsBefore),
+          settings(protocol.settingsAfter),
+        );
+        assert.deepEqual(
+          settings(protocol.settingsBefore),
+          settings(pair.cadence[implementation].settings),
+        );
+        const identities = {
+          civil: expectedIds('civil'),
+          military: expectedIds('military'),
+        };
+        assert.deepEqual(protocol.identityBefore, identities);
+        assert.deepEqual(protocol.identityAfter, identities);
+      } else {
+        assert.ok(sample.durationMs >= 2900 && sample.durationMs < 5000);
+      }
       const frames = intervals(
         sample.frameTimesMs,
         sample.durationMs,
@@ -598,6 +666,20 @@ export async function validateFleetComparison(report) {
       assert.equal(
         sample.demand.scheduledUpdates.length,
         implementation === 'baseline' ? 0 : 2,
+      );
+    }
+    if (extendedCadence) {
+      const baseline = pair.cadence.baseline.cadence.protocol;
+      const candidate = pair.cadence.candidate.cadence.protocol;
+      assert.ok(
+        Math.abs(baseline.warmupElapsedMs - candidate.warmupElapsedMs) <= 1000,
+        'Paired extended warmup durations differ by more than one second',
+      );
+      assert.ok(
+        Math.abs(
+          baseline.measurementElapsedMs - candidate.measurementElapsedMs,
+        ) <= 1000,
+        'Paired extended measurement durations differ by more than one second',
       );
     }
     const renderedFrameReduction =
