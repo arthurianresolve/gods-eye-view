@@ -32,6 +32,25 @@ function validateLifetime(lifetime, report, layer) {
     lifetime.activationContext.length === 0
   )
     fail(`${lifetime.mode} activation order/context is invalid.`);
+  if (layer.layerId === 'local-datacenters') {
+    const camera = lifetime.cameraContract;
+    if (
+      camera?.layerId !== layer.layerId ||
+      camera.kind !== 'lookAt-world-frame' ||
+      !Array.isArray(camera.targetCartographic) ||
+      camera.targetCartographic.length !== 3 ||
+      !camera.targetCartographic.every(Number.isFinite) ||
+      Math.abs(camera.targetCartographic[0]) > Math.PI ||
+      Math.abs(camera.targetCartographic[1]) > Math.PI / 2 ||
+      camera.headingRadians !== 0 ||
+      camera.pitchRadians !== -Math.PI / 3 ||
+      !same(camera.sampleRangesMeters, [140_000, 170_000]) ||
+      camera.restoredTransform !== 'IDENTITY'
+    )
+      fail(
+        `${lifetime.mode} datacenter camera contract is missing or invalid.`,
+      );
+  }
   if (
     !Number.isFinite(lifetime.activationDiagnosticMs) ||
     lifetime.activationDiagnosticMs <= 0 ||
@@ -350,6 +369,10 @@ export function compareInfrastructureRuntimeLifetimes(baseline, candidate) {
     candidate?.mode !== 'primitive-collections'
   )
     fail('Expected default Entity and production collection lifetimes.');
+  if (baseline.cameraContract != null || candidate.cameraContract != null) {
+    if (!same(baseline.cameraContract, candidate.cameraContract))
+      fail('Renderer lifetimes used different source-anchor camera contracts.');
+  }
   const comparisons = [];
   for (const caseId of INFRASTRUCTURE_RUNTIME_CASES) {
     for (let pair = 0; pair < INFRASTRUCTURE_RUNTIME_PAIRS; pair++) {

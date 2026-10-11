@@ -1,0 +1,60 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38127482272",
+  "commit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+  "status": "failed",
+  "reason": "Native renderer probe failed: Infrastructure fixture failed: entities default-style did not settle with native point/stem picks.",
+  "scope": "Default Entity lifetime failed before collection lifetime; not evidence of an A/B visual regression",
+  "source": {
+    "layerId": "local-datacenters",
+    "payloadSha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+    "payloadBytes": 2561978,
+    "featureCount": 4351,
+    "geometryKinds": {
+      "Polygon": 3509,
+      "Point": 834,
+      "MultiPolygon": 8
+    }
+  },
+  "frame": {
+    "width": 960,
+    "height": 640,
+    "pixelSha256": "9014bc05cf1f7316b8025e64bee83716d96e3ff66460edfdd0c428f94b6dc494"
+  },
+  "pickDiagnostics": {
+    "examined": 4362,
+    "hidden": 4360,
+    "offscreen": 2,
+    "coincident": 0,
+    "pointMisses": 0,
+    "stemMisses": 0,
+    "rejections": []
+  },
+  "sceneReadiness": {
+    "dataSourcesReady": true,
+    "globeTilesLoaded": true
+  },
+  "lodDiagnostics": {
+    "total": 4362,
+    "active": 2,
+    "budgetLimit": 420,
+    "computed": true,
+    "geometryDirty": false,
+    "cameraPosition": [
+      1291230.1372193538,
+      -3718370.842472924,
+      -5178390.83447951
+    ]
+  },
+  "teardown": {
+    "layerDestroyed": true,
+    "dataSourceRemoved": true,
+    "rendererOwnersRemoved": true,
+    "viewerKeptForNextLifetime": true,
+    "instrumentationRestored": true,
+    "ownerCountAfterDestroy": 0,
+    "dataSourceCountAfterDestroy": 0,
+    "scenePrimitiveCountAfterDestroy": 1,
+    "groundPrimitiveCountAfterDestroy": 1
+  },
+  "viewerDestroyed": true
+}

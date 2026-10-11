@@ -104,7 +104,7 @@ function sample(mode, caseId, pair, layer = infrastructureFixtureLayer()) {
 }
 
 function lifetime(mode, layer = infrastructureFixtureLayer()) {
-  return {
+  const result = {
     mode,
     activationOrder: mode === 'entities' ? 0 : 1,
     activationContext: 'test fixture lifetime context',
@@ -142,6 +142,22 @@ function lifetime(mode, layer = infrastructureFixtureLayer()) {
       groundPrimitiveCountAfterDestroy: 1,
     },
   };
+  if (layer.layerId === 'local-datacenters') {
+    result.cameraContract = {
+      layerId: layer.layerId,
+      kind: 'lookAt-world-frame',
+      targetCartographic: [
+        (-70.85 * Math.PI) / 180,
+        (-53 * Math.PI) / 180,
+        2000,
+      ],
+      headingRadians: 0,
+      pitchRadians: -Math.PI / 3,
+      sampleRangesMeters: [140_000, 170_000],
+      restoredTransform: 'IDENTITY',
+    };
+  }
+  return result;
 }
 
 function validReport(layerId = 'local-dams') {
@@ -251,6 +267,26 @@ test('runtime report binds the complete datacenter source and Entity inventory',
         expectedLayerId: 'local-dams',
       }),
     /different requested layer/,
+  );
+  const changedCamera = structuredClone(report);
+  changedCamera.lifetimes[1].cameraContract.targetCartographic[0] += 0.01;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(changedCamera, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /different source-anchor camera contracts/,
+  );
+  const invalidCamera = structuredClone(report);
+  invalidCamera.lifetimes[0].cameraContract.targetCartographic[0] = -70.85;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(invalidCamera, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /camera contract is missing or invalid/,
   );
 });
 

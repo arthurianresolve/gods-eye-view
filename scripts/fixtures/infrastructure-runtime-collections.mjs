@@ -11,6 +11,7 @@ import {
   DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
+import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
@@ -509,15 +510,30 @@ async function captureFrame(viewer) {
 }
 
 function setCamera(viewer, anchor, height) {
-  viewer.camera.setView({
-    destination: Cesium.Cartesian3.fromRadians(
+  return setInfrastructureFixtureCamera(
+    viewer,
+    anchor,
+    height,
+    fixtureLayer.layerId,
+    { requestRender: true },
+  );
+}
+
+function runtimeCameraContract(layerId, anchor) {
+  if (layerId !== 'local-datacenters') return null;
+  return {
+    layerId,
+    kind: 'lookAt-world-frame',
+    targetCartographic: [
       anchor.longitude,
       anchor.latitude,
-      height,
-    ),
-    orientation: { heading: 0, pitch: -Math.PI / 3, roll: 0 },
-  });
-  viewer.scene.requestRender();
+      Number.isFinite(anchor.height) ? anchor.height : 0,
+    ],
+    headingRadians: 0,
+    pitchRadians: -Math.PI / 3,
+    sampleRangesMeters: [140_000, 170_000],
+    restoredTransform: 'IDENTITY',
+  };
 }
 
 function snapshotCamera(viewer) {
@@ -632,6 +648,7 @@ async function runLayerLifetime(
       new Cesium.Cartesian3(...first.point.position),
     );
     check(anchor, 'Source anchor is not cartographic.');
+    lifetime.cameraContract = runtimeCameraContract(layer.layerId, anchor);
     const renderState = () => {
       const owner = scanOwners(viewer, layer.layerId);
       const graphics = countInfrastructureGraphics(

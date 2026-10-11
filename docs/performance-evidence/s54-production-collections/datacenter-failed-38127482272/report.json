@@ -1,0 +1,992 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+  "platform": "darwin",
+  "timestamp": "2026-10-11T09:12:02.352Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+    "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+    "capturedAt": "2026-10-11T09:12:15.713Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+        "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+        "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: Infrastructure fixture failed: entities default-style did not settle with native point/stem picks.",
+  "importBatches": {
+    "schema": "gev-import-batches/v1",
+    "applicationCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+    "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+    "capturedAt": "2026-10-11T09:12:19.475Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 114.79999999993015,
+        "maxHeartbeatGapMs": 268.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 232557198,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 16.399999999906868,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 16.399999999906868,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 392,
+        "maxHeartbeatGapMs": 59.79999999993015,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 356995541,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 15.599999999976717,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 15.599999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 341.30000000004657,
+        "maxHeartbeatGapMs": 75.40000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 113514825,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 69.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 34.5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 93.5,
+        "maxHeartbeatGapMs": 187.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 224472669,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 65.19999999995343,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 49.199999999953434,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 83.5,
+        "maxHeartbeatGapMs": 179.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 145079061,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 13.300000000046566,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 13.300000000046566,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 240,
+        "maxHeartbeatGapMs": 34.800000000046566,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 273462957,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 75.30000000004657,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 34.09999999997672,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 194.20000000006985,
+        "maxHeartbeatGapMs": 35.10000000009313,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 235542649,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 75.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 50,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 87.70000000006985,
+        "maxHeartbeatGapMs": 183.40000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 351729905,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 25.70000000006985,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 25.70000000006985,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 88.90000000002328,
+        "maxHeartbeatGapMs": 244,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 106868497,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 8.300000000046566,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 8.300000000046566,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 590.2000000000698,
+        "maxHeartbeatGapMs": 170.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 106117105,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 88.60000000009313,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 39.60000000009313,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+      "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "coldActivationMs": 1254.1999999999534,
+    "warmedResources": {
+      "heapBytes": 107652390,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "infrastructureCollections": {
+    "schema": "gev-infrastructure-runtime-renderers/v4",
+    "applicationCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+    "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+    "source": {
+      "layerId": "local-datacenters",
+      "payloadSha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+      "payloadBytes": 2561978,
+      "featureCount": 4351,
+      "geometryKinds": {
+        "Polygon": 3509,
+        "Point": 834,
+        "MultiPolygon": 8
+      }
+    },
+    "candidateRepresentation": {
+      "id": "production-local-infrastructure-primitive-collections/rgba8/v1",
+      "stemColorEncoding": "entity-color-attribute-byte"
+    },
+    "environment": {
+      "appCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+      "harnessCommit": "7cf682d07a39979bc27ff8d3ec83e128bff9b48a",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 1200,
+        "height": 960,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 960,
+        "height": 640
+      },
+      "layers": []
+    },
+    "samplingScope": "five-correctness-snapshots-per-case-not-alternating-performance-runs",
+    "renderClock": {
+      "iso": "2026-10-11T09:12:30.664Z",
+      "julianDayNumber": 2461324,
+      "secondsOfDay": 76387.664,
+      "shouldAnimate": false
+    },
+    "status": "failed",
+    "lifetimes": [
+      {
+        "mode": "entities",
+        "activationOrder": 0,
+        "activationContext": "first layer lifetime in a fresh fixture viewer",
+        "status": "failed",
+        "samples": [],
+        "sceneBaseline": {
+          "dataSources": 0,
+          "scenePrimitives": 1,
+          "groundPrimitives": 1,
+          "rendererOwners": 0
+        },
+        "initialOwnership": {
+          "dataSources": 0,
+          "scenePrimitives": 1,
+          "groundPrimitives": 1,
+          "rendererOwners": 0
+        },
+        "renderClock": {
+          "iso": "2026-10-11T09:12:30.664Z",
+          "julianDayNumber": 2461324,
+          "secondsOfDay": 76387.664,
+          "shouldAnimate": false
+        },
+        "teardown": {
+          "layerDestroyed": true,
+          "dataSourceRemoved": true,
+          "rendererOwnersRemoved": true,
+          "viewerKeptForNextLifetime": true,
+          "instrumentationRestored": true,
+          "ownerCountAfterDestroy": 0,
+          "dataSourceCountAfterDestroy": 0,
+          "scenePrimitiveCountAfterDestroy": 1,
+          "groundPrimitiveCountAfterDestroy": 1
+        },
+        "activationDiagnosticMs": 665.9000000000233,
+        "activationTimingScope": "single-layer-activation-diagnostic-not-performance-evidence",
+        "failedSample": {
+          "caseId": "default-style",
+          "pair": 0,
+          "stableFrames": 6,
+          "completedCaptures": 22,
+          "pickSearches": 1,
+          "pickDiagnostics": {
+            "examined": 4362,
+            "hidden": 4360,
+            "offscreen": 2,
+            "coincident": 0,
+            "pointMisses": 0,
+            "stemMisses": 0,
+            "rejections": []
+          },
+          "geometryReady": true,
+          "observedGeometry": "dbf470a71c173be2a85bac6ada9c8b3596f0a4643e20d76defb7d15b0bdcb68c",
+          "changedGeometryFrom": null,
+          "lodDiagnostics": {
+            "total": 4362,
+            "active": 2,
+            "budgetLimit": 420,
+            "computed": true,
+            "geometryDirty": false,
+            "cameraPosition": [
+              1291230.1372193538,
+              -3718370.842472924,
+              -5178390.83447951
+            ]
+          },
+          "cameraPosition": [
+            1291230.1372193538,
+            -3718370.842472924,
+            -5178390.83447951
+          ],
+          "sceneReadiness": {
+            "dataSourcesReady": true,
+            "globeTilesLoaded": true
+          },
+          "pointPick": null,
+          "stemPick": null,
+          "surfaceCount": 4362,
+          "visibleSurfaces": 2,
+          "sourceReady": true,
+          "ownership": {
+            "renderer": "entities",
+            "datasourcePresent": true,
+            "entityCount": 4362,
+            "surfaceEntityCount": 4362,
+            "entitySurfaceGraphics": 4362,
+            "preservedGraphics": {
+              "points": 0,
+              "polylines": 0,
+              "polygons": 3528
+            },
+            "rendererOwners": 0,
+            "rendererOwnerChildren": []
+          },
+          "clock": {
+            "iso": "2026-10-11T09:12:30.664Z",
+            "julianDayNumber": 2461324,
+            "secondsOfDay": 76387.664,
+            "shouldAnimate": false
+          },
+          "lastFrame": {
+            "width": 960,
+            "height": 640,
+            "pixelSha256": "9014bc05cf1f7316b8025e64bee83716d96e3ff66460edfdd0c428f94b6dc494",
+            "pngBase64": "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"
+          }
+        },
+        "error": {
+          "name": "Error",
+          "message": "entities default-style did not settle with native point/stem picks."
+        }
+      }
+    ],
+    "comparisons": [],
+    "cleanup": {
+      "viewerDestroyed": true
+    },
+    "error": {
+      "name": "Error",
+      "message": "entities default-style did not settle with native point/stem picks."
+    },
+    "viewerOwnedDisplayWarmup": {
+      "completedFrames": 2,
+      "temporaryDataSourceRemoved": true,
+      "dataSourcesBefore": 0,
+      "dataSourcesAfter": 0,
+      "primitiveCountsBefore": {
+        "scenePrimitives": 0,
+        "groundPrimitives": 0
+      },
+      "primitiveCountsAfter": {
+        "scenePrimitives": 1,
+        "groundPrimitives": 1
+      }
+    }
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 38734.32,
+      "closeSettledHostMs": 39327.0495,
+      "closeElapsedMs": 592.7295000000013,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 574.8554589999985
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

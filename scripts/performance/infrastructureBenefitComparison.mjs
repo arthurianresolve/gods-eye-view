@@ -146,6 +146,25 @@ function validateRun(run, mode, suite, expectedCommit, layer) {
     run.settings.drawingBufferHeight !== EXPECTED_CANVAS_CSS.height
   )
     fail(`${mode}/${suite} render settings or fixed clock are invalid.`);
+  if (layer.layerId === 'local-datacenters') {
+    const camera = run.cameraContract;
+    if (
+      camera?.layerId !== layer.layerId ||
+      camera.kind !== 'lookAt-world-frame' ||
+      !Array.isArray(camera.targetCartographic) ||
+      camera.targetCartographic.length !== 3 ||
+      !camera.targetCartographic.every(Number.isFinite) ||
+      Math.abs(camera.targetCartographic[0]) > Math.PI ||
+      Math.abs(camera.targetCartographic[1]) > Math.PI / 2 ||
+      camera.headingRadians !== 0 ||
+      camera.pitchRadians !== -Math.PI / 3 ||
+      camera.rangeMeters !== 140_000 ||
+      camera.restoredTransform !== 'IDENTITY'
+    )
+      fail(
+        `${mode}/${suite} datacenter camera contract is missing or invalid.`,
+      );
+  }
   if (
     run.sourceReady?.count !== layer.entityCount ||
     run.surfacePopulation?.statsCount !== layer.entityCount ||
@@ -408,7 +427,10 @@ export function validateInfrastructureBenefitReport(
     'scripts/performance/infrastructureBenefitComparison.test.mjs',
   ];
   if (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID)
-    requiredSourcePaths.push('scripts/fixtures/infrastructureFixtureLayer.mjs');
+    requiredSourcePaths.push(
+      'scripts/fixtures/infrastructureFixtureLayer.mjs',
+      'scripts/fixtures/infrastructureFixtureCamera.mjs',
+    );
   const dependencyBytes = report.provenance?.installedDependencyBytes;
   if (
     !requiredSourcePaths.every((path) =>
@@ -480,9 +502,12 @@ export function validateInfrastructureBenefitReport(
       const candidate = pair.runs['primitive-collections'];
       if (
         !same(baseline.settings, candidate.settings) ||
-        !same(baseline.renderClock, candidate.renderClock)
+        !same(baseline.renderClock, candidate.renderClock) ||
+        !same(baseline.cameraContract, candidate.cameraContract)
       )
-        fail(`${suite} pair ${index + 1} changed settings or render clock.`);
+        fail(
+          `${suite} pair ${index + 1} changed settings, render clock, or camera contract.`,
+        );
       for (const path of [
         'source.payloadSha256',
         'source.featureCount',
@@ -525,6 +550,20 @@ export function validateInfrastructureBenefitReport(
       if (!same(pair.deltas, expectedDeltas))
         fail(`${suite} pair ${index + 1} delta summary is stale.`);
     }
+  }
+  if (layer.layerId === 'local-datacenters') {
+    const cameraContracts = report.pairs.flatMap((pair) =>
+      INFRASTRUCTURE_BENEFIT_MODES.map(
+        (mode) => pair.runs[mode].cameraContract,
+      ),
+    );
+    if (
+      cameraContracts.length !== INFRASTRUCTURE_BENEFIT_PAIRS * 2 * 2 ||
+      cameraContracts.some((contract) => !same(contract, cameraContracts[0]))
+    )
+      fail(
+        'Datacenter benefit runs did not share one fixed source-anchor camera.',
+      );
   }
   if (!same(report.summary, summarizeInfrastructureBenefitPairs(report.pairs)))
     fail('Infrastructure benefit summary is stale.');
@@ -666,6 +705,7 @@ if (isMain) {
     'scripts/fixtures/infrastructure-benefit.html',
     'scripts/fixtures/infrastructure-benefit.mjs',
     'scripts/fixtures/infrastructureFixtureLayer.mjs',
+    'scripts/fixtures/infrastructureFixtureCamera.mjs',
     'scripts/performance/infrastructureBenefitComparison.mjs',
     'scripts/performance/infrastructureBenefitComparison.test.mjs',
     'scripts/performance/rendererEvidence.mjs',
@@ -997,6 +1037,7 @@ if (isMain) {
         'Browser acceleration is not verified; refusing a software/unknown renderer.',
       );
       record.warmup = state.warmup;
+      record.cameraContract = state.cameraContract || null;
       record.sourceReady = state.sourceReady;
       record.sourceReadyElapsedMs = state.sourceReadyElapsedMs;
       record.firstUsable = state.firstUsable;
