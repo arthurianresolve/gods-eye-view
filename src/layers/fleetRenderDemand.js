@@ -54,7 +54,7 @@ export function createFleetRenderDemand(
         // Keep a fallback wake alive if the browser omits the requested frame.
         // A completed fleet tick replaces this deadline with one relative to the
         // actual tick time via noteFrame().
-        if (enabled && !disposed && !isTracked?.()) {
+        if (enabled && !disposed && isEnabled?.() && !isTracked?.()) {
           const remaining = remainingDelayMs?.();
           scheduleWake(
             Number.isFinite(remaining) && remaining > 0
@@ -91,17 +91,24 @@ export function createFleetRenderDemand(
     },
     sync,
     invalidate() {
-      if (disposed || !enabled || !isEnabled?.() || isTracked?.()) return;
-      scheduleWake(0);
+      // Discrete publications may need one final rendered frame after the
+      // fleet becomes empty. The wake is one-shot because its callback only
+      // arms a fallback when periodic work is still eligible.
+      if (disposed || !enabled || isTracked?.()) return;
+      if (canSchedule) scheduleWake(0);
+      else render?.governorRequestRender?.('fleet-discrete-invalidation');
     },
     noteFrame() {
-      if (
-        !disposed &&
-        enabled &&
-        isEnabled?.() &&
-        !isTracked?.() &&
-        canSchedule
-      ) {
+      if (disposed || !enabled) return;
+      if (!isEnabled?.()) {
+        // A fleet pass may remove its last record after the scheduled callback
+        // has already armed a fallback. Stop that queued periodic wake here;
+        // the frame that completed the removal is the final visual frame.
+        clearWake();
+        releaseContinuous();
+        return;
+      }
+      if (!isTracked?.() && canSchedule) {
         // _fleetTick samples its logical timestamp at entry, but this callback
         // runs only after the entire fleet pass has completed. Schedule against
         // the remaining time from that sampled tick, so work time overlaps the

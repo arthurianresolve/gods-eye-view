@@ -21,7 +21,10 @@ export function createLifecycle({
     fleetRenderDemand = createFleetRenderDemand(services.render, {
       owner: 'military-fleet',
       intervalMs: FLEET_DR_INTERVAL_MS,
-      isEnabled: () => renderDemandEnabled,
+      isEnabled: () =>
+        renderDemandEnabled &&
+        (flightState._billboards?.size > 0 ||
+          Boolean(flightState._trackedIcao)),
       isTracked: () => Boolean(flightState._trackedIcao),
       remainingDelayMs: () => {
         const productionNowMs = Date.now();
@@ -64,6 +67,7 @@ export function createLifecycle({
 
     /** Wake the existing preRender fleet pass for a forced visual refresh. */
     requestFleetTick() {
+      fleetRenderDemand?.sync();
       fleetRenderDemand?.invalidate();
     },
 
@@ -209,6 +213,8 @@ export function createLifecycle({
         );
       }
       restoreSpriteOrder(viewer);
+      if (flightState._billboards?.size === 0 && !flightState._trackedIcao)
+        fleetRenderDemand.invalidate();
     },
 
     /**

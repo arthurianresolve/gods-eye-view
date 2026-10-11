@@ -1149,9 +1149,11 @@ export function createTracking({
   function _onMilitaryActiveChange(active) {
     if (!flightState._viewer || !flightState._billboardCollection) return;
     if (active) {
+      let removed = false;
       for (const [icao24, bb] of flightState._billboards) {
         if (!isMilitaryIcao(icao24) || icao24 === flightState._trackedIcao)
           continue;
+        removed = true;
         flightState._billboardCollection.remove(bb);
         flightState._billboards.delete(icao24);
         parts.rendering._releaseModel(icao24); // military-suppression: drop any 3D model too
@@ -1163,6 +1165,7 @@ export function createTracking({
         flightState.records.missingPolls.delete(icao24);
       }
       flightState.feed._count = flightState._billboards.size;
+      if (removed) parts.lifecycle.methods.requestFleetTick();
     } else if (flightState._billboardCollection.show) {
       // Fire-and-forget refresh; only while the layer is actually enabled.
       void flightsLayer.update(flightState._viewer);

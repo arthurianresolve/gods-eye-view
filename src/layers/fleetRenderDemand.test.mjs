@@ -10,17 +10,22 @@ import { FLEET_DR_INTERVAL_MS as FLIGHT_INTERVAL_MS } from './flights/policy.js'
 import { FLEET_DR_INTERVAL_MS as MILITARY_INTERVAL_MS } from './military/policy.js';
 import { createIngestion as createFlightIngestion } from './flights/ingestion.js';
 import { createIngestion as createMilitaryIngestion } from './military/ingestion.js';
+import { createTracking as createFlightTracking } from './flights/tracking.js';
 
 function fixture({ withScheduler = true } = {}) {
   const held = [];
   const released = [];
   const scheduled = [];
+  const requests = [];
   const render = {
     holdContinuousRender(owner) {
       held.push(owner);
     },
     releaseContinuousRender(owner) {
       released.push(owner);
+    },
+    governorRequestRender(reason) {
+      requests.push(reason);
     },
   };
   if (withScheduler) {
@@ -34,11 +39,12 @@ function fixture({ withScheduler = true } = {}) {
   }
   let enabled = false;
   let tracked = false;
+  let eligible = true;
   let remaining = null;
   const demand = createFleetRenderDemand(render, {
     owner: 'fixture-fleet',
     intervalMs: 80,
-    isEnabled: () => enabled,
+    isEnabled: () => enabled && (eligible || tracked),
     isTracked: () => tracked,
     remainingDelayMs: () => remaining,
   });
@@ -47,6 +53,7 @@ function fixture({ withScheduler = true } = {}) {
     held,
     released,
     scheduled,
+    requests,
     setEnabled(value) {
       enabled = value;
       demand.setEnabled(value);
@@ -55,11 +62,143 @@ function fixture({ withScheduler = true } = {}) {
       tracked = value;
       demand.sync();
     },
+    setEligible(value, { sync = true } = {}) {
+      eligible = value;
+      if (sync) demand.sync();
+    },
     setRemaining(value) {
       remaining = value;
     },
   };
 }
+
+test('an enabled empty fleet gets one final frame but no periodic wakes', () => {
+  const f = fixture();
+  f.setEligible(false);
+  f.setEnabled(true);
+  assert.equal(f.held.length, 0);
+  assert.equal(f.scheduled.length, 0);
+
+  f.demand.invalidate();
+  const finalWake = f.scheduled.at(-1);
+  assert.equal(finalWake.delayMs, 0);
+  finalWake.callback();
+  assert.equal(f.scheduled.length, 1, 'empty final frame does not re-arm');
+
+  f.setEligible(true);
+  const arrivalWake = f.scheduled.at(-1);
+  assert.notEqual(arrivalWake, finalWake);
+  assert.equal(arrivalWake.delayMs, 0);
+  arrivalWake.callback();
+  assert.equal(f.scheduled.at(-1).delayMs, 80);
+
+  const pendingPeriodicWake = f.scheduled.at(-1);
+  f.setEligible(false, { sync: false });
+  f.demand.noteFrame();
+  assert.equal(pendingPeriodicWake.cancelled, true);
+  f.demand.invalidate();
+  const removalFrame = f.scheduled.at(-1);
+  assert.equal(removalFrame.delayMs, 0);
+  removalFrame.callback();
+  assert.equal(f.scheduled.at(-1), removalFrame);
+
+  f.setTracked(true);
+  assert.equal(f.held.length, 1, 'tracking retains continuous rendering');
+  const wakeCountBeforeUntrack = f.scheduled.length;
+  f.setTracked(false);
+  assert.equal(f.released.length, 1);
+  assert.equal(
+    f.scheduled.length,
+    wakeCountBeforeUntrack,
+    'untracking an empty fleet does not reuse an already-fired wake',
+  );
+  f.setEnabled(false);
+});
+
+test('legacy continuous mode requests one final frame when the last item leaves', () => {
+  const f = fixture({ withScheduler: false });
+  f.setEnabled(true);
+  assert.equal(f.held.length, 1);
+
+  f.setEligible(false);
+  assert.equal(f.released.length, 1);
+  assert.equal(f.scheduled.length, 0);
+  f.demand.invalidate();
+
+  assert.deepEqual(f.requests, ['fleet-discrete-invalidation']);
+  assert.equal(f.held.length, 1);
+  assert.equal(f.released.length, 1);
+
+  f.setEligible(true);
+  assert.equal(f.held.length, 2, 'new data reacquires the compatibility hold');
+  assert.equal(f.requests.length, 1);
+  f.setEnabled(false);
+  assert.equal(f.released.length, 2);
+});
+
+test('military suppression requests a final frame when it removes the last civil sprite', () => {
+  const sprite = { id: 'military-fixture' };
+  let removed = null;
+  let fleetTickRequests = 0;
+  const flightState = {
+    _viewer: {},
+    _billboardCollection: {
+      show: true,
+      remove(value) {
+        removed = value;
+      },
+    },
+    _billboards: new Map([['military-fixture', sprite]]),
+    _trackedIcao: null,
+    _cullPositions: new Map([['military-fixture', {}]]),
+    _positionHistory: new Map([['military-fixture', []]]),
+    _displayCourse: new Map([['military-fixture', 0]]),
+    records: {
+      data: new Map([['military-fixture', {}]]),
+      missingPolls: new Map([['military-fixture', 0]]),
+    },
+    feed: { _count: 1 },
+    _groundSnap: { forget() {} },
+  };
+  const services = {
+    context: {},
+    aircraftPresentation: {},
+    trails: {},
+    geoid: {},
+    groundFloor: {},
+    focus: {},
+    militaryRegistry: {
+      isMilitaryIcao: () => true,
+    },
+    readout: {},
+    camera: {},
+    picking: {},
+  };
+  const parts = {
+    rendering: { _releaseModel() {} },
+    lifecycle: {
+      methods: {
+        requestFleetTick() {
+          fleetTickRequests += 1;
+        },
+      },
+    },
+  };
+  const tracking = createFlightTracking({
+    flightState,
+    services,
+    parts,
+    layer: {},
+    resolveAsset: (url) => url,
+  });
+
+  tracking._onMilitaryActiveChange(true);
+
+  assert.equal(removed, sprite);
+  assert.equal(flightState._billboards.size, 0);
+  assert.equal(flightState.feed._count, 0);
+  assert.equal(fleetTickRequests, 1);
+});
 
 test('untracked fleet schedules an immediate wake and retains the 80 ms tick deadline', () => {
   const state = { _lastFleetTickMs: 0 };
@@ -404,6 +543,7 @@ test('destroy and re-init create a fresh owner; stale callbacks stay inert', () 
     }).methods;
 
     lifecycle.init(viewer);
+    state._billboards.set('fixture', {});
     lifecycle.enable(viewer);
     const oldWake = scheduled.at(-1);
     const oldOwner = oldWake.owner;
@@ -411,6 +551,7 @@ test('destroy and re-init create a fresh owner; stale callbacks stay inert', () 
     assert.ok(oldWake.cancelled, 'destroy cancels its scheduled callback');
 
     lifecycle.init(viewer);
+    state._billboards.set('fixture', {});
     lifecycle.enable(viewer);
     const newWake = scheduled.at(-1);
     assert.notEqual(newWake.owner, oldOwner, 're-init receives a new owner');
@@ -470,6 +611,7 @@ for (const [name, createLifecycle, intervalMs] of [
     let logicalNowMs = 100;
     const state = {
       _lastFleetTickMs: 0,
+      _billboards: new Map([['fixture', {}]]),
       _trackedIcao: null,
       _billboardCollection: { show: false },
       _modelCollection: { show: false },
@@ -589,6 +731,30 @@ for (const [name, createLifecycle, intervalMs] of [
         scheduled.at(-1).delayMs,
         intervalMs - 30,
         'an early wake uses the same logical clock as the fleet tick',
+      );
+
+      const periodicWake = scheduled.at(-1);
+      state._billboards.clear();
+      lifecycle.requestFleetTick();
+      assert.equal(periodicWake.cancelled, true);
+      const removalFrame = scheduled.at(-1);
+      assert.equal(removalFrame.delayMs, 0);
+      removalFrame.callback();
+      assert.equal(
+        scheduled.at(-1),
+        removalFrame,
+        'removing the last item leaves one final frame and stops periodic wakes',
+      );
+
+      state._billboards.set('fixture', {});
+      lifecycle.requestFleetTick();
+      const arrivalFrame = scheduled.at(-1);
+      assert.equal(arrivalFrame.delayMs, 0);
+      arrivalFrame.callback();
+      assert.equal(
+        scheduled.at(-1).delayMs,
+        intervalMs - 30,
+        'a repopulated fleet returns to the remaining tick deadline',
       );
 
       state._trackedIcao = 'fixture';
