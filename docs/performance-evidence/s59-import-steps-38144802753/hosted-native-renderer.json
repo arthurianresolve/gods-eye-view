@@ -1,0 +1,3265 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+  "platform": "darwin",
+  "timestamp": "2026-10-11T13:51:39.869Z",
+  "status": "passed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+    "harnessCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+    "capturedAt": "2026-10-11T13:51:52.355Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+        "harnessCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+        "harnessCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.",
+  "performanceAcceptanceEligible": false,
+  "stepDiagnosticsScope": "Per-iterator.next diagnosis run; the extra clock reads and aggregation exclude every latency and heartbeat value from performance acceptance.",
+  "importBatches": {
+    "schema": "gev-import-batches/v2",
+    "applicationCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+    "harnessCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+    "capturedAt": "2026-10-11T13:51:57.036Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "featureLimit": 5000,
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "pointVisualStateDiagnosticScope": "Version-pinned post-capture Entity/PointPrimitiveCollection state hashes; diagnostic work is outside import and capture elapsedMs and is not a performance sample.",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "cooperativeScheduler": {
+      "configuration": "production-default",
+      "scheduleOverride": false,
+      "cancelOverride": false,
+      "targetBudgetMs": 4,
+      "batchObserver": "onBatch metrics only; does not replace the scheduler",
+      "stepObserver": "per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance",
+      "backendCounts": {
+        "synchronous-start": 7,
+        "scheduler.postTask": 134
+      },
+      "observedBackendCount": 2
+    },
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "performanceAcceptanceEligible": false,
+    "stepDiagnosticScope": "Diagnostic-only per-next perf.now sampling and aggregation. All import/capture latency and heartbeat values from this run are excluded from performance acceptance.",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "full-linestring-and-polygon-output-and-production-scheduler",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 73.60000000000582,
+        "maxHeartbeatGapMs": 170.20000000001164,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 231084496,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": null,
+        "capture": {
+          "elapsedMs": 41.70000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 41.70000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 223.39999999999418,
+        "maxHeartbeatGapMs": 42.59999999997672,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 356688864,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": {
+          "budgetMs": 4,
+          "totalBatches": 19,
+          "yieldedBatches": 18,
+          "queuedWakeCount": 18,
+          "maxActiveBatchMs": 25.60000000000582,
+          "maxEnqueueToWakeMs": 38.5,
+          "backends": {
+            "synchronous-start": 1,
+            "scheduler.postTask": 18
+          },
+          "samples": [
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": null,
+              "schedulerBackend": "synchronous-start",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 3,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 17.60000000000582,
+              "enqueueToWakeMs": 0,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 9.39999999999418,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 25.60000000000582,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.29999999998835847,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 38.5,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 8.799999999988358,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 33.20000000001164,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 7.899999999994179,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 3.3000000000174623,
+              "enqueueToWakeMs": 9.799999999988358,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": false
+            }
+          ],
+          "truncatedSamples": 0,
+          "iteratorSteps": {
+            "totalSteps": 5001,
+            "overBudgetSteps": 2,
+            "maxStepMs": 24.10000000000582,
+            "stages": {
+              "entity": {
+                "count": 5000,
+                "overBudget": 2,
+                "maxMs": 24.10000000000582
+              },
+              "coordinate-chunk": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "unsupported-feature": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "completed": {
+                "count": 1,
+                "overBudget": 0,
+                "maxMs": 0.7000000000116415
+              },
+              "other": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              }
+            }
+          }
+        },
+        "capture": {
+          "elapsedMs": 13.39999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 13.39999999999418,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 207.39999999999418,
+        "maxHeartbeatGapMs": 95.30000000001746,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 119060902,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": {
+          "budgetMs": 4,
+          "totalBatches": 16,
+          "yieldedBatches": 15,
+          "queuedWakeCount": 15,
+          "maxActiveBatchMs": 4.100000000005821,
+          "maxEnqueueToWakeMs": 87,
+          "backends": {
+            "synchronous-start": 1,
+            "scheduler.postTask": 15
+          },
+          "samples": [
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": null,
+              "schedulerBackend": "synchronous-start",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 2.8999999999941792,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.099999999976717,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.100000000005821,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.100000000005821,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 87,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.100000000005821,
+              "enqueueToWakeMs": 2.7999999999883585,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 4.7000000000116415,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 21.699999999982538,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 19.70000000001164,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 4.7999999999883585,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 2.2999999999883585,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": false
+            }
+          ],
+          "truncatedSamples": 0,
+          "iteratorSteps": {
+            "totalSteps": 5001,
+            "overBudgetSteps": 0,
+            "maxStepMs": 2.3000000000174623,
+            "stages": {
+              "entity": {
+                "count": 5000,
+                "overBudget": 0,
+                "maxMs": 2.3000000000174623
+              },
+              "coordinate-chunk": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "unsupported-feature": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "completed": {
+                "count": 1,
+                "overBudget": 0,
+                "maxMs": 0.29999999998835847
+              },
+              "other": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              }
+            }
+          }
+        },
+        "capture": {
+          "elapsedMs": 19.39999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 19.39999999999418,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 96.60000000000582,
+        "maxHeartbeatGapMs": 195.39999999999418,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 236041203,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": null,
+        "capture": {
+          "elapsedMs": 64.70000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 24.79999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 101.5,
+        "maxHeartbeatGapMs": 200.30000000001746,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 116817906,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": null,
+        "capture": {
+          "elapsedMs": 13.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 13.5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 210,
+        "maxHeartbeatGapMs": 76.29999999998836,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 248335287,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": {
+          "budgetMs": 4,
+          "totalBatches": 21,
+          "yieldedBatches": 20,
+          "queuedWakeCount": 20,
+          "maxActiveBatchMs": 14.799999999988358,
+          "maxEnqueueToWakeMs": 32.5,
+          "backends": {
+            "synchronous-start": 1,
+            "scheduler.postTask": 20
+          },
+          "samples": [
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": null,
+              "schedulerBackend": "synchronous-start",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 11.800000000017462,
+              "enqueueToWakeMs": 2.599999999976717,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 11.39999999999418,
+              "enqueueToWakeMs": 1.1000000000058208,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.6000000000058208,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.09999999997671694,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.2000000000116415,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.7000000000116415,
+              "enqueueToWakeMs": 0.09999999997671694,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 1,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 27.20000000001164,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 14.799999999988358,
+              "enqueueToWakeMs": 5.399999999994179,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.3000000000174623,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.09999999997671694,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.100000000005821,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 13.39999999999418,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 16.60000000000582,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.2999999999883585,
+              "enqueueToWakeMs": 32.5,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": false
+            }
+          ],
+          "truncatedSamples": 0,
+          "iteratorSteps": {
+            "totalSteps": 5001,
+            "overBudgetSteps": 4,
+            "maxStepMs": 12.39999999999418,
+            "stages": {
+              "entity": {
+                "count": 5000,
+                "overBudget": 4,
+                "maxMs": 12.39999999999418
+              },
+              "coordinate-chunk": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "unsupported-feature": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "completed": {
+                "count": 1,
+                "overBudget": 0,
+                "maxMs": 1
+              },
+              "other": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              }
+            }
+          }
+        },
+        "capture": {
+          "elapsedMs": 11.89999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 11.89999999999418,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 265.20000000001164,
+        "maxHeartbeatGapMs": 46.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 245549239,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": {
+          "budgetMs": 4,
+          "totalBatches": 23,
+          "yieldedBatches": 22,
+          "queuedWakeCount": 22,
+          "maxActiveBatchMs": 25.70000000001164,
+          "maxEnqueueToWakeMs": 28.300000000017462,
+          "backends": {
+            "synchronous-start": 1,
+            "scheduler.postTask": 22
+          },
+          "samples": [
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": null,
+              "schedulerBackend": "synchronous-start",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 16,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.8999999999941792,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 3.2000000000116415,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.29999999998835847,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.29999999998835847,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 21.70000000001164,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 20.39999999999418,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 6.7000000000116415,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 25.70000000001164,
+              "enqueueToWakeMs": 6.199999999982538,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 3.5,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 4.599999999976717,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 28.300000000017462,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 5.100000000005821,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.100000000005821,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 18.89999999999418,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 17.5,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": false
+            }
+          ],
+          "truncatedSamples": 0,
+          "iteratorSteps": {
+            "totalSteps": 5001,
+            "overBudgetSteps": 2,
+            "maxStepMs": 25.10000000000582,
+            "stages": {
+              "entity": {
+                "count": 5000,
+                "overBudget": 2,
+                "maxMs": 25.10000000000582
+              },
+              "coordinate-chunk": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "unsupported-feature": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "completed": {
+                "count": 1,
+                "overBudget": 0,
+                "maxMs": 0.29999999998835847
+              },
+              "other": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              }
+            }
+          }
+        },
+        "capture": {
+          "elapsedMs": 49.69999999998254,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 28.29999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 107.5,
+        "maxHeartbeatGapMs": 227.79999999998836,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 361681020,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": null,
+        "capture": {
+          "elapsedMs": 60.39999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 25.10000000000582,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 141.69999999998254,
+        "maxHeartbeatGapMs": 377.3999999999942,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 115487338,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": null,
+        "capture": {
+          "elapsedMs": 44.29999999998836,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 44.29999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 211.60000000000582,
+        "maxHeartbeatGapMs": 44.80000000001746,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 242616091,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "batchMetrics": {
+          "budgetMs": 4,
+          "totalBatches": 20,
+          "yieldedBatches": 19,
+          "queuedWakeCount": 19,
+          "maxActiveBatchMs": 13.799999999988358,
+          "maxEnqueueToWakeMs": 20.60000000000582,
+          "backends": {
+            "synchronous-start": 1,
+            "scheduler.postTask": 19
+          },
+          "samples": [
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": null,
+              "schedulerBackend": "synchronous-start",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 2.1999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.20000000001164153,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 12.900000000023283,
+              "enqueueToWakeMs": 0.09999999997671694,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 13.799999999988358,
+              "enqueueToWakeMs": 18,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 2.8999999999941792,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 5,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.10000000000582077,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 13.5,
+              "enqueueToWakeMs": 0.29999999998835847,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 20.60000000000582,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 7.2000000000116415,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 8.89999999999418,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 18.29999999998836,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4.100000000005821,
+              "enqueueToWakeMs": 12.60000000000582,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 3.5,
+              "enqueueToWakeMs": 6.7999999999883585,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": false
+            }
+          ],
+          "truncatedSamples": 0,
+          "iteratorSteps": {
+            "totalSteps": 5001,
+            "overBudgetSteps": 3,
+            "maxStepMs": 13.10000000000582,
+            "stages": {
+              "entity": {
+                "count": 5000,
+                "overBudget": 3,
+                "maxMs": 13.10000000000582
+              },
+              "coordinate-chunk": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "unsupported-feature": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "completed": {
+                "count": 1,
+                "overBudget": 0,
+                "maxMs": 0.39999999999417923
+              },
+              "other": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              }
+            }
+          }
+        },
+        "capture": {
+          "elapsedMs": 61.89999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 31.89999999999418,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "pointVisualState": {
+          "available": true,
+          "version": "1.138.0",
+          "scope": "post-capture diagnostic only; state hashing is outside import and frame-capture timings",
+          "expectedCount": 5000,
+          "entityCount": 5000,
+          "visualizerItemCount": 5000,
+          "primitiveCount": 5000,
+          "entityOrderAndStateSha256": "443d4fa1ed351cb9545cb3afeade4512fbb38ef631620412443a6e8ce8c6f836",
+          "entityToPrimitiveAssignmentSha256": "418898a5271a322130ce70b776e0dc63b1413cc9edca42890c5ff24983a8d9ec",
+          "primitiveDrawOrderAndStateSha256": "b83555895373df636a85ccb65d95b30776b1c12eaf0b5dfafe75c0647e1f9f7c",
+          "firstEntity": {
+            "id": "gev-import:fixture:fixture:0",
+            "name": "Fixture 0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "lastEntity": {
+            "id": "gev-import:fixture:fixture:4999",
+            "name": "Fixture 4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "pixelSize": 9,
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1
+          },
+          "firstPrimitive": {
+            "id": "gev-import:fixture:fixture:0",
+            "position": [
+              6378109.714698836,
+              -16697.890334769083,
+              -8293.068365857716
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          },
+          "lastPrimitive": {
+            "id": "gev-import:fixture:fixture:4999",
+            "position": [
+              6378111.005793527,
+              16363.934360085377,
+              7961.345805893219
+            ],
+            "color": [
+              0,
+              1,
+              1,
+              1
+            ],
+            "outlineColor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "outlineWidth": 1,
+            "pixelSize": 9,
+            "show": true
+          }
+        }
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+      "harnessCommit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "warmupBatches": {
+      "budgetMs": 4,
+      "totalBatches": 37,
+      "yieldedBatches": 36,
+      "queuedWakeCount": 36,
+      "maxActiveBatchMs": 43.5,
+      "maxEnqueueToWakeMs": 51.89999999999418,
+      "backends": {
+        "synchronous-start": 1,
+        "scheduler.postTask": 36
+      },
+      "samples": [
+        {
+          "activeMs": 4.5,
+          "enqueueToWakeMs": null,
+          "schedulerBackend": "synchronous-start",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 14.60000000000582,
+          "enqueueToWakeMs": 25.699999999982538,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 14.5,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4.5,
+          "enqueueToWakeMs": 51.89999999999418,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4.7000000000116415,
+          "enqueueToWakeMs": 10.60000000000582,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 11.5,
+          "enqueueToWakeMs": 0.29999999998835847,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 2.5,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4.399999999994179,
+          "enqueueToWakeMs": 7.100000000005821,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.5,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 1.6000000000058208,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.29999999998835847,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.39999999999417923,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 10.10000000000582,
+          "enqueueToWakeMs": 0.5,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 5.2999999999883585,
+          "enqueueToWakeMs": 0.10000000000582077,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.10000000000582077,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.20000000001164153,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.10000000000582077,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4.100000000005821,
+          "enqueueToWakeMs": 0.09999999997671694,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.10000000000582077,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.10000000000582077,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 46.29999999998836,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 5,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 20.20000000001164,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 7.199999999982538,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 5.5,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 21.199999999982538,
+          "enqueueToWakeMs": 5.400000000023283,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 43.5,
+          "enqueueToWakeMs": 0.39999999999417923,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4.300000000017462,
+          "enqueueToWakeMs": 15.60000000000582,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 20.60000000000582,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 5.800000000017462,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 5.199999999982538,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 5.600000000005821,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.20000000001164153,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.1999999999825377,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 4,
+          "enqueueToWakeMs": 0.20000000001164153,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": true
+        },
+        {
+          "activeMs": 5.7000000000116415,
+          "enqueueToWakeMs": 0.1999999999825377,
+          "schedulerBackend": "scheduler.postTask",
+          "budgetMs": 4,
+          "yielded": false
+        }
+      ],
+      "truncatedSamples": 0,
+      "iteratorSteps": {
+        "totalSteps": 5001,
+        "overBudgetSteps": 8,
+        "maxStepMs": 41,
+        "stages": {
+          "entity": {
+            "count": 5000,
+            "overBudget": 7,
+            "maxMs": 41
+          },
+          "coordinate-chunk": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "unsupported-feature": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "completed": {
+            "count": 1,
+            "overBudget": 1,
+            "maxMs": 4.699999999982538
+          },
+          "other": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          }
+        }
+      }
+    },
+    "coldActivationMs": 566.0999999999767,
+    "warmedResources": {
+      "heapBytes": 121012760,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "largeGeometry": {
+      "featureLimit": 5000,
+      "featureCount": 2,
+      "sourceCoordinateCounts": {
+        "LineString": 50000,
+        "Polygon": 50000
+      },
+      "synchronous": {
+        "drawn": 2,
+        "omitted": 0,
+        "rows": [
+          {
+            "id": "gev-import:scheduler-geometry:scheduler-probe:line",
+            "geometryType": "LineString",
+            "coordinateCount": 50000,
+            "ringCoordinateCounts": [
+              50000
+            ],
+            "geometrySha256": "c863ddeb090286a3e072984760ea167ee2ce3946a0db27a0494feb1020d8aabd"
+          },
+          {
+            "id": "gev-import:scheduler-geometry:scheduler-probe:polygon",
+            "geometryType": "Polygon",
+            "coordinateCount": 50000,
+            "ringCoordinateCounts": [
+              25000,
+              25000
+            ],
+            "geometrySha256": "51e1650091693665683c0356060f5117173c4e9a116d9742acd2f907be15aeb4"
+          }
+        ]
+      },
+      "cooperative": {
+        "drawn": 2,
+        "omitted": 0,
+        "rows": [
+          {
+            "id": "gev-import:scheduler-geometry:scheduler-probe:line",
+            "geometryType": "LineString",
+            "coordinateCount": 50000,
+            "ringCoordinateCounts": [
+              50000
+            ],
+            "geometrySha256": "c863ddeb090286a3e072984760ea167ee2ce3946a0db27a0494feb1020d8aabd"
+          },
+          {
+            "id": "gev-import:scheduler-geometry:scheduler-probe:polygon",
+            "geometryType": "Polygon",
+            "coordinateCount": 50000,
+            "ringCoordinateCounts": [
+              25000,
+              25000
+            ],
+            "geometrySha256": "51e1650091693665683c0356060f5117173c4e9a116d9742acd2f907be15aeb4"
+          }
+        ],
+        "batchMetrics": {
+          "budgetMs": 4,
+          "totalBatches": 5,
+          "yieldedBatches": 4,
+          "queuedWakeCount": 4,
+          "maxActiveBatchMs": 20.5,
+          "maxEnqueueToWakeMs": 285.69999999998254,
+          "backends": {
+            "synchronous-start": 1,
+            "scheduler.postTask": 4
+          },
+          "samples": [
+            {
+              "activeMs": 10.89999999999418,
+              "enqueueToWakeMs": null,
+              "schedulerBackend": "synchronous-start",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 0.8000000000174623,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 4,
+              "enqueueToWakeMs": 285.69999999998254,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 20.5,
+              "enqueueToWakeMs": 1.8000000000174623,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": true
+            },
+            {
+              "activeMs": 2.5,
+              "enqueueToWakeMs": 0.6999999999825377,
+              "schedulerBackend": "scheduler.postTask",
+              "budgetMs": 4,
+              "yielded": false
+            }
+          ],
+          "truncatedSamples": 0,
+          "iteratorSteps": {
+            "totalSteps": 392,
+            "overBudgetSteps": 2,
+            "maxStepMs": 17.10000000000582,
+            "stages": {
+              "entity": {
+                "count": 2,
+                "overBudget": 0,
+                "maxMs": 0.1999999999825377
+              },
+              "coordinate-chunk": {
+                "count": 389,
+                "overBudget": 2,
+                "maxMs": 17.10000000000582
+              },
+              "unsupported-feature": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "completed": {
+                "count": 1,
+                "overBudget": 0,
+                "maxMs": 0
+              },
+              "other": {
+                "count": 0,
+                "overBudget": 0,
+                "maxMs": 0
+              }
+            }
+          }
+        }
+      },
+      "exactOutputParity": true
+    },
+    "cancellation": {
+      "attempted": 12,
+      "abortErrors": 12,
+      "pendingJobsAfter": 0,
+      "featureCountAfter": 0,
+      "ownershipReleased": true
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true,
+    "stepDiagnostic": true
+  },
+  "importBatchValidation": {
+    "valid": true,
+    "errors": []
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 26846.695958,
+      "closeSettledHostMs": 27139.347333,
+      "closeElapsedMs": 292.6513750000013,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 277.3934169999993
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

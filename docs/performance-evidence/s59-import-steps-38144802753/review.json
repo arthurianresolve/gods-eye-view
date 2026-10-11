@@ -1,0 +1,257 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38144802753",
+  "commit": "885dd771596c8c14f4e0ec88482cdc946226749f",
+  "status": "passed",
+  "reportSha256": "f9ac3f81f471b82e7a450cb6853dcb48147b7c5b66d815b9a8859e8b1bf83c48",
+  "performanceAcceptanceEligible": false,
+  "physicalHardwareValidated": false,
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "pointSamples": [
+    {
+      "pair": 0,
+      "batchMaxMs": 25.60000000000582,
+      "maxWakeMs": 38.5,
+      "iteratorSteps": {
+        "totalSteps": 5001,
+        "overBudgetSteps": 2,
+        "maxStepMs": 24.10000000000582,
+        "stages": {
+          "entity": {
+            "count": 5000,
+            "overBudget": 2,
+            "maxMs": 24.10000000000582
+          },
+          "coordinate-chunk": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "unsupported-feature": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "completed": {
+            "count": 1,
+            "overBudget": 0,
+            "maxMs": 0.7000000000116415
+          },
+          "other": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          }
+        }
+      }
+    },
+    {
+      "pair": 1,
+      "batchMaxMs": 4.100000000005821,
+      "maxWakeMs": 87,
+      "iteratorSteps": {
+        "totalSteps": 5001,
+        "overBudgetSteps": 0,
+        "maxStepMs": 2.3000000000174623,
+        "stages": {
+          "entity": {
+            "count": 5000,
+            "overBudget": 0,
+            "maxMs": 2.3000000000174623
+          },
+          "coordinate-chunk": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "unsupported-feature": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "completed": {
+            "count": 1,
+            "overBudget": 0,
+            "maxMs": 0.29999999998835847
+          },
+          "other": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          }
+        }
+      }
+    },
+    {
+      "pair": 2,
+      "batchMaxMs": 14.799999999988358,
+      "maxWakeMs": 32.5,
+      "iteratorSteps": {
+        "totalSteps": 5001,
+        "overBudgetSteps": 4,
+        "maxStepMs": 12.39999999999418,
+        "stages": {
+          "entity": {
+            "count": 5000,
+            "overBudget": 4,
+            "maxMs": 12.39999999999418
+          },
+          "coordinate-chunk": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "unsupported-feature": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "completed": {
+            "count": 1,
+            "overBudget": 0,
+            "maxMs": 1
+          },
+          "other": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          }
+        }
+      }
+    },
+    {
+      "pair": 3,
+      "batchMaxMs": 25.70000000001164,
+      "maxWakeMs": 28.300000000017462,
+      "iteratorSteps": {
+        "totalSteps": 5001,
+        "overBudgetSteps": 2,
+        "maxStepMs": 25.10000000000582,
+        "stages": {
+          "entity": {
+            "count": 5000,
+            "overBudget": 2,
+            "maxMs": 25.10000000000582
+          },
+          "coordinate-chunk": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "unsupported-feature": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "completed": {
+            "count": 1,
+            "overBudget": 0,
+            "maxMs": 0.29999999998835847
+          },
+          "other": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          }
+        }
+      }
+    },
+    {
+      "pair": 4,
+      "batchMaxMs": 13.799999999988358,
+      "maxWakeMs": 20.60000000000582,
+      "iteratorSteps": {
+        "totalSteps": 5001,
+        "overBudgetSteps": 3,
+        "maxStepMs": 13.10000000000582,
+        "stages": {
+          "entity": {
+            "count": 5000,
+            "overBudget": 3,
+            "maxMs": 13.10000000000582
+          },
+          "coordinate-chunk": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "unsupported-feature": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          },
+          "completed": {
+            "count": 1,
+            "overBudget": 0,
+            "maxMs": 0.39999999999417923
+          },
+          "other": {
+            "count": 0,
+            "overBudget": 0,
+            "maxMs": 0
+          }
+        }
+      }
+    }
+  ],
+  "largeGeometrySteps": {
+    "totalSteps": 392,
+    "overBudgetSteps": 2,
+    "maxStepMs": 17.10000000000582,
+    "stages": {
+      "entity": {
+        "count": 2,
+        "overBudget": 0,
+        "maxMs": 0.1999999999825377
+      },
+      "coordinate-chunk": {
+        "count": 389,
+        "overBudget": 2,
+        "maxMs": 17.10000000000582
+      },
+      "unsupported-feature": {
+        "count": 0,
+        "overBudget": 0,
+        "maxMs": 0
+      },
+      "completed": {
+        "count": 1,
+        "overBudget": 0,
+        "maxMs": 0
+      },
+      "other": {
+        "count": 0,
+        "overBudget": 0,
+        "maxMs": 0
+      }
+    }
+  },
+  "pixelHash": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+  "cancellation": {
+    "attempted": 12,
+    "abortErrors": 12,
+    "pendingJobsAfter": 0,
+    "featureCountAfter": 0,
+    "ownershipReleased": true
+  },
+  "interpretation": [
+    "Eleven of 25,000 entity-producing iterator steps exceed 4 ms, with a maximum of 25.1 ms. Most points do not exceed the budget, so total batch size alone cannot explain every overrun.",
+    "Two of 389 preparation steps, each handling at most 256 coordinates, exceed 4 ms, with a maximum of 17.1 ms. This is a separate observed location for stalls.",
+    "The timing observer includes engine work, garbage collection and scheduling pauses within each next() wall interval; these aggregates do not yet distinguish them.",
+    "Post-task wake delay is separate: point-load wakes reach 87 ms, and large-geometry wakes reach 285.7 ms. Smaller work batches would not by themselves establish a fix for that delay.",
+    "This query-gated diagnostic preserves all five reported pixel pairs, complete geometry and 12 cancellation checks. Its extra per-step clock reads mean no latency or performance acceptance claim."
+  ],
+  "largeGeometryBatch": {
+    "maximumActiveMs": 20.5,
+    "maximumWakeMs": 285.69999999998254
+  }
+}

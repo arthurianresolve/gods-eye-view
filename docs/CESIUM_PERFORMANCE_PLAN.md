@@ -4112,3 +4112,25 @@ that bulk removal changes point-primitive reuse order. Production clearing
 continues to use ownership-checked forward per-ID removals. The earlier Node
 removal timings remain historical results for the rejected helper and are not
 attributed to the current implementation.
+
+### S59 individual-work attribution — 11 October 2026
+
+[Run 38144802753 at `885dd77`](performance-evidence/s59-import-steps-38144802753/review.json)
+passes the diagnostic contract, five exact reported pixel pairs, complete
+50,000-coordinate geometry checks and twelve cancellation checks. The optional
+observer adds per-iterator timing and bounded stage aggregates; every latency
+and heartbeat value in this run is excluded from performance acceptance.
+
+Eleven of 25,000 entity-producing steps exceed four ms; the maximum is 25.1 ms.
+Two of 389 coordinate-preparation chunks exceed four ms, with a maximum of
+17.1 ms. Each chunk still produces at most 256 Cartesian positions. These are
+individual wall-time intervals that include engine work and possible garbage
+collection or scheduling pauses; they do not yet identify the underlying cause.
+Point-load queued wakes reach 87.0 ms, and the separate large-geometry check
+reaches 285.7 ms. Wake delay is distinct from synchronous work time.
+
+The next attribution must distinguish the rare slow operations from pauses
+before choosing a runtime change. Reducing all batch sizes or restoring the
+rejected bulk-clear path is not supported by these observations. Code and
+automatic correctness are recorded separately from the unresolved four-ms,
+interaction, throughput and physical-hardware acceptance requirements.
