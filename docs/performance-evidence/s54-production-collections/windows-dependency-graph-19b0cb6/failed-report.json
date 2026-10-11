@@ -1,0 +1,154 @@
+{
+  "schema": "gev-infrastructure-runtime-renderers/v4",
+  "applicationCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+  "harnessCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+  "source": {
+    "layerId": "local-datacenters",
+    "payloadSha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+    "payloadBytes": 2561978,
+    "featureCount": 4351,
+    "geometryKinds": {
+      "Polygon": 3509,
+      "Point": 834,
+      "MultiPolygon": 8
+    }
+  },
+  "candidateRepresentation": {
+    "id": "production-local-infrastructure-primitive-collections/rgba8/v1",
+    "stemColorEncoding": "entity-color-attribute-byte"
+  },
+  "environment": {
+    "appCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+    "harnessCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 888,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 864,
+      "height": 640
+    },
+    "layers": []
+  },
+  "samplingScope": "five-correctness-snapshots-per-case-not-alternating-performance-runs",
+  "renderClock": {
+    "iso": "2026-10-11T10:22:23.378Z",
+    "julianDayNumber": 2461324,
+    "secondsOfDay": 80580.378,
+    "shouldAnimate": false
+  },
+  "status": "failed",
+  "lifetimes": [
+    {
+      "mode": "entities",
+      "activationOrder": 0,
+      "activationContext": "first layer lifetime in a fresh fixture viewer",
+      "status": "failed",
+      "samples": [],
+      "sceneBaseline": {
+        "dataSources": 0,
+        "scenePrimitives": 1,
+        "groundPrimitives": 1,
+        "rendererOwners": 0
+      },
+      "initialOwnership": {
+        "dataSources": 0,
+        "scenePrimitives": 1,
+        "groundPrimitives": 1,
+        "rendererOwners": 0
+      },
+      "renderClock": {
+        "iso": "2026-10-11T10:22:23.378Z",
+        "julianDayNumber": 2461324,
+        "secondsOfDay": 80580.378,
+        "shouldAnimate": false
+      },
+      "teardown": {
+        "layerDestroyed": true,
+        "dataSourceRemoved": true,
+        "rendererOwnersRemoved": true,
+        "viewerKeptForNextLifetime": true,
+        "instrumentationRestored": true,
+        "ownerCountAfterDestroy": 0,
+        "dataSourceCountAfterDestroy": 0,
+        "scenePrimitiveCountAfterDestroy": 1,
+        "groundPrimitiveCountAfterDestroy": 1
+      },
+      "activationDiagnosticMs": 1151.1000000238419,
+      "activationTimingScope": "single-layer-activation-diagnostic-not-performance-evidence",
+      "cameraContract": {
+        "layerId": "local-datacenters",
+        "kind": "lookAt-world-frame",
+        "targetCartographic": [
+          -1.236567286826375,
+          -0.924014956174621,
+          2000.0000000006846
+        ],
+        "headingRadians": 0,
+        "pitchRadians": -1.0471975511965976,
+        "sampleRangesMeters": [
+          140000,
+          170000
+        ],
+        "restoredTransform": "IDENTITY"
+      },
+      "error": {
+        "name": "Error",
+        "message": "Fresh completed frame was unavailable."
+      }
+    }
+  ],
+  "comparisons": [],
+  "cleanup": {
+    "viewerDestroyed": true
+  },
+  "error": {
+    "name": "Error",
+    "message": "Fresh completed frame was unavailable.",
+    "frameDelivery": {
+      "elapsedMs": 745.6000000238419,
+      "updates": 1,
+      "renderedFrames": 0,
+      "before": {
+        "visibility": "visible",
+        "hidden": false,
+        "focused": true
+      },
+      "after": {
+        "visibility": "visible",
+        "hidden": false,
+        "focused": true
+      },
+      "defaultRenderLoop": false,
+      "targetFrameRate": 60,
+      "requestRenderMode": true,
+      "width": 864,
+      "height": 640,
+      "completed": false
+    }
+  },
+  "renderErrors": [
+    {
+      "name": "DeveloperError",
+      "message": "renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth."
+    }
+  ],
+  "viewerOwnedDisplayWarmup": {
+    "completedFrames": 2,
+    "temporaryDataSourceRemoved": true,
+    "dataSourcesBefore": 0,
+    "dataSourcesAfter": 0,
+    "primitiveCountsBefore": {
+      "scenePrimitives": 0,
+      "groundPrimitives": 0
+    },
+    "primitiveCountsAfter": {
+      "scenePrimitives": 1,
+      "groundPrimitives": 1
+    }
+  }
+}

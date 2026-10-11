@@ -1,0 +1,45 @@
+{
+  "applicationCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+  "packages": [
+    {
+      "name": "cesium",
+      "canonicalPath": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-collision-fix\\qa-artifacts\\collision-dependency-reconstruction-20261011\\node_modules\\cesium",
+      "version": "1.138.0"
+    },
+    {
+      "name": "@cesium/engine",
+      "canonicalPath": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-collision-fix\\qa-artifacts\\collision-dependency-reconstruction-20261011\\node_modules\\@cesium\\engine",
+      "version": "22.3.0"
+    },
+    {
+      "name": "@cesium/widgets",
+      "canonicalPath": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-dev\\node_modules\\@cesium\\widgets",
+      "version": "14.3.0"
+    }
+  ],
+  "bundleSha256": "deb8b18dafa30147260a79d7759e1118c7eca9b63cd613bc3f2a68da548f1065",
+  "modules": [
+    {
+      "line": 23631,
+      "path": "../gev-collision-fix/qa-artifacts/collision-dependency-reconstruction-20261011/node_modules/@cesium/engine/Source/Renderer/ContextLimits.js"
+    },
+    {
+      "line": 236748,
+      "path": "../gev-collision-fix/qa-artifacts/collision-dependency-reconstruction-20261011/node_modules/@cesium/engine/Source/Scene/Scene.js"
+    },
+    {
+      "line": 268836,
+      "path": "../gev-dev/node_modules/@cesium/engine/Source/Renderer/ContextLimits.js"
+    },
+    {
+      "line": 467776,
+      "path": "../gev-dev/node_modules/@cesium/engine/Source/Scene/Scene.js"
+    }
+  ],
+  "renderErrors": [
+    {
+      "name": "DeveloperError",
+      "message": "renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth."
+    }
+  ]
+}
