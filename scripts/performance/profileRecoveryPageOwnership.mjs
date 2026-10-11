@@ -298,15 +298,25 @@ export async function stopOwnedRecoveryProcessTree(
   };
 }
 
+export function validateRecoveryCloseObservationMs(value) {
+  if (!Number.isInteger(value) || value < 0 || value > 15000)
+    throw new RangeError(
+      'Close observation must be an integer from 0 to 15000 ms.',
+    );
+  return value;
+}
+
 export async function closeRecoveryBrowser(
   browser,
   {
     timeoutMs = 5000,
+    postTimeoutObservationMs = 0,
     forceProcess,
     now = () => performance.now(),
     closeTrace = null,
   } = {},
 ) {
+  validateRecoveryCloseObservationMs(postTimeoutObservationMs);
   const child = browser.process?.() ?? null;
   const startedAt = now();
   let processExit = null;
@@ -318,13 +328,19 @@ export async function closeRecoveryBrowser(
   processExit = initialExit();
   const processExitedBeforeClose = processExit !== null;
   if (processExit) processExit = { ...processExit, elapsedMs: null };
+  let resolveProcessExit;
+  const processExitPending = new Promise((resolve) => {
+    resolveProcessExit = resolve;
+  });
+  if (processExit) resolveProcessExit();
   const onExit = (code, signal) => {
     processExit = { code, signal, elapsedMs: Math.max(0, now() - startedAt) };
+    resolveProcessExit();
   };
   if (!processExit) child?.once?.('exit', onExit);
   const onDisconnected = () => closeTrace?.recordDisconnected?.();
 
-  const settleWithin = async (operation) => {
+  const settleWithin = async (operation, deadlineMs = timeoutMs) => {
     let timer;
     const settled = Promise.resolve()
       .then(operation)
@@ -336,7 +352,7 @@ export async function closeRecoveryBrowser(
       return await Promise.race([
         settled,
         new Promise((resolve) => {
-          timer = setTimeout(() => resolve({ kind: 'timeout' }), timeoutMs);
+          timer = setTimeout(() => resolve({ kind: 'timeout' }), deadlineMs);
         }),
       ]);
     } finally {
@@ -351,7 +367,18 @@ export async function closeRecoveryBrowser(
   try {
     browser.on?.('disconnected', onDisconnected);
     closeTrace?.begin?.();
-    const closeResult = await settleWithin(() => browser.close());
+    let closeOperationStatus = 'pending';
+    const closeOperation = Promise.resolve().then(() => browser.close());
+    // Attach both handlers now: a rejection after the deadline must be observed.
+    const closeOperationSettled = closeOperation.then(
+      () => {
+        closeOperationStatus = 'resolved';
+      },
+      () => {
+        closeOperationStatus = 'rejected';
+      },
+    );
+    const closeResult = await settleWithin(() => closeOperation);
     const closeCompleted = closeResult.kind === 'resolved';
     const closeStatus = closeCompleted
       ? 'completed'
@@ -369,6 +396,24 @@ export async function closeRecoveryBrowser(
         typeof name === 'string' && /^[A-Za-z][A-Za-z0-9]*$/.test(name)
           ? name.slice(0, 48)
           : 'Error';
+    }
+
+    let postTimeoutObservation = null;
+    if (closeResult.kind === 'timeout' && postTimeoutObservationMs > 0) {
+      const observationStartedAt = now();
+      const result = await settleWithin(
+        () => Promise.race([closeOperationSettled, processExitPending]),
+        postTimeoutObservationMs,
+      );
+      postTimeoutObservation = {
+        budgetMs: postTimeoutObservationMs,
+        elapsedMs: Math.max(0, now() - observationStartedAt),
+        status: result.kind === 'timeout' ? 'expired' : 'settled',
+        closeOperationStatus,
+        processExitBeforeForce: processExit || initialExit(),
+      };
+      // Diagnostic evidence only. A late exit cannot change the original
+      // deadline, closeCompleted, closeStatus, or recovery failure.
     }
 
     if (!closeCompleted && forceProcess) {
@@ -416,6 +461,7 @@ export async function closeRecoveryBrowser(
         closeSettledHostMs: closeSettledAt,
         closeElapsedMs,
         closeRejectionName,
+        postTimeoutObservation,
         processExitedBeforeClose,
         processExit,
         protocolCloseTrace,

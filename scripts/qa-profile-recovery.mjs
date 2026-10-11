@@ -42,12 +42,17 @@ import {
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
   stopOwnedRecoveryProcessTree,
+  validateRecoveryCloseObservationMs,
 } from './performance/profileRecoveryPageOwnership.mjs';
 import {
   cleanupEarlyCesiumRendererProbe,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
+
+const postTimeoutObservationMs = validateRecoveryCloseObservationMs(
+  Number(process.env.GEV_QA_CLOSE_POST_TIMEOUT_OBSERVATION_MS || 0),
+);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const priorCommit = '6b896e2a8277fba12bc9577ad7772005a71e13c7';
@@ -505,6 +510,7 @@ async function reopen(label, { seed = false } = {}) {
         browserClose = await closeRecoveryBrowser(browser, {
           forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
           closeTrace: browserCloseTrace,
+          postTimeoutObservationMs,
         });
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);
@@ -676,6 +682,7 @@ try {
         }
       : null,
     browserVersion,
+    postTimeoutObservationMs,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.
     timestamp: new Date().toISOString(),

@@ -3972,3 +3972,36 @@ pairs, all seven ordinary integration jobs and all 111 tracking checks pass.
 The runtime traffic change is accepted; fleet scheduling remains excluded.
 [Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
 retain separate code, automated and hosted/physical hardware status.
+
+
+### Main integration and Windows close follow-up (2026-10-11)
+
+The proposed merge of main `591f299d11f38a612629a274463196d57ae3862e`
+into dev `37afdc6d66b74487ee2280dacc38566ccb3a1530` is preserved at
+`d61ba493a2c281b1e13eaae292628c38fb54e9e6`. It is not yet on dev.
+[CI 38135536915](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38135536915)
+finished with six passing jobs and one failing Windows recovery job. Both Node
+suites, Windows onboarding, Linux/macOS recovery, and the full browser gate pass.
+The exact [CI record](performance-evidence/main-integration-38135536915/ci.json)
+and [failed recovery report](performance-evidence/main-integration-38135536915/windows-recovery.json)
+remain acceptance evidence, including the failure.
+
+At the upgraded-application stage, the persisted settings, workspace bundle,
+asset hash and rendered feature match. The one owned page closes and there are
+zero pages left. Chrome acknowledges Browser.close after 15.79 ms and disconnects
+after 48.92 ms, but its parent process has not exited at the unchanged 5000 ms
+deadline. Forced owned-process cleanup exits it at 5727.94 ms. This is a shutdown
+failure; no workspace loss was observed. Prior reports reproduced the same class
+of failure against the old installation, so this run does not attribute it to
+the newly merged application changes.
+
+The next diagnostic adds an opt-in post-deadline observation window capped at
+15000 ms. Only a windows-profile-recovery dispatch enables it; ordinary CI uses
+zero additional observation. It observes the original close operation and parent
+exit before forced cleanup, with one close request and deterministic listener and
+timer cleanup. Late natural exit, persistent pending close, and late rejection
+remain distinct. The original close result and acceptance deadline never change:
+a late successful exit still fails recovery. This is implemented diagnostic
+instrumentation, not a root-cause fix. Focused ownership tests (25) pass, including
+late exit, unresolved close, expired observation, rejection, and invalid budgets.
+Hosted validation of the new diagnostic is pending.

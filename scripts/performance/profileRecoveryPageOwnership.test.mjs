@@ -12,6 +12,7 @@ import {
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
   stopOwnedRecoveryProcessTree,
+  validateRecoveryCloseObservationMs,
 } from './profileRecoveryPageOwnership.mjs';
 
 const BASE = 'http://127.0.0.1:4173';
@@ -530,4 +531,174 @@ test('cleanup failure becomes primary only after an otherwise-passed check', () 
   assert.equal(earlierFailure.step, 'application-ready');
   assert.equal(earlierFailure.error, 'startup failed');
   assert.equal(earlierFailure.pageOwnership.cleanupError, cleanupError.message);
+});
+
+test('late natural exit stays failed and is distinguished from forced cleanup', async () => {
+  const child = fakeBrowserProcess();
+  let closeCalls = 0;
+  const outcome = await closeRecoveryBrowser(
+    {
+      process: () => child,
+      close: () => {
+        closeCalls++;
+        return new Promise((resolve) =>
+          setTimeout(() => {
+            child.exitCode = 0;
+            child.emit('exit', 0, null);
+            resolve();
+          }, 35),
+        );
+      },
+    },
+    {
+      timeoutMs: 10,
+      postTimeoutObservationMs: 100,
+      forceProcess: () => {
+        throw new Error('must not force an exited process');
+      },
+    },
+  );
+  assert.equal(closeCalls, 1);
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.observation.closeStatus, 'timed-out');
+  assert.equal(outcome.observation.closeDeadlineMs, 10);
+  assert.equal(outcome.observation.postTimeoutObservation.status, 'settled');
+  assert.equal(
+    outcome.observation.postTimeoutObservation.processExitBeforeForce.code,
+    0,
+  );
+  assert.equal(outcome.observation.forceProcessStatus, 'already-exited');
+  assert.equal(outcome.observation.forceProcessCallbackInvoked, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('an unresolved close with a late process exit remains failed without forcing', async () => {
+  const child = fakeBrowserProcess();
+  const outcome = await closeRecoveryBrowser(
+    {
+      process: () => child,
+      close: () => {
+        setTimeout(() => {
+          child.exitCode = 0;
+          child.emit('exit', 0, null);
+        }, 35);
+        return new Promise(() => {});
+      },
+    },
+    {
+      timeoutMs: 10,
+      postTimeoutObservationMs: 100,
+      forceProcess: () => assert.fail('unexpected force'),
+    },
+  );
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(
+    outcome.observation.postTimeoutObservation.closeOperationStatus,
+    'pending',
+  );
+  assert.equal(
+    outcome.observation.postTimeoutObservation.processExitBeforeForce.code,
+    0,
+  );
+  assert.equal(outcome.observation.forceProcessStatus, 'already-exited');
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('post-timeout observation is bounded before owned-process cleanup', async () => {
+  const child = fakeBrowserProcess();
+  let forced = 0;
+  const outcome = await closeRecoveryBrowser(
+    {
+      process: () => child,
+      close: () => new Promise(() => {}),
+    },
+    {
+      timeoutMs: 10,
+      postTimeoutObservationMs: 20,
+      forceProcess: () => {
+        forced++;
+        child.exitCode = 1;
+        child.emit('exit', 1, null);
+        return { attempted: true, confirmed: true };
+      },
+    },
+  );
+  assert.equal(forced, 1);
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.observation.closeDeadlineMs, 10);
+  assert.equal(outcome.observation.postTimeoutObservation.status, 'expired');
+  assert.equal(
+    outcome.observation.postTimeoutObservation.processExitBeforeForce,
+    null,
+  );
+  assert.equal(
+    outcome.observation.postTimeoutObservation.closeOperationStatus,
+    'pending',
+  );
+  assert.equal(outcome.forcedProcessTermination, true);
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('late close rejection is handled without retaining its message or upgrading the result', async () => {
+  const child = fakeBrowserProcess();
+  const outcome = await closeRecoveryBrowser(
+    {
+      process: () => child,
+      close: () =>
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('private diagnostic text')), 35),
+        ),
+    },
+    {
+      timeoutMs: 10,
+      postTimeoutObservationMs: 100,
+      forceProcess: () => ({ attempted: true, confirmed: true }),
+    },
+  );
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.observation.closeStatus, 'timed-out');
+  assert.equal(
+    outcome.observation.postTimeoutObservation.closeOperationStatus,
+    'rejected',
+  );
+  assert.equal(
+    outcome.observation.postTimeoutObservation.processExitBeforeForce,
+    null,
+  );
+  assert.equal(outcome.forcedProcessTermination, true);
+  assert.equal(
+    JSON.stringify(outcome).includes('private diagnostic text'),
+    false,
+  );
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('successful close does not use the post-timeout observation budget', async () => {
+  const outcome = await closeRecoveryBrowser(
+    { close: async () => {} },
+    {
+      timeoutMs: 10,
+      postTimeoutObservationMs: 15000,
+    },
+  );
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.observation.postTimeoutObservation, null);
+});
+
+test('post-timeout observation rejects unbounded or malformed settings before closing', async () => {
+  for (const value of [-1, 15001, 1.5, NaN, Infinity, '20', undefined, null]) {
+    assert.throws(() => validateRecoveryCloseObservationMs(value), RangeError);
+  }
+  assert.equal(validateRecoveryCloseObservationMs(0), 0);
+  assert.equal(validateRecoveryCloseObservationMs(15000), 15000);
+  await assert.rejects(
+    closeRecoveryBrowser(
+      { close: () => assert.fail('unexpected close') },
+      {
+        postTimeoutObservationMs: Infinity,
+      },
+    ),
+    RangeError,
+  );
 });

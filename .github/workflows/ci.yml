@@ -275,6 +275,9 @@ jobs:
       # Windows install recovery uses the measured WebGL-only SwiftShader path.
       # Keep the full-driver software renderer available on other OS jobs.
       GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ matrix.os == 'windows-latest' && '1' || '0' }}
+      # Diagnostic dispatch only: observe a late OS exit after the unchanged
+      # five-second FAILED deadline, before owned-process cleanup.
+      GEV_QA_CLOSE_POST_TIMEOUT_OBSERVATION_MS: ${{ inputs.validation_mode == 'windows-profile-recovery' && '15000' || '0' }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
