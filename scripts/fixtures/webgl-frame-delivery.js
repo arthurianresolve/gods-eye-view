@@ -6,6 +6,9 @@ const MAX_EVENTS = 32;
 const runButton = document.querySelector('#run');
 const downloadButton = document.querySelector('#download');
 const modeSelect = document.querySelector('#mode');
+const preserveDrawingBufferSelect = document.querySelector(
+  '#preserve-drawing-buffer',
+);
 const status = document.querySelector('#status');
 const result = document.querySelector('#result');
 let canvas = document.querySelector('#surface');
@@ -85,6 +88,50 @@ function replaceSurface() {
   canvas = next;
 }
 
+function canvasBoundsSnapshot(targetCanvas) {
+  const rect = targetCanvas.getBoundingClientRect();
+  const visibleWidth = Math.max(
+    0,
+    Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0),
+  );
+  const visibleHeight = Math.max(
+    0,
+    Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0),
+  );
+  return {
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    canvas: {
+      width: targetCanvas.width,
+      height: targetCanvas.height,
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      },
+      viewportIntersection: {
+        width: visibleWidth,
+        height: visibleHeight,
+        fraction:
+          rect.width > 0 && rect.height > 0
+            ? (visibleWidth * visibleHeight) / (rect.width * rect.height)
+            : 0,
+      },
+    },
+  };
+}
+
+function contextAttributesSnapshot(targetGl) {
+  try {
+    const attributes = targetGl?.getContextAttributes();
+    return attributes ? { ...attributes } : null;
+  } catch {
+    return null;
+  }
+}
+
 function readRenderer(gl) {
   const started = performance.now();
   try {
@@ -104,12 +151,18 @@ function readRenderer(gl) {
 }
 
 runButton.addEventListener('click', () => {
-  runButton.disabled = downloadButton.disabled = modeSelect.disabled = true;
+  runButton.disabled =
+    downloadButton.disabled =
+    modeSelect.disabled =
+    preserveDrawingBufferSelect.disabled =
+      true;
   result.textContent = '';
   status.textContent = 'Preparing diagnostic';
   replaceSurface();
 
   const mode = modeSelect.value;
+  const preserveDrawingBufferRequested =
+    preserveDrawingBufferSelect.value === 'true';
   let gl = null;
   let program = null;
   let rafId = null;
@@ -127,6 +180,8 @@ runButton.addEventListener('click', () => {
   let wallStartedAt = null;
   let focusedAtStart = null;
   let visibilityAtStart = null;
+  let canvasBoundsAtStart = null;
+  let contextAttributesAtStart = null;
   let active = false;
   const buckets = Array.from({ length: 5 }, (_, index) => ({
     startMs: index * BUCKET_MS,
@@ -182,15 +237,8 @@ runButton.addEventListener('click', () => {
     const rafGap = previousFrame === null ? null : endedAt - previousFrame;
     const timerGap =
       previousHeartbeat === null ? null : endedAt - previousHeartbeat;
-    const rect = canvas.getBoundingClientRect();
-    const visibleWidth = Math.max(
-      0,
-      Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0),
-    );
-    const visibleHeight = Math.max(
-      0,
-      Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0),
-    );
+    const canvasBoundsAtEnd = canvasBoundsSnapshot(canvas);
+    const contextAttributesAtEnd = contextAttributesSnapshot(gl);
     maximumHeartbeatGapMs = Math.max(maximumHeartbeatGapMs, timerGap || 0);
     const report = {
       schema: 'gev-webgl-frame-delivery/v1',
@@ -213,28 +261,15 @@ runButton.addEventListener('click', () => {
         visibilityAtStart,
       },
       pointCount: mode === 'webgl2' ? POINT_COUNT : null,
-      viewport: { width: window.innerWidth, height: window.innerHeight },
-      canvas: {
-        width: canvas.width,
-        height: canvas.height,
-        rect: {
-          left: rect.left,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-        },
-        viewportIntersection: {
-          width: visibleWidth,
-          height: visibleHeight,
-          fraction:
-            rect.width > 0 && rect.height > 0
-              ? (visibleWidth * visibleHeight) / (rect.width * rect.height)
-              : 0,
-        },
-      },
-      contextAttributes: gl?.getContextAttributes() ?? null,
+      preserveDrawingBufferRequested:
+        mode === 'webgl2' ? preserveDrawingBufferRequested : null,
+      canvasBoundsAtStart,
+      canvasBoundsAtEnd,
+      viewport: canvasBoundsAtEnd.viewport,
+      canvas: canvasBoundsAtEnd.canvas,
+      contextAttributesAtStart,
+      contextAttributesAtEnd,
+      contextAttributes: contextAttributesAtEnd,
       renderer: gl ? readRenderer(gl) : null,
       rendererMetadataReadAfterWindow: true,
       frames,
@@ -260,7 +295,10 @@ runButton.addEventListener('click', () => {
     result.textContent = JSON.stringify(report, null, 2);
     status.textContent = `Diagnostic ${outcome}`;
     downloadButton.disabled = false;
-    runButton.disabled = modeSelect.disabled = false;
+    runButton.disabled =
+      modeSelect.disabled =
+      preserveDrawingBufferSelect.disabled =
+        false;
   };
 
   try {
@@ -268,11 +306,12 @@ runButton.addEventListener('click', () => {
       gl = canvas.getContext('webgl2', {
         alpha: false,
         antialias: true,
-        preserveDrawingBuffer: true,
+        preserveDrawingBuffer: preserveDrawingBufferRequested,
         powerPreference: 'high-performance',
         stencil: true,
       });
       if (!gl) throw new Error('WebGL2 context creation failed.');
+      contextAttributesAtStart = contextAttributesSnapshot(gl);
       program = createPointProgram(gl);
     }
   } catch (error) {
@@ -280,6 +319,7 @@ runButton.addEventListener('click', () => {
     wallStartedAt = new Date().toISOString();
     focusedAtStart = document.hasFocus();
     visibilityAtStart = document.visibilityState;
+    canvasBoundsAtStart = canvasBoundsSnapshot(canvas);
     active = true;
     finish('setup-failed', error);
     return;
@@ -289,6 +329,7 @@ runButton.addEventListener('click', () => {
   wallStartedAt = new Date().toISOString();
   focusedAtStart = document.hasFocus();
   visibilityAtStart = document.visibilityState;
+  canvasBoundsAtStart = canvasBoundsSnapshot(canvas);
   active = true;
   previousHeartbeat = start;
   window.addEventListener('focus', onFocus);
@@ -349,7 +390,11 @@ downloadButton.addEventListener('click', () => {
   );
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `webgl-frame-delivery-${lastReport.appCommit?.slice(0, 7) || 'local'}-${lastReport.mode}.json`;
+  const preservation =
+    lastReport.preserveDrawingBufferRequested === null
+      ? 'na'
+      : String(lastReport.preserveDrawingBufferRequested);
+  anchor.download = `webgl-frame-delivery-${lastReport.appCommit?.slice(0, 7) || 'local'}-${lastReport.mode}-preserve-${preservation}.json`;
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
