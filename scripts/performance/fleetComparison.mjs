@@ -115,6 +115,94 @@ async function pixels(value) {
   return data;
 }
 
+export function validateFleetEmptyLifecycle(sample, report) {
+  assert.equal(sample?.schema, 'gev-fleet-render-demand/v3');
+  assert.equal(sample.status, 'passed');
+  assert.equal(sample.applicationCommit, report.candidate);
+  assert.equal(sample.harnessCommit, report.harness);
+  assert.equal(sample.mode, 'empty-lifecycle');
+  assert.equal(sample.implementation, 'candidate');
+  assert.deepEqual(sample.pageErrors, []);
+  assert.deepEqual(
+    sample.checks,
+    ['population', 'foreground', 'no-render-errors'].map((id) => ({
+      id,
+      status: 'passed',
+    })),
+  );
+  settings(sample.settings);
+  assert.equal(sample.cleanup.viewerDestroyed, true);
+  assert.equal(sample.cleanup.governor.installed, false);
+  assert.deepEqual(sample.cleanup.failures, []);
+  for (const state of [
+    sample.cleanup.governor,
+    sample.cleanup.beforeUninstall,
+  ]) {
+    assert.deepEqual(state.holds, []);
+    assert.deepEqual(state.scheduledUpdates, []);
+  }
+  const result = sample.emptyLifecycle;
+  assert.equal(result?.schema, 'gev-fleet-empty-lifecycle/v1');
+  assert.equal(result.status, 'passed');
+  assert.equal(result.requestedIdleMs, 10000);
+  assert.equal(result.maxIdleFrames, 2);
+  assert.deepEqual(
+    result.checks,
+    [
+      'initial-population-present',
+      'empty-final-frame',
+      'empty-no-periodic-demand',
+      'source-rearrival-resumes-cadence',
+      'ten-second-idle-frame-bound',
+      'full-source-recovery',
+    ].map((id) => ({ id, status: 'passed' })),
+  );
+  assert.deepEqual(
+    result.phases.map((p) => p.name),
+    ['empty-first', 'repopulate', 'empty-again', 'recovery'],
+  );
+  for (const phase of [result.phases[0], result.phases[2]]) {
+    assert.deepEqual(
+      phase.absentSnapshots.map((s) => s.absencePoll),
+      [1, 2, 3],
+    );
+    for (const frame of [phase.finalFrame, phase.drained]) {
+      assert.deepEqual(frame.population, { civil: 0, military: 0 });
+      assert.deepEqual(frame.sceneBillboards, { civil: 0, military: 0 });
+      assert.equal(frame.demand.holds, 0);
+      assert.equal(frame.demand.scheduledUpdates, 0);
+    }
+  }
+  for (const [index, counts] of [
+    [1, { civil: 1, military: 1 }],
+    [3, { civil: 12, military: 8 }],
+  ]) {
+    const frame = result.phases[index].frame;
+    assert.deepEqual(frame.population, counts);
+    assert.deepEqual(frame.sceneBillboards, counts);
+    assert.deepEqual(frame.billboardsReady, { civil: true, military: true });
+    assert.deepEqual(frame.billboardsShown, { civil: true, military: true });
+    assert.equal(frame.demand.holds, 0);
+    assert.equal(frame.demand.scheduledUpdates, 2);
+  }
+  const idle = result.phases[2].idle;
+  assert.equal(idle.requestedMs, 10000);
+  assert.ok(Number.isFinite(idle.observedMs) && idle.observedMs >= 10000);
+  assert.ok(
+    Number.isInteger(idle.frames) && idle.frames >= 0 && idle.frames <= 2,
+  );
+  assert.equal(idle.maxFrames, 2);
+  for (const state of [idle.demandStart, idle.demandEnd]) {
+    assert.equal(state.holds, 0);
+    assert.equal(state.scheduledUpdates, 0);
+  }
+  return {
+    status: 'passed',
+    emptyIdleFrames: idle.frames,
+    emptyIdleMs: idle.observedMs,
+  };
+}
+
 function validateSample(sample, report, implementation, mode) {
   assert.equal(sample.schema, 'gev-fleet-render-demand/v3');
   assert.equal(sample.status, 'passed');

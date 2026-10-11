@@ -28,6 +28,7 @@ import {
 import {
   validateFleetComparison,
   validateFleetRepeat,
+  validateFleetEmptyLifecycle,
 } from './performance/fleetComparison.mjs';
 
 // A local user's Chrome is controlled exclusively through the visible browser
@@ -47,6 +48,8 @@ const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const files = [
   'scripts/fixtures/fleet-render-demand.html',
   'scripts/fixtures/fleet-render-demand.mjs',
+  'scripts/fixtures/fleet-draw-state.mjs',
+  'scripts/fixtures/fleet-empty-lifecycle.mjs',
 ];
 
 if (process.argv[2] === '--serve') {
@@ -298,6 +301,25 @@ if (process.argv[2] === '--serve') {
     });
     report.browserVersion = await browser.version();
     report.graphics = await readBrowserGraphicsInfo(browser);
+    report.emptyLifecycle = await sample(
+      candidateUrl,
+      'candidate',
+      candidate,
+      'empty-lifecycle',
+    );
+    try {
+      report.emptyLifecycleValidation = validateFleetEmptyLifecycle(
+        report.emptyLifecycle,
+        report,
+      );
+    } catch (error) {
+      // Independent lifecycle evidence must not suppress the baseline draw
+      // diagnosis. A failed lifecycle still prevents overall acceptance.
+      report.emptyLifecycleValidation = {
+        status: 'failed',
+        error: String(error.stack || error).slice(0, 2000),
+      };
+    }
     // Prove the fixed-time protocol can reproduce the unchanged baseline
     // before spending time on candidate comparisons or drawing conclusions.
     for (let i = 0; i < 2; i++) {
@@ -350,6 +372,8 @@ if (process.argv[2] === '--serve') {
       process.stdout.write(`Completed actual-source fleet pair ${i + 1}/5\n`);
     }
     report.comparison = await validateFleetComparison(report);
+    if (report.emptyLifecycleValidation.status !== 'passed')
+      throw new Error('Empty fleet lifecycle validation failed');
     report.status = 'passed';
   } catch (error) {
     report.status = 'failed';

@@ -9,6 +9,11 @@ import * as governor from '../../src/renderGovernor.js';
 import { ensureGeoidReady } from '../../src/data/geoid.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
+import {
+  snapshotFleetDrawState,
+  encodeFleetDrawState,
+} from './fleet-draw-state.mjs';
+import { runFleetEmptyLifecycle } from './fleet-empty-lifecycle.mjs';
 
 const EPOCH = Date.UTC(2026, 9, 8, 12);
 const IDS = {
@@ -132,11 +137,14 @@ async function createFixture(clock) {
     registry.registerMilitaryIcaos(IDS.military);
     let revision = 0,
       sourceEpoch = EPOCH;
+    let sourceIds = IDS;
     const source = (kind) => ({
       label: `S51 ${kind} fixture`,
       async getSnapshot() {
         return {
-          records: records(kind, revision, sourceEpoch),
+          records: records(kind, revision, sourceEpoch).filter((r) =>
+            sourceIds[kind].includes(r.id),
+          ),
           source: `S51 ${kind} fixture`,
           coverage: 'fixed local fixture',
           observedAtMs: clock.now(),
@@ -328,6 +336,8 @@ async function createFixture(clock) {
                     : null,
                   uv: [uv.x, uv.y, uv.width, uv.height],
                   actualPosition: vector(b._actualPosition),
+                  dirty: b._dirty,
+                  textureDirty: b.textureDirty,
                 };
               }),
             },
@@ -460,6 +470,7 @@ async function createFixture(clock) {
     async function capture(name) {
       let frameOutput;
       let framebufferBytes;
+      let drawState;
       const remove = viewer.scene.postRender.addEventListener(() => {
         frameOutput = {
           output: output(),
@@ -500,6 +511,15 @@ async function createFixture(clock) {
           gl.UNSIGNED_BYTE,
           framebufferBytes,
         );
+        drawState = Object.fromEntries(
+          Object.keys(layers).map((kind) => [
+            kind,
+            snapshotFleetDrawState(
+              [...billboards(kind).values()][0]?._billboardCollection,
+              gl,
+            ),
+          ]),
+        );
       });
       let canvas;
       let rawCanvas;
@@ -508,6 +528,8 @@ async function createFixture(clock) {
         canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
         check(canvas && frameOutput, `${name}: completed frame unavailable`);
         remove();
+        for (const state of Object.values(drawState))
+          await encodeFleetDrawState(state);
         for (const fleet of Object.values(frameOutput.renderState.fleets)) {
           for (const sprite of fleet.sprites) {
             sprite.imageSha256 = await sha(
@@ -541,6 +563,7 @@ async function createFixture(clock) {
         captured = {
           name,
           ...frameOutput,
+          drawState,
           settings: settings(),
           governor: governor.getRenderGovernorDiagnostics(),
           pixels: {
@@ -578,6 +601,7 @@ async function createFixture(clock) {
         if (canvas) canvas.width = canvas.height = 0;
         if (rawCanvas) rawCanvas.width = rawCanvas.height = 0;
         framebufferBytes = null;
+        drawState = null;
       }
     }
     async function dispose() {
@@ -617,6 +641,9 @@ async function createFixture(clock) {
       phases,
       cameraEvents,
       settings,
+      setSourceIds(value) {
+        sourceIds = value;
+      },
       output,
       capture,
       dispose,
@@ -697,7 +724,10 @@ async function run() {
     ['baseline', 'candidate'].includes(implementation),
     'Expected implementation=baseline or candidate',
   );
-  check(['correctness', 'cadence'].includes(mode), 'Unknown fixture mode');
+  check(
+    ['correctness', 'cadence', 'empty-lifecycle'].includes(mode),
+    'Unknown fixture mode',
+  );
   check(
     /^[a-f0-9]{40}$/.test(appCommit || ''),
     'Served application has no exact build identity',
@@ -731,6 +761,7 @@ async function run() {
     implementation,
     mode,
     samples: [],
+    followupFrames: [],
     checks: [],
     cleanup: null,
   };
@@ -747,7 +778,20 @@ async function run() {
       fixture.layers.civil.getStats().count === 12 &&
         fixture.layers.military.getStats().count === 8,
     );
-    if (mode === 'cadence') {
+    if (mode === 'empty-lifecycle') {
+      check(
+        implementation === 'candidate',
+        'Empty lifecycle requires candidate scheduling',
+      );
+      result.emptyLifecycle = await runFleetEmptyLifecycle({
+        viewer: fixture.viewer,
+        layers: fixture.layers,
+        governor,
+        ids: IDS,
+        setSourceIds: fixture.setSourceIds,
+        errors: () => fixture.errors,
+      });
+    } else if (mode === 'cadence') {
       clock.start();
       await sleep(500);
       const frameStart = fixture.frames.length,
@@ -853,6 +897,12 @@ async function run() {
           fixture.layers[kind].getTrackedInfo() === null,
         );
         result.samples.push(await fixture.capture(`${kind}-released`));
+        // Preserve the first image. A second fresh capture with identical
+        // logical state tests whether deferred uploads converge on another
+        // render; it never replaces a failing first-frame comparison.
+        result.followupFrames.push(
+          await fixture.capture(`${kind}-released-followup`),
+        );
       }
       fixture.advance(EPOCH + 30640);
       const frames = fixture.frames.length;
@@ -888,6 +938,7 @@ async function run() {
   } catch (error) {
     result.status = 'failed';
     if (error.frameCapture) result.failedCapture = error.frameCapture;
+    if (error.lifecycleReport) result.emptyLifecycle = error.lifecycleReport;
     result.error = String(error.stack || error).slice(0, 3000);
   } finally {
     if (fixture) {

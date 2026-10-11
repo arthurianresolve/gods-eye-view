@@ -1173,5 +1173,9 @@
   "scripts/fixtures/fleet-render-demand.mjs",
   "scripts/qa-fleet-render-demand.mjs",
   "scripts/performance/fleetComparison.mjs",
-  "scripts/performance/fleetComparison.test.mjs"
+  "scripts/performance/fleetComparison.test.mjs",
+  "scripts/performance/fleetEmptyComparison.test.mjs",
+  "scripts/fixtures/fleet-draw-state.mjs",
+  "scripts/fixtures/fleet-draw-state.test.mjs",
+  "scripts/fixtures/fleet-empty-lifecycle.mjs"
 ]
