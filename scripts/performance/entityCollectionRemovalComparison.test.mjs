@@ -1,9 +1,13 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import { removeOwnedEntityCollection } from '../../src/imports/entityCollectionOwnership.js';
 import {
+  assertHistoricalBatchedHelper,
   assertInputFingerprintsUnchanged,
+  HISTORICAL_BATCHED_HELPER_SHA256,
   removeByIdsIndividually,
 } from './entityCollectionRemovalComparison.mjs';
 
@@ -42,12 +46,15 @@ test('individual removal preserves the exact imported IDs and unrelated entities
   assert.equal(events.length, owned.size);
 });
 
-test('batched removal uses one collection event when all entities are owned', () => {
+test('production helper preserves per-ID removal events and insertion order', () => {
   const { collection, owned, events } = populatedCollection();
   removeOwnedEntityCollection(collection, owned);
   assert.deepEqual(collection.values, []);
-  assert.equal(events.length, 1);
-  assert.deepEqual(events[0].removed.sort(), [...owned.keys()].sort());
+  assert.equal(events.length, owned.size);
+  assert.deepEqual(
+    events.map((event) => event.removed),
+    [...owned.keys()].map((id) => [id]),
+  );
 });
 
 test('mixed ownership is preserved and respects an external event suspension', () => {
@@ -61,7 +68,7 @@ test('mixed ownership is preserved and respects an external event suspension', (
   assert.deepEqual(events, []);
   collection.resumeEvents();
   assert.equal(events.length, 1);
-  assert.deepEqual(events[0].removed.sort(), [...owned.keys()].sort());
+  assert.deepEqual(events[0].removed, [...owned.keys()]);
 });
 
 test('shared production helper preserves a replacement with an owned ID', () => {
@@ -93,5 +100,25 @@ test('comparison input guard rejects changed hashes and path sets', () => {
   assert.throws(
     () => assertInputFingerprintsUnchanged(before, { runtime: 'abc' }),
     /input path set changed/,
+  );
+});
+
+test('historical batched benchmark rejects a different production helper', () => {
+  const currentHelperHash = createHash('sha256')
+    .update(
+      readFileSync(
+        new URL(
+          '../../src/imports/entityCollectionOwnership.js',
+          import.meta.url,
+        ),
+      ),
+    )
+    .digest('hex');
+  assert.doesNotThrow(() =>
+    assertHistoricalBatchedHelper(HISTORICAL_BATCHED_HELPER_SHA256),
+  );
+  assert.throws(
+    () => assertHistoricalBatchedHelper(currentHelperHash),
+    /does not apply to the current removal implementation/,
   );
 });

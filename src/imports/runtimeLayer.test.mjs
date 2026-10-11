@@ -246,10 +246,10 @@ test('cancellation during one large feature never publishes partial geometry', a
   assert.equal(env.timers.size, 0);
 });
 
-test('fully owned imports clear through one collection event and removeAll', (t) => {
+test('fully owned imports clear one-by-one in their original order', (t) => {
   const env = fixture(t);
   env.layer.load(records(4));
-  const expectedRemoved = env.entities.values.map((entity) => entity.id).sort();
+  const expectedRemoved = env.entities.values.map((entity) => entity.id);
   const changes = [];
   env.entities.collectionChanged.addEventListener(
     (_collection, added, removed, changed) =>
@@ -264,10 +264,14 @@ test('fully owned imports clear through one collection event and removeAll', (t)
 
   env.layer.clear();
 
-  assert.equal(removeAllCalls, 1);
-  assert.equal(changes.length, 1);
+  assert.equal(removeAllCalls, 0);
+  assert.equal(changes.length, expectedRemoved.length);
   assert.deepEqual(
-    changes[0].removed.map((entity) => entity.id).sort(),
+    changes.map((change) => change.removed.map((entity) => entity.id)),
+    expectedRemoved.map((id) => [id]),
+  );
+  assert.deepEqual(
+    changes.flatMap((change) => change.removed.map((entity) => entity.id)),
     expectedRemoved,
   );
   assert.deepEqual(env.entities.values, []);
@@ -275,10 +279,10 @@ test('fully owned imports clear through one collection event and removeAll', (t)
   assert.equal(env.layer.getState().featureCount, 0);
 });
 
-test('mixed imports preserve outside entities and batch within nested suspension', (t) => {
+test('mixed imports preserve outside entities and respect external suspension', (t) => {
   const env = fixture(t);
   env.layer.load(records(4));
-  const expectedRemoved = env.entities.values.map((entity) => entity.id).sort();
+  const expectedRemoved = env.entities.values.map((entity) => entity.id);
   const outside = env.entities.add({ id: 'outside:kept' });
   const changes = [];
   env.entities.collectionChanged.addEventListener(
@@ -301,7 +305,7 @@ test('mixed imports preserve outside entities and batch within nested suspension
 
   assert.equal(changes.length, 1);
   assert.deepEqual(
-    changes[0].removed.map((entity) => entity.id).sort(),
+    changes[0].removed.map((entity) => entity.id),
     expectedRemoved,
   );
   assert.equal(env.entities.getById(outside.id), outside);
@@ -345,7 +349,7 @@ test('clear preserves an external replacement that reuses an imported ID', (t) =
   );
 });
 
-test('mixed removal resumes collection events when a removal throws', (t) => {
+test('partial clear errors leave later collection events live', (t) => {
   const env = fixture(t);
   env.layer.load(records(3));
   env.entities.add({ id: 'outside:kept' });

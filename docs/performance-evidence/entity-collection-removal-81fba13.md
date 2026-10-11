@@ -52,6 +52,35 @@ That report ran at harness SHA-256
 
 Earlier `cb4b59f` measurements used an ID-only batched variant and are
 exploratory; they are not attributed to this production helper. The comparison
-does not establish a broad application performance gain. The focused
-ownership tests, package-boundary check, formatting check, and production build
-passed for the candidate.
+does not establish a broad application performance gain. Focused ownership
+tests, package-boundary check, formatting check, and production build passed
+for that historical candidate.
+
+## Outcome: bulk removal rejected
+
+The bulk-removal implementation was rejected after rendered pixel equivalence
+failed. Hosted run 38142466903 at `acbd812b6c1ea9e976929db9aefccb18e457c640`
+reported `Final pixels differ across equivalent imports`. An independent
+decode found 798 changed pixels in the rectangle x=232..407, y=127..238. Both
+captures contained 26,631 non-black green pixels, so the mismatch was localized
+to point edges/colors rather than missing point coverage. The original report
+and exact captures are archived in
+[`import-pixels-38142466903/`](import-pixels-38142466903/).
+
+A separate Node reproduction using the real Cesium 1.138.0
+`EntityCollection`, `EntityCluster`, and `PointVisualizer` showed that
+`removeAll()` changes the Entity-to-point-primitive index assignment after
+repopulation: the first clear mapped the first entity to primitive 4,999, while
+individual forward removals kept it at index 0. The mapping alternated after
+repeated bulk clears. This is consistent with the pixel mismatch, but the
+captures do not prove that index order alone caused those changed edge pixels.
+
+Reverse-order batched removal restores the normal point-index assignment, but
+changes the `collectionChanged` removed-array order when a caller has already
+suspended collection events. Cesium exposes no public suspension-depth query,
+so the helper cannot safely choose a different order for that case without
+reading private engine state. The runtime therefore keeps ownership-checked,
+forward per-ID removal and preserves the existing normal and externally
+suspended event order. The earlier latency rows above are historical results
+from the rejected helper hash and do not describe the current runtime or justify
+the optimization.

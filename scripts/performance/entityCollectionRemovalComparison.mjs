@@ -10,6 +10,8 @@ import { removeOwnedEntityCollection } from '../../src/imports/entityCollectionO
 export const IMPORTED_ENTITY_COUNT = 5_000;
 export const EXTERNAL_ENTITY_COUNT = 100;
 export const REMOVAL_PAIRS = 5;
+export const HISTORICAL_BATCHED_HELPER_SHA256 =
+  '0a9091f60f510b4b6c1c2fd51c653a29e632044296ee30db9475373d83d62b4f';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const median = (values) => [...values].sort((a, b) => a - b)[2];
@@ -25,6 +27,13 @@ export function assertInputFingerprintsUnchanged(before, after) {
       before[path] === after[path],
       `comparison input changed while the run was active: ${path}`,
     );
+}
+
+export function assertHistoricalBatchedHelper(sourceHash) {
+  assertExact(
+    sourceHash === HISTORICAL_BATCHED_HELPER_SHA256,
+    'historical batched-helper comparison does not apply to the current removal implementation',
+  );
 }
 
 export function removeByIdsIndividually(collection, ids) {
@@ -238,6 +247,7 @@ if (invoked) {
   const baseCommit = currentHead();
   assertCommittedSources(baseCommit);
   const beforeInputHashes = sourceFingerprints();
+  assertHistoricalBatchedHelper(beforeInputHashes[helperPath]);
   const report = runEntityCollectionRemovalComparison({
     baseCommit,
     sourceSha256: beforeInputHashes[runtimePath],
