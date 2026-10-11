@@ -15,6 +15,12 @@ const ROOT = path.resolve(
 const MANIFEST = JSON.parse(
   readFileSync(path.join(ROOT, 'patches/cesium-1.138.0-inertia.json'), 'utf8'),
 );
+const COLLISION_MANIFEST = JSON.parse(
+  readFileSync(
+    path.join(ROOT, 'patches/cesium-1.138.0-collision-transform.json'),
+    'utf8',
+  ),
+);
 const require = createRequire(import.meta.url);
 const NATIVE_DATE = globalThis.Date;
 
@@ -33,6 +39,23 @@ function recoverStock(entry, patchedBytes) {
   const stock = Buffer.from(patchedText.replace(entry.newText, entry.oldText));
   assert.equal(sha256(stock), entry.sourceSha256);
   return stock;
+}
+
+function recoverInertiaStage(relativePath, installedBytes) {
+  const entry = COLLISION_MANIFEST.files.find(
+    (candidate) => candidate.relativePath === relativePath,
+  );
+  assert.ok(entry, `missing collision manifest entry for ${relativePath}`);
+  const digest = sha256(installedBytes);
+  if (digest === entry.sourceSha256) return installedBytes;
+  assert.equal(digest, entry.patchedSha256);
+  const patchedText = installedBytes.toString('utf8');
+  assert.equal(patchedText.split(entry.newText).length - 1, 1);
+  const inertiaStage = Buffer.from(
+    patchedText.replace(entry.newText, entry.oldText),
+  );
+  assert.equal(sha256(inertiaStage), entry.sourceSha256);
+  return inertiaStage;
 }
 
 class EventTargetLite {
@@ -413,7 +436,8 @@ function loadIifeText(text, filename, documentTarget) {
 
 async function withDistribution(entry, kind, run) {
   const realPath = distributionFile(entry.relativePath);
-  const patchedBytes = readFileSync(realPath);
+  const installedBytes = readFileSync(realPath);
+  const patchedBytes = recoverInertiaStage(entry.relativePath, installedBytes);
   const stockBytes = recoverStock(entry, patchedBytes);
   const temporaryPath = path.join(
     path.dirname(realPath),

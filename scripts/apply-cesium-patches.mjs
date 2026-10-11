@@ -18,6 +18,11 @@ const DEFAULT_MANIFEST = path.join(
   'patches',
   'cesium-1.138.0-inertia.json',
 );
+const DEFAULT_COLLISION_MANIFEST = path.join(
+  REPOSITORY_ROOT,
+  'patches',
+  'cesium-1.138.0-collision-transform.json',
+);
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -82,57 +87,123 @@ function assertPackageVersion(root, relativePath, expectedVersion) {
 }
 
 /**
- * Apply the hash-pinned Cesium 1.138 disabled-input inertia correction.
- * Every dependency file is validated before the first write; mixed pristine
- * and already-patched states are accepted for recovery after interrupted writes.
+ * Apply the hash-pinned Cesium 1.138 dependency patches in order. Every
+ * dependency file is validated through the full patch chain before the first
+ * write; any intermediate state is accepted for recovery after interruption.
  */
-export function applyCesiumPatches({
-  root = REPOSITORY_ROOT,
-  manifestPath = DEFAULT_MANIFEST,
-} = {}) {
-  const manifest = readJson(manifestPath);
-  validateManifest(manifest);
+export function applyCesiumPatches(options = {}) {
+  const root = options.root ?? REPOSITORY_ROOT;
+  const manifestPaths =
+    options.manifestPaths ??
+    (Object.hasOwn(options, 'manifestPath')
+      ? [options.manifestPath]
+      : [DEFAULT_MANIFEST, DEFAULT_COLLISION_MANIFEST]);
+  if (!Array.isArray(manifestPaths) || manifestPaths.length === 0) {
+    throw new Error('At least one Cesium patch manifest is required');
+  }
+  const manifests = manifestPaths.map((manifestPath) => {
+    const manifest = readJson(manifestPath);
+    validateManifest(manifest);
+    return manifest;
+  });
+  const firstManifest = manifests[0];
+  for (const manifest of manifests) {
+    if (
+      manifest.cesiumVersion !== firstManifest.cesiumVersion ||
+      manifest.engineVersion !== firstManifest.engineVersion
+    ) {
+      throw new Error(
+        'Cesium patch manifests target different package versions',
+      );
+    }
+  }
   assertPackageVersion(
     root,
     'node_modules/cesium/package.json',
-    manifest.cesiumVersion,
+    firstManifest.cesiumVersion,
   );
   assertPackageVersion(
     root,
     'node_modules/@cesium/engine/package.json',
-    manifest.engineVersion,
+    firstManifest.engineVersion,
   );
 
-  const validated = manifest.files.map((entry) => {
-    const filePath = path.join(root, 'node_modules', entry.relativePath);
-    const bytes = readFileSync(filePath);
-    const digest = sha256(bytes);
-    if (digest === entry.patchedSha256) {
-      return { entry, filePath, bytes, patched: true };
-    }
-    if (digest !== entry.sourceSha256) {
-      throw new Error(
-        `Unexpected Cesium bytes for ${entry.relativePath}: ${digest}`,
-      );
-    }
-    const originalText = bytes.toString('utf8');
-    const occurrences = originalText.split(entry.oldText).length - 1;
-    if (occurrences !== 1) {
-      throw new Error(
-        `Expected one patch anchor in ${entry.relativePath}; found ${occurrences}`,
-      );
-    }
-    const patchedBytes = Buffer.from(
-      originalText.replace(entry.oldText, entry.newText),
-      'utf8',
+  const entriesByPath = new Map();
+  for (let index = 0; index < manifests.length; index += 1) {
+    const manifest = manifests[index];
+    const manifestEntries = new Map(
+      manifest.files.map((entry) => [entry.relativePath, entry]),
     );
-    const patchedDigest = sha256(patchedBytes);
-    if (patchedDigest !== entry.patchedSha256) {
+    if (index === 0) {
+      for (const [relativePath, entry] of manifestEntries) {
+        entriesByPath.set(relativePath, [entry]);
+      }
+      continue;
+    }
+    if (
+      manifestEntries.size !== entriesByPath.size ||
+      [...entriesByPath.keys()].some(
+        (relativePath) => !manifestEntries.has(relativePath),
+      )
+    ) {
+      throw new Error('Cesium patch manifests do not cover the same files');
+    }
+    for (const [relativePath, entries] of entriesByPath) {
+      const entry = manifestEntries.get(relativePath);
+      if (entry.sourceSha256 !== entries.at(-1).patchedSha256) {
+        throw new Error(`Broken Cesium patch chain for ${relativePath}`);
+      }
+      entries.push(entry);
+    }
+  }
+
+  const validated = [...entriesByPath].map(([relativePath, entries]) => {
+    const filePath = path.join(root, 'node_modules', relativePath);
+    const originalBytes = readFileSync(filePath);
+    const originalDigest = sha256(originalBytes);
+    const validDigests = [
+      entries[0].sourceSha256,
+      ...entries.map((entry) => entry.patchedSha256),
+    ];
+    const stateIndex = validDigests.indexOf(originalDigest);
+    if (stateIndex < 0) {
       throw new Error(
-        `Patch output hash mismatch for ${entry.relativePath}: ${patchedDigest}`,
+        `Unexpected Cesium bytes for ${relativePath}: ${originalDigest}`,
       );
     }
-    return { entry, filePath, bytes: patchedBytes, patched: false };
+    let bytes = originalBytes;
+    let text;
+    for (
+      let patchIndex = stateIndex;
+      patchIndex < entries.length;
+      patchIndex += 1
+    ) {
+      const entry = entries[patchIndex];
+      if (patchIndex > 0 && sha256(bytes) !== entry.sourceSha256) {
+        throw new Error(`Broken Cesium patch chain for ${relativePath}`);
+      }
+      text ??= bytes.toString('utf8');
+      const occurrences = text.split(entry.oldText).length - 1;
+      if (occurrences !== 1) {
+        throw new Error(
+          `Expected one patch anchor in ${relativePath}; found ${occurrences}`,
+        );
+      }
+      text = text.replace(entry.oldText, entry.newText);
+      bytes = Buffer.from(text, 'utf8');
+      const patchedDigest = sha256(bytes);
+      if (patchedDigest !== entry.patchedSha256) {
+        throw new Error(
+          `Patch output hash mismatch for ${relativePath}: ${patchedDigest}`,
+        );
+      }
+    }
+    return {
+      entry: entries.at(-1),
+      filePath,
+      bytes,
+      patched: stateIndex === entries.length,
+    };
   });
 
   const pending = validated.filter((item) => !item.patched);

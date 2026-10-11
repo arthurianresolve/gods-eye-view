@@ -9,6 +9,7 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
 ]);
 const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/cesiumDisabledInputInertia.test.mjs',
+  'scripts/performance/cesiumTerrainCollisionTransform.test.mjs',
   'scripts/apply-cesium-patches.test.mjs',
   'scripts/performance/motionBudget.test.mjs',
   'scripts/performance/captureIntegrity.test.mjs',
