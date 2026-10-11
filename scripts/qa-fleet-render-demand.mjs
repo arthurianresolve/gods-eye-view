@@ -278,12 +278,36 @@ if (process.argv[2] === '--serve') {
         'src',
         'build',
         'public/models',
+        'patches',
+        'scripts/apply-cesium-patches.mjs',
       ])
         .split('\n')
         .filter(Boolean))
         report.sourceHashes[label][file] = hash(
           await readFile(path.join(root, file)),
         );
+    }
+    // Both Vite checkouts use the same dependency directory. Record the actual
+    // engine bytes, including local pinned corrections, rather than implying
+    // that a matching package lock proves an identical installed engine.
+    const inertiaManifest = JSON.parse(
+      await readFile('patches/cesium-1.138.0-inertia.json', 'utf8'),
+    );
+    report.sharedDependencies = {
+      scope:
+        'Both source revisions use this installed dependency set from the candidate checkout; patch source identities for each revision are recorded separately in sourceHashes.',
+      cesiumVersion: JSON.parse(
+        await readFile('node_modules/cesium/package.json', 'utf8'),
+      ).version,
+      engineVersion: JSON.parse(
+        await readFile('node_modules/@cesium/engine/package.json', 'utf8'),
+      ).version,
+      files: {},
+    };
+    for (const { relativePath } of inertiaManifest.files) {
+      report.sharedDependencies.files[relativePath] = hash(
+        await readFile(path.join(candidateRoot, 'node_modules', relativePath)),
+      );
     }
     const baselineUrl = await startServer(
       baselineRoot,
