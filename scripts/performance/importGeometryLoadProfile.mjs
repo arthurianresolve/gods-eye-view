@@ -4,6 +4,7 @@ import {
 } from './importLoadProfile.mjs';
 import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
 import { createHash } from 'node:crypto';
+import { isValidImportTraceFlowEvent } from './importTraceAttribution.mjs';
 
 export const IMPORT_GEOMETRY_LOAD_PROFILE_SCHEMA =
   'gev-import-geometry-load-profile/v1';
@@ -135,37 +136,10 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
   const gc = trace.events.filter((event) => event.kind === 'gc');
   const flowEvents = trace.flowEvents;
   const flowPhaseCounts = trace.flowPhaseCounts;
-  const validFlowPhases = new Set(['s', 't', 'f']);
   const flowRecordsValid =
     Array.isArray(flowEvents) &&
     flowEvents.length <= 8192 &&
-    flowEvents.every(
-      (event) =>
-        event?.kind === 'gc-flow' &&
-        validFlowPhases.has(event.phase) &&
-        typeof event.name === 'string' &&
-        event.nameStatus === 'valid' &&
-        event.name.length <= 128 &&
-        /^V8\.(?:GC|MinorGC)/.test(event.name) &&
-        typeof event.category === 'string' &&
-        event.category.length <= 128 &&
-        Number.isFinite(event.tsUs) &&
-        event.tsUs >= 0 &&
-        Number.isInteger(event.pid) &&
-        event.pid >= 0 &&
-        Number.isInteger(event.tid) &&
-        event.tid >= 0 &&
-        ['present', 'missing', 'invalid'].includes(event.identityStatus) &&
-        event.identity &&
-        typeof event.identity === 'object' &&
-        !Array.isArray(event.identity) &&
-        (event.identityStatus !== 'present' ||
-          ['id', 'bindId'].some((key) => Object.hasOwn(event.identity, key)) ||
-          (event.identity.id2 &&
-            ['local', 'global'].some((key) =>
-              Object.hasOwn(event.identity.id2, key),
-            ))),
-    );
+    flowEvents.every(isValidImportTraceFlowEvent);
   const phaseCountsValid =
     flowPhaseCounts &&
     ['s', 't', 'f'].every(
@@ -192,7 +166,10 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
     invalidFlowIdentityCount === 0 &&
     Number.isInteger(invalidFlowRecordCount) &&
     invalidFlowRecordCount ===
-      flowEvents.filter((event) => event.nameStatus !== 'valid').length &&
+      flowEvents.filter(
+        (event) =>
+          event.nameStatus !== 'valid' || event.categoryStatus !== 'valid',
+      ).length &&
     invalidFlowRecordCount === 0 &&
     flowOmittedCount === 0;
   const phaseCountsMatchRecords =
@@ -325,7 +302,7 @@ function summarizeUnmatchedFlow(flowEvents) {
   const groups = new Map();
   for (const event of flowEvents) {
     if (event.identityStatus !== 'present') continue;
-    const identityKey = `${event.category}\u0000${event.name}\u0000${JSON.stringify(event.identity)}`;
+    const identityKey = `${event.pid}\u0000${event.category}\u0000${event.name}\u0000${JSON.stringify(event.identity)}`;
     const records = groups.get(identityKey) || [];
     records.push(event);
     groups.set(identityKey, records);
@@ -348,7 +325,9 @@ function summarizeUnmatchedFlow(flowEvents) {
     unmatchedStarts += open;
   }
   return {
-    interpretation: 'observed-records-only; flow completion is not inferred',
+    interpretation:
+      'observed-records-only; flow completion is not inferred; matches are scoped to one process, so cross-process links are not reconstructed',
+    crossProcessLinksNotReconstructed: true,
     unmatchedStarts,
     unmatchedSteps,
     unmatchedEnds,

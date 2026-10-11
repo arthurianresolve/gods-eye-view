@@ -525,6 +525,7 @@ test('flow links report unpaired phases without making causal completion a gate'
       name: 'V8.GC',
       nameStatus: 'valid',
       category: 'disabled-by-default-v8.gc',
+      categoryStatus: 'valid',
       tsUs: 100_000,
       pid: 1,
       tid: 2,
@@ -537,10 +538,11 @@ test('flow links report unpaired phases without making causal completion a gate'
       name: 'V8.GC',
       nameStatus: 'valid',
       category: 'disabled-by-default-v8.gc',
+      categoryStatus: 'valid',
       tsUs: 110_000,
-      pid: 1,
+      pid: 3,
       tid: 2,
-      identity: { id: 10 },
+      identity: { id: 9 },
       identityStatus: 'present',
     },
   ];
@@ -560,7 +562,9 @@ test('flow links report unpaired phases without making causal completion a gate'
   assert.equal(summary.complete, true);
   assert.equal(summary.sameThreadGcOverlapMs, 0);
   assert.deepEqual(summary.unmatchedFlow, {
-    interpretation: 'observed-records-only; flow completion is not inferred',
+    interpretation:
+      'observed-records-only; flow completion is not inferred; matches are scoped to one process, so cross-process links are not reconstructed',
+    crossProcessLinksNotReconstructed: true,
     unmatchedStarts: 1,
     unmatchedSteps: 0,
     unmatchedEnds: 1,
@@ -675,6 +679,35 @@ test('missing, malformed, or overflowed flow observations fail closed', () => {
   });
   assert.equal(oversizedSummary.complete, false);
 
+  const oversizedCategoryCollector = createImportTraceEventCollector();
+  oversizedCategoryCollector.add([
+    {
+      name: 'V8.GC',
+      cat: `disabled-by-default-v8.gc,${'x'.repeat(140)}`,
+      ph: 's',
+      ts: 3,
+      pid: 1,
+      tid: 2,
+      id: 8,
+    },
+  ]);
+  const oversizedCategory = oversizedCategoryCollector.finish();
+  assert.equal(oversizedCategory.flowEvents[0].categoryStatus, 'invalid');
+  assert.equal(oversizedCategory.invalidFlowRecordCount, 1);
+  const oversizedCategorySummary = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      ...oversizedCategory,
+      relevantCount: traceInput.events.length + oversizedCategory.relevantCount,
+      stopError: null,
+      bufferUsagePeak: 0.1,
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(oversizedCategorySummary.complete, false);
+
   const malformed = summarizeGeometryGcOverlap({
     trace: {
       ...traceInput,
@@ -733,6 +766,54 @@ test('missing, malformed, or overflowed flow observations fail closed', () => {
   assert.equal(oldCounterOnly.complete, false);
 });
 
+test('flow report validation rejects forged identity values, keys, and bounds', () => {
+  const valid = {
+    kind: 'gc-flow',
+    phase: 's',
+    name: 'V8.GC',
+    nameStatus: 'valid',
+    category: 'disabled-by-default-v8.gc',
+    categoryStatus: 'valid',
+    tsUs: 1,
+    pid: 1,
+    tid: 2,
+    identity: { id: 'flow-id' },
+    identityStatus: 'present',
+  };
+  const check = (event) =>
+    summarizeGeometryGcOverlap({
+      trace: {
+        ...traceInput,
+        flowEvents: [event],
+        flowEventCount: 1,
+        flowPhaseCounts: { s: 1, t: 0, f: 0 },
+        relevantCount: traceInput.events.length + 1,
+      },
+      anchor,
+      startMs: loadStartedAtMs,
+      endMs: loadCompletedAtMs,
+    }).complete;
+  assert.equal(check(valid), true);
+  assert.equal(
+    check({ ...valid, identity: { id: { value: 'forged' } } }),
+    false,
+  );
+  assert.equal(check({ ...valid, identity: { id: 'x'.repeat(129) } }), false);
+  assert.equal(
+    check({ ...valid, identity: { id: 'flow-id', extra: 1 } }),
+    false,
+  );
+  assert.equal(
+    check({ ...valid, identity: { id2: { local: 4, extra: 1 } } }),
+    false,
+  );
+  assert.equal(
+    check({ ...valid, identity: { id: 'flow-id' }, unreviewed: true }),
+    false,
+  );
+  assert.equal(check({ ...valid, category: 'c'.repeat(129) }), false);
+});
+
 test('profile validator recomputes retained flow identity and phase accounting', () => {
   const report = validReport();
   const event = {
@@ -741,6 +822,7 @@ test('profile validator recomputes retained flow identity and phase accounting',
     name: 'V8.GC',
     nameStatus: 'valid',
     category: 'disabled-by-default-v8.gc',
+    categoryStatus: 'valid',
     tsUs: 500_100,
     pid: 1,
     tid: 2,

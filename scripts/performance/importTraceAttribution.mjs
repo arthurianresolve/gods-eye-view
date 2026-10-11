@@ -73,6 +73,10 @@ function boundedFlowIdentity(event) {
     const id2 = {};
     addScalar(id2, 'local', event.id2.local);
     addScalar(id2, 'global', event.id2.global);
+    if (
+      Object.keys(event.id2).some((key) => !['local', 'global'].includes(key))
+    )
+      invalid = true;
     if (Object.keys(id2).length) identity.id2 = id2;
   } else if (event.id2 !== undefined) {
     identity.id2Status = 'invalid';
@@ -88,6 +92,112 @@ function boundedFlowIdentity(event) {
     identity,
     status: invalid ? 'invalid' : valid ? 'present' : 'missing',
   };
+}
+
+const FLOW_IDENTITY_KEYS = new Set([
+  'id',
+  'bindId',
+  'id2',
+  'scope',
+  'idStatus',
+  'bindIdStatus',
+  'id2Status',
+  'scopeStatus',
+]);
+const FLOW_ID2_KEYS = new Set([
+  'local',
+  'global',
+  'localStatus',
+  'globalStatus',
+]);
+const FLOW_EVENT_KEYS = new Set([
+  'kind',
+  'phase',
+  'name',
+  'nameStatus',
+  'category',
+  'categoryStatus',
+  'tsUs',
+  'pid',
+  'tid',
+  'identity',
+  'identityStatus',
+]);
+
+function plainObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function validIdentityScalar(value) {
+  return (
+    (typeof value === 'string' && value.length <= 128) ||
+    (typeof value === 'number' && Number.isFinite(value))
+  );
+}
+
+function validIdentityObject(identity) {
+  if (
+    !plainObject(identity) ||
+    Object.keys(identity).some((key) => !FLOW_IDENTITY_KEYS.has(key))
+  )
+    return false;
+  for (const key of ['id', 'bindId', 'scope']) {
+    if (Object.hasOwn(identity, key) && !validIdentityScalar(identity[key]))
+      return false;
+  }
+  for (const key of ['idStatus', 'bindIdStatus', 'id2Status', 'scopeStatus']) {
+    if (Object.hasOwn(identity, key) && identity[key] !== 'invalid')
+      return false;
+  }
+  if (Object.hasOwn(identity, 'id2')) {
+    const id2 = identity.id2;
+    if (
+      !plainObject(id2) ||
+      Object.keys(id2).some((key) => !FLOW_ID2_KEYS.has(key)) ||
+      ['local', 'global'].some(
+        (key) => Object.hasOwn(id2, key) && !validIdentityScalar(id2[key]),
+      ) ||
+      ['localStatus', 'globalStatus'].some(
+        (key) => Object.hasOwn(id2, key) && id2[key] !== 'invalid',
+      )
+    )
+      return false;
+  }
+  const hasValue =
+    ['id', 'bindId'].some((key) => Object.hasOwn(identity, key)) ||
+    (identity.id2 &&
+      ['local', 'global'].some((key) => Object.hasOwn(identity.id2, key)));
+  const hasInvalidField = Object.keys(identity).some((key) =>
+    key.endsWith('Status'),
+  );
+  if (hasInvalidField) return false;
+  return hasValue;
+}
+
+export function isValidImportTraceFlowEvent(event) {
+  return (
+    plainObject(event) &&
+    Object.keys(event).every((key) => FLOW_EVENT_KEYS.has(key)) &&
+    event.kind === 'gc-flow' &&
+    ['s', 't', 'f'].includes(event.phase) &&
+    typeof event.name === 'string' &&
+    event.nameStatus === 'valid' &&
+    event.name.length <= 128 &&
+    /^V8\.(?:GC|MinorGC)/.test(event.name) &&
+    typeof event.category === 'string' &&
+    event.categoryStatus === 'valid' &&
+    event.category.length <= 128 &&
+    finite(event.tsUs) &&
+    event.tsUs >= 0 &&
+    Number.isInteger(event.pid) &&
+    event.pid >= 0 &&
+    Number.isInteger(event.tid) &&
+    event.tid >= 0 &&
+    event.identityStatus === 'present' &&
+    validIdentityObject(event.identity)
+  );
 }
 
 function overlaps(event, startUs, endUs) {
@@ -123,7 +233,7 @@ function summarizeFlowSequences(flowEvents) {
   const sequences = new Map();
   for (const event of flowEvents) {
     if (event.identityStatus !== 'present') continue;
-    const key = `${event.category}\u0000${event.name}\u0000${JSON.stringify(event.identity)}`;
+    const key = `${event.pid}\u0000${event.category}\u0000${event.name}\u0000${JSON.stringify(event.identity)}`;
     const records = sequences.get(key) || [];
     records.push(event);
     sequences.set(key, records);
@@ -145,7 +255,12 @@ function summarizeFlowSequences(flowEvents) {
     }
     unmatchedStarts += openStarts;
   }
-  return { unmatchedStarts, unmatchedSteps, unmatchedEnds };
+  return {
+    unmatchedStarts,
+    unmatchedSteps,
+    unmatchedEnds,
+    crossProcessLinksNotReconstructed: true,
+  };
 }
 
 /**
@@ -201,14 +316,16 @@ export function createImportTraceEventCollector(
     }
     const { identity, status } = boundedFlowIdentity(event);
     const nameValid = event.name.length <= 128;
+    const categoryValid = event.cat.length <= 128;
     if (status !== 'present') invalidFlowIdentityCount += 1;
-    if (!nameValid) invalidFlowRecordCount += 1;
+    if (!nameValid || !categoryValid) invalidFlowRecordCount += 1;
     flowEvents.push({
       kind: 'gc-flow',
       phase: event.ph,
       name: event.name.slice(0, 128),
       nameStatus: nameValid ? 'valid' : 'invalid',
       category: event.cat.slice(0, 128),
+      categoryStatus: categoryValid ? 'valid' : 'invalid',
       tsUs: event.ts,
       pid: event.pid,
       tid: event.tid,
@@ -402,40 +519,10 @@ export function summarizeImportTraceAttribution({
   const gcInstantObservations = [];
   const flowEvents = Array.isArray(trace.flowEvents) ? trace.flowEvents : [];
   if (!Array.isArray(trace.flowEvents)) errors.push('missing-flow-records');
-  let invalidFlowRecords = 0;
-  for (const event of flowEvents) {
-    const validIdentity =
-      event?.identityStatus === 'present' &&
-      event.identity &&
-      (Object.hasOwn(event.identity, 'id') ||
-        Object.hasOwn(event.identity, 'bindId') ||
-        Object.hasOwn(event.identity.id2 || {}, 'local') ||
-        Object.hasOwn(event.identity.id2 || {}, 'global'));
-    if (
-      event?.kind !== 'gc-flow' ||
-      !['s', 't', 'f'].includes(event.phase) ||
-      typeof event.name !== 'string' ||
-      event.nameStatus !== 'valid' ||
-      event.name.length > 128 ||
-      !/^V8\.(?:GC|MinorGC)/.test(event.name) ||
-      typeof event.category !== 'string' ||
-      event.category.length > 128 ||
-      !finite(event.tsUs) ||
-      event.tsUs < 0 ||
-      !Number.isInteger(event.pid) ||
-      event.pid < 0 ||
-      !Number.isInteger(event.tid) ||
-      event.tid < 0 ||
-      !['present', 'missing', 'invalid'].includes(event.identityStatus) ||
-      !event.identity ||
-      typeof event.identity !== 'object' ||
-      Array.isArray(event.identity) ||
-      (event.identityStatus === 'present' && !validIdentity)
-    ) {
-      errors.push('invalid-flow-event');
-      invalidFlowRecords += 1;
-    }
-  }
+  const invalidFlowRecords = flowEvents.filter(
+    (event) => !isValidImportTraceFlowEvent(event),
+  ).length;
+  if (invalidFlowRecords) errors.push('invalid-flow-event');
   const flowCounts = trace.flowPhaseCounts;
   const flowOmitted = trace.flowOmittedCount;
   const invalidIdentityCount = trace.invalidFlowIdentityCount;
@@ -463,7 +550,10 @@ export function summarizeImportTraceAttribution({
     invalidIdentityCount === 0 &&
     Number.isInteger(invalidRecordCount) &&
     invalidRecordCount ===
-      flowEvents.filter((event) => event.nameStatus !== 'valid').length &&
+      flowEvents.filter(
+        (event) =>
+          event.nameStatus !== 'valid' || event.categoryStatus !== 'valid',
+      ).length &&
     invalidRecordCount === 0 &&
     flowOmitted === 0 &&
     invalidFlowRecords === 0;
