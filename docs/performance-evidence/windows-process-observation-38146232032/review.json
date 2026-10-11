@@ -1,0 +1,135 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38146232032",
+  "commit": "9d23f57904fa1ea97aa290618564724fb8ecab3b",
+  "reportSha256": "321c3c616bae435635d9fdc67c88a1ed4ccb34c380ee4b9026cd98cafd18044b",
+  "status": "passed-without-reproducing-timeout",
+  "scope": "Instrumented hosted Windows recovery. Parent-process sampling, not physical GPU evidence or proof of a shutdown fix.",
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "closeElapsedMs": 639.8998000000138,
+      "processExitMs": 639.530700000003,
+      "helperSetupMs": 1070.405299999984,
+      "samples": 3,
+      "sampledCpuDeltaMs": 31.25,
+      "sampledWindowMs": 222.4357
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "closeElapsedMs": 416.086100000015,
+      "processExitMs": 415.9557999999961,
+      "helperSetupMs": 317.25030000001425,
+      "samples": 3,
+      "sampledCpuDeltaMs": 31.25,
+      "sampledWindowMs": 227.1697
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "closeElapsedMs": 408.4349999999977,
+      "processExitMs": 408.2601999999606,
+      "helperSetupMs": 309.5622999999905,
+      "samples": 3,
+      "sampledCpuDeltaMs": 15.625,
+      "sampledWindowMs": 212.2982
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "closeElapsedMs": 415.0572000000393,
+      "processExitMs": 414.9346000000369,
+      "helperSetupMs": 335.3037000000477,
+      "samples": 3,
+      "sampledCpuDeltaMs": 0,
+      "sampledWindowMs": 219.6461
+    },
+    {
+      "id": "shutdown-repeat-prior-1",
+      "closeElapsedMs": 360.90729999996256,
+      "processExitMs": 360.74600000004284,
+      "helperSetupMs": 312.04390000004787,
+      "samples": 3,
+      "sampledCpuDeltaMs": 31.25,
+      "sampledWindowMs": 219.57080000000005
+    },
+    {
+      "id": "shutdown-repeat-candidate-1",
+      "closeElapsedMs": 479.28390000003856,
+      "processExitMs": 479.0553999999538,
+      "helperSetupMs": 316.06199999991804,
+      "samples": 4,
+      "sampledCpuDeltaMs": 93.75,
+      "sampledWindowMs": 324.7993
+    },
+    {
+      "id": "shutdown-repeat-prior-2",
+      "closeElapsedMs": 397.8484999999637,
+      "processExitMs": 397.73439999995753,
+      "helperSetupMs": 296.65629999991506,
+      "samples": 3,
+      "sampledCpuDeltaMs": 15.625,
+      "sampledWindowMs": 227.52960000000002
+    },
+    {
+      "id": "shutdown-repeat-candidate-2",
+      "closeElapsedMs": 416.93169999995735,
+      "processExitMs": 416.80389999994077,
+      "helperSetupMs": 314.46349999995437,
+      "samples": 3,
+      "sampledCpuDeltaMs": 15.625,
+      "sampledWindowMs": 211.42830000000004
+    },
+    {
+      "id": "shutdown-repeat-prior-3",
+      "closeElapsedMs": 435.7846000000136,
+      "processExitMs": 435.59560000000056,
+      "helperSetupMs": 308.5596000000369,
+      "samples": 4,
+      "sampledCpuDeltaMs": 0,
+      "sampledWindowMs": 318.66780000000006
+    },
+    {
+      "id": "shutdown-repeat-candidate-3",
+      "closeElapsedMs": 415.9381000000285,
+      "processExitMs": 415.7797000000719,
+      "helperSetupMs": 297.9235000000335,
+      "samples": 4,
+      "sampledCpuDeltaMs": 31.25,
+      "sampledWindowMs": 325.8392
+    },
+    {
+      "id": "shutdown-repeat-prior-4",
+      "closeElapsedMs": 378.25520000001416,
+      "processExitMs": 378.1175000000512,
+      "helperSetupMs": 305.9462000000058,
+      "samples": 3,
+      "sampledCpuDeltaMs": 46.875,
+      "sampledWindowMs": 229.58329999999998
+    },
+    {
+      "id": "shutdown-repeat-candidate-4",
+      "closeElapsedMs": 447.71830000006594,
+      "processExitMs": 447.5820000000531,
+      "helperSetupMs": 308.20940000005066,
+      "samples": 4,
+      "sampledCpuDeltaMs": 62.5,
+      "sampledWindowMs": 335.6788
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "closeElapsedMs": 414.43799999996554,
+      "processExitMs": 414.3188000000082,
+      "helperSetupMs": 294.845100000035,
+      "samples": 3,
+      "sampledCpuDeltaMs": 46.875,
+      "sampledWindowMs": 226.9409
+    }
+  ],
+  "findings": [
+    "All 13 scenarios preserved settings, workspace bundle, and the same rendered asset.",
+    "Every browser exited naturally with code zero within the unchanged five-second gate.",
+    "Sampling helper setup after page closure adds delay before Browser.close; this pass does not reproduce the uninstrumented timing condition.",
+    "Observed CPU and wait labels cannot identify the earlier blocking stack or establish its cause."
+  ],
+  "rootCauseResolved": false,
+  "mainMergePromoted": false,
+  "hardwareRenderingValidated": false
+}

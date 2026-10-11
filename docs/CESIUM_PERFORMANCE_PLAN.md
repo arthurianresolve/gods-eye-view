@@ -4098,3 +4098,18 @@ This mode is mutually exclusive with Chromium shutdown tracing and disabled
 by default. Focused validation includes a real disposable Node process on
 Windows, without controlling any local browser. Hosted reproduction, attribution
 of the intermittent delay and an independently validated fix are still pending.
+
+### Windows process observation result - 11 October 2026
+
+[Run 38146232032](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38146232032)
+at `9d23f57904fa1ea97aa290618564724fb8ecab3b` passed all 13 recovery and
+alternating shutdown scenarios with settings, workspace and imported asset
+preserved. Browser shutdown took 361-640 ms; every process exited naturally
+with code zero inside the unchanged five-second gate. The bounded observer
+returned 3-4 samples per close. See the [review and raw evidence](performance-evidence/windows-process-observation-38146232032/review.json).
+
+This does not establish a fix: helper startup inserted 295-1070 ms between
+page closure and Browser.close and sampling changes the execution conditions.
+The earlier uninstrumented timeout remains authoritative. Its cause, an
+independently validated fix, and main integration remain pending. Software
+rendering on a hosted Windows runner is not hardware-performance evidence.
