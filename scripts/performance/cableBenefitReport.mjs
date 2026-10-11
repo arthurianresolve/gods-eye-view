@@ -43,6 +43,8 @@ export const CABLE_BENEFIT_SOURCE_PATHS = Object.freeze([
   'scripts/performance/cableBenefitComparison.mjs',
   'scripts/performance/cableBenefitReport.mjs',
   'scripts/performance/cableBenefitReport.test.mjs',
+  'scripts/fixtures/cableBenefitDeadline.test.mjs',
+  'scripts/fixtures/cableDeadline.mjs',
   'scripts/fixtures/cable-reference-collections-ui.js',
   'scripts/performance/rendererEvidence.mjs',
   'scripts/performance/profileRecoveryPageOwnership.mjs',
@@ -181,6 +183,7 @@ export function validateCableBenefit(report, expectedCommit) {
         assert.equal(run.applicationCommit, expectedCommit);
         assert.equal(run.harnessCommit, expectedCommit);
         assert.equal(run.pageErrors.length, 0);
+        assert.deepEqual(run.resourceFailures, []);
         assert.equal(run.contextClosed, true);
         assert.equal(run.sessionDetached, true);
         assert.equal(run.cleanupComplete, true);

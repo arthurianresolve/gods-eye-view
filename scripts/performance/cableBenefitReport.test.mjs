@@ -101,6 +101,7 @@ function makeRun(mode, suite, index, orderIndex) {
     phase: 'viewer-destroyed',
     status: 'passed',
     pageErrors: [],
+    resourceFailures: [],
     contextClosed: true,
     sessionDetached: true,
     cleanupComplete: true,
@@ -330,4 +331,18 @@ test('rejects wrong dependency patch hashes and incomplete forced-GC samples', (
     (pair) => pair.suite === 'memory',
   ).runs.entities.memory.enabled = -1;
   assert.throws(() => validateCableBenefit(memory, commit));
+});
+
+test('rejects missing or failed local fixture resources', () => {
+  const missing = makeReport();
+  delete missing.pairs[0].runs.entities.resourceFailures;
+  assert.throws(() => validateCableBenefit(missing, commit));
+
+  const failed = makeReport();
+  failed.pairs[0].runs.collections.resourceFailures.push({
+    status: 404,
+    resource: 'http://127.0.0.1/scripts/fixtures/favicon.ico',
+    type: 'Other',
+  });
+  assert.throws(() => validateCableBenefit(failed, commit));
 });

@@ -353,6 +353,7 @@ if (isMain) {
       phase: 'new-context',
       status: 'running',
       pageErrors: [],
+      resourceFailures: [],
       externalRequests: [],
       interceptionErrors: [],
       sessionDetached: false,
@@ -387,6 +388,21 @@ if (isMain) {
       });
       await page.setCacheEnabled(false);
       await session.send('Performance.enable');
+      await session.send('Network.enable');
+      session.on('Network.responseReceived', ({ response, type }) => {
+        if (response.status < 400 || record.resourceFailures.length >= 20)
+          return;
+        let resource = response.url;
+        try {
+          const parsed = new URL(response.url);
+          resource = `${parsed.origin}${parsed.pathname}`;
+        } catch {}
+        record.resourceFailures.push({
+          status: response.status,
+          resource: resource.slice(0, 500),
+          type: String(type || 'unknown').slice(0, 80),
+        });
+      });
       if (suite === 'memory') await session.send('HeapProfiler.enable');
       const origin = `http://127.0.0.1:${server.httpServer.address().port}`;
       await interceptFixtureSession(
@@ -454,6 +470,11 @@ if (isMain) {
         record.externalRequests,
         [],
         'Fixture requested a remote resource.',
+      );
+      assert.deepEqual(
+        record.resourceFailures,
+        [],
+        'Fixture requested a missing or failing resource.',
       );
       assert.deepEqual(
         record.interceptionErrors,

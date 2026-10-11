@@ -1210,6 +1210,8 @@
   "scripts/fixtures/scenePrimitiveReadiness.mjs",
   "scripts/fixtures/scenePrimitiveReadiness.test.mjs",
   "scripts/fixtures/cableReferenceFixture.mjs",
+  "scripts/fixtures/cableBenefitDeadline.test.mjs",
+  "scripts/fixtures/cableDeadline.mjs",
   "scripts/fixtures/cable-reference-benefit.html",
   "scripts/fixtures/cable-reference-benefit.mjs",
   "scripts/performance/cableBenefitComparison.mjs",

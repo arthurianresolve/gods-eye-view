@@ -21,6 +21,7 @@ import {
   viewerSettings,
   shaJson,
 } from './cableReferenceFixture.mjs';
+import { waitForPostRenderUntil } from './cableDeadline.mjs';
 
 const mode = new URLSearchParams(location.search).get('mode');
 const output = document.querySelector('#result');
@@ -83,7 +84,12 @@ async function activate() {
     );
   };
   while (!disposed && performance.now() < deadline) {
-    await waitForPostRender(viewer);
+    await waitForPostRenderUntil(
+      viewer,
+      deadline,
+      () => performance.now(),
+      waitForPostRender,
+    );
     const complete = populationComplete();
     if (complete && populationAt === null) populationAt = performance.now();
     readiness = readScenePrimitiveReadiness(viewer.scene, Cesium);
@@ -208,7 +214,12 @@ async function activate() {
     const restoreDeadline = performance.now() + 180_000;
     let restoreFrames = 0;
     while (!disposed && performance.now() < restoreDeadline) {
-      await waitForPostRender(viewer);
+      await waitForPostRenderUntil(
+        viewer,
+        restoreDeadline,
+        () => performance.now(),
+        waitForPostRender,
+      );
       const complete = populationComplete();
       const ready = readScenePrimitiveReadiness(viewer.scene, Cesium);
       if (
