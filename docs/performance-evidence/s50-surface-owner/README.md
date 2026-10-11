@@ -10,3 +10,11 @@ At exact clean application/harness `0258bdf203f5c57d2771b6197dabd0743d1c7b87`:
 - [Terrain/picking run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38173646675) passes five cycles, 162 local terrain tile requests, 171 completed of 171 submitted transition workers, and three selection re-enable picks. Browser shutdown is natural in 715.5 ms. Original report: [terrain-picking-lifecycle.json](terrain/terrain-picking-lifecycle.json).
 
 Both original reports were independently revalidated using their exact-revision validators and expected fixture identities. These are software-rendered lifecycle checks. They do not establish physical GPU performance, a live photoreal-provider visual comparison, or completion of every S50 criterion.
+
+Review follow-up `8b68d54e` fixes a reconnect/disposal boundary in the new event
+bridge. Each connection owns its unsubscribe callback; reconnect resets the
+settled-state deduplication, and late callbacks from a retired connection are
+ignored. A focused regression first failed on the previous implementation.
+After repair, 31 map/CCTV tests and package boundaries pass. The existing
+rendered reports predate this follow-up and do not substitute for its standard
+integration CI.
