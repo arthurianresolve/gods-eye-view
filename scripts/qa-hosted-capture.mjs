@@ -158,6 +158,9 @@ try {
     const importLoadHeapProfile = process.argv.includes(
       '--import-load-heap-profile',
     );
+    const importPointCollection = process.argv.includes(
+      '--import-point-collection',
+    );
     const importLoadProfileMode = importLoadCpuProfile
       ? 'cpu'
       : importLoadHeapProfile
@@ -183,6 +186,11 @@ try {
       importFixtureUrl.searchParams.set('step-attribution', '1');
     if (importLoadProfileMode)
       importFixtureUrl.searchParams.set('load-profile', importLoadProfileMode);
+    if (importPointCollection)
+      importFixtureUrl.searchParams.set(
+        'point-renderer',
+        'primitive-collection',
+      );
     const importPageErrors = [];
     const onImportPageError = (error) => {
       if (importPageErrors.length < 8)
@@ -702,7 +710,8 @@ try {
     process.argv.includes('--import-step-diagnostics') ||
     process.argv.includes('--import-step-attribution') ||
     process.argv.includes('--import-load-cpu-profile') ||
-    process.argv.includes('--import-load-heap-profile')
+    process.argv.includes('--import-load-heap-profile') ||
+    process.argv.includes('--import-point-collection')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

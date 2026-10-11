@@ -1039,6 +1039,8 @@
   "scripts/performance/importPixelWitness.test.mjs",
   "scripts/performance/importPointState.mjs",
   "scripts/performance/importPointState.test.mjs",
+  "scripts/performance/importPointRepresentationComparison.mjs",
+  "scripts/performance/importPointRepresentationComparison.test.mjs",
   "scripts/performance/importEntityClearOrder.mjs",
   "scripts/performance/importEntityClearOrder.test.mjs",
   "scripts/performance/csvDecodeComparison.mjs",

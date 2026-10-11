@@ -34,7 +34,7 @@ function finiteColor(value) {
  */
 export function inspectImportedPointState(
   viewer,
-  { Cesium, workspaceId, expectedCount },
+  { Cesium, workspaceId, expectedCount, pointRepresentation = 'entity', layer },
 ) {
   const version = Cesium?.VERSION ?? null;
   if (version !== CESIUM_VERSION)
@@ -45,6 +45,80 @@ export function inspectImportedPointState(
     expectedCount < 0
   )
     return unavailable('invalid-request', version);
+
+  if (pointRepresentation === 'primitive-collection') {
+    if (typeof layer?.getPointRendererSnapshot !== 'function')
+      return unavailable('point-collection-snapshot-unavailable', version);
+    const snapshot = layer.getPointRendererSnapshot();
+    if (
+      !snapshot ||
+      snapshot.pointCount !== expectedCount ||
+      snapshot.blendOption !== Cesium.BlendOption.OPAQUE_AND_TRANSLUCENT ||
+      !Array.isArray(snapshot.entityRows) ||
+      snapshot.entityRows.length !== expectedCount ||
+      !Array.isArray(snapshot.primitiveRows) ||
+      snapshot.primitiveRows.length !== expectedCount
+    )
+      return unavailable('point-collection-population-mismatch', version);
+    const prefix = `gev-import:${workspaceId}:`;
+    const ids = new Set();
+    for (let index = 0; index < expectedCount; index++) {
+      const entity = snapshot.entityRows[index];
+      const primitive = snapshot.primitiveRows[index];
+      if (
+        typeof entity?.id !== 'string' ||
+        !entity.id.startsWith(prefix) ||
+        ids.has(entity.id) ||
+        entity.id !== primitive?.id ||
+        !finiteTriple(entity.position) ||
+        !finiteTriple(primitive.position) ||
+        !sameTriple(entity.position, primitive.position) ||
+        !Array.isArray(entity.color) ||
+        !Array.isArray(entity.outlineColor) ||
+        !Array.isArray(primitive.color) ||
+        !Array.isArray(primitive.outlineColor) ||
+        !finiteQuad(entity.color) ||
+        !finiteQuad(entity.outlineColor) ||
+        !sameArray(entity.color, primitive.color) ||
+        !sameArray(entity.outlineColor, primitive.outlineColor) ||
+        entity.pixelSize !== primitive.pixelSize ||
+        entity.outlineWidth !== primitive.outlineWidth ||
+        entity.pixelSize !== 9 ||
+        entity.outlineWidth !== 1 ||
+        !sameArray(entity.color, [0, 1, 1, 1]) ||
+        !sameArray(entity.outlineColor, [0, 0, 0, 1]) ||
+        primitive.disableDepthTestDistance !== 0 ||
+        primitive.splitDirection !== Cesium.SplitDirection.NONE ||
+        primitive.scaleByDistance !== null ||
+        primitive.translucencyByDistance !== null ||
+        primitive.distanceDisplayCondition !== null ||
+        primitive.show !== true
+      )
+        return unavailable(
+          'point-collection-identity-or-state-mismatch',
+          version,
+        );
+      ids.add(entity.id);
+    }
+    return {
+      available: true,
+      version,
+      expectedCount,
+      renderer: 'primitive-collection',
+      entityCount: expectedCount,
+      visualizerItemCount: 0,
+      primitiveCount: snapshot.pointCount,
+      blendOption: snapshot.blendOption,
+      entityRows: snapshot.entityRows,
+      drawAssignmentRows: snapshot.entityRows.map((row, primitiveIndex) => ({
+        id: row.id,
+        primitiveIndex,
+      })),
+      primitiveRows: snapshot.primitiveRows,
+    };
+  }
+  if (pointRepresentation !== 'entity')
+    return unavailable('unknown-point-representation', version);
 
   const entities = viewer?.entities?.values;
   const visualizers =
@@ -149,6 +223,16 @@ export function inspectImportedPointState(
       outlineColor: finiteColor(point.outlineColor),
       outlineWidth: point.outlineWidth,
       pixelSize: point.pixelSize,
+      disableDepthTestDistance: point.disableDepthTestDistance,
+      splitDirection: point.splitDirection,
+      scaleByDistance: nearFar(point.scaleByDistance),
+      translucencyByDistance: nearFar(point.translucencyByDistance),
+      distanceDisplayCondition: point.distanceDisplayCondition
+        ? [
+            point.distanceDisplayCondition.near,
+            point.distanceDisplayCondition.far,
+          ]
+        : null,
       show: point.show,
     });
   }
@@ -156,12 +240,45 @@ export function inspectImportedPointState(
   return {
     available: true,
     version,
+    renderer: 'entity',
     expectedCount,
     entityCount: imported.length,
     visualizerItemCount: items.length,
     primitiveCount: collection.length,
+    blendOption: collection.blendOption,
     entityRows,
     drawAssignmentRows,
     primitiveRows,
   };
+}
+
+function finiteTriple(value) {
+  return (
+    Array.isArray(value) && value.length === 3 && value.every(Number.isFinite)
+  );
+}
+
+function sameTriple(left, right) {
+  return left.every((value, index) => Object.is(value, right[index]));
+}
+
+function finiteQuad(value) {
+  return (
+    Array.isArray(value) && value.length === 4 && value.every(Number.isFinite)
+  );
+}
+
+function sameArray(left, right) {
+  return (
+    Array.isArray(left) &&
+    Array.isArray(right) &&
+    left.length === right.length &&
+    left.every((value, index) => Object.is(value, right[index]))
+  );
+}
+
+function nearFar(value) {
+  return value
+    ? [value.near, value.nearValue, value.far, value.farValue]
+    : null;
 }

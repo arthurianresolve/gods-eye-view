@@ -156,3 +156,68 @@ test('point state snapshot fails closed on version, shape, count, or ownership d
     dispose();
   }
 });
+
+test('primitive-collection point state binds metadata order to native point ids and fails closed on drift', () => {
+  const entityRows = ['one', 'two'].map((name, index) => ({
+    id: `gev-import:fixture:${name}`,
+    name: `Point ${name}`,
+    position: [index + 1, 2, 3],
+    pixelSize: 9,
+    color: [0, 1, 1, 1],
+    outlineColor: [0, 0, 0, 1],
+    outlineWidth: 1,
+  }));
+  const primitiveRows = entityRows.map((row) => ({
+    id: row.id,
+    position: [...row.position],
+    color: [...row.color],
+    outlineColor: [...row.outlineColor],
+    outlineWidth: row.outlineWidth,
+    pixelSize: row.pixelSize,
+    disableDepthTestDistance: 0,
+    splitDirection: Cesium.SplitDirection.NONE,
+    scaleByDistance: null,
+    translucencyByDistance: null,
+    distanceDisplayCondition: null,
+    show: true,
+  }));
+  const snapshot = {
+    pointCount: 2,
+    blendOption: Cesium.BlendOption.OPAQUE_AND_TRANSLUCENT,
+    entityRows,
+    primitiveRows,
+  };
+  const layer = { getPointRendererSnapshot: () => snapshot };
+  const options = {
+    Cesium,
+    workspaceId: 'fixture',
+    expectedCount: 2,
+    pointRepresentation: 'primitive-collection',
+    layer,
+  };
+
+  const inspected = inspectImportedPointState({}, options);
+  assert.equal(inspected.available, true);
+  assert.equal(inspected.renderer, 'primitive-collection');
+  assert.deepEqual(
+    inspected.drawAssignmentRows.map((row) => row.primitiveIndex),
+    [0, 1],
+  );
+
+  snapshot.primitiveRows[1].id = 'gev-import:fixture:wrong';
+  assert.equal(
+    inspectImportedPointState({}, options).reason,
+    'point-collection-identity-or-state-mismatch',
+  );
+  snapshot.primitiveRows[1].id = entityRows[1].id;
+  snapshot.primitiveRows[1].show = false;
+  assert.equal(
+    inspectImportedPointState({}, options).reason,
+    'point-collection-identity-or-state-mismatch',
+  );
+  assert.equal(
+    inspectImportedPointState({}, { ...options, pointRepresentation: 'other' })
+      .reason,
+    'unknown-point-representation',
+  );
+});

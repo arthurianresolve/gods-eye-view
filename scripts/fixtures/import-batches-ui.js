@@ -36,6 +36,8 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runOptions = new URLSearchParams(window.location.search);
 const requestedLoadProfile = runOptions.get('load-profile');
 const requestedWorkload = runOptions.get('workload');
+const requestedPointRepresentation =
+  runOptions.get('point-renderer') || 'entity';
 const requestedViewer =
   runOptions.get('viewer') === 'cesium' ? 'cesium' : 'application-wrapper';
 if (['paired', 'synchronous', 'cooperative'].includes(requestedWorkload))
@@ -297,10 +299,13 @@ async function geometrySnapshot(viewer, workspaceId) {
   }
   return rows;
 }
-function resources(viewer) {
+function resources(viewer, layer) {
   const collections = [];
+  let pointPrimitiveCount = 0;
   const visit = (value, depth = 0) => {
     if (!value || depth > 5 || collections.length >= 64) return;
+    if (value instanceof Cesium.PointPrimitiveCollection)
+      pointPrimitiveCount += value.length;
     collections.push({
       type: value.constructor.name,
       count: value.length ?? null,
@@ -313,6 +318,10 @@ function resources(viewer) {
     heapBytes: performance.memory?.usedJSHeapSize ?? null,
     heapScope: 'Unforced heap sample; not retained-memory acceptance',
     entities: viewer.entities.values.length,
+    pointPrimitiveCount,
+    importedFeatureCount: layer?.getState?.().featureCount ?? null,
+    pointRepresentation:
+      layer?.getPerformanceDiagnostics?.().pointRepresentation ?? null,
     collections,
   };
 }
@@ -506,27 +515,81 @@ async function sha256Bytes(bytes) {
     .join('');
 }
 
+function nativePointPickWitness(viewer, entityRows) {
+  const canvas = viewer.scene.canvas;
+  const ids = new Set(entityRows.map((row) => row.id));
+  const indices = [...new Set([0, 1, 49, 50, 499, 500, 2499, 2500, 4999])];
+  const picks = [];
+  for (const index of indices) {
+    const row = entityRows[index];
+    if (!row) continue;
+    const world = new Cesium.Cartesian3(...row.position);
+    const windowPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+      viewer.scene,
+      world,
+    );
+    if (
+      !windowPosition ||
+      !Number.isFinite(windowPosition.x) ||
+      !Number.isFinite(windowPosition.y) ||
+      windowPosition.x < 0 ||
+      windowPosition.y < 0 ||
+      windowPosition.x >= canvas.clientWidth ||
+      windowPosition.y >= canvas.clientHeight
+    )
+      continue;
+    const picked = viewer.scene.pick(
+      new Cesium.Cartesian2(windowPosition.x, windowPosition.y),
+    );
+    const pickedEntityId = picked?.id?.id;
+    picks.push({
+      targetId: row.id,
+      screen: [windowPosition.x, windowPosition.y],
+      pickedEntityId:
+        typeof pickedEntityId === 'string' ? pickedEntityId : null,
+    });
+  }
+  return {
+    scope:
+      'post-capture natural scene.pick samples at fixed fixture point projections; overlapping points may return another imported point, and this does not replace rendered pixel equality',
+    candidates: indices.length,
+    tested: picks.length,
+    importedHits: picks.filter((row) => ids.has(row.pickedEntityId)).length,
+    rows: picks,
+  };
+}
+
 async function pointStateWitness(viewer) {
   const snapshot = inspectImportedPointState(viewer, {
     Cesium,
     workspaceId: 'fixture',
     expectedCount: 5000,
+    pointRepresentation: requestedPointRepresentation,
+    layer,
   });
   if (!snapshot.available) return snapshot;
+  const nativePicks = nativePointPickWitness(viewer, snapshot.entityRows);
+  check(
+    nativePicks.tested > 0 && nativePicks.importedHits > 0,
+    'Native scene.pick did not return an imported point Entity.',
+  );
   return {
     available: true,
     version: snapshot.version,
+    renderer: snapshot.renderer,
     scope:
       'post-capture diagnostic only; state hashing is outside import and frame-capture timings',
     expectedCount: snapshot.expectedCount,
     entityCount: snapshot.entityCount,
     visualizerItemCount: snapshot.visualizerItemCount,
     primitiveCount: snapshot.primitiveCount,
+    blendOption: snapshot.blendOption,
     entityOrderAndStateSha256: await sha256Json(snapshot.entityRows),
     entityToPrimitiveAssignmentSha256: await sha256Json(
       snapshot.drawAssignmentRows,
     ),
     primitiveDrawOrderAndStateSha256: await sha256Json(snapshot.primitiveRows),
+    nativePickWitness: nativePicks,
     firstEntity: snapshot.entityRows[0] ?? null,
     lastEntity: snapshot.entityRows.at(-1) ?? null,
     firstPrimitive: snapshot.primitiveRows[0] ?? null,
@@ -615,6 +678,7 @@ run.addEventListener('click', async () => {
     foregroundUninterruptedScope:
       'document visibility only; does not verify desktop foreground or occlusion',
     fixture: 'synthetic-5000-import-points/v1',
+    pointRepresentation: requestedPointRepresentation,
     featureLimit: IMPORT_VERTEX_LIMIT,
     workload,
     viewerConstruction: requestedViewer,
@@ -706,6 +770,10 @@ run.addEventListener('click', async () => {
       'Unknown loading profile mode.',
     );
     check(
+      ['entity', 'primitive-collection'].includes(requestedPointRepresentation),
+      'Unknown imported point renderer.',
+    );
+    check(
       /^[a-f0-9]{40}$/.test(report.applicationCommit || ''),
       'Exact source revision required.',
     );
@@ -758,8 +826,45 @@ run.addEventListener('click', async () => {
       appCommit: report.applicationCommit,
       harnessCommit: report.harnessCommit,
     });
+    report.renderConfiguration = {
+      viewerConstruction: requestedViewer,
+      pointRepresentation: requestedPointRepresentation,
+      preserveDrawingBuffer,
+      captureMode: report.captureMode,
+      renderDemand: report.renderDemand,
+      msaaSamplesRequested: 4,
+      antialias: viewer.scene.context?.antialias ?? null,
+      msaaSupported: viewer.scene.context?.msaa ?? null,
+      webglContextAttributes:
+        viewer.scene.context?._gl?.getContextAttributes?.() ?? null,
+      requestRenderMode: viewer.scene.requestRenderMode === true,
+      sceneMode: viewer.scene.mode,
+      canvas: {
+        cssWidth: viewer.scene.canvas.clientWidth,
+        cssHeight: viewer.scene.canvas.clientHeight,
+        drawingBufferWidth: viewer.scene.canvas.width,
+        drawingBufferHeight: viewer.scene.canvas.height,
+      },
+      camera: {
+        position: [
+          viewer.camera.positionWC.x,
+          viewer.camera.positionWC.y,
+          viewer.camera.positionWC.z,
+        ],
+        direction: [
+          viewer.camera.directionWC.x,
+          viewer.camera.directionWC.y,
+          viewer.camera.directionWC.z,
+        ],
+        up: [viewer.camera.upWC.x, viewer.camera.upWC.y, viewer.camera.upWC.z],
+        frustumNear: viewer.camera.frustum.near,
+        frustumFar: viewer.camera.frustum.far,
+        frustumFov: viewer.camera.frustum.fov ?? null,
+      },
+    };
     layer = createImportedGeometryLayer({
       viewer,
+      pointRepresentation: requestedPointRepresentation,
       batchOptions: {
         ...(requestedLoadProfile ? {} : { onBatch: recordBatch }),
         ...(collectIteratorStepDiagnostics
@@ -788,7 +893,7 @@ run.addEventListener('click', async () => {
     activeBatchMetrics = null;
     await settledFrame(viewer);
     report.coldActivationMs = performance.now() - coldAt;
-    report.warmedResources = resources(viewer);
+    report.warmedResources = resources(viewer, layer);
 
     if (requestedLoadProfile) {
       const setupReadyAtMs = performance.now();
@@ -849,7 +954,7 @@ run.addEventListener('click', async () => {
         pair: null,
         mode: 'single-cooperative-load-profile',
         features: 5000,
-        resources: resources(viewer),
+        resources: resources(viewer, layer),
       };
       const captureStartMs = performance.now();
       const pixelSha256 = await pixels(viewer, sample);
@@ -883,7 +988,7 @@ run.addEventListener('click', async () => {
         preCaptureDrainMs: 20,
         maxHeartbeatGapMs: null,
         features: 5000,
-        resources: resources(viewer),
+        resources: resources(viewer, layer),
       };
       report.samples.push(sample);
       await wait(20);
@@ -923,7 +1028,7 @@ run.addEventListener('click', async () => {
           interCaptureWaitMs: captureIndex > 0 ? 150 : null,
           preCaptureDrainMs: 20,
           features: 5000,
-          resources: resources(viewer),
+          resources: resources(viewer, layer),
         };
         report.samples.push(sample);
         sample.pixelSha256 = await pixels(viewer, sample);
@@ -1005,7 +1110,7 @@ run.addEventListener('click', async () => {
             elapsedMs,
             maxHeartbeatGapMs: Math.max(...gaps),
             features: 5000,
-            resources: resources(viewer),
+            resources: resources(viewer, layer),
             batchMetrics: batchMetrics ? metricSnapshot(batchMetrics) : null,
           };
           if (batchMetrics)
@@ -1272,6 +1377,8 @@ run.addEventListener('click', async () => {
       abortErrors: cancellationAbortErrors,
       pendingJobsAfter: layer.getPerformanceDiagnostics().pendingJobs,
       featureCountAfter: layer.getState().featureCount,
+      pointPrimitiveCountAfter:
+        layer.getPerformanceDiagnostics().pointPrimitiveCount,
       ownershipReleased: layer.getState().featureCount === 0,
     };
     check(
