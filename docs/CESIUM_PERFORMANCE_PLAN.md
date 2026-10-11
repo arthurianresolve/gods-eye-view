@@ -4047,3 +4047,14 @@ termination. This narrows the observed delay to process shutdown after protocol
 disconnection; it does not establish which Chromium subsystem delayed exit or
 prove an application/main-merge regression. Earlier prior-build failures remain
 relevant. The merge and Windows recovery gate remain unaccepted.
+
+
+The next hosted Windows diagnostic records Chromium's `shutdown` trace category
+using its [documented tracing switches](https://chromium.googlesource.com/chromium/src/+/a0e9c1e80c1bd2ab242a969fd460af4a07cae15e/components/tracing/common/tracing_switches.cc).
+This is attribution with instrumentation, not a revised acceptance timeout or a
+performance comparison. Ordinary CI does not enable tracing. Recovery still
+fails at five seconds and stops at its first failure. Only bounded shutdown
+span names, process/thread IDs and wall intervals are retained; event arguments
+and unrelated categories are excluded. Missing/incomplete trace evidence remains
+explicit. Twenty-nine focused recovery/trace tests pass; the hosted result is
+pending. These spans may overlap and must not be summed as CPU execution time.

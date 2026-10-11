@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { stageRelease, verifyReleaseDirectory } from './stage-release.mjs';
 import {
   launchFixtureBrowser,
+  fixtureBrowserArgs,
   prepareFixturePage,
   bootFixturePage,
   cleanupFixturePageDiagnostics,
@@ -50,6 +51,17 @@ import {
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
+
+import { summarizeShutdownTrace } from './performance/shutdownTrace.mjs';
+
+const shutdownTracing = process.env.GEV_QA_SHUTDOWN_TRACE === '1';
+if (
+  shutdownTracing &&
+  (process.env.GITHUB_ACTIONS !== 'true' || process.platform !== 'win32')
+)
+  throw new Error(
+    'Shutdown tracing is limited to the hosted Windows diagnostic.',
+  );
 
 const postTimeoutObservationMs = validateRecoveryCloseObservationMs(
   Number(process.env.GEV_QA_CLOSE_POST_TIMEOUT_OBSERVATION_MS || 0),
@@ -261,10 +273,23 @@ async function reopen(label, { seed = false } = {}) {
     progress(step);
   };
   timedProgress('launch');
+  const shutdownTracePath = shutdownTracing
+    ? path.join(scratch, `${label}-shutdown.json`)
+    : null;
   const browserCloseTrace = createRecoveryBrowserCloseTrace();
   browser = await launchFixtureBrowser({
     userDataDir: path.join(scratch, 'browser-profile'),
     logger: browserCloseTrace.logger,
+    ...(shutdownTracePath
+      ? {
+          args: [
+            ...fixtureBrowserArgs(),
+            '--enable-tracing=shutdown',
+            '--enable-tracing-format=json',
+            `--enable-tracing-output=${shutdownTracePath}`,
+          ],
+        }
+      : {}),
   });
   const pageTargetGuard = createRecoveryPageTargetGuard(browser);
   const diagnosticMode = process.env.GEV_PROFILE_RECOVERY_DIAGNOSTICS === '1';
@@ -521,6 +546,22 @@ async function reopen(label, { seed = false } = {}) {
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);
     }
+    if (shutdownTracePath) {
+      try {
+        const traceStat = await stat(shutdownTracePath);
+        if (traceStat.size > 8 * 1024 * 1024)
+          throw new Error('Shutdown trace exceeded eight MiB.');
+        pageOwnership.shutdownTrace = summarizeShutdownTrace(
+          JSON.parse(await readFile(shutdownTracePath, 'utf8')),
+        );
+        pageOwnership.shutdownTrace.fileBytes = traceStat.size;
+      } catch (error) {
+        pageOwnership.shutdownTrace = {
+          status: 'unavailable',
+          error: sanitizeDiagnosticText(error.message, 240),
+        };
+      }
+    }
     pageOwnership.browserCloseCompleted = browserClose.closeCompleted;
     pageOwnership.forcedBrowserProcessTermination =
       browserClose.forcedProcessTermination;
@@ -700,6 +741,7 @@ try {
       : null,
     browserVersion,
     postTimeoutObservationMs,
+    shutdownTracing,
     closeRepetitionPlan,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.

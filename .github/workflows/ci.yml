@@ -279,6 +279,8 @@ jobs:
       # five-second FAILED deadline, before owned-process cleanup.
       GEV_QA_CLOSE_POST_TIMEOUT_OBSERVATION_MS: ${{ inputs.validation_mode == 'windows-profile-recovery' && '15000' || '0' }}
       GEV_QA_CLOSE_REPETITIONS: ${{ inputs.validation_mode == 'windows-profile-recovery' && '8' || '0' }}
+      # Separate attribution run; no trace timing is performance acceptance.
+      GEV_QA_SHUTDOWN_TRACE: ${{ inputs.validation_mode == 'windows-profile-recovery' && '1' || '0' }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
