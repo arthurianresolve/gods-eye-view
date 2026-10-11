@@ -627,7 +627,10 @@ try {
     let auditError = null;
     let restorationError = null;
     try {
-      if (auditMode === 'prewarm') {
+      // All audit boundaries must freeze metadata and retained bodies in the
+      // same page task. Separate metadata/read/restore calls let Cesium create
+      // more workers between observations, even on a document about to close.
+      {
         blobAudit = await runCaptureStage(
           'worker-blob-read-and-observer-restore',
           () => readAndRestoreCesiumWorkerBodies(auditPage, workerUrls),
@@ -649,16 +652,7 @@ try {
           })),
         };
         if (blobAudit.readError)
-          throw new Error('Prewarm worker blob body read failed.');
-      } else {
-        metadata = await runCaptureStage(
-          'worker-metadata-read',
-          () =>
-            auditPage.evaluate(
-              () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
-            ),
-          { timeoutMs: PREWARM_RESTORE_STAGE_TIMEOUT_MS },
-        );
+          throw new Error('Worker blob body read failed.');
       }
       if (!metadata)
         throw new Error('Receipt-verified page worker blob audit is missing.');
@@ -670,25 +664,13 @@ try {
       if (requireEvidence && !hasEvidence)
         throw new Error('Prewarm worker audit observed no executable blobs.');
       if (hasEvidence) {
-        if (auditMode !== 'prewarm')
-          blobAudit = await runCaptureStage(
-            'worker-blob-read',
-            () =>
-              auditPage.evaluate(async (urls) => {
-                const audit = window.__gevCesiumWorkerBlobAuditV1;
-                if (!audit)
-                  throw new Error(
-                    'Receipt-verified page worker audit disappeared.',
-                  );
-                return audit.readWorkerBodies(urls);
-              }, workerUrls),
-            { timeoutMs: PREWARM_BLOB_READ_STAGE_TIMEOUT_MS },
-          );
         validation = await runCaptureStage('worker-blob-validation', () =>
           validateCesiumWorkerBlobs({
             contract: captureWorkerContract,
             baseUrl: buildProvenanceOptions.baseUrl,
-            workerUrls,
+            workerUrls: [...auditState.workerUrls].filter((value) =>
+              value.startsWith('blob:'),
+            ),
             observedBlobUrls: [...auditState.blobUrls],
             blobAudit,
             auditMode,

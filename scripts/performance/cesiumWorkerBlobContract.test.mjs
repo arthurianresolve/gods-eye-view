@@ -636,6 +636,60 @@ function makeAtomicWorkerAuditPage(BlobClass) {
   return { context, page, nativeCreateObjectURL, TestURL };
 }
 
+test('diagnostic and prewarm boundaries include workers created after an earlier metadata observation', async () => {
+  for (const auditMode of ['diagnostic', 'prewarm']) {
+    const contract = makeContract();
+    const { context, page, nativeCreateObjectURL, TestURL } =
+      makeAtomicWorkerAuditPage(Blob);
+    context.source = contract.embeddedWorkerSource;
+    vm.runInContext(
+      `window.parentUrl = URL.createObjectURL(new Blob([source], {type: 'application/javascript'}))`,
+      context,
+    );
+    const earlierCount = vm.runInContext(
+      'window.__gevCesiumWorkerBlobAuditV1.metadata().createdBlobCount',
+      context,
+    );
+    const wrapperUrl = vm.runInContext(
+      `URL.createObjectURL(new Blob(['importScripts("' + window.parentUrl + '"); CesiumWorkers["createGeometry"]();'], {type: 'application/javascript'}))`,
+      context,
+    );
+    const result = JSON.parse(
+      JSON.stringify(
+        await readAndRestoreCesiumWorkerBodies(page, [wrapperUrl]),
+      ),
+    );
+    assert.equal(earlierCount, 1);
+    assert.equal(result.createdBlobCount, 2);
+    assert.equal(result.restoration.createdScriptBlobCountAtRestore, 2);
+    assert.equal(result.restoration.registryEmpty, true);
+    assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
+    const input = {
+      contract,
+      baseUrl: BASE,
+      auditMode,
+      blobAudit: result,
+      workerUrls: [wrapperUrl],
+      observedBlobUrls: [wrapperUrl],
+    };
+    assert.equal(
+      validateCesiumWorkerBlobs(input).observation.createdScriptBlobCount,
+      2,
+    );
+    assert.throws(
+      () =>
+        validateCesiumWorkerBlobs({
+          ...input,
+          observedBlobUrls: [
+            ...input.observedBlobUrls,
+            'blob:http://127.0.0.1:4173/late-worker',
+          ],
+        }),
+      /not a validated Cesium worker/,
+    );
+  }
+});
+
 test('prewarm body read atomically restores first and rejects a late executable blob use', async () => {
   let lateUrl = null;
   class TestBlob {
