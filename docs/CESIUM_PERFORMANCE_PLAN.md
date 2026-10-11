@@ -73,8 +73,13 @@ workspace contents and the rendered asset but failed Chrome's five-second
 shutdown deadline. [The failure and diagnostic setup corrections](performance-evidence/s50-macos-recovery-38174948494/README.md)
 remain explicit; dev stays `ba7c8738`. QA follow-up `ee45f9e1` supports matched
 Windows/macOS/Linux shutdown controls with validated software-renderer flags;
-49 focused checks pass. The unchanged deadline is being tested on macOS in
-`38176078163`; that diagnostic does not itself complete application recovery.
+49 focused checks pass. Both full-driver controls `38176078163` and WebGL-only
+controls `38176248222` pass. Whole-application WebGL-only recovery
+`38176373283` passes all five stages, retaining settings/workspaces/assets and
+closing naturally in 121-290 ms. Counterbalanced same-host backend sequences
+`38176631829` now test repeatability at `46ed790b`; the ordinary recovery
+renderer default remains unchanged pending that evidence. These software
+checks do not establish physical GPU acceptance.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both

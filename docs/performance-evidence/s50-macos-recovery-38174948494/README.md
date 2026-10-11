@@ -46,9 +46,24 @@ hosted jobs, not a repeatable application performance comparison or root-cause p
 QA workflow `af704b60` makes the existing isolated recovery mode select the
 same OS and software backend as the controls while retaining ordinary matrix
 defaults. [Whole-application recovery 38176373283](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38176373283)
-tests WebGL-only SwiftShader on macOS at that exact revision. It is pending.
+tests WebGL-only SwiftShader on macOS at that exact revision and passes all five
+stages. [The complete report](recovery-38176373283.json) retains matching
+settings, workspace bundle, imported asset digest and rendered feature count
+through prior install, interrupted update, rollback, upgrade, and failed
+verification. Natural closes take 290, 187, 121, 151 and 123 ms; every process
+exits with code zero and no forced cleanup.
 Blank, WebGL and Cesium controls cannot substitute for application recovery.
 
+Follow-up `46ed790b` extends the existing ordered renderer comparison to the
+three supported operating systems, rejects mixed/unsupported platform evidence,
+and retains the platform in its result. Forty-one focused tests pass. The
+[AB/BA macOS comparison 38176631829](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38176631829)
+is running on this frozen revision, using both driver/WebGL and WebGL/driver
+orders. Default recovery matrix settings have not changed. This checks whether
+the backend result repeats within matched hosts before adoption; one successful
+alternative does not identify a specific Chrome/ANGLE defect.
+
 Implementation status: diagnostic platform mismatch fixed. Automated status:
-focused tests pass, whole-application macOS recovery remains failed. Hardware
+focused tests and the alternative-backend macOS recovery pass; the original
+full-driver failure remains recorded and counterbalanced comparison is pending. Hardware
 status: no new physical GPU validation. Production dev remains `ba7c8738`.
