@@ -1,0 +1,123 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..', '..', '..');
+const sourceRoot = path.join(root, 'qa-artifacts/s52-paint-stage-rebased-936bd/named-entry-capture-controls-01/submarine-cables-named-entry');
+const candidateRoot = path.join(here, 'candidate');
+const baselineSha = '233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2';
+const workerSha = '9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901';
+const prototypeAppend = path.join(root, 'qa-artifacts/s52-paint-stage-rebased-936bd/didpaint-signature-prototype-01/keyhole-signature.test.append.mjs');
+const unregisterAppend = path.join(here, 'self-unregister.test.append.mjs');
+const lowAlphaAppend = path.join(root, 'qa-artifacts/s52-paint-low-alpha-review-01/regression.append.mjs.txt');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const outArg = process.argv[2];
+if (!outArg) throw new Error('Usage: run-target-controls.mjs fresh-output-directory');
+const out = path.resolve(root, outArg);
+if (out === root || !out.startsWith(`${root}${path.sep}`) || existsSync(out)) throw new Error('Output must be a fresh directory inside the checkout');
+const baselineBytes = readFileSync(path.join(sourceRoot, 'src/overlays/worldOverlay.js'));
+const candidateBytes = readFileSync(path.join(candidateRoot, 'src/overlays/worldOverlay.js'));
+assert.equal(hash(baselineBytes), baselineSha, 'pinned baseline runtime changed');
+assert.equal(hash(readFileSync(path.join(sourceRoot, 'src/overlays/worldOverlayAllocation.worker.mjs'))), workerSha, 'pinned worker changed');
+
+mkdirSync(out, { recursive: true });
+const sides = {};
+for (const side of ['baseline', 'candidate']) {
+  const sideRoot = path.join(out, side);
+  cpSync(sourceRoot, sideRoot, { recursive: true });
+  const runtimePath = path.join(sideRoot, 'src/overlays/worldOverlay.js');
+  if (side === 'candidate') writeFileSync(runtimePath, candidateBytes);
+  const workerPath = path.join(sideRoot, 'src/overlays/worldOverlayAllocation.worker.mjs');
+  assert.equal(hash(readFileSync(workerPath)), workerSha);
+  const testsPath = path.join(sideRoot, 'src/overlays/worldOverlay.test.mjs');
+  const originalTest = readFileSync(testsPath, 'utf8');
+  const appends = `${readFileSync(prototypeAppend, 'utf8')}\n${readFileSync(lowAlphaAppend, 'utf8')}\n${readFileSync(unregisterAppend, 'utf8')}`;
+  writeFileSync(testsPath, `${originalTest}\n${appends}`);
+  sides[side] = { sideRoot, runtimePath, workerPath, testsPath };
+}
+
+const candidateTests = spawnSync(process.execPath, ['--test', '--test-reporter=tap', '--test-concurrency=1', sides.candidate.testsPath], {
+  cwd: sides.candidate.sideRoot, encoding: 'utf8', timeout: 180_000, maxBuffer: 16 * 1024 * 1024,
+});
+const testOutput = `${candidateTests.stdout || ''}${candidateTests.stderr || ''}`;
+writeFileSync(path.join(out, 'candidate-focused.tap.txt'), testOutput);
+assert.ifError(candidateTests.error);
+assert.equal(candidateTests.status, 0, 'candidate focused suite failed');
+const testCount = Number(testOutput.match(/^# tests (\d+)$/m)?.[1] || 0);
+const passCount = Number(testOutput.match(/^# pass (\d+)$/m)?.[1] || 0);
+const failCount = Number(testOutput.match(/^# fail (\d+)$/m)?.[1] || -1);
+assert.ok(testCount > 0, 'focused test summary must be present');
+assert.equal(passCount, testCount, 'every focused test must pass');
+assert.equal(failCount, 0, 'candidate focused tests failed');
+
+const profiles = [
+  { name: 'local-infrastructure', entries: 320 },
+  { name: 'submarine-cables', entries: 160 },
+];
+const rows = [];
+for (let pair = 0; pair < 5; pair++) {
+  for (const side of pair % 2 === 0 ? ['baseline', 'candidate'] : ['candidate', 'baseline']) {
+    for (const profile of profiles) {
+      const env = { ...process.env, GEV_ALLOC_PROFILE: profile.name, GEV_ALLOC_ENTRIES: String(profile.entries), GEV_ALLOC_WARMUP: '3000', GEV_ALLOC_CHUNK: '48', GEV_ALLOC_CHUNKS: '10' };
+      const run = spawnSync(process.execPath, ['--expose-gc', '--no-concurrent-recompilation', sides[side].workerPath], {
+        cwd: sides[side].sideRoot, encoding: 'utf8', timeout: 300_000, maxBuffer: 16 * 1024 * 1024, env,
+      });
+      const stdout = run.stdout || '';
+      const stderr = run.stderr || '';
+      const stem = `${profile.name}-${pair}-${side}`;
+      writeFileSync(path.join(out, `${stem}.stdout.txt`), stdout);
+      writeFileSync(path.join(out, `${stem}.stderr.txt`), stderr);
+      assert.ifError(run.error);
+      assert.equal(run.status, 0, `${stem} failed: ${stderr}`);
+      const measured = JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+      assert.equal(measured.ok, true);
+      assert.equal(measured.profile, profile.name);
+      assert.equal(measured.entryCount, profile.entries);
+      rows.push({ pair, side, profile: profile.name, entries: profile.entries, medianBytesPerFrame: measured.medianBytesPerFrame, maxBytesPerFrame: measured.maxBytesPerFrame, chunkBytesPerFrame: measured.chunkBytesPerFrame, candidateCount: measured.candidateCount, paintedCount: measured.paintedCount, paintedBySource: measured.paintedBySource, stdoutSha256: hash(Buffer.from(stdout)), stderrSha256: hash(Buffer.from(stderr)) });
+    }
+  }
+}
+
+const summary = Object.create(null);
+for (const profile of profiles) {
+  const pairRows = [];
+  for (let pair = 0; pair < 5; pair++) {
+    const base = rows.find((row) => row.profile === profile.name && row.pair === pair && row.side === 'baseline');
+    const candidate = rows.find((row) => row.profile === profile.name && row.pair === pair && row.side === 'candidate');
+    assert.equal(candidate.candidateCount, base.candidateCount, `${profile.name} candidate count parity pair ${pair}`);
+    assert.equal(candidate.paintedCount, base.paintedCount, `${profile.name} painted count parity pair ${pair}`);
+    assert.deepEqual(candidate.paintedBySource, base.paintedBySource, `${profile.name} source parity pair ${pair}`);
+    pairRows.push({ pair, baselineMedian: base.medianBytesPerFrame, candidateMedian: candidate.medianBytesPerFrame, deltaPct: (candidate.medianBytesPerFrame / base.medianBytesPerFrame - 1) * 100, baselineMax: base.maxBytesPerFrame, candidateMax: candidate.maxBytesPerFrame });
+  }
+  const sorted = pairRows.map((row) => row.deltaPct).sort((a, b) => a - b);
+  summary[profile.name] = { entries: profile.entries, pairs: pairRows, medianDeltaPct: sorted[2], minDeltaPct: sorted[0], maxDeltaPct: sorted[4] };
+}
+
+assert.equal(hash(readFileSync(path.join(candidateRoot, 'src/overlays/worldOverlay.js'))), hash(candidateBytes), 'candidate runtime changed during run');
+assert.equal(hash(readFileSync(path.join(sourceRoot, 'src/overlays/worldOverlay.js'))), baselineSha, 'baseline runtime changed during run');
+assert.equal(hash(readFileSync(path.join(sourceRoot, 'src/overlays/worldOverlayAllocation.worker.mjs'))), workerSha, 'worker changed during run');
+const report = {
+  schema: 's52-didpaint-keyhole-target-controls/v1',
+  scope: 'Five alternating paired Node GC-bracketed allocation comparisons on unchanged baseline233d versus staged didPaint/keyhole-signature runtime. Focused candidate tests include low-alpha stable/recovery, same-geometry tuning, edgeFade, and detection-callback mutation. No pixel/GPU/browser performance claim.',
+  baselineRuntimeSha256: baselineSha,
+  candidateRuntimeSha256: hash(candidateBytes),
+  workerSha256: workerSha,
+  prototypeAppendSha256: hash(readFileSync(prototypeAppend)),
+  unregisterAppendSha256: hash(readFileSync(unregisterAppend)),
+  lowAlphaRegressionAppendSha256: hash(readFileSync(lowAlphaAppend)),
+  focusedTestSha256: hash(Buffer.from(testOutput)),
+  packageLockSha256: hash(readFileSync(path.join(root, 'package-lock.json'))),
+  node: process.version,
+  platform: process.platform,
+  conditions: { warmupFrames: 3000, chunkFrames: 48, measuredChunks: 10, order: rows.map(({ pair, side, profile: name }) => ({ pair, side, profile: name })) },
+  focused: { exitCode: candidateTests.status, summary: testOutput.split(/\r?\n/).filter((line) => /^(ℹ tests|ℹ pass|ℹ fail|ℹ duration_ms)/.test(line)) },
+  profiles: summary,
+  rows,
+};
+const reportPath = path.join(out, 'report.json');
+writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ report: path.relative(root, reportPath).replaceAll('\\', '/'), reportSha256: hash(readFileSync(reportPath)), baselineRuntimeSha256: report.baselineRuntimeSha256, candidateRuntimeSha256: report.candidateRuntimeSha256, focused: report.focused.summary, profiles: summary }, null, 2));

@@ -1,0 +1,104 @@
+TAP version 13
+# Subtest: steady moving-source frames stay in budget below collision capacity
+ok 1 - steady moving-source frames stay in budget below collision capacity
+  ---
+  duration_ms: 5667.7156
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget above collision capacity
+ok 2 - steady moving-source frames stay in budget above collision capacity
+  ---
+  duration_ms: 7086.9158
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with both local infrastructure sources live
+ok 3 - steady moving-source frames stay in budget with both local infrastructure sources live
+  ---
+  duration_ms: 7945.1588
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with infrastructure and FIRMS live
+ok 4 - steady moving-source frames stay in budget with infrastructure and FIRMS live
+  ---
+  duration_ms: 9554.6409
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live
+ok 5 - steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live
+  ---
+  duration_ms: 12735.3967
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live
+ok 6 - steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live
+  ---
+  duration_ms: 14840.7553
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with all Phase 3 sources and CCTV thumbnails live
+ok 7 - steady moving-source frames stay in budget with all Phase 3 sources and CCTV thumbnails live
+  ---
+  duration_ms: 12359.8453
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort
+not ok 8 - steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort
+  ---
+  duration_ms: 4269.8291
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-dev\\qa-artifacts\\s52-paint-stage-rebased-936bd\\didpaint-signature-prototype-02\\candidate-current-a938\\src\\overlays\\worldOverlayAllocation.test.mjs:315:3'
+  failureType: 'testCodeFailure'
+  error: 'world-overlay steady frame exceeded 6000 B/frame: 48 candidates / 24 painted, median 6081 B/frame (max 6439), median 126.7 B/candidate/frame over 480 frames and 60 solves; chunks: 6392, 6439, 6387, 6094, 6081, 5929, 5874, 5874, 6013, 5959'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/didpaint-signature-prototype-02/candidate-current-a938/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: steady moving-source frames stay in budget with final Phase 5 host sources live (pre-cable-migration surface)
+ok 9 - steady moving-source frames stay in budget with final Phase 5 host sources live (pre-cable-migration surface)
+  ---
+  duration_ms: 14231.9608
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with final Phase 5 sources and bounded rocket-mission markers live
+ok 10 - steady moving-source frames stay in budget with final Phase 5 sources and bounded rocket-mission markers live
+  ---
+  duration_ms: 15266.5198
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with every shared-host source and bounded Radio text live
+ok 11 - steady moving-source frames stay in budget with every shared-host source and bounded Radio text live
+  ---
+  duration_ms: 17597.5672
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with the bounded submarine-cable reference cohort
+ok 12 - steady moving-source frames stay in budget with the bounded submarine-cable reference cohort
+  ---
+  duration_ms: 5434.167
+  type: 'test'
+  ...
+# Subtest: steady moving-source frames stay in budget with the Dense detection lane active over 5,000 observations
+ok 13 - steady moving-source frames stay in budget with the Dense detection lane active over 5,000 observations
+  ---
+  duration_ms: 20379.082
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 12
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 152298.6391

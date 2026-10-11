@@ -14,10 +14,28 @@ Further conditional-paint review reproduced two callback-lifecycle failures in
 an unpublished prototype. A per-frame callback guard fixes both in the revised
 prototype; production already passes the same controls. Both new production
 regressions and the focused suite pass (90/90). The expanded 44-case browser
-fixture still requires its native-pixel control. [Raw failure controls and
+fixture passes five same-commit pairs at `61606d0`; independent decoding verifies
+all 880 PNGs, source hashes, recorded conditions, hits and accessible actions
+([baseline control](performance-evidence/s52-paint-baseline-44/README.md)).
+[Raw failure controls and
 source snapshots](performance-evidence/s52-paint-callback-regressions/README.md)
 preserve the rejected result separately from the corrected experimental result.
 No conditional-paint runtime is accepted by these unit checks alone.
+
+An allocation diagnostic comparing two unpublished paint prototypes reduces
+paired median allocation in all five infrastructure and cable pairs; these
+results are not a production comparison or latency claim. The first current-base
+transplant subsequently fails the isolated rocket allocation budget (6,081 versus
+6,000 bytes/frame), while the other twelve allocation rows pass. This failure
+prevents promotion; investigation continues without changing the budget.
+[Diagnostic evidence and scope](performance-evidence/s52-paint-didpaint-target/README.md)
+retain the experimental results.
+
+All seven ordinary integration jobs also pass at
+`f301cba278d7dc6188b14e6fd84a889f1d2c40af`
+([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38104723701),
+[archived results](performance-evidence/s52-placement-direct-filter/dev-f301cba-ci.json)).
+PR-only layer-token and optional diagnostic/soak checks remain skipped.
 
 The subsequent `dev` run at `e89715c3d46414107cc7996cce98d34aa1a09e8f`
 also passes all seven ordinary integration jobs, including Windows recovery and
