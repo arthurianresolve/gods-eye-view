@@ -1479,7 +1479,7 @@ for (const outcome of [
   });
 }
 
-test('regional transfer preserves deferrals, original Request, rejection and cancellation', async () => {
+test('regional transfer releases the displaced decoded image but not a late Cesium image', async () => {
   const h = renderingHarness();
   const stage = h.rendering.setFrame(
     { ...snapshot, product: 'clouds-regional' },
@@ -1494,11 +1494,19 @@ test('regional transfer preserves deferrals, original Request, rejection and can
   };
   assert.equal(provider.requestImage(1, 2, 3, request), undefined);
   assert.deepEqual(provider.requestArgs, [1, 2, 3, request]);
-  const image = { width: 256, height: 256 };
+  const image = {
+    width: 256,
+    height: 256,
+    closed: 0,
+    close() {
+      this.closed++;
+    },
+  };
   provider.response = { promise: Promise.resolve(image) };
   const processed = await provider.requestImage(1, 2, 3, request);
   assert.equal(processed.source, image);
   assert.deepEqual([...processed.pixels], [194, 100, 0, 98]);
+  assert.equal(image.closed, 1, 'the application returned a separate canvas');
   const error = new Error('cancelled upstream');
   provider.response = { promise: Promise.reject(error) };
   await assert.rejects(
@@ -1509,17 +1517,85 @@ test('regional transfer preserves deferrals, original Request, rejection and can
   const late = provider.requestImage(0, 0, 0, request);
   h.rendering.clear();
   assert.equal(cancelled, 1);
-  provider.response.resolve(image);
-  assert.equal(await late, image, 'closed frames do not process late images');
+  const lateImage = {
+    width: 256,
+    height: 256,
+    closed: 0,
+    close() {
+      this.closed++;
+    },
+  };
+  provider.response.resolve(lateImage);
+  assert.equal(
+    await late,
+    lateImage,
+    'closed frames pass image ownership through',
+  );
+  assert.equal(lateImage.closed, 0, 'Cesium still owns the late pass-through');
   assert.equal(await stage, false);
+});
+
+test('regional transfer releases its decoded source when processing throws', async () => {
+  const error = new Error('canvas draw failed');
+  const h = renderingHarness({
+    createCanvas: () => ({
+      getContext: () => ({
+        drawImage() {
+          throw error;
+        },
+      }),
+    }),
+  });
+  void h.rendering.setFrame(
+    { ...snapshot, product: 'clouds-regional' },
+    times[0],
+  );
+  const provider = h.providers[0];
+  let closes = 0;
+  const image = {
+    width: 256,
+    height: 256,
+    close() {
+      closes++;
+    },
+  };
+  provider.response = { promise: Promise.resolve(image) };
+  await assert.rejects(
+    provider.requestImage(0, 0, 0, {}),
+    (cause) => cause === error,
+  );
+  assert.equal(closes, 1);
+  h.rendering.clear();
+});
+
+test('radar request images pass through without application close', async () => {
+  const h = renderingHarness();
+  void h.rendering.setFrame(snapshot, times[0]);
+  const provider = h.providers[0];
+  let closes = 0;
+  const image = {
+    width: 256,
+    height: 256,
+    close() {
+      closes++;
+    },
+  };
+  provider.response = { promise: Promise.resolve(image) };
+  assert.equal(await provider.requestImage(0, 0, 0, {}), image);
+  assert.equal(closes, 0, 'Cesium receives the unmodified source image');
+  h.rendering.clear();
 });
 
 test('regional tiles decoded as flipped ImageBitmaps are drawn back upright', async () => {
   const hadBitmap = Object.hasOwn(globalThis, 'ImageBitmap');
   const previous = globalThis.ImageBitmap;
+  let bitmapCloses = 0;
   globalThis.ImageBitmap = class ImageBitmap {
     width = 256;
     height = 256;
+    close() {
+      bitmapCloses++;
+    }
   };
   try {
     const h = renderingHarness();
@@ -1532,6 +1608,7 @@ test('regional tiles decoded as flipped ImageBitmaps are drawn back upright', as
     provider.response = { promise: Promise.resolve(new ImageBitmap()) };
     const bitmapTile = await provider.requestImage(0, 0, 0, {});
     assert.deepEqual(bitmapTile.drawnWith, [1, 0, 0, -1, 0, 256]);
+    assert.equal(bitmapCloses, 1, 'the copied source bitmap is released');
     // An HTMLImageElement fallback is not pre-flipped.
     provider.response = {
       promise: Promise.resolve({ width: 256, height: 256 }),
