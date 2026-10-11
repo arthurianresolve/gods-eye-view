@@ -1,5 +1,15 @@
 # Cesium performance plan
 
+Imported Entity cleanup is corrected at
+`82e2b0b1da8ac517710cdbdd8468cc3b502330c4`: clearing an import preserves an
+external replacement that reuses an imported ID. All seven standard CI jobs and
+15 three-OS recovery stages pass at that exact revision.
+[Repair and raw evidence](performance-evidence/import-entity-ownership/README.md)
+separate this accepted correctness component from the opt-in point-renderer
+experiment, which still needs current-dev benefit evidence. Production renderer
+and scheduling defaults are unchanged; physical Windows validation and the
+remaining S47-S60 requirements stay pending.
+
 The dev push at `26f383edc0a960a58db94e7abcbb24c795fe8a83` also passes all
 seven standard jobs in [run 38154279746](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38154279746).
 Its five Windows recovery stages preserve settings/workspaces and exit normally
