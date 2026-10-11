@@ -1059,6 +1059,8 @@
   "scripts/performance/browserShutdownControls.mjs",
   "scripts/performance/browserShutdownControls.test.mjs",
   "scripts/performance/browserShutdownFixtures.mjs",
+  "scripts/performance/windowsProcessSample.mjs",
+  "scripts/performance/windowsProcessSample.test.mjs",
   "scripts/fixtures/mission-render-demand.html",
   "scripts/fixtures/mission-render-demand-fixture.mjs",
   "scripts/run-unit-tests.mjs",
