@@ -80,7 +80,7 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
-### S52 placement reuse: implementation under comparison - 11 October 2026
+### S52 placement reuse: moving-workload regression found - 11 October 2026
 
 The QA candidate retains complete placement variants on each existing projection
 record. It reuses them only when entry, layout, source/UI/font revisions and every
@@ -125,11 +125,41 @@ and cleanup completes normally. The [raw report](performance-evidence/s52-placem
 and [independent review](performance-evidence/s52-placement-reuse/native-font-review.json)
 retain the SwiftShader renderer and exact revisions.
 
-This experiment is not yet accepted as a performance improvement. The
-[eight-workload CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097674690)
-and [candidate integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097900422)
-are pending. Full-scene latency, conditional painting and physical Windows
-acceptance remain separate requirements.
+The [eight-workload CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097674690)
+finished, but **this candidate is not accepted for promotion to `dev`**. The
+[raw report](performance-evidence/s52-placement-reuse/cpu-report.json) and
+[independent review](performance-evidence/s52-placement-reuse/cpu-review.json)
+verify all 40 alternating pairs, exact source/fixture/lockfile/harness hashes,
+matched trajectories and populations, and instrumentation-disabled timing.
+On the hosted AMD EPYC 9V45 with Node 24.14.0, every one of the 15 moving ordinary
+pairs regresses. Two individual regressions exceed 10%. Fixed and periodic inputs
+improve in every pair, so the unchanged-work benefit is real but does not excuse
+the moving-path cost.
+
+| Workload | Update cadence | Median paired CPU change | Individual pair range |
+| --- | --- | ---: | ---: |
+| Generic, 250 entries | Every frame | +7.53% | +4.66% to +10.78% |
+| Infrastructure, 320 entries | Every frame | +8.14% | +4.92% to +10.90% |
+| Radio, 864 entries | Every frame | +3.22% | +1.46% to +5.37% |
+| Detection, 5,000 entries | Every frame | +2.32% | -3.87% to +6.53% |
+| Infrastructure, 320 entries | Fixed | -22.36% | -25.26% to -22.01% |
+| Radio, 864 entries | Fixed | -19.12% | -21.27% to -18.17% |
+| Infrastructure, 320 entries | Every 60 frames | -22.11% | -25.63% to -21.52% |
+| Radio, 864 entries | Every 60 frames | -15.30% | -16.42% to -13.43% |
+
+Separate instrumented samples localize the moving overhead to candidate
+preparation: its projection phase grows approximately 8-13%, while solve and
+paint remain broadly unchanged. The cache miss path's repeated snapshot writes
+and variant-list copying are being investigated; attribution does not yet prove
+which operation is responsible. A corrected candidate must repeat the same
+comparison and correctness gates before promotion. This report measures the Node
+algorithm with mock Canvas2D, not browser painting, GPU time or motion p95.
+
+The [candidate integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097900422)
+has passed Node 24/26, Windows onboarding and all three operating-system recovery
+jobs; the browser gate remains pending. Conditional painting is staged only and
+will be rebased after the placement decision. Full-scene latency and physical
+Windows acceptance remain separate requirements.
 
 ### S52 layout reuse: accepted component optimization - 11 October 2026
 

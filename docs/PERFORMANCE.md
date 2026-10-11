@@ -5,9 +5,16 @@ ordinary integration jobs ([results](performance-evidence/s52-placement-reuse/ba
 including Node 24/26, builds, onboarding, three-OS recovery and browser journeys.
 The placement-cache experiment at `21523d5` passes five 24-case exact-pixel pairs
 and two native font-wake pairs, with independent source and artifact checks
-([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-placement-reuse-implementation-under-comparison---11-october-2026)).
-Its CPU timing and integration checks remain pending; these correctness results
-do not yet accept it as a performance improvement.
+([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-placement-reuse-moving-workload-regression-found---11-october-2026)).
+Its CPU comparison now shows repeatable moving-workload regressions: +7.53%,
++8.14% and +3.22% paired medians for generic, infrastructure and radio workloads,
+with two individual pairs over 10%. Fixed and periodic cases improve in all 20
+pairs, but this candidate remains off `dev` while the moving miss path is
+corrected. These are Node algorithm results, not GPU or browser frame times.
+The [raw comparison](performance-evidence/s52-placement-reuse/cpu-report.json)
+and [independent review](performance-evidence/s52-placement-reuse/cpu-review.json)
+preserve the failed performance acceptance. Six ordinary integration jobs pass;
+the browser gate is still pending.
 
 Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
 layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel
