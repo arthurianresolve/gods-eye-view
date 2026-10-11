@@ -162,6 +162,28 @@ test('accepts bounded iterator-step attribution only when excluded from acceptan
     errors: [],
   });
 
+  for (const mutate of [
+    (bad) => {
+      delete bad.performanceAcceptanceEligible;
+    },
+    (bad) => {
+      bad.performanceAcceptanceEligible = true;
+    },
+    (bad) => {
+      bad.samples[1].batchMetrics.iteratorSteps.maxStepMs = 0;
+    },
+    (bad) => {
+      bad.samples[1].batchMetrics.iteratorSteps.stages.entity.maxMs = 0;
+    },
+    (bad) => {
+      bad.samples[1].batchMetrics.iteratorSteps.stages.other.maxMs = 1;
+    },
+  ]) {
+    const bad = structuredClone(report);
+    mutate(bad);
+    assert.equal(validateImportBatchSchedulerReport(bad, commit).valid, false);
+  }
+
   report.samples.find(
     (sample) => sample.mode === 'cooperative',
   ).batchMetrics.iteratorSteps.stages.entity.count = 2;

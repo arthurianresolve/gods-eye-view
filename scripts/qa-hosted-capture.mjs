@@ -513,7 +513,8 @@ try {
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
     process.argv.includes('--imports') ||
-    process.argv.includes('--import-attribution')
+    process.argv.includes('--import-attribution') ||
+    process.argv.includes('--import-step-diagnostics')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

@@ -165,6 +165,7 @@ function validateBatchMetrics(
     return;
   let stageCount = 0;
   let stageOverBudget = 0;
+  let maximumStageMs = 0;
   for (const stage of stages) {
     const row = stageRows[stage];
     add(
@@ -175,18 +176,27 @@ function validateBatchMetrics(
         Number.isInteger(row.overBudget) &&
         row.overBudget >= 0 &&
         row.overBudget <= row.count &&
-        finite(row.maxMs),
+        finite(row.maxMs) &&
+        (row.count !== 0 || row.maxMs === 0) &&
+        row.overBudget > 0 === row.maxMs > metrics.budgetMs,
       `${name} iterator stage ${stage} is invalid`,
     );
     if (row && Number.isInteger(row.count)) stageCount += row.count;
     if (row && Number.isInteger(row.overBudget))
       stageOverBudget += row.overBudget;
+    if (row && finite(row.maxMs))
+      maximumStageMs = Math.max(maximumStageMs, row.maxMs);
   }
   add(
     errors,
     stageCount === steps.totalSteps &&
       stageOverBudget === steps.overBudgetSteps,
     `${name} iterator stage totals do not reconcile`,
+  );
+  add(
+    errors,
+    maximumStageMs === steps.maxStepMs,
+    `${name} iterator maximum does not reconcile`,
   );
 }
 
