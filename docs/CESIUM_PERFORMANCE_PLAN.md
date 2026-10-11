@@ -16,8 +16,16 @@ confirms hardware-accelerated WebGL on Intel UHD 620 / ANGLE D3D11 with zero
 GPU-process crashes reported. A minimal WebGL retry still has a 1,016 ms RAF
 gap while 20 ms timers continue. Its build identity is missing and the canvas
 is only 90% in the viewport; it is retained as diagnostic evidence, not accepted
-performance or soak evidence. The identified fixture server is prepared for
-the next controlled retry. [Configuration and raw result](performance-evidence/windows-gpu-20261012/README.md).
+performance or soak evidence. Identified controls at `acc471e4` subsequently
+reproduce an 850 ms WebGL RAF gap with the whole canvas visible (60 frames in
+five seconds); the matched plain-RAF control receives 286 frames with a 200 ms
+maximum gap. The minimal page contains no Cesium. Desktop occlusion is still
+unavailable; the cause and full hardware acceptance remain unresolved.
+[Configuration and raw results](performance-evidence/windows-gpu-20261012/README.md).
+The exact `acc471e4` revision also passed all seven standard jobs in
+[CI run 38183006552](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38183006552).
+Its optional soak and push-inapplicable layer-token checks were skipped, not
+passed; the Windows hardware frame stall remains a separate unresolved gate.
 
 Previous dev checkpoint (11 October 2026): point integration is pushed at
 `ba7c8738b8505244be06d0f0e3bd873e02d6b2ca`. [All seven standard CI jobs](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)

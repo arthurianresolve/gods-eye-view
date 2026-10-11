@@ -1,0 +1,84 @@
+{
+  "schema": "gev-webgl-frame-delivery/v1",
+  "appCommit": "acc471e4afb4ff629244ec37caf2836b6aef89ef",
+  "harnessCommit": "acc471e4afb4ff629244ec37caf2836b6aef89ef",
+  "scope": "diagnostic-only browser frame-delivery observation; not performance acceptance",
+  "mode": "plain-raf",
+  "outcome": "duration-complete",
+  "startedAt": "2026-10-11T23:16:37.494Z",
+  "elapsedMs": 5000.199999999953,
+  "requestedDurationMs": 5000,
+  "desktopForegroundVerification": "unavailable",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "focusedAtStart": true,
+    "visibilityAtStart": "visible"
+  },
+  "pointCount": null,
+  "viewport": {
+    "width": 894,
+    "height": 585
+  },
+  "canvas": {
+    "width": 640,
+    "height": 360,
+    "rect": {
+      "left": 16,
+      "top": 259.375,
+      "right": 658,
+      "bottom": 621.375,
+      "width": 642,
+      "height": 362
+    },
+    "viewportIntersection": {
+      "width": 642,
+      "height": 325.625,
+      "fraction": 0.8995165745856354
+    }
+  },
+  "contextAttributes": null,
+  "renderer": null,
+  "rendererMetadataReadAfterWindow": true,
+  "frames": 282,
+  "firstFrameAtMs": 8.300000000046566,
+  "buckets": [
+    {
+      "startMs": 0,
+      "endMs": 1000,
+      "frames": 46
+    },
+    {
+      "startMs": 1000,
+      "endMs": 2000,
+      "frames": 60
+    },
+    {
+      "startMs": 2000,
+      "endMs": 3000,
+      "frames": 60
+    },
+    {
+      "startMs": 3000,
+      "endMs": 4000,
+      "frames": 60
+    },
+    {
+      "startMs": 4000,
+      "endMs": 5000,
+      "frames": 56
+    }
+  ],
+  "maximumFrameGapMs": 166.5,
+  "trailingFrameGapMs": 10.299999999813735,
+  "frameClock": "performance.now sampled inside each native requestAnimationFrame callback",
+  "timer": {
+    "intervalMs": 20,
+    "ticks": 246,
+    "maximumGapMs": 117.5,
+    "trailingGapMs": 0
+  },
+  "finalVisibility": "visible",
+  "finalFocused": true,
+  "contextLost": false,
+  "events": []
+}

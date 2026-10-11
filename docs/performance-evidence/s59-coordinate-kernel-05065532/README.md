@@ -31,3 +31,13 @@ physical Windows GPU acceptance.
 Next: attribute the polygon readiness variation and finish cooperative
 large-feature preparation. The four-millisecond application batch target and
 full S59/S60 acceptance remain unfinished.
+
+[Timing partition](readiness-attribution.json), recomputed from both retained
+reports, shows why another conversion-only experiment is insufficient. In the
+repeat, polygon native-render/pick waits range from 501.8 to 1,179.2 ms for the
+Cesium arm and 555.2 to 840.7 ms for the scalar arm. Polygon loading itself takes
+2.8-6.8 ms. The recorded readiness wait therefore dominates first-usable time.
+It combines worker completion, rendering, native picking and polling; these
+totals cannot attribute the delay to one of those components. A separate
+diagnostic run must make that distinction. No timing gate is relaxed and no
+historical outcome is changed.
