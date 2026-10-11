@@ -6,6 +6,7 @@ import {
   mkdtemp,
   readFile,
   realpath,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -124,6 +125,12 @@ if (process.argv[2] === '--serve') {
     scope:
       'Actual fleet layers: fixed-time pixel/position equivalence and real-time untracked render cadence. Hosted acceleration is not physical desktop evidence or full-app motion-p95 acceptance.',
   };
+  async function persistReport() {
+    await mkdir('qa-artifacts', { recursive: true });
+    const temporary = 'qa-artifacts/fleet-render-demand.json.tmp';
+    await writeFile(temporary, JSON.stringify(report, null, 2) + '\n');
+    await rename(temporary, 'qa-artifacts/fleet-render-demand.json');
+  }
   async function startServer(root, commit, port, label) {
     const child = spawn(
       process.execPath,
@@ -173,6 +180,10 @@ if (process.argv[2] === '--serve') {
     return `http://127.0.0.1:${port}`;
   }
   async function sample(base, implementation, commit, mode) {
+    report.currentSample = { implementation, commit, mode };
+    // Keep completed observations even if the hosted job is interrupted during
+    // a later sample. A checkpoint remains running and cannot imply acceptance.
+    await persistReport();
     const page = await browser.newPage();
     let session;
     const errors = [];
@@ -357,6 +368,7 @@ if (process.argv[2] === '--serve') {
         'correctness',
       );
       report.baselineRepeat.push(result);
+      await persistReport();
       if (result.status !== 'passed' || result.pageErrors.length)
         throw new Error(
           `Baseline repeat ${i + 1}: ${result.error || 'fixture failed'}`,
@@ -383,6 +395,7 @@ if (process.argv[2] === '--serve') {
             mode,
           );
           pair[mode][implementation] = result;
+          await persistReport();
           if (result.status !== 'passed' || result.pageErrors.length)
             throw new Error(
               `${implementation}/${mode}: ${result.error || result.pageErrors.join('; ') || 'fixture failed'}`,
@@ -442,11 +455,7 @@ if (process.argv[2] === '--serve') {
       await rm(ownedDirectory, { recursive: true });
       report.temporaryDirectoryRemoved = true;
     }
-    await mkdir('qa-artifacts', { recursive: true });
-    await writeFile(
-      'qa-artifacts/fleet-render-demand.json',
-      JSON.stringify(report, null, 2) + '\n',
-    );
+    await persistReport();
     process.stdout.write(
       `QA_EVIDENCE_BEGIN fleet-render-demand\n${JSON.stringify(report, null, 2)}\nQA_EVIDENCE_END fleet-render-demand\n`,
     );
