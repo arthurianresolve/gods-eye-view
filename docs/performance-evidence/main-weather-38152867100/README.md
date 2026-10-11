@@ -51,3 +51,17 @@ frame delivery, current-candidate GPU comparisons, the 60-minute retained-memory
 plateau and human accessibility/usability reviews remain pending. No complete
 performance slice, performance target or release-readiness claim follows from
 this integration run.
+
+## Subsequent dev push validation
+
+The evidence-only dev revision `26f383edc0a960a58db94e7abcbb24c795fe8a83`
+also passes all seven standard jobs in
+[run 38154279746](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38154279746).
+The [complete job record](dev-26f383ed-ci.json) confirms the exact revision.
+Its [Windows recovery report](dev-26f383ed-windows-recovery.json), extracted
+unchanged from the completed job log after removing runner prefixes, preserves
+settings and workspace contents in all five stages. Each leaves zero owned
+pages and exits normally in 325.0-612.3 ms, without forced termination.
+[Review and hashes](dev-26f383ed-review.json) retain these observations.
+The earlier failures remain unresolved historical evidence; this successful
+run does not demonstrate their root cause or a permanent fix.

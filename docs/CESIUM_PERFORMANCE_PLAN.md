@@ -1,5 +1,11 @@
 # Cesium performance plan
 
+The dev push at `26f383edc0a960a58db94e7abcbb24c795fe8a83` also passes all
+seven standard jobs in [run 38154279746](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38154279746).
+Its five Windows recovery stages preserve settings/workspaces and exit normally
+within 325.0-612.3 ms. [Exact follow-up evidence](performance-evidence/main-weather-38152867100/dev-26f383ed-review.json)
+does not establish the cause of earlier intermittent shutdown failures.
+
 Latest integration: `7ef32a74afc7574d5fcad0dc19d2b4b33c49e815` passes all seven
 standard CI jobs after incorporating main `591f299` and correcting disclosure
 ownership in the accessibility journey. All 15 three-OS recovery checkpoints
@@ -4000,7 +4006,7 @@ Hardware validation, full weather/effect comparisons and the current-candidate
 60-minute retained-memory plateau remain pending. This success does not establish
 the cause of previous intermittent Windows browser shutdown failures.
 
-## Current main/weather integration gate - 11 October 2026
+## Historical main/weather integration gate - 11 October 2026
 
 Candidate `260037cbe51cb187ec7ac1eca12fe9d10767269b` merges upstream main
 `591f299` with the independently validated regional bitmap cleanup. Published
@@ -4025,3 +4031,9 @@ checks that it remains exposed, and requires Chrome's computed accessible name
 instead of accepting a raw aria-labelledby ID. Failures retain AX and panel
 state. Code is implemented; hosted validation remains pending. No production
 panel behavior or browser-close deadline changed.
+
+The subsequent corrected integration at `7ef32a74` and evidence-only dev push
+at `26f383ed` both pass all seven standard jobs. They are now integrated on dev;
+the candidate/pending statements above describe the earlier failed gate only.
+[Current integration evidence](performance-evidence/main-weather-38152867100/README.md)
+preserves both successful runs and the earlier failures separately.
