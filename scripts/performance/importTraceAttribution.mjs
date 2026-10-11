@@ -143,10 +143,15 @@ function validIdentityObject(identity) {
     Object.keys(identity).some((key) => !FLOW_IDENTITY_KEYS.has(key))
   )
     return false;
-  for (const key of ['id', 'bindId', 'scope']) {
+  for (const key of ['id', 'bindId']) {
     if (Object.hasOwn(identity, key) && !validIdentityScalar(identity[key]))
       return false;
   }
+  if (
+    Object.hasOwn(identity, 'scope') &&
+    (typeof identity.scope !== 'string' || identity.scope.length > 128)
+  )
+    return false;
   for (const key of ['idStatus', 'bindIdStatus', 'id2Status', 'scopeStatus']) {
     if (Object.hasOwn(identity, key) && identity[key] !== 'invalid')
       return false;
@@ -161,7 +166,8 @@ function validIdentityObject(identity) {
       ) ||
       ['localStatus', 'globalStatus'].some(
         (key) => Object.hasOwn(id2, key) && id2[key] !== 'invalid',
-      )
+      ) ||
+      Object.keys(id2).some((key) => key.endsWith('Status'))
     )
       return false;
   }
@@ -189,6 +195,7 @@ export function isValidImportTraceFlowEvent(event) {
     typeof event.category === 'string' &&
     event.categoryStatus === 'valid' &&
     event.category.length <= 128 &&
+    event.category.split(',').some((category) => category.includes('v8.gc')) &&
     finite(event.tsUs) &&
     event.tsUs >= 0 &&
     Number.isInteger(event.pid) &&

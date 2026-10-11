@@ -807,11 +807,28 @@ test('flow report validation rejects forged identity values, keys, and bounds', 
     check({ ...valid, identity: { id2: { local: 4, extra: 1 } } }),
     false,
   );
+  assert.equal(check({ ...valid, identity: { id2: {} } }), false);
+  assert.equal(
+    check({
+      ...valid,
+      identity: { id2: { global: 'flow-id', localStatus: 'invalid' } },
+    }),
+    false,
+  );
+  assert.equal(
+    check({ ...valid, identity: { id: 'flow-id', scope: 3 } }),
+    false,
+  );
+  assert.equal(
+    check({ ...valid, identity: { id: 'flow-id', scope: 's'.repeat(129) } }),
+    false,
+  );
   assert.equal(
     check({ ...valid, identity: { id: 'flow-id' }, unreviewed: true }),
     false,
   );
   assert.equal(check({ ...valid, category: 'c'.repeat(129) }), false);
+  assert.equal(check({ ...valid, category: 'devtools.timeline' }), false);
 });
 
 test('profile validator recomputes retained flow identity and phase accounting', () => {
