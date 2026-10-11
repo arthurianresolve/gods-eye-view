@@ -4034,3 +4034,30 @@ The rerun at `e77f77d` completed frame readiness but failed on a missing `waitFo
 At `480af78`, [the next cable comparison](performance-evidence/s54-cable-benefit-38141050784/review.json) passed activation and source/geometry/style/pick identity restoration but rejected different pixels after disabling/re-enabling the Entity baseline. No collection trial or complete pair ran. This is an unresolved visual-equivalence failure, not performance evidence. The fixture now preserves the two failed PNGs and camera/clock/readiness snapshots to locate the difference; the exact-pixel gate remains unchanged.
 
 The [failure-image diagnostic at `cd5bbed`](performance-evidence/s54-cable-benefit-38141341702/review.json) identifies missing ground cable segments in the initial image at an identical camera and clock. The readiness walker did not descend through Cesium ordered ground collections, while `DataSourceDisplay.ready` is sticky after its first success. The fixture now reads the ordered child list under explicit Cesium 1.138 version/shape guards and fails closed for unsupported layouts. This is a read-only private-owner probe in the fixture, not an engine mutation or public API guarantee. Sixteen focused tests pass, including unfinished ground geometry and unknown shapes. Exact rendered validation is pending; earlier ground-cable captures must not be treated as proof of complete geometry merely because their source records and images matched.
+
+### Cable complete-geometry comparison and baseline correction
+
+[Run 38141699421 at `c53ea94`](performance-evidence/s54-cable-benefit-38141699421/review.json)
+completed five latency pairs and five separate forced-GC pairs. Independent PNG
+decoding verifies all twenty images and ten exact renderer pairs, including full
+ground geometry and both visibility restores. The report still **fails**:
+teardown leaves one normal and one ground display container whereas the fixture
+recorded zero before the first DataSource was ever added. Cesium 1.138
+`DataSourceDisplay` creates these viewer-owned containers lazily and retains them
+until viewer destruction. This is a cold-versus-warmed baseline error, not proof
+of a layer leak or a reason to remove engine-owned containers.
+
+The fixture now materializes the empty default-entity display through an exact
+public-API add/remove pair before measurement and records three completed warmup
+frames. It requires zero remaining warmup entities and a warmed 0-DataSource,
+1-normal, 1-ground baseline. Exact teardown equality and all pixel/ownership
+gates remain required. The report validator also rejects missing or contradictory
+primitive-readiness witnesses. The old report remains failed; the corrected
+measurement requires fresh validation.
+
+The failed run's population-ready median regresses 40.28%, while ready-frame
+median improves 7.82% with inconsistent individual pairs. Enabled JS-heap delta
+is 10.69% lower across five pairs. These are diagnostic results with an invalid
+baseline, not an accepted activation or stability improvement. Default Entity
+rendering remains in place. No physical Windows, motion p95, GPU-memory, or
+60-minute retention claim follows from this hosted run.

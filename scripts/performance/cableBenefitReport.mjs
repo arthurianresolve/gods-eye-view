@@ -220,6 +220,22 @@ export function validateCableBenefit(report, expectedCommit) {
           Number.isSafeInteger(run.image.bytes) && run.image.bytes > 32,
         );
         assert.equal(run.readiness.ready, true);
+        assert.equal(
+          run.engineDisplayWarmup.method,
+          'empty-default-entity-add-remove',
+        );
+        assert.equal(run.engineDisplayWarmup.completedFrames, 3);
+        assert.equal(run.engineDisplayWarmup.remainingEntities, 0);
+        assert.deepEqual(run.engineDisplayWarmup.coldViewerResources, {
+          dataSources: 0,
+          primitives: 0,
+          groundPrimitives: 0,
+        });
+        assert.deepEqual(run.warmup, {
+          dataSources: 0,
+          primitives: 1,
+          groundPrimitives: 1,
+        });
         assert.equal(run.readiness.truncated, false);
         assert.deepEqual(run.readiness.pending, []);
         assert.deepEqual(run.readiness.unsupportedOwners, []);

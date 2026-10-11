@@ -438,6 +438,7 @@ if (isMain) {
       let state = await waitForFixtureState(page, 'ready', 60_000);
       record.ready = true;
       record.warmup = state.warmup;
+      record.engineDisplayWarmup = state.engineDisplayWarmup;
       record.environment = {
         ...state.environment,
         graphics: report.graphics,

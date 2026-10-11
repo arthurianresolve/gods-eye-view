@@ -1,0 +1,51 @@
+{
+  "testedCommit": "c53ea946d702ecd63ab049d3ec9fe6a7ea5d9ccc",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38141699421",
+  "outcome": "failed",
+  "reportSha256": "4e3c60aaf22a86a51bfd9707c749c262361bf033f00a72845b467fec33c8a097",
+  "imageAudit": {
+    "independentDecode": true,
+    "images": 20,
+    "matchedPairs": 10
+  },
+  "benefitAccepted": false,
+  "hardwareValidated": false,
+  "failedGate": "Warmed primitive ownership baseline was actually cold: all 20 trials begin at normal=0/ground=0 and end layer teardown at normal=1/ground=1.",
+  "rootCause": "Cesium 1.138 DataSourceDisplay attaches its normal and ground PrimitiveCollections lazily on the first default-entity or DataSource change. The display owns those containers until viewer destruction; removing all layer DataSources does not detach them.",
+  "correction": "Warm only the empty default-entity display before latency/heap measurement, remove the warmup Entity through the public API, render three frames, and require a 0-DataSource/1-normal/1-ground warmed baseline. Keep exact teardown equality, layer ownership and pixel gates. No engine owners are removed.",
+  "summary": {
+    "populationReadyMs": {
+      "baseline": 998.5999999999767,
+      "candidate": 1400.7999999999884,
+      "changePercent": 40.27638694172051,
+      "pairedChangePercent": [
+        -44.09323116219728, -6.288804326052544, 66.87096774193174,
+        30.810411666979643, 103.70535714285194
+      ]
+    },
+    "readyFrameMs": {
+      "baseline": 11165.5,
+      "candidate": 10291.800000000017,
+      "changePercent": -7.824996641439997,
+      "pairedChangePercent": [
+        -45.98600012280601, -7.824996641439997, -26.653086199818997,
+        1.0529962755365219, 33.65767359575449
+      ]
+    },
+    "enabledJsHeapDeltaBytes": {
+      "baseline": 139540972,
+      "candidate": 124622924,
+      "changePercent": -10.690801265165328,
+      "pairedChangePercent": [
+        -10.979844437138375, -10.29971935716839, -10.55919074258388,
+        -10.659412634734977, -10.913303232323768
+      ]
+    }
+  },
+  "limits": [
+    "Original report remains failed; the revised warmup requires a new run.",
+    "Population-ready median regresses 40.28%; ready-frame median improves 7.82% with inconsistent paired results. No accepted activation benefit.",
+    "Enabled JS-heap delta is 10.69% lower across five pairs, but this is hosted diagnostic evidence with a failed ownership gate, not final performance acceptance.",
+    "No physical Windows, motion p95, GPU/native memory or long-run retention evidence."
+  ]
+}

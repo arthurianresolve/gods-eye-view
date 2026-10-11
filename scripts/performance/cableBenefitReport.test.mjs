@@ -136,7 +136,17 @@ function makeRun(mode, suite, index, orderIndex) {
         { path: 'primitives', type: 'PrimitiveCollection', ready: null },
       ],
     },
-    warmup: { dataSources: 0, primitives: 2, groundPrimitives: 1 },
+    warmup: { dataSources: 0, primitives: 1, groundPrimitives: 1 },
+    engineDisplayWarmup: {
+      method: 'empty-default-entity-add-remove',
+      completedFrames: 3,
+      remainingEntities: 0,
+      coldViewerResources: {
+        dataSources: 0,
+        primitives: 0,
+        groundPrimitives: 0,
+      },
+    },
     ownership: {
       referenceGraphics: mode === 'entities' ? 2629 : 0,
       collections: mode === 'entities' ? 0 : 2,
@@ -150,7 +160,7 @@ function makeRun(mode, suite, index, orderIndex) {
         phase: 'layer-destroyed',
         teardown: {
           dataSources: 0,
-          primitives: 2,
+          primitives: 1,
           groundPrimitives: 1,
           listeners: 0,
           collections: 0,
@@ -375,4 +385,16 @@ test('rejects incomplete or contradictory primitive readiness evidence', () => {
     change(report.pairs[0].runs.entities.readiness);
     assert.throws(() => validateCableBenefit(report, commit));
   }
+});
+
+test('rejects cold display baselines and retained warmup entities', () => {
+  const cold = makeReport();
+  cold.pairs[0].runs.entities.warmup.primitives = 0;
+  assert.throws(() => validateCableBenefit(cold, commit));
+  const retained = makeReport();
+  retained.pairs[0].runs.collections.engineDisplayWarmup.remainingEntities = 1;
+  assert.throws(() => validateCableBenefit(retained, commit));
+  const missing = makeReport();
+  delete missing.pairs[0].runs.entities.engineDisplayWarmup;
+  assert.throws(() => validateCableBenefit(missing, commit));
 });

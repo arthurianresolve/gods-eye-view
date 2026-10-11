@@ -379,7 +379,22 @@ async function prepare() {
   const anchor = featureReference(firstLanding.feature);
   const target = Cesium.Cartesian3.fromDegrees(...Object.values(anchor), 0);
   viewer = createFixtureViewer(target);
+  const coldViewerResources = resourceCounts();
+  // DataSourceDisplay attaches its viewer-owned normal/ground containers only
+  // on the first entity or data-source change. Materialize that empty display
+  // before taking the warmed baseline; never remove engine owners at teardown.
+  const warmupEntity = viewer.entities.add({
+    id: 'cable-benefit-display-warmup',
+  });
+  assert(
+    viewer.entities.remove(warmupEntity),
+    'Display warmup entity was not removed.',
+  );
   for (let frame = 0; frame < 3; frame++) await waitForPostRender(viewer);
+  assert(
+    viewer.entities.values.length === 0,
+    'Display warmup retained entities.',
+  );
   source = createBundledCableSource();
   overlay = createOverlayHost();
   layer = createSubmarineCableLayer({
@@ -412,6 +427,12 @@ async function prepare() {
       harnessCommit: __GEV_APP_COMMIT__,
     }),
     warmup: resourceCounts(),
+    engineDisplayWarmup: {
+      method: 'empty-default-entity-add-remove',
+      completedFrames: 3,
+      remainingEntities: viewer.entities.values.length,
+      coldViewerResources,
+    },
   };
   window.__cableBenefit = {
     start() {
