@@ -58,6 +58,10 @@ on:
         type: choice
         options: [diagnostic, prewarm]
         default: diagnostic
+      render_boundary_cpu_profile:
+        description: Collect bounded CPU profiles around provider render-boundary settling (not latency evidence)
+        type: boolean
+        default: false
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -395,11 +399,17 @@ jobs:
         env:
           CANDIDATE_SHA: ${{ inputs.candidate_sha || github.sha }}
           CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
-        run: >-
-          node scripts/qa-performance-build-smoke.mjs
-          --candidate-sha "$CANDIDATE_SHA"
-          --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
-          --out "$RUNNER_TEMP/performance-build-smoke.json"
+          RENDER_BOUNDARY_CPU_PROFILE: ${{ inputs.render_boundary_cpu_profile || 'false' }}
+        run: |
+          profile_args=()
+          if [ "$RENDER_BOUNDARY_CPU_PROFILE" = "true" ]; then
+            profile_args+=(--render-boundary-cpu-profile)
+          fi
+          node scripts/qa-performance-build-smoke.mjs \
+            --candidate-sha "$CANDIDATE_SHA" \
+            --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE" \
+            "${profile_args[@]}" \
+            --out "$RUNNER_TEMP/performance-build-smoke.json"
 
       - name: Print bounded smoke evidence
         if: always()
@@ -416,7 +426,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-build-smoke-${{ github.run_id }}
-          path: ${{ runner.temp }}/performance-build-smoke.json
+          path: |
+            ${{ runner.temp }}/performance-build-smoke.json
+            ${{ runner.temp }}/performance-build-smoke-render-boundary-cpu-profiles/**
           if-no-files-found: warn
           retention-days: 3
 

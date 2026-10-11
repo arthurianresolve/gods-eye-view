@@ -1198,5 +1198,11 @@
   "build/cesium-dependencies.js",
   "src/tooling/cesiumDependencies.test.mjs",
   "scripts/performance/measureSceneWindow.mjs",
-  "scripts/performance/measureSceneWindow.test.mjs"
+  "scripts/performance/measureSceneWindow.test.mjs",
+  "scripts/performance/boundedCpuProfile.mjs",
+  "scripts/performance/boundedCpuProfile.test.mjs",
+  "scripts/qa-performance-build-smoke.mjs",
+  "scripts/qa-performance-build-smoke.test.mjs",
+  "scripts/performance/captureFailureReport.mjs",
+  "scripts/performance/captureFailureReport.test.mjs"
 ]

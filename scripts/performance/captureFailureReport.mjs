@@ -107,6 +107,7 @@ export function createCaptureFailureReport({
   startupSamples = [],
   completedSamples = [],
   fixtureDelivery = null,
+  diagnosticArtifacts = [],
 } = {}) {
   const boundedState = { truncated: false };
   const fullCompleted = completedSamples
@@ -151,6 +152,12 @@ export function createCaptureFailureReport({
     },
     fixtureDelivery: boundedValue(
       fixtureDelivery,
+      0,
+      new WeakSet(),
+      boundedState,
+    ),
+    diagnosticArtifacts: boundedValue(
+      diagnosticArtifacts.slice(-16),
       0,
       new WeakSet(),
       boundedState,

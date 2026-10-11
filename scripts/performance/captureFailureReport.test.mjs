@@ -142,3 +142,29 @@ test('failure artifact redacts secrets and stays within its hard byte cap', () =
   assert.equal(serialized.includes('private'), false);
   assert.equal(serialized.includes('secret.invalid'), false);
 });
+
+test('failure artifact keeps bounded profiler sidecar indexes when current details are truncated', () => {
+  const reference = {
+    schema: 'gev-render-boundary-cpu-profile-ref/v1',
+    label: 'warmup boundary',
+    status: 'incomplete',
+    performanceAcceptanceEligible: false,
+    fileName: 'render-boundary-01-warmup-boundary.json',
+    sha256: 'a'.repeat(64),
+    byteLength: 1024,
+    profilerErrors: ['Profiler stop timed out.'],
+  };
+  const report = createCaptureFailureReport({
+    source,
+    phase: 'provider-render-boundary',
+    error: new Error('Render boundary timed out.'),
+    current: { diagnostic: 'x'.repeat(300_000) },
+    diagnosticArtifacts: [reference],
+  });
+  assert.equal(report.evidenceTruncated, true);
+  assert.deepEqual(report.diagnosticArtifacts, [reference]);
+  assert.ok(
+    Buffer.byteLength(`${JSON.stringify(report, null, 2)}\n`, 'utf8') <=
+      MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  );
+});

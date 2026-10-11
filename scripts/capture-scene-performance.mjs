@@ -47,6 +47,7 @@ import {
   PREWARM_WORKER_AUDIT_BOUNDARY,
 } from './performance/prewarmWorkerAuditBoundary.mjs';
 import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
+import { runBoundedBoundaryProfile } from './performance/boundedCpuProfile.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import { createCaptureStageJournal } from './performance/captureStageJournal.mjs';
 import { measureSceneWindow } from './performance/measureSceneWindow.mjs';
@@ -81,6 +82,11 @@ const providerFixtureTime = option(
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
 const measureReadCosts = args.includes('--read-cost-diagnostics');
+const renderBoundaryCpuProfile = args.includes('--render-boundary-cpu-profile');
+const renderBoundaryCpuProfileDirectory = option(
+  '--render-boundary-profile-dir',
+  null,
+);
 const useEarlyRendererProbe = args.includes('--early-renderer-probe');
 if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
   throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
@@ -129,6 +135,10 @@ const fixtureTimeoutMs = Math.max(
 const PREWARM_BLOB_READ_STAGE_TIMEOUT_MS = 90_000;
 const PREWARM_RESTORE_STAGE_TIMEOUT_MS = 10_000;
 const out = option('--out', null);
+if (renderBoundaryCpuProfile && !renderBoundaryCpuProfileDirectory)
+  throw new Error(
+    '--render-boundary-cpu-profile requires --render-boundary-profile-dir.',
+  );
 const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
@@ -281,6 +291,7 @@ const failureProgress = {
   workload: {
     readCostDiagnostics: measureReadCosts,
     earlyRendererProbe: useEarlyRendererProbe,
+    renderBoundaryCpuProfile,
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
@@ -350,10 +361,14 @@ async function writeCaptureFailure(error) {
       ...(performanceDiagnosticsDocuments.length
         ? { performanceDiagnosticsDocuments }
         : {}),
+      ...(renderBoundaryCpuProfiles.length
+        ? { renderBoundaryCpuProfiles }
+        : {}),
     },
     startupSamples: failureProgress.startupSamples,
     completedSamples: failureProgress.completedSamples,
     fixtureDelivery: failureProgress.fixtureDelivery,
+    diagnosticArtifacts: renderBoundaryCpuProfiles,
   });
   const json = `${JSON.stringify(report, null, 2)}\n`;
   if (out) {
@@ -422,6 +437,8 @@ const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
 const fixtureInterceptionOwners = new Map();
 const performanceDiagnosticsDocuments = [];
+const renderBoundaryCpuProfiles = [];
+let renderBoundaryCpuProfileSequence = 0;
 const earlyRendererProbes = new Map();
 const earlyRendererProbeCleanup = [];
 async function releaseEarlyRendererProbe(targetPage) {
@@ -508,12 +525,34 @@ async function settleProviderRenderAtBoundary(
 ) {
   const diagnostic = {};
   (failureProgress.current.renderBoundaryDiagnostics ??= []).push(diagnostic);
-  return settlePageRenderBoundary(targetPage, {
+  const operation = () =>
+    settlePageRenderBoundary(targetPage, {
+      label,
+      timeoutMs,
+      diagnostic,
+      verbose: measureReadCosts,
+    });
+  if (!renderBoundaryCpuProfile) return operation();
+  renderBoundaryCpuProfileSequence += 1;
+  const fileName = `render-boundary-${String(
+    renderBoundaryCpuProfileSequence,
+  ).padStart(2, '0')}-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+  const publishProfile = (profile) => {
+    renderBoundaryCpuProfiles.push(profile);
+    failureProgress.renderBoundaryCpuProfiles =
+      renderBoundaryCpuProfiles.slice(-16);
+    if (failureProgress.current)
+      (failureProgress.current.renderBoundaryCpuProfiles ??= []).push(profile);
+  };
+  const result = await runBoundedBoundaryProfile({
+    page: targetPage,
     label,
-    timeoutMs,
-    diagnostic,
-    verbose: measureReadCosts,
+    artifactDirectory: renderBoundaryCpuProfileDirectory,
+    fileName,
+    operation,
+    onProfile: publishProfile,
   });
+  return result.value;
 }
 
 async function releaseFlightFixtureSession(session) {
@@ -1982,6 +2021,12 @@ try {
     await closeEarlyRendererProbeDocument(targetPage);
     await releaseEarlyRendererProbe(targetPage);
   }
+  const renderBoundaryCpuProfileStatus = !renderBoundaryCpuProfile
+    ? 'disabled'
+    : renderBoundaryCpuProfiles.length === captures.length * 2 &&
+        renderBoundaryCpuProfiles.every((entry) => entry.status === 'complete')
+      ? 'complete'
+      : 'incomplete';
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode,
@@ -1993,6 +2038,14 @@ try {
       requested:
         'disabled-after-app-ready-before-warmup-when-supported-per-document',
       documents: performanceDiagnosticsDocuments,
+    },
+    renderBoundaryCpuProfiling: {
+      enabled: renderBoundaryCpuProfile,
+      status: renderBoundaryCpuProfileStatus,
+      scope:
+        'Opt-in CPU sampling spans provider render-boundary settling, including idle and garbage collection. Sample weights are attribution only; this capture is ineligible for latency acceptance.',
+      performanceAcceptanceEligible: false,
+      profiles: renderBoundaryCpuProfiles,
     },
     capturedAt: new Date().toISOString(),
     observerReadDiagnostics: {
@@ -2015,10 +2068,14 @@ try {
         workerAuditMode === 'prewarm'
           ? PREWARM_WORKER_AUDIT_BOUNDARY
           : 'during-capture-diagnostic-instrumentation',
-      reasons:
-        comparisonReadinessReasons.length > 0
+      reasons: [
+        ...(comparisonReadinessReasons.length > 0
           ? comparisonReadinessReasons
-          : ['comparison-eligibility-is-not-enabled-by-this-capture-path'],
+          : ['comparison-eligibility-is-not-enabled-by-this-capture-path']),
+        ...(renderBoundaryCpuProfile
+          ? ['cpu-profile-diagnostic-is-ineligible-for-latency-acceptance']
+          : []),
+      ],
       reason:
         comparisonReadinessReasons.join('; ') ||
         'comparison-eligibility-is-not-enabled-by-this-capture-path',
@@ -2035,6 +2092,7 @@ try {
       startupRuns: startupSamples.length,
       scenarios,
       fixture,
+      renderBoundaryCpuProfile,
       ...(productionFlightFixture
         ? {
             providerFixtureLifecycle: {
@@ -2083,6 +2141,7 @@ try {
   } else {
     process.stdout.write(json);
   }
+  if (renderBoundaryCpuProfileStatus === 'incomplete') process.exitCode = 1;
   if (hardwareRequired && !environment.hardwareEligible) process.exitCode = 2;
   // Idle governor frames are intentionally sparse and are not a motion
   // performance failure. Apply an explicit frame budget only to the moving

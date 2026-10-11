@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +11,7 @@ import {
   parseSmokeArguments,
   runBoundedChild,
   validateCaptureCliReport,
+  verifyRenderBoundaryCpuProfileArtifacts,
 } from './qa-performance-build-smoke.mjs';
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 import { createProductionFlightFixture } from './performance/productionFlightFixture.mjs';
@@ -39,6 +41,12 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     ]),
     { candidateSha: sha, captureWorkerAuditMode: 'prewarm' },
   );
+  assert.deepEqual(parseSmokeArguments(['--render-boundary-cpu-profile']), {
+    renderBoundaryCpuProfile: true,
+  });
+  assert.deepEqual(parseSmokeArguments(['--render-boundary-cpu-profile']), {
+    renderBoundaryCpuProfile: true,
+  });
   assert.throws(
     () => parseSmokeArguments(['--candidate-sha', sha, '--unknown', 'x']),
     /Unknown option/,
@@ -239,6 +247,8 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
     startupRuns: 1,
     scenarios,
     fixture,
+    renderBoundaryCpuProfile: false,
+    renderBoundaryCpuProfile: false,
     injectedDelayMs: 0,
     cameraPath: 'observed per-scenario route descriptors',
     populationStableAcrossSamples: true,
@@ -315,6 +325,14 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
     comparisonContract,
     comparisonReadiness,
     performanceDiagnostics,
+    renderBoundaryCpuProfiling: {
+      enabled: false,
+      status: 'disabled',
+      scope:
+        'Opt-in CPU sampling spans provider render-boundary settling; this is not latency acceptance.',
+      performanceAcceptanceEligible: false,
+      profiles: [],
+    },
     integrity: { status: 'passed', sampleCount: 6 },
     source,
     workload,
@@ -371,6 +389,130 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
       }),
     /sampleCount/,
   );
+});
+
+test('capture CLI accepts boundary CPU profile references only as complete diagnostic data', () => {
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    renderBoundaryCpuProfile: true,
+  };
+  const report = validCaptureCliReport();
+  report.workload.renderBoundaryCpuProfile = true;
+  report.renderBoundaryCpuProfiling = {
+    enabled: true,
+    status: 'complete',
+    scope:
+      'Opt-in CPU sampling around provider boundaries; not latency acceptance.',
+    performanceAcceptanceEligible: false,
+    profiles: Array.from({ length: 12 }, (_, index) => ({
+      schema: 'gev-render-boundary-cpu-profile-ref/v1',
+      label: index % 2 ? 'Measurement boundary' : 'Warmup boundary',
+      status: 'complete',
+      performanceAcceptanceEligible: false,
+      fileName: `render-boundary-${String(index + 1).padStart(2, '0')}-${index % 2 ? 'measurement' : 'warmup'}-boundary.json`,
+      sha256: index.toString(16).padStart(64, '0'),
+      byteLength: 1024,
+      profilerErrors: [],
+    })),
+  };
+  assert.equal(validateCaptureCliReport(report, expected).status, 'passed');
+
+  const incomplete = structuredClone(report);
+  incomplete.renderBoundaryCpuProfiling.profiles[0].status = 'incomplete';
+  assert.throws(() => validateCaptureCliReport(incomplete, expected));
+  const acceptance = structuredClone(report);
+  acceptance.renderBoundaryCpuProfiling.performanceAcceptanceEligible = true;
+  assert.throws(() => validateCaptureCliReport(acceptance, expected));
+  const eligible = structuredClone(report);
+  eligible.comparisonEligible = true;
+  assert.throws(() => validateCaptureCliReport(eligible, expected));
+});
+
+test('smoke runner verifies bounded profile sidecar bytes and hashes', async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-smoke-cpu-profile-'),
+  );
+  try {
+    const bytes = Buffer.from('{"bounded":true}\n');
+    await writeFile(
+      path.join(directory, 'render-boundary-01-warmup-boundary.json'),
+      bytes,
+    );
+    const reference = {
+      fileName: 'render-boundary-01-warmup-boundary.json',
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+      byteLength: bytes.byteLength,
+    };
+    const verified = await verifyRenderBoundaryCpuProfileArtifacts(
+      [reference],
+      directory,
+    );
+    assert.equal(verified.files[0].sha256, reference.sha256);
+    await assert.rejects(
+      verifyRenderBoundaryCpuProfileArtifacts(
+        [{ ...reference, sha256: 'a'.repeat(64) }],
+        directory,
+      ),
+    );
+    await assert.rejects(
+      verifyRenderBoundaryCpuProfileArtifacts(
+        [{ ...reference, fileName: '../outside.json' }],
+        directory,
+      ),
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('capture CLI requires complete diagnostic-only references when CPU profiling is enabled', () => {
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    renderBoundaryCpuProfile: true,
+  };
+  const report = validCaptureCliReport();
+  const profiles = Array.from({ length: 12 }, (_, index) => ({
+    schema: 'gev-render-boundary-cpu-profile-ref/v1',
+    label: index % 2 ? 'Measurement boundary' : 'Warmup boundary',
+    status: 'complete',
+    performanceAcceptanceEligible: false,
+    fileName: `render-boundary-${String(index + 1).padStart(2, '0')}-${index % 2 ? 'measurement' : 'warmup'}-boundary.json`,
+    sha256: index.toString(16).padStart(64, '0'),
+    byteLength: 1024,
+    profilerErrors: [],
+  }));
+  report.renderBoundaryCpuProfiling = {
+    enabled: true,
+    status: 'complete',
+    scope:
+      'Opt-in CPU sampling around boundaries; this is not latency acceptance.',
+    performanceAcceptanceEligible: false,
+    profiles,
+  };
+  report.workload.renderBoundaryCpuProfile = true;
+  assert.equal(validateCaptureCliReport(report, expected).status, 'passed');
+
+  const incomplete = structuredClone(report);
+  incomplete.renderBoundaryCpuProfiling.profiles[0].status = 'incomplete';
+  assert.throws(() => validateCaptureCliReport(incomplete, expected));
+
+  const incompleteStatus = structuredClone(report);
+  incompleteStatus.renderBoundaryCpuProfiling.status = 'incomplete';
+  assert.throws(() => validateCaptureCliReport(incompleteStatus, expected));
+
+  const eligible = structuredClone(report);
+  eligible.renderBoundaryCpuProfiling.performanceAcceptanceEligible = true;
+  assert.throws(() => validateCaptureCliReport(eligible, expected));
+
+  const comparable = structuredClone(report);
+  comparable.comparisonEligible = true;
+  assert.throws(() => validateCaptureCliReport(comparable, expected));
 });
 
 test('capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence', () => {

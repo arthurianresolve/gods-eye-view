@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { assertSceneMeasurementWindow } from './performance/measureSceneWindow.mjs';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -88,6 +89,12 @@ export function parseSmokeArguments(argv) {
   const output = {};
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
+    if (flag === '--render-boundary-cpu-profile') {
+      if (output.renderBoundaryCpuProfile)
+        throw new TypeError('Duplicate --render-boundary-cpu-profile option.');
+      output.renderBoundaryCpuProfile = true;
+      continue;
+    }
     const key = OPTION_KEYS.get(flag);
     if (!key) throw new TypeError(`Unknown option: ${flag}`);
     const value = argv[++index];
@@ -347,8 +354,60 @@ export function runBoundedChild(
 export function validateCaptureCliReport(report, expected) {
   assert.equal(report?.schema, 'gev-performance-capture/v1');
   const workerAuditMode = expected.workerAuditMode || 'diagnostic';
+  const renderBoundaryCpuProfile = expected.renderBoundaryCpuProfile === true;
   assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
+  assert.equal(
+    report.renderBoundaryCpuProfiling?.enabled,
+    renderBoundaryCpuProfile,
+  );
+  assert.equal(
+    report.renderBoundaryCpuProfiling?.status,
+    renderBoundaryCpuProfile ? 'complete' : 'disabled',
+  );
+  assert.equal(
+    report.renderBoundaryCpuProfiling?.performanceAcceptanceEligible,
+    false,
+  );
+  assert.equal(
+    report.workload?.renderBoundaryCpuProfile,
+    renderBoundaryCpuProfile,
+  );
+  assert.match(
+    report.renderBoundaryCpuProfiling?.scope || '',
+    /(?:not.*latency acceptance|ineligible for latency acceptance)/i,
+  );
+  const profileReferences = report.renderBoundaryCpuProfiling?.profiles;
+  assert.ok(Array.isArray(profileReferences));
+  if (renderBoundaryCpuProfile) {
+    assert.equal(profileReferences.length, 12);
+    assert.equal(
+      new Set(profileReferences.map((entry) => entry?.fileName)).size,
+      12,
+    );
+    for (const [index, entry] of profileReferences.entries()) {
+      assert.equal(entry?.schema, 'gev-render-boundary-cpu-profile-ref/v1');
+      assert.equal(entry?.status, 'complete');
+      assert.equal(entry?.performanceAcceptanceEligible, false);
+      const sequence = String(index + 1).padStart(2, '0');
+      const boundary = index % 2 === 0 ? 'warmup' : 'measurement';
+      assert.equal(
+        entry?.label,
+        `${boundary === 'warmup' ? 'Warmup' : 'Measurement'} boundary`,
+      );
+      assert.equal(
+        entry?.fileName,
+        `render-boundary-${sequence}-${boundary}-boundary.json`,
+      );
+      assert.match(entry?.sha256 || '', /^[a-f0-9]{64}$/);
+      assert.ok(
+        Number.isInteger(entry?.byteLength) &&
+          entry.byteLength > 0 &&
+          entry.byteLength <= 8 * 1024 * 1024,
+      );
+      assert.deepEqual(entry?.profilerErrors, []);
+    }
+  } else assert.deepEqual(profileReferences, []);
   assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 6 });
   assert.equal(report.source?.appCommit, expected.appSha);
   assert.equal(report.source?.harnessCommit, expected.harnessSha);
@@ -607,11 +666,44 @@ export function validateCaptureCliReport(report, expected) {
       layers: sample.layers,
       conditions: sample.conditions,
     })),
+    renderBoundaryCpuProfiles:
+      report.renderBoundaryCpuProfiling?.profiles || [],
     rawReport: report,
     limitations: [
       'Hosted software-rendering CLI integration only; not hardware or paired performance evidence.',
       'The static production flight fixture verifies source delivery and populations, not a complete moving trajectory contract.',
     ],
+  };
+}
+
+export async function verifyRenderBoundaryCpuProfileArtifacts(
+  profileReferences,
+  directory,
+) {
+  assert.ok(Array.isArray(profileReferences));
+  const names = new Set();
+  for (const entry of profileReferences) {
+    assert.match(entry?.fileName || '', /^render-boundary-[a-z0-9-]+\.json$/);
+    assert.equal(names.has(entry.fileName), false);
+    names.add(entry.fileName);
+    assert.ok(Number.isInteger(entry.byteLength) && entry.byteLength > 0);
+    assert.match(entry.sha256 || '', /^[a-f0-9]{64}$/);
+    const artifactPath = path.join(directory, entry.fileName);
+    assert.equal(path.basename(artifactPath), entry.fileName);
+    const bytes = await readFile(artifactPath);
+    assert.equal(bytes.byteLength, entry.byteLength);
+    assert.equal(
+      createHash('sha256').update(bytes).digest('hex'),
+      entry.sha256,
+    );
+  }
+  return {
+    directory: path.basename(directory),
+    files: profileReferences.map(({ fileName, sha256, byteLength }) => ({
+      fileName,
+      sha256,
+      byteLength,
+    })),
   };
 }
 
@@ -662,6 +754,17 @@ export function compactCaptureCliFailure(report) {
         report.captures?.length ??
         0,
       evidenceTruncated: report.evidenceTruncated ?? null,
+      renderBoundaryCpuProfiling: report.renderBoundaryCpuProfiling
+        ? {
+            enabled: report.renderBoundaryCpuProfiling.enabled === true,
+            performanceAcceptanceEligible:
+              report.renderBoundaryCpuProfiling
+                .performanceAcceptanceEligible === true,
+            profiles: Array.isArray(report.renderBoundaryCpuProfiling.profiles)
+              ? report.renderBoundaryCpuProfiling.profiles.slice(-16)
+              : [],
+          }
+        : null,
     },
     ...(preservesBoundedFailureReport
       ? { rawReport: report }
@@ -871,6 +974,8 @@ async function runCandidateCaptureCli({
   tempRoot,
   fixture,
   workerAuditMode,
+  renderBoundaryCpuProfile,
+  profileArtifactDirectory,
   startedAt,
   budgetMs,
 }) {
@@ -943,6 +1048,12 @@ async function runCandidateCaptureCli({
     '--out',
     reportPath,
   ];
+  if (renderBoundaryCpuProfile)
+    args.push(
+      '--render-boundary-cpu-profile',
+      '--render-boundary-profile-dir',
+      profileArtifactDirectory,
+    );
   let captureReport = null;
   try {
     await runBoundedChild(process.execPath, args, {
@@ -951,13 +1062,22 @@ async function runCandidateCaptureCli({
       ownedPidFile: browserPidPath,
     });
     captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
-    return validateCaptureCliReport(captureReport, {
+    const validated = validateCaptureCliReport(captureReport, {
       appSha: commit,
       harnessSha: harnessCommit,
       receiptSha256: build.receipt.receiptSha256,
       fixtureSha256: fixture.sha256,
       workerAuditMode,
+      renderBoundaryCpuProfile,
     });
+    if (renderBoundaryCpuProfile) {
+      validated.profileArtifacts =
+        await verifyRenderBoundaryCpuProfileArtifacts(
+          validated.rawReport.renderBoundaryCpuProfiling.profiles,
+          profileArtifactDirectory,
+        );
+    }
+    return validated;
   } catch (error) {
     if (!captureReport) {
       try {
@@ -983,6 +1103,8 @@ async function runRevision({
   startedAt,
   budgetMs,
   workerAuditMode,
+  renderBoundaryCpuProfile,
+  profileArtifactDirectory,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -1399,6 +1521,8 @@ async function runRevision({
         tempRoot,
         fixture: flightFixture,
         workerAuditMode,
+        renderBoundaryCpuProfile,
+        profileArtifactDirectory,
         startedAt,
         budgetMs,
       });
@@ -1539,6 +1663,7 @@ async function main() {
     candidateSha,
     out,
     captureWorkerAuditMode = 'diagnostic',
+    renderBoundaryCpuProfile = false,
   } = parseSmokeArguments(process.argv.slice(2));
   const outputPath = path.resolve(
     out ||
@@ -1572,6 +1697,10 @@ async function main() {
     candidateSha,
     harnessSha: harnessCommit,
     captureWorkerAuditMode,
+    renderBoundaryCpuProfile,
+    renderBoundaryProfileArtifactDirectory: renderBoundaryCpuProfile
+      ? 'performance-build-smoke-render-boundary-cpu-profiles'
+      : null,
     startedAt: null,
     variants: [],
     limitations: [
@@ -1642,6 +1771,11 @@ async function main() {
           startedAt,
           budgetMs,
           workerAuditMode: captureWorkerAuditMode,
+          renderBoundaryCpuProfile,
+          profileArtifactDirectory: path.join(
+            path.dirname(outputPath),
+            'performance-build-smoke-render-boundary-cpu-profiles',
+          ),
         });
         Object.assign(variant, result);
       } catch (error) {
