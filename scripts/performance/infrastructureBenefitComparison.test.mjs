@@ -106,6 +106,21 @@ function run(mode, suite, seed, layer) {
       groundPrimitiveCountAfterDestroy: 2,
     },
   };
+  if (layer.layerId === 'local-datacenters') {
+    result.cameraContract = {
+      layerId: layer.layerId,
+      kind: 'lookAt-world-frame',
+      targetCartographic: [
+        (-70.85 * Math.PI) / 180,
+        (-53 * Math.PI) / 180,
+        2000,
+      ],
+      headingRadians: 0,
+      pitchRadians: -Math.PI / 3,
+      rangeMeters: 140_000,
+      restoredTransform: 'IDENTITY',
+    };
+  }
   result.surfacePopulation.resources =
     mode === 'entities'
       ? {
@@ -218,6 +233,7 @@ function validReport(layerId = 'local-dams') {
           'scripts/fixtures/infrastructure-benefit.html',
           'scripts/fixtures/infrastructure-benefit.mjs',
           'scripts/fixtures/infrastructureFixtureLayer.mjs',
+          'scripts/fixtures/infrastructureFixtureCamera.mjs',
           'scripts/performance/infrastructureBenefitComparison.mjs',
           'scripts/performance/infrastructureBenefitComparison.test.mjs',
         ].map((path, index) => [path, hash(String(index + 1)[0])]),
@@ -316,6 +332,27 @@ test('datacenter benefit evidence binds the complete untruncated inventory', () 
         expectedLayerId: 'local-dams',
       }),
     /different requested layer/,
+  );
+  const changedCamera = structuredClone(report);
+  changedCamera.pairs[0].runs.entities.cameraContract.targetCartographic[1] += 0.01;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(changedCamera, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /settings, render clock, or camera contract/,
+  );
+  const invalidCamera = structuredClone(report);
+  invalidCamera.pairs[0].runs.entities.cameraContract.targetCartographic[1] =
+    -53;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(invalidCamera, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /camera contract is missing or invalid/,
   );
 });
 

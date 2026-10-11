@@ -11,6 +11,7 @@ import {
   DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
+import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
 
 const FRAME_TIMEOUT_MS = 12_000;
 const params = new URLSearchParams(location.search);
@@ -409,14 +410,12 @@ async function runActivation() {
   const firstPosition = firstEntity.position.getValue(renderTimeRef);
   const anchor = Cesium.Cartographic.fromCartesian(firstPosition);
   check(anchor, 'First source coordinate is not cartographic.');
-  viewer.camera.setView({
-    destination: Cesium.Cartesian3.fromRadians(
-      anchor.longitude,
-      anchor.latitude,
-      140_000,
-    ),
-    orientation: { heading: 0, pitch: -Math.PI / 3, roll: 0 },
-  });
+  state.cameraContract = setInfrastructureFixtureCamera(
+    viewer,
+    anchor,
+    140_000,
+    fixtureLayer.layerId,
+  );
   publish('awaiting-first-usable-frame');
 
   const deadline = performance.now() + FRAME_TIMEOUT_MS;
