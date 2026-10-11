@@ -11,6 +11,7 @@ import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
+import { DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -240,22 +241,29 @@ try {
           `Collection diagnostic failed: ${report.pointCollections.error || 'incomplete samples'}`,
         );
     }
-    if (
-      process.argv.includes('--infrastructure') &&
-      report.hardwareRenderingAvailable
-    ) {
+    const infrastructureDiagnostic =
+      process.argv.includes('--infrastructure') ||
+      process.argv.includes('--infrastructure-datacenters');
+    if (infrastructureDiagnostic && report.hardwareRenderingAvailable) {
       await page.setViewport({
         width: 1200,
         height: 960,
         deviceScaleFactor: 1,
       });
-      await page.goto(
+      const infrastructureUrl = new URL(
         url.replace(
           'capture-matrix.html',
           'infrastructure-runtime-collections.html',
         ),
-        { waitUntil: 'networkidle0' },
       );
+      const expectedLayerId = process.argv.includes(
+        '--infrastructure-datacenters',
+      )
+        ? 'local-datacenters'
+        : DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+      if (expectedLayerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID)
+        infrastructureUrl.searchParams.set('layerId', expectedLayerId);
+      await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
         { timeout: 360_000, polling: 100 },
@@ -282,6 +290,7 @@ try {
         );
       validateInfrastructureRuntimeReport(report.infrastructureCollections, {
         expectedCommit: commit,
+        expectedLayerId,
       });
     }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
@@ -552,6 +561,7 @@ try {
   }
   if (
     process.argv.includes('--infrastructure') ||
+    process.argv.includes('--infrastructure-datacenters') ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
     process.argv.includes('--import-point-entity') ||

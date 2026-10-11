@@ -1024,6 +1024,7 @@
   "scripts/fixtures/infrastructure-collections-ui.js",
   "scripts/fixtures/infrastructure-runtime-collections.html",
   "scripts/fixtures/infrastructure-runtime-collections.mjs",
+  "scripts/fixtures/infrastructureFixtureLayer.mjs",
   "scripts/fixtures/terrain-picking-lifecycle.html",
   "scripts/fixtures/terrain-picking-lifecycle.js",
   "scripts/performance/infrastructureCollectionExperiment.mjs",

@@ -7,14 +7,24 @@ import { INFRASTRUCTURE_DATA_URLS } from '../../src/sources/infrastructureData.j
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
+  assertInfrastructureSourceInventory,
+  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  infrastructureFixtureLayer,
+} from './infrastructureFixtureLayer.mjs';
+import {
+  countInfrastructureGraphics,
+  createInfrastructureSampleReadiness,
+  infrastructureCameraRevisionReady,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
-  INFRASTRUCTURE_RUNTIME_SCHEMA,
   validateInfrastructureRuntimeReport,
 } from '../performance/infrastructureRuntimeComparison.mjs';
 
 const FRAME_TIMEOUT_MS = 400;
-const MAX_RECORDS = 2000;
+const fixtureLayer = infrastructureFixtureLayer(
+  new URLSearchParams(location.search).get('layerId') ||
+    DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+);
 const container = document.querySelector('#viewer');
 const status = document.querySelector('#status');
 const output = document.querySelector('#result');
@@ -30,9 +40,12 @@ async function sha256(bytes) {
     .join('');
 }
 
-async function sourceDigest() {
-  const response = await fetch(INFRASTRUCTURE_DATA_URLS['local-dams']);
-  check(response.ok, `Bundled dams payload returned HTTP ${response.status}.`);
+async function sourceDigest(layer) {
+  const response = await fetch(INFRASTRUCTURE_DATA_URLS[layer.layerId]);
+  check(
+    response.ok,
+    `Bundled ${layer.layerName} payload returned HTTP ${response.status}.`,
+  );
   const bytes = await response.arrayBuffer();
   check(
     bytes.byteLength > 0 && bytes.byteLength <= 20 * 1024 * 1024,
@@ -48,12 +61,15 @@ async function sourceDigest() {
     const kind = feature?.geometry?.type || 'unknown';
     geometryKinds[kind] = (geometryKinds[kind] || 0) + 1;
   }
-  return {
+  const source = {
+    layerId: layer.layerId,
     payloadSha256: await sha256(bytes),
     payloadBytes: bytes.byteLength,
     featureCount: lines.length,
     geometryKinds,
   };
+  assertInfrastructureSourceInventory(source, layer);
+  return source;
 }
 
 function value(property, time) {
@@ -92,18 +108,18 @@ function analystIndex(records) {
   return index;
 }
 
-function identityFor(entity, recordsBySource, time) {
+function identityFor(entity, recordsBySource, time, layerId) {
   const properties = value(entity.properties, time) || {};
   const sourceId = String(properties.osm_id ?? properties.id ?? entity.id);
   const record = recordsBySource.get(sourceId)?.[0];
   check(
-    record?.evidence?.entityRef?.layerKey === 'local-dams',
+    record?.evidence?.entityRef?.layerKey === layerId,
     `Entity ${entity.id} lacks the expected analyst identity.`,
   );
   return String(record.sourceRecordId || record.evidence.entityRef.id);
 }
 
-function readEntitySurfaces(dataSource, records, time) {
+function readEntitySurfaces(dataSource, records, time, layerId) {
   const bySource = analystIndex(records);
   const rows = [];
   for (const entity of dataSource.entities.values) {
@@ -116,7 +132,7 @@ function readEntitySurfaces(dataSource, records, time) {
     rows.push({
       entity,
       entityId: String(entity.id),
-      sourceRecordId: identityFor(entity, bySource, time),
+      sourceRecordId: identityFor(entity, bySource, time, layerId),
       entityShow: entity.show !== false,
       point: {
         position: finitePosition(value(entity.position, time)),
@@ -141,11 +157,11 @@ function readEntitySurfaces(dataSource, records, time) {
   return rows;
 }
 
-function findProductionCollection(viewer) {
+function findProductionCollection(viewer, layerId) {
   const owners = [];
   for (let index = 0; index < viewer.scene.primitives.length; index++) {
     const primitive = viewer.scene.primitives.get(index);
-    if (primitive?.__gevLocalInfrastructureLayerId === 'local-dams')
+    if (primitive?.__gevLocalInfrastructureLayerId === layerId)
       owners.push(primitive);
   }
   check(
@@ -163,7 +179,13 @@ function findProductionCollection(viewer) {
   };
 }
 
-function readCollectionSurfaces(dataSource, records, collections, time) {
+function readCollectionSurfaces(
+  dataSource,
+  records,
+  collections,
+  time,
+  layerId,
+) {
   const bySource = analystIndex(records);
   const entityById = new Map(
     dataSource.entities.values.map((entity) => [String(entity.id), entity]),
@@ -189,7 +211,7 @@ function readCollectionSurfaces(dataSource, records, collections, time) {
     rows.push({
       entity,
       entityId: String(entity.id),
-      sourceRecordId: identityFor(entity, bySource, time),
+      sourceRecordId: identityFor(entity, bySource, time, layerId),
       entityShow: entity.show !== false,
       point: {
         position: finitePosition(point.position),
@@ -262,12 +284,12 @@ function identitySnapshot(rows) {
   }));
 }
 
-function scanOwners(viewer) {
+function scanOwners(viewer, layerId) {
   let count = 0;
   const childCounts = [];
   for (let index = 0; index < viewer.scene.primitives.length; index++) {
     const primitive = viewer.scene.primitives.get(index);
-    if (primitive?.__gevLocalInfrastructureLayerId === 'local-dams') {
+    if (primitive?.__gevLocalInfrastructureLayerId === layerId) {
       count++;
       childCounts.push(primitive.length);
     }
@@ -337,9 +359,30 @@ function projectNativePick(viewer, row, kind) {
   return screen;
 }
 
-function captureNativePick(viewer, row, kind, collections, screen) {
+function captureNativePick(
+  viewer,
+  row,
+  kind,
+  collections,
+  screen,
+  diagnostics,
+) {
   const picked = viewer.scene.pick(new Cesium.Cartesian2(screen.x, screen.y));
-  if (picked?.id !== row.entity) return null;
+  const miss = (reason) => {
+    diagnostics[`${kind}Misses`]++;
+    if (diagnostics.rejections.length < 4)
+      diagnostics.rejections.push({
+        kind,
+        reason,
+        expectedEntityId: row.entityId,
+        actualEntityId: picked?.id?.id ? String(picked.id.id) : null,
+        primitiveType: picked?.primitive?.constructor?.name || null,
+        appearanceType:
+          picked?.primitive?.appearance?.constructor?.name || null,
+      });
+    return null;
+  };
+  if (picked?.id !== row.entity) return miss('source-entity-mismatch');
   if (collections) {
     const collection =
       kind === 'point' ? collections.points : collections.stems;
@@ -350,9 +393,11 @@ function captureNativePick(viewer, row, kind, collections, screen) {
         break;
       }
     }
-    if (!expected || picked.primitive !== expected) return null;
+    if (!expected || picked.primitive !== expected)
+      return miss('collection-primitive-mismatch');
   } else if (kind === 'point') {
-    if (!(picked.primitive instanceof Cesium.PointPrimitive)) return null;
+    if (!(picked.primitive instanceof Cesium.PointPrimitive))
+      return miss('default-point-type');
   } else {
     const primitive = picked.primitive;
     const defaultStemPrimitive =
@@ -360,7 +405,7 @@ function captureNativePick(viewer, row, kind, collections, screen) {
       (primitive instanceof Cesium.Primitive &&
         (primitive.appearance instanceof Cesium.PolylineColorAppearance ||
           primitive.appearance instanceof Cesium.PolylineMaterialAppearance));
-    if (!defaultStemPrimitive) return null;
+    if (!defaultStemPrimitive) return miss('default-stem-type');
   }
   viewer.selectedEntity = picked.id;
   check(
@@ -380,6 +425,7 @@ function findNativePickTarget(
   rows,
   collections,
   preferredEntityId = null,
+  diagnostics,
 ) {
   const orderedRows = preferredEntityId
     ? [
@@ -388,21 +434,31 @@ function findNativePickTarget(
       ]
     : rows;
   for (const row of orderedRows) {
-    if (!row.entityShow || !row.point.show || !row.stem.show) continue;
+    diagnostics.examined++;
+    if (!row.entityShow || !row.point.show || !row.stem.show) {
+      diagnostics.hidden++;
+      continue;
+    }
     const pointScreen = projectNativePick(viewer, row, 'point');
     const stemScreen = projectNativePick(viewer, row, 'stem');
-    if (!pointScreen || !stemScreen) continue;
+    if (!pointScreen || !stemScreen) {
+      diagnostics.offscreen++;
+      continue;
+    }
     if (
       Math.hypot(pointScreen.x - stemScreen.x, pointScreen.y - stemScreen.y) <=
       8
-    )
+    ) {
+      diagnostics.coincident++;
       continue;
+    }
     const pointPick = captureNativePick(
       viewer,
       row,
       'point',
       collections,
       pointScreen,
+      diagnostics,
     );
     if (!pointPick) continue;
     const stemPick = captureNativePick(
@@ -411,6 +467,7 @@ function findNativePickTarget(
       'stem',
       collections,
       stemScreen,
+      diagnostics,
     );
     if (stemPick) return { row, pointPick, stemPick };
   }
@@ -492,6 +549,7 @@ function snapshotClock(viewer) {
 async function runLayerLifetime(
   viewer,
   mode,
+  layer,
   source,
   report,
   renderTime,
@@ -511,7 +569,7 @@ async function runLayerLifetime(
     renderClock: report.renderClock,
     teardown: null,
   };
-  const ownersBefore = scanOwners(viewer);
+  const ownersBefore = scanOwners(viewer, layer.layerId);
   lifetime.sceneBaseline = {
     dataSources: viewer.dataSources.length,
     ...scenePrimitiveCounts(viewer),
@@ -523,33 +581,50 @@ async function runLayerLifetime(
   if (mode === 'primitive-collections')
     services.infrastructureSurfaceRenderer = mode;
   const layers = createInfrastructureLayers(services);
-  const dams = layers.find((layer) => layer.id === 'local-dams');
-  check(dams, 'Production dams layer did not construct.');
+  const targetLayer = layers.find(
+    (candidate) => candidate.id === layer.layerId,
+  );
+  check(targetLayer, `Production ${layer.layerName} layer did not construct.`);
   let dataSource;
   let restored = true;
   try {
     restoreCamera(viewer, initialCamera);
-    await dams.init(viewer);
-    await dams.enable(viewer);
+    await targetLayer.init(viewer);
+    await targetLayer.enable(viewer);
     lifetime.activationDiagnosticMs = performance.now() - layerStart;
     lifetime.activationTimingScope =
       'single-layer-activation-diagnostic-not-performance-evidence';
-    dataSource = viewer.dataSources.getByName('Dams')?.[0];
+    dataSource = viewer.dataSources.getByName(layer.layerName)?.[0];
     check(
       dataSource && dataSource.isLoading !== true,
-      'Production dams source did not load.',
+      `Production ${layer.layerName} source did not load.`,
     );
-    const records = dams.getAnalystRecords(MAX_RECORDS);
-    check(records.length > 0, 'Production analyst records are empty.');
+    check(
+      dataSource.entities.values.length === layer.entityCount,
+      `Expected ${layer.entityCount} ${layer.layerId} GeoJSON entities; received ${dataSource.entities.values.length}.`,
+    );
+    const records = targetLayer.getAnalystRecords(
+      dataSource.entities.values.length,
+    );
+    check(
+      records.length === layer.surfaceCount,
+      `Expected all ${layer.surfaceCount} ${layer.layerId} surface identities; received ${records.length}.`,
+    );
     let collections =
       mode === 'primitive-collections'
-        ? findProductionCollection(viewer)
+        ? findProductionCollection(viewer, layer.layerId)
         : null;
     const time = Cesium.JulianDate.clone(renderTime);
     const readRows = () =>
       mode === 'entities'
-        ? readEntitySurfaces(dataSource, records, time)
-        : readCollectionSurfaces(dataSource, records, collections, time);
+        ? readEntitySurfaces(dataSource, records, time, layer.layerId)
+        : readCollectionSurfaces(
+            dataSource,
+            records,
+            collections,
+            time,
+            layer.layerId,
+          );
     let preferredPickEntityId = null;
     let rows = readRows();
     const first = rows[0];
@@ -558,17 +633,24 @@ async function runLayerLifetime(
     );
     check(anchor, 'Source anchor is not cartographic.');
     const renderState = () => {
-      const owner = scanOwners(viewer);
-      const graphicCount = dataSource.entities.values.filter(
-        (entity) => entity.point || entity.polyline,
-      ).length;
+      const owner = scanOwners(viewer, layer.layerId);
+      const graphics = countInfrastructureGraphics(
+        dataSource.entities.values,
+        rows.map((row) => row.entity),
+      );
+      const graphicCount = graphics.surfaceGraphics;
+      check(
+        JSON.stringify(graphics.preservedGraphics) ===
+          JSON.stringify(layer.preservedGraphics),
+        `Preserved source geometry differs for ${layer.layerId}.`,
+      );
       if (mode === 'entities')
         check(
           owner.count === 0 && graphicCount === rows.length,
           'Baseline is not the default Entity representation.',
         );
       else {
-        const diagnostic = dams.getSurfaceRendererDiagnostics();
+        const diagnostic = targetLayer.getSurfaceRendererDiagnostics();
         check(
           owner.count === 1 && owner.childCounts[0] === 2 && graphicCount === 0,
           'Candidate contains duplicate or unowned Graphics.',
@@ -588,6 +670,7 @@ async function runLayerLifetime(
         entityCount: dataSource.entities.values.length,
         surfaceEntityCount: rows.length,
         entitySurfaceGraphics: graphicCount,
+        preservedGraphics: graphics.preservedGraphics,
         rendererOwners: owner.count,
         rendererOwnerChildren: owner.childCounts,
       };
@@ -600,31 +683,62 @@ async function runLayerLifetime(
       recordSample = true,
     ) => {
       const deadline = performance.now() + 8000;
-      let previous = null;
+      const readiness = createInfrastructureSampleReadiness();
+      let completedCaptures = 0;
+      let pickSearches = 0;
+      let pickDiagnostics = null;
       let stableFrames = 0;
       let finalFrame;
       let pointPick;
       let stemPick;
       let pickRow;
-      let attemptedPickSearch = false;
       let selectionRendered = false;
+      let geometryReady = false;
+      let observedGeometry = null;
+      let lodDiagnostics = null;
+      let cameraPosition = null;
+      let sceneReadiness = null;
       while (performance.now() < deadline) {
         finalFrame = await captureFrame(viewer);
+        completedCaptures++;
         if (pickRow) selectionRendered = true;
         rows = readRows();
         const hash = await sha256(
           new TextEncoder().encode(JSON.stringify(geometrySnapshot(rows))),
         );
         const signature = `${finalFrame.pixelSha256}:${hash}`;
-        stableFrames = signature === previous ? stableFrames + 1 : 1;
-        previous = signature;
-        if (stableFrames >= 3 && !attemptedPickSearch) {
-          attemptedPickSearch = true;
+        observedGeometry = hash;
+        lodDiagnostics = targetLayer.getLodDiagnostics();
+        cameraPosition = finitePosition(viewer.camera.positionWC);
+        sceneReadiness = {
+          dataSourcesReady: viewer.dataSourceDisplay.ready,
+          globeTilesLoaded: viewer.scene.globe.tilesLoaded,
+        };
+        geometryReady =
+          (!changedGeometryFrom || hash !== changedGeometryFrom) &&
+          infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition) &&
+          sceneReadiness.dataSourcesReady === true &&
+          sceneReadiness.globeTilesLoaded === true;
+        stableFrames = readiness.observe(signature, {
+          inputsReady: geometryReady,
+        });
+        if (readiness.takePickAttempt()) {
+          pickSearches++;
+          pickDiagnostics = {
+            examined: 0,
+            hidden: 0,
+            offscreen: 0,
+            coincident: 0,
+            pointMisses: 0,
+            stemMisses: 0,
+            rejections: [],
+          };
           const target = findNativePickTarget(
             viewer,
             rows,
             collections,
             preferredPickEntityId,
+            pickDiagnostics,
           );
           pointPick = target?.pointPick;
           stemPick = target?.stemPick;
@@ -633,6 +747,39 @@ async function runLayerLifetime(
         }
         if (stableFrames >= 3 && pointPick && stemPick && selectionRendered)
           break;
+      }
+      if (!(stableFrames >= 3 && pointPick && stemPick && pickRow)) {
+        lifetime.failedSample = {
+          caseId,
+          pair,
+          stableFrames,
+          completedCaptures,
+          pickSearches,
+          pickDiagnostics,
+          geometryReady,
+          observedGeometry,
+          changedGeometryFrom,
+          lodDiagnostics,
+          cameraPosition,
+          sceneReadiness,
+          pointPick: pointPick || null,
+          stemPick: stemPick || null,
+          surfaceCount: rows.length,
+          visibleSurfaces: rows.filter(
+            (row) => row.entityShow && row.point.show && row.stem.show,
+          ).length,
+          sourceReady: viewer.dataSourceDisplay.ready,
+          ownership: renderState(),
+          clock: snapshotClock(viewer),
+          lastFrame: finalFrame
+            ? {
+                width: finalFrame.width,
+                height: finalFrame.height,
+                pixelSha256: finalFrame.pixelSha256,
+                pngBase64: finalFrame.pngBase64,
+              }
+            : null,
+        };
       }
       check(
         stableFrames >= 3 && pointPick && stemPick && pickRow,
@@ -670,6 +817,9 @@ async function runLayerLifetime(
           new TextEncoder().encode(JSON.stringify(style)),
         ),
         styleAudit,
+        lodDiagnostics,
+        cameraPosition,
+        sceneReadiness,
         pixelSha256: finalFrame.pixelSha256,
         pngBase64: finalFrame.pngBase64,
         pixelDifferenceCount: finalFrame.pixelsDifferentFromCorner,
@@ -689,9 +839,9 @@ async function runLayerLifetime(
         },
         productionDiagnostics:
           mode === 'primitive-collections'
-            ? dams.getSurfaceRendererDiagnostics()
+            ? targetLayer.getSurfaceRendererDiagnostics()
             : null,
-        layerResourceDiagnostics: dams.getPerformanceDiagnostics(),
+        layerResourceDiagnostics: targetLayer.getPerformanceDiagnostics(),
         entitySelectionIdentity: String(viewer.selectedEntity?.id || ''),
       };
       check(
@@ -742,7 +892,7 @@ async function runLayerLifetime(
         lifetime.teardownError = String(error);
       }
     }
-    const owner = scanOwners(viewer);
+    const owner = scanOwners(viewer, layer.layerId);
     lifetime.teardown = {
       layerDestroyed: layers.every((layer) => {
         const diagnostics = layer.getPerformanceDiagnostics?.();
@@ -781,10 +931,10 @@ async function runLayerLifetime(
 
 async function runDiagnostic() {
   const report = {
-    schema: INFRASTRUCTURE_RUNTIME_SCHEMA,
+    schema: fixtureLayer.schema,
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
-    source: await sourceDigest(),
+    source: await sourceDigest(fixtureLayer),
     candidateRepresentation: {
       id: 'production-local-infrastructure-primitive-collections/rgba8/v1',
       stemColorEncoding: 'entity-color-attribute-byte',
@@ -829,10 +979,15 @@ async function runDiagnostic() {
       secondsOfDay: renderTime.secondsOfDay,
       shouldAnimate: false,
     };
-    report.environment = await readPerformanceEnvironment(viewer.scene);
+    report.environment = readPerformanceEnvironment({
+      viewer,
+      appCommit: report.applicationCommit,
+      harnessCommit: report.harnessCommit,
+    });
     await runLayerLifetime(
       viewer,
       'entities',
+      fixtureLayer,
       report.source,
       report,
       renderTime,
@@ -841,6 +996,7 @@ async function runDiagnostic() {
     await runLayerLifetime(
       viewer,
       'primitive-collections',
+      fixtureLayer,
       report.source,
       report,
       renderTime,
@@ -933,7 +1089,7 @@ async function main() {
 
 main().catch((error) => {
   output.textContent = JSON.stringify({
-    schema: INFRASTRUCTURE_RUNTIME_SCHEMA,
+    schema: fixtureLayer.schema,
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     status: 'failed',

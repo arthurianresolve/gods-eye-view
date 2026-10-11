@@ -38,6 +38,7 @@ on:
             collections,
             wind,
             infrastructure,
+            infrastructure-datacenters,
             vessels,
             calibration,
             traffic,
@@ -823,7 +824,9 @@ jobs:
           elif [ "$DIAGNOSTIC" = "import-point-benefit" ]; then
             node scripts/performance/importPointRepresentationBenefit.mjs
           elif [ "$DIAGNOSTIC" = "datacenter-benefit" ]; then
-            node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/datacenter-benefit
+            node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/datacenter-benefit --layer-id local-datacenters
+          elif [ "$DIAGNOSTIC" = "infrastructure-datacenters" ]; then
+            node scripts/qa-hosted-capture.mjs --infrastructure-datacenters
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
@@ -833,6 +836,14 @@ jobs:
         with:
           name: datacenter-benefit-${{ github.run_id }}
           path: qa-artifacts/datacenter-benefit/
+          if-no-files-found: error
+          retention-days: 3
+      - name: Preserve datacenter runtime evidence
+        if: always() && inputs.renderer_diagnostic == 'infrastructure-datacenters'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: infrastructure-datacenters-${{ github.run_id }}
+          path: qa-artifacts/hosted-native-renderer.json
           if-no-files-found: error
           retention-days: 3
       - name: Preserve renderer comparison evidence

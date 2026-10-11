@@ -1,5 +1,11 @@
+import {
+  assertInfrastructureSourceInventory,
+  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  infrastructureFixtureLayer,
+} from '../fixtures/infrastructureFixtureLayer.mjs';
+
 export const INFRASTRUCTURE_RUNTIME_SCHEMA =
-  'gev-infrastructure-runtime-renderers/v2';
+  'gev-infrastructure-runtime-renderers/v3';
 export const INFRASTRUCTURE_RUNTIME_CASES = Object.freeze([
   'default-style',
   'camera-lod-update',
@@ -10,7 +16,11 @@ function fail(message) {
   throw new Error(message);
 }
 
-function validateLifetime(lifetime, report) {
+function same(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function validateLifetime(lifetime, report, layer) {
   if (
     !['entities', 'primitive-collections'].includes(lifetime?.mode) ||
     lifetime.status !== 'passed'
@@ -60,10 +70,9 @@ function validateLifetime(lifetime, report) {
         row.mode !== lifetime.mode ||
         row.status !== 'settled' ||
         row.sourceFeatureCount !== report.source.featureCount ||
-        !Number.isSafeInteger(row.surfaceCount) ||
-        row.surfaceCount <= 0 ||
+        row.surfaceCount !== layer.surfaceCount ||
         !Number.isSafeInteger(row.entityCount) ||
-        row.entityCount < row.surfaceCount ||
+        row.entityCount !== layer.entityCount ||
         !/^[a-f0-9]{64}$/.test(row.identitySha256 || '') ||
         !/^[a-f0-9]{64}$/.test(row.geometrySha256 || '') ||
         !/^[a-f0-9]{64}$/.test(row.styleSha256 || '') ||
@@ -91,9 +100,17 @@ function validateLifetime(lifetime, report) {
         row.frame.width <= 0 ||
         !Number.isSafeInteger(row.frame?.height) ||
         row.frame.height <= 0 ||
+        row.frame.width !== report.environment.drawingBuffer.width ||
+        row.frame.height !== report.environment.drawingBuffer.height ||
         !Number.isSafeInteger(row.frame?.completedStableFrames) ||
         row.frame.completedStableFrames < 3 ||
         JSON.stringify(row.clock) !== JSON.stringify(report.renderClock) ||
+        row.sceneReadiness?.dataSourcesReady !== true ||
+        row.sceneReadiness?.globeTilesLoaded !== true ||
+        !infrastructureCameraRevisionReady(
+          row.lodDiagnostics,
+          row.cameraPosition,
+        ) ||
         row.ownership?.renderer !== lifetime.mode ||
         row.ownership.datasourcePresent !== true ||
         row.ownership.entityCount !== row.entityCount ||
@@ -110,6 +127,10 @@ function validateLifetime(lifetime, report) {
       )
         fail(
           `${caseId} pair ${pair + 1} has incomplete render or ownership evidence.`,
+        );
+      if (!same(row.ownership.preservedGraphics, layer.preservedGraphics))
+        fail(
+          'Preserved source geometry inventory differs from its layer contract.',
         );
       if (
         lifetime.mode === 'entities' &&
@@ -173,10 +194,8 @@ function validateLifetime(lifetime, report) {
 
 export function validateInfrastructureRuntimeReport(
   report,
-  { expectedCommit } = {},
+  { expectedCommit, expectedLayerId } = {},
 ) {
-  if (report?.schema !== INFRASTRUCTURE_RUNTIME_SCHEMA)
-    fail('Infrastructure runtime report schema is invalid.');
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
   if (
@@ -184,11 +203,38 @@ export function validateInfrastructureRuntimeReport(
     report.harnessCommit !== expectedCommit
   )
     fail('Infrastructure runtime source identity changed.');
+  let layer;
+  try {
+    const layerId =
+      report.source?.layerId || DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+    layer = infrastructureFixtureLayer(layerId);
+    if (expectedLayerId && expectedLayerId !== layer.layerId)
+      fail('Infrastructure report selected a different requested layer.');
+    if (report.schema !== layer.schema)
+      fail('Infrastructure runtime report schema is invalid for its layer.');
+    if (
+      layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID &&
+      report.source?.layerId !== layer.layerId
+    )
+      fail('Datacenter reports must explicitly identify their source layer.');
+    assertInfrastructureSourceInventory({ ...report.source, layerId }, layer);
+  } catch (error) {
+    fail(error?.message || 'Infrastructure source layer is invalid.');
+  }
+  if (
+    report.environment?.appCommit !== expectedCommit ||
+    report.environment?.harnessCommit !== expectedCommit ||
+    typeof report.environment?.renderer !== 'string' ||
+    !report.environment.renderer ||
+    !Number.isSafeInteger(report.environment?.drawingBuffer?.width) ||
+    report.environment.drawingBuffer.width <= 0 ||
+    !Number.isSafeInteger(report.environment?.drawingBuffer?.height) ||
+    report.environment.drawingBuffer.height <= 0
+  )
+    fail('Infrastructure observed renderer environment is missing or invalid.');
   if (report.status !== 'passed' || report.error || report.failedPhase)
     fail('Infrastructure runtime comparison did not pass.');
   if (
-    !Number.isSafeInteger(report.source?.featureCount) ||
-    report.source.featureCount <= 0 ||
     !Number.isSafeInteger(report.source?.payloadBytes) ||
     report.source.payloadBytes <= 0 ||
     !/^[a-f0-9]{64}$/.test(report.source?.payloadSha256 || '')
@@ -210,7 +256,8 @@ export function validateInfrastructureRuntimeReport(
     fail(
       'Expected independent default and candidate layer lifetimes in order.',
     );
-  for (const lifetime of report.lifetimes) validateLifetime(lifetime, report);
+  for (const lifetime of report.lifetimes)
+    validateLifetime(lifetime, report, layer);
   if (
     JSON.stringify(report.lifetimes[0].initialOwnership) !==
     JSON.stringify(report.lifetimes[1].initialOwnership)
@@ -323,6 +370,11 @@ export function compareInfrastructureRuntimeLifetimes(baseline, candidate) {
       const equal = Object.fromEntries(
         exactFields.map((field) => [field, left[field] === right[field]]),
       );
+      if (
+        JSON.stringify(left.ownership.preservedGraphics) !==
+        JSON.stringify(right.ownership.preservedGraphics)
+      )
+        fail('Preserved source geometry inventory differs between renderers.');
       const picksEqual =
         JSON.stringify(left.pointPick) === JSON.stringify(right.pointPick) &&
         JSON.stringify(left.stemPick) === JSON.stringify(right.stemPick);
@@ -350,4 +402,68 @@ export function compareInfrastructureRuntimeLifetimes(baseline, candidate) {
     }
   }
   return comparisons;
+}
+
+/** Generated surface Graphics and original source geometry have separate owners. */
+export function countInfrastructureGraphics(entities, surfaceEntities) {
+  const surfaces = new Set(surfaceEntities);
+  let surfaceGraphics = 0;
+  const preservedGraphics = { points: 0, polylines: 0, polygons: 0 };
+  for (const entity of entities) {
+    if (surfaces.has(entity)) {
+      if (entity.point || entity.polyline) surfaceGraphics++;
+    } else {
+      if (entity.point) preservedGraphics.points++;
+      if (entity.polyline) preservedGraphics.polylines++;
+    }
+    if (entity.polygon) preservedGraphics.polygons++;
+  }
+  return { surfaceGraphics, preservedGraphics };
+}
+
+/** A failed native pick is retried only after a new stable rendered state. */
+export function createInfrastructureSampleReadiness() {
+  let previous = null;
+  let stableFrames = 0;
+  let pickAttempted = false;
+  return {
+    observe(signature, { inputsReady = true } = {}) {
+      if (!inputsReady) {
+        previous = null;
+        stableFrames = 0;
+        pickAttempted = false;
+        return 0;
+      }
+      if (signature !== previous) {
+        stableFrames = 1;
+        pickAttempted = false;
+      } else stableFrames++;
+      previous = signature;
+      return stableFrames;
+    },
+    takePickAttempt() {
+      if (stableFrames < 3 || pickAttempted) return false;
+      pickAttempted = true;
+      return true;
+    },
+  };
+}
+
+/** Inactive stems retain history, so readiness follows the consumed camera pose. */
+export function infrastructureCameraRevisionReady(diagnostics, cameraPosition) {
+  const valid = (position) =>
+    Array.isArray(position) &&
+    position.length === 3 &&
+    position.every(Number.isFinite);
+  return (
+    diagnostics?.computed === true &&
+    diagnostics.geometryDirty === false &&
+    valid(diagnostics.cameraPosition) &&
+    valid(cameraPosition) &&
+    Math.hypot(
+      ...cameraPosition.map(
+        (value, index) => value - diagnostics.cameraPosition[index],
+      ),
+    ) <= 1e-6
+  );
 }

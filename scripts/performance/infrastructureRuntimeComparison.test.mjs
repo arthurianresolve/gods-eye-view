@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { infrastructureFixtureLayer } from '../fixtures/infrastructureFixtureLayer.mjs';
 import {
+  countInfrastructureGraphics,
+  createInfrastructureSampleReadiness,
+  infrastructureCameraRevisionReady,
   compareInfrastructureRuntimeLifetimes,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
-  INFRASTRUCTURE_RUNTIME_SCHEMA,
   validateInfrastructureRuntimeReport,
 } from './infrastructureRuntimeComparison.mjs';
 
@@ -17,7 +20,7 @@ const renderClock = {
   shouldAnimate: false,
 };
 
-function sample(mode, caseId, pair) {
+function sample(mode, caseId, pair, layer = infrastructureFixtureLayer()) {
   const collection = mode === 'primitive-collections';
   const id = `${caseId}-surface-${pair}`;
   return {
@@ -25,9 +28,9 @@ function sample(mode, caseId, pair) {
     pair,
     mode,
     status: 'settled',
-    sourceFeatureCount: 12,
-    surfaceCount: 4,
-    entityCount: 16,
+    sourceFeatureCount: layer.sourceFeatureCount,
+    surfaceCount: layer.surfaceCount,
+    entityCount: layer.entityCount,
     entitySelectionIdentity: id,
     identitySha256: digest,
     geometrySha256: digest,
@@ -51,6 +54,13 @@ function sample(mode, caseId, pair) {
     pixelDifferenceCount: 1000,
     frame: { width: 960, height: 640, completedStableFrames: 3 },
     clock: { ...renderClock },
+    sceneReadiness: { dataSourcesReady: true, globeTilesLoaded: true },
+    cameraPosition: [1, 2, 3],
+    lodDiagnostics: {
+      computed: true,
+      geometryDirty: false,
+      cameraPosition: [1, 2, 3],
+    },
     pointPick: {
       entityId: id,
       sourceRecordId: id,
@@ -66,9 +76,10 @@ function sample(mode, caseId, pair) {
     ownership: {
       renderer: mode,
       datasourcePresent: true,
-      entityCount: 16,
-      surfaceEntityCount: 4,
-      entitySurfaceGraphics: collection ? 0 : 4,
+      entityCount: layer.entityCount,
+      surfaceEntityCount: layer.surfaceCount,
+      entitySurfaceGraphics: collection ? 0 : layer.surfaceCount,
+      preservedGraphics: { ...layer.preservedGraphics },
       rendererOwners: collection ? 1 : 0,
       rendererOwnerChildren: collection ? [2] : [],
       sceneDataSourceCount: 1,
@@ -76,17 +87,23 @@ function sample(mode, caseId, pair) {
       sceneGroundPrimitiveCount: 1,
     },
     productionDiagnostics: collection
-      ? { mode, owners: 1, attached: true, points: 4, stems: 4 }
+      ? {
+          mode,
+          owners: 1,
+          attached: true,
+          points: layer.surfaceCount,
+          stems: layer.surfaceCount,
+        }
       : null,
     layerResourceDiagnostics: {
       surfaceCollectionOwners: collection ? 1 : 0,
-      surfacePoints: collection ? 4 : 0,
-      surfaceStems: collection ? 4 : 0,
+      surfacePoints: collection ? layer.surfaceCount : 0,
+      surfaceStems: collection ? layer.surfaceCount : 0,
     },
   };
 }
 
-function lifetime(mode) {
+function lifetime(mode, layer = infrastructureFixtureLayer()) {
   return {
     mode,
     activationOrder: mode === 'entities' ? 0 : 1,
@@ -110,7 +127,7 @@ function lifetime(mode) {
     renderClock: { ...renderClock },
     samples: INFRASTRUCTURE_RUNTIME_CASES.flatMap((caseId) =>
       Array.from({ length: INFRASTRUCTURE_RUNTIME_PAIRS }, (_, pair) =>
-        sample(mode, caseId, pair),
+        sample(mode, caseId, pair, layer),
       ),
     ),
     teardown: {
@@ -127,18 +144,26 @@ function lifetime(mode) {
   };
 }
 
-function validReport() {
-  const baseline = lifetime('entities');
-  const candidate = lifetime('primitive-collections');
+function validReport(layerId = 'local-dams') {
+  const layer = infrastructureFixtureLayer(layerId);
+  const baseline = lifetime('entities', layer);
+  const candidate = lifetime('primitive-collections', layer);
   return {
-    schema: INFRASTRUCTURE_RUNTIME_SCHEMA,
+    schema: layer.schema,
     applicationCommit: commit,
     harnessCommit: commit,
+    environment: {
+      appCommit: commit,
+      harnessCommit: commit,
+      renderer: 'ANGLE test renderer',
+      drawingBuffer: { width: 960, height: 640 },
+    },
     source: {
-      featureCount: 12,
+      layerId,
+      featureCount: layer.sourceFeatureCount,
       payloadBytes: 400,
       payloadSha256: digest,
-      geometryKinds: { Point: 12 },
+      geometryKinds: { ...layer.geometryKinds },
     },
     candidateRepresentation: {
       id: 'production-local-infrastructure-primitive-collections/rgba8/v1',
@@ -179,6 +204,53 @@ test('runtime report validates independent default and production lifetimes', ()
       expectedCommit: commit,
     }),
     true,
+  );
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(validReport(), {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /different requested layer/,
+  );
+});
+
+test('runtime report binds the complete datacenter source and Entity inventory', () => {
+  const report = validReport('local-datacenters');
+  assert.equal(
+    validateInfrastructureRuntimeReport(report, {
+      expectedCommit: commit,
+      expectedLayerId: 'local-datacenters',
+    }),
+    true,
+  );
+  const truncated = structuredClone(report);
+  truncated.lifetimes[1].samples[0].entityCount--;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(truncated, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /incomplete render or ownership/,
+  );
+  const wrongKinds = structuredClone(report);
+  wrongKinds.source.geometryKinds.Point--;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(wrongKinds, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /source inventory changed/,
+  );
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-dams',
+      }),
+    /different requested layer/,
   );
 });
 
@@ -308,4 +380,125 @@ test('runtime report recomputes comparisons and requires populated ownership bas
       }),
     /display was not warmed and restored/,
   );
+});
+
+test('surface ownership excludes retained line geometry and still detects duplicate Graphics', () => {
+  const surface = { point: {}, polyline: {}, polygon: {} };
+  const line = { polyline: {} };
+  assert.deepEqual(countInfrastructureGraphics([surface, line], [surface]), {
+    surfaceGraphics: 1,
+    preservedGraphics: { points: 0, polylines: 1, polygons: 1 },
+  });
+  surface.point = surface.polyline = undefined;
+  assert.deepEqual(countInfrastructureGraphics([surface, line], [surface]), {
+    surfaceGraphics: 0,
+    preservedGraphics: { points: 0, polylines: 1, polygons: 1 },
+  });
+  surface.point = {};
+  assert.equal(
+    countInfrastructureGraphics([surface, line], [surface]).surfaceGraphics,
+    1,
+  );
+  const report = validReport();
+  report.lifetimes[1].samples[0].ownership.preservedGraphics.polylines--;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /Preserved source geometry inventory/,
+  );
+});
+
+test('runtime report requires observed renderer identity and drawing-buffer dimensions', () => {
+  const report = validReport();
+  report.environment.renderer = null;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /observed renderer environment/,
+  );
+  report.environment.renderer = 'ANGLE test renderer';
+  report.environment.drawingBuffer.width++;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /incomplete render or ownership evidence/,
+  );
+});
+
+test('late geometry completion permits a fresh native pick without polling unchanged frames', () => {
+  const gate = createInfrastructureSampleReadiness();
+  gate.observe('points-ready-stems-pending');
+  assert.equal(gate.takePickAttempt(), false);
+  gate.observe('points-ready-stems-pending');
+  gate.observe('points-ready-stems-pending');
+  assert.equal(gate.takePickAttempt(), true);
+  for (let i = 0; i < 5; i++) {
+    gate.observe('points-ready-stems-pending');
+    assert.equal(gate.takePickAttempt(), false);
+  }
+  assert.equal(gate.observe('points-and-stems-ready'), 1);
+  assert.equal(gate.takePickAttempt(), false);
+  gate.observe('points-and-stems-ready');
+  gate.observe('points-and-stems-ready');
+  assert.equal(gate.takePickAttempt(), true);
+  assert.equal(gate.takePickAttempt(), false);
+});
+
+test('stable pixels from a prior camera revision cannot satisfy the sample gate', () => {
+  const gate = createInfrastructureSampleReadiness();
+  for (let i = 0; i < 10; i++) {
+    assert.equal(gate.observe('old-geometry', { inputsReady: false }), 0);
+    assert.equal(gate.takePickAttempt(), false);
+  }
+  assert.equal(gate.observe('new-geometry'), 1);
+  gate.observe('new-geometry');
+  gate.observe('new-geometry');
+  assert.equal(gate.takePickAttempt(), true);
+  assert.equal(gate.observe('old-geometry', { inputsReady: false }), 0);
+  assert.equal(gate.observe('new-geometry'), 1);
+  assert.equal(gate.takePickAttempt(), false);
+});
+
+test('camera readiness requires consumed geometry and the current finite pose', () => {
+  const observed = {
+    computed: true,
+    geometryDirty: false,
+    cameraPosition: [1, 2, 3],
+  };
+  assert.equal(infrastructureCameraRevisionReady(observed, [1, 2, 3]), true);
+  assert.equal(infrastructureCameraRevisionReady(observed, [1, 2, 4]), false);
+  assert.equal(
+    infrastructureCameraRevisionReady(
+      { ...observed, geometryDirty: true },
+      [1, 2, 3],
+    ),
+    false,
+  );
+  assert.equal(
+    infrastructureCameraRevisionReady(
+      { ...observed, computed: false },
+      [1, 2, 3],
+    ),
+    false,
+  );
+  assert.equal(infrastructureCameraRevisionReady(observed, [1, 2, NaN]), false);
+  const report = validReport();
+  report.lifetimes[0].samples[0].cameraPosition[2]++;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /incomplete render or ownership/,
+  );
+});
+
+test('native picks do not establish completion of the remaining scene geometry', () => {
+  for (const key of ['dataSourcesReady', 'globeTilesLoaded']) {
+    const report = validReport();
+    report.lifetimes[1].samples[0].sceneReadiness[key] = false;
+    assert.throws(
+      () =>
+        validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+      /incomplete render or ownership/,
+    );
+  }
 });
