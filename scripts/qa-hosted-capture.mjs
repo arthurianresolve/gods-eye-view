@@ -86,6 +86,13 @@ try {
     timeout: 30_000,
   });
   const page = await browser.newPage();
+  let observingImportPage = false;
+  report.importPageErrors = [];
+  page.on('pageerror', (error) => {
+    if (!observingImportPage) return;
+    report.importPageErrors.push(String(error?.message || error).slice(0, 400));
+    if (report.importPageErrors.length > 8) report.importPageErrors.shift();
+  });
   await page.goto(url, { waitUntil: 'networkidle0' });
   report.webglAvailable = await page.evaluate(() => {
     const canvas = document.createElement('canvas');
@@ -132,22 +139,54 @@ try {
     report.reason = report.hardwareRenderingAvailable
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
-    await page.goto(url.replace('capture-matrix.html', 'import-batches.html'), {
-      waitUntil: 'networkidle0',
-    });
-    await page.click('#run');
-    await page.waitForFunction(
-      () => document.querySelector('#result')?.textContent,
-      { timeout: 120_000 },
+    const importUrl = new URL(
+      url.replace('capture-matrix.html', 'import-batches.html'),
     );
-    report.importBatches = await page.$eval('#result', (element) =>
-      JSON.parse(element.textContent),
-    );
+    if (process.argv.includes('--import-point-collection'))
+      importUrl.searchParams.set('point-renderer', 'primitive-collection');
+    else if (process.argv.includes('--import-point-entity'))
+      importUrl.searchParams.set('point-renderer', 'entity');
+    if (process.argv.includes('--import-mixed-parity'))
+      importUrl.searchParams.set('mixed-parity', '1');
+    if (process.argv.includes('--import-point-benefit-diagnostics'))
+      importUrl.searchParams.set('point-benefit', '1');
+    observingImportPage = true;
+    try {
+      await page.goto(importUrl.href, { waitUntil: 'networkidle0' });
+      await page.click('#run');
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 120_000 },
+      );
+      report.importBatches = await page.$eval('#result', (element) =>
+        JSON.parse(element.textContent),
+      );
+    } catch (error) {
+      report.importFixtureFailure = String(error?.message || error).slice(
+        0,
+        800,
+      );
+      report.importFixturePartialResult = await page
+        .$eval('#result', (element) => element.textContent.slice(0, 16_000))
+        .catch(() => null);
+      throw error;
+    } finally {
+      observingImportPage = false;
+    }
     if (
       report.importBatches.applicationCommit !== commit ||
       report.importBatches.status !== 'passed' ||
       report.importBatches.samples?.length !== 10 ||
-      report.importBatches.checks?.length !== 2
+      !Array.isArray(report.importBatches.checks) ||
+      report.importBatches.checks.length < 2 ||
+      (process.argv.includes('--import-point-entity') &&
+        report.importBatches.pointRepresentation !== 'entity') ||
+      (process.argv.includes('--import-point-collection') &&
+        report.importBatches.pointRepresentation !== 'primitive-collection') ||
+      (process.argv.includes('--import-mixed-parity') &&
+        report.importBatches.mixedGeometryParity?.status !== 'passed') ||
+      (process.argv.includes('--import-point-benefit-diagnostics') &&
+        report.importBatches.pointBenefitDiagnosticsRequested !== true)
     )
       throw new Error(
         `Import comparison failed: ${report.importBatches.error || 'incomplete checks'}`,
@@ -464,7 +503,9 @@ try {
   if (
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--vessels') ||
-    process.argv.includes('--calibration')
+    process.argv.includes('--calibration') ||
+    process.argv.includes('--import-point-entity') ||
+    process.argv.includes('--import-point-collection')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

@@ -8,6 +8,10 @@ import {
 } from '../../src/freshFrame.js';
 import { observeSubmittedCommands } from '../performance/glCompletionProbe.mjs';
 import { getContextStore } from '../../src/data/contextStore.js';
+import {
+  inspectDefaultEntityPointPrimitiveCount,
+  inspectImportedPointState,
+} from '../performance/importPointState.mjs';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
   installRenderGovernor,
@@ -26,11 +30,15 @@ const frameProbe = document.querySelector('#frame-probe');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runOptions = new URLSearchParams(window.location.search);
 const requestedWorkload = runOptions.get('workload');
+const requestedPointRepresentation =
+  runOptions.get('point-renderer') || 'entity';
+const requestedPointComparison = runOptions.has('point-renderer');
+const requestedMixedParity = runOptions.get('mixed-parity') === '1';
+const requestedPointBenefitDiagnostics =
+  runOptions.get('point-benefit') === '1';
 const requestedViewer =
   runOptions.get('viewer') === 'cesium' ? 'cesium' : 'application-wrapper';
-if (
-  ['paired', 'synchronous', 'cooperative'].includes(requestedWorkload)
-)
+if (['paired', 'synchronous', 'cooperative'].includes(requestedWorkload))
   document.querySelector('#workload').value = requestedWorkload;
 if (['initial-load', 'steady-population'].includes(requestedWorkload))
   status.textContent = 'Diagnostic only: unchanged loaded population';
@@ -38,6 +46,47 @@ let frameDiagnostics = null;
 const check = (condition, message) => {
   if (!condition) throw new Error(message);
 };
+function sha256Json(value) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  return crypto.subtle
+    .digest('SHA-256', bytes)
+    .then((digest) =>
+      [...new Uint8Array(digest)]
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join(''),
+    );
+}
+function encodePixelWitness(image) {
+  check(
+    image.width > 0 &&
+      image.width <= 1024 &&
+      image.height > 0 &&
+      image.height <= 1024,
+    'Pixel mismatch witness exceeds its bounded image dimensions.',
+  );
+  const witnessCanvas = document.createElement('canvas');
+  witnessCanvas.width = image.width;
+  witnessCanvas.height = image.height;
+  try {
+    const context = witnessCanvas.getContext('2d');
+    const imageData = context.createImageData(image.width, image.height);
+    imageData.data.set(image.rgba);
+    context.putImageData(imageData, 0, 0);
+    const dataUrl = witnessCanvas.toDataURL('image/png');
+    check(
+      dataUrl.length <= 1_500_000,
+      'Pixel mismatch witness exceeded its bounded PNG size.',
+    );
+    return dataUrl;
+  } finally {
+    witnessCanvas.width = witnessCanvas.height = 0;
+  }
+}
+const unavailableBatchAttribution = Object.freeze({
+  available: false,
+  reason:
+    'The production cooperative loader exposes no batch-completion observer; no batch duration or wake values are inferred.',
+});
 const imports = [
   {
     id: 'fixture',
@@ -56,11 +105,57 @@ const imports = [
     })),
   },
 ];
+const mixedGeometryImports = [
+  {
+    id: 'mixed-parity',
+    kind: 'synthetic-demo',
+    attribution: 'Generated local fixture',
+    records: [
+      {
+        id: 'point',
+        properties: { name: 'Mixed point' },
+        geometry: { type: 'Point', coordinates: [0, 0] },
+      },
+      {
+        id: 'line',
+        properties: { name: 'Mixed line' },
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [0.045, 0.03],
+            [0.055, 0.03],
+          ],
+        },
+      },
+      {
+        id: 'polygon',
+        properties: { name: 'Mixed polygon' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-0.06, -0.01],
+              [-0.05, -0.01],
+              [-0.05, 0.01],
+              [-0.06, 0.01],
+              [-0.06, -0.01],
+            ],
+          ],
+        },
+      },
+    ],
+  },
+];
+const MIXED_GEOMETRY_READY_TIMEOUT_MS = 10_000;
 let report;
-function resources(viewer) {
+function resources(viewer, layer) {
   const collections = [];
+  let pointPrimitiveCount = 0;
+  let entityPointCensus = null;
   const visit = (value, depth = 0) => {
     if (!value || depth > 5 || collections.length >= 64) return;
+    if (value instanceof Cesium.PointPrimitiveCollection)
+      pointPrimitiveCount += value.length;
     collections.push({
       type: value.constructor.name,
       count: value.length ?? null,
@@ -69,10 +164,31 @@ function resources(viewer) {
       for (let i = 0; i < value.length; i++) visit(value.get(i), depth + 1);
   };
   visit(viewer.scene.primitives);
+  const pointRepresentation =
+    layer?.getPerformanceDiagnostics?.().pointRepresentation ?? null;
+  if (pointRepresentation === 'entity') {
+    entityPointCensus = inspectDefaultEntityPointPrimitiveCount(viewer, {
+      Cesium,
+      workspaceId: 'fixture',
+      expectedCount: layer.getState().featureCount,
+    });
+    pointPrimitiveCount = entityPointCensus.available
+      ? entityPointCensus.pointCount
+      : null;
+    if (entityPointCensus.available)
+      collections.push({
+        type: 'EntityClusterPointPrimitiveCollection',
+        count: entityPointCensus.pointCount,
+        ownership: 'Cesium-1.138.0-PointVisualizer-EntityCluster-adapter',
+      });
+  }
   return {
     heapBytes: performance.memory?.usedJSHeapSize ?? null,
     heapScope: 'Unforced heap sample; not retained-memory acceptance',
+    importedFeatureCount: layer?.getState?.().featureCount ?? null,
     entities: viewer.entities.values.length,
+    pointPrimitiveCount,
+    entityPointCensus,
     collections,
   };
 }
@@ -113,7 +229,7 @@ frameProbe.addEventListener('click', async () => {
   status.textContent = 'Browser scheduling diagnostic complete';
   run.disabled = frameProbe.disabled = false;
 });
-function settledFrame(viewer) {
+function settledFrame(viewer, timeoutMs = 10_000) {
   return new Promise((resolve, reject) => {
     const remove = viewer.scene.postRender.addEventListener(() => {
       clearTimeout(timer);
@@ -125,11 +241,270 @@ function settledFrame(viewer) {
       reject(
         new Error('Fixture did not complete a render within ten seconds.'),
       );
-    }, 10000);
+    }, timeoutMs);
     viewer.scene.requestRender();
   });
 }
-async function pixels(viewer, sample) {
+function nativePointPickWitness(viewer, entityRows) {
+  const canvas = viewer.scene.canvas;
+  const ids = new Set(entityRows.map((row) => row.id));
+  const indices = [0, 1, 49, 50, 499, 500, 2499, 2500, 4999];
+  const rows = [];
+  for (const index of indices) {
+    const row = entityRows[index];
+    if (!row) continue;
+    const screen = Cesium.SceneTransforms.worldToWindowCoordinates(
+      viewer.scene,
+      new Cesium.Cartesian3(...row.position),
+    );
+    const onCanvas = Boolean(
+      screen &&
+      Number.isFinite(screen.x) &&
+      Number.isFinite(screen.y) &&
+      screen.x >= 0 &&
+      screen.y >= 0 &&
+      screen.x < canvas.clientWidth &&
+      screen.y < canvas.clientHeight,
+    );
+    const picked = onCanvas
+      ? viewer.scene.pick(new Cesium.Cartesian2(screen.x, screen.y))
+      : null;
+    const pickedEntityId = picked?.id?.id;
+    rows.push({
+      targetId: row.id,
+      screen: screen ? [screen.x, screen.y] : null,
+      onCanvas,
+      pickedEntityId:
+        typeof pickedEntityId === 'string' ? pickedEntityId : null,
+    });
+  }
+  return {
+    scope:
+      'Post-capture natural scene.pick samples at fixed imported point projections; overlapping points may resolve to another imported point.',
+    candidates: indices.length,
+    tested: rows.length,
+    importedHits: rows.filter(
+      (row) => row.onCanvas && ids.has(row.pickedEntityId),
+    ).length,
+    rows,
+  };
+}
+async function pointStateWitness(viewer, layer) {
+  const snapshot = inspectImportedPointState(viewer, {
+    Cesium,
+    workspaceId: 'fixture',
+    expectedCount: 5000,
+    pointRepresentation: requestedPointRepresentation,
+    layer,
+  });
+  if (!snapshot.available) return snapshot;
+  const nativePickWitness = nativePointPickWitness(viewer, snapshot.entityRows);
+  check(
+    nativePickWitness.tested > 0 && nativePickWitness.importedHits > 0,
+    'Native scene.pick did not resolve an imported point.',
+  );
+  return {
+    available: true,
+    version: snapshot.version,
+    renderer: snapshot.renderer,
+    expectedCount: snapshot.expectedCount,
+    entityCount: snapshot.entityCount,
+    visualizerItemCount: snapshot.visualizerItemCount,
+    primitiveCount: snapshot.primitiveCount,
+    blendOption: snapshot.blendOption,
+    entityOrderAndStateSha256: await sha256Json(snapshot.entityRows),
+    entityToPrimitiveAssignmentSha256: await sha256Json(
+      snapshot.drawAssignmentRows,
+    ),
+    primitiveDrawOrderAndStateSha256: await sha256Json(snapshot.primitiveRows),
+    nativePickWitness,
+    firstEntity: snapshot.entityRows[0] ?? null,
+    lastEntity: snapshot.entityRows.at(-1) ?? null,
+    firstPrimitive: snapshot.primitiveRows[0] ?? null,
+    lastPrimitive: snapshot.primitiveRows.at(-1) ?? null,
+  };
+}
+function probeMixedGeometryNativePicks(viewer) {
+  const targets = [
+    { shape: 'point', coordinate: [0, 0] },
+    { shape: 'line', coordinate: [0.05, 0.03] },
+    { shape: 'polygon', coordinate: [-0.055, 0] },
+  ];
+  return targets.map(({ shape, coordinate }) => {
+    const screen = Cesium.SceneTransforms.worldToWindowCoordinates(
+      viewer.scene,
+      Cesium.Cartesian3.fromDegrees(...coordinate),
+    );
+    const onCanvas = Boolean(
+      screen &&
+      Number.isFinite(screen.x) &&
+      Number.isFinite(screen.y) &&
+      screen.x >= 0 &&
+      screen.y >= 0 &&
+      screen.x < viewer.scene.canvas.clientWidth &&
+      screen.y < viewer.scene.canvas.clientHeight,
+    );
+    const picked = onCanvas
+      ? viewer.scene.pick(new Cesium.Cartesian2(screen.x, screen.y))
+      : null;
+    return {
+      shape,
+      screen: screen ? [screen.x, screen.y] : null,
+      onCanvas,
+      expectedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+      pickedEntityId: typeof picked?.id?.id === 'string' ? picked.id.id : null,
+    };
+  });
+}
+async function waitForMixedGeometryNativePicks(viewer) {
+  const startedAtMs = performance.now();
+  const deadlineAtMs = startedAtMs + MIXED_GEOMETRY_READY_TIMEOUT_MS;
+  let attempts = 0;
+  let lastNativePicks = [];
+  let frameWaitError = null;
+  const observations = [];
+  while (performance.now() < deadlineAtMs) {
+    const remainingMs = deadlineAtMs - performance.now();
+    if (remainingMs <= 0) break;
+    try {
+      await settledFrame(viewer, remainingMs);
+    } catch (error) {
+      frameWaitError = String(error?.message || error).slice(0, 240);
+      break;
+    }
+    attempts++;
+    lastNativePicks = probeMixedGeometryNativePicks(viewer);
+    const ready = lastNativePicks.every(
+      (row) => row.onCanvas && row.pickedEntityId === row.expectedEntityId,
+    );
+    const elapsedMs = performance.now() - startedAtMs;
+    observations.push({ atMs: elapsedMs, ready, nativePicks: lastNativePicks });
+    if (observations.length > 8) observations.shift();
+    if (ready && elapsedMs <= MIXED_GEOMETRY_READY_TIMEOUT_MS)
+      return {
+        status: 'passed',
+        timeoutMs: MIXED_GEOMETRY_READY_TIMEOUT_MS,
+        elapsedMs,
+        attempts,
+        nativePicks: lastNativePicks,
+        observations,
+      };
+  }
+  return {
+    status: 'failed',
+    timeoutMs: MIXED_GEOMETRY_READY_TIMEOUT_MS,
+    elapsedMs: performance.now() - startedAtMs,
+    attempts,
+    nativePicks: lastNativePicks,
+    observations,
+    frameWaitError,
+  };
+}
+async function mixedGeometrySnapshot(viewer, layer, readiness) {
+  const prefix = 'gev-import:mixed-parity:mixed-parity:';
+  const entities = [...getContextStore().entities.values()]
+    .map((entry) => entry.entity)
+    .filter((entity) => String(entity.id).startsWith(prefix))
+    .sort((left, right) => String(left.id).localeCompare(String(right.id)));
+  const candidatePointRows =
+    requestedPointRepresentation === 'primitive-collection'
+      ? new Map(
+          (layer.getPointRendererSnapshot()?.primitiveRows ?? []).map((row) => [
+            row.id,
+            row,
+          ]),
+        )
+      : null;
+  const vector = (value) => (value ? [value.x, value.y, value.z] : null);
+  const color = (value) =>
+    value ? [value.red, value.green, value.blue, value.alpha] : null;
+  const rows = entities.map((entity) => {
+    const pointPosition = entity.position?.getValue(viewer.clock.currentTime);
+    const collectionPoint = candidatePointRows?.get(entity.id);
+    let linePositions = null;
+    let polygonRings = null;
+    if (entity.polyline)
+      linePositions = entity.polyline.positions
+        .getValue(viewer.clock.currentTime)
+        .map(vector);
+    if (entity.polygon) {
+      const hierarchy = entity.polygon.hierarchy.getValue(
+        viewer.clock.currentTime,
+      );
+      polygonRings = [
+        hierarchy.positions,
+        ...hierarchy.holes.map((hole) => hole.positions),
+      ].map((ring) => ring.map(vector));
+    }
+    return {
+      id: entity.id,
+      name: entity.name,
+      position: vector(pointPosition),
+      point: entity.point
+        ? {
+            pixelSize: entity.point.pixelSize.getValue(
+              viewer.clock.currentTime,
+            ),
+            color: color(entity.point.color.getValue(viewer.clock.currentTime)),
+            outlineColor: color(
+              entity.point.outlineColor.getValue(viewer.clock.currentTime),
+            ),
+            outlineWidth: entity.point.outlineWidth.getValue(
+              viewer.clock.currentTime,
+            ),
+          }
+        : collectionPoint
+          ? {
+              pixelSize: collectionPoint.pixelSize,
+              color: collectionPoint.color,
+              outlineColor: collectionPoint.outlineColor,
+              outlineWidth: collectionPoint.outlineWidth,
+            }
+          : null,
+      linePositions,
+      polygonRings,
+    };
+  });
+  const ids = rows.map((row) => row.id);
+  check(
+    JSON.stringify(ids) ===
+      JSON.stringify([`${prefix}line`, `${prefix}point`, `${prefix}polygon`]),
+    'Mixed fixture did not retain exact point, line, and polygon Entity identities.',
+  );
+  if (requestedPointRepresentation === 'primitive-collection') {
+    const snapshot = layer.getPointRendererSnapshot();
+    check(
+      snapshot?.pointCount === 1 &&
+        snapshot.primitiveRows[0]?.id === `${prefix}point`,
+      'Mixed fixture point primitive ownership is incomplete.',
+    );
+  } else {
+    check(
+      layer.getPointRendererSnapshot() === null &&
+        viewer.entities.getById(`${prefix}point`) ===
+          getContextStore().entities.get(`${prefix}point`)?.entity,
+      'Mixed fixture default point Entity ownership changed.',
+    );
+  }
+  check(
+    readiness.nativePicks.every(
+      (row) => row.pickedEntityId === row.expectedEntityId,
+    ),
+    'Mixed geometry native scene.pick did not resolve each intended Entity.',
+  );
+  return {
+    schema: 'gev-import-mixed-geometry-parity/v1',
+    status: 'passed',
+    renderer: requestedPointRepresentation,
+    readiness,
+    entityIds: ids,
+    rows,
+    rowsSha256: await sha256Json(rows),
+    nativePicks: readiness.nativePicks,
+    nativePicksSha256: await sha256Json(readiness.nativePicks),
+  };
+}
+async function pixels(viewer, sample, { preserveBytes = false } = {}) {
   const started = performance.now();
   const browserStateBefore = report.diagnosticsEnabled
     ? frameDiagnostics.snapshotCanvas(viewer.canvas)
@@ -175,8 +550,9 @@ async function pixels(viewer, sample) {
     maximumHeartbeatGapMs,
     performance.now() - lastHeartbeat,
   );
+  const captureElapsedMs = performance.now() - started;
   sample.capture = {
-    elapsedMs: performance.now() - started,
+    elapsedMs: captureElapsedMs,
     renderedFrames: frames,
     updates,
     animationFrames,
@@ -210,9 +586,17 @@ async function pixels(viewer, sample) {
       'The fixture did not render visible points.',
     );
     const digest = await crypto.subtle.digest('SHA-256', data);
-    return [...new Uint8Array(digest)]
+    const pixelSha256 = [...new Uint8Array(digest)]
       .map((n) => n.toString(16).padStart(2, '0'))
       .join('');
+    return preserveBytes
+      ? {
+          pixelSha256,
+          width: canvas.width,
+          height: canvas.height,
+          rgba: data,
+        }
+      : pixelSha256;
   } finally {
     canvas.width = canvas.height = 0;
   }
@@ -221,10 +605,11 @@ async function pixels(viewer, sample) {
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
-  const workload =
-    ['initial-load', 'steady-population'].includes(requestedWorkload)
-      ? requestedWorkload
-      : document.querySelector('#workload').value;
+  const workload = ['initial-load', 'steady-population'].includes(
+    requestedWorkload,
+  )
+    ? requestedWorkload
+    : document.querySelector('#workload').value;
   const diagnosticRun =
     runOptions.get('diag') === '1' ||
     ['initial-load', 'steady-population'].includes(workload) ||
@@ -232,7 +617,7 @@ run.addEventListener('click', async () => {
   frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
-    schema: 'gev-import-batches/v1',
+    schema: 'gev-import-batches/v2',
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     capturedAt: new Date().toISOString(),
@@ -242,6 +627,10 @@ run.addEventListener('click', async () => {
     foregroundUninterruptedScope:
       'document visibility only; does not verify desktop foreground or occlusion',
     fixture: 'synthetic-5000-import-points/v1',
+    pointRepresentation: requestedPointRepresentation,
+    featureLimit: 5000,
+    mixedGeometryParityRequested: requestedMixedParity,
+    pointBenefitDiagnosticsRequested: requestedPointBenefitDiagnostics,
     workload,
     viewerConstruction: requestedViewer,
     diagnosticsEnabled: diagnosticRun,
@@ -257,8 +646,15 @@ run.addEventListener('click', async () => {
     observeCommands: document.querySelector('#observe-commands').checked,
     commandObservationScope:
       'Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison',
-      scope:
-        'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
+    scope:
+      'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
+    ...(requestedPointBenefitDiagnostics
+      ? {
+          performanceAcceptanceEligible: false,
+          pointBenefitMeasurementScope:
+            'Separate fresh-page comparison; load, synchronous clear, reset/drain, capture, heartbeat, and live resources are distinct. The production loader exposes no batch-completion observer, so batch timing is unavailable. No forced GC, GPU timing, or physical-desktop claim.',
+        }
+      : {}),
     checks: [],
     samples: [],
     renderErrors: [],
@@ -274,6 +670,14 @@ run.addEventListener('click', async () => {
     check(
       /^[a-f0-9]{40}$/.test(report.applicationCommit || ''),
       'Exact source revision required.',
+    );
+    check(
+      ['entity', 'primitive-collection'].includes(requestedPointRepresentation),
+      'Unknown imported point renderer.',
+    );
+    check(
+      !requestedPointComparison || report.captureMode === 'pixels',
+      'Point renderer comparison requires pixel capture mode.',
     );
     const viewerOptions = {
       timeline: false,
@@ -324,7 +728,45 @@ run.addEventListener('click', async () => {
       appCommit: report.applicationCommit,
       harnessCommit: report.harnessCommit,
     });
-    layer = createImportedGeometryLayer({ viewer });
+    report.renderConfiguration = {
+      viewerConstruction: requestedViewer,
+      pointRepresentation: requestedPointRepresentation,
+      preserveDrawingBuffer,
+      captureMode: report.captureMode,
+      renderDemand: report.renderDemand,
+      msaaSamplesRequested: 4,
+      antialias: viewer.scene.context?.antialias ?? null,
+      msaaSupported: viewer.scene.context?.msaa ?? null,
+      webglContextAttributes:
+        viewer.scene.context?._gl?.getContextAttributes?.() ?? null,
+      sceneMode: viewer.scene.mode,
+      canvas: {
+        cssWidth: viewer.scene.canvas.clientWidth,
+        cssHeight: viewer.scene.canvas.clientHeight,
+        drawingBufferWidth: viewer.scene.canvas.width,
+        drawingBufferHeight: viewer.scene.canvas.height,
+      },
+      camera: {
+        position: [
+          viewer.camera.positionWC.x,
+          viewer.camera.positionWC.y,
+          viewer.camera.positionWC.z,
+        ],
+        direction: [
+          viewer.camera.directionWC.x,
+          viewer.camera.directionWC.y,
+          viewer.camera.directionWC.z,
+        ],
+        up: [viewer.camera.upWC.x, viewer.camera.upWC.y, viewer.camera.upWC.z],
+        frustumNear: viewer.camera.frustum.near,
+        frustumFar: viewer.camera.frustum.far,
+        frustumFov: viewer.camera.frustum.fov ?? null,
+      },
+    };
+    layer = createImportedGeometryLayer({
+      viewer,
+      pointRepresentation: requestedPointRepresentation,
+    });
     status.textContent = diagnosticRun
       ? 'Diagnostic only: warming the complete 5,000-point population'
       : 'Warming the complete point population';
@@ -332,7 +774,7 @@ run.addEventListener('click', async () => {
     await layer.loadAsync(imports, { workspaceId: 'fixture' });
     await settledFrame(viewer);
     report.coldActivationMs = performance.now() - coldAt;
-    report.warmedResources = resources(viewer);
+    report.warmedResources = resources(viewer, layer);
     let expectedPixels = null;
     if (workload === 'initial-load') {
       const sample = {
@@ -342,7 +784,7 @@ run.addEventListener('click', async () => {
         preCaptureDrainMs: 20,
         maxHeartbeatGapMs: null,
         features: 5000,
-        resources: resources(viewer),
+        resources: resources(viewer, layer),
       };
       report.samples.push(sample);
       await wait(20);
@@ -382,7 +824,7 @@ run.addEventListener('click', async () => {
           interCaptureWaitMs: captureIndex > 0 ? 150 : null,
           preCaptureDrainMs: 20,
           features: 5000,
-          resources: resources(viewer),
+          resources: resources(viewer, layer),
         };
         report.samples.push(sample);
         sample.pixelSha256 = await pixels(viewer, sample);
@@ -406,8 +848,16 @@ run.addEventListener('click', async () => {
             : [workload, workload];
         for (const mode of modes) {
           status.textContent = `Pair ${pair + 1}/5: ${mode} import`;
+          const clearStartedAtMs = performance.now();
           layer.clear();
+          const clearCallCompletedAtMs = performance.now();
+          const drainStartedAtMs = performance.now();
           await wait(150);
+          if (requestedPointBenefitDiagnostics) await settledFrame(viewer);
+          const drainCompletedAtMs = performance.now();
+          const resourcesAfterClear = requestedPointBenefitDiagnostics
+            ? resources(viewer, layer)
+            : null;
           let previous = performance.now();
           const gaps = [];
           const timer = setInterval(() => {
@@ -438,13 +888,36 @@ run.addEventListener('click', async () => {
             elapsedMs,
             maxHeartbeatGapMs: Math.max(...gaps),
             features: 5000,
-            resources: resources(viewer),
+            ...(requestedPointBenefitDiagnostics
+              ? {
+                  clearCallElapsedMs: clearCallCompletedAtMs - clearStartedAtMs,
+                  resetDrainElapsedMs: drainCompletedAtMs - drainStartedAtMs,
+                  clearAndDrainElapsedMs: drainCompletedAtMs - clearStartedAtMs,
+                  resourcesAfterClear,
+                  cooperativeBatchMetrics:
+                    mode === 'cooperative' ? unavailableBatchAttribution : null,
+                }
+              : {}),
           };
           report.samples.push(sample);
           // The capture operation owns its completed-frame wait. Request it from
           // the import task, rather than immediately chaining two postRender waits.
-          const hash = await pixels(viewer, sample);
+          const captured = await pixels(viewer, sample, {
+            preserveBytes: requestedPointComparison || requestedMixedParity,
+          });
+          const hash =
+            captured && typeof captured === 'object'
+              ? captured.pixelSha256
+              : captured;
           sample.pixelSha256 = hash;
+          if (captured && typeof captured === 'object') {
+            sample.pixelPngDataUrl = encodePixelWitness(captured);
+            sample.pointVisualState = await pointStateWitness(viewer, layer);
+            captured.rgba = null;
+          }
+          sample.resources = resources(viewer, layer);
+          if (requestedPointBenefitDiagnostics)
+            sample.captureElapsedMs = sample.capture?.elapsedMs;
           if (expectedPixels === null) expectedPixels = hash;
           check(
             hash === expectedPixels,
@@ -459,6 +932,90 @@ run.addEventListener('click', async () => {
             : 'diagnostic-population-and-fresh-frames-without-pixel-equivalence',
         status: 'passed',
       });
+      if (requestedPointComparison)
+        report.checks.push({
+          id: 'point-renderer-identity-order-style-and-native-picks',
+          status: 'passed',
+        });
+    }
+    if (requestedMixedParity) {
+      check(
+        report.captureMode === 'pixels',
+        'Mixed geometry parity requires pixel capture mode.',
+      );
+      layer.clear();
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 85_000),
+      });
+      const priorGlobeShow = viewer.scene.globe.show;
+      viewer.scene.globe.show = true;
+      const mixedSettings = {
+        priorGlobeShow,
+        globeShow: viewer.scene.globe.show,
+        terrainProvider: viewer.terrainProvider?.constructor?.name ?? null,
+        imageryLayerCount: viewer.imageryLayers?.length ?? null,
+        baseLayer: false,
+      };
+      check(
+        viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider &&
+          viewer.imageryLayers.length === 0,
+        'Mixed geometry readiness requires the local ellipsoid with no imagery layers.',
+      );
+      try {
+        const mixedLoad = layer.load(mixedGeometryImports, {
+          workspaceId: 'mixed-parity',
+        });
+        report.mixedGeometryParity = {
+          schema: 'gev-import-mixed-geometry-parity/v1',
+          status: 'pending',
+          renderer: requestedPointRepresentation,
+          renderSettings: mixedSettings,
+          load: { drawn: mixedLoad.drawn, omitted: mixedLoad.omitted },
+        };
+        check(
+          mixedLoad.drawn === 3 && mixedLoad.omitted === 0,
+          'Mixed fixture did not load point, line, and polygon features.',
+        );
+        const readiness = await waitForMixedGeometryNativePicks(viewer);
+        report.mixedGeometryParity.readiness = readiness;
+        check(
+          readiness.status === 'passed' &&
+            readiness.elapsedMs <= MIXED_GEOMETRY_READY_TIMEOUT_MS,
+          'Mixed point, line, and polygon native picks did not become ready within 10 seconds.',
+        );
+        const mixed = await mixedGeometrySnapshot(viewer, layer, readiness);
+        const capture = await pixels(
+          viewer,
+          { mode: 'mixed-parity' },
+          { preserveBytes: true },
+        );
+        check(
+          capture && typeof capture === 'object' && capture.rgba,
+          'Mixed parity pixel capture is missing.',
+        );
+        mixed.renderSettings = mixedSettings;
+        mixed.load = { drawn: mixedLoad.drawn, omitted: mixedLoad.omitted };
+        mixed.capture = {
+          pixelSha256: capture.pixelSha256,
+          width: capture.width,
+          height: capture.height,
+          pngDataUrl: encodePixelWitness(capture),
+        };
+        report.mixedGeometryParity = mixed;
+        report.checks.push({
+          id: 'mixed-point-line-polygon-pixels-and-native-picks',
+          status: 'passed',
+        });
+      } finally {
+        layer.clear();
+        viewer.scene.globe.show = priorGlobeShow;
+      }
+      check(
+        layer.getState().featureCount === 0 &&
+          layer.getPerformanceDiagnostics().pointPrimitiveCount === 0 &&
+          getContextStore().entities.size === 0,
+        'Mixed geometry parity retained owned render resources after clear.',
+      );
     }
     if (!['initial-load', 'steady-population'].includes(workload))
       status.textContent = 'Checking cancellation and repeated teardown';
@@ -490,6 +1047,19 @@ run.addEventListener('click', async () => {
         id: 'twelve-cancelled-imports-release-ownership',
         status: 'passed',
       });
+    report.cancellation = {
+      attempted: ['initial-load', 'steady-population'].includes(workload)
+        ? 0
+        : 12,
+      abortErrors: ['initial-load', 'steady-population'].includes(workload)
+        ? 0
+        : 12,
+      pendingJobsAfter: layer.getPerformanceDiagnostics().pendingJobs,
+      featureCountAfter: layer.getState().featureCount,
+      pointPrimitiveCountAfter:
+        layer.getPerformanceDiagnostics().pointPrimitiveCount,
+      ownershipReleased: layer.getState().featureCount === 0,
+    };
     check(
       !backgrounded,
       'Document visibility changed; rerun for valid measurements.',
