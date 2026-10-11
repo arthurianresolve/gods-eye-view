@@ -1,0 +1,22 @@
+{
+  "command": "For each ALLOCATION_TEST_FILES entry, node with allocationTestArgs(file) from scripts/run-unit-tests.mjs",
+  "node": "24.16.0",
+  "platform": "win32",
+  "scope": "Separate serialized allocation gates; infrastructure runtime matches d880071. The failed general suite was not rerun by this command.",
+  "exitCode": 0,
+  "suites": [
+    {
+      "file": "src/data/focusAllocations.test.mjs",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "src/overlays/worldOverlayAllocation.test.mjs",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "rawLogSha256": "d617f09e2bb9db00be1ce58f1b9a7e315e15b9d8b145a28f84fdeaa14909871d"
+}
