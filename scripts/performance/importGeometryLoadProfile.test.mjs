@@ -162,8 +162,24 @@ test('explicit-start trace marks retain engine timestamp witnesses despite slow 
     endMs: 220,
   });
   assert.equal(summary.complete, true);
+  const roundedAnchor = { ...value, pageNowMs: 3101.5999999999767 };
+  const roundedTrace = {
+    ...trace,
+    events: [{ ...trace.events[0], recordedStartTimeMs: 3101.599999999977 }],
+  };
+  assert.equal(
+    summarizeGeometryGcOverlap({
+      trace: roundedTrace,
+      anchor: roundedAnchor,
+      startMs: 3200,
+      endMs: 3220,
+    }).complete,
+    true,
+  );
   for (const change of [
     { recordedStartTimeMs: 101 },
+    { recordedStartTimeMs: 100.000001 },
+    { recordedStartTimeMs: undefined },
     { markerType: 'console' },
   ]) {
     const invalid = { ...trace, events: [{ ...trace.events[0], ...change }] };

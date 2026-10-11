@@ -136,10 +136,18 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
     (event) => event.kind === 'marker' && event.name === anchor.name,
   );
   const marker = markers.length === 1 ? markers[0] : null;
+  // CDP trace JSON and Runtime JSON can round the same double one ULP apart.
+  // Permit only serialization rounding, capped by the declared 1 us bound.
+  const markRoundingMs = Math.min(
+    0.001,
+    2 * Number.EPSILON * Math.max(1, Math.abs(anchor.pageNowMs)),
+  );
   if (
     anchor.method === 'performance-mark-explicit-start' &&
     (marker?.markerType !== 'performance-mark' ||
-      marker.recordedStartTimeMs !== anchor.pageNowMs ||
+      !Number.isFinite(marker.recordedStartTimeMs) ||
+      Math.abs(marker.recordedStartTimeMs - anchor.pageNowMs) >
+        markRoundingMs ||
       anchor.uncertaintyMs !== 0.001 ||
       anchor.precisionBasis !== 'trace-microsecond-serialization')
   )
