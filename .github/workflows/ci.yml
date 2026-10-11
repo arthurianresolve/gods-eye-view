@@ -33,7 +33,8 @@ on:
       renderer_diagnostic:
         description: Workload for the isolated hosted Mac diagnostic
         type: choice
-        options: [collections, wind, infrastructure, vessels, calibration]
+        options:
+          [collections, wind, infrastructure, vessels, calibration, traffic]
         default: collections
       hosted_gpu_probe:
         description: Probe native WebGL on free standard hosted runners
@@ -767,7 +768,7 @@ jobs:
     name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.renderer_diagnostic == 'traffic' && 20 || 10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -776,10 +777,23 @@ jobs:
         with:
           node-version: 24.14.0
       - run: npm ci
+      - name: Prepare the exact traffic baseline
+        if: inputs.renderer_diagnostic == 'traffic'
+        run: |
+          git fetch --no-tags origin e6ab561ad0e77a49219627e97573199f1db0af62
+          git worktree add --detach "$RUNNER_TEMP/gev-traffic-baseline" e6ab561ad0e77a49219627e97573199f1db0af62
+          npm ci --prefix "$RUNNER_TEMP/gev-traffic-baseline"
       - name: Run selected project diagnostic with verified acceleration
         env:
           DIAGNOSTIC: ${{ inputs.renderer_diagnostic || 'collections' }}
-        run: node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
+          BASELINE_SHA: e6ab561ad0e77a49219627e97573199f1db0af62
+          CANDIDATE_SHA: ${{ github.sha }}
+        run: |
+          if [ "$DIAGNOSTIC" = "traffic" ]; then
+            node scripts/performance/trafficRenderDemandComparison.mjs "$RUNNER_TEMP/gev-traffic-baseline" "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/qa-artifacts/traffic-render-demand"
+          else
+            node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
+          fi
       - name: Preserve renderer comparison evidence
         if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -788,3 +802,14 @@ jobs:
           path: qa-artifacts/hosted-native-renderer.json
           if-no-files-found: error
           retention-days: 3
+      - name: Preserve traffic evidence after success or failure
+        if: always() && inputs.renderer_diagnostic == 'traffic'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: traffic-comparison-${{ github.run_id }}
+          path: qa-artifacts/traffic-render-demand
+          if-no-files-found: error
+          retention-days: 3
+      - name: Remove the owned traffic baseline checkout
+        if: always() && inputs.renderer_diagnostic == 'traffic'
+        run: git worktree remove --force "$RUNNER_TEMP/gev-traffic-baseline"

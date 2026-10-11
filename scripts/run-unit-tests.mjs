@@ -34,6 +34,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/cesiumWorkerBlobContract.test.mjs',
   'scripts/performance/prewarmWorkerAuditBoundary.test.mjs',
   'scripts/performance/missionRenderDemand.test.mjs',
+  'scripts/performance/trafficRenderDemand.test.mjs',
   'scripts/performance/vesselRenderDemand.test.mjs',
   'scripts/performance/nativePointerFixture.test.mjs',
   'scripts/performance/cctvCalibrationDemand.test.mjs',

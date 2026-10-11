@@ -1,0 +1,357 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  compareTrafficRenderDemandRuns,
+  validateTrafficRenderDemandRun,
+} from './trafficRenderDemand.mjs';
+
+const BASE = '1'.repeat(40);
+const CANDIDATE = '2'.repeat(40);
+const HASH = 'a'.repeat(64);
+const EPOCH = Date.UTC(2026, 9, 11, 12, 0, 0);
+const RENDERER = 'ANGLE (NVIDIA GeForce RTX 4090)';
+const names = [
+  'populated',
+  'fading-retained-dots',
+  'jam-heatlines',
+  'high-altitude-clear',
+  'return-arrival',
+];
+
+function makeRun(mode, appCommit, frames) {
+  return {
+    schema: 'gev-traffic-render-demand/v1',
+    status: 'passed',
+    mode,
+    appCommit,
+    fixtureSurface: {
+      kind: 'generated-local-3d-tiles-1.1-plane',
+      glbSha256: HASH,
+      tilesetJsonSha256: 'b'.repeat(64),
+      noNetworkSource: true,
+      renderedReadyContent: [{ ready: true, type: 'Model3DTileContent' }],
+      renderedReadyContentPostRenderFrame: 2,
+      renderedReadyContentOverflow: false,
+    },
+    environment: {
+      cesiumVersion: '1.138.0',
+      viewport: { width: 1024, height: 768, dpr: 1 },
+      renderMode: true,
+      msaaSamples: 4,
+      clockShouldAnimate: false,
+    },
+    rendererEvidence: {
+      renderer: RENDERER,
+      classification: {
+        kind: 'native-gpu',
+        accelerationVerified: true,
+      },
+      browserGraphicsInfo: { featureStatus: { webgl: 'enabled' } },
+    },
+    phases: [
+      {
+        name: 'enabled-empty-high-altitude-idle',
+        elapsedMs: 10_001,
+        frames,
+        holds: mode === 'candidate' ? [] : ['traffic'],
+        governorMode: mode === 'candidate' ? 'idle' : 'continuous',
+        requestRenderMode: mode === 'candidate',
+      },
+      {
+        name: 'arrival-natural-frame',
+        noCaptureWakeBeforeFirstPopulation: true,
+        captureCountBefore: 0,
+        sourceResolvedAt: 100,
+        firstPopulationFrame: { at: 120, count: 2 },
+      },
+      {
+        name: 'disable-pending-request',
+        abortedBefore: true,
+        countAfterLateResponse: 0,
+        holdsAfterLateResponse: [],
+      },
+      {
+        name: 'disable-reinitialize-destroy',
+        holds: [],
+        primitiveCount: 1,
+      },
+    ],
+    captures: names.map((name, index) => {
+      const requestedEpochMs = EPOCH + [250, 2090, 2700, 2700, 4250][index];
+      return {
+        name,
+        width: 1024,
+        height: 768,
+        pngSha256: String(index + 1).padStart(64, '0'),
+        snapshot: {
+          stats: {
+            count: index === 3 ? 0 : 2,
+            heatLines: index === 2 ? 2 : 0,
+            fadingVisibleDots: index === 1 ? 1 : 0,
+          },
+          dots:
+            index === 3
+              ? []
+              : [
+                  {
+                    id: 'dot-a',
+                    roadKey: 'jam-a',
+                    x: 12,
+                    y: 30,
+                    pixelSize: 5,
+                    color: [1, 0, 0, 1],
+                  },
+                  {
+                    id: 'dot-b',
+                    roadKey: 'jam-a',
+                    x: 18,
+                    y: 30,
+                    pixelSize: 4,
+                    color: [1, 0, 0, 1],
+                  },
+                ],
+          renderSettings: {
+            viewport: { width: 1024, height: 768, dpr: 1 },
+            drawingBuffer: { width: 1024, height: 768 },
+            renderer: RENDERER,
+            maskedRenderer: 'WebGL Renderer',
+            msaaSamples: 4,
+            contextAttributes: {
+              antialias: true,
+              preserveDrawingBuffer: true,
+            },
+          },
+          clock: {
+            requestedEpochMs,
+            currentTimeIso: new Date(requestedEpochMs).toISOString(),
+            shouldAnimate: false,
+          },
+        },
+      };
+    }),
+    heatlineVisualWitness: {
+      sameRenderedDots: true,
+      heatlinePngSha256: HASH,
+      noHeatlineControlPngSha256: 'b'.repeat(64),
+      noHeatlineControlImagePng: 'data:image/png;base64,AA==',
+      noHeatlineControlSnapshot: {
+        stats: {
+          count: 2,
+          heatLines: 0,
+          fadingVisibleDots: 0,
+          jamViz: 'none',
+        },
+        dots: [
+          {
+            id: 'dot-a',
+            roadKey: 'jam-a',
+            x: 12,
+            y: 30,
+            pixelSize: 5,
+            color: [1, 0, 0, 1],
+          },
+          {
+            id: 'dot-b',
+            roadKey: 'jam-a',
+            x: 18,
+            y: 30,
+            pixelSize: 4,
+            color: [1, 0, 0, 1],
+          },
+        ],
+        renderSettings: {
+          viewport: { width: 1024, height: 768, dpr: 1 },
+          drawingBuffer: { width: 1024, height: 768 },
+          renderer: RENDERER,
+          maskedRenderer: 'WebGL Renderer',
+          msaaSamples: 4,
+          contextAttributes: {
+            antialias: true,
+            preserveDrawingBuffer: true,
+          },
+        },
+      },
+      clock: {
+        requestedEpochMs: EPOCH + 2700,
+        currentTimeIso: new Date(EPOCH + 2700).toISOString(),
+        shouldAnimate: false,
+      },
+      changedPixels: 12,
+      heatlineParamsBefore: { jamViz: 'heatline', densityScale: 0.2 },
+      controlParamsRequested: { jamViz: 'none', densityScale: 0.200000001 },
+      controlParamsEffective: { jamViz: 'none', densityScale: 0.200000001 },
+      restoredParams: { jamViz: 'heatline', densityScale: 0.2 },
+      effectiveRestoredParams: { jamViz: 'heatline', densityScale: 0.2 },
+      sameSnapshotStatsExceptHeatlineSettings: true,
+    },
+    cleanup: {
+      viewerDestroyed: true,
+      listenersRemoved: true,
+      governorUninstalled: true,
+    },
+  };
+}
+
+test('traffic render-demand validator accepts a complete baseline/candidate pair', () => {
+  const baseline = makeRun('baseline', BASE, 83);
+  const candidate = makeRun('candidate', CANDIDATE, 1);
+  assert.equal(validateTrafficRenderDemandRun(baseline).mode, 'baseline');
+  assert.equal(validateTrafficRenderDemandRun(candidate).mode, 'candidate');
+  const comparison = compareTrafficRenderDemandRuns(baseline, candidate, {
+    baselineCommit: BASE,
+    candidateCommit: CANDIDATE,
+  });
+  assert.equal(comparison.baselineIdleFrames, 83);
+  assert.equal(comparison.candidateIdleFrames, 1);
+  assert.equal(comparison.phases.length, 5);
+});
+
+test('traffic render-demand validator rejects idle excess, shortened idle, and non-discriminating baseline', () => {
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  candidate.phases[0].frames = 3;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /more than two/,
+  );
+  candidate.phases[0].frames = 0;
+  candidate.phases[0].elapsedMs = 9_000;
+  assert.throws(() => validateTrafficRenderDemandRun(candidate), /ten seconds/);
+  candidate.phases[0].elapsedMs = 10_001;
+  const baseline = makeRun('baseline', BASE, 2);
+  assert.throws(
+    () => validateTrafficRenderDemandRun(baseline),
+    /continuous empty-idle/,
+  );
+});
+
+test('traffic render-demand validator rejects missing population, heatlines, or fading evidence', () => {
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  candidate.captures[1].snapshot.stats.fadingVisibleDots = 0;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /visible fade/,
+  );
+  candidate.captures[1].snapshot.stats.fadingVisibleDots = 1;
+  candidate.captures[2].snapshot.stats.heatLines = 0;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /no classified/,
+  );
+  candidate.captures[2].snapshot.stats.heatLines = 2;
+  candidate.captures[4].snapshot.stats.count = 0;
+  candidate.captures[4].snapshot.dots = [];
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /empty in return-arrival/,
+  );
+});
+
+test('traffic render-demand comparison rejects image, state, source, and cleanup mismatches', () => {
+  const baseline = makeRun('baseline', BASE, 80);
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  candidate.captures[0].pngSha256 = HASH;
+  assert.throws(
+    () => compareTrafficRenderDemandRuns(baseline, candidate),
+    /differs in populated/,
+  );
+  candidate.captures[0].pngSha256 = baseline.captures[0].pngSha256;
+  candidate.phases[1].sourceResolvedAt = 200;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /natural frame/,
+  );
+  candidate.phases[1].sourceResolvedAt = 100;
+  candidate.phases[2].holdsAfterLateResponse = ['traffic'];
+  assert.throws(() => validateTrafficRenderDemandRun(candidate), /late source/);
+  candidate.phases[2].holdsAfterLateResponse = [];
+  candidate.cleanup.viewerDestroyed = false;
+  assert.throws(() => validateTrafficRenderDemandRun(candidate), /cleanup/);
+});
+
+test('traffic render-demand validator binds exact commit and local surface identity', () => {
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate, { expectedCommit: BASE }),
+    /commit mismatch/,
+  );
+  candidate.fixtureSurface.noNetworkSource = false;
+  assert.throws(() => validateTrafficRenderDemandRun(candidate), /not a local/);
+});
+
+test('traffic evidence requires an observed ready surface frame, stable dot IDs, and frozen clock', () => {
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  candidate.fixtureSurface.renderedReadyContent = [];
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /visible content/,
+  );
+
+  candidate.fixtureSurface.renderedReadyContent = [
+    { ready: true, type: 'Model3DTileContent' },
+  ];
+  candidate.fixtureSurface.renderedReadyContentPostRenderFrame = 0;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /visible content/,
+  );
+  candidate.fixtureSurface.renderedReadyContentPostRenderFrame = 2;
+  candidate.fixtureSurface.renderedReadyContentOverflow = true;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /visible content/,
+  );
+  candidate.fixtureSurface.renderedReadyContentOverflow = false;
+  candidate.captures[0].snapshot.dots[0].id = '';
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /rendered dot evidence/,
+  );
+
+  candidate.captures[0].snapshot.dots[0].id = 'dot-a';
+  candidate.captures[0].snapshot.clock.shouldAnimate = true;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /clock was not frozen/,
+  );
+
+  candidate.captures[0].snapshot.clock.shouldAnimate = false;
+  candidate.captures[0].snapshot.clock.currentTimeIso = new Date(
+    EPOCH + 251,
+  ).toISOString();
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /clock was not frozen/,
+  );
+});
+
+test('traffic comparison rejects unverified acceleration and changed heatline-control dots', () => {
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  candidate.rendererEvidence.classification.accelerationVerified = false;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /accelerated WebGL rendering/,
+  );
+  candidate.rendererEvidence.classification.accelerationVerified = true;
+  candidate.heatlineVisualWitness.noHeatlineControlSnapshot.dots[0].color[3] = 0.5;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /changed dot identity, projection, size or style/,
+  );
+});
+
+test('heatline control proves visible pixels change and parameters restore', () => {
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  candidate.heatlineVisualWitness.sameRenderedDots = false;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /visible heatline-only pixel control/,
+  );
+  candidate.heatlineVisualWitness.sameRenderedDots = true;
+  candidate.heatlineVisualWitness.effectiveRestoredParams.densityScale = 0.3;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /parameters were not auditable or restored/,
+  );
+  candidate.heatlineVisualWitness.effectiveRestoredParams.densityScale = 0.2;
+  assert.equal(validateTrafficRenderDemandRun(candidate).mode, 'candidate');
+});
