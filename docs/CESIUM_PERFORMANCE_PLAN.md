@@ -1,5 +1,16 @@
 # Cesium performance plan
 
+S47 observer-read diagnostic (11 October 2026): this isolated QA branch adds
+opt-in `--read-cost-diagnostics` to the capture CLI and enables it in the build
+smoke child. It records ten bounded synchronous read durations, including WebGL
+attributes, renderer/vendor queries, layers and visual state. Host stage timing
+is separate from in-page wall time. Missing clocks remain unavailable. Default
+capture behavior does not read the diagnostic clock. Population, visual settings,
+route and the 180-second child deadline are unchanged. This diagnostic cannot
+establish CPU/GPU cost or performance acceptance. Twenty-two focused observer,
+stage, failure-envelope and comparison-contract tests pass; hosted attribution
+and physical Windows validation are still pending.
+
 Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
 Point integration passes all seven standard jobs and fifteen recovery stages at
 `1a8d4928`. Frozen candidate `fca2f991` also passes collection-specific native

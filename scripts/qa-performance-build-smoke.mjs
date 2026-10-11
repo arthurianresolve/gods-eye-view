@@ -411,9 +411,8 @@ export function validateCaptureCliReport(report, expected) {
     expectedRoles,
   );
   for (const entry of workerAuditDocuments) {
-    const measuredProviderDocument = entry.documentRole.startsWith(
-      'provider-sample-',
-    );
+    const measuredProviderDocument =
+      entry.documentRole.startsWith('provider-sample-');
     assert.equal(
       entry.mode,
       workerAuditMode === 'prewarm' && measuredProviderDocument
@@ -897,6 +896,9 @@ async function runCandidateCaptureCli({
     fixture.fixedTime,
     '--worker-audit-mode',
     workerAuditMode,
+    // Isolated diagnostic branch: retain the same workload and deadline while
+    // attributing synchronous observer reads outside each measurement interval.
+    '--read-cost-diagnostics',
     '--mixed-layers',
     '--quality-mode',
     'manual',

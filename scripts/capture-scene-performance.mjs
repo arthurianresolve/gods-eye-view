@@ -74,6 +74,7 @@ const providerFixtureTime = option(
   '2026-10-08T12:00:00.000Z',
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
+const measureReadCosts = args.includes('--read-cost-diagnostics');
 if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
   throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
 if (providerFixtureMode && providerFixtureMode !== 'dense-investigation')
@@ -270,6 +271,7 @@ const failureProgress = {
   fixture: productionFlightFixture,
   fixtureDelivery: null,
   workload: {
+    readCostDiagnostics: measureReadCosts,
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
@@ -296,6 +298,22 @@ const captureStageJournal = createCaptureStageJournal({
 });
 async function runCaptureStage(stage, operation, options) {
   return captureStageJournal.run(stage, operation, options);
+}
+async function readCommonScene(page, stage) {
+  const operation = () =>
+    page.evaluate(observeCommonScene, {
+      appCommit: source.appCommit,
+      measureReadCosts,
+    });
+  const observed = measureReadCosts
+    ? await runCaptureStage(stage, operation)
+    : await operation();
+  if (measureReadCosts && failureProgress.current)
+    failureProgress.current.observerReadDiagnostics = {
+      ...(failureProgress.current.observerReadDiagnostics || {}),
+      [stage]: observed.readDiagnostics,
+    };
+  return observed;
 }
 let captureFailure = null;
 let failureReportWritten = false;
@@ -1158,9 +1176,7 @@ try {
       transform: camera.transform.clone(),
     };
   });
-  const commonScene = await page.evaluate(observeCommonScene, {
-    appCommit: source.appCommit,
-  });
+  const commonScene = await readCommonScene(page, 'startup-scene-observer');
   const environment = commonScene.environment;
   environment.startup = {
     runs: startupSamples,
@@ -1558,9 +1574,10 @@ try {
         throw new Error(
           `Provider fixture was stale or unfocused at measurement start: ${JSON.stringify(fixtureMeasurementStart)}`,
         );
-      const sceneBefore = await page.evaluate(observeCommonScene, {
-        appCommit: source.appCommit,
-      });
+      const sceneBefore = await readCommonScene(
+        page,
+        'before-sample-scene-observer',
+      );
       failureProgress.phase = 'measure-scene';
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
@@ -1882,9 +1899,15 @@ try {
         }
         providerSampleWorkerAuditComplete = true;
       }
-      const sceneAfter = await page.evaluate(observeCommonScene, {
-        appCommit: source.appCommit,
-      });
+      const sceneAfter = await readCommonScene(
+        page,
+        'after-sample-scene-observer',
+      );
+      if (measureReadCosts)
+        sample.observerReadDiagnostics = {
+          before: sceneBefore.readDiagnostics,
+          after: sceneAfter.readDiagnostics,
+        };
       failureProgress.current.after = sceneAfter;
       failureProgress.phase = 'validate-sample-integrity';
       failureProgress.current.phase = failureProgress.phase;
@@ -2111,6 +2134,12 @@ try {
       documents: performanceDiagnosticsDocuments,
     },
     capturedAt: new Date().toISOString(),
+    observerReadDiagnostics: {
+      enabled: measureReadCosts,
+      scope:
+        'Synchronous observer wall time outside sample intervals; not CPU or GPU execution time.',
+      startup: commonScene.readDiagnostics ?? null,
+    },
     source,
     url: new URL(url).origin,
     comparisonEligible: false,

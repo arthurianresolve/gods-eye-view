@@ -6,7 +6,32 @@
 export function observeCommonScene({
   windowObject = globalThis.window,
   appCommit = null,
+  measureReadCosts = false,
 } = {}) {
+  // Diagnostic wall time only: synchronous driver reads may wait for queued
+  // rendering. These durations are neither CPU execution nor GPU timings.
+  const readCosts = {};
+  let clockAvailable = measureReadCosts;
+  const now = () => {
+    if (!measureReadCosts) return null;
+    try {
+      const value = windowObject?.performance?.now?.();
+      if (Number.isFinite(value)) return value;
+    } catch {}
+    clockAvailable = false;
+    return null;
+  };
+  const observerStarted = now();
+  const read = (name, operation) => {
+    if (!measureReadCosts) return operation();
+    const started = now();
+    const result = operation();
+    const ended = now();
+    const valid = started !== null && ended !== null && ended >= started;
+    if (!valid) clockAvailable = false;
+    readCosts[name] = valid ? ended - started : null;
+    return result;
+  };
   const fail = (field) => {
     throw new Error(`Common scene observer is missing ${field}.`);
   };
@@ -41,46 +66,62 @@ export function observeCommonScene({
     fail('detection settings readers');
   if (!manager?.getAll) fail('layer population reader');
 
-  const gl =
-    scene.context?._originalGLContext ||
-    scene.context?._gl ||
-    canvas.getContext('webgl2') ||
-    canvas.getContext('webgl');
+  const gl = read(
+    'context',
+    () =>
+      scene.context?._originalGLContext ||
+      scene.context?._gl ||
+      canvas.getContext('webgl2') ||
+      canvas.getContext('webgl'),
+  );
   if (!gl?.getParameter || !gl.getContextAttributes)
     fail('Cesium WebGL context');
-  const attributes = gl.getContextAttributes();
+  const attributes = read('contextAttributes', () => gl.getContextAttributes());
   if (!attributes) fail('WebGL context attributes');
-  const extension = gl.getExtension('WEBGL_debug_renderer_info');
-  const renderer = extension
-    ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
-    : gl.getParameter(gl.RENDERER);
-  const vendor = extension
-    ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL)
-    : gl.getParameter(gl.VENDOR);
+  const extension = read('rendererExtension', () =>
+    gl.getExtension('WEBGL_debug_renderer_info'),
+  );
+  const renderer = read('renderer', () =>
+    extension
+      ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
+      : gl.getParameter(gl.RENDERER),
+  );
+  const vendor = read('vendor', () =>
+    extension
+      ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL)
+      : gl.getParameter(gl.VENDOR),
+  );
   if (typeof renderer !== 'string' || !renderer.trim())
     fail('renderer identity');
 
-  const layers = manager.getAll().map((layer) => {
-    if (typeof layer?.id !== 'string' || !layer.id) fail('layer identity');
-    const count = layer.stats?.count;
-    if (layer.enabled && (!Number.isInteger(count) || count < 0))
-      fail(`count for enabled layer ${layer.id}`);
-    return {
-      id: layer.id,
-      enabled: Boolean(layer.enabled),
-      count: Number.isInteger(count) && count >= 0 ? count : null,
-    };
-  });
-  const visualState = style.getVisualState();
+  const layers = read('layers', () =>
+    manager.getAll().map((layer) => {
+      if (typeof layer?.id !== 'string' || !layer.id) fail('layer identity');
+      const count = layer.stats?.count;
+      if (layer.enabled && (!Number.isInteger(count) || count < 0))
+        fail(`count for enabled layer ${layer.id}`);
+      return {
+        id: layer.id,
+        enabled: Boolean(layer.enabled),
+        count: Number.isInteger(count) && count >= 0 ? count : null,
+      };
+    }),
+  );
+  const visualState = read('visualState', () => style.getVisualState());
   if (!visualState?.style || !visualState.styleParams)
     fail('effective visual state');
-  const densityPct = style.services.getDetectionTuning()?.densityPct;
-  const detectionMode = style.services.getDetectionMode();
+  const densityPct = read(
+    'density',
+    () => style.services.getDetectionTuning()?.densityPct,
+  );
+  const detectionMode = read('detectionMode', () =>
+    style.services.getDetectionMode(),
+  );
   if (!Number.isFinite(densityPct)) fail('effective detection density');
   if (typeof detectionMode !== 'string' || !detectionMode)
     fail('detection mode');
 
-  const view = style.shareLinkManager?.getCurrentView?.();
+  const view = read('view', () => style.shareLinkManager?.getCurrentView?.());
   const settings = {
     qualityMode: style._adaptiveQuality.getMode(),
     densityPct,
@@ -102,7 +143,7 @@ export function observeCommonScene({
   for (const key of ['antialias', 'fxaa'])
     if (typeof settings[key] !== 'boolean') fail(`effective ${key}`);
 
-  return {
+  const result = {
     environment: {
       userAgent: windowObject.navigator?.userAgent || null,
       platform: windowObject.navigator?.platform || null,
@@ -131,6 +172,20 @@ export function observeCommonScene({
       transform: readMatrix(viewer.camera.transform),
     },
   };
+  if (measureReadCosts) {
+    const ended = now();
+    const valid =
+      observerStarted !== null && ended !== null && ended >= observerStarted;
+    result.readDiagnostics = {
+      schema: 'gev-common-scene-read-cost/v1',
+      metric: 'wall-time-ms',
+      clockAvailable: clockAvailable && valid,
+      totalMs: valid ? ended - observerStarted : null,
+      reads: readCosts,
+      performanceAcceptanceEligible: false,
+    };
+  }
+  return result;
 }
 
 /** Convert the current capture callback's measured route into a paired descriptor. */

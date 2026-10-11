@@ -65,6 +65,86 @@ function fakeWindow() {
   };
 }
 
+test('observer diagnostics attribute driver read wall time without changing observations', () => {
+  const windowObject = fakeWindow();
+  let time = 0;
+  windowObject.performance = { now: () => time };
+  const gl = windowObject.__godsEyeView.viewer.scene.context._originalGLContext;
+  const originalParameter = gl.getParameter;
+  gl.getParameter = (key) => {
+    time += key === 1 ? 40 : 7;
+    return originalParameter(key);
+  };
+  const observed = observeCommonScene({ windowObject, measureReadCosts: true });
+  const { readDiagnostics, ...withoutDiagnostics } = observed;
+  assert.deepEqual(withoutDiagnostics, observeCommonScene({ windowObject }));
+  assert.equal(readDiagnostics.reads.renderer, 40);
+  assert.equal(readDiagnostics.reads.vendor, 7);
+  assert.equal(readDiagnostics.reads.layers, 0);
+  assert.equal(readDiagnostics.totalMs, 47);
+  assert.equal(readDiagnostics.clockAvailable, true);
+  assert.equal(readDiagnostics.performanceAcceptanceEligible, false);
+  assert.equal(Object.keys(readDiagnostics.reads).length, 10);
+});
+
+test('default observer never queries the diagnostic clock', () => {
+  const windowObject = fakeWindow();
+  let calls = 0;
+  windowObject.performance = {
+    now() {
+      calls++;
+      throw new Error('clock unavailable');
+    },
+  };
+  const observed = observeCommonScene({ windowObject });
+  assert.equal(calls, 0);
+  assert.equal(Object.hasOwn(observed, 'readDiagnostics'), false);
+});
+
+test('missing, failing and non-monotonic diagnostic clocks remain unavailable', () => {
+  for (const performance of [
+    undefined,
+    { now: () => NaN },
+    {
+      now() {
+        throw new Error('clock');
+      },
+    },
+  ]) {
+    const windowObject = fakeWindow();
+    windowObject.performance = performance;
+    const observed = observeCommonScene({
+      windowObject,
+      measureReadCosts: true,
+    });
+    assert.equal(observed.readDiagnostics.clockAvailable, false);
+    assert.equal(observed.readDiagnostics.totalMs, null);
+    assert.ok(
+      Object.values(observed.readDiagnostics.reads).every(
+        (value) => value === null,
+      ),
+    );
+  }
+  const windowObject = fakeWindow();
+  let time = 100;
+  windowObject.performance = { now: () => --time };
+  const observed = observeCommonScene({ windowObject, measureReadCosts: true });
+  assert.equal(observed.readDiagnostics.clockAvailable, false);
+  assert.equal(observed.readDiagnostics.totalMs, null);
+});
+
+test('timed observer remains self-contained when serialized into a page', () => {
+  const serialized = new Function(
+    `return (${observeCommonScene.toString()});`,
+  )();
+  const windowObject = fakeWindow();
+  windowObject.performance = { now: () => 10 };
+  assert.deepEqual(
+    serialized({ windowObject, measureReadCosts: true }),
+    observeCommonScene({ windowObject, measureReadCosts: true }),
+  );
+});
+
 test('common observer emits shared Cesium scene and effective workload inputs', () => {
   const observed = observeCommonScene({
     windowObject: fakeWindow(),
