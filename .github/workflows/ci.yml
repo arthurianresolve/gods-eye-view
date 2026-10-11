@@ -54,7 +54,7 @@ on:
         required: false
         default: ''
       capture_worker_audit_mode:
-        description: Keep worker auditing diagnostic, or restore it before capture warmup
+        description: Keep worker auditing diagnostic, or audit and restore after warmup before measurement
         type: choice
         options: [diagnostic, prewarm]
         default: diagnostic
