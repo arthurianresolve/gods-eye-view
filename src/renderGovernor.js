@@ -28,7 +28,9 @@
  * short stable strings ('flights', 'traffic', 'style-anim', …) so the
  * diagnostics read like a story.
  *
- * The governor is O(1) passive: no per-frame work of its own, ever.
+ * The governor is passive when idle. While scheduled owners exist, it adds
+ * only an O(1) preUpdate deadline check so an already-due callback can request
+ * the current frame before Cesium decides whether to render.
  */
 
 let _viewer = null;
@@ -42,29 +44,77 @@ const _scheduledUpdates = new Map();
 let _scheduledTimer = null;
 let _scheduledAt = null;
 let _generation = 0;
+let _preUpdateRemove = null;
 
 const now = () => performance.now();
 const ownerLabel = (owner) =>
   typeof owner === 'symbol' ? owner.description : owner;
+
+function detachScheduledPreUpdate() {
+  if (!_preUpdateRemove) return;
+  _preUpdateRemove();
+  _preUpdateRemove = null;
+}
+
+function checkDueUpdatesBeforeRender() {
+  if (
+    !_installed ||
+    !_viewer?.scene ||
+    _scheduledAt === null ||
+    now() < _scheduledAt
+  )
+    return;
+  flushScheduledUpdates();
+}
+
+function attachScheduledPreUpdate() {
+  const event = _viewer?.scene?.preUpdate;
+  if (_preUpdateRemove || !event?.addEventListener) return;
+  const remove = event.addEventListener(checkDueUpdatesBeforeRender);
+  _preUpdateRemove =
+    typeof remove === 'function'
+      ? remove
+      : () => event.removeEventListener?.(checkDueUpdatesBeforeRender);
+}
 
 function armScheduledUpdates() {
   const earliest =
     _scheduledUpdates.size && _installed
       ? Math.min(...[..._scheduledUpdates.values()].map((update) => update.at))
       : null;
+  if (earliest !== null) attachScheduledPreUpdate();
+  else detachScheduledPreUpdate();
   if (_scheduledTimer !== null && earliest === _scheduledAt) return;
   if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
   _scheduledTimer = null;
   _scheduledAt = earliest;
   if (earliest !== null) {
-    _scheduledTimer = setTimeout(
-      flushScheduledUpdates,
+    const timerGeneration = _generation;
+    const timerAt = earliest;
+    let timer;
+    timer = setTimeout(
+      () => {
+        // Ignore a callback from a deadline retired by a frame-side flush.
+        // A stale task must not flush a newer owner's deadline.
+        if (
+          _generation !== timerGeneration ||
+          _scheduledTimer !== timer ||
+          _scheduledAt !== timerAt
+        )
+          return;
+        flushScheduledUpdates();
+      },
       Math.max(0, earliest - now()),
     );
+    _scheduledTimer = timer;
   }
 }
 
 function flushScheduledUpdates() {
+  // A preUpdate flush can beat the queued timeout when its deadline expires
+  // during Cesium's initializeFrame/clock.tick work. Retire that timer before
+  // invoking callbacks so it cannot produce a duplicate wake after this frame.
+  if (_scheduledTimer !== null) clearTimeout(_scheduledTimer);
   _scheduledTimer = null;
   _scheduledAt = null;
   if (!_installed || !_viewer?.scene) return;
@@ -114,6 +164,7 @@ function applyMode() {
 export function installRenderGovernor(viewer) {
   if (!viewer?.scene)
     throw new TypeError('installRenderGovernor requires a Cesium viewer');
+  if (_viewer !== viewer) detachScheduledPreUpdate();
   _viewer = viewer;
   _installed = true;
   // Never let Cesium re-render on simulation-time deltas behind our back —
@@ -239,6 +290,7 @@ export function getRenderGovernorDiagnostics() {
 export function uninstallRenderGovernor(viewer) {
   if (_viewer !== viewer) return;
   _generation += 1;
+  detachScheduledPreUpdate();
   _viewer = null;
   _installed = false;
   _holds.clear();
@@ -252,6 +304,7 @@ export function uninstallRenderGovernor(viewer) {
 /** Test seam: reset module state between unit tests. */
 export function _resetRenderGovernorForTest() {
   _generation += 1;
+  detachScheduledPreUpdate();
   _viewer = null;
   _installed = false;
   _holds.clear();
