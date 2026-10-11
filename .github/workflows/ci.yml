@@ -45,6 +45,8 @@ on:
             import-attribution,
             import-step-diagnostics,
             import-step-attribution,
+            import-load-cpu-profile,
+            import-load-heap-profile,
           ]
         default: collections
       hosted_gpu_probe:
@@ -806,7 +808,7 @@ jobs:
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
       - name: Preserve renderer comparison evidence
-        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'imports' || inputs.renderer_diagnostic == 'import-attribution' || inputs.renderer_diagnostic == 'import-step-diagnostics' || inputs.renderer_diagnostic == 'import-step-attribution')
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'imports' || inputs.renderer_diagnostic == 'import-attribution' || inputs.renderer_diagnostic == 'import-step-diagnostics' || inputs.renderer_diagnostic == 'import-step-attribution' || inputs.renderer_diagnostic == 'import-load-cpu-profile' || inputs.renderer_diagnostic == 'import-load-heap-profile')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}

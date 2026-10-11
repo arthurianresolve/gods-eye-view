@@ -223,7 +223,7 @@ try {
     if (importLoadProfileMode) {
       report.performanceAcceptanceEligible = false;
       report.importLoadProfileScope =
-        'Separate single-load CPU or sampled-allocation diagnostic. The profiler starts after fixture setup/warmup and stops before fresh-frame capture and teardown; all output is diagnostic and excluded from performance acceptance.';
+        'Separate single-load CPU or sampled-allocation diagnostic. The profiler spans browser start/stop control clicks and wait/poll time around one warmed cooperative load, may include idle stacks and garbage collection, and stops before fresh-frame capture and teardown. Output is diagnostic-only, not performance acceptance.';
     }
     let traceStopped = null;
     let loadProfileOwner = null;

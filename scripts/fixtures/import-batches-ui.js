@@ -630,7 +630,7 @@ run.addEventListener('click', async () => {
           performanceAcceptanceEligible: false,
           importLoadProfileMode: requestedLoadProfile,
           importLoadProfileScope:
-            'One warmed cooperative 5,000-point load only. Setup/warmup and frame capture/teardown are outside the profiler window. This diagnostic is not a latency or performance acceptance sample.',
+            'Profiler window spans browser start/stop control clicks and wait/poll time around one warmed cooperative 5,000-point load; it may include idle stacks and garbage collection. Setup/warmup, fresh-frame capture, and teardown are outside the window. Diagnostic-only, not a latency or performance acceptance sample.',
         }
       : {}),
     preserveDrawingBuffer,

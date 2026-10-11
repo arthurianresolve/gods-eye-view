@@ -4,6 +4,7 @@ import {
   startImportLoadProfile,
   summarizeImportHeapProfile,
   validateImportLoadProfileFixture,
+  IMPORT_LOAD_PROFILE_SCOPE,
 } from './importLoadProfile.mjs';
 import { runControlledImportLoadProfile } from './importLoadProfileControl.mjs';
 
@@ -110,10 +111,37 @@ function profileResult(mode = 'cpu') {
   return {
     mode,
     performanceAcceptanceEligible: false,
-    profileScope: 'single warmed cooperative load only',
+    profileScope: IMPORT_LOAD_PROFILE_SCOPE,
+    nodeCount: 2,
+    groupedLocations: 1,
+    omittedLocations: 0,
+    topLocations: [
+      mode === 'cpu'
+        ? {
+            functionName: 'sampled',
+            url: '/fixture.js',
+            samples: 3,
+            sampledWeightMs: 5,
+          }
+        : {
+            functionName: 'sampled',
+            url: '/fixture.js',
+            nodes: 1,
+            sampledBytes: 4096,
+          },
+    ],
+    recomputation: 'bounded summary only',
     ...(mode === 'cpu'
-      ? { sampleCount: 3 }
-      : { nodeCount: 2, sampledAllocationBytes: 4096 }),
+      ? {
+          sampleCount: 3,
+          profileWindowMs: 5,
+          totalSampleWeightMs: 5,
+        }
+      : {
+          sampleCount: 1,
+          sampledAllocationBytes: 4096,
+          truncated: false,
+        }),
     control: {
       fixtureReadyGateObserved: true,
       loadCompleteGateObserved: true,
@@ -130,7 +158,7 @@ test('loading CPU profile is bounded to its owned CDP start/stop session', async
   const report = await owner.stop();
   assert.equal(report.mode, 'cpu');
   assert.equal(report.performanceAcceptanceEligible, false);
-  assert.equal(report.profileScope, 'single warmed cooperative load only');
+  assert.equal(report.profileScope, IMPORT_LOAD_PROFILE_SCOPE);
   assert.equal(report.sampleCount, 3);
   assert.equal('profile' in report, false, 'raw profile tree is not emitted');
   assert.deepEqual(
@@ -167,12 +195,15 @@ test('heap profile includes collected objects and returns only bounded callsite 
           },
         ],
       },
+      samples: [{ size: 4096, nodeId: 2, ordinal: 1 }],
     },
   });
   const owner = await startImportLoadProfile(pageFor(session), 'heap');
   const report = await owner.stop();
   assert.equal(report.mode, 'heap');
   assert.equal(report.sampledAllocationBytes, 4096);
+  assert.equal(report.sampleCount, 1);
+  assert.equal(report.truncated, false);
   assert.equal(report.topLocations[0].functionName, 'createImportedEntity');
   assert.equal(report.topLocations[0].url, '/src/imports/runtimeLayer.js');
   assert.doesNotMatch(JSON.stringify(report), /secret/);
@@ -197,6 +228,38 @@ test('heap summaries reject malformed or unbounded profile branches', () => {
     () => summarizeImportHeapProfile({ head: { selfSize: 0, children: [] } }),
     /Invalid loading heap profile/,
   );
+  assert.throws(
+    () =>
+      summarizeImportHeapProfile({
+        head: {
+          callFrame: { functionName: 'root' },
+          selfSize: 0,
+          children: [],
+        },
+        samples: [{ size: -1, nodeId: 1, ordinal: 1 }],
+      }),
+    /malformed sample/,
+  );
+  const deepRoot = {
+    callFrame: { functionName: 'root' },
+    selfSize: 0,
+    children: [],
+  };
+  let cursor = deepRoot;
+  for (let depth = 0; depth < 66; depth++) {
+    const child = {
+      callFrame: { functionName: `depth${depth}` },
+      selfSize: 0,
+      children: [],
+    };
+    cursor.children.push(child);
+    cursor = child;
+  }
+  const truncated = summarizeImportHeapProfile({
+    head: deepRoot,
+    samples: [{ size: 0, nodeId: 1, ordinal: 1 }],
+  });
+  assert.equal(truncated.truncated, true);
 });
 
 test('single-load report validator accepts CPU and heap diagnostic shapes', () => {
@@ -241,6 +304,42 @@ test('single-load heap report requires allocation summary without CPU sample fie
   assert.match(result.errors.join(';'), /heap profile summary is incomplete/);
 });
 
+test('single-load report validator rejects malformed containers and truncated profiles', () => {
+  const malformedFixture = fixtureResult();
+  malformedFixture.checks = { passed: true };
+  assert.equal(
+    validateImportLoadProfileFixture({
+      fixtureReport: malformedFixture,
+      profileReport: profileResult(),
+      mode: 'cpu',
+      commit: 'a'.repeat(40),
+    }).valid,
+    false,
+  );
+
+  const truncatedHeapProfile = profileResult('heap');
+  truncatedHeapProfile.truncated = true;
+  const result = validateImportLoadProfileFixture({
+    fixtureReport: fixtureResult('heap'),
+    profileReport: truncatedHeapProfile,
+    mode: 'heap',
+    commit: 'a'.repeat(40),
+  });
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(';'), /heap profile summary is incomplete/);
+
+  const malformedLocation = profileResult('cpu');
+  malformedLocation.topLocations = [{ functionName: 'sampled' }];
+  const malformedResult = validateImportLoadProfileFixture({
+    fixtureReport: fixtureResult('cpu'),
+    profileReport: malformedLocation,
+    mode: 'cpu',
+    commit: 'a'.repeat(40),
+  });
+  assert.equal(malformedResult.valid, false);
+  assert.match(malformedResult.errors.join(';'), /profile summary locations/);
+});
+
 test('profile startup failure detaches and preserves the CDP error', async () => {
   const session = new FakeSession();
   session.failure = 'HeapProfiler.startSampling';
@@ -251,8 +350,33 @@ test('profile startup failure detaches and preserves the CDP error', async () =>
   assert.equal(session.detached, 1);
   assert.deepEqual(
     session.calls.map(({ method }) => method),
-    ['HeapProfiler.enable', 'HeapProfiler.startSampling'],
+    [
+      'HeapProfiler.enable',
+      'HeapProfiler.startSampling',
+      'HeapProfiler.stopSampling',
+      'HeapProfiler.disable',
+    ],
   );
+});
+
+test('partial profiler start failure stops, disables and detaches without masking the error', async () => {
+  const session = new FakeSession();
+  session.failure = 'Profiler.start';
+  await assert.rejects(
+    startImportLoadProfile(pageFor(session), 'cpu'),
+    /Profiler.start failed/,
+  );
+  assert.deepEqual(
+    session.calls.map(({ method }) => method),
+    [
+      'Profiler.enable',
+      'Profiler.setSamplingInterval',
+      'Profiler.start',
+      'Profiler.stop',
+      'Profiler.disable',
+    ],
+  );
+  assert.equal(session.detached, 1);
 });
 
 test('profile creation deadline rejects a stalled CDP session request', async () => {
@@ -264,6 +388,27 @@ test('profile creation deadline rejects a stalled CDP session request', async ()
     ),
     /session creation timed out/,
   );
+});
+
+test('late CDP session resolution after the creation deadline is detached', async () => {
+  let resolveSession;
+  const session = new FakeSession();
+  const page = {
+    createCDPSession: () =>
+      new Promise((resolve) => {
+        resolveSession = resolve;
+      }),
+  };
+  await assert.rejects(
+    startImportLoadProfile(page, 'cpu', {
+      timeoutMs: 10,
+      cleanupTimeoutMs: 20,
+    }),
+    /session creation timed out/,
+  );
+  resolveSession(session);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(session.detached, 1);
 });
 
 test('profile stop timeout still disables and detaches the owned session', async () => {

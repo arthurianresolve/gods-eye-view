@@ -2,7 +2,10 @@ import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
 
 const MAX_HEAP_PROFILE_NODES = 50_000;
 const MAX_HEAP_PROFILE_DEPTH = 64;
+const MAX_HEAP_PROFILE_SAMPLES = 250_000;
 const MAX_PROFILE_LOCATIONS = 30;
+export const IMPORT_LOAD_PROFILE_SCOPE =
+  'Profiler window includes explicit browser start/stop control clicks and wait/poll time around one warmed cooperative load; it may include idle stacks and garbage collection. Fresh-frame capture and teardown are outside the window. Sampled profile summaries are diagnostic and not performance acceptance.';
 
 function positiveTimeout(value, name) {
   if (!Number.isFinite(value) || value <= 0)
@@ -35,8 +38,25 @@ function fixturePath(value) {
 }
 
 export function summarizeImportHeapProfile(profile) {
-  if (!profile?.head || typeof profile.head !== 'object')
-    throw new Error('Invalid loading heap profile: missing root');
+  if (
+    !profile?.head ||
+    typeof profile.head !== 'object' ||
+    !Array.isArray(profile.samples) ||
+    profile.samples.length > MAX_HEAP_PROFILE_SAMPLES
+  )
+    throw new Error(
+      'Invalid loading heap profile: missing root or malformed samples',
+    );
+  for (const sample of profile.samples) {
+    if (
+      !sample ||
+      !Number.isFinite(sample.size) ||
+      sample.size < 0 ||
+      !Number.isSafeInteger(sample.nodeId) ||
+      !Number.isFinite(sample.ordinal)
+    )
+      throw new Error('Invalid loading heap profile: malformed sample');
+  }
   const locations = new Map();
   const stack = [{ node: profile.head, depth: 0 }];
   let nodeCount = 0;
@@ -87,9 +107,12 @@ export function summarizeImportHeapProfile(profile) {
   return {
     schema: 'gev-import-load-heap-profile/v1',
     scope:
-      'HeapProfiler sampled allocation callsites during one warmed cooperative load; sampled bytes are estimates, not exact allocation totals or retained-memory evidence.',
+      'HeapProfiler sampled allocation callsites during the profiled window; sampled bytes are estimates, not exact allocation totals or retained-memory evidence.',
     performanceAcceptanceEligible: false,
+    recomputation:
+      'Raw heap profile tree is omitted; grouped top callsites and sampled-byte totals are a bounded summary and cannot reconstruct all source nodes.',
     nodeCount,
+    sampleCount: profile.samples.length,
     sampledAllocationBytes,
     groupedLocations: ranked.length,
     topLocations: ranked.slice(0, MAX_PROFILE_LOCATIONS),
@@ -151,7 +174,8 @@ export function validateImportLoadProfileFixture({
   )
     errors.push('profiled workload did not complete the full population');
   if (
-    !fixtureReport?.checks?.some(
+    !Array.isArray(fixtureReport?.checks) ||
+    !fixtureReport.checks.some(
       (check) =>
         check.id ===
           'single-profiled-load-separated-from-capture-and-teardown' &&
@@ -162,20 +186,66 @@ export function validateImportLoadProfileFixture({
   if (
     profileReport?.mode !== mode ||
     profileReport?.performanceAcceptanceEligible !== false ||
-    profileReport?.profileScope !== 'single warmed cooperative load only'
+    profileReport?.profileScope !== IMPORT_LOAD_PROFILE_SCOPE
   )
     errors.push('profiler report mode or scope mismatch');
   if (
+    !Number.isInteger(profileReport?.nodeCount) ||
+    profileReport.nodeCount < 1 ||
+    !Number.isInteger(profileReport?.groupedLocations) ||
+    profileReport.groupedLocations < 1 ||
+    !Number.isInteger(profileReport?.omittedLocations) ||
+    profileReport.omittedLocations < 0 ||
+    !Array.isArray(profileReport?.topLocations) ||
+    profileReport.topLocations.length > MAX_PROFILE_LOCATIONS ||
+    typeof profileReport?.recomputation !== 'string' ||
+    profileReport.recomputation.length === 0
+  )
+    errors.push('bounded profile summary is incomplete');
+  if (
+    Array.isArray(profileReport?.topLocations) &&
+    (profileReport.topLocations.some(
+      (row) =>
+        !row ||
+        typeof row.functionName !== 'string' ||
+        typeof row.url !== 'string' ||
+        (mode === 'cpu'
+          ? !Number.isInteger(row.samples) ||
+            !Number.isFinite(row.sampledWeightMs) ||
+            row.sampledWeightMs < 0
+          : !Number.isInteger(row.nodes) ||
+            row.nodes < 1 ||
+            !Number.isFinite(row.sampledBytes) ||
+            row.sampledBytes < 0),
+    ) ||
+      profileReport.omittedLocations !==
+        Math.max(
+          0,
+          profileReport.groupedLocations - profileReport.topLocations.length,
+        ))
+  )
+    errors.push('profile summary locations are malformed');
+  if (
     mode === 'cpu' &&
     (!Number.isInteger(profileReport?.sampleCount) ||
-      profileReport.sampleCount < 1)
+      profileReport.sampleCount < 1 ||
+      !Number.isFinite(profileReport?.profileWindowMs) ||
+      profileReport.profileWindowMs <= 0 ||
+      !Number.isFinite(profileReport?.totalSampleWeightMs) ||
+      profileReport.totalSampleWeightMs < 0)
   )
     errors.push('CPU profile has no sample count');
   if (
     mode === 'heap' &&
     (!Number.isInteger(profileReport?.nodeCount) ||
+      profileReport.nodeCount < 1 ||
+      !Number.isInteger(profileReport?.sampleCount) ||
+      profileReport.sampleCount < 1 ||
       !Number.isFinite(profileReport?.sampledAllocationBytes) ||
-      profileReport.sampledAllocationBytes < 0)
+      profileReport.sampledAllocationBytes < 0 ||
+      profileReport?.truncated !== false ||
+      !Number.isInteger(profileReport?.omittedLocations) ||
+      profileReport.omittedLocations < 0)
   )
     errors.push('heap profile summary is incomplete');
   if (
@@ -199,13 +269,52 @@ export async function startImportLoadProfile(
     throw new TypeError('Import load profile mode must be cpu or heap');
   if (!page || typeof page.createCDPSession !== 'function')
     throw new TypeError('Invalid import profile page');
-  const session = await bounded(
-    Promise.resolve().then(() => page.createCDPSession()),
-    timeoutMs,
-    'Import profile session creation timed out',
+  let timedOutCreatingSession = false;
+  let lateSession = null;
+  let lateDetachStarted = false;
+  const sessionPromise = Promise.resolve().then(() => page.createCDPSession());
+  sessionPromise.then(
+    (session) => {
+      lateSession = session;
+      if (timedOutCreatingSession && !lateDetachStarted) {
+        lateDetachStarted = true;
+        bounded(
+          Promise.resolve().then(() => session.detach()),
+          cleanupTimeoutMs,
+          'Late import profile session detach timed out',
+        ).catch(() => {});
+      }
+    },
+    () => {},
   );
+  let session;
+  try {
+    session = await bounded(
+      sessionPromise,
+      timeoutMs,
+      'Import profile session creation timed out',
+    );
+  } catch (error) {
+    timedOutCreatingSession = true;
+    if (lateSession && !lateDetachStarted) {
+      lateDetachStarted = true;
+      try {
+        await bounded(
+          Promise.resolve().then(() => lateSession.detach()),
+          cleanupTimeoutMs,
+          'Late import profile session detach timed out',
+        );
+      } catch (cleanupError) {
+        error.profileCleanupError = String(
+          cleanupError?.message || cleanupError,
+        ).slice(0, 240);
+      }
+    }
+    throw error;
+  }
   const domain = mode === 'cpu' ? 'Profiler' : 'HeapProfiler';
-  let started = false;
+  let enableAttempted = false;
+  let startAttempted = false;
   let stopped = false;
   const detach = () =>
     bounded(
@@ -214,6 +323,7 @@ export async function startImportLoadProfile(
       'Import profile session detach timed out',
     );
   try {
+    enableAttempted = true;
     await bounded(
       Promise.resolve().then(() => session.send(`${domain}.enable`)),
       timeoutMs,
@@ -227,12 +337,14 @@ export async function startImportLoadProfile(
         timeoutMs,
         'Import CPU sampling setup timed out',
       );
+      startAttempted = true;
       await bounded(
         Promise.resolve().then(() => session.send('Profiler.start')),
         timeoutMs,
         'Import CPU profile start timed out',
       );
     } else {
+      startAttempted = true;
       await bounded(
         Promise.resolve().then(() =>
           session.send('HeapProfiler.startSampling', {
@@ -246,15 +358,42 @@ export async function startImportLoadProfile(
         'Import heap profile start timed out',
       );
     }
-    started = true;
   } catch (error) {
+    const cleanupErrors = [];
+    if (startAttempted) {
+      try {
+        const method =
+          mode === 'cpu' ? 'Profiler.stop' : 'HeapProfiler.stopSampling';
+        await bounded(
+          Promise.resolve().then(() => session.send(method)),
+          cleanupTimeoutMs,
+          'Partial import profile stop timed out',
+        );
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
+    if (enableAttempted) {
+      try {
+        await bounded(
+          Promise.resolve().then(() => session.send(`${domain}.disable`)),
+          cleanupTimeoutMs,
+          'Partial import profile disable timed out',
+        );
+      } catch (cleanupError) {
+        cleanupErrors.push(cleanupError);
+      }
+    }
     try {
       await detach();
     } catch (cleanupError) {
-      error.profileCleanupError = String(
-        cleanupError?.message || cleanupError,
-      ).slice(0, 240);
+      cleanupErrors.push(cleanupError);
     }
+    if (cleanupErrors.length && error && typeof error === 'object')
+      error.profileCleanupError = cleanupErrors
+        .map((cleanupError) => String(cleanupError?.message || cleanupError))
+        .join('; ')
+        .slice(0, 240);
     throw error;
   }
 
@@ -276,16 +415,14 @@ export async function startImportLoadProfile(
       } catch (error) {
         stopError = error;
       } finally {
-        if (started) {
-          try {
-            await bounded(
-              Promise.resolve().then(() => session.send(`${domain}.disable`)),
-              cleanupTimeoutMs,
-              'Import profile disable timed out',
-            );
-          } catch (error) {
-            stopError ||= error;
-          }
+        try {
+          await bounded(
+            Promise.resolve().then(() => session.send(`${domain}.disable`)),
+            cleanupTimeoutMs,
+            'Import profile disable timed out',
+          );
+        } catch (error) {
+          stopError ||= error;
         }
         try {
           await detach();
@@ -299,14 +436,18 @@ export async function startImportLoadProfile(
           ? (() => {
               const { profile: _boundedProfile, ...cpuSummary } =
                 summarizeCpuProfile(profile);
-              return cpuSummary;
+              return {
+                ...cpuSummary,
+                recomputation:
+                  'Raw CPU node/sample arrays are omitted; the top-callsite summary cannot reconstruct the complete profile.',
+              };
             })()
           : summarizeImportHeapProfile(profile);
       return {
         ...summary,
         mode,
         samplingInterval: mode === 'cpu' ? 1000 : 16_384,
-        profileScope: 'single warmed cooperative load only',
+        profileScope: IMPORT_LOAD_PROFILE_SCOPE,
         performanceAcceptanceEligible: false,
       };
     },
