@@ -1,0 +1,161 @@
+{
+  "testedCommit": "f5cd245b1d878b51af190be83fc17620e0a62b22",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38143057626",
+  "outcome": "passed",
+  "reportSha256": "a8a19db029a77639db3fefdeca896cec3334f55795a4d03a9edefc986880f2fd",
+  "sourceProvenanceVerified": true,
+  "sourceFilesVerified": 39,
+  "imageAudit": {
+    "independentDecode": true,
+    "images": 20,
+    "matchedPairs": 10,
+    "pairs": [
+      {
+        "suite": "latency",
+        "index": 0,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "latency",
+        "index": 1,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "latency",
+        "index": 2,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "latency",
+        "index": 3,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "latency",
+        "index": 4,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "memory",
+        "index": 0,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "memory",
+        "index": 1,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "memory",
+        "index": 2,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "memory",
+        "index": 3,
+        "pixelsEqual": true
+      },
+      {
+        "suite": "memory",
+        "index": 4,
+        "pixelsEqual": true
+      }
+    ]
+  },
+  "benefitAccepted": false,
+  "hardwareValidated": false,
+  "environment": {
+    "appCommit": "f5cd245b1d878b51af190be83fc17620e0a62b22",
+    "harnessCommit": "f5cd245b1d878b51af190be83fc17620e0a62b22",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "viewport": {
+      "width": 1200,
+      "height": 1000,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 960,
+      "height": 640
+    },
+    "layers": [],
+    "graphics": {
+      "featureStatus": {
+        "webgl": "enabled",
+        "webgl2": null,
+        "gpu_compositing": "enabled",
+        "opengl": "enabled_on"
+      },
+      "devices": [
+        {
+          "vendor": "Google Inc. (Apple)",
+          "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+          "driver": "26.6.2"
+        }
+      ]
+    },
+    "rendererClass": {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  },
+  "summary": {
+    "populationReadyMs": {
+      "baseline": 683.7000000000116,
+      "candidate": 672.2999999999884,
+      "changePercent": -1.6673979815742368,
+      "pairedChangePercent": [
+        16.698037106750952,
+        -5.296520636714142,
+        -11.167740968369976,
+        -2.1397105097509805,
+        19.175076788061208
+      ]
+    },
+    "readyFrameMs": {
+      "baseline": 6617.5,
+      "candidate": 6961.700000000012,
+      "changePercent": 5.201360030223068,
+      "pairedChangePercent": [
+        -26.839023289679965,
+        -1.654235181104624,
+        -13.05905085065251,
+        -5.0787871178350485,
+        10.18511522478278
+      ]
+    },
+    "enabledJsHeapDeltaBytes": {
+      "baseline": 139357364,
+      "candidate": 124728988,
+      "changePercent": -10.497024039576408,
+      "pairedChangePercent": [
+        -10.381298544079808,
+        -10.305575046519778,
+        -10.397734943209302,
+        -10.636581261651045,
+        -10.397773036500645
+      ]
+    }
+  },
+  "ownership": {
+    "trials": 20,
+    "expectedWarmedBaseline": {
+      "dataSources": 0,
+      "primitives": 1,
+      "groundPrimitives": 1
+    },
+    "layerTeardownMatchesBaseline": true,
+    "remainingLayerListeners": 0,
+    "remainingLayerCollections": 0,
+    "viewersDestroyed": true
+  },
+  "limits": [
+    "Five separate forced-GC pairs show an enabled JS-heap delta reduction of 10.50%; this metric excludes native and GPU allocations.",
+    "Population-ready median changes -1.67% and ready-frame median +5.20%; paired timings vary. No accepted activation speedup.",
+    "Prior failed cold-baseline report remains failed; its timing conditions are not pooled with this warmed run.",
+    "Apple paravirtual Metal on a free hosted runner is supplemental evidence, not physical Windows or Mac desktop coverage.",
+    "No motion p95, full-app mixed-layer equivalence or 60-minute retained-heap plateau claim. Default Entity rendering remains unchanged."
+  ]
+}

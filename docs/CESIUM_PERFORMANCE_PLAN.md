@@ -4061,3 +4061,28 @@ is 10.69% lower across five pairs. These are diagnostic results with an invalid
 baseline, not an accepted activation or stability improvement. Default Entity
 rendering remains in place. No physical Windows, motion p95, GPU-memory, or
 60-minute retention claim follows from this hosted run.
+
+### Cable warmed-baseline result — 11 October 2026
+
+[Run 38143057626 at `f5cd245`](performance-evidence/s54-cable-benefit-38143057626/review.json)
+passes the corrected report contract. Root independently verified the exact
+commit's 39 source hashes and decoded all twenty PNGs: ten Entity/collection
+pairs match exactly. All twenty trials restore source, geometry, style and
+native point/stem picking through two visibility cycles. Layer teardown returns
+to the warmed display baseline with zero owned listeners or reference
+collections; every viewer, browser context and server is then released.
+
+Five separate forced-GC pairs reduce the median enabled JS-heap delta from
+139,357,364 to 124,728,988 bytes (10.50%), with each pair improving 10.31–10.64%.
+This supports a hosted JS-memory reduction at these settings. It does not
+measure GPU/native memory. Population-ready median changes from 683.7 to
+672.3 ms (-1.67%); first-three-ready-frame median changes from 6,617.5 to
+6,961.7 ms (+5.20%). Individual timings vary, so no activation speedup is
+accepted. The previous cold-baseline failure remains failed and is not pooled
+with this corrected run.
+
+Code and focused automated correctness are implemented and validated for this
+cable experiment. Final benefit acceptance and default rollout remain pending:
+Apple paravirtual Metal / Chrome 152 is supplemental hosted evidence, and
+physical Windows validation, mixed-layer behavior and long-run retention remain
+separate gates. Entity rendering stays the default.
