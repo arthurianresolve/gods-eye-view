@@ -263,7 +263,7 @@ test('CPU profile URL allowlist treats relative and local absolute paths equally
   const profileData = profile();
   profileData.nodes = [
     '/scripts/fixture.js',
-    '/scripts/fixture.js',
+    'http://127.0.0.1:4173/scripts/fixture.js',
     '/src/app.js',
     '/@fs/C:/Users/Privat/private.js',
     'http://127.0.0.1:4173/@fs/C:/Users/Privat/private.js',
@@ -280,6 +280,14 @@ test('CPU profile URL allowlist treats relative and local absolute paths equally
   profileData.samples = [1, 2, 3, 4, 5];
   profileData.timeDeltas = [400, 400, 400, 400, 400];
   const normalized = normalizeCpuProfile(profileData);
+  assert.equal(
+    normalized.profile.nodes[0].callFrame.url,
+    '/scripts/fixture.js',
+  );
+  assert.equal(
+    normalized.profile.nodes[1].callFrame.url,
+    '/scripts/fixture.js',
+  );
   assert.ok(
     normalized.topLocations.some(
       (entry) => entry.url === '/scripts/fixture.js',
