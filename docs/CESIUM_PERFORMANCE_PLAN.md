@@ -3934,3 +3934,26 @@ rises from 15.94 to 27.23 ms and 16.12 to 30.98 ms respectively (about 71% and 9
 This identifies an unresolved scheduling/completion trade-off; it is not an
 accepted activation improvement, browser interaction result or GPU comparison.
 Single-feature preparation and raw document decoding therefore remain S59 gaps.
+
+### S51 extended fleet cadence decision - 11 October 2026
+
+[Run 38145590633](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38145590633)
+compared baseline `e6ab561ad0e77a49219627e97573199f1db0af62` with
+`b560278b0b523709e713883490a6d607708b0cda`, using five alternating pairs
+with 30 seconds warmup and 60 seconds measurement. The extended protocol failed
+the unchanged cadence gate. Civil p95 regressed by more than 10% in pairs 2-5;
+military p95 did so in pairs 2, 4 and 5. Median run-level p95 increased 17.61%
+for civil and 14.28% for military aircraft despite 56.29% median frame reduction.
+
+Reject this fleet scheduling candidate for promotion to dev. Lower frame counts
+are not a benefit when delivery cadence fails the preservation contract. Keep
+the current continuous fleet behavior until a separately measured approach
+preserves cadence; no acceptance threshold or source age was relaxed.
+
+The independent review verified 3,189 source-file hashes against the exact Git
+objects and six fixture hashes, decoded 360 canvas/framebuffer PNGs and found
+exact parity at all fixed-time poses, including repeat controls. Both servers
+and the browser exited cleanly. The [review](performance-evidence/s51-fleet-extended-38145590633/review.json)
+links the unchanged compressed raw report with hashes. This hosted paravirtual
+Metal component result is not full-application or physical Windows evidence.
+S51 overall acceptance and the remaining S47-S60 work remain incomplete.
