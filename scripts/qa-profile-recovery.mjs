@@ -53,14 +53,21 @@ import {
 } from './performance/earlyCesiumRendererProbe.mjs';
 
 import { summarizeShutdownTrace } from './performance/shutdownTrace.mjs';
+import { observeWindowsOwnedProcess } from './performance/windowsProcessSample.mjs';
 
 const shutdownTracing = process.env.GEV_QA_SHUTDOWN_TRACE === '1';
+const shutdownProcessSampling =
+  process.env.GEV_QA_SHUTDOWN_PROCESS_SAMPLE === '1';
 if (
-  shutdownTracing &&
+  (shutdownTracing || shutdownProcessSampling) &&
   (process.env.GITHUB_ACTIONS !== 'true' || process.platform !== 'win32')
 )
   throw new Error(
     'Shutdown tracing is limited to the hosted Windows diagnostic.',
+  );
+if (shutdownTracing && shutdownProcessSampling)
+  throw new Error(
+    'Run native process sampling separately from Chromium tracing.',
   );
 
 const postTimeoutObservationMs = validateRecoveryCloseObservationMs(
@@ -536,16 +543,38 @@ async function reopen(label, { seed = false } = {}) {
       forcedProcessTermination: false,
       observation: null,
     };
+    let processObserver = null;
+    if (shutdownProcessSampling && browser) {
+      try {
+        processObserver = await observeWindowsOwnedProcess(browser.process());
+      } catch (error) {
+        pageOwnership.processObservation = {
+          status: 'unavailable',
+          reason: sanitizeDiagnosticText(error.message, 240),
+        };
+      }
+    }
     try {
-      if (browser)
+      if (browser) {
+        processObserver?.start();
         browserClose = await closeRecoveryBrowser(browser, {
           forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
           closeTrace: browserCloseTrace,
           postTimeoutObservationMs,
         });
+      }
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);
+      if (processObserver)
+        pageOwnership.processObservation = await processObserver.finish();
     }
+    if (
+      shutdownProcessSampling &&
+      pageOwnership.processObservation?.status !== 'observed'
+    )
+      cleanupError ||= new Error(
+        'Owned-process shutdown observation is unavailable.',
+      );
     if (shutdownTracePath) {
       try {
         const traceStat = await stat(shutdownTracePath);
@@ -742,6 +771,7 @@ try {
     browserVersion,
     postTimeoutObservationMs,
     shutdownTracing,
+    shutdownProcessSampling,
     closeRepetitionPlan,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.

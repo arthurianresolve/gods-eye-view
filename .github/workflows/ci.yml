@@ -30,6 +30,10 @@ on:
         description: Instrument Windows shutdown separately from ordinary recovery evidence
         type: boolean
         default: false
+      shutdown_process_sample:
+        description: Sample only the owned Windows browser process during shutdown (diagnostic)
+        type: boolean
+        default: false
       full_soak:
         description: Run the 60-minute rendered application acceptance soak
         type: boolean
@@ -285,6 +289,7 @@ jobs:
       GEV_QA_CLOSE_REPETITIONS: ${{ inputs.validation_mode == 'windows-profile-recovery' && '8' || '0' }}
       # Separate attribution run; no trace timing is performance acceptance.
       GEV_QA_SHUTDOWN_TRACE: ${{ inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_trace == true && '1' || '0' }}
+      GEV_QA_SHUTDOWN_PROCESS_SAMPLE: ${{ inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_process_sample == true && '1' || '0' }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0

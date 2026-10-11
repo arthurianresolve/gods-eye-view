@@ -4074,3 +4074,27 @@ do not claim that a root cause or fix has been established by this trace.
 Shutdown tracing now requires the explicit `shutdown_trace` dispatch option.
 Its default is false so the normal bounded repetition diagnostic continues to
 collect uninstrumented close evidence. No acceptance deadline has changed.
+
+### Windows shutdown process observation — 11 October 2026
+
+The optional `shutdown_process_sample` dispatch adds a separate bounded native
+observer for the owned browser parent process. It starts after the application
+page closes and opens a handle to that exact process, then samples process CPU
+time and aggregate thread states at 100 ms waits. It never reads command lines,
+file paths, stacks or other processes. It stops after exit, 200 samples or
+25 seconds, whichever comes first; output is capped at 256 KiB. The observer
+never terminates the browser. Existing five-second close failure and bounded
+post-timeout cleanup retain their original behavior.
+
+The diagnostic uses [.NET process CPU time](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.totalprocessortime)
+and [thread wait reasons](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processthread.waitreason).
+Sampled CPU time is distinct from wall time; wait labels do not identify a
+blocking stack or prove a cause. The helper has its own monotonic clock, with
+startup overhead and first-sample receipt delay recorded. Its timestamps are
+not assumed to align exactly with the host's Browser.close trace. Missing
+observations stay unavailable and fail the requested diagnostic.
+
+This mode is mutually exclusive with Chromium shutdown tracing and disabled
+by default. Focused validation includes a real disposable Node process on
+Windows, without controlling any local browser. Hosted reproduction, attribution
+of the intermittent delay and an independently validated fix are still pending.
