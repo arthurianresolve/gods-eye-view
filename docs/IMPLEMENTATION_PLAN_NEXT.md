@@ -1,16 +1,20 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
-11 October follow-up: [standard integration at `1a8d4928`](performance-evidence/import-point-current-dev/README.md)
-passes all seven executed jobs and fifteen three-OS saved-profile checks.
-Collection lifecycle and teardown also pass at `fca2f991`; its 60-minute hosted
-soak is still running in `38162032244`.
-The [60-minute hosted retention result at `26f383ed`](performance-evidence/hosted-soak-38155558706/README.md)
-completes 252 cycles with stable application-resource counts and 1.568% maximum
-final-window heap growth. This is supplemental hosted Apple paravirtual Metal
-evidence from an older candidate, with raw harness/cleanliness fields absent.
-S44/S46 remain pending for the final candidate and primary physical Windows
-machine. Older results below are historical and do not substitute for that work.
+11 October checkpoint: [current dev `ba7c8738`](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
+passes all seven standard jobs, including full Node 24/26 validation and
+Windows/Linux/macOS installation recovery. The corrected [60-minute hosted soak](performance-evidence/hosted-soak-38167171204/README.md)
+at `7cea7aac` completes 252 mixed-use cycles; 40 resource gauges remain constant
+at 13 post-GC checkpoints, listeners remain 629, pending workers drain, and
+maximum final-window heap growth is 1.937%. Both browsers exit naturally within
+the existing five-second deadline. The exact report includes clean application
+and harness identities and shutdown evidence.
 
+This closes the point-integration supplemental retention gate and replaces no
+historical result. The prior `fca2f991` soak lacked shutdown evidence and remains
+incomplete. S44/S46 still require final-candidate and primary physical Windows
+acceptance; hosted Apple paravirtual Metal is supplemental. The historical
+ledger below retains each earlier check's scope; current performance work is
+tracked in [S47-S60](CESIUM_PERFORMANCE_PLAN.md).
 
 Status: Automated checkpoint on 11 October 2026 at
 `167ba62c047fe94f36d0d60066aa4d648ede7519`. Code, automated results and external

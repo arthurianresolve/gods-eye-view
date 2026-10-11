@@ -1,0 +1,5 @@
+# Preserved failed diagnostic 38171616725
+
+[Exact hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38171616725). Original performance-build-smoke.json SHA-256: `d9fae88586ff21fd116307b1f5252a81c961a15726025080bfe2f9975a5eacf3`.
+
+Atomic worker audit succeeds with all 12 created bodies validated and the registry cleared. The run then fails before any sample because probe-listener removal is queued in the busy scene and misses its one-second cleanup bound. Repeating that cleanup in finally fails again. Startup observer reads total 1.3 ms; the early identity query takes 12.9 ms. Fix 6d837e4d disposes a completed fixture document through its existing owner before recording its probe as released, rather than sending listener-removal work to a target being discarded. Open-page recovery cleanup retains its explicit-removal behavior. Closed-document evidence is labeled separately, and failed/unconfirmed close still fails. Seventy-nine focused checks pass. [Follow-up 38172276737](../s47-probe-disposal-38172276737/README.md) confirms both page disposals but fails at the warmup render deadline; no performance acceptance is claimed.

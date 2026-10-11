@@ -1,0 +1,206 @@
+{
+  "schema": "gev-import-geometry-load-profile/v1",
+  "status": "failed",
+  "mode": "heap",
+  "arm": "whole-feature-timer",
+  "geometryType": "LineString",
+  "timestamp": "2026-10-11T20:37:59.963Z",
+  "performanceAcceptanceEligible": false,
+  "source": {
+    "applicationCommit": "20f5e257412788e7ccba7b4b83fd0b0413ea0398",
+    "harnessCommit": "20f5e257412788e7ccba7b4b83fd0b0413ea0398",
+    "sourceDirtyAtStart": false,
+    "harnessDirtyAtStart": false,
+    "sourceChangedDuringRun": false,
+    "harnessChangedDuringRun": false,
+    "hashes": {
+      "runtimeLayerSha256": "1e0a1f2010facb76760581f4f4ae1bbbad758e57f5b82dd9775305c7a1235fcd",
+      "cooperativeSha256": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+      "fixtureSha256": "06fb0dd1331beb7c6d8eb705e4e051735d528af142bc20382aacae35761f673a",
+      "fixtureHtmlSha256": "c214a9bcdad6f13ce9c75d9369eb5d328b8be526b2907788681ebd737e673873",
+      "viteEntryConfigSha256": "fda61ef04f9cbfdcef020a4c2d2c6c2d9f6fbbe8cde6e11bf291be603732edc7",
+      "viteConfigSha256": "280d30fac59f57a865ab19ef2f13f26802b121dc89cb704c602094794ff7cf62",
+      "runnerSha256": "853ba74682389c3011011a8fe61aad27762f7be7fb74c414a62b4ff1f5dca5d6",
+      "profileHelperSha256": "21cdfd86b91236d7694875c5b4b6cc54f6b43982a90c487562f76caf708c6f12",
+      "cpuHeapHelperSha256": "1785ef0f1bed3d890569db17e5d8b052eefd17e7ba80fc16bb669c93186f353c",
+      "traceHelperSha256": "ee910fba342c55c2ebdedae36fc19d1fc76510d8722d1af67f4ea8f6812406d4",
+      "traceSummarySha256": "90566645f6da8308766dddec5a26a25409d81495d8be98a51d130b23f61e6b26",
+      "sampledCpuProfileSha256": "b2448414b5c183ea6468723d083c870683a0651df086242da7b6efdc3b8878af",
+      "rendererEvidenceSha256": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+      "pageOwnershipSha256": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+      "sourceProvenanceSha256": "3736bf76178578ce5d3f6bff37c590609057a46f994f3120f9316f580bfed7c9",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "06965275ff39485bfdf76a10b60b7e245cb6e928225287bbd97c83c49e2d79af",
+      "cesiumSceneSha256": "df48862a64670bed7379acbd1401d47e8ab2015cfcd83ff33b4497acc6161f12"
+    },
+    "dirtyAtStart": false,
+    "hashesAtFinish": {
+      "runtimeLayerSha256": "1e0a1f2010facb76760581f4f4ae1bbbad758e57f5b82dd9775305c7a1235fcd",
+      "cooperativeSha256": "39ed1a43bed94166c8d56e33d04d8633a04071358476985f740dddb888e43a7b",
+      "fixtureSha256": "06fb0dd1331beb7c6d8eb705e4e051735d528af142bc20382aacae35761f673a",
+      "fixtureHtmlSha256": "c214a9bcdad6f13ce9c75d9369eb5d328b8be526b2907788681ebd737e673873",
+      "viteEntryConfigSha256": "fda61ef04f9cbfdcef020a4c2d2c6c2d9f6fbbe8cde6e11bf291be603732edc7",
+      "viteConfigSha256": "280d30fac59f57a865ab19ef2f13f26802b121dc89cb704c602094794ff7cf62",
+      "runnerSha256": "853ba74682389c3011011a8fe61aad27762f7be7fb74c414a62b4ff1f5dca5d6",
+      "profileHelperSha256": "21cdfd86b91236d7694875c5b4b6cc54f6b43982a90c487562f76caf708c6f12",
+      "cpuHeapHelperSha256": "1785ef0f1bed3d890569db17e5d8b052eefd17e7ba80fc16bb669c93186f353c",
+      "traceHelperSha256": "ee910fba342c55c2ebdedae36fc19d1fc76510d8722d1af67f4ea8f6812406d4",
+      "traceSummarySha256": "90566645f6da8308766dddec5a26a25409d81495d8be98a51d130b23f61e6b26",
+      "sampledCpuProfileSha256": "b2448414b5c183ea6468723d083c870683a0651df086242da7b6efdc3b8878af",
+      "rendererEvidenceSha256": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+      "pageOwnershipSha256": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+      "sourceProvenanceSha256": "3736bf76178578ce5d3f6bff37c590609057a46f994f3120f9316f580bfed7c9",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "06965275ff39485bfdf76a10b60b7e245cb6e928225287bbd97c83c49e2d79af",
+      "cesiumSceneSha256": "df48862a64670bed7379acbd1401d47e8ab2015cfcd83ff33b4497acc6161f12"
+    }
+  },
+  "fixture": {
+    "applicationCommit": null,
+    "harnessCommit": null,
+    "geometry": "s59-50k-line-polygon/v1",
+    "profileWindow": "actual-load-async-call-and-runtime-phase-observers",
+    "captureAfterProfileStop": true
+  },
+  "environment": null,
+  "profile": null,
+  "fixtureResult": {
+    "schema": "gev-import-geometry-load-profile/v1",
+    "status": "failed",
+    "applicationCommit": "20f5e257412788e7ccba7b4b83fd0b0413ea0398",
+    "harnessCommit": "20f5e257412788e7ccba7b4b83fd0b0413ea0398",
+    "arm": "whole-feature-timer",
+    "chunkSize": 0,
+    "fixture": "s59-50k-line-polygon/v1",
+    "phases": [],
+    "renderErrors": [],
+    "schedulerKind": "setTimeout",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "canvas": {
+        "cssWidth": 960,
+        "cssHeight": 640,
+        "drawingBufferWidth": 960,
+        "drawingBufferHeight": 640
+      },
+      "sceneMode": 3,
+      "renderLoop": true,
+      "requestRenderMode": false,
+      "globeShow": true,
+      "terrainProvider": "EllipsoidTerrainProvider",
+      "imageryLayerCount": 0,
+      "clockCurrentTime": "2025-01-01T00:00:00.000Z",
+      "clockShouldAnimate": false,
+      "cameraPosition": [
+        -686390.040485531,
+        -5590198.274425677,
+        3230373.7353836372
+      ],
+      "cameraDirection": [
+        0.1055386661162648,
+        0.8595434583972056,
+        -0.5000466309065296
+      ],
+      "drawingBufferWidth": 960,
+      "drawingBufferHeight": 640,
+      "msaa": true,
+      "webglContextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      }
+    },
+    "diagnosticMode": "geometry-load-profile",
+    "profileMode": "heap",
+    "geometryType": "LineString",
+    "profileStatus": "aborted",
+    "profileStartedAtMs": null,
+    "profileStoppedAtMs": null,
+    "samples": [],
+    "traceAnchor": {
+      "name": "gev-import-step:geometry-profile:LineString",
+      "pageNowMs": 6661.649999999994,
+      "uncertaintyMs": 2.900000000023283,
+      "capturePhase": "before-profiler-start"
+    },
+    "error": "Diagnostic did not capture.",
+    "stack": "Error: Diagnostic did not capture.\n    at check (http://127.0.0.1:4191/scripts/fixtures/import-geometry-wake.js:42:25)\n    at run (http://127.0.0.1:4191/scripts/fixtures/import-geometry-wake.js:807:5)\n    at async http://127.0.0.1:4191/scripts/fixtures/import-geometry-wake.js:833:3"
+  },
+  "pageErrors": [],
+  "error": "Trace clock calibration exceeds the 2 ms uncertainty limit.",
+  "cleanupError": null,
+  "traceAnchor": {
+    "name": "gev-import-step:geometry-profile:LineString",
+    "pageNowMs": 6661.649999999994,
+    "uncertaintyMs": 2.900000000023283,
+    "capturePhase": "before-profiler-start"
+  },
+  "failureTraceInput": {
+    "events": [
+      {
+        "kind": "marker",
+        "name": "gev-import-step:geometry-profile:LineString",
+        "tsUs": 190995093,
+        "pid": 2561,
+        "tid": 11412
+      }
+    ],
+    "flowEvents": [],
+    "relevantCount": 1,
+    "omittedCount": 0,
+    "flowEventCount": 0,
+    "flowPhaseCounts": {
+      "s": 0,
+      "t": 0,
+      "f": 0
+    },
+    "flowOmittedCount": 0,
+    "invalidFlowIdentityCount": 0,
+    "invalidFlowRecordCount": 0,
+    "omissionReasons": {},
+    "bufferUsagePeak": null,
+    "bufferUsageCount": 0,
+    "bufferUsageStatus": "unavailable",
+    "completionObserved": true,
+    "dataLossOccurred": false,
+    "stopError": null
+  },
+  "pageCleanup": {
+    "closeCompleted": true,
+    "openPageCount": 0
+  },
+  "browserCleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 16998.624791,
+      "closeSettledHostMs": 18137.502458,
+      "closeElapsedMs": 1138.8776670000007,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1098.0702500000007
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "serverCleanup": {
+    "confirmed": true,
+    "reason": "exit-observed"
+  }
+}

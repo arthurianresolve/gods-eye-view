@@ -1,21 +1,51 @@
 # Cesium performance plan
 
-S47/S59 diagnostic checkpoint (11 October 2026): early renderer identity reuse
-at `681e704a` reduces recorded observer reads to 0.7-1.4 ms from the prior
-2.1-4.1 seconds. Four samples complete before the unchanged child deadline;
-this [failed run](performance-evidence/s47-early-probe-38170201283/README.md)
-remains incomplete. Timing-window isolation at `e9ebce8b` passes 90 focused
-checks. Its [hosted run](performance-evidence/s47-window-38171176892/README.md)
-finds a diagnostic worker-audit race before sampling. Fix `c266634f` freezes
-all audit boundaries atomically; 109 focused checks pass, and exact-SHA smoke
-`38171616725` is pending. No hardware or full-scene speedup is claimed.
+Current dev checkpoint (11 October 2026): point integration is pushed at
+`ba7c8738b8505244be06d0f0e3bd873e02d6b2ca`. [All seven standard CI jobs](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
+pass on that exact revision: Node 24/26 suites and builds, three-OS recovery,
+Windows onboarding, and browser journeys. The corrected frozen 60-minute hosted
+soak at `7cea7aac` passes its supplemental retention gate; there is no intervening
+runtime change in the promoted point integration. Physical Windows and final
+performance acceptance remain pending.
 
-The S59 flow records now retain identity, but [run 38170388678](performance-evidence/s59-load-profile-38170388678/README.md)
-fails because a short trace has no periodic buffer sample. Follow-up `15f00672`
-retains the protocol's explicit completion/data-loss witness while keeping
-missing buffer telemetry unavailable and malformed payloads failed. Twenty-nine
-focused checks pass; CPU diagnostic `38171589957` is pending. Historical
-incomplete reports remain failed and no geometry prototype is accepted.
+S47 diagnostics: [atomic worker audit](performance-evidence/s47-atomic-audit-38171616725/README.md)
+and [probe document disposal](performance-evidence/s47-probe-disposal-38172276737/README.md)
+now complete, but the latter run fails waiting for a warmup render. Follow-up
+`abb5c3d5` adds bounded held-boundary progress events; its run stops earlier on a
+fixture interception error. [Cause capture at `d081a114`](performance-evidence/s47-fixture-cause-38173405378/README.md)
+identifies a queued callback using Fetch after its document owner disabled it.
+`c9447d40` disposes interception callbacks before protocol teardown; 56 focused
+checks pass. Exact smoke `38173706259` is pending. No completed matched captures
+or speedup are established.
+
+S59 attribution: the [CPU/GC diagnostic at `d91e0873`](performance-evidence/s59-load-profile-38172396175/README.md)
+passes independent recomputation; coordinate conversion takes 14.6 ms of the
+20.8 ms instrumented load. Heap profiling exposed imprecise console clock
+anchors. [The first failure](performance-evidence/s59-load-profile-38172541874/README.md)
+records 24.6 ms uncertainty; [pre-profiler calibration](performance-evidence/s59-load-profile-38172977669/README.md)
+still records 2.9 ms and remains failed. Explicit-start User Timing marks now
+retain independently checkable trace start times and bounded raw profiles.
+`552d1144` accounts for a one-ULP JSON timestamp difference observed at `a8fbb007`,
+with 33 focused checks passing. The [exact heap diagnostic](performance-evidence/s59-load-profile-38173470721/README.md)
+passes independent tree, sample-ownership, digest, trace-overlap and cleanup
+checks. Its instrumented load takes 24 ms, including 17.8 ms coordinate
+conversion; 463 allocation samples concentrate in position/Cartesian conversion.
+The [CPU mode rerun](performance-evidence/s59-load-profile-38173617763/README.md)
+also passes on the same harness. Its instrumented times vary; no performance
+comparison is inferred from these diagnostic runs.
+These QA branches contain rejected geometry prototypes and are not merged into
+dev; none of these profiles is performance acceptance.
+
+S50 source ownership at QA commit `0258bdf2`: mesh-floor cells are scoped to the
+actual tileset identity. In-flight switches suspend reads; settled events cover
+silent activation and failed recovery. CCTV invalidates only live mesh-derived
+ground/probe values, preserves independent DEM/shipped samples, rejects stale
+footprint results, and defers obstruction probes until the replacement is ready.
+Deactivation/manual range changes cancel pending probes. Focused checks,
+formatting and package boundaries pass. [Rendered CCTV and terrain/picking jobs](performance-evidence/s50-surface-owner/README.md)
+pass at that exact revision, with five stable CCTV reuse cycles and all 171
+terrain workers completed. They are software-rendered lifecycle evidence;
+production promotion awaits integrated standard CI and does not close full S50.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
@@ -30,8 +60,8 @@ line pairs and four of five polygon pairs regress by more than 10%). Its thirty
 decoded images remain identical; it is recorded in the same evidence packet.
 Separate active-cost profiling is the next step, with neither prototype merged.
 
-Current checkpoint (11 October 2026): point collection integration is accepted
-for promotion after the corrected frozen soak at `7cea7aac`. All 252 cycles
+Point collection integration was promoted after the corrected frozen soak
+at `7cea7aac`. All 252 cycles
 complete; 40 gauges remain constant at 13 post-GC checkpoints, listeners stay
 629, all workers drain, and maximum final-window heap growth is 1.937%. Both
 browser owners close naturally within five seconds. [Raw evidence and independent review](performance-evidence/hosted-soak-38167171204/README.md)

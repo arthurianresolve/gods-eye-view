@@ -1,0 +1,16 @@
+{
+  "schema": "gev-geometry-profile-review/v1",
+  "sourceSha256": "e0f1451f8d03ce35fc62b4a93fc6f0658bfd0ed7bf083af782a6f58cd4950aea",
+  "validatorCommit": "d91e0873989d99ede54c3a0455934787e7c0e489",
+  "validator": {
+    "valid": true,
+    "errors": []
+  },
+  "rawInputSha256": "5e7cd1b98256458909add1cea9178e75135a62a4adfdf1f0db86843159448ebc",
+  "traceInputSha256": "fdc563f9f731d578d5cd650f1eb75563f41d65f6ceb78c5cc721e5df94e7ad65",
+  "independentSampleWeightMs": 106.125,
+  "independentSampleCount": 17,
+  "knownGeometryHash": true,
+  "cleanupComplete": true,
+  "performanceAcceptanceEligible": false
+}
