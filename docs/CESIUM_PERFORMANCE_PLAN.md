@@ -17,8 +17,17 @@ Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
 Point integration passes all seven standard jobs and fifteen recovery stages at
 `1a8d4928`. Frozen candidate `fca2f991` also passes collection-specific native
 import, workspace replacement, cancellation and supersession checks, including
-the enforced teardown census. Its 60-minute hosted soak remains in progress in
-run `38162032244`. [Integration evidence and scope](performance-evidence/import-point-current-dev/README.md).
+the enforced teardown census. Its 60-minute hosted soak completes 252 cycles,
+with all 40 resource gauges unchanged and 1.183% maximum final-window heap growth.
+Missing browser-shutdown observations keep that envelope pending. The ownership
+reporting fix `7cea7aac` passes 84 focused tests; corrected run `38167171204` and
+standard CI `38167173641` are in progress before promotion.
+[Raw report and reporting fix](performance-evidence/hosted-soak-38162032244/README.md).
+
+S47 stage diagnostic `38165977957` fails at the unchanged child deadline during
+the fourth sample's layer/camera setup. The first three worker audits finish;
+the new evidence does not establish an audit stall. Dense SwiftShader setup and
+render delays need further attribution. [Preserved failure](performance-evidence/s47-stage-diagnostic-38165977957/README.md).
 
 S60 ingestion now accepts complete hosted soak envelopes at `f07ad0cf`, preserving
 the outer outcome, cleanup and exact artifact digest. Missing provenance stays
@@ -42,7 +51,7 @@ The imported-point collection candidate passes five current-dev hosted pairs at
 five pairs (median paired change -56.9%); independent decoding confirms 55 exact
 image pairs and matching native picks. The asynchronous application import path
 now selects this renderer on the QA branch; current-candidate soak review remains
-pending before promotion.
+pending before promotion because the frozen soak lacks shutdown observations.
 [Raw comparison and limits](performance-evidence/import-point-current-dev/README.md)
 record slower synchronous capture waits separately. This is not full S59/S60,
 capture-speed, physical Windows or retained-heap acceptance.

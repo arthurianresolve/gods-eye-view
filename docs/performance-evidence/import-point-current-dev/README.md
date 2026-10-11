@@ -177,6 +177,10 @@ shutdown takes 60.71 ms without forced termination. An offline copy containing
 one extra cleanup primitive is rejected. This directly exercises the final
 teardown assertion and does not relabel the older observer failure.
 
-The 60-minute hosted soak of this frozen candidate is still running in
+The 60-minute hosted soak of this frozen candidate completes 252 cycles in
 [run 38162032244](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38162032244).
-No result is claimed until its original report and cleanup have been reviewed.
+Its 40 application resource gauges remain unchanged and maximum retained-heap
+growth over the final window is 1.183%. Its raw envelope omits browser cleanup,
+so candidate ingestion correctly remains pending. The reporting handoff is fixed
+at `7cea7aac`; a corrected run is in progress. [Original evidence and review](../hosted-soak-38162032244/README.md)
+keep measurement results separate from acceptance and physical Windows coverage.

@@ -13,7 +13,16 @@ with 55 exact image pairs and matching native picks. [Full results and limits](p
 include slower synchronous capture waits; no full-scene motion claim is made.
 Integration CI and fifteen recovery stages pass at `1a8d4928`; collection-specific
 lifecycle and teardown validation pass at `fca2f991`. The frozen candidate's
-60-minute hosted soak (`38162032244`) is running before promotion to dev.
+60-minute hosted soak (`38162032244`) completes 252 cycles with unchanged
+ownership gauges and 1.183% maximum final-window retained-heap growth. Its
+missing browser-shutdown fields keep acceptance pending. Fix `7cea7aac` records
+both owners; a corrected run is in progress before promotion to dev.
+[Original evidence and limits](performance-evidence/hosted-soak-38162032244/README.md).
+
+S47's [stage diagnostic](performance-evidence/s47-stage-diagnostic-38165977957/README.md)
+still hits its 180-second child cap during scene setup after three samples.
+Worker audits finish; these software-rendered wall timings do not establish an
+audit stall or a Windows GPU root cause.
 
 The [historical 60-minute hosted soak](performance-evidence/hosted-soak-38155558706/README.md)
 at `26f383ed` completes 252 cycles with stable owner counts and 1.568% maximum
