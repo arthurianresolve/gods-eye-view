@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { validateImportBatchSchedulerReport } from './importBatchSchedulerReport.mjs';
+import {
+  retainImportTraceEvents,
+  summarizeImportTraceAttribution,
+} from './importTraceAttribution.mjs';
 
 const commit = 'a'.repeat(40);
 const digest = 'b'.repeat(64);
@@ -148,7 +152,6 @@ function traceAttributedReport() {
     'per-iterator-next timing with bounded V8 GC trace overlap; diagnostic-only';
   const anchors = [];
   const windows = [];
-  const summaryRows = [];
   const cooperative = report.samples.filter(
     (sample) => sample.mode === 'cooperative',
   );
@@ -191,64 +194,36 @@ function traceAttributedReport() {
       slowSteps: steps.slowStepWindows,
       omittedSlowSteps: 0,
     });
-    summaryRows.push({
-      pair: sample.pair,
-      mode: sample.mode,
-      aligned: true,
-      overBudgetSteps: 1,
-      recordedSlowSteps: 1,
-      omittedSlowSteps: 0,
-      v8GcSlicesOverlappingLoad: 0,
-      v8GcSlicesOtherThreadsOverlappingLoad: 0,
-      sameThreadGcOverlapMs: 0,
-      otherThreadGcOverlapMs: 0,
-      v8GcSlicesOverlappingSlowSteps: 0,
-      slowStepGcOverlapMs: 0,
-      traceProcessId: 1,
-      traceThreadId: 2,
-      steps: [
-        {
-          stage: 'entity',
-          markerName: stepMarker,
-          durationMs: 8,
-          aligned: true,
-          otherThreadGcSlices: 0,
-          otherThreadGcOverlapMs: 0,
-        },
-      ],
-    });
   });
+  const preparation = {
+    name: 'gev-import-step:preparation',
+    pageNowMs: 10,
+    callDurationMs: 11.7,
+    uncertaintyMs: 5.85,
+  };
+  const trace = retainImportTraceEvents(
+    [preparation, ...anchors].map((anchor) => ({
+      name: 'TimeStamp',
+      cat: 'devtools.timeline',
+      ph: 'I',
+      ts: anchor.pageNowMs * 1000,
+      pid: 1,
+      tid: 2,
+      args: { data: { message: anchor.name } },
+    })),
+  );
   report.importTraceAttribution = {
     schema: 'gev-import-trace-attribution/v2',
     performanceAcceptanceEligible: false,
     traceAnchors: anchors,
     loadingWindows: windows,
-    traceSummary: {
-      schema: 'gev-import-trace-attribution/v2',
-      complete: true,
-      performanceAcceptanceEligible: false,
-      scope:
-        'Chrome trace capture spans the entire diagnostic fixture, including setup and teardown; attribution is restricted to the six measured loading windows.',
-      categories: 'devtools.timeline,disabled-by-default-v8.gc',
-      traceEventAccounting:
-        'Counts markers, complete GC X/B-E intervals, instant observations, and s/t/f GC flow edges separately. Flow phases are non-duration links; unsupported/incomplete duration records are omitted and fail completeness.',
-      traceRelevantEvents: anchors.length,
-      retainedTraceEvents: anchors.length,
-      preparation: {
-        name: 'gev-import-step:preparation',
-        callDurationMs: 0.1,
-        uncertaintyMs: 0.05,
-      },
-      flowEventCount: 0,
-      flowPhaseCounts: { s: 0, t: 0, f: 0 },
-      omittedTraceEvents: 0,
-      bufferUsagePeak: 0.1,
-      errors: [],
-      observedMarkers: anchors.map((anchor) => anchor.name).sort(),
-      gcSlices: [],
-      gcInstantObservations: [],
-      loadingWindows: summaryRows,
-    },
+    preparation,
+    traceSummary: summarizeImportTraceAttribution({
+      trace: { ...trace, bufferUsagePeak: 0.1 },
+      anchors,
+      loadingWindows: windows,
+      preparation,
+    }),
   };
   return report;
 }
@@ -310,6 +285,12 @@ test('accepts bounded iterator-step attribution only when excluded from acceptan
 
 test('accepts complete loading trace with per-step same-trace anchors', () => {
   const report = traceAttributedReport();
+  const attribution = report.importTraceAttribution;
+  assert.ok(attribution.preparation.uncertaintyMs > 2);
+  assert.equal(
+    attribution.traceSummary.observedMarkers.length,
+    attribution.traceAnchors.length + 1,
+  );
   assert.deepEqual(validateImportBatchSchedulerReport(report, commit), {
     valid: true,
     errors: [],
@@ -343,6 +324,31 @@ test('rejects incomplete or misbound loading trace evidence', () => {
     },
     (bad) => {
       bad.importTraceAttribution.traceSummary.preparation = null;
+    },
+    (bad) => {
+      delete bad.importTraceAttribution.preparation;
+    },
+    (bad) => {
+      bad.importTraceAttribution.preparation.callDurationMs += 1;
+    },
+    (bad) => {
+      bad.importTraceAttribution.preparation.pageNowMs = 1000;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.observedMarkers =
+        bad.importTraceAttribution.traceSummary.observedMarkers.filter(
+          (name) => name !== 'gev-import-step:preparation',
+        );
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.observedMarkers.push(
+        'gev-import-step:unexpected',
+      );
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceAnchors.push(
+        bad.importTraceAttribution.preparation,
+      );
     },
     (bad) => {
       bad.importTraceAttribution.traceSummary.loadingWindows[0].steps[0].aligned = false;

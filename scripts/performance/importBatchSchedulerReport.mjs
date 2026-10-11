@@ -400,10 +400,30 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
     const anchorNames = new Set(
       array(attribution?.traceAnchors).map((anchor) => anchor?.name),
     );
+    const preparation = attribution?.preparation;
+    const preparationName = 'gev-import-step:preparation';
+    add(
+      errors,
+      preparation?.name === preparationName &&
+        finite(preparation.pageNowMs) &&
+        finite(preparation.callDurationMs) &&
+        finite(preparation.uncertaintyMs) &&
+        Math.abs(preparation.callDurationMs - preparation.uncertaintyMs * 2) <=
+          0.001 &&
+        summary?.preparation?.callDurationMs === preparation.callDurationMs &&
+        summary?.preparation?.uncertaintyMs === preparation.uncertaintyMs &&
+        !anchorNames.has(preparationName) &&
+        array(attribution?.traceAnchors).every(
+          (anchor) =>
+            finite(anchor?.pageNowMs) &&
+            anchor.pageNowMs >= preparation.pageNowMs,
+        ),
+      'loading trace preparation is missing or inconsistent',
+    );
     add(
       errors,
       anchorNames.size === array(attribution?.traceAnchors).length &&
-        JSON.stringify([...anchorNames].sort()) ===
+        JSON.stringify([...anchorNames, preparationName].sort()) ===
           JSON.stringify(array(summary?.observedMarkers).sort()) &&
         array(attribution?.loadingWindows).every(
           (window) =>
