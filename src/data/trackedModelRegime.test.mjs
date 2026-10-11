@@ -940,8 +940,8 @@ test('both layers gate the tracked-model load and record its failures', async ()
     // The reset must be reachable from the real teardown, not only a test seam.
     assert.match(source, /(?:parts\.\w+\.)?_releaseTrackedModel\(\s*,?\s*\);\n\s*(?:parts\.\w+\.)?_resetTrackedSelectionState\(\s*,?\s*\);/,
       `${name}: deselect clears the per-selection latches in the production path`);
-    assert.match(source, /(?:flightState\.)?_trackedIcao\s*=\s*icao24;\n\s*(?:parts\.\w+\.)?_resetTrackedSelectionState\(\s*,?\s*\);/,
-      `${name}: selecting a contact starts from a clean per-selection state`);
+    assert.match(source, /(?:flightState\.)?_trackedIcao\s*=\s*icao24;\n(?:\s*parts\.lifecycle\.methods\.syncRenderDemand\(\);\n)?\s*(?:parts\.\w+\.)?_resetTrackedSelectionState\(\s*,?\s*\);/,
+      `${name}: tracking reconciles render demand and starts from clean per-selection state`);
   }
 });
 

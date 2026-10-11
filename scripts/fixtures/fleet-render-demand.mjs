@@ -262,6 +262,7 @@ async function createFixture(clock) {
         };
       });
       let canvas;
+      let captured;
       try {
         canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
         check(canvas && frameOutput, `${name}: completed frame unavailable`);
@@ -273,19 +274,7 @@ async function createFixture(clock) {
         for (let i = 0; i < bytes.length; i += 4)
           if (bytes[i] > 40 || bytes[i + 1] > 40 || bytes[i + 2] > 40)
             colored++;
-        if (name !== 'disabled')
-          check(colored > 20, `${name}: fixture image is empty`);
-        else {
-          check(colored === 0, 'Disabled fleet still paints visible pixels');
-          check(
-            Object.values(frameOutput.output).every((fleet) =>
-              fleet.billboards.every((b) => !b.collectionShow),
-            ),
-            'Disabled fleet collection remains visible',
-          );
-        }
-        check(errors.length === 0, errors.join(';'));
-        return {
+        captured = {
           name,
           ...frameOutput,
           settings: settings(),
@@ -298,6 +287,22 @@ async function createFixture(clock) {
             png: canvas.toDataURL('image/png'),
           },
         };
+        if (name !== 'disabled')
+          check(colored > 20, `${name}: fixture image is empty`);
+        else {
+          check(colored === 0, 'Disabled fleet still paints visible pixels');
+          check(
+            Object.values(frameOutput.output).every((fleet) =>
+              fleet.billboards.every((b) => !b.collectionShow),
+            ),
+            'Disabled fleet collection remains visible',
+          );
+        }
+        check(errors.length === 0, errors.join(';'));
+        return captured;
+      } catch (error) {
+        error.frameCapture = captured;
+        throw error;
       } finally {
         remove();
         if (canvas) canvas.width = canvas.height = 0;
@@ -523,6 +528,9 @@ async function run() {
             detail: { active, subjectId: IDS.civil[0] },
           }),
         );
+        // Cockpit entry replaces silhouettes with atlas-backed contact pips.
+        // Do not compare the intermediate frame while those images are loading.
+        await fixture.ready();
         result.samples.push(
           await fixture.capture(active ? 'cockpit-enter' : 'cockpit-exit'),
         );
@@ -538,12 +546,14 @@ async function run() {
           demand.mode === 'continuous' && demand.holds.length > 0,
         );
         await sleep(200);
+        await fixture.ready();
         assertCheck(
           `${kind}-tracked-id`,
           fixture.layers[kind].getTrackedInfo()?.icao24 === IDS[kind][0],
         );
         result.samples.push(await fixture.capture(`${kind}-tracked`));
         fixture.layers[kind].stopTracking();
+        await fixture.ready();
         assertCheck(
           `${kind}-untracked`,
           fixture.layers[kind].getTrackedInfo() === null,
@@ -578,6 +588,7 @@ async function run() {
     result.status = 'passed';
   } catch (error) {
     result.status = 'failed';
+    if (error.frameCapture) result.failedCapture = error.frameCapture;
     result.error = String(error.stack || error).slice(0, 3000);
   } finally {
     try {
