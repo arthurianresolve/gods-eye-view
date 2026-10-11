@@ -12,12 +12,8 @@ import { validateInfrastructureCollectionReport } from './performance/infrastruc
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { validateImportBatchSchedulerReport } from './performance/importBatchSchedulerReport.mjs';
-import {
-  IMPORT_TRACE_CATEGORIES,
-  IMPORT_TRACE_EVENT_LIMIT,
-  createImportTraceEventCollector,
-  summarizeImportTraceAttribution,
-} from './performance/importTraceAttribution.mjs';
+import { summarizeImportTraceAttribution } from './performance/importTraceAttribution.mjs';
+import { startImportTraceSession } from './performance/importTraceSession.mjs';
 import { startFixtureCpuProfile } from './performance/sampledCpuProfile.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
@@ -65,81 +61,7 @@ const closeOwnedBrowser = (ownedBrowser) =>
   });
 async function startImportLoadingTrace(page) {
   const session = await page.createCDPSession();
-  const collector = createImportTraceEventCollector(IMPORT_TRACE_EVENT_LIMIT);
-  let collectorError = null;
-  let bufferUsagePeak = null;
-  let completeResolve;
-  const completed = new Promise((resolve) => {
-    completeResolve = resolve;
-  });
-  const onData = ({ value }) => {
-    try {
-      collector.add(Array.isArray(value) ? value : []);
-    } catch (error) {
-      collectorError ||= String(error?.message || error).slice(0, 240);
-    }
-  };
-  const onBufferUsage = ({ percentFull }) => {
-    if (Number.isFinite(percentFull))
-      bufferUsagePeak = Math.max(bufferUsagePeak ?? 0, percentFull);
-  };
-  const onComplete = ({ dataLossOccurred } = {}) => {
-    if (dataLossOccurred) collectorError ||= 'trace-data-loss-reported';
-    completeResolve();
-  };
-  session.on('Tracing.dataCollected', onData);
-  session.on('Tracing.bufferUsage', onBufferUsage);
-  session.on('Tracing.tracingComplete', onComplete);
-  try {
-    await session.send('Tracing.start', {
-      categories: IMPORT_TRACE_CATEGORIES,
-      options: 'record-until-full',
-      bufferUsageReportingInterval: 100,
-    });
-  } catch (error) {
-    session.off('Tracing.dataCollected', onData);
-    session.off('Tracing.bufferUsage', onBufferUsage);
-    session.off('Tracing.tracingComplete', onComplete);
-    await session.detach().catch(() => {});
-    throw error;
-  }
-  let stopped = false;
-  return {
-    async stop() {
-      if (stopped) throw new Error('Import trace already stopped');
-      stopped = true;
-      let stopError = null;
-      let timeoutHandle = null;
-      try {
-        await session.send('Tracing.end');
-        await Promise.race([
-          completed,
-          new Promise((_, reject) => {
-            timeoutHandle = setTimeout(
-              () => reject(new Error('Import trace completion timed out')),
-              15_000,
-            );
-          }),
-        ]);
-      } catch (error) {
-        stopError = String(error?.message || error).slice(0, 240);
-      } finally {
-        if (timeoutHandle !== null) clearTimeout(timeoutHandle);
-        session.off('Tracing.dataCollected', onData);
-        session.off('Tracing.bufferUsage', onBufferUsage);
-        session.off('Tracing.tracingComplete', onComplete);
-        await session.detach().catch((error) => {
-          stopError ||= String(error?.message || error).slice(0, 240);
-        });
-      }
-      stopError ||= collectorError;
-      return {
-        ...collector.finish(),
-        bufferUsagePeak,
-        stopError,
-      };
-    },
-  };
+  return startImportTraceSession(session);
 }
 const report = {
   schema: 'gev-hosted-native-renderer/v1',

@@ -153,13 +153,18 @@ export function createImportTraceEventCollector(
         if (event.ph === 'E') {
           const key = eventKey(event);
           const begins = pendingBegins.get(key);
-          const begin = begins?.pop();
-          if (!begin || event.ts < begin.tsUs) {
+          const begin = begins?.at(-1);
+          if (!begin) {
             omit();
             continue;
           }
+          begins.pop();
           pendingCount -= 1;
           if (begins.length === 0) pendingBegins.delete(key);
+          if (event.ts < begin.tsUs) {
+            omit();
+            continue;
+          }
           retain({
             kind: 'gc',
             name: event.name,
@@ -338,7 +343,9 @@ export function summarizeImportTraceAttribution({
       Array.isArray(window.slowSteps) &&
       window.slowSteps.length <= 128 &&
       Number.isInteger(window.omittedSlowSteps) &&
-      window.omittedSlowSteps >= 0;
+      window.omittedSlowSteps >= 0 &&
+      window.slowSteps.length + window.omittedSlowSteps ===
+        window.overBudgetSteps;
     if (!valid) {
       errors.push('invalid-loading-window');
       return null;
@@ -377,6 +384,7 @@ export function summarizeImportTraceAttribution({
         step.endMs >= step.startMs &&
         finite(step.durationMs) &&
         step.durationMs >= 0 &&
+        Math.abs(step.durationMs - (step.endMs - step.startMs)) <= 0.001 &&
         step.startMs >= window.startMs - 1 &&
         step.endMs <= window.endMs + 1;
       if (!stepValid) {

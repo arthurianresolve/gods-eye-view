@@ -1121,6 +1121,8 @@
   "scripts/performance/importBatchSchedulerReport.test.mjs",
   "scripts/performance/importTraceAttribution.mjs",
   "scripts/performance/importTraceAttribution.test.mjs",
+  "scripts/performance/importTraceSession.mjs",
+  "scripts/performance/importTraceSession.test.mjs",
   "scripts/performance/sampledCpuProfile.mjs",
   "scripts/performance/sampledCpuProfile.test.mjs",
   "scripts/performance/importGeometry.mjs",

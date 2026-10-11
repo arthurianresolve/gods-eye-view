@@ -186,6 +186,9 @@ test('rejects malformed stages, timestamps, and unbounded intervals', () => {
     (bad) => (bad.loadingWindows[0].slowSteps[0].stage = 'payload'),
     (bad) => (bad.loadingWindows[0].startMs = -1),
     (bad) => (bad.loadingWindows[0].slowSteps[0].endMs = 100),
+    (bad) => (bad.loadingWindows[0].slowSteps[0].durationMs = 9),
+    (bad) => (bad.loadingWindows[0].overBudgetSteps += 1),
+    (bad) => (bad.loadingWindows[0].omittedSlowSteps += 1),
     (bad) => (bad.trace.events[1].durationUs = -1),
   ]) {
     const input = {
@@ -360,6 +363,55 @@ test('pairs begin/end GC slices across streamed trace chunks', () => {
   ]);
   assert.equal(result.relevantCount, 1);
   assert.equal(result.omittedCount, 0);
+});
+
+test('releases malformed reversed B/E state without corrupting the next pair', () => {
+  const retained = retainImportTraceEvents([
+    {
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'B',
+      ts: 10_000,
+      pid: 1,
+      tid: 2,
+    },
+    {
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'E',
+      ts: 9_000,
+      pid: 1,
+      tid: 2,
+    },
+    {
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'B',
+      ts: 11_000,
+      pid: 1,
+      tid: 2,
+    },
+    {
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'E',
+      ts: 13_000,
+      pid: 1,
+      tid: 2,
+    },
+  ]);
+  assert.equal(retained.relevantCount, 2);
+  assert.equal(retained.omittedCount, 1);
+  assert.deepEqual(retained.events, [
+    {
+      kind: 'gc',
+      name: 'V8.GCScavenger',
+      tsUs: 11_000,
+      durationUs: 2_000,
+      pid: 1,
+      tid: 2,
+    },
+  ]);
 });
 
 test('retains instant GC observations without treating them as pauses', () => {

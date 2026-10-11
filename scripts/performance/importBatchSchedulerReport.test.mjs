@@ -209,6 +209,8 @@ function traceAttributedReport() {
       steps: [
         {
           stage: 'entity',
+          markerName: stepMarker,
+          durationMs: 8,
           aligned: true,
           otherThreadGcSlices: 0,
           otherThreadGcOverlapMs: 0,
@@ -328,6 +330,15 @@ test('rejects incomplete or misbound loading trace evidence', () => {
     },
     (bad) => {
       bad.importTraceAttribution.traceSummary.loadingWindows[0].steps[0].aligned = false;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.loadingWindows[0].steps[0].durationMs = 9;
+    },
+    (bad) => {
+      bad.importTraceAttribution.loadingWindows[0].slowSteps[0].durationMs = 9;
+    },
+    (bad) => {
+      bad.importTraceAttribution.loadingWindows[0].omittedSlowSteps = 1;
     },
     (bad) => {
       bad.performanceAcceptanceEligible = true;

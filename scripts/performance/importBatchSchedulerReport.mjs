@@ -227,6 +227,8 @@ function validateBatchMetrics(
           finite(window.endMs) &&
           window.endMs >= window.startMs &&
           finite(window.durationMs) &&
+          Math.abs(window.durationMs - (window.endMs - window.startMs)) <=
+            0.001 &&
           window.durationMs > metrics.budgetMs,
         `${name} slow-step window ${index} is invalid`,
       );
@@ -397,6 +399,8 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
           Number.isInteger(row.overBudgetSteps) &&
           Number.isInteger(row.recordedSlowSteps) &&
           row.omittedSlowSteps === 0 &&
+          row.recordedSlowSteps + row.omittedSlowSteps ===
+            row.overBudgetSteps &&
           Number.isInteger(row.v8GcSlicesOverlappingLoad) &&
           Number.isInteger(row.v8GcSlicesOtherThreadsOverlappingLoad) &&
           finite(row.sameThreadGcOverlapMs) &&
@@ -410,6 +414,9 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
           row.steps.every(
             (step) =>
               step.aligned === true &&
+              typeof step.markerName === 'string' &&
+              finite(step.durationMs) &&
+              step.durationMs > report?.cooperativeScheduler?.targetBudgetMs &&
               Number.isInteger(step.otherThreadGcSlices) &&
               finite(step.otherThreadGcOverlapMs),
           ),
@@ -430,6 +437,9 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
       'loading trace windows do not match the five paired loads and geometry load',
     );
     for (const window of loadingWindows) {
+      const summaryRow = array(summary?.loadingWindows).find(
+        (row) => row?.pair === window?.pair && row?.mode === window?.mode,
+      );
       const metrics =
         window?.mode === 'geometry-cooperative'
           ? report?.largeGeometry?.cooperative?.batchMetrics?.iteratorSteps
@@ -452,9 +462,24 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
         });
       add(
         errors,
-        metrics &&
+        summaryRow &&
+          summaryRow.overBudgetSteps === window.overBudgetSteps &&
+          summaryRow.recordedSlowSteps === array(window.slowSteps).length &&
+          summaryRow.omittedSlowSteps === window.omittedSlowSteps &&
+          array(summaryRow.steps).length === array(window.slowSteps).length &&
+          array(summaryRow.steps).every((step, index) => {
+            const source = window.slowSteps[index];
+            return (
+              step?.stage === source?.stage &&
+              step?.markerName === source?.markerName &&
+              step?.durationMs === source?.durationMs
+            );
+          }) &&
+          metrics &&
           window?.markerName &&
           anchorNames.has(window.markerName) &&
+          array(window?.slowSteps).length + window?.omittedSlowSteps ===
+            window?.overBudgetSteps &&
           array(window?.slowSteps).every((step) =>
             anchorNames.has(step?.markerName),
           ) &&
