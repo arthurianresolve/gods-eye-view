@@ -581,6 +581,16 @@ function readRenderer(gl) {
   };
 }
 
+function clockSnapshot() {
+  return {
+    requestedEpochMs: logicalNow,
+    // Logical time is integer milliseconds. Explicit precision avoids engines
+    // parsing Cesium's long floating-point fractional seconds inconsistently.
+    currentTimeIso: Cesium.JulianDate.toIso8601(viewer.clock.currentTime, 3),
+    shouldAnimate: viewer.clock.shouldAnimate,
+  };
+}
+
 function projectedSnapshot() {
   const gl = viewer.scene.context._gl;
   const renderer = readRenderer(gl);
@@ -634,11 +644,7 @@ function projectedSnapshot() {
         viewer.camera.direction.z,
       ].map((v) => Number(v.toFixed(9))),
     },
-    clock: {
-      requestedEpochMs: logicalNow,
-      currentTimeIso: Cesium.JulianDate.toIso8601(viewer.clock.currentTime),
-      shouldAnimate: viewer.clock.shouldAnimate,
-    },
+    clock: clockSnapshot(),
     renderSettings: {
       viewport: {
         width: innerWidth,
@@ -756,6 +762,22 @@ async function requestActiveFrame(label) {
   const frame = waitForNaturalFrame(() => true, 2_000, label);
   viewer.scene.requestRender();
   await frame;
+}
+
+async function waitForHeatlineGeometry(label) {
+  await waitUntil(
+    () => {
+      const primitives = viewer.scene.groundPrimitives;
+      return (
+        primitives.length > 0 &&
+        Array.from({ length: primitives.length }, (_, i) =>
+          primitives.get(i),
+        ).every((primitive) => primitive.ready)
+      );
+    },
+    8_000,
+    label,
+  );
 }
 
 function eventListenerCounts() {
@@ -959,6 +981,7 @@ async function run() {
       'traffic population settled',
     );
     setClock(FIXTURE_EPOCH + 250);
+    await waitForHeatlineGeometry('initial populated heatline readiness');
     await requestActiveFrame('populated active snapshot');
     await capture('populated');
 
@@ -969,6 +992,7 @@ async function run() {
     // time, then advance to its midpoint instead of waiting for completion.
     await requestActiveFrame('retention reconciliation start');
     await requestActiveFrame('retention retirement published');
+    await waitForHeatlineGeometry('rebuilt density heatline readiness');
     const retentionAtStart = layer.getLoadingDiagnostics();
     if (!retentionAtStart.populationPending)
       throw new Error(
@@ -990,19 +1014,7 @@ async function run() {
       'retention completion after clock advance',
     );
     report.retentionFade.after = layer.getLoadingDiagnostics();
-    await waitUntil(
-      () => {
-        const primitives = viewer.scene.groundPrimitives;
-        return (
-          primitives.length > 0 &&
-          Array.from({ length: primitives.length }, (_, i) =>
-            primitives.get(i),
-          ).every((primitive) => primitive.ready)
-        );
-      },
-      8_000,
-      'heatline geometry ready for visual control',
-    );
+    await waitForHeatlineGeometry('heatline geometry ready for visual control');
     const heatlineCapture = await capture('jam-heatlines', {
       retainPixels: true,
     });
@@ -1120,6 +1132,7 @@ async function run() {
       'return population settled',
     );
     setClock(FIXTURE_EPOCH + 4_250);
+    await waitForHeatlineGeometry('return population heatline readiness');
     await requestActiveFrame('return population visible snapshot');
     await capture('return-arrival');
 

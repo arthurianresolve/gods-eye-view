@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import * as Cesium from 'cesium';
 import { EventEmitter } from 'node:events';
 import { installTrafficFixtureInterception } from './trafficFixtureInterception.mjs';
 import {
@@ -610,4 +611,52 @@ test('traffic interception releases its session after setup failure', async () =
     /injected setup failure/,
   );
   assert.equal(detached, true);
+});
+
+test('fixture serializes real Julian dates at its integer millisecond precision', async () => {
+  const source = await readFile(
+    new URL('../fixtures/traffic-render-demand.mjs', import.meta.url),
+    'utf8',
+  );
+  const start = source.indexOf('function clockSnapshot() {');
+  const end = source.indexOf('function projectedSnapshot()', start);
+  assert.ok(start >= 0 && end > start);
+  const scope = {
+    Cesium,
+    logicalNow: EPOCH,
+    viewer: {
+      clock: {
+        currentTime: Cesium.JulianDate.fromDate(new Date(EPOCH)),
+        shouldAnimate: false,
+      },
+    },
+  };
+  vm.createContext(scope);
+  const snapshot = vm.runInContext(
+    source.slice(start, end) + '\nclockSnapshot',
+    scope,
+  );
+  for (const offset of [0, 90, 250, 2090, 2700, 4250]) {
+    scope.logicalNow = EPOCH + offset;
+    scope.viewer.clock.currentTime = Cesium.JulianDate.fromDate(
+      new Date(scope.logicalNow),
+    );
+    const observed = snapshot();
+    assert.equal(
+      observed.currentTimeIso,
+      new Date(scope.logicalNow).toISOString(),
+    );
+    assert.equal(Date.parse(observed.currentTimeIso), scope.logicalNow);
+    assert.equal(observed.shouldAnimate, false);
+  }
+  scope.viewer.clock.currentTime = Cesium.JulianDate.addSeconds(
+    scope.viewer.clock.currentTime,
+    0.001,
+    new Cesium.JulianDate(),
+  );
+  assert.notEqual(
+    Date.parse(snapshot().currentTimeIso),
+    scope.logicalNow,
+    'real clock drift must remain observable',
+  );
 });

@@ -91,6 +91,19 @@
         "message": "Traffic fixture failed: Timed out waiting for heatline geometry ready for visual control"
       },
       "completedTrials": 0
+    },
+    {
+      "run": "38121981675",
+      "commit": "6ef933df3ca98369bd0cf6174021bc57d76f7129",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121981675",
+      "file": "traffic-38121981675.json",
+      "sha256": "9c533e1335981ab0e12767b929672ffb6a4348df9dbd74b07ecebf40c47cf038",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture clock was not frozen at the requested time in fading-retained-dots"
+      },
+      "completedTrials": 1
     }
   ],
   "acceptance": "None of these failed runs provides a completed traffic optimization comparison or physical desktop hardware acceptance."
