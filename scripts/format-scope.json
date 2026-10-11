@@ -1033,6 +1033,8 @@
   "scripts/performance/s59DocumentDecodeWorker.mjs",
   "scripts/performance/s59CoordinateTransfer.mjs",
   "scripts/performance/s59CoordinateTransfer.test.mjs",
+  "scripts/performance/entityCollectionRemovalComparison.mjs",
+  "scripts/performance/entityCollectionRemovalComparison.test.mjs",
   "scripts/performance/csvDecodeComparison.mjs",
   "scripts/performance/csvDecodeComparison.test.mjs",
   "scripts/performance/militaryTrackedFrameTimeRepro.mjs",
