@@ -393,7 +393,7 @@ jobs:
 
       - name: Build and inspect both immutable application revisions
         env:
-          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha || github.sha }}
           CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
         run: >-
           node scripts/qa-performance-build-smoke.mjs
