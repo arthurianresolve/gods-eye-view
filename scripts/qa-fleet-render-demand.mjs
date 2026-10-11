@@ -25,7 +25,10 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
-import { validateFleetComparison } from './performance/fleetComparison.mjs';
+import {
+  validateFleetComparison,
+  validateFleetRepeat,
+} from './performance/fleetComparison.mjs';
 
 // A local user's Chrome is controlled exclusively through the visible browser
 // tool. This driver owns only the disposable browser in a standard hosted job.
@@ -110,6 +113,7 @@ if (process.argv[2] === '--serve') {
     timestamp: new Date().toISOString(),
     environment: readHostEnvironment(),
     pairs: [],
+    baselineRepeat: [],
     fixtureHashes: {},
     sourceHashes: {},
     serverErrors: [],
@@ -294,6 +298,25 @@ if (process.argv[2] === '--serve') {
     });
     report.browserVersion = await browser.version();
     report.graphics = await readBrowserGraphicsInfo(browser);
+    // Prove the fixed-time protocol can reproduce the unchanged baseline
+    // before spending time on candidate comparisons or drawing conclusions.
+    for (let i = 0; i < 2; i++) {
+      const result = await sample(
+        baselineUrl,
+        'baseline',
+        BASELINE,
+        'correctness',
+      );
+      report.baselineRepeat.push(result);
+      if (result.status !== 'passed' || result.pageErrors.length)
+        throw new Error(
+          `Baseline repeat ${i + 1}: ${result.error || 'fixture failed'}`,
+        );
+    }
+    report.baselineRepeatValidation = await validateFleetRepeat(
+      ...report.baselineRepeat,
+      report,
+    );
     for (let i = 0; i < 5; i++) {
       const pair = {
         pair: i + 1,

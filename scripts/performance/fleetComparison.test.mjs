@@ -5,6 +5,7 @@ import sharp from 'sharp';
 import {
   FLEET_CHECKS,
   FLEET_SHOTS,
+  FLEET_OFFSETS,
   validateFleetComparison,
 } from './fleetComparison.mjs';
 
@@ -95,17 +96,44 @@ function validReport() {
               ];
         const clean = { holds: [], scheduledUpdates: [] };
         pair[mode][implementation] = {
-          schema: 'gev-fleet-render-demand/v2',
+          schema: 'gev-fleet-render-demand/v3',
           status: 'passed',
           applicationCommit: report[implementation],
           harnessCommit: report.harness,
           implementation,
           mode,
-          fixture: '20-aircraft-fixed-source/v2',
+          fixture: '20-aircraft-fixed-source/v3',
           epochMs: Date.UTC(2026, 9, 8, 12),
           pageErrors: [],
           checks: checks.map((id) => ({ id, status: 'passed' })),
           settings,
+          phases:
+            mode === 'correctness'
+              ? [
+                  ...FLEET_SHOTS.slice(1, 6).map((name) => ({
+                    name,
+                    kind: 'movement',
+                    logicalTimeMs:
+                      Date.UTC(2026, 9, 8, 12) + FLEET_OFFSETS[name],
+                    frames: 1,
+                    elapsedMs: 90,
+                    publicationFrame: 5,
+                    observedFrame: 6,
+                    revision: name === 'source-refresh' ? 3 : 2,
+                  })),
+                  ...FLEET_SHOTS.filter((name) => name !== 'disabled').map(
+                    (name) => ({
+                      name,
+                      kind: 'settled',
+                      logicalTimeMs:
+                        Date.UTC(2026, 9, 8, 12) + FLEET_OFFSETS[name],
+                      stableMs: 710,
+                      elapsedMs: 900,
+                      frames: 8,
+                    }),
+                  ),
+                ]
+              : [],
           cleanup: {
             viewerDestroyed: true,
             governor: { ...clean, installed: false },
@@ -125,17 +153,15 @@ function validReport() {
                       b.collectionShow = name !== 'disabled';
                     });
                   }
-                  const offset =
-                    name === 'initial' || name === 'reinitialized'
-                      ? 0
-                      : name.startsWith('motion-')
-                        ? Number(name.slice(7))
-                        : 30000;
+                  const offset = FLEET_OFFSETS[name];
                   return {
                     name,
                     output: visible,
                     camera: { position: [1, 2, 3] },
                     logicalTimeMs: Date.UTC(2026, 9, 8, 12) + offset,
+                    sourceEpochMs:
+                      Date.UTC(2026, 9, 8, 12) +
+                      (name === 'reinitialized' ? 60000 : 0),
                     settings,
                     pixels: { ...(name === 'disabled' ? darkImage : image) },
                   };
@@ -165,6 +191,9 @@ function validReport() {
       }
     report.pairs.push(pair);
   }
+  report.baselineRepeat = [0, 1].map(() =>
+    structuredClone(report.pairs[0].correctness.baseline),
+  );
   return report;
 }
 
@@ -175,6 +204,60 @@ test('valid five-pair evidence decodes all images and quantifies frame savings',
   assert.equal(result.medianRenderedFrameReduction, 0.76);
 });
 const invalidCases = [
+  [
+    'pre-publication movement',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'movement',
+      );
+      p.observedFrame = p.publicationFrame;
+    },
+  ],
+  [
+    'missing baseline repeat',
+    (r) => {
+      delete r.baselineRepeat;
+    },
+  ],
+  [
+    'unstable baseline repeat',
+    (r) => {
+      r.baselineRepeat[1].samples[0].camera.position[0]++;
+    },
+  ],
+  [
+    'later baseline drift',
+    (r) => {
+      for (const side of ['baseline', 'candidate'])
+        r.pairs[4].correctness[side].samples[0].camera.position[0]++;
+    },
+  ],
+  [
+    'missing stability witness',
+    (r) => {
+      r.pairs[0].correctness.candidate.phases = [];
+    },
+  ],
+  [
+    'fixed sleep posing as camera stability',
+    (r) => {
+      r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.name === 'civil-tracked',
+      ).frames = 0;
+    },
+  ],
+  [
+    'rewound reinitialization clock',
+    (r) => {
+      for (const side of ['baseline', 'candidate'])
+        r.pairs[0].correctness[side].samples.at(-1).logicalTimeMs = Date.UTC(
+          2026,
+          9,
+          8,
+          12,
+        );
+    },
+  ],
   [
     'matched but wrong display epochs',
     (r) => {

@@ -46,6 +46,10 @@ function fixtureClock() {
   return {
     now,
     set(time) {
+      check(
+        Number.isFinite(time) && time >= now(),
+        'Fixture clock must be monotonic',
+      );
       value = time;
       runningAt = null;
     },
@@ -59,7 +63,7 @@ function fixtureClock() {
   };
 }
 
-function records(kind, revision) {
+function records(kind, revision, sourceEpoch) {
   return IDS[kind].map((id, i) => ({
     id,
     reference: id,
@@ -70,8 +74,8 @@ function records(kind, revision) {
       (Math.floor(i / 4) - 1) * 0.08 +
       revision * 0.0028 +
       (kind === 'military' ? 0.18 : 0),
-    positionTimeMs: EPOCH - 60000 + revision * 30000,
-    contactTimeMs: EPOCH - 60000 + revision * 30000,
+    positionTimeMs: sourceEpoch - 60000 + revision * 30000,
+    contactTimeMs: sourceEpoch - 60000 + revision * 30000,
     baroAltitudeM: 9000 + (i % 5) * 250,
     ellipsoidAltitudeM: 9000 + (i % 5) * 250,
     onGround: false,
@@ -126,12 +130,13 @@ async function createFixture(clock) {
     const registry = createMilitaryRegistry({ now: clock.now });
     setupCleanup.push(() => registry.dispose());
     registry.registerMilitaryIcaos(IDS.military);
-    let revision = 0;
+    let revision = 0,
+      sourceEpoch = EPOCH;
     const source = (kind) => ({
       label: `S51 ${kind} fixture`,
       async getSnapshot() {
         return {
-          records: records(kind, revision),
+          records: records(kind, revision, sourceEpoch),
           source: `S51 ${kind} fixture`,
           coverage: 'fixed local fixture',
           observedAtMs: clock.now(),
@@ -157,10 +162,30 @@ async function createFixture(clock) {
     const layers = { civil, military };
     const frames = [];
     const errors = [];
+    const phases = [];
+    const cameraEvents = [];
+    let publicationFrame = 0,
+      latestFrame = null;
     const removers = [
+      viewer.camera.moveEnd.addEventListener(() => {
+        check(cameraEvents.length < 200, 'Camera event buffer overflow');
+        cameraEvents.push({ logicalTimeMs: clock.now(), frame: frames.length });
+      }),
       viewer.scene.postRender.addEventListener(() => {
         if (frames.length >= 20000) throw new Error('Frame buffer overflow');
         frames.push(performance.now());
+        if (
+          mode === 'correctness' &&
+          Object.keys(layers).every(
+            (kind) => billboards(kind).size === IDS[kind].length,
+          )
+        )
+          latestFrame = {
+            frame: frames.length,
+            logicalTimeMs: clock.now(),
+            revision,
+            output: output(),
+          };
       }),
       viewer.scene.renderError.addEventListener((_scene, error) =>
         errors.push(String(error?.message || error)),
@@ -225,6 +250,7 @@ async function createFixture(clock) {
       await Promise.all(
         Object.values(layers).map((layer) => layer.update(viewer)),
       );
+      publicationFrame = frames.length;
       for (const [kind, layer] of Object.entries(layers))
         check(
           layer.getStats().count === IDS[kind].length,
@@ -248,17 +274,128 @@ async function createFixture(clock) {
       }
       throw new Error('Fleet billboards failed to materialize');
     }
+    function cameraPose() {
+      return {
+        position: vector(viewer.camera.positionWC),
+        direction: vector(viewer.camera.directionWC),
+        up: vector(viewer.camera.upWC),
+      };
+    }
+    function checkpoint() {
+      check(latestFrame, 'No completed frame for movement checkpoint');
+      return { frame: frames.length, output: latestFrame.output };
+    }
+    // This observer never requests a frame. It must see both fleets move on a
+    // naturally delivered frame before a capture can request another render.
+    async function awaitMovement(prior, name) {
+      const start = performance.now();
+      while (performance.now() - start < 2000) {
+        const current = latestFrame?.output;
+        if (
+          latestFrame?.frame > Math.max(prior.frame, publicationFrame) &&
+          latestFrame.logicalTimeMs === clock.now() &&
+          latestFrame.revision === revision &&
+          Object.keys(layers).every((kind) =>
+            current[kind].billboards.some((b, i) =>
+              b.position.some(
+                (v, axis) =>
+                  v !== prior.output[kind].billboards[i].position[axis],
+              ),
+            ),
+          )
+        ) {
+          phases.push({
+            name,
+            kind: 'movement',
+            logicalTimeMs: clock.now(),
+            frames: frames.length - prior.frame,
+            publicationFrame,
+            observedFrame: latestFrame.frame,
+            revision: latestFrame.revision,
+            elapsedMs: performance.now() - start,
+          });
+          return;
+        }
+        await sleep(20);
+      }
+      throw new Error(
+        `${name}: no completed fleet update at the new display time`,
+      );
+    }
+    // Wait beyond Cesium's own moveEnd window, using completed-frame output
+    // rather than a fixed sleep or atlas readiness as a camera-settling proxy.
+    // Exact values remain exact: no tolerance is introduced into comparisons.
+    async function settle(name) {
+      const start = performance.now();
+      let last = null,
+        changedAt = start,
+        lastFrameAt = start,
+        stableFrames = 0;
+      const phase = {
+        name,
+        kind: 'settled',
+        logicalTimeMs: clock.now(),
+        transitions: [],
+      };
+      phases.push(phase);
+      const remove = viewer.scene.postRender.addEventListener(() => {
+        lastFrameAt = performance.now();
+        const signature = JSON.stringify({
+          output: output(),
+          camera: cameraPose(),
+          moves: cameraEvents.length,
+        });
+        if (signature !== last) {
+          last = signature;
+          changedAt = lastFrameAt;
+          stableFrames = 0;
+          if (phase.transitions.length < 30)
+            phase.transitions.push({
+              afterMs: changedAt - start,
+              frame: frames.length,
+              moves: cameraEvents.length,
+              camera: cameraPose(),
+              fleet: Object.fromEntries(
+                Object.entries(output()).map(([kind, fleet]) => [
+                  kind,
+                  { tracked: fleet.tracked, first: fleet.billboards[0] },
+                ]),
+              ),
+            });
+        }
+        stableFrames++;
+      });
+      try {
+        while (performance.now() - start < 5000) {
+          check(errors.length === 0, errors.join(';'));
+          if (
+            stableFrames >= 3 &&
+            lastFrameAt - changedAt >= 700 &&
+            performance.now() - lastFrameAt < 250
+          ) {
+            phase.elapsedMs = performance.now() - start;
+            phase.stableMs = lastFrameAt - changedAt;
+            phase.frames = stableFrames;
+            return;
+          }
+          await sleep(20);
+        }
+        throw new Error(
+          `${name}: camera/fleet did not settle on completed frames`,
+        );
+      } finally {
+        remove();
+      }
+    }
     async function capture(name) {
       let frameOutput;
       const remove = viewer.scene.postRender.addEventListener(() => {
         frameOutput = {
           output: output(),
-          camera: {
-            position: vector(viewer.camera.positionWC),
-            direction: vector(viewer.camera.directionWC),
-            up: vector(viewer.camera.upWC),
-          },
+          camera: cameraPose(),
           logicalTimeMs: clock.now(),
+          sourceEpochMs: sourceEpoch,
+          cameraMoveEnds: cameraEvents.length,
         };
       });
       let canvas;
@@ -342,11 +479,20 @@ async function createFixture(clock) {
       layers,
       frames,
       errors,
+      phases,
+      cameraEvents,
       settings,
       output,
       capture,
       dispose,
       ready,
+      checkpoint,
+      awaitMovement,
+      settle,
+      advance(time) {
+        clock.set(time);
+        viewer.clock.currentTime = Cesium.JulianDate.fromDate(new Date(time));
+      },
       refresh,
       observeFleetCadence(start) {
         const points = Object.fromEntries(
@@ -383,7 +529,9 @@ async function createFixture(clock) {
       setRevision(value) {
         revision = value;
       },
-      async init() {
+      async init(epoch = EPOCH) {
+        sourceEpoch = epoch;
+        revision = 0;
         await ensureGeoidReady();
         for (const layer of Object.values(layers)) {
           layer.init(viewer);
@@ -439,11 +587,11 @@ async function run() {
   const clock = fixtureClock();
   let fixture;
   const result = {
-    schema: 'gev-fleet-render-demand/v2',
+    schema: 'gev-fleet-render-demand/v3',
     status: 'running',
     applicationCommit: appCommit,
     harnessCommit: params.get('harness'),
-    fixture: '20-aircraft-fixed-source/v2',
+    fixture: '20-aircraft-fixed-source/v3',
     epochMs: EPOCH,
     implementation,
     mode,
@@ -490,9 +638,13 @@ async function run() {
               result.cadence.demand.scheduledUpdates.length === 2,
       );
     } else {
+      await fixture.settle('initial');
       result.samples.push(await fixture.capture('initial'));
       for (const offset of [80, 160, 240, 320]) {
-        clock.set(EPOCH + offset);
+        const prior = fixture.checkpoint();
+        fixture.advance(EPOCH + offset);
+        await fixture.awaitMovement(prior, `motion-${offset}`);
+        await fixture.settle(`motion-${offset}`);
         result.samples.push(await fixture.capture(`motion-${offset}`));
       }
       assertCheck(
@@ -506,22 +658,25 @@ async function run() {
               .output.civil.billboards.map((b) => b.position),
           ),
       );
-      clock.set(EPOCH + 30000);
+      const priorSource = fixture.checkpoint();
+      fixture.advance(EPOCH + 30000);
       fixture.setRevision(3);
       await fixture.refresh();
       // Source arrival must schedule its own frame; a capture request is not
       // allowed to hide a missing wake. Observe a new completed frame first.
-      let frames = fixture.frames.length;
-      await sleep(200);
-      assertCheck('source-arrival-frame', fixture.frames.length > frames);
+      await fixture.awaitMovement(priorSource, 'source-refresh');
+      assertCheck('source-arrival-frame', true);
+      await fixture.settle('source-refresh');
       result.samples.push(await fixture.capture('source-refresh'));
+      fixture.advance(EPOCH + 30080);
       fixture.viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(-122.19, 37.86, 730000),
         orientation: { heading: 0.12, pitch: -1.53, roll: 0 },
       });
-      fixture.viewer.camera.moveEnd.raiseEvent();
+      await fixture.settle('camera-change');
       result.samples.push(await fixture.capture('camera-change'));
       for (const active of [true, false]) {
+        fixture.advance(EPOCH + (active ? 30160 : 30240));
         document.body.classList.toggle('cockpit-mode', active);
         window.dispatchEvent(
           new CustomEvent('gev:cockpit-mode-changed', {
@@ -531,11 +686,13 @@ async function run() {
         // Cockpit entry replaces silhouettes with atlas-backed contact pips.
         // Do not compare the intermediate frame while those images are loading.
         await fixture.ready();
+        await fixture.settle(active ? 'cockpit-enter' : 'cockpit-exit');
         result.samples.push(
           await fixture.capture(active ? 'cockpit-enter' : 'cockpit-exit'),
         );
       }
       for (const kind of ['civil', 'military']) {
+        fixture.advance(EPOCH + (kind === 'civil' ? 30320 : 30480));
         assertCheck(
           `${kind}-track-start`,
           fixture.layers[kind].trackById(IDS[kind][0]),
@@ -545,22 +702,25 @@ async function run() {
           `${kind}-continuous-tracking`,
           demand.mode === 'continuous' && demand.holds.length > 0,
         );
-        await sleep(200);
         await fixture.ready();
+        await fixture.settle(`${kind}-tracked`);
         assertCheck(
           `${kind}-tracked-id`,
           fixture.layers[kind].getTrackedInfo()?.icao24 === IDS[kind][0],
         );
         result.samples.push(await fixture.capture(`${kind}-tracked`));
+        fixture.advance(EPOCH + (kind === 'civil' ? 30400 : 30560));
         fixture.layers[kind].stopTracking();
         await fixture.ready();
+        await fixture.settle(`${kind}-released`);
         assertCheck(
           `${kind}-untracked`,
           fixture.layers[kind].getTrackedInfo() === null,
         );
         result.samples.push(await fixture.capture(`${kind}-released`));
       }
-      frames = fixture.frames.length;
+      fixture.advance(EPOCH + 30640);
+      const frames = fixture.frames.length;
       for (const layer of Object.values(fixture.layers))
         layer.disable(fixture.viewer);
       await sleep(150);
@@ -575,12 +735,16 @@ async function run() {
       // lifecycle permits. This catches a permanently disposed demand owner.
       for (const layer of Object.values(fixture.layers))
         layer.destroy(fixture.viewer);
-      clock.set(EPOCH);
-      fixture.setRevision(0);
-      await fixture.init();
-      frames = fixture.frames.length;
-      await sleep(200);
-      assertCheck('reinit-resumes-frames', fixture.frames.length > frames);
+      // A reopened workspace has fresh observation times, not a wall-clock
+      // rewind. Both Date.now and the viewer clock follow the same epoch.
+      fixture.advance(EPOCH + 60000);
+      await fixture.init(EPOCH + 60000);
+      const reinit = fixture.checkpoint();
+      await fixture.settle('reinitialized');
+      assertCheck(
+        'reinit-resumes-frames',
+        fixture.frames.length > reinit.frame,
+      );
       result.samples.push(await fixture.capture('reinitialized'));
     }
     assertCheck('foreground', !backgrounded);
@@ -591,6 +755,10 @@ async function run() {
     if (error.frameCapture) result.failedCapture = error.frameCapture;
     result.error = String(error.stack || error).slice(0, 3000);
   } finally {
+    if (fixture) {
+      result.phases = fixture.phases;
+      result.cameraEvents = fixture.cameraEvents;
+    }
     try {
       if (fixture) result.cleanup = await fixture.dispose();
     } catch (error) {

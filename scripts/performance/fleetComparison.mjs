@@ -19,6 +19,18 @@ export const FLEET_SHOTS = [
   'disabled',
   'reinitialized',
 ];
+export const FLEET_OFFSETS = Object.fromEntries(
+  FLEET_SHOTS.map((name, i) => [
+    name,
+    i === 0
+      ? 0
+      : i <= 4
+        ? i * 80
+        : name === 'reinitialized'
+          ? 60000
+          : 30000 + (i - 5) * 80,
+  ]),
+);
 export const FLEET_CHECKS = [
   'population',
   'aircraft-moves',
@@ -104,13 +116,13 @@ async function pixels(value) {
 }
 
 function validateSample(sample, report, implementation, mode) {
-  assert.equal(sample.schema, 'gev-fleet-render-demand/v2');
+  assert.equal(sample.schema, 'gev-fleet-render-demand/v3');
   assert.equal(sample.status, 'passed');
   assert.equal(sample.applicationCommit, report[implementation]);
   assert.equal(sample.harnessCommit, report.harness);
   assert.equal(sample.implementation, implementation);
   assert.equal(sample.mode, mode);
-  assert.equal(sample.fixture, '20-aircraft-fixed-source/v2');
+  assert.equal(sample.fixture, '20-aircraft-fixed-source/v3');
   assert.equal(sample.epochMs, Date.UTC(2026, 9, 8, 12));
   assert.deepEqual(sample.pageErrors, []);
   assert.deepEqual(
@@ -139,6 +151,73 @@ function validateSample(sample, report, implementation, mode) {
   settings(sample.settings);
   assert.equal(sample.settings.environment.appCommit, report[implementation]);
   assert.equal(sample.settings.environment.harnessCommit, report.harness);
+  if (mode === 'correctness') {
+    const settled = sample.phases.filter((p) => p.kind === 'settled');
+    assert.deepEqual(
+      settled.map((p) => p.name),
+      FLEET_SHOTS.filter((n) => n !== 'disabled'),
+    );
+    for (const phase of settled) {
+      assert.equal(
+        phase.logicalTimeMs,
+        sample.epochMs + FLEET_OFFSETS[phase.name],
+      );
+      assert.ok(
+        phase.stableMs >= 700 && phase.elapsedMs < 5000 && phase.frames >= 3,
+        `${phase.name}: missing completed-frame stability witness`,
+      );
+    }
+    const movement = sample.phases.filter((p) => p.kind === 'movement');
+    assert.deepEqual(
+      movement.map((p) => p.name),
+      FLEET_SHOTS.slice(1, 6),
+    );
+    for (const phase of movement) {
+      assert.equal(
+        phase.logicalTimeMs,
+        sample.epochMs + FLEET_OFFSETS[phase.name],
+      );
+      assert.ok(phase.frames > 0 && phase.elapsedMs < 2000);
+      assert.ok(
+        Number.isInteger(phase.publicationFrame) &&
+          phase.observedFrame > phase.publicationFrame,
+        'Movement must be witnessed after publication',
+      );
+      assert.equal(phase.revision, phase.name === 'source-refresh' ? 3 : 2);
+    }
+  }
+}
+
+// A baseline that cannot reproduce itself cannot establish candidate parity.
+// Keep full images and exact camera/output values; never normalize away drift.
+export async function validateFleetRepeat(first, second, report) {
+  for (const sample of [first, second]) {
+    validateSample(sample, report, 'baseline', 'correctness');
+    assert.deepEqual(
+      sample.samples.map((s) => s.name),
+      FLEET_SHOTS,
+    );
+  }
+  for (let i = 0; i < FLEET_SHOTS.length; i++) {
+    const a = first.samples[i],
+      b = second.samples[i];
+    const label = `baseline repeat/${a.name}`;
+    assert.deepEqual(a.camera, b.camera, `${label}: camera differs`);
+    assert.deepEqual(a.output, b.output, `${label}: aircraft output differs`);
+    assert.equal(a.logicalTimeMs, b.logicalTimeMs, `${label}: clock differs`);
+    assert.equal(
+      a.sourceEpochMs,
+      b.sourceEpochMs,
+      `${label}: source epoch differs`,
+    );
+    assert.deepEqual(settings(a.settings), settings(b.settings));
+    const [left, right] = await Promise.all([
+      pixels(a.pixels),
+      pixels(b.pixels),
+    ]);
+    assert.ok(left.equals(right), `${label}: decoded pixels differ`);
+  }
+  return { status: 'passed', decodedImages: FLEET_SHOTS.length * 2 };
 }
 
 function intervals(times, duration, label) {
@@ -171,6 +250,12 @@ export async function validateFleetComparison(report) {
   assert.notEqual(report.baseline, report.candidate);
   assert.equal(report.harness, report.candidate);
   assert.equal(report.pairs.length, 5);
+  assert.equal(
+    report.baselineRepeat?.length,
+    2,
+    'Independent baseline repeat control required',
+  );
+  await validateFleetRepeat(...report.baselineRepeat, report);
   const comparisons = [];
   let decodedImages = 0;
   for (const [i, pair] of report.pairs.entries()) {
@@ -194,6 +279,7 @@ export async function validateFleetComparison(report) {
       );
     }
     const { baseline, candidate } = pair.correctness;
+    await validateFleetRepeat(report.baselineRepeat[0], baseline, report);
     assert.deepEqual(
       baseline.samples.map((s) => s.name),
       FLEET_SHOTS,
@@ -207,16 +293,16 @@ export async function validateFleetComparison(report) {
         b = candidate.samples[n];
       for (const sample of [a, b]) {
         population(sample.output);
-        const offset =
-          sample.name === 'initial' || sample.name === 'reinitialized'
-            ? 0
-            : sample.name.startsWith('motion-')
-              ? Number(sample.name.slice(7))
-              : 30000;
+        const offset = FLEET_OFFSETS[sample.name];
         assert.equal(
           sample.logicalTimeMs,
           baseline.epochMs + offset,
           'Unexpected display epoch',
+        );
+        assert.equal(
+          sample.sourceEpochMs,
+          baseline.epochMs + (sample.name === 'reinitialized' ? 60000 : 0),
+          'Unexpected source epoch',
         );
         for (const [kind, fleet] of Object.entries(sample.output)) {
           assert.equal(
