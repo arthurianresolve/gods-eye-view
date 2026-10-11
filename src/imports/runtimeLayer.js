@@ -37,7 +37,7 @@ function position(coordinate) {
 function scalarPosition(coordinate, radiiSquared) {
   const longitude = coordinate?.[0];
   const latitude = coordinate?.[1];
-  if (typeof longitude !== 'number' || typeof latitude !== 'number')
+  if (!Number.isFinite(longitude) || !Number.isFinite(latitude))
     return position(coordinate);
 
   const radiansPerDegree = Cesium.Math.RADIANS_PER_DEGREE;

@@ -12,6 +12,7 @@ import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
+import { validateImportCoordinateKernelReport } from './performance/importCoordinateKernelComparison.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -171,22 +172,54 @@ try {
       importUrl.searchParams.set('mixed-parity', '1');
     if (process.argv.includes('--import-point-benefit-diagnostics'))
       importUrl.searchParams.set('point-benefit', '1');
+    if (process.argv.includes('--import-coordinate-kernel'))
+      importUrl.searchParams.set('coordinate-kernel-experiment', '1');
     observingImportPage = true;
     try {
       await page.goto(importUrl.href, { waitUntil: 'networkidle0' });
       await page.click('#run');
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
-        { timeout: 120_000 },
+        {
+          timeout: process.argv.includes('--import-coordinate-kernel')
+            ? 2_400_000
+            : 120_000,
+        },
       );
       report.importBatches = await page.$eval('#result', (element) =>
         JSON.parse(element.textContent),
       );
+      if (process.argv.includes('--import-coordinate-kernel')) {
+        report.importCoordinateKernel = report.importBatches;
+        delete report.importBatches;
+        const validation = await validateImportCoordinateKernelReport(
+          report.importCoordinateKernel,
+          commit,
+        );
+        report.importCoordinateKernelValidation = validation;
+        if (!validation.valid)
+          throw new Error(
+            `Coordinate kernel experiment is invalid: ${validation.errors.join('; ')}`,
+          );
+        report.importCoordinateKernel.performanceOutcome = validation.summary
+          .regressionGatePassed
+          ? 'no-regression-observed; not an acceptance claim'
+          : 'candidate regression exceeded the 10% median load or first-usable gate';
+        report.importCoordinateKernel.summary = validation.summary;
+        if (!validation.summary.regressionGatePassed)
+          throw new Error(
+            'Scalar coordinate kernel exceeded the 10% median load or first-usable regression gate.',
+          );
+      }
     } catch (error) {
       report.importFixtureFailure = String(error?.message || error).slice(
         0,
         800,
       );
+      if (process.argv.includes('--import-coordinate-kernel'))
+        report.importCoordinateKernelPartial = await page
+          .evaluate(() => window.__gevCoordinateKernelReport || null)
+          .catch(() => null);
       report.importFixturePartialResult = await page
         .$eval('#result', (element) => element.textContent.slice(0, 16_000))
         .catch(() => null);
@@ -194,7 +227,10 @@ try {
     } finally {
       observingImportPage = false;
     }
-    if (
+    if (process.argv.includes('--import-coordinate-kernel')) {
+      if (!report.importCoordinateKernel)
+        throw new Error('Coordinate-kernel fixture did not return its result.');
+    } else if (
       report.importBatches.applicationCommit !== commit ||
       report.importBatches.status !== 'passed' ||
       report.importBatches.samples?.length !== 10 ||
@@ -208,10 +244,11 @@ try {
         report.importBatches.mixedGeometryParity?.status !== 'passed') ||
       (process.argv.includes('--import-point-benefit-diagnostics') &&
         report.importBatches.pointBenefitDiagnosticsRequested !== true)
-    )
+    ) {
       throw new Error(
         `Import comparison failed: ${report.importBatches.error || 'incomplete checks'}`,
       );
+    }
     if (
       process.argv.includes('--collections') &&
       report.hardwareRenderingAvailable
@@ -554,6 +591,7 @@ try {
     process.argv.includes('--calibration') ||
     process.argv.includes('--import-point-entity') ||
     process.argv.includes('--import-point-collection') ||
+    process.argv.includes('--import-coordinate-kernel') ||
     process.argv.includes('--soak')
   ) {
     await mkdir('qa-artifacts', { recursive: true });

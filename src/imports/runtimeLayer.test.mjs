@@ -196,6 +196,129 @@ test('opt-in scalar Cartesian kernel exactly matches Cesium across 50k full-deta
     Cesium.Ellipsoid.default = previousEllipsoid;
   }
 });
+
+test('opt-in scalar Cartesian kernel matches WGS84 at global longitude, latitude, and height extremes', (t) => {
+  const env = fixture(t, { coordinateKernel: 'scalar-experiment' });
+  const previousEllipsoid = Cesium.Ellipsoid.default;
+  const extremes = [
+    [-180, -90, 0],
+    [180, 90, 0],
+    [-180, 90, -12_000],
+    [180, -90, 35_786_000],
+    [-179.999999, 89.999999, -6_378_137],
+    [179.999999, -89.999999, 6_378_137],
+    [0, 0, 0],
+    [360, -0, Number.NaN],
+  ];
+  try {
+    Cesium.Ellipsoid.default = Cesium.Ellipsoid.WGS84;
+    env.layer.load(
+      [
+        {
+          id: 'global-extremes',
+          kind: 'geojson',
+          records: [
+            {
+              id: 'global-line',
+              geometry: { type: 'LineString', coordinates: extremes },
+            },
+          ],
+        },
+      ],
+      { workspaceId: 'scalar-wgs84-extremes' },
+    );
+    const actual = env.entities
+      .getById('gev-import:scalar-wgs84-extremes:global-extremes:global-line')
+      .polyline.positions.getValue();
+    assert.equal(actual.length, extremes.length);
+    for (let index = 0; index < extremes.length; index++) {
+      const [longitude, latitude, height] = extremes[index];
+      assert.deepEqual(
+        actual[index],
+        Cesium.Cartesian3.fromDegrees(
+          longitude,
+          latitude,
+          Number.isFinite(height) ? height : 0,
+        ),
+        `WGS84 extreme ${index}`,
+      );
+    }
+  } finally {
+    Cesium.Ellipsoid.default = previousEllipsoid;
+  }
+});
+
+test('opt-in scalar kernel preserves Cesium behavior for non-finite longitude and latitude', (t) => {
+  const experimental = fixture(t, { coordinateKernel: 'scalar-experiment' });
+  const coordinates = [
+    [Number.NaN, 0, 0],
+    [0, Number.POSITIVE_INFINITY, 0],
+  ];
+  const outcome = (convert) => {
+    try {
+      const positions = coordinates.map(convert);
+      return {
+        positions: positions.map(({ x, y, z }) =>
+          [x, y, z].map((value) =>
+            Number.isNaN(value)
+              ? 'NaN'
+              : value === Infinity
+                ? 'Infinity'
+                : value,
+          ),
+        ),
+      };
+    } catch (error) {
+      return { errorName: error.name, errorMessage: error.message };
+    }
+  };
+  const imports = [
+    {
+      id: 'invalid-coordinates',
+      kind: 'geojson',
+      records: [
+        {
+          id: 'invalid-line',
+          geometry: { type: 'LineString', coordinates },
+        },
+      ],
+    },
+  ];
+  let importOutcome;
+  try {
+    const result = experimental.layer.load(imports, {
+      workspaceId: 'malformed-scalar',
+    });
+    const entity = experimental.entities.getById(
+      'gev-import:malformed-scalar:invalid-coordinates:invalid-line',
+    );
+    importOutcome = {
+      result,
+      positions: (entity?.polyline?.positions?.getValue?.() || []).map(
+        ({ x, y, z }) =>
+          [x, y, z].map((value) =>
+            Number.isNaN(value)
+              ? 'NaN'
+              : value === Infinity
+                ? 'Infinity'
+                : value,
+          ),
+      ),
+    };
+  } catch (error) {
+    importOutcome = { errorName: error.name, errorMessage: error.message };
+  }
+  assert.deepEqual(
+    importOutcome.positions,
+    outcome((coordinate) =>
+      Cesium.Cartesian3.fromDegrees(
+        coordinate[0],
+        coordinate[1],
+        Number.isFinite(coordinate[2]) ? coordinate[2] : 0,
+      ),
+    ).positions,
+  );
+});
 const records = (count) => [
   {
     id: 'fixture',

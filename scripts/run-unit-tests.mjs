@@ -33,6 +33,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/importFrameDiagnostics.test.mjs',
   'scripts/performance/importPointState.test.mjs',
   'scripts/performance/importPointRepresentationComparison.test.mjs',
+  'scripts/performance/importCoordinateKernelComparison.test.mjs',
   'scripts/performance/importPointRepresentationBenefit.test.mjs',
   'scripts/performance/profileRecoveryFixtureContract.test.mjs',
   'scripts/performance/importWorkspaceLifecycle.test.mjs',
