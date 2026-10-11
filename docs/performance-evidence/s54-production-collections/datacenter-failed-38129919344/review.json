@@ -1,0 +1,46 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38129919344",
+  "commit": "14ffe21a8bda35770b30ec1d9d6d380a850a7f18",
+  "status": "failed",
+  "reason": "Native renderer probe failed: Infrastructure fixture failed: entities default-style did not settle with native point/stem picks.",
+  "pickDiagnostics": {
+    "examined": 4362,
+    "hidden": 4360,
+    "offscreen": 0,
+    "coincident": 0,
+    "pointMisses": 0,
+    "stemMisses": 2,
+    "rejections": [
+      {
+        "kind": "stem",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1176042553",
+        "actualEntityId": null,
+        "primitiveType": null,
+        "appearanceType": null
+      },
+      {
+        "kind": "stem",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1182624646",
+        "actualEntityId": null,
+        "primitiveType": null,
+        "appearanceType": null
+      }
+    ]
+  },
+  "observedGeometry": "b3aa411fe8907e9961fc8454221545af43ee0ea2ea60a2fa1362db9ef654f77f",
+  "pixelSha256": "7c7ffce8bc403e9e8ce239dc0cfcb0e34fd9ab6e5555a7313c9f825604aae5a9",
+  "completedCaptures": 20,
+  "geometryReady": true,
+  "sceneReadiness": {
+    "dataSourcesReady": true,
+    "globeTilesLoaded": true
+  },
+  "rootCause": "Unresolved: point hits are accepted but stems are not visible or picked in the default Entity lifetime. Previous runs at the same geometry hash rendered stems. Bounded primitive show/readiness/instance bounding-sphere observations added; no deadline or visual contract changes.",
+  "scope": "Default Entity lifetime failed before candidate comparison; not performance acceptance.",
+  "artifacts": {
+    "hosted-native-renderer.json": "bbf20990e1070cd0facba4481bcfed32f93e1c6ac9a0e7b0afbdc533e683f784",
+    "last-frame.png": "a05287e737fa74c54a679e47c7d58d1c246b8701865439535943814227bdd65c"
+  }
+}

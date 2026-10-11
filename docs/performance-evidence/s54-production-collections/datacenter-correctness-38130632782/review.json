@@ -1,0 +1,128 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38130632782",
+  "commit": "4f5c55f5b4e708e48b6ec23dc68c5b5cbf50523d",
+  "rawSha256": "3f9a678bfa0b063f2158d3b85918d2a55c9f952b015f8f9f77af555830b3e292",
+  "status": "passed",
+  "decodedImages": 20,
+  "comparisons": [
+    {
+      "caseId": "default-style",
+      "pair": 0,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "default-style",
+      "pair": 1,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "default-style",
+      "pair": 2,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "default-style",
+      "pair": 3,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "default-style",
+      "pair": 4,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 0,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 1,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 2,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 3,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 4,
+      "differingRgbaBytes": 0,
+      "dimensions": [
+        960,
+        640
+      ]
+    }
+  ],
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderer": {
+    "appCommit": "4f5c55f5b4e708e48b6ec23dc68c5b5cbf50523d",
+    "harnessCommit": "4f5c55f5b4e708e48b6ec23dc68c5b5cbf50523d",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "viewport": {
+      "width": 1200,
+      "height": 960,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 960,
+      "height": 640
+    },
+    "layers": []
+  },
+  "scope": "Hosted paravirtual Metal correctness only; no performance or physical Windows acceptance. Earlier missing-stem failure remains unresolved; this diagnostic observes ready=false/show=false baseline stem primitives during an early attempted pick, then ready=true/show=true and correct spheres on the later successful pick. Diagnostics changed timing; this is not proof of a runtime fix."
+}

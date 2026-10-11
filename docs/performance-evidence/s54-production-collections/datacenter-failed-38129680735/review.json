@@ -1,0 +1,56 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38129680735",
+  "commit": "81ad9b8e65a3915bba2bf6f742d7194a5c300a2f",
+  "status": "failed",
+  "reason": "Native renderer probe failed: Infrastructure fixture failed: entities default-style did not settle with native point/stem picks.",
+  "pickDiagnostics": {
+    "examined": 4362,
+    "hidden": 4360,
+    "offscreen": 0,
+    "coincident": 0,
+    "pointMisses": 2,
+    "stemMisses": 0,
+    "rejections": [
+      {
+        "kind": "point",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1176042553",
+        "actualEntityId": "1182624646",
+        "primitiveType": "PointPrimitive",
+        "appearanceType": null
+      },
+      {
+        "kind": "point",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1182624646",
+        "actualEntityId": "1182624646",
+        "primitiveType": "PointPrimitive",
+        "appearanceType": null
+      }
+    ]
+  },
+  "source": {
+    "layerId": "local-datacenters",
+    "payloadSha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+    "payloadBytes": 2561978,
+    "featureCount": 4351,
+    "geometryKinds": {
+      "Polygon": 3509,
+      "Point": 834,
+      "MultiPolygon": 8
+    }
+  },
+  "teardown": {
+    "layerDestroyed": true,
+    "dataSourceRemoved": true,
+    "rendererOwnersRemoved": true,
+    "viewerKeptForNextLifetime": true,
+    "instrumentationRestored": true,
+    "ownerCountAfterDestroy": 0,
+    "dataSourceCountAfterDestroy": 0,
+    "scenePrimitiveCountAfterDestroy": 1,
+    "groundPrimitiveCountAfterDestroy": 1
+  },
+  "rootCause": "Fixture passed targetLayer.layerId, but production layer exposes id; the fixture descriptor exposes layerId. Helper correctly rejected undefined layerId. Caller corrected to descriptor layer.layerId; search now fails immediately on mismatched inventory identity.",
+  "scope": "Default Entity lifetime failed before candidate comparison; not renderer or performance evidence."
+}

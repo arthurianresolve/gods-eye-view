@@ -1,0 +1,100 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38130908513",
+  "commit": "4f5c55f5b4e708e48b6ec23dc68c5b5cbf50523d",
+  "rawSha256": "b44551c7bfe845485eb79ce579293b2d290ef3e4b083e024bf5d99e81d1cdfb6",
+  "verifiedImageFiles": 40,
+  "uniqueDecodedPngs": 1,
+  "comparisons": [
+    {
+      "suite": "latency",
+      "pair": 0,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "latency",
+      "pair": 1,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "latency",
+      "pair": 2,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "latency",
+      "pair": 3,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "latency",
+      "pair": 4,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "memory",
+      "pair": 0,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "memory",
+      "pair": 1,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "memory",
+      "pair": 2,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "memory",
+      "pair": 3,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    },
+    {
+      "suite": "memory",
+      "pair": 4,
+      "firstUsableDifferingBytes": 0,
+      "settledDifferingBytes": 0
+    }
+  ],
+  "summary": {
+    "latency": {
+      "entities": {
+        "sourceReadyElapsedMedianMs": 497.29999999998836,
+        "firstUsableAfterSourceReadyMedianMs": 5278.700000000012,
+        "samples": 5
+      },
+      "primitive-collections": {
+        "sourceReadyElapsedMedianMs": 485.1000000000058,
+        "firstUsableAfterSourceReadyMedianMs": 2856.100000000006,
+        "samples": 5
+      }
+    },
+    "memory": {
+      "entities": {
+        "enabledHeapDeltaMedianBytes": 163904892,
+        "afterDestroyHeapDeltaMedianBytes": 118980596,
+        "absoluteHeapBytesAfterGc": 134007252,
+        "afterViewerDestroyHeapDeltaMedianBytes": 9235868,
+        "samples": 5
+      },
+      "primitive-collections": {
+        "enabledHeapDeltaMedianBytes": 137470376,
+        "afterDestroyHeapDeltaMedianBytes": 85170972,
+        "absoluteHeapBytesAfterGc": 100197376,
+        "afterViewerDestroyHeapDeltaMedianBytes": 8946528,
+        "samples": 5
+      }
+    }
+  },
+  "scope": "Hosted paravirtual Metal, five fresh-viewer latency pairs and five separate forced-GC JS-heap pairs. Not GPU/native/process retained memory, motion performance, Windows evidence or a full soak. Earlier default-Entity cold activation deadline remains unresolved."
+}

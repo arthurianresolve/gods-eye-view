@@ -1,0 +1,53 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38128332112",
+  "commit": "45c46f21f845318f67cf1b59d8ce22a32dd18925",
+  "status": "failed",
+  "reason": "Native renderer probe failed: Infrastructure fixture failed: entities default-style did not settle with native point/stem picks.",
+  "pickDiagnostics": {
+    "examined": 4362,
+    "hidden": 4360,
+    "offscreen": 0,
+    "coincident": 0,
+    "pointMisses": 1,
+    "stemMisses": 1,
+    "rejections": [
+      {
+        "kind": "point",
+        "reason": "source-entity-mismatch",
+        "expectedEntityId": "1176042553",
+        "actualEntityId": "1182624646",
+        "primitiveType": "PointPrimitive",
+        "appearanceType": null
+      },
+      {
+        "kind": "stem",
+        "reason": "source-entity-mismatch",
+        "expectedEntityId": "1182624646",
+        "actualEntityId": "1176042553",
+        "primitiveType": "Primitive",
+        "appearanceType": "PolylineColorAppearance"
+      }
+    ]
+  },
+  "sceneReadiness": {
+    "dataSourcesReady": true,
+    "globeTilesLoaded": true
+  },
+  "cameraContract": {
+    "layerId": "local-datacenters",
+    "kind": "lookAt-world-frame",
+    "targetCartographic": [
+      -1.236567286826375,
+      -0.924014956174621,
+      2000.0000000006846
+    ],
+    "headingRadians": 0,
+    "pitchRadians": -1.0471975511965976,
+    "sampleRangesMeters": [
+      140000,
+      170000
+    ],
+    "restoredTransform": "IDENTITY"
+  },
+  "scope": "Framing now exposes both surfaces. Default renderer fails the fixture assumption that point and stem topmost hits must be the same Entity; no candidate comparison ran."
+}

@@ -1,0 +1,33 @@
+{
+  "baseCommit": "45c46f21f845318f67cf1b59d8ce22a32dd18925",
+  "recordedAt": "2026-10-11T09:48:07.136Z",
+  "node": "v24.16.0",
+  "tests": {
+    "passed": 36,
+    "failed": 0
+  },
+  "format": {
+    "passed": true,
+    "files": 1523
+  },
+  "legacyReportsValidated": [
+    "38125170759",
+    "38126090636",
+    "38124840068"
+  ],
+  "legacyWrongRequestedLayerRejected": true,
+  "logSha256": "1135711363a627cb87e7cf7d1a39504a70306de2f99ce60bd9e747cee287fc3b",
+  "sourceHashes": {
+    "scripts/fixtures/infrastructure-runtime-collections.mjs": "e9cfea3d3e8eef78dd731b44747a17200d8440923989bb1a71177a0996cc0548",
+    "scripts/fixtures/infrastructure-benefit.mjs": "ddea2d78432e3200da20a8dadaec4ba9e398bc0402af3d04f7aa449e7a53daf0",
+    "scripts/fixtures/infrastructureNativePickOwnership.mjs": "1c8b74edb61b2a9975136f544032052833ee6c4bd968912f8a2d5d7c5dec35d1",
+    "scripts/fixtures/infrastructureNativePickOwnership.test.mjs": "d40b52d6d4f9abbb8de4b58310444a3bf4d7defde8062322d6f0f7840c7ceb6e",
+    "scripts/performance/infrastructureRuntimeComparison.mjs": "ca826ba63401642620b32f5421d402aa659d7a01189b1cc8f7dcb5a240684672",
+    "scripts/performance/infrastructureRuntimeComparison.test.mjs": "6161bb501dd14207e31749f94756bc6d7db235103fdc436fd684d510ceba385a",
+    "scripts/performance/infrastructureBenefitComparison.mjs": "cef2002de3d041d06ddf829c53644639578b4bb37434af529cef07bac510ee02",
+    "scripts/performance/infrastructureBenefitComparison.test.mjs": "f2335a3cfbf58d30439e74b2a4e01ee453201f24c2e1142a43845bef36c066c8",
+    "scripts/format-scope.json": "c62f9c718e79ebe222e85d145c6664158b4f082d53294e7a0a39fd992715a66e",
+    "scripts/run-unit-tests.mjs": "3d3894be397fda0c63fe7d3f8ffb1d60c81201778ce33cb752e08c20074c8ca5"
+  },
+  "scope": "Native pick ownership fixture correction only. Separate point/stem IDs and exact query coordinates are required across renderers. Existing pixels/geometry/style/deadlines/populations/camera are unchanged. Rendered DCS verification pending."
+}
