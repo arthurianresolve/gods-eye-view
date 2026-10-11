@@ -1536,12 +1536,20 @@ test('regional transfer releases the displaced decoded image but not a late Cesi
 });
 
 test('regional transfer releases its decoded source when processing throws', async () => {
-  const error = new Error('canvas draw failed');
+  const error = new Error('canvas readback failed');
+  const operations = [];
   const h = renderingHarness({
     createCanvas: () => ({
       getContext: () => ({
         drawImage() {
+          operations.push('draw');
+        },
+        getImageData() {
+          operations.push('readback');
           throw error;
+        },
+        putImageData() {
+          operations.push('writeback');
         },
       }),
     }),
@@ -1557,6 +1565,7 @@ test('regional transfer releases its decoded source when processing throws', asy
     height: 256,
     close() {
       closes++;
+      operations.push('close');
     },
   };
   provider.response = { promise: Promise.resolve(image) };
@@ -1565,7 +1574,68 @@ test('regional transfer releases its decoded source when processing throws', asy
     (cause) => cause === error,
   );
   assert.equal(closes, 1);
+  assert.deepEqual(operations, ['draw', 'readback', 'close']);
   h.rendering.clear();
+});
+
+test('30 regional transfers close each source once and clear frame ownership', async () => {
+  const h = renderingHarness();
+  for (let cycle = 0; cycle < 30; cycle++) {
+    const stage = h.rendering.setFrame(
+      { ...snapshot, product: 'clouds-regional' },
+      times[cycle % times.length],
+    );
+    const provider = h.providers.at(-1);
+    let closes = 0;
+    const source = {
+      width: 256,
+      height: 256,
+      close() {
+        closes++;
+      },
+    };
+    provider.response = { promise: Promise.resolve(source) };
+    const processed = await provider.requestImage(cycle, 0, 0, {});
+
+    assert.notEqual(processed, source);
+    assert.equal(processed.source, source);
+    assert.deepEqual([...processed.pixels], [194, 100, 0, 98]);
+    assert.equal(closes, 1, `cycle ${cycle}: decoded source closes once`);
+
+    h.rendering.clear();
+    assert.equal(await stage, false, `cycle ${cycle}: stage is cancelled`);
+    assert.equal(closes, 1, `cycle ${cycle}: clear does not close it twice`);
+    assert.equal(
+      h.postRender.size,
+      0,
+      `cycle ${cycle}: no frame listener remains`,
+    );
+    assert.equal(
+      provider.errorEvent.size,
+      0,
+      `cycle ${cycle}: no provider listener remains`,
+    );
+    assert.deepEqual(
+      h.rendering.getDiagnostics(),
+      {
+        host: 'globe',
+        cache: { mosaics: 0, prefetching: false },
+        imageryCount: 0,
+        mosaic: undefined,
+        infrared: 'filtered',
+        loading: false,
+        time: null,
+        hidden: false,
+        product: null,
+        pendingTiles: 0,
+        deferredTiles: 0,
+        loadedTiles: 0,
+        frameLoadMs: null,
+        error: null,
+      },
+      `cycle ${cycle}: no frame resource owner remains after clear`,
+    );
+  }
 });
 
 test('radar request images pass through without application close', async () => {
