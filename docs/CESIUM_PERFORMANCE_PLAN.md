@@ -209,10 +209,17 @@ changes the label width from 283 to 299 pixels, and does not wake the retired
 host. All four 800-ms idle samples have zero frames and render requests.
 [Raw font evidence and review](performance-evidence/s52-placement-revised-fixed/native-font-review.json)
 retain software-WebGL scope. These are correctness checks, not hardware or
-performance acceptance. The frozen candidate's
+performance acceptance. All seven standard jobs in the
+[full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099704275)
+pass at this exact candidate: Node 24/26, production builds, formatting,
+boundaries, Windows onboarding, recovery on Linux/macOS/Windows, and every
+ordinary browser journey, including the mixed-use smoke and portable panel.
+[Job evidence](performance-evidence/s52-placement-revised-fixed/ci-run.json)
+and [review](performance-evidence/s52-placement-revised-fixed/ci-review.json)
+record the skipped PR-only published layer-token checks and optional diagnostics
+separately. The frozen candidate's
 [CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099699273)
-and [full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099704275)
-remain under observation; remote `dev` stays at `7269408`.
+remains under observation; remote `dev` stays at `7269408`.
 
 The allocation increase is isolated to the moving anchor comparison path.
 Checking unequal anchors before `Object.is` removes the measured increase while
