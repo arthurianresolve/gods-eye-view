@@ -3,6 +3,7 @@ import cesium from 'vite-plugin-cesium';
 import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { panelBuildPlugin } from './panel.js';
+import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
 
 /**
  * Content-Security-Policy for every document the dev/preview server serves.
@@ -63,6 +64,7 @@ export function createBrowserViteConfig({
     plugins: [
       // First, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
+      cesiumDependencyIdentityPlugin(),
       cesium(),
       applicationHtmlPlugin(),
       ...plugins,

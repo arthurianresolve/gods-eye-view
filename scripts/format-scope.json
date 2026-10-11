@@ -1194,5 +1194,7 @@
   "scripts/performance/infrastructureBenefitComparison.mjs",
   "scripts/performance/infrastructureBenefitComparison.test.mjs",
   "scripts/fixtures/infrastructurePrimitiveObservation.mjs",
-  "scripts/fixtures/infrastructurePrimitiveObservation.test.mjs"
+  "scripts/fixtures/infrastructurePrimitiveObservation.test.mjs",
+  "build/cesium-dependencies.js",
+  "src/tooling/cesiumDependencies.test.mjs"
 ]
