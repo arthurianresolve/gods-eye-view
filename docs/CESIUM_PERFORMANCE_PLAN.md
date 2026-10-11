@@ -1,5 +1,15 @@
 # Cesium performance plan
 
+Latest integration: `7ef32a74afc7574d5fcad0dc19d2b4b33c49e815` passes all seven
+standard CI jobs after incorporating main `591f299` and correcting disclosure
+ownership in the accessibility journey. All 15 three-OS recovery checkpoints
+preserve settings/workspaces and exit normally; 61 computed accessible control
+names pass across the inspector, workspace library and timeline. Local token
+checks pass against both frozen branch bases. [Exact evidence and limits](performance-evidence/main-weather-38152867100/README.md)
+retain the earlier failed run separately. This accepts the integration for dev;
+the intermittent Windows shutdown cause, physical frame-delivery failure and
+remaining S47-S60 requirements are still unresolved.
+
 Cable multipart source mapping is corrected at `64a607e` with 39 focused
 checks and all seven ordinary integration jobs passing. All 1,913 bundled cable segments resolve to their actual 712
 source features, retaining native Entity IDs and one reference per source.
