@@ -1,5 +1,14 @@
 # Cesium performance plan
 
+S59 large-geometry comparison (11 October 2026): the hosted browser experiment
+at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
+256-coordinate chunking arms regress completion time in four of five pairs for
+lines and polygons. Measured spans also remain above the 4 ms target. The
+experiment is not accepted; production defaults remain unchanged.
+[Raw results and independent review](performance-evidence/import-geometry-wake-current-dev/README.md).
+Large-feature batching remains unfinished; the next experiment must reduce and
+attribute active preparation cost before another scheduling change.
+
 Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
 Point integration passes all seven standard jobs and fifteen recovery stages at
 `1a8d4928`. Frozen candidate `fca2f991` also passes collection-specific native

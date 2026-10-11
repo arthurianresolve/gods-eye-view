@@ -1,5 +1,12 @@
 # Performance baseline
 
+The hosted large-geometry experiment at `df63fc43` is rejected for production:
+both 256-coordinate chunking arms preserve all 30 decoded images and native
+picks but regress completion time in four of five pairs for both lines and
+polygons. Their measured active spans also remain above the 4 ms target.
+[Paired timings, raw artifacts and limits](performance-evidence/import-geometry-wake-current-dev/README.md)
+record the result without changing production scheduling or preparation.
+
 Latest checkpoint (11 October 2026): the isolated imported-point comparison
 shows a -56.9% median paired cooperative-load change across five hosted pairs,
 with 55 exact image pairs and matching native picks. [Full results and limits](performance-evidence/import-point-current-dev/README.md)
