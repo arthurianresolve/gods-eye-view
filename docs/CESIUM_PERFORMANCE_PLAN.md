@@ -141,22 +141,22 @@ existing behavior alone does not complete a new slice. No S47-S60 slice has full
 acceptance evidence yet. The [S32-S46 ledger](IMPLEMENTATION_PLAN_NEXT.md) retains
 the earlier release requirements and historical results.
 
-| Slice | Code implemented | Automatically validated | Hardware validated |
-| --- | --- | --- | --- |
-| S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
-| S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
-| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
-| S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
-| S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
-| S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
-| S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
-| S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
-| S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
-| S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
-| S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
-| S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards and header-only CSV setup; full document decoding and wider UI maintenance remain | All seven integration jobs pass at `9a665b2`; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
-| S60 final candidate | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental |
+| Slice                                    | Code implemented                                                                                                                                                                                                                                              | Automatically validated                                                                                                                                                                                                                                                                                                                                                                     | Hardware validated                                                                                                                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S47 baseline and comparable capture      | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards                                                                              | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending                                                                                                                                                                                                                                                    | Pending matched captures and negative control                                                                                                                                                              |
+| S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts                                                                        | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains                                                                                                                                                                                                                            | Pending traces, allocation profiles and cost attribution                                                                                                                                                   |
+| S49 worker/lifecycle retention           | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners                                                                                        | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed`                                                                                                                                                                     | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending                                                                                                        |
+| S50 geometry coalescing                  | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed                                                                                   | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611`                                                                                                                                                                                                | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain                                      |
+| S51 render demand scheduling             | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains                                                                                                              | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels                                                                                                                                                                                                             | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending                                                                                 |
+| S52 overlay invalidation                 | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance                                                                                                      |
+| S53 collection uploads                   | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected                                                                                                                                    | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass                                                                                                                                                                  | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed                                                                  |
+| S54 infrastructure batching              | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged                                                                                                    | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained                                                                                                                                                                                                                                   | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending                                                                     |
+| S55 tracking updates                     | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate                                                                                                               | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame                                                                                                                                                                         | Pending tracking p95 and full camera-ownership comparison                                                                                                                                                  |
+| S56 fresh-frame capture                  | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence                                                                                                                                | 168 focused tests pass including failure paths, concurrent teardown and resized capture                                                                                                                                                                                                                                                                                                     | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending                                     |
+| S57 map-resource lifetime                | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained                                                                                            | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads                                                                                                                                                                                                                                                                                              | Pending matched streaming/activation measurements                                                                                                                                                          |
+| S58 weather/effects                      | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains                                                                                                                                             | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero                                                                                                                                                                                                                                                                  | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain                                           |
+| S59 cooperative ingestion                | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards and header-only CSV setup; full document decoding and wider UI maintenance remain     | All seven integration jobs pass at `9a665b2`; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4`                                                                                                                                                                                                    | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
+| S60 final candidate                      | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending                                                                                                                                                    | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below                                                                                                                                                                                                                                                                  | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental                                                                                                    |
 
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
@@ -304,16 +304,16 @@ pairs regresses. Two individual regressions exceed 10%. Fixed and periodic input
 improve in every pair, so the unchanged-work benefit is real but does not excuse
 the moving-path cost.
 
-| Workload | Update cadence | Median paired CPU change | Individual pair range |
-| --- | --- | ---: | ---: |
-| Generic, 250 entries | Every frame | +7.53% | +4.66% to +10.78% |
-| Infrastructure, 320 entries | Every frame | +8.14% | +4.92% to +10.90% |
-| Radio, 864 entries | Every frame | +3.22% | +1.46% to +5.37% |
-| Detection, 5,000 entries | Every frame | +2.32% | -3.87% to +6.53% |
-| Infrastructure, 320 entries | Fixed | -22.36% | -25.26% to -22.01% |
-| Radio, 864 entries | Fixed | -19.12% | -21.27% to -18.17% |
-| Infrastructure, 320 entries | Every 60 frames | -22.11% | -25.63% to -21.52% |
-| Radio, 864 entries | Every 60 frames | -15.30% | -16.42% to -13.43% |
+| Workload                    | Update cadence  | Median paired CPU change | Individual pair range |
+| --------------------------- | --------------- | -----------------------: | --------------------: |
+| Generic, 250 entries        | Every frame     |                   +7.53% |     +4.66% to +10.78% |
+| Infrastructure, 320 entries | Every frame     |                   +8.14% |     +4.92% to +10.90% |
+| Radio, 864 entries          | Every frame     |                   +3.22% |      +1.46% to +5.37% |
+| Detection, 5,000 entries    | Every frame     |                   +2.32% |      -3.87% to +6.53% |
+| Infrastructure, 320 entries | Fixed           |                  -22.36% |    -25.26% to -22.01% |
+| Radio, 864 entries          | Fixed           |                  -19.12% |    -21.27% to -18.17% |
+| Infrastructure, 320 entries | Every 60 frames |                  -22.11% |    -25.63% to -21.52% |
+| Radio, 864 entries          | Every 60 frames |                  -15.30% |    -16.42% to -13.43% |
 
 Separate instrumented samples localize the moving overhead to candidate
 preparation: its projection phase grows approximately 8-13%, while solve and
@@ -396,16 +396,16 @@ conditions and populations, and instrumentation-disabled latency samples.
 On AMD EPYC 7763 with Node 24.14.0, all 15 ordinary moving pairs regress;
 one generic pair exceeds 10%. Static and periodic cases improve in every pair.
 
-| Workload | Update cadence | Median paired CPU change | Individual pair range |
-| --- | --- | ---: | ---: |
-| Generic, 250 entries | Every frame | +7.52% | +3.04% to +11.06% |
-| Infrastructure, 320 entries | Every frame | +5.58% | +3.01% to +7.73% |
-| Radio, 864 entries | Every frame | +0.77% | +0.07% to +2.81% |
-| Detection, 5,000 entries | Every frame | -0.36% | -1.71% to +2.67% |
-| Infrastructure, 320 entries | Fixed | -26.41% | -26.93% to -25.05% |
-| Radio, 864 entries | Fixed | -20.24% | -22.88% to -16.95% |
-| Infrastructure, 320 entries | Every 60 frames | -25.35% | -26.02% to -23.49% |
-| Radio, 864 entries | Every 60 frames | -15.53% | -15.84% to -15.05% |
+| Workload                    | Update cadence  | Median paired CPU change | Individual pair range |
+| --------------------------- | --------------- | -----------------------: | --------------------: |
+| Generic, 250 entries        | Every frame     |                   +7.52% |     +3.04% to +11.06% |
+| Infrastructure, 320 entries | Every frame     |                   +5.58% |      +3.01% to +7.73% |
+| Radio, 864 entries          | Every frame     |                   +0.77% |      +0.07% to +2.81% |
+| Detection, 5,000 entries    | Every frame     |                   -0.36% |      -1.71% to +2.67% |
+| Infrastructure, 320 entries | Fixed           |                  -26.41% |    -26.93% to -25.05% |
+| Radio, 864 entries          | Fixed           |                  -20.24% |    -22.88% to -16.95% |
+| Infrastructure, 320 entries | Every 60 frames |                  -25.35% |    -26.02% to -23.49% |
+| Radio, 864 entries          | Every 60 frames |                  -15.53% |    -15.84% to -15.05% |
 
 Removing duplicate signature fields resolved the allocation failure but did not
 resolve moving CPU overhead. Separate instrumented samples still place that
@@ -1426,10 +1426,10 @@ comparisons match within their pairs, all 32 vessel billboards remain present,
 focus reaches its configured floor and release returns exactly to alpha 255.
 All ten viewers, governors and scheduled demands clean up in each environment.
 
-| Environment | Idle rendered frames, control to candidate | Evidence |
-| --- | --- | --- |
-| Physical Windows, Intel UHD 620 through ANGLE/D3D11, Chrome 154; 888x529 drawing buffer, DPR 2, MSAA 4 | 1,508 to 25 across ten idle intervals | [Raw report](performance-evidence/vessels-windows-65fd7f3-2026-10-10.json) |
-| GitHub hosted Apple paravirtual Metal, Chrome 152; supplemental virtual hardware | 502 to 25 across ten idle intervals | [Raw report](performance-evidence/vessels-38075992435.json), [run 38075992435](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075992435), [job result](performance-evidence/vessels-38075992435-run.json) |
+| Environment                                                                                            | Idle rendered frames, control to candidate | Evidence                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Physical Windows, Intel UHD 620 through ANGLE/D3D11, Chrome 154; 888x529 drawing buffer, DPR 2, MSAA 4 | 1,508 to 25 across ten idle intervals      | [Raw report](performance-evidence/vessels-windows-65fd7f3-2026-10-10.json)                                                                                                                                                  |
+| GitHub hosted Apple paravirtual Metal, Chrome 152; supplemental virtual hardware                       | 502 to 25 across ten idle intervals        | [Raw report](performance-evidence/vessels-38075992435.json), [run 38075992435](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38075992435), [job result](performance-evidence/vessels-38075992435-run.json) |
 
 The Windows comparison ran from 18:30:06 to 18:31:25 UTC. Its before-focus
 intervals render 180-181 control frames versus three candidate frames; after
@@ -1474,12 +1474,12 @@ Four fresh-viewer controls used the existing frozen diagnostic build
 Chrome 154 reports Intel UHD 620 through ANGLE/D3D11, a 640x360 drawing buffer,
 and an 888x585 viewport at DPR 2. Settings and the 400 ms deadline are unchanged.
 
-| Control (UTC) | Frame results | Raw report |
-| --- | --- | --- |
-| Globe only, no copy (17:45:36) | 3/3 delivered; 3.8-90.1 ms | [JSON](performance-evidence/wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T17-45-36-323Z.json) |
-| Paused wind, no copy (17:47:46) | 3/3 delivered; 9.8-32.5 ms | [JSON](performance-evidence/wind-frame-delivery-paused-wind-no-copy-7e09988-2026-10-10T17-47-46-921Z.json) |
-| Paused wind, copy (17:48:05) | First two copied; third failed at 412 ms | [Failure JSON](performance-evidence/wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T17-48-05-412Z.json) |
-| Globe only, copy (17:50:40) | 3/3 copied; 14.7-304.2 ms | [JSON](performance-evidence/wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T17-50-40-780Z.json) |
+| Control (UTC)                   | Frame results                            | Raw report                                                                                                      |
+| ------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Globe only, no copy (17:45:36)  | 3/3 delivered; 3.8-90.1 ms               | [JSON](performance-evidence/wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T17-45-36-323Z.json)       |
+| Paused wind, no copy (17:47:46) | 3/3 delivered; 9.8-32.5 ms               | [JSON](performance-evidence/wind-frame-delivery-paused-wind-no-copy-7e09988-2026-10-10T17-47-46-921Z.json)      |
+| Paused wind, copy (17:48:05)    | First two copied; third failed at 412 ms | [Failure JSON](performance-evidence/wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T17-48-05-412Z.json) |
+| Globe only, copy (17:50:40)     | 3/3 copied; 14.7-304.2 ms                | [JSON](performance-evidence/wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T17-50-40-780Z.json)          |
 
 The failed request observes no new animation-frame callback or Cesium render
 event between its before/after observations. Its preceding two pixel hashes
@@ -1683,12 +1683,12 @@ not acceptance evidence. The corrected clean-commit comparison at
 finishes with zero pending jobs and a terminated owned worker. Root recomputed
 the five-pair medians and complete output/count comparisons from the raw report.
 
-| Workload | Main completion median | Worker completion median | Change |
-| --- | --- | --- | --- |
-| 50k-vertex GeoJSON line | 49.87 ms | 79.20 ms | +58.8% |
-| 50k-vertex polygon with hole | 39.92 ms | 86.17 ms | +115.8% |
-| 50k CSV rows | 535.47 ms | 701.03 ms | +30.9% |
-| 50k-coordinate KML line | 66.82 ms | 102.23 ms | +53.0% |
+| Workload                     | Main completion median | Worker completion median | Change  |
+| ---------------------------- | ---------------------- | ------------------------ | ------- |
+| 50k-vertex GeoJSON line      | 49.87 ms               | 79.20 ms                 | +58.8%  |
+| 50k-vertex polygon with hole | 39.92 ms               | 86.17 ms                 | +115.8% |
+| 50k CSV rows                 | 535.47 ms              | 701.03 ms                | +30.9%  |
+| 50k-coordinate KML line      | 66.82 ms               | 102.23 ms                | +53.0%  |
 
 Worker startup is 59.86 ms, excluded from these warmed comparisons. CSV's
 main-thread timer-gap median falls from 129.22 to 18.44 ms and KML's from 66.93
@@ -1723,12 +1723,12 @@ The clean comparison has five rotated triples for each of four workloads, all
 identity remains clean and unchanged through cleanup, with no pending jobs and
 the owned worker terminated. Root independently recomputed all medians.
 
-| Workload | Main median | Clone-worker median | Transfer-worker median | Transfer reconstruction median |
-| --- | ---: | ---: | ---: | ---: |
-| 50k-vertex GeoJSON line | 40.40 ms | 105.07 ms | 418.38 ms | 330.63 ms |
-| 50k-vertex polygon with hole | 39.36 ms | 83.18 ms | 333.45 ms | 256.78 ms |
-| 50k CSV rows | 455.29 ms | 593.71 ms | 901.64 ms | 269.70 ms |
-| 50k-coordinate KML line | 53.79 ms | 81.37 ms | 331.31 ms | 246.55 ms |
+| Workload                     | Main median | Clone-worker median | Transfer-worker median | Transfer reconstruction median |
+| ---------------------------- | ----------: | ------------------: | ---------------------: | -----------------------------: |
+| 50k-vertex GeoJSON line      |    40.40 ms |           105.07 ms |              418.38 ms |                      330.63 ms |
+| 50k-vertex polygon with hole |    39.36 ms |            83.18 ms |              333.45 ms |                      256.78 ms |
+| 50k CSV rows                 |   455.29 ms |           593.71 ms |              901.64 ms |                      269.70 ms |
+| 50k-coordinate KML line      |    53.79 ms |            81.37 ms |              331.31 ms |                      246.55 ms |
 
 Transfer is **rejected as a production path**: total completion regresses for
 every workload, and the CSV median main-thread timer gap remains 104.49 ms.
@@ -1793,12 +1793,12 @@ GPT-6 Luna's `9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` adds a header-only mode 
 
 Root's independent [exact-source comparison](performance-evidence/csv-header-comparison-9a665b2.json) uses baseline `2b269e3` and the clean candidate on Windows/Node 24.16.0. Each of four workloads has two warmups per variant and five alternating pairs over the same 50,000-row, 2,892,263-byte fixture. All 40 timed samples match their complete expected output hash. No forced GC or profiler is active. [Reproduction harness](performance-evidence/csv-header-comparison.mjs).
 
-| Local CPU workload | Baseline median | Candidate median | Change |
-| --- | ---: | ---: | ---: |
-| Column-name discovery | 87.77 ms | 0.024 ms | Removes the redundant body scan |
-| Column setup plus full preview | 433.15 ms | 327.29 ms | 24.4% lower |
-| Standalone full preview | 346.26 ms | 339.48 ms | 2.0% lower |
-| Public full decoder | 74.62 ms | 79.43 ms | 6.4% higher; within the 10% investigation threshold |
+| Local CPU workload             | Baseline median | Candidate median |                                              Change |
+| ------------------------------ | --------------: | ---------------: | --------------------------------------------------: |
+| Column-name discovery          |        87.77 ms |         0.024 ms |                     Removes the redundant body scan |
+| Column setup plus full preview |       433.15 ms |        327.29 ms |                                         24.4% lower |
+| Standalone full preview        |       346.26 ms |        339.48 ms |                                          2.0% lower |
+| Public full decoder            |        74.62 ms |         79.43 ms | 6.4% higher; within the 10% investigation threshold |
 
 Report SHA-256: `b272baad50b091ab2f0c197f45e7e07cde1e7800930ce8d6ae62809fb45ff6ce`; harness SHA-256: `5233ff694d80309addb67c7dc8f1a4df6f5d460bfcbcca06f2231e09611c8d43`. Run `node docs/performance-evidence/csv-header-comparison.mjs 9a665b2bcbd17c081544ccd21b1d4ea2591e68ee` from that clean checkout with the retained harness and locked dependencies.
 
@@ -1828,11 +1828,11 @@ GPT-6 Luna's fixture-only `7e09988616e3242eef0b2349416e36b523243441` creates one
 
 All four downloaded reports identify UHD 620/ANGLE/D3D11 and Chrome 154, a 640x360 drawing buffer, normal 888x585 viewport, DPR 2, antialiasing and preservation enabled. Each reports complete fixture cleanup. Desktop foreground/occlusion remains externally unverified.
 
-| Control | Observations | Raw report |
-| --- | --- | --- |
-| globe-only / copy | Three completed frame requests | [JSON](performance-evidence/windows-wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T15-14-49-910Z.json) |
-| globe-only / no-copy | Three completed frame requests | [JSON](performance-evidence/windows-wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T15-14-36-081Z.json) |
-| paused-wind / copy | Three completed frame requests | [JSON](performance-evidence/windows-wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T15-16-18-682Z.json) |
+| Control               | Observations                                                    | Raw report                                                                                                         |
+| --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| globe-only / copy     | Three completed frame requests                                  | [JSON](performance-evidence/windows-wind-frame-delivery-globe-only-copy-7e09988-2026-10-10T15-14-49-910Z.json)     |
+| globe-only / no-copy  | Three completed frame requests                                  | [JSON](performance-evidence/windows-wind-frame-delivery-globe-only-no-copy-7e09988-2026-10-10T15-14-36-081Z.json)  |
+| paused-wind / copy    | Three completed frame requests                                  | [JSON](performance-evidence/windows-wind-frame-delivery-paused-wind-copy-7e09988-2026-10-10T15-16-18-682Z.json)    |
 | paused-wind / no-copy | First frame request failed; no RAF delivered during 411 ms wait | [JSON](performance-evidence/windows-wind-frame-delivery-paused-wind-no-copy-7e09988-2026-10-10T15-15-34-029Z.json) |
 
 The paused-wind/no-copy failure occurs without any preceding pixel copy, readback or hash in its fresh viewer. Copying is therefore not required to trigger this failure. The separate wind-copy run then completes three requests; that does not erase the failure or identify its browser/OS/compositor cause. No production rendering change, deadline increase, hardware soak pass or performance improvement follows from these controls. Globe-only omits both wind geometry and its generated imagery, so this is not a pure geometry comparison.
@@ -1925,12 +1925,12 @@ baseline/candidate pairs with equal output hashes and the expected accepted
 population. This is Node 24.16.0 on Windows 10, Intel i7-8665U; it measures local
 import completion, without a browser, GPU or forced GC.
 
-| Valid workload | Baseline median | Candidate median |
-| --- | --- | --- |
-| One 40,000-position line | 65.97 ms | 43.79 ms |
-| One 30,000-position polygon with a hole | 56.49 ms | 31.03 ms |
-| 10,000 point features | 423.19 ms | 99.29 ms |
-| Synchronous 40,000-position pack decoder | 12.59 ms | 12.48 ms |
+| Valid workload                           | Baseline median | Candidate median |
+| ---------------------------------------- | --------------- | ---------------- |
+| One 40,000-position line                 | 65.97 ms        | 43.79 ms         |
+| One 30,000-position polygon with a hole  | 56.49 ms        | 31.03 ms         |
+| 10,000 point features                    | 423.19 ms       | 99.29 ms         |
+| Synchronous 40,000-position pack decoder | 12.59 ms        | 12.48 ms         |
 
 All five candidate queued-cancellation trials reject with `AbortError`; every
 baseline trial completes before its queued abort runs. Candidate settlement after
@@ -2530,12 +2530,12 @@ second runtime.
   report the failure; do not label the plan fully accepted. The 20% objective is
   reported separately as achieved or not achieved.
 
-| Environment | Work to execute | What it cannot establish |
-| --- | --- | --- |
-| User's Windows / Intel UHD 620 | Primary foreground visual comparisons, five paired runs per workload, interaction checks, capture matrix, tracking journeys and 60-minute retention soak | Other GPUs or operating systems |
-| VM105 / Linux | Node 24/26 where supported, install/upgrade/rollback, application/API health, worker assets, deployment and persistence | Windows rendering or GPU performance without a verified physical renderer |
-| Free standard GitHub Linux/Windows/macOS runners | Existing CI/recovery suites, bounded fixture jobs, software or verified hosted Metal visual/retention supplements | Physical Mac or discrete Windows GPU coverage; software results are not GPU evidence |
-| Unavailable discrete Windows GPU / physical Mac | Keep original matrix entries unavailable and support claims unverified | These missing machines do not block independent implementation or pretend to pass |
+| Environment                                      | Work to execute                                                                                                                                          | What it cannot establish                                                             |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| User's Windows / Intel UHD 620                   | Primary foreground visual comparisons, five paired runs per workload, interaction checks, capture matrix, tracking journeys and 60-minute retention soak | Other GPUs or operating systems                                                      |
+| VM105 / Linux                                    | Node 24/26 where supported, install/upgrade/rollback, application/API health, worker assets, deployment and persistence                                  | Windows rendering or GPU performance without a verified physical renderer            |
+| Free standard GitHub Linux/Windows/macOS runners | Existing CI/recovery suites, bounded fixture jobs, software or verified hosted Metal visual/retention supplements                                        | Physical Mac or discrete Windows GPU coverage; software results are not GPU evidence |
+| Unavailable discrete Windows GPU / physical Mac  | Keep original matrix entries unavailable and support claims unverified                                                                                   | These missing machines do not block independent implementation or pretend to pass    |
 
 Use free standard public-repository runners only, with bounded project tests,
 limited retained artifacts and no paid GPU/larger runners. Keep tests independent
@@ -3759,6 +3759,7 @@ architectural limitation justifies migration cost. No Next.js migration is plann
 as a Cesium performance fix.
 
 ## Historical evidence continued
+
 - [The historical CI run for `2e0fb80`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/37917730204)
   passed Node 24.14.0/26.x suites and production builds, formatting/boundaries,
   Windows onboarding, Linux/macOS installation/profile recovery and the browser
@@ -3830,11 +3831,11 @@ clean-source runs, each with three warmups and five alternating measurements,
 show repeated CPU preparation reductions:
 
 | Source commit | Stored records | Old median ms | Candidate median ms | Selected features |
-| --- | ---: | ---: | ---: | ---: |
-| `4d90058` | 50,000 | 4.106 | 0.169 | 5,000 |
-| `4d90058` | 250,000 | 19.130 | 0.135 | 5,000 |
-| `5328e25` | 50,000 | 4.306 | 0.176 | 5,000 |
-| `5328e25` | 250,000 | 15.546 | 0.084 | 5,000 |
+| ------------- | -------------: | ------------: | ------------------: | ----------------: |
+| `4d90058`     |         50,000 |         4.106 |               0.169 |             5,000 |
+| `4d90058`     |        250,000 |        19.130 |               0.135 |             5,000 |
+| `5328e25`     |         50,000 |         4.306 |               0.176 |             5,000 |
+| `5328e25`     |        250,000 |        15.546 |               0.084 |             5,000 |
 
 [First raw report](performance-evidence/import-preparation-4d90058.json) and
 [repeat report](performance-evidence/import-preparation-5328e25.json) identify
@@ -3842,7 +3843,6 @@ Windows/Node 24.16 and the exact source revisions. These are Node CPU
 microbenchmarks; they exclude parsing, Cesium geometry and GPU rendering and do
 not establish an end-to-end frame-time gain or complete S59. Cooperative parsing,
 geometry preparation, cancellation and large-import interaction remain pending.
-
 
 ## Subsequent validation on available hardware
 
@@ -3862,8 +3862,7 @@ case that still fails on cache-entry growth. The fresh `8c952b0` smoke passes;
 the earlier report is not overwritten or relabeled.
 
 The [Windows render-demand report](performance-evidence/render-demand-3664f4f.json)
-tests exactly `3664f4f24eafe1e640aca01ecae281a38784b9c8` on Intel UHD 620 / Chrome
-154. A settled isolated viewer renders zero frames in 10,002.6 ms; three scheduled
+tests exactly `3664f4f24eafe1e640aca01ecae281a38784b9c8` on Intel UHD 620 / Chrome 154. A settled isolated viewer renders zero frames in 10,002.6 ms; three scheduled
 one-second updates render three frames. The final capture is green and ownership
 returns to zero holds and scheduled updates. All four checks pass in an
 uninterrupted foreground tab. This supports governor correctness, not every
@@ -3874,7 +3873,6 @@ series. Diagnostic buffers remain opt-in and disabled instrumentation reads no
 clock. The Node attribution fixture uses a mock Canvas2D context: its phase
 names describe synchronous algorithm work, not browser paint, GPU duration or
 motion p95. Allocation/forced-GC diagnostics remain separate from timing runs.
-
 
 ## S52 experiment disposition and S59 continuation
 
@@ -3973,7 +3971,6 @@ The runtime traffic change is accepted; fleet scheduling remains excluded.
 [Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
 retain separate code, automated and hosted/physical hardware status.
 
-
 ### Main integration and Windows close follow-up (2026-10-11)
 
 The proposed merge of main `591f299d11f38a612629a274463196d57ae3862e`
@@ -4006,7 +4003,6 @@ instrumentation, not a root-cause fix. Focused ownership tests (25) pass, includ
 late exit, unresolved close, expired observation, rejection, and invalid budgets.
 Hosted validation of the new diagnostic is pending.
 
-
 ### Windows shutdown reproducibility follow-up
 
 [Diagnostic 38136959543](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38136959543)
@@ -4025,7 +4021,6 @@ Ordinary CI retains its original five stages with zero additional reopens.
 This tests whether the existing profile/application combination reproduces a
 late or stuck process without adding repeated installs/builds or changing the
 acceptance deadline. Hardware and application-performance claims are excluded.
-
 
 ### Windows close repetition result - 11 October 2026
 
@@ -4047,7 +4042,6 @@ termination. This narrows the observed delay to process shutdown after protocol
 disconnection; it does not establish which Chromium subsystem delayed exit or
 prove an application/main-merge regression. Earlier prior-build failures remain
 relevant. The merge and Windows recovery gate remain unaccepted.
-
 
 The next hosted Windows diagnostic records Chromium's `shutdown` trace category
 using its [documented tracing switches](https://chromium.googlesource.com/chromium/src/+/a0e9c1e80c1bd2ab242a969fd460af4a07cae15e/components/tracing/common/tracing_switches.cc).
