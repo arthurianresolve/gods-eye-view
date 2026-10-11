@@ -10,6 +10,77 @@ import {
 } from './cableReferenceCollections.mjs';
 
 const commit = 'a'.repeat(40);
+
+test('static Entity stem picks require the actual polyline appearance and owner', () => {
+  const report = validReport();
+  report.lifetimes[0].samples[0].stemPick.primitiveType = 'Primitive';
+  report.lifetimes[0].samples[0].stemPick.appearanceType =
+    'PolylineColorAppearance';
+  assert.equal(
+    validateCableReferenceCollectionsReport(report, { expectedCommit: commit }),
+    true,
+  );
+  for (const invalid of [
+    { appearanceType: 'PerInstanceColorAppearance' },
+    { ownerVerified: false },
+  ]) {
+    const changed = structuredClone(report);
+    Object.assign(changed.lifetimes[0].samples[0].stemPick, invalid);
+    assert.throws(
+      () =>
+        validateCableReferenceCollectionsReport(changed, {
+          expectedCommit: commit,
+        }),
+      /verified native owned pick/,
+    );
+  }
+});
+
+test('owned readiness contract rejects pending, truncated and missing observations', () => {
+  const report = validReport();
+  report.samplingContract = 'owned-primitives-ready/v1';
+  for (const lifetime of report.lifetimes)
+    for (const sample of lifetime.samples)
+      sample.primitiveReadiness = {
+        ready: true,
+        truncated: false,
+        observedOwners: 20,
+        pending: [],
+      };
+  assert.equal(
+    validateCableReferenceCollectionsReport(report, { expectedCommit: commit }),
+    true,
+  );
+  for (const invalid of [
+    undefined,
+    { ready: false },
+    { ready: true, truncated: true, observedOwners: 64, pending: [] },
+    {
+      ready: true,
+      truncated: false,
+      observedOwners: 20,
+      pending: [{ path: 'pending' }],
+    },
+  ]) {
+    const changed = structuredClone(report);
+    changed.lifetimes[0].samples[0].primitiveReadiness = invalid;
+    assert.throws(
+      () =>
+        validateCableReferenceCollectionsReport(changed, {
+          expectedCommit: commit,
+        }),
+      /unfinished primitive/,
+    );
+  }
+  report.samplingContract = 'unsupported';
+  assert.throws(
+    () =>
+      validateCableReferenceCollectionsReport(report, {
+        expectedCommit: commit,
+      }),
+    /contract is unknown/,
+  );
+});
 const hash = 'b'.repeat(64);
 const renderClock = {
   iso: '2026-10-11T12:34:56.000Z',

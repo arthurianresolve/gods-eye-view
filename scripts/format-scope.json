@@ -1189,5 +1189,7 @@
   "scripts/performance/trafficFixtureInterception.mjs",
   "scripts/performance/trafficFixtureRandom.mjs",
   "scripts/performance/trafficFixtureRandomTransform.mjs",
-  "scripts/fixtures/traffic-render-demand.vite.mjs"
+  "scripts/fixtures/traffic-render-demand.vite.mjs",
+  "scripts/fixtures/scenePrimitiveReadiness.mjs",
+  "scripts/fixtures/scenePrimitiveReadiness.test.mjs"
 ]

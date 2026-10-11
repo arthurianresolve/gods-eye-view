@@ -8,6 +8,7 @@ import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import { createCableCameraSweepGate } from './cableCameraSweep.mjs';
 import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
+import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
 import {
   CABLE_REFERENCE_RENDER_CASES,
   CABLE_REFERENCE_RENDER_POPULATION,
@@ -452,6 +453,7 @@ async function waitForStableScene(
   mode,
   sourceRecords,
   deadline = performance.now() + STABLE_TIMEOUT_MS,
+  observations = null,
 ) {
   let previous = null;
   let stableFrames = 0;
@@ -463,9 +465,24 @@ async function waitForStableScene(
       if (performance.now() >= deadline) break;
       throw error;
     }
+    const primitiveReadiness = readScenePrimitiveReadiness(
+      viewer.scene,
+      Cesium,
+    );
+    if (observations) {
+      const observation = {
+        remainingMs: deadline - performance.now(),
+        frameNumber: viewer.scene.frameState?.frameNumber ?? null,
+        dataSourceDisplayReady: viewer.dataSourceDisplay.ready === true,
+        primitiveReadiness,
+      };
+      if (observations.length === 32) observations.splice(1, 1);
+      observations.push(observation);
+    }
     if (
       viewer.dataSourceDisplay.ready !== true ||
-      viewer.scene.globe.tilesLoaded !== true
+      viewer.scene.globe.tilesLoaded !== true ||
+      !primitiveReadiness.ready
     ) {
       previous = null;
       stableFrames = 0;
@@ -922,6 +939,7 @@ function viewerSettings(viewer) {
 function makeReport() {
   return {
     schema: CABLE_REFERENCE_RENDER_SCHEMA,
+    samplingContract: 'owned-primitives-ready/v1',
     applicationCommit: EXPECTED_COMMIT,
     harnessCommit: EXPECTED_COMMIT,
     status: 'pending',
@@ -1196,6 +1214,7 @@ async function runLifetime({
     };
     const cameraContracts = {};
     const cameraSweeps = {};
+    lifetime.readinessByCase = {};
     for (const caseId of CABLE_REFERENCE_RENDER_CASES) {
       const targetCase = caseTargets[caseId];
       const readinessDeadline = performance.now() + STABLE_TIMEOUT_MS;
@@ -1272,12 +1291,14 @@ async function runLifetime({
           cameraEventWaitMs: viewer.scene.cameraEventWaitTime,
         };
       }
+      lifetime.readinessByCase[caseId] = [];
       await waitForStableScene(
         viewer,
         layer,
         mode,
         sourceRecords,
         readinessDeadline,
+        lifetime.readinessByCase[caseId],
       );
       cameraContracts[caseId] = cameraContract(
         viewer,
@@ -1320,6 +1341,10 @@ async function runLifetime({
           ).slice(0, 1000);
         }
         appendCableFailureDiagnostics(pickFailure, viewer, layer);
+        pickFailure.primitiveReadiness = readScenePrimitiveReadiness(
+          viewer.scene,
+          Cesium,
+        );
         try {
           const lastFrame = await capturePixels(viewer);
           pickFailure.lastFrame = {
@@ -1400,6 +1425,7 @@ async function runLifetime({
           sample,
           status: 'settled',
           stableFrames,
+          primitiveReadiness: readScenePrimitiveReadiness(viewer.scene, Cesium),
           clock: {
             iso: Cesium.JulianDate.toIso8601(viewer.clock.currentTime, 3),
             shouldAnimate: viewer.clock.shouldAnimate,
@@ -1414,6 +1440,8 @@ async function runLifetime({
           cameraSweep: cameraSweeps[caseId] || {
             status: 'not-required',
             frameNumber: null,
+            finalPoseVerified: null,
+            flightCompleteVerified: null,
             cameraEventWaitMs: null,
           },
           frame: { width: frame.width, height: frame.height },

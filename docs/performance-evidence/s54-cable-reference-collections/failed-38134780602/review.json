@@ -1,0 +1,27 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38134780602",
+  "commit": "ff84ea0c1f5e3db18bc6858795e6aa17ca9ad349",
+  "rawSha256": "a5a32f752a66d3c5301ec47c85d861d1da4f02da1d840925295a3e7ca38e4b07",
+  "status": "failed",
+  "baselineSamples": 5,
+  "candidateRan": false,
+  "finalCameraVerified": true,
+  "pointPick": {
+    "kind": "point",
+    "sourceKind": "cable",
+    "entityId": "cable-reference-0-kunoa-north",
+    "sourceRecordId": "kunoa-north",
+    "sourceOrdinal": 0,
+    "primitiveType": "PointPrimitive",
+    "appearanceType": null,
+    "screen": [
+      480.00000000000966,
+      264.80836236926444
+    ],
+    "ownerVerified": true
+  },
+  "stemPick": null,
+  "stemScenePickCount": 165,
+  "visibleReferences": 35,
+  "scope": "Failure preserved. Final camera sweep and data source readiness were true, but all baseline Entity stem pick probes missed and the copied frame contains no visible stems. Actual public owned-primitive readiness was not recorded in this run; next diagnostic adds it without changing the 12-second settle deadline or runtime geometry."
+}

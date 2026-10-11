@@ -79,10 +79,7 @@ function validatePick(pick, kind, mode) {
     !pick.screen.every(Number.isFinite) ||
     (kind === 'point' && !pointTypes.includes(pick.primitiveType)) ||
     (kind === 'stem' && !stemTypes.includes(pick.primitiveType)) ||
-    (mode === 'entities' &&
-      kind === 'stem' &&
-      pick.primitiveType !== 'PolylineCollection') ||
-    (mode === 'collections' &&
+    (kind === 'stem' &&
       pick.primitiveType === 'Primitive' &&
       pick.appearanceType !== 'PolylineColorAppearance')
   )
@@ -174,6 +171,18 @@ function validateLifetime(lifetime, report, modeIndex) {
     for (let index = 0; index < rows.length; index += 1) {
       const row = rows[index];
       if (
+        report.samplingContract === 'owned-primitives-ready/v1' &&
+        (row.primitiveReadiness?.ready !== true ||
+          row.primitiveReadiness?.truncated !== false ||
+          !Number.isSafeInteger(row.primitiveReadiness?.observedOwners) ||
+          row.primitiveReadiness.observedOwners <= 0 ||
+          !Array.isArray(row.primitiveReadiness?.pending) ||
+          row.primitiveReadiness.pending.length !== 0)
+      )
+        fail(
+          `${mode} ${caseId} sample ${index + 1} has unfinished primitive work.`,
+        );
+      if (
         row.mode !== mode ||
         row.caseId !== caseId ||
         row.sample !== index ||
@@ -241,6 +250,11 @@ export function validateCableReferenceCollectionsReport(
 ) {
   if (report?.schema !== CABLE_REFERENCE_RENDER_SCHEMA)
     fail('Cable collection render schema is invalid.');
+  if (
+    report.samplingContract !== undefined &&
+    report.samplingContract !== 'owned-primitives-ready/v1'
+  )
+    fail('Cable primitive sampling contract is unknown.');
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
   if (
