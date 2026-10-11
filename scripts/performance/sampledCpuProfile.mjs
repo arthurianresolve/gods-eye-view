@@ -57,10 +57,32 @@ export function summarizeCpuProfile(profile) {
   for (let index = 0; index < profile.samples.length; index++) {
     const node = nodes.get(profile.samples[index]);
     const weightUs = profile.timeDeltas[index];
-    requireValid(
-      node && Number.isFinite(weightUs) && weightUs >= 0,
-      'unknown sample or invalid weight',
-    );
+    if (!node || !Number.isFinite(weightUs) || weightUs < 0) {
+      const error = new Error(
+        'Invalid CPU profile: unknown sample or invalid weight',
+      );
+      // Preserve the failing scalar observation without source URLs, stacks or
+      // an unbounded profile. Invalid data must not become a timing summary.
+      error.profileFailureEvidence = {
+        schema: 'gev-cpu-profile-invalid-sample/v1',
+        performanceAcceptanceEligible: false,
+        nodeCount: nodes.size,
+        sampleCount: profile.samples.length,
+        profileWindowUs: profile.endTime - profile.startTime,
+        index,
+        nodeId: Number.isSafeInteger(profile.samples[index])
+          ? profile.samples[index]
+          : null,
+        knownNode: Boolean(node),
+        weightUs: Number.isFinite(weightUs) ? weightUs : null,
+        reason: !node
+          ? 'unknown-node'
+          : !Number.isFinite(weightUs)
+            ? 'nonfinite-weight'
+            : 'negative-weight',
+      };
+      throw error;
+    }
     const frame = node.callFrame;
     const url = publicFixturePath(frame.url);
     const key = JSON.stringify([

@@ -8,6 +8,7 @@ import {
   validateImportGeometryLoadProfileReport,
 } from './importGeometryLoadProfile.mjs';
 import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
+import { startImportLoadProfile } from './importLoadProfile.mjs';
 import {
   createImportTraceEventCollector,
   summarizeImportTraceAttribution,
@@ -85,6 +86,59 @@ const rawCpu = {
   timeDeltas: [1_000, 2_000],
 };
 const cpuSummary = summarizeCpuProfile(rawCpu);
+
+test('invalid CPU samples retain bounded cause evidence after owned session cleanup', async () => {
+  for (const [sampleId, weight, reason] of [
+    [99, 1000, 'unknown-node'],
+    [1, -3, 'negative-weight'],
+    [1, NaN, 'nonfinite-weight'],
+  ]) {
+    const calls = [];
+    const profile = { ...rawCpu, samples: [sampleId], timeDeltas: [weight] };
+    const session = {
+      async send(method) {
+        calls.push(method);
+        return method === 'Profiler.stop' ? { profile } : {};
+      },
+      async detach() {
+        calls.push('detach');
+      },
+    };
+    const owned = await startImportLoadProfile(
+      {
+        async createCDPSession() {
+          return session;
+        },
+      },
+      'cpu',
+    );
+    await assert.rejects(owned.stop(), (error) => {
+      assert.equal(error.profileFailureEvidence.reason, reason);
+      assert.equal(error.profileFailureEvidence.index, 0);
+      assert.equal(error.profileFailureEvidence.sampleCount, 1);
+      assert.equal(error.profileFailureEvidence.knownNode, sampleId === 1);
+      assert.equal(
+        error.profileFailureEvidence.weightUs,
+        Number.isFinite(weight) ? weight : null,
+      );
+      assert.equal(
+        error.profileFailureEvidence.performanceAcceptanceEligible,
+        false,
+      );
+      assert.equal(
+        JSON.stringify(error.profileFailureEvidence).includes('runtimeLayer'),
+        false,
+      );
+      return true;
+    });
+    assert.deepEqual(calls.slice(-3), [
+      'Profiler.stop',
+      'Profiler.disable',
+      'detach',
+    ]);
+    assert.equal(calls.filter((call) => call === 'Profiler.stop').length, 1);
+  }
+});
 const traceSummary = summarizeGeometryGcOverlap({
   trace: traceInput,
   anchor,

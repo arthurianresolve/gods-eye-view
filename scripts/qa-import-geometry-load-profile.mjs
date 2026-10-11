@@ -235,11 +235,15 @@ async function runProfile() {
         loadPageReport.error ||
           'Profile fixture load failed before completion.',
       );
-    const profile = await profileSession.stop();
+    // Transfer stop ownership before awaiting: validation can reject after
+    // the helper has already disabled and detached its protocol session.
+    const stoppingProfile = profileSession;
     profileSession = null;
+    const profile = await stoppingProfile.stop();
     stoppedAt = Date.now();
-    const trace = await traceSession.stop();
+    const stoppingTrace = traceSession;
     traceSession = null;
+    const trace = await stoppingTrace.stop();
     const fixture = await page.evaluate(() =>
       window.__importGeometryProfileControl.finishCapture(),
     );
@@ -341,6 +345,8 @@ async function runProfile() {
   } catch (error) {
     primaryError = error;
     report.error = String(error?.message || error).slice(0, 1000);
+    if (error.profileFailureEvidence)
+      report.profileFailureEvidence = error.profileFailureEvidence;
     if (page) {
       await page
         .evaluate(
@@ -360,7 +366,11 @@ async function runProfile() {
     ]) {
       if (!session) continue;
       try {
-        await session.stop();
+        const result = await session.stop();
+        if (key === 'traceCleanupError') {
+          report.failureTraceInput = result;
+          if (result.stopError) report[key] = result.stopError;
+        }
       } catch (error) {
         report[key] = String(error?.message || error).slice(0, 400);
       }
