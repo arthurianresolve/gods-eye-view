@@ -5,10 +5,19 @@ connection-scoped map-bridge cleanup and measured macOS recovery backend pass
 [all seven standard CI jobs at `501aa8d8`](performance-evidence/s50-macos-recovery-38174948494/standard-38177697638/ci-run.json).
 Independent inspection of the three raw recovery reports confirms all 15
 stages preserve settings, workspace bundles and asset digests, with natural
-browser exits within five seconds. The integration is ready for dev promotion;
-subsequent evidence commits change documentation only. This closes the
+browser exits within five seconds. The integration is pushed to dev at
+`acc471e4afb4ff629244ec37caf2836b6aef89ef`; its difference from tested `501aa8d8`
+is documentation only. This closes the
 integration blocker, not full S50 or physical Windows/performance acceptance.
 The rejected S59 scalar experiment remains on its separate opt-in QA branch.
+
+Windows retry (12 October 2026): the user-exported Chrome GPU configuration
+confirms hardware-accelerated WebGL on Intel UHD 620 / ANGLE D3D11 with zero
+GPU-process crashes reported. A minimal WebGL retry still has a 1,016 ms RAF
+gap while 20 ms timers continue. Its build identity is missing and the canvas
+is only 90% in the viewport; it is retained as diagnostic evidence, not accepted
+performance or soak evidence. The identified fixture server is prepared for
+the next controlled retry. [Configuration and raw result](performance-evidence/windows-gpu-20261012/README.md).
 
 Previous dev checkpoint (11 October 2026): point integration is pushed at
 `ba7c8738b8505244be06d0f0e3bd873e02d6b2ca`. [All seven standard CI jobs](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
