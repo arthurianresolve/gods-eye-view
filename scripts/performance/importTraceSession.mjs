@@ -52,9 +52,18 @@ export async function startImportTraceSession(
   const completed = new Promise((resolve) => {
     completeResolve = resolve;
   });
-  const onData = ({ value } = {}) => {
+  const onData = (event) => {
+    if (
+      !event ||
+      typeof event !== 'object' ||
+      Array.isArray(event) ||
+      !Array.isArray(event.value)
+    ) {
+      collectorError ||= 'trace-data-collected-payload-malformed';
+      return;
+    }
     try {
-      collector.add(Array.isArray(value) ? value : []);
+      collector.add(event.value);
     } catch (error) {
       collectorError ||= String(error?.message || error).slice(0, 240);
     }
@@ -82,9 +91,14 @@ export async function startImportTraceSession(
   // dataLossOccurred as required (types/protocol.d.ts, Tracing domain); the
   // BufferUsageEvent percentFull remains optional. Do not infer delivery from
   // the periodic sample when tracingComplete supplies the authoritative flag.
-  const onComplete = (event = {}) => {
+  const onComplete = (event) => {
     completionObserved = true;
-    if (typeof event.dataLossOccurred !== 'boolean') {
+    if (
+      !event ||
+      typeof event !== 'object' ||
+      Array.isArray(event) ||
+      typeof event.dataLossOccurred !== 'boolean'
+    ) {
       collectorError ||= 'trace-data-loss-flag-missing-or-malformed';
     } else {
       dataLossOccurred = event.dataLossOccurred;

@@ -64,6 +64,8 @@ test('tracingComplete data-loss and malformed required flag remain explicit fail
     { dataLossOccurred: true },
     {},
     { dataLossOccurred: 'false' },
+    null,
+    [],
   ]) {
     const session = new FakeSession();
     session.completeEvent = event;
@@ -71,11 +73,31 @@ test('tracingComplete data-loss and malformed required flag remain explicit fail
     assert.equal(trace.completionObserved, true);
     assert.equal(
       trace.dataLossOccurred,
-      typeof event.dataLossOccurred === 'boolean'
+      typeof event?.dataLossOccurred === 'boolean'
         ? event.dataLossOccurred
         : null,
     );
     assert.equal(typeof trace.stopError, 'string');
+  }
+});
+
+test('malformed dataCollected payloads are reported and never silently counted as an empty trace', async () => {
+  for (const event of [
+    null,
+    [],
+    {},
+    { value: null },
+    { value: 'not-events' },
+  ]) {
+    const session = new FakeSession();
+    const traceSession = await startImportTraceSession(session);
+    assert.doesNotThrow(() => session.emit('Tracing.dataCollected', event));
+    const trace = await traceSession.stop();
+    assert.equal(trace.completionObserved, true);
+    assert.equal(trace.relevantCount, 0);
+    assert.equal(trace.events.length, 0);
+    assert.equal(trace.stopError, 'trace-data-collected-payload-malformed');
+    assert.equal(session.detached, true);
   }
 });
 
