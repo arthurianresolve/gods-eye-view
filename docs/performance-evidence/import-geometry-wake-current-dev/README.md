@@ -81,3 +81,42 @@ The benchmark code remains on `qa/s59-geometry-wake-browser` for reproduction.
 It is not merged into production merely because its correctness checks pass.
 This result does not establish interaction latency, full-scene motion,
 retained-heap stability or completion of S47-S60.
+
+## Ordinary inner-loop follow-up
+
+[Run 38165281098](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38165281098)
+tests `844edfc901c1307c494e64c404b453443379d9b5`. The sole runtime change
+moves coordinate conversion into an ordinary `fillPositionRange` loop, leaving
+the generator responsible only for the same 256-coordinate chunk boundaries.
+The whole-feature control, fixture, scheduler and validator are unchanged.
+This tests a narrow overhead hypothesis; the separate run is not a paired
+comparison against the earlier chunking implementation.
+
+The change is also rejected. Compared with the control within this run:
+
+| Geometry | Candidate | Median paired load change | Pairs >10% slower | Median run maximum active span |
+| --- | --- | ---: | ---: | ---: |
+| Line | Chunked timer | +175.3% | 5/5 | 10.7 ms |
+| Line | Chunked MessageChannel | +112.2% | 5/5 | 10.7 ms |
+| Polygon | Chunked timer | +110.6% | 4/5 | 6.7 ms |
+| Polygon | Chunked MessageChannel | +83.0% | 4/5 | 7.3 ms |
+
+Root independently decoded another thirty PNGs; both image groups match the
+first run exactly. All source hashes, pick IDs, queued cancellation controls and
+cleanup assertions pass. Browser close is natural, taking 649.1 ms. Eighteen
+runtime tests and changed-file formatting also pass. These correctness results
+do not justify promoting either chunked renderer. Ordinary-loop conversion
+alone is insufficient; a separate diagnostic profile must identify the active
+cost and over-budget stages before another runtime optimization is selected.
+
+- [Unchanged downloaded report](inner-loop/report.json), SHA-256
+  `342acf8a4b136e81a2ceaf3b04a12df25199501a914608e1b19650a06e486ba7`.
+- [Independent review](inner-loop/independent-review.json) and
+  [exact workflow record](inner-loop/ci-run.json).
+- Reproduce the offline review with the shared `independent-review.mjs`, a fresh
+  copy of that report directory as its first argument, and the complete
+  `844edfc9` commit SHA above as its second argument.
+
+The follow-up remains on `qa/s59-chunk-inner-loop`; production still uses its
+original preparation and scheduling defaults. Large-feature batching remains
+an implementation gap, with two measured approaches rejected.

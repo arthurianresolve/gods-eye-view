@@ -6,7 +6,9 @@ import { resolve, join } from 'node:path';
 import sharp from 'sharp';
 
 const directory = resolve(process.argv[2]);
-const expectedCommit = 'df63fc432a7164778583c20ced4db87bc3d6d350';
+const expectedCommit =
+  process.argv[3] || 'df63fc432a7164778583c20ced4db87bc3d6d350';
+assert.match(expectedCommit, /^[a-f0-9]{40}$/);
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const bytes = await readFile(join(directory, 'report.json'));
 const report = JSON.parse(bytes);

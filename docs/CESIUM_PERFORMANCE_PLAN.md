@@ -8,6 +8,10 @@ experiment is not accepted; production defaults remain unchanged.
 [Raw results and independent review](performance-evidence/import-geometry-wake-current-dev/README.md).
 Large-feature batching remains unfinished; the next experiment must reduce and
 attribute active preparation cost before another scheduling change.
+An ordinary-inner-loop follow-up at `844edfc9` also fails that gate (five of five
+line pairs and four of five polygon pairs regress by more than 10%). Its thirty
+decoded images remain identical; it is recorded in the same evidence packet.
+Separate active-cost profiling is the next step, with neither prototype merged.
 
 Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
 Point integration passes all seven standard jobs and fifteen recovery stages at
