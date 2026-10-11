@@ -3254,3 +3254,38 @@ test('S52 placement signature rebuilds moved configuration before returning to a
   assert.equal(restored?.hit?.entryId, 'same');
   assert.deepEqual(capture()?.rect, original.rect, 'a stable repeat uses the restored full signature');
 });
+
+test('entries below the paint threshold stay noninteractive across stable frames and recovery', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  let alpha = 0.0005;
+  setOverlayEntries('low-alpha', [selectedEntry('faded-action', {
+    position: positionAtScreen(252, 174, 500, 360),
+    sourceAlpha: () => alpha,
+    edgeFade: 'none',
+    interactive: true,
+    accessibilityLabel: 'Faded action',
+    activate() { return true; },
+  })]);
+
+  for (const expectedVisible of [false, true, false]) {
+    alpha = expectedVisible ? 0.8 : 0.0005;
+    for (let frame = 0; frame < 3; frame++) {
+      env.advanceTime(16);
+      env.postRender.raise();
+      const diagnostics = getWorldOverlayDiagnostics();
+      assert.equal(diagnostics.candidateCount, 1, 'source population is retained');
+      assert.equal(diagnostics.paintedCount, Number(expectedVisible), 'publish only painted entries');
+      assert.equal(diagnostics.hitRectCount, Number(expectedVisible), 'invisible entries have no hit target');
+      const rect = getOverlayPaintRect('low-alpha', 'faded-action');
+      assert.equal(Boolean(rect), expectedVisible, 'paint rectangles follow opacity across stable frames');
+      const actions = env.document.getElementById('world-overlay-action-list');
+      assert.equal(actions.children.length, Number(expectedVisible), 'accessible actions follow visible output');
+      if (rect) {
+        const hit = hitTestWorldOverlay(rect.x + rect.w / 2, rect.y + rect.h / 2, { sourceId: 'low-alpha' });
+        assert.equal(hit?.entryId, 'faded-action', 'recovery preserves action identity');
+      }
+    }
+  }
+});

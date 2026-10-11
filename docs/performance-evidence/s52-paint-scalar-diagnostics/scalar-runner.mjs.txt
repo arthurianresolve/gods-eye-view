@@ -1,0 +1,149 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const stage = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(stage, '..', '..');
+const sourceRoot = path.join(stage, 'named-entry-capture-controls-01', 'submarine-cables-named-entry');
+const expectedSource = '233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2';
+const workerHash = '9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901';
+const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const outArg = process.argv[2];
+if (!outArg) throw new Error('Usage: run-scalar-snapshot-storage-controls.mjs fresh-output-directory');
+const out = path.resolve(root, outArg);
+if (out === root || !out.startsWith(`${root}${path.sep}`) || existsSync(out))
+  throw new Error('Output must be a fresh directory inside this checkout');
+const runtimePath = path.join(sourceRoot, 'src/overlays/worldOverlay.js');
+const reference = readFileSync(runtimePath, 'utf8');
+assert.equal(sha(Buffer.from(reference)), expectedSource);
+
+function replaceOnce(text, before, after, label) {
+  const at = text.indexOf(before);
+  assert.ok(at >= 0, `Missing ${label}`);
+  assert.equal(text.indexOf(before, at + before.length), -1, `Ambiguous ${label}`);
+  return text.slice(0, at) + after + text.slice(at + before.length);
+}
+
+let candidate = replaceOnce(reference,
+  '      entryFields: [],\n      layoutFields: new Float64Array(PAINT_LAYOUT_FIELDS.length),',
+  '      entryFields: [],\n      scalarFields: new Float64Array(8),\n      scalarValuesValid: false,\n      layoutFields: new Float64Array(PAINT_LAYOUT_FIELDS.length),',
+  'scalar initializer');
+candidate = replaceOnce(candidate,
+  [
+    '  snapshot.temporalAlpha = item.temporalAlpha;',
+    '  snapshot.keyholeAlpha = cachedKeyholeAlpha(item, keyhole);',
+    '  snapshot.sourceAlpha = record.sourceAlpha;',
+    '  snapshot.distanceAlpha = record.distanceAlpha;',
+    '  snapshot.altitudeAlpha = record.altitudeAlpha;',
+    '  snapshot.paintScale = record.paintScale;',
+    '  snapshot.leaderProgress = record.leaderProgress;',
+    '  snapshot.contentAlpha = record.contentAlpha;',
+  ].join('\n'),
+  [
+    '  const scalar0 = item.temporalAlpha;',
+    '  const scalar1 = cachedKeyholeAlpha(item, keyhole);',
+    '  const scalar2 = record.sourceAlpha;',
+    '  const scalar3 = record.distanceAlpha;',
+    '  const scalar4 = record.altitudeAlpha;',
+    '  const scalar5 = record.paintScale;',
+    '  const scalar6 = record.leaderProgress;',
+    '  const scalar7 = record.contentAlpha;',
+    "  snapshot.scalarValuesValid = typeof scalar0 === 'number' && typeof scalar1 === 'number' && typeof scalar2 === 'number' && typeof scalar3 === 'number' && typeof scalar4 === 'number' && typeof scalar5 === 'number' && typeof scalar6 === 'number' && typeof scalar7 === 'number';",
+    "  snapshot.scalarFields[0] = typeof scalar0 === 'number' ? scalar0 : 0;",
+    "  snapshot.scalarFields[1] = typeof scalar1 === 'number' ? scalar1 : 0;",
+    "  snapshot.scalarFields[2] = typeof scalar2 === 'number' ? scalar2 : 0;",
+    "  snapshot.scalarFields[3] = typeof scalar3 === 'number' ? scalar3 : 0;",
+    "  snapshot.scalarFields[4] = typeof scalar4 === 'number' ? scalar4 : 0;",
+    "  snapshot.scalarFields[5] = typeof scalar5 === 'number' ? scalar5 : 0;",
+    "  snapshot.scalarFields[6] = typeof scalar6 === 'number' ? scalar6 : 0;",
+    "  snapshot.scalarFields[7] = typeof scalar7 === 'number' ? scalar7 : 0;",
+  ].join('\n'),
+  'scalar snapshot capture');
+candidate = replaceOnce(candidate,
+  [
+    '    !Object.is(snapshot.temporalAlpha, item.temporalAlpha) ||',
+    '    !Object.is(snapshot.keyholeAlpha, cachedKeyholeAlpha(item, keyhole)) ||',
+    '    !Object.is(snapshot.sourceAlpha, record.sourceAlpha) ||',
+    '    !Object.is(snapshot.distanceAlpha, record.distanceAlpha) ||',
+    '    !Object.is(snapshot.altitudeAlpha, record.altitudeAlpha) ||',
+    '    !Object.is(snapshot.paintScale, record.paintScale) ||',
+    '    !Object.is(snapshot.leaderProgress, record.leaderProgress) ||',
+    '    !Object.is(snapshot.contentAlpha, record.contentAlpha) ||',
+  ].join('\n'),
+  [
+    '    !snapshot.scalarValuesValid ||',
+    '    !Object.is(snapshot.scalarFields[0], item.temporalAlpha) ||',
+    '    !Object.is(snapshot.scalarFields[1], cachedKeyholeAlpha(item, keyhole)) ||',
+    '    !Object.is(snapshot.scalarFields[2], record.sourceAlpha) ||',
+    '    !Object.is(snapshot.scalarFields[3], record.distanceAlpha) ||',
+    '    !Object.is(snapshot.scalarFields[4], record.altitudeAlpha) ||',
+    '    !Object.is(snapshot.scalarFields[5], record.paintScale) ||',
+    '    !Object.is(snapshot.scalarFields[6], record.leaderProgress) ||',
+    '    !Object.is(snapshot.scalarFields[7], record.contentAlpha) ||',
+  ].join('\n'),
+  'scalar snapshot comparison');
+candidate = replaceOnce(candidate,
+  '  snapshot.referencesReleased = true;\n  _paintReuse.retainedCount--;',
+  '  snapshot.scalarValuesValid = false;\n  snapshot.referencesReleased = true;\n  _paintReuse.retainedCount--;',
+  'scalar snapshot retirement');
+
+mkdirSync(out, { recursive: true });
+const workloads = [
+  { profile: 'local-infrastructure', entries: 320, order: ['reference', 'candidate'] },
+  { profile: 'submarine-cables', entries: 160, order: ['candidate', 'reference'] },
+];
+const parityKeys = ['candidateCount', 'paintedCount', 'paintedBySource', 'solveCount'];
+const results = {};
+let order = 0;
+for (const workload of workloads) {
+  const pair = {};
+  for (const variant of workload.order) {
+    const name = `${workload.profile}-${variant}`;
+    const target = path.join(out, name);
+    cpSync(sourceRoot, target, { recursive: true });
+    const targetRuntime = path.join(target, 'src/overlays/worldOverlay.js');
+    writeFileSync(targetRuntime, variant === 'candidate' ? candidate : reference, { flag: 'w' });
+    const workerPath = path.join(target, 'src/overlays/worldOverlayAllocation.worker.mjs');
+    assert.equal(sha(readFileSync(workerPath)), workerHash);
+    const syntax = spawnSync(process.execPath, ['--check', targetRuntime], { encoding: 'utf8', timeout: 15_000 });
+    if (syntax.error) throw syntax.error;
+    assert.equal(syntax.status, 0, `${name} syntax: ${syntax.stderr}`);
+    const worker = spawnSync(process.execPath, ['--expose-gc', '--no-concurrent-recompilation', workerPath], {
+      cwd: target, encoding: 'utf8', timeout: 240_000, maxBuffer: 8 * 1024 * 1024,
+      env: { ...process.env, GEV_ALLOC_WARMUP: '3000', GEV_ALLOC_CHUNK: '48', GEV_ALLOC_CHUNKS: '10', GEV_ALLOC_ENTRIES: String(workload.entries), GEV_ALLOC_PROFILE: workload.profile },
+    });
+    const stdout = worker.stdout || '';
+    const stderr = worker.stderr || '';
+    writeFileSync(path.join(target, 'worker.stdout.txt'), stdout, { flag: 'w' });
+    writeFileSync(path.join(target, 'worker.stderr.txt'), stderr, { flag: 'w' });
+    if (worker.error) throw worker.error;
+    assert.equal(worker.status, 0, `${name} worker: ${stderr}`);
+    const measured = JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+    assert.equal(measured.ok, true);
+    assert.equal(measured.profile, workload.profile);
+    assert.equal(measured.entryCount, workload.entries);
+    pair[variant] = { order: order++, runtimeSha256: sha(readFileSync(targetRuntime)), stdoutSha256: sha(Buffer.from(stdout)), stderrSha256: sha(Buffer.from(stderr)), measured };
+    results[name] = pair[variant];
+  }
+  for (const key of parityKeys) assert.deepEqual(pair.reference.measured[key], pair.candidate.measured[key], `${workload.profile} parity: ${key}`);
+}
+
+const report = {
+  schema: 's52-scalar-snapshot-storage-controls/v1',
+  scope: 'Diagnostic candidate moves eight numeric presentation snapshot values to a preallocated Float64Array; key/lane/zIndex/selected/corner remain object fields. All capture and comparison values preserve Object.is for numeric inputs. Non-number numeric-channel values conservatively invalidate reuse, retaining normal render output. No fields or candidate populations are removed.',
+  referenceRuntimeSha256: expectedSource,
+  candidateRuntimeSha256: sha(Buffer.from(candidate)),
+  runnerSha256: sha(readFileSync(fileURLToPath(import.meta.url))),
+  workerSha256: workerHash,
+  packageLockSha256: sha(readFileSync(path.join(root, 'package-lock.json'))),
+  node: process.version,
+  platform: process.platform,
+  conditions: { warmupFrames: 3000, stabilizationChunks: 6, chunkFrames: 48, measuredChunks: 10, workloads, parityKeys },
+  results,
+};
+const reportPath = path.join(out, 'report.json');
+writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({ report: path.relative(root, reportPath).replaceAll('\\', '/'), reportSha256: sha(readFileSync(reportPath)), candidateRuntimeSha256: report.candidateRuntimeSha256, results: Object.fromEntries(Object.entries(results).map(([name, row]) => [name, { runtimeSha256: row.runtimeSha256, entries: row.measured.entryCount, candidates: row.measured.candidateCount, painted: row.measured.paintedCount, medianBytesPerFrame: row.measured.medianBytesPerFrame, maxBytesPerFrame: row.measured.maxBytesPerFrame, chunks: row.measured.chunkBytesPerFrame }])) }, null, 2));

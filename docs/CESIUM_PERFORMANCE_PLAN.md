@@ -10,6 +10,12 @@ the 10% limit. This tradeoff and the limits of Node/component measurements are
 explicit below. Conditional painting, full-scene performance and hardware
 acceptance remain unfinished; this does not complete S52 or S47-S60.
 
+The subsequent `dev` run at `e89715c3d46414107cc7996cce98d34aa1a09e8f`
+also passes all seven ordinary integration jobs, including Windows recovery and
+the final browser journey ([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38103646706),
+[archived results](performance-evidence/s52-placement-direct-filter/dev-e89715c-ci.json)).
+PR-only layer-token and optional diagnostic/soak checks remain skipped in that run.
+
 The previous `dev` baseline `72694089e7fa0fa414042cde48765e1418a70d7e` passes all seven
 ordinary integration jobs, including the final browser gate
 ([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38096363702),
@@ -134,6 +140,15 @@ binds all artifacts and records the component's promotion decision. PR-only
 published layer-token checks and optional diagnostic/soak jobs were skipped;
 their absence is not a pass. Subsequent evidence-only commits do not change
 the tested application or harness bytes.
+
+Additional scalar-paint diagnostics reject a typed-buffer prototype that both
+increases allocation and publishes invisible hit targets on a stable frame.
+An independent failure control reproduces the stale opacity-field read, while
+the named-field reference passes. A new regression covers consecutive hidden
+frames, visible recovery and returning to low opacity; all 88 focused checks
+pass on the unchanged production runtime. [Raw evidence and reproduction](performance-evidence/s52-paint-scalar-diagnostics/README.md)
+preserve the rejected source and distinguish diagnostic omission controls from
+eligible implementation changes. Conditional painting remains unfinished.
 
 The expanded paint fixture adds actual font loading, selection promotion and
 demotion, and shared/separate custom painter transitions. Its first baseline run
