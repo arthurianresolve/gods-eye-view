@@ -64,6 +64,16 @@ function validReport() {
       ];
     }),
   );
+  const models = {
+    truncated: false,
+    items: Object.values(output).flatMap((fleet) =>
+      fleet.billboards.map((b) => ({
+        id: b.id,
+        ready: true,
+        effectiveShow: true,
+      })),
+    ),
+  };
   for (let i = 0; i < 5; i++) {
     const pair = {
       pair: i + 1,
@@ -96,13 +106,13 @@ function validReport() {
               ];
         const clean = { holds: [], scheduledUpdates: [] };
         pair[mode][implementation] = {
-          schema: 'gev-fleet-render-demand/v3',
+          schema: 'gev-fleet-render-demand/v4',
           status: 'passed',
           applicationCommit: report[implementation],
           harnessCommit: report.harness,
           implementation,
           mode,
-          fixture: '20-aircraft-fixed-source/v3',
+          fixture: '20-aircraft-fixed-source/v4',
           epochMs: Date.UTC(2026, 9, 8, 12),
           pageErrors: [],
           checks: checks.map((id) => ({ id, status: 'passed' })),
@@ -130,8 +140,20 @@ function validReport() {
                       stableMs: 710,
                       elapsedMs: 900,
                       frames: 8,
+                      models: structuredClone(models),
                     }),
                   ),
+                  ...FLEET_SHOTS.slice(9, 13).map((name) => ({
+                    name,
+                    kind: 'model-readiness',
+                    logicalTimeMs:
+                      Date.UTC(2026, 9, 8, 12) + FLEET_OFFSETS[name] - 80,
+                    maxWaitMs: 30000,
+                    elapsedMs: 1200,
+                    startFrame: 20,
+                    observedFrame: 24,
+                    models: structuredClone(models),
+                  })),
                 ]
               : [],
           cleanup: {
@@ -204,6 +226,69 @@ test('valid five-pair evidence decodes all images and quantifies frame savings',
   assert.equal(result.medianRenderedFrameReduction, 0.76);
 });
 const invalidCases = [
+  [
+    'missing model readiness barrier',
+    (r) => {
+      r.pairs[0].correctness.candidate.phases =
+        r.pairs[0].correctness.candidate.phases.filter(
+          (p) => p.kind !== 'model-readiness',
+        );
+    },
+  ],
+  [
+    'readiness from a previous frame',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'model-readiness',
+      );
+      p.observedFrame = p.startFrame;
+    },
+  ],
+  [
+    'no logical tick after readiness',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'model-readiness',
+      );
+      p.logicalTimeMs += 80;
+    },
+  ],
+  [
+    'duplicate model identity instead of a complete source population',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'model-readiness',
+      );
+      p.models.items[0].id = p.models.items[1].id;
+    },
+  ],
+  [
+    'unfinished model load',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'model-readiness',
+      );
+      p.models.items[0].ready = false;
+    },
+  ],
+  [
+    'unbounded cold activation',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'model-readiness',
+      );
+      p.elapsedMs = 30001;
+    },
+  ],
+  [
+    'billboard fallback posing as model handoff',
+    (r) => {
+      const p = r.pairs[0].correctness.candidate.phases.find(
+        (p) => p.kind === 'settled' && p.name === 'civil-tracked',
+      );
+      p.models.items[0].effectiveShow = false;
+    },
+  ],
   [
     'pre-publication movement',
     (r) => {

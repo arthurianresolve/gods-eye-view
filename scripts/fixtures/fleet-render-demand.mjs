@@ -14,7 +14,10 @@ import {
   encodeFleetDrawState,
 } from './fleet-draw-state.mjs';
 import { runFleetEmptyLifecycle } from './fleet-empty-lifecycle.mjs';
-import { snapshotFleetModelProgramState } from './fleet-program-state.mjs';
+import {
+  snapshotFleetModelProgramState,
+  snapshotFleetModelReadiness,
+} from './fleet-program-state.mjs';
 
 const EPOCH = Date.UTC(2026, 9, 8, 12);
 const IDS = {
@@ -407,7 +410,59 @@ async function createFixture(clock) {
     // Wait beyond Cesium's own moveEnd window, using completed-frame output
     // rather than a fixed sleep or atlas readiness as a camera-settling proxy.
     // Exact values remain exact: no tolerance is introduced into comparisons.
-    async function settle(name) {
+    function completeModelPopulation(state, requireShown = false) {
+      const expected = [...IDS.civil, ...IDS.military].sort();
+      return (
+        !state.truncated &&
+        JSON.stringify(state.items.map((m) => m.id).sort()) ===
+          JSON.stringify(expected) &&
+        state.items.every((m) => m.ready && (!requireShown || m.effectiveShow))
+      );
+    }
+    async function modelsReady(name) {
+      const start = performance.now();
+      const phase = {
+        name,
+        kind: 'model-readiness',
+        logicalTimeMs: clock.now(),
+        maxWaitMs: 30000,
+        startFrame: frames.length,
+        observations: [],
+      };
+      phases.push(phase);
+      let latest = null,
+        previous = null;
+      const remove = viewer.scene.postRender.addEventListener(() => {
+        latest = snapshotFleetModelReadiness(viewer);
+        const summary = JSON.stringify(latest);
+        if (summary !== previous && phase.observations.length < 40) {
+          phase.observations.push({
+            elapsedMs: performance.now() - start,
+            frame: frames.length,
+            models: latest,
+          });
+          previous = summary;
+        }
+      });
+      try {
+        while (performance.now() - start < phase.maxWaitMs) {
+          check(errors.length === 0, errors.join(';'));
+          if (latest && completeModelPopulation(latest)) {
+            phase.elapsedMs = performance.now() - start;
+            phase.observedFrame = frames.length;
+            phase.models = latest;
+            return;
+          }
+          await sleep(20);
+        }
+        phase.elapsedMs = performance.now() - start;
+        phase.models = latest;
+        throw new Error(`${name}: model population did not become ready`);
+      } finally {
+        remove();
+      }
+    }
+    async function settle(name, { expectModels = false } = {}) {
       const start = performance.now();
       let last = null,
         changedAt = start,
@@ -426,6 +481,7 @@ async function createFixture(clock) {
           output: output(),
           camera: cameraPose(),
           moves: cameraEvents.length,
+          models: snapshotFleetModelReadiness(viewer),
         });
         if (signature !== last) {
           last = signature;
@@ -458,6 +514,13 @@ async function createFixture(clock) {
             phase.elapsedMs = performance.now() - start;
             phase.stableMs = lastFrameAt - changedAt;
             phase.frames = stableFrames;
+            if (expectModels) {
+              phase.models = snapshotFleetModelReadiness(viewer);
+              check(
+                completeModelPopulation(phase.models, true),
+                `${name}: ready models have not taken visual ownership`,
+              );
+            }
             return;
           }
           await sleep(20);
@@ -468,6 +531,39 @@ async function createFixture(clock) {
       } finally {
         remove();
       }
+    }
+    async function encodeProgramSources(modelState) {
+      for (const program of modelState.programs) {
+        for (const stage of ['vertex', 'fragment']) {
+          const source = program[`${stage}Source`];
+          if (source !== null) {
+            const digest = await sha(new TextEncoder().encode(source));
+            check(
+              programSources.size < 64 || programSources.has(digest),
+              'Shader source diagnostic limit exceeded',
+            );
+            programSources.set(digest, source);
+            program[`${stage}SourceSha256`] = digest;
+          }
+          delete program[`${stage}Source`];
+        }
+      }
+      return modelState;
+    }
+    async function failureState() {
+      // Preserve the failed state before teardown, without requesting a frame
+      // that could conceal a missing wake. These are current model properties
+      // and last-drawn command/program values, not a new completed capture.
+      const state = {
+        observation: 'after-failure-without-requesting-render',
+        completedFrames: frames.length,
+        logicalTimeMs: clock.now(),
+        camera: cameraPose(),
+        demand: governor.getRenderGovernorDiagnostics(),
+        modelState: snapshotFleetModelProgramState(viewer),
+      };
+      await encodeProgramSources(state.modelState);
+      return state;
     }
     async function capture(name) {
       let frameOutput;
@@ -531,21 +627,7 @@ async function createFixture(clock) {
         canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
         check(canvas && frameOutput, `${name}: completed frame unavailable`);
         remove();
-        for (const program of frameOutput.modelState.programs) {
-          for (const stage of ['vertex', 'fragment']) {
-            const source = program[`${stage}Source`];
-            if (source !== null) {
-              const digest = await sha(new TextEncoder().encode(source));
-              check(
-                programSources.size < 64 || programSources.has(digest),
-                'Shader source diagnostic limit exceeded',
-              );
-              programSources.set(digest, source);
-              program[`${stage}SourceSha256`] = digest;
-            }
-            delete program[`${stage}Source`];
-          }
-        }
+        await encodeProgramSources(frameOutput.modelState);
         for (const state of Object.values(drawState))
           await encodeFleetDrawState(state);
         for (const fleet of Object.values(frameOutput.renderState.fleets)) {
@@ -665,11 +747,13 @@ async function createFixture(clock) {
       },
       output,
       capture,
+      failureState,
       dispose,
       ready,
       checkpoint,
       awaitMovement,
       settle,
+      modelsReady,
       advance(time) {
         clock.set(time);
         viewer.clock.currentTime = Cesium.JulianDate.fromDate(new Date(time));
@@ -771,11 +855,11 @@ async function run() {
   const clock = fixtureClock();
   let fixture;
   const result = {
-    schema: 'gev-fleet-render-demand/v3',
+    schema: 'gev-fleet-render-demand/v4',
     status: 'running',
     applicationCommit: appCommit,
     harnessCommit: params.get('harness'),
-    fixture: '20-aircraft-fixed-source/v3',
+    fixture: '20-aircraft-fixed-source/v4',
     epochMs: EPOCH,
     implementation,
     mode,
@@ -890,7 +974,8 @@ async function run() {
         );
       }
       for (const kind of ['civil', 'military']) {
-        fixture.advance(EPOCH + (kind === 'civil' ? 30320 : 30480));
+        const prepareOffset = kind === 'civil' ? 30320 : 30640;
+        fixture.advance(EPOCH + prepareOffset);
         assertCheck(
           `${kind}-track-start`,
           fixture.layers[kind].trackById(IDS[kind][0]),
@@ -901,16 +986,24 @@ async function run() {
           demand.mode === 'continuous' && demand.holds.length > 0,
         );
         await fixture.ready();
-        await fixture.settle(`${kind}-tracked`);
+        // Loading and timer scheduling run in real time, while this fixture
+        // freezes display time. Observe actual model readiness first, then
+        // advance one declared fleet interval so the production handoff can
+        // run. Never call a private tick or use camera events as a load barrier.
+        await fixture.modelsReady(`${kind}-tracked`);
+        fixture.advance(EPOCH + prepareOffset + 80);
+        await fixture.settle(`${kind}-tracked`, { expectModels: true });
         assertCheck(
           `${kind}-tracked-id`,
           fixture.layers[kind].getTrackedInfo()?.icao24 === IDS[kind][0],
         );
         result.samples.push(await fixture.capture(`${kind}-tracked`));
-        fixture.advance(EPOCH + (kind === 'civil' ? 30400 : 30560));
+        fixture.advance(EPOCH + prepareOffset + 160);
         fixture.layers[kind].stopTracking();
         await fixture.ready();
-        await fixture.settle(`${kind}-released`);
+        await fixture.modelsReady(`${kind}-released`);
+        fixture.advance(EPOCH + prepareOffset + 240);
+        await fixture.settle(`${kind}-released`, { expectModels: true });
         assertCheck(
           `${kind}-untracked`,
           fixture.layers[kind].getTrackedInfo() === null,
@@ -923,7 +1016,7 @@ async function run() {
           await fixture.capture(`${kind}-released-followup`),
         );
       }
-      fixture.advance(EPOCH + 30640);
+      fixture.advance(EPOCH + 30960);
       const frames = fixture.frames.length;
       for (const layer of Object.values(fixture.layers))
         layer.disable(fixture.viewer);
@@ -959,6 +1052,16 @@ async function run() {
     if (error.frameCapture) result.failedCapture = error.frameCapture;
     if (error.lifecycleReport) result.emptyLifecycle = error.lifecycleReport;
     result.error = String(error.stack || error).slice(0, 3000);
+    if (fixture) {
+      try {
+        result.failureState = await fixture.failureState();
+      } catch (diagnosticError) {
+        result.failureState = {
+          status: 'unavailable',
+          error: String(diagnosticError.message).slice(0, 300),
+        };
+      }
+    }
   } finally {
     if (fixture) {
       result.phases = fixture.phases;

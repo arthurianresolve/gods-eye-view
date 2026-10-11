@@ -32,7 +32,7 @@ function emptyPhase(name) {
 
 function validSample() {
   return {
-    schema: 'gev-fleet-render-demand/v3',
+    schema: 'gev-fleet-render-demand/v4',
     status: 'passed',
     applicationCommit: COMMIT,
     harnessCommit: COMMIT,

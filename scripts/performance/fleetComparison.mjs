@@ -19,18 +19,29 @@ export const FLEET_SHOTS = [
   'disabled',
   'reinitialized',
 ];
-export const FLEET_OFFSETS = Object.fromEntries(
-  FLEET_SHOTS.map((name, i) => [
-    name,
-    i === 0
-      ? 0
-      : i <= 4
-        ? i * 80
-        : name === 'reinitialized'
-          ? 60000
-          : 30000 + (i - 5) * 80,
-  ]),
-);
+export const FLEET_OFFSETS = {
+  initial: 0,
+  'motion-80': 80,
+  'motion-160': 160,
+  'motion-240': 240,
+  'motion-320': 320,
+  'source-refresh': 30000,
+  'camera-change': 30080,
+  'cockpit-enter': 30160,
+  'cockpit-exit': 30240,
+  'civil-tracked': 30400,
+  'civil-released': 30560,
+  'military-tracked': 30720,
+  'military-released': 30880,
+  disabled: 30960,
+  reinitialized: 60000,
+};
+const MODEL_PHASES = [
+  'civil-tracked',
+  'civil-released',
+  'military-tracked',
+  'military-released',
+];
 export const FLEET_CHECKS = [
   'population',
   'aircraft-moves',
@@ -56,6 +67,19 @@ const expectedIds = (kind) =>
   Array.from({ length: kind === 'civil' ? 12 : 8 }, (_, i) =>
     ((kind === 'civil' ? 0xa10000 : 0xa20000) + i).toString(16),
   );
+
+function modelPopulation(state, requireShown = false) {
+  assert.equal(state?.truncated, false);
+  assert.deepEqual(
+    state.items.map((m) => m.id).sort(),
+    [...expectedIds('civil'), ...expectedIds('military')].sort(),
+    'Exactly one model must represent each current source identity',
+  );
+  for (const model of state.items) {
+    assert.equal(model.ready, true, 'Model readiness must be observed');
+    if (requireShown) assert.equal(model.effectiveShow, true);
+  }
+}
 
 function settings(value) {
   assert.ok(value?.context);
@@ -116,7 +140,7 @@ async function pixels(value) {
 }
 
 export function validateFleetEmptyLifecycle(sample, report) {
-  assert.equal(sample?.schema, 'gev-fleet-render-demand/v3');
+  assert.equal(sample?.schema, 'gev-fleet-render-demand/v4');
   assert.equal(sample.status, 'passed');
   assert.equal(sample.applicationCommit, report.candidate);
   assert.equal(sample.harnessCommit, report.harness);
@@ -204,13 +228,13 @@ export function validateFleetEmptyLifecycle(sample, report) {
 }
 
 function validateSample(sample, report, implementation, mode) {
-  assert.equal(sample.schema, 'gev-fleet-render-demand/v3');
+  assert.equal(sample.schema, 'gev-fleet-render-demand/v4');
   assert.equal(sample.status, 'passed');
   assert.equal(sample.applicationCommit, report[implementation]);
   assert.equal(sample.harnessCommit, report.harness);
   assert.equal(sample.implementation, implementation);
   assert.equal(sample.mode, mode);
-  assert.equal(sample.fixture, '20-aircraft-fixed-source/v3');
+  assert.equal(sample.fixture, '20-aircraft-fixed-source/v4');
   assert.equal(sample.epochMs, Date.UTC(2026, 9, 8, 12));
   assert.deepEqual(sample.pageErrors, []);
   assert.deepEqual(
@@ -254,6 +278,31 @@ function validateSample(sample, report, implementation, mode) {
         phase.stableMs >= 700 && phase.elapsedMs < 5000 && phase.frames >= 3,
         `${phase.name}: missing completed-frame stability witness`,
       );
+      if (MODEL_PHASES.includes(phase.name))
+        modelPopulation(phase.models, true);
+    }
+    const ready = sample.phases.filter((p) => p.kind === 'model-readiness');
+    assert.deepEqual(
+      ready.map((p) => p.name),
+      MODEL_PHASES,
+    );
+    for (const phase of ready) {
+      assert.equal(phase.maxWaitMs, 30000);
+      assert.ok(
+        Number.isFinite(phase.elapsedMs) &&
+          phase.elapsedMs >= 0 &&
+          phase.elapsedMs < 30000,
+      );
+      assert.equal(
+        phase.logicalTimeMs,
+        sample.epochMs + FLEET_OFFSETS[phase.name] - 80,
+      );
+      assert.ok(Number.isInteger(phase.startFrame) && phase.startFrame >= 0);
+      assert.ok(
+        Number.isInteger(phase.observedFrame) &&
+          phase.observedFrame > phase.startFrame,
+      );
+      modelPopulation(phase.models);
     }
     const movement = sample.phases.filter((p) => p.kind === 'movement');
     assert.deepEqual(

@@ -40,6 +40,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/fleetComparison.test.mjs',
   'scripts/performance/fleetEmptyComparison.test.mjs',
   'scripts/fixtures/fleet-draw-state.test.mjs',
+  'scripts/fixtures/fleet-program-state.test.mjs',
   'scripts/qa-mission-render-demand.test.mjs',
   'scripts/performance/cctvLifecycle.test.mjs',
   'scripts/performance/terrainPickingLifecycle.test.mjs',

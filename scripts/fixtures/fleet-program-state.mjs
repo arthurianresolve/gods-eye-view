@@ -51,6 +51,96 @@ function julianDate(value) {
   };
 }
 
+function fixtureModelId(value, expectedIds, entityToFixtureId) {
+  if (typeof value === 'string' || typeof value === 'number') {
+    const id = String(value);
+    return { id, identityKind: 'scalar' };
+  }
+  if (value instanceof Cesium.Entity) {
+    const mapped = entityToFixtureId.get(value);
+    if (typeof mapped === 'string' && expectedIds.has(mapped))
+      return { id: mapped, identityKind: 'entity-map' };
+    const entityId = String(value.id);
+    if (expectedIds.has(entityId))
+      return { id: entityId, identityKind: 'entity-id' };
+    return { id: null, identityKind: 'unmapped-entity' };
+  }
+  return { id: null, identityKind: value == null ? 'missing' : 'unsupported' };
+}
+
+/**
+ * Read only the readiness barrier fields used by the fleet fixture. Unlike the
+ * full program-state diagnostic, this does not inspect GL, shaders, uniforms,
+ * lighting, or environment-map compute state and is safe to call per completed
+ * frame while waiting for cold model activation.
+ *
+ * `entityToFixtureId` is only needed if a Cesium.Model uses an Entity object as
+ * its pick id. The map lets the fixture normalize that object to one of its
+ * declared source ICAOs without serializing arbitrary Entity properties.
+ */
+export function snapshotFleetModelReadiness(
+  viewer,
+  {
+    expectedIds = [],
+    entityToFixtureId = new Map(),
+    maxModels = DEFAULT_LIMITS.models,
+    maxCollectionDepth = DEFAULT_LIMITS.collectionDepth,
+  } = {},
+) {
+  if (!viewer?.scene?.primitives)
+    throw new TypeError('Cesium viewer scene primitives required');
+  if (!Number.isInteger(maxModels) || maxModels < 0)
+    throw new TypeError('Invalid maxModels limit');
+  if (!Number.isInteger(maxCollectionDepth) || maxCollectionDepth < 0)
+    throw new TypeError('Invalid maxCollectionDepth limit');
+  if (!(entityToFixtureId instanceof Map))
+    throw new TypeError('entityToFixtureId must be a Map');
+
+  const knownIds = new Set(expectedIds.map(String));
+  const visited = new Set();
+  const items = [];
+  let truncated = false;
+
+  function visit(collection, path, depth, ancestorsShown) {
+    if (!collection || visited.has(collection)) return;
+    visited.add(collection);
+    if (!(collection instanceof Cesium.PrimitiveCollection)) return;
+    if (depth > maxCollectionDepth) {
+      truncated = true;
+      return;
+    }
+    const shown = ancestorsShown && collection.show !== false;
+    for (let index = 0; index < collection.length; index++) {
+      const primitive = collection.get(index);
+      if (primitive instanceof Cesium.Model) {
+        if (items.length >= maxModels) {
+          truncated = true;
+          continue;
+        }
+        const identity = fixtureModelId(
+          primitive.id,
+          knownIds,
+          entityToFixtureId,
+        );
+        items.push({
+          id: identity.id,
+          identityKind: identity.identityKind,
+          collectionPath: [...path, index],
+          ready: primitive.ready === true,
+          show: primitive.show === true,
+          effectiveShow: Boolean(shown && primitive.show === true),
+          modelMatrix: matrix(primitive.modelMatrix),
+        });
+      } else if (primitive instanceof Cesium.PrimitiveCollection) {
+        visit(primitive, [...path, index], depth + 1, shown);
+      }
+    }
+  }
+
+  visit(viewer.scene.primitives, [], 0, true);
+  return { items, truncated };
+}
+
 function coefficients(values, limit) {
   if (!Array.isArray(values)) return null;
   return {
