@@ -115,6 +115,7 @@
     "exports": ["./build/vite", "./build/html"],
     "modules": [
       "build/vite.js",
+      "build/cesium-dependencies.js",
       "build/application-html.js",
       "build/allowedHosts.js",
       "build/embed-framing.js",
