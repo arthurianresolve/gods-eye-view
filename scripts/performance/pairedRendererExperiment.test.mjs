@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {
   cleanupEarlyCesiumRendererProbe,
+  closeEarlyRendererProbeDocument,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './earlyCesiumRendererProbe.mjs';
@@ -335,4 +336,26 @@ test('early probe optionally captures vendor and releases both context listeners
   assert.equal(await cleanupEarlyCesiumRendererProbe(page, 'early-hook'), true);
   assert.equal(canvas.listeners.size, 0);
   assert.equal(window.__gevRecoveryEarlyRendererProbe, undefined);
+});
+
+test('completed probe documents are destroyed without queueing cleanup in a busy renderer', async () => {
+  let closed = false;
+  let closeCalls = 0;
+  const page = {
+    isClosed: () => closed,
+    close: async () => { closeCalls++; closed = true; },
+    evaluate: async () => { throw new Error('renderer is busy'); },
+    removeScriptToEvaluateOnNewDocument: async () => { throw new Error('target is gone'); },
+  };
+  assert.deepEqual(await closeEarlyRendererProbeDocument(page), { cleanupKind: 'document-destroyed', closed: true });
+  assert.equal(await cleanupEarlyCesiumRendererProbe(page, 'hook'), true);
+  await closeEarlyRendererProbeDocument(page);
+  assert.equal(closeCalls, 1);
+});
+
+test('probe document disposal rejects failed, unconfirmed and timed-out close', async () => {
+  for (const close of [async () => {}, async () => { throw new Error('close failed'); }, () => new Promise(() => {})]) {
+    const page = { isClosed: () => false, close };
+    await assert.rejects(closeEarlyRendererProbeDocument(page, close, 5), /did not close/);
+  }
 });

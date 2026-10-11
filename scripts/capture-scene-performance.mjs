@@ -53,6 +53,7 @@ import { measureSceneWindow } from './performance/measureSceneWindow.mjs';
 import {
   installEarlyCesiumRendererProbe,
   cleanupEarlyCesiumRendererProbe,
+  closeEarlyRendererProbeDocument,
 } from './performance/earlyCesiumRendererProbe.mjs';
 import {
   createObservedDenseComparisonContract,
@@ -429,7 +430,13 @@ async function releaseEarlyRendererProbe(targetPage) {
     targetPage,
     record.scriptIdentifier,
   );
-  earlyRendererProbeCleanup.push({ document: record.document, cleaned });
+  earlyRendererProbeCleanup.push({
+    document: record.document,
+    cleaned,
+    cleanupKind: targetPage.isClosed()
+      ? 'document-destroyed'
+      : 'explicit-removal',
+  });
   if (!cleaned)
     throw new Error(
       'Early renderer probe did not release its hook and listeners.',
@@ -1254,9 +1261,10 @@ try {
     }
     await runCaptureStage('provider-context-and-fixture-attach', async () => {
       await releaseFlightFixtureSession(activeFixtureSession);
+      await closeEarlyRendererProbeDocument(page, () =>
+        providerContext ? providerContext.close() : page.close(),
+      );
       await releaseEarlyRendererProbe(page);
-      if (providerContext) await providerContext.close();
-      else await page.close();
       providerContext = await browser.createBrowserContext();
       page = await providerContext.newPage();
       flightFixtureDelivery = createFlightFixtureDeliveryObserver(
@@ -1968,8 +1976,10 @@ try {
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
   const graphics = await readBrowserGraphicsInfo(browser);
-  for (const targetPage of earlyRendererProbes.keys())
+  for (const targetPage of earlyRendererProbes.keys()) {
+    await closeEarlyRendererProbeDocument(targetPage);
     await releaseEarlyRendererProbe(targetPage);
+  }
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode,
@@ -2097,6 +2107,7 @@ try {
 } finally {
   for (const targetPage of earlyRendererProbes.keys()) {
     try {
+      await closeEarlyRendererProbeDocument(targetPage);
       await releaseEarlyRendererProbe(targetPage);
     } catch (error) {
       captureFailure ||= error;

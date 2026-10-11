@@ -144,6 +144,10 @@ export async function cleanupEarlyCesiumRendererProbe(
   scriptIdentifier,
   timeoutMs = 1_000,
 ) {
+  // Document scripts, prototype hooks and listeners belong to this target.
+  // Once its owner confirms destruction, no protocol call can remove them:
+  // the execution context and its registrations have already been released.
+  if (page.isClosed()) return true;
   const removed = await withHostTimeout(async () => {
     if (!page.isClosed())
       await page.evaluate((key) => {
@@ -159,4 +163,21 @@ export async function cleanupEarlyCesiumRendererProbe(
     return true;
   }, timeoutMs);
   return removed === true;
+}
+
+/** Dispose a completed fixture document before auditing its released probe. */
+export async function closeEarlyRendererProbeDocument(
+  page,
+  closeDocument = () => page.close(),
+  timeoutMs = 5_000,
+) {
+  if (!page.isClosed()) {
+    const closed = await withHostTimeout(async () => {
+      await closeDocument();
+      return page.isClosed();
+    }, timeoutMs);
+    if (closed !== true)
+      throw new Error('Early renderer probe document did not close.');
+  }
+  return { cleanupKind: 'document-destroyed', closed: true };
 }
