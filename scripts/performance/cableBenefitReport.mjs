@@ -221,7 +221,15 @@ export function validateCableBenefit(report, expectedCommit) {
         );
         assert.equal(run.readiness.ready, true);
         assert.equal(run.readiness.truncated, false);
-        assert.equal(run.readiness.pending.length, 0);
+        assert.deepEqual(run.readiness.pending, []);
+        assert.deepEqual(run.readiness.unsupportedOwners, []);
+        assert.ok(
+          Number.isSafeInteger(run.readiness.observedOwners) &&
+            run.readiness.observedOwners > 0 &&
+            run.readiness.observedOwners <= 64,
+        );
+        assert.equal(run.readiness.owners.length, run.readiness.observedOwners);
+        assert.ok(run.readiness.owners.every((owner) => owner.ready !== false));
         assert.equal(run.timings.readyFrames, 3);
         assert.equal(run.timings.deadlineMs, 180000);
         assert.ok(finite(run.timings.populationReadyMs));

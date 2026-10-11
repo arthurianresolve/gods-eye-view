@@ -126,7 +126,16 @@ function makeRun(mode, suite, index, orderIndex) {
       readyFrames: 3,
       deadlineMs: 180_000,
     },
-    readiness: { ready: true, truncated: false, pending: [] },
+    readiness: {
+      ready: true,
+      truncated: false,
+      pending: [],
+      unsupportedOwners: [],
+      observedOwners: 1,
+      owners: [
+        { path: 'primitives', type: 'PrimitiveCollection', ready: null },
+      ],
+    },
     warmup: { dataSources: 0, primitives: 2, groundPrimitives: 1 },
     ownership: {
       referenceGraphics: mode === 'entities' ? 2629 : 0,
@@ -345,4 +354,25 @@ test('rejects missing or failed local fixture resources', () => {
     type: 'Other',
   });
   assert.throws(() => validateCableBenefit(failed, commit));
+});
+
+test('rejects incomplete or contradictory primitive readiness evidence', () => {
+  for (const change of [
+    (readiness) => delete readiness.unsupportedOwners,
+    (readiness) =>
+      readiness.unsupportedOwners.push({ path: 'groundPrimitives/0' }),
+    (readiness) => {
+      readiness.observedOwners = 65;
+    },
+    (readiness) => {
+      readiness.observedOwners = 2;
+    },
+    (readiness) => {
+      readiness.owners[0].ready = false;
+    },
+  ]) {
+    const report = makeReport();
+    change(report.pairs[0].runs.entities.readiness);
+    assert.throws(() => validateCableBenefit(report, commit));
+  }
 });
