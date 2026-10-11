@@ -49,6 +49,14 @@ test('failure artifact preserves bounded current and completed sample evidence w
     },
     current: {
       phase: 'sample-observation',
+      startupObserverReadDiagnostics: {
+        schema: 'gev-common-scene-read-cost/v1',
+        metric: 'wall-time-ms',
+        clockAvailable: true,
+        totalMs: 42,
+        reads: { renderer: 40, vendor: 2 },
+        performanceAcceptanceEligible: false,
+      },
       before: { camera: { position: { x: 1, y: 2, z: 3 } } },
       measurement: { frameCount: 12 },
       captureStageDiagnostics: [
@@ -79,6 +87,10 @@ test('failure artifact preserves bounded current and completed sample evidence w
   assert.equal(report.progress.completedSampleCount, 1);
   assert.equal(report.progress.completedSamples[0].scenario, 'idle');
   assert.equal(report.progress.current.before.camera.position.x, 1);
+  assert.equal(
+    report.progress.current.startupObserverReadDiagnostics.reads.renderer,
+    40,
+  );
   assert.equal(
     report.progress.current.captureStageDiagnostics[0].stage,
     'worker-blob-read-and-observer-restore',

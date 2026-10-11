@@ -267,6 +267,7 @@ const failureProgress = {
   run: null,
   current: null,
   startupSamples: [],
+  startupObserverReadDiagnostics: null,
   completedSamples: [],
   fixture: productionFlightFixture,
   fixtureDelivery: null,
@@ -334,6 +335,8 @@ async function writeCaptureFailure(error) {
     errorOperator: error?.operator,
     current: {
       ...(failureProgress.current || {}),
+      startupObserverReadDiagnostics:
+        failureProgress.startupObserverReadDiagnostics,
       captureStageDiagnostics: captureStageJournal.snapshot(),
       ...(performanceDiagnosticsDocuments.length
         ? { performanceDiagnosticsDocuments }
@@ -1177,6 +1180,8 @@ try {
     };
   });
   const commonScene = await readCommonScene(page, 'startup-scene-observer');
+  failureProgress.startupObserverReadDiagnostics =
+    commonScene.readDiagnostics ?? null;
   const environment = commonScene.environment;
   environment.startup = {
     runs: startupSamples,

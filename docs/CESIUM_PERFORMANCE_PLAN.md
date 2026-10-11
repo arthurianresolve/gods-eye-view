@@ -10,6 +10,11 @@ route and the 180-second child deadline are unchanged. This diagnostic cannot
 establish CPU/GPU cost or performance acceptance. Twenty-two focused observer,
 stage, failure-envelope and comparison-contract tests pass; hosted attribution
 and physical Windows validation are still pending.
+Run `38168778561` fails before the first sample at the unchanged completed-render
+deadline. Startup observer host time is 2,937.4 ms, but its in-page attribution
+was lost when sample progress replaced startup progress. The follow-up preserves
+startup attribution independently in failure reports; nine focused tests pass.
+The original failure is not reclassified, and no timing acceptance is claimed.
 
 Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
 Point integration passes all seven standard jobs and fifteen recovery stages at
