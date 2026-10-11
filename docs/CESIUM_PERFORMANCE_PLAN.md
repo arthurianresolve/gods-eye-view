@@ -191,7 +191,7 @@ retain their original UTF-16LE bytes and recorded hashes. This variant is also
 rejected for promotion. Its allocation increase must be explained and corrected
 before a fresh timing comparison; no performance benefit is claimed for it.
 
-### S52 corrected placement signature: ready for comparison - 11 October 2026
+### S52 corrected placement signature: moving regression remains - 11 October 2026
 
 The correction is frozen at `698752adcd27b59040affc0d0a1a9bd643025833`
 on `qa/s52-placement-revised`. Its fresh
@@ -219,7 +219,33 @@ and [review](performance-evidence/s52-placement-revised-fixed/ci-review.json)
 record the skipped PR-only published layer-token checks and optional diagnostics
 separately. The frozen candidate's
 [CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099699273)
-remains under observation; remote `dev` stays at `7269408`.
+is complete and **the candidate is rejected for promotion to `dev`**. Remote
+`dev` stays at `7269408`. The
+[raw report](performance-evidence/s52-placement-revised-fixed/cpu-report.json)
+and [independent review](performance-evidence/s52-placement-revised-fixed/cpu-review.json)
+verify all 40 alternating pairs, exact revisions and source hashes, matching
+conditions and populations, and instrumentation-disabled latency samples.
+On AMD EPYC 7763 with Node 24.14.0, all 15 ordinary moving pairs regress;
+one generic pair exceeds 10%. Static and periodic cases improve in every pair.
+
+| Workload | Update cadence | Median paired CPU change | Individual pair range |
+| --- | --- | ---: | ---: |
+| Generic, 250 entries | Every frame | +7.52% | +3.04% to +11.06% |
+| Infrastructure, 320 entries | Every frame | +5.58% | +3.01% to +7.73% |
+| Radio, 864 entries | Every frame | +0.77% | +0.07% to +2.81% |
+| Detection, 5,000 entries | Every frame | -0.36% | -1.71% to +2.67% |
+| Infrastructure, 320 entries | Fixed | -26.41% | -26.93% to -25.05% |
+| Radio, 864 entries | Fixed | -20.24% | -22.88% to -16.95% |
+| Infrastructure, 320 entries | Every 60 frames | -25.35% | -26.02% to -23.49% |
+| Radio, 864 entries | Every 60 frames | -15.53% | -15.84% to -15.05% |
+
+Removing duplicate signature fields resolved the allocation failure but did not
+resolve moving CPU overhead. Separate instrumented samples still place that
+overhead in preparation/projection, which grows 6.61-8.11% for the three moving
+ordinary workloads. Further controls must isolate the remaining cause before
+another candidate is retained. These Node/mock-canvas results do not establish
+browser painting, GPU performance, motion p95, or S52 acceptance; green visual
+and integration checks do not override the timing result.
 
 The allocation increase is isolated to the moving anchor comparison path.
 Checking unequal anchors before `Object.is` removes the measured increase while

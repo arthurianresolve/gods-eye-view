@@ -19,9 +19,13 @@ this does not override the measured regression.
 
 A revised signature first exposed a repeatable allocation failure, then a
 targeted anchor guard removed it. The applied correction passes all 86 focused
-checks and 13 allocation gates, with unchanged budgets. It remains on QA pending
-fresh frozen timing, pixel and integration comparisons
-([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-corrected-placement-signature-ready-for-comparison---11-october-2026)).
+checks and 13 allocation gates, with unchanged budgets. Frozen candidate `698752a`
+also passes five visual pairs, two native font pairs and all seven integration
+jobs. Its new 40-pair CPU comparison still regresses in all 15 ordinary moving
+pairs: generic +7.52%, infrastructure +5.58%, radio +0.77% paired medians, with
+one generic pair at +11.06%. All 20 static/periodic pairs improve. The candidate
+remains rejected for promotion while the moving path is investigated
+([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-corrected-placement-signature-moving-regression-remains---11-october-2026)).
 
 Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
 layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel

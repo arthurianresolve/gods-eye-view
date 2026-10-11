@@ -1,0 +1,100 @@
+{
+  "conclusion": "success",
+  "databaseId": 38099699273,
+  "headSha": "698752adcd27b59040affc0d0a1a9bd643025833",
+  "jobs": [
+    {
+      "completedAt": "2026-10-11T01:08:29Z",
+      "conclusion": "success",
+      "databaseId": 114352900091,
+      "name": "paired-cpu",
+      "startedAt": "2026-10-11T00:49:00Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-11T00:49:01Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-11T00:49:00Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:06Z",
+          "conclusion": "success",
+          "name": "Check out the comparison harness",
+          "number": 2,
+          "startedAt": "2026-10-11T00:49:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:10Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-11T00:49:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:17Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies",
+          "number": 4,
+          "startedAt": "2026-10-11T00:49:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:19Z",
+          "conclusion": "success",
+          "name": "Prepare two immutable source checkouts",
+          "number": 5,
+          "startedAt": "2026-10-11T00:49:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T01:08:26Z",
+          "conclusion": "success",
+          "name": "Run the same eight-workload paired CPU comparison in isolation",
+          "number": 6,
+          "startedAt": "2026-10-11T00:49:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T01:08:28Z",
+          "conclusion": "success",
+          "name": "Preserve the complete or partial report in job logs",
+          "number": 7,
+          "startedAt": "2026-10-11T01:08:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T01:08:28Z",
+          "conclusion": "success",
+          "name": "Post Use supported Node.js",
+          "number": 13,
+          "startedAt": "2026-10-11T01:08:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T01:08:28Z",
+          "conclusion": "success",
+          "name": "Post Check out the comparison harness",
+          "number": 14,
+          "startedAt": "2026-10-11T01:08:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T01:08:28Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "startedAt": "2026-10-11T01:08:28Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099699273/job/114352900091"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099699273"
+}
