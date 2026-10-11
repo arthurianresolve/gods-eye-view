@@ -42,6 +42,7 @@ on:
             calibration,
             traffic,
             import-point-benefit,
+            datacenter-benefit,
           ]
         default: collections
       hosted_gpu_probe:
@@ -821,9 +822,19 @@ jobs:
             node scripts/performance/trafficRenderDemandComparison.mjs "$RUNNER_TEMP/gev-traffic-baseline" "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/qa-artifacts/traffic-render-demand"
           elif [ "$DIAGNOSTIC" = "import-point-benefit" ]; then
             node scripts/performance/importPointRepresentationBenefit.mjs
+          elif [ "$DIAGNOSTIC" = "datacenter-benefit" ]; then
+            node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/datacenter-benefit
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
+      - name: Preserve datacenter benefit evidence
+        if: always() && inputs.renderer_diagnostic == 'datacenter-benefit'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: datacenter-benefit-${{ github.run_id }}
+          path: qa-artifacts/datacenter-benefit/
+          if-no-files-found: error
+          retention-days: 3
       - name: Preserve renderer comparison evidence
         if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

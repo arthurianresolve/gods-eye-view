@@ -1212,5 +1212,9 @@
   "docs/performance-evidence/webgl-delayed-start/README.md",
   "build/cesium-dependencies.js",
   "src/tooling/cesiumDependencies.test.mjs",
-  "src/hudSummaryContext.test.mjs"
+  "src/hudSummaryContext.test.mjs",
+  "scripts/fixtures/infrastructure-benefit.html",
+  "scripts/fixtures/infrastructure-benefit.mjs",
+  "scripts/performance/infrastructureBenefitComparison.mjs",
+  "scripts/performance/infrastructureBenefitComparison.test.mjs"
 ]
