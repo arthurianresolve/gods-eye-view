@@ -245,3 +245,128 @@ test('cancellation during one large feature never publishes partial geometry', a
   assert.equal(env.layer.getState().pendingJobs, 0);
   assert.equal(env.timers.size, 0);
 });
+
+test('fully owned imports clear through one collection event and removeAll', (t) => {
+  const env = fixture(t);
+  env.layer.load(records(4));
+  const expectedRemoved = env.entities.values.map((entity) => entity.id).sort();
+  const changes = [];
+  env.entities.collectionChanged.addEventListener(
+    (_collection, added, removed, changed) =>
+      changes.push({ added, removed, changed }),
+  );
+  const removeAll = env.entities.removeAll.bind(env.entities);
+  let removeAllCalls = 0;
+  env.entities.removeAll = () => {
+    removeAllCalls += 1;
+    return removeAll();
+  };
+
+  env.layer.clear();
+
+  assert.equal(removeAllCalls, 1);
+  assert.equal(changes.length, 1);
+  assert.deepEqual(
+    changes[0].removed.map((entity) => entity.id).sort(),
+    expectedRemoved,
+  );
+  assert.deepEqual(env.entities.values, []);
+  assert.equal(getContextStore().entities.size, 0);
+  assert.equal(env.layer.getState().featureCount, 0);
+});
+
+test('mixed imports preserve outside entities and batch within nested suspension', (t) => {
+  const env = fixture(t);
+  env.layer.load(records(4));
+  const expectedRemoved = env.entities.values.map((entity) => entity.id).sort();
+  const outside = env.entities.add({ id: 'outside:kept' });
+  const changes = [];
+  env.entities.collectionChanged.addEventListener(
+    (_collection, added, removed, changed) =>
+      changes.push({ added, removed, changed }),
+  );
+  let removeAllCalls = 0;
+  const removeAll = env.entities.removeAll.bind(env.entities);
+  env.entities.removeAll = () => {
+    removeAllCalls += 1;
+    return removeAll();
+  };
+
+  env.entities.suspendEvents();
+  env.layer.clear();
+  assert.equal(removeAllCalls, 0);
+  assert.deepEqual(changes, []);
+  assert.equal(env.entities.getById(outside.id), outside);
+  env.entities.resumeEvents();
+
+  assert.equal(changes.length, 1);
+  assert.deepEqual(
+    changes[0].removed.map((entity) => entity.id).sort(),
+    expectedRemoved,
+  );
+  assert.equal(env.entities.getById(outside.id), outside);
+  assert.equal(getContextStore().entities.size, 0);
+});
+
+test('clear preserves an external replacement that reuses an imported ID', (t) => {
+  const env = fixture(t);
+  const replacementId = 'gev-import:active:fixture:0';
+  const stillOwnedId = 'gev-import:active:fixture:1';
+  env.layer.load(records(2));
+  const imported = env.entities.getById(replacementId);
+  assert.ok(imported);
+  env.entities.remove(imported);
+  const replacement = env.entities.add({
+    id: replacementId,
+    name: 'Outside replacement',
+  });
+  const changes = [];
+  env.entities.collectionChanged.addEventListener(
+    (_collection, added, removed, changed) =>
+      changes.push({ added, removed, changed }),
+  );
+  let removeAllCalls = 0;
+  const removeAll = env.entities.removeAll.bind(env.entities);
+  env.entities.removeAll = () => {
+    removeAllCalls += 1;
+    return removeAll();
+  };
+
+  env.layer.clear();
+
+  assert.equal(removeAllCalls, 0);
+  assert.equal(env.entities.getById(replacementId), replacement);
+  assert.notEqual(replacement, imported);
+  assert.equal(env.entities.getById(stillOwnedId), undefined);
+  assert.equal(changes.length, 1);
+  assert.deepEqual(
+    changes[0].removed.map((entity) => entity.id),
+    [stillOwnedId],
+  );
+});
+
+test('mixed removal resumes collection events when a removal throws', (t) => {
+  const env = fixture(t);
+  env.layer.load(records(3));
+  env.entities.add({ id: 'outside:kept' });
+  const changes = [];
+  env.entities.collectionChanged.addEventListener(
+    (_collection, added, removed) => changes.push({ added, removed }),
+  );
+  const removeById = env.entities.removeById.bind(env.entities);
+  let removals = 0;
+  env.entities.removeById = (id) => {
+    removals += 1;
+    if (removals === 2) throw new Error('controlled remove failure');
+    return removeById(id);
+  };
+
+  assert.throws(() => env.layer.clear(), /controlled remove failure/);
+  assert.equal(changes.length, 1);
+  env.entities.add({ id: 'outside:after-failure' });
+  assert.equal(changes.length, 2);
+  assert.deepEqual(
+    changes[1].added.map((entity) => entity.id),
+    ['outside:after-failure'],
+  );
+});

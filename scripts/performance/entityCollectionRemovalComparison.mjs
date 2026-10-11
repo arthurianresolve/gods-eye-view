@@ -5,6 +5,7 @@ import { performance } from 'node:perf_hooks';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as Cesium from 'cesium';
+import { removeOwnedEntityCollection } from '../../src/imports/entityCollectionOwnership.js';
 
 export const IMPORTED_ENTITY_COUNT = 5_000;
 export const EXTERNAL_ENTITY_COUNT = 100;
@@ -14,43 +15,18 @@ const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const median = (values) => [...values].sort((a, b) => a - b)[2];
 
 export function removeByIdsIndividually(collection, ids) {
-  for (const id of ids) {
+  for (const id of ids.keys()) {
     const entity = collection.getById(id);
     if (entity) collection.remove(entity);
   }
 }
 
-export function removeOwnedByIdsBatched(collection, ids) {
-  const values = collection.values;
-  let allOwned = values.length === ids.size;
-  if (allOwned) {
-    for (const entity of values) {
-      if (!ids.has(entity.id)) {
-        allOwned = false;
-        break;
-      }
-    }
-  }
-  if (allOwned) {
-    collection.removeAll();
-    return;
-  }
-
-  collection.suspendEvents();
-  try {
-    for (const id of ids) collection.removeById(id);
-  } finally {
-    collection.resumeEvents();
-  }
-}
-
 function makeCollection(mode, trial) {
   const collection = new Cesium.EntityCollection();
-  const ownedIds = new Set();
+  const ownedEntities = new Map();
   for (let index = 0; index < IMPORTED_ENTITY_COUNT; index += 1) {
     const id = `gev-import:bench:${trial}:${index}`;
-    ownedIds.add(id);
-    collection.add({
+    const entity = collection.add({
       id,
       name: `Imported site ${index}`,
       position: Cesium.Cartesian3.fromDegrees(
@@ -64,6 +40,7 @@ function makeCollection(mode, trial) {
         outlineWidth: 1,
       },
     });
+    ownedEntities.set(id, entity);
   }
   const externalIds = new Set();
   if (mode === 'mixed') {
@@ -85,15 +62,22 @@ function makeCollection(mode, trial) {
       events.removedEntityCount += removed.length;
     },
   );
-  return { collection, ownedIds, externalIds, events };
+  return { collection, ownedEntities, externalIds, events };
 }
 
-function verify(mode, strategy, collection, ownedIds, externalIds, events) {
+function verify(
+  mode,
+  strategy,
+  collection,
+  ownedEntities,
+  externalIds,
+  events,
+) {
   const survivorIds = collection.values.map((entity) => entity.id).sort();
   const expectedSurvivors = [...externalIds].sort();
-  const expectedRemovedIds = [...ownedIds].sort();
+  const expectedRemovedIds = [...ownedEntities.keys()].sort();
   assertExact(
-    events.removedEntityCount === ownedIds.size,
+    events.removedEntityCount === ownedEntities.size,
     'wrong number of removal-event entities',
   );
   assertExact(
@@ -104,13 +88,15 @@ function verify(mode, strategy, collection, ownedIds, externalIds, events) {
     JSON.stringify(survivorIds) === JSON.stringify(expectedSurvivors),
     `${mode} survivor set changed`,
   );
-  const expectedEvents = strategy === 'individual' ? ownedIds.size : 1;
+  const expectedEvents = strategy === 'individual' ? ownedEntities.size : 1;
   assertExact(events.count === expectedEvents, 'unexpected event count');
   return {
     removedCount: expectedRemovedIds.length,
-    removedIds: expectedRemovedIds,
     removedIdsSha256: sha256(Buffer.from(expectedRemovedIds.join('\n'))),
-    survivorIds,
+    removedIdsEvidence:
+      'inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only',
+    survivorCount: survivorIds.length,
+    survivorIdsSha256: sha256(Buffer.from(survivorIds.join('\n'))),
     collectionChangedEvents: events.count,
     removedEntityCountFromEvents: events.removedEntityCount,
   };
@@ -121,19 +107,20 @@ function assertExact(condition, message) {
 }
 
 function runRemoval(mode, strategy, index) {
-  const { collection, ownedIds, externalIds, events } = makeCollection(
+  const { collection, ownedEntities, externalIds, events } = makeCollection(
     mode,
     `${mode}:${index}`,
   );
   const started = performance.now();
-  if (strategy === 'individual') removeByIdsIndividually(collection, ownedIds);
-  else removeOwnedByIdsBatched(collection, ownedIds);
+  if (strategy === 'individual')
+    removeByIdsIndividually(collection, ownedEntities);
+  else removeOwnedEntityCollection(collection, ownedEntities);
   const elapsedMs = performance.now() - started;
   const evidence = verify(
     mode,
     strategy,
     collection,
-    ownedIds,
+    ownedEntities,
     externalIds,
     events,
   );
@@ -166,7 +153,7 @@ export function runEntityCollectionRemovalComparison({
       importedEntityCount: IMPORTED_ENTITY_COUNT,
       externalEntityCount: mode === 'mixed' ? EXTERNAL_ENTITY_COUNT : 0,
       eventSemantics:
-        'same exact removed ids and survivors; counts observed after setup',
+        'expected setup IDs are confirmed absent and survivors are exact; timed observer records removal counts only',
       pairs,
       individualMedianMs: median(
         pairs.map((pair) => pair.runs.individual.elapsedMs),
@@ -183,6 +170,7 @@ export function runEntityCollectionRemovalComparison({
     schema: 'gev-entity-collection-removal-comparison/v1',
     baseCommit: baseCommit || null,
     sourceSha256: sourceSha256 || null,
+    productionHelperPath: 'src/imports/entityCollectionOwnership.js',
     harnessSha256: harnessSha256 || null,
     cesiumVersion: Cesium.VERSION,
     conditions,
@@ -206,8 +194,23 @@ if (invoked) {
     mkdirSync(dirname(outputPath), { recursive: true });
   }
   const runtimePath = 'src/imports/runtimeLayer.js';
+  const helperPath = 'src/imports/entityCollectionOwnership.js';
   const harnessPath =
     'scripts/performance/entityCollectionRemovalComparison.mjs';
+  try {
+    execFileSync('git', [
+      'diff',
+      '--quiet',
+      'HEAD',
+      '--',
+      runtimePath,
+      helperPath,
+    ]);
+  } catch {
+    throw new Error(
+      'Refusing comparison: production runtime/helper differ from committed HEAD.',
+    );
+  }
   const report = runEntityCollectionRemovalComparison({
     baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], {
       encoding: 'utf8',
@@ -215,6 +218,20 @@ if (invoked) {
     sourceSha256: sha256(readFileSync(runtimePath)),
     harnessSha256: sha256(readFileSync(harnessPath)),
   });
+  report.productionHelperSha256 = sha256(readFileSync(helperPath));
+  report.nodeVersion = process.version;
+  report.conditions = Object.fromEntries(
+    Object.entries(report.conditions).map(([mode, condition]) => [
+      mode,
+      {
+        ...condition,
+        forcedGc: false,
+        runtimeSourcePath: runtimePath,
+        productionHelperPath: helperPath,
+        productionHelperSha256: report.productionHelperSha256,
+      },
+    ]),
+  );
   const json = `${JSON.stringify(report, null, 2)}\n`;
   if (outputPath) writeFileSync(outputPath, json, { flag: 'wx' });
   else process.stdout.write(json);

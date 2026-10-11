@@ -1106,6 +1106,7 @@
   "src/ui/workspaceImportRead.test.mjs",
   "src/ui/workspaceLibraryImport.test.mjs",
   "src/imports/runtimeLayer.js",
+  "src/imports/entityCollectionOwnership.js",
   "src/imports/runtimeLayer.test.mjs",
   "src/imports/macrotask.js",
   "src/imports/macrotask.test.mjs",

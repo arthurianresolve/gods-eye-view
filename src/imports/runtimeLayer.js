@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { consumeInBatches } from './cooperative.js';
+import { removeOwnedEntityCollection } from './entityCollectionOwnership.js';
 import { selectImportRenderRecords } from './renderRecords.js';
 import {
   registerEntityContext,
@@ -47,7 +48,7 @@ export function createImportedGeometryLayer({
 } = {}) {
   if (!viewer?.entities || !viewer?.scene?.canvas)
     throw new TypeError('A Cesium viewer is required.');
-  const ids = new Set();
+  const ownedEntities = new Map();
   let destroyed = false;
   let pending = null;
   const handler = screenSpaceEventHandlerFactory(viewer.scene.canvas);
@@ -61,11 +62,8 @@ export function createImportedGeometryLayer({
     const previous = pending;
     pending = null;
     previous?.abort();
-    for (const id of ids) {
-      const entity = viewer.entities.getById(id);
-      if (entity) viewer.entities.remove(entity);
-    }
-    ids.clear();
+    removeOwnedEntityCollection(viewer.entities, ownedEntities);
+    ownedEntities.clear();
     removeEntityContextsForLayer(IMPORTED_LAYER_ID);
     clearOverlaySource(IMPORTED_LAYER_ID);
   }
@@ -152,8 +150,8 @@ export function createImportedGeometryLayer({
           horizonCull: true,
         });
       const entity = viewer.entities.add({ id, name: label, ...shape });
+      ownedEntities.set(id, entity);
       entity.__gevImportContextId = id;
-      ids.add(id);
       const evidence = createEvidenceEnvelope({
         entityRef: { layerKey: IMPORTED_LAYER_ID, id: String(feature.id) },
         sourceId:
@@ -251,10 +249,10 @@ export function createImportedGeometryLayer({
     clear,
     getPerformanceDiagnostics: () => ({
       pendingJobs: pending ? 1 : 0,
-      cacheEntries: ids.size,
+      cacheEntries: ownedEntities.size,
     }),
     getState: () => ({
-      featureCount: ids.size,
+      featureCount: ownedEntities.size,
       pendingJobs: pending ? 1 : 0,
       destroyed,
     }),

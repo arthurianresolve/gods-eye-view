@@ -1560,6 +1560,7 @@
       "src/imports/cooperative.js",
       "src/imports/macrotask.js",
       "src/imports/runtimeLayer.js",
+      "src/imports/entityCollectionOwnership.js",
       "src/imports/renderRecords.js",
       "src/ui/commandPalette.js",
       "src/ui/styles/commandPalette.css",
