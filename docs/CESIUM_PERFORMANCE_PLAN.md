@@ -1,12 +1,22 @@
 # Cesium performance plan
 
-Remote `dev` at `72694089e7fa0fa414042cde48765e1418a70d7e` now passes all seven
+Placement reuse at `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` is accepted as a
+component optimization after exact-source CPU, pixel, allocation, native font
+and all seven integration gates pass ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),
+[CI results](performance-evidence/s52-placement-direct-filter/ci-run.json)).
+Static/periodic workloads improve in all twenty pairs; moving generic and
+infrastructure medians regress 3.34%/2.36%, with no individual pair exceeding
+the 10% limit. This tradeoff and the limits of Node/component measurements are
+explicit below. Conditional painting, full-scene performance and hardware
+acceptance remain unfinished; this does not complete S52 or S47-S60.
+
+The previous `dev` baseline `72694089e7fa0fa414042cde48765e1418a70d7e` passes all seven
 ordinary integration jobs, including the final browser gate
 ([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38096363702),
 [archived results](performance-evidence/s52-placement-reuse/baseline-dev-ci.json)).
 The PR-only published layer-token check and optional diagnostic jobs did not run;
 their absence is not a pass. This revision is the integration baseline for the
-next placement experiment below.
+placement comparison below.
 
 Updated on 11 October 2026. All seven full integration jobs pass at
 `f25154a61326e881e2223f2238d94b06cf231df8`
@@ -16,7 +26,7 @@ and normalized-entry layout optimizations now have repeatable isolated CPU benef
 five paired 24-case exact-pixel comparisons for each change, and applicable unit,
 allocation and integration checks. The idle font wake fix also passes native
 browser failure-control comparisons, including with layout reuse enabled.
-These component optimizations are retained. Placement reuse, conditional painting,
+These component optimizations are retained. Conditional painting,
 full-scene latency and physical Windows acceptance remain unfinished. Details,
 raw evidence and earlier failures are preserved below; this is not full S52
 acceptance. Earlier `33d9856` and remote `dev` revision `d2c5aa1` also pass all seven
@@ -66,7 +76,7 @@ the earlier release requirements and historical results.
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
-| S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, and normalized-entry layout reuse at `f25154a`; placement reuse and conditional painting remain | Both optimizations pass isolated 40-pair CPU comparisons and five 24-case visual pairs. Layout's 35 ordinary pairs all improve; detection median +0.50%, maximum individual +4.57%. 83 focused checks, allocation checks and all seven integration jobs pass; native font failure control passes with and without layout reuse | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
+| S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional painting remains | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Earlier component evidence is preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
@@ -111,11 +121,19 @@ radio's median improves 1.90%; detection's median regresses 0.20%, with mixed
 individual results. No pair exceeds the 10% regression limit. These are
 synchronous Node algorithm timings with mock Canvas2D, not browser painting,
 GPU timings or full-scene motion p95. The component meets the measured-benefit
-and regression threshold with this explicit moving-path tradeoff; final
-integration checks are still pending. This runtime remains on QA; `dev` is
-unchanged. [Exact-commit CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524)
-and [native font wake control](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102807734)
-are running at `4686ea3`.
+and regression threshold with this explicit moving-path tradeoff.
+[Exact-commit CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524)
+passes all seven ordinary jobs at `4686ea3`, including Windows recovery and
+browser journeys ([archived results](performance-evidence/s52-placement-direct-filter/ci-run.json)).
+The [native font wake control](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102807734)
+passes both alternating pairs: the pre-fix control misses the wake twice,
+while the candidate wakes only the current host and changes its width from
+283 to 299 px ([independent review](performance-evidence/s52-placement-direct-filter/native-font-review.json)).
+The [acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json)
+binds all artifacts and records the component's promotion decision. PR-only
+published layer-token checks and optional diagnostic/soak jobs were skipped;
+their absence is not a pass. Subsequent evidence-only commits do not change
+the tested application or harness bytes.
 
 The expanded paint fixture adds actual font loading, selection promotion and
 demotion, and shared/separate custom painter transitions. Its first baseline run

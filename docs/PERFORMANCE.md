@@ -5,15 +5,17 @@ isolated CPU comparison. Static and periodic infrastructure/radio paired
 medians improve 17.65-31.11%, with all twenty pairs improving. Moving generic
 and infrastructure medians regress 3.34%/2.36%; the largest individual
 regression is 6.14%, below the 10% limit. This is an explicit component
-tradeoff, not a browser/GPU or full-scene motion-p95 result. Exact-pixel and
-allocation checks pass; exact-commit integration and native font checks remain
-in progress ([raw CPU report](performance-evidence/s52-placement-direct-filter/cpu-report.json),
+tradeoff, not a browser/GPU or full-scene motion-p95 result. Exact-pixel,
+allocation, native font failure-control and all seven exact-commit integration
+checks pass. The component is accepted ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),
+[CI results](performance-evidence/s52-placement-direct-filter/ci-run.json),
+[raw CPU report](performance-evidence/s52-placement-direct-filter/cpu-report.json),
 [independent review](performance-evidence/s52-placement-direct-filter/cpu-review.json)).
 The separate repaint optimization is still rejected: its latest isolated
 prototype passes 87 behavior checks but fails six of thirteen unchanged
 allocation gates ([preserved variants and logs](performance-evidence/s52-paint-allocation-rejections/review.json)).
 
-Remote `dev` at `72694089e7fa0fa414042cde48765e1418a70d7e` passes all seven
+The previous `dev` baseline `72694089e7fa0fa414042cde48765e1418a70d7e` passes all seven
 ordinary integration jobs ([results](performance-evidence/s52-placement-reuse/baseline-dev-ci.json)),
 including Node 24/26, builds, onboarding, three-OS recovery and browser journeys.
 The placement-cache experiment at `21523d5` passes five 24-case exact-pixel pairs

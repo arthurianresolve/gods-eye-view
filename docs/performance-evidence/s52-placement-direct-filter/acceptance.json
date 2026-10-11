@@ -1,0 +1,140 @@
+{
+  "schema": "gev-overlay-component-acceptance/v1",
+  "decidedAt": "2026-10-11T01:57:45.911Z",
+  "candidateCommit": "4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5",
+  "disposition": "Accept placement reuse as a measured component optimization, with the explicit moving-path tradeoff below. This does not complete S52 or the Cesium plan.",
+  "sourceSha256": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+  "integrationRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524",
+  "requiredJobs": [
+    {
+      "name": "Node 24.14.0",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361188018",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Node 26.x",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361188040",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Street Level browser gate",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361188092",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Windows onboarding",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361188169",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361187893",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361188061",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524/job/114361188105",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "comparison": {
+    "workloadPairs": 40,
+    "allTwentyStaticPeriodicPairsImprove": true,
+    "staticPeriodicMedianChangePercent": [
+      {
+        "profile": "local-infrastructure",
+        "cadence": 0,
+        "delta": -30.65271236601931
+      },
+      {
+        "profile": "all-live-radio",
+        "cadence": 0,
+        "delta": -22.927818700332182
+      },
+      {
+        "profile": "local-infrastructure",
+        "cadence": 60,
+        "delta": -31.11190393661265
+      },
+      {
+        "profile": "all-live-radio",
+        "cadence": 60,
+        "delta": -17.646603301314336
+      }
+    ],
+    "movingPath": [
+      {
+        "profile": "generic",
+        "medianChangePercent": 3.336538742517692,
+        "maximumPairChangePercent": 6.141949834926619
+      },
+      {
+        "profile": "local-infrastructure",
+        "medianChangePercent": 2.3633442585115016,
+        "maximumPairChangePercent": 3.6459098205000817
+      },
+      {
+        "profile": "all-live-radio",
+        "medianChangePercent": -1.9009999872042327,
+        "maximumPairChangePercent": 0.05719990970132205
+      },
+      {
+        "profile": "phase6-detection",
+        "medianChangePercent": 0.19979839728028193,
+        "maximumPairChangePercent": 0.8960113935611691
+      }
+    ],
+    "noPairExceedsTenPercentRegression": true
+  },
+  "correctness": {
+    "focusedChecks": 87,
+    "unchangedAllocationBudgets": 13,
+    "exactVisualPairs": 5,
+    "casesPerPair": 24,
+    "independentlyVerifiedImages": 240,
+    "nativeFontFailureControlPairs": 2
+  },
+  "skipped": [
+    "PR-only published layer-token checks",
+    "Optional diagnostic/soak jobs"
+  ],
+  "remaining": [
+    "Conditional painting implementation and validation",
+    "Full-scene browser motion and real Windows GPU comparisons",
+    "Current-candidate retention soak",
+    "Remaining S47-S60 and S32-S46 ledger gates"
+  ],
+  "limitations": [
+    "CPU comparison measures synchronous Node algorithms with mock Canvas2D, not browser painting or GPU timing.",
+    "Moving generic/infrastructure medians regress 3.34%/2.36%; repeated static/periodic benefit and the unchanged 10% regression ceiling justify this component tradeoff.",
+    "No 20% full-scene motion-p95 claim."
+  ],
+  "artifactSha256": {
+    "cpu-report.json": "f90c01e73b013c2293b0d7f0abff3cc3972e96955b6e53500788d0e1e16c6c6e",
+    "cpu-review.json": "e602078b1edef88211ca0875403704594f7fe877d311fd346667b73a430b5f3c",
+    "cpu-run.json": "2d416c91b8815418d16d9fce6ca1fe46759db9c5172447d8a4f52e068c1a24b2",
+    "visual/report.json": "247fe1c311578d4cbc4dd751b0d0a45d2bf89f62a91bb56ab2b42c4cd307823f",
+    "visual/review.json": "7766ad8edd7f681107351deb4f6c3c70a2ab75770a9c0f9e0194356afd8d9f66",
+    "visual/images.zip": "4734ec640c291d92a43de1bf4ed3aff4b8c0ff3ed88ed6de876945f274e090d2",
+    "native-font-report.json": "1b38d717810823d639c1f48f58cc1e42b3858f236b36f1d8b5f2a9124564821f",
+    "native-font-review.json": "16b9d7d8102c809427043c9e6f2ea7cc501450be6f4d3492b378a54779998ff0",
+    "native-font-run.json": "97f8e4f9218ea135efe5ba9c562d65900b36af6500eab145c97623499aa0c630",
+    "review.json": "b6b22aa7e03cb57cb29d04f1211ee565a60c457ae255f325c3b24782c1670a4c",
+    "work-report.json": "5e02e1e5658e8083ccd49910b79f04142795198ed463166d1ce5b23a79c305ad",
+    "focused.txt": "8a58d6be7d3a27a06c26c992ac9ee50742d2dc7224b3f95764b2d6eb648f75db",
+    "allocation.txt": "d28875655bfe597bd697194a9448a1e4ebc2056313f7ebdf7c1b42e79b563918"
+  },
+  "ciRunSha256": "a24593f09da6d3801531f84be85fab35a00223851a78ba37be8a661a7f76ab8e"
+}
