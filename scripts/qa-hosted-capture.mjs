@@ -14,6 +14,7 @@ import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrati
 import { validateImportBatchSchedulerReport } from './performance/importBatchSchedulerReport.mjs';
 import { summarizeImportTraceAttribution } from './performance/importTraceAttribution.mjs';
 import { startImportTraceSession } from './performance/importTraceSession.mjs';
+import { sanitizeDiagnosticText } from './performance/startupDiagnostics.mjs';
 import { startFixtureCpuProfile } from './performance/sampledCpuProfile.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
@@ -162,6 +163,12 @@ try {
       importFixtureUrl.searchParams.set('step-diagnostics', '1');
     if (importStepAttribution)
       importFixtureUrl.searchParams.set('step-attribution', '1');
+    const importPageErrors = [];
+    const onImportPageError = (error) => {
+      if (importPageErrors.length < 8)
+        importPageErrors.push(sanitizeDiagnosticText(error?.message, 240));
+    };
+    if (importStepAttribution) page.on('pageerror', onImportPageError);
     await page.goto(importFixtureUrl.href, {
       waitUntil: 'networkidle0',
     });
@@ -198,7 +205,36 @@ try {
       );
       if (profileImports) report.importBatches.profiled = true;
       if (importStepDiagnostics) report.importBatches.stepDiagnostic = true;
+    } catch (error) {
+      if (importStepAttribution) {
+        let stateDeadline;
+        try {
+          report.importFailureState = await Promise.race([
+            page.evaluate(() => ({
+              status: document
+                .querySelector('#status')
+                ?.textContent?.slice(0, 240),
+              resultBytes:
+                document.querySelector('#result')?.textContent?.length,
+              runDisabled: document.querySelector('#run')?.disabled,
+            })),
+            new Promise((_, reject) => {
+              stateDeadline = setTimeout(
+                () => reject(new Error('Import failure state unavailable')),
+                2000,
+              );
+            }),
+          ]);
+        } catch {
+          report.importFailureState = { status: 'unavailable' };
+        } finally {
+          clearTimeout(stateDeadline);
+        }
+      }
+      throw error;
     } finally {
+      page.off('pageerror', onImportPageError);
+      if (importStepAttribution) report.importPageErrors = importPageErrors;
       if (importTrace) {
         traceStopped = await importTrace.stop();
         if (!report.importBatches) {
@@ -223,9 +259,14 @@ try {
               error?.message || error,
             ).slice(0, 240);
           }
-        } else
+        } else {
           report.importTraceAttributionError =
             'Fixture result did not contain loading trace anchors/windows.';
+          // Retain already-sanitized bounded trace records even when the page
+          // never publishes its final report. They cannot establish alignment
+          // or performance acceptance without the missing fixture intervals.
+          report.importIncompleteTrace = traceStopped;
+        }
       }
       if (cpuProfile) {
         const { profile, ...summary } = await cpuProfile.stop();

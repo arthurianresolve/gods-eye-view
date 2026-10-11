@@ -1,0 +1,15 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38147837347",
+  "commit": "b53897c61b3758c13fbeabdd09d73810740dbe62",
+  "reportSha256": "f83ae57071945a837ea65a1157bffd3aced19e2d477e6c5c915b02b40e03c62b",
+  "status": "failed",
+  "reason": "Native renderer probe failed: Waiting failed: 120000ms exceeded",
+  "fixtureReportAvailable": false,
+  "gcAttributionAvailable": false,
+  "performanceAccepted": false,
+  "findings": [
+    "Capture matrix completed; the subsequent import fixture did not publish a final result within 120 seconds.",
+    "The driver did not preserve the current fixture stage, page exceptions or sanitized trace on this path. No attribution of the failure is justified.",
+    "Add bounded failure-state retention before the next diagnostic. Keep the timeout and acceptance gates unchanged."
+  ]
+}

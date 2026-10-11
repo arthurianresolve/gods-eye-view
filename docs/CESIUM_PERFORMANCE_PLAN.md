@@ -4152,3 +4152,18 @@ code. Recovery used software rendering; published layer-token checks and the
 separate soak/tracking jobs were not selected by this workflow dispatch. This
 pass neither resolves the intermittent shutdown failure on the separate
 main-integration candidate nor closes S59's work-budget and hardware gates.
+
+### S59 loading trace timeout - 11 October 2026
+
+[Run 38147837347](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38147837347)
+at `b53897c61b3758c13fbeabdd09d73810740dbe62` passed the capture matrix but
+the traced import fixture failed to publish its report inside 120 seconds.
+The original [failed report and review](performance-evidence/s59-import-trace-timeout-38147837347/review.json)
+are preserved. No loading-window GC attribution or performance acceptance
+can be inferred from this incomplete run.
+
+The next diagnostic preserves the bounded DOM stage and page exceptions on
+failure, plus the sanitized bounded trace even when fixture anchors are
+unavailable. Missing alignment remains unavailable. The diagnostic timeout,
+source populations, geometry, runtime scheduler and acceptance gates are
+unchanged. This addresses missing failure evidence, not the timeout cause.
