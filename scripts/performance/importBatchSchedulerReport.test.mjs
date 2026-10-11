@@ -219,21 +219,28 @@ function traceAttributedReport() {
     });
   });
   report.importTraceAttribution = {
-    schema: 'gev-import-trace-attribution/v1',
+    schema: 'gev-import-trace-attribution/v2',
     performanceAcceptanceEligible: false,
     traceAnchors: anchors,
     loadingWindows: windows,
     traceSummary: {
-      schema: 'gev-import-trace-attribution/v1',
+      schema: 'gev-import-trace-attribution/v2',
       complete: true,
       performanceAcceptanceEligible: false,
       scope:
         'Chrome trace capture spans the entire diagnostic fixture, including setup and teardown; attribution is restricted to the six measured loading windows.',
       categories: 'devtools.timeline,disabled-by-default-v8.gc',
       traceEventAccounting:
-        'Counts normalized markers, complete GC X slices, paired B/E GC slices, and instant observations. Unmatched/malformed GC records are omitted and make the summary incomplete.',
+        'Counts markers, complete GC X/B-E intervals, instant observations, and s/t/f GC flow edges separately. Flow phases are non-duration links; unsupported/incomplete duration records are omitted and fail completeness.',
       traceRelevantEvents: anchors.length,
       retainedTraceEvents: anchors.length,
+      preparation: {
+        name: 'gev-import-step:preparation',
+        callDurationMs: 0.1,
+        uncertaintyMs: 0.05,
+      },
+      flowEventCount: 0,
+      flowPhaseCounts: { s: 0, t: 0, f: 0 },
       omittedTraceEvents: 0,
       bufferUsagePeak: 0.1,
       errors: [],
@@ -327,6 +334,15 @@ test('rejects incomplete or misbound loading trace evidence', () => {
     },
     (bad) => {
       bad.importTraceAttribution.traceSummary.traceRelevantEvents += 1;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.flowEventCount += 1;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.flowPhaseCounts.s = -1;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.preparation = null;
     },
     (bad) => {
       bad.importTraceAttribution.traceSummary.loadingWindows[0].steps[0].aligned = false;

@@ -103,7 +103,7 @@ let collectIteratorStepDiagnostics = false;
 let collectImportTraceAttribution = false;
 let importTraceAnchors = [];
 let importTraceWindows = [];
-function markImportTrace(name) {
+function markImportTrace(name, { retainAnchor = true } = {}) {
   const markerName = `gev-import-step:${name}`;
   const beforeMs = performance.now();
   console.timeStamp(markerName);
@@ -112,8 +112,9 @@ function markImportTrace(name) {
     name: markerName,
     pageNowMs: (beforeMs + afterMs) / 2,
     uncertaintyMs: (afterMs - beforeMs) / 2,
+    callDurationMs: afterMs - beforeMs,
   };
-  importTraceAnchors.push(anchor);
+  if (retainAnchor) importTraceAnchors.push(anchor);
   return anchor;
 }
 function createIteratorStepMetrics() {
@@ -652,6 +653,7 @@ run.addEventListener('click', async () => {
             performanceAcceptanceEligible: false,
             traceAnchors: importTraceAnchors,
             loadingWindows: importTraceWindows,
+            preparation: null,
           },
         }
       : {}),
@@ -660,6 +662,14 @@ run.addEventListener('click', async () => {
     renderErrors: [],
     status: 'running',
   };
+  if (collectImportTraceAttribution) {
+    // Warm the first-use tracing/timestamp path outside every measured load.
+    // Its cost and uncertainty are recorded separately and never substituted
+    // for a measured anchor or used to bypass the per-anchor 2ms gate.
+    report.importTraceAttribution.preparation = markImportTrace('preparation', {
+      retainAnchor: false,
+    });
+  }
   let viewer, layer;
   let backgrounded = document.visibilityState !== 'visible';
   const visibility = () => {

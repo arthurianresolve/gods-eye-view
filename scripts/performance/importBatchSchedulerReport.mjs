@@ -310,7 +310,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
     const summary = attribution?.traceSummary;
     add(
       errors,
-      attribution?.schema === 'gev-import-trace-attribution/v1',
+      attribution?.schema === 'gev-import-trace-attribution/v2',
       'loading trace attribution schema missing',
     );
     add(
@@ -329,9 +329,15 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
     );
     add(
       errors,
-      summary?.schema === 'gev-import-trace-attribution/v1' &&
+      summary?.schema === 'gev-import-trace-attribution/v2' &&
         summary?.complete === true &&
         summary?.performanceAcceptanceEligible === false &&
+        summary?.preparation &&
+        summary.preparation.name === 'gev-import-step:preparation' &&
+        finite(summary.preparation.callDurationMs) &&
+        summary.preparation.callDurationMs >= 0 &&
+        finite(summary.preparation.uncertaintyMs) &&
+        summary.preparation.uncertaintyMs >= 0 &&
         typeof summary?.scope === 'string' &&
         summary.scope.includes('entire diagnostic fixture') &&
         summary.scope.includes('six measured loading windows') &&
@@ -342,10 +348,24 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
         summary.traceRelevantEvents >= 0 &&
         Number.isInteger(summary?.retainedTraceEvents) &&
         summary.retainedTraceEvents >= 0 &&
-        summary.retainedTraceEvents <= 4096 &&
+        summary.retainedTraceEvents <= 8192 &&
+        Number.isInteger(summary?.flowEventCount) &&
+        summary.flowEventCount >= 0 &&
+        summary?.flowPhaseCounts &&
+        ['s', 't', 'f'].every(
+          (phase) =>
+            Number.isInteger(summary.flowPhaseCounts[phase]) &&
+            summary.flowPhaseCounts[phase] >= 0,
+        ) &&
+        summary.flowEventCount ===
+          summary.flowPhaseCounts.s +
+            summary.flowPhaseCounts.t +
+            summary.flowPhaseCounts.f &&
         summary?.omittedTraceEvents === 0 &&
         summary.traceRelevantEvents ===
-          summary.retainedTraceEvents + summary.omittedTraceEvents &&
+          summary.retainedTraceEvents +
+            summary.flowEventCount +
+            summary.omittedTraceEvents &&
         Number.isFinite(summary?.bufferUsagePeak) &&
         summary.bufferUsagePeak >= 0 &&
         summary.bufferUsagePeak < 0.95 &&
@@ -353,7 +373,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
         summary.errors.length === 0 &&
         Array.isArray(summary?.observedMarkers) &&
         Array.isArray(summary?.gcSlices) &&
-        summary.gcSlices.length <= 4096 &&
+        summary.gcSlices.length <= 8192 &&
         summary.gcSlices.every(
           (event) =>
             typeof event?.name === 'string' &&
@@ -365,7 +385,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
             Number.isInteger(event.tid),
         ) &&
         Array.isArray(summary?.gcInstantObservations) &&
-        summary.gcInstantObservations.length <= 4096 &&
+        summary.gcInstantObservations.length <= 8192 &&
         summary.gcInstantObservations.every(
           (event) =>
             typeof event?.name === 'string' &&

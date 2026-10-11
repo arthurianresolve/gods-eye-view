@@ -258,6 +258,7 @@ try {
               trace: traceStopped,
               anchors: fixtureAttribution.traceAnchors,
               loadingWindows: fixtureAttribution.loadingWindows,
+              preparation: fixtureAttribution.preparation,
             });
             fixtureAttribution.traceSummary = summary;
             report.importTraceAttribution = summary;

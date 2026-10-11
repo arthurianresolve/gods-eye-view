@@ -183,6 +183,160 @@ test('retains only bounded marker and GC timing fields, omitting trace payloads'
   assert.equal(Object.hasOwn(retained.events[0], 'args'), false);
 });
 
+test('accounts s/t/f as bounded non-duration flow counters, not GC pauses', () => {
+  const trace = retainImportTraceEvents([
+    {
+      name: 'TimeStamp',
+      cat: 'devtools.timeline',
+      ph: 'I',
+      ts: 100_000,
+      pid: 1,
+      tid: 2,
+      args: { data: { message: anchor } },
+    },
+    ...['s', 't', 'f'].map((ph, index) => ({
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph,
+      ts: 101_000 + index * 1000,
+      pid: 1,
+      tid: 2,
+      id: `flow-${index}`,
+      args: { secret: 'not retained' },
+    })),
+  ]);
+  assert.deepEqual(trace.flowPhaseCounts, { s: 1, t: 1, f: 1 });
+  assert.equal(trace.flowEventCount, 3);
+  assert.equal(trace.events.length, 1);
+  assert.equal(trace.relevantCount, 4);
+  assert.equal(trace.omittedCount, 0);
+  assert.equal(Object.hasOwn(trace.events[0], 'args'), false);
+
+  const summary = summarizeImportTraceAttribution({
+    trace: { ...trace, bufferUsagePeak: 0.1 },
+    anchors: [{ name: anchor, pageNowMs: 50, uncertaintyMs: 0.05 }],
+    loadingWindows: [
+      {
+        pair: 0,
+        mode: 'cooperative',
+        markerName: anchor,
+        startMs: 50,
+        endMs: 60,
+        overBudgetSteps: 0,
+        omittedSlowSteps: 0,
+        slowSteps: [],
+      },
+    ],
+  });
+  assert.equal(summary.complete, true);
+  assert.equal(summary.gcSlices.length, 0);
+  assert.equal(summary.flowEventCount, 3);
+  assert.deepEqual(summary.flowPhaseCounts, { s: 1, t: 1, f: 1 });
+});
+
+test('bounded retention covers the observed full-fixture mix without dropping GC intervals', () => {
+  const events = [
+    ...Array.from({ length: 4102 }, (_, index) => ({
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'X',
+      ts: index * 1000,
+      dur: 100,
+      pid: 1,
+      tid: 2,
+    })),
+    ...Array.from({ length: 516 }, (_, index) => ({
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 's',
+      ts: 5_000_000 + index * 1000,
+      pid: 1,
+      tid: 2,
+    })),
+    ...Array.from({ length: 516 }, (_, index) => ({
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'f',
+      ts: 6_000_000 + index * 1000,
+      pid: 1,
+      tid: 2,
+    })),
+  ];
+  const retained = retainImportTraceEvents(events);
+  assert.equal(retained.events.length, 4102);
+  assert.equal(retained.flowEventCount, 1032);
+  assert.equal(retained.relevantCount, 5134);
+  assert.equal(retained.omittedCount, 0);
+  assert.equal(retained.flowPhaseCounts.s, 516);
+  assert.equal(retained.flowPhaseCounts.f, 516);
+});
+
+test('records one-time timestamp preparation separately from measured anchors', () => {
+  const preparation = {
+    name: 'gev-import-step:preparation',
+    pageNowMs: 10,
+    uncertaintyMs: 5.85,
+    callDurationMs: 11.7,
+  };
+  const trace = retainImportTraceEvents([
+    {
+      name: 'TimeStamp',
+      cat: 'devtools.timeline',
+      ts: 20_000,
+      pid: 1,
+      tid: 2,
+      args: { data: { message: anchor } },
+    },
+  ]);
+  const summary = summarizeImportTraceAttribution({
+    trace: { ...trace, bufferUsagePeak: 0.1 },
+    anchors: [{ name: anchor, pageNowMs: 20, uncertaintyMs: 0.1 }],
+    preparation,
+    loadingWindows: [
+      {
+        pair: 0,
+        mode: 'cooperative',
+        markerName: anchor,
+        startMs: 20,
+        endMs: 25,
+        overBudgetSteps: 0,
+        omittedSlowSteps: 0,
+        slowSteps: [],
+      },
+    ],
+  });
+  assert.equal(summary.complete, true);
+  assert.deepEqual(summary.preparation, {
+    name: preparation.name,
+    callDurationMs: 11.7,
+    uncertaintyMs: 5.85,
+  });
+  assert.equal(summary.loadingWindows[0].anchorUncertaintyMs, 0.1);
+});
+
+test('unsupported GC duration phases remain omissions and fail completeness', () => {
+  const trace = retainImportTraceEvents([
+    {
+      name: 'V8.GCScavenger',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'P',
+      ts: 101_000,
+      pid: 1,
+      tid: 2,
+      dur: 1000,
+    },
+  ]);
+  assert.equal(trace.omittedCount, 1);
+  assert.equal(trace.flowEventCount, 0);
+  assert.equal(trace.omissionReasons['unsupported-gc-phase-P'], 1);
+  const summary = summarizeImportTraceAttribution({
+    trace: { ...trace, bufferUsagePeak: 0.1 },
+    anchors: [],
+    loadingWindows: [],
+  });
+  assert.equal(summary.complete, false);
+});
+
 test('reports missing trace anchors as incomplete rather than inventing alignment', () => {
   const result = summarizeImportTraceAttribution({
     trace: {

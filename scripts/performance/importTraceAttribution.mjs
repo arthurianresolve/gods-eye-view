@@ -1,9 +1,11 @@
 /** Bounded loading-window summary of Chrome trace markers and V8 GC. */
 export const IMPORT_TRACE_ATTRIBUTION_SCHEMA =
-  'gev-import-trace-attribution/v1';
+  'gev-import-trace-attribution/v2';
 export const IMPORT_TRACE_CATEGORIES =
   'devtools.timeline,disabled-by-default-v8.gc';
-export const IMPORT_TRACE_EVENT_LIMIT = 4096;
+// Explicit headroom for full-fixture diagnostics; flow edges use counters and
+// do not consume retained duration/marker slots.
+export const IMPORT_TRACE_EVENT_LIMIT = 8192;
 export const MAX_IMPORT_SLOW_STEPS_PER_WINDOW = 128;
 
 const finite = (value) => typeof value === 'number' && Number.isFinite(value);
@@ -90,6 +92,7 @@ export function createImportTraceEventCollector(
   let relevantCount = 0;
   let omittedCount = 0;
   let pendingCount = 0;
+  const flowPhaseCounts = { s: 0, t: 0, f: 0 };
   let finished = false;
   const omissionReasons = {};
   const noteOmission = (reason) => {
@@ -129,6 +132,12 @@ export function createImportTraceEventCollector(
         }
         if (!validBase) {
           omit('invalid-gc-clock-or-thread');
+          continue;
+        }
+        if (event.ph === 's' || event.ph === 't' || event.ph === 'f') {
+          // These are Chromium causal-flow edges, not duration records.
+          relevantCount += 1;
+          flowPhaseCounts[event.ph] += 1;
           continue;
         }
         if (event.ph === 'X') {
@@ -214,6 +223,9 @@ export function createImportTraceEventCollector(
         events: retained,
         relevantCount,
         omittedCount,
+        flowEventCount:
+          flowPhaseCounts.s + flowPhaseCounts.t + flowPhaseCounts.f,
+        flowPhaseCounts: { ...flowPhaseCounts },
         omissionReasons: { ...omissionReasons },
       };
     },
@@ -238,6 +250,7 @@ export function summarizeImportTraceAttribution({
   trace,
   anchors,
   loadingWindows,
+  preparation = null,
 }) {
   const errors = [];
   if (trace?.stopError) errors.push('trace-stop-failed');
@@ -522,10 +535,28 @@ export function summarizeImportTraceAttribution({
       'Chrome trace capture spans the entire diagnostic fixture, including setup and teardown; attribution is restricted to the six measured loading windows and their slow iterator steps. Per-step overlap uses same-process/thread TimeStamp markers. Nested GC overlap uses interval union. Instant GC events are retained only as non-duration observations and are never counted as pauses. Temporal overlap is correlational, not proof of cause; no GC slice does not exclude engine stalls, OS preemption, or untraced GC.',
     performanceAcceptanceEligible: false,
     categories: IMPORT_TRACE_CATEGORIES,
+    preparation:
+      preparation &&
+      typeof preparation.name === 'string' &&
+      preparation.name === `${MARKER_PREFIX}preparation` &&
+      finite(preparation.callDurationMs) &&
+      preparation.callDurationMs >= 0 &&
+      finite(preparation.uncertaintyMs) &&
+      preparation.uncertaintyMs >= 0 &&
+      finite(preparation.pageNowMs) &&
+      preparation.pageNowMs >= 0
+        ? {
+            name: preparation.name,
+            callDurationMs: preparation.callDurationMs,
+            uncertaintyMs: preparation.uncertaintyMs,
+          }
+        : null,
     traceEventAccounting:
-      'Counts normalized markers, complete GC X slices, paired B/E GC slices, and instant observations. Unmatched/malformed GC records are omitted and make the summary incomplete.',
+      'Counts markers, complete GC X/B-E intervals, instant observations, and s/t/f GC flow edges separately. Flow phases are non-duration links; unsupported/incomplete duration records are omitted and fail completeness.',
     traceRelevantEvents: trace.relevantCount,
     retainedTraceEvents: trace.events.length,
+    flowEventCount: trace.flowEventCount ?? 0,
+    flowPhaseCounts: trace.flowPhaseCounts ?? { s: 0, t: 0, f: 0 },
     omittedTraceEvents: trace.omittedCount,
     traceOmissionReasons: trace.omissionReasons ?? null,
     observedMarkers: [...traceMarkerByName.keys()].sort(),
@@ -534,7 +565,10 @@ export function summarizeImportTraceAttribution({
     complete:
       errors.length === 0 &&
       windows.length > 0 &&
-      trace.relevantCount === trace.events.length + trace.omittedCount &&
+      trace.relevantCount ===
+        trace.events.length +
+          (trace.flowEventCount ?? 0) +
+          trace.omittedCount &&
       trace.omittedCount === 0 &&
       !trace.stopError &&
       finite(trace.bufferUsagePeak) &&
