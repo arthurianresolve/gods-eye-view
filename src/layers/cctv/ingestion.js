@@ -22,6 +22,7 @@ export function createIngestion({
       if (!layerState._enabled) return;
       const now = Date.now();
       layerState._lastUpdate = now;
+      parts.ground.updatePendingGoogleProbe?.();
       if (
         !layerState._tilesReadyReenqueued &&
         parts.model.projectionTilesReady()

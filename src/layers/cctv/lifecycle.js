@@ -73,6 +73,8 @@ export function createLifecycle({
     // Task 5: the applied-regime tracker is record-set-scoped — a fresh init
     // recomputes it against the then-current scene.
     layerState._lastAppliedRegime = null;
+    layerState._googleGroundSource = null;
+    layerState._hasGoogleGroundSource = false;
   }
 
   function releaseViewerOwners(viewer) {
@@ -273,6 +275,7 @@ export function createLifecycle({
           // Reset + re-probed on every activation; cleared when the user takes
           // the range slider (slider overrides the clamp).
           probeClampRangeM: null,
+          probeClampSource: null,
           // Viewshed (design §3a/§3b): per-camera color identity + the volume
           // primitive handle (exists only in viewshed mode for the visible set).
           viewshedColors: viewshedColors(
@@ -310,9 +313,14 @@ export function createLifecycle({
       // regimes itself, so 'switching'/'error' emissions and same-regime stack
       // swaps (bing→osm) no-op.
       layerState._lastAppliedRegime = parts.ground.currentSurfaceRegime();
+      if (typeof services.mesh?.reconcileMeshFloorSource === 'function') {
+        const observed = services.mesh.reconcileMeshFloorSource(viewer.scene);
+        layerState._googleGroundSource = observed.source;
+        layerState._hasGoogleGroundSource = true;
+      }
       if (!layerState._mapStackListener && typeof window !== 'undefined') {
-        layerState._mapStackListener = () =>
-          parts.ground.handleMapStackChanged();
+        layerState._mapStackListener = (event) =>
+          parts.ground.handleMapStackChanged(event);
         window.addEventListener(
           'gev:map-stack-changed',
           layerState._mapStackListener,

@@ -70,6 +70,7 @@ function createEmptyCctvLayerWithFocusListeners(
   };
   return {
     layer: createCctvLayer({ services, source }),
+    services,
     focusListeners,
     getSpriteRestoreCount: () => spriteRestoreCount,
     spriteUnregistrations,
@@ -384,6 +385,65 @@ test('disable then destroy and independent CCTV instances own separate focus lis
 
   second.layer.destroy();
   assert.equal(second.focusListeners.size, 0);
+});
+
+test('map-stack source listener survives re-init once and detaches/rebinds across destroy', async (t) => {
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  globalThis.document = {
+    hidden: false,
+    onmousewheel: undefined,
+    addEventListener() {},
+    removeEventListener() {},
+  };
+  const listeners = new Map();
+  globalThis.window = {
+    addEventListener(type, listener) {
+      const set = listeners.get(type) || new Set();
+      set.add(listener);
+      listeners.set(type, set);
+    },
+    removeEventListener(type, listener) {
+      listeners.get(type)?.delete(listener);
+    },
+  };
+  t.after(() => {
+    globalThis.window = previousWindow;
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  });
+  const fixture = createEmptyCctvLayerWithFocusListeners();
+  t.after(() => fixture.layer.destroy());
+  const viewerA = createCctvTestViewer();
+  const viewerB = createCctvTestViewer();
+  const eventName = 'gev:map-stack-changed';
+  const sourceA = {};
+  const sourceB = {};
+  const reconciledScenes = [];
+  fixture.services.mesh.reconcileMeshFloorSource = (scene) => {
+    reconciledScenes.push(scene);
+    return {
+      changed: false,
+      source: scene === viewerA.scene ? sourceA : sourceB,
+    };
+  };
+
+  await fixture.layer.init(viewerA);
+  assert.equal(listeners.get(eventName)?.size, 1);
+  const firstListener = [...listeners.get(eventName)][0];
+  await fixture.layer.init(viewerB);
+  assert.equal(listeners.get(eventName)?.size, 1);
+  assert.equal([...listeners.get(eventName)][0], firstListener);
+  firstListener({ detail: { status: 'ready', activeId: 'photoreal' } });
+  assert.equal(reconciledScenes.at(-1), viewerB.scene);
+
+  fixture.layer.destroy();
+  assert.equal(listeners.get(eventName)?.size, 0);
+  await fixture.layer.init(viewerA);
+  assert.equal(listeners.get(eventName)?.size, 1);
+  assert.notEqual([...listeners.get(eventName)][0], firstListener);
+  fixture.layer.destroy();
+  assert.equal(listeners.get(eventName)?.size, 0);
 });
 
 test('CCTV init aborts catalog terrain-prior work on destroy and re-init', async (t) => {
