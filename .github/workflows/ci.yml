@@ -62,6 +62,16 @@ on:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
         default: false
+      shutdown_runner:
+        description: Free standard hosted OS for isolated browser shutdown controls
+        type: choice
+        options: [windows-latest, macos-latest, ubuntu-latest]
+        default: windows-latest
+      shutdown_renderer:
+        description: Match recovery renderer defaults, or explicitly isolate SwiftShader WebGL
+        type: choice
+        options: [recovery-default, swiftshader-webgl-only]
+        default: recovery-default
 
 permissions:
   contents: read
@@ -324,13 +334,13 @@ jobs:
 
   windows-browser-shutdown:
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'windows-browser-shutdown'
-    name: Windows browser shutdown controls
-    runs-on: windows-latest
+    name: Browser shutdown controls (${{ inputs.shutdown_runner || 'windows-latest' }})
+    runs-on: ${{ inputs.shutdown_runner || 'windows-latest' }}
     timeout-minutes: 12
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
-      GEV_QA_SOFTWARE_RENDERING: '1'
-      GEV_QA_SWIFTSHADER_WEBGL_ONLY: '1'
+      GEV_QA_SOFTWARE_RENDERING: ${{ (inputs.shutdown_runner == 'windows-latest' || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (inputs.shutdown_runner == 'windows-latest' || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
     steps:
       - name: Check out immutable diagnostic source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -351,7 +361,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: browser-shutdown-windows-${{ github.run_id }}
+          name: browser-shutdown-${{ inputs.shutdown_runner || 'windows-latest' }}-${{ github.run_id }}
           path: qa-artifacts/browser-shutdown.json
           retention-days: 14
       - name: Shutdown evidence in job logs
