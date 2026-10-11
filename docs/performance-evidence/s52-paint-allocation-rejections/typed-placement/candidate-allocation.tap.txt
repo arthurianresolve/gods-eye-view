@@ -1,0 +1,165 @@
+✖ steady moving-source frames stay in budget below collision capacity (6170.1721ms)
+✖ steady moving-source frames stay in budget above collision capacity (7252.6383ms)
+✖ steady moving-source frames stay in budget with both local infrastructure sources live (8918.3674ms)
+✖ steady moving-source frames stay in budget with infrastructure and FIRMS live (11065.3912ms)
+✖ steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live (13620.8136ms)
+✖ steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live (13283.6604ms)
+✔ steady moving-source frames stay in budget with all Phase 3 sources and CCTV thumbnails live (15572.9136ms)
+✖ steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort (5517.4215ms)
+✔ steady moving-source frames stay in budget with final Phase 5 host sources live (pre-cable-migration surface) (17572.7727ms)
+✔ steady moving-source frames stay in budget with final Phase 5 sources and bounded rocket-mission markers live (16847.6523ms)
+✔ steady moving-source frames stay in budget with every shared-host source and bounded Radio text live (30557.5946ms)
+✖ steady moving-source frames stay in budget with the bounded submarine-cable reference cohort (9008.0368ms)
+✔ steady moving-source frames stay in budget with the Dense detection lane active over 5,000 observations (31809.4465ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 5
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 191026.8599
+
+✖ failing tests:
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget below collision capacity (6170.1721ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 4100 B/frame: 60 candidates / 60 painted, median 9600 B/frame (max 9906), median 160.0 B/candidate/frame over 480 frames and 60 solves; chunks: 9600, 9598, 9600, 9603, 9611, 9797, 9515, 9515, 9906, 9517
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.start (node:internal/test_runner/test:1177:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget above collision capacity (7252.6383ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 13000 B/frame: 250 candidates / 96 painted, median 20478 B/frame (max 20717), median 81.9 B/candidate/frame over 480 frames and 60 solves; chunks: 20476, 20476, 20470, 20478, 20480, 20482, 20391, 20387, 20511, 20717
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget with both local infrastructure sources live (8918.3674ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 49000 B/frame: 320 candidates / 192 painted, median 77512 B/frame (max 77917), median 242.2 B/candidate/frame over 480 frames and 60 solves; chunks: 77517, 77089, 77605, 77512, 77269, 76619, 75939, 76519, 77723, 77917
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget with infrastructure and FIRMS live (11065.3912ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 53600 B/frame: 338 candidates / 211 painted, median 77464 B/frame (max 77942), median 229.2 B/candidate/frame over 480 frames and 60 solves; chunks: 76535, 77464, 77281, 77226, 77868, 77942, 77016, 77588, 77001, 77476
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live (13620.8136ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 87500 B/frame: 451 candidates / 310 painted, median 114093 B/frame (max 115163), median 253.0 B/candidate/frame over 480 frames and 60 solves; chunks: 114236, 113938, 114556, 114093, 113630, 115163, 115018, 112110, 112551, 112894
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live (13283.6604ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 86700 B/frame: 451 candidates / 304 painted, median 123615 B/frame (max 126975), median 274.1 B/candidate/frame over 480 frames and 60 solves; chunks: 121500, 122870, 126975, 122813, 123615, 126105, 124392, 124290, 122897, 123112
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort (5517.4215ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 6000 B/frame: 48 candidates / 24 painted, median 10493 B/frame (max 10874), median 218.6 B/candidate/frame over 480 frames and 60 solves; chunks: 10874, 10872, 10869, 10493, 10371, 10238, 10212, 10212, 10348, 10686
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src\overlays\worldOverlayAllocation.test.mjs:315:3
+✖ steady moving-source frames stay in budget with the bounded submarine-cable reference cohort (9008.0368ms)
+  AssertionError [ERR_ASSERTION]: world-overlay steady frame exceeded 19000 B/frame: 160 candidates / 96 painted, median 35710 B/frame (max 35981), median 223.2 B/candidate/frame over 480 frames and 60 solves; chunks: 35207, 35257, 35342, 35471, 35866, 35710, 35848, 35981, 35658, 35819
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-dev/qa-artifacts/s52-paint-stage-rebased-936bd/validation-typed-01/source/candidate/src/overlays/worldOverlayAllocation.test.mjs:351:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

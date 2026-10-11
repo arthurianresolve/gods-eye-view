@@ -99,7 +99,23 @@ identities ([review](performance-evidence/s52-placement-direct-filter/visual/rev
 [raw report](performance-evidence/s52-placement-direct-filter/visual/report.json),
 [all image files](performance-evidence/s52-placement-direct-filter/visual/images.zip)).
 The [40-pair CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101751521)
-is still running. This runtime remains on QA; `dev` is unchanged.
+is complete. Independent recomputation verifies exact source, fixture, lockfile
+and harness identities, all before/after input conditions and all forty paired
+ratios ([raw report](performance-evidence/s52-placement-direct-filter/cpu-report.json),
+[review](performance-evidence/s52-placement-direct-filter/cpu-review.json)).
+Static infrastructure/radio paired medians improve 30.65%/22.93%; periodic
+infrastructure/radio improve 31.11%/17.65%, with improvement in every one of
+those twenty pairs. Moving generic and infrastructure medians regress
+3.34%/2.36% (all ten pairs regress; largest individual regression 6.14%). Moving
+radio's median improves 1.90%; detection's median regresses 0.20%, with mixed
+individual results. No pair exceeds the 10% regression limit. These are
+synchronous Node algorithm timings with mock Canvas2D, not browser painting,
+GPU timings or full-scene motion p95. The component meets the measured-benefit
+and regression threshold with this explicit moving-path tradeoff; final
+integration checks are still pending. This runtime remains on QA; `dev` is
+unchanged. [Exact-commit CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102509524)
+and [native font wake control](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38102807734)
+are running at `4686ea3`.
 
 The expanded paint fixture adds actual font loading, selection promotion and
 demotion, and shared/separate custom painter transitions. Its first baseline run
@@ -117,6 +133,21 @@ states ([review](performance-evidence/s52-paint-baseline/review.json),
 These results validate the fixture; they do not accept the staged repaint
 optimization, demonstrate GPU performance, or complete S52. The repaint
 prototype remains isolated while its allocation failures are corrected.
+
+Three rejected paint prototypes are now preserved with their exact source
+bytes, all twelve original test logs, the semantic hold-test transform and
+an [independent source-graph and failure review](performance-evidence/s52-paint-allocation-rejections/review.json).
+The original `613795ba` variant and typed-placement `3d02c3bc` variant each fail
+eight of thirteen allocation checks. Direct named-field capture `291e1a4e`
+reduces that to six failures: infrastructure, infrastructure plus FIRMS, two
+vessel regimes, rocket and cable cohorts. Its focused checks pass 87/87, but
+that does not override allocation failure. Both the frame ceiling and the
+154 B/candidate ceiling remain enforced unchanged. The original focused test
+failure is retained; its assumption that stable pixels must be redrawn is
+replaced identically on both sides for the later two trials by checks for
+fresh promotion/demotion paint, retained pixels without clearing, current hit
+identity and accessible output. Real pixels have a separate browser fixture.
+No paint prototype is accepted or added to the runtime by this evidence commit.
 
 ### S52 placement reuse: moving-workload regression found - 11 October 2026
 

@@ -1,0 +1,21 @@
+✔ steady moving-source frames stay in budget below collision capacity (7116.1229ms)
+✔ steady moving-source frames stay in budget above collision capacity (10797.1255ms)
+✔ steady moving-source frames stay in budget with both local infrastructure sources live (10731.6522ms)
+✔ steady moving-source frames stay in budget with infrastructure and FIRMS live (11990.7181ms)
+✔ steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live (14222.1995ms)
+✔ steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live (11431.3351ms)
+✔ steady moving-source frames stay in budget with all Phase 3 sources and CCTV thumbnails live (13728.4559ms)
+✔ steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort (4313.7692ms)
+✔ steady moving-source frames stay in budget with final Phase 5 host sources live (pre-cable-migration surface) (13979.4769ms)
+✔ steady moving-source frames stay in budget with final Phase 5 sources and bounded rocket-mission markers live (16815.1964ms)
+✔ steady moving-source frames stay in budget with every shared-host source and bounded Radio text live (17007.4683ms)
+✔ steady moving-source frames stay in budget with the bounded submarine-cable reference cohort (5386.1418ms)
+✔ steady moving-source frames stay in budget with the Dense detection lane active over 5,000 observations (20848.0681ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 162697.7554
