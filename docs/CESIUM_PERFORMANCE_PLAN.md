@@ -4012,3 +4012,14 @@ pairs, all seven ordinary integration jobs and all 111 tracking checks pass.
 The runtime traffic change is accepted; fleet scheduling remains excluded.
 [Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
 retain separate code, automated and hosted/physical hardware status.
+
+
+S59 review follow-up: a regression test reproduced cancellation from the new
+batch observer queuing one replacement wake after ownership was released. The
+consumer now rechecks completion before scheduling. Both synchronous and deferred
+starts reject with AbortError, close the iterator and retain no wake or abort
+listener. Nested malformed browser evidence is also rejected without validator
+exceptions. The dedicated hosted `imports` diagnostic runs the capture matrix
+and import fixture without unrelated point-collection experiments. The earlier
+CPU reports remain bound to their original commits; they do not establish
+performance of this newer validation packet. Hosted validation is pending.

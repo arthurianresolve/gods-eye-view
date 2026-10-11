@@ -196,3 +196,33 @@ test('malformed evidence fails closed without throwing during validation', () =>
     false,
   );
 });
+
+test('wrong nested container types and null checks are rejected without exceptions', () => {
+  for (const mutate of [
+    (report) => {
+      report.samples.find(
+        (row) => row.mode === 'cooperative',
+      ).batchMetrics.samples = {};
+    },
+    (report) => {
+      report.largeGeometry.cooperative.rows = {};
+    },
+    (report) => {
+      report.checks = {};
+    },
+    (report) => {
+      report.checks[0] = null;
+    },
+  ]) {
+    const report = validReport();
+    mutate(report);
+    assert.equal(
+      validateImportBatchSchedulerReport(report, commit).valid,
+      false,
+    );
+  }
+  assert.equal(
+    validateImportBatchSchedulerReport(validReport(), undefined).valid,
+    false,
+  );
+});

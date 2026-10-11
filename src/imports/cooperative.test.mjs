@@ -148,3 +148,50 @@ test('optional batch observation measures owned wakes without replacing the sche
   assert.equal(observations[1].yielded, true);
   assert.equal(observations[2].yielded, false);
 });
+
+test('cancellation from a batch observer cannot enqueue another wake', async () => {
+  for (const deferStart of [false, true]) {
+    const controller = new AbortController();
+    const queued = new Set();
+    let clock = 0;
+    let closed = false;
+    function* work() {
+      try {
+        clock += 4;
+        yield;
+        assert.fail('Cancelled geometry resumed');
+      } finally {
+        closed = true;
+      }
+    }
+    const pending = consumeInBatches(work(), {
+      signal: controller.signal,
+      deferStart,
+      now: () => clock,
+      schedule(callback) {
+        queued.add(callback);
+        return callback;
+      },
+      cancel(callback) {
+        queued.delete(callback);
+      },
+      onBatch() {
+        controller.abort();
+      },
+    });
+    const rejected = assert.rejects(pending, { name: 'AbortError' });
+    if (deferStart) {
+      const callback = [...queued][0];
+      queued.delete(callback);
+      callback();
+    }
+    await rejected;
+    assert.equal(closed, true);
+    assert.equal(
+      queued.size,
+      0,
+      'Cancelled work must not retain a queued wake',
+    );
+    assert.equal(getEventListeners(controller.signal, 'abort').length, 0);
+  }
+});

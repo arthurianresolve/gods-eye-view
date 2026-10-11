@@ -79,6 +79,9 @@ export function consumeInBatches(iterator, options = {}) {
           });
           wakeScheduledAt = now();
         }
+        // An observer may synchronously cancel the import. Its abort handler
+        // already released ownership, so do not create a replacement wake.
+        if (finished) return;
         timer = schedule(step, (error) => finish(error));
       } catch (error) {
         finish(error);

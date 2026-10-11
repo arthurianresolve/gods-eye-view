@@ -1,6 +1,8 @@
 const BACKENDS = new Set(['scheduler.postTask', 'MessageChannel']);
 const BATCH_BACKENDS = new Set([...BACKENDS, 'synchronous-start']);
 
+const array = (value) => (Array.isArray(value) ? value : []);
+
 function finite(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0;
 }
@@ -81,7 +83,7 @@ function validateBatchMetrics(metrics, errors, name, { requireWake }) {
       [...BACKENDS].some((backend) => backends[backend] > 0),
       `${name} has no production macrotask backend`,
     );
-  for (const [index, sample] of (metrics.samples || []).entries()) {
+  for (const [index, sample] of array(metrics.samples).entries()) {
     add(
       errors,
       sample && typeof sample === 'object',
@@ -119,6 +121,11 @@ function validateBatchMetrics(metrics, errors, name, { requireWake }) {
 
 export function validateImportBatchSchedulerReport(report, expectedCommit) {
   const errors = [];
+  add(
+    errors,
+    typeof expectedCommit === 'string' && /^[a-f0-9]{40}$/.test(expectedCommit),
+    'expected commit is invalid',
+  );
   add(errors, report?.schema === 'gev-import-batches/v2', 'schema must be v2');
   add(errors, report?.status === 'passed', 'fixture did not pass');
   add(
@@ -274,10 +281,10 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
       Array.isArray(result?.rows) && result.rows.length === 2,
       `${mode} geometry rows missing`,
     );
-    const line = result?.rows?.find(
+    const line = array(result?.rows).find(
       (row) => row?.geometryType === 'LineString',
     );
-    const polygon = result?.rows?.find(
+    const polygon = array(result?.rows).find(
       (row) => row?.geometryType === 'Polygon',
     );
     add(
@@ -343,7 +350,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
   ])
     add(
       errors,
-      report?.checks?.some((check) => check.id === expected),
+      array(report?.checks).some((check) => check?.id === expected),
       `required check missing: ${expected}`,
     );
   return { valid: errors.length === 0, errors };
