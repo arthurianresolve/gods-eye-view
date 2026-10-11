@@ -35,3 +35,11 @@ Windows/macOS/Linux, and the complete browser journey job. Exact step results ar
 in `run-38123641479.json`. The traffic component is accepted on this evidence.
 PR-only published layer-token checks, full-application idle, motion targets and
 full S51/S60 acceptance remain unproved by this component comparison.
+
+The subsequent remote `dev` revision `8bf4d272761273b70e1709b2632d5ac1febf3ae2`
+also passes all seven ordinary integration jobs in
+[run 38124796369](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38124796369).
+The complete [step results](dev-8bf4d27-ci.json) are preserved. This revision adds
+the evidence record without changing runtime, harness, workflow or package files
+from the tested implementation above. PR-only and optional diagnostic jobs remain
+skipped; this does not replace the outstanding physical hardware or soak evidence.
