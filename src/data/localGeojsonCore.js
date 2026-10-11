@@ -855,20 +855,28 @@ export function createLocalGeoJsonLayer(
                   [base, tip],
                   [base, tip],
                 ];
-                feature.polyline = new Cesium.PolylineGraphics({
-                  positions: stemPositionBuffers[0],
-                  width: 3.5,
-                  material: new Cesium.ColorMaterialProperty(baseColor),
-                });
-                feature.point = new Cesium.PointGraphics({
-                  pixelSize: 10,
-                  color: baseColor,
-                  outlineColor: Cesium.Color.BLACK,
-                  outlineWidth: 2,
-                  // Never depth-cull the anchor against the photoreal mesh —
-                  // globe-horizon culling is handled by the pre-render occluder.
-                  disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                });
+                if (surfaceRenderer === 'entities') {
+                  feature.polyline = new Cesium.PolylineGraphics({
+                    positions: stemPositionBuffers[0],
+                    width: 3.5,
+                    material: new Cesium.ColorMaterialProperty(baseColor),
+                  });
+                  feature.point = new Cesium.PointGraphics({
+                    pixelSize: 10,
+                    color: baseColor,
+                    outlineColor: Cesium.Color.BLACK,
+                    outlineWidth: 2,
+                    // Never depth-cull the anchor against the photoreal mesh —
+                    // globe-horizon culling is handled by the pre-render occluder.
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                  });
+                } else {
+                  // GeoJsonDataSource may have supplied marker Graphics for
+                  // point features. Keep the candidate surface on the owned
+                  // collections without allocating replacement Graphics.
+                  feature.point = undefined;
+                  feature.polyline = undefined;
+                }
 
                 const priority = labelPriorityFromProperties(properties, id);
                 const stemRecord = {

@@ -601,6 +601,24 @@ test('opt-in surface collections retain Entity metadata and native pick identity
   assert.notEqual(env.primitiveOwners[0], originalOwner);
 });
 
+test('default Entity mode retains native point and stem Graphics', async (t) => {
+  const env = await createRealLocalLayerHarness({ featureCount: 3 });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = env.dataSources[0].entities.values;
+  assert.equal(entities.length, 3);
+  assert.ok(
+    entities.every((entity) => entity.point instanceof Cesium.PointGraphics),
+  );
+  assert.ok(
+    entities.every(
+      (entity) => entity.polyline instanceof Cesium.PolylineGraphics,
+    ),
+  );
+});
+
 test('surface collection mode rejects stale or unsupported ownership and destroy releases it', async (t) => {
   assert.throws(
     () =>
