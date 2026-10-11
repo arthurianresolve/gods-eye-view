@@ -107,11 +107,29 @@ UTF-16LE bytes; the review records its encoding and hash. Formatting and package
 boundaries pass. The reproducible runner rejects existing evidence output and
 checks consumed source bytes before and after the comparison.
 
-This experiment is not yet accepted as a performance improvement. Run the
-unchanged eight-workload, five-pair CPU comparison and five-pair, 24-case browser
-pixel comparison against the frozen integration baseline. Native font
-invalidation must still pass with the new cache. Full-scene latency, conditional
-painting and physical Windows acceptance remain separate requirements.
+The committed candidate is `21523d5c5ff7f17329e139f23582a883a91a7c92` on
+`qa/s52-placement-reuse`. Its [browser comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097676379)
+passes five alternating pairs across the unchanged 24-case matrix. All 240 PNG
+files were decoded and their pixels independently hashed; all 120 baseline and
+candidate comparisons, repeated cases, hit targets, accessible actions and input
+conditions agree. Source and harness hashes match their Git objects. The
+[raw report](performance-evidence/s52-placement-reuse/visual/report.json),
+[review](performance-evidence/s52-placement-reuse/visual/review.json) and images
+are archived. This is real Canvas2D with a mock Cesium host, not full-scene WebGL.
+
+The [native font comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097677965)
+also passes two pairs. The pre-fix baseline reproduces both missing-wake failures;
+the candidate changes its hit width from 283 to 299 px after actual font loading.
+All four idle controls have zero frames and requests; retired hosts remain idle,
+and cleanup completes normally. The [raw report](performance-evidence/s52-placement-reuse/native-font-report.json)
+and [independent review](performance-evidence/s52-placement-reuse/native-font-review.json)
+retain the SwiftShader renderer and exact revisions.
+
+This experiment is not yet accepted as a performance improvement. The
+[eight-workload CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097674690)
+and [candidate integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097900422)
+are pending. Full-scene latency, conditional painting and physical Windows
+acceptance remain separate requirements.
 
 ### S52 layout reuse: accepted component optimization - 11 October 2026
 

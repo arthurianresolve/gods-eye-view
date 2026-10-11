@@ -3,8 +3,11 @@
 Remote `dev` at `72694089e7fa0fa414042cde48765e1418a70d7e` passes all seven
 ordinary integration jobs ([results](performance-evidence/s52-placement-reuse/baseline-dev-ci.json)),
 including Node 24/26, builds, onboarding, three-OS recovery and browser journeys.
-The next placement-cache experiment has not yet established timing or rendered
-equivalence. Its results must remain separate from the accepted changes below.
+The placement-cache experiment at `21523d5` passes five 24-case exact-pixel pairs
+and two native font-wake pairs, with independent source and artifact checks
+([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-placement-reuse-implementation-under-comparison---11-october-2026)).
+Its CPU timing and integration checks remain pending; these correctness results
+do not yet accept it as a performance improvement.
 
 Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
 layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel
