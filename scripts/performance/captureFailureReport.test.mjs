@@ -51,6 +51,17 @@ test('failure artifact preserves bounded current and completed sample evidence w
       phase: 'sample-observation',
       before: { camera: { position: { x: 1, y: 2, z: 3 } } },
       measurement: { frameCount: 12 },
+      captureStageDiagnostics: [
+        {
+          sequence: 3,
+          stage: 'worker-blob-read-and-observer-restore',
+          status: 'timed-out',
+          startedAtMs: 12,
+          elapsedMs: 90_000,
+          timeoutMs: 90_000,
+          errorName: null,
+        },
+      ],
       after: null,
     },
     startupSamples: [{ run: 1, renderer: 'software renderer' }],
@@ -68,6 +79,14 @@ test('failure artifact preserves bounded current and completed sample evidence w
   assert.equal(report.progress.completedSampleCount, 1);
   assert.equal(report.progress.completedSamples[0].scenario, 'idle');
   assert.equal(report.progress.current.before.camera.position.x, 1);
+  assert.equal(
+    report.progress.current.captureStageDiagnostics[0].stage,
+    'worker-blob-read-and-observer-restore',
+  );
+  assert.equal(
+    report.progress.current.captureStageDiagnostics[0].status,
+    'timed-out',
+  );
   assert.equal(report.fixture.sha256, 'd'.repeat(64));
   assert.equal('body' in report.fixture, false);
   assert.throws(

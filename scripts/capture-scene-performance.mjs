@@ -48,6 +48,7 @@ import {
 } from './performance/prewarmWorkerAuditBoundary.mjs';
 import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
+import { createCaptureStageJournal } from './performance/captureStageJournal.mjs';
 import {
   createObservedDenseComparisonContract,
   getCaptureReadinessReasons,
@@ -117,6 +118,8 @@ const fixtureTimeoutMs = Math.max(
   1_000,
   Math.min(180_000, Number(option('--fixture-timeout-ms', '90000')) || 90_000),
 );
+const PREWARM_BLOB_READ_STAGE_TIMEOUT_MS = 90_000;
+const PREWARM_RESTORE_STAGE_TIMEOUT_MS = 10_000;
 const out = option('--out', null);
 const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
@@ -279,6 +282,21 @@ const failureProgress = {
     mixedLayers,
   },
 };
+const captureStageJournal = createCaptureStageJournal({
+  onUpdate(stages) {
+    failureProgress.captureStageDiagnostics = stages;
+    if (!failureProgress.current)
+      failureProgress.current = {
+        phase: failureProgress.phase,
+        scenario: failureProgress.scenario,
+        run: failureProgress.run,
+      };
+    failureProgress.current.captureStageDiagnostics = stages;
+  },
+});
+async function runCaptureStage(stage, operation, options) {
+  return captureStageJournal.run(stage, operation, options);
+}
 let captureFailure = null;
 let failureReportWritten = false;
 async function writeCaptureFailure(error) {
@@ -296,12 +314,13 @@ async function writeCaptureFailure(error) {
     errorActual: error?.actual,
     errorExpected: error?.expected,
     errorOperator: error?.operator,
-    current: performanceDiagnosticsDocuments.length
-      ? {
-          ...(failureProgress.current || {}),
-          performanceDiagnosticsDocuments,
-        }
-      : failureProgress.current,
+    current: {
+      ...(failureProgress.current || {}),
+      captureStageDiagnostics: captureStageJournal.snapshot(),
+      ...(performanceDiagnosticsDocuments.length
+        ? { performanceDiagnosticsDocuments }
+        : {}),
+    },
     startupSamples: failureProgress.startupSamples,
     completedSamples: failureProgress.completedSamples,
     fixtureDelivery: failureProgress.fixtureDelivery,
@@ -540,6 +559,7 @@ try {
     { documentRole, auditMode = 'diagnostic', requireEvidence = false } = {},
   ) => {
     if (!captureProvenance) return null;
+    const stageCheckpoint = captureStageJournal.checkpoint();
     for (const worker of auditPage.workers()) {
       if (!auditState.workerUrls.has(worker.url()))
         throw new Error(
@@ -559,11 +579,14 @@ try {
     let restoreAttestation = null;
     let restorationSummary = null;
     let blobAudit = null;
+    let auditError = null;
+    let restorationError = null;
     try {
       if (auditMode === 'prewarm') {
-        blobAudit = await readAndRestoreCesiumWorkerBodies(
-          auditPage,
-          workerUrls,
+        blobAudit = await runCaptureStage(
+          'worker-blob-read-and-observer-restore',
+          () => readAndRestoreCesiumWorkerBodies(auditPage, workerUrls),
+          { timeoutMs: PREWARM_BLOB_READ_STAGE_TIMEOUT_MS },
         );
         if (!blobAudit)
           throw new Error(
@@ -583,8 +606,13 @@ try {
         if (blobAudit.readError)
           throw new Error('Prewarm worker blob body read failed.');
       } else {
-        metadata = await auditPage.evaluate(
-          () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
+        metadata = await runCaptureStage(
+          'worker-metadata-read',
+          () =>
+            auditPage.evaluate(
+              () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
+            ),
+          { timeoutMs: PREWARM_RESTORE_STAGE_TIMEOUT_MS },
         );
       }
       if (!metadata)
@@ -598,28 +626,43 @@ try {
         throw new Error('Prewarm worker audit observed no executable blobs.');
       if (hasEvidence) {
         if (auditMode !== 'prewarm')
-          blobAudit = await auditPage.evaluate(async (urls) => {
-            const audit = window.__gevCesiumWorkerBlobAuditV1;
-            if (!audit)
-              throw new Error(
-                'Receipt-verified page worker audit disappeared.',
-              );
-            return audit.readWorkerBodies(urls);
-          }, workerUrls);
-        validation = validateCesiumWorkerBlobs({
-          contract: captureWorkerContract,
-          baseUrl: buildProvenanceOptions.baseUrl,
-          workerUrls,
-          observedBlobUrls: [...auditState.blobUrls],
-          blobAudit,
-          auditMode,
-        });
-      }
-    } finally {
-      if (!restoreAttestation)
-        restoreAttestation = await auditPage.evaluate(
-          restoreCesiumWorkerBlobAudit,
+          blobAudit = await runCaptureStage(
+            'worker-blob-read',
+            () =>
+              auditPage.evaluate(async (urls) => {
+                const audit = window.__gevCesiumWorkerBlobAuditV1;
+                if (!audit)
+                  throw new Error(
+                    'Receipt-verified page worker audit disappeared.',
+                  );
+                return audit.readWorkerBodies(urls);
+              }, workerUrls),
+            { timeoutMs: PREWARM_BLOB_READ_STAGE_TIMEOUT_MS },
+          );
+        validation = await runCaptureStage('worker-blob-validation', () =>
+          validateCesiumWorkerBlobs({
+            contract: captureWorkerContract,
+            baseUrl: buildProvenanceOptions.baseUrl,
+            workerUrls,
+            observedBlobUrls: [...auditState.blobUrls],
+            blobAudit,
+            auditMode,
+          }),
         );
+      }
+    } catch (error) {
+      auditError = error;
+    }
+    try {
+      if (!restoreAttestation)
+        restoreAttestation = await runCaptureStage(
+          'worker-observer-restoration-check',
+          () => auditPage.evaluate(restoreCesiumWorkerBlobAudit),
+          { timeoutMs: PREWARM_RESTORE_STAGE_TIMEOUT_MS },
+        );
+    } catch (error) {
+      restorationError = error;
+    } finally {
       restorationSummary = {
         nativeCreateObjectURLRestored:
           restoreAttestation?.nativeCreateObjectURLRestored === true,
@@ -634,11 +677,17 @@ try {
           validation?.observation.createdScriptBlobCount ?? null,
         observedWorkerTargetCount: auditState.workerUrls.size,
         observedBlobRequestCount: auditState.blobUrls.size,
+        restorationErrorName:
+          typeof restorationError?.name === 'string'
+            ? restorationError.name.slice(0, 80)
+            : null,
       };
       if (failureProgress.current)
         failureProgress.current.workerAuditRestoration = restorationSummary;
       else failureProgress.workerAuditRestoration = restorationSummary;
     }
+    if (auditError) throw auditError;
+    if (restorationError) throw restorationError;
     if (
       restoreAttestation?.nativeCreateObjectURLRestored !== true ||
       restoreAttestation?.registryEmpty !== true ||
@@ -665,6 +714,7 @@ try {
         auditedCreatedScriptBlobCount: metadata.createdBlobCount,
         auditedOverflowCount: metadata.overflowCount,
       },
+      stageDiagnostics: captureStageJournal.since(stageCheckpoint),
       observedWorkerTargetCount: auditState.workerUrls.size,
       observedBlobRequestCount: auditState.blobUrls.size,
     };
@@ -1292,6 +1342,7 @@ try {
 
   for (const scenario of scenarios) {
     for (let run = 1; run <= runs; run += 1) {
+      const sampleStageCheckpoint = captureStageJournal.checkpoint();
       failureProgress.phase = 'prepare-sample-context';
       failureProgress.scenario = scenario;
       failureProgress.run = run;
@@ -1300,56 +1351,68 @@ try {
       if (productionFlightFixture) {
         failureProgress.phase = 'prepare-fresh-provider-document';
         failureProgress.current.phase = failureProgress.phase;
-        await prepareFreshProviderDocument();
+        await runCaptureStage(
+          'fresh-provider-document-setup',
+          prepareFreshProviderDocument,
+        );
       }
       failureProgress.phase = 'configure-scenario-route';
       failureProgress.current.phase = failureProgress.phase;
-      const trackingResult = await page.evaluate(
-        async ({ scenarioName, hasFixture }) => {
-          const fixtureClock = window.__gevPhasedMonotonicWallClockV1;
-          const app = window.__godsEyeView;
-          const viewer = app.viewer;
-          const flights = app.dataManager.layers.get('flights')?.module;
-          let trackedAircraftId = null;
-          if (viewer.trackedEntity) flights?.stopTracking?.();
-          if (scenarioName === 'selected-aircraft-tracking') {
-            if (!hasFixture || typeof flights?.trackById !== 'function')
-              throw new Error(
-                'Selected-aircraft workload requires an injected flight fixture',
-              );
-            if (!flights.trackById('000001'))
-              throw new Error('Selected-aircraft fixture could not be tracked');
-            if (viewer.trackedEntity?.gevTrackedId !== 'flights:000001')
-              throw new Error(
-                'Selected-aircraft tracker did not claim the camera',
-              );
-            await new Promise((resolve) =>
-              requestAnimationFrame(() => requestAnimationFrame(resolve)),
-            );
-            trackedAircraftId = viewer.trackedEntity.gevTrackedId;
-          } else {
-            viewer.camera.cancelFlight?.();
-            const home = window.__gevPerformanceHome;
-            viewer.camera.setView({
-              destination: home.position,
-              orientation: { direction: home.direction, up: home.up },
-              endTransform: home.transform,
-            });
-            viewer.scene.requestRender();
-          }
-          // Release wall time only after fixture/tracking/camera setup has
-          // settled. Warmup and capture then share one monotonic epoch.
-          const clockStart = fixtureClock?.startWarmup?.() ?? null;
-          return { trackedAircraftId, clockStart };
-        },
-        { scenarioName: scenario, hasFixture: Boolean(fixture) },
+      const trackingResult = await runCaptureStage(
+        'tracking-and-camera-setup',
+        () =>
+          page.evaluate(
+            async ({ scenarioName, hasFixture }) => {
+              const fixtureClock = window.__gevPhasedMonotonicWallClockV1;
+              const app = window.__godsEyeView;
+              const viewer = app.viewer;
+              const flights = app.dataManager.layers.get('flights')?.module;
+              let trackedAircraftId = null;
+              if (viewer.trackedEntity) flights?.stopTracking?.();
+              if (scenarioName === 'selected-aircraft-tracking') {
+                if (!hasFixture || typeof flights?.trackById !== 'function')
+                  throw new Error(
+                    'Selected-aircraft workload requires an injected flight fixture',
+                  );
+                if (!flights.trackById('000001'))
+                  throw new Error(
+                    'Selected-aircraft fixture could not be tracked',
+                  );
+                if (viewer.trackedEntity?.gevTrackedId !== 'flights:000001')
+                  throw new Error(
+                    'Selected-aircraft tracker did not claim the camera',
+                  );
+                await new Promise((resolve) =>
+                  requestAnimationFrame(() => requestAnimationFrame(resolve)),
+                );
+                trackedAircraftId = viewer.trackedEntity.gevTrackedId;
+              } else {
+                viewer.camera.cancelFlight?.();
+                const home = window.__gevPerformanceHome;
+                viewer.camera.setView({
+                  destination: home.position,
+                  orientation: { direction: home.direction, up: home.up },
+                  endTransform: home.transform,
+                });
+                viewer.scene.requestRender();
+              }
+              // Release wall time only after fixture/tracking/camera setup has
+              // settled. Warmup and capture then share one monotonic epoch.
+              const clockStart = fixtureClock?.startWarmup?.() ?? null;
+              return { trackedAircraftId, clockStart };
+            },
+            { scenarioName: scenario, hasFixture: Boolean(fixture) },
+          ),
       );
       const trackingSetup = trackingResult?.trackedAircraftId ?? null;
       failureProgress.current.trackingSetup = trackingSetup;
       failureProgress.current.clockStart = trackingResult?.clockStart ?? null;
       // Each workload/run receives the declared warmup, including tracking.
       if (warmupMs)
-        await new Promise((resolve) => setTimeout(resolve, warmupMs));
+        await runCaptureStage(
+          'configured-wall-clock-warmup',
+          () => new Promise((resolve) => setTimeout(resolve, warmupMs)),
+        );
       let fixtureBoundaryStart = null;
       let warmupBoundarySettle = null;
       let prewarmWorkerAuditTimingBoundary = null;
@@ -1367,25 +1430,25 @@ try {
         warmupMs,
         readWarmupBoundary: async () => {
           fixtureBoundaryStart = productionFlightFixture
-            ? await page.evaluate(async () => {
-                const clock = window.__gevPhasedMonotonicWallClockV1;
-                const held = clock?.holdWarmupBoundary?.();
-                if (!held || held.phase !== 'warmup-held')
-                  throw new Error(
-                    'Provider fixture warmup did not reach its declared boundary.',
-                  );
-                return window.__gevPhasedMonotonicWallClockV1.snapshot();
-              })
+            ? await runCaptureStage('fixture-warmup-clock-boundary', () =>
+                page.evaluate(async () => {
+                  const clock = window.__gevPhasedMonotonicWallClockV1;
+                  const held = clock?.holdWarmupBoundary?.();
+                  if (!held || held.phase !== 'warmup-held')
+                    throw new Error(
+                      'Provider fixture warmup did not reach its declared boundary.',
+                    );
+                  return window.__gevPhasedMonotonicWallClockV1.snapshot();
+                }),
+              )
             : null;
           failureProgress.current.warmupBoundary = fixtureBoundaryStart;
           return fixtureBoundaryStart;
         },
         settleCompletedRender: async () => {
           warmupBoundarySettle = productionFlightFixture
-            ? await settleProviderRenderAtBoundary(
-                page,
-                'Warmup boundary',
-                5000,
+            ? await runCaptureStage('warmup-completed-render-settle', () =>
+                settleProviderRenderAtBoundary(page, 'Warmup boundary', 5000),
               )
             : null;
           failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
@@ -1832,7 +1895,12 @@ try {
         throw new Error(
           `Selected-aircraft workload lost camera tracking: ${JSON.stringify({ trackingSetup, trackedAircraftId: sample.trackedAircraftId })}`,
         );
-      captures.push({ scenario, run, ...sample });
+      captures.push({
+        scenario,
+        run,
+        ...sample,
+        setupStageDiagnostics: captureStageJournal.since(sampleStageCheckpoint),
+      });
       failureProgress.current = null;
     }
   }
