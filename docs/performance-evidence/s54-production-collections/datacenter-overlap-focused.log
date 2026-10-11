@@ -1,0 +1,44 @@
+✔ datacenter fixture camera looks at the source anchor and restores world coordinates (4.0291ms)
+✔ datacenter lookAt camera points at the anchor at the declared range in a real Cesium camera (8.392ms)
+✔ dams retain the exact historical setView camera and no implicit render request (0.4733ms)
+✔ fixture camera rejects an unregistered layer instead of choosing a framing policy (0.7078ms)
+✔ a native overlapping hit resolves to its actual datacenter owner (1.9744ms)
+✔ default Entity picks accept the baseline null collection-index shape (0.3514ms)
+✔ foreign and wrong-layer Entities are rejected even with valid primitive types (1.3873ms)
+✔ native picks reject a primitive of the wrong surface kind (0.5233ms)
+✔ collection picks must be the exact primitive attached to the picked Entity (0.5871ms)
+✔ non-DCS layers retain the exact requested-row ownership contract (0.5426ms)
+✔ accepts complete alternating fresh-context latency and GC-memory evidence (34.8262ms)
+✔ datacenter benefit evidence binds the complete untruncated inventory (15.586ms)
+✔ datacenter benefit evidence binds independent native owners and exact picks (8.6942ms)
+✔ rejects a stale summary and unsafe layer allowlist names (3.5697ms)
+✔ rejects unfinished scene geometry and changed fidelity instead of matching viewport size (2.1918ms)
+✔ rejects a missing mode run instead of trusting pair flags (2.2148ms)
+✔ requires five complete alternating pairs in each separate suite (0.612ms)
+✔ rejects a changed payload or population between matched modes (1.7265ms)
+✔ rejects output, clock, or order drift (2.495ms)
+✔ requires current-camera geometry readiness and the complete PNG set (1.7192ms)
+✔ requires accelerated rendering, effective context attributes, and page cleanup (2.6735ms)
+✔ requires forced-GC JS heap provenance only in the separate memory suite (1.5375ms)
+✔ requires teardown and exact app identity on every mode and suite (1.5979ms)
+✔ requires fixture references to be released before post-teardown heap samples (1.4083ms)
+✔ rejects missing installed dependency hashes and fresh-viewer drift (2.0423ms)
+✔ runtime report validates independent default and production lifetimes (33.5476ms)
+✔ runtime report binds the complete datacenter source and Entity inventory (11.7623ms)
+✔ runtime report rejects synthesized ownership, duplicate Graphics, and incomplete teardown (6.948ms)
+✔ runtime pair comparison requires exact pixels, geometry, style and native pick identity (0.775ms)
+✔ runtime report recomputes comparisons and requires populated ownership baselines (5.6674ms)
+✔ surface ownership excludes retained line geometry and still detects duplicate Graphics (2.2119ms)
+✔ runtime report requires observed renderer identity and drawing-buffer dimensions (0.5459ms)
+✔ late geometry completion permits a fresh native pick without polling unchanged frames (0.4145ms)
+✔ stable pixels from a prior camera revision cannot satisfy the sample gate (0.3364ms)
+✔ camera readiness requires consumed geometry and the current finite pose (0.857ms)
+✔ native picks do not establish completion of the remaining scene geometry (0.9228ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5511.779

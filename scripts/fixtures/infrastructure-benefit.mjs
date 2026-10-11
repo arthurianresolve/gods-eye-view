@@ -12,6 +12,7 @@ import {
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
+import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
 
 const FRAME_TIMEOUT_MS = 12_000;
 const params = new URLSearchParams(location.search);
@@ -104,9 +105,83 @@ function pointAndStem(row, collections, time, collectionByEntity) {
   return null;
 }
 
-function pickTarget(viewer, rows, collections, time, collectionByEntity) {
+function createNativeOwnershipRows(rows, analystRecords, time, layerId) {
+  const recordsBySourceId = new Map();
+  for (const record of analystRecords) {
+    const sourceId = String(record?.evidence?.entityRef?.id ?? '');
+    if (!sourceId) continue;
+    const records = recordsBySourceId.get(sourceId) || [];
+    records.push(record);
+    recordsBySourceId.set(sourceId, records);
+  }
+  const ownershipRows = new Map();
+  for (const entity of rows) {
+    const properties =
+      (typeof entity.properties?.getValue === 'function'
+        ? entity.properties.getValue(time)
+        : entity.properties) || {};
+    const sourceId = String(properties.osm_id ?? properties.id ?? entity.id);
+    const analyst = recordsBySourceId.get(sourceId)?.[0];
+    if (analyst?.evidence?.entityRef?.layerKey !== layerId) continue;
+    ownershipRows.set(entity, {
+      entity,
+      layerId,
+      entityId: String(entity.id),
+      sourceRecordId: String(
+        analyst.sourceRecordId || analyst.evidence.entityRef.id,
+      ),
+      entityShow: entity.show !== false,
+      point: { show: true },
+      stem: { show: true },
+    });
+  }
+  check(
+    ownershipRows.size === rows.length,
+    'Native pick ownership index does not cover every layer surface.',
+  );
+  return ownershipRows;
+}
+
+function pickTarget(
+  viewer,
+  rows,
+  collections,
+  time,
+  collectionByEntity,
+  ownershipRows,
+  layerId,
+) {
   const canvasWidth = viewer.scene.canvas.clientWidth;
   const canvasHeight = viewer.scene.canvas.clientHeight;
+  const pickOwner = (picked, kind, requestedRow) => {
+    const indexedRow = ownershipRows.get(picked?.id);
+    const currentSurfaces = indexedRow
+      ? pointAndStem(indexedRow.entity, collections, time, collectionByEntity)
+      : null;
+    if (indexedRow) {
+      indexedRow.entityShow = indexedRow.entity.show !== false;
+      indexedRow.point.show = currentSurfaces?.pointShow === true;
+      indexedRow.stem.show = currentSurfaces?.stemShow === true;
+    }
+    const owner = resolveInfrastructureNativePickOwner({
+      picked,
+      kind,
+      requestedEntity: requestedRow,
+      rowsByEntity: ownershipRows,
+      primitivesByEntity: collectionByEntity,
+      layerId,
+      mode: collections ? 'primitive-collections' : 'entities',
+      Cesium,
+    });
+    return owner
+      ? {
+          row: owner.row.entity,
+          sourceRecordId: owner.row.sourceRecordId,
+          primitiveType: owner.primitiveType,
+          appearanceType: owner.appearanceType,
+        }
+      : null;
+  };
   for (const row of rows) {
     if (!row.show) continue;
     const surfaces = pointAndStem(row, collections, time, collectionByEntity);
@@ -153,11 +228,34 @@ function pickTarget(viewer, rows, collections, time, collectionByEntity) {
     const stemPick = viewer.scene.pick(
       new Cesium.Cartesian2(stemScreen.x, stemScreen.y),
     );
-    if (pointPick?.id !== row || stemPick?.id !== row) continue;
+    const pointOwner = pickOwner(pointPick, 'point', row);
+    const stemOwner = pickOwner(stemPick, 'stem', row);
+    if (!pointOwner || !stemOwner) continue;
+    const pointScreenPosition = [pointScreen.x, pointScreen.y];
+    const stemScreenPosition = [stemScreen.x, stemScreen.y];
+    if (layerId !== 'local-datacenters')
+      return {
+        entityId: String(row.id),
+        pointScreen: pointScreenPosition,
+        stemScreen: stemScreenPosition,
+      };
+    const makePick = (kind, owner, screen) => ({
+      kind,
+      layerId,
+      ownerVerified: true,
+      entityId: String(owner.row.id),
+      sourceRecordId: owner.sourceRecordId,
+      primitiveType: owner.primitiveType,
+      appearanceType: owner.appearanceType,
+      screen,
+    });
     return {
-      entityId: String(row.id),
-      pointScreen: [pointScreen.x, pointScreen.y],
-      stemScreen: [stemScreen.x, stemScreen.y],
+      entityId: String(stemOwner.row.id),
+      layerId,
+      pointScreen: pointScreenPosition,
+      stemScreen: stemScreenPosition,
+      point: makePick('point', pointOwner, pointScreenPosition),
+      stem: makePick('stem', stemOwner, stemScreenPosition),
     };
   }
   return null;
@@ -379,6 +477,20 @@ async function runActivation() {
     `${fixtureLayer.layerName} analyst surface inventory is incomplete.`,
   );
   const collections = primitiveCollections(viewer, fixtureLayer.layerId);
+  const pickRows = dataSource.entities.values.filter(
+    (entity) =>
+      entity.point || entity.polyline || mode === 'primitive-collections',
+  );
+  check(
+    pickRows.length === fixtureLayer.entityCount,
+    'Native pick inventory was unexpectedly truncated.',
+  );
+  const ownershipRows = createNativeOwnershipRows(
+    pickRows,
+    analystRecords,
+    renderTimeRef,
+    fixtureLayer.layerId,
+  );
   collectionByEntityRef = null;
   if (collections) {
     const byPoint = new Map();
@@ -427,20 +539,14 @@ async function runActivation() {
     check(!frame.error, frame.error || 'Frame capture failed.');
     const bytes = new Uint8Array(frame.pixels.bytes);
     const frameHash = await sha256(bytes);
-    const records = dataSource.entities.values.filter(
-      (entity) =>
-        entity.point || entity.polyline || mode === 'primitive-collections',
-    );
-    check(
-      records.length === fixtureLayer.entityCount,
-      'Native pick inventory was unexpectedly truncated.',
-    );
     const target = pickTarget(
       viewer,
-      records,
+      pickRows,
       collections,
       renderTimeRef,
       collectionByEntityRef,
+      ownershipRows,
+      fixtureLayer.layerId,
     );
     const lod = layer.getLodDiagnostics();
     const cameraPosition = [
@@ -517,6 +623,13 @@ async function runActivation() {
     ),
   };
   viewer.selectedEntity = dataSource.entities.getById(usable.target.entityId);
+  if (fixtureLayer.layerId === 'local-datacenters') {
+    usable.selectedEntityIdentity = String(viewer.selectedEntity?.id || '');
+    check(
+      usable.selectedEntityIdentity === usable.target.stem.entityId,
+      'Final datacenter selection did not retain the native stem-hit Entity.',
+    );
+  }
   await settleVisibleFrame(viewer);
   state.enabledSettledResources = sceneResourceCounts(viewer, dataSource);
   collectionByEntityRef = null;

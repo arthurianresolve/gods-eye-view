@@ -1024,6 +1024,8 @@
   "scripts/fixtures/infrastructure-collections-ui.js",
   "scripts/fixtures/infrastructure-runtime-collections.html",
   "scripts/fixtures/infrastructure-runtime-collections.mjs",
+  "scripts/fixtures/infrastructureNativePickOwnership.mjs",
+  "scripts/fixtures/infrastructureNativePickOwnership.test.mjs",
   "scripts/fixtures/infrastructureFixtureLayer.mjs",
   "scripts/fixtures/infrastructureFixtureCamera.mjs",
   "scripts/fixtures/infrastructureFixtureCamera.test.mjs",

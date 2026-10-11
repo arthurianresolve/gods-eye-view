@@ -14,6 +14,38 @@ const commit = 'a'.repeat(40);
 const hash = (letter) => letter.repeat(64);
 
 function run(mode, suite, seed, layer) {
+  const target =
+    layer.layerId === 'local-datacenters'
+      ? {
+          layerId: layer.layerId,
+          entityId: 'datacenter-stem-owner',
+          pointScreen: [400, 350],
+          stemScreen: [402, 370],
+          point: {
+            kind: 'point',
+            layerId: layer.layerId,
+            ownerVerified: true,
+            entityId: 'datacenter-point-owner',
+            sourceRecordId: 'point-source',
+            primitiveType: 'PointPrimitive',
+            screen: [400, 350],
+          },
+          stem: {
+            kind: 'stem',
+            layerId: layer.layerId,
+            ownerVerified: true,
+            entityId: 'datacenter-stem-owner',
+            sourceRecordId: 'stem-source',
+            primitiveType:
+              mode === 'primitive-collections' ? 'Polyline' : 'Primitive',
+            appearanceType:
+              mode === 'primitive-collections'
+                ? null
+                : 'PolylineColorAppearance',
+            screen: [402, 370],
+          },
+        }
+      : { entityId: 'dam-1' };
   const image = (kind) => ({
     path: `images/${suite}-pair-${String(seed + 1).padStart(2, '0')}-${mode}-${kind}.png`,
     sha256: hash(kind === 'settled' ? 'b' : 'c'),
@@ -65,6 +97,9 @@ function run(mode, suite, seed, layer) {
     firstUsable: {
       elapsedFromSourceReadyMs: 80,
       pixelSha256: hash('2'),
+      ...(layer.layerId === 'local-datacenters'
+        ? { selectedEntityIdentity: 'datacenter-stem-owner' }
+        : {}),
       changedPixels: 1400,
       width: 960,
       height: 640,
@@ -73,7 +108,7 @@ function run(mode, suite, seed, layer) {
       dataSourcesReady: true,
       globeTilesLoaded: true,
       cameraPosition: [1, 2, 3],
-      target: { entityId: 'dam-1' },
+      target,
     },
     surfacePopulation: {
       layerId: layer.layerId,
@@ -232,6 +267,7 @@ function validReport(layerId = 'local-dams') {
           'src/performance/performanceSnapshot.js',
           'scripts/fixtures/infrastructure-benefit.html',
           'scripts/fixtures/infrastructure-benefit.mjs',
+          'scripts/fixtures/infrastructureNativePickOwnership.mjs',
           'scripts/fixtures/infrastructureFixtureLayer.mjs',
           'scripts/fixtures/infrastructureFixtureCamera.mjs',
           'scripts/performance/infrastructureBenefitComparison.mjs',
@@ -325,6 +361,18 @@ test('datacenter benefit evidence binds the complete untruncated inventory', () 
       }),
     /preserved source geometry inventory/,
   );
+  const omittedPickOwnership = structuredClone(report);
+  delete omittedPickOwnership.provenance.files[
+    'scripts/fixtures/infrastructureNativePickOwnership.mjs'
+  ];
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(omittedPickOwnership, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /source or installed Cesium identity is incomplete/,
+  );
   assert.throws(
     () =>
       validateInfrastructureBenefitReport(report, {
@@ -353,6 +401,57 @@ test('datacenter benefit evidence binds the complete untruncated inventory', () 
         expectedLayerId: 'local-datacenters',
       }),
     /camera contract is missing or invalid/,
+  );
+});
+
+test('datacenter benefit evidence binds independent native owners and exact picks', () => {
+  const report = validReport('local-datacenters');
+  const baseline = report.pairs[0].runs.entities.firstUsable.target;
+  assert.notEqual(baseline.point.entityId, baseline.stem.entityId);
+  assert.equal(baseline.entityId, baseline.stem.entityId);
+  assert.equal(
+    validateInfrastructureBenefitReport(report, {
+      expectedCommit: commit,
+      expectedLayerId: 'local-datacenters',
+    }),
+    true,
+  );
+
+  const unverified = structuredClone(report);
+  unverified.pairs[0].runs.entities.firstUsable.target.point.ownerVerified = false;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(unverified, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /native-pick ownership/,
+  );
+
+  const differentCoordinates = structuredClone(report);
+  differentCoordinates.pairs[0].runs['primitive-collections'].firstUsable.target
+    .point.screen[0]++;
+  differentCoordinates.pairs[0].runs['primitive-collections'].firstUsable.target
+    .pointScreen[0]++;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(differentCoordinates, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /changed actual datacenter point\/stem picks/,
+  );
+
+  const wrongSelection = structuredClone(report);
+  wrongSelection.pairs[0].runs.entities.firstUsable.selectedEntityIdentity =
+    'datacenter-point-owner';
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(wrongSelection, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /native-pick ownership/,
   );
 });
 
