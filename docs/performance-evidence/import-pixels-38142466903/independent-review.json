@@ -1,0 +1,26 @@
+﻿{
+    "schema":  "gev-import-pixel-mismatch-review/v1",
+    "run":  38142466903,
+    "applicationCommit":  "acbd812b6c1ea9e976929db9aefccb18e457c640",
+    "status":  "failed",
+    "failure":  "Final pixels differ across equivalent imports.",
+    "independentDecode":  {
+                              "reviewer":  "root",
+                              "changedPixels":  798,
+                              "changedPixelBounds":  {
+                                                         "xMin":  232,
+                                                         "xMax":  407,
+                                                         "yMin":  127,
+                                                         "yMax":  238
+                                                     },
+                              "beforeNonBlackGreenPixels":  26631,
+                              "afterNonBlackGreenPixels":  26631,
+                              "pixelsLitOnOnlyOneSide":  0,
+                              "conclusion":  "Same point coverage; localized pixel/color differences. This evidence does not alone prove the removal-order hypothesis."
+                          },
+    "sha256":  {
+                   "after.png":  "9b2040520fba4f87dabab9ef6cd82b091320ee7cb1b172cd3c01ab5a3324c85e",
+                   "hosted-native-renderer.json":  "9bf7d579ea58c372ed5e56b06d4c950aa48c3ae999e397e3b239b24b0b49e704",
+                   "before.png":  "6abffea3ddbbd6f368a1c119fca8047afc8423fcb4d8914686eb2ad9d34eb0fd"
+               }
+}
