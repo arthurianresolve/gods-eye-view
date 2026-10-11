@@ -110,6 +110,8 @@ runButton.addEventListener('click', () => {
   replaceSurface();
 
   const mode = modeSelect.value;
+  const usesWebGL = mode !== 'plain-raf';
+  const preserveDrawingBuffer = mode !== 'webgl2-unpreserved';
   let gl = null;
   let program = null;
   let rafId = null;
@@ -212,7 +214,8 @@ runButton.addEventListener('click', () => {
         focusedAtStart,
         visibilityAtStart,
       },
-      pointCount: mode === 'webgl2' ? POINT_COUNT : null,
+      pointCount: usesWebGL ? POINT_COUNT : null,
+      requestedPreserveDrawingBuffer: usesWebGL ? preserveDrawingBuffer : null,
       viewport: { width: window.innerWidth, height: window.innerHeight },
       canvas: {
         width: canvas.width,
@@ -264,11 +267,11 @@ runButton.addEventListener('click', () => {
   };
 
   try {
-    if (mode === 'webgl2') {
+    if (usesWebGL) {
       gl = canvas.getContext('webgl2', {
         alpha: false,
         antialias: true,
-        preserveDrawingBuffer: true,
+        preserveDrawingBuffer,
         powerPreference: 'high-performance',
         stencil: true,
       });
