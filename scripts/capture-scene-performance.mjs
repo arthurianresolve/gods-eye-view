@@ -1206,138 +1206,172 @@ try {
   async function prepareFreshProviderDocument() {
     providerSampleDocumentIndex += 1;
     if (!providerSampleWorkerAuditComplete) {
-      await auditPageWorkerBlobs(page, captureAuditState, {
-        documentRole: 'main-setup',
-        auditMode: 'diagnostic',
-      });
+      await runCaptureStage('provider-previous-document-worker-audit', () =>
+        auditPageWorkerBlobs(page, captureAuditState, {
+          documentRole: 'main-setup',
+          auditMode: 'diagnostic',
+        }),
+      );
       providerSampleWorkerAuditComplete = true;
     }
-    await releaseFlightFixtureSession(activeFixtureSession);
-    if (providerContext) await providerContext.close();
-    else await page.close();
-    providerContext = await browser.createBrowserContext();
-    page = await providerContext.newPage();
-    flightFixtureDelivery = createFlightFixtureDeliveryObserver(
-      productionFlightFixture,
-      new URL(url).origin + '/',
-    );
-    const pageAttachment = await attachMeasuredPage(
-      page,
-      flightFixtureDelivery,
-    );
-    activeFixtureSession = pageAttachment.fixtureSession;
-    captureAuditState = pageAttachment.auditState;
-    captureAuditState.workerUrls.clear();
-    captureAuditState.blobUrls.clear();
-    providerSampleWorkerAuditComplete = false;
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    if (captureProvenance) {
-      const servedBase = new URL(buildProvenanceOptions.baseUrl);
-      const actualPage = new URL(page.url());
-      if (
-        actualPage.origin !== servedBase.origin ||
-        !captureProvenance.source.entryPaths.includes(actualPage.pathname)
-      )
-        throw new Error(
-          'Provider-fixture navigation redirected outside the verified application entry point.',
-        );
-    }
-    await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
-      timeout: 90_000,
+    await runCaptureStage('provider-context-and-fixture-attach', async () => {
+      await releaseFlightFixtureSession(activeFixtureSession);
+      if (providerContext) await providerContext.close();
+      else await page.close();
+      providerContext = await browser.createBrowserContext();
+      page = await providerContext.newPage();
+      flightFixtureDelivery = createFlightFixtureDeliveryObserver(
+        productionFlightFixture,
+        new URL(url).origin + '/',
+      );
+      const pageAttachment = await attachMeasuredPage(
+        page,
+        flightFixtureDelivery,
+      );
+      activeFixtureSession = pageAttachment.fixtureSession;
+      captureAuditState = pageAttachment.auditState;
+      captureAuditState.workerUrls.clear();
+      captureAuditState.blobUrls.clear();
+      providerSampleWorkerAuditComplete = false;
     });
-    await disableCaptureDiagnostics(
-      page,
-      `provider-sample-${providerSampleDocumentIndex}`,
-    );
-    await page.waitForFunction(
-      () =>
-        document.getElementById('loading-screen')?.classList.contains('hidden'),
-      { timeout: 90_000 },
-    );
-    if (await page.evaluate(() => Boolean(navigator.serviceWorker?.controller)))
-      throw new Error(
-        'Provider-fixture page is controlled by a service worker.',
+    await runCaptureStage('provider-navigation', async () => {
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (captureProvenance) {
+        const servedBase = new URL(buildProvenanceOptions.baseUrl);
+        const actualPage = new URL(page.url());
+        if (
+          actualPage.origin !== servedBase.origin ||
+          !captureProvenance.source.entryPaths.includes(actualPage.pathname)
+        )
+          throw new Error(
+            'Provider-fixture navigation redirected outside the verified application entry point.',
+          );
+      }
+    });
+    await runCaptureStage('provider-viewer-readiness', async () => {
+      await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
+        timeout: 90_000,
+      });
+      await disableCaptureDiagnostics(
+        page,
+        `provider-sample-${providerSampleDocumentIndex}`,
       );
-    const initialEpoch = await page.evaluate(() => ({
-      now: Date.now(),
-      clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
-    }));
-    if (
-      initialEpoch.now !== productionFlightFixture.fixedTimeMs ||
-      initialEpoch.clock?.phase !== 'setup'
-    )
-      throw new Error(
-        `Provider-fixture document did not start at the held epoch: ${JSON.stringify(initialEpoch)}`,
-      );
-    await page.evaluate(
-      async ({ qualityMode: mode, detectionMode: requestedDetectionMode }) => {
-        const app = window.__godsEyeView;
-        const manager = app.dataManager;
-        if (!manager.isEnabled('flights'))
-          await manager.setEnabled('flights', true);
-        const controller = app.styleManager?._adaptiveQuality;
-        if (controller && !controller.setMode(mode))
-          throw new Error('Presentation quality controller is unavailable');
-        if (!controller && mode !== 'manual')
-          throw new Error('Requested quality profile is unavailable');
-        const services = app.styleManager?.services;
-        if (typeof services?.setDetectionModeByLabel !== 'function')
-          throw new Error('Detection workload controls are unavailable');
-        services.setDetectionModeByLabel(requestedDetectionMode);
-        if (services.getDetectionMode() !== requestedDetectionMode)
-          throw new Error('Detection workload mode did not match the request');
-        for (const id of ['local-datacenters', 'local-dams']) {
-          const entry = manager.layers.get(id);
-          if (!entry) throw new Error(`Missing required mixed layer ${id}`);
-          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
-        }
-        const viewer = app.viewer;
-        const destination =
-          viewer.scene.globe.ellipsoid.cartographicToCartesian({
-            longitude: (-97.7431 * Math.PI) / 180,
-            latitude: (30.2672 * Math.PI) / 180,
-            height: 130_000,
+    });
+    await runCaptureStage(
+      'provider-loading-readiness-and-clock-check',
+      async () => {
+        await page.waitForFunction(
+          () =>
+            document
+              .getElementById('loading-screen')
+              ?.classList.contains('hidden'),
+          { timeout: 90_000 },
+        );
+        if (
+          await page.evaluate(() =>
+            Boolean(navigator.serviceWorker?.controller),
+          )
+        )
+          throw new Error(
+            'Provider-fixture page is controlled by a service worker.',
+          );
+        const initialEpoch = await page.evaluate(() => ({
+          now: Date.now(),
+          clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
+        }));
+        if (
+          initialEpoch.now !== productionFlightFixture.fixedTimeMs ||
+          initialEpoch.clock?.phase !== 'setup'
+        )
+          throw new Error(
+            `Provider-fixture document did not start at the held epoch: ${JSON.stringify(initialEpoch)}`,
+          );
+      },
+    );
+    await runCaptureStage('provider-layer-and-camera-setup', () =>
+      page.evaluate(
+        async ({
+          qualityMode: mode,
+          detectionMode: requestedDetectionMode,
+        }) => {
+          const app = window.__godsEyeView;
+          const manager = app.dataManager;
+          if (!manager.isEnabled('flights'))
+            await manager.setEnabled('flights', true);
+          const controller = app.styleManager?._adaptiveQuality;
+          if (controller && !controller.setMode(mode))
+            throw new Error('Presentation quality controller is unavailable');
+          if (!controller && mode !== 'manual')
+            throw new Error('Requested quality profile is unavailable');
+          const services = app.styleManager?.services;
+          if (typeof services?.setDetectionModeByLabel !== 'function')
+            throw new Error('Detection workload controls are unavailable');
+          services.setDetectionModeByLabel(requestedDetectionMode);
+          if (services.getDetectionMode() !== requestedDetectionMode)
+            throw new Error(
+              'Detection workload mode did not match the request',
+            );
+          for (const id of ['local-datacenters', 'local-dams']) {
+            const entry = manager.layers.get(id);
+            if (!entry) throw new Error(`Missing required mixed layer ${id}`);
+            if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+          }
+          const viewer = app.viewer;
+          const destination =
+            viewer.scene.globe.ellipsoid.cartographicToCartesian({
+              longitude: (-97.7431 * Math.PI) / 180,
+              latitude: (30.2672 * Math.PI) / 180,
+              height: 130_000,
+            });
+          viewer.camera.cancelFlight?.();
+          viewer.camera.setView({
+            destination,
+            orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
           });
-        viewer.camera.cancelFlight?.();
-        viewer.camera.setView({
-          destination,
-          orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+          viewer.scene.requestRender();
+        },
+        { qualityMode, detectionMode },
+      ),
+    );
+    await runCaptureStage('provider-population-readiness', () =>
+      page.waitForFunction(
+        (counts) => {
+          const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
+          const getLayer = (id) => layers.find((entry) => entry.id === id);
+          return (
+            ['flights', 'local-datacenters', 'local-dams'].every(
+              (id) => getLayer(id)?.enabled === true,
+            ) &&
+            getLayer('flights')?.stats?.count === counts.flights &&
+            getLayer('local-datacenters')?.stats?.count ===
+              counts.datacenters &&
+            getLayer('local-dams')?.stats?.count === counts.dams
+          );
+        },
+        { timeout: fixtureTimeoutMs, polling: 100 },
+        {
+          flights: productionFlightFixture.count,
+          datacenters: mixedLayerCounts.datacenters,
+          dams: mixedLayerCounts.dams,
+        },
+      ),
+    );
+    await runCaptureStage(
+      'provider-fixture-delivery-and-home-pose',
+      async () => {
+        fixtureDelivery = await summarizeFlightFixtureDelivery();
+        failureProgress.fixtureDelivery = fixtureDelivery;
+        await page.evaluate(() => {
+          const camera = window.__godsEyeView.viewer.camera;
+          window.__gevPerformanceHome = {
+            position: camera.position.clone(),
+            direction: camera.direction.clone(),
+            up: camera.up.clone(),
+            transform: camera.transform.clone(),
+          };
         });
-        viewer.scene.requestRender();
-      },
-      { qualityMode, detectionMode },
-    );
-    await page.waitForFunction(
-      (counts) => {
-        const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
-        const getLayer = (id) => layers.find((entry) => entry.id === id);
-        return (
-          ['flights', 'local-datacenters', 'local-dams'].every(
-            (id) => getLayer(id)?.enabled === true,
-          ) &&
-          getLayer('flights')?.stats?.count === counts.flights &&
-          getLayer('local-datacenters')?.stats?.count === counts.datacenters &&
-          getLayer('local-dams')?.stats?.count === counts.dams
-        );
-      },
-      { timeout: fixtureTimeoutMs, polling: 100 },
-      {
-        flights: productionFlightFixture.count,
-        datacenters: mixedLayerCounts.datacenters,
-        dams: mixedLayerCounts.dams,
       },
     );
-    fixtureDelivery = await summarizeFlightFixtureDelivery();
-    failureProgress.fixtureDelivery = fixtureDelivery;
-    await page.evaluate(() => {
-      const camera = window.__godsEyeView.viewer.camera;
-      window.__gevPerformanceHome = {
-        position: camera.position.clone(),
-        direction: camera.direction.clone(),
-        up: camera.up.clone(),
-        transform: camera.transform.clone(),
-      };
-    });
   }
 
   for (const scenario of scenarios) {

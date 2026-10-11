@@ -56,6 +56,34 @@ test('stage journal records bounded timings without retaining operation results'
   assert.equal(JSON.stringify(journal.snapshot()).includes('payload'), false);
 });
 
+test('running stage snapshots report elapsed time without changing its status', async () => {
+  let clock = 20;
+  let finishOperation;
+  const journal = createCaptureStageJournal({ now: () => clock });
+  const pending = journal.run(
+    'provider-population-readiness',
+    () => new Promise((resolve) => (finishOperation = resolve)),
+  );
+  await Promise.resolve();
+  clock = 57;
+
+  assert.deepEqual(journal.snapshot(), [
+    {
+      sequence: 1,
+      stage: 'provider-population-readiness',
+      status: 'running',
+      startedAtMs: 20,
+      elapsedMs: 37,
+      timeoutMs: null,
+      errorName: null,
+    },
+  ]);
+  finishOperation();
+  await pending;
+  assert.equal(journal.snapshot()[0].status, 'completed');
+  assert.equal(journal.snapshot()[0].elapsedMs, 37);
+});
+
 test('stage journal attributes an operation failure and retains no error payload', async () => {
   let clock = 0;
   const journal = createCaptureStageJournal({ now: () => clock });

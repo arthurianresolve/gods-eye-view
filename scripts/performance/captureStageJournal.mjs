@@ -36,7 +36,14 @@ export function createCaptureStageJournal({
   let nextSequence = 1;
 
   function snapshot() {
-    return records.map((record) => ({ ...record }));
+    const snapshotTime = now();
+    return records.map((record) => ({
+      ...record,
+      elapsedMs:
+        record.status === 'running' && Number.isFinite(snapshotTime)
+          ? Math.max(0, snapshotTime - record.startedAtMs)
+          : record.elapsedMs,
+    }));
   }
 
   function checkpoint() {
