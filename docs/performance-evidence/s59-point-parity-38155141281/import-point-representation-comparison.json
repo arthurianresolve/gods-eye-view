@@ -1,0 +1,31 @@
+{
+  "valid": false,
+  "errors": [
+    "Entity run warmup population or primitive count mismatch",
+    "point state or native pick witness incomplete for 0:synchronous",
+    "point state or native pick witness incomplete for 0:cooperative",
+    "point state or native pick witness incomplete for 1:synchronous",
+    "point state or native pick witness incomplete for 1:cooperative",
+    "point state or native pick witness incomplete for 2:synchronous",
+    "point state or native pick witness incomplete for 2:cooperative",
+    "point state or native pick witness incomplete for 3:synchronous",
+    "point state or native pick witness incomplete for 3:cooperative",
+    "point state or native pick witness incomplete for 4:synchronous",
+    "point state or native pick witness incomplete for 4:cooperative"
+  ],
+  "summary": {
+    "schema": "gev-import-point-representation-comparison/v1",
+    "applicationCommit": "b0c09ce85105717fba47c68129101fcf3d0a09e0",
+    "fixtureCommit": "b0c09ce85105717fba47c68129101fcf3d0a09e0",
+    "representationPairs": 1,
+    "synchronousCooperativePairsPerRepresentation": 5,
+    "pixelSamplesCompared": 10,
+    "pointStateSamplesCompared": 0,
+    "pngWitnessCount": 22,
+    "mixedGeometryPixelParity": true,
+    "mixedGeometryNativePickCount": 3,
+    "geometryParity": true,
+    "cancellationCleanup": true,
+    "performanceAcceptanceEligible": false
+  }
+}
