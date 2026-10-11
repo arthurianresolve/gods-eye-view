@@ -1,0 +1,107 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38147968815",
+  "candidate": "b304c0f35f8eba40d2ec67256896231c13407088",
+  "status": "passed-without-reproducing-timeout",
+  "reportSha256": "ce0201f52771c11132ee5e44d2f33d599367f33b4a0d992e8bf32c0397b1e3d9",
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "closeElapsedMs": 694.2742000000144,
+      "pageCleanupToStartSignalMs": 0.061399999976856634,
+      "sampleCount": 1,
+      "sampledCpuDeltaMs": null
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "closeElapsedMs": 423.3461000000243,
+      "pageCleanupToStartSignalMs": 0.013299999991431832,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 31.25
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "closeElapsedMs": 365.51410000002943,
+      "pageCleanupToStartSignalMs": 0.0313000000314787,
+      "sampleCount": 3,
+      "sampledCpuDeltaMs": 31.25
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "closeElapsedMs": 314.9513000000734,
+      "pageCleanupToStartSignalMs": 0.013799999956972897,
+      "sampleCount": 3,
+      "sampledCpuDeltaMs": 46.875
+    },
+    {
+      "id": "shutdown-repeat-prior-1",
+      "closeElapsedMs": 384.44880000001285,
+      "pageCleanupToStartSignalMs": 0.013799999956972897,
+      "sampleCount": 3,
+      "sampledCpuDeltaMs": 109.375
+    },
+    {
+      "id": "shutdown-repeat-candidate-1",
+      "closeElapsedMs": 450.2574999999488,
+      "pageCleanupToStartSignalMs": 0.016100000008009374,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 31.25
+    },
+    {
+      "id": "shutdown-repeat-prior-2",
+      "closeElapsedMs": 381.45209999999497,
+      "pageCleanupToStartSignalMs": 0.01959999999962747,
+      "sampleCount": 3,
+      "sampledCpuDeltaMs": 78.125
+    },
+    {
+      "id": "shutdown-repeat-candidate-2",
+      "closeElapsedMs": 392.19719999993686,
+      "pageCleanupToStartSignalMs": 0.016100000008009374,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 15.625
+    },
+    {
+      "id": "shutdown-repeat-prior-3",
+      "closeElapsedMs": 410.951999999932,
+      "pageCleanupToStartSignalMs": 0.015099999960511923,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 62.5
+    },
+    {
+      "id": "shutdown-repeat-candidate-3",
+      "closeElapsedMs": 362.4812999999849,
+      "pageCleanupToStartSignalMs": 0.01720000000204891,
+      "sampleCount": 3,
+      "sampledCpuDeltaMs": 46.875
+    },
+    {
+      "id": "shutdown-repeat-prior-4",
+      "closeElapsedMs": 411.52190000005066,
+      "pageCleanupToStartSignalMs": 0.01540000003296882,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 31.25
+    },
+    {
+      "id": "shutdown-repeat-candidate-4",
+      "closeElapsedMs": 413.1003999999957,
+      "pageCleanupToStartSignalMs": 0.007199999992735684,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 78.125
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "closeElapsedMs": 403.5718000000343,
+      "pageCleanupToStartSignalMs": 0.006999999983236194,
+      "sampleCount": 4,
+      "sampledCpuDeltaMs": 62.5
+    }
+  ],
+  "diagnosticStartupGapRemoved": true,
+  "underlyingShutdownCauseResolved": false,
+  "hardwareRenderingValidated": false,
+  "limitations": [
+    "Observer startup now occurs before page closure; observation still changes execution conditions.",
+    "The prior uninstrumented timeout was not reproduced. This is not evidence that its cause is fixed.",
+    "All thirteen recovery cases preserved their settings, workspace and rendered asset; no forced browser termination occurred."
+  ]
+}

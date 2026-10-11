@@ -1,0 +1,1845 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "b304c0f35f8eba40d2ec67256896231c13407088",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "AMD EPYC 9V45 96-Core Processor                ",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-webgl-only",
+  "rendererExperiment": null,
+  "browserVersion": "Chrome/152.0.7977.75",
+  "postTimeoutObservationMs": 15000,
+  "shutdownTracing": false,
+  "shutdownProcessSampling": true,
+  "closeRepetitionPlan": [
+    {
+      "id": "shutdown-repeat-prior-1",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-1",
+      "variant": "candidate",
+      "servedCommit": "b304c0f35f8eba40d2ec67256896231c13407088"
+    },
+    {
+      "id": "shutdown-repeat-prior-2",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-2",
+      "variant": "candidate",
+      "servedCommit": "b304c0f35f8eba40d2ec67256896231c13407088"
+    },
+    {
+      "id": "shutdown-repeat-prior-3",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-3",
+      "variant": "candidate",
+      "servedCommit": "b304c0f35f8eba40d2ec67256896231c13407088"
+    },
+    {
+      "id": "shutdown-repeat-prior-4",
+      "variant": "prior",
+      "servedCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7"
+    },
+    {
+      "id": "shutdown-repeat-candidate-4",
+      "variant": "candidate",
+      "servedCommit": "b304c0f35f8eba40d2ec67256896231c13407088"
+    }
+  ],
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-11T14:49:52.388Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 3436,
+        "rendererQueryDurationMs": 179,
+        "bootPlusQueryCriticalPathMs": 3616,
+        "rendererCheckpointElapsedMs": 5395
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 195443.8774,
+          "closeSettledHostMs": 196138.1516,
+          "closeElapsedMs": 694.2742000000144,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 694
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.2166000000142958,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 4.784100000018952,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 23.72839999999269,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 672.6828,
+          "sampleCount": 1,
+          "sampledCpuDeltaMs": null,
+          "sampledWindowMs": null,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 590.7538000000001,
+              "cpuMs": 1328.125,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 4,
+                "EventPairLow": 12,
+                "Unknown": 3
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 3271.6947999999975,
+          "startSignalToFirstSampleReceiptMs": 612.7976999999955,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.061399999976856634
+        }
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 3905,
+        "rendererQueryDurationMs": 362,
+        "bootPlusQueryCriticalPathMs": 4267,
+        "rendererCheckpointElapsedMs": 4494
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 213555.1113,
+          "closeSettledHostMs": 213978.4574,
+          "closeElapsedMs": 423.3461000000243,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 423.219299999997
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.0804000000061933,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 7.415899999992689,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 23.170100000017555,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 420.2758,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 31.25,
+          "sampledWindowMs": 323.43,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 33.251400000000004,
+              "cpuMs": 1000,
+              "threadCount": 54,
+              "states": {
+                "Running": 1,
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 138.9403,
+              "cpuMs": 1031.25,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 32,
+                "Executive": 5,
+                "EventPairLow": 13,
+                "Unknown": 3
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 248.756,
+              "cpuMs": 1031.25,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 37,
+                "Executive": 1,
+                "EventPairLow": 13,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 356.6814,
+              "cpuMs": 1031.25,
+              "threadCount": 49,
+              "states": {
+                "Wait": 49
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 1,
+                "EventPairLow": 11,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 427.73669999997946,
+          "startSignalToFirstSampleReceiptMs": 37.016700000007404,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.013299999991431832
+        }
+      }
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2412,
+        "rendererQueryDurationMs": 278,
+        "bootPlusQueryCriticalPathMs": 2690,
+        "rendererCheckpointElapsedMs": 2952
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 354704.3833,
+          "closeSettledHostMs": 355069.8974,
+          "closeElapsedMs": 365.51410000002943,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 365.4086000000243
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.07020000001648441,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 9.177700000000186,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 26.527899999986403,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 358.35560000000004,
+          "sampleCount": 3,
+          "sampledCpuDeltaMs": 31.25,
+          "sampledWindowMs": 221.83190000000002,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 33.7753,
+              "cpuMs": 875,
+              "threadCount": 54,
+              "states": {
+                "Running": 1,
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 145.6896,
+              "cpuMs": 906.25,
+              "threadCount": 53,
+              "states": {
+                "Running": 1,
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 13,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 255.6072,
+              "cpuMs": 906.25,
+              "threadCount": 50,
+              "states": {
+                "Wait": 50
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 926.1301000000094,
+          "startSignalToFirstSampleReceiptMs": 37.39369999995688,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.0313000000314787
+        }
+      }
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2405,
+        "rendererQueryDurationMs": 276,
+        "bootPlusQueryCriticalPathMs": 2681,
+        "rendererCheckpointElapsedMs": 2927
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 556211.7244,
+          "closeSettledHostMs": 556526.6757,
+          "closeElapsedMs": 314.9513000000734,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 314.84560000000056
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.06640000001061708,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 7.4786999999778345,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 26.09340000001248,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 311.3761,
+          "sampleCount": 3,
+          "sampledCpuDeltaMs": 46.875,
+          "sampledWindowMs": 215.1001,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 32.161100000000005,
+              "cpuMs": 734.375,
+              "threadCount": 54,
+              "states": {
+                "Running": 1,
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 136.9574,
+              "cpuMs": 765.625,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 13,
+                "Unknown": 3
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 247.2612,
+              "cpuMs": 781.25,
+              "threadCount": 49,
+              "states": {
+                "Wait": 49
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 2,
+                "EventPairLow": 11,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1766.7900000000373,
+          "startSignalToFirstSampleReceiptMs": 36.38359999994282,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.013799999956972897
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-prior-1",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2450,
+        "rendererQueryDurationMs": 264,
+        "bootPlusQueryCriticalPathMs": 2714,
+        "rendererCheckpointElapsedMs": 2977
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 565470.7378,
+          "closeSettledHostMs": 565855.1866,
+          "closeElapsedMs": 384.44880000001285,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 384.34089999995194
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.06229999999050051,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 8.985600000014529,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 25.840099999913946,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 363.1207,
+          "sampleCount": 3,
+          "sampledCpuDeltaMs": 109.375,
+          "sampledWindowMs": 219.6528,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 34.347300000000004,
+              "cpuMs": 859.375,
+              "threadCount": 53,
+              "states": {
+                "Running": 1,
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 146.0937,
+              "cpuMs": 953.125,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 3,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 254.0001,
+              "cpuMs": 968.75,
+              "threadCount": 49,
+              "states": {
+                "Wait": 49
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 11,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1233.3371999999508,
+          "startSignalToFirstSampleReceiptMs": 38.037699999986216,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.013799999956972897
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-candidate-1",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2462,
+        "rendererQueryDurationMs": 303,
+        "bootPlusQueryCriticalPathMs": 2765,
+        "rendererCheckpointElapsedMs": 3018
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 574149.1654,
+          "closeSettledHostMs": 574599.4229,
+          "closeElapsedMs": 450.2574999999488,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 450.09089999995194
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.07280000008177012,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 7.63620000006631,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 26.43350000004284,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 446.58180000000004,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 31.25,
+          "sampledWindowMs": 331.2679,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 39.0967,
+              "cpuMs": 718.75,
+              "threadCount": 53,
+              "states": {
+                "Running": 1,
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 152.8109,
+              "cpuMs": 750,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 33,
+                "Executive": 4,
+                "EventPairLow": 12,
+                "Unknown": 3
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 268.06600000000003,
+              "cpuMs": 750,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 2,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 370.3646,
+              "cpuMs": 750,
+              "threadCount": 48,
+              "states": {
+                "Wait": 48
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 2,
+                "EventPairLow": 10,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1621.732500000042,
+          "startSignalToFirstSampleReceiptMs": 43.58019999996759,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.016100000008009374
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-prior-2",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2563,
+        "rendererQueryDurationMs": 177,
+        "bootPlusQueryCriticalPathMs": 2741,
+        "rendererCheckpointElapsedMs": 2984
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 583697.5788,
+          "closeSettledHostMs": 584079.0309,
+          "closeElapsedMs": 381.45209999999497,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 381.29370000003837
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.0731000000378117,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 8.009799999999814,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 34.79610000003595,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 365.42260000000005,
+          "sampleCount": 3,
+          "sampledCpuDeltaMs": 78.125,
+          "sampledWindowMs": 222.88750000000005,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 36.0854,
+              "cpuMs": 765.625,
+              "threadCount": 55,
+              "states": {
+                "Running": 1,
+                "Wait": 54
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 14,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 157.3505,
+              "cpuMs": 812.5,
+              "threadCount": 54,
+              "states": {
+                "Wait": 54
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 3,
+                "EventPairLow": 14,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 258.97290000000004,
+              "cpuMs": 843.75,
+              "threadCount": 51,
+              "states": {
+                "Wait": 51
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1579.625699999975,
+          "startSignalToFirstSampleReceiptMs": 40.757199999992736,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.01959999999962747
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-candidate-2",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2435,
+        "rendererQueryDurationMs": 277,
+        "bootPlusQueryCriticalPathMs": 2712,
+        "rendererCheckpointElapsedMs": 2955
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 591555.4294,
+          "closeSettledHostMs": 591947.6266,
+          "closeElapsedMs": 392.19719999993686,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 392.0505000000121
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.07180000003427267,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 10.753200000035577,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 31.185600000084378,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 388.61690000000004,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 15.625,
+          "sampledWindowMs": 325.1503,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 35.322,
+              "cpuMs": 750,
+              "threadCount": 53,
+              "states": {
+                "Running": 1,
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 141.1599,
+              "cpuMs": 765.625,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 33,
+                "Executive": 5,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 244.3805,
+              "cpuMs": 765.625,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 2,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 360.4723,
+              "cpuMs": 765.625,
+              "threadCount": 48,
+              "states": {
+                "Wait": 48
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 1,
+                "EventPairLow": 10,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1713.027699999977,
+          "startSignalToFirstSampleReceiptMs": 39.59820000000764,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.016100000008009374
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-prior-3",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2501,
+        "rendererQueryDurationMs": 298,
+        "bootPlusQueryCriticalPathMs": 2799,
+        "rendererCheckpointElapsedMs": 3041
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 601216.155,
+          "closeSettledHostMs": 601627.107,
+          "closeElapsedMs": 410.951999999932,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 410.81420000002254
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.06539999996311963,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 7.785700000007637,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 29.50109999999404,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 407.5461,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 62.5,
+          "sampledWindowMs": 328.4338,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 34.518,
+              "cpuMs": 875,
+              "threadCount": 53,
+              "states": {
+                "Running": 1,
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 157.8896,
+              "cpuMs": 937.5,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 3,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 260.2973,
+              "cpuMs": 937.5,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 37,
+                "Executive": 1,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 362.9518,
+              "cpuMs": 937.5,
+              "threadCount": 48,
+              "states": {
+                "Wait": 48
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 2,
+                "EventPairLow": 10,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1427.6411999999546,
+          "startSignalToFirstSampleReceiptMs": 38.507600000011735,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.015099999960511923
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-candidate-3",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2723,
+        "rendererQueryDurationMs": 184,
+        "bootPlusQueryCriticalPathMs": 2907,
+        "rendererCheckpointElapsedMs": 3153
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 608925.7027,
+          "closeSettledHostMs": 609288.184,
+          "closeElapsedMs": 362.4812999999849,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 362.327399999951
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.09120000002440065,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 7.5191999999806285,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 39.07750000001397,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 358.7251,
+          "sampleCount": 3,
+          "sampledCpuDeltaMs": 46.875,
+          "sampledWindowMs": 219.48880000000003,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 33.464800000000004,
+              "cpuMs": 843.75,
+              "threadCount": 54,
+              "states": {
+                "Running": 1,
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 141.85760000000002,
+              "cpuMs": 890.625,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 33,
+                "Executive": 5,
+                "EventPairLow": 13,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 252.95360000000002,
+              "cpuMs": 890.625,
+              "threadCount": 50,
+              "states": {
+                "Wait": 50
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1397.6979000000283,
+          "startSignalToFirstSampleReceiptMs": 37.78489999996964,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.01720000000204891
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-prior-4",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2427,
+        "rendererQueryDurationMs": 298,
+        "bootPlusQueryCriticalPathMs": 2725,
+        "rendererCheckpointElapsedMs": 2971
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 617754.3883,
+          "closeSettledHostMs": 618165.9102,
+          "closeElapsedMs": 411.52190000005066,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 411.41339999996126
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.0731000000378117,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 11.11379999993369,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 30.10849999997299,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 407.91580000000005,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 31.25,
+          "sampledWindowMs": 328.6936,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 37.6139,
+              "cpuMs": 828.125,
+              "threadCount": 53,
+              "states": {
+                "Running": 1,
+                "Ready": 1,
+                "Wait": 51
+              },
+              "waits": {
+                "UserRequest": 38,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 146.34210000000002,
+              "cpuMs": 859.375,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 4,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 248.42020000000002,
+              "cpuMs": 859.375,
+              "threadCount": 52,
+              "states": {
+                "Wait": 52
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 2,
+                "EventPairLow": 12,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 366.3075,
+              "cpuMs": 859.375,
+              "threadCount": 48,
+              "states": {
+                "Wait": 48
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 1,
+                "EventPairLow": 10,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1100.9536999999546,
+          "startSignalToFirstSampleReceiptMs": 41.88939999998547,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.01540000003296882
+        }
+      }
+    },
+    {
+      "id": "shutdown-repeat-candidate-4",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2436,
+        "rendererQueryDurationMs": 287,
+        "bootPlusQueryCriticalPathMs": 2723,
+        "rendererCheckpointElapsedMs": 2963
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 625985.9475,
+          "closeSettledHostMs": 626399.0479,
+          "closeElapsedMs": 413.1003999999957,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 412.97809999994934
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.15989999996963888,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 10.104599999962375,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 25.757600000011735,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 409.22110000000004,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 78.125,
+          "sampledWindowMs": 322.6143,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 39.987100000000005,
+              "cpuMs": 937.5,
+              "threadCount": 54,
+              "states": {
+                "Running": 1,
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 144.65030000000002,
+              "cpuMs": 1015.625,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 13,
+                "Unknown": 3
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 253.58030000000002,
+              "cpuMs": 1015.625,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 37,
+                "Executive": 1,
+                "EventPairLow": 13,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 362.6014,
+              "cpuMs": 1015.625,
+              "threadCount": 49,
+              "states": {
+                "Wait": 49
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 2,
+                "EventPairLow": 11,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1730.8665000000037,
+          "startSignalToFirstSampleReceiptMs": 44.60600000002887,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.007199999992735684
+        }
+      }
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "late",
+        "rendererQueryDurationClock": "host-wall-clock",
+        "rendererQueryMeasurement": "host-round-trip",
+        "bootElapsedMs": 2511,
+        "rendererQueryDurationMs": 306,
+        "bootPlusQueryCriticalPathMs": 2818,
+        "rendererCheckpointElapsedMs": 3062
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": true,
+        "forcedBrowserProcessTermination": false,
+        "browserCloseObservation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "closeStartHostMs": 635572.505,
+          "closeSettledHostMs": 635976.0768,
+          "closeElapsedMs": 403.5718000000343,
+          "closeRejectionName": null,
+          "postTimeoutObservation": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 403.4767999999458
+          },
+          "protocolCloseTrace": {
+            "scope": "owned-browser-close-only",
+            "browserCloseRequestSeen": true,
+            "browserCloseRequestElapsedMs": 0.07429999997839332,
+            "browserCloseAcknowledgementSeen": true,
+            "browserCloseAcknowledgementElapsedMs": 9.612100000027567,
+            "browserCloseAcknowledgementLate": false,
+            "browserCloseAcknowledgementError": false,
+            "browserDisconnected": true,
+            "browserDisconnectedElapsedMs": 30.461699999985285,
+            "malformedCloseMessage": false,
+            "protocolMessageCount": 3,
+            "protocolMessageOverflow": false,
+            "protocolObservationComplete": true
+          },
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null,
+          "stderr": []
+        },
+        "processObservation": {
+          "schema": "gev-windows-owned-process-observation/v1",
+          "scope": "Owned browser parent only; sampled process CPU and thread states, not stacks, descendants or GPU work. Sampling may affect timing. No performance acceptance.",
+          "status": "observed",
+          "endReason": "process-exited",
+          "elapsedMs": 399.8668,
+          "sampleCount": 4,
+          "sampledCpuDeltaMs": 62.5,
+          "sampledWindowMs": 330.3879,
+          "clock": "helper monotonic time from start command receipt; not synchronized with host Browser.close timestamps",
+          "samples": [
+            {
+              "elapsedMs": 39.5033,
+              "cpuMs": 718.75,
+              "threadCount": 54,
+              "states": {
+                "Running": 1,
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 39,
+                "EventPairLow": 13,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 152.92430000000002,
+              "cpuMs": 734.375,
+              "threadCount": 53,
+              "states": {
+                "Wait": 53
+              },
+              "waits": {
+                "UserRequest": 35,
+                "Executive": 3,
+                "EventPairLow": 13,
+                "Unknown": 2
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 266.9141,
+              "cpuMs": 765.625,
+              "threadCount": 50,
+              "states": {
+                "Wait": 50
+              },
+              "waits": {
+                "UserRequest": 34,
+                "Executive": 3,
+                "EventPairLow": 12,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            },
+            {
+              "elapsedMs": 369.8912,
+              "cpuMs": 781.25,
+              "threadCount": 49,
+              "states": {
+                "Wait": 49
+              },
+              "waits": {
+                "UserRequest": 36,
+                "Executive": 1,
+                "EventPairLow": 11,
+                "Unknown": 1
+              },
+              "unavailableThreads": 0,
+              "truncatedThreads": false
+            }
+          ],
+          "setupElapsedMs": 1343.9381000000285,
+          "startSignalToFirstSampleReceiptMs": 43.79780000005849,
+          "setupPhase": "before-owned-page-close",
+          "startPhase": "after-owned-page-close-before-browser-close",
+          "pageCleanupToStartSignalMs": 0.006999999983236194
+        }
+      }
+    }
+  ],
+  "status": "passed",
+  "failure": null
+}

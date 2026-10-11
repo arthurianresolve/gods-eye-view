@@ -4128,3 +4128,15 @@ including a real disposable Node process on Windows. This corrects a
 diagnostic distortion, not the unresolved Chromium shutdown failure. The
 next hosted run must establish whether the original failure can be observed
 under these conditions; a pass without reproduction is not proof of a fix.
+
+### Windows prearmed observation result - 11 October 2026
+
+[Run 38147968815](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38147968815)
+at `b304c0f35f8eba40d2ec67256896231c13407088` passed all 13 recovery checks.
+The page-cleanup to observer-start gap is 0.007-0.062 ms, confirming helper
+startup is outside that interval. Natural browser shutdown took 315-694 ms
+and preserved settings, workspace and the rendered asset.
+[Raw report and independent review](performance-evidence/windows-prearmed-observer-38147968815/review.json)
+are preserved. The earlier intermittent uninstrumented timeout was not
+reproduced; its cause remains unresolved, and no hardware acceptance or
+validated shutdown-fix claim follows from this diagnostic pass.
