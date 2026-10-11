@@ -9,7 +9,8 @@ All 252 mixed-use cycles complete: 1,008 source toggles; 252 replay seeks,
 imports, archive failures and camera recoveries; and 504 workspace openings.
 Thirteen post-GC checkpoints retain the same 40 application-resource gauges,
 with no gauge above its warmed baseline. Initial/final browser listener counts
-are both 629; transient counts range from 629 to 637. Final worker pending is
+are both 629. The Performance-domain listener census ranges from 629 to 637;
+the separately sampled DOM counter ranges from 629 to 646. Final worker pending is
 zero, and no checkpoint has a worker task aged ten seconds or more.
 
 Retained heap starts at 72.00 MiB and ends at 78.56 MiB. The conservative final

@@ -2286,7 +2286,7 @@ function makeControlledImportDriver(
         runControlledImportOperation,
         { action: 'clear', timeoutMs: drainMs },
       );
-      driver.warmedEmptySnapshot = snapshot;
+      driver.warmedEmptySnapshot ??= snapshot;
       return snapshot;
     },
     async workerCounters() {

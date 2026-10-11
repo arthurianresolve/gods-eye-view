@@ -127,3 +127,27 @@ points, and rejects renderer mismatch. Missing native ownership now rejects
 and cleans up its completed-render waiter immediately. All 54 lifecycle tests
 pass. Collection-specific hosted cancellation/supersession remains pending
 until the corrected source is tested; deadlines and resource gates are unchanged.
+
+## Collection renderer lifecycle observed
+
+[Run 38161336726](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38161336726)
+passes at `1a8d4928424f84349e4b9c6b411ce3f1b328459b`. Each native and
+controlled checkpoint explicitly records `primitive-collection`. Five native
+load/clear cycles, five workspace replacements, five observed queued
+cancellations and five observed supersessions complete. The controlled owner
+returns to zero imported features/pending jobs and the same scene census after
+destruction: zero Entities, three data sources, one primitive and one ground
+primitive. Root checked that cleanup census independently against the warmed
+baseline. The browser exits normally in 67.75 ms, without forced termination.
+
+Review identified that the validator did not yet enforce that final scene-census
+comparison, although this raw run satisfies it. A focused negative control will
+make an empty retained primitive fail the gate. This adds a missing assertion;
+it does not erase earlier raw results or assert a production leak occurred.
+
+The teardown comparison is enforced by `1595db4f`, with 54 focused checks and
+all 1,538 scoped formatting checks passing. Root also revalidated the original
+`1a8d4928` raw report with that validator, then injected one extra empty
+primitive into a copy and confirmed rejection. This offline regression check
+is distinct from a new browser run. The live driver retains its first warmed
+empty census for teardown instead of replacing the baseline after each cycle.
