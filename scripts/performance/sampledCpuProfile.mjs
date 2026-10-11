@@ -54,10 +54,20 @@ export function summarizeCpuProfile(profile) {
   }
   const groups = new Map();
   let totalWeightUs = 0;
+  let timestampUs = profile.startTime;
+  let negativeDeltaCount = 0;
+  const ordered = [];
   for (let index = 0; index < profile.samples.length; index++) {
     const node = nodes.get(profile.samples[index]);
     const weightUs = profile.timeDeltas[index];
-    if (!node || !Number.isFinite(weightUs) || weightUs < 0) {
+    timestampUs += weightUs;
+    if (
+      !node ||
+      !Number.isFinite(weightUs) ||
+      !Number.isFinite(timestampUs) ||
+      timestampUs < profile.startTime ||
+      timestampUs > profile.endTime
+    ) {
       const error = new Error(
         'Invalid CPU profile: unknown sample or invalid weight',
       );
@@ -79,10 +89,21 @@ export function summarizeCpuProfile(profile) {
           ? 'unknown-node'
           : !Number.isFinite(weightUs)
             ? 'nonfinite-weight'
-            : 'negative-weight',
+            : 'out-of-window-timestamp',
       };
       throw error;
     }
+    if (weightUs < 0) negativeDeltaCount++;
+    ordered.push({ node, timestampUs, index });
+  }
+  // DevTools CPUProfileDataModel converts deltas to cumulative timestamps,
+  // then sorts timestamp/sample pairs. Deltas are not nonnegative weights.
+  // Preserve raw ordering below, and do not clamp, drop or invent samples.
+  ordered.sort((a, b) => a.timestampUs - b.timestampUs || a.index - b.index);
+  let previousTimestampUs = profile.startTime;
+  for (const { node, timestampUs } of ordered) {
+    const weightUs = timestampUs - previousTimestampUs;
+    previousTimestampUs = timestampUs;
     const frame = node.callFrame;
     const url = publicFixturePath(frame.url);
     const key = JSON.stringify([
@@ -112,6 +133,16 @@ export function summarizeCpuProfile(profile) {
     scope:
       'sample-weighted main-thread stacks including idle and garbage collection; not precise CPU execution, GPU timing, or performance acceptance',
     performanceAcceptanceEligible: false,
+    sampleOrdering: {
+      method: 'cumulative-timestamp-stable-sort',
+      negativeDeltaCount,
+      reorderedSamples: ordered.filter((entry, index) => entry.index !== index)
+        .length,
+      weightConvention:
+        'interval-preceding-sample; statistical attribution only',
+      unattributedTailUs: profile.endTime - previousTimestampUs,
+      rawOrderPreserved: true,
+    },
     profileWindowMs: (profile.endTime - profile.startTime) / 1000,
     totalSampleWeightMs: totalWeightUs / 1000,
     nodeCount: nodes.size,
@@ -133,8 +164,8 @@ export function summarizeCpuProfile(profile) {
         },
         ...(node.children ? { children: node.children } : {}),
       })),
-      samples: profile.samples,
-      timeDeltas: profile.timeDeltas,
+      samples: [...profile.samples],
+      timeDeltas: [...profile.timeDeltas],
     },
   };
 }

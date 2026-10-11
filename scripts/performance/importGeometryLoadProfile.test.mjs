@@ -87,10 +87,57 @@ const rawCpu = {
 };
 const cpuSummary = summarizeCpuProfile(rawCpu);
 
+test('CPU delta normalization keeps sample/timestamp pairs and original input intact', () => {
+  const raw = {
+    startTime: 1000,
+    endTime: 1040,
+    nodes: [1, 2, 3].map((id) => ({
+      id,
+      callFrame: {
+        functionName: `sample${id}`,
+        url: '',
+        lineNumber: 0,
+        columnNumber: 0,
+      },
+    })),
+    samples: [1, 2, 3],
+    timeDeltas: [20, -10, 20],
+  };
+  const original = structuredClone(raw);
+  const summary = summarizeCpuProfile(raw);
+  assert.deepEqual(raw, original);
+  assert.deepEqual(summary.profile.samples, raw.samples);
+  assert.deepEqual(summary.profile.timeDeltas, raw.timeDeltas);
+  assert.equal(summary.sampleOrdering.negativeDeltaCount, 1);
+  assert.equal(summary.sampleOrdering.reorderedSamples, 2);
+  assert.equal(summary.sampleOrdering.unattributedTailUs, 10);
+  assert.equal(summary.totalSampleWeightMs, 0.03);
+  assert.deepEqual(
+    summary.topLocations.map((row) => [row.functionName, row.sampledWeightMs]),
+    [
+      ['sample2', 0.01],
+      ['sample1', 0.01],
+      ['sample3', 0.01],
+    ],
+  );
+  assert.deepEqual(summarizeCpuProfile(summary.profile), summary);
+  for (const timeDeltas of [
+    [-1, 2, 3],
+    [20, -21, 5],
+    [41, -2, 1],
+    [20, NaN, 1],
+  ]) {
+    assert.throws(
+      () => summarizeCpuProfile({ ...raw, timeDeltas }),
+      /Invalid CPU profile/,
+    );
+  }
+});
+
 test('invalid CPU samples retain bounded cause evidence after owned session cleanup', async () => {
   for (const [sampleId, weight, reason] of [
     [99, 1000, 'unknown-node'],
-    [1, -3, 'negative-weight'],
+    [1, -3, 'out-of-window-timestamp'],
     [1, NaN, 'nonfinite-weight'],
   ]) {
     const calls = [];

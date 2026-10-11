@@ -309,13 +309,20 @@ export function validateImportLoadProfileFixture({
       profileReport.profile.timeDeltas.length !==
         profileReport.profile.samples.length ||
       profileReport.profile.timeDeltas.some(
-        (delta) => !Number.isFinite(delta) || delta < 0,
+        (delta) => !Number.isFinite(delta),
       ) ||
       !Number.isFinite(profileReport.profile.startTime) ||
       !Number.isFinite(profileReport.profile.endTime) ||
       profileReport.profile.endTime < profileReport.profile.startTime)
   )
     errors.push('CPU profile summary is incomplete');
+  if (mode === 'cpu') {
+    try {
+      summarizeCpuProfile(profileReport?.profile);
+    } catch {
+      errors.push('CPU profile timestamps or sample identities are invalid');
+    }
+  }
   if (
     mode === 'heap' &&
     (!Number.isInteger(profileReport?.nodeCount) ||
