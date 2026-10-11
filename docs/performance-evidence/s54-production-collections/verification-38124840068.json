@@ -1,0 +1,119 @@
+{
+  "schema": "gev-infrastructure-production-correctness-verification/v1",
+  "run": "38124840068",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38124840068",
+  "commit": "51cfdb37f0fee3996ae48dabf944e7fa3f9a0ae1",
+  "reportSha256": "a37edfb3a8d04ce71a9be8351195a8ab0c644861194713f9086dedba87f3e4a7",
+  "independentlyDecodedImages": 20,
+  "comparisons": [
+    {
+      "caseId": "default-style",
+      "pair": 0,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 1,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 2,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 3,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 4,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 0,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 1,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 2,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 3,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 4,
+      "pixelSha256Equal": true,
+      "identityEqual": true,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "picksEqual": true,
+      "framebufferEqual": true
+    }
+  ],
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "codeImplemented": "opt-in QA prototype only; production default unchanged",
+  "automaticallyValidated": "all snapshots, native point/stem picks, camera revisions, full scene readiness, identities, styles, geometry and teardown",
+  "hardwareValidated": "hosted Apple paravirtual Metal only; physical Windows pending",
+  "benefit": "unmeasured; no acceptance for activation, retained memory or full S54"
+}

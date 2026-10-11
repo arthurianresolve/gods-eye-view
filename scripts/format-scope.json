@@ -1172,5 +1172,9 @@
   "patches/cesium-1.138.0-collision-transform.json",
   "scripts/performance/cesiumDisabledInputInertia.test.mjs",
   "scripts/performance/cesiumTerrainCollisionTransform.test.mjs",
-  "scripts/qa-cctv-gizmo-geometry.mjs"
+  "scripts/qa-cctv-gizmo-geometry.mjs",
+  "scripts/fixtures/infrastructure-benefit.html",
+  "scripts/fixtures/infrastructure-benefit.mjs",
+  "scripts/performance/infrastructureBenefitComparison.mjs",
+  "scripts/performance/infrastructureBenefitComparison.test.mjs"
 ]
