@@ -222,3 +222,60 @@ test('map bridge deduplicates identical settled state but republishes same-gener
   disconnect();
   assert.equal(unsubscribed, true);
 });
+
+test('obsolete bridge disconnect and callbacks cannot affect a replacement connection', () => {
+  const target = new EventTarget();
+  const details = [];
+  target.addEventListener('gev:map-stack-changed', (event) =>
+    details.push(event.detail),
+  );
+  const bridge = createMapStackEventBridge(target);
+  const state = { activeId: 'globe', lastError: null };
+  const makeController = () => {
+    const listeners = new Set();
+    let lastListener;
+    return {
+      listeners,
+      getSwitchGeneration: () => 1,
+      getImageryHostTileset: () => null,
+      subscribe(listener) {
+        lastListener = listener;
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      emit: (value = state) => lastListener(value),
+    };
+  };
+  const first = makeController(),
+    second = makeController();
+  const disconnectFirst = bridge.connect(first);
+  first.emit();
+  const disconnectSecond = bridge.connect(second);
+  assert.equal(first.listeners.size, 0);
+  second.emit();
+  assert.equal(
+    details.length,
+    2,
+    'new owner publishes even when its generation/state match',
+  );
+  first.emit({ activeId: 'retired' });
+  assert.equal(
+    details.length,
+    2,
+    'late old callback cannot publish under the replacement owner',
+  );
+  disconnectFirst();
+  assert.equal(
+    second.listeners.size,
+    1,
+    'old disposer cannot unsubscribe the new controller',
+  );
+  second.emit({ activeId: 'new-map' });
+  assert.equal(details.at(-1).activeId, 'new-map');
+  disconnectSecond();
+  assert.equal(second.listeners.size, 0);
+  const count = details.length;
+  second.emit({ activeId: 'late' });
+  bridge.onChange({ activeId: 'late', status: 'switching' });
+  assert.equal(details.length, count, 'disposed bridge emits no late events');
+});

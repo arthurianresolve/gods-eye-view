@@ -1,7 +1,7 @@
 /** Bridge map controller states to the app-wide map-stack event. */
 export function createMapStackEventBridge(eventTarget) {
   let controller = null;
-  let unsubscribe = null;
+  let disconnect = null;
   let lastSettledGeneration;
   let lastSettledSnapshot = null;
 
@@ -48,17 +48,29 @@ export function createMapStackEventBridge(eventTarget) {
 
   return {
     onChange(state) {
+      if (!controller) return;
       dispatch(state, state?.status === 'ready' || state?.status === 'error');
     },
     connect(mapStackController) {
-      unsubscribe?.();
+      disconnect?.();
       controller = mapStackController;
-      unsubscribe = controller?.subscribe?.((state) => dispatch(state, true));
-      return () => {
+      lastSettledGeneration = undefined;
+      lastSettledSnapshot = null;
+      let active = true;
+      const unsubscribe = controller?.subscribe?.((state) => {
+        if (active && controller === mapStackController) dispatch(state, true);
+      });
+      const dispose = () => {
+        if (!active) return;
+        active = false;
+        if (disconnect === dispose) {
+          disconnect = null;
+          controller = null;
+        }
         unsubscribe?.();
-        unsubscribe = null;
-        if (controller === mapStackController) controller = null;
       };
+      disconnect = dispose;
+      return dispose;
     },
   };
 }
