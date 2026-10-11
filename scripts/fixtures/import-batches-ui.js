@@ -18,6 +18,7 @@ import {
   observeImportFrameHealth,
 } from '../performance/importFrameDiagnostics.mjs';
 import { summarizeRgbaDifferences } from '../performance/importPixelWitness.mjs';
+import { inspectImportedPointState } from '../performance/importPointState.mjs';
 
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
@@ -387,6 +388,90 @@ function encodePixelWitness(image) {
   }
 }
 
+async function sha256Json(value) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  return sha256Bytes(bytes);
+}
+
+async function sha256Bytes(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)]
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function pointStateWitness(viewer) {
+  const snapshot = inspectImportedPointState(viewer, {
+    Cesium,
+    workspaceId: 'fixture',
+    expectedCount: 5000,
+  });
+  if (!snapshot.available) return snapshot;
+  return {
+    available: true,
+    version: snapshot.version,
+    scope:
+      'post-capture diagnostic only; state hashing is outside import and frame-capture timings',
+    expectedCount: snapshot.expectedCount,
+    entityCount: snapshot.entityCount,
+    visualizerItemCount: snapshot.visualizerItemCount,
+    primitiveCount: snapshot.primitiveCount,
+    entityOrderAndStateSha256: await sha256Json(snapshot.entityRows),
+    entityToPrimitiveAssignmentSha256: await sha256Json(
+      snapshot.drawAssignmentRows,
+    ),
+    primitiveDrawOrderAndStateSha256: await sha256Json(snapshot.primitiveRows),
+    firstEntity: snapshot.entityRows[0] ?? null,
+    lastEntity: snapshot.entityRows.at(-1) ?? null,
+    firstPrimitive: snapshot.primitiveRows[0] ?? null,
+    lastPrimitive: snapshot.primitiveRows.at(-1) ?? null,
+  };
+}
+
+async function capturePostMismatchFrames(viewer, maximumFrames = 3) {
+  const budgetMs = 1200;
+  const started = performance.now();
+  const frames = [];
+  while (
+    frames.length < maximumFrames &&
+    performance.now() - started < budgetMs
+  ) {
+    const remainingMs = budgetMs - (performance.now() - started);
+    let canvas;
+    try {
+      canvas = await captureFreshCesiumFrame(viewer, {
+        timeoutMs: Math.min(400, remainingMs),
+      });
+      if (!canvas) {
+        frames.push({ completed: false, pixelSha256: null });
+        break;
+      }
+      const rgba = canvas
+        .getContext('2d')
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      frames.push({
+        completed: true,
+        pixelSha256: await sha256Bytes(rgba),
+      });
+    } catch (error) {
+      frames.push({
+        completed: false,
+        error: String(error?.message || error).slice(0, 240),
+      });
+      break;
+    } finally {
+      if (canvas) canvas.width = canvas.height = 0;
+    }
+  }
+  return {
+    scope:
+      'failure-only diagnostic frames; excluded from the original capture and latency samples',
+    budgetMs,
+    elapsedMs: performance.now() - started,
+    frames,
+  };
+}
+
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
@@ -424,6 +509,10 @@ run.addEventListener('click', async () => {
       : {}),
     preserveDrawingBuffer,
     captureMode: document.querySelector('#capture-mode').value,
+    pointVisualStateDiagnosticScope:
+      document.querySelector('#capture-mode').value === 'pixels'
+        ? 'Version-pinned post-capture Entity/PointPrimitiveCollection state hashes; diagnostic work is outside import and capture elapsedMs and is not a performance sample.'
+        : 'Disabled outside pixel captures.',
     renderDemand: document.querySelector('#render-demand').checked,
     observeCommands: document.querySelector('#observe-commands').checked,
     commandObservationScope:
@@ -655,6 +744,19 @@ run.addEventListener('click', async () => {
               : capture;
           sample.pixelSha256 = hash;
           if (expectedPixels === null) expectedPixels = hash;
+          let currentPointState = null;
+          if (report.captureMode === 'pixels') {
+            try {
+              currentPointState = await pointStateWitness(viewer);
+            } catch (error) {
+              currentPointState = {
+                available: false,
+                reason: 'snapshot-error',
+                error: String(error?.message || error).slice(0, 240),
+              };
+            }
+          }
+          if (currentPointState) sample.pointVisualState = currentPointState;
           if (
             report.captureMode === 'pixels' &&
             expectedPixelCapture &&
@@ -675,16 +777,49 @@ run.addEventListener('click', async () => {
                 },
               };
               sample.pixelMismatchWitness = witness;
-              witness.before.pngDataUrl = encodePixelWitness(
-                expectedPixelCapture.image,
-              );
-              witness.after.pngDataUrl = encodePixelWitness(capture);
-              witness.difference = summarizeRgbaDifferences(
-                expectedPixelCapture.image.rgba,
-                capture.rgba,
-                capture.width,
-                capture.height,
-              );
+              try {
+                witness.before.pngDataUrl = encodePixelWitness(
+                  expectedPixelCapture.image,
+                );
+              } catch (error) {
+                witness.before.pngError = String(error?.message || error).slice(
+                  0,
+                  240,
+                );
+              }
+              try {
+                witness.after.pngDataUrl = encodePixelWitness(capture);
+              } catch (error) {
+                witness.after.pngError = String(error?.message || error).slice(
+                  0,
+                  240,
+                );
+              }
+              try {
+                witness.difference = summarizeRgbaDifferences(
+                  expectedPixelCapture.image.rgba,
+                  capture.rgba,
+                  capture.width,
+                  capture.height,
+                );
+              } catch (error) {
+                witness.differenceError = String(error?.message || error).slice(
+                  0,
+                  240,
+                );
+              }
+              witness.pointVisualState = {
+                before: expectedPixelCapture.pointState,
+                after: currentPointState,
+              };
+              try {
+                witness.followupFrames =
+                  await capturePostMismatchFrames(viewer);
+              } catch (error) {
+                witness.followupFramesError = String(
+                  error?.message || error,
+                ).slice(0, 240);
+              }
             } catch (witnessError) {
               sample.pixelMismatchWitnessError = String(
                 witnessError?.message || witnessError,
@@ -698,7 +833,11 @@ run.addEventListener('click', async () => {
           if (hash === expectedPixels)
             expectedPixelCapture =
               capture && typeof capture === 'object'
-                ? { mode, image: capture }
+                ? {
+                    mode,
+                    image: capture,
+                    pointState: currentPointState,
+                  }
                 : null;
         }
       }
