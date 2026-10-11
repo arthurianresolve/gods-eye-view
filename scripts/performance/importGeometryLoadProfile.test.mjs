@@ -11,6 +11,7 @@ import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
 import { startImportLoadProfile } from './importLoadProfile.mjs';
 import {
   captureImportTraceAnchor,
+  captureImportPerformanceMarkAnchor,
   createImportTraceEventCollector,
   summarizeImportTraceAttribution,
 } from './importTraceAttribution.mjs';
@@ -107,6 +108,107 @@ const traceInput = {
   dataLossOccurred: false,
   stopError: null,
 };
+test('explicit-start trace marks retain engine timestamp witnesses despite slow delivery', () => {
+  const calls = [];
+  let clockMs = 100;
+  const clock = {
+    now: () => clockMs,
+    mark(name, options) {
+      calls.push(['mark', name, options]);
+      clockMs += 24.6;
+      return { name, startTime: options.startTime, entryType: 'mark' };
+    },
+    clearMarks(name) {
+      calls.push(['clear', name]);
+    },
+  };
+  const value = captureImportPerformanceMarkAnchor(anchor.name, clock);
+  assert.equal(value.pageNowMs, 100);
+  assert.equal(value.uncertaintyMs, 0.001);
+  assert.equal(value.callElapsedMs, clockMs - 100);
+  assert.deepEqual(calls, [
+    ['mark', anchor.name, { startTime: 100 }],
+    ['clear', anchor.name],
+  ]);
+  const collector = createImportTraceEventCollector();
+  collector.add([
+    {
+      cat: 'blink.user_timing',
+      name: anchor.name,
+      ph: 'I',
+      ts: 500000,
+      pid: 1,
+      tid: 2,
+      args: { data: { startTime: 100, detail: 'not retained' } },
+    },
+  ]);
+  const observed = collector.finish();
+  assert.deepEqual(observed.events, [
+    {
+      kind: 'marker',
+      name: anchor.name,
+      tsUs: 500000,
+      pid: 1,
+      tid: 2,
+      markerType: 'performance-mark',
+      recordedStartTimeMs: 100,
+    },
+  ]);
+  const trace = { ...traceInput, ...observed };
+  const summary = summarizeGeometryGcOverlap({
+    trace,
+    anchor: value,
+    startMs: 200,
+    endMs: 220,
+  });
+  assert.equal(summary.complete, true);
+  for (const change of [
+    { recordedStartTimeMs: 101 },
+    { markerType: 'console' },
+  ]) {
+    const invalid = { ...trace, events: [{ ...trace.events[0], ...change }] };
+    assert.equal(
+      summarizeGeometryGcOverlap({
+        trace: invalid,
+        anchor: value,
+        startMs: 200,
+        endMs: 220,
+      }).complete,
+      false,
+    );
+  }
+  for (const entry of [
+    null,
+    { name: anchor.name, entryType: 'mark', startTime: 99 },
+  ]) {
+    let cleared = false;
+    assert.throws(
+      () =>
+        captureImportPerformanceMarkAnchor(anchor.name, {
+          now: () => 100,
+          mark: () => entry,
+          clearMarks: () => {
+            cleared = true;
+          },
+        }),
+      /explicit start time/,
+    );
+    assert.equal(cleared, true);
+  }
+  const invalid = createImportTraceEventCollector();
+  invalid.add([
+    {
+      cat: 'blink.user_timing',
+      name: anchor.name,
+      ph: 'I',
+      ts: 500000,
+      pid: 1,
+      tid: 2,
+      args: {},
+    },
+  ]);
+  assert.equal(invalid.finish().omittedCount, 1);
+});
 const loadStartedAtMs = 200;
 const loadCompletedAtMs = 220;
 const rawCpu = {

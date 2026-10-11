@@ -2,7 +2,7 @@
 export const IMPORT_TRACE_ATTRIBUTION_SCHEMA =
   'gev-import-trace-attribution/v2';
 export const IMPORT_TRACE_CATEGORIES =
-  'devtools.timeline,disabled-by-default-v8.gc';
+  'devtools.timeline,disabled-by-default-v8.gc,blink.user_timing';
 // Chromium DevTools represents flow arrows with phases s/t/f. They have an id
 // but no duration; retain them separately from GC slices.
 // Source: https://chromium.googlesource.com/devtools/devtools-frontend/+/b88894b14f63f84c460f66cff8918b2b4d079eae/front_end/models/trace/types/TraceEvents.ts
@@ -48,6 +48,47 @@ const STAGE_NAMES = new Set([
 ]);
 
 /**
+ * Chromium stamps an explicit-start PerformanceMark at timeOrigin + startTime,
+ * independently of time spent delivering the marker. The trace also carries
+ * startTime; attribution verifies that second witness before using the offset.
+ * https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/timing/performance_mark.cc
+ * https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/timing/performance_user_timing.cc
+ */
+export function captureImportPerformanceMarkAnchor(name, clock = performance) {
+  if (
+    typeof name !== 'string' ||
+    name.length > 240 ||
+    !name.startsWith(MARKER_PREFIX)
+  )
+    throw new TypeError('A bounded import trace marker name is required.');
+  const pageNowMs = clock.now();
+  if (!Number.isFinite(pageNowMs) || pageNowMs < 0)
+    throw new TypeError('Invalid trace mark start time.');
+  try {
+    const entry = clock.mark(name, { startTime: pageNowMs });
+    if (
+      entry?.name !== name ||
+      entry.entryType !== 'mark' ||
+      entry.startTime !== pageNowMs
+    )
+      throw new Error('Trace mark did not retain its explicit start time.');
+    const after = clock.now();
+    if (!Number.isFinite(after) || after < pageNowMs)
+      throw new Error('Invalid trace mark completion time.');
+    return {
+      name,
+      pageNowMs,
+      method: 'performance-mark-explicit-start',
+      uncertaintyMs: 0.001,
+      precisionBasis: 'trace-microsecond-serialization',
+      callElapsedMs: after - pageNowMs,
+    };
+  } finally {
+    clock.clearMarks(name);
+  }
+}
+
+/**
  * Validate the protocol's trace-delivery witness separately from the optional
  * periodic buffer sample. A short trace may finish before the first buffer
  * report; null remains unavailable rather than being treated as zero.
@@ -77,6 +118,16 @@ export function importTraceDeliveryIsComplete(trace) {
 }
 
 function markerName(event) {
+  if (
+    typeof event?.cat === 'string' &&
+    event.cat.split(',').includes('blink.user_timing')
+  ) {
+    const name =
+      event.name === 'performance.mark' ? event.args?.markName : event.name;
+    return typeof name === 'string' && name.startsWith(MARKER_PREFIX)
+      ? name
+      : null;
+  }
   if (event?.name !== 'TimeStamp') return null;
   const message = event.args?.data?.message;
   return typeof message === 'string' && message.startsWith(MARKER_PREFIX)
@@ -406,7 +457,19 @@ export function createImportTraceEventCollector(
         if (!marker && !gc) continue;
         const validBase = finite(event.ts) && event.ts >= 0 && hasThread(event);
         if (marker) {
-          if (!validBase) omit('invalid-marker-clock-or-thread');
+          const userTiming = event.cat
+            ?.split(',')
+            .includes('blink.user_timing');
+          const startTime = event.args?.data?.startTime;
+          if (!validBase || marker.length > 240)
+            omit('invalid-marker-clock-or-thread');
+          else if (
+            userTiming &&
+            (!['I', 'i', 'R'].includes(event.ph) ||
+              !finite(startTime) ||
+              startTime < 0)
+          )
+            omit('invalid-user-timing-mark');
           else
             retain({
               kind: 'marker',
@@ -414,6 +477,12 @@ export function createImportTraceEventCollector(
               tsUs: event.ts,
               pid: event.pid,
               tid: event.tid,
+              ...(userTiming
+                ? {
+                    markerType: 'performance-mark',
+                    recordedStartTimeMs: startTime,
+                  }
+                : {}),
             });
           continue;
         }

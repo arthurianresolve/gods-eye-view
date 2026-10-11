@@ -5,7 +5,10 @@ import { createImportedGeometryLayer } from '../../src/imports/runtimeLayer.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { getContextStore } from '../../src/data/contextStore.js';
 import { createMessageChannelWakeScheduler } from '../performance/geometryWakeScheduler.mjs';
-import { captureImportTraceAnchor } from '../performance/importTraceAttribution.mjs';
+import {
+  captureImportTraceAnchor,
+  captureImportPerformanceMarkAnchor,
+} from '../performance/importTraceAttribution.mjs';
 
 const resultElement = document.querySelector('#result');
 const params = new URLSearchParams(location.search);
@@ -397,9 +400,11 @@ function prepareSample(type, diagnostic = false) {
     initialActiveSpanMs: () => initialActiveSpanMs,
     calibrateTraceClock() {
       check(!this.anchor, 'Trace clock was already calibrated.');
-      this.anchor = captureImportTraceAnchor(
-        `gev-import-step:geometry-profile:${type}`,
-      );
+      this.anchor = (
+        diagnostic
+          ? captureImportPerformanceMarkAnchor
+          : captureImportTraceAnchor
+      )(`gev-import-step:geometry-profile:${type}`);
       return this.anchor;
     },
     startLoad() {

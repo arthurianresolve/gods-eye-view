@@ -136,6 +136,19 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
     (event) => event.kind === 'marker' && event.name === anchor.name,
   );
   const marker = markers.length === 1 ? markers[0] : null;
+  if (
+    anchor.method === 'performance-mark-explicit-start' &&
+    (marker?.markerType !== 'performance-mark' ||
+      marker.recordedStartTimeMs !== anchor.pageNowMs ||
+      anchor.uncertaintyMs !== 0.001 ||
+      anchor.precisionBasis !== 'trace-microsecond-serialization')
+  )
+    return {
+      schema: 'gev-import-geometry-gc-overlap/v1',
+      complete: false,
+      error: 'explicit-start-mark-mismatch',
+      performanceAcceptanceEligible: false,
+    };
   const gc = trace.events.filter((event) => event.kind === 'gc');
   const flowEvents = trace.flowEvents;
   const flowPhaseCounts = trace.flowPhaseCounts;
