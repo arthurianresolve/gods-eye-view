@@ -160,6 +160,27 @@ test('AB and BA compare backend variants without requiring the early-query repor
   }
 });
 
+test('same-platform renderer comparisons support all recovery operating systems', () => {
+  for (const platform of ['win32', 'darwin', 'linux']) {
+    for (const order of ['AB', 'BA']) {
+      const input = packet({ order });
+      for (const { report } of input.reports) report.platform = platform;
+      const result = evaluatePairedRendererExperiment(input);
+      assert.equal(result.status, 'comparable');
+      assert.equal(result.platform, platform);
+      input.reports.find(({ variant }) => variant === 'webgl-late').report.platform = 'unsupported';
+      const invalid = evaluatePairedRendererExperiment(input);
+      assert.equal(invalid.comparisons['webgl-late'].status, 'incomparable');
+      assert.equal(invalid.adoptionEligibleByVariant['webgl-late'], false);
+    }
+  }
+  const mixed = packet({ order: 'AB' });
+  mixed.reports[1].report.platform = 'darwin';
+  assert.equal(evaluatePairedRendererExperiment(mixed).comparisons['webgl-late'].status, 'incomparable');
+  mixed.reports[0].report.platform = 'unsupported';
+  assert.throws(() => evaluatePairedRendererExperiment(mixed), /unsupported platform/);
+});
+
 test('a failed early candidate does not invalidate a completed backend comparison', () => {
   const input = packet({ order: 'ABC' });
   input.reports[2].report.status = 'failed';

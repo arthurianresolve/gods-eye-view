@@ -1,4 +1,4 @@
-name: Windows profile recovery renderer experiment
+name: Profile recovery renderer experiment
 
 on:
   push:
@@ -10,9 +10,14 @@ on:
         type: choice
         options: [backend-only, with-early-query]
         default: backend-only
+      runner:
+        description: Free standard hosted OS for both ordered recovery sequences
+        type: choice
+        options: [windows-latest, macos-latest, ubuntu-latest]
+        default: windows-latest
 
 concurrency:
-  group: windows-profile-recovery-renderer-experiment-${{ github.ref }}-${{ github.sha }}
+  group: profile-recovery-renderer-experiment-${{ github.ref }}-${{ github.sha }}-${{ inputs.runner || 'windows-latest' }}
   cancel-in-progress: false
 
 permissions:
@@ -21,7 +26,7 @@ permissions:
 jobs:
   ordered-renderer-sequence:
     name: Same-host renderer sequence ${{ matrix.order }}
-    runs-on: windows-latest
+    runs-on: ${{ inputs.runner || 'windows-latest' }}
     timeout-minutes: 60
     strategy:
       fail-fast: false

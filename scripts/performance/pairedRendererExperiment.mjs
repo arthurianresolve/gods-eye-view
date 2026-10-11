@@ -37,7 +37,10 @@ function assertReport(report, variant, expectedCommit, reference) {
     fail(`${variant} prior build differs`);
   if (report.sourceDirtyAtStart !== false || report.sourceChangedDuringRun !== false)
     fail(`${variant} source checkout was dirty or changed`);
-  if (report.platform !== 'win32') fail(`${variant} is not a Windows run`);
+  if (!['win32', 'darwin', 'linux'].includes(report.platform))
+    fail(`${variant} has an unsupported platform`);
+  if (report.platform !== reference.platform)
+    fail(`${variant} platform changed within the sequence`);
   if (
     typeof report.hostEnvironment?.cpuModel !== 'string' ||
     !report.hostEnvironment.cpuModel.trim() ||
@@ -278,6 +281,7 @@ export function evaluatePairedRendererExperiment({
     order,
     expectedCommit,
     priorCommit: reference.priorCommit,
+    platform: reference.platform,
     hostEnvironment: reference.hostEnvironment,
     persistedWorkspaceAssetSha256: digest,
     stageIds: STAGES,
