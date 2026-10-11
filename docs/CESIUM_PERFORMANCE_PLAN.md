@@ -11,7 +11,10 @@ S60 ingestion now accepts complete hosted soak envelopes at `f07ad0cf`, preservi
 the outer outcome, cleanup and exact artifact digest. Missing provenance stays
 pending; contradictory revisions and failed/forced cleanup fail validation.
 Eighty-four focused checks, 1,538 scoped formatting checks and package boundaries
-pass locally. These are reader checks, not new hardware or retention acceptance.
+pass locally. All seven standard jobs also pass at `c2572ba8` in
+[run 38163192400](performance-evidence/import-point-current-dev/validation-38163192400-ci.json),
+including full Node 24/26 suites, builds, three-OS recovery and browser journeys.
+These checks do not establish new hardware or retention acceptance.
 
 The 60-minute hosted run at `26f383ed` passes operation and retention checks:
 252 cycles, 13 post-GC checkpoints, stable application ownership and 1.568%

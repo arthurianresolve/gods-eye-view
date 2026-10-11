@@ -116,3 +116,15 @@ This packet does not automate visual review, interaction latency acceptance,
 human accessibility/usability reviews, release attestations or deployment. Those
 requirements remain in the implementation ledgers and are not satisfied by the
 new comparison or retention gates.
+
+## Hosted envelope validation checkpoint
+
+The envelope reader is implemented at `f07ad0cf`. Its 84 focused candidate,
+retention and provenance checks pass locally, including failed outer runs,
+incomplete or forced cleanup, mismatched revisions, missing metadata, malformed
+soaks and full-envelope digest tampering. The historical `38155558706` artifact
+still reports pending provenance when read directly; its raw bytes are unchanged.
+[Full integration at `c2572ba8`](performance-evidence/import-point-current-dev/validation-38163192400-ci.json)
+passes all seven standard jobs: Node 24/26, Windows onboarding, three-OS recovery
+and browser journeys. This validates ingestion and integration, not completion
+of the performance plan or physical hardware acceptance.
