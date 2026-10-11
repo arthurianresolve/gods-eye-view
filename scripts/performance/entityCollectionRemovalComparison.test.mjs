@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import { removeOwnedEntityCollection } from '../../src/imports/entityCollectionOwnership.js';
-import { removeByIdsIndividually } from './entityCollectionRemovalComparison.mjs';
+import {
+  assertInputFingerprintsUnchanged,
+  removeByIdsIndividually,
+} from './entityCollectionRemovalComparison.mjs';
 
 function populatedCollection({ external = false } = {}) {
   const collection = new Cesium.EntityCollection();
@@ -74,5 +77,21 @@ test('shared production helper preserves a replacement with an owned ID', () => 
   assert.deepEqual(
     events.flatMap((event) => event.removed),
     ['import:1', 'import:2', 'import:3'],
+  );
+});
+
+test('comparison input guard rejects changed hashes and path sets', () => {
+  const before = { runtime: 'abc', helper: 'def' };
+  assert.doesNotThrow(() =>
+    assertInputFingerprintsUnchanged(before, { helper: 'def', runtime: 'abc' }),
+  );
+  assert.throws(
+    () =>
+      assertInputFingerprintsUnchanged(before, { ...before, helper: 'xyz' }),
+    /input changed while the run was active: helper/,
+  );
+  assert.throws(
+    () => assertInputFingerprintsUnchanged(before, { runtime: 'abc' }),
+    /input path set changed/,
   );
 });

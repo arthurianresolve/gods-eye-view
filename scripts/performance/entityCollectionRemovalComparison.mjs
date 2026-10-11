@@ -14,6 +14,19 @@ export const REMOVAL_PAIRS = 5;
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const median = (values) => [...values].sort((a, b) => a - b)[2];
 
+export function assertInputFingerprintsUnchanged(before, after) {
+  const paths = Object.keys(before).sort();
+  assertExact(
+    JSON.stringify(paths) === JSON.stringify(Object.keys(after).sort()),
+    'comparison input path set changed while the run was active',
+  );
+  for (const path of paths)
+    assertExact(
+      before[path] === after[path],
+      `comparison input changed while the run was active: ${path}`,
+    );
+}
+
 export function removeByIdsIndividually(collection, ids) {
   for (const id of ids.keys()) {
     const entity = collection.getById(id);
@@ -197,28 +210,44 @@ if (invoked) {
   const helperPath = 'src/imports/entityCollectionOwnership.js';
   const harnessPath =
     'scripts/performance/entityCollectionRemovalComparison.mjs';
-  try {
-    execFileSync('git', [
-      'diff',
-      '--quiet',
-      'HEAD',
-      '--',
-      runtimePath,
-      helperPath,
-    ]);
-  } catch {
-    throw new Error(
-      'Refusing comparison: production runtime/helper differ from committed HEAD.',
+  const lockfilePath = 'package-lock.json';
+  const inputPaths = [runtimePath, helperPath, harnessPath, lockfilePath];
+  function currentHead() {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      encoding: 'utf8',
+    }).trim();
+  }
+  function sourceFingerprints() {
+    return Object.fromEntries(
+      inputPaths.map((path) => [path, sha256(readFileSync(path))]),
     );
   }
+  function assertCommittedSources(expectedHead) {
+    if (currentHead() !== expectedHead)
+      throw new Error(
+        'Refusing comparison: HEAD changed while the run was active.',
+      );
+    try {
+      execFileSync('git', ['diff', '--quiet', 'HEAD', '--', ...inputPaths]);
+    } catch {
+      throw new Error(
+        'Refusing comparison: runtime/helper/harness/lockfile differ from committed HEAD.',
+      );
+    }
+  }
+  const baseCommit = currentHead();
+  assertCommittedSources(baseCommit);
+  const beforeInputHashes = sourceFingerprints();
   const report = runEntityCollectionRemovalComparison({
-    baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], {
-      encoding: 'utf8',
-    }).trim(),
-    sourceSha256: sha256(readFileSync(runtimePath)),
-    harnessSha256: sha256(readFileSync(harnessPath)),
+    baseCommit,
+    sourceSha256: beforeInputHashes[runtimePath],
+    harnessSha256: beforeInputHashes[harnessPath],
   });
-  report.productionHelperSha256 = sha256(readFileSync(helperPath));
+  assertInputFingerprintsUnchanged(beforeInputHashes, sourceFingerprints());
+  assertCommittedSources(baseCommit);
+  report.productionHelperSha256 = beforeInputHashes[helperPath];
+  report.packageLockSha256 = beforeInputHashes[lockfilePath];
+  report.inputSha256 = beforeInputHashes;
   report.nodeVersion = process.version;
   report.conditions = Object.fromEntries(
     Object.entries(report.conditions).map(([mode, condition]) => [
