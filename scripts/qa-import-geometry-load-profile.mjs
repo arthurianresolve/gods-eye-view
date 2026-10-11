@@ -268,9 +268,13 @@ async function runProfile() {
       pageReport.profileStoppedAtMs - pageReport.profileStartedAtMs;
     const traceInput = {
       events: trace.events,
+      flowEvents: trace.flowEvents,
       relevantCount: trace.relevantCount,
       omittedCount: trace.omittedCount,
       flowEventCount: trace.flowEventCount,
+      flowOmittedCount: trace.flowOmittedCount,
+      invalidFlowIdentityCount: trace.invalidFlowIdentityCount,
+      invalidFlowRecordCount: trace.invalidFlowRecordCount,
       flowPhaseCounts: trace.flowPhaseCounts,
       omissionReasons: trace.omissionReasons,
       bufferUsagePeak: trace.bufferUsagePeak,

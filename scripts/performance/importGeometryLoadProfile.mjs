@@ -133,12 +133,89 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
   );
   const marker = markers.length === 1 ? markers[0] : null;
   const gc = trace.events.filter((event) => event.kind === 'gc');
+  const flowEvents = trace.flowEvents;
+  const flowPhaseCounts = trace.flowPhaseCounts;
+  const validFlowPhases = new Set(['s', 't', 'f']);
+  const flowRecordsValid =
+    Array.isArray(flowEvents) &&
+    flowEvents.length <= 8192 &&
+    flowEvents.every(
+      (event) =>
+        event?.kind === 'gc-flow' &&
+        validFlowPhases.has(event.phase) &&
+        typeof event.name === 'string' &&
+        event.nameStatus === 'valid' &&
+        event.name.length <= 128 &&
+        /^V8\.(?:GC|MinorGC)/.test(event.name) &&
+        typeof event.category === 'string' &&
+        event.category.length <= 128 &&
+        Number.isFinite(event.tsUs) &&
+        event.tsUs >= 0 &&
+        Number.isInteger(event.pid) &&
+        event.pid >= 0 &&
+        Number.isInteger(event.tid) &&
+        event.tid >= 0 &&
+        ['present', 'missing', 'invalid'].includes(event.identityStatus) &&
+        event.identity &&
+        typeof event.identity === 'object' &&
+        !Array.isArray(event.identity) &&
+        (event.identityStatus !== 'present' ||
+          ['id', 'bindId'].some((key) => Object.hasOwn(event.identity, key)) ||
+          (event.identity.id2 &&
+            ['local', 'global'].some((key) =>
+              Object.hasOwn(event.identity.id2, key),
+            ))),
+    );
+  const phaseCountsValid =
+    flowPhaseCounts &&
+    ['s', 't', 'f'].every(
+      (phase) =>
+        Number.isInteger(flowPhaseCounts[phase]) && flowPhaseCounts[phase] >= 0,
+    );
+  const flowEventCount = trace.flowEventCount;
+  const flowOmittedCount = trace.flowOmittedCount;
+  const invalidFlowIdentityCount = trace.invalidFlowIdentityCount;
+  const invalidFlowRecordCount = trace.invalidFlowRecordCount;
+  const flowAccountingComplete =
+    flowRecordsValid &&
+    phaseCountsValid &&
+    Number.isInteger(flowEventCount) &&
+    Number.isInteger(flowOmittedCount) &&
+    flowOmittedCount >= 0 &&
+    flowEventCount === flowEvents.length + flowOmittedCount &&
+    flowPhaseCounts.s + flowPhaseCounts.t + flowPhaseCounts.f ===
+      flowEventCount &&
+    Number.isInteger(invalidFlowIdentityCount) &&
+    invalidFlowIdentityCount >= 0 &&
+    invalidFlowIdentityCount ===
+      flowEvents.filter((event) => event.identityStatus !== 'present').length &&
+    invalidFlowIdentityCount === 0 &&
+    Number.isInteger(invalidFlowRecordCount) &&
+    invalidFlowRecordCount ===
+      flowEvents.filter((event) => event.nameStatus !== 'valid').length &&
+    invalidFlowRecordCount === 0 &&
+    flowOmittedCount === 0;
+  const phaseCountsMatchRecords =
+    flowAccountingComplete &&
+    ['s', 't', 'f'].every(
+      (phase) =>
+        flowPhaseCounts[phase] ===
+        flowEvents.filter((event) => event.phase === phase).length,
+    );
+  const unmatchedFlow = summarizeUnmatchedFlow(
+    flowRecordsValid ? flowEvents : [],
+  );
   const traceAccountingComplete =
     Number.isInteger(trace.relevantCount) &&
     Number.isInteger(trace.omittedCount) &&
-    trace.relevantCount === trace.events.length + trace.omittedCount &&
+    trace.relevantCount ===
+      trace.events.length +
+        (Array.isArray(flowEvents) ? flowEvents.length : 0) +
+        trace.omittedCount +
+        (Number.isInteger(flowOmittedCount) ? flowOmittedCount : 0) &&
     trace.omittedCount === 0 &&
-    trace.flowEventCount === 0 &&
+    flowAccountingComplete &&
+    phaseCountsMatchRecords &&
     trace.stopError === null &&
     Number.isFinite(trace.bufferUsagePeak) &&
     trace.bufferUsagePeak < 0.95;
@@ -229,10 +306,52 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
       (event) => event.kind === 'gc-instant',
     ).length,
     traceOmittedCount: trace.omittedCount,
+    flowEventCount,
+    retainedFlowEvents: Array.isArray(flowEvents) ? flowEvents.length : null,
+    flowOmittedCount,
+    invalidFlowIdentityCount,
+    invalidFlowRecordCount,
+    flowPhaseCounts: phaseCountsValid ? flowPhaseCounts : null,
+    flowEvents: flowRecordsValid ? flowEvents : null,
+    unmatchedFlow,
     bufferUsagePeak: trace.bufferUsagePeak,
     caveat:
       'Time overlap is correlational and does not establish that GC caused a slow load step. A profile window can include idle/control time. Instant GC markers are not pauses; unsupported or omitted trace events make this result incomplete.',
     performanceAcceptanceEligible: false,
+  };
+}
+
+function summarizeUnmatchedFlow(flowEvents) {
+  const groups = new Map();
+  for (const event of flowEvents) {
+    if (event.identityStatus !== 'present') continue;
+    const identityKey = `${event.category}\u0000${event.name}\u0000${JSON.stringify(event.identity)}`;
+    const records = groups.get(identityKey) || [];
+    records.push(event);
+    groups.set(identityKey, records);
+  }
+  let unmatchedStarts = 0;
+  let unmatchedSteps = 0;
+  let unmatchedEnds = 0;
+  for (const records of groups.values()) {
+    records.sort((left, right) => left.tsUs - right.tsUs);
+    let open = 0;
+    for (const event of records) {
+      if (event.phase === 's') open += 1;
+      else if (event.phase === 't') {
+        if (open === 0) unmatchedSteps += 1;
+      } else if (event.phase === 'f') {
+        if (open === 0) unmatchedEnds += 1;
+        else open -= 1;
+      }
+    }
+    unmatchedStarts += open;
+  }
+  return {
+    interpretation: 'observed-records-only; flow completion is not inferred',
+    unmatchedStarts,
+    unmatchedSteps,
+    unmatchedEnds,
   };
 }
 
@@ -445,9 +564,23 @@ export function validateImportGeometryLoadProfileReport(report, expected = {}) {
         'otherThreadGcOverlapMs',
         'instantGcObservations',
         'traceOmittedCount',
+        'flowEventCount',
+        'retainedFlowEvents',
+        'flowOmittedCount',
+        'invalidFlowIdentityCount',
+        'invalidFlowRecordCount',
+        'flowPhaseCounts',
+        'flowEvents',
+        'unmatchedFlow',
         'bufferUsagePeak',
       ]) {
-        if (recomputedTrace[key] !== profile.trace[key])
+        const expectedValue = profile.trace[key];
+        const actualValue = recomputedTrace[key];
+        const same =
+          actualValue && typeof actualValue === 'object'
+            ? JSON.stringify(actualValue) === JSON.stringify(expectedValue)
+            : actualValue === expectedValue;
+        if (!same)
           errors.push('GC overlap summary does not match retained trace input');
       }
     } catch {

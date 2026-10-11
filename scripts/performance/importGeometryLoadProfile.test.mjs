@@ -8,6 +8,10 @@ import {
   validateImportGeometryLoadProfileReport,
 } from './importGeometryLoadProfile.mjs';
 import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
+import {
+  createImportTraceEventCollector,
+  summarizeImportTraceAttribution,
+} from './importTraceAttribution.mjs';
 
 const commit = 'a'.repeat(40);
 const hash = 'b'.repeat(64);
@@ -44,10 +48,14 @@ const traceInput = {
   events: [
     { kind: 'marker', name: anchor.name, tsUs: 500_000, pid: 1, tid: 2 },
   ],
+  flowEvents: [],
   relevantCount: 1,
   omittedCount: 0,
   flowEventCount: 0,
-  flowPhaseCounts: {},
+  flowOmittedCount: 0,
+  invalidFlowIdentityCount: 0,
+  invalidFlowRecordCount: 0,
+  flowPhaseCounts: { s: 0, t: 0, f: 0 },
   omissionReasons: {},
   bufferUsagePeak: 0.1,
   stopError: null,
@@ -394,9 +402,14 @@ test('geometry GC overlap uses interval unions and separates other threads', () 
         },
         { kind: 'gc-instant', name: 'V8.GC', tsUs: 512_000, pid: 1, tid: 2 },
       ],
+      flowEvents: [],
       relevantCount: 5,
       omittedCount: 0,
+      flowOmittedCount: 0,
+      invalidFlowIdentityCount: 0,
+      invalidFlowRecordCount: 0,
       flowEventCount: 0,
+      flowPhaseCounts: { s: 0, t: 0, f: 0 },
       stopError: null,
       bufferUsagePeak: 0.2,
     },
@@ -426,9 +439,14 @@ test('geometry GC overlap fails closed on omitted trace events or weak anchors',
           tid: 2,
         },
       ],
+      flowEvents: [],
       relevantCount: 2,
       omittedCount: 1,
+      flowOmittedCount: 0,
+      invalidFlowIdentityCount: 0,
+      invalidFlowRecordCount: 0,
       flowEventCount: 0,
+      flowPhaseCounts: { s: 0, t: 0, f: 0 },
       stopError: null,
       bufferUsagePeak: 0.2,
     },
@@ -441,6 +459,319 @@ test('geometry GC overlap fails closed on omitted trace events or weak anchors',
         anchor: { ...base.anchor, uncertaintyMs: 2.1 },
       }),
     /Invalid geometry trace attribution input/,
+  );
+});
+
+test('GC flow links are retained as bounded identity observations, not durations', () => {
+  const collector = createImportTraceEventCollector(1, 2);
+  collector.add([
+    {
+      name: 'V8.GC_SCAVENGER',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 's',
+      ts: 10,
+      pid: 1,
+      tid: 2,
+      id: 42,
+    },
+    {
+      name: 'V8.GC_SCAVENGER',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 't',
+      ts: 11,
+      pid: 1,
+      tid: 2,
+      id: 42,
+    },
+    {
+      name: 'V8.GC_SCAVENGER',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 'f',
+      ts: 12,
+      pid: 1,
+      tid: 2,
+      id: 42,
+    },
+  ]);
+  const result = collector.finish();
+  assert.equal(result.events.length, 0);
+  assert.equal(result.flowEvents.length, 2);
+  assert.equal(result.flowEvents[0].identity.id, 42);
+  assert.equal(result.flowEvents[0].phase, 's');
+  assert.equal(result.flowOmittedCount, 1);
+  assert.equal(result.flowEventCount, 3);
+  assert.deepEqual(result.flowPhaseCounts, { s: 1, t: 1, f: 1 });
+  assert.equal(result.relevantCount, 3);
+  const overflowSummary = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      ...result,
+      relevantCount: traceInput.events.length + result.relevantCount,
+      stopError: null,
+      bufferUsagePeak: 0.1,
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(overflowSummary.complete, false);
+});
+
+test('flow links report unpaired phases without making causal completion a gate', () => {
+  const flowEvents = [
+    {
+      kind: 'gc-flow',
+      phase: 's',
+      name: 'V8.GC',
+      nameStatus: 'valid',
+      category: 'disabled-by-default-v8.gc',
+      tsUs: 100_000,
+      pid: 1,
+      tid: 2,
+      identity: { id: 9 },
+      identityStatus: 'present',
+    },
+    {
+      kind: 'gc-flow',
+      phase: 'f',
+      name: 'V8.GC',
+      nameStatus: 'valid',
+      category: 'disabled-by-default-v8.gc',
+      tsUs: 110_000,
+      pid: 1,
+      tid: 2,
+      identity: { id: 10 },
+      identityStatus: 'present',
+    },
+  ];
+  const trace = {
+    ...traceInput,
+    flowEvents,
+    flowEventCount: 2,
+    flowPhaseCounts: { s: 1, t: 0, f: 1 },
+    relevantCount: traceInput.events.length + flowEvents.length,
+  };
+  const summary = summarizeGeometryGcOverlap({
+    trace,
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(summary.complete, true);
+  assert.equal(summary.sameThreadGcOverlapMs, 0);
+  assert.deepEqual(summary.unmatchedFlow, {
+    interpretation: 'observed-records-only; flow completion is not inferred',
+    unmatchedStarts: 1,
+    unmatchedSteps: 0,
+    unmatchedEnds: 1,
+  });
+});
+
+test('trace attribution summary retains flow identities and reports window boundaries', () => {
+  const markerName = 'gev-import-step:geometry-profile:LineString';
+  const collector = createImportTraceEventCollector();
+  collector.add([
+    {
+      name: 'TimeStamp',
+      cat: 'devtools.timeline',
+      ph: 'I',
+      ts: 500_000,
+      pid: 1,
+      tid: 2,
+      args: { data: { message: markerName } },
+    },
+    {
+      name: 'V8.GC',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 's',
+      ts: 500_100,
+      pid: 1,
+      tid: 2,
+      id: 'flow-x',
+    },
+  ]);
+  const trace = {
+    ...collector.finish(),
+    stopError: null,
+    bufferUsagePeak: 0.1,
+  };
+  const summary = summarizeImportTraceAttribution({
+    trace,
+    anchors: [{ name: markerName, pageNowMs: 100, uncertaintyMs: 0.1 }],
+    loadingWindows: [
+      {
+        pair: 1,
+        mode: 'cooperative',
+        markerName,
+        startMs: 100,
+        endMs: 101,
+        overBudgetSteps: 0,
+        slowSteps: [],
+        omittedSlowSteps: 0,
+      },
+    ],
+  });
+  assert.equal(summary.complete, true);
+  assert.equal(summary.flowEventCount, 1);
+  assert.equal(summary.flowEvents[0].identity.id, 'flow-x');
+  assert.equal(summary.unmatchedFlow.unmatchedStarts, 1);
+});
+
+test('missing, malformed, or overflowed flow observations fail closed', () => {
+  const collector = createImportTraceEventCollector();
+  collector.add([
+    {
+      name: 'V8.GC',
+      cat: 'disabled-by-default-v8.gc',
+      ph: 's',
+      ts: 1,
+      pid: 1,
+      tid: 2,
+    },
+  ]);
+  const missingIdentity = collector.finish();
+  assert.equal(missingIdentity.flowEvents[0].identityStatus, 'missing');
+  assert.equal(missingIdentity.invalidFlowIdentityCount, 1);
+  const withMissingIdentity = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      ...missingIdentity,
+      relevantCount: traceInput.events.length + missingIdentity.relevantCount,
+      stopError: null,
+      bufferUsagePeak: 0.1,
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(withMissingIdentity.complete, false);
+
+  const oversizedNameCollector = createImportTraceEventCollector();
+  oversizedNameCollector.add([
+    {
+      name: `V8.GC${'x'.repeat(140)}`,
+      cat: 'disabled-by-default-v8.gc',
+      ph: 's',
+      ts: 2,
+      pid: 1,
+      tid: 2,
+      id: 8,
+    },
+  ]);
+  const oversizedName = oversizedNameCollector.finish();
+  assert.equal(oversizedName.flowEvents[0].nameStatus, 'invalid');
+  assert.equal(oversizedName.invalidFlowRecordCount, 1);
+  const oversizedSummary = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      ...oversizedName,
+      relevantCount: traceInput.events.length + oversizedName.relevantCount,
+      stopError: null,
+      bufferUsagePeak: 0.1,
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(oversizedSummary.complete, false);
+
+  const malformed = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      flowEvents: [{ ...missingIdentity.flowEvents[0], phase: 'X' }],
+      flowEventCount: 1,
+      flowPhaseCounts: { s: 1, t: 0, f: 0 },
+      relevantCount: traceInput.events.length + 1,
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(malformed.complete, false);
+
+  const wrongPhaseCount = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      flowEvents: [
+        {
+          ...missingIdentity.flowEvents[0],
+          identity: { id: 7 },
+          identityStatus: 'present',
+        },
+      ],
+      flowEventCount: 1,
+      invalidFlowIdentityCount: 0,
+      flowPhaseCounts: { s: 0, t: 1, f: 0 },
+      relevantCount: traceInput.events.length + 1,
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(wrongPhaseCount.complete, false);
+
+  const absent = summarizeGeometryGcOverlap({
+    trace: { ...traceInput, flowEvents: undefined },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(absent.complete, false);
+
+  const oldCounterOnly = summarizeGeometryGcOverlap({
+    trace: {
+      ...traceInput,
+      flowEvents: [],
+      relevantCount: traceInput.events.length + 2,
+      flowEventCount: 2,
+      flowPhaseCounts: { s: 1, t: 0, f: 1 },
+    },
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(oldCounterOnly.complete, false);
+});
+
+test('profile validator recomputes retained flow identity and phase accounting', () => {
+  const report = validReport();
+  const event = {
+    kind: 'gc-flow',
+    phase: 's',
+    name: 'V8.GC',
+    nameStatus: 'valid',
+    category: 'disabled-by-default-v8.gc',
+    tsUs: 500_100,
+    pid: 1,
+    tid: 2,
+    identity: { id: 'flow-a' },
+    identityStatus: 'present',
+  };
+  report.profile.traceInput.flowEvents = [event];
+  report.profile.traceInput.flowEventCount = 1;
+  report.profile.traceInput.flowPhaseCounts = { s: 1, t: 0, f: 0 };
+  report.profile.traceInput.relevantCount += 1;
+  report.profile.traceInputSha256 = hashJson(report.profile.traceInput);
+  report.profile.trace = summarizeGeometryGcOverlap({
+    trace: report.profile.traceInput,
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  assert.equal(
+    validateImportGeometryLoadProfileReport(report, {
+      commit,
+      geometrySha256: geometryHash,
+    }).valid,
+    true,
+  );
+  report.profile.trace.flowPhaseCounts.s = 0;
+  assert.equal(
+    validateImportGeometryLoadProfileReport(report, {
+      commit,
+      geometrySha256: geometryHash,
+    }).valid,
+    false,
   );
 });
 

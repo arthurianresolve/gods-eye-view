@@ -3,9 +3,12 @@ export const IMPORT_TRACE_ATTRIBUTION_SCHEMA =
   'gev-import-trace-attribution/v2';
 export const IMPORT_TRACE_CATEGORIES =
   'devtools.timeline,disabled-by-default-v8.gc';
-// Explicit headroom for full-fixture diagnostics; flow edges use counters and
-// do not consume retained duration/marker slots.
+// Chromium DevTools represents flow arrows with phases s/t/f. They have an id
+// but no duration; retain them separately from GC slices.
+// Source: https://chromium.googlesource.com/devtools/devtools-frontend/+/b88894b14f63f84c460f66cff8918b2b4d079eae/front_end/models/trace/types/TraceEvents.ts
+// Explicit headroom for full-fixture diagnostics.
 export const IMPORT_TRACE_EVENT_LIMIT = 8192;
+export const IMPORT_TRACE_FLOW_EVENT_LIMIT = 8192;
 export const MAX_IMPORT_SLOW_STEPS_PER_WINDOW = 128;
 
 const finite = (value) => typeof value === 'number' && Number.isFinite(value);
@@ -48,6 +51,45 @@ function eventKey(event) {
   return `${event.pid}\u0000${event.tid}\u0000${event.cat}\u0000${event.name}`;
 }
 
+function boundedFlowIdentity(event) {
+  const identity = {};
+  let valid = false;
+  let invalid = false;
+  const addScalar = (target, key, value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      target[key] = value;
+      valid = true;
+    } else if (typeof value === 'string' && value.length <= 128) {
+      target[key] = value;
+      valid = true;
+    } else if (value !== undefined) {
+      target[`${key}Status`] = 'invalid';
+      invalid = true;
+    }
+  };
+  addScalar(identity, 'id', event.id);
+  addScalar(identity, 'bindId', event.bind_id);
+  if (event.id2 && typeof event.id2 === 'object' && !Array.isArray(event.id2)) {
+    const id2 = {};
+    addScalar(id2, 'local', event.id2.local);
+    addScalar(id2, 'global', event.id2.global);
+    if (Object.keys(id2).length) identity.id2 = id2;
+  } else if (event.id2 !== undefined) {
+    identity.id2Status = 'invalid';
+    invalid = true;
+  }
+  if (typeof event.scope === 'string' && event.scope.length <= 128)
+    identity.scope = event.scope;
+  else if (event.scope !== undefined) {
+    identity.scopeStatus = 'invalid';
+    invalid = true;
+  }
+  return {
+    identity,
+    status: invalid ? 'invalid' : valid ? 'present' : 'missing',
+  };
+}
+
 function overlaps(event, startUs, endUs) {
   return event.tsUs < endUs && event.tsUs + event.durationUs > startUs;
 }
@@ -77,6 +119,35 @@ function unionOverlapUs(events, startUs, endUs) {
   return start === null ? total : total + end - start;
 }
 
+function summarizeFlowSequences(flowEvents) {
+  const sequences = new Map();
+  for (const event of flowEvents) {
+    if (event.identityStatus !== 'present') continue;
+    const key = `${event.category}\u0000${event.name}\u0000${JSON.stringify(event.identity)}`;
+    const records = sequences.get(key) || [];
+    records.push(event);
+    sequences.set(key, records);
+  }
+  let unmatchedStarts = 0;
+  let unmatchedSteps = 0;
+  let unmatchedEnds = 0;
+  for (const records of sequences.values()) {
+    records.sort((left, right) => left.tsUs - right.tsUs);
+    let openStarts = 0;
+    for (const event of records) {
+      if (event.phase === 's') openStarts += 1;
+      else if (event.phase === 't') {
+        if (openStarts === 0) unmatchedSteps += 1;
+      } else if (event.phase === 'f') {
+        if (openStarts === 0) unmatchedEnds += 1;
+        else openStarts -= 1;
+      }
+    }
+    unmatchedStarts += openStarts;
+  }
+  return { unmatchedStarts, unmatchedSteps, unmatchedEnds };
+}
+
 /**
  * Retain bounded markers, V8 GC duration events, and non-duration GC markers.
  * B/E pairs are joined across dataCollected chunks. No trace args, URLs, source
@@ -84,8 +155,15 @@ function unionOverlapUs(events, startUs, endUs) {
  */
 export function createImportTraceEventCollector(
   maxEvents = IMPORT_TRACE_EVENT_LIMIT,
+  maxFlowEvents = IMPORT_TRACE_FLOW_EVENT_LIMIT,
 ) {
-  if (!Number.isInteger(maxEvents) || maxEvents < 1)
+  if (
+    !Number.isInteger(maxEvents) ||
+    maxEvents < 1 ||
+    !Number.isInteger(maxFlowEvents) ||
+    maxFlowEvents < 1 ||
+    maxFlowEvents > IMPORT_TRACE_FLOW_EVENT_LIMIT
+  )
     throw new TypeError('Invalid trace event input');
   const retained = [];
   const pendingBegins = new Map();
@@ -93,6 +171,10 @@ export function createImportTraceEventCollector(
   let omittedCount = 0;
   let pendingCount = 0;
   const flowPhaseCounts = { s: 0, t: 0, f: 0 };
+  const flowEvents = [];
+  let flowOmittedCount = 0;
+  let invalidFlowIdentityCount = 0;
+  let invalidFlowRecordCount = 0;
   let finished = false;
   const omissionReasons = {};
   const noteOmission = (reason) => {
@@ -107,6 +189,32 @@ export function createImportTraceEventCollector(
   const omit = (reason) => {
     relevantCount += 1;
     noteOmission(reason);
+  };
+  const retainFlow = (event) => {
+    relevantCount += 1;
+    flowPhaseCounts[event.ph] += 1;
+    if (flowEvents.length >= maxFlowEvents) {
+      flowOmittedCount += 1;
+      omissionReasons.flowEventLimit =
+        (omissionReasons.flowEventLimit || 0) + 1;
+      return;
+    }
+    const { identity, status } = boundedFlowIdentity(event);
+    const nameValid = event.name.length <= 128;
+    if (status !== 'present') invalidFlowIdentityCount += 1;
+    if (!nameValid) invalidFlowRecordCount += 1;
+    flowEvents.push({
+      kind: 'gc-flow',
+      phase: event.ph,
+      name: event.name.slice(0, 128),
+      nameStatus: nameValid ? 'valid' : 'invalid',
+      category: event.cat.slice(0, 128),
+      tsUs: event.ts,
+      pid: event.pid,
+      tid: event.tid,
+      identity,
+      identityStatus: status,
+    });
   };
   return {
     add(events) {
@@ -135,9 +243,8 @@ export function createImportTraceEventCollector(
           continue;
         }
         if (event.ph === 's' || event.ph === 't' || event.ph === 'f') {
-          // These are Chromium causal-flow edges, not duration records.
-          relevantCount += 1;
-          flowPhaseCounts[event.ph] += 1;
+          // Chromium flow edges are retained as observations, never durations.
+          retainFlow(event);
           continue;
         }
         if (event.ph === 'X') {
@@ -221,11 +328,15 @@ export function createImportTraceEventCollector(
       }
       return {
         events: retained,
+        flowEvents,
         relevantCount,
         omittedCount,
         flowEventCount:
           flowPhaseCounts.s + flowPhaseCounts.t + flowPhaseCounts.f,
         flowPhaseCounts: { ...flowPhaseCounts },
+        flowOmittedCount,
+        invalidFlowIdentityCount,
+        invalidFlowRecordCount,
         omissionReasons: { ...omissionReasons },
       };
     },
@@ -289,6 +400,73 @@ export function summarizeImportTraceAttribution({
   const traceMarkerByName = new Map();
   const gcEvents = [];
   const gcInstantObservations = [];
+  const flowEvents = Array.isArray(trace.flowEvents) ? trace.flowEvents : [];
+  if (!Array.isArray(trace.flowEvents)) errors.push('missing-flow-records');
+  let invalidFlowRecords = 0;
+  for (const event of flowEvents) {
+    const validIdentity =
+      event?.identityStatus === 'present' &&
+      event.identity &&
+      (Object.hasOwn(event.identity, 'id') ||
+        Object.hasOwn(event.identity, 'bindId') ||
+        Object.hasOwn(event.identity.id2 || {}, 'local') ||
+        Object.hasOwn(event.identity.id2 || {}, 'global'));
+    if (
+      event?.kind !== 'gc-flow' ||
+      !['s', 't', 'f'].includes(event.phase) ||
+      typeof event.name !== 'string' ||
+      event.nameStatus !== 'valid' ||
+      event.name.length > 128 ||
+      !/^V8\.(?:GC|MinorGC)/.test(event.name) ||
+      typeof event.category !== 'string' ||
+      event.category.length > 128 ||
+      !finite(event.tsUs) ||
+      event.tsUs < 0 ||
+      !Number.isInteger(event.pid) ||
+      event.pid < 0 ||
+      !Number.isInteger(event.tid) ||
+      event.tid < 0 ||
+      !['present', 'missing', 'invalid'].includes(event.identityStatus) ||
+      !event.identity ||
+      typeof event.identity !== 'object' ||
+      Array.isArray(event.identity) ||
+      (event.identityStatus === 'present' && !validIdentity)
+    ) {
+      errors.push('invalid-flow-event');
+      invalidFlowRecords += 1;
+    }
+  }
+  const flowCounts = trace.flowPhaseCounts;
+  const flowOmitted = trace.flowOmittedCount;
+  const invalidIdentityCount = trace.invalidFlowIdentityCount;
+  const invalidRecordCount = trace.invalidFlowRecordCount;
+  const flowAccountingComplete =
+    Array.isArray(trace.flowEvents) &&
+    Number.isInteger(trace.flowEventCount) &&
+    Number.isInteger(flowOmitted) &&
+    flowOmitted >= 0 &&
+    trace.flowEventCount === flowEvents.length + flowOmitted &&
+    flowCounts &&
+    ['s', 't', 'f'].every(
+      (phase) => Number.isInteger(flowCounts[phase]) && flowCounts[phase] >= 0,
+    ) &&
+    flowCounts.s + flowCounts.t + flowCounts.f === trace.flowEventCount &&
+    (flowOmitted > 0 ||
+      ['s', 't', 'f'].every(
+        (phase) =>
+          flowCounts[phase] ===
+          flowEvents.filter((event) => event.phase === phase).length,
+      )) &&
+    Number.isInteger(invalidIdentityCount) &&
+    invalidIdentityCount ===
+      flowEvents.filter((event) => event.identityStatus !== 'present').length &&
+    invalidIdentityCount === 0 &&
+    Number.isInteger(invalidRecordCount) &&
+    invalidRecordCount ===
+      flowEvents.filter((event) => event.nameStatus !== 'valid').length &&
+    invalidRecordCount === 0 &&
+    flowOmitted === 0 &&
+    invalidFlowRecords === 0;
   for (const event of trace.events) {
     if (
       !event ||
@@ -552,11 +730,18 @@ export function summarizeImportTraceAttribution({
           }
         : null,
     traceEventAccounting:
-      'Counts markers, complete GC X/B-E intervals, instant observations, and s/t/f GC flow edges separately. Flow phases are non-duration links; unsupported/incomplete duration records are omitted and fail completeness.',
+      'Counts markers, complete GC X/B-E intervals, instant observations, and retained s/t/f GC flow observations separately. Flow phases are links, not durations. Their bounded records and unmatched phase counts are reported without inferring causal completion. Unsupported or omitted duration/flow observations fail completeness.',
     traceRelevantEvents: trace.relevantCount,
     retainedTraceEvents: trace.events.length,
     flowEventCount: trace.flowEventCount ?? 0,
+    retainedFlowEvents: flowEvents.length,
+    flowEvents,
+    invalidFlowRecords,
+    flowOmittedCount: trace.flowOmittedCount ?? null,
+    invalidFlowIdentityCount: trace.invalidFlowIdentityCount ?? null,
+    invalidFlowRecordCount: trace.invalidFlowRecordCount ?? null,
     flowPhaseCounts: trace.flowPhaseCounts ?? { s: 0, t: 0, f: 0 },
+    unmatchedFlow: summarizeFlowSequences(flowEvents),
     omittedTraceEvents: trace.omittedCount,
     traceOmissionReasons: trace.omissionReasons ?? null,
     observedMarkers: [...traceMarkerByName.keys()].sort(),
@@ -567,8 +752,26 @@ export function summarizeImportTraceAttribution({
       windows.length > 0 &&
       trace.relevantCount ===
         trace.events.length +
-          (trace.flowEventCount ?? 0) +
-          trace.omittedCount &&
+          flowEvents.length +
+          trace.omittedCount +
+          (trace.flowOmittedCount ?? 0) &&
+      trace.flowEventCount ===
+        flowEvents.length + (trace.flowOmittedCount ?? 0) &&
+      trace.flowPhaseCounts &&
+      ['s', 't', 'f'].every(
+        (phase) =>
+          Number.isInteger(trace.flowPhaseCounts[phase]) &&
+          trace.flowPhaseCounts[phase] >= 0,
+      ) &&
+      trace.flowPhaseCounts.s +
+        trace.flowPhaseCounts.t +
+        trace.flowPhaseCounts.f ===
+        trace.flowEventCount &&
+      invalidFlowRecords === 0 &&
+      flowAccountingComplete &&
+      trace.invalidFlowIdentityCount === 0 &&
+      trace.invalidFlowRecordCount === 0 &&
+      trace.flowOmittedCount === 0 &&
       trace.omittedCount === 0 &&
       !trace.stopError &&
       finite(trace.bufferUsagePeak) &&
