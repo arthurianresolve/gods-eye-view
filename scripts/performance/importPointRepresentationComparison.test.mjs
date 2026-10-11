@@ -97,6 +97,14 @@ function makeRun(representation) {
         schema: 'gev-import-mixed-geometry-parity/v1',
         status: 'passed',
         renderer: representation,
+        renderSettings: {
+          priorGlobeShow: false,
+          globeShow: true,
+          terrainProvider: 'EllipsoidTerrainProvider',
+          imageryLayerCount: 0,
+          baseLayer: false,
+        },
+        load: { drawn: 3, omitted: 0 },
         entityIds: [
           'gev-import:mixed-parity:mixed-parity:line',
           'gev-import:mixed-parity:mixed-parity:point',
@@ -125,6 +133,7 @@ function makeRun(representation) {
         nativePicks: ['point', 'line', 'polygon'].map((shape, index) => ({
           shape,
           screen: [100 + index, 200 + index],
+          onCanvas: true,
           expectedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
           pickedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
         })),
@@ -134,6 +143,32 @@ function makeRun(representation) {
           width: 960,
           height: 640,
           pngDataUrl: 'data:image/png;base64,AA==',
+        },
+        readiness: {
+          status: 'passed',
+          timeoutMs: 10_000,
+          elapsedMs: 24,
+          attempts: 2,
+          nativePicks: ['point', 'line', 'polygon'].map((shape, index) => ({
+            shape,
+            screen: [100 + index, 200 + index],
+            onCanvas: true,
+            expectedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+            pickedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+          })),
+          observations: [
+            {
+              atMs: 24,
+              ready: true,
+              nativePicks: ['point', 'line', 'polygon'].map((shape, index) => ({
+                shape,
+                screen: [100 + index, 200 + index],
+                onCanvas: true,
+                expectedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+                pickedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+              })),
+            },
+          ],
         },
       },
       largeGeometry: {
@@ -264,6 +299,49 @@ test('rejects mixed capture pixel drift, wrong native owner, or missing mixed fi
   assert.ok(
     missing.errors.includes(
       'mixed geometry capture, rows, or native picks are incomplete',
+    ),
+  );
+});
+
+test('rejects mixed readiness timeout, offscreen picks, and changed terrain settings', () => {
+  const entity = makeRun('entity');
+  const collection = makeRun('primitive-collection');
+  collection.importBatches.mixedGeometryParity.readiness.status = 'failed';
+  let compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+  assert.ok(
+    compared.errors.includes(
+      'mixed geometry capture, rows, or native picks are incomplete',
+    ),
+  );
+
+  collection.importBatches.mixedGeometryParity.readiness.status = 'passed';
+  collection.importBatches.mixedGeometryParity.readiness.elapsedMs = 10_001;
+  compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+
+  collection.importBatches.mixedGeometryParity.readiness.elapsedMs = 24;
+  collection.importBatches.mixedGeometryParity.nativePicks[1].onCanvas = false;
+  compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+
+  collection.importBatches.mixedGeometryParity.nativePicks[1].onCanvas = true;
+  collection.importBatches.mixedGeometryParity.renderSettings.globeShow = false;
+  compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+  assert.ok(
+    compared.errors.includes(
+      'mixed geometry capture, rows, or native picks are incomplete',
+    ),
+  );
+
+  collection.importBatches.mixedGeometryParity.renderSettings.globeShow = true;
+  collection.importBatches.mixedGeometryParity.renderSettings.priorGlobeShow = true;
+  compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+  assert.ok(
+    compared.errors.includes(
+      'mixed geometry globe or terrain settings differ across renderers',
     ),
   );
 });

@@ -24,6 +24,8 @@ function validPngDataUrl(value) {
 }
 
 function mixedParityKey(value, expectedRenderer) {
+  const readiness = value?.readiness;
+  const settings = value?.renderSettings;
   if (
     value?.schema !== 'gev-import-mixed-geometry-parity/v1' ||
     value?.status !== 'passed' ||
@@ -32,6 +34,25 @@ function mixedParityKey(value, expectedRenderer) {
     !validSha256(value?.nativePicksSha256) ||
     !Array.isArray(value?.rows) ||
     value.rows.length !== 3 ||
+    value?.load?.drawn !== 3 ||
+    value?.load?.omitted !== 0 ||
+    typeof settings?.priorGlobeShow !== 'boolean' ||
+    settings.globeShow !== true ||
+    settings.terrainProvider !== 'EllipsoidTerrainProvider' ||
+    settings.imageryLayerCount !== 0 ||
+    settings.baseLayer !== false ||
+    readiness?.status !== 'passed' ||
+    readiness.timeoutMs !== 10_000 ||
+    !Number.isFinite(readiness.elapsedMs) ||
+    readiness.elapsedMs < 0 ||
+    readiness.elapsedMs > readiness.timeoutMs ||
+    !Number.isInteger(readiness.attempts) ||
+    readiness.attempts < 1 ||
+    !Array.isArray(readiness.observations) ||
+    readiness.observations.length < 1 ||
+    readiness.observations.length > 8 ||
+    !Array.isArray(readiness.nativePicks) ||
+    readiness.nativePicks.length !== 3 ||
     !Array.isArray(value?.nativePicks) ||
     value.nativePicks.length !== 3 ||
     !validSha256(value?.capture?.pixelSha256) ||
@@ -57,9 +78,25 @@ function mixedParityKey(value, expectedRenderer) {
         Array.isArray(row?.screen) &&
         row.screen.length === 2 &&
         row.screen.every(Number.isFinite) &&
+        row.onCanvas === true &&
         row.expectedEntityId ===
           `gev-import:mixed-parity:mixed-parity:${shapes[index]}` &&
         row.pickedEntityId === row.expectedEntityId,
+    )
+  )
+    return null;
+  if (
+    !jsonEqual(readiness.nativePicks, value.nativePicks) ||
+    !readiness.observations.at(-1)?.ready ||
+    !jsonEqual(readiness.observations.at(-1)?.nativePicks, value.nativePicks) ||
+    readiness.observations.some(
+      (observation) =>
+        !Number.isFinite(observation?.atMs) ||
+        observation.atMs < 0 ||
+        observation.atMs > readiness.timeoutMs ||
+        typeof observation?.ready !== 'boolean' ||
+        !Array.isArray(observation?.nativePicks) ||
+        observation.nativePicks.length !== 3,
     )
   )
     return null;
@@ -69,6 +106,7 @@ function mixedParityKey(value, expectedRenderer) {
     rowsSha256: value.rowsSha256,
     nativePicks: value.nativePicks,
     nativePicksSha256: value.nativePicksSha256,
+    renderSettings: settings,
     capture: value.capture,
   };
 }
@@ -348,6 +386,11 @@ export function compareImportPointRepresentationReports(
       jsonEqual(entityMixed.nativePicks, collectionMixed.nativePicks) &&
         entityMixed.nativePicksSha256 === collectionMixed.nativePicksSha256,
       'mixed point/line/polygon native picks differ',
+    );
+    add(
+      errors,
+      jsonEqual(entityMixed.renderSettings, collectionMixed.renderSettings),
+      'mixed geometry globe or terrain settings differ across renderers',
     );
   }
 

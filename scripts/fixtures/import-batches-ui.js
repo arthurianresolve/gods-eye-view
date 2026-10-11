@@ -69,6 +69,7 @@ const imports = [
 ];
 const LARGE_GEOMETRY_COORDINATES = 50_000;
 const IMPORT_VERTEX_LIMIT = 5_000;
+const MIXED_GEOMETRY_READY_TIMEOUT_MS = 10_000;
 function coordinateRing(count, radius) {
   const points = Array.from({ length: count - 1 }, (_, index) => {
     const angle = (index / (count - 1)) * Math.PI * 2;
@@ -341,7 +342,7 @@ async function geometrySnapshot(viewer, workspaceId) {
   }
   return rows;
 }
-async function mixedGeometrySnapshot(viewer, layer) {
+async function mixedGeometrySnapshot(viewer, layer, readiness) {
   const prefix = 'gev-import:mixed-parity:mixed-parity:';
   const entities = [...getContextStore().entities.values()]
     .map((entry) => entry.entity)
@@ -410,34 +411,7 @@ async function mixedGeometrySnapshot(viewer, layer) {
           getContextStore().entities.get(`${prefix}point`)?.entity,
       'Mixed fixture default point Entity ownership changed.',
     );
-  const pickTargets = [
-    { shape: 'point', coordinate: [0, 0] },
-    { shape: 'line', coordinate: [0.055, 0.03] },
-    { shape: 'polygon', coordinate: [-0.055, 0] },
-  ];
-  const nativePicks = pickTargets.map(({ shape, coordinate }) => {
-    const windowPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
-      viewer.scene,
-      Cesium.Cartesian3.fromDegrees(...coordinate),
-    );
-    check(
-      windowPosition &&
-        windowPosition.x >= 0 &&
-        windowPosition.y >= 0 &&
-        windowPosition.x < viewer.scene.canvas.clientWidth &&
-        windowPosition.y < viewer.scene.canvas.clientHeight,
-      `Mixed ${shape} native-pick target is outside the viewport.`,
-    );
-    const picked = viewer.scene.pick(
-      new Cesium.Cartesian2(windowPosition.x, windowPosition.y),
-    );
-    return {
-      shape,
-      screen: [windowPosition.x, windowPosition.y],
-      expectedEntityId: `${prefix}${shape}`,
-      pickedEntityId: typeof picked?.id?.id === 'string' ? picked.id.id : null,
-    };
-  });
+  const nativePicks = readiness.nativePicks;
   check(
     nativePicks.every((row) => row.pickedEntityId === row.expectedEntityId),
     'Mixed geometry native scene.pick did not resolve each intended Entity.',
@@ -448,12 +422,99 @@ async function mixedGeometrySnapshot(viewer, layer) {
     scope:
       'one isolated rendered mixed-geometry parity capture; native scene.pick for point, line, and polygon; correctness only, not a performance sample',
     renderer: requestedPointRepresentation,
+    readiness,
     entityIds: ids,
     rows,
     rowsSha256: await sha256Json(rows),
     nativePicks,
     nativePicksSha256: await sha256Json(nativePicks),
     capture: null,
+  };
+}
+
+function probeMixedGeometryNativePicks(viewer) {
+  const targets = [
+    { shape: 'point', coordinate: [0, 0] },
+    { shape: 'line', coordinate: [0.055, 0.03] },
+    { shape: 'polygon', coordinate: [-0.055, 0] },
+  ];
+  return targets.map(({ shape, coordinate }) => {
+    const windowPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
+      viewer.scene,
+      Cesium.Cartesian3.fromDegrees(...coordinate),
+    );
+    const onCanvas = Boolean(
+      windowPosition &&
+      Number.isFinite(windowPosition.x) &&
+      Number.isFinite(windowPosition.y) &&
+      windowPosition.x >= 0 &&
+      windowPosition.y >= 0 &&
+      windowPosition.x < viewer.scene.canvas.clientWidth &&
+      windowPosition.y < viewer.scene.canvas.clientHeight,
+    );
+    const picked = onCanvas
+      ? viewer.scene.pick(
+          new Cesium.Cartesian2(windowPosition.x, windowPosition.y),
+        )
+      : null;
+    return {
+      shape,
+      screen: windowPosition ? [windowPosition.x, windowPosition.y] : null,
+      onCanvas,
+      expectedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+      pickedEntityId: typeof picked?.id?.id === 'string' ? picked.id.id : null,
+    };
+  });
+}
+
+async function waitForMixedGeometryNativePicks(
+  viewer,
+  deadlineAtMs,
+  startedAtMs,
+) {
+  let attempts = 0;
+  let lastNativePicks = [];
+  let lastFrameError = null;
+  const observations = [];
+  while (performance.now() < deadlineAtMs) {
+    const remainingMs = deadlineAtMs - performance.now();
+    if (remainingMs <= 0) break;
+    try {
+      await settledFrame(viewer, remainingMs);
+    } catch (error) {
+      lastFrameError = String(error?.message || error).slice(0, 240);
+      break;
+    }
+    attempts++;
+    lastNativePicks = probeMixedGeometryNativePicks(viewer);
+    const ready = lastNativePicks.every(
+      (row) => row.onCanvas && row.pickedEntityId === row.expectedEntityId,
+    );
+    const observedAtMs = performance.now();
+    observations.push({
+      atMs: observedAtMs - startedAtMs,
+      ready,
+      nativePicks: lastNativePicks,
+    });
+    if (observations.length > 8) observations.shift();
+    if (ready && observedAtMs <= deadlineAtMs)
+      return {
+        status: 'passed',
+        timeoutMs: MIXED_GEOMETRY_READY_TIMEOUT_MS,
+        elapsedMs: observedAtMs - startedAtMs,
+        attempts,
+        nativePicks: lastNativePicks,
+        observations,
+      };
+  }
+  return {
+    status: 'failed',
+    timeoutMs: MIXED_GEOMETRY_READY_TIMEOUT_MS,
+    elapsedMs: performance.now() - startedAtMs,
+    attempts,
+    nativePicks: lastNativePicks,
+    observations,
+    frameWaitError: lastFrameError,
   };
 }
 function resources(viewer, layer) {
@@ -519,19 +580,24 @@ frameProbe.addEventListener('click', async () => {
   status.textContent = 'Browser scheduling diagnostic complete';
   run.disabled = frameProbe.disabled = false;
 });
-function settledFrame(viewer) {
+function settledFrame(viewer, timeoutMs = 10000) {
   return new Promise((resolve, reject) => {
     const remove = viewer.scene.postRender.addEventListener(() => {
       clearTimeout(timer);
       remove();
       resolve();
     });
-    const timer = setTimeout(() => {
-      remove();
-      reject(
-        new Error('Fixture did not complete a render within ten seconds.'),
-      );
-    }, 10000);
+    const timer = setTimeout(
+      () => {
+        remove();
+        reject(
+          new Error(
+            'Fixture did not complete a render before its bounded deadline.',
+          ),
+        );
+      },
+      Math.max(1, timeoutMs),
+    );
     viewer.scene.requestRender();
   });
 }
@@ -948,6 +1014,7 @@ run.addEventListener('click', async () => {
       selectionIndicator: false,
       infoBox: false,
       baseLayer: false,
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
       creditContainer: document.querySelector('#credits'),
       msaaSamples: 4,
       contextOptions: { webgl: { preserveDrawingBuffer } },
@@ -1492,15 +1559,63 @@ run.addEventListener('click', async () => {
       viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(0, 0, 85000),
       });
+      const readinessStartedAtMs = performance.now();
+      const readinessDeadlineAtMs =
+        readinessStartedAtMs + MIXED_GEOMETRY_READY_TIMEOUT_MS;
+      check(
+        viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider &&
+          viewer.imageryLayers.length === 0,
+        'Mixed geometry readiness requires the local ellipsoid with no imagery layers.',
+      );
+      const priorGlobeShow = viewer.scene.globe.show;
+      viewer.scene.globe.show = true;
+      report.mixedGeometryParity = {
+        schema: 'gev-import-mixed-geometry-parity/v1',
+        status: 'pending',
+        renderer: requestedPointRepresentation,
+        renderSettings: {
+          priorGlobeShow,
+          globeShow: viewer.scene.globe.show,
+          terrainProvider: viewer.terrainProvider?.constructor?.name ?? null,
+          imageryLayerCount: viewer.imageryLayers?.length ?? null,
+          baseLayer: false,
+        },
+        load: null,
+        readiness: {
+          status: 'pending',
+          timeoutMs: MIXED_GEOMETRY_READY_TIMEOUT_MS,
+          elapsedMs: 0,
+          attempts: 0,
+          nativePicks: [],
+          observations: [],
+        },
+        capture: null,
+      };
       const mixedLoad = layer.load(mixedGeometryImports, {
         workspaceId: 'mixed-parity',
       });
+      report.mixedGeometryParity.load = {
+        drawn: mixedLoad.drawn,
+        omitted: mixedLoad.omitted,
+      };
       check(
         mixedLoad.drawn === 3 && mixedLoad.omitted === 0,
         'Mixed geometry fixture did not load all three source shapes.',
       );
-      await settledFrame(viewer);
-      const mixed = await mixedGeometrySnapshot(viewer, layer);
+      const readiness = await waitForMixedGeometryNativePicks(
+        viewer,
+        readinessDeadlineAtMs,
+        readinessStartedAtMs,
+      );
+      report.mixedGeometryParity.readiness = readiness;
+      report.mixedGeometryParity.status = readiness.status;
+      check(
+        readiness.status === 'passed',
+        'Mixed point, line, and polygon native picks did not all become ready before the 10-second setup deadline.',
+      );
+      const mixed = await mixedGeometrySnapshot(viewer, layer, readiness);
+      mixed.renderSettings = report.mixedGeometryParity.renderSettings;
+      mixed.load = report.mixedGeometryParity.load;
       const capture = await pixels(
         viewer,
         { mode: 'mixed-parity' },
@@ -1522,6 +1637,7 @@ run.addEventListener('click', async () => {
         status: 'passed',
       });
       layer.clear();
+      viewer.scene.globe.show = priorGlobeShow;
       check(
         layer.getState().featureCount === 0 &&
           layer.getPerformanceDiagnostics().pointPrimitiveCount === 0 &&
@@ -1598,6 +1714,13 @@ run.addEventListener('click', async () => {
   } finally {
     if (report.importLoadProfile?.phases)
       report.importLoadProfile.phases.teardownStartedAtMs = performance.now();
+    if (
+      viewer &&
+      typeof report.mixedGeometryParity?.renderSettings?.priorGlobeShow ===
+        'boolean'
+    )
+      viewer.scene.globe.show =
+        report.mixedGeometryParity.renderSettings.priorGlobeShow;
     layer?.destroy();
     if (viewer) uninstallRenderGovernor(viewer);
     viewer?.destroy();
