@@ -1,0 +1,51 @@
+{
+  "schema": "gev-placement-revised-review/v1",
+  "reviewedAt": "2026-10-11T00:37:43.287Z",
+  "sourceSha256": "a42a7235062b379223aa29f8a21922f167514476d1500ef48ce998b5a3bbb616",
+  "workReportSha256": "909634822be112e40b4485b7120ab41f6934667a1c2dd93279e634107d7d5173",
+  "verified": {
+    "sourceUnchanged": true,
+    "pinnedHelperAndRuntimeDependencyHashes": true,
+    "installedCesiumHashes": true,
+    "exactSingleBaselineWorkFailure": true,
+    "allCandidateBehaviorChecks": true,
+    "allSampledOutputsMatch": true
+  },
+  "buildCalls": {
+    "baseline": 28,
+    "candidate": 14
+  },
+  "tests": {
+    "focused": {
+      "path": "qa-artifacts/placement-revised-focused.txt",
+      "sha256": "a12a6baff76402114f238ba4e403860532681f9700f329b2c66fd5c24639bae2",
+      "encoding": "utf16le",
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    "allocation": {
+      "path": "qa-artifacts/placement-revised-allocation.txt",
+      "sha256": "46dc340811418122812225df2b5af89c377480253852c79809655e03162b6e51",
+      "encoding": "utf16le",
+      "passed": 12,
+      "failed": 1,
+      "skipped": 0
+    },
+    "allocation-control": {
+      "path": "qa-artifacts/placement-revised-allocation-control.txt",
+      "sha256": "3373e41e3528bf30cdfa10c10ebbdebb0344832663983cea167a21167061b0a9",
+      "encoding": "utf16le",
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0
+    }
+  },
+  "rootReview": "The pooled placementInput is read as the previous complete scalar signature before any writes. A miss stores every current input before rebuilding; valid is cleared before the build and restored after success. Full variants remain separate from the filtered array, preserving UI/protected-footprint recovery. No change to source sampling, painting or visual settings.",
+  "transitionRegression": "Original pose/configuration -> new pose/new configuration -> same new pose/old configuration -> original pose/old configuration -> stable repeat; hit identity and exact rectangle geometry remain correct.",
+  "disposition": "Rejected for promotion: the above-cap 250-entry workload exceeds its unchanged 13000 B/frame budget in both the full suite and isolated repeat (13682 B/frame median, 54.7 B/candidate). Twelve of thirteen allocation checks pass. Diagnose and fix before repeating full acceptance; no timing or browser claims for this revision.",
+  "limitations": [
+    "Mock Canvas2D work and behavior checks; no browser pixels, GPU, motion-p95 or full S52 acceptance.",
+    "Allocation checks are forced-GC test gates; their elapsed duration is not latency evidence."
+  ]
+}

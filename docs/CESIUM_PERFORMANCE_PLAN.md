@@ -156,10 +156,40 @@ comparison and correctness gates before promotion. This report measures the Node
 algorithm with mock Canvas2D, not browser painting, GPU time or motion p95.
 
 The [candidate integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38097900422)
-has passed Node 24/26, Windows onboarding and all three operating-system recovery
-jobs; the browser gate remains pending. Conditional painting is staged only and
-will be rebased after the placement decision. Full-scene latency and physical
-Windows acceptance remain separate requirements.
+passes all seven ordinary jobs at `21523d5`: Node 24/26, Windows onboarding,
+three-OS recovery and the browser gate
+([job and step results](performance-evidence/s52-placement-reuse/ci-run.json)).
+The PR-only published layer-token check and optional diagnostics did not run.
+Passing these integration checks does not override the moving CPU regressions.
+Conditional painting is staged only and will follow the placement decision.
+Full-scene latency and physical Windows acceptance remain separate requirements.
+
+### S52 revised placement signature: allocation gate failure - 11 October 2026
+
+The next staged variant reads its pooled `placementInput` as the previous scalar
+signature before writing new inputs. It checks changed anchors first and removes
+eleven duplicate scalar cache fields; the complete variant list and collision
+filtering remain separate. Its source SHA-256 is
+`a42a7235062b379223aa29f8a21922f167514476d1500ef48ce998b5a3bbb616`.
+The [source artifact](performance-evidence/s52-placement-revised-a42/runtime-candidate.js),
+[work report](performance-evidence/s52-placement-revised-a42/work-report.json) and
+[review](performance-evidence/s52-placement-revised-a42/review.json) preserve the
+experiment without promoting its runtime to `dev`.
+
+All 86 focused checks pass, including a new original-pose/configuration -> moved
+pose/new configuration -> same moved pose/original configuration -> original
+pose transition. The work witness still performs 14 variant builds versus 28,
+with identical sampled rectangles, hit identities and text. Formatting and
+package boundaries pass.
+
+However, only 12 of 13 allocation checks pass. The 250-entry above-cap workload
+uses **13,682 bytes/frame** against the unchanged **13,000 bytes/frame** budget.
+A separate focused repeat reproduces the same median and 13,880-byte maximum.
+Both [full-suite log](performance-evidence/s52-placement-revised-a42/allocation.txt)
+and [repeat log](performance-evidence/s52-placement-revised-a42/allocation-control.txt)
+retain their original UTF-16LE bytes and recorded hashes. This variant is also
+rejected for promotion. Its allocation increase must be explained and corrected
+before a fresh timing comparison; no performance benefit is claimed for it.
 
 ### S52 layout reuse: accepted component optimization - 11 October 2026
 

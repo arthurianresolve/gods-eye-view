@@ -13,8 +13,9 @@ pairs, but this candidate remains off `dev` while the moving miss path is
 corrected. These are Node algorithm results, not GPU or browser frame times.
 The [raw comparison](performance-evidence/s52-placement-reuse/cpu-report.json)
 and [independent review](performance-evidence/s52-placement-reuse/cpu-review.json)
-preserve the failed performance acceptance. Six ordinary integration jobs pass;
-the browser gate is still pending.
+preserve the failed performance acceptance. All seven ordinary integration jobs
+pass at `21523d5` ([results](performance-evidence/s52-placement-reuse/ci-run.json));
+this does not override the measured regression.
 
 Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
 layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel
