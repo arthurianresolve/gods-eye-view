@@ -3963,3 +3963,14 @@ rises from 15.94 to 27.23 ms and 16.12 to 30.98 ms respectively (about 71% and 9
 This identifies an unresolved scheduling/completion trade-off; it is not an
 accepted activation improvement, browser interaction result or GPU comparison.
 Single-feature preparation and raw document decoding therefore remain S59 gaps.
+
+### Windows frame-delivery observation - 11 October 2026
+
+A five-second run of the already-open diagnostic reported 40 frames with a
+999.7 ms maximum RAF gap, while its 20 ms timer fired 248 times (62.1 ms
+maximum gap). Chrome reported Intel UHD 620 / D3D11 and no context loss.
+The fixture identified older revision `9c482ca`; this observation does not
+qualify current dev. Physical foreground/occlusion was unverified and 89.95%
+of the canvas intersected the viewport. No browser flags or visual settings
+were changed. The unresolved scheduling symptom remains; no root-cause or
+hardware-soak pass is claimed. [Raw observation and limitations](performance-evidence/windows-frame-delivery-20261011/review.json).

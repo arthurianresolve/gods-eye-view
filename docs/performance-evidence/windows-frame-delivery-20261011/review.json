@@ -1,0 +1,26 @@
+{
+  "schema": "gev-frame-delivery-observation-review/v1",
+  "source": "Visible Chrome diagnostic downloaded through its Download report control",
+  "rawSha256": "14fb7865625e0addce373ae27ba0b1ecd21af7ba3d1a585a07bbd81f0b63d68c",
+  "observedAt": "2026-10-11T15:08:12.845Z",
+  "reportedApplicationCommit": "9c482cac36eaa0726e7d90dc6037db63de21c53a",
+  "reportedHarnessCommit": "9c482cac36eaa0726e7d90dc6037db63de21c53a",
+  "loadedAssetIdentityIndependentlyVerified": false,
+  "outcome": "Scheduling stalls observed; not performance acceptance",
+  "frames": 40,
+  "elapsedMs": 5001.399999976158,
+  "maximumFrameGapMs": 999.7000000476837,
+  "timerTicks": 248,
+  "maximumTimerGapMs": 62.10000002384186,
+  "contextLost": false,
+  "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "desktopForegroundVerification": "unavailable",
+  "canvasViewportFraction": 0.8995165745856354,
+  "limitations": [
+    "Fixture reported an older revision, not current dev. Served asset hashes were not independently verified in this observation.",
+    "DOM focus/visibility remained true; physical foreground and occlusion were not established.",
+    "Only 89.95% of the canvas intersected the viewport. This is not a matched full-viewport run.",
+    "Five-second plain WebGL diagnostic does not include Cesium or establish GPU speed, retention, root cause, performance acceptance or the current candidate soak.",
+    "No browser flags, drawing settings, GPU driver or application configuration changed."
+  ]
+}
