@@ -1,5 +1,13 @@
 # Cesium performance plan
 
+Remote `dev` at `72694089e7fa0fa414042cde48765e1418a70d7e` now passes all seven
+ordinary integration jobs, including the final browser gate
+([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38096363702),
+[archived results](performance-evidence/s52-placement-reuse/baseline-dev-ci.json)).
+The PR-only published layer-token check and optional diagnostic jobs did not run;
+their absence is not a pass. This revision is the integration baseline for the
+next placement experiment below.
+
 Updated on 11 October 2026. All seven full integration jobs pass at
 `f25154a61326e881e2223f2238d94b06cf231df8`
 ([CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38095198493),
@@ -71,6 +79,39 @@ the earlier release requirements and historical results.
 The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
+
+### S52 placement reuse: implementation under comparison - 11 October 2026
+
+The QA candidate retains complete placement variants on each existing projection
+record. It reuses them only when entry, layout, source/UI/font revisions and every
+pure geometry input match. Current UI exclusions, protected-card collision
+filtering, arbitration, presentation callbacks, painting, picking and accessible
+actions still run. The full variant list is separate from the filtered list,
+so a temporarily rejected choice can return on a later frame.
+
+The [exact-source work report](performance-evidence/s52-placement-reuse/work-report.json)
+and [independent review](performance-evidence/s52-placement-reuse/review.json)
+bind the proposed source to SHA-256
+`c43194668c660a84e3aba94e94208d0ce1fd5378ce004aef1e7d86cced71872b`.
+Baseline `f25154a` and integration baseline `7269408` have identical overlay
+source bytes. The baseline fails exactly the unchanged-work assertion; the
+candidate passes all four comparison checks. Both pass the behavior controls.
+The sampled rectangles, hit identities and painted text agree; variant builds
+fall from 28 to 14. Each changed input rebuilds once, followed by reuse.
+
+Two permanent regressions cover radius-derived geometry, UI occlusion and
+offscreen recovery, plus restoration after a moving protected card filters out
+an unchanged ambient label's placement. All 85 focused checks and 13 existing
+allocation checks pass. The archived allocation log preserves its original
+UTF-16LE bytes; the review records its encoding and hash. Formatting and package
+boundaries pass. The reproducible runner rejects existing evidence output and
+checks consumed source bytes before and after the comparison.
+
+This experiment is not yet accepted as a performance improvement. Run the
+unchanged eight-workload, five-pair CPU comparison and five-pair, 24-case browser
+pixel comparison against the frozen integration baseline. Native font
+invalidation must still pass with the new cache. Full-scene latency, conditional
+painting and physical Windows acceptance remain separate requirements.
 
 ### S52 layout reuse: accepted component optimization - 11 October 2026
 

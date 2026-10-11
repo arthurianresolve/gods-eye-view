@@ -1849,6 +1849,24 @@ function getProjectionRecord(entry) {
       distanceOptions: {},
       altitudeOptions: {},
       placementInput: {},
+      placementVariants: [],
+      placementCacheValid: false,
+      placementCacheEntry: null,
+      placementCacheLayout: null,
+      placementCacheSourceRevision: -1,
+      placementCacheLayoutRevision: -1,
+      placementCacheFontRevision: -1,
+      placementCacheAnchorX: Number.NaN,
+      placementCacheAnchorY: Number.NaN,
+      placementCacheWidth: Number.NaN,
+      placementCacheHeight: Number.NaN,
+      placementCacheViewportWidth: Number.NaN,
+      placementCacheViewportHeight: Number.NaN,
+      placementCacheGap: Number.NaN,
+      placementCacheLeaderOffset: Number.NaN,
+      placementCachePreferred: null,
+      placementCacheVerticalOnly: false,
+      placementCacheViewportMargin: Number.NaN,
       scaledPaintPlacement: { rect: {} },
     };
     record.candidate = {
@@ -2155,7 +2173,63 @@ function snapshotAndProject(
   record.placementInput.preferred = entry.placement;
   record.placementInput.verticalOnly = entry.verticalOnly;
   record.placementInput.viewportMargin = entry.viewportMargin;
-  placementVariants(record.placementInput, record.placements);
+  const placementCacheMatches =
+    record.placementCacheValid &&
+    record.placementCacheEntry === entry &&
+    record.placementCacheLayout === layout &&
+    record.placementCacheSourceRevision === source.projectionRevision &&
+    record.placementCacheLayoutRevision === _layoutRevision &&
+    record.placementCacheFontRevision === fontRevision &&
+    Object.is(record.placementCacheAnchorX, record.placementInput.anchorX) &&
+    Object.is(record.placementCacheAnchorY, record.placementInput.anchorY) &&
+    Object.is(record.placementCacheWidth, record.placementInput.width) &&
+    Object.is(record.placementCacheHeight, record.placementInput.height) &&
+    Object.is(
+      record.placementCacheViewportWidth,
+      record.placementInput.viewportWidth,
+    ) &&
+    Object.is(
+      record.placementCacheViewportHeight,
+      record.placementInput.viewportHeight,
+    ) &&
+    Object.is(record.placementCacheGap, record.placementInput.gap) &&
+    Object.is(
+      record.placementCacheLeaderOffset,
+      record.placementInput.leaderOffset,
+    ) &&
+    record.placementCachePreferred === record.placementInput.preferred &&
+    record.placementCacheVerticalOnly === record.placementInput.verticalOnly &&
+    Object.is(
+      record.placementCacheViewportMargin,
+      record.placementInput.viewportMargin,
+    );
+  if (!placementCacheMatches) {
+    placementVariants(record.placementInput, record.placementVariants);
+    record.placementCacheValid = true;
+    record.placementCacheEntry = entry;
+    record.placementCacheLayout = layout;
+    record.placementCacheSourceRevision = source.projectionRevision;
+    record.placementCacheLayoutRevision = _layoutRevision;
+    record.placementCacheFontRevision = fontRevision;
+    record.placementCacheAnchorX = record.placementInput.anchorX;
+    record.placementCacheAnchorY = record.placementInput.anchorY;
+    record.placementCacheWidth = record.placementInput.width;
+    record.placementCacheHeight = record.placementInput.height;
+    record.placementCacheViewportWidth = record.placementInput.viewportWidth;
+    record.placementCacheViewportHeight = record.placementInput.viewportHeight;
+    record.placementCacheGap = record.placementInput.gap;
+    record.placementCacheLeaderOffset = record.placementInput.leaderOffset;
+    record.placementCachePreferred = record.placementInput.preferred;
+    record.placementCacheVerticalOnly = record.placementInput.verticalOnly;
+    record.placementCacheViewportMargin = record.placementInput.viewportMargin;
+  }
+  // `record.placements` is filtered and pooled by collision arbitration below.
+  // Keep the complete generated set separate so each hit can restore it without
+  // allocating placement objects or rerunning the geometric variant builder.
+  record.placements.length = record.placementVariants.length;
+  for (let i = 0; i < record.placementVariants.length; i++) {
+    record.placements[i] = record.placementVariants[i];
+  }
   // UI exclusion is a PREFERENCE for chrome that composites ABOVE the host, and
   // a HARD VETO for chrome that composites below it.
   //
