@@ -1,0 +1,311 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  compareInfrastructureRuntimeLifetimes,
+  INFRASTRUCTURE_RUNTIME_CASES,
+  INFRASTRUCTURE_RUNTIME_PAIRS,
+  INFRASTRUCTURE_RUNTIME_SCHEMA,
+  validateInfrastructureRuntimeReport,
+} from './infrastructureRuntimeComparison.mjs';
+
+const commit = 'a'.repeat(40);
+const digest = 'b'.repeat(64);
+const renderClock = {
+  iso: '2026-10-11T12:00:00.000Z',
+  julianDayNumber: 2461325,
+  secondsOfDay: 43200,
+  shouldAnimate: false,
+};
+
+function sample(mode, caseId, pair) {
+  const collection = mode === 'primitive-collections';
+  const id = `${caseId}-surface-${pair}`;
+  return {
+    caseId,
+    pair,
+    mode,
+    status: 'settled',
+    sourceFeatureCount: 12,
+    surfaceCount: 4,
+    entityCount: 16,
+    entitySelectionIdentity: id,
+    identitySha256: digest,
+    geometrySha256: digest,
+    styleSha256: digest,
+    styleAudit: {
+      entityId: id,
+      entityShow: true,
+      point: {
+        rawColor: [0, 0.5333333333, 1, 1],
+        graphicsOrPrimitiveShow: true,
+        effectiveShow: true,
+      },
+      stem: {
+        rawColor: [0, 0.5333333333, 1, 1],
+        graphicsOrPrimitiveShow: true,
+        effectiveShow: true,
+      },
+    },
+    pixelSha256: digest,
+    pngBase64: 'iVBORw0KGgo=',
+    pixelDifferenceCount: 1000,
+    frame: { width: 960, height: 640, completedStableFrames: 3 },
+    clock: { ...renderClock },
+    pointPick: {
+      entityId: id,
+      sourceRecordId: id,
+      kind: 'point',
+      screen: [100, 110],
+    },
+    stemPick: {
+      entityId: id,
+      sourceRecordId: id,
+      kind: 'stem',
+      screen: [102, 120],
+    },
+    ownership: {
+      renderer: mode,
+      datasourcePresent: true,
+      entityCount: 16,
+      surfaceEntityCount: 4,
+      entitySurfaceGraphics: collection ? 0 : 4,
+      rendererOwners: collection ? 1 : 0,
+      rendererOwnerChildren: collection ? [2] : [],
+      sceneDataSourceCount: 1,
+      scenePrimitiveCount: collection ? 4 : 3,
+      sceneGroundPrimitiveCount: 1,
+    },
+    productionDiagnostics: collection
+      ? { mode, owners: 1, attached: true, points: 4, stems: 4 }
+      : null,
+    layerResourceDiagnostics: {
+      surfaceCollectionOwners: collection ? 1 : 0,
+      surfacePoints: collection ? 4 : 0,
+      surfaceStems: collection ? 4 : 0,
+    },
+  };
+}
+
+function lifetime(mode) {
+  return {
+    mode,
+    activationOrder: mode === 'entities' ? 0 : 1,
+    activationContext: 'test fixture lifetime context',
+    status: 'passed',
+    activationDiagnosticMs: 100,
+    activationTimingScope:
+      'single-layer-activation-diagnostic-not-performance-evidence',
+    sceneBaseline: {
+      dataSources: 0,
+      scenePrimitives: 3,
+      groundPrimitives: 1,
+      rendererOwners: 0,
+    },
+    initialOwnership: {
+      dataSources: 0,
+      scenePrimitives: 3,
+      groundPrimitives: 1,
+      rendererOwners: 0,
+    },
+    renderClock: { ...renderClock },
+    samples: INFRASTRUCTURE_RUNTIME_CASES.flatMap((caseId) =>
+      Array.from({ length: INFRASTRUCTURE_RUNTIME_PAIRS }, (_, pair) =>
+        sample(mode, caseId, pair),
+      ),
+    ),
+    teardown: {
+      layerDestroyed: true,
+      dataSourceRemoved: true,
+      rendererOwnersRemoved: true,
+      instrumentationRestored: true,
+      viewerKeptForNextLifetime: true,
+      dataSourceCountAfterDestroy: 0,
+      ownerCountAfterDestroy: 0,
+      scenePrimitiveCountAfterDestroy: 3,
+      groundPrimitiveCountAfterDestroy: 1,
+    },
+  };
+}
+
+function validReport() {
+  const baseline = lifetime('entities');
+  const candidate = lifetime('primitive-collections');
+  return {
+    schema: INFRASTRUCTURE_RUNTIME_SCHEMA,
+    applicationCommit: commit,
+    harnessCommit: commit,
+    source: {
+      featureCount: 12,
+      payloadBytes: 400,
+      payloadSha256: digest,
+      geometryKinds: { Point: 12 },
+    },
+    candidateRepresentation: {
+      id: 'production-local-infrastructure-primitive-collections/rgba8/v1',
+      stemColorEncoding: 'entity-color-attribute-byte',
+    },
+    samplingScope:
+      'five-correctness-snapshots-per-case-not-alternating-performance-runs',
+    renderClock: { ...renderClock },
+    viewerOwnedDisplayWarmup: {
+      completedFrames: 2,
+      temporaryDataSourceRemoved: true,
+      dataSourcesBefore: 0,
+      dataSourcesAfter: 0,
+      primitiveCountsBefore: { scenePrimitives: 1, groundPrimitives: 0 },
+      primitiveCountsAfter: { scenePrimitives: 3, groundPrimitives: 1 },
+    },
+    status: 'passed',
+    lifetimes: [baseline, candidate],
+    comparisons: INFRASTRUCTURE_RUNTIME_CASES.flatMap((caseId) =>
+      Array.from({ length: INFRASTRUCTURE_RUNTIME_PAIRS }, (_, pair) => ({
+        caseId,
+        pair,
+        pixelSha256Equal: true,
+        identityEqual: true,
+        geometryEqual: true,
+        styleEqual: true,
+        picksEqual: true,
+        framebufferEqual: true,
+      })),
+    ),
+    cleanup: { viewerDestroyed: true },
+  };
+}
+
+test('runtime report validates independent default and production lifetimes', () => {
+  assert.equal(
+    validateInfrastructureRuntimeReport(validReport(), {
+      expectedCommit: commit,
+    }),
+    true,
+  );
+});
+
+test('runtime report rejects synthesized ownership, duplicate Graphics, and incomplete teardown', () => {
+  const wrongMode = structuredClone(validReport());
+  wrongMode.lifetimes[0].mode = 'synthetic-entities';
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(wrongMode, {
+        expectedCommit: commit,
+      }),
+    /independent default and candidate/,
+  );
+
+  const duplicate = structuredClone(validReport());
+  duplicate.lifetimes[1].samples[0].ownership.entitySurfaceGraphics = 4;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(duplicate, {
+        expectedCommit: commit,
+      }),
+    /sole production-owned collection/,
+  );
+
+  const leaked = structuredClone(validReport());
+  leaked.lifetimes[0].teardown.dataSourceRemoved = false;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(leaked, { expectedCommit: commit }),
+    /did not clean up/,
+  );
+
+  const missingPair = structuredClone(validReport());
+  missingPair.lifetimes[1].samples.pop();
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(missingPair, {
+        expectedCommit: commit,
+      }),
+    /sample inventory is incomplete/,
+  );
+});
+
+test('runtime pair comparison requires exact pixels, geometry, style and native pick identity', () => {
+  const baseline = lifetime('entities');
+  const candidate = lifetime('primitive-collections');
+  assert.equal(
+    compareInfrastructureRuntimeLifetimes(baseline, candidate).length,
+    10,
+  );
+  candidate.samples[0].geometrySha256 = 'c'.repeat(64);
+  assert.throws(
+    () => compareInfrastructureRuntimeLifetimes(baseline, candidate),
+    /differs between production renderers/,
+  );
+});
+
+test('runtime report recomputes comparisons and requires populated ownership baselines', () => {
+  const staleFlags = validReport();
+  staleFlags.lifetimes[1].samples[0].pixelSha256 = 'c'.repeat(64);
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(staleFlags, {
+        expectedCommit: commit,
+      }),
+    /differs between production renderers/,
+  );
+
+  const duplicate = validReport();
+  duplicate.comparisons[1] = structuredClone(duplicate.comparisons[0]);
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(duplicate, {
+        expectedCommit: commit,
+      }),
+    /comparisons do not match captured samples/,
+  );
+
+  const missingBaseline = validReport();
+  delete missingBaseline.lifetimes[0].initialOwnership;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(missingBaseline, {
+        expectedCommit: commit,
+      }),
+    /initial scene ownership is missing or inconsistent/,
+  );
+
+  const inconsistentVisibility = validReport();
+  inconsistentVisibility.lifetimes[1].samples[0].styleAudit.stem.effectiveShow = false;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(inconsistentVisibility, {
+        expectedCommit: commit,
+      }),
+    /incomplete render or ownership evidence/,
+  );
+
+  const movingClock = validReport();
+  movingClock.lifetimes[1].samples[0].clock.secondsOfDay += 0.001;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(movingClock, {
+        expectedCommit: commit,
+      }),
+    /incomplete render or ownership evidence/,
+  );
+
+  const animatedClock = validReport();
+  animatedClock.renderClock.shouldAnimate = true;
+  for (const lifetime of animatedClock.lifetimes)
+    for (const sample of lifetime.samples) sample.clock.shouldAnimate = true;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(animatedClock, {
+        expectedCommit: commit,
+      }),
+    /comparison clock is invalid/,
+  );
+
+  const unremovedWarmup = validReport();
+  unremovedWarmup.viewerOwnedDisplayWarmup.temporaryDataSourceRemoved = false;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(unremovedWarmup, {
+        expectedCommit: commit,
+      }),
+    /display was not warmed and restored/,
+  );
+});

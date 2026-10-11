@@ -10,6 +10,7 @@ import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
+import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -249,11 +250,12 @@ try {
         deviceScaleFactor: 1,
       });
       await page.goto(
-        url.replace('capture-matrix.html', 'infrastructure-collections.html'),
+        url.replace(
+          'capture-matrix.html',
+          'infrastructure-runtime-collections.html',
+        ),
         { waitUntil: 'networkidle0' },
       );
-      await page.select('#color-encoding', 'entity-color-attribute-byte');
-      await page.click('#run');
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
         { timeout: 360_000, polling: 100 },
@@ -276,9 +278,9 @@ try {
           ?.stemColorEncoding !== 'entity-color-attribute-byte'
       )
         throw new Error(
-          'Infrastructure run did not execute the explicitly selected RGBA8 candidate',
+          'Infrastructure run did not execute the production RGBA8 collection candidate',
         );
-      validateInfrastructureCollectionReport(report.infrastructureCollections, {
+      validateInfrastructureRuntimeReport(report.infrastructureCollections, {
         expectedCommit: commit,
       });
     }

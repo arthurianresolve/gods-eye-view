@@ -1,0 +1,11 @@
+# Production infrastructure collection experiment
+
+Status: opt-in code implemented; focused automatic checks passed; rendered correctness, measured benefit and physical hardware validation pending. Default application rendering remains Entity-based.
+
+This candidate moves local infrastructure point/stem visuals into production-owned PointPrimitiveCollection and PolylineCollection instances. Metadata Entities, polygons, evidence identities and the existing Entity-based picking path remain. Collection ownership follows datasource teardown, including failed construction. Per-record updates preserve terrain/LOD geometry and effective visibility; stem material colors use the Entity geometry's RGBA8 encoding.
+
+The fixture instantiates the actual default dams layer, destroys it and verifies cleanup, then instantiates the actual opt-in collection layer. It does not synthesize a baseline by restoring temporary Graphics. Viewer-owned DataSourceDisplay containers are warmed before both lifetimes and checked separately from layer-owned resources. Five correctness snapshots per case check native point/stem picking, selected Entity identity, visible pixels, geometry, rendered style, observed frozen clock and ownership. The cases are default style and camera/LOD updates. Raw colors and show flags are retained for the selected row. Source hashes and exact commits are required.
+
+The two lifetimes share one viewer, so their activation times are diagnostic only. They do not establish a performance gain: a separate alternating fresh-viewer comparison and retained-memory protocol are still required, followed by datacenter coverage and integration. Submarine cable rendering remains on its specialized path.
+
+Before the hosted run, 82 focused localGeoJSON, infrastructure, LOD and report-contract tests passed. Import directions, package boundaries, adopted formatting, syntax and diff checks also passed. Browser results must be recorded separately; no acceptance is inferred from these checks.
