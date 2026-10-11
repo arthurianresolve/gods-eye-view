@@ -59,6 +59,7 @@ test('CPU attribution groups self samples without counting ancestors twice and s
     JSON.stringify(report),
     /credential|private|secret\.example|4184/,
   );
+  assert.deepEqual(summarizeCpuProfile(report.profile), report);
 });
 
 test('CPU attribution rejects incomplete, invalid or unbounded sampling data', () => {

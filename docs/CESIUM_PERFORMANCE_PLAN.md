@@ -4065,3 +4065,31 @@ acceptance. The profiler session is released after startup failure, normal stop,
 failed stop and failed disable; focused tests exercise those exit paths and
 reject malformed or oversized sampling data. This instrumentation does not alter
 runtime import scheduling. Hosted attribution is pending.
+
+
+### S59 measured import attribution - 11 October 2026
+
+[Run 38139002908](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38139002908)
+passes the exact-commit correctness diagnostic at
+`1666df0f6923a8f355a762119ade031d4cf50f83`. The downloaded
+[CPU profile](performance-evidence/s59-import-attribution-38139002908/import-attribution.cpuprofile)
+independently reproduces every field of the
+[recorded attribution summary](performance-evidence/s59-import-attribution-38139002908/hosted-native-renderer.json).
+It contains 950 samples across 5902.4 ms. The requested sampling interval is
+one ms, but observed sampling is coarser; sample-weighted time is not a precise
+execution-duration measure, and no latency in this run is acceptance evidence.
+
+The leading sampled locations include garbage collection (119 samples,
+1113.2 ms of sample weight), destroyObject (123, 735.7 ms), and
+AssociativeArray.remove (120, 665.5 ms). Parent chains place much of the latter
+work in GeometryVisualizer/PolylineVisualizer updates and GeometryUpdaterSet
+teardown during Cesium ticks. Some removals originate directly from the import
+clear path. This is whole-fixture attribution, including clearing, captures and
+cancellation; it does not isolate the cause of every individual long import
+batch. Treat deferred Entity teardown and allocation as the next measured
+lifecycle targets, and retain the old-timer/new-scheduler comparison requirement.
+Do not adopt a scheduler optimization solely from this profile.
+
+The profile summarizer now accepts its already-sanitized local source paths so
+independent artifact review is repeatable. Round-trip summary and cleanup tests
+pass. The hosted source remains bound to the preceding immutable commit.

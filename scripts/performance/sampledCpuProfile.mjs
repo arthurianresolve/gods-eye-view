@@ -7,6 +7,9 @@ const requireValid = (value, message) => {
 
 function publicFixturePath(value) {
   if (!value) return '';
+  // A downloaded, sanitized profile can be independently summarized again.
+  if (value.startsWith('/') && !value.startsWith('//') && !/[?#]/.test(value))
+    return value;
   try {
     const url = new URL(value);
     return url.protocol === 'http:' && url.hostname === '127.0.0.1'
