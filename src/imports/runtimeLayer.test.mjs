@@ -2,9 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import { createImportedGeometryLayer } from './runtimeLayer.js';
-import { getContextStore } from '../data/contextStore.js';
+import {
+  getContextStore,
+  getSelectedEntityContext,
+} from '../data/contextStore.js';
 
-function fixture(t) {
+function fixture(
+  t,
+  { advancePreparationClock = false, pointRepresentation = 'entity' } = {},
+) {
   const previous = globalThis.window;
   globalThis.window = { dispatchEvent() {} };
   let clock = 0,
@@ -13,24 +19,30 @@ function fixture(t) {
   const timers = new Map();
   let timerId = 0;
   const entities = new Cesium.EntityCollection();
+  const primitives = new Cesium.PrimitiveCollection();
+  const inputActions = new Map();
   const originalAdd = entities.add.bind(entities);
   entities.add = (entity) => {
     clock += 2;
     return originalAdd(entity);
   };
-  const layer = createImportedGeometryLayer({
-    viewer: {
-      entities,
-      scene: {
-        canvas: {},
-        requestRender() {
-          renders++;
-        },
+  const viewer = {
+    entities,
+    scene: {
+      canvas: {},
+      primitives,
+      pick: () => null,
+      requestRender() {
+        renders++;
       },
     },
+  };
+  const layer = createImportedGeometryLayer({
+    viewer,
+    pointRepresentation,
     now: () => 1000,
     batchOptions: {
-      now: () => clock,
+      now: () => (advancePreparationClock ? (clock += 2) : clock),
       schedule(fn) {
         timers.set(++timerId, fn);
         return timerId;
@@ -42,7 +54,9 @@ function fixture(t) {
     screenSpaceEventHandlerFactory() {
       handlers++;
       return {
-        setInputAction() {},
+        setInputAction(callback, type) {
+          inputActions.set(type, callback);
+        },
         destroy() {
           handlers--;
         },
@@ -51,6 +65,7 @@ function fixture(t) {
   });
   t.after(() => {
     layer.destroy();
+    if (!primitives.isDestroyed()) primitives.destroy();
     if (previous === undefined) delete globalThis.window;
     else globalThis.window = previous;
   });
@@ -64,7 +79,10 @@ function fixture(t) {
   return {
     layer,
     entities,
+    primitives,
+    viewer,
     timers,
+    inputActions,
     flush,
     handlers: () => handlers,
     renders: () => renders,
@@ -83,10 +101,193 @@ const records = (count) => [
   },
 ];
 
+test('primitive point mode preserves Entity metadata, exact style, and native pick identity', (t) => {
+  const env = fixture(t, { pointRepresentation: 'primitive-collection' });
+  env.layer.load(records(3), { workspaceId: 'points' });
+
+  assert.equal(env.entities.values.length, 0);
+  assert.equal(env.layer.getState().featureCount, 3);
+  assert.equal(env.layer.getPerformanceDiagnostics().pointPrimitiveCount, 3);
+  const snapshot = env.layer.getPointRendererSnapshot();
+  assert.equal(snapshot.pointCount, 3);
+  assert.deepEqual(
+    snapshot.entityRows.map(
+      ({ id, name, pixelSize, color, outlineColor, outlineWidth }) => ({
+        id,
+        name,
+        pixelSize,
+        color,
+        outlineColor,
+        outlineWidth,
+      }),
+    ),
+    [0, 1, 2].map((index) => ({
+      id: `gev-import:points:fixture:${index}`,
+      name: `Site ${index}`,
+      pixelSize: 9,
+      color: [0, 1, 1, 1],
+      outlineColor: [0, 0, 0, 1],
+      outlineWidth: 1,
+    })),
+  );
+  const collection = env.primitives.get(0);
+  assert.ok(collection instanceof Cesium.PointPrimitiveCollection);
+  assert.equal(
+    collection.blendOption,
+    Cesium.BlendOption.OPAQUE_AND_TRANSLUCENT,
+  );
+  assert.equal(collection.length, 3);
+  const pickedEntity = snapshot.entityRows[1];
+  const contextEntity = getContextStore().entities.get(pickedEntity.id).entity;
+  assert.ok(contextEntity instanceof Cesium.Entity);
+  assert.equal(
+    contextEntity.position.getValue().x,
+    collection.get(1).position.x,
+  );
+  assert.equal(collection.get(1).id, contextEntity);
+  assert.equal(contextEntity.point.pixelSize.getValue(), 9);
+  env.viewer.scene.pick = () => ({ id: collection.get(1).id });
+  env.inputActions.get(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
+    position: { x: 1, y: 1 },
+  });
+  assert.equal(getSelectedEntityContext()?.entity, contextEntity);
+  assert.equal(getSelectedEntityContext()?.evidence.entityRef.id, '1');
+});
+
+test('primitive point mode leaves non-point graphics on viewer.entities and preserves external primitives on clear', (t) => {
+  const env = fixture(t, { pointRepresentation: 'primitive-collection' });
+  const outside = env.primitives.add(new Cesium.PointPrimitiveCollection());
+  const input = [
+    {
+      id: 'mixed',
+      kind: 'geojson',
+      attribution: 'Survey',
+      records: [
+        { id: 'point', geometry: { type: 'Point', coordinates: [10, 40] } },
+        {
+          id: 'line',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [10, 40],
+              [11, 41],
+            ],
+          },
+        },
+        {
+          id: 'polygon',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [10, 40],
+                [11, 40],
+                [11, 41],
+                [10, 40],
+              ],
+            ],
+          },
+        },
+      ],
+    },
+  ];
+  env.layer.load(input, { workspaceId: 'mixed' });
+  assert.deepEqual(
+    env.entities.values.map((entity) => entity.id),
+    ['gev-import:mixed:mixed:line', 'gev-import:mixed:mixed:polygon'],
+  );
+  assert.equal(env.layer.getPointRendererSnapshot().pointCount, 1);
+  assert.equal(env.layer.getState().featureCount, 3);
+  assert.equal(getContextStore().entities.size, 3);
+
+  env.layer.clear();
+  assert.equal(env.entities.values.length, 0);
+  assert.equal(env.primitives.length, 1);
+  assert.equal(env.primitives.get(0), outside);
+  assert.equal(outside.isDestroyed(), false);
+  assert.equal(env.layer.getPointRendererSnapshot().pointCount, 0);
+  assert.equal(getContextStore().entities.size, 0);
+});
+
+test('primitive point mode cancellation and replacement cannot repopulate a released collection', async (t) => {
+  const env = fixture(t, {
+    pointRepresentation: 'primitive-collection',
+    advancePreparationClock: true,
+  });
+  const previous = env.layer.loadAsync(records(20), { workspaceId: 'old' });
+  const previousResult = assert.rejects(previous, { name: 'AbortError' });
+  const late = [...env.timers.values()][0];
+  const replacement = env.layer.loadAsync(records(2), { workspaceId: 'new' });
+  const replacementCollection = env.primitives.get(0);
+  late();
+  env.flush();
+  await previousResult;
+  assert.equal((await replacement).drawn, 2);
+  assert.equal(env.layer.getPointRendererSnapshot().pointCount, 2);
+  assert.equal(env.primitives.length, 1);
+  assert.equal(env.primitives.get(0), replacementCollection);
+  assert.deepEqual(
+    env.layer.getPointRendererSnapshot().entityRows.map((row) => row.id),
+    ['gev-import:new:fixture:0', 'gev-import:new:fixture:1'],
+  );
+});
+
+test('primitive point mode destroys its collection on clear and destroy', (t) => {
+  const env = fixture(t, { pointRepresentation: 'primitive-collection' });
+  env.layer.load(records(2));
+  const collection = env.primitives.get(0);
+  env.layer.clear();
+  assert.equal(collection.isDestroyed(), true);
+  assert.equal(env.primitives.length, 0);
+
+  env.layer.load(records(1));
+  const replacement = env.primitives.get(0);
+  env.layer.destroy();
+  assert.equal(replacement.isDestroyed(), true);
+  assert.equal(env.primitives.length, 0);
+  assert.equal(env.layer.getState().destroyed, true);
+});
+
+test('primitive point mode rolls back collection-add failure and preserves a conflicting external Entity', (t) => {
+  const env = fixture(t, { pointRepresentation: 'primitive-collection' });
+  let allocated;
+  env.primitives.add = (collection) => {
+    allocated = collection;
+    throw new Error('controlled primitive add failure');
+  };
+  assert.throws(
+    () => env.layer.load(records(1), { workspaceId: 'failed-add' }),
+    /controlled primitive add failure/,
+  );
+  assert.ok(allocated);
+  assert.equal(allocated.isDestroyed(), true);
+  assert.equal(env.primitives.length, 0);
+  assert.equal(env.layer.getState().featureCount, 0);
+  assert.equal(getContextStore().entities.size, 0);
+
+  const external = env.entities.add({
+    id: 'gev-import:conflict:fixture:0',
+    name: 'External entity',
+  });
+  assert.throws(
+    () => env.layer.load(records(1), { workspaceId: 'conflict' }),
+    /Duplicate imported feature id/,
+  );
+  assert.equal(env.entities.getById(external.id), external);
+  assert.equal(env.primitives.length, 0);
+  assert.equal(env.layer.getState().featureCount, 0);
+});
+
 test('cooperative imports yield after four ms and preserve complete entity and evidence identity', async (t) => {
   const env = fixture(t);
   const input = records(7);
   env.layer.load(input, { workspaceId: 'w' });
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().pointRepresentation,
+    'entity',
+  );
+  assert.equal(env.layer.getPointRendererSnapshot(), null);
+  assert.equal(env.primitives.length, 0);
   const expected = env.entities.values.map((e) => [e.id, e.name]);
   const pending = env.layer.loadAsync(input, { workspaceId: 'w' });
   assert.equal(env.entities.values.length, 2);

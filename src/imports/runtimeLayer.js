@@ -17,6 +17,7 @@ import {
 export const IMPORTED_LAYER_ID = 'user-imports';
 export const MAX_RENDERED_IMPORT_FEATURES = 5_000;
 const MAX_IMPORTED_OVERLAY_LABELS = 180;
+const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
 
 function position(coordinate) {
   return Cesium.Cartesian3.fromDegrees(
@@ -33,6 +34,7 @@ function positions(coordinates) {
 /** Render a bounded user-imported cohort with the shared evidence inspector. */
 export function createImportedGeometryLayer({
   viewer,
+  pointRepresentation = 'entity',
   now = () => Date.now(),
   batchOptions = {},
   screenSpaceEventHandlerFactory = (canvas) =>
@@ -40,7 +42,16 @@ export function createImportedGeometryLayer({
 } = {}) {
   if (!viewer?.entities || !viewer?.scene?.canvas)
     throw new TypeError('A Cesium viewer is required.');
+  if (!POINT_REPRESENTATIONS.has(pointRepresentation))
+    throw new TypeError('Unknown imported point representation.');
+  if (
+    pointRepresentation === 'primitive-collection' &&
+    (typeof viewer.scene.primitives?.add !== 'function' ||
+      typeof viewer.scene.primitives?.remove !== 'function')
+  )
+    throw new TypeError('Scene primitives are required for point collections.');
   const ownedEntities = new Map();
+  let pointPrimitiveCollection = null;
   let destroyed = false;
   let pending = null;
   const handler = screenSpaceEventHandlerFactory(viewer.scene.canvas);
@@ -50,19 +61,94 @@ export function createImportedGeometryLayer({
     if (picked?.__gevImportContextId) selectEntityContext(picked);
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+  function ensurePointPrimitiveCollection() {
+    if (pointPrimitiveCollection) return pointPrimitiveCollection;
+    const collection = new Cesium.PointPrimitiveCollection({
+      blendOption: Cesium.BlendOption.OPAQUE_AND_TRANSLUCENT,
+    });
+    try {
+      viewer.scene.primitives.add(collection);
+      pointPrimitiveCollection = collection;
+      return collection;
+    } catch (error) {
+      const primitives = viewer.scene?.primitives;
+      try {
+        if (primitives && !primitives.isDestroyed?.())
+          primitives.remove(collection);
+      } catch {
+        // Preserve the construction error; the owned object is still destroyed below.
+      }
+      if (!collection.isDestroyed()) collection.destroy();
+      throw error;
+    }
+  }
+
+  function releasePointPrimitiveCollection() {
+    const collection = pointPrimitiveCollection;
+    pointPrimitiveCollection = null;
+    if (!collection || collection.isDestroyed()) return;
+    const primitives = viewer.scene?.primitives;
+    let cleanupError = null;
+    if (primitives && !primitives.isDestroyed?.()) {
+      try {
+        primitives.remove(collection);
+      } catch (error) {
+        cleanupError = error;
+      }
+    }
+    try {
+      if (!collection.isDestroyed()) collection.destroy();
+    } catch (error) {
+      cleanupError ||= error;
+    }
+    if (cleanupError) throw cleanupError;
+  }
+
+  function createEntity(id, name, shape) {
+    if (pointRepresentation === 'entity' || !shape.point)
+      return viewer.entities.add({ id, name, ...shape });
+
+    if (ownedEntities.has(id) || viewer.entities.getById(id))
+      throw new Error(`Duplicate imported feature id: ${id}`);
+    // This opt-in path keeps the Entity's public identity and PointGraphics for
+    // context/evidence consumers, while bypassing viewer.entities so Cesium's
+    // general geometry visualizer does not create unrelated updater sets.
+    const entity = new Cesium.Entity({ id, name, ...shape });
+    ensurePointPrimitiveCollection().add({
+      id: entity,
+      position: shape.position,
+      pixelSize: shape.point.pixelSize,
+      color: shape.point.color,
+      outlineColor: shape.point.outlineColor,
+      outlineWidth: shape.point.outlineWidth,
+      disableDepthTestDistance: 0.0,
+    });
+    return entity;
+  }
+
   function clear() {
     const previous = pending;
     pending = null;
     previous?.abort();
-    for (const [id, entity] of ownedEntities) {
-      // Another owner can replace an Entity while retaining its public ID.
-      // Release only the exact object created by this import layer.
-      if (viewer.entities.getById(id) === entity)
-        viewer.entities.remove(entity);
+    let cleanupError = null;
+    try {
+      for (const [id, entity] of ownedEntities) {
+        // Release only the exact object created by this import layer.
+        if (viewer.entities.getById(id) === entity)
+          viewer.entities.remove(entity);
+      }
+    } catch (error) {
+      cleanupError = error;
+    }
+    try {
+      releasePointPrimitiveCollection();
+    } catch (error) {
+      cleanupError ||= error;
     }
     ownedEntities.clear();
     removeEntityContextsForLayer(IMPORTED_LAYER_ID);
     clearOverlaySource(IMPORTED_LAYER_ID);
+    if (cleanupError) throw cleanupError;
   }
 
   function* build(imports, { workspaceId = 'active' } = {}) {
@@ -142,7 +228,7 @@ export function createImportedGeometryLayer({
           edgeFade: 'keyhole',
           horizonCull: true,
         });
-      const entity = viewer.entities.add({ id, name: label, ...shape });
+      const entity = createEntity(id, label, shape);
       entity.__gevImportContextId = id;
       ownedEntities.set(id, entity);
       const evidence = createEvidenceEnvelope({
@@ -243,7 +329,83 @@ export function createImportedGeometryLayer({
     getPerformanceDiagnostics: () => ({
       pendingJobs: pending ? 1 : 0,
       cacheEntries: ownedEntities.size,
+      pointRepresentation,
+      pointPrimitiveCount: pointPrimitiveCollection?.length || 0,
     }),
+    getPointRendererSnapshot() {
+      if (pointRepresentation !== 'primitive-collection') return null;
+      const collection = pointPrimitiveCollection;
+      if (!collection)
+        return { pointCount: 0, entityRows: [], primitiveRows: [] };
+      const entityRows = [];
+      const primitiveRows = [];
+      const time = viewer.clock?.currentTime;
+      for (let index = 0; index < collection.length; index++) {
+        const point = collection.get(index);
+        const entity = point.id;
+        if (
+          !entity ||
+          ownedEntities.get(entity.id) !== entity ||
+          viewer.entities.getById(entity.id) !== undefined ||
+          entity.__gevImportContextId !== entity.id
+        )
+          throw new Error('Imported point collection has an unowned Entity.');
+        const positionValue = entity.position?.getValue(time);
+        const pointGraphics = entity.point;
+        const vector = (value) =>
+          value &&
+          Number.isFinite(value.x) &&
+          Number.isFinite(value.y) &&
+          Number.isFinite(value.z)
+            ? [value.x, value.y, value.z]
+            : null;
+        const color = (value) =>
+          value &&
+          [value.red, value.green, value.blue, value.alpha].every(
+            Number.isFinite,
+          )
+            ? [value.red, value.green, value.blue, value.alpha]
+            : null;
+        const nearFar = (value) =>
+          value
+            ? [value.near, value.nearValue, value.far, value.farValue]
+            : null;
+        entityRows.push({
+          id: entity.id,
+          name: entity.name,
+          position: vector(positionValue),
+          pixelSize: pointGraphics.pixelSize.getValue(time),
+          color: color(pointGraphics.color.getValue(time)),
+          outlineColor: color(pointGraphics.outlineColor.getValue(time)),
+          outlineWidth: pointGraphics.outlineWidth.getValue(time),
+        });
+        primitiveRows.push({
+          id: entity.id,
+          position: vector(point.position),
+          color: color(point.color),
+          outlineColor: color(point.outlineColor),
+          outlineWidth: point.outlineWidth,
+          pixelSize: point.pixelSize,
+          disableDepthTestDistance: point.disableDepthTestDistance,
+          splitDirection: point.splitDirection,
+          scaleByDistance: nearFar(point.scaleByDistance),
+          translucencyByDistance: nearFar(point.translucencyByDistance),
+          distanceDisplayCondition: point.distanceDisplayCondition
+            ? [
+                point.distanceDisplayCondition.near,
+                point.distanceDisplayCondition.far,
+              ]
+            : null,
+          show: point.show,
+        });
+      }
+      return {
+        pointCount: collection.length,
+        blendOption: collection.blendOption,
+        entityRows,
+        primitiveRows,
+      };
+    },
     getState: () => ({
       featureCount: ownedEntities.size,
       pendingJobs: pending ? 1 : 0,
