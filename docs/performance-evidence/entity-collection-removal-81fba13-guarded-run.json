@@ -1,0 +1,355 @@
+{
+  "schema": "gev-entity-collection-removal-comparison/v1",
+  "baseCommit": "be6c07efdb659983c3ecaf0ce1a9066439ee8f71",
+  "sourceSha256": "f9e6634f2ae5f70e9e5eb9c4c7952eb5cf2566e6c77bfd3c63a2767fc3b7337d",
+  "productionHelperPath": "src/imports/entityCollectionOwnership.js",
+  "harnessSha256": "72adf0316b1418fe75b13d4c563a23df62dce5628c4a368bb7b46077d508ba0c",
+  "cesiumVersion": "1.138.0",
+  "conditions": {
+    "isolated": {
+      "importedEntityCount": 5000,
+      "externalEntityCount": 0,
+      "eventSemantics": "expected setup IDs are confirmed absent and survivors are exact; timed observer records removal counts only",
+      "pairs": [
+        {
+          "index": 0,
+          "order": [
+            "individual",
+            "batched"
+          ],
+          "runs": {
+            "individual": {
+              "elapsedMs": 62.48490000000038,
+              "removedCount": 5000,
+              "removedIdsSha256": "055d23b3d7d47d70b7d4738b64f1a9a244e2144218b4eab83734637304cbbd11",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            },
+            "batched": {
+              "elapsedMs": 9.215000000000146,
+              "removedCount": 5000,
+              "removedIdsSha256": "055d23b3d7d47d70b7d4738b64f1a9a244e2144218b4eab83734637304cbbd11",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 1,
+          "order": [
+            "batched",
+            "individual"
+          ],
+          "runs": {
+            "batched": {
+              "elapsedMs": 8.50799999999981,
+              "removedCount": 5000,
+              "removedIdsSha256": "4ed23dec8938cd2000becda82ebb5ae76d33884326414eef16963bb302cc3af3",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            },
+            "individual": {
+              "elapsedMs": 28.739399999999478,
+              "removedCount": 5000,
+              "removedIdsSha256": "4ed23dec8938cd2000becda82ebb5ae76d33884326414eef16963bb302cc3af3",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 2,
+          "order": [
+            "individual",
+            "batched"
+          ],
+          "runs": {
+            "individual": {
+              "elapsedMs": 42.6921999999995,
+              "removedCount": 5000,
+              "removedIdsSha256": "e966d7ca5ac3ebb6615bedbb8db9bb61fb6dd7278b4598c0cae7f9f7fecfdb25",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            },
+            "batched": {
+              "elapsedMs": 7.122200000000703,
+              "removedCount": 5000,
+              "removedIdsSha256": "e966d7ca5ac3ebb6615bedbb8db9bb61fb6dd7278b4598c0cae7f9f7fecfdb25",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 3,
+          "order": [
+            "batched",
+            "individual"
+          ],
+          "runs": {
+            "batched": {
+              "elapsedMs": 6.934500000000298,
+              "removedCount": 5000,
+              "removedIdsSha256": "be01c6a4833ee60737a2e748a332d5a8d09e02cde1ed6904d252f4446c77c10a",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            },
+            "individual": {
+              "elapsedMs": 36.44960000000083,
+              "removedCount": 5000,
+              "removedIdsSha256": "be01c6a4833ee60737a2e748a332d5a8d09e02cde1ed6904d252f4446c77c10a",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 4,
+          "order": [
+            "individual",
+            "batched"
+          ],
+          "runs": {
+            "individual": {
+              "elapsedMs": 26.241499999999178,
+              "removedCount": 5000,
+              "removedIdsSha256": "b97b0f9df2aeef0ed59c4de0245c915c6eb940dedb9bf4c58f287c371c73ae76",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            },
+            "batched": {
+              "elapsedMs": 32.04249999999956,
+              "removedCount": 5000,
+              "removedIdsSha256": "b97b0f9df2aeef0ed59c4de0245c915c6eb940dedb9bf4c58f287c371c73ae76",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 0,
+              "survivorIdsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        }
+      ],
+      "individualMedianMs": 36.44960000000083,
+      "batchedMedianMs": 8.50799999999981,
+      "pairedChangePercent": [
+        -85.25243698877635,
+        -70.39604167101622,
+        -83.31732728694988,
+        -80.9750998639213,
+        22.106205819029267
+      ],
+      "forcedGc": false,
+      "runtimeSourcePath": "src/imports/runtimeLayer.js",
+      "productionHelperPath": "src/imports/entityCollectionOwnership.js",
+      "productionHelperSha256": "0a9091f60f510b4b6c1c2fd51c653a29e632044296ee30db9475373d83d62b4f"
+    },
+    "mixed": {
+      "importedEntityCount": 5000,
+      "externalEntityCount": 100,
+      "eventSemantics": "expected setup IDs are confirmed absent and survivors are exact; timed observer records removal counts only",
+      "pairs": [
+        {
+          "index": 0,
+          "order": [
+            "individual",
+            "batched"
+          ],
+          "runs": {
+            "individual": {
+              "elapsedMs": 33.542999999999665,
+              "removedCount": 5000,
+              "removedIdsSha256": "b2a5303d7682390d240444611e126b5cead11bb38c77a63b8af5f20e04fd574b",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "15a66f275e850b07daf862e0fed51d91ab9713fbbb21adb0113e4a23afec34a3",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            },
+            "batched": {
+              "elapsedMs": 16.94970000000012,
+              "removedCount": 5000,
+              "removedIdsSha256": "b2a5303d7682390d240444611e126b5cead11bb38c77a63b8af5f20e04fd574b",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "15a66f275e850b07daf862e0fed51d91ab9713fbbb21adb0113e4a23afec34a3",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 1,
+          "order": [
+            "batched",
+            "individual"
+          ],
+          "runs": {
+            "batched": {
+              "elapsedMs": 15.475900000000365,
+              "removedCount": 5000,
+              "removedIdsSha256": "bde0a447000e57d623bde73a879e859c9191b57f48ba2d790da3e76dff6b60ac",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "fbe2419ff202e562d6df3341ba8d0a07e0c216abbbc3619f731ad7a09aae92fd",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            },
+            "individual": {
+              "elapsedMs": 24.317299999999705,
+              "removedCount": 5000,
+              "removedIdsSha256": "bde0a447000e57d623bde73a879e859c9191b57f48ba2d790da3e76dff6b60ac",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "fbe2419ff202e562d6df3341ba8d0a07e0c216abbbc3619f731ad7a09aae92fd",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 2,
+          "order": [
+            "individual",
+            "batched"
+          ],
+          "runs": {
+            "individual": {
+              "elapsedMs": 45.69669999999951,
+              "removedCount": 5000,
+              "removedIdsSha256": "f9eea10cabd77eed27cd752a0a3218e3c8742cee1edb98ebf70884394f50031c",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "5be4d4bd8494ccfaccea2b1d7af66e71e8fd1dd2c4182cdd72be3553a347c39b",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            },
+            "batched": {
+              "elapsedMs": 10.769599999999627,
+              "removedCount": 5000,
+              "removedIdsSha256": "f9eea10cabd77eed27cd752a0a3218e3c8742cee1edb98ebf70884394f50031c",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "5be4d4bd8494ccfaccea2b1d7af66e71e8fd1dd2c4182cdd72be3553a347c39b",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 3,
+          "order": [
+            "batched",
+            "individual"
+          ],
+          "runs": {
+            "batched": {
+              "elapsedMs": 26.853399999999965,
+              "removedCount": 5000,
+              "removedIdsSha256": "a58ac3ff1d4f21226a8e1d66b251fb7050681b37db4b47c8ce3a2c42bf8319af",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "5820344edb7b9fed01bc707a4886f01ff496fa1a1efade2b01a3ac18434aa2e0",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            },
+            "individual": {
+              "elapsedMs": 18.558999999999287,
+              "removedCount": 5000,
+              "removedIdsSha256": "a58ac3ff1d4f21226a8e1d66b251fb7050681b37db4b47c8ce3a2c42bf8319af",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "5820344edb7b9fed01bc707a4886f01ff496fa1a1efade2b01a3ac18434aa2e0",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        },
+        {
+          "index": 4,
+          "order": [
+            "individual",
+            "batched"
+          ],
+          "runs": {
+            "individual": {
+              "elapsedMs": 20.65009999999984,
+              "removedCount": 5000,
+              "removedIdsSha256": "468e1dfae23c367da3e57980889da2cf96e7956c39e8d90148f845f0a19ed512",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "4095a6f80587e7b2e4515d694f7455b187e6b374bce7144304de5d1a8a2e543b",
+              "collectionChangedEvents": 5000,
+              "removedEntityCountFromEvents": 5000
+            },
+            "batched": {
+              "elapsedMs": 11.159099999999853,
+              "removedCount": 5000,
+              "removedIdsSha256": "468e1dfae23c367da3e57980889da2cf96e7956c39e8d90148f845f0a19ed512",
+              "removedIdsEvidence": "inferred from exact setup IDs and confirmed absent after removal; timed observer records counts only",
+              "survivorCount": 100,
+              "survivorIdsSha256": "4095a6f80587e7b2e4515d694f7455b187e6b374bce7144304de5d1a8a2e543b",
+              "collectionChangedEvents": 1,
+              "removedEntityCountFromEvents": 5000
+            }
+          }
+        }
+      ],
+      "individualMedianMs": 24.317299999999705,
+      "batchedMedianMs": 15.475900000000365,
+      "pairedChangePercent": [
+        -49.468741615239274,
+        -36.35847729805302,
+        -76.43243385189797,
+        44.69206314995957,
+        -45.96103650829807
+      ],
+      "forcedGc": false,
+      "runtimeSourcePath": "src/imports/runtimeLayer.js",
+      "productionHelperPath": "src/imports/entityCollectionOwnership.js",
+      "productionHelperSha256": "0a9091f60f510b4b6c1c2fd51c653a29e632044296ee30db9475373d83d62b4f"
+    }
+  },
+  "limits": {
+    "noBrowserOrFrameClaim": true,
+    "removeAllOnlyWhenAllCurrentEntitiesAreLayerOwned": true,
+    "mixedCollectionsSuspendAndResumeEvents": true,
+    "fiveAlternatingPairsAfterOneUnmeasuredWarmupPerSide": true
+  },
+  "productionHelperSha256": "0a9091f60f510b4b6c1c2fd51c653a29e632044296ee30db9475373d83d62b4f",
+  "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+  "inputSha256": {
+    "src/imports/runtimeLayer.js": "f9e6634f2ae5f70e9e5eb9c4c7952eb5cf2566e6c77bfd3c63a2767fc3b7337d",
+    "src/imports/entityCollectionOwnership.js": "0a9091f60f510b4b6c1c2fd51c653a29e632044296ee30db9475373d83d62b4f",
+    "scripts/performance/entityCollectionRemovalComparison.mjs": "72adf0316b1418fe75b13d4c563a23df62dce5628c4a368bb7b46077d508ba0c",
+    "package-lock.json": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+  },
+  "nodeVersion": "v24.16.0"
+}

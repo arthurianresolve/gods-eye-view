@@ -13,12 +13,14 @@ imported point entities. The mixed mode also had 100 unrelated entities. Forced
 GC was disabled. The timer covers only EntityCollection clearing; this evidence
 does not measure browser frames, import activation, or end-to-end UI latency.
 
-| Run | Mode | Individual median | Shared helper median | Paired changes | Faster pairs |
-| --- | --- | ---: | ---: | --- | ---: |
-| Primary | Isolated | 28.322 ms | 8.363 ms | -71.3, -74.6, -70.1, +18.9, -76.2% | 4/5 |
-| Primary | Mixed | 21.764 ms | 12.883 ms | -67.9, -39.9, -47.6, -68.3, +56.9% | 4/5 |
-| Independent repeat | Isolated | 20.010 ms | 8.938 ms | -57.3, -74.5, +24.0, -90.9, -37.8% | 4/5 |
-| Independent repeat | Mixed | 37.978 ms | 13.353 ms | -69.6, +49.0, -67.0, +46.2, -67.7% | 3/5 |
+| Run                | Mode     | Individual median | Shared helper median | Paired changes                     | Faster pairs |
+| ------------------ | -------- | ----------------: | -------------------: | ---------------------------------- | -----------: |
+| Primary            | Isolated |         28.322 ms |             8.363 ms | -71.3, -74.6, -70.1, +18.9, -76.2% |          4/5 |
+| Primary            | Mixed    |         21.764 ms |            12.883 ms | -67.9, -39.9, -47.6, -68.3, +56.9% |          4/5 |
+| Independent repeat | Isolated |         20.010 ms |             8.938 ms | -57.3, -74.5, +24.0, -90.9, -37.8% |          4/5 |
+| Independent repeat | Mixed    |         37.978 ms |            13.353 ms | -69.6, +49.0, -67.0, +46.2, -67.7% |          3/5 |
+| Guarded invocation | Isolated |         36.450 ms |             8.508 ms | -85.3, -70.4, -83.3, -81.0, +22.1% |          4/5 |
+| Guarded invocation | Mixed    |         24.317 ms |            15.476 ms | -49.5, -36.4, -76.4, +44.7, -46.0% |          4/5 |
 
 All pairs confirmed the expected removal count, exact survivor set, and the
 collection event counts: individual removal emitted 5,000 events; the helper
@@ -39,6 +41,14 @@ and benchmark harness SHA-256
 `973ab7650fd08aba76ba69d21e1d9512e3dd346a059d0a5102613ca1095bd425`.
 The package-lock SHA-256 at both runs was
 `671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6`.
+The guarded invocation then verified committed-clean runtime, helper, harness,
+and lockfile bytes both before and after all timed pairs, while confirming
+`HEAD` stayed fixed. It records their four hashes in its report and has SHA-256
+`f5d9578d686b2ff3e19162dee303ec9396b7c4766680aa77a82acdebe404897a` in
+[`entity-collection-removal-81fba13-guarded-run.json`](entity-collection-removal-81fba13-guarded-run.json).
+That report ran at harness SHA-256
+`72adf0316b1418fe75b13d4c563a23df62dce5628c4a368bb7b46077d508ba0c` on commit
+`be6c07efdb659983c3ecaf0ce1a9066439ee8f71`.
 
 Earlier `cb4b59f` measurements used an ID-only batched variant and are
 exploratory; they are not attributed to this production helper. The comparison
