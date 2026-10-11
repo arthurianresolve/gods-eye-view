@@ -15,8 +15,11 @@ now complete, but the latter run fails waiting for a warmup render. Follow-up
 fixture interception error. [Cause capture at `d081a114`](performance-evidence/s47-fixture-cause-38173405378/README.md)
 identifies a queued callback using Fetch after its document owner disabled it.
 `c9447d40` disposes interception callbacks before protocol teardown; 56 focused
-checks pass. Exact smoke `38173706259` is pending. No completed matched captures
-or speedup are established.
+checks pass. [Smoke 38173706259](performance-evidence/s47-fixture-owner-38173706259/README.md)
+passes that setup but fails at the render boundary: 4.25 seconds of its host
+deadline were consumed before the browser callback entered. Entry and render
+deadlines must be bounded separately, with delayed-timer negative controls.
+No completed matched captures or speedup are established.
 
 S59 attribution: the [CPU/GC diagnostic at `d91e0873`](performance-evidence/s59-load-profile-38172396175/README.md)
 passes independent recomputation; coordinate conversion takes 14.6 ms of the
@@ -45,7 +48,9 @@ Deactivation/manual range changes cancel pending probes. Focused checks,
 formatting and package boundaries pass. [Rendered CCTV and terrain/picking jobs](performance-evidence/s50-surface-owner/README.md)
 pass at that exact revision, with five stable CCTV reuse cycles and all 171
 terrain workers completed. They are software-rendered lifecycle evidence;
-production promotion awaits integrated standard CI and does not close full S50.
+The integration candidate `7ab4f188` is in standard CI `38174089296` after
+1,543 formatting checks and package boundaries pass. Production promotion
+awaits that result and does not close full S50.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
