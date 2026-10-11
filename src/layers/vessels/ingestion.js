@@ -143,7 +143,7 @@ export function createIngestion({
     feed.acceptedRowCount = snapshot.acceptedRowCount;
     feed.partial = payload?.complete === false;
 
-    if (snapshot.acceptedRowCount === 0) {
+    if (snapshot.acceptedRowCount === 0 && !snapshot.emptyCoverage) {
       feed.count = readCount();
       feed.stale = feed.count > 0 || Boolean(payload?.refreshing);
       if (isDefinitiveTransportFailure(snapshot.transportStatus)) {
