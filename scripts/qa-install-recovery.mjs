@@ -126,6 +126,7 @@ export async function runInstallRecoveryFixture({
     'scripts/verify-release.mjs',
     'scripts/apply-cesium-patches.mjs',
     'patches/cesium-1.138.0-inertia.json',
+    'patches/cesium-1.138.0-collision-transform.json',
   ]) {
     const target = path.join(source, file);
     await mkdir(path.dirname(target), { recursive: true });

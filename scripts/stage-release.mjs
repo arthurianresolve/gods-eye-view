@@ -109,6 +109,18 @@ export async function stageRelease({
       typeof command === 'string' &&
       command.includes('scripts/apply-cesium-patches.mjs'),
   );
+  const collisionPatch = 'patches/cesium-1.138.0-collision-transform.json';
+  const applierPath = path.join(source, 'scripts/apply-cesium-patches.mjs');
+  if (usesCesiumPatch) {
+    const applierInfo = await lstat(applierPath);
+    if (!applierInfo.isFile() || applierInfo.isSymbolicLink())
+      throw new Error('Missing or unsafe release dependency patch applier');
+  }
+  const usesCollisionPatch =
+    usesCesiumPatch &&
+    (await readFile(applierPath, 'utf8')).includes(
+      path.posix.basename(collisionPatch),
+    );
   const filesToCopy = [
     ...(await listFiles(dist)).map((entry) => ({
       ...entry,
@@ -126,6 +138,7 @@ export async function stageRelease({
         ? [
             'scripts/apply-cesium-patches.mjs',
             'patches/cesium-1.138.0-inertia.json',
+            ...(usesCollisionPatch ? [collisionPatch] : []),
           ]
         : []),
     ].map((relative) => ({

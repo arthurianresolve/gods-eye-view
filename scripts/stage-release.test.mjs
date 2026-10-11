@@ -35,11 +35,15 @@ async function fixture(t) {
   );
   await writeFile(
     path.join(root, 'scripts', 'apply-cesium-patches.mjs'),
-    '/* dependency patch applier */',
+    '/* dependency patch applier: cesium-1.138.0-collision-transform.json */',
   );
   await writeFile(
     path.join(root, 'patches', 'cesium-1.138.0-inertia.json'),
     '{"fixture":true}',
+  );
+  await writeFile(
+    path.join(root, 'patches', 'cesium-1.138.0-collision-transform.json'),
+    '{"collisionFixture":true}',
   );
   return root;
 }
@@ -62,7 +66,7 @@ test('release staging creates a verified versioned manifest and refuses replacem
   assert.equal(
     (await verifyReleaseDirectory(path.join(root, 'staging'))).artifactFiles
       .length,
-    10,
+    11,
   );
   await assert.rejects(
     stageRelease({ root, out: 'staging' }),
@@ -82,6 +86,7 @@ test('release retains and checksums the dependency postinstall support files', a
   for (const file of [
     'scripts/apply-cesium-patches.mjs',
     'patches/cesium-1.138.0-inertia.json',
+    'patches/cesium-1.138.0-collision-transform.json',
   ]) {
     assert.deepEqual(
       await readFile(path.join(staged, file)),
@@ -90,7 +95,7 @@ test('release retains and checksums the dependency postinstall support files', a
     assert.ok(manifest.artifactFiles.some((entry) => entry.path === file));
   }
   await writeFile(
-    path.join(staged, 'patches', 'cesium-1.138.0-inertia.json'),
+    path.join(staged, 'patches', 'cesium-1.138.0-collision-transform.json'),
     '{}',
   );
   await assert.rejects(verifyReleaseDirectory(staged), /checksum mismatch/);
@@ -114,6 +119,35 @@ test('a package declaring the dependency hook cannot omit its applier', async (t
   const root = await fixture(t);
   await rm(path.join(root, 'scripts', 'apply-cesium-patches.mjs'));
   await assert.rejects(stageRelease({ root, out: 'incomplete' }), /ENOENT/);
+});
+
+test('a package using collision correction cannot omit its second patch manifest', async (t) => {
+  const root = await fixture(t);
+  await rm(
+    path.join(root, 'patches', 'cesium-1.138.0-collision-transform.json'),
+  );
+  await assert.rejects(stageRelease({ root, out: 'incomplete' }), /ENOENT/);
+});
+
+test('historical inertia-only installers retain their original support files', async (t) => {
+  const root = await fixture(t);
+  await writeFile(
+    path.join(root, 'scripts', 'apply-cesium-patches.mjs'),
+    '/* historical inertia-only applier */',
+  );
+  await rm(
+    path.join(root, 'patches', 'cesium-1.138.0-collision-transform.json'),
+  );
+  await stageRelease({ root, out: 'historical-inertia' });
+  const verified = await verifyReleaseDirectory(
+    path.join(root, 'historical-inertia'),
+  );
+  assert.equal(verified.artifactFiles.length, 10);
+  assert.ok(
+    verified.artifactFiles.some(
+      (file) => file.path === 'patches/cesium-1.138.0-inertia.json',
+    ),
+  );
 });
 
 test('stable staging requires the exact version tag in CI, independently of the host workflow', async (t) => {
