@@ -161,6 +161,7 @@ try {
     const importPointCollection = process.argv.includes(
       '--import-point-collection',
     );
+    const importMixedParity = process.argv.includes('--import-mixed-parity');
     const importLoadProfileMode = importLoadCpuProfile
       ? 'cpu'
       : importLoadHeapProfile
@@ -191,6 +192,8 @@ try {
         'point-renderer',
         'primitive-collection',
       );
+    if (importMixedParity)
+      importFixtureUrl.searchParams.set('mixed-parity', '1');
     const importPageErrors = [];
     const onImportPageError = (error) => {
       if (importPageErrors.length < 8)
@@ -711,7 +714,8 @@ try {
     process.argv.includes('--import-step-attribution') ||
     process.argv.includes('--import-load-cpu-profile') ||
     process.argv.includes('--import-load-heap-profile') ||
-    process.argv.includes('--import-point-collection')
+    process.argv.includes('--import-point-collection') ||
+    process.argv.includes('--import-mixed-parity')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

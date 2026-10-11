@@ -3,6 +3,17 @@ import test from 'node:test';
 import * as Cesium from 'cesium';
 import { inspectImportedPointState } from './importPointState.mjs';
 
+test('pinned Cesium exposes the world-to-window transform used by native pick fixtures', () => {
+  assert.equal(
+    typeof Cesium.SceneTransforms.worldToWindowCoordinates,
+    'function',
+  );
+  assert.notEqual(
+    typeof Cesium.SceneTransforms.wgs84ToWindowCoordinates,
+    'function',
+  );
+});
+
 function fixture() {
   const entities = new Cesium.EntityCollection();
   const clock = { currentTime: new Cesium.JulianDate() };

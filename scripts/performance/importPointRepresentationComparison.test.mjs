@@ -37,6 +37,7 @@ function makeRun(representation) {
         mode,
         features: 5000,
         pixelSha256: hash('a'),
+        pixelPngDataUrl: 'data:image/png;base64,AA==',
         pointVisualState: structuredClone(pointState),
       });
   return {
@@ -55,6 +56,7 @@ function makeRun(representation) {
       harnessCommit: 'a'.repeat(40),
       fixture: 'synthetic-5000-import-points/v1',
       pointRepresentation: representation,
+      mixedGeometryParityRequested: true,
       featureLimit: 5000,
       workload: 'paired',
       captureMode: 'pixels',
@@ -91,6 +93,49 @@ function makeRun(representation) {
         entities: entity ? 5000 : 0,
       },
       samples,
+      mixedGeometryParity: {
+        schema: 'gev-import-mixed-geometry-parity/v1',
+        status: 'passed',
+        renderer: representation,
+        entityIds: [
+          'gev-import:mixed-parity:mixed-parity:line',
+          'gev-import:mixed-parity:mixed-parity:point',
+          'gev-import:mixed-parity:mixed-parity:polygon',
+        ],
+        rows: [
+          {
+            id: 'line',
+            geometry: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+          },
+          { id: 'point', position: [7, 8, 9], style: [9, 0, 1] },
+          {
+            id: 'polygon',
+            geometry: [
+              [
+                [10, 11, 12],
+                [13, 14, 15],
+              ],
+            ],
+          },
+        ],
+        rowsSha256: hash('4'),
+        nativePicks: ['point', 'line', 'polygon'].map((shape, index) => ({
+          shape,
+          screen: [100 + index, 200 + index],
+          expectedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+          pickedEntityId: `gev-import:mixed-parity:mixed-parity:${shape}`,
+        })),
+        nativePicksSha256: hash('5'),
+        capture: {
+          pixelSha256: hash('6'),
+          width: 960,
+          height: 640,
+          pngDataUrl: 'data:image/png;base64,AA==',
+        },
+      },
       largeGeometry: {
         exactOutputParity: true,
         synchronous: { rows: [{ id: 'line', geometrySha256: hash('b') }] },
@@ -108,7 +153,7 @@ function makeRun(representation) {
   };
 }
 
-test('matches five fresh Entity and point-collection runs with exact native state and pixels', () => {
+test('compares two fresh renderer reports with exact pixels and native state', () => {
   const compared = compareImportPointRepresentationReports(
     makeRun('entity'),
     makeRun('primitive-collection'),
@@ -116,6 +161,8 @@ test('matches five fresh Entity and point-collection runs with exact native stat
   assert.equal(compared.valid, true, compared.errors.join('; '));
   assert.equal(compared.summary.pixelSamplesCompared, 10);
   assert.equal(compared.summary.pointStateSamplesCompared, 10);
+  assert.equal(compared.summary.mixedGeometryPixelParity, true);
+  assert.equal(compared.summary.mixedGeometryNativePickCount, 3);
   assert.equal(compared.summary.performanceAcceptanceEligible, false);
 });
 
@@ -184,4 +231,49 @@ test('rejects incomplete warmup, geometry, or cancellation ownership', () => {
       error.includes('cancellation/primitive cleanup'),
     ),
   );
+});
+
+test('rejects mixed capture pixel drift, wrong native owner, or missing mixed fixture', () => {
+  const entity = makeRun('entity');
+  const collection = makeRun('primitive-collection');
+  collection.importBatches.mixedGeometryParity.capture.pixelSha256 = hash('7');
+  const pixelDrift = compareImportPointRepresentationReports(
+    entity,
+    collection,
+  );
+  assert.equal(pixelDrift.valid, false);
+  assert.ok(
+    pixelDrift.errors.includes(
+      'mixed point/line/polygon pixels differ across renderers',
+    ),
+  );
+
+  collection.importBatches.mixedGeometryParity.capture.pixelSha256 = hash('6');
+  collection.importBatches.mixedGeometryParity.nativePicks[0].pickedEntityId =
+    'gev-import:mixed-parity:mixed-parity:line';
+  const compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+  assert.ok(
+    compared.errors.includes(
+      'mixed geometry capture, rows, or native picks are incomplete',
+    ),
+  );
+
+  delete collection.importBatches.mixedGeometryParity;
+  const missing = compareImportPointRepresentationReports(entity, collection);
+  assert.ok(
+    missing.errors.includes(
+      'mixed geometry capture, rows, or native picks are incomplete',
+    ),
+  );
+});
+
+test('rejects missing or oversized PNG witnesses', () => {
+  const entity = makeRun('entity');
+  const collection = makeRun('primitive-collection');
+  delete collection.importBatches.samples[0].pixelPngDataUrl;
+  collection.importBatches.mixedGeometryParity.capture.pngDataUrl = `data:image/png;base64,${'A'.repeat(1_500_001)}`;
+  const compared = compareImportPointRepresentationReports(entity, collection);
+  assert.equal(compared.valid, false);
+  assert.ok(compared.errors.some((error) => error.includes('PNG witness')));
 });

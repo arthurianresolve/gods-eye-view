@@ -9,10 +9,14 @@ import {
 
 function fixture(
   t,
-  { advancePreparationClock = false, pointRepresentation = 'entity' } = {},
+  {
+    advancePreparationClock = false,
+    pointRepresentation = 'entity',
+    manageWindow = true,
+  } = {},
 ) {
   const previous = globalThis.window;
-  globalThis.window = { dispatchEvent() {} };
+  if (manageWindow) globalThis.window = { dispatchEvent() {} };
   let clock = 0,
     handlers = 0,
     renders = 0;
@@ -66,8 +70,10 @@ function fixture(
   t.after(() => {
     layer.destroy();
     if (!primitives.isDestroyed()) primitives.destroy();
-    if (previous === undefined) delete globalThis.window;
-    else globalThis.window = previous;
+    if (manageWindow) {
+      if (previous === undefined) delete globalThis.window;
+      else globalThis.window = previous;
+    }
   });
   const flush = () => {
     while (timers.size) {
@@ -207,6 +213,132 @@ test('primitive point mode leaves non-point graphics on viewer.entities and pres
   assert.equal(outside.isDestroyed(), false);
   assert.equal(env.layer.getPointRendererSnapshot().pointCount, 0);
   assert.equal(getContextStore().entities.size, 0);
+});
+
+test('primitive point mode keeps mixed geometry parity and point selection beside line and polygon Entities', (t) => {
+  const previousWindow = globalThis.window;
+  globalThis.window = { dispatchEvent() {} };
+  const input = [
+    {
+      id: 'mixed-parity',
+      kind: 'geojson',
+      attribution: 'Survey',
+      records: [
+        {
+          id: 'point',
+          properties: { name: 'Marker' },
+          geometry: { type: 'Point', coordinates: [10, 40] },
+        },
+        {
+          id: 'line',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [10, 40],
+              [11, 41],
+            ],
+          },
+        },
+        {
+          id: 'polygon',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [10, 40],
+                [11, 40],
+                [11, 41],
+                [10, 40],
+              ],
+            ],
+          },
+        },
+      ],
+    },
+  ];
+  const summarize = (entities) =>
+    entities.map((entity) => ({
+      id: entity.id,
+      name: entity.name,
+      position: entity.position?.getValue()?.toString(),
+      point: entity.point
+        ? {
+            pixelSize: entity.point.pixelSize.getValue(),
+            color: entity.point.color.getValue().toString(),
+            outlineColor: entity.point.outlineColor.getValue().toString(),
+            outlineWidth: entity.point.outlineWidth.getValue(),
+          }
+        : null,
+      line: entity.polyline
+        ? entity.polyline.positions
+            .getValue()
+            .map((value) => [value.x, value.y, value.z])
+        : null,
+      polygon: entity.polygon ? entity.polygon.hierarchy.getValue() : null,
+    }));
+
+  const baseline = fixture(t, { manageWindow: false });
+  baseline.layer.load(input, { workspaceId: 'mixed-parity' });
+  const expected = summarize(baseline.entities.values);
+  assert.deepEqual(
+    expected.map(({ id }) => id),
+    [
+      'gev-import:mixed-parity:mixed-parity:point',
+      'gev-import:mixed-parity:mixed-parity:line',
+      'gev-import:mixed-parity:mixed-parity:polygon',
+    ],
+  );
+  baseline.layer.clear();
+
+  const candidate = fixture(t, {
+    pointRepresentation: 'primitive-collection',
+    manageWindow: false,
+  });
+  candidate.layer.load(input, { workspaceId: 'mixed-parity' });
+  const candidatePoint =
+    candidate.layer.getPointRendererSnapshot().entityRows[0];
+  const candidateRows = [
+    {
+      id: candidatePoint.id,
+      name: candidatePoint.name,
+      position: new Cesium.Cartesian3(...candidatePoint.position).toString(),
+      point: {
+        pixelSize: candidatePoint.pixelSize,
+        color: new Cesium.Color(...candidatePoint.color).toString(),
+        outlineColor: new Cesium.Color(
+          ...candidatePoint.outlineColor,
+        ).toString(),
+        outlineWidth: candidatePoint.outlineWidth,
+      },
+      line: null,
+      polygon: null,
+    },
+    ...summarize(candidate.entities.values),
+  ];
+  assert.deepEqual(candidateRows, expected);
+  assert.deepEqual(
+    candidate.entities.values.map((entity) => entity.id),
+    [
+      'gev-import:mixed-parity:mixed-parity:line',
+      'gev-import:mixed-parity:mixed-parity:polygon',
+    ],
+  );
+
+  const primitive = candidate.primitives.get(0).get(0);
+  candidate.viewer.scene.pick = () => ({ id: primitive.id });
+  candidate.inputActions.get(Cesium.ScreenSpaceEventType.LEFT_CLICK)({
+    position: { x: 1, y: 1 },
+  });
+  assert.equal(getSelectedEntityContext()?.entity.id, candidatePoint.id);
+  assert.equal(getSelectedEntityContext()?.evidence.entityRef.id, 'point');
+  candidate.layer.destroy();
+  baseline.layer.destroy();
+  if (previousWindow === undefined) delete globalThis.window;
+  else globalThis.window = previousWindow;
+  t.after(() => {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  });
 });
 
 test('primitive point mode cancellation and replacement cannot repopulate a released collection', async (t) => {

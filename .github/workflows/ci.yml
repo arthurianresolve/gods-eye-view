@@ -47,6 +47,7 @@ on:
             import-step-attribution,
             import-load-cpu-profile,
             import-load-heap-profile,
+            imports-point-collection-parity,
           ]
         default: collections
       hosted_gpu_probe:
@@ -804,17 +805,28 @@ jobs:
         run: |
           if [ "$DIAGNOSTIC" = "traffic" ]; then
             node scripts/performance/trafficRenderDemandComparison.mjs "$RUNNER_TEMP/gev-traffic-baseline" "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/qa-artifacts/traffic-render-demand"
+          elif [ "$DIAGNOSTIC" = "imports-point-collection-parity" ]; then
+            mkdir -p qa-artifacts
+            node scripts/qa-hosted-capture.mjs --imports --import-mixed-parity
+            cp qa-artifacts/hosted-native-renderer.json qa-artifacts/import-point-entity.json
+            node scripts/qa-hosted-capture.mjs --imports --import-point-collection --import-mixed-parity
+            cp qa-artifacts/hosted-native-renderer.json qa-artifacts/import-point-collection.json
+            node scripts/performance/importPointRepresentationComparison.mjs --entity-report=qa-artifacts/import-point-entity.json --collection-report=qa-artifacts/import-point-collection.json > qa-artifacts/import-point-representation-comparison.json
+            cat qa-artifacts/import-point-representation-comparison.json
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
       - name: Preserve renderer comparison evidence
-        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'imports' || inputs.renderer_diagnostic == 'import-attribution' || inputs.renderer_diagnostic == 'import-step-diagnostics' || inputs.renderer_diagnostic == 'import-step-attribution' || inputs.renderer_diagnostic == 'import-load-cpu-profile' || inputs.renderer_diagnostic == 'import-load-heap-profile')
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'imports' || inputs.renderer_diagnostic == 'import-attribution' || inputs.renderer_diagnostic == 'import-step-diagnostics' || inputs.renderer_diagnostic == 'import-step-attribution' || inputs.renderer_diagnostic == 'import-load-cpu-profile' || inputs.renderer_diagnostic == 'import-load-heap-profile' || inputs.renderer_diagnostic == 'imports-point-collection-parity')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}
           path: |
             qa-artifacts/hosted-native-renderer.json
             qa-artifacts/import-attribution.cpuprofile
+            qa-artifacts/import-point-entity.json
+            qa-artifacts/import-point-collection.json
+            qa-artifacts/import-point-representation-comparison.json
           if-no-files-found: error
           retention-days: 3
       - name: Preserve traffic evidence after success or failure

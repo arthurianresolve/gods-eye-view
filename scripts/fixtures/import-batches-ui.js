@@ -38,6 +38,7 @@ const requestedLoadProfile = runOptions.get('load-profile');
 const requestedWorkload = runOptions.get('workload');
 const requestedPointRepresentation =
   runOptions.get('point-renderer') || 'entity';
+const requestedMixedParity = runOptions.get('mixed-parity') === '1';
 const requestedViewer =
   runOptions.get('viewer') === 'cesium' ? 'cesium' : 'application-wrapper';
 if (['paired', 'synchronous', 'cooperative'].includes(requestedWorkload))
@@ -97,6 +98,47 @@ const largeGeometryImports = [
           coordinates: [
             coordinateRing(LARGE_GEOMETRY_COORDINATES / 2, 0.1),
             coordinateRing(LARGE_GEOMETRY_COORDINATES / 2, 0.02),
+          ],
+        },
+      },
+    ],
+  },
+];
+const mixedGeometryImports = [
+  {
+    id: 'mixed-parity',
+    kind: 'synthetic-demo',
+    attribution: 'Generated mixed-geometry parity fixture',
+    records: [
+      {
+        id: 'point',
+        properties: { name: 'Mixed point' },
+        geometry: { type: 'Point', coordinates: [0, 0] },
+      },
+      {
+        id: 'line',
+        properties: { name: 'Mixed line' },
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [0.03, 0.03],
+            [0.08, 0.03],
+          ],
+        },
+      },
+      {
+        id: 'polygon',
+        properties: { name: 'Mixed polygon' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-0.08, -0.03],
+              [-0.03, -0.03],
+              [-0.03, 0.03],
+              [-0.08, 0.03],
+              [-0.08, -0.03],
+            ],
           ],
         },
       },
@@ -298,6 +340,121 @@ async function geometrySnapshot(viewer, workspaceId) {
     });
   }
   return rows;
+}
+async function mixedGeometrySnapshot(viewer, layer) {
+  const prefix = 'gev-import:mixed-parity:mixed-parity:';
+  const entities = [...getContextStore().entities.values()]
+    .map((entry) => entry.entity)
+    .filter((entity) => String(entity.id).startsWith(prefix))
+    .sort((left, right) => String(left.id).localeCompare(String(right.id)));
+  const rows = [];
+  for (const entity of entities) {
+    const pointPosition = entity.position?.getValue(viewer.clock.currentTime);
+    const vector = (value) => (value ? [value.x, value.y, value.z] : null);
+    const color = (value) =>
+      value ? [value.red, value.green, value.blue, value.alpha] : null;
+    let linePositions = null;
+    let polygonRings = null;
+    if (entity.polyline)
+      linePositions = entity.polyline.positions
+        .getValue(viewer.clock.currentTime)
+        .map(vector);
+    if (entity.polygon) {
+      const hierarchy = entity.polygon.hierarchy.getValue(
+        viewer.clock.currentTime,
+      );
+      polygonRings = [
+        hierarchy.positions,
+        ...hierarchy.holes.map((hole) => hole.positions),
+      ].map((ring) => ring.map(vector));
+    }
+    rows.push({
+      id: entity.id,
+      name: entity.name,
+      position: vector(pointPosition),
+      point: entity.point
+        ? {
+            pixelSize: entity.point.pixelSize.getValue(
+              viewer.clock.currentTime,
+            ),
+            color: color(entity.point.color.getValue(viewer.clock.currentTime)),
+            outlineColor: color(
+              entity.point.outlineColor.getValue(viewer.clock.currentTime),
+            ),
+            outlineWidth: entity.point.outlineWidth.getValue(
+              viewer.clock.currentTime,
+            ),
+          }
+        : null,
+      linePositions,
+      polygonRings,
+    });
+  }
+  const ids = rows.map((row) => row.id);
+  check(
+    JSON.stringify(ids) ===
+      JSON.stringify([`${prefix}line`, `${prefix}point`, `${prefix}polygon`]),
+    'Mixed fixture did not retain exact point, line, and polygon Entity identities.',
+  );
+  const pointSnapshot = layer.getPointRendererSnapshot();
+  if (requestedPointRepresentation === 'primitive-collection')
+    check(
+      pointSnapshot?.pointCount === 1 &&
+        pointSnapshot.primitiveRows[0]?.id === `${prefix}point`,
+      'Mixed fixture point primitive ownership is incomplete.',
+    );
+  else
+    check(
+      pointSnapshot === null &&
+        viewer.entities.getById(`${prefix}point`) ===
+          getContextStore().entities.get(`${prefix}point`)?.entity,
+      'Mixed fixture default point Entity ownership changed.',
+    );
+  const pickTargets = [
+    { shape: 'point', coordinate: [0, 0] },
+    { shape: 'line', coordinate: [0.055, 0.03] },
+    { shape: 'polygon', coordinate: [-0.055, 0] },
+  ];
+  const nativePicks = pickTargets.map(({ shape, coordinate }) => {
+    const windowPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
+      viewer.scene,
+      Cesium.Cartesian3.fromDegrees(...coordinate),
+    );
+    check(
+      windowPosition &&
+        windowPosition.x >= 0 &&
+        windowPosition.y >= 0 &&
+        windowPosition.x < viewer.scene.canvas.clientWidth &&
+        windowPosition.y < viewer.scene.canvas.clientHeight,
+      `Mixed ${shape} native-pick target is outside the viewport.`,
+    );
+    const picked = viewer.scene.pick(
+      new Cesium.Cartesian2(windowPosition.x, windowPosition.y),
+    );
+    return {
+      shape,
+      screen: [windowPosition.x, windowPosition.y],
+      expectedEntityId: `${prefix}${shape}`,
+      pickedEntityId: typeof picked?.id?.id === 'string' ? picked.id.id : null,
+    };
+  });
+  check(
+    nativePicks.every((row) => row.pickedEntityId === row.expectedEntityId),
+    'Mixed geometry native scene.pick did not resolve each intended Entity.',
+  );
+  return {
+    schema: 'gev-import-mixed-geometry-parity/v1',
+    status: 'passed',
+    scope:
+      'one isolated rendered mixed-geometry parity capture; native scene.pick for point, line, and polygon; correctness only, not a performance sample',
+    renderer: requestedPointRepresentation,
+    entityIds: ids,
+    rows,
+    rowsSha256: await sha256Json(rows),
+    nativePicks,
+    nativePicksSha256: await sha256Json(nativePicks),
+    capture: null,
+  };
 }
 function resources(viewer, layer) {
   const collections = [];
@@ -524,7 +681,7 @@ function nativePointPickWitness(viewer, entityRows) {
     const row = entityRows[index];
     if (!row) continue;
     const world = new Cesium.Cartesian3(...row.position);
-    const windowPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(
+    const windowPosition = Cesium.SceneTransforms.worldToWindowCoordinates(
       viewer.scene,
       world,
     );
@@ -679,6 +836,7 @@ run.addEventListener('click', async () => {
       'document visibility only; does not verify desktop foreground or occlusion',
     fixture: 'synthetic-5000-import-points/v1',
     pointRepresentation: requestedPointRepresentation,
+    mixedGeometryParityRequested: requestedMixedParity,
     featureLimit: IMPORT_VERTEX_LIMIT,
     workload,
     viewerConstruction: requestedViewer,
@@ -1131,6 +1289,8 @@ run.addEventListener('click', async () => {
               ? capture.pixelSha256
               : capture;
           sample.pixelSha256 = hash;
+          if (requestedMixedParity && capture?.rgba)
+            sample.pixelPngDataUrl = encodePixelWitness(capture);
           if (expectedPixels === null) expectedPixels = hash;
           let currentPointState = null;
           if (report.captureMode === 'pixels') {
@@ -1323,6 +1483,52 @@ run.addEventListener('click', async () => {
         geometryEquivalent,
       'Cooperative geometry changed complete line/polygon output or identity.',
     );
+    if (requestedMixedParity) {
+      check(
+        report.captureMode === 'pixels',
+        'Mixed geometry parity requires pixel capture mode.',
+      );
+      layer.clear();
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 85000),
+      });
+      const mixedLoad = layer.load(mixedGeometryImports, {
+        workspaceId: 'mixed-parity',
+      });
+      check(
+        mixedLoad.drawn === 3 && mixedLoad.omitted === 0,
+        'Mixed geometry fixture did not load all three source shapes.',
+      );
+      await settledFrame(viewer);
+      const mixed = await mixedGeometrySnapshot(viewer, layer);
+      const capture = await pixels(
+        viewer,
+        { mode: 'mixed-parity' },
+        { preserveBytes: true },
+      );
+      check(
+        capture && typeof capture === 'object' && capture.rgba,
+        'Mixed parity pixel capture is missing.',
+      );
+      mixed.capture = {
+        pixelSha256: capture.pixelSha256,
+        width: capture.width,
+        height: capture.height,
+        pngDataUrl: encodePixelWitness(capture),
+      };
+      report.mixedGeometryParity = mixed;
+      report.checks.push({
+        id: 'mixed-point-line-polygon-pixels-and-native-picks',
+        status: 'passed',
+      });
+      layer.clear();
+      check(
+        layer.getState().featureCount === 0 &&
+          layer.getPerformanceDiagnostics().pointPrimitiveCount === 0 &&
+          getContextStore().entities.size === 0,
+        'Mixed geometry parity capture retained owned render resources.',
+      );
+    }
     check(
       geometryBatchMetrics.yieldedBatches > 0 &&
         geometryBatchMetrics.queuedWakeCount > 0 &&

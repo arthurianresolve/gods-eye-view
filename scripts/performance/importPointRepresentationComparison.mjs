@@ -14,6 +14,65 @@ function validSha256(value) {
   return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 }
 
+function validPngDataUrl(value) {
+  return (
+    typeof value === 'string' &&
+    value.startsWith('data:image/png;base64,') &&
+    value.length <= 1_500_000 &&
+    /^[A-Za-z0-9+/]+=*$/.test(value.slice('data:image/png;base64,'.length))
+  );
+}
+
+function mixedParityKey(value, expectedRenderer) {
+  if (
+    value?.schema !== 'gev-import-mixed-geometry-parity/v1' ||
+    value?.status !== 'passed' ||
+    value?.renderer !== expectedRenderer ||
+    !validSha256(value?.rowsSha256) ||
+    !validSha256(value?.nativePicksSha256) ||
+    !Array.isArray(value?.rows) ||
+    value.rows.length !== 3 ||
+    !Array.isArray(value?.nativePicks) ||
+    value.nativePicks.length !== 3 ||
+    !validSha256(value?.capture?.pixelSha256) ||
+    !validPngDataUrl(value?.capture?.pngDataUrl) ||
+    !Number.isInteger(value?.capture?.width) ||
+    value.capture.width < 1 ||
+    !Number.isInteger(value?.capture?.height) ||
+    value.capture.height < 1
+  )
+    return null;
+  const shapes = ['point', 'line', 'polygon'];
+  const entityIds = ['line', 'point', 'polygon'].map(
+    (shape) => `gev-import:mixed-parity:mixed-parity:${shape}`,
+  );
+  if (
+    !jsonEqual(value.entityIds, entityIds) ||
+    !jsonEqual(
+      value.nativePicks.map((row) => row?.shape),
+      shapes,
+    ) ||
+    !value.nativePicks.every(
+      (row, index) =>
+        Array.isArray(row?.screen) &&
+        row.screen.length === 2 &&
+        row.screen.every(Number.isFinite) &&
+        row.expectedEntityId ===
+          `gev-import:mixed-parity:mixed-parity:${shapes[index]}` &&
+        row.pickedEntityId === row.expectedEntityId,
+    )
+  )
+    return null;
+  return {
+    entityIds: value.entityIds,
+    rows: value.rows,
+    rowsSha256: value.rowsSha256,
+    nativePicks: value.nativePicks,
+    nativePicksSha256: value.nativePicksSha256,
+    capture: value.capture,
+  };
+}
+
 function pointStateKey(state, representation) {
   const pickRows = state?.nativePickWitness?.rows;
   const validPickRows =
@@ -102,6 +161,11 @@ function samplesByPairAndMode(fixture, errors, label) {
       sample?.features === 5000,
       `${label} sample ${key} population changed`,
     );
+    add(
+      errors,
+      validPngDataUrl(sample?.pixelPngDataUrl),
+      `${label} sample ${key} lacks its bounded PNG witness`,
+    );
   }
   add(errors, result.size === 10, `${label} pair/mode inventory is incomplete`);
   return result;
@@ -116,7 +180,11 @@ function fixtureOf(run) {
   return run?.importBatches || run;
 }
 
-/** Compare separate fresh hosted runs of the Entity and app-owned point paths. */
+/**
+ * Compare separate fresh hosted runs of the Entity and app-owned point paths.
+ * Each report has five sync/cooperative workload pairs; renderer order is not
+ * alternated and this comparison is correctness-only, not benefit evidence.
+ */
 export function compareImportPointRepresentationReports(
   entityRun,
   collectionRun,
@@ -154,6 +222,11 @@ export function compareImportPointRepresentationReports(
       errors,
       fixture?.pointRepresentation === expected,
       `${label} renderer identity mismatch`,
+    );
+    add(
+      errors,
+      fixture?.mixedGeometryParityRequested === true,
+      `${label} did not request the mixed geometry parity capture`,
     );
     add(
       errors,
@@ -245,6 +318,38 @@ export function compareImportPointRepresentationReports(
     ),
     'effective render settings or camera differ',
   );
+  const entityMixed = mixedParityKey(entity?.mixedGeometryParity, 'entity');
+  const collectionMixed = mixedParityKey(
+    collection?.mixedGeometryParity,
+    'primitive-collection',
+  );
+  add(
+    errors,
+    Boolean(entityMixed && collectionMixed),
+    'mixed geometry capture, rows, or native picks are incomplete',
+  );
+  if (entityMixed && collectionMixed) {
+    add(
+      errors,
+      entityMixed.capture.width === collectionMixed.capture.width &&
+        entityMixed.capture.height === collectionMixed.capture.height &&
+        entityMixed.capture.pixelSha256 === collectionMixed.capture.pixelSha256,
+      'mixed point/line/polygon pixels differ across renderers',
+    );
+    add(
+      errors,
+      jsonEqual(entityMixed.entityIds, collectionMixed.entityIds) &&
+        jsonEqual(entityMixed.rows, collectionMixed.rows) &&
+        entityMixed.rowsSha256 === collectionMixed.rowsSha256,
+      'mixed point/line/polygon Entity identities or geometry differ',
+    );
+    add(
+      errors,
+      jsonEqual(entityMixed.nativePicks, collectionMixed.nativePicks) &&
+        entityMixed.nativePicksSha256 === collectionMixed.nativePicksSha256,
+      'mixed point/line/polygon native picks differ',
+    );
+  }
 
   const entitySamples = samplesByPairAndMode(entity, errors, 'Entity run');
   const collectionSamples = samplesByPairAndMode(
@@ -344,9 +449,17 @@ export function compareImportPointRepresentationReports(
       schema: 'gev-import-point-representation-comparison/v1',
       applicationCommit: expectedCommit || null,
       fixtureCommit: entity?.harnessCommit || null,
-      entityPairs: 5,
+      representationPairs: 1,
+      synchronousCooperativePairsPerRepresentation: 5,
       pixelSamplesCompared: pixelMatches,
       pointStateSamplesCompared: pointStateMatches,
+      pngWitnessCount: entitySamples.size + collectionSamples.size + 2,
+      mixedGeometryPixelParity: Boolean(
+        entityMixed &&
+        collectionMixed &&
+        entityMixed.capture.pixelSha256 === collectionMixed.capture.pixelSha256,
+      ),
+      mixedGeometryNativePickCount: entityMixed?.nativePicks.length || 0,
       geometryParity: errors.every((error) => !error.includes('geometry')),
       cancellationCleanup:
         entity?.cancellation?.ownershipReleased === true &&
