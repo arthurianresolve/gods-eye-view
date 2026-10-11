@@ -168,8 +168,18 @@ function traceAttributedReport() {
     const loadMarker = `gev-import-step:${label}`;
     const stepMarker = `gev-import-step:step:${label}:entity:1`;
     anchors.push(
-      { name: loadMarker, pageNowMs: 100 + index * 100, uncertaintyMs: 0.05 },
-      { name: stepMarker, pageNowMs: 120 + index * 100, uncertaintyMs: 0.05 },
+      {
+        name: loadMarker,
+        pageNowMs: 100 + index * 100,
+        uncertaintyMs: 0.05,
+        callDurationMs: 0.1,
+      },
+      {
+        name: stepMarker,
+        pageNowMs: 120 + index * 100,
+        uncertaintyMs: 0.05,
+        callDurationMs: 0.1,
+      },
     );
     const steps = iteratorSteps();
     steps.slowStepWindows = [
@@ -333,6 +343,17 @@ test('rejects incomplete or misbound loading trace evidence', () => {
     },
     (bad) => {
       bad.importTraceAttribution.preparation.pageNowMs = 1000;
+    },
+    (bad) => {
+      // Summary flags cannot waive the raw measured-anchor limit.
+      bad.importTraceAttribution.traceAnchors[0].uncertaintyMs = 2.01;
+      bad.importTraceAttribution.traceAnchors[0].callDurationMs = 4.02;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceAnchors[0].uncertaintyMs = NaN;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceAnchors[0].callDurationMs += 1;
     },
     (bad) => {
       bad.importTraceAttribution.traceSummary.observedMarkers =

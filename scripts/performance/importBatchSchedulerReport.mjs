@@ -415,10 +415,16 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
         !anchorNames.has(preparationName) &&
         array(attribution?.traceAnchors).every(
           (anchor) =>
-            finite(anchor?.pageNowMs) &&
-            anchor.pageNowMs >= preparation.pageNowMs,
+            typeof anchor?.name === 'string' &&
+            anchor.name.startsWith('gev-import-step:') &&
+            finite(anchor.pageNowMs) &&
+            anchor.pageNowMs >= preparation.pageNowMs &&
+            finite(anchor.uncertaintyMs) &&
+            anchor.uncertaintyMs <= 2 &&
+            finite(anchor.callDurationMs) &&
+            Math.abs(anchor.callDurationMs - anchor.uncertaintyMs * 2) <= 0.001,
         ),
-      'loading trace preparation is missing or inconsistent',
+      'loading trace preparation or measured anchor is missing or inconsistent',
     );
     add(
       errors,
