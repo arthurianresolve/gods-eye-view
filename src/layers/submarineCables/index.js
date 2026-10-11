@@ -10,12 +10,18 @@ export function createSubmarineCableLayer({
   screenSpaceEventHandlerFactory,
   mapStackEventTarget = null,
   sweepClock = defaultSweepClock,
+  referenceRenderer = 'entities',
 }) {
   if (!source?.fetch || !source.label)
     throw new TypeError(
       'A cable source with a label and fetch(signal) is required',
     );
-  const state = createState({ overlayHost, sweepClock });
+  if (!['entities', 'collections'].includes(referenceRenderer)) {
+    throw new TypeError(
+      'referenceRenderer must be either entities or collections',
+    );
+  }
+  const state = createState({ overlayHost, sweepClock, referenceRenderer });
   const parts = {};
   const context = {
     state,

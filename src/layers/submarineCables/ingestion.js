@@ -159,6 +159,8 @@ export function createIngestion({ state, parts, source }) {
       state._surfaceRecords = [];
       state._featureRecords = [];
 
+      parts.rendering.prepareReferenceCollections?.(viewer);
+
       cableFeatures.forEach((feature, index) => {
         const reference = featureReference(feature);
         if (!reference) return;

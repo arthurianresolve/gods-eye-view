@@ -5,7 +5,7 @@ import {
 } from './overlay.js';
 import { BASE_CABLE_COLOR, BASE_LANDING_COLOR } from './policy.js';
 
-export function createState({ sweepClock, overlayHost }) {
+export function createState({ sweepClock, overlayHost, referenceRenderer }) {
   const state = {};
 
   state._viewer = null;
@@ -35,6 +35,11 @@ export function createState({ sweepClock, overlayHost }) {
   state._landingDataSource = null;
 
   state._referenceDataSource = null;
+
+  // Experimental opt-in renderer for reference points/stems only. The
+  // default continues to use the Entity visualizers.
+  state._referenceRendererMode = referenceRenderer ?? 'entities';
+  state._referenceCollections = null;
 
   /**
    * Fetched cable/landing JSON kept across disable/enable. A disable RELEASES

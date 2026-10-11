@@ -1,0 +1,34 @@
+{
+  "baselineCommit": "908a7ffe2afe1078740ff239c8fc36659b3eb3ca",
+  "scope": "Experimental opt-in reference renderer; code and focused actual-Cesium lifecycle validation only. Rendered equivalence and benefit not measured.",
+  "command": [
+    "C:\\Program Files\\nodejs\\node.exe",
+    "--test",
+    "src/layers/submarineCables/referenceCollections.test.mjs",
+    "src/layers/submarineCables/ingestion.test.mjs",
+    "src/layers/submarineCables/interaction.test.mjs",
+    "src/layers/submarineCables/geometry.test.mjs",
+    "src/layers/submarineCables/bundledSource.test.mjs",
+    "src/data/telegeographySubmarineCables.test.mjs"
+  ],
+  "runtime": "v24.16.0",
+  "sourceHashes": {
+    "src/layers/submarineCables/index.js": "abaea2ac677d09bab150f6f61271cc54fdbe919c212b4c3298e74fd08352c15f",
+    "src/layers/submarineCables/ingestion.js": "42d005531c3e70043e718482c06ba199e2e368d6c570e8841c53c5b2edefc302",
+    "src/layers/submarineCables/lifecycle.js": "3858b0ca7f450d783343807a4866b569c08457ef014f498af940d2a0433d2ba3",
+    "src/layers/submarineCables/overlay.js": "f7c73befc30dc5785fe25cf30b498cea0148afc3cdda125b21a75e3bcbbea833",
+    "src/layers/submarineCables/rendering.js": "35f26ebd7587007b62d45552c146e5d56fd71352a0bbf87dfd190ee3e8aa2e59",
+    "src/layers/submarineCables/state.js": "46b6a4f22ea9b699db6c9f21f1ba05ceec4113f1477a48de86ad3dbe5fe86f9f",
+    "src/layers/submarineCables/referenceCollections.test.mjs": "98e2fb726acf049274558232885e91e1465a2b5169a8f1b845fdc51c5eaef17f"
+  },
+  "logSha256": "3c6d8e61236f178c60c77493144cade2fcd6d2d1f668e143cb30ae52cf0a6683",
+  "populations": {
+    "cableSources": 712,
+    "groundCableSegments": 1913,
+    "landingBillboards": 1917,
+    "referenceEntities": 2629,
+    "collectionPoints": 2629,
+    "collectionStems": 2629
+  },
+  "defaultRenderer": "entities"
+}
