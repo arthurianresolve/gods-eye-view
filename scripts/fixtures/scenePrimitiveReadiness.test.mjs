@@ -54,3 +54,37 @@ test('bounded or cyclic owner graphs cannot produce an incomplete pass', () => {
   assert.equal(result.ready, false);
   assert.equal(result.observedOwners, 64);
 });
+
+test('ordered ground geometry must be ready even when its enclosing display is ready', () => {
+  const scene = fixture();
+  const ordered = scene.groundPrimitives.add(
+    new Cesium.OrderedGroundPrimitiveCollection(),
+  );
+  const ready = ordered.add({ ready: true, show: true }, -1);
+  const pending = ordered.add({ ready: false, show: false }, 1);
+  const before = readScenePrimitiveReadiness(scene, Cesium);
+  assert.equal(before.ready, false);
+  assert.equal(before.pending.length, 1);
+  assert.equal(before.pending[0].path, 'groundPrimitives/0/z-group-1/0');
+  pending.ready = true;
+  assert.equal(readScenePrimitiveReadiness(scene, Cesium).ready, true);
+  assert.equal(pending.show, false);
+  assert.equal(ready.show, true);
+  assert.equal(ordered.length, 2);
+});
+
+test('unknown ordered-ground shape or Cesium version cannot be reported ready', () => {
+  const scene = fixture();
+  const ordered = scene.groundPrimitives.add(
+    new Cesium.OrderedGroundPrimitiveCollection(),
+  );
+  ordered.add({ ready: true, show: true });
+  assert.equal(
+    readScenePrimitiveReadiness(scene, { ...Cesium, VERSION: '2.0.0' }).ready,
+    false,
+  );
+  ordered._collectionsArray = [];
+  const result = readScenePrimitiveReadiness(scene, Cesium);
+  assert.equal(result.ready, false);
+  assert.equal(result.unsupportedOwners.length, 1);
+});

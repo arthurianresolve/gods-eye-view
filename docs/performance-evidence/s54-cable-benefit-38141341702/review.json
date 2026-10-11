@@ -1,0 +1,25 @@
+{
+  "testedCommit": "cd5bbedc95c7db59f35624f75ec191b1ee329a64",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38141341702",
+  "outcome": "failed",
+  "completePairs": 0,
+  "benefitAccepted": false,
+  "hardwareValidated": false,
+  "pixelAudit": {
+    "decodedIndependently": true,
+    "changedPixels": 525,
+    "bounds": {
+      "minX": 183,
+      "minY": 102,
+      "maxX": 633,
+      "maxY": 320
+    }
+  },
+  "observation": "Before-toggle image lacks ground cable segments visible after-toggle. Camera pose and fixed clock match exactly. Both restores preserve full source/geometry/style/native-pick identities.",
+  "rootCause": "The fixture readiness walker visited PrimitiveCollection children but stopped at OrderedGroundPrimitiveCollection. Cesium 1.138 DataSourceDisplay.ready remains true after its first successful update and cannot establish current ground-geometry readiness.",
+  "correction": "Fixture-only read of OrderedGroundPrimitiveCollection._collectionsArray, guarded by exact Cesium version, instance type, child types and aggregate length. Every nested primitive participates in readiness. Unknown shapes/versions fail closed. No engine state is changed and no deadline or pixel gate is relaxed.",
+  "checks": {
+    "focusedTestsPassed": 16
+  },
+  "renderedFollowup": "pending"
+}
