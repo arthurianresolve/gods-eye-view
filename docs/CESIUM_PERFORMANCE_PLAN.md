@@ -1,5 +1,14 @@
 # Cesium performance plan
 
+The S51 untracked fleet scheduling experiment remains **unaccepted**: the
+five-pair `1d673a2` comparison has exact camera/output/pixel equivalence but fails
+two unchanged cadence limits. A separate bounded timing diagnostic at `cb0cf99`
+attributes synchronous CPU and timer delays without changing that verdict.
+All seven integration jobs pass at `1d673a2`; those functional checks do not
+establish performance acceptance. [Raw reports, hashes and decision](performance-evidence/s51-fleet-scheduling-review/README.md)
+are preserved. The isolated traffic idle-demand work and independent camera
+correction review continue; primary `dev` has not acquired the fleet experiment.
+
 Placement reuse at `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` is accepted as a
 component optimization after exact-source CPU, pixel, allocation, native font
 and all seven integration gates pass ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),
