@@ -7,6 +7,7 @@ export function observeCommonScene({
   windowObject = globalThis.window,
   appCommit = null,
   measureReadCosts = false,
+  useEarlyRendererProbe = false,
 } = {}) {
   // Diagnostic wall time only: synchronous driver reads may wait for queued
   // rendering. These durations are neither CPU execution nor GPU timings.
@@ -78,18 +79,43 @@ export function observeCommonScene({
     fail('Cesium WebGL context');
   const attributes = read('contextAttributes', () => gl.getContextAttributes());
   if (!attributes) fail('WebGL context attributes');
-  const extension = read('rendererExtension', () =>
-    gl.getExtension('WEBGL_debug_renderer_info'),
-  );
+  const early = useEarlyRendererProbe
+    ? windowObject.__gevRecoveryEarlyRendererProbe
+    : null;
+  if (
+    useEarlyRendererProbe &&
+    (!early?.captured ||
+      early.error ||
+      early.canvas !== canvas ||
+      early.context !== gl ||
+      gl !== scene.context?._originalGLContext ||
+      early.contextLost ||
+      early.contextRestored ||
+      gl.isContextLost?.() !== false ||
+      early.vendorCaptured !== true ||
+      typeof early.vendor !== 'string' ||
+      !Number.isFinite(early.queryDurationMs) ||
+      early.queryDurationMs < 0)
+  )
+    fail('valid early renderer context identity');
+  const extension = useEarlyRendererProbe
+    ? null
+    : read('rendererExtension', () =>
+        gl.getExtension('WEBGL_debug_renderer_info'),
+      );
   const renderer = read('renderer', () =>
-    extension
-      ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
-      : gl.getParameter(gl.RENDERER),
+    useEarlyRendererProbe
+      ? early.renderer
+      : extension
+        ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
+        : gl.getParameter(gl.RENDERER),
   );
   const vendor = read('vendor', () =>
-    extension
-      ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL)
-      : gl.getParameter(gl.VENDOR),
+    useEarlyRendererProbe
+      ? early.vendor
+      : extension
+        ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL)
+        : gl.getParameter(gl.VENDOR),
   );
   if (typeof renderer !== 'string' || !renderer.trim())
     fail('renderer identity');
@@ -163,6 +189,18 @@ export function observeCommonScene({
         0,
       ),
       appCommit,
+      ...(useEarlyRendererProbe
+        ? {
+            rendererObservation: {
+              mode: 'early-verified-context',
+              queryDurationMs: early.queryDurationMs,
+              canvasMatchesScene: true,
+              contextMatchesScene: true,
+              contextLost: false,
+              contextRestored: false,
+            },
+          }
+        : {}),
     },
     settings,
     camera: {

@@ -1,5 +1,21 @@
 # Cesium performance plan
 
+S47 measured observer cost (11 October 2026): `38169235037` retains the missing
+startup attribution. Its two completed idle samples show 2.1-4.1 seconds in
+synchronous renderer/vendor reads, with other individual settings/population
+reads below one millisecond. It still fails the unchanged render-settle deadline
+before the first motion sample, so it is not a complete comparison.
+
+The new opt-in `--early-renderer-probe` reuses the existing one-shot probe on the
+real Cesium canvas and captures vendor identity before rendering begins. Each
+subsequent observer verifies canvas/context identity and rejects lost/restored
+contexts. Context attributes, populations and settings remain live observations.
+All probe listeners/hooks are released before document replacement and final
+reporting; failure reports retain cleanup outcomes. The isolated smoke enables
+this mode; default CLI/recovery behavior and production rendering are unchanged.
+Twenty-four focused observer/probe/failure checks pass. Hosted benefit and full
+capture completion are still unverified.
+
 S47 observer-read diagnostic (11 October 2026): this isolated QA branch adds
 opt-in `--read-cost-diagnostics` to the capture CLI and enables it in the build
 smoke child. It records ten bounded synchronous read durations, including WebGL

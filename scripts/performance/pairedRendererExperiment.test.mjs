@@ -238,8 +238,9 @@ function earlyProbePage(performanceStep = 5) {
     if (!/^webgl/.test(kind)) return null;
     return {
       RENDERER: 7937,
-      getExtension: () => ({ UNMASKED_RENDERER_WEBGL: 37446 }),
-      getParameter: () => 'Google SwiftShader',
+      VENDOR: 7936,
+      getExtension: () => ({ UNMASKED_RENDERER_WEBGL: 37446, UNMASKED_VENDOR_WEBGL: 37445 }),
+      getParameter: (key) => key === 37445 || key === 7936 ? 'fixture vendor' : 'Google SwiftShader',
     };
   };
   Object.defineProperty(Canvas.prototype, 'getContext', {
@@ -260,8 +261,8 @@ function earlyProbePage(performanceStep = 5) {
     vm.runInContext(`(${fn.toString()})(...${JSON.stringify(args)})`, context);
   const page = {
     isClosed: () => false,
-    evaluateOnNewDocument: async (fn) => {
-      evaluate(fn);
+    evaluateOnNewDocument: async (fn, ...args) => {
+      evaluate(fn, ...args);
       return { identifier: 'early-hook' };
     },
     evaluate: async (fn, ...args) => evaluate(fn, ...args),
@@ -319,4 +320,19 @@ test('early probe accepts a valid zero-duration clock sample', async () => {
   window.__godsEyeView = { viewer: { scene: { canvas, context: { _originalGLContext: gl } } } };
   const result = await readEarlyCesiumRendererProbe(page);
   assert.equal(result.queryDurationMs, 0);
+});
+
+test('early probe optionally captures vendor and releases both context listeners', async () => {
+  const { page, Canvas, native, window } = earlyProbePage();
+  await installEarlyCesiumRendererProbe(page, { captureVendor: true });
+  const canvas = new Canvas();
+  canvas.getContext('webgl2');
+  const state = window.__gevRecoveryEarlyRendererProbe;
+  assert.equal(state.vendor, 'fixture vendor');
+  assert.equal(state.vendorCaptured, true);
+  assert.equal(Canvas.prototype.getContext, native);
+  assert.equal(canvas.listeners.size, 2);
+  assert.equal(await cleanupEarlyCesiumRendererProbe(page, 'early-hook'), true);
+  assert.equal(canvas.listeners.size, 0);
+  assert.equal(window.__gevRecoveryEarlyRendererProbe, undefined);
 });

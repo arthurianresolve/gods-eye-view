@@ -101,6 +101,86 @@ test('default observer never queries the diagnostic clock', () => {
   assert.equal(Object.hasOwn(observed, 'readDiagnostics'), false);
 });
 
+function addEarlyProbe(windowObject) {
+  const scene = windowObject.__godsEyeView.viewer.scene;
+  scene.context._originalGLContext.isContextLost = () => false;
+  return (windowObject.__gevRecoveryEarlyRendererProbe = {
+    captured: true,
+    canvas: scene.canvas,
+    context: scene.context._originalGLContext,
+    renderer: 'test renderer',
+    vendor: 'test vendor',
+    vendorCaptured: true,
+    queryDurationMs: 0,
+    error: null,
+    contextLost: false,
+    contextRestored: false,
+  });
+}
+
+test('early observer reuses verified identity without repeated renderer queries', () => {
+  const windowObject = fakeWindow();
+  const before = observeCommonScene({ windowObject });
+  addEarlyProbe(windowObject);
+  const gl = windowObject.__godsEyeView.viewer.scene.context._originalGLContext;
+  gl.getParameter = gl.getExtension = () => {
+    throw new Error('redundant driver query');
+  };
+  for (let index = 0; index < 2; index++) {
+    const cached = observeCommonScene({
+      windowObject,
+      useEarlyRendererProbe: true,
+    });
+    const witness = cached.environment.rendererObservation;
+    assert.equal(witness.queryDurationMs, 0);
+    assert.equal(witness.contextMatchesScene, true);
+    delete cached.environment.rendererObservation;
+    assert.deepEqual(cached, before);
+  }
+});
+
+test('early observer rejects stale or incomplete context evidence without fallback', () => {
+  const changes = [
+    (w) => {
+      delete w.__gevRecoveryEarlyRendererProbe;
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.canvas = {};
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.context = {};
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.contextLost = true;
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.contextRestored = true;
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.vendorCaptured = false;
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.queryDurationMs = NaN;
+    },
+    (w) => {
+      w.__gevRecoveryEarlyRendererProbe.error = 'failed query';
+    },
+    (w) => {
+      w.__godsEyeView.viewer.scene.context._originalGLContext.isContextLost =
+        () => true;
+    },
+  ];
+  for (const change of changes) {
+    const windowObject = fakeWindow();
+    addEarlyProbe(windowObject);
+    change(windowObject);
+    assert.throws(
+      () => observeCommonScene({ windowObject, useEarlyRendererProbe: true }),
+      /early renderer context identity/,
+    );
+  }
+});
+
 test('missing, failing and non-monotonic diagnostic clocks remain unavailable', () => {
   for (const performance of [
     undefined,

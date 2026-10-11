@@ -899,6 +899,7 @@ async function runCandidateCaptureCli({
     // Isolated diagnostic branch: retain the same workload and deadline while
     // attributing synchronous observer reads outside each measurement interval.
     '--read-cost-diagnostics',
+    '--early-renderer-probe',
     '--mixed-layers',
     '--quality-mode',
     'manual',

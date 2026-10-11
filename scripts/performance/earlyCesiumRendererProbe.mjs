@@ -3,8 +3,11 @@ import { withHostTimeout } from './startupDiagnostics.mjs';
 const STATE_KEY = '__gevRecoveryEarlyRendererProbe';
 
 /** Install an opt-in, one-shot hook on Cesium's real widget canvas only. */
-export async function installEarlyCesiumRendererProbe(page) {
-  const handle = await page.evaluateOnNewDocument(() => {
+export async function installEarlyCesiumRendererProbe(
+  page,
+  { captureVendor = false } = {},
+) {
+  const handle = await page.evaluateOnNewDocument((captureVendor) => {
     const key = '__gevRecoveryEarlyRendererProbe';
     const prototype = HTMLCanvasElement.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'getContext');
@@ -19,6 +22,8 @@ export async function installEarlyCesiumRendererProbe(page) {
       contextLost: false,
       contextRestored: false,
       renderer: null,
+      vendor: null,
+      vendorCaptured: false,
       queryDurationMs: null,
       error: null,
       canvas: null,
@@ -67,6 +72,12 @@ export async function installEarlyCesiumRendererProbe(page) {
             state.renderer = context.getParameter(
               extension?.UNMASKED_RENDERER_WEBGL || context.RENDERER,
             );
+            if (captureVendor) {
+              state.vendor = context.getParameter(
+                extension?.UNMASKED_VENDOR_WEBGL || context.VENDOR,
+              );
+              state.vendorCaptured = true;
+            }
             state.queryDurationMs = performance.now() - started;
           } catch (error) {
             state.error = String(error?.message || error).slice(0, 240);
@@ -75,7 +86,7 @@ export async function installEarlyCesiumRendererProbe(page) {
         return context;
       },
     });
-  });
+  }, captureVendor);
   return handle?.identifier || null;
 }
 
@@ -89,7 +100,8 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
         const scene = window.__godsEyeView?.viewer?.scene;
         if (!state?.captured || !state.canvas || !state.context)
           throw new Error('early renderer context was not captured');
-        if (state.error) throw new Error('early renderer query failed: ' + state.error);
+        if (state.error)
+          throw new Error('early renderer query failed: ' + state.error);
         if (state.contextLost || state.contextRestored)
           throw new Error('early renderer context was lost or restored');
         if (state.canvas !== scene?.canvas)
@@ -100,7 +112,10 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
           throw new Error('Cesium original WebGL context identity unavailable');
         if (state.context !== original)
           throw new Error('early renderer context does not match Cesium scene');
-        if (!Number.isFinite(state.queryDurationMs) || state.queryDurationMs < 0)
+        if (
+          !Number.isFinite(state.queryDurationMs) ||
+          state.queryDurationMs < 0
+        )
           throw new Error('early renderer query duration is invalid');
         return {
           renderer: String(state.renderer || ''),

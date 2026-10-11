@@ -50,6 +50,10 @@ import { createCaptureFailureReport } from './performance/captureFailureReport.m
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import { createCaptureStageJournal } from './performance/captureStageJournal.mjs';
 import {
+  installEarlyCesiumRendererProbe,
+  cleanupEarlyCesiumRendererProbe,
+} from './performance/earlyCesiumRendererProbe.mjs';
+import {
   createObservedDenseComparisonContract,
   getCaptureReadinessReasons,
 } from './performance/captureComparisonContract.mjs';
@@ -75,6 +79,7 @@ const providerFixtureTime = option(
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
 const measureReadCosts = args.includes('--read-cost-diagnostics');
+const useEarlyRendererProbe = args.includes('--early-renderer-probe');
 if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
   throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
 if (providerFixtureMode && providerFixtureMode !== 'dense-investigation')
@@ -273,6 +278,7 @@ const failureProgress = {
   fixtureDelivery: null,
   workload: {
     readCostDiagnostics: measureReadCosts,
+    earlyRendererProbe: useEarlyRendererProbe,
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
@@ -305,6 +311,7 @@ async function readCommonScene(page, stage) {
     page.evaluate(observeCommonScene, {
       appCommit: source.appCommit,
       measureReadCosts,
+      useEarlyRendererProbe,
     });
   const observed = measureReadCosts
     ? await runCaptureStage(stage, operation)
@@ -317,7 +324,6 @@ async function readCommonScene(page, stage) {
   return observed;
 }
 let captureFailure = null;
-let failureReportWritten = false;
 async function writeCaptureFailure(error) {
   const report = createCaptureFailureReport({
     source,
@@ -337,6 +343,7 @@ async function writeCaptureFailure(error) {
       ...(failureProgress.current || {}),
       startupObserverReadDiagnostics:
         failureProgress.startupObserverReadDiagnostics,
+      earlyRendererProbeCleanup,
       captureStageDiagnostics: captureStageJournal.snapshot(),
       ...(performanceDiagnosticsDocuments.length
         ? { performanceDiagnosticsDocuments }
@@ -412,6 +419,22 @@ if (ownedBrowserPidFile) {
 const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
 const performanceDiagnosticsDocuments = [];
+const earlyRendererProbes = new Map();
+const earlyRendererProbeCleanup = [];
+async function releaseEarlyRendererProbe(targetPage) {
+  if (!earlyRendererProbes.has(targetPage)) return;
+  const record = earlyRendererProbes.get(targetPage);
+  const cleaned = await cleanupEarlyCesiumRendererProbe(
+    targetPage,
+    record.scriptIdentifier,
+  );
+  earlyRendererProbeCleanup.push({ document: record.document, cleaned });
+  if (!cleaned)
+    throw new Error(
+      'Early renderer probe did not release its hook and listeners.',
+    );
+  earlyRendererProbes.delete(targetPage);
+}
 async function disableCaptureDiagnostics(targetPage, documentRole) {
   const status = await targetPage.evaluate(
     disableOptionalPerformanceDiagnostics,
@@ -775,6 +798,17 @@ try {
     return lateUseCheck;
   };
   async function attachMeasuredPage(auditPage, deliveryObserver = null) {
+    if (useEarlyRendererProbe) {
+      const scriptIdentifier = await installEarlyCesiumRendererProbe(
+        auditPage,
+        { captureVendor: true },
+      );
+      earlyRendererProbes.set(auditPage, {
+        scriptIdentifier,
+        document:
+          earlyRendererProbeCleanup.length + earlyRendererProbes.size + 1,
+      });
+    }
     await auditPage.setViewport({
       width: 1440,
       height: 900,
@@ -1237,6 +1271,7 @@ try {
     }
     await runCaptureStage('provider-context-and-fixture-attach', async () => {
       await releaseFlightFixtureSession(activeFixtureSession);
+      await releaseEarlyRendererProbe(page);
       if (providerContext) await providerContext.close();
       else await page.close();
       providerContext = await browser.createBrowserContext();
@@ -2126,6 +2161,8 @@ try {
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
   const graphics = await readBrowserGraphicsInfo(browser);
+  for (const targetPage of earlyRendererProbes.keys())
+    await releaseEarlyRendererProbe(targetPage);
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode,
@@ -2141,6 +2178,10 @@ try {
     capturedAt: new Date().toISOString(),
     observerReadDiagnostics: {
       enabled: measureReadCosts,
+      rendererReadMode: useEarlyRendererProbe
+        ? 'early-verified-context'
+        : 'live',
+      probeCleanup: earlyRendererProbeCleanup,
       scope:
         'Synchronous observer wall time outside sample intervals; not CPU or GPU execution time.',
       startup: commonScene.readDiagnostics ?? null,
@@ -2243,11 +2284,18 @@ try {
   process.exitCode = 1;
   try {
     await writeCaptureFailure(error);
-    failureReportWritten = true;
   } catch {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
+  for (const targetPage of earlyRendererProbes.keys()) {
+    try {
+      await releaseEarlyRendererProbe(targetPage);
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
   for (const session of fixtureInterceptionSessions) {
     await session.send('Fetch.disable').catch(() => {});
     await session.detach().catch(() => {});
@@ -2262,7 +2310,7 @@ try {
       await fs.rm(ownedBrowserPidFile, { force: true }).catch(() => {});
   }
 }
-if (captureFailure && !failureReportWritten) {
+if (captureFailure) {
   try {
     await writeCaptureFailure(captureFailure);
   } catch {
