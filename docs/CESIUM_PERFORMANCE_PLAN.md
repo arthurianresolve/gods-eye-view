@@ -22,14 +22,17 @@ source snapshots](performance-evidence/s52-paint-callback-regressions/README.md)
 preserve the rejected result separately from the corrected experimental result.
 No conditional-paint runtime is accepted by these unit checks alone.
 
-An allocation diagnostic comparing two unpublished paint prototypes reduces
-paired median allocation in all five infrastructure and cable pairs; these
-results are not a production comparison or latency claim. The first current-base
-transplant subsequently fails the isolated rocket allocation budget (6,081 versus
-6,000 bytes/frame), while the other twelve allocation rows pass. This failure
-prevents promotion; investigation continues without changing the budget.
-[Diagnostic evidence and scope](performance-evidence/s52-paint-didpaint-target/README.md)
-retain the experimental results.
+The conditional-paint cache experiment is now **rejected**, with the existing
+production paint path retained. Its final revision passes 72 focused checks and
+twelve allocation gates, but the mixed infrastructure/FIRMS/vessel/tracked
+workload exceeds the unchanged allocation limit: 160.1 versus 154 bytes per
+candidate/frame. A narrow rocket comparison crosses its own limit by only seven
+bytes/frame and does not override the full-suite failure. No further permutations
+of this design are planned. [Rejection and raw evidence](performance-evidence/s52-paint-rejection-07/README.md)
+record the exact frozen sources and failed gate. Earlier prototype diagnostics
+and the first current-base rocket failure remain [historical evidence](performance-evidence/s52-paint-didpaint-target/README.md).
+The accepted projection, layout and placement improvements remain in production;
+S52 full-scene performance and hardware validation are still pending.
 
 All seven ordinary integration jobs also pass at
 `f301cba278d7dc6188b14e6fd84a889f1d2c40af`
@@ -109,7 +112,7 @@ the earlier release requirements and historical results.
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
-| S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional painting remains | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Earlier component evidence is preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
+| S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; no runtime partitioning accepted | Existing satellite tests pass; repeated controls are pixel-identical but partitioning changes 24 pixels | Hosted Metal visual mismatch reproduced at `9dacb7c`; accepted matched comparison pending |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
