@@ -1,5 +1,15 @@
 # Cesium performance plan
 
+S59 large-geometry attribution (11 October 2026): the isolated QA profiler
+surrounds the actual 50,000-position load with separate CPU or sampled-heap
+profiling and a bounded GC trace. Eight opt-in runtime phases distinguish
+coordinate conversion, publication and ancillary work. Capture, hashing, picking
+and teardown follow profiler stop. Raw bounded inputs, source hashes, observed
+commits, environment and cleanup remain in the report for independent review.
+Thirteen report tests and the phase-observer regression pass. Hosted diagnostic
+results are pending; the rejected chunking prototype remains outside dev and
+these instrumented timings cannot establish a performance acceptance result.
+
 Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
 Point integration passes all seven standard jobs at `b67cca57`. The corrected
 native import/workspace observer passes at `c3df3acc`; the separate controlled

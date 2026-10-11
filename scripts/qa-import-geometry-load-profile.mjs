@@ -550,6 +550,9 @@ try {
         traceHelperSha256: report.source.hashes.traceHelperSha256,
         traceSummarySha256: report.source.hashes.traceSummarySha256,
         sampledCpuProfileSha256: report.source.hashes.sampledCpuProfileSha256,
+        rendererEvidenceSha256: report.source.hashes.rendererEvidenceSha256,
+        pageOwnershipSha256: report.source.hashes.pageOwnershipSha256,
+        sourceProvenanceSha256: report.source.hashes.sourceProvenanceSha256,
       };
       report.fixture = fixture;
       const validation = validateImportGeometryLoadProfileReport(
