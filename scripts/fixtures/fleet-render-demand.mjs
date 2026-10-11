@@ -281,6 +281,65 @@ async function createFixture(clock) {
         up: vector(viewer.camera.upWC),
       };
     }
+    // Read-only attribution for exact-image failures. Identical public
+    // billboards do not imply identical atlas coordinates or fitted frustums.
+    // Never overwrite an engine bound, texture or matrix to force parity.
+    function renderState() {
+      const sphere = (value) =>
+        value?.center
+          ? { center: vector(value.center), radius: value.radius }
+          : null;
+      const fleets = Object.fromEntries(
+        Object.keys(layers).map((kind) => {
+          const points = [...billboards(kind).values()];
+          const collection = points[0]?._billboardCollection;
+          const atlas = collection?.textureAtlas;
+          return [
+            kind,
+            {
+              baseBounds: sphere(collection?._baseVolume),
+              worldBounds: sphere(collection?._baseVolumeWC),
+              drawBounds: sphere(collection?._boundingVolume),
+              atlas: atlas?.texture
+                ? {
+                    width: atlas.texture.width,
+                    height: atlas.texture.height,
+                    rectangles: atlas.rectangles?.length,
+                  }
+                : null,
+              sprites: points.map((b) => {
+                const uv = b.computeTextureCoordinates(
+                  new Cesium.BoundingRectangle(),
+                );
+                return {
+                  id: String(b.id),
+                  width: b.width,
+                  height: b.height,
+                  uv: [uv.x, uv.y, uv.width, uv.height],
+                  actualPosition: vector(b._actualPosition),
+                };
+              }),
+            },
+          ];
+        }),
+      );
+      const frustums = viewer.scene.frustumCommandsList;
+      check(frustums.length <= 16, 'Frustum diagnostic limit exceeded');
+      return {
+        fleets,
+        view: Cesium.Matrix4.toArray(viewer.camera.viewMatrix),
+        projection: Cesium.Matrix4.toArray(
+          viewer.camera.frustum.projectionMatrix,
+        ),
+        transform: Cesium.Matrix4.toArray(viewer.camera.transform),
+        right: vector(viewer.camera.rightWC),
+        frustums: frustums.map((f) => ({
+          near: f.near,
+          far: f.far,
+          commands: Array.from(f.indices),
+        })),
+      };
+    }
     function checkpoint() {
       check(latestFrame, 'No completed frame for movement checkpoint');
       return { frame: frames.length, output: latestFrame.output };
@@ -396,6 +455,7 @@ async function createFixture(clock) {
           logicalTimeMs: clock.now(),
           sourceEpochMs: sourceEpoch,
           cameraMoveEnds: cameraEvents.length,
+          renderState: renderState(),
         };
       });
       let canvas;
