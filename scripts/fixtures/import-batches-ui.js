@@ -17,6 +17,7 @@ import {
   createImportFrameDiagnostics,
   observeImportFrameHealth,
 } from '../performance/importFrameDiagnostics.mjs';
+import { summarizeRgbaDifferences } from '../performance/importPixelWitness.mjs';
 
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
@@ -262,7 +263,7 @@ function settledFrame(viewer) {
     viewer.scene.requestRender();
   });
 }
-async function pixels(viewer, sample) {
+async function pixels(viewer, sample, { preserveBytes = false } = {}) {
   const started = performance.now();
   const browserStateBefore = report.diagnosticsEnabled
     ? frameDiagnostics.snapshotCanvas(viewer.canvas)
@@ -343,11 +344,46 @@ async function pixels(viewer, sample) {
       'The fixture did not render visible points.',
     );
     const digest = await crypto.subtle.digest('SHA-256', data);
-    return [...new Uint8Array(digest)]
+    const pixelSha256 = [...new Uint8Array(digest)]
       .map((n) => n.toString(16).padStart(2, '0'))
       .join('');
+    return preserveBytes
+      ? {
+          pixelSha256,
+          width: canvas.width,
+          height: canvas.height,
+          rgba: data,
+        }
+      : pixelSha256;
   } finally {
     canvas.width = canvas.height = 0;
+  }
+}
+
+function encodePixelWitness(image) {
+  check(
+    image.width > 0 &&
+      image.width <= 1024 &&
+      image.height > 0 &&
+      image.height <= 1024,
+    'Pixel mismatch witness exceeds its bounded image dimensions.',
+  );
+  const witnessCanvas = document.createElement('canvas');
+  witnessCanvas.width = image.width;
+  witnessCanvas.height = image.height;
+  try {
+    const context = witnessCanvas.getContext('2d');
+    const imageData = context.createImageData(image.width, image.height);
+    imageData.data.set(image.rgba);
+    context.putImageData(imageData, 0, 0);
+    const dataUrl = witnessCanvas.toDataURL('image/png');
+    check(
+      dataUrl.length <= 1_500_000,
+      'Pixel mismatch witness exceeded its bounded PNG size.',
+    );
+    return dataUrl;
+  } finally {
+    witnessCanvas.width = witnessCanvas.height = 0;
   }
 }
 
@@ -488,6 +524,7 @@ run.addEventListener('click', async () => {
     report.coldActivationMs = performance.now() - coldAt;
     report.warmedResources = resources(viewer);
     let expectedPixels = null;
+    let expectedPixelCapture = null;
     if (workload === 'initial-load') {
       const sample = {
         pair: null,
@@ -609,13 +646,60 @@ run.addEventListener('click', async () => {
           report.samples.push(sample);
           // The capture operation owns its completed-frame wait. Request it from
           // the import task, rather than immediately chaining two postRender waits.
-          const hash = await pixels(viewer, sample);
+          const capture = await pixels(viewer, sample, {
+            preserveBytes: report.captureMode === 'pixels',
+          });
+          const hash =
+            capture && typeof capture === 'object'
+              ? capture.pixelSha256
+              : capture;
           sample.pixelSha256 = hash;
           if (expectedPixels === null) expectedPixels = hash;
+          if (
+            report.captureMode === 'pixels' &&
+            expectedPixelCapture &&
+            capture &&
+            hash !== expectedPixels
+          ) {
+            try {
+              const witness = {
+                width: capture.width,
+                height: capture.height,
+                before: {
+                  mode: expectedPixelCapture.mode,
+                  pixelSha256: expectedPixelCapture.image.pixelSha256,
+                },
+                after: {
+                  mode,
+                  pixelSha256: capture.pixelSha256,
+                },
+              };
+              sample.pixelMismatchWitness = witness;
+              witness.before.pngDataUrl = encodePixelWitness(
+                expectedPixelCapture.image,
+              );
+              witness.after.pngDataUrl = encodePixelWitness(capture);
+              witness.difference = summarizeRgbaDifferences(
+                expectedPixelCapture.image.rgba,
+                capture.rgba,
+                capture.width,
+                capture.height,
+              );
+            } catch (witnessError) {
+              sample.pixelMismatchWitnessError = String(
+                witnessError?.message || witnessError,
+              ).slice(0, 300);
+            }
+          }
           check(
             hash === expectedPixels,
             'Final pixels differ across equivalent imports.',
           );
+          if (hash === expectedPixels)
+            expectedPixelCapture =
+              capture && typeof capture === 'object'
+                ? { mode, image: capture }
+                : null;
         }
       }
       report.checks.push({
