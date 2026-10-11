@@ -80,6 +80,44 @@ The visual default remains Manual. Resolution, MSAA, label density, source
 populations, tracking behavior, effects, and visual fidelity are not reduced as
 a performance shortcut. Auto quality remains opt-in.
 
+### S52 direct filtering and paint fixture controls - 11 October 2026
+
+QA candidate `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` removes the separate
+copy from complete placement variants into the filtered list. UI filtering now
+reads the complete variants directly; protected-card filtering still owns its
+separate mutable list. All 87 focused checks and 13 unchanged allocation budgets
+pass, and the existing work witness retains output parity with 28 -> 14 variant
+builds ([raw work report](performance-evidence/s52-placement-direct-filter/work-report.json),
+[review and test hashes](performance-evidence/s52-placement-direct-filter/review.json)).
+The 18-run local CPU diagnostic is noisy, including both improvements and
+regressions, and is explicitly not acceptance evidence.
+
+The [fresh visual comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101751467)
+passes all five 24-case pairs. Independent decoding verifies 240 PNG pixel
+hashes, exact repeated states, hits, accessible actions, inputs and source
+identities ([review](performance-evidence/s52-placement-direct-filter/visual/review.json),
+[raw report](performance-evidence/s52-placement-direct-filter/visual/report.json),
+[all image files](performance-evidence/s52-placement-direct-filter/visual/images.zip)).
+The [40-pair CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101751521)
+is still running. This runtime remains on QA; `dev` is unchanged.
+
+The expanded paint fixture adds actual font loading, selection promotion and
+demotion, and shared/separate custom painter transitions. Its first baseline run
+[failed](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101521814)
+because the test retained a pooled rectangle beyond its documented single-frame
+lifetime. The recorded immutable observations already show 283 -> 299 px widths;
+this was a fixture assertion bug. Harness `d5ed890` copies rectangles before
+another frame. The [corrected baseline control](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101675504)
+passes five 38-case pairs with identical application commit `698752a` on both
+sides. Root independently decoded and verified all 760 images and all recorded
+states ([review](performance-evidence/s52-paint-baseline/review.json),
+[raw report](performance-evidence/s52-paint-baseline/report.json),
+[all image files](performance-evidence/s52-paint-baseline/images.zip),
+[original failed report](performance-evidence/s52-paint-baseline/failed-pooled-rect-report.json)).
+These results validate the fixture; they do not accept the staged repaint
+optimization, demonstrate GPU performance, or complete S52. The repaint
+prototype remains isolated while its allocation failures are corrected.
+
 ### S52 placement reuse: moving-workload regression found - 11 October 2026
 
 The QA candidate retains complete placement variants on each existing projection
