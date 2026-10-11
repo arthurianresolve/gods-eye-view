@@ -168,10 +168,17 @@ try {
       if (importPageErrors.length < 8)
         importPageErrors.push(sanitizeDiagnosticText(error?.message, 240));
     };
-    if (importStepAttribution) page.on('pageerror', onImportPageError);
+    if (importStepAttribution) {
+      report.importPageErrors = importPageErrors;
+      page.on('pageerror', onImportPageError);
+    }
     await page.goto(importFixtureUrl.href, {
       waitUntil: 'networkidle0',
     });
+    if (importPageErrors.length) {
+      page.off('pageerror', onImportPageError);
+      throw new Error(`Import fixture failed to load: ${importPageErrors[0]}`);
+    }
     const cpuProfile = profileImports
       ? await startFixtureCpuProfile(page)
       : null;

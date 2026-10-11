@@ -4,6 +4,7 @@ export const IMPORT_TRACE_ATTRIBUTION_SCHEMA =
 export const IMPORT_TRACE_CATEGORIES =
   'devtools.timeline,disabled-by-default-v8.gc';
 export const IMPORT_TRACE_EVENT_LIMIT = 4096;
+export const MAX_IMPORT_SLOW_STEPS_PER_WINDOW = 128;
 
 const finite = (value) => typeof value === 'number' && Number.isFinite(value);
 const MARKER_PREFIX = 'gev-import-step:';
@@ -90,14 +91,19 @@ export function createImportTraceEventCollector(
   let omittedCount = 0;
   let pendingCount = 0;
   let finished = false;
+  const omissionReasons = {};
+  const noteOmission = (reason) => {
+    omittedCount += 1;
+    omissionReasons[reason] = (omissionReasons[reason] || 0) + 1;
+  };
   const retain = (event) => {
     relevantCount += 1;
     if (retained.length + pendingCount < maxEvents) retained.push(event);
-    else omittedCount += 1;
+    else noteOmission('event-limit');
   };
-  const omit = () => {
+  const omit = (reason) => {
     relevantCount += 1;
-    omittedCount += 1;
+    noteOmission(reason);
   };
   return {
     add(events) {
@@ -110,7 +116,7 @@ export function createImportTraceEventCollector(
         if (!marker && !gc) continue;
         const validBase = finite(event.ts) && event.ts >= 0 && hasThread(event);
         if (marker) {
-          if (!validBase) omit();
+          if (!validBase) omit('invalid-marker-clock-or-thread');
           else
             retain({
               kind: 'marker',
@@ -122,11 +128,11 @@ export function createImportTraceEventCollector(
           continue;
         }
         if (!validBase) {
-          omit();
+          omit('invalid-gc-clock-or-thread');
           continue;
         }
         if (event.ph === 'X') {
-          if (!finite(event.dur) || event.dur < 0) omit();
+          if (!finite(event.dur) || event.dur < 0) omit('invalid-gc-duration');
           else
             retain({
               kind: 'gc',
@@ -142,7 +148,7 @@ export function createImportTraceEventCollector(
           const key = eventKey(event);
           const begins = pendingBegins.get(key) || [];
           if (retained.length + pendingCount >= maxEvents) {
-            omit();
+            omit('event-limit');
             continue;
           }
           begins.push({ tsUs: event.ts, pid: event.pid, tid: event.tid });
@@ -155,14 +161,14 @@ export function createImportTraceEventCollector(
           const begins = pendingBegins.get(key);
           const begin = begins?.at(-1);
           if (!begin) {
-            omit();
+            omit('unmatched-gc-end');
             continue;
           }
           begins.pop();
           pendingCount -= 1;
           if (begins.length === 0) pendingBegins.delete(key);
           if (event.ts < begin.tsUs) {
-            omit();
+            omit('reversed-gc-interval');
             continue;
           }
           retain({
@@ -185,7 +191,13 @@ export function createImportTraceEventCollector(
           });
           continue;
         }
-        omit();
+        // Keep only a bounded single-character phase classification, never
+        // trace arguments or provider data, to explain unsupported records.
+        omit(
+          typeof event.ph === 'string' && /^[A-Za-z]$/.test(event.ph)
+            ? `unsupported-gc-phase-${event.ph}`
+            : 'invalid-gc-phase',
+        );
       }
     },
     finish() {
@@ -193,7 +205,7 @@ export function createImportTraceEventCollector(
         finished = true;
         for (const begins of pendingBegins.values())
           for (const _begin of begins) {
-            omit();
+            omit('unmatched-gc-begin');
             pendingCount -= 1;
           }
         pendingBegins.clear();
@@ -202,6 +214,7 @@ export function createImportTraceEventCollector(
         events: retained,
         relevantCount,
         omittedCount,
+        omissionReasons: { ...omissionReasons },
       };
     },
   };
@@ -235,7 +248,10 @@ export function summarizeImportTraceAttribution({
     !Array.isArray(loadingWindows)
   )
     throw new TypeError('Invalid import trace attribution input');
-  if (anchors.length > 774 || loadingWindows.length > 6)
+  if (
+    anchors.length > 6 * (MAX_IMPORT_SLOW_STEPS_PER_WINDOW + 1) ||
+    loadingWindows.length > 6
+  )
     throw new RangeError('Import trace attribution input exceeds its bound');
 
   const anchorByName = new Map();
@@ -341,7 +357,7 @@ export function summarizeImportTraceAttribution({
       Number.isInteger(window.overBudgetSteps) &&
       window.overBudgetSteps >= 0 &&
       Array.isArray(window.slowSteps) &&
-      window.slowSteps.length <= 128 &&
+      window.slowSteps.length <= MAX_IMPORT_SLOW_STEPS_PER_WINDOW &&
       Number.isInteger(window.omittedSlowSteps) &&
       window.omittedSlowSteps >= 0 &&
       window.slowSteps.length + window.omittedSlowSteps ===
@@ -511,6 +527,7 @@ export function summarizeImportTraceAttribution({
     traceRelevantEvents: trace.relevantCount,
     retainedTraceEvents: trace.events.length,
     omittedTraceEvents: trace.omittedCount,
+    traceOmissionReasons: trace.omissionReasons ?? null,
     observedMarkers: [...traceMarkerByName.keys()].sort(),
     bufferUsagePeak: trace.bufferUsagePeak,
     errors,

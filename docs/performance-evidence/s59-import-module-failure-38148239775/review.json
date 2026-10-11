@@ -1,0 +1,19 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38148239775",
+  "commit": "1a13d9afc12500af61e797911cc9d9c37c55788e",
+  "reportSha256": "c92508cbf75e3f437d61cea05c2d27bc39f77d904f2cf4add405d17e71d1b285",
+  "status": "failed",
+  "reason": "Native renderer probe failed: Waiting failed: 120000ms exceeded",
+  "failureState": {
+    "status": "Ready",
+    "resultBytes": 0,
+    "runDisabled": false
+  },
+  "pageErrors": [
+    "The requested module '/scripts/performance/importTraceAttribution.mjs' does not provide an export named 'MAX_IMPORT_SLOW_STEPS_PER_WINDOW'"
+  ],
+  "rootCause": "Fixture imports MAX_IMPORT_SLOW_STEPS_PER_WINDOW, but the trace module did not export it. Module evaluation failed before the run listener was registered.",
+  "gcAttributionAvailable": false,
+  "performanceAccepted": false,
+  "traceLimitations": "The unaligned trace omitted 256 GC records; their reasons were not retained in this revision. No loading or pause claims are supported."
+}

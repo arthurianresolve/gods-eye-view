@@ -4167,3 +4167,19 @@ failure, plus the sanitized bounded trace even when fixture anchors are
 unavailable. Missing alignment remains unavailable. The diagnostic timeout,
 source populations, geometry, runtime scheduler and acceptance gates are
 unchanged. This addresses missing failure evidence, not the timeout cause.
+
+### S59 traced fixture module-load correction - 11 October 2026
+
+[Run 38148239775](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38148239775)
+at `1a13d9afc12500af61e797911cc9d9c37c55788e` identified the timeout cause:
+the fixture requested `MAX_IMPORT_SLOW_STEPS_PER_WINDOW`, which the trace
+module did not export. The DOM remained Ready with no registered run handler.
+[The failed report](performance-evidence/s59-import-module-failure-38148239775/review.json)
+preserves the module exception and incomplete trace.
+
+The bound is now exported and shared with trace validation; a named-import
+regression checks oversized loading-window rejection. Module-load exceptions
+now fail the hosted trace run before the two-minute result wait. Omitted GC
+records gain bounded reason counts, while unsupported observations remain
+incomplete. Focused tests pass; hosted validation of the correction is pending.
+No import performance claim is made from either failed diagnostic.

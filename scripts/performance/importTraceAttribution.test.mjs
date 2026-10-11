@@ -3,12 +3,39 @@ import test from 'node:test';
 import {
   IMPORT_TRACE_ATTRIBUTION_SCHEMA,
   IMPORT_TRACE_EVENT_LIMIT,
+  MAX_IMPORT_SLOW_STEPS_PER_WINDOW,
   createImportTraceEventCollector,
   retainImportTraceEvents,
   summarizeImportTraceAttribution,
 } from './importTraceAttribution.mjs';
 
 const anchor = 'gev-import-step:sample:0:cooperative';
+test('fixture-exported slow-step bound rejects an oversized loading window', () => {
+  const count = MAX_IMPORT_SLOW_STEPS_PER_WINDOW + 1;
+  const summary = summarizeImportTraceAttribution({
+    trace: {
+      events: [],
+      relevantCount: 0,
+      omittedCount: 0,
+      bufferUsagePeak: 0,
+    },
+    anchors: [],
+    loadingWindows: [
+      {
+        pair: 0,
+        mode: 'cooperative',
+        markerName: anchor,
+        startMs: 0,
+        endMs: 1000,
+        overBudgetSteps: count,
+        omittedSlowSteps: 0,
+        slowSteps: Array(count).fill({}),
+      },
+    ],
+  });
+  assert.equal(summary.complete, false);
+  assert.ok(summary.errors.includes('invalid-loading-window'));
+});
 const stepAnchor = 'gev-import-step:step:sample:0:cooperative:entity:1';
 const window = {
   pair: 0,
