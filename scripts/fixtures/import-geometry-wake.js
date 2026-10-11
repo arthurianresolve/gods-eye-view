@@ -5,6 +5,7 @@ import { createImportedGeometryLayer } from '../../src/imports/runtimeLayer.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { getContextStore } from '../../src/data/contextStore.js';
 import { createMessageChannelWakeScheduler } from '../performance/geometryWakeScheduler.mjs';
+import { captureImportTraceAnchor } from '../performance/importTraceAttribution.mjs';
 
 const resultElement = document.querySelector('#result');
 const params = new URLSearchParams(location.search);
@@ -394,16 +395,16 @@ function prepareSample(type, diagnostic = false) {
     loadPromise: null,
     scheduledCount: () => scheduledCount,
     initialActiveSpanMs: () => initialActiveSpanMs,
+    calibrateTraceClock() {
+      check(!this.anchor, 'Trace clock was already calibrated.');
+      this.anchor = captureImportTraceAnchor(
+        `gev-import-step:geometry-profile:${type}`,
+      );
+      return this.anchor;
+    },
     startLoad() {
-      const before = performance.now();
-      const markerName = `gev-import-step:geometry-profile:${type}`;
-      console.timeStamp(markerName);
+      if (!this.anchor) this.calibrateTraceClock();
       const after = performance.now();
-      this.anchor = {
-        name: markerName,
-        pageNowMs: (before + after) / 2,
-        uncertaintyMs: after - before,
-      };
       this.startedAt = after;
       const pending = layer.loadAsync(input, { workspaceId: 'geometry-wake' });
       initialActiveSpanMs = performance.now() - after;
@@ -725,10 +726,24 @@ async function run() {
         publishProfileStatus();
         return { geometryType, arm, profileMode };
       },
+      calibrateTraceClock() {
+        check(
+          report.profileStatus === 'prepared' &&
+            report.profileStartedAtMs === null,
+          'Trace calibration must precede the profiler.',
+        );
+        const anchor = diagnosticPrepared.calibrateTraceClock();
+        report.traceAnchor = {
+          ...anchor,
+          capturePhase: 'before-profiler-start',
+        };
+        publishProfileStatus();
+        return report.traceAnchor;
+      },
       markProfilerStarted() {
         check(
-          report.profileStatus === 'prepared',
-          'Geometry load was not prepared.',
+          report.profileStatus === 'prepared' && report.traceAnchor,
+          'Geometry load or trace calibration was not prepared.',
         );
         report.profileStartedAtMs = performance.now();
       },

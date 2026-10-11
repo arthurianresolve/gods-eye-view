@@ -199,6 +199,20 @@ async function runProfile() {
       await page.createCDPSession(),
       { timeoutMs: 15_000, cleanupTimeoutMs: 2_000 },
     );
+    // Calibrate while tracing is active but before sampling can interrupt the
+    // marker bracket. Keep the same precision gate and never retry a marker.
+    const traceAnchor = await page.evaluate(() =>
+      window.__importGeometryProfileControl.calibrateTraceClock(),
+    );
+    report.traceAnchor = traceAnchor;
+    if (
+      !Number.isFinite(traceAnchor?.uncertaintyMs) ||
+      traceAnchor.uncertaintyMs < 0 ||
+      traceAnchor.uncertaintyMs > 2
+    )
+      throw new Error(
+        'Trace clock calibration exceeds the 2 ms uncertainty limit.',
+      );
     profileSession = await startImportLoadProfile(page, mode, {
       timeoutMs: 30_000,
       cleanupTimeoutMs: 2_000,
@@ -240,10 +254,17 @@ async function runProfile() {
     const stoppingProfile = profileSession;
     profileSession = null;
     const profile = await stoppingProfile.stop();
+    report.profile = summarizeGeometryLoadProfile({ mode, profile });
     stoppedAt = Date.now();
     const stoppingTrace = traceSession;
     traceSession = null;
     const trace = await stoppingTrace.stop();
+    // Retain normalized, bounded inputs before any downstream attribution or
+    // capture validation can fail. Failed evidence remains failed.
+    report.profile.traceInput = trace;
+    report.profile.traceInputSha256 = createHash('sha256')
+      .update(JSON.stringify(trace))
+      .digest('hex');
     const fixture = await page.evaluate(() =>
       window.__importGeometryProfileControl.finishCapture(),
     );

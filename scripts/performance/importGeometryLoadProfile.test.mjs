@@ -10,6 +10,7 @@ import {
 import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
 import { startImportLoadProfile } from './importLoadProfile.mjs';
 import {
+  captureImportTraceAnchor,
   createImportTraceEventCollector,
   summarizeImportTraceAttribution,
 } from './importTraceAttribution.mjs';
@@ -45,6 +46,47 @@ const anchor = {
   pageNowMs: 100,
   uncertaintyMs: 0.1,
 };
+test('trace calibration records one complete bracket without retrying slow markers', () => {
+  for (const duration of [0.1, 24.6]) {
+    const calls = [];
+    let nowMs = 100;
+    const value = captureImportTraceAnchor(anchor.name, {
+      now: () => {
+        calls.push('now');
+        return nowMs;
+      },
+      emit: (name) => {
+        calls.push(name);
+        nowMs += duration;
+      },
+    });
+    assert.deepEqual(calls, ['now', anchor.name, 'now']);
+    assert.equal(value.pageNowMs, (100 + nowMs) / 2);
+    assert.equal(value.uncertaintyMs, nowMs - 100);
+    if (duration > 2)
+      assert.throws(
+        () =>
+          summarizeGeometryGcOverlap({
+            trace: { events: [] },
+            anchor: value,
+            startMs: 200,
+            endMs: 220,
+          }),
+        /Invalid geometry trace attribution input/,
+      );
+  }
+  for (const end of [99, NaN, Infinity]) {
+    const clock = [100, end];
+    assert.throws(
+      () =>
+        captureImportTraceAnchor(anchor.name, {
+          now: () => clock.shift(),
+          emit: () => {},
+        }),
+      /monotonic clock/,
+    );
+  }
+});
 const traceInput = {
   events: [
     { kind: 'marker', name: anchor.name, tsUs: 500_000, pid: 1, tid: 2 },

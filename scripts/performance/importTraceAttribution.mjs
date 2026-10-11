@@ -13,6 +13,32 @@ export const MAX_IMPORT_SLOW_STEPS_PER_WINDOW = 128;
 
 const finite = (value) => typeof value === 'number' && Number.isFinite(value);
 const MARKER_PREFIX = 'gev-import-step:';
+/** Capture one clock bracket; never retry or hide a slow calibration. */
+export function captureImportTraceAnchor(
+  name,
+  {
+    now = () => performance.now(),
+    emit = (value) => console.timeStamp(value),
+  } = {},
+) {
+  if (
+    typeof name !== 'string' ||
+    name.length > 240 ||
+    !name.startsWith(MARKER_PREFIX)
+  )
+    throw new TypeError('A bounded import trace marker name is required.');
+  const before = now();
+  emit(name);
+  const after = now();
+  if (!Number.isFinite(before) || !Number.isFinite(after) || after < before)
+    throw new TypeError('Trace calibration requires a monotonic clock.');
+  return {
+    name,
+    pageNowMs: (before + after) / 2,
+    uncertaintyMs: after - before,
+  };
+}
+
 const STAGE_NAMES = new Set([
   'entity',
   'coordinate-chunk',
