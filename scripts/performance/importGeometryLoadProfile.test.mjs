@@ -58,6 +58,10 @@ const traceInput = {
   flowPhaseCounts: { s: 0, t: 0, f: 0 },
   omissionReasons: {},
   bufferUsagePeak: 0.1,
+  bufferUsageCount: 1,
+  bufferUsageStatus: 'observed',
+  completionObserved: true,
+  dataLossOccurred: false,
   stopError: null,
 };
 const loadStartedAtMs = 200;
@@ -109,6 +113,7 @@ function validReport() {
       },
     ]),
   );
+  const retainedTraceInput = structuredClone(traceInput);
   return {
     schema: 'gev-import-geometry-load-profile/v1',
     status: 'passed',
@@ -176,8 +181,8 @@ function validReport() {
       rawInputSha256: hashJson(cpuSummary.profile),
       profileWindowMs: 3,
       trace: traceSummary,
-      traceInput,
-      traceInputSha256: hashJson(traceInput),
+      traceInput: retainedTraceInput,
+      traceInputSha256: hashJson(retainedTraceInput),
     },
     environment: {
       host: { hosted: true, logicalCpus: 4 },
@@ -289,6 +294,45 @@ test('validator recomputes retained raw profiles and trace and requires clean na
   });
   assert.equal(validation.valid, false);
   assert.ok(validation.errors.includes('page or resource cleanup failed'));
+});
+
+test('validator recomputes explicit trace completion and buffer availability', () => {
+  const report = validReport();
+  report.profile.traceInput.dataLossOccurred = true;
+  report.profile.traceInputSha256 = hashJson(report.profile.traceInput);
+  const validation = validateImportGeometryLoadProfileReport(report, {
+    commit,
+    geometrySha256: geometryHash,
+  });
+  assert.equal(validation.valid, false);
+  assert.ok(
+    validation.errors.includes(
+      'GC overlap summary does not match retained trace input',
+    ),
+    JSON.stringify(validation.errors),
+  );
+
+  const unavailable = validReport();
+  unavailable.profile.traceInput.bufferUsagePeak = null;
+  unavailable.profile.traceInput.bufferUsageCount = 0;
+  unavailable.profile.traceInput.bufferUsageStatus = 'unavailable';
+  unavailable.profile.trace.bufferUsagePeak = null;
+  unavailable.profile.trace.bufferUsageCount = 0;
+  unavailable.profile.trace.bufferUsageStatus = 'unavailable';
+  unavailable.profile.traceInputSha256 = hashJson(
+    unavailable.profile.traceInput,
+  );
+  unavailable.profile.trace = summarizeGeometryGcOverlap({
+    trace: unavailable.profile.traceInput,
+    anchor,
+    startMs: loadStartedAtMs,
+    endMs: loadCompletedAtMs,
+  });
+  const accepted = validateImportGeometryLoadProfileReport(unavailable, {
+    commit,
+    geometrySha256: geometryHash,
+  });
+  assert.equal(accepted.valid, true, JSON.stringify(accepted.errors));
 });
 
 test('validator rejects forged ranked profile locations even with a valid raw-input hash', () => {
@@ -412,6 +456,10 @@ test('geometry GC overlap uses interval unions and separates other threads', () 
       flowPhaseCounts: { s: 0, t: 0, f: 0 },
       stopError: null,
       bufferUsagePeak: 0.2,
+      bufferUsageCount: 1,
+      bufferUsageStatus: 'observed',
+      completionObserved: true,
+      dataLossOccurred: false,
     },
   });
   assert.equal(summary.complete, true);
@@ -449,6 +497,10 @@ test('geometry GC overlap fails closed on omitted trace events or weak anchors',
       flowPhaseCounts: { s: 0, t: 0, f: 0 },
       stopError: null,
       bufferUsagePeak: 0.2,
+      bufferUsageCount: 1,
+      bufferUsageStatus: 'observed',
+      completionObserved: true,
+      dataLossOccurred: false,
     },
   };
   assert.equal(summarizeGeometryGcOverlap(base).complete, false);
@@ -597,7 +649,11 @@ test('trace attribution summary retains flow identities and reports window bound
   const trace = {
     ...collector.finish(),
     stopError: null,
-    bufferUsagePeak: 0.1,
+    bufferUsagePeak: null,
+    bufferUsageCount: 0,
+    bufferUsageStatus: 'unavailable',
+    completionObserved: true,
+    dataLossOccurred: false,
   };
   const summary = summarizeImportTraceAttribution({
     trace,
@@ -616,9 +672,62 @@ test('trace attribution summary retains flow identities and reports window bound
     ],
   });
   assert.equal(summary.complete, true);
+  assert.equal(summary.bufferUsagePeak, null);
+  assert.equal(summary.bufferUsageStatus, 'unavailable');
   assert.equal(summary.flowEventCount, 1);
   assert.equal(summary.flowEvents[0].identity.id, 'flow-x');
   assert.equal(summary.unmatchedFlow.unmatchedStarts, 1);
+});
+
+test('trace delivery requires explicit completion and no-loss fields; buffer sample is optional only when unavailable', () => {
+  const valid = {
+    ...traceInput,
+    bufferUsagePeak: null,
+    bufferUsageCount: 0,
+    bufferUsageStatus: 'unavailable',
+  };
+  assert.equal(
+    summarizeGeometryGcOverlap({
+      trace: valid,
+      anchor,
+      startMs: loadStartedAtMs,
+      endMs: loadCompletedAtMs,
+    }).complete,
+    true,
+  );
+
+  for (const changed of [
+    { completionObserved: false },
+    { completionObserved: null },
+    { dataLossOccurred: true },
+    { dataLossOccurred: null },
+    { bufferUsageCount: 1 },
+    { bufferUsagePeak: 0 },
+    { bufferUsageStatus: 'observed' },
+    { bufferUsageStatus: 'unavailable', bufferUsagePeak: 0.1 },
+    {
+      bufferUsagePeak: 0.95,
+      bufferUsageCount: 1,
+      bufferUsageStatus: 'observed',
+    },
+    {
+      bufferUsagePeak: 1.01,
+      bufferUsageCount: 1,
+      bufferUsageStatus: 'observed',
+    },
+  ]) {
+    const trace = { ...valid, ...changed };
+    assert.equal(
+      summarizeGeometryGcOverlap({
+        trace,
+        anchor,
+        startMs: loadStartedAtMs,
+        endMs: loadCompletedAtMs,
+      }).complete,
+      false,
+      JSON.stringify(changed),
+    );
+  }
 });
 
 test('missing, malformed, or overflowed flow observations fail closed', () => {

@@ -4,7 +4,10 @@ import {
 } from './importLoadProfile.mjs';
 import { summarizeCpuProfile } from './sampledCpuProfile.mjs';
 import { createHash } from 'node:crypto';
-import { isValidImportTraceFlowEvent } from './importTraceAttribution.mjs';
+import {
+  importTraceDeliveryIsComplete,
+  isValidImportTraceFlowEvent,
+} from './importTraceAttribution.mjs';
 
 export const IMPORT_GEOMETRY_LOAD_PROFILE_SCHEMA =
   'gev-import-geometry-load-profile/v1';
@@ -194,8 +197,7 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
     flowAccountingComplete &&
     phaseCountsMatchRecords &&
     trace.stopError === null &&
-    Number.isFinite(trace.bufferUsagePeak) &&
-    trace.bufferUsagePeak < 0.95;
+    importTraceDeliveryIsComplete(trace);
   if (
     !marker ||
     !Number.isFinite(marker.tsUs) ||
@@ -292,6 +294,10 @@ export function summarizeGeometryGcOverlap({ trace, anchor, startMs, endMs }) {
     flowEvents: flowRecordsValid ? flowEvents : null,
     unmatchedFlow,
     bufferUsagePeak: trace.bufferUsagePeak,
+    bufferUsageCount: trace.bufferUsageCount ?? null,
+    bufferUsageStatus: trace.bufferUsageStatus ?? null,
+    completionObserved: trace.completionObserved ?? null,
+    dataLossOccurred: trace.dataLossOccurred ?? null,
     caveat:
       'Time overlap is correlational and does not establish that GC caused a slow load step. A profile window can include idle/control time. Instant GC markers are not pauses; unsupported or omitted trace events make this result incomplete.',
     performanceAcceptanceEligible: false,
@@ -552,6 +558,10 @@ export function validateImportGeometryLoadProfileReport(report, expected = {}) {
         'flowEvents',
         'unmatchedFlow',
         'bufferUsagePeak',
+        'bufferUsageCount',
+        'bufferUsageStatus',
+        'completionObserved',
+        'dataLossOccurred',
       ]) {
         const expectedValue = profile.trace[key];
         const actualValue = recomputedTrace[key];

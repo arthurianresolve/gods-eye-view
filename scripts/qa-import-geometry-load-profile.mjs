@@ -278,6 +278,10 @@ async function runProfile() {
       flowPhaseCounts: trace.flowPhaseCounts,
       omissionReasons: trace.omissionReasons,
       bufferUsagePeak: trace.bufferUsagePeak,
+      bufferUsageCount: trace.bufferUsageCount,
+      bufferUsageStatus: trace.bufferUsageStatus,
+      completionObserved: trace.completionObserved,
+      dataLossOccurred: trace.dataLossOccurred,
       stopError: trace.stopError,
     };
     const traceInputSha256 = createHash('sha256')

@@ -21,6 +21,35 @@ const STAGE_NAMES = new Set([
   'other',
 ]);
 
+/**
+ * Validate the protocol's trace-delivery witness separately from the optional
+ * periodic buffer sample. A short trace may finish before the first buffer
+ * report; null remains unavailable rather than being treated as zero.
+ * @param {object} trace
+ * @returns {boolean}
+ */
+export function importTraceDeliveryIsComplete(trace) {
+  if (
+    trace?.completionObserved !== true ||
+    trace.dataLossOccurred !== false ||
+    !Number.isInteger(trace.bufferUsageCount) ||
+    trace.bufferUsageCount < 0
+  )
+    return false;
+  if (trace.bufferUsageCount === 0) {
+    return (
+      trace.bufferUsageStatus === 'unavailable' &&
+      trace.bufferUsagePeak === null
+    );
+  }
+  return (
+    trace.bufferUsageStatus === 'observed' &&
+    finite(trace.bufferUsagePeak) &&
+    trace.bufferUsagePeak >= 0 &&
+    trace.bufferUsagePeak < 0.95
+  );
+}
+
 function markerName(event) {
   if (event?.name !== 'TimeStamp') return null;
   const message = event.args?.data?.message;
@@ -489,6 +518,8 @@ export function summarizeImportTraceAttribution({
 }) {
   const errors = [];
   if (trace?.stopError) errors.push('trace-stop-failed');
+  if (!importTraceDeliveryIsComplete(trace))
+    errors.push('trace-delivery-or-buffer-incomplete');
   if (
     !trace ||
     !Array.isArray(trace.events) ||
@@ -843,6 +874,10 @@ export function summarizeImportTraceAttribution({
     traceOmissionReasons: trace.omissionReasons ?? null,
     observedMarkers: [...traceMarkerByName.keys()].sort(),
     bufferUsagePeak: trace.bufferUsagePeak,
+    bufferUsageCount: trace.bufferUsageCount ?? null,
+    bufferUsageStatus: trace.bufferUsageStatus ?? null,
+    completionObserved: trace.completionObserved ?? null,
+    dataLossOccurred: trace.dataLossOccurred ?? null,
     errors,
     complete:
       errors.length === 0 &&
@@ -871,8 +906,7 @@ export function summarizeImportTraceAttribution({
       trace.flowOmittedCount === 0 &&
       trace.omittedCount === 0 &&
       !trace.stopError &&
-      finite(trace.bufferUsagePeak) &&
-      trace.bufferUsagePeak < 0.95 &&
+      importTraceDeliveryIsComplete(trace) &&
       windows.every(
         (window) =>
           window?.aligned === true &&

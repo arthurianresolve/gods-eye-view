@@ -1031,6 +1031,7 @@
   "scripts/fixtures/import-geometry-wake.js",
   "scripts/performance/importGeometryLoadProfile.mjs",
   "scripts/performance/importGeometryLoadProfile.test.mjs",
+  "scripts/performance/importTraceSession.test.mjs",
   "docs/performance-evidence/import-trace-flow-semantics.md",
   "scripts/performance/importLoadProfile.mjs",
   "scripts/performance/importTraceAttribution.mjs",

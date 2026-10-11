@@ -45,6 +45,9 @@ export async function startImportTraceSession(
   const collector = createImportTraceEventCollector(IMPORT_TRACE_EVENT_LIMIT);
   let collectorError = null;
   let bufferUsagePeak = null;
+  let bufferUsageCount = 0;
+  let completionObserved = false;
+  let dataLossOccurred = null;
   let completeResolve;
   const completed = new Promise((resolve) => {
     completeResolve = resolve;
@@ -56,12 +59,37 @@ export async function startImportTraceSession(
       collectorError ||= String(error?.message || error).slice(0, 240);
     }
   };
-  const onBufferUsage = ({ percentFull } = {}) => {
-    if (Number.isFinite(percentFull))
-      bufferUsagePeak = Math.max(bufferUsagePeak ?? 0, percentFull);
+  const onBufferUsage = (event = {}) => {
+    if (!event || typeof event !== 'object' || Array.isArray(event)) {
+      collectorError ||= 'trace-buffer-usage-malformed';
+      return;
+    }
+    const supplied = ['percentFull', 'value'].filter((key) =>
+      Object.hasOwn(event, key),
+    );
+    if (!supplied.length) return;
+    const values = supplied.map((key) => event[key]);
+    if (
+      values.some((value) => !Number.isFinite(value) || value < 0 || value > 1)
+    ) {
+      collectorError ||= 'trace-buffer-usage-malformed';
+      return;
+    }
+    bufferUsageCount += 1;
+    bufferUsagePeak = Math.max(bufferUsagePeak ?? 0, ...values);
   };
-  const onComplete = ({ dataLossOccurred } = {}) => {
-    if (dataLossOccurred) collectorError ||= 'trace-data-loss-reported';
+  // Pinned devtools-protocol 0.0.1666840 declares TracingCompleteEvent's
+  // dataLossOccurred as required (types/protocol.d.ts, Tracing domain); the
+  // BufferUsageEvent percentFull remains optional. Do not infer delivery from
+  // the periodic sample when tracingComplete supplies the authoritative flag.
+  const onComplete = (event = {}) => {
+    completionObserved = true;
+    if (typeof event.dataLossOccurred !== 'boolean') {
+      collectorError ||= 'trace-data-loss-flag-missing-or-malformed';
+    } else {
+      dataLossOccurred = event.dataLossOccurred;
+      if (dataLossOccurred) collectorError ||= 'trace-data-loss-reported';
+    }
     completeResolve();
   };
   const removeListeners = () => {
@@ -139,6 +167,10 @@ export async function startImportTraceSession(
       return {
         ...collector.finish(),
         bufferUsagePeak,
+        bufferUsageCount,
+        bufferUsageStatus: bufferUsageCount ? 'observed' : 'unavailable',
+        completionObserved,
+        dataLossOccurred,
         stopError,
       };
     },
