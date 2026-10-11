@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
+import * as Cesium from 'cesium';
 
 const fixturePath = new URL('./traffic-render-demand.mjs', import.meta.url);
 const fixtureSource = await readFile(fixturePath, 'utf8');
@@ -31,7 +32,9 @@ function createHarness({ tilesetLoaded = false, globeLoaded = false } = {}) {
   const timers = new Map();
   const frames = new Map();
   const urls = new Set();
+  const blobsByUrl = new Map();
   const revokedUrls = [];
+  let capturedTilesetJson = null;
   const tileset = {
     tileVisible: new MockEvent(),
     loadProgress: new MockEvent(),
@@ -64,20 +67,28 @@ function createHarness({ tilesetLoaded = false, globeLoaded = false } = {}) {
     },
     CENTER: { lon: -97, lat: 30 },
     Cesium: {
-      Cartesian3: { fromDegrees: () => ({}) },
-      Cesium3DTileset: { fromUrl: async () => tileset },
+      Cartesian3: Cesium.Cartesian3,
+      Cesium3DTileset: {
+        fromUrl: async (url) => {
+          const blob = blobsByUrl.get(url);
+          capturedTilesetJson = JSON.parse(blob.parts.join(''));
+          return tileset;
+        },
+      },
       Model3DTileContent: modelContent,
-      Transforms: { eastNorthUpToFixedFrame: () => [1, 0, 0, 1] },
+      Transforms: Cesium.Transforms,
     },
     URL: {
-      createObjectURL() {
+      createObjectURL(blob) {
         const url = `blob:fixture/${nextUrlId++}`;
         urls.add(url);
+        blobsByUrl.set(url, blob);
         return url;
       },
       revokeObjectURL(url) {
         revokedUrls.push(url);
         urls.delete(url);
+        blobsByUrl.delete(url);
       },
     },
     TextEncoder,
@@ -122,6 +133,7 @@ function createHarness({ tilesetLoaded = false, globeLoaded = false } = {}) {
     frames,
     timers,
     urls,
+    getCapturedTilesetJson: () => capturedTilesetJson,
     revokedUrls,
     getNow: () => now,
     setNow: (value) => {
@@ -144,6 +156,43 @@ function createHarness({ tilesetLoaded = false, globeLoaded = false } = {}) {
       now += timer.delayMs;
       timer.callback();
     },
+  };
+}
+
+function measureFixtureRootScreenSpaceError(tilesetJson, cameraHeightM) {
+  const tileset = {
+    _geometricError: tilesetJson.geometricError,
+    modelMatrix: Cesium.Matrix4.IDENTITY,
+    dynamicScreenSpaceError: false,
+    _dynamicScreenSpaceErrorComputedDensity: 0,
+    dynamicScreenSpaceErrorFactor: 0,
+  };
+  const rootTile = new Cesium.Cesium3DTile(
+    tileset,
+    Cesium.Resource.createIfNeeded('https://fixture.invalid/tileset.json'),
+    tilesetJson.root,
+    undefined,
+  );
+  const camera = {
+    frustum: new Cesium.PerspectiveFrustum({
+      fov: Cesium.Math.toRadians(60),
+      aspectRatio: 1200 / 800,
+      near: 1,
+      far: 100_000,
+    }),
+    positionWC: Cesium.Cartesian3.fromDegrees(-97, 30, cameraHeightM),
+  };
+  const frameState = {
+    camera,
+    context: { drawingBufferWidth: 1200, drawingBufferHeight: 800 },
+    mode: Cesium.SceneMode.SCENE3D,
+    pixelRatio: 1,
+  };
+  rootTile._distanceToCamera = rootTile.distanceToTile(frameState);
+  return {
+    rootTraversalSse: rootTile.getScreenSpaceError(frameState, true),
+    leafSse: rootTile.getScreenSpaceError(frameState, false),
+    distanceToTileM: rootTile._distanceToCamera,
   };
 }
 
@@ -265,4 +314,45 @@ test('readiness predicate exceptions preserve diagnostics and release frame reso
   assert.equal(harness.frames.size, 0);
   assert.equal(harness.timers.size, 0);
   assert.equal(harness.urls.size, 0);
+});
+
+test('nonzero root geometric error enters traversal while zero-error leaf stays full detail', async () => {
+  const harness = createHarness({ tilesetLoaded: true, globeLoaded: true });
+  const promise = harness.context.__addFixtureTileset(
+    harness.context.viewerInstance,
+  );
+  await harness.settleMicrotasks();
+  harness.tileset.tileVisible.raise({
+    content: Object.assign(new harness.context.Cesium.Model3DTileContent(), {
+      ready: true,
+    }),
+  });
+  harness.scene.postRender.raise();
+  harness.runFrame();
+  await promise;
+
+  const fixtureTilesetJson = harness.getCapturedTilesetJson();
+  assert.ok(fixtureTilesetJson);
+  const noRootError = JSON.parse(JSON.stringify(fixtureTilesetJson));
+  noRootError.geometricError = 0;
+
+  // Cesium3DTilesetBaseTraversal.selectTiles returns before traversal when
+  // root.getScreenSpaceError(frameState, true) <= memoryAdjustedScreenSpaceError.
+  // This checks that gate's actual Cesium SSE input; it does not claim a render.
+  for (const cameraHeightM of [12_000, 2_400]) {
+    const oldRoot = measureFixtureRootScreenSpaceError(
+      noRootError,
+      cameraHeightM,
+    );
+    const correctedRoot = measureFixtureRootScreenSpaceError(
+      fixtureTilesetJson,
+      cameraHeightM,
+    );
+    assert.equal(oldRoot.rootTraversalSse, 0);
+    assert.ok(oldRoot.rootTraversalSse <= 1);
+    assert.ok(correctedRoot.distanceToTileM > 0);
+    assert.ok(correctedRoot.rootTraversalSse > 1);
+    assert.equal(correctedRoot.leafSse, 0);
+    assert.equal(fixtureTilesetJson.root.geometricError, 0);
+  }
 });

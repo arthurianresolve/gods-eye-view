@@ -26,6 +26,19 @@
         "message": "Traffic fixture failed: Local fixture tiles did not settle"
       },
       "completedTrials": 0
+    },
+    {
+      "run": "38120492292",
+      "commit": "da493e8b7f7d27212a8d47e18cbd573586a8ff65",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38120492292",
+      "file": "traffic-38120492292.json",
+      "sha256": "e90bab9837d9b2a040ff35ce9daa4c780bcbfa406006798429b69fd10f4fddff",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Local fixture tiles did not settle"
+      },
+      "completedTrials": 0
     }
   ],
   "acceptance": "Neither run provides a traffic optimization comparison or physical desktop hardware acceptance."

@@ -257,7 +257,10 @@ async function addFixtureTileset(viewerInstance) {
   );
   const tilesetJson = {
     asset: { version: '1.1', gltfUpAxis: 'Z' },
-    geometricError: 0,
+    // This is the error when the entire 5.2 km surface is absent. Zero here
+    // tells Cesium it may omit the whole tree, even though the leaf has content.
+    // The leaf error below stays zero: its geometry is already full detail.
+    geometricError: 5_200,
     root: {
       boundingVolume: { box: [0, 0, 0, 2600, 0, 0, 0, 2600, 0, 0, 0, 5] },
       geometricError: 0,
