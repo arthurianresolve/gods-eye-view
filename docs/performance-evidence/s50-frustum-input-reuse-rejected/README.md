@@ -26,11 +26,15 @@ The original candidate source and test, benchmark harness, focused TAP output,
 and complete five-pair report are retained in this directory. The final report
 is [`comparison-final-node24.json`](raw/comparison-final-node24.json). To reproduce the
 comparison, use the isolated S50 worktree at the baseline commit, copy the
-candidate snapshots into their source paths, then run:
+this evidence directory from the archive commit into that checkout first, then
+copy its candidate snapshots into their source paths as below. The checkout
+needs the pinned dependencies installed. Do not run these copy commands over
+active development work.
 
 ```powershell
 Copy-Item docs/performance-evidence/s50-frustum-input-reuse-rejected/candidate/src/layers/cctv/geometry.js src/layers/cctv/geometry.js
 Copy-Item docs/performance-evidence/s50-frustum-input-reuse-rejected/candidate/src/layers/cctv/geometryReuse.test.mjs src/layers/cctv/geometryReuse.test.mjs
+Copy-Item docs/performance-evidence/s50-frustum-input-reuse-rejected/candidate/scripts/performance/cctvFrustumInputReuseComparison.mjs scripts/performance/cctvFrustumInputReuseComparison.mjs
 node --test --test-reporter=tap src/layers/cctv/geometryReuse.test.mjs
 node scripts/performance/cctvFrustumInputReuseComparison.mjs qa-artifacts/s50-frustum-input-reuse-replay
 ```

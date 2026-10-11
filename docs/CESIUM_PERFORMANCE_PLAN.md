@@ -3972,3 +3972,19 @@ pairs, all seven ordinary integration jobs and all 111 tracking checks pass.
 The runtime traffic change is accepted; fleet scheduling remains excluded.
 [Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
 retain separate code, automated and hosted/physical hardware status.
+
+### S50 exact-input memo experiment - 11 October 2026
+
+An exact-input WeakMap memo was tested against `37afdc6d66b74487ee2280dacc38566ccb3a1530`
+using the actual frustum function and five alternating pairs per workload.
+The final CPU-only comparison preserves output hashes and improves unchanged
+inputs by 53.7%, intermittent pose edits by 40.5%, and terrain updates by 44.6%.
+Every-call pose changes regress 35.6% at the median, with four of five pairs
+above 10%. That path is used during calibration dragging. The optimization
+is rejected and production geometry/test files are restored to baseline.
+
+[Exact sources, reports, reproduction steps and test results](performance-evidence/s50-frustum-input-reuse-rejected/README.md)
+are preserved. Candidate tests passed 11/11 and related geometry checks 17/17;
+the restored baseline passed 15/15. This rejects one optional design without
+changing visual fidelity or acceptance thresholds. It is not full-layer/GPU
+acceptance, and remaining S50 lifecycle and Windows comparisons are incomplete.
