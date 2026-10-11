@@ -1,6 +1,16 @@
 # Cesium performance plan
 
-Current dev checkpoint (11 October 2026): point integration is pushed at
+Integration checkpoint (12 October 2026): the S50 map-source ownership repair,
+connection-scoped map-bridge cleanup and measured macOS recovery backend pass
+[all seven standard CI jobs at `501aa8d8`](performance-evidence/s50-macos-recovery-38174948494/standard-38177697638/ci-run.json).
+Independent inspection of the three raw recovery reports confirms all 15
+stages preserve settings, workspace bundles and asset digests, with natural
+browser exits within five seconds. The integration is ready for dev promotion;
+subsequent evidence commits change documentation only. This closes the
+integration blocker, not full S50 or physical Windows/performance acceptance.
+The rejected S59 scalar experiment remains on its separate opt-in QA branch.
+
+Previous dev checkpoint (11 October 2026): point integration is pushed at
 `ba7c8738b8505244be06d0f0e3bd873e02d6b2ca`. [All seven standard CI jobs](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
 pass on that exact revision: Node 24/26 suites and builds, three-OS recovery,
 Windows onboarding, and browser journeys. The corrected frozen 60-minute hosted
@@ -81,7 +91,8 @@ closing naturally in 121-290 ms. Counterbalanced same-host backend sequences
 pass in both orders at `46ed790b`. WebGL-only reduces median recovery boot
 plus renderer-query time by 57.93% (AB) and 49.28% (BA), with no stage regression.
 QA now adopts this backend for macOS recovery; Linux keeps its existing backend.
-Full standard CI on the adoption commit is required before production promotion.
+Full standard CI at the adoption commit passes in `38177697638`; the retained
+three-OS reports above also pass independent recovery and natural-close checks.
 These software checks do not establish physical GPU acceptance.
 
 S59 coordinate-kernel follow-up at `05065532` completes two five-pair

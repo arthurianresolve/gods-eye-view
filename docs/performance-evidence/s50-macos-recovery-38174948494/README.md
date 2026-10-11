@@ -71,9 +71,21 @@ The QA workflow now selects WebGL-only SwiftShader for ordinary macOS recovery
 and matching shutdown controls. Windows keeps this backend and Linux keeps its
 existing full-driver backend. The ordered experiment still supports both modes.
 This remedies the measured configuration cost; it does not prove a specific
-Chrome/ANGLE defect. Full standard CI must pass before production promotion.
+Chrome/ANGLE defect.
+
+[Standard CI 38177697638](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38177697638)
+passes all seven jobs at exact `501aa8d8e52d1b7f92d02fbcbf9de6cb1feadb46`.
+[Run metadata](standard-38177697638/ci-run.json) and raw recovery reports for
+[Windows](standard-38177697638/win32.json),
+[macOS](standard-38177697638/darwin.json), and
+[Linux](standard-38177697638/linux.json) are retained.
+[Independent review](standard-38177697638/independent-review.json) verifies all
+15 persisted-workspace stages and natural browser exits. macOS closes take
+209-249 ms; Windows 304-557 ms; Linux 317-709 ms. All retain the unchanged
+five-second deadline. This supplies the required integration CI evidence.
 
 Implementation status: diagnostic platform mismatch fixed. Automated status:
 focused tests and the alternative-backend macOS recovery pass; the original
 full-driver failure remains recorded; both counterbalanced sequences pass. Hardware
-status: no new physical GPU validation. Production dev remains `ba7c8738`.
+status: no new physical GPU validation. Integration is eligible for promotion
+from the previous dev checkpoint `ba7c8738`; full S47-S60 acceptance is pending.

@@ -1,0 +1,44 @@
+{
+  "candidateCommit": "501aa8d8e52d1b7f92d02fbcbf9de6cb1feadb46",
+  "scope": "three-OS recovery; not physical GPU or performance acceptance",
+  "allSevenStandardJobsPassed": true,
+  "recoveryStageCount": 15,
+  "summaries": [
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "platform": "win32",
+      "requestedRenderingBackend": "swiftshader-webgl-only",
+      "closeElapsedMs": [
+        557.3686000000162,
+        382.24809999999707,
+        314.5778000000282,
+        425.0718000000343,
+        303.7280000000028
+      ]
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "platform": "linux",
+      "requestedRenderingBackend": "swiftshader-gl-driver",
+      "closeElapsedMs": [
+        317.21110300000146,
+        699.7895019999996,
+        708.650662,
+        657.5554709999997,
+        467.00884600001154
+      ]
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "platform": "darwin",
+      "requestedRenderingBackend": "swiftshader-webgl-only",
+      "closeElapsedMs": [
+        228.6947500000024,
+        218.62308300001314,
+        214.96312499999476,
+        248.6321670000034,
+        209.0314579999831
+      ]
+    }
+  ]
+}
