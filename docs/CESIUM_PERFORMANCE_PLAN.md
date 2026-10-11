@@ -35,9 +35,12 @@ The accepted projection, layout and placement improvements remain in production;
 S52 full-scene performance and hardware validation are still pending.
 
 All seven ordinary integration jobs also pass at
-`f301cba278d7dc6188b14e6fd84a889f1d2c40af`
-([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38104723701),
-[archived results](performance-evidence/s52-placement-direct-filter/dev-f301cba-ci.json)).
+`38f8d70ce087939fa6d4b57a5c8257c5d6b84293`, whose production renderer does not
+include the rejected paint cache
+([run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38106226841),
+[archived results](performance-evidence/s52-paint-rejection-07/production-dev-38f8d70-ci.json)).
+The [earlier successful f301cba results](performance-evidence/s52-placement-direct-filter/dev-f301cba-ci.json)
+remain preserved.
 PR-only layer-token and optional diagnostic/soak checks remain skipped.
 
 The subsequent `dev` run at `e89715c3d46414107cc7996cce98d34aa1a09e8f`

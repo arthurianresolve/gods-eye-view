@@ -11,6 +11,13 @@ Production commit `38f8d70ce087939fa6d4b57a5c8257c5d6b84293` retains the accepte
 projection, layout and placement improvements. Neither the paint-cache runtime
 nor its keyhole tuning API changes were installed in production.
 
+All seven ordinary integration jobs pass on that unchanged production commit
+([GitHub run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38106226841),
+[archived job results](production-dev-38f8d70-ci.json)): Node 24/26, Windows
+onboarding, Windows/Linux/macOS recovery and the browser journeys. This validates
+production, not the rejected candidate. PR-only layer-token checks and optional
+soak/diagnostic jobs were skipped and are not counted as passes.
+
 ## Evidence
 
 - [Independent review](review.json) checks source and dependency hashes,
