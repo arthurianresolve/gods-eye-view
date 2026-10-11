@@ -23,6 +23,11 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './profileRecoveryPageOwnership.mjs';
+import {
+  assertInfrastructureSourceInventory,
+  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  infrastructureFixtureLayer,
+} from '../fixtures/infrastructureFixtureLayer.mjs';
 
 export const INFRASTRUCTURE_BENEFIT_SCHEMA =
   'gev-infrastructure-benefit-comparison/v2';
@@ -87,7 +92,7 @@ function median(values) {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-function validateRun(run, mode, suite, expectedCommit) {
+function validateRun(run, mode, suite, expectedCommit, layer) {
   if (
     run?.mode !== mode ||
     run?.suite !== suite ||
@@ -98,9 +103,16 @@ function validateRun(run, mode, suite, expectedCommit) {
   )
     fail(`${mode}/${suite} run identity or lifecycle is invalid.`);
   if (
+    (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID &&
+      run.layerId !== layer.layerId) ||
+    (run.layerId != null && run.layerId !== layer.layerId)
+  )
+    fail(`${mode}/${suite} run selected a different infrastructure layer.`);
+  if (
     !/^[a-f0-9]{64}$/.test(run.source?.payloadSha256 || '') ||
-    !Number.isSafeInteger(run.source?.featureCount) ||
-    run.source.featureCount <= 0 ||
+    run.source?.featureCount !== layer.sourceFeatureCount ||
+    (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID &&
+      run.source?.layerId !== layer.layerId) ||
     !Number.isSafeInteger(run.source?.payloadBytes) ||
     run.source.payloadBytes <= 0
   )
@@ -135,23 +147,37 @@ function validateRun(run, mode, suite, expectedCommit) {
   )
     fail(`${mode}/${suite} render settings or fixed clock are invalid.`);
   if (
-    run.sourceReady?.count !== run.surfacePopulation?.statsCount ||
-    run.surfacePopulation?.entityCount < run.surfacePopulation?.statsCount ||
+    run.sourceReady?.count !== layer.entityCount ||
+    run.surfacePopulation?.statsCount !== layer.entityCount ||
+    run.surfacePopulation?.entityCount !== layer.entityCount ||
+    (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID &&
+      run.surfacePopulation?.layerId !== layer.layerId) ||
+    (run.surfacePopulation?.layerId != null &&
+      run.surfacePopulation.layerId !== layer.layerId) ||
     !Number.isSafeInteger(run.surfacePopulation?.surfaceCount) ||
-    run.surfacePopulation.surfaceCount <= 0 ||
+    run.surfacePopulation.surfaceCount !== layer.surfaceCount
+  )
+    fail(`${mode}/${suite} source population is incomplete or truncated.`);
+  if (
+    (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID ||
+      run.surfacePopulation?.preservedGraphics != null) &&
+    !same(run.surfacePopulation?.preservedGraphics, layer.preservedGraphics)
+  )
+    fail(`${mode}/${suite} preserved source geometry inventory is incomplete.`);
+  if (
     (mode === 'entities' &&
       (run.surfacePopulation.resources?.owners !== 0 ||
         run.surfacePopulation.resources?.surfaceGraphics !==
-          run.surfacePopulation.surfaceCount ||
+          layer.surfaceCount ||
         run.surfacePopulation.resources?.collectionPoints !== 0 ||
         run.surfacePopulation.resources?.collectionStems !== 0)) ||
     (mode === 'primitive-collections' &&
       (run.surfacePopulation.resources?.owners !== 1 ||
         run.surfacePopulation.resources?.surfaceGraphics !== 0 ||
         run.surfacePopulation.resources?.collectionPoints !==
-          run.surfacePopulation.surfaceCount ||
+          layer.surfaceCount ||
         run.surfacePopulation.resources?.collectionStems !==
-          run.surfacePopulation.surfaceCount)) ||
+          layer.surfaceCount)) ||
     !/^[a-f0-9]{64}$/.test(run.surfacePopulation?.identitySha256 || '') ||
     !Number.isFinite(run.sourceReadyElapsedMs) ||
     run.sourceReadyElapsedMs <= 0 ||
@@ -243,11 +269,96 @@ function validateRun(run, mode, suite, expectedCommit) {
   }
 }
 
+function resolveReportLayer(report, expectedLayerId) {
+  const layerId =
+    report?.layerId ||
+    report?.pairs?.[0]?.runs?.entities?.source?.layerId ||
+    DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+  const layer = infrastructureFixtureLayer(layerId);
+  if (expectedLayerId && layer.layerId !== expectedLayerId)
+    fail('Infrastructure benefit report selected a different requested layer.');
+  if (
+    layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID &&
+    report?.layerId !== layer.layerId
+  )
+    fail(
+      'Datacenter benefit reports must explicitly identify their source layer.',
+    );
+  return layer;
+}
+
+export function summarizeInfrastructureBenefitPairs(pairs) {
+  return Object.fromEntries(
+    ['latency', 'memory'].map((suite) => [
+      suite,
+      Object.fromEntries(
+        INFRASTRUCTURE_BENEFIT_MODES.map((mode) => {
+          const runs = pairs
+            .filter((pair) => pair.suite === suite)
+            .map((pair) => pair.runs[mode]);
+          if (runs.length !== INFRASTRUCTURE_BENEFIT_PAIRS)
+            fail(`${suite} summary has an incomplete sample inventory.`);
+          if (suite === 'latency')
+            return [
+              mode,
+              {
+                sourceReadyElapsedMedianMs: median(
+                  runs.map((run) => run.sourceReadyElapsedMs),
+                ),
+                firstUsableAfterSourceReadyMedianMs: median(
+                  runs.map((run) => run.firstUsable.elapsedFromSourceReadyMs),
+                ),
+                samples: runs.length,
+              },
+            ];
+          return [
+            mode,
+            {
+              enabledHeapDeltaMedianBytes: median(
+                runs.map(
+                  (run) =>
+                    run.memory.enabledSettled.bytes -
+                    run.memory.beforeActivation.bytes,
+                ),
+              ),
+              afterDestroyHeapDeltaMedianBytes: median(
+                runs.map(
+                  (run) =>
+                    run.memory.afterLayerDestroy.bytes -
+                    run.memory.beforeActivation.bytes,
+                ),
+              ),
+              absoluteHeapBytesAfterGc: median(
+                runs.map((run) => run.memory.afterLayerDestroy.bytes),
+              ),
+              afterViewerDestroyHeapDeltaMedianBytes: median(
+                runs.map(
+                  (run) =>
+                    run.memory.afterViewerDestroy.bytes -
+                    run.memory.beforeActivation.bytes,
+                ),
+              ),
+              samples: runs.length,
+            },
+          ];
+        }),
+      ),
+    ]),
+  );
+}
+
 export function validateInfrastructureBenefitReport(
   report,
-  { expectedCommit } = {},
+  { expectedCommit, expectedLayerId } = {},
 ) {
-  if (report?.schema !== INFRASTRUCTURE_BENEFIT_SCHEMA)
+  let layer;
+  try {
+    layer = resolveReportLayer(report, expectedLayerId);
+  } catch (error) {
+    fail(error.message);
+  }
+  const expectedSchema = layer.benefitSchema;
+  if (report?.schema !== expectedSchema)
     fail('Infrastructure benefit report schema is invalid.');
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
@@ -296,6 +407,8 @@ export function validateInfrastructureBenefitReport(
     'scripts/performance/infrastructureBenefitComparison.mjs',
     'scripts/performance/infrastructureBenefitComparison.test.mjs',
   ];
+  if (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID)
+    requiredSourcePaths.push('scripts/fixtures/infrastructureFixtureLayer.mjs');
   const dependencyBytes = report.provenance?.installedDependencyBytes;
   if (
     !requiredSourcePaths.every((path) =>
@@ -351,7 +464,18 @@ export function validateInfrastructureBenefitReport(
       )
         fail(`${suite} pair ${index + 1} is not fresh and alternating.`);
       for (const mode of INFRASTRUCTURE_BENEFIT_MODES)
-        validateRun(pair.runs[mode], mode, suite, expectedCommit);
+        validateRun(pair.runs[mode], mode, suite, expectedCommit, layer);
+      for (const mode of INFRASTRUCTURE_BENEFIT_MODES) {
+        const source = pair.runs[mode].source;
+        try {
+          assertInfrastructureSourceInventory(
+            { ...source, layerId: source.layerId || layer.layerId },
+            layer,
+          );
+        } catch (error) {
+          fail(error.message);
+        }
+      }
       const baseline = pair.runs.entities;
       const candidate = pair.runs['primitive-collections'];
       if (
@@ -402,6 +526,8 @@ export function validateInfrastructureBenefitReport(
         fail(`${suite} pair ${index + 1} delta summary is stale.`);
     }
   }
+  if (!same(report.summary, summarizeInfrastructureBenefitPairs(report.pairs)))
+    fail('Infrastructure benefit summary is stale.');
   const imagePaths = report.pairs.flatMap((pair) =>
     INFRASTRUCTURE_BENEFIT_MODES.flatMap((mode) =>
       ['firstUsable', 'settled'].map(
@@ -427,6 +553,10 @@ export function validateInfrastructureBenefitReport(
         run.source.featureCount !== referenceRun.source.featureCount ||
         run.surfacePopulation.identitySha256 !==
           referenceRun.surfacePopulation.identitySha256 ||
+        !same(
+          run.surfacePopulation.preservedGraphics || null,
+          referenceRun.surfacePopulation.preservedGraphics || null,
+        ) ||
         run.firstUsable.pixelSha256 !== referenceRun.firstUsable.pixelSha256 ||
         !same(run.settings, referenceRun.settings) ||
         !same(run.renderClock, referenceRun.renderClock) ||
@@ -498,9 +628,15 @@ if (isMain) {
   const expectedCommit = process.env.CANDIDATE_SHA;
   assert.match(expectedCommit || '', /^[a-f0-9]{40}$/);
   const outputPath = process.argv[2];
+  const layerOption = process.argv.indexOf('--layer-id');
+  const requestedLayerId =
+    layerOption >= 0
+      ? process.argv[layerOption + 1]
+      : DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+  const selectedLayer = infrastructureFixtureLayer(requestedLayerId);
   assert.ok(
     outputPath,
-    'Usage: infrastructureBenefitComparison.mjs OUTPUT_DIR',
+    'Usage: infrastructureBenefitComparison.mjs OUTPUT_DIR [--layer-id local-datacenters]',
   );
 
   const root = resolve(process.cwd());
@@ -529,6 +665,7 @@ if (isMain) {
     'src/performance/performanceSnapshot.js',
     'scripts/fixtures/infrastructure-benefit.html',
     'scripts/fixtures/infrastructure-benefit.mjs',
+    'scripts/fixtures/infrastructureFixtureLayer.mjs',
     'scripts/performance/infrastructureBenefitComparison.mjs',
     'scripts/performance/infrastructureBenefitComparison.test.mjs',
     'scripts/performance/rendererEvidence.mjs',
@@ -601,7 +738,8 @@ if (isMain) {
     'Cesium patch manifests and installed package versions disagree.',
   );
   const report = {
-    schema: INFRASTRUCTURE_BENEFIT_SCHEMA,
+    schema: selectedLayer.benefitSchema,
+    layerId: selectedLayer.layerId,
     status: 'running',
     applicationCommit: expectedCommit,
     harnessCommit: expectedCommit,
@@ -747,6 +885,7 @@ if (isMain) {
       suite,
       pairIndex,
       orderIndex: indexInOrder,
+      layerId: selectedLayer.layerId,
       applicationCommit: expectedCommit,
       harnessCommit: expectedCommit,
       status: 'running',
@@ -794,7 +933,7 @@ if (isMain) {
         },
       );
       const response = await page.goto(
-        `${origin}/scripts/fixtures/infrastructure-benefit.html?mode=${mode}&epoch=${encodeURIComponent(INFRASTRUCTURE_BENEFIT_EPOCH)}`,
+        `${origin}/scripts/fixtures/infrastructure-benefit.html?mode=${mode}&layerId=${encodeURIComponent(selectedLayer.layerId)}&epoch=${encodeURIComponent(INFRASTRUCTURE_BENEFIT_EPOCH)}`,
         { waitUntil: 'networkidle0', timeout: 60_000 },
       );
       assert.equal(response?.status(), 200, 'Benefit fixture did not load.');
@@ -837,6 +976,7 @@ if (isMain) {
       );
       assert.equal(state.applicationCommit, expectedCommit);
       assert.equal(state.mode, mode);
+      assert.equal(state.layerId, selectedLayer.layerId);
       record.source = state.source;
       record.renderClock = state.renderTime;
       record.settings = state.settings;
@@ -1051,7 +1191,7 @@ if (isMain) {
         for (let orderIndex = 0; orderIndex < order.length; orderIndex++) {
           const mode = order[orderIndex];
           const record = await runOne(mode, suite, index, orderIndex, pair);
-          validateRun(record, mode, suite, expectedCommit);
+          validateRun(record, mode, suite, expectedCommit, selectedLayer);
           save();
         }
         const baseline = pair.runs.entities;
@@ -1100,59 +1240,7 @@ if (isMain) {
         save();
       }
     }
-    report.summary = {};
-    for (const suite of ['latency', 'memory']) {
-      report.summary[suite] = Object.fromEntries(
-        INFRASTRUCTURE_BENEFIT_MODES.map((mode) => {
-          const runs = report.pairs
-            .filter((pair) => pair.suite === suite)
-            .map((pair) => pair.runs[mode]);
-          if (suite === 'latency')
-            return [
-              mode,
-              {
-                sourceReadyElapsedMedianMs: median(
-                  runs.map((run) => run.sourceReadyElapsedMs),
-                ),
-                firstUsableAfterSourceReadyMedianMs: median(
-                  runs.map((run) => run.firstUsable.elapsedFromSourceReadyMs),
-                ),
-                samples: runs.length,
-              },
-            ];
-          return [
-            mode,
-            {
-              enabledHeapDeltaMedianBytes: median(
-                runs.map(
-                  (run) =>
-                    run.memory.enabledSettled.bytes -
-                    run.memory.beforeActivation.bytes,
-                ),
-              ),
-              afterDestroyHeapDeltaMedianBytes: median(
-                runs.map(
-                  (run) =>
-                    run.memory.afterLayerDestroy.bytes -
-                    run.memory.beforeActivation.bytes,
-                ),
-              ),
-              absoluteHeapBytesAfterGc: median(
-                runs.map((run) => run.memory.afterLayerDestroy.bytes),
-              ),
-              afterViewerDestroyHeapDeltaMedianBytes: median(
-                runs.map(
-                  (run) =>
-                    run.memory.afterViewerDestroy.bytes -
-                    run.memory.beforeActivation.bytes,
-                ),
-              ),
-              samples: runs.length,
-            },
-          ];
-        }),
-      );
-    }
+    report.summary = summarizeInfrastructureBenefitPairs(report.pairs);
     report.status = 'passed';
   } catch (error) {
     failure = error;
@@ -1251,7 +1339,10 @@ if (isMain) {
     if (failure) report.status = 'failed';
     else {
       try {
-        validateInfrastructureBenefitReport(report, { expectedCommit });
+        validateInfrastructureBenefitReport(report, {
+          expectedCommit,
+          expectedLayerId: selectedLayer.layerId,
+        });
       } catch (error) {
         failure = error;
         report.status = 'failed';

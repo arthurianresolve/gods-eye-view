@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { infrastructureFixtureLayer } from '../fixtures/infrastructureFixtureLayer.mjs';
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
@@ -7,7 +8,6 @@ import {
   compareInfrastructureRuntimeLifetimes,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
-  INFRASTRUCTURE_RUNTIME_SCHEMA,
   validateInfrastructureRuntimeReport,
 } from './infrastructureRuntimeComparison.mjs';
 
@@ -20,7 +20,7 @@ const renderClock = {
   shouldAnimate: false,
 };
 
-function sample(mode, caseId, pair) {
+function sample(mode, caseId, pair, layer = infrastructureFixtureLayer()) {
   const collection = mode === 'primitive-collections';
   const id = `${caseId}-surface-${pair}`;
   return {
@@ -28,9 +28,9 @@ function sample(mode, caseId, pair) {
     pair,
     mode,
     status: 'settled',
-    sourceFeatureCount: 12,
-    surfaceCount: 4,
-    entityCount: 16,
+    sourceFeatureCount: layer.sourceFeatureCount,
+    surfaceCount: layer.surfaceCount,
+    entityCount: layer.entityCount,
     entitySelectionIdentity: id,
     identitySha256: digest,
     geometrySha256: digest,
@@ -76,10 +76,10 @@ function sample(mode, caseId, pair) {
     ownership: {
       renderer: mode,
       datasourcePresent: true,
-      entityCount: 16,
-      surfaceEntityCount: 4,
-      entitySurfaceGraphics: collection ? 0 : 4,
-      preservedGraphics: { points: 0, polylines: 7, polygons: 9 },
+      entityCount: layer.entityCount,
+      surfaceEntityCount: layer.surfaceCount,
+      entitySurfaceGraphics: collection ? 0 : layer.surfaceCount,
+      preservedGraphics: { ...layer.preservedGraphics },
       rendererOwners: collection ? 1 : 0,
       rendererOwnerChildren: collection ? [2] : [],
       sceneDataSourceCount: 1,
@@ -87,17 +87,23 @@ function sample(mode, caseId, pair) {
       sceneGroundPrimitiveCount: 1,
     },
     productionDiagnostics: collection
-      ? { mode, owners: 1, attached: true, points: 4, stems: 4 }
+      ? {
+          mode,
+          owners: 1,
+          attached: true,
+          points: layer.surfaceCount,
+          stems: layer.surfaceCount,
+        }
       : null,
     layerResourceDiagnostics: {
       surfaceCollectionOwners: collection ? 1 : 0,
-      surfacePoints: collection ? 4 : 0,
-      surfaceStems: collection ? 4 : 0,
+      surfacePoints: collection ? layer.surfaceCount : 0,
+      surfaceStems: collection ? layer.surfaceCount : 0,
     },
   };
 }
 
-function lifetime(mode) {
+function lifetime(mode, layer = infrastructureFixtureLayer()) {
   return {
     mode,
     activationOrder: mode === 'entities' ? 0 : 1,
@@ -121,7 +127,7 @@ function lifetime(mode) {
     renderClock: { ...renderClock },
     samples: INFRASTRUCTURE_RUNTIME_CASES.flatMap((caseId) =>
       Array.from({ length: INFRASTRUCTURE_RUNTIME_PAIRS }, (_, pair) =>
-        sample(mode, caseId, pair),
+        sample(mode, caseId, pair, layer),
       ),
     ),
     teardown: {
@@ -138,11 +144,12 @@ function lifetime(mode) {
   };
 }
 
-function validReport() {
-  const baseline = lifetime('entities');
-  const candidate = lifetime('primitive-collections');
+function validReport(layerId = 'local-dams') {
+  const layer = infrastructureFixtureLayer(layerId);
+  const baseline = lifetime('entities', layer);
+  const candidate = lifetime('primitive-collections', layer);
   return {
-    schema: INFRASTRUCTURE_RUNTIME_SCHEMA,
+    schema: layer.schema,
     applicationCommit: commit,
     harnessCommit: commit,
     environment: {
@@ -152,10 +159,11 @@ function validReport() {
       drawingBuffer: { width: 960, height: 640 },
     },
     source: {
-      featureCount: 12,
+      layerId,
+      featureCount: layer.sourceFeatureCount,
       payloadBytes: 400,
       payloadSha256: digest,
-      geometryKinds: { Point: 12 },
+      geometryKinds: { ...layer.geometryKinds },
     },
     candidateRepresentation: {
       id: 'production-local-infrastructure-primitive-collections/rgba8/v1',
@@ -196,6 +204,53 @@ test('runtime report validates independent default and production lifetimes', ()
       expectedCommit: commit,
     }),
     true,
+  );
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(validReport(), {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /different requested layer/,
+  );
+});
+
+test('runtime report binds the complete datacenter source and Entity inventory', () => {
+  const report = validReport('local-datacenters');
+  assert.equal(
+    validateInfrastructureRuntimeReport(report, {
+      expectedCommit: commit,
+      expectedLayerId: 'local-datacenters',
+    }),
+    true,
+  );
+  const truncated = structuredClone(report);
+  truncated.lifetimes[1].samples[0].entityCount--;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(truncated, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /incomplete render or ownership/,
+  );
+  const wrongKinds = structuredClone(report);
+  wrongKinds.source.geometryKinds.Point--;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(wrongKinds, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /source inventory changed/,
+  );
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-dams',
+      }),
+    /different requested layer/,
   );
 });
 

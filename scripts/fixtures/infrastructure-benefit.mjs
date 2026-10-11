@@ -5,11 +5,19 @@ import { localGeoJsonServices } from '../../src/app/localGeojsonServices.js';
 import { createInfrastructureLayers } from '../../src/data/infrastructure.js';
 import { INFRASTRUCTURE_DATA_URLS } from '../../src/sources/infrastructureData.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
+import { countInfrastructureGraphics } from '../performance/infrastructureRuntimeComparison.mjs';
+import {
+  assertInfrastructureSourceInventory,
+  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  infrastructureFixtureLayer,
+} from './infrastructureFixtureLayer.mjs';
 
 const FRAME_TIMEOUT_MS = 12_000;
-const MAX_PICK_ROWS = 2_000;
 const params = new URLSearchParams(location.search);
 const mode = params.get('mode');
+const fixtureLayer = infrastructureFixtureLayer(
+  params.get('layerId') || DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+);
 const statusNode = document.querySelector('#status');
 const outputNode = document.querySelector('#result');
 const container = document.querySelector('#viewer');
@@ -25,9 +33,12 @@ async function sha256(bytes) {
     .join('');
 }
 
-async function readSourceIdentity() {
-  const response = await fetch(INFRASTRUCTURE_DATA_URLS['local-dams']);
-  check(response.ok, `Dams payload returned HTTP ${response.status}.`);
+async function readSourceIdentity(layer) {
+  const response = await fetch(INFRASTRUCTURE_DATA_URLS[layer.layerId]);
+  check(
+    response.ok,
+    `${layer.layerName} payload returned HTTP ${response.status}.`,
+  );
   const bytes = await response.arrayBuffer();
   check(
     bytes.byteLength > 0 && bytes.byteLength <= 20 * 1024 * 1024,
@@ -40,12 +51,15 @@ async function readSourceIdentity() {
     const type = JSON.parse(line)?.geometry?.type || 'unknown';
     kinds[type] = (kinds[type] || 0) + 1;
   }
-  return {
+  const source = {
+    layerId: layer.layerId,
     payloadSha256: await sha256(bytes),
     payloadBytes: bytes.byteLength,
     featureCount: features.length,
     geometryKinds: kinds,
   };
+  assertInfrastructureSourceInventory(source, layer);
+  return source;
 }
 
 function finitePosition(value) {
@@ -53,40 +67,25 @@ function finitePosition(value) {
   return position.every(Number.isFinite) ? position : null;
 }
 
-function primitiveCollections(viewer) {
+function primitiveCollections(viewer, layerId) {
   for (let index = 0; index < viewer.scene.primitives.length; index++) {
     const owner = viewer.scene.primitives.get(index);
-    if (owner?.__gevLocalInfrastructureLayerId === 'local-dams') {
+    if (owner?.__gevLocalInfrastructureLayerId === layerId) {
       return { owner, points: owner.get(0), stems: owner.get(1) };
     }
   }
   return null;
 }
 
-function pointAndStem(row, collections, time) {
+function pointAndStem(row, collections, time, collectionByEntity) {
   if (collections) {
-    let point;
-    let stem;
-    for (let index = 0; index < collections.points.length; index++) {
-      const candidate = collections.points.get(index);
-      if (candidate?.id === row) {
-        point = candidate;
-        break;
-      }
-    }
-    for (let index = 0; index < collections.stems.length; index++) {
-      const candidate = collections.stems.get(index);
-      if (candidate?.id === row) {
-        stem = candidate;
-        break;
-      }
-    }
-    if (point && stem)
+    const pair = collectionByEntity?.get(row);
+    if (pair)
       return {
-        point: point.position,
-        positions: stem.positions,
-        pointShow: point.show !== false,
-        stemShow: stem.show !== false,
+        point: pair.point.position,
+        positions: pair.stem.positions,
+        pointShow: pair.point.show !== false,
+        stemShow: pair.stem.show !== false,
       };
   }
   if (row.point && row.polyline) {
@@ -104,12 +103,12 @@ function pointAndStem(row, collections, time) {
   return null;
 }
 
-function pickTarget(viewer, rows, collections, time) {
+function pickTarget(viewer, rows, collections, time, collectionByEntity) {
   const canvasWidth = viewer.scene.canvas.clientWidth;
   const canvasHeight = viewer.scene.canvas.clientHeight;
   for (const row of rows) {
     if (!row.show) continue;
-    const surfaces = pointAndStem(row, collections, time);
+    const surfaces = pointAndStem(row, collections, time, collectionByEntity);
     if (
       !surfaces?.pointShow ||
       !surfaces.stemShow ||
@@ -290,17 +289,28 @@ function sceneResourceCounts(viewer, dataSource) {
   const owners = [];
   for (let index = 0; index < viewer.scene.primitives.length; index++) {
     const primitive = viewer.scene.primitives.get(index);
-    if (primitive?.__gevLocalInfrastructureLayerId === 'local-dams')
+    if (primitive?.__gevLocalInfrastructureLayerId === fixtureLayer.layerId)
       owners.push(primitive);
   }
   const graphics =
     dataSource?.entities.values.filter(
       (entity) => entity.point && entity.polyline,
     ).length || 0;
-  const diagnostics = damsRef?.getPerformanceDiagnostics?.() || null;
+  const surfaceEntities =
+    mode === 'entities'
+      ? (dataSource?.entities.values || []).filter(
+          (entity) => entity.point && entity.polyline,
+        )
+      : [...(collectionByEntityRef?.keys() || [])];
+  const inventory = countInfrastructureGraphics(
+    dataSource?.entities.values || [],
+    surfaceEntities,
+  );
+  const diagnostics = layerRef?.getPerformanceDiagnostics?.() || null;
   return {
     entityCount: dataSource?.entities.values.length ?? 0,
     surfaceGraphics: graphics,
+    preservedGraphics: inventory.preservedGraphics,
     owners: owners.length,
     collectionPoints: diagnostics?.surfacePoints ?? 0,
     collectionStems: diagnostics?.surfaceStems ?? 0,
@@ -312,8 +322,9 @@ function sceneResourceCounts(viewer, dataSource) {
 
 let viewerRef = null;
 let layersRef = [];
-let damsRef = null;
+let layerRef = null;
 let gateRef = null;
+let collectionByEntityRef = null;
 let state = null;
 let lifecyclePromise = null;
 let teardownPromise = null;
@@ -333,27 +344,55 @@ function publish(phase, patch = {}) {
 async function runActivation() {
   check(state && state.phase === 'ready', 'Measurement is not ready to start.');
   const viewer = viewerRef;
-  const dams = damsRef;
+  const layer = layerRef;
   const startedAt = performance.now();
   publish('starting', { activationStartedAt: startedAt });
   const initStartedAt = performance.now();
-  await dams.init(viewer);
+  await layer.init(viewer);
   const initCompletedAt = performance.now();
   state.initDurationMs = initCompletedAt - initStartedAt;
   try {
-    await dams.enable(viewer);
+    await layer.enable(viewer);
   } catch (error) {
     publish('activation-error', { error: String(error?.stack || error) });
     throw error;
   }
   const sourceReadyAt = performance.now();
-  const stats = dams.getStats();
-  const diagnostics = dams.getPerformanceDiagnostics();
-  const dataSource = viewer.dataSources.getByName('Dams')?.[0];
+  const stats = layer.getStats();
+  const diagnostics = layer.getPerformanceDiagnostics();
+  const dataSource = viewer.dataSources.getByName(fixtureLayer.layerName)?.[0];
   check(
     dataSource && stats.count > 0 && diagnostics.pendingJobs === 0,
     'Layer enable returned before the source was ready.',
   );
+  check(
+    dataSource.entities.values.length === fixtureLayer.entityCount &&
+      stats.count === fixtureLayer.entityCount,
+    `${fixtureLayer.layerName} Entity inventory is incomplete.`,
+  );
+  const analystRecords = layer.getAnalystRecords(
+    dataSource.entities.values.length,
+  );
+  check(
+    analystRecords.length === fixtureLayer.surfaceCount,
+    `${fixtureLayer.layerName} analyst surface inventory is incomplete.`,
+  );
+  const collections = primitiveCollections(viewer, fixtureLayer.layerId);
+  collectionByEntityRef = null;
+  if (collections) {
+    const byPoint = new Map();
+    for (let index = 0; index < collections.points.length; index++) {
+      const point = collections.points.get(index);
+      const stem = collections.stems.get(index);
+      if (point?.id && point.id === stem?.id)
+        byPoint.set(point.id, { point, stem });
+    }
+    check(
+      byPoint.size === fixtureLayer.surfaceCount,
+      'Candidate primitive index does not cover every source Entity.',
+    );
+    collectionByEntityRef = byPoint;
+  }
   state.sourceReadyAt = sourceReadyAt;
   state.sourceReadyElapsedMs = sourceReadyAt - startedAt;
   state.sourceReady = {
@@ -389,19 +428,22 @@ async function runActivation() {
     check(!frame.error, frame.error || 'Frame capture failed.');
     const bytes = new Uint8Array(frame.pixels.bytes);
     const frameHash = await sha256(bytes);
-    const records = dataSource.entities.values
-      .filter(
-        (entity) =>
-          entity.point || entity.polyline || mode === 'primitive-collections',
-      )
-      .slice(0, MAX_PICK_ROWS);
+    const records = dataSource.entities.values.filter(
+      (entity) =>
+        entity.point || entity.polyline || mode === 'primitive-collections',
+    );
+    check(
+      records.length === fixtureLayer.entityCount,
+      'Native pick inventory was unexpectedly truncated.',
+    );
     const target = pickTarget(
       viewer,
       records,
-      primitiveCollections(viewer),
+      collections,
       renderTimeRef,
+      collectionByEntityRef,
     );
-    const lod = dams.getLodDiagnostics();
+    const lod = layer.getLodDiagnostics();
     const cameraPosition = [
       viewer.camera.positionWC.x,
       viewer.camera.positionWC.y,
@@ -454,6 +496,7 @@ async function runActivation() {
   state.firstUsable = usable;
   const resources = sceneResourceCounts(viewer, dataSource);
   state.surfacePopulation = {
+    layerId: fixtureLayer.layerId,
     mode,
     statsCount: stats.count,
     entityCount: dataSource.entities.values.length,
@@ -462,10 +505,11 @@ async function runActivation() {
         ? resources.surfaceGraphics
         : resources.collectionPoints,
     resources,
+    preservedGraphics: resources.preservedGraphics,
     identitySha256: await sha256(
       new TextEncoder().encode(
         JSON.stringify(
-          dams.getAnalystRecords(MAX_PICK_ROWS).map((row) => ({
+          analystRecords.map((row) => ({
             id: row.sourceRecordId,
             ref: row.evidence?.entityRef?.id,
           })),
@@ -476,6 +520,7 @@ async function runActivation() {
   viewer.selectedEntity = dataSource.entities.getById(usable.target.entityId);
   await settleVisibleFrame(viewer);
   state.enabledSettledResources = sceneResourceCounts(viewer, dataSource);
+  collectionByEntityRef = null;
   publish('enabled-settled');
 }
 
@@ -508,7 +553,8 @@ async function destroyLayer() {
     publish('destroying-layer');
     for (const layer of layersRef) layer.destroy(viewerRef);
     layersRef = [];
-    damsRef = null;
+    layerRef = null;
+    collectionByEntityRef = null;
     const framePromise = gateRef.next();
     viewerRef.scene.requestRender();
     const frame = await framePromise;
@@ -534,7 +580,8 @@ function releaseLayerReferences() {
     'Layer references can only be released after layer teardown.',
   );
   layersRef = [];
-  damsRef = null;
+  layerRef = null;
+  collectionByEntityRef = null;
   lifecyclePromise = null;
   teardownPromise = null;
   return { ok: true, released: true };
@@ -626,7 +673,7 @@ async function prepare() {
     /^[a-f0-9]{40}$/.test(__GEV_APP_COMMIT__),
     'Exact app commit is missing.',
   );
-  const source = await readSourceIdentity();
+  const source = await readSourceIdentity(fixtureLayer);
   const renderTime = params.has('epoch')
     ? Cesium.JulianDate.fromIso8601(params.get('epoch'))
     : Cesium.JulianDate.now();
@@ -655,14 +702,18 @@ async function prepare() {
       ? { infrastructureSurfaceRenderer: mode }
       : {}),
   });
-  damsRef = layersRef.find((layer) => layer.id === 'local-dams');
-  check(damsRef, 'Production dams layer was not constructed.');
+  layerRef = layersRef.find((layer) => layer.id === fixtureLayer.layerId);
+  check(
+    layerRef,
+    `Production ${fixtureLayer.layerName} layer was not constructed.`,
+  );
   state = {
     schema: 'gev-infrastructure-benefit-trial/v1',
     status: 'ready',
     phase: 'ready',
     applicationCommit: __GEV_APP_COMMIT__,
     mode,
+    layerId: fixtureLayer.layerId,
     source,
     renderTime: {
       iso: Cesium.JulianDate.toIso8601(renderTime, 3),

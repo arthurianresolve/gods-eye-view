@@ -1,3 +1,9 @@
+import {
+  assertInfrastructureSourceInventory,
+  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  infrastructureFixtureLayer,
+} from '../fixtures/infrastructureFixtureLayer.mjs';
+
 export const INFRASTRUCTURE_RUNTIME_SCHEMA =
   'gev-infrastructure-runtime-renderers/v3';
 export const INFRASTRUCTURE_RUNTIME_CASES = Object.freeze([
@@ -10,7 +16,11 @@ function fail(message) {
   throw new Error(message);
 }
 
-function validateLifetime(lifetime, report) {
+function same(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function validateLifetime(lifetime, report, layer) {
   if (
     !['entities', 'primitive-collections'].includes(lifetime?.mode) ||
     lifetime.status !== 'passed'
@@ -60,10 +70,9 @@ function validateLifetime(lifetime, report) {
         row.mode !== lifetime.mode ||
         row.status !== 'settled' ||
         row.sourceFeatureCount !== report.source.featureCount ||
-        !Number.isSafeInteger(row.surfaceCount) ||
-        row.surfaceCount <= 0 ||
+        row.surfaceCount !== layer.surfaceCount ||
         !Number.isSafeInteger(row.entityCount) ||
-        row.entityCount < row.surfaceCount ||
+        row.entityCount !== layer.entityCount ||
         !/^[a-f0-9]{64}$/.test(row.identitySha256 || '') ||
         !/^[a-f0-9]{64}$/.test(row.geometrySha256 || '') ||
         !/^[a-f0-9]{64}$/.test(row.styleSha256 || '') ||
@@ -107,11 +116,6 @@ function validateLifetime(lifetime, report) {
         row.ownership.entityCount !== row.entityCount ||
         row.ownership.surfaceEntityCount !== row.surfaceCount ||
         !Number.isSafeInteger(row.ownership.entitySurfaceGraphics) ||
-        !['points', 'polylines', 'polygons'].every(
-          (key) =>
-            Number.isSafeInteger(row.ownership.preservedGraphics?.[key]) &&
-            row.ownership.preservedGraphics[key] >= 0,
-        ) ||
         !Number.isSafeInteger(row.ownership.rendererOwners) ||
         row.ownership.sceneDataSourceCount !==
           lifetime.sceneBaseline.dataSources + 1 ||
@@ -123,6 +127,10 @@ function validateLifetime(lifetime, report) {
       )
         fail(
           `${caseId} pair ${pair + 1} has incomplete render or ownership evidence.`,
+        );
+      if (!same(row.ownership.preservedGraphics, layer.preservedGraphics))
+        fail(
+          'Preserved source geometry inventory differs from its layer contract.',
         );
       if (
         lifetime.mode === 'entities' &&
@@ -186,10 +194,8 @@ function validateLifetime(lifetime, report) {
 
 export function validateInfrastructureRuntimeReport(
   report,
-  { expectedCommit } = {},
+  { expectedCommit, expectedLayerId } = {},
 ) {
-  if (report?.schema !== INFRASTRUCTURE_RUNTIME_SCHEMA)
-    fail('Infrastructure runtime report schema is invalid.');
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
   if (
@@ -197,6 +203,24 @@ export function validateInfrastructureRuntimeReport(
     report.harnessCommit !== expectedCommit
   )
     fail('Infrastructure runtime source identity changed.');
+  let layer;
+  try {
+    const layerId =
+      report.source?.layerId || DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+    layer = infrastructureFixtureLayer(layerId);
+    if (expectedLayerId && expectedLayerId !== layer.layerId)
+      fail('Infrastructure report selected a different requested layer.');
+    if (report.schema !== layer.schema)
+      fail('Infrastructure runtime report schema is invalid for its layer.');
+    if (
+      layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID &&
+      report.source?.layerId !== layer.layerId
+    )
+      fail('Datacenter reports must explicitly identify their source layer.');
+    assertInfrastructureSourceInventory({ ...report.source, layerId }, layer);
+  } catch (error) {
+    fail(error?.message || 'Infrastructure source layer is invalid.');
+  }
   if (
     report.environment?.appCommit !== expectedCommit ||
     report.environment?.harnessCommit !== expectedCommit ||
@@ -211,8 +235,6 @@ export function validateInfrastructureRuntimeReport(
   if (report.status !== 'passed' || report.error || report.failedPhase)
     fail('Infrastructure runtime comparison did not pass.');
   if (
-    !Number.isSafeInteger(report.source?.featureCount) ||
-    report.source.featureCount <= 0 ||
     !Number.isSafeInteger(report.source?.payloadBytes) ||
     report.source.payloadBytes <= 0 ||
     !/^[a-f0-9]{64}$/.test(report.source?.payloadSha256 || '')
@@ -234,7 +256,8 @@ export function validateInfrastructureRuntimeReport(
     fail(
       'Expected independent default and candidate layer lifetimes in order.',
     );
-  for (const lifetime of report.lifetimes) validateLifetime(lifetime, report);
+  for (const lifetime of report.lifetimes)
+    validateLifetime(lifetime, report, layer);
   if (
     JSON.stringify(report.lifetimes[0].initialOwnership) !==
     JSON.stringify(report.lifetimes[1].initialOwnership)

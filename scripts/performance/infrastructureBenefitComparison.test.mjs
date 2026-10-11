@@ -1,18 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { infrastructureFixtureLayer } from '../fixtures/infrastructureFixtureLayer.mjs';
 import {
   INFRASTRUCTURE_BENEFIT_EPOCH,
   INFRASTRUCTURE_BENEFIT_MODES,
   INFRASTRUCTURE_BENEFIT_PAIRS,
-  INFRASTRUCTURE_BENEFIT_SCHEMA,
   compareInfrastructureBenefitPair,
+  summarizeInfrastructureBenefitPairs,
   validateInfrastructureBenefitReport,
 } from './infrastructureBenefitComparison.mjs';
 
 const commit = 'a'.repeat(40);
 const hash = (letter) => letter.repeat(64);
 
-function run(mode, suite, seed) {
+function run(mode, suite, seed, layer) {
   const image = (kind) => ({
     path: `images/${suite}-pair-${String(seed + 1).padStart(2, '0')}-${mode}-${kind}.png`,
     sha256: hash(kind === 'settled' ? 'b' : 'c'),
@@ -22,6 +23,7 @@ function run(mode, suite, seed) {
   });
   const result = {
     mode,
+    layerId: layer.layerId,
     suite,
     pairIndex: seed,
     status: 'passed',
@@ -29,9 +31,11 @@ function run(mode, suite, seed) {
     harnessCommit: commit,
     phase: 'viewer-destroyed',
     source: {
+      layerId: layer.layerId,
       payloadSha256: hash('1'),
-      featureCount: 1600,
+      featureCount: layer.sourceFeatureCount,
       payloadBytes: 700_000,
+      geometryKinds: { ...layer.geometryKinds },
     },
     renderClock: { iso: INFRASTRUCTURE_BENEFIT_EPOCH, shouldAnimate: false },
     settings: {
@@ -56,7 +60,7 @@ function run(mode, suite, seed) {
       },
       globeLighting: false,
     },
-    sourceReady: { count: 1600 },
+    sourceReady: { count: layer.entityCount },
     sourceReadyElapsedMs: 150,
     firstUsable: {
       elapsedFromSourceReadyMs: 80,
@@ -72,9 +76,11 @@ function run(mode, suite, seed) {
       target: { entityId: 'dam-1' },
     },
     surfacePopulation: {
-      statsCount: 1600,
-      entityCount: 1600,
-      surfaceCount: 700,
+      layerId: layer.layerId,
+      statsCount: layer.entityCount,
+      entityCount: layer.entityCount,
+      surfaceCount: layer.surfaceCount,
+      preservedGraphics: { ...layer.preservedGraphics },
       identitySha256: hash('3'),
     },
     environment: {
@@ -104,15 +110,15 @@ function run(mode, suite, seed) {
     mode === 'entities'
       ? {
           owners: 0,
-          surfaceGraphics: 700,
+          surfaceGraphics: layer.surfaceCount,
           collectionPoints: 0,
           collectionStems: 0,
         }
       : {
           owners: 1,
           surfaceGraphics: 0,
-          collectionPoints: 700,
-          collectionStems: 700,
+          collectionPoints: layer.surfaceCount,
+          collectionStems: layer.surfaceCount,
         };
   if (suite === 'memory') {
     result.memory = {
@@ -145,7 +151,8 @@ function run(mode, suite, seed) {
   return result;
 }
 
-function validReport() {
+function validReport(layerId = 'local-dams') {
+  const layer = infrastructureFixtureLayer(layerId);
   const pairs = [];
   for (const suite of ['latency', 'memory']) {
     for (let index = 0; index < INFRASTRUCTURE_BENEFIT_PAIRS; index++) {
@@ -158,8 +165,13 @@ function validReport() {
         index,
         order,
         runs: {
-          entities: run('entities', suite, index),
-          'primitive-collections': run('primitive-collections', suite, index),
+          entities: run('entities', suite, index, layer),
+          'primitive-collections': run(
+            'primitive-collections',
+            suite,
+            index,
+            layer,
+          ),
         },
         sameInputAndOutput: true,
       };
@@ -168,7 +180,8 @@ function validReport() {
     }
   }
   return {
-    schema: INFRASTRUCTURE_BENEFIT_SCHEMA,
+    schema: layer.benefitSchema,
+    layerId,
     status: 'passed',
     applicationCommit: commit,
     harnessCommit: commit,
@@ -204,6 +217,7 @@ function validReport() {
           'src/performance/performanceSnapshot.js',
           'scripts/fixtures/infrastructure-benefit.html',
           'scripts/fixtures/infrastructure-benefit.mjs',
+          'scripts/fixtures/infrastructureFixtureLayer.mjs',
           'scripts/performance/infrastructureBenefitComparison.mjs',
           'scripts/performance/infrastructureBenefitComparison.test.mjs',
         ].map((path, index) => [path, hash(String(index + 1)[0])]),
@@ -219,6 +233,7 @@ function validReport() {
       },
     },
     pairs,
+    summary: summarizeInfrastructureBenefitPairs(pairs),
     environment: {
       renderer: 'ANGLE Renderer',
       rendererClass: { kind: 'native-gpu', accelerationVerified: true },
@@ -244,6 +259,85 @@ test('accepts complete alternating fresh-context latency and GC-memory evidence'
     }),
     true,
   );
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(validReport(), {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /different requested layer/,
+  );
+});
+
+test('datacenter benefit evidence binds the complete untruncated inventory', () => {
+  const report = validReport('local-datacenters');
+  assert.equal(
+    validateInfrastructureBenefitReport(report, {
+      expectedCommit: commit,
+      expectedLayerId: 'local-datacenters',
+    }),
+    true,
+  );
+  const truncated = structuredClone(report);
+  truncated.pairs[0].runs.entities.surfacePopulation.entityCount--;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(truncated, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /population/,
+  );
+  const wrongKinds = structuredClone(report);
+  wrongKinds.pairs[0].runs.entities.source.geometryKinds.Point--;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(wrongKinds, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /source inventory changed/,
+  );
+  const omittedGeometry = structuredClone(report);
+  delete omittedGeometry.pairs[0].runs.entities.surfacePopulation
+    .preservedGraphics;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(omittedGeometry, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /preserved source geometry inventory/,
+  );
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-dams',
+      }),
+    /different requested layer/,
+  );
+});
+
+test('rejects a stale summary and unsafe layer allowlist names', () => {
+  const report = validReport();
+  report.summary.latency.entities.sourceReadyElapsedMedianMs += 1;
+  assert.throws(
+    () =>
+      validateInfrastructureBenefitReport(report, { expectedCommit: commit }),
+    /summary is stale/,
+  );
+  for (const layerId of ['__proto__', 'constructor', 'toString']) {
+    const unsafe = validReport();
+    unsafe.layerId = layerId;
+    assert.throws(
+      () =>
+        validateInfrastructureBenefitReport(unsafe, {
+          expectedCommit: commit,
+        }),
+      /Unsupported infrastructure fixture layer/,
+    );
+  }
 });
 
 test('rejects unfinished scene geometry and changed fidelity instead of matching viewport size', () => {

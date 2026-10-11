@@ -39,6 +39,8 @@ on:
             wind,
             infrastructure,
             infrastructure-benefit,
+            infrastructure-datacenters,
+            infrastructure-benefit-datacenters,
             vessels,
             calibration,
           ]
@@ -791,19 +793,21 @@ jobs:
         run: |
           if [ "$DIAGNOSTIC" = "infrastructure-benefit" ]; then
             node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/infrastructure-benefit
+          elif [ "$DIAGNOSTIC" = "infrastructure-benefit-datacenters" ]; then
+            node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/infrastructure-benefit-datacenters --layer-id local-datacenters
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
       - name: Preserve infrastructure benefit evidence
-        if: always() && inputs.renderer_diagnostic == 'infrastructure-benefit'
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure-benefit' || inputs.renderer_diagnostic == 'infrastructure-benefit-datacenters')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: infrastructure-benefit-${{ github.run_id }}
-          path: qa-artifacts/infrastructure-benefit/
+          path: qa-artifacts/${{ inputs.renderer_diagnostic == 'infrastructure-benefit-datacenters' && 'infrastructure-benefit-datacenters' || 'infrastructure-benefit' }}/
           if-no-files-found: error
           retention-days: 3
       - name: Preserve renderer comparison evidence
-        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration')
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'infrastructure-datacenters' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}
