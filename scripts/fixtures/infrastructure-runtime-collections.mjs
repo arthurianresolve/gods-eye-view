@@ -638,6 +638,7 @@ async function runLayerLifetime(
       pair,
       changedGeometryFrom,
       recordSample = true,
+      requiredGeometry = null,
     ) => {
       const deadline = performance.now() + 8000;
       const readiness = createInfrastructureSampleReadiness();
@@ -650,6 +651,8 @@ async function runLayerLifetime(
       let stemPick;
       let pickRow;
       let selectionRendered = false;
+      let geometryReady = false;
+      let observedGeometry = null;
       while (performance.now() < deadline) {
         finalFrame = await captureFrame(viewer);
         completedCaptures++;
@@ -659,7 +662,13 @@ async function runLayerLifetime(
           new TextEncoder().encode(JSON.stringify(geometrySnapshot(rows))),
         );
         const signature = `${finalFrame.pixelSha256}:${hash}`;
-        stableFrames = readiness.observe(signature);
+        observedGeometry = hash;
+        geometryReady =
+          (!changedGeometryFrom || hash !== changedGeometryFrom) &&
+          (!requiredGeometry || hash === requiredGeometry);
+        stableFrames = readiness.observe(signature, {
+          inputsReady: geometryReady,
+        });
         if (readiness.takePickAttempt()) {
           pickSearches++;
           pickDiagnostics = {
@@ -694,6 +703,10 @@ async function runLayerLifetime(
           completedCaptures,
           pickSearches,
           pickDiagnostics,
+          geometryReady,
+          observedGeometry,
+          changedGeometryFrom,
+          requiredGeometry,
           pointPick: pointPick || null,
           stemPick: stemPick || null,
           surfaceCount: rows.length,
@@ -793,6 +806,8 @@ async function runLayerLifetime(
             pair,
             null,
             false,
+            lifetime.samples.find((row) => row.caseId === 'default-style')
+              .geometrySha256,
           );
           previousGeometry = baseline.geometrySha256;
           setCamera(viewer, anchor, 170000);

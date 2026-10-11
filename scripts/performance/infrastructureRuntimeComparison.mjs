@@ -398,7 +398,13 @@ export function createInfrastructureSampleReadiness() {
   let stableFrames = 0;
   let pickAttempted = false;
   return {
-    observe(signature) {
+    observe(signature, { inputsReady = true } = {}) {
+      if (!inputsReady) {
+        previous = null;
+        stableFrames = 0;
+        pickAttempted = false;
+        return 0;
+      }
       if (signature !== previous) {
         stableFrames = 1;
         pickAttempted = false;

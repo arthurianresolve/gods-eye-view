@@ -380,3 +380,18 @@ test('late geometry completion permits a fresh native pick without polling uncha
   assert.equal(gate.takePickAttempt(), true);
   assert.equal(gate.takePickAttempt(), false);
 });
+
+test('stable pixels from a prior camera revision cannot satisfy the sample gate', () => {
+  const gate = createInfrastructureSampleReadiness();
+  for (let i = 0; i < 10; i++) {
+    assert.equal(gate.observe('old-geometry', { inputsReady: false }), 0);
+    assert.equal(gate.takePickAttempt(), false);
+  }
+  assert.equal(gate.observe('new-geometry'), 1);
+  gate.observe('new-geometry');
+  gate.observe('new-geometry');
+  assert.equal(gate.takePickAttempt(), true);
+  assert.equal(gate.observe('old-geometry', { inputsReady: false }), 0);
+  assert.equal(gate.observe('new-geometry'), 1);
+  assert.equal(gate.takePickAttempt(), false);
+});
