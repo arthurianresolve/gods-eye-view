@@ -1,6 +1,6 @@
 # Production infrastructure collection experiment
 
-Status: opt-in code implemented; bundled-dams rendered correctness and the separate measurement protocol pass. The first benefit comparison exposes a source-preparation regression requiring investigation; broader workload and physical hardware validation remain pending. Default application rendering remains Entity-based.
+Status: opt-in code implemented; bundled-dams rendered correctness and two separate measurement runs pass. Skipping redundant Graphics reduces the observed preparation regression, while the enabled JS heap improvement persists. Broader workload, integration and physical hardware validation remain pending. Default application rendering remains Entity-based.
 
 This candidate moves local infrastructure point/stem visuals into production-owned PointPrimitiveCollection and PolylineCollection instances. Metadata Entities, polygons, evidence identities and the existing Entity-based picking path remain. Collection ownership follows datasource teardown, including failed construction. Per-record updates preserve terrain/LOD geometry and effective visibility; stem material colors use the Entity geometry's RGBA8 encoding.
 
@@ -42,3 +42,18 @@ A separate hosted-only benefit harness collects five alternating fresh-context p
 The enabled heap improvement appears in all five memory pairs. Source-ready latency worsens in three of five non-GC pairs, exceeding the 10% investigation threshold in the medians. The first Entity latency trial also includes a 6.165-second frame-delay outlier; cold activation was not independently controlled. These data do not establish a repeatable frame-latency gain, a lifecycle retention plateau or full S54 acceptance. The green workflow result certifies complete measurements and matching output; it does not approve the optimization. Collection construction must be investigated before promotion. The hosted Apple paravirtual Metal environment remains supplemental, with physical Windows validation outstanding.
 
 Source review found that collection mode built temporary Entity `PointGraphics`, `PolylineGraphics` and `ColorMaterialProperty` objects for every generated surface, then discarded them after constructing the collections. The revised candidate skips those temporary objects and clears any loader-created point/stem Graphics directly. The default Entity path, collection materials, source records, preserved polygons, picking and LOD buffers remain unchanged. The 41 core, six factory and eight lifecycle checks pass; the lifecycle diagnostics expectations now include explicit zero collection counts. This removes demonstrably redundant allocations, but attribution of the measured slowdown still requires a new rendered comparison. No performance improvement is inferred from source inspection alone.
+
+## Redundant Graphics removal: measured follow-up
+
+[Run 38126090636](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38126090636) at `d8800711d49c8f2d83c69052a271cd329c8e45af` completes all 20 trials after the temporary Graphics removal. The [raw report](benefit-38126090636/report.json), all 40 PNGs and [independent verification](benefit-38126090636/verification.json) are retained. The independently recomputed file/pixel hashes, Git source identities, installed Cesium bytes, fixed settings, full source populations and teardown checks pass. All 40 images are identical.
+
+| Median metric | Entities | Collections | Change |
+| --- | ---: | ---: | ---: |
+| Source-ready time, separate latency suite | 126.4 ms | 136.0 ms | +7.59% |
+| First usable frame after source-ready | 2,517.1 ms | 2,248.6 ms | -10.67% |
+| Total time to first usable frame | 2,620.7 ms | 2,343.1 ms | -10.59% |
+| Enabled post-GC JS heap delta | 37,246,192 bytes | 33,120,008 bytes | -11.08% |
+| Post-layer-destroy JS heap delta | 29,615,644 bytes | 24,246,820 bytes | -18.13% |
+| Post-viewer-destroy JS heap delta | 8,547,076 bytes | 8,581,988 bytes | +0.41% |
+
+The enabled JS heap reduction recurs in all five memory pairs in both runs. The source-ready median regression is below 10% in the revised non-GC suite, while one individual pair is 25.22% slower and other pairs vary in either direction. The first Entity frame still has a cold outlier. No motion-p95 claim follows from this instrumented activation protocol; comparisons between separate runner allocations are also not a controlled causal proof. The evidence supports continuing to the full datacenter workload and integration, while keeping the default renderer unchanged. Physical Windows and repeated-lifecycle plateau evidence remain pending.

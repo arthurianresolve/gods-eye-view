@@ -1,14 +1,16 @@
 # Cesium performance plan
 
-The S54 production collection prototype now passes the bundled-dams correctness
-comparison at `51cfdb3` and a separate complete measurement run at `c218b19`.
-Independent decoding verifies all 40 benefit-run images. The enabled post-GC JS
-heap delta improves 11.00%, while source-ready latency worsens 39.24% by median;
-the latter requires investigation before promotion. These are instrumented
-activation and JS-only heap measurements on hosted paravirtual Metal, not full
-performance acceptance. [Raw evidence and limits](performance-evidence/s54-production-collections/README.md)
-are preserved. Datacenter, cable and physical Windows validation remain open;
-the production default remains Entity-based.
+The S54 production collection prototype passes the bundled-dams correctness
+comparison at `51cfdb3` and complete measurement runs at `c218b19` and `d880071`.
+Independent decoding verifies all 80 benefit-run images. After removing discarded
+temporary Graphics, the enabled post-GC JS heap delta improves 11.08%; source-ready
+latency is 7.59% higher by median, compared with 39.24% in the first experiment.
+Timing remains variable, including one preparation pair above 10% and a cold
+first-frame outlier. These are instrumented activation and JS-only heap measurements
+on hosted paravirtual Metal, not full performance acceptance.
+[Raw evidence and limits](performance-evidence/s54-production-collections/README.md)
+are preserved. Datacenter, cable, integration and physical Windows validation
+remain open; the production default remains Entity-based.
 
 The isolated Cesium no-op terrain-collision transform fix is accepted at
 f26f4dd738a518c6cefa96b5f809c5d9c53afa83 after all seven ordinary integration jobs
@@ -144,7 +146,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
-| S54 infrastructure batching | Partial: opt-in production point/stem collections with original Entity identity and owned teardown; default remains Entities | Actual production dams lifetimes pass ten exact-pixel/geometry/style/pick pairs at `51cfdb3`. At `c218b19`, all 20 fresh-context trials and 40 independently decoded PNGs pass; enabled JS heap delta -11.00%, source-ready median +39.24% requires investigation. Datacenter/cable coverage remains | Hosted paravirtual Metal only; production promotion, broader performance and physical Windows acceptance remain pending |
+| S54 infrastructure batching | Partial: opt-in production point/stem collections with original Entity identity, owned teardown and redundant Graphics removal; default remains Entities | Actual production dams lifetimes pass ten exact-pixel/geometry/style/pick pairs at `51cfdb3`. Two fresh-context measurement runs preserve all 80 decoded PNGs. Revised `d880071`: enabled JS heap delta -11.08%, source-ready median +7.59%; timings variable, broader confirmation remains | Hosted paravirtual Metal only; datacenter/cable coverage, integration, production promotion and physical Windows acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
