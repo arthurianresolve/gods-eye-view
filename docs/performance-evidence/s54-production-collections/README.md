@@ -57,3 +57,9 @@ Source review found that collection mode built temporary Entity `PointGraphics`,
 | Post-viewer-destroy JS heap delta | 8,547,076 bytes | 8,581,988 bytes | +0.41% |
 
 The enabled JS heap reduction recurs in all five memory pairs in both runs. The source-ready median regression is below 10% in the revised non-GC suite, while one individual pair is 25.22% slower and other pairs vary in either direction. The first Entity frame still has a cold outlier. No motion-p95 claim follows from this instrumented activation protocol; comparisons between separate runner allocations are also not a controlled causal proof. The evidence supports continuing to the full datacenter workload and integration, while keeping the default renderer unchanged. Physical Windows and repeated-lifecycle plateau evidence remain pending.
+
+## Full local suite and deterministic backoff test
+
+The local Node 24.16.0 Windows general suite reached 7,019 tests: 7,008 passed, one failed and ten were skipped. [Raw output](unit-before-backoff-fix.log) and [failure metadata](unit-before-backoff-fix.json) preserve the failure; the runner stopped before its separate allocation suites. The failing request-service test used a real 30 ms backoff and assumed the next asynchronous query would occur before that deadline. The original test also failed in isolation on this machine. This is a test timing assumption: production correctly re-probes once the deadline expires.
+
+The correction in `fb2f6e2` controls only `Date`, verifies suppression at 29 ms and retry at 30 ms, and retains the exact expected transport-call sequence. All six request-service tests pass after the change, including timeout and caller cancellation. Production request code is unchanged. The correction is independently applied to `dev` as `e503504`; a complete new suite result is still required and is not inferred from the focused pass.
