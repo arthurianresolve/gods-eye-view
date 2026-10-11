@@ -5,6 +5,8 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
+  rm,
   symlink,
   writeFile,
 } from 'node:fs/promises';
@@ -83,13 +85,17 @@ if (process.argv[2] === '--serve') {
     process.exit(0);
   });
 } else {
-  const candidateRoot = path.resolve('.');
+  const candidateRoot = await realpath(path.resolve('.'));
   const candidate = git(candidateRoot, ['rev-parse', 'HEAD']);
   if (!/^[a-f0-9]{40}$/.test(candidate) || candidate !== process.env.GITHUB_SHA)
     throw new Error('Candidate must equal the immutable workflow revision');
   if (git(candidateRoot, ['status', '--porcelain', '--untracked-files=no']))
     throw new Error('Candidate tracked source is dirty');
-  const ownedDirectory = await mkdtemp(path.join(tmpdir(), 'gev-fleet-pair-'));
+  // macOS aliases /var to /private/var. Vite resolves module IDs to real paths;
+  // its fs allowlist must use the same canonical checkout path.
+  const ownedDirectory = await realpath(
+    await mkdtemp(path.join(tmpdir(), 'gev-fleet-pair-')),
+  );
   const baselineRoot = path.join(ownedDirectory, 'baseline');
   const script = fileURLToPath(import.meta.url);
   const servers = [];
@@ -162,11 +168,19 @@ if (process.argv[2] === '--serve') {
     const page = await browser.newPage();
     let session;
     const errors = [];
+    const failedResponses = [];
     try {
       await page.setViewport({ width: 960, height: 640, deviceScaleFactor: 1 });
       page.on('pageerror', (error) =>
         errors.push(String(error.message).slice(0, 500)),
       );
+      page.on('response', (response) => {
+        if (response.status() >= 400 && failedResponses.length < 20)
+          failedResponses.push({
+            path: new URL(response.url()).pathname,
+            status: response.status(),
+          });
+      });
       session = await page.createCDPSession();
       await interceptFixtureSession(session, base, null, (error) =>
         errors.push(String(error.message).slice(0, 500)),
@@ -181,6 +195,7 @@ if (process.argv[2] === '--serve') {
         `${base}/scripts/fixtures/fleet-render-demand.html?${query}`,
         { waitUntil: 'networkidle0', timeout: 60000 },
       );
+      await page.waitForSelector('#run:not([disabled])', { timeout: 15000 });
       await page.click('#run');
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
@@ -191,6 +206,17 @@ if (process.argv[2] === '--serve') {
       );
       result.pageErrors = errors;
       return result;
+    } catch (error) {
+      report.failedSample = {
+        implementation,
+        mode,
+        pageErrors: errors,
+        failedResponses,
+        statusText: await page
+          .$eval('#status', (element) => element.textContent)
+          .catch(() => null),
+      };
+      throw error;
     } finally {
       // Complete page teardown before disposing the browser; never leave a
       // renderer waiting for a detached interception session.
@@ -313,8 +339,14 @@ if (process.argv[2] === '--serve') {
       });
       if (!report.browserCleanup.closeCompleted) report.status = 'failed';
     }
-    for (const child of servers) await stopOwnedRecoveryProcessTree(child);
-    if (worktreeAdded) {
+    report.serverCleanup = [];
+    for (const child of servers)
+      report.serverCleanup.push(await stopOwnedRecoveryProcessTree(child));
+    const serversStopped = report.serverCleanup.every(
+      (result) => result.confirmed,
+    );
+    if (!serversStopped) report.status = 'failed';
+    if (worktreeAdded && serversStopped) {
       // The only extra files are our two fixtures and dependency symlink in
       // this mkdtemp-owned checkout. No user checkout is removed.
       try {
@@ -323,6 +355,18 @@ if (process.argv[2] === '--serve') {
         report.worktreeCleanupError = String(error.message).slice(0, 500);
         report.status = 'failed';
       }
+    }
+    if (serversStopped && !report.worktreeCleanupError) {
+      const relative = path.relative(await realpath(tmpdir()), ownedDirectory);
+      if (
+        !relative.startsWith('gev-fleet-pair-') ||
+        relative.includes(path.sep)
+      )
+        throw new Error(
+          'Owned temporary directory escaped its expected parent',
+        );
+      await rm(ownedDirectory, { recursive: true });
+      report.temporaryDirectoryRemoved = true;
     }
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

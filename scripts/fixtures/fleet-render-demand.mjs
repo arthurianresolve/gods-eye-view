@@ -193,6 +193,7 @@ async function createFixture(clock) {
                 id,
                 ready: b.ready,
                 show: b.show,
+                collectionShow: b._billboardCollection.show,
                 position: vector(b.position),
                 rotation: b.rotation,
                 scale: b.scale,
@@ -274,6 +275,15 @@ async function createFixture(clock) {
             colored++;
         if (name !== 'disabled')
           check(colored > 20, `${name}: fixture image is empty`);
+        else {
+          check(colored === 0, 'Disabled fleet still paints visible pixels');
+          check(
+            Object.values(frameOutput.output).every((fleet) =>
+              fleet.billboards.every((b) => !b.collectionShow),
+            ),
+            'Disabled fleet collection remains visible',
+          );
+        }
         check(errors.length === 0, errors.join(';'));
         return {
           name,
@@ -612,3 +622,5 @@ document.querySelector('#download').addEventListener('click', () => {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
 });
+document.querySelector('#status').textContent = 'Ready';
+document.querySelector('#run').disabled = false;

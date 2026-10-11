@@ -19,6 +19,20 @@ const image = {
   height: 640,
   sha256: createHash('sha256').update(bytes).digest('hex'),
   png: `data:image/png;base64,${png.toString('base64')}`,
+  coloredPixels: 960 * 640,
+};
+const dark = Buffer.alloc(960 * 640 * 4, 0);
+const darkPng = await sharp(dark, {
+  raw: { width: 960, height: 640, channels: 4 },
+})
+  .png()
+  .toBuffer();
+const darkImage = {
+  width: 960,
+  height: 640,
+  coloredPixels: 0,
+  sha256: createHash('sha256').update(dark).digest('hex'),
+  png: `data:image/png;base64,${darkPng.toString('base64')}`,
 };
 function validReport() {
   const report = {
@@ -39,6 +53,7 @@ function validReport() {
             id: ((kind === 'civil' ? 0xa10000 : 0xa20000) + i).toString(16),
             ready: true,
             show: true,
+            collectionShow: true,
             position: [1, 2, 3],
             color: [1, 1, 1, 1],
             rotation: 0,
@@ -99,14 +114,32 @@ function validReport() {
           },
           samples:
             mode === 'correctness'
-              ? FLEET_SHOTS.map((name) => ({
-                  name,
-                  output: structuredClone(output),
-                  camera: { position: [1, 2, 3] },
-                  logicalTimeMs: Date.UTC(2026, 9, 8, 12),
-                  settings,
-                  pixels: { ...image },
-                }))
+              ? FLEET_SHOTS.map((name) => {
+                  const visible = structuredClone(output);
+                  for (const [kind, fleet] of Object.entries(visible)) {
+                    fleet.tracked =
+                      name === `${kind}-tracked`
+                        ? fleet.billboards[0].id
+                        : null;
+                    fleet.billboards.forEach((b) => {
+                      b.collectionShow = name !== 'disabled';
+                    });
+                  }
+                  const offset =
+                    name === 'initial' || name === 'reinitialized'
+                      ? 0
+                      : name.startsWith('motion-')
+                        ? Number(name.slice(7))
+                        : 30000;
+                  return {
+                    name,
+                    output: visible,
+                    camera: { position: [1, 2, 3] },
+                    logicalTimeMs: Date.UTC(2026, 9, 8, 12) + offset,
+                    settings,
+                    pixels: { ...(name === 'disabled' ? darkImage : image) },
+                  };
+                })
               : [],
           cadence: {
             durationMs: 3000,
@@ -142,6 +175,32 @@ test('valid five-pair evidence decodes all images and quantifies frame savings',
   assert.equal(result.medianRenderedFrameReduction, 0.76);
 });
 const invalidCases = [
+  [
+    'matched but wrong display epochs',
+    (r) => {
+      for (const side of ['baseline', 'candidate'])
+        r.pairs[0].correctness[side].samples[1].logicalTimeMs++;
+    },
+  ],
+  [
+    'matched but visible disabled fleet',
+    (r) => {
+      for (const side of ['baseline', 'candidate']) {
+        const s = r.pairs[0].correctness[side].samples.find(
+          (s) => s.name === 'disabled',
+        );
+        s.pixels = { ...image };
+      }
+    },
+  ],
+  [
+    'disabled collection still enabled',
+    (r) => {
+      r.pairs[0].correctness.candidate.samples.find(
+        (s) => s.name === 'disabled',
+      ).output.civil.billboards[0].collectionShow = true;
+    },
+  ],
   [
     'wrong source',
     (r) => {

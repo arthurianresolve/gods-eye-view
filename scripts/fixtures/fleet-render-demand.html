@@ -62,9 +62,11 @@
         The hosted runner uses this same fixture against the frozen baseline and
         candidate source checkouts. No live provider data is used.
       </p>
-      <button id="run" type="button">Run fixture</button>
+      <button id="run" type="button" disabled>Run fixture</button>
       <button id="download" type="button" disabled>Download JSON</button>
-      <div id="status" role="status" aria-live="polite">Ready</div>
+      <div id="status" role="status" aria-live="polite">
+        Loading fixture module
+      </div>
       <pre id="result"></pre>
     </aside>
     <script type="module" src="./fleet-render-demand.mjs"></script>

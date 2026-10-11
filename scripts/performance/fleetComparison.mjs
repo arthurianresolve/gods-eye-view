@@ -75,6 +75,7 @@ function population(output) {
     for (const b of fleet.billboards) {
       assert.equal(b.ready, true);
       assert.equal(typeof b.show, 'boolean');
+      assert.equal(typeof b.collectionShow, 'boolean');
       assert.ok(b.position.length === 3 && b.position.every(Number.isFinite));
       assert.ok(b.color.length === 4 && b.color.every(Number.isFinite));
       assert.ok(Number.isFinite(b.rotation) && Number.isFinite(b.scale));
@@ -204,7 +205,32 @@ export async function validateFleetComparison(report) {
     for (let n = 0; n < FLEET_SHOTS.length; n++) {
       const a = baseline.samples[n],
         b = candidate.samples[n];
-      for (const sample of [a, b]) population(sample.output);
+      for (const sample of [a, b]) {
+        population(sample.output);
+        const offset =
+          sample.name === 'initial' || sample.name === 'reinitialized'
+            ? 0
+            : sample.name.startsWith('motion-')
+              ? Number(sample.name.slice(7))
+              : 30000;
+        assert.equal(
+          sample.logicalTimeMs,
+          baseline.epochMs + offset,
+          'Unexpected display epoch',
+        );
+        for (const [kind, fleet] of Object.entries(sample.output)) {
+          assert.equal(
+            fleet.tracked,
+            sample.name === `${kind}-tracked` ? expectedIds(kind)[0] : null,
+          );
+          assert.ok(
+            fleet.billboards.every(
+              (point) => point.collectionShow === (sample.name !== 'disabled'),
+            ),
+            'Collection visibility differs from lifecycle phase',
+          );
+        }
+      }
       assert.deepEqual(
         a.output,
         b.output,
@@ -223,6 +249,15 @@ export async function validateFleetComparison(report) {
       ]);
       decodedImages += 2;
       assert.ok(left.equals(right), `${a.name}: decoded pixels differ`);
+      let colored = 0;
+      for (let p = 0; p < left.length; p += 4)
+        if (left[p] > 40 || left[p + 1] > 40 || left[p + 2] > 40) colored++;
+      assert.equal(a.pixels.coloredPixels, colored);
+      assert.equal(b.pixels.coloredPixels, colored);
+      assert.ok(
+        a.name === 'disabled' ? colored === 0 : colored > 20,
+        `${a.name}: unexpected painted population`,
+      );
     }
     const cadence = {};
     for (const implementation of ['baseline', 'candidate']) {
