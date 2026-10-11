@@ -193,6 +193,27 @@ before a fresh timing comparison; no performance benefit is claimed for it.
 
 ### S52 corrected placement signature: ready for comparison - 11 October 2026
 
+The correction is frozen at `698752adcd27b59040affc0d0a1a9bd643025833`
+on `qa/s52-placement-revised`. Its fresh
+[visual run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099700920)
+passes five 24-case pairs. Independent review decoded all 240 PNGs, checked
+their raw pixel hashes and alpha counts, and compared all recorded input,
+hit-test and accessibility states within and across pairs. The
+[raw visual evidence and review](performance-evidence/s52-placement-revised-fixed/visual/review.json)
+are scoped to browser Canvas2D with the deterministic mock viewer.
+
+The [native font run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099702643)
+also passes both alternating pairs against the pre-fix `33d9856` control.
+The old missing-wake failures reproduce twice; the corrected candidate wakes,
+changes the label width from 283 to 299 pixels, and does not wake the retired
+host. All four 800-ms idle samples have zero frames and render requests.
+[Raw font evidence and review](performance-evidence/s52-placement-revised-fixed/native-font-review.json)
+retain software-WebGL scope. These are correctness checks, not hardware or
+performance acceptance. The frozen candidate's
+[CPU comparison](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099699273)
+and [full integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099704275)
+remain under observation; remote `dev` stays at `7269408`.
+
 The allocation increase is isolated to the moving anchor comparison path.
 Checking unequal anchors before `Object.is` removes the measured increase while
 retaining `Object.is` as the final equality decision, including signed zero and
