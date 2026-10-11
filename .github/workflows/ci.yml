@@ -339,7 +339,7 @@ jobs:
     timeout-minutes: 12
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
-      GEV_QA_SOFTWARE_RENDERING: ${{ (inputs.shutdown_runner == 'windows-latest' || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
+      GEV_QA_SOFTWARE_RENDERING: '1'
       GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (inputs.shutdown_runner == 'windows-latest' || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
     steps:
       - name: Check out immutable diagnostic source
