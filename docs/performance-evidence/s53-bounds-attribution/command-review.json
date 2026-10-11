@@ -1,0 +1,127 @@
+{
+  "commit": "4d39fedd3d3da6f54c5c9dcfaeb823d1a8c30e7b",
+  "status": "verified-failed-comparison",
+  "decodedImagesEqualHistoricalPair": true,
+  "changedPixels": [
+    {
+      "x": 495,
+      "y": 18
+    },
+    {
+      "x": 421,
+      "y": 285
+    },
+    {
+      "x": 160,
+      "y": 338
+    },
+    {
+      "x": 479,
+      "y": 338
+    },
+    {
+      "x": 160,
+      "y": 339
+    },
+    {
+      "x": 479,
+      "y": 339
+    },
+    {
+      "x": 152,
+      "y": 346
+    },
+    {
+      "x": 153,
+      "y": 346
+    },
+    {
+      "x": 486,
+      "y": 346
+    },
+    {
+      "x": 487,
+      "y": 346
+    },
+    {
+      "x": 152,
+      "y": 347
+    },
+    {
+      "x": 487,
+      "y": 347
+    },
+    {
+      "x": 145,
+      "y": 353
+    },
+    {
+      "x": 146,
+      "y": 353
+    },
+    {
+      "x": 493,
+      "y": 353
+    },
+    {
+      "x": 494,
+      "y": 353
+    },
+    {
+      "x": 145,
+      "y": 354
+    },
+    {
+      "x": 494,
+      "y": 354
+    },
+    {
+      "x": 319,
+      "y": 357
+    },
+    {
+      "x": 320,
+      "y": 357
+    },
+    {
+      "x": 319,
+      "y": 358
+    },
+    {
+      "x": 320,
+      "y": 358
+    },
+    {
+      "x": 319,
+      "y": 359
+    },
+    {
+      "x": 320,
+      "y": 359
+    }
+  ],
+  "samePositionsAndProjectedNeighborhoods": true,
+  "oitActiveInBoth": true,
+  "frameBoundDiagnostics": true,
+  "frustums": [
+    {
+      "mode": "mixed",
+      "planes": [
+        {
+          "near": 42919.37666947001,
+          "far": 126464.14966261906
+        }
+      ]
+    },
+    {
+      "mode": "partitioned",
+      "planes": [
+        {
+          "near": 44410.05622069358,
+          "far": 124958.56331588328
+        }
+      ]
+    }
+  ],
+  "conclusion": "Collection partitioning changes command bounds and fitted frustum planes; whether these cause the exact image difference requires an intervention control."
+}
