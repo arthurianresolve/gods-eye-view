@@ -1735,6 +1735,96 @@ test('completed-render waiter retains a render that fires before its consumer aw
   assert.equal(scope.__qaLifecycleCancelRenderWait(id), undefined);
 });
 
+test('collection renderer lifecycle observes owned points outside viewer.entities', async () => {
+  const listeners = new Set();
+  const point = {
+    id: 'gev-import:ws:file:point',
+    name: 'Point',
+    position: [1, 2, 3],
+  };
+  const scope = {
+    __godsEyeView: {
+      viewer: {
+        entities: { values: [] },
+        scene: {
+          frameState: { frameNumber: 1 },
+          postRender: {
+            addEventListener: (listener) => listeners.add(listener),
+            removeEventListener: (listener) => listeners.delete(listener),
+          },
+        },
+      },
+      importedGeometryLayer: {
+        getState: () => ({ featureCount: 1 }),
+        getPointRendererSnapshot: () => ({
+          pointCount: 1,
+          entityRows: [point],
+          primitiveRows: [{ id: point.id, position: point.position }],
+        }),
+      },
+    },
+  };
+  installLifecycleRenderWaiter(scope);
+  const id = scope.__qaLifecycleStartRenderWait({
+    workspaceId: 'ws',
+    count: 1,
+    timeoutMs: 100,
+  });
+  scope.__godsEyeView.viewer.scene.frameState.frameNumber++;
+  for (const listener of [...listeners]) listener();
+  assert.equal(listeners.size, 0);
+  assert.equal(
+    (await scope.__qaLifecycleWaitForRender(id)).importedEntityCount,
+    1,
+  );
+  assert.deepEqual(scope.__qaLifecycleImportInventory().records, [point]);
+});
+
+test('collection renderer lifecycle inventory rejects missing, conflicting, and drifted native owners', () => {
+  const point = {
+    id: 'gev-import:ws:file:point',
+    name: 'Point',
+    position: [1, 2, 3],
+  };
+  let snapshot = { pointCount: 1, entityRows: [point], primitiveRows: [] };
+  const scope = {
+    __godsEyeView: {
+      viewer: { entities: { values: [] } },
+      importedGeometryLayer: { getPointRendererSnapshot: () => snapshot },
+    },
+  };
+  // The function is injected into the browser, so it cannot depend on imports
+  // or outer lexical state for the new inventory reader.
+  const context = vm.createContext({});
+  vm.runInContext(
+    `(${installLifecycleRenderWaiter.toString()})`,
+    context,
+  )(scope);
+  assert.throws(() => scope.__qaLifecycleImportInventory(), /incomplete/);
+  snapshot.primitiveRows = [
+    { id: 'gev-import:ws:file:wrong', position: point.position },
+  ];
+  assert.throws(
+    () => scope.__qaLifecycleImportInventory(),
+    /identity or position/,
+  );
+  snapshot.primitiveRows = [{ id: point.id, position: [4, 5, 6] }];
+  assert.throws(
+    () => scope.__qaLifecycleImportInventory(),
+    /identity or position/,
+  );
+  snapshot.primitiveRows = [{ id: point.id, position: point.position }];
+  scope.__godsEyeView.viewer.entities.values = [{ id: point.id }];
+  assert.throws(() => scope.__qaLifecycleImportInventory(), /duplicate/);
+  scope.__godsEyeView.viewer.entities.values = [
+    { id: 'gev-import:ws:file:line' },
+  ];
+  assert.deepEqual(Array.from(scope.__qaLifecycleImportInventory().ids), [
+    'gev-import:ws:file:line',
+    point.id,
+  ]);
+});
+
 test('workspace render observation ignores an old matching frame until restore transitions', async () => {
   const listeners = new Set();
   const previousRestore = { status: 'applied', workspaceId: 'ws' };

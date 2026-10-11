@@ -1356,10 +1356,7 @@ async function pageSnapshot(page) {
       const importState = layer?.getState?.();
       const importDiagnostics = layer?.getPerformanceDiagnostics?.();
       const scene = app?.viewer?.scene;
-      const importEntities =
-        app?.viewer?.entities?.values?.filter((entity) =>
-          String(entity.id).startsWith('gev-import:'),
-        ) || [];
+      const importInventory = window.__qaLifecycleImportInventory();
       const worker = window.__gevSoakWorkers?.snapshot?.() || null;
       return {
         imports: {
@@ -1367,21 +1364,8 @@ async function pageSnapshot(page) {
           pendingJobs: importState?.pendingJobs ?? null,
           cacheEntries: importDiagnostics?.cacheEntries ?? null,
         },
-        importEntityIds:
-          app?.viewer?.entities?.values
-            ?.filter((entity) => String(entity.id).startsWith('gev-import:'))
-            .map((entity) => String(entity.id))
-            .slice(0, 5000) ?? null,
-        importEntityRecords: importEntities.slice(0, 5000).map((entity) => {
-          const position = entity.position?.getValue(
-            app.viewer.clock.currentTime,
-          );
-          return {
-            id: String(entity.id),
-            name: String(entity.name || ''),
-            position: position ? [position.x, position.y, position.z] : null,
-          };
-        }),
+        importEntityIds: importInventory.ids,
+        importEntityRecords: importInventory.records,
         scene: {
           entities: app?.viewer?.entities?.values?.length ?? null,
           dataSources: app?.viewer?.dataSources?.length ?? null,
@@ -1556,10 +1540,7 @@ function makeImportDriver(
             return {
               ...result,
               renderedPopulation,
-              importEntityIds: app.viewer.entities.values
-                .filter((entity) => String(entity.id).startsWith('gev-import:'))
-                .map((entity) => String(entity.id))
-                .slice(0, 5000),
+              importEntityIds: window.__qaLifecycleImportInventory().ids,
             };
           } finally {
             window.__qaLifecycleCancelRenderWait(waitId);
@@ -1641,10 +1622,7 @@ function makeImportDriver(
             await oldSettled;
             const renderedPopulation =
               await window.__qaLifecycleWaitForRender(waitId);
-            const allIds = window.__godsEyeView.viewer.entities.values
-              .filter((entity) => String(entity.id).startsWith('gev-import:'))
-              .map((entity) => String(entity.id))
-              .slice(0, 5000);
+            const allIds = window.__qaLifecycleImportInventory().ids;
             return {
               oldStatus,
               queuedObserved,

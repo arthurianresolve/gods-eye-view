@@ -81,3 +81,23 @@ durations/wake timing are explicitly unavailable; no 4 ms batch result is inferr
 Large-feature preparation, raw document decoding, full application motion
 benchmarks, the primary physical Windows soak and full S47-S60 acceptance remain
 outstanding. No available hosted report substitutes for those requirements.
+
+## Initial integration observer failure
+
+[Lifecycle run 38159771524](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38159771524)
+fails at application integration `b67cca57b22743f03dacad36f9826279e93308ea`.
+The initial 512-feature load completes with no pending jobs, but the completed-
+render observer counts only `viewer.entities`, which contains none of the new
+point metadata Entities. Its population predicate therefore never succeeds.
+[Raw failure](lifecycle-38159771524-failed.json) and
+[workflow record](lifecycle-38159771524-ci.json) preserve this failure.
+
+A focused regression fails against that observer and passes after adding a
+shared, bounded inventory of Entity-rendered features and native point owners.
+The reader verifies point count, native ID/position agreement and uniqueness;
+metadata alone, missing primitives, mismatched positions and duplicate owners
+cannot satisfy the census. All 53 lifecycle tests pass, including browser-style
+function serialization and the existing timeout/cleanup controls. The same
+inventory supplies load, supersession and workspace checkpoints. Render and
+drain deadlines are unchanged. A new hosted lifecycle run is still required;
+these unit results do not relabel the failed run.

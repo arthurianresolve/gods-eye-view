@@ -353,6 +353,62 @@ export function installLifecycleDrainObserver(scope = window) {
 export function installLifecycleRenderWaiter(scope = window) {
   let nextId = 0;
   const waits = new Map();
+  // The app-owned point renderer keeps metadata Entities outside
+  // viewer.entities. Read both representations and verify the native owners;
+  // metadata or feature counts alone must not satisfy the rendered census.
+  scope.__qaLifecycleImportInventory = () => {
+    const app = scope.__godsEyeView;
+    const records = (app?.viewer?.entities?.values || [])
+      .filter((entity) => String(entity.id).startsWith('gev-import:'))
+      .map((entity) => {
+        const position = entity.position?.getValue(
+          app.viewer.clock?.currentTime,
+        );
+        return {
+          id: String(entity.id),
+          name: String(entity.name || ''),
+          position: position ? [position.x, position.y, position.z] : null,
+        };
+      });
+    const points = app?.importedGeometryLayer?.getPointRendererSnapshot?.();
+    if (points) {
+      if (
+        !Number.isSafeInteger(points.pointCount) ||
+        points.pointCount < 0 ||
+        !Array.isArray(points.entityRows) ||
+        !Array.isArray(points.primitiveRows) ||
+        points.pointCount !== points.entityRows.length ||
+        points.pointCount !== points.primitiveRows.length
+      )
+        throw new Error('Imported point ownership inventory is incomplete.');
+      for (let index = 0; index < points.pointCount; index++) {
+        const entity = points.entityRows[index];
+        const primitive = points.primitiveRows[index];
+        if (
+          !entity?.id?.startsWith('gev-import:') ||
+          entity.id !== primitive?.id ||
+          !Array.isArray(entity.position) ||
+          entity.position.length !== 3 ||
+          !entity.position.every(Number.isFinite) ||
+          JSON.stringify(entity.position) !== JSON.stringify(primitive.position)
+        )
+          throw new Error(
+            'Imported point native identity or position drifted.',
+          );
+        records.push({
+          id: entity.id,
+          name: String(entity.name || ''),
+          position: entity.position,
+        });
+      }
+    }
+    const ids = records.map((record) => record.id);
+    if (records.length > 5000 || new Set(ids).size !== ids.length)
+      throw new Error(
+        'Imported renderer inventory has duplicate or excess owners.',
+      );
+    return { ids, records };
+  };
   function settle(id, error, value, status = null) {
     const row = waits.get(id);
     if (!row || row.settled) return;
@@ -397,10 +453,15 @@ export function installLifecycleRenderWaiter(scope = window) {
           restore.workspaceId !== workspaceId)
       )
         return;
-      const ids =
-        current?.viewer?.entities?.values
-          ?.filter((entity) => String(entity.id).startsWith(prefix))
-          .map((entity) => String(entity.id)) || [];
+      let ids;
+      try {
+        ids = scope
+          .__qaLifecycleImportInventory()
+          .ids.filter((id) => id.startsWith(prefix));
+      } catch (error) {
+        settle(id, error);
+        return;
+      }
       if (state?.featureCount !== count || ids.length !== count) return;
       const frameNumber = current.viewer.scene.frameState?.frameNumber ?? null;
       if (
