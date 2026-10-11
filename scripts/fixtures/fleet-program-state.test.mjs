@@ -262,6 +262,26 @@ test('tracked fallback snapshot identifies the military visual without evaluatin
   });
 });
 
+test('tracked fallback snapshot sees the default unclustered EntityCluster owner', () => {
+  const root = new Cesium.PrimitiveCollection();
+  const cluster = new Cesium.EntityCluster({ enabled: false });
+  cluster._billboardCollection = trackedBillboardCollection({ alpha: 0 });
+  root.add(cluster);
+  const viewer = viewerWithPrimitives(root);
+  const visible = snapshotFleetTrackedBillboards(viewer);
+  assert.equal(visible.items.length, 1);
+  assert.equal(visible.items[0].id, 'a10001');
+  assert.equal(visible.items[0].alpha, 0);
+  assert.equal(visible.items[0].effectiveShow, true);
+  cluster.show = false;
+  assert.equal(
+    snapshotFleetTrackedBillboards(viewer).items[0].effectiveShow,
+    false,
+  );
+  cluster._billboardCollection = undefined;
+  assert.deepEqual(snapshotFleetTrackedBillboards(viewer).items, []);
+});
+
 test('tracked fallback snapshot preserves duplicate identity evidence and military IDs', () => {
   const root = new Cesium.PrimitiveCollection();
   root.add(trackedBillboardCollection());

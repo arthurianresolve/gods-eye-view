@@ -182,7 +182,13 @@ export function snapshotFleetTrackedBillboards(
         return;
       }
       visitedPrimitives++;
-      const primitive = collection.get(index);
+      const owner = collection.get(index);
+      // DataSourceDisplay puts Entity billboards inside an EntityCluster,
+      // even when clustering is disabled. Inspect its existing collection;
+      // never allocate a billboard or evaluate an Entity callback to find it.
+      const cluster = owner instanceof Cesium.EntityCluster ? owner : null;
+      const primitive = cluster ? cluster._billboardCollection : owner;
+      const primitiveShown = shown && cluster?.show !== false;
       const childPath = [...path, index];
       if (primitive instanceof Cesium.BillboardCollection) {
         const billboardCount = primitive.length;
@@ -211,7 +217,9 @@ export function snapshotFleetTrackedBillboards(
             show: billboard.show === true,
             collectionShow: primitive.show !== false,
             effectiveShow: Boolean(
-              shown && primitive.show !== false && billboard.show === true,
+              primitiveShown &&
+              primitive.show !== false &&
+              billboard.show === true,
             ),
             alpha: Number.isFinite(alpha) ? alpha : null,
             collectionPath: childPath,
