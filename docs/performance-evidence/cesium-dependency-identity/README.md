@@ -27,3 +27,5 @@ cache from the new installation.
 [Focused validation](review.json) records 21 passing checks, format/import/package
 checks and a production build on Node 24. Full exact-commit integration evidence
 must be recorded separately.
+
+All seven ordinary CI jobs passed at `20e7655e969fb5384700bb161a54306715b81e09`: Node 24/26 suites and production builds, the browser journeys, Windows onboarding, and installation/update recovery on Windows, Linux and macOS. [Run 38132827900](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38132827900) and [saved job results](ci-38132827900.json) bind this evidence to that source. These are automatic compatibility checks, not Windows GPU or full performance acceptance.
