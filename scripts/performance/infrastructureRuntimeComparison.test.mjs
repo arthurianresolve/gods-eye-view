@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
+  infrastructureCameraRevisionReady,
   compareInfrastructureRuntimeLifetimes,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
@@ -53,6 +54,12 @@ function sample(mode, caseId, pair) {
     pixelDifferenceCount: 1000,
     frame: { width: 960, height: 640, completedStableFrames: 3 },
     clock: { ...renderClock },
+    cameraPosition: [1, 2, 3],
+    lodDiagnostics: {
+      computed: true,
+      geometryDirty: false,
+      cameraPosition: [1, 2, 3],
+    },
     pointPick: {
       entityId: id,
       sourceRecordId: id,
@@ -394,4 +401,36 @@ test('stable pixels from a prior camera revision cannot satisfy the sample gate'
   assert.equal(gate.observe('old-geometry', { inputsReady: false }), 0);
   assert.equal(gate.observe('new-geometry'), 1);
   assert.equal(gate.takePickAttempt(), false);
+});
+
+test('camera readiness requires consumed geometry and the current finite pose', () => {
+  const observed = {
+    computed: true,
+    geometryDirty: false,
+    cameraPosition: [1, 2, 3],
+  };
+  assert.equal(infrastructureCameraRevisionReady(observed, [1, 2, 3]), true);
+  assert.equal(infrastructureCameraRevisionReady(observed, [1, 2, 4]), false);
+  assert.equal(
+    infrastructureCameraRevisionReady(
+      { ...observed, geometryDirty: true },
+      [1, 2, 3],
+    ),
+    false,
+  );
+  assert.equal(
+    infrastructureCameraRevisionReady(
+      { ...observed, computed: false },
+      [1, 2, 3],
+    ),
+    false,
+  );
+  assert.equal(infrastructureCameraRevisionReady(observed, [1, 2, NaN]), false);
+  const report = validReport();
+  report.lifetimes[0].samples[0].cameraPosition[2]++;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /incomplete render or ownership/,
+  );
 });

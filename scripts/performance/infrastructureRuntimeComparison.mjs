@@ -1,5 +1,5 @@
 export const INFRASTRUCTURE_RUNTIME_SCHEMA =
-  'gev-infrastructure-runtime-renderers/v2';
+  'gev-infrastructure-runtime-renderers/v3';
 export const INFRASTRUCTURE_RUNTIME_CASES = Object.freeze([
   'default-style',
   'camera-lod-update',
@@ -96,6 +96,10 @@ function validateLifetime(lifetime, report) {
         !Number.isSafeInteger(row.frame?.completedStableFrames) ||
         row.frame.completedStableFrames < 3 ||
         JSON.stringify(row.clock) !== JSON.stringify(report.renderClock) ||
+        !infrastructureCameraRevisionReady(
+          row.lodDiagnostics,
+          row.cameraPosition,
+        ) ||
         row.ownership?.renderer !== lifetime.mode ||
         row.ownership.datasourcePresent !== true ||
         row.ownership.entityCount !== row.entityCount ||
@@ -418,4 +422,23 @@ export function createInfrastructureSampleReadiness() {
       return true;
     },
   };
+}
+
+/** Inactive stems retain history, so readiness follows the consumed camera pose. */
+export function infrastructureCameraRevisionReady(diagnostics, cameraPosition) {
+  const valid = (position) =>
+    Array.isArray(position) &&
+    position.length === 3 &&
+    position.every(Number.isFinite);
+  return (
+    diagnostics?.computed === true &&
+    diagnostics.geometryDirty === false &&
+    valid(diagnostics.cameraPosition) &&
+    valid(cameraPosition) &&
+    Math.hypot(
+      ...cameraPosition.map(
+        (value, index) => value - diagnostics.cameraPosition[index],
+      ),
+    ) <= 1e-6
+  );
 }

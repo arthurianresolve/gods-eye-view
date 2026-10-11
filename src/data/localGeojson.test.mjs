@@ -1577,6 +1577,7 @@ test('getLodDiagnostics reports the active/total split and the band budget', asy
 
   assert.deepEqual(env.layer.getLodDiagnostics(), {
     total: 150, active: 0, budgetLimit: 0, computed: false,
+    geometryDirty: true, cameraPosition: null,
   }, 'before the first walk: materialized but not yet selected');
 
   env.preRender.raise();
@@ -1585,13 +1586,19 @@ test('getLodDiagnostics reports the active/total split and the band budget', asy
   assert.equal(global.active, INFRA_LOD_ACTIVE_MIN);
   assert.equal(global.budgetLimit, INFRA_LOD_ACTIVE_MIN);
   assert.equal(global.computed, true);
+  assert.equal(global.geometryDirty, false);
+  assert.deepEqual(global.cameraPosition, [env.viewer.camera.positionWC.x, env.viewer.camera.positionWC.y, env.viewer.camera.positionWC.z]);
   assert.ok(global.active < global.total, 'active < total means the declutter is engaged');
 
   env.setCameraHeight(60_000);
   env.moveEnd.raise();
+  assert.equal(env.layer.getLodDiagnostics().geometryDirty, true);
+  assert.deepEqual(env.layer.getLodDiagnostics().cameraPosition, global.cameraPosition, 'diagnostics retain the consumed pose until geometry is updated');
   clock.advance(500);
   env.preRender.raise();
   const regional = env.layer.getLodDiagnostics();
+  assert.equal(regional.geometryDirty, false);
+  assert.notDeepEqual(regional.cameraPosition, global.cameraPosition);
   assert.equal(regional.active, 150, 'regional band lifts the cap above the in-view count');
   assert.ok(regional.budgetLimit >= 150, `regional budget widened (${regional.budgetLimit})`);
 });

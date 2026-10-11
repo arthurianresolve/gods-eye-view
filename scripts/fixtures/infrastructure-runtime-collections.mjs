@@ -9,6 +9,7 @@ import { readPerformanceEnvironment } from '../../src/performance/performanceSna
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
+  infrastructureCameraRevisionReady,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
   INFRASTRUCTURE_RUNTIME_SCHEMA,
@@ -638,7 +639,6 @@ async function runLayerLifetime(
       pair,
       changedGeometryFrom,
       recordSample = true,
-      requiredGeometry = null,
     ) => {
       const deadline = performance.now() + 8000;
       const readiness = createInfrastructureSampleReadiness();
@@ -653,6 +653,8 @@ async function runLayerLifetime(
       let selectionRendered = false;
       let geometryReady = false;
       let observedGeometry = null;
+      let lodDiagnostics = null;
+      let cameraPosition = null;
       while (performance.now() < deadline) {
         finalFrame = await captureFrame(viewer);
         completedCaptures++;
@@ -663,9 +665,11 @@ async function runLayerLifetime(
         );
         const signature = `${finalFrame.pixelSha256}:${hash}`;
         observedGeometry = hash;
+        lodDiagnostics = dams.getLodDiagnostics();
+        cameraPosition = finitePosition(viewer.camera.positionWC);
         geometryReady =
           (!changedGeometryFrom || hash !== changedGeometryFrom) &&
-          (!requiredGeometry || hash === requiredGeometry);
+          infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition);
         stableFrames = readiness.observe(signature, {
           inputsReady: geometryReady,
         });
@@ -706,7 +710,8 @@ async function runLayerLifetime(
           geometryReady,
           observedGeometry,
           changedGeometryFrom,
-          requiredGeometry,
+          lodDiagnostics,
+          cameraPosition,
           pointPick: pointPick || null,
           stemPick: stemPick || null,
           surfaceCount: rows.length,
@@ -762,6 +767,8 @@ async function runLayerLifetime(
           new TextEncoder().encode(JSON.stringify(style)),
         ),
         styleAudit,
+        lodDiagnostics,
+        cameraPosition,
         pixelSha256: finalFrame.pixelSha256,
         pngBase64: finalFrame.pngBase64,
         pixelDifferenceCount: finalFrame.pixelsDifferentFromCorner,
@@ -806,8 +813,6 @@ async function runLayerLifetime(
             pair,
             null,
             false,
-            lifetime.samples.find((row) => row.caseId === 'default-style')
-              .geometrySha256,
           );
           previousGeometry = baseline.geometrySha256;
           setCamera(viewer, anchor, 170000);
