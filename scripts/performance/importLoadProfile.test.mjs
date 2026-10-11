@@ -133,9 +133,22 @@ function profileResult(mode = 'cpu') {
     recomputation: 'bounded summary only',
     ...(mode === 'cpu'
       ? {
-          sampleCount: 3,
+          sampleCount: 1,
           profileWindowMs: 5,
           totalSampleWeightMs: 5,
+          profile: {
+            startTime: 1,
+            endTime: 5001,
+            nodes: [
+              {
+                id: 1,
+                callFrame: { functionName: 'sampled', url: '/fixture.js' },
+                children: [],
+              },
+            ],
+            samples: [1],
+            timeDeltas: [5000],
+          },
         }
       : {
           sampleCount: 1,
@@ -160,7 +173,12 @@ test('loading CPU profile is bounded to its owned CDP start/stop session', async
   assert.equal(report.performanceAcceptanceEligible, false);
   assert.equal(report.profileScope, IMPORT_LOAD_PROFILE_SCOPE);
   assert.equal(report.sampleCount, 3);
-  assert.equal('profile' in report, false, 'raw profile tree is not emitted');
+  assert.equal(report.profile.nodes.length, 1);
+  assert.equal(
+    report.profile.nodes[0].callFrame.url,
+    '/src/imports/runtimeLayer.js',
+  );
+  assert.equal(report.profile.samples.length, 3);
   assert.deepEqual(
     session.calls.map(({ method }) => method),
     [
@@ -307,6 +325,7 @@ test('single-load heap report requires allocation summary without CPU sample fie
 test('single-load report validator rejects malformed containers and truncated profiles', () => {
   const malformedFixture = fixtureResult();
   malformedFixture.checks = { passed: true };
+  malformedFixture.samples = { length: 1, 0: fixtureResult().samples[0] };
   assert.equal(
     validateImportLoadProfileFixture({
       fixtureReport: malformedFixture,
@@ -338,6 +357,32 @@ test('single-load report validator rejects malformed containers and truncated pr
   });
   assert.equal(malformedResult.valid, false);
   assert.match(malformedResult.errors.join(';'), /profile summary locations/);
+
+  const malformedCpuArrays = profileResult();
+  malformedCpuArrays.profile.nodes = { length: 1 };
+  const malformedCpuResult = validateImportLoadProfileFixture({
+    fixtureReport: fixtureResult(),
+    profileReport: malformedCpuArrays,
+    mode: 'cpu',
+    commit: 'a'.repeat(40),
+  });
+  assert.equal(malformedCpuResult.valid, false);
+  assert.match(
+    malformedCpuResult.errors.join(';'),
+    /CPU profile summary is incomplete/,
+  );
+
+  const nullCheck = fixtureResult();
+  nullCheck.checks = [null];
+  assert.equal(
+    validateImportLoadProfileFixture({
+      fixtureReport: nullCheck,
+      profileReport: profileResult(),
+      mode: 'cpu',
+      commit: 'a'.repeat(40),
+    }).valid,
+    false,
+  );
 });
 
 test('profile startup failure detaches and preserves the CDP error', async () => {

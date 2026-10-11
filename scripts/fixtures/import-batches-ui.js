@@ -843,7 +843,7 @@ run.addEventListener('click', async () => {
         performanceAcceptanceEligible: false,
       };
       status.textContent =
-        'Load complete; stop the profiler before capture and teardown.';
+        'Profiler stopped; capturing a fresh frame before teardown.';
 
       const sample = {
         pair: null,

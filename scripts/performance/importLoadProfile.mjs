@@ -163,7 +163,8 @@ export function validateImportLoadProfileFixture({
   )
     errors.push('fixture phase ordering is incomplete');
   if (
-    fixtureReport?.samples?.length !== 1 ||
+    !Array.isArray(fixtureReport?.samples) ||
+    fixtureReport.samples.length !== 1 ||
     fixtureReport.samples[0]?.capture?.completed !== true ||
     !/^[a-f0-9]{64}$/.test(fixtureReport.samples[0]?.pixelSha256 || '')
   )
@@ -177,6 +178,7 @@ export function validateImportLoadProfileFixture({
     !Array.isArray(fixtureReport?.checks) ||
     !fixtureReport.checks.some(
       (check) =>
+        check &&
         check.id ===
           'single-profiled-load-separated-from-capture-and-teardown' &&
         check.status === 'passed',
@@ -232,9 +234,36 @@ export function validateImportLoadProfileFixture({
       !Number.isFinite(profileReport?.profileWindowMs) ||
       profileReport.profileWindowMs <= 0 ||
       !Number.isFinite(profileReport?.totalSampleWeightMs) ||
-      profileReport.totalSampleWeightMs < 0)
+      profileReport.totalSampleWeightMs < 0 ||
+      !profileReport?.profile ||
+      !Array.isArray(profileReport.profile.nodes) ||
+      profileReport.profile.nodes.length < 1 ||
+      profileReport.profile.nodes.length > 50_000 ||
+      profileReport.profile.nodes.some(
+        (node) =>
+          !node ||
+          !Number.isSafeInteger(node.id) ||
+          typeof node.callFrame?.functionName !== 'string' ||
+          typeof node.callFrame?.url !== 'string' ||
+          (node.children !== undefined &&
+            (!Array.isArray(node.children) ||
+              node.children.some((id) => !Number.isSafeInteger(id)))),
+      ) ||
+      !Array.isArray(profileReport.profile.samples) ||
+      profileReport.profile.samples.length < 1 ||
+      profileReport.profile.samples.length > 250_000 ||
+      profileReport.profile.samples.some((id) => !Number.isSafeInteger(id)) ||
+      !Array.isArray(profileReport.profile.timeDeltas) ||
+      profileReport.profile.timeDeltas.length !==
+        profileReport.profile.samples.length ||
+      profileReport.profile.timeDeltas.some(
+        (delta) => !Number.isFinite(delta) || delta < 0,
+      ) ||
+      !Number.isFinite(profileReport.profile.startTime) ||
+      !Number.isFinite(profileReport.profile.endTime) ||
+      profileReport.profile.endTime < profileReport.profile.startTime)
   )
-    errors.push('CPU profile has no sample count');
+    errors.push('CPU profile summary is incomplete');
   if (
     mode === 'heap' &&
     (!Number.isInteger(profileReport?.nodeCount) ||
@@ -434,12 +463,11 @@ export async function startImportLoadProfile(
       const summary =
         mode === 'cpu'
           ? (() => {
-              const { profile: _boundedProfile, ...cpuSummary } =
-                summarizeCpuProfile(profile);
+              const cpuSummary = summarizeCpuProfile(profile);
               return {
                 ...cpuSummary,
                 recomputation:
-                  'Raw CPU node/sample arrays are omitted; the top-callsite summary cannot reconstruct the complete profile.',
+                  'The normalized bounded CPU profile is retained so the summary can be independently recomputed; sample weights remain statistical estimates.',
               };
             })()
           : summarizeImportHeapProfile(profile);
