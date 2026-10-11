@@ -1,11 +1,11 @@
 # Cesium performance plan
 
-Cable multipart source mapping is corrected in an isolated fix with 39 focused
-checks passing. All 1,913 bundled cable segments resolve to their actual 712
+Cable multipart source mapping is corrected at `64a607e` with 39 focused
+checks and all seven ordinary integration jobs passing. All 1,913 bundled cable segments resolve to their actual 712
 source features, retaining native Entity IDs and one reference per source.
 [Evidence and scope](performance-evidence/cable-source-identity/README.md)
 separate this correctness repair from infrastructure batching and hardware
-acceptance. Whole integration remains pending.
+acceptance. The exact-commit CI record includes Windows/Linux/macOS recovery.
 
 The isolated Cesium no-op terrain-collision transform fix is accepted at
 f26f4dd738a518c6cefa96b5f809c5d9c53afa83 after all seven ordinary integration jobs
