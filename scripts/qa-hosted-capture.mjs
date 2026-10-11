@@ -17,33 +17,19 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
+import {
+  assessHostedSourceFinish,
+  assessHostedSourceStart,
+  inspectTrackedWorktree,
+} from './performance/hostedSourceProvenance.mjs';
 
 if (process.env.GITHUB_ACTIONS !== 'true')
   throw new Error(
     'Run this hosted-renderer probe in GitHub Actions. Local Chrome validation uses the visible fixture.',
   );
 const commit = process.env.GITHUB_SHA;
-if (!/^[a-f0-9]{40}$/.test(commit || ''))
-  throw new Error('Exact source revision required');
-const server = spawn(
-  process.execPath,
-  [
-    'node_modules/vite/bin/vite.js',
-    '--host',
-    '127.0.0.1',
-    '--port',
-    '4184',
-    '--strictPort',
-  ],
-  {
-    env: { ...process.env, GEV_APP_COMMIT: commit },
-    stdio: ['ignore', 'ignore', 'ignore'],
-  },
-);
+let server;
 let serverError = null;
-server.on('error', (error) => {
-  serverError = error;
-});
 const url = 'http://127.0.0.1:4184/scripts/fixtures/capture-matrix.html';
 let browser;
 let vesselPage;
@@ -58,14 +44,48 @@ const closeOwnedBrowser = (ownedBrowser) =>
 const report = {
   schema: 'gev-hosted-native-renderer/v1',
   commit,
+  harnessCommit: null,
   platform: process.platform,
   timestamp: new Date().toISOString(),
   status: 'pending',
   hardwareRenderingAvailable: false,
   captureMatrix: null,
   environment: readHostEnvironment(),
+  sourceDirtyAtStart: null,
+  harnessDirtyAtStart: null,
+  sourceChangedDuringRun: null,
+  harnessChangedDuringRun: null,
 };
+let sourceSnapshotAtStart = null;
 try {
+  sourceSnapshotAtStart = inspectTrackedWorktree();
+  const sourceStart = assessHostedSourceStart(sourceSnapshotAtStart, commit);
+  report.harnessCommit = sourceStart.harnessCommit;
+  report.sourceDirtyAtStart = sourceStart.sourceDirtyAtStart;
+  report.harnessDirtyAtStart = sourceStart.harnessDirtyAtStart;
+  if (!sourceStart.valid)
+    throw new Error(
+      sourceStart.error ||
+        'Hosted capture requires GITHUB_SHA to match a clean tracked HEAD.',
+    );
+  server = spawn(
+    process.execPath,
+    [
+      'node_modules/vite/bin/vite.js',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      '4184',
+      '--strictPort',
+    ],
+    {
+      env: { ...process.env, GEV_APP_COMMIT: commit },
+      stdio: ['ignore', 'ignore', 'ignore'],
+    },
+  );
+  server.on('error', (error) => {
+    serverError = error;
+  });
   const deadline = Date.now() + 90_000;
   for (;;) {
     if (serverError) throw serverError;
@@ -499,13 +519,50 @@ try {
       process.exitCode = 1;
     }
   }
-  server.kill();
+  server?.kill();
+  const sourceSnapshotAtFinish = inspectTrackedWorktree();
+  const sourceFinish = assessHostedSourceFinish(
+    sourceSnapshotAtStart,
+    sourceSnapshotAtFinish,
+  );
+  report.sourceChangedDuringRun = sourceFinish.sourceChangedDuringRun;
+  report.harnessChangedDuringRun = sourceFinish.harnessChangedDuringRun;
+  if (sourceFinish.error) report.provenanceInspectionError = sourceFinish.error;
+  if (
+    report.sourceDirtyAtStart !== false ||
+    report.harnessDirtyAtStart !== false ||
+    report.sourceChangedDuringRun !== false ||
+    report.harnessChangedDuringRun !== false
+  ) {
+    report.status = 'failed';
+    report.reason ||=
+      'Hosted source or harness provenance was dirty, changed, or unavailable.';
+    process.exitCode = 1;
+    if (report.soak) {
+      Object.assign(report.soak, {
+        harnessCommit: report.harnessCommit,
+        sourceDirtyAtStart: report.sourceDirtyAtStart,
+        harnessDirtyAtStart: report.harnessDirtyAtStart,
+        sourceChangedDuringRun: report.sourceChangedDuringRun,
+        harnessChangedDuringRun: report.harnessChangedDuringRun,
+      });
+    }
+  } else if (report.soak) {
+    Object.assign(report.soak, {
+      harnessCommit: report.harnessCommit,
+      sourceDirtyAtStart: report.sourceDirtyAtStart,
+      harnessDirtyAtStart: report.harnessDirtyAtStart,
+      sourceChangedDuringRun: report.sourceChangedDuringRun,
+      harnessChangedDuringRun: report.harnessChangedDuringRun,
+    });
+  }
   if (
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
     process.argv.includes('--import-point-entity') ||
-    process.argv.includes('--import-point-collection')
+    process.argv.includes('--import-point-collection') ||
+    process.argv.includes('--soak')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

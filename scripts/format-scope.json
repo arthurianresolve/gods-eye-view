@@ -1022,6 +1022,8 @@
   "scripts/performance/terrainPickingLifecycle.mjs",
   "scripts/performance/terrainPickingLifecycle.test.mjs",
   "scripts/qa-hosted-capture.mjs",
+  "scripts/performance/hostedSourceProvenance.mjs",
+  "scripts/performance/hostedSourceProvenance.test.mjs",
   "scripts/fixtures/import-batches-ui.js",
   "scripts/performance/importPointState.mjs",
   "scripts/performance/importPointState.test.mjs",
