@@ -1168,5 +1168,15 @@
   "patches/cesium-1.138.0-collision-transform.json",
   "scripts/performance/cesiumDisabledInputInertia.test.mjs",
   "scripts/performance/cesiumTerrainCollisionTransform.test.mjs",
-  "scripts/qa-cctv-gizmo-geometry.mjs"
+  "scripts/qa-cctv-gizmo-geometry.mjs",
+  "scripts/fixtures/traffic-render-demand.html",
+  "scripts/fixtures/traffic-render-demand.mjs",
+  "scripts/performance/trafficRenderDemand.mjs",
+  "scripts/performance/trafficRenderDemand.test.mjs",
+  "scripts/performance/trafficRenderDemandComparison.mjs",
+  "scripts/fixtures/traffic-surface-readiness.test.mjs",
+  "scripts/performance/trafficFixtureInterception.mjs",
+  "scripts/performance/trafficFixtureRandom.mjs",
+  "scripts/performance/trafficFixtureRandomTransform.mjs",
+  "scripts/fixtures/traffic-render-demand.vite.mjs"
 ]

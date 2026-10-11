@@ -12,8 +12,35 @@ export function createLifecycle({
   parts,
   source,
 }) {
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const {
+    holdContinuousRender,
+    releaseContinuousRender,
+    governorRequestRender = () => {},
+  } = services.render;
   const { resetFlowTileCache } = source;
+  let renderHeld = false;
+
+  function hasAnimatedVisualWork() {
+    return Boolean(
+      layerState._enabled &&
+      (layerState._dots.length > 0 ||
+        layerState._populationPending ||
+        layerState._heightPending ||
+        layerState._heatJamPrim),
+    );
+  }
+
+  function syncRenderDemand(reason = 'traffic-animation-boundary') {
+    const wanted = hasAnimatedVisualWork();
+    if (wanted === renderHeld) return false;
+    renderHeld = wanted;
+    if (wanted) holdContinuousRender('traffic');
+    else releaseContinuousRender('traffic');
+    // A newly animated population needs its first frame; the last animation
+    // frame must also publish the settled or cleared state before sleeping.
+    governorRequestRender(reason);
+    return true;
+  }
 
   const methods = {
     /**
@@ -83,9 +110,9 @@ export function createLifecycle({
       layerState._enabled = true;
       layerState._surfaceFrameRemover = observeTrafficSurface(viewer.scene);
       if (layerState._roadMode !== 'tomtom') source.prefetch?.();
-      holdContinuousRender('traffic'); // per-frame animator (perf wave 2)
       layerState._lastAnimTime = 0;
       layerState._pointCollection.show = true;
+      governorRequestRender('traffic-enabled');
 
       layerState._preRenderRemover = viewer.scene.preRender.addEventListener(
         parts.animation.animate,
@@ -144,7 +171,7 @@ export function createLifecycle({
     disable(viewer) {
       layerState._enabled = false;
       services.credits?.hideOsmCredit?.(layerState._viewer, 'traffic');
-      releaseContinuousRender('traffic');
+      syncRenderDemand('traffic-disabled');
       clearTimeout(layerState._fetchTimeout);
       clearInterval(layerState._enableKickTimer);
       layerState._enableKickTimer = null;
@@ -183,6 +210,7 @@ export function createLifecycle({
       layerState._arrivalRemover = null;
       releaseCameraSensitivity(viewer.camera, 'traffic');
       if (layerState._pointCollection) layerState._pointCollection.show = false;
+      governorRequestRender('traffic-disabled');
     },
 
     /**
@@ -213,5 +241,5 @@ export function createLifecycle({
     },
   };
 
-  return { methods };
+  return { methods, syncRenderDemand };
 }

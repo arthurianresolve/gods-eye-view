@@ -291,6 +291,8 @@ export function createRendering({
     }
 
     parts.retention.refreshCounts();
+    parts.lifecycle?.syncRenderDemand?.('traffic-animation-start');
+    services.render?.governorRequestRender?.('traffic-road-render');
     layerState._lastUpdate = Date.now();
     console.log(
       `[Data:Traffic] ${label}: ${layerState._count} dots (roads=${roads.length}, alt=${Math.round(altitude)}m)`,

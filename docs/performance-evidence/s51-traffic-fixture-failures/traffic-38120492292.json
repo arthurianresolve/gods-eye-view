@@ -1,0 +1,275 @@
+{
+  "schema": "gev-traffic-render-demand-comparison/v1",
+  "status": "failed",
+  "createdAt": "2026-10-11T07:11:29.238Z",
+  "scope": "Five alternating exact-pixel traffic A/B pairs, deterministic local surface and feed, 10-second enabled-empty idle observation; native hosted WebGL acceleration is required and verified.",
+  "commits": {
+    "baseline": "e6ab561ad0e77a49219627e97573199f1db0af62",
+    "candidate": "da493e8b7f7d27212a8d47e18cbd573586a8ff65"
+  },
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "darwin",
+    "osRelease": "25.6.0",
+    "viewport": {
+      "width": 1024,
+      "height": 768,
+      "deviceScaleFactor": 1
+    },
+    "host": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "osRelease": "25.6.0",
+      "cpu": "Apple M1 (Virtual)",
+      "logicalCpus": 3,
+      "memoryBytes": 7516192768,
+      "hosted": true,
+      "runnerImage": "macos26",
+      "runnerImageVersion": "20260907.0351.1"
+    },
+    "browserArgs": [
+      "--no-sandbox",
+      "--disable-dev-shm-usage"
+    ],
+    "browserVersion": "Chrome/152.0.7977.75",
+    "browserGraphicsInfo": {
+      "featureStatus": {
+        "webgl": "enabled",
+        "webgl2": null,
+        "gpu_compositing": "enabled",
+        "opengl": "enabled_on"
+      },
+      "devices": [
+        {
+          "vendor": "Google Inc. (Apple)",
+          "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+          "driver": "26.6.2"
+        }
+      ]
+    }
+  },
+  "harness": {
+    "commit": "da493e8b7f7d27212a8d47e18cbd573586a8ff65",
+    "runnerSha256": "04abe687b9c432e7d8b5bddba2b080412c6a09f0505c8a664bf88a4e1a63f47f",
+    "validatorSha256": "c4bb9a2b8c966d5715f28341d9dc85dde6cf623d4e7e37bbbc1a94e79659bc18",
+    "fixtures": {
+      "scripts/fixtures/traffic-render-demand.html": "1baefc222bc2012c8e12e2b60430986ac504a5c87ddf12f0846bea912c70f35f",
+      "scripts/fixtures/traffic-render-demand.mjs": "da013ba22fc9bd9194759a713a5580ec1678e5480ec1853af6729e470d7ff18a"
+    }
+  },
+  "sources": {
+    "baseline": {
+      "commit": "e6ab561ad0e77a49219627e97573199f1db0af62",
+      "trafficFiles": {
+        "src/layers/traffic/animation.js": "037234b5d280e681a108c21980522cb273e8a1b34b64fe11c9a6a0fda668aff1",
+        "src/layers/traffic/lifecycle.js": "852640fe4f0f025e604d6186018fb38814f3608aa2daea6149f4e38dc64c3460",
+        "src/layers/traffic/rendering.js": "3b339a019c711dc2ee04af6a9d33d48babc44182d92055ed525b8e7689d48c85",
+        "src/layers/traffic/retention.js": "cf882a06df5f0ecd738addb36d3963ed185ec8b6dc7dd18c6fb772347005729e",
+        "src/layers/traffic/style.js": "a77eba606fdcb9e3751539bf3bcabbe4fd7be85116eb1aa245f5a37db79c0409"
+      },
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumVersion": "1.138.0",
+      "cesiumPackageJsonSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+      "engineVersion": "22.3.0",
+      "enginePackageJsonSha256": "ea6007d927f9df91679fa94c22b541beea94c88c4fb7a89297970dcbf3866f70",
+      "widgetsVersion": "14.3.0",
+      "widgetsPackageJsonSha256": "95912186bb1e92d5b33479144ca9ddd16a356141284357b42014af10e26e6294",
+      "cesiumRuntimeFiles": {
+        "cesium/Build/Cesium/Widgets/widgets.css": "702c5adf3d16ec7f1c03cc5fb7ecb823af6c59fa192789fb2c859ac7a11f4a0c",
+        "cesium/Source/Cesium.js": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+        "@cesium/engine/index.js": "22c3d675790f593eb52365c961af59fb6cc7450510c56a2c2e51bfb83cdd88f7",
+        "@cesium/widgets/index.js": "3d3bd419d5542e3c682910d59a9f801dbaa0c9feac6254c640b2a385561cf363",
+        "cesium/Build/Cesium/index.cjs": "9ac3d1f3541165c8379fa6e7d4c110946fc9b5bfad58c73bb6299e2fe0f250ae",
+        "cesium/Build/CesiumUnminified/index.cjs": "7c233e615767d9183e053c16a72d0bd1bea98ed888f88a86fe55711a54fd3367",
+        "cesium/Build/Cesium/Cesium.js": "90966c1f22604d00f24013288f7176c6e564587fd7e16205e169e9700eaa982a",
+        "cesium/Build/CesiumUnminified/Cesium.js": "1e4cc6f4b76d4c48df12ce7160a07d0ef009244b073f0a4048384f1d413158d2"
+      },
+      "cesiumSourceTrees": {
+        "cesium/Source": {
+          "fileCount": 282,
+          "sha256": "a067263f79437a443e63db18cab5049f730936d7f27cf30089fff91ec71b3cef"
+        },
+        "@cesium/engine/Source": {
+          "fileCount": 1796,
+          "sha256": "828cd88858d21a7e44dd3405faa6bc1634b1379b0812461f5cf323f7ba0755c0"
+        },
+        "@cesium/widgets/Source": {
+          "fileCount": 119,
+          "sha256": "6874a1c434ff9b2d10c5d53c902961d53ef8520c12df2387db29bf4db90e28f5"
+        }
+      }
+    },
+    "candidate": {
+      "commit": "da493e8b7f7d27212a8d47e18cbd573586a8ff65",
+      "trafficFiles": {
+        "src/layers/traffic/animation.js": "e72dc09832708d7d1effed6f4245a29c0162b4c10eea51bb16966ec0f11d797a",
+        "src/layers/traffic/lifecycle.js": "f551ce9c76789359817812a3cf5c0d3ca85aa24bc3803c8f4e25ec7b23785326",
+        "src/layers/traffic/rendering.js": "2f3049e62193d265351d9c8b229f233b5ba62296fac799ae329927850724468f",
+        "src/layers/traffic/retention.js": "3d69c4861a9424ce694f487bab4bad474a9a528e1433803f1d0da46e0a8349b6",
+        "src/layers/traffic/style.js": "87dddc3e00a5c401c421c7e7f7f81e0d0d628dc8efc83627e9025fb24fd5a3ed"
+      },
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumVersion": "1.138.0",
+      "cesiumPackageJsonSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+      "engineVersion": "22.3.0",
+      "enginePackageJsonSha256": "ea6007d927f9df91679fa94c22b541beea94c88c4fb7a89297970dcbf3866f70",
+      "widgetsVersion": "14.3.0",
+      "widgetsPackageJsonSha256": "95912186bb1e92d5b33479144ca9ddd16a356141284357b42014af10e26e6294",
+      "cesiumRuntimeFiles": {
+        "cesium/Build/Cesium/Widgets/widgets.css": "702c5adf3d16ec7f1c03cc5fb7ecb823af6c59fa192789fb2c859ac7a11f4a0c",
+        "cesium/Source/Cesium.js": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+        "@cesium/engine/index.js": "22c3d675790f593eb52365c961af59fb6cc7450510c56a2c2e51bfb83cdd88f7",
+        "@cesium/widgets/index.js": "3d3bd419d5542e3c682910d59a9f801dbaa0c9feac6254c640b2a385561cf363",
+        "cesium/Build/Cesium/index.cjs": "9ac3d1f3541165c8379fa6e7d4c110946fc9b5bfad58c73bb6299e2fe0f250ae",
+        "cesium/Build/CesiumUnminified/index.cjs": "7c233e615767d9183e053c16a72d0bd1bea98ed888f88a86fe55711a54fd3367",
+        "cesium/Build/Cesium/Cesium.js": "90966c1f22604d00f24013288f7176c6e564587fd7e16205e169e9700eaa982a",
+        "cesium/Build/CesiumUnminified/Cesium.js": "1e4cc6f4b76d4c48df12ce7160a07d0ef009244b073f0a4048384f1d413158d2"
+      },
+      "cesiumSourceTrees": {
+        "cesium/Source": {
+          "fileCount": 282,
+          "sha256": "a067263f79437a443e63db18cab5049f730936d7f27cf30089fff91ec71b3cef"
+        },
+        "@cesium/engine/Source": {
+          "fileCount": 1796,
+          "sha256": "828cd88858d21a7e44dd3405faa6bc1634b1379b0812461f5cf323f7ba0755c0"
+        },
+        "@cesium/widgets/Source": {
+          "fileCount": 119,
+          "sha256": "6874a1c434ff9b2d10c5d53c902961d53ef8520c12df2387db29bf4db90e28f5"
+        }
+      }
+    }
+  },
+  "pairs": [
+    {
+      "pair": 1,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "runs": {
+        "baseline": {
+          "schema": "gev-traffic-render-demand/v1",
+          "status": "failed",
+          "mode": "baseline",
+          "appCommit": "e6ab561ad0e77a49219627e97573199f1db0af62",
+          "harness": "scripts/fixtures/traffic-render-demand.mjs",
+          "expectedCaptures": [
+            "populated",
+            "fading-retained-dots",
+            "jam-heatlines",
+            "high-altitude-clear",
+            "return-arrival"
+          ],
+          "startedAtMonotonic": 8569.79999999993,
+          "captures": [],
+          "phases": [],
+          "sourceCalls": [],
+          "cleanup": {
+            "disposed": true,
+            "viewerDestroyed": true,
+            "listenersRemoved": false,
+            "governorUninstalled": true,
+            "errors": []
+          },
+          "fixtureSurfaceProgress": {
+            "phase": "wait-rendered-content",
+            "tilesetTilesLoaded": true,
+            "globeTilesLoaded": true,
+            "postRenderFrame": 26,
+            "latestVisibleTileContent": [],
+            "latestVisibleTileContentOverflow": false,
+            "loadProgress": [],
+            "tileFailures": [],
+            "renderErrors": [],
+            "readinessReadErrors": [],
+            "observerCleanupErrors": []
+          },
+          "endedAtMonotonic": 24270.199999999953,
+          "error": {
+            "name": "Error",
+            "message": "Local fixture tiles did not settle"
+          },
+          "pageErrors": [],
+          "externalRequests": [],
+          "rendererEvidence": {
+            "browserGraphicsInfo": {
+              "featureStatus": {
+                "webgl": "enabled",
+                "webgl2": null,
+                "gpu_compositing": "enabled",
+                "opengl": "enabled_on"
+              },
+              "devices": [
+                {
+                  "vendor": "Google Inc. (Apple)",
+                  "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+                  "driver": "26.6.2"
+                }
+              ]
+            },
+            "classification": {
+              "kind": "unknown",
+              "accelerationVerified": false,
+              "physicalDesktopCoverage": false
+            }
+          }
+        }
+      }
+    }
+  ],
+  "cleanup": {
+    "browserClosed": true,
+    "pagesClosed": true,
+    "serversStopped": true,
+    "temporaryFixturesRemoved": true,
+    "sourceTreesUnchanged": true,
+    "pageCloseResults": [
+      {
+        "closeCompleted": true,
+        "openPageCount": 0
+      }
+    ],
+    "serverStopResults": [
+      {
+        "attempted": true,
+        "confirmed": true,
+        "reason": "process-exit-observed"
+      },
+      {
+        "attempted": true,
+        "confirmed": true,
+        "reason": "process-exit-observed"
+      }
+    ]
+  },
+  "error": {
+    "name": "Error",
+    "message": "Traffic fixture failed: Local fixture tiles did not settle"
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 33487.17825,
+      "closeSettledHostMs": 33971.183583,
+      "closeElapsedMs": 484.005333000001,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 447.97070800000074
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "endedAt": "2026-10-11T07:12:06.998Z"
+}

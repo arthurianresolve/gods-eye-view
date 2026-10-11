@@ -113,6 +113,7 @@ export function createRetention({ state, parts }) {
     }
     refreshCounts();
     state._populationPending = pending;
+    parts.lifecycle?.syncRenderDemand?.();
     if (pending) schedule();
   }
   function refreshCounts() {

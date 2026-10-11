@@ -8,6 +8,8 @@ are recorded separately from fleet scheduling, full-scene performance and physic
 Windows acceptance, which remain unfinished. No entire performance slice is
 completed by this component correction.
 
+S51 traffic demand has passed its isolated five-pair hosted comparison at c73bbeb: zero enabled-empty frames versus 254?302 baseline frames over ten seconds, with all five visual states matching in every pair. [Raw evidence and verification](performance-evidence/s51-traffic-render-demand/README.md) are retained. This integration candidate preserves the accepted camera correction and will rerun against the common 4dfea32 engine baseline. Full integration and physical Windows validation remain pending.
+
 Placement reuse at `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` is accepted as a
 component optimization after exact-source CPU, pixel, allocation, native font
 and all seven integration gates pass ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),
@@ -3942,3 +3944,7 @@ rises from 15.94 to 27.23 ms and 16.12 to 30.98 ms respectively (about 71% and 9
 This identifies an unresolved scheduling/completion trade-off; it is not an
 accepted activation improvement, browser interaction result or GPU comparison.
 Single-feature preparation and raw document decoding therefore remain S59 gaps.
+
+## S51 traffic render-demand comparison ? 11 October 2026
+
+The narrow traffic scheduler experiment now has five matching hosted A/B pairs at c73bbebb1f9be6579c42869ee0820bd8e5fa89d8 against e6ab561ad0e77a49219627e97573199f1db0af62. Enabled-empty traffic renders zero frames in each ten-second candidate observation, versus 254?302 in the baseline. Root independently checked 60 PNGs and recomputed every phase comparison and heatline control. Code and focused automatic validation are complete for this experiment; current-dev integration is still pending. Hosted Apple paravirtual Metal is supplemental evidence, not physical Windows coverage or full S51/S60 completion. See [raw evidence and limitations](performance-evidence/s51-traffic-render-demand/README.md).

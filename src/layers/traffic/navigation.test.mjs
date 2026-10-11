@@ -18,6 +18,12 @@ function setup(
   { mockTimers = true } = {},
 ) {
   if (mockTimers) t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const renderDemand = {
+    held: false,
+    holds: 0,
+    releases: 0,
+    requests: [],
+  };
   const camera = {
     positionCartographic: Cesium.Cartographic.fromDegrees(
       -97.744,
@@ -57,7 +63,19 @@ function setup(
   const layer = createTrafficLayer({
     services: {
       credits: {},
-      render: { holdContinuousRender() {}, releaseContinuousRender() {} },
+      render: {
+        holdContinuousRender() {
+          renderDemand.held = true;
+          renderDemand.holds++;
+        },
+        releaseContinuousRender() {
+          renderDemand.held = false;
+          renderDemand.releases++;
+        },
+        governorRequestRender(reason) {
+          renderDemand.requests.push(reason);
+        },
+      },
     },
     source: {
       requestRoads,
@@ -82,7 +100,7 @@ function setup(
     t.mock.timers.tick(ms);
     for (let i = 0; i < 30; i++) await Promise.resolve();
   };
-  return { layer, viewer, move, tick };
+  return { layer, viewer, move, tick, renderDemand };
 }
 function roads(bounds) {
   return {
@@ -101,6 +119,81 @@ function roads(bounds) {
     }),
   };
 }
+
+test('an enabled empty high-altitude traffic layer does not hold continuous rendering', async (t) => {
+  const h = setup(t, async () => {
+    throw new Error('high-altitude traffic must not fetch roads');
+  });
+  h.viewer.camera.positionCartographic = Cesium.Cartographic.fromDegrees(
+    -97.744,
+    30.267,
+    1_000_000,
+  );
+
+  h.layer.enable(h.viewer);
+  await h.tick(10_000);
+
+  assert.equal(h.layer.getStats().count, 0);
+  assert.equal(h.renderDemand.held, false);
+  assert.equal(h.renderDemand.holds, 0);
+  assert.equal(h.renderDemand.releases, 0);
+  assert.ok(
+    h.renderDemand.requests.includes('traffic-enabled'),
+    'enabling still requests a discrete frame for the visible collection state',
+  );
+});
+
+test('traffic acquires before the first populated frame and releases after high-altitude clear', async (t) => {
+  const h = setup(t, async (bounds) => roads(bounds));
+  h.layer.enable(h.viewer);
+  assert.equal(h.renderDemand.held, false, 'empty startup is request-driven');
+  await h.tick(400);
+  assert.ok(h.layer.getStats().count > 0);
+  assert.equal(h.renderDemand.held, true);
+  assert.ok(h.renderDemand.holds >= 1);
+  assert.ok(h.renderDemand.requests.includes('traffic-animation-boundary'));
+
+  h.move(-97.744, 30.267, 1_000_000);
+  await h.tick(0);
+  assert.equal(h.layer.getStats().count, 0);
+  assert.equal(h.renderDemand.held, false);
+  assert.ok(h.renderDemand.requests.includes('traffic-cleared'));
+
+  h.move(-97.744, 30.267, 3200);
+  await h.tick(400);
+  assert.ok(h.layer.getStats().count > 0, 'new viewport data repopulates dots');
+  assert.equal(h.renderDemand.held, true);
+  assert.ok(
+    h.renderDemand.requests.includes('traffic-animation-boundary'),
+    'rearrival requests the first rendered frame before animation proceeds',
+  );
+  h.layer.disable(h.viewer);
+  assert.equal(h.renderDemand.held, false);
+});
+
+test('retiring dot populations keep traffic demand until the fade work drains', async (t) => {
+  const h = setup(t, async (bounds) => roads(bounds));
+  h.layer.enable(h.viewer);
+  await h.tick(400);
+  assert.ok(h.layer.getStats().count > 0);
+  assert.equal(h.renderDemand.held, true);
+
+  h.layer.setParams({ densityScale: 0.2 });
+  assert.equal(h.renderDemand.held, true);
+  assert.ok(
+    h.layer.getLoadingDiagnostics().populationPending ||
+      h.layer.getStats().count > 0,
+    'retiring/remaining point contributions continue to own animation frames',
+  );
+  h.layer.disable(h.viewer);
+  assert.equal(h.renderDemand.held, false);
+  await h.tick(1000);
+  assert.equal(
+    h.renderDemand.held,
+    false,
+    'disabled callbacks cannot reacquire demand',
+  );
+});
 
 test('traffic recovers a failed destination request after another city has loaded', async (t) => {
   let londonCalls = 0;
