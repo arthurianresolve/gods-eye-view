@@ -1181,5 +1181,7 @@
   "scripts/fixtures/infrastructure-benefit.html",
   "scripts/fixtures/infrastructure-benefit.mjs",
   "scripts/performance/infrastructureBenefitComparison.mjs",
-  "scripts/performance/infrastructureBenefitComparison.test.mjs"
+  "scripts/performance/infrastructureBenefitComparison.test.mjs",
+  "scripts/fixtures/infrastructurePrimitiveObservation.mjs",
+  "scripts/fixtures/infrastructurePrimitiveObservation.test.mjs"
 ]

@@ -13,7 +13,9 @@ import {
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
 import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
+import { observeInfrastructurePrimitives } from './infrastructurePrimitiveObservation.mjs';
 import {
+  compareInfrastructureRuntimeLifetimes,
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
   infrastructureCameraRevisionReady,
@@ -744,11 +746,21 @@ async function runLayerLifetime(
       let lodDiagnostics = null;
       let cameraPosition = null;
       let sceneReadiness = null;
+      const primitiveObservations = [];
+      const observePrimitives = (phase) => {
+        if (primitiveObservations.length >= 8) return;
+        primitiveObservations.push({
+          phase,
+          completedCaptures,
+          ...observeInfrastructurePrimitives(viewer.scene, rows, Cesium),
+        });
+      };
       while (performance.now() < deadline) {
         finalFrame = await captureFrame(viewer);
         completedCaptures++;
         if (pickRow) selectionRendered = true;
         rows = readRows();
+        if (completedCaptures === 1) observePrimitives('first-capture');
         const hash = await sha256(
           new TextEncoder().encode(JSON.stringify(geometrySnapshot(rows))),
         );
@@ -769,6 +781,7 @@ async function runLayerLifetime(
           inputsReady: geometryReady,
         });
         if (readiness.takePickAttempt()) {
+          observePrimitives('before-native-picks');
           pickSearches++;
           pickDiagnostics = {
             examined: 0,
@@ -791,12 +804,15 @@ async function runLayerLifetime(
           stemPick = target?.stemPick;
           pickRow = target?.row;
           if (pickRow) preferredPickEntityId = pickRow.entityId;
+          observePrimitives('after-native-picks');
         }
         if (stableFrames >= 3 && pointPick && stemPick && selectionRendered)
           break;
       }
       if (!(stableFrames >= 3 && pointPick && stemPick && pickRow)) {
+        observePrimitives('failed-sample');
         lifetime.failedSample = {
+          primitiveObservations,
           caseId,
           pair,
           stableFrames,
@@ -884,6 +900,7 @@ async function runLayerLifetime(
           scenePrimitiveCount: viewer.scene.primitives.length,
           sceneGroundPrimitiveCount: viewer.scene.groundPrimitives.length,
         },
+        primitiveObservations,
         productionDiagnostics:
           mode === 'primitive-collections'
             ? targetLayer.getSurfaceRendererDiagnostics()
@@ -997,6 +1014,8 @@ async function runDiagnostic() {
     error: null,
   };
   let viewer;
+  let removeRenderError;
+  report.renderErrors = [];
   try {
     check(
       /^[a-f0-9]{40}$/.test(report.applicationCommit),
@@ -1007,6 +1026,15 @@ async function runDiagnostic() {
       creditContainer: document.querySelector('#credits'),
       preserveDrawingBuffer: true,
     });
+    removeRenderError = viewer.scene.renderError.addEventListener(
+      (_scene, error) => {
+        if (report.renderErrors.length < 8)
+          report.renderErrors.push({
+            name: error?.name || 'Error',
+            message: String(error?.message || error).slice(0, 500),
+          });
+      },
+    );
     viewer.scene.requestRenderMode = true;
     viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
     viewer.scene.globe.show = true;
@@ -1051,7 +1079,11 @@ async function runDiagnostic() {
     );
     const baseline = report.lifetimes[0];
     const candidate = report.lifetimes[1];
-    report.comparisons = compareSamples(baseline, candidate);
+    check(report.renderErrors.length === 0, 'Scene reported a render error.');
+    report.comparisons = compareInfrastructureRuntimeLifetimes(
+      baseline,
+      candidate,
+    );
     report.status = 'passed';
   } catch (error) {
     report.status = 'failed';
@@ -1060,6 +1092,7 @@ async function runDiagnostic() {
       message: String(error?.message || error),
     };
   } finally {
+    removeRenderError?.();
     if (viewer && !viewer.isDestroyed()) {
       try {
         viewer.destroy();
@@ -1084,46 +1117,6 @@ async function runDiagnostic() {
     }
   }
   return report;
-}
-
-function compareSamples(baseline, candidate) {
-  const result = [];
-  for (const caseId of INFRASTRUCTURE_RUNTIME_CASES) {
-    const leftRows = baseline.samples.filter((row) => row.caseId === caseId);
-    const rightRows = candidate.samples.filter((row) => row.caseId === caseId);
-    for (let pair = 0; pair < INFRASTRUCTURE_RUNTIME_PAIRS; pair++) {
-      const left = leftRows.find((row) => row.pair === pair);
-      const right = rightRows.find((row) => row.pair === pair);
-      check(
-        left && right,
-        `${caseId} pair ${pair + 1} is missing a renderer sample.`,
-      );
-      const exact =
-        left.pixelSha256 === right.pixelSha256 &&
-        left.identitySha256 === right.identitySha256 &&
-        left.geometrySha256 === right.geometrySha256 &&
-        left.styleSha256 === right.styleSha256 &&
-        JSON.stringify(left.pointPick) === JSON.stringify(right.pointPick) &&
-        JSON.stringify(left.stemPick) === JSON.stringify(right.stemPick);
-      check(
-        exact,
-        `${caseId} pair ${pair + 1} baseline/candidate evidence differs.`,
-      );
-      result.push({
-        caseId,
-        pair,
-        pixelSha256Equal: true,
-        identityEqual: true,
-        geometryEqual: true,
-        styleEqual: true,
-        picksEqual: true,
-        framebufferEqual:
-          left.frame.width === right.frame.width &&
-          left.frame.height === right.frame.height,
-      });
-    }
-  }
-  return result;
 }
 
 async function main() {
