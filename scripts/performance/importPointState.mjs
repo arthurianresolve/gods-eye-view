@@ -28,6 +28,87 @@ function finiteColor(value) {
 }
 
 /**
+ * Return the owned default Entity point count through the pinned Cesium
+ * PointVisualizer/EntityCluster adapter. This is a bounded resource census,
+ * not a general traversal of arbitrary private engine objects.
+ */
+export function inspectDefaultEntityPointPrimitiveCount(
+  viewer,
+  { Cesium, workspaceId, expectedCount },
+) {
+  const version = Cesium?.VERSION ?? null;
+  if (version !== CESIUM_VERSION)
+    return unavailable('unsupported-cesium-version', version);
+  if (
+    typeof workspaceId !== 'string' ||
+    !Number.isSafeInteger(expectedCount) ||
+    expectedCount < 0
+  )
+    return unavailable('invalid-request', version);
+
+  const entities = viewer?.entities?.values;
+  const visualizers =
+    viewer?.dataSourceDisplay?.defaultDataSource?._visualizers;
+  if (!Array.isArray(entities) || !Array.isArray(visualizers))
+    return unavailable('default-entity-visualizer-unavailable', version);
+  const candidates = visualizers.filter(
+    (visualizer) =>
+      visualizer instanceof Cesium.PointVisualizer &&
+      visualizer?._entityCollection === viewer.entities &&
+      visualizer._items?.values &&
+      typeof visualizer._items.get === 'function' &&
+      visualizer._cluster?._pointCollection instanceof
+        Cesium.PointPrimitiveCollection &&
+      visualizer._cluster?._collectionIndicesByEntity,
+  );
+  if (candidates.length !== 1)
+    return unavailable('point-visualizer-shape-mismatch', version);
+
+  const prefix = `gev-import:${workspaceId}:`;
+  const imported = entities.filter(
+    (entity) => typeof entity?.id === 'string' && entity.id.startsWith(prefix),
+  );
+  const visualizer = candidates[0];
+  const cluster = visualizer._cluster;
+  const collection = cluster._pointCollection;
+  const items = visualizer._items.values;
+  if (
+    imported.length !== expectedCount ||
+    items.length !== expectedCount ||
+    collection.length !== expectedCount ||
+    typeof collection.get !== 'function'
+  )
+    return unavailable('point-population-count-mismatch', version);
+
+  const importedById = new Map(imported.map((entity) => [entity.id, entity]));
+  if (importedById.size !== expectedCount)
+    return unavailable('duplicate-or-missing-point-identity', version);
+  for (const entity of imported) {
+    const item = visualizer._items.get(entity.id);
+    const index = cluster._collectionIndicesByEntity[entity.id]?.pointIndex;
+    const point = Number.isInteger(index) ? collection.get(index) : null;
+    if (
+      !item ||
+      item.entity !== entity ||
+      item.pointPrimitive !== point ||
+      point?.id !== entity
+    )
+      return unavailable('point-visualizer-entity-ownership-mismatch', version);
+  }
+  for (let index = 0; index < collection.length; index++) {
+    const point = collection.get(index);
+    const entity = point?.id;
+    if (
+      !entity ||
+      importedById.get(entity.id) !== entity ||
+      cluster._collectionIndicesByEntity[entity.id]?.pointIndex !== index
+    )
+      return unavailable('point-collection-order-mismatch', version);
+  }
+  return { available: true, version, pointCount: collection.length };
+}
+
+/**
  * Read a version-pinned snapshot of the default Entity point visualizer.
  * Cesium's visualizer and EntityCluster fields are private; any version or
  * shape change returns unavailable rather than a misleading partial pass.

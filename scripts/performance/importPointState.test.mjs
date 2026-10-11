@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as Cesium from 'cesium';
-import { inspectImportedPointState } from './importPointState.mjs';
+import {
+  inspectDefaultEntityPointPrimitiveCount,
+  inspectImportedPointState,
+} from './importPointState.mjs';
 
 test('pinned Cesium exposes the world-to-window transform used by native pick fixtures', () => {
   assert.equal(
@@ -89,6 +92,30 @@ test('point state snapshot binds Entity order to the owned Cesium primitive orde
     assert.deepEqual(snapshot.entityRows[1].position, [2, 2, 3]);
     assert.equal(snapshot.primitiveRows[1].pixelSize, 9);
     assert.equal(snapshot.drawAssignmentRows[1].primitiveIndex, 1);
+  } finally {
+    dispose();
+  }
+});
+
+test('Entity resource census counts only points owned by the pinned point visualizer', () => {
+  const { viewer, dispose } = fixture();
+  try {
+    assert.deepEqual(
+      inspectDefaultEntityPointPrimitiveCount(viewer, {
+        Cesium,
+        workspaceId: 'fixture',
+        expectedCount: 2,
+      }),
+      { available: true, version: Cesium.VERSION, pointCount: 2 },
+    );
+    assert.equal(
+      inspectDefaultEntityPointPrimitiveCount(viewer, {
+        Cesium,
+        workspaceId: 'fixture',
+        expectedCount: 1,
+      }).reason,
+      'point-population-count-mismatch',
+    );
   } finally {
     dispose();
   }

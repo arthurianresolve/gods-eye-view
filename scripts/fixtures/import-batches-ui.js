@@ -19,7 +19,10 @@ import {
 } from '../performance/importFrameDiagnostics.mjs';
 import { summarizeRgbaDifferences } from '../performance/importPixelWitness.mjs';
 import { runControlledImportLoadProfile } from '../performance/importLoadProfileControl.mjs';
-import { inspectImportedPointState } from '../performance/importPointState.mjs';
+import {
+  inspectDefaultEntityPointPrimitiveCount,
+  inspectImportedPointState,
+} from '../performance/importPointState.mjs';
 import {
   IMPORT_TRACE_ATTRIBUTION_SCHEMA,
   MAX_IMPORT_SLOW_STEPS_PER_WINDOW,
@@ -532,6 +535,22 @@ function resources(viewer, layer) {
       for (let i = 0; i < value.length; i++) visit(value.get(i), depth + 1);
   };
   visit(viewer.scene.primitives);
+  const pointRepresentation =
+    layer?.getPerformanceDiagnostics?.().pointRepresentation ?? null;
+  if (pointRepresentation === 'entity') {
+    const inspected = inspectDefaultEntityPointPrimitiveCount(viewer, {
+      Cesium,
+      workspaceId: 'fixture',
+      expectedCount: layer?.getState?.().featureCount ?? -1,
+    });
+    pointPrimitiveCount = inspected.available ? inspected.pointCount : null;
+    if (inspected.available)
+      collections.push({
+        type: 'EntityClusterPointPrimitiveCollection',
+        count: inspected.pointCount,
+        ownership: 'Cesium-1.138.0-PointVisualizer-EntityCluster-adapter',
+      });
+  }
   return {
     heapBytes: performance.memory?.usedJSHeapSize ?? null,
     heapScope: 'Unforced heap sample; not retained-memory acceptance',
@@ -782,7 +801,7 @@ function nativePointPickWitness(viewer, entityRows) {
   };
 }
 
-async function pointStateWitness(viewer) {
+async function pointStateWitness(viewer, layer) {
   const snapshot = inspectImportedPointState(viewer, {
     Cesium,
     workspaceId: 'fixture',
@@ -1362,7 +1381,7 @@ run.addEventListener('click', async () => {
           let currentPointState = null;
           if (report.captureMode === 'pixels') {
             try {
-              currentPointState = await pointStateWitness(viewer);
+              currentPointState = await pointStateWitness(viewer, layer);
             } catch (error) {
               currentPointState = {
                 available: false,
