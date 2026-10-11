@@ -1,0 +1,808 @@
+{
+  "schema": "gev-independent-infrastructure-benefit-verification/v1",
+  "verifiedAt": "2026-10-11T08:40:50.174Z",
+  "applicationCommit": "c218b192dbc8d4437de9c52aaa54ed25e9b6412c",
+  "harnessCommit": "c218b192dbc8d4437de9c52aaa54ed25e9b6412c",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38125170759",
+  "rawReportSha256": "2bba320662e618a797de14c063c6b81ca8fb99046b74dc6cb2bcb899c0e9fc5d",
+  "reportContractPassed": true,
+  "sourceGitBlobHashes": {
+    "package-lock.json": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+    "patches/cesium-1.138.0-inertia.json": "934ca34f18a67e157dfa1813b65dd58f6a2a33571c590f047c27929281f5d951",
+    "patches/cesium-1.138.0-collision-transform.json": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79",
+    "src/data/infrastructure.js": "e80769a69ecbc46b75e8c7e2f8182cc53dc5b1e9f3f898bba9f51f4fbcfd2460",
+    "src/data/localGeojsonCore.js": "1841bba63a65a477f01f41d6e64fd9710429519f07683647df27690ab21de644",
+    "src/data/localGeojsonLod.js": "cdc4f1734711816d161bee4cb000947fcc4d30ca0e819cd202e7a0e1289573fc",
+    "src/data/infrastructureOverlayEntry.js": "dec1ec7acbfcc618a60313ace9c68d8bb26a593fccf83351e65e9dcbbe7176e4",
+    "src/data/inputOwnership.js": "2ee8fa71db1d3049fdbd5299c563a94ea9e4bf08c6df29be4dd0a5e6b474dc03",
+    "src/app/localGeojsonServices.js": "b2edce7b92d408d072d0971cfb7e3d55fc673ac563a4c8e4975e536ba8d7c390",
+    "src/app/viewer.js": "d54423936748a2a20c170b0b7d9ac2cacd79d3f617a49b5963261cb31b943911",
+    "src/app/atmosphereCompat.js": "4682531175416e582d7992bffb6a32c7511e75042589068efa6bb50925be088b",
+    "src/app/cameraAnglesCompat.js": "6253c2f3dfb3783a2b6582e8d39ac5653dccc942f35309544d1d9ee83896857b",
+    "src/freshFrame.js": "56e2fb400e0af904d585d6c8dbf8039278a5182ce3d5b15c3df01b05e88e18ca",
+    "src/renderGovernor.js": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836",
+    "src/data/dataCredits.js": "48fc314729ca30fc95abb2160e5cd6f8da747fb0e0d66ed9e298c5c5e95562fb",
+    "src/sources/infrastructureData.js": "537b2d41961fef901fd6295e0ffa86d194a286e5ccb475019a419a6c93cfcd02",
+    "src/performance/performanceSnapshot.js": "b2cff39fe801afb9b78111111bdbaecf0cfc2427b8624baf4d80d18e8959af80",
+    "scripts/fixtures/infrastructure-benefit.html": "00abaa0601a7cddf94c357938cda17e0549d907027a05b7390ec441be2d59138",
+    "scripts/fixtures/infrastructure-benefit.mjs": "686625222bb128189fafdfa09304968116167da543854e40e28209d2e8375f4c",
+    "scripts/performance/infrastructureBenefitComparison.mjs": "74a1cabc992b1c26940df569de76ecf227583e0694c0c029d36e956c30be4126",
+    "scripts/performance/infrastructureBenefitComparison.test.mjs": "c2cbbd0dfd73466e578aec200a42d9c92331998466afa6940fbe4e36abedcaed",
+    "scripts/performance/rendererEvidence.mjs": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+    "scripts/performance/profileRecoveryPageOwnership.mjs": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+    "scripts/performance/fixtureInterception.mjs": "e94a13ae6df18925298fe167a7a6243503a6f1761555c2210be7c6e39501ff00"
+  },
+  "installedDependencyHashesMatched": true,
+  "decodedPngCount": 40,
+  "decodedPixelsExactAcrossAllTrials": true,
+  "images": [
+    {
+      "path": "images/latency-pair-01-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-01-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-01-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-01-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-02-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-02-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-02-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-02-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-03-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-03-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-03-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-03-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-04-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-04-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-04-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-04-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-05-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-05-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-05-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/latency-pair-05-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-01-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-01-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-01-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-01-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-02-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-02-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-02-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-02-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-03-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-03-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-03-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-03-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-04-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-04-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-04-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-04-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-05-entities-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-05-entities-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-05-primitive-collections-firstUsable.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "path": "images/memory-pair-05-primitive-collections-settled.png",
+      "sha256": "d2d28c273c68b7d5e113743e748394082bf48be4c3aa21d921238783564dabf2",
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "width": 960,
+      "height": 640
+    }
+  ],
+  "metrics": {
+    "latency": {
+      "entities": {
+        "sourceReadyMs": {
+          "values": [
+            209.89999999999418,
+            114.70000000001164,
+            118.5,
+            94.60000000003492,
+            119.09999999997672
+          ],
+          "median": 118.5
+        },
+        "firstUsableAfterReadyMs": {
+          "values": [
+            6165.100000000006,
+            2017.5,
+            1862.7000000000116,
+            1913.399999999965,
+            1821.5
+          ],
+          "median": 1913.399999999965
+        },
+        "totalFirstUsableMs": {
+          "values": [
+            6375,
+            2132.2000000000116,
+            1981.2000000000116,
+            2008,
+            1940.5999999999767
+          ],
+          "median": 2008
+        }
+      },
+      "primitive-collections": {
+        "sourceReadyMs": {
+          "values": [
+            179.20000000001164,
+            106.60000000003492,
+            161.90000000002328,
+            216.5,
+            165
+          ],
+          "median": 165
+        },
+        "firstUsableAfterReadyMs": {
+          "values": [
+            2312.5,
+            1869.2999999999884,
+            1935.7000000000116,
+            1582.5,
+            1622.1999999999534
+          ],
+          "median": 1869.2999999999884
+        },
+        "totalFirstUsableMs": {
+          "values": [
+            2491.7000000000116,
+            1975.9000000000233,
+            2097.600000000035,
+            1799,
+            1787.1999999999534
+          ],
+          "median": 1975.9000000000233
+        }
+      }
+    },
+    "memory": {
+      "entities": {
+        "sourceReadyMs": {
+          "values": [
+            101.29999999998836,
+            102.70000000001164,
+            83.70000000001164,
+            174.09999999997672,
+            166.40000000002328
+          ],
+          "median": 102.70000000001164
+        },
+        "firstUsableAfterReadyMs": {
+          "values": [
+            1657.0999999999767,
+            2092.2000000000116,
+            1870.399999999965,
+            3613.7000000000116,
+            2370.0999999999767
+          ],
+          "median": 2092.2000000000116
+        },
+        "totalFirstUsableMs": {
+          "values": [
+            1758.399999999965,
+            2194.9000000000233,
+            1954.0999999999767,
+            3787.7999999999884,
+            2536.5
+          ],
+          "median": 2194.9000000000233
+        },
+        "enabledHeapDeltaBytes": {
+          "values": [
+            37225308,
+            37237648,
+            37224484,
+            37236096,
+            37245808
+          ],
+          "median": 37236096
+        },
+        "afterLayerDestroyHeapDeltaBytes": {
+          "values": [
+            29617356,
+            29592208,
+            29589144,
+            29594760,
+            29607728
+          ],
+          "median": 29594760
+        },
+        "afterViewerDestroyHeapDeltaBytes": {
+          "values": [
+            8530900,
+            8533368,
+            8535800,
+            8533076,
+            8559780
+          ],
+          "median": 8533368
+        }
+      },
+      "primitive-collections": {
+        "sourceReadyMs": {
+          "values": [
+            113.39999999996508,
+            195,
+            188.5,
+            240,
+            143.10000000003492
+          ],
+          "median": 188.5
+        },
+        "firstUsableAfterReadyMs": {
+          "values": [
+            1523,
+            2061.7000000000116,
+            2826.5,
+            2741.2000000000116,
+            2027.7999999999884
+          ],
+          "median": 2061.7000000000116
+        },
+        "totalFirstUsableMs": {
+          "values": [
+            1636.399999999965,
+            2256.7000000000116,
+            3015,
+            2981.2000000000116,
+            2170.9000000000233
+          ],
+          "median": 2256.7000000000116
+        },
+        "enabledHeapDeltaBytes": {
+          "values": [
+            33125960,
+            33151552,
+            33147844,
+            33124948,
+            33138848
+          ],
+          "median": 33138848
+        },
+        "afterLayerDestroyHeapDeltaBytes": {
+          "values": [
+            24285928,
+            24292088,
+            24296500,
+            24282760,
+            24281776
+          ],
+          "median": 24285928
+        },
+        "afterViewerDestroyHeapDeltaBytes": {
+          "values": [
+            8592624,
+            8631724,
+            8623728,
+            8587960,
+            8612892
+          ],
+          "median": 8612892
+        }
+      }
+    }
+  },
+  "medianPercentChanges": {
+    "latency": {
+      "sourceReadyMs": 39.240506329113934,
+      "firstUsableAfterReadyMs": -2.304797742237774,
+      "totalFirstUsableMs": -1.5986055776880836
+    },
+    "memory": {
+      "sourceReadyMs": 83.54430379744755,
+      "firstUsableAfterReadyMs": -1.4577956218334687,
+      "totalFirstUsableMs": 2.8156180235995976,
+      "enabledHeapDeltaBytes": -11.003430649657798,
+      "afterLayerDestroyHeapDeltaBytes": -17.938418828197968,
+      "afterViewerDestroyHeapDeltaBytes": 0.9319180890827727
+    }
+  },
+  "independentPairs": [
+    {
+      "suite": "latency",
+      "index": 0,
+      "entities": {
+        "sourceReadyMs": 209.89999999999418,
+        "firstUsableAfterReadyMs": 6165.100000000006,
+        "totalFirstUsableMs": 6375
+      },
+      "primitive-collections": {
+        "sourceReadyMs": 179.20000000001164,
+        "firstUsableAfterReadyMs": 2312.5,
+        "totalFirstUsableMs": 2491.7000000000116
+      },
+      "percentChanges": {
+        "sourceReadyMs": -14.626012386842968,
+        "firstUsableAfterReadyMs": -62.490470551978106,
+        "totalFirstUsableMs": -60.91450980392139
+      }
+    },
+    {
+      "suite": "latency",
+      "index": 1,
+      "primitive-collections": {
+        "sourceReadyMs": 106.60000000003492,
+        "firstUsableAfterReadyMs": 1869.2999999999884,
+        "totalFirstUsableMs": 1975.9000000000233
+      },
+      "entities": {
+        "sourceReadyMs": 114.70000000001164,
+        "firstUsableAfterReadyMs": 2017.5,
+        "totalFirstUsableMs": 2132.2000000000116
+      },
+      "percentChanges": {
+        "sourceReadyMs": -7.061900610266692,
+        "firstUsableAfterReadyMs": -7.345724907063778,
+        "totalFirstUsableMs": -7.330456805177166
+      }
+    },
+    {
+      "suite": "latency",
+      "index": 2,
+      "entities": {
+        "sourceReadyMs": 118.5,
+        "firstUsableAfterReadyMs": 1862.7000000000116,
+        "totalFirstUsableMs": 1981.2000000000116
+      },
+      "primitive-collections": {
+        "sourceReadyMs": 161.90000000002328,
+        "firstUsableAfterReadyMs": 1935.7000000000116,
+        "totalFirstUsableMs": 2097.600000000035
+      },
+      "percentChanges": {
+        "sourceReadyMs": 36.6244725738593,
+        "firstUsableAfterReadyMs": 3.919042250496574,
+        "totalFirstUsableMs": 5.875227135070804
+      }
+    },
+    {
+      "suite": "latency",
+      "index": 3,
+      "primitive-collections": {
+        "sourceReadyMs": 216.5,
+        "firstUsableAfterReadyMs": 1582.5,
+        "totalFirstUsableMs": 1799
+      },
+      "entities": {
+        "sourceReadyMs": 94.60000000003492,
+        "firstUsableAfterReadyMs": 1913.399999999965,
+        "totalFirstUsableMs": 2008
+      },
+      "percentChanges": {
+        "sourceReadyMs": 128.85835095128974,
+        "firstUsableAfterReadyMs": -17.293822514893442,
+        "totalFirstUsableMs": -10.408366533864545
+      }
+    },
+    {
+      "suite": "latency",
+      "index": 4,
+      "entities": {
+        "sourceReadyMs": 119.09999999997672,
+        "firstUsableAfterReadyMs": 1821.5,
+        "totalFirstUsableMs": 1940.5999999999767
+      },
+      "primitive-collections": {
+        "sourceReadyMs": 165,
+        "firstUsableAfterReadyMs": 1622.1999999999534,
+        "totalFirstUsableMs": 1787.1999999999534
+      },
+      "percentChanges": {
+        "sourceReadyMs": 38.53904282118577,
+        "firstUsableAfterReadyMs": -10.941531704641594,
+        "totalFirstUsableMs": -7.904771720087867
+      }
+    },
+    {
+      "suite": "memory",
+      "index": 0,
+      "entities": {
+        "sourceReadyMs": 101.29999999998836,
+        "firstUsableAfterReadyMs": 1657.0999999999767,
+        "totalFirstUsableMs": 1758.399999999965,
+        "enabledHeapDeltaBytes": 37225308,
+        "afterLayerDestroyHeapDeltaBytes": 29617356,
+        "afterViewerDestroyHeapDeltaBytes": 8530900
+      },
+      "primitive-collections": {
+        "sourceReadyMs": 113.39999999996508,
+        "firstUsableAfterReadyMs": 1523,
+        "totalFirstUsableMs": 1636.399999999965,
+        "enabledHeapDeltaBytes": 33125960,
+        "afterLayerDestroyHeapDeltaBytes": 24285928,
+        "afterViewerDestroyHeapDeltaBytes": 8592624
+      },
+      "percentChanges": {
+        "sourceReadyMs": 11.944718657431498,
+        "firstUsableAfterReadyMs": -8.0924506668263,
+        "totalFirstUsableMs": -6.93812556869895,
+        "enabledHeapDeltaBytes": -11.012260798486883,
+        "afterLayerDestroyHeapDeltaBytes": -18.001026155069344,
+        "afterViewerDestroyHeapDeltaBytes": 0.7235344453691894
+      }
+    },
+    {
+      "suite": "memory",
+      "index": 1,
+      "primitive-collections": {
+        "sourceReadyMs": 195,
+        "firstUsableAfterReadyMs": 2061.7000000000116,
+        "totalFirstUsableMs": 2256.7000000000116,
+        "enabledHeapDeltaBytes": 33151552,
+        "afterLayerDestroyHeapDeltaBytes": 24292088,
+        "afterViewerDestroyHeapDeltaBytes": 8631724
+      },
+      "entities": {
+        "sourceReadyMs": 102.70000000001164,
+        "firstUsableAfterReadyMs": 2092.2000000000116,
+        "totalFirstUsableMs": 2194.9000000000233,
+        "enabledHeapDeltaBytes": 37237648,
+        "afterLayerDestroyHeapDeltaBytes": 29592208,
+        "afterViewerDestroyHeapDeltaBytes": 8533368
+      },
+      "percentChanges": {
+        "sourceReadyMs": 89.87341772149746,
+        "firstUsableAfterReadyMs": -1.4577956218334687,
+        "totalFirstUsableMs": 2.8156180235995976,
+        "enabledHeapDeltaBytes": -10.973023860153575,
+        "afterLayerDestroyHeapDeltaBytes": -17.91052563566734,
+        "afterViewerDestroyHeapDeltaBytes": 1.1526046925434352
+      }
+    },
+    {
+      "suite": "memory",
+      "index": 2,
+      "entities": {
+        "sourceReadyMs": 83.70000000001164,
+        "firstUsableAfterReadyMs": 1870.399999999965,
+        "totalFirstUsableMs": 1954.0999999999767,
+        "enabledHeapDeltaBytes": 37224484,
+        "afterLayerDestroyHeapDeltaBytes": 29589144,
+        "afterViewerDestroyHeapDeltaBytes": 8535800
+      },
+      "primitive-collections": {
+        "sourceReadyMs": 188.5,
+        "firstUsableAfterReadyMs": 2826.5,
+        "totalFirstUsableMs": 3015,
+        "enabledHeapDeltaBytes": 33147844,
+        "afterLayerDestroyHeapDeltaBytes": 24296500,
+        "afterViewerDestroyHeapDeltaBytes": 8623728
+      },
+      "percentChanges": {
+        "sourceReadyMs": 125.20908004775842,
+        "firstUsableAfterReadyMs": 51.11740804106355,
+        "totalFirstUsableMs": 54.29097794381228,
+        "enabledHeapDeltaBytes": -10.951501705168031,
+        "afterLayerDestroyHeapDeltaBytes": -17.887114274072946,
+        "afterViewerDestroyHeapDeltaBytes": 1.0301084842662567
+      }
+    },
+    {
+      "suite": "memory",
+      "index": 3,
+      "primitive-collections": {
+        "sourceReadyMs": 240,
+        "firstUsableAfterReadyMs": 2741.2000000000116,
+        "totalFirstUsableMs": 2981.2000000000116,
+        "enabledHeapDeltaBytes": 33124948,
+        "afterLayerDestroyHeapDeltaBytes": 24282760,
+        "afterViewerDestroyHeapDeltaBytes": 8587960
+      },
+      "entities": {
+        "sourceReadyMs": 174.09999999997672,
+        "firstUsableAfterReadyMs": 3613.7000000000116,
+        "totalFirstUsableMs": 3787.7999999999884,
+        "enabledHeapDeltaBytes": 37236096,
+        "afterLayerDestroyHeapDeltaBytes": 29594760,
+        "afterViewerDestroyHeapDeltaBytes": 8533076
+      },
+      "percentChanges": {
+        "sourceReadyMs": 37.85180930501557,
+        "firstUsableAfterReadyMs": -24.14422890666068,
+        "totalFirstUsableMs": -21.294682929404384,
+        "enabledHeapDeltaBytes": -11.040760019525141,
+        "afterLayerDestroyHeapDeltaBytes": -17.949123425903778,
+        "afterViewerDestroyHeapDeltaBytes": 0.643191271236776
+      }
+    },
+    {
+      "suite": "memory",
+      "index": 4,
+      "entities": {
+        "sourceReadyMs": 166.40000000002328,
+        "firstUsableAfterReadyMs": 2370.0999999999767,
+        "totalFirstUsableMs": 2536.5,
+        "enabledHeapDeltaBytes": 37245808,
+        "afterLayerDestroyHeapDeltaBytes": 29607728,
+        "afterViewerDestroyHeapDeltaBytes": 8559780
+      },
+      "primitive-collections": {
+        "sourceReadyMs": 143.10000000003492,
+        "firstUsableAfterReadyMs": 2027.7999999999884,
+        "totalFirstUsableMs": 2170.9000000000233,
+        "enabledHeapDeltaBytes": 33138848,
+        "afterLayerDestroyHeapDeltaBytes": 24281776,
+        "afterViewerDestroyHeapDeltaBytes": 8612892
+      },
+      "percentChanges": {
+        "sourceReadyMs": -14.002403846144896,
+        "firstUsableAfterReadyMs": -14.442428589510637,
+        "totalFirstUsableMs": -14.413561994873913,
+        "enabledHeapDeltaBytes": -11.026636876826512,
+        "afterLayerDestroyHeapDeltaBytes": -17.988384654168666,
+        "afterViewerDestroyHeapDeltaBytes": 0.6204832367187052
+      }
+    }
+  ],
+  "environment": {
+    "graphics": {
+      "featureStatus": {
+        "webgl": "enabled",
+        "webgl2": null,
+        "gpu_compositing": "enabled",
+        "opengl": "enabled_on"
+      },
+      "devices": [
+        {
+          "vendor": "Google Inc. (Apple)",
+          "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+          "driver": "26.6.2"
+        }
+      ]
+    },
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "rendererClass": {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  },
+  "cleanup": {
+    "browserClosed": true,
+    "initialPageClosed": true,
+    "pagesClosed": true,
+    "sessionsDetached": true,
+    "serverClosed": true,
+    "sourceTreeUnchanged": true
+  },
+  "acceptance": {
+    "productionDefaultEnabled": false,
+    "decision": "pending-source-preparation-regression-investigation-and-broader-workloads",
+    "limitations": [
+      "Bundled dams only; datacenters and cables untested.",
+      "Hosted paravirtual Metal; physical Windows hardware evidence absent.",
+      "Instrumented fresh-context activation; not motion p95 and not controlled warmed latency.",
+      "Separate forced-GC JS heap snapshot deltas, excluding native and GPU allocations; not a repeated lifecycle plateau.",
+      "Initial latency pair includes a 6.165-second Entity first-frame outlier; cold activation was not independently controlled."
+    ]
+  }
+}

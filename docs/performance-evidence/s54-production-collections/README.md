@@ -1,6 +1,6 @@
 # Production infrastructure collection experiment
 
-Status: opt-in code implemented; focused automatic checks passed; rendered correctness, measured benefit and physical hardware validation pending. Default application rendering remains Entity-based.
+Status: opt-in code implemented; bundled-dams rendered correctness and the separate measurement protocol pass. The first benefit comparison exposes a source-preparation regression requiring investigation; broader workload and physical hardware validation remain pending. Default application rendering remains Entity-based.
 
 This candidate moves local infrastructure point/stem visuals into production-owned PointPrimitiveCollection and PolylineCollection instances. Metadata Entities, polygons, evidence identities and the existing Entity-based picking path remain. Collection ownership follows datasource teardown, including failed construction. Per-record updates preserve terrain/LOD geometry and effective visibility; stem material colors use the Entity geometry's RGBA8 encoding.
 
@@ -24,4 +24,19 @@ Run `38124527732` at `e3e7cc9` completes both actual production layer lifetimes,
 
 [Run 38124840068](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38124840068) at `51cfdb37f0fee3996ae48dabf944e7fa3f9a0ae1` passes all ten pairs of snapshots across two actual production layer lifetimes. Root independently decoded and hashed all 20 embedded PNGs, and reran the report validator. The snapshots retain exact pixels, geometry, styles, source identities, native point/stem picks, current-camera and complete-scene readiness, and owned-resource teardown. Hosted Apple paravirtual Metal is supplemental; physical Windows remains pending. This proves correctness for the controlled bundled-dams fixture, not a production activation/memory benefit or full S54 acceptance.
 
-A separate hosted-only benefit harness now collects five alternating fresh-context pairs per latency and forced-GC memory suite. The same immutable app enables the default Entity or opt-in collections implementation. It records source-ready and completed usable-frame times with bounded readback/picking instrumentation; these are instrumented activation diagnostics, not motion p95. It keeps forced GC separate, releases fixture references and image buffers before heap measurements, saves first-usable/settled PNGs, and requires observed acceleration, exact settings, complete scene readiness and cleanup. JS heap deltas exclude native/GPU memory. Use workflow diagnostic `infrastructure-benefit`; 12 report-contract tests pass, but no benefit result exists yet. Only `local-dams` is covered by this first experiment; datacenter and cable workload coverage remain required.
+A separate hosted-only benefit harness collects five alternating fresh-context pairs per latency and forced-GC memory suite. The same immutable app enables the default Entity or opt-in collections implementation. It records source-ready and completed usable-frame times with bounded readback/picking instrumentation; these are instrumented activation diagnostics, not motion p95. It keeps forced GC separate, releases fixture references and image buffers before heap measurements, saves first-usable/settled PNGs, and requires observed acceleration, exact settings, complete scene readiness and cleanup. JS heap deltas exclude native/GPU memory. Use workflow diagnostic `infrastructure-benefit`; 12 report-contract tests pass. Only `local-dams` is covered by this first experiment; datacenter and cable workload coverage remain required.
+
+## First benefit comparison: investigation required
+
+[Run 38125170759](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38125170759) at `c218b192dbc8d4437de9c52aaa54ed25e9b6412c` completes all 20 trials. The [raw report](benefit-38125170759/report.json), all 40 first-usable/settled PNGs, run metadata and [independent verification](benefit-38125170759/verification.json) are retained. Independent verification decodes every PNG, recomputes pixel and file hashes, matches source hashes to the tested Git blobs, checks installed Cesium bytes and recomputes paired metrics. All 40 images are identical at unchanged populations, drawing-buffer dimensions and MSAA.
+
+| Median metric | Entities | Collections | Change |
+| --- | ---: | ---: | ---: |
+| Source-ready time, separate latency suite | 118.5 ms | 165.0 ms | +39.24% |
+| First usable frame after source-ready | 1,913.4 ms | 1,869.3 ms | -2.30% |
+| Total time to first usable frame | 2,008.0 ms | 1,975.9 ms | -1.60% |
+| Enabled post-GC JS heap delta from pre-activation | 37,236,096 bytes | 33,138,848 bytes | -11.00% |
+| Post-layer-destroy JS heap delta | 29,594,760 bytes | 24,285,928 bytes | -17.94% |
+| Post-viewer-destroy JS heap delta | 8,533,368 bytes | 8,612,892 bytes | +0.93% |
+
+The enabled heap improvement appears in all five memory pairs. Source-ready latency worsens in three of five non-GC pairs, exceeding the 10% investigation threshold in the medians. The first Entity latency trial also includes a 6.165-second frame-delay outlier; cold activation was not independently controlled. These data do not establish a repeatable frame-latency gain, a lifecycle retention plateau or full S54 acceptance. The green workflow result certifies complete measurements and matching output; it does not approve the optimization. Collection construction must be investigated before promotion. The hosted Apple paravirtual Metal environment remains supplemental, with physical Windows validation outstanding.
