@@ -12,6 +12,7 @@ import {
   createFixtureViewer,
   createOverlayHost,
   waitForPostRender,
+  waitForStableScene,
   dataSource,
   nativeTargets,
   cleanPick,

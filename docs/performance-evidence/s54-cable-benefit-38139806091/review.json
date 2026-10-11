@@ -19,6 +19,7 @@
   "rerun": {
     "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38140471164",
     "testedCommit": "e77f77de35a7e75c3fc7a7531b59f83ea20018b8",
-    "status": "pending"
+    "status": "failed",
+    "review": "../s54-cable-benefit-38140471164/review.json"
   }
 }
