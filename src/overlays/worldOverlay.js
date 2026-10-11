@@ -2213,13 +2213,6 @@ function snapshotAndProject(
     if (record.placementCacheFontRevision !== fontRevision)
       record.placementCacheFontRevision = fontRevision;
   }
-  // `record.placements` is filtered and pooled by collision arbitration below.
-  // Keep the complete generated set separate so each hit can restore it without
-  // allocating placement objects or rerunning the geometric variant builder.
-  record.placements.length = record.placementVariants.length;
-  for (let i = 0; i < record.placementVariants.length; i++) {
-    record.placements[i] = record.placementVariants[i];
-  }
   // UI exclusion is a PREFERENCE for chrome that composites ABOVE the host, and
   // a HARD VETO for chrome that composites below it.
   //
@@ -2232,8 +2225,8 @@ function snapshotAndProject(
   // below both host surfaces — where a kept placement would render ON TOP of the
   // HUD text. Labels never cover the UI, so those rects keep the absolute veto.
   let softClear = 0;
-  for (let i = 0; i < record.placements.length; i++) {
-    const placement = record.placements[i];
+  for (let i = 0; i < record.placementVariants.length; i++) {
+    const placement = record.placementVariants[i];
     if (overlayRectIntersectsAny(placement.rect, _uiOcclusionRects)) continue;
     record.placements[softClear++] = placement;
   }
@@ -2241,8 +2234,8 @@ function snapshotAndProject(
     // Nothing is clear of everything: fall back to placements that at least
     // clear the below-host chrome, and veto the entry if even that is impossible.
     let hardClear = 0;
-    for (let i = 0; i < record.placements.length; i++) {
-      const placement = record.placements[i];
+    for (let i = 0; i < record.placementVariants.length; i++) {
+      const placement = record.placementVariants[i];
       if (overlayRectIntersectsAnyHard(placement.rect, _uiOcclusionRects))
         continue;
       record.placements[hardClear++] = placement;
