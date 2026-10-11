@@ -25,7 +25,7 @@ layer, rendered, or GPU acceptance test.
 The original candidate source and test, benchmark harness, focused TAP output,
 and complete five-pair report are retained in this directory. The final report
 is [`comparison-final-node24.json`](raw/comparison-final-node24.json). To reproduce the
-comparison, use the isolated S50 worktree at the baseline commit, copy the
+comparison, use the isolated S50 worktree at the baseline commit. Copy
 this evidence directory from the archive commit into that checkout first, then
 copy its candidate snapshots into their source paths as below. The checkout
 needs the pinned dependencies installed. Do not run these copy commands over
