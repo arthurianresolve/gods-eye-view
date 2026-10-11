@@ -58,8 +58,50 @@ coordinate click after scrolling, preserving the recorded complete intersection.
 This setup correction does not erase the earlier results. A fresh browser tab
 also restored control after a stale debugger connection.
 
-Next: compare framebuffer preservation in a separate minimal control while
-keeping antialiasing, buffer dimensions and point count unchanged, then rerun
-the existing Cesium/wind frame and capture controls. Desktop occlusion is still
-unavailable. These short diagnostics do not replace the required matched
-performance runs or sixty-minute retention soak.
+## Framebuffer preservation control
+
+Fixture-only commit `b48c2e301fe2ab364cfbb9f270f4c99968f844b8` adds an explicit
+preservation selector, retaining true as its default. The hardware runs use
+the same Chrome instance in A/B/B/A order (A=true, B=false). Independent
+inspection verifies identical start/end canvas bounds and 894x585 viewport,
+full intersection, 640x360 drawing buffer, 5,000 points, antialiasing and all
+other context attributes. Every run reports uninterrupted visible/focused
+state and no context loss. No local builds or tests ran during this sequence.
+
+| Ordered control | Frames in five seconds | Maximum RAF gap |
+| --- | --- | --- |
+| [A1: preservation true](preserve-a1-true.json) | 36 | 1,000.3 ms |
+| [B1: preservation false](preserve-b1-false.json) | 64 | 783.5 ms |
+| [B2: preservation false](preserve-b2-false.json) | 54 | 983.2 ms |
+| [A2: preservation true](preserve-a2-true.json) | 37 | 999.6 ms |
+| [Plain RAF, same fixture revision](preserve-plain-raf.json) | 285 | 266.3 ms |
+
+Disabling preservation does not eliminate the scheduling stall. These short
+controls establish neither a performance gain nor application capture correctness;
+the production default stays unchanged. The intentionally released WebGL context
+can leave a context-loss icon after the run; cleanup happens after the recorded
+observation window and does not change its `contextLost` result.
+
+## Cesium and wind controls
+
+Four diagnostic runs at `acc471e4` distinguish completed-frame waiting from
+pixel-copy/readback. All use the existing 400 ms per-frame deadline, three
+requests maximum, and a fresh viewer. All report a ready scene and cleaned-up
+listeners/viewer. These are individual observations, not matched latency samples.
+
+| Control | Observation |
+| --- | --- |
+| [Globe only, no copy](wind-globe-no-copy.json) | Three completed frames; 84.4, 145.4 and 15.8 ms waits. |
+| [Globe only, copy](wind-globe-copy.json) | Three copies/readbacks; 21.3, 238.0 and 92.0 ms frame-and-copy waits. |
+| [Paused wind, no copy](wind-paused-no-copy.json) | First request fails at 409.7 ms; the probe stops as designed. |
+| [Paused wind, copy](wind-paused-copy.json) | Three copies/readbacks; 24.5, 30.3 and 32.7 ms frame-and-copy waits. |
+
+Package-boundary checks overlapped the wind diagnostic period, so its differing
+outcomes cannot isolate wind or copying as the cause. The successful copy reports
+retain pixel hashes but no images; they do not prove image equivalence or a
+non-black capture. The failed request remains failed.
+
+Desktop occlusion remains unavailable. Next work must attribute the remaining
+minimal-WebGL scheduling stall separately from the hosted HUD depth-read cost.
+These diagnostics do not replace matched performance runs or the sixty-minute
+retention soak.

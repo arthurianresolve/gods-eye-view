@@ -26,6 +26,11 @@ The exact `acc471e4` revision also passed all seven standard jobs in
 [CI run 38183006552](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38183006552).
 Its optional soak and push-inapplicable layer-token checks were skipped, not
 passed; the Windows hardware frame stall remains a separate unresolved gate.
+The subsequent fixture-only A/B/B/A preservation control at `b48c2e30` keeps
+dimensions, context settings and visibility matched. Both true and false retain
+783-1,000 ms maximum RAF gaps; disabling preservation does not eliminate the
+stall. Production defaults remain unchanged. Raw controls and limited wind
+observations are retained in the same evidence packet.
 
 Previous dev checkpoint (11 October 2026): point integration is pushed at
 `ba7c8738b8505244be06d0f0e3bd873e02d6b2ca`. [All seven standard CI jobs](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
@@ -57,6 +62,15 @@ completes three samples, then fails the page render deadline on the fourth:
 entry takes 4.86 ms, but the next update opportunity arrives over five seconds
 later. This preserves the late-frame failure and requires further attribution.
 The workflow's optional candidate now defaults to its dispatched immutable commit.
+
+[Bounded CPU profiling at `94ab2536`](performance-evidence/s47-boundary-cpu-38184189829/README.md)
+preserves a failed first-idle measurement boundary and a validated profile
+sidecar. Its leading sampled cost is `readPixels`, reached through HUD summary
+context and Cesium depth picking; shader-program queries also contribute.
+Warmup profiling times out and remains unavailable. Statistical sample weights
+are not exact CPU/GPU time, and this hosted software-rendering result does not
+explain the separate Windows no-Cesium scheduling stall. Runtime remediation
+and a successful controlled comparison remain outstanding.
 
 S59 attribution: the [CPU/GC diagnostic at `d91e0873`](performance-evidence/s59-load-profile-38172396175/README.md)
 passes independent recomputation; coordinate conversion takes 14.6 ms of the
