@@ -8,6 +8,8 @@ import { createTrafficFixtureRandom } from './trafficFixtureRandom.mjs';
 import { transformTrafficFixtureRandom } from './trafficFixtureRandomTransform.mjs';
 import { installTrafficFixtureInterception } from './trafficFixtureInterception.mjs';
 import {
+  TRAFFIC_SOURCE_CHANGES,
+  validateTrafficSourceChanges,
   compareTrafficRenderDemandRuns,
   validateTrafficRenderDemandRun,
 } from './trafficRenderDemand.mjs';
@@ -768,4 +770,27 @@ test('traffic comparisons reject missing or mismatched independent random inputs
     () => compareTrafficRenderDemandRuns(baseline, candidate),
     /rendered output differs/,
   );
+});
+
+test('source inventory preserves unchanged traffic model while requiring the intended runtime changes', () => {
+  const baseline = Object.fromEntries(
+    Object.keys(TRAFFIC_SOURCE_CHANGES).map((name) => [name, 'a'.repeat(64)]),
+  );
+  const candidate = Object.fromEntries(
+    Object.entries(TRAFFIC_SOURCE_CHANGES).map(([name, changed]) => [
+      name,
+      (changed ? 'b' : 'a').repeat(64),
+    ]),
+  );
+  validateTrafficSourceChanges(baseline, candidate);
+  for (const [name, changed] of Object.entries(TRAFFIC_SOURCE_CHANGES)) {
+    assert.throws(
+      () =>
+        validateTrafficSourceChanges(baseline, {
+          ...candidate,
+          [name]: (changed ? 'a' : 'b').repeat(64),
+        }),
+      /Unexpected traffic source change status/,
+    );
+  }
 });

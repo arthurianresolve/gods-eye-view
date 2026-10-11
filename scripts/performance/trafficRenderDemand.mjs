@@ -417,3 +417,21 @@ export function compareTrafficRenderDemandRuns(
     phases,
   };
 }
+
+export const TRAFFIC_SOURCE_CHANGES = Object.freeze({
+  'src/layers/traffic/animation.js': true,
+  'src/layers/traffic/model.js': false,
+  'src/layers/traffic/lifecycle.js': true,
+  'src/layers/traffic/rendering.js': true,
+  'src/layers/traffic/retention.js': true,
+  'src/layers/traffic/style.js': true,
+});
+
+export function validateTrafficSourceChanges(baseline, candidate) {
+  for (const [name, changed] of Object.entries(TRAFFIC_SOURCE_CHANGES)) {
+    digest(baseline?.[name], 'baseline ' + name);
+    digest(candidate?.[name], 'candidate ' + name);
+    if ((baseline[name] !== candidate[name]) !== changed)
+      fail('Unexpected traffic source change status: ' + name);
+  }
+}

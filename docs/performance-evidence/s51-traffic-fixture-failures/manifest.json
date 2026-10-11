@@ -118,6 +118,19 @@
       },
       "completedTrials": 4,
       "completedMatchingPairs": 1
+    },
+    {
+      "run": "38122836856",
+      "commit": "c06dec128c5ebba560ecace143fa857fb9aea0b4",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38122836856",
+      "file": "traffic-38122836856.json",
+      "sha256": "7276daa3a1c4d0bc37d67ce5220589ee038c0b237963c3789b7054a094bada5a",
+      "status": "failed",
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected candidate change in src/layers/traffic/model.js"
+      },
+      "completedTrials": 0
     }
   ],
   "acceptance": "These failed runs do not establish an accepted five-pair traffic comparison or physical desktop coverage. Run 38122209754 completed one matching pair before failing the second pair."

@@ -34,6 +34,8 @@ import {
   stopOwnedRecoveryProcessTree,
 } from './profileRecoveryPageOwnership.mjs';
 import {
+  TRAFFIC_SOURCE_CHANGES,
+  validateTrafficSourceChanges,
   compareTrafficRenderDemandRuns,
   validateTrafficRenderDemandRun,
 } from './trafficRenderDemand.mjs';
@@ -87,14 +89,7 @@ const gitBytes = (cwd, ref) => {
   if (result.status !== 0) throw new Error(`git show ${ref} failed in ${cwd}`);
   return result.stdout;
 };
-const TRAFFIC_SOURCES = [
-  'src/layers/traffic/animation.js',
-  'src/layers/traffic/model.js',
-  'src/layers/traffic/lifecycle.js',
-  'src/layers/traffic/rendering.js',
-  'src/layers/traffic/retention.js',
-  'src/layers/traffic/style.js',
-];
+const TRAFFIC_SOURCES = Object.keys(TRAFFIC_SOURCE_CHANGES);
 const CESIUM_RUNTIME_FILES = [
   'cesium/Build/Cesium/Widgets/widgets.css',
   'cesium/Source/Cesium.js',
@@ -702,12 +697,10 @@ try {
     report.sources.candidate.cesiumSourceTrees,
     'Installed Cesium source module trees differ',
   );
-  for (const name of TRAFFIC_SOURCES)
-    assert.notEqual(
-      report.sources.baseline.trafficFiles[name],
-      report.sources.candidate.trafficFiles[name],
-      `Expected candidate change in ${name}`,
-    );
+  validateTrafficSourceChanges(
+    report.sources.baseline.trafficFiles,
+    report.sources.candidate.trafficFiles,
+  );
 
   servers.push(serverFor('baseline', 4187), serverFor('candidate', 4188));
   const urls = await Promise.all(
