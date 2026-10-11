@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "actual-function CPU microbenchmark; not full-layer, rendering, or GPU acceptance",
+  "baselineCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+  "candidateBaseCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+  "candidateWorkingTreeSource": true,
+  "baselineSourceSha256": "3465e545bacfb9f55d04f1365065277323590ad5f8dc715ae3b7fc25be9bdedf",
+  "candidateSourceSha256": "801b0e62c9a9ba2df83a21a16a6a23989a89ee797e4d250de7c4a207faef6ad0",
+  "dependencySha256": {
+    "src/layers/cctv/model.js": "d58d93435cbf6c0307fd1c449a4e31c92a716b7b228aada9a532d53b7320f874",
+    "src/layers/cctv/policy.js": "50782ac74b69d5ebf81f0a1b880edc79cb2cb9210944b954177325c952cd076e",
+    "src/data/cctvFootprint.js": "e7b6a51efcc3cb7845e4ed898bdd9fc01beb6647f3f2b1d23752944400f0570a",
+    "src/data/cctvViewshed.js": "d93c135ae2e73d5e4bc368ab5ebab6c49ea5e43b1fdd744c7149f29062b496b3"
+  },
+  "harnessSha256": "8ba78e8bc9a9d9dcec76a860c550cb8840ac0ed63dc4ce828a448f2733f6291e",
+  "cesium": {
+    "version": "1.138.0",
+    "packageSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4"
+  },
+  "node": "v24.16.0",
+  "forcedGc": false,
+  "records": 12,
+  "stepsPerTrial": 350,
+  "operationCountPerTrial": 4200,
+  "order": "five alternating baseline/candidate pairs per workload",
+  "comparisons": {
+    "unchanged": {
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 34.653099999999995,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          },
+          "candidate": {
+            "elapsedMs": 12.547900000000027,
+            "operations": 4200,
+            "projectPointCalls": 0,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 17.69699999999966,
+            "operations": 4200,
+            "projectPointCalls": 0,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          },
+          "baseline": {
+            "elapsedMs": 27.08849999999984,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 25.45869999999968,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          },
+          "candidate": {
+            "elapsedMs": 12.977499999999964,
+            "operations": 4200,
+            "projectPointCalls": 0,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 11.277900000000045,
+            "operations": 4200,
+            "projectPointCalls": 0,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          },
+          "baseline": {
+            "elapsedMs": 34.93130000000019,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 23.530699999999797,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          },
+          "candidate": {
+            "elapsedMs": 11.508100000000013,
+            "operations": 4200,
+            "projectPointCalls": 0,
+            "outputSha256": "1438d318d33aa80bafd012cfcbff7975083dc380149cf3160030a569d4cadcc4"
+          }
+        }
+      ],
+      "baselineMedianMs": 27.08849999999984,
+      "candidateMedianMs": 12.547900000000027,
+      "medianChangePercent": -53.6781290953722
+    },
+    "moving": {
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 41.05119999999988,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          },
+          "candidate": {
+            "elapsedMs": 47.824499999999716,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 53.64820000000009,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          },
+          "baseline": {
+            "elapsedMs": 35.27539999999999,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 41.29269999999997,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          },
+          "candidate": {
+            "elapsedMs": 48.32600000000002,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 44.56020000000035,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          },
+          "baseline": {
+            "elapsedMs": 33.70199999999977,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 34.24369999999999,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          },
+          "candidate": {
+            "elapsedMs": 34.964100000000144,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "6c6d95e0d3df523d625e5a0fb95c8d8407e46cd24f98acdb5365e85b6ecf4de2"
+          }
+        }
+      ],
+      "baselineMedianMs": 35.27539999999999,
+      "candidateMedianMs": 47.824499999999716,
+      "medianChangePercent": 35.57464975591979
+    },
+    "intermittent-pose": {
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 25.403099999999995,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          },
+          "candidate": {
+            "elapsedMs": 16.43229999999994,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 22.401299999999992,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          },
+          "baseline": {
+            "elapsedMs": 24.978399999999965,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 25.207300000000032,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          },
+          "candidate": {
+            "elapsedMs": 14.859600000000228,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 14.686599999999999,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          },
+          "baseline": {
+            "elapsedMs": 23.87400000000025,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 23.741899999999987,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          },
+          "candidate": {
+            "elapsedMs": 14.22440000000006,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "37ffd4911fc272f154a50c8e31c0cedf9c6ec8acd4ebb39ab4213ec724b27c95"
+          }
+        }
+      ],
+      "baselineMedianMs": 24.978399999999965,
+      "candidateMedianMs": 14.859600000000228,
+      "medianChangePercent": -40.510200813501875
+    },
+    "terrain": {
+      "pairs": [
+        {
+          "pair": 1,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 35.2813000000001,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          },
+          "candidate": {
+            "elapsedMs": 20.747499999999945,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          }
+        },
+        {
+          "pair": 2,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 19.68139999999994,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          },
+          "baseline": {
+            "elapsedMs": 29.978200000000015,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          }
+        },
+        {
+          "pair": 3,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 36.221000000000004,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          },
+          "candidate": {
+            "elapsedMs": 15.66630000000032,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          }
+        },
+        {
+          "pair": 4,
+          "order": [
+            "candidate",
+            "baseline"
+          ],
+          "candidate": {
+            "elapsedMs": 14.872699999999895,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          },
+          "baseline": {
+            "elapsedMs": 25.74459999999999,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          }
+        },
+        {
+          "pair": 5,
+          "order": [
+            "baseline",
+            "candidate"
+          ],
+          "baseline": {
+            "elapsedMs": 27.85230000000047,
+            "operations": 4200,
+            "projectPointCalls": 33600,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          },
+          "candidate": {
+            "elapsedMs": 16.61499999999978,
+            "operations": 4200,
+            "projectPointCalls": 4224,
+            "outputSha256": "16a954dc1d01de63896bf7cff6bfe464fbbcbc3b4f4eff3daa138fb4414e9325"
+          }
+        }
+      ],
+      "baselineMedianMs": 29.978200000000015,
+      "candidateMedianMs": 16.61499999999978,
+      "medianChangePercent": -44.576392178317
+    }
+  }
+}

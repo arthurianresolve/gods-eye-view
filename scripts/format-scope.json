@@ -1024,6 +1024,8 @@
   "scripts/qa-hosted-capture.mjs",
   "scripts/performance/cctvLifecycle.mjs",
   "scripts/performance/cctvLifecycle.test.mjs",
+  "scripts/performance/cctvFrustumInputReuseComparison.mjs",
+  "docs/performance-evidence/s50-frustum-input-reuse-rejected/README.md",
   "scripts/performance/trackedFrameTimeRepro.mjs",
   "scripts/performance/trackedFrameTimeRepro.test.mjs",
   "scripts/performance/trackedFloorCoverage.mjs",
