@@ -14,6 +14,7 @@ import {
   encodeFleetDrawState,
 } from './fleet-draw-state.mjs';
 import { runFleetEmptyLifecycle } from './fleet-empty-lifecycle.mjs';
+import { observeFleetTiming } from './fleet-timing-trace.mjs';
 import {
   snapshotFleetModelProgramState,
   snapshotFleetModelReadiness,
@@ -899,7 +900,12 @@ async function run() {
     'Expected implementation=baseline or candidate',
   );
   check(
-    ['correctness', 'cadence', 'empty-lifecycle'].includes(mode),
+    [
+      'correctness',
+      'cadence',
+      'cadence-diagnostic',
+      'empty-lifecycle',
+    ].includes(mode),
     'Unknown fixture mode',
   );
   check(
@@ -965,20 +971,33 @@ async function run() {
         setSourceIds: fixture.setSourceIds,
         errors: () => fixture.errors,
       });
-    } else if (mode === 'cadence') {
+    } else if (mode === 'cadence' || mode === 'cadence-diagnostic') {
       clock.start();
       await sleep(500);
       const frameStart = fixture.frames.length,
         start = performance.now();
       const observer = fixture.observeFleetCadence(start);
-      await sleep(3000);
-      result.cadence = {
-        durationMs: performance.now() - start,
-        frameTimesMs: fixture.frames.slice(frameStart).map((t) => t - start),
-        demand: governor.getRenderGovernorDiagnostics(),
-        output: fixture.output(),
-        fleetUpdateTimesMs: observer.stop(),
-      };
+      let timing;
+      try {
+        if (mode === 'cadence-diagnostic') {
+          timing = observeFleetTiming({
+            scene: fixture.viewer.scene,
+            maxEvents: 20000,
+          });
+          timing.report.cadenceStartOffsetMs = timing.report.start - start;
+        }
+        await sleep(mode === 'cadence-diagnostic' ? 10000 : 3000);
+        result.cadence = {
+          durationMs: performance.now() - start,
+          frameTimesMs: fixture.frames.slice(frameStart).map((t) => t - start),
+          demand: governor.getRenderGovernorDiagnostics(),
+          output: fixture.output(),
+          fleetUpdateTimesMs: observer.stop(),
+        };
+      } finally {
+        observer.stop();
+        if (timing) result.timingTrace = timing.stop();
+      }
       assertCheck(
         'cadence-delivers-frames',
         result.cadence.frameTimesMs.length >= 10,

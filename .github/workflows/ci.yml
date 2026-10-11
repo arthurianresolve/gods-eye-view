@@ -34,7 +34,15 @@ on:
         description: Workload for the isolated hosted Mac diagnostic
         type: choice
         options:
-          [collections, wind, infrastructure, vessels, calibration, fleets]
+          [
+            collections,
+            wind,
+            infrastructure,
+            vessels,
+            calibration,
+            fleets,
+            fleets-timing,
+          ]
         default: collections
       hosted_gpu_probe:
         description: Probe native WebGL on free standard hosted runners
@@ -783,6 +791,8 @@ jobs:
         run: |
           if [ "$DIAGNOSTIC" = "fleets" ]; then
             node scripts/qa-fleet-render-demand.mjs
+          elif [ "$DIAGNOSTIC" = "fleets-timing" ]; then
+            FLEET_TIMING_DIAGNOSTIC=1 node scripts/qa-fleet-render-demand.mjs
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
@@ -795,10 +805,10 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Preserve fleet comparison evidence after success or failure
-        if: always() && inputs.renderer_diagnostic == 'fleets'
+        if: always() && (inputs.renderer_diagnostic == 'fleets' || inputs.renderer_diagnostic == 'fleets-timing')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: fleets-comparison-${{ github.run_id }}
+          name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}
           path: qa-artifacts/fleet-render-demand.json
           if-no-files-found: error
           retention-days: 3

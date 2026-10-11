@@ -469,6 +469,11 @@ function intervals(times, duration, label) {
 
 /** Validate raw evidence, including independently decoded pixels, before making a claim. */
 export async function validateFleetComparison(report) {
+  assert.notEqual(
+    report.diagnosticOnly,
+    true,
+    'Instrumented diagnostics cannot establish performance acceptance',
+  );
   assert.match(report.baseline, /^[a-f0-9]{40}$/);
   assert.match(report.candidate, /^[a-f0-9]{40}$/);
   assert.notEqual(report.baseline, report.candidate);

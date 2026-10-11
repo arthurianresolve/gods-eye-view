@@ -1181,5 +1181,9 @@
   "scripts/fixtures/fleet-draw-state.test.mjs",
   "scripts/fixtures/fleet-empty-lifecycle.mjs",
   "scripts/fixtures/fleet-program-state.mjs",
-  "scripts/fixtures/fleet-program-state.test.mjs"
+  "scripts/fixtures/fleet-program-state.test.mjs",
+  "scripts/fixtures/fleet-timing-trace.mjs",
+  "scripts/fixtures/fleet-timing-trace.test.mjs",
+  "scripts/performance/fleetTiming.mjs",
+  "scripts/performance/fleetTiming.test.mjs"
 ]

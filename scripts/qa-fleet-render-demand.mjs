@@ -31,6 +31,7 @@ import {
   validateFleetRepeat,
   validateFleetEmptyLifecycle,
 } from './performance/fleetComparison.mjs';
+import { summarizeFleetTiming } from './performance/fleetTiming.mjs';
 
 // A local user's Chrome is controlled exclusively through the visible browser
 // tool. This driver owns only the disposable browser in a standard hosted job.
@@ -52,6 +53,7 @@ const files = [
   'scripts/fixtures/fleet-draw-state.mjs',
   'scripts/fixtures/fleet-empty-lifecycle.mjs',
   'scripts/fixtures/fleet-program-state.mjs',
+  'scripts/fixtures/fleet-timing-trace.mjs',
 ];
 
 if (process.argv[2] === '--serve') {
@@ -95,6 +97,7 @@ if (process.argv[2] === '--serve') {
 } else {
   const candidateRoot = await realpath(path.resolve('.'));
   const candidate = git(candidateRoot, ['rev-parse', 'HEAD']);
+  const diagnosticOnly = process.env.FLEET_TIMING_DIAGNOSTIC === '1';
   if (!/^[a-f0-9]{40}$/.test(candidate) || candidate !== process.env.GITHUB_SHA)
     throw new Error('Candidate must equal the immutable workflow revision');
   if (git(candidateRoot, ['status', '--porcelain', '--untracked-files=no']))
@@ -110,7 +113,10 @@ if (process.argv[2] === '--serve') {
   let browser,
     worktreeAdded = false;
   const report = {
-    schema: 'gev-hosted-fleet-comparison/v1',
+    schema: diagnosticOnly
+      ? 'gev-hosted-fleet-timing/v1'
+      : 'gev-hosted-fleet-comparison/v1',
+    diagnosticOnly,
     baseline: BASELINE,
     candidate,
     harness: candidate,
@@ -122,8 +128,9 @@ if (process.argv[2] === '--serve') {
     fixtureHashes: {},
     sourceHashes: {},
     serverErrors: [],
-    scope:
-      'Actual fleet layers: fixed-time pixel/position equivalence and real-time untracked render cadence. Hosted acceleration is not physical desktop evidence or full-app motion-p95 acceptance.',
+    scope: diagnosticOnly
+      ? 'Instrumented timer and CPU attribution only. No latency, visual-equivalence or performance acceptance claim. Both revisions use common candidate dependencies.'
+      : 'Actual fleet layers: fixed-time pixel/position equivalence and real-time untracked render cadence. Hosted acceleration is not physical desktop evidence or full-app motion-p95 acceptance.',
   };
   async function persistReport() {
     await mkdir('qa-artifacts', { recursive: true });
@@ -339,81 +346,125 @@ if (process.argv[2] === '--serve') {
     });
     report.browserVersion = await browser.version();
     report.graphics = await readBrowserGraphicsInfo(browser);
-    report.emptyLifecycle = await sample(
-      candidateUrl,
-      'candidate',
-      candidate,
-      'empty-lifecycle',
-    );
-    try {
-      report.emptyLifecycleValidation = validateFleetEmptyLifecycle(
-        report.emptyLifecycle,
-        report,
-      );
-    } catch (error) {
-      // Independent lifecycle evidence must not suppress the baseline draw
-      // diagnosis. A failed lifecycle still prevents overall acceptance.
-      report.emptyLifecycleValidation = {
-        status: 'failed',
-        error: String(error.stack || error).slice(0, 2000),
-      };
-    }
-    // Prove the fixed-time protocol can reproduce the unchanged baseline
-    // before spending time on candidate comparisons or drawing conclusions.
-    for (let i = 0; i < 2; i++) {
-      const result = await sample(
-        baselineUrl,
-        'baseline',
-        BASELINE,
-        'correctness',
-      );
-      report.baselineRepeat.push(result);
-      await persistReport();
-      if (result.status !== 'passed' || result.pageErrors.length)
-        throw new Error(
-          `Baseline repeat ${i + 1}: ${result.error || 'fixture failed'}`,
-        );
-    }
-    report.baselineRepeatValidation = await validateFleetRepeat(
-      ...report.baselineRepeat,
-      report,
-    );
-    for (let i = 0; i < 5; i++) {
-      const pair = {
-        pair: i + 1,
-        order: i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
-        correctness: {},
-        cadence: {},
-      };
-      report.pairs.push(pair);
-      for (const mode of ['correctness', 'cadence']) {
+    if (diagnosticOnly) {
+      report.diagnosticPairs = [];
+      for (let i = 0; i < 2; i++) {
+        const pair = {
+          pair: i + 1,
+          order: i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
+          samples: {},
+          summaries: {},
+        };
+        report.diagnosticPairs.push(pair);
         for (const implementation of pair.order) {
+          const commit = implementation === 'baseline' ? BASELINE : candidate;
           const result = await sample(
             implementation === 'baseline' ? baselineUrl : candidateUrl,
             implementation,
-            implementation === 'baseline' ? BASELINE : candidate,
-            mode,
+            commit,
+            'cadence-diagnostic',
           );
-          pair[mode][implementation] = result;
+          pair.samples[implementation] = result;
           await persistReport();
-          if (result.status !== 'passed' || result.pageErrors.length)
+          if (
+            result.status !== 'passed' ||
+            result.pageErrors.length ||
+            result.applicationCommit !== commit ||
+            result.harnessCommit !== candidate
+          )
             throw new Error(
-              `${implementation}/${mode}: ${result.error || result.pageErrors.join('; ') || 'fixture failed'}`,
+              `${implementation}: timing fixture failed or source identity differs`,
             );
-          const renderer = classifyRenderer(
+          if (result.mode !== 'cadence-diagnostic')
+            throw new Error('Wrong timing diagnostic mode');
+          report.rendering = classifyRenderer(
             result.settings?.environment?.renderer,
             report.graphics,
           );
-          report.rendering = renderer;
-          if (!renderer.accelerationVerified)
+          if (!report.rendering.accelerationVerified)
             throw new Error('Hosted accelerated rendering is unavailable');
+          pair.summaries[implementation] = summarizeFleetTiming(
+            result.timingTrace,
+          );
         }
       }
-      process.stdout.write(`Completed actual-source fleet pair ${i + 1}/5\n`);
+    } else {
+      report.emptyLifecycle = await sample(
+        candidateUrl,
+        'candidate',
+        candidate,
+        'empty-lifecycle',
+      );
+      try {
+        report.emptyLifecycleValidation = validateFleetEmptyLifecycle(
+          report.emptyLifecycle,
+          report,
+        );
+      } catch (error) {
+        // Independent lifecycle evidence must not suppress the baseline draw
+        // diagnosis. A failed lifecycle still prevents overall acceptance.
+        report.emptyLifecycleValidation = {
+          status: 'failed',
+          error: String(error.stack || error).slice(0, 2000),
+        };
+      }
+      // Prove the fixed-time protocol can reproduce the unchanged baseline
+      // before spending time on candidate comparisons or drawing conclusions.
+      for (let i = 0; i < 2; i++) {
+        const result = await sample(
+          baselineUrl,
+          'baseline',
+          BASELINE,
+          'correctness',
+        );
+        report.baselineRepeat.push(result);
+        await persistReport();
+        if (result.status !== 'passed' || result.pageErrors.length)
+          throw new Error(
+            `Baseline repeat ${i + 1}: ${result.error || 'fixture failed'}`,
+          );
+      }
+      report.baselineRepeatValidation = await validateFleetRepeat(
+        ...report.baselineRepeat,
+        report,
+      );
+      for (let i = 0; i < 5; i++) {
+        const pair = {
+          pair: i + 1,
+          order: i % 2 ? ['candidate', 'baseline'] : ['baseline', 'candidate'],
+          correctness: {},
+          cadence: {},
+        };
+        report.pairs.push(pair);
+        for (const mode of ['correctness', 'cadence']) {
+          for (const implementation of pair.order) {
+            const result = await sample(
+              implementation === 'baseline' ? baselineUrl : candidateUrl,
+              implementation,
+              implementation === 'baseline' ? BASELINE : candidate,
+              mode,
+            );
+            pair[mode][implementation] = result;
+            await persistReport();
+            if (result.status !== 'passed' || result.pageErrors.length)
+              throw new Error(
+                `${implementation}/${mode}: ${result.error || result.pageErrors.join('; ') || 'fixture failed'}`,
+              );
+            const renderer = classifyRenderer(
+              result.settings?.environment?.renderer,
+              report.graphics,
+            );
+            report.rendering = renderer;
+            if (!renderer.accelerationVerified)
+              throw new Error('Hosted accelerated rendering is unavailable');
+          }
+        }
+        process.stdout.write(`Completed actual-source fleet pair ${i + 1}/5\n`);
+      }
+      report.comparison = await validateFleetComparison(report);
+      if (report.emptyLifecycleValidation.status !== 'passed')
+        throw new Error('Empty fleet lifecycle validation failed');
     }
-    report.comparison = await validateFleetComparison(report);
-    if (report.emptyLifecycleValidation.status !== 'passed')
-      throw new Error('Empty fleet lifecycle validation failed');
     report.status = 'passed';
   } catch (error) {
     report.status = 'failed';
