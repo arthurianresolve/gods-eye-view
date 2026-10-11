@@ -44,6 +44,7 @@ on:
           - calibration
           - traffic
           - cable-references
+          - cable-benefit
         default: collections
       hosted_gpu_probe:
         description: Probe native WebGL on free standard hosted runners
@@ -777,7 +778,7 @@ jobs:
     name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
-    timeout-minutes: ${{ (inputs.renderer_diagnostic == 'traffic' || inputs.renderer_diagnostic == 'cable-references') && 20 || 10 }}
+    timeout-minutes: ${{ inputs.renderer_diagnostic == 'cable-benefit' && 75 || (inputs.renderer_diagnostic == 'traffic' || inputs.renderer_diagnostic == 'cable-references') && 20 || 10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -804,6 +805,8 @@ jobs:
             node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/infrastructure-benefit
           elif [ "$DIAGNOSTIC" = "infrastructure-benefit-datacenters" ]; then
             node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/infrastructure-benefit-datacenters --layer-id local-datacenters
+          elif [ "$DIAGNOSTIC" = "cable-benefit" ]; then
+            node scripts/performance/cableBenefitComparison.mjs qa-artifacts/cable-benefit
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
@@ -829,6 +832,14 @@ jobs:
         with:
           name: traffic-comparison-${{ github.run_id }}
           path: qa-artifacts/traffic-render-demand
+          if-no-files-found: error
+          retention-days: 3
+      - name: Preserve cable benefit evidence after success or failure
+        if: always() && inputs.renderer_diagnostic == 'cable-benefit'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cable-benefit-${{ github.run_id }}
+          path: qa-artifacts/cable-benefit/
           if-no-files-found: error
           retention-days: 3
       - name: Remove the owned traffic baseline checkout
