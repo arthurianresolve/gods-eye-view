@@ -7,6 +7,7 @@ import { createSubmarineCableLayer } from '../../src/layers/submarineCables/inde
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import { createCableCameraSweepGate } from './cableCameraSweep.mjs';
+import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
 import {
   CABLE_REFERENCE_RENDER_CASES,
   CABLE_REFERENCE_RENDER_POPULATION,
@@ -1293,17 +1294,11 @@ async function runLifetime({
         mode === 'entities' ? null : baselineTarget,
       );
       if (!selected.pointOwner || !selected.stemOwner) {
-        lifetime.nativePickFailure = {
+        const pickFailure = {
           caseId,
+          reason: 'Native point and/or stem pick did not resolve to its owner.',
           camera: cameraContracts[caseId],
-          cameraAfterSearch: cameraVector(viewer),
           cameraSweep: cameraSweeps[caseId] || null,
-          scene: {
-            dataSourceDisplayReady: viewer.dataSourceDisplay.ready === true,
-            globeTilesLoaded: viewer.scene.globe.tilesLoaded === true,
-            frameNumber: viewer.scene.frameState?.frameNumber ?? null,
-            lod: layer.getLodDiagnostics(),
-          },
           visibleReferenceCount: selected.diagnostics.visibleReferences,
           population: CABLE_REFERENCE_RENDER_POPULATION.referenceRecords,
           search: selected.diagnostics,
@@ -1316,9 +1311,18 @@ async function runLifetime({
               ? cleanPick(selected.stem, selected.stemOwner)
               : null,
         };
+        lifetime.nativePickFailure = pickFailure;
+        try {
+          pickFailure.cameraAfterSearch = cameraVector(viewer);
+        } catch (cameraError) {
+          pickFailure.cameraDiagnosticError = String(
+            cameraError?.message || cameraError,
+          ).slice(0, 1000);
+        }
+        appendCableFailureDiagnostics(pickFailure, viewer, layer);
         try {
           const lastFrame = await capturePixels(viewer);
-          lifetime.nativePickFailure.lastFrame = {
+          pickFailure.lastFrame = {
             width: lastFrame.width,
             height: lastFrame.height,
             pixelSha256: lastFrame.pixelSha256,
@@ -1327,23 +1331,22 @@ async function runLifetime({
               : { pngOmittedReason: 'PNG exceeds the 4 MB evidence cap.' }),
           };
         } catch (captureError) {
-          lifetime.nativePickFailure.lastFrameError = String(
+          pickFailure.lastFrameError = String(
             captureError?.message || captureError,
           ).slice(0, 1000);
         }
         try {
           const current = await sourceGeometryHash();
-          lifetime.nativePickFailure.geometrySha256 = current.geometrySha256;
-          lifetime.nativePickFailure.styleSha256 = current.styleSha256;
-          lifetime.nativePickFailure.overlaySha256 = current.overlaySha256;
-          lifetime.nativePickFailure.visibleReferenceCount =
+          pickFailure.geometrySha256 = current.geometrySha256;
+          pickFailure.styleSha256 = current.styleSha256;
+          pickFailure.overlaySha256 = current.overlaySha256;
+          pickFailure.visibleReferenceCount =
             current.view.referenceData.items.filter(
               (item) => item.visible,
             ).length;
-          lifetime.nativePickFailure.population =
-            current.view.referenceData.items.length;
+          pickFailure.population = current.view.referenceData.items.length;
         } catch (diagnosticError) {
-          lifetime.nativePickFailure.geometryDiagnosticError = String(
+          pickFailure.geometryDiagnosticError = String(
             diagnosticError?.message || diagnosticError,
           ).slice(0, 1000);
         }
