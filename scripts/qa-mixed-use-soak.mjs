@@ -29,7 +29,7 @@ export async function runMixedUseSoak({
     browserOptions,
     expectedCommit,
   });
-  let report;
+  let report, runFailure;
   try {
     for (let i = 0; i < (driver.warmupIterations || 0); i++)
       await driver.runCycle(i);
@@ -131,8 +131,27 @@ export async function runMixedUseSoak({
       error.soakReport = report;
       throw error;
     }
+  } catch (error) {
+    runFailure = error;
+    throw error;
   } finally {
-    if (ownsDriver) await driver.close();
+    if (ownsDriver) {
+      try {
+        const close = await driver.close();
+        if (report) report.browserClose = close;
+      } catch (error) {
+        if (report) {
+          report.browserClose = error.browserClose || { closeCompleted: false };
+          report.cleanupError =
+            'Application soak browser did not close normally.';
+          report.operationStatus = 'failed';
+        }
+        if (!runFailure) {
+          error.soakReport = report;
+          throw error;
+        }
+      }
+    }
   }
 }
 

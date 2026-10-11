@@ -6,6 +6,7 @@ import {
 } from './performance/rendererEvidence.mjs';
 export { isSoftwareRenderer } from './performance/rendererEvidence.mjs';
 import { installWorkerDiagnostics } from './performance/workerDiagnostics.mjs';
+import { createOwnedSoakCloser } from './performance/hostedSoakSession.mjs';
 import {
   launchFixtureBrowser,
   prepareFixturePage,
@@ -21,6 +22,7 @@ export async function createRenderedSoakDriver(
   { browserOptions = {}, expectedCommit } = {},
 ) {
   const browser = await launchFixtureBrowser(browserOptions);
+  const closeBrowser = createOwnedSoakCloser(browser);
   let cameraFailure = true;
   let archiveFailure = true;
   let archiveCalls = 0;
@@ -571,12 +573,17 @@ export async function createRenderedSoakDriver(
           },
         };
       },
-      async close() {
-        await browser.close();
-      },
+      close: closeBrowser,
     };
   } catch (error) {
-    await browser.close();
+    try {
+      error.browserClose = await closeBrowser();
+    } catch (cleanupError) {
+      error.browserClose = cleanupError.browserClose || {
+        closeCompleted: false,
+      };
+      error.cleanupError = 'Application soak browser did not close normally.';
+    }
     throw error;
   }
 }

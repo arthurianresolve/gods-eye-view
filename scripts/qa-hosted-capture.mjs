@@ -8,6 +8,7 @@ import {
 } from './performance/rendererEvidence.mjs';
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
+import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
@@ -454,29 +455,20 @@ try {
       });
     }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
-      await browser.close();
+      const probeBrowser = browser;
       browser = null;
-      const driver = await createRenderedSoakDriver('http://127.0.0.1:4184', {
-        expectedCommit: commit,
+      await runHostedSoakSession({
+        report,
+        probeBrowser,
+        closeProbeBrowser: closeOwnedBrowser,
+        createDriver: () =>
+          createRenderedSoakDriver('http://127.0.0.1:4184', {
+            expectedCommit: commit,
+          }),
+        runSoak: runMixedUseSoak,
+        commit,
+        progress: (value) => console.log(JSON.stringify(value)),
       });
-      try {
-        if (!driver.hardwareRenderingValidated)
-          throw new Error('Soak browser did not retain verified acceleration');
-        report.soak = await runMixedUseSoak({
-          driver,
-          progress: (value) => console.log(JSON.stringify(value)),
-        });
-        report.soak.candidateCommit = commit;
-        if (!report.soak.fullSoak || report.soak.stability.status !== 'passed')
-          throw new Error(
-            'Hosted accelerated soak did not pass stability acceptance',
-          );
-      } catch (error) {
-        if (error.soakReport) report.soak = error.soakReport;
-        throw error;
-      } finally {
-        await driver.close();
-      }
     }
   }
 } catch (error) {

@@ -311,14 +311,26 @@ function validateRetentionReport(report, candidateCommit, environmentId) {
       )
         errors.push(`Hosted soak envelope and inner ${field} disagree.`);
     }
-    if (
-      envelope.cleanupError ||
-      envelope.browserClose?.closeCompleted === false ||
-      envelope.browserClose?.forcedProcessTermination === true
-    )
+    if (envelope.cleanupError)
       errors.push('Hosted soak envelope reports incomplete browser cleanup.');
-    else if (envelope.browserClose?.closeCompleted !== true)
-      pending.push('Hosted soak browser cleanup evidence is unavailable.');
+    for (const [field, owner] of [
+      ['browserClose', 'soak'],
+      ['probeBrowserClose', 'probe'],
+    ]) {
+      const close = envelope[field];
+      if (
+        close?.closeCompleted === false ||
+        close?.forcedProcessTermination === true
+      )
+        errors.push(`Hosted ${owner} reports incomplete browser cleanup.`);
+      else if (
+        close?.closeCompleted !== true ||
+        close?.forcedProcessTermination !== false
+      )
+        pending.push(
+          `Hosted ${owner} browser cleanup evidence is unavailable.`,
+        );
+    }
     for (const environment of [envelope.environment, report?.environment]) {
       if (environment?.hosted === false)
         errors.push(
@@ -623,10 +635,12 @@ function retentionOutcome(rows) {
   const failures = rows.flatMap((row) =>
     row.errors.map((message) => `${row.environmentId}: ${message}`),
   );
-  const pending = primaryRows
+  const pending = rows
     .filter((row) => row.status === 'pending')
     .flatMap((row) => [
-      `${row.environmentId}: ${row.stability.pending.join(' ')}`,
+      ...row.stability.pending.map(
+        (message) => `${row.environmentId}: ${message}`,
+      ),
       ...row.pending.map((message) => `${row.environmentId}: ${message}`),
     ]);
   if (!rows.length) pending.push('No raw retention report was supplied.');
@@ -641,11 +655,9 @@ function retentionOutcome(rows) {
     environments: rows.map((row) => ({
       environmentId: row.environmentId,
       status:
-        row.status === 'failed'
-          ? 'failed'
-          : row.primaryEligible
-            ? row.status
-            : 'supplemental',
+        row.status !== 'passed' || row.primaryEligible
+          ? row.status
+          : 'supplemental',
       primaryEligible: row.primaryEligible,
       renderer: row.renderer,
       artifact: row.artifact,

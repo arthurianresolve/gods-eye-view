@@ -153,6 +153,10 @@ function makeHostedRetentionEnvelope() {
     platform: 'darwin',
     environment: { ...environment },
     browserClose: { closeCompleted: true, forcedProcessTermination: false },
+    probeBrowserClose: {
+      closeCompleted: true,
+      forcedProcessTermination: false,
+    },
     soak: makeRetentionReport({
       renderer: {
         renderer:
@@ -215,6 +219,13 @@ test('failed hosted envelope or cleanup cannot be hidden by a passing inner soak
       'incomplete-close',
       (value) => {
         value.browserClose.closeCompleted = false;
+      },
+      /incomplete browser cleanup/,
+    ],
+    [
+      'forced-probe-close',
+      (value) => {
+        value.probeBrowserClose.forcedProcessTermination = true;
       },
       /incomplete browser cleanup/,
     ],
@@ -354,6 +365,20 @@ test('missing hosted provenance stays pending without filling from the other lev
       /cleanup evidence/,
     ],
     [
+      'probe-cleanup',
+      (value) => {
+        delete value.probeBrowserClose;
+      },
+      /cleanup evidence/,
+    ],
+    [
+      'unknown-force-status',
+      (value) => {
+        delete value.browserClose.forcedProcessTermination;
+      },
+      /cleanup evidence/,
+    ],
+    [
       'hosted',
       (value) => {
         delete value.environment.hosted;
@@ -386,6 +411,7 @@ test('missing hosted provenance stays pending without filling from the other lev
         result.retention[0].pending.some((message) => pending.test(message)),
       );
       assert.equal(result.retentionOutcome.status, 'pending');
+      assert.equal(result.retentionOutcome.environments[0].status, 'pending');
       assert.equal(result.retention[0].artifact.sha256, digest(envelope));
     });
   }
@@ -747,6 +773,33 @@ test('invalid supplemental retention cannot disappear behind a valid primary run
   );
   assert.equal(result.retentionOutcome.environments[1].status, 'failed');
   assert.ok(result.retentionOutcome.environments[1].errors.length > 0);
+});
+
+test('missing supplemental cleanup remains pending beside a valid primary run', async () => {
+  const setup = await setupManifest();
+  const hosted = makeHostedRetentionEnvelope();
+  delete hosted.probeBrowserClose;
+  setup.evidence.retention.push(
+    {
+      environmentId: 'windows-primary',
+      report: await setup.writeArtifact('primary', makeRetentionReport()),
+    },
+    {
+      environmentId: 'hosted',
+      report: await setup.writeArtifact('hosted', hosted),
+    },
+  );
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.equal(result.retentionOutcome.status, 'pending');
+  assert.equal(result.retentionOutcome.environments[1].status, 'pending');
+  assert.ok(
+    result.retentionOutcome.pending.some((message) =>
+      /hosted: Hosted probe browser cleanup/.test(message),
+    ),
+  );
 });
 
 test('renderer classification uses recorded host data, never the ingestion process', () => {
