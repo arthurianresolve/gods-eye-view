@@ -60,11 +60,14 @@ export function consumeInBatches(iterator, options = {}) {
           if (signal?.aborted) return abort();
           const stepStarted = onStep ? now() : null;
           const next = iterator.next();
-          if (onStep)
+          if (onStep) {
+            const stepEnded = now();
             onStep(
-              Math.max(0, now() - stepStarted),
+              Math.max(0, stepEnded - stepStarted),
               next.done ? 'completed' : next.value,
+              { startMs: stepStarted, endMs: stepEnded },
             );
+          }
           if (finished) return;
           if (next.done) {
             if (onBatch)

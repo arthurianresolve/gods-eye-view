@@ -172,16 +172,20 @@ test('optional step observation reports bounded iterator work without changing r
       const index = queued.indexOf(callback);
       if (index >= 0) queued.splice(index, 1);
     },
-    onStep(activeMs, stage) {
-      steps.push({ activeMs, stage });
+    onStep(activeMs, stage, interval) {
+      steps.push({ activeMs, stage, interval });
     },
   });
   while (queued.length) queued.shift()();
   assert.equal(await pending, 'complete');
   assert.deepEqual(steps, [
-    { activeMs: 2, stage: 'entity' },
-    { activeMs: 5, stage: 'coordinate-chunk' },
-    { activeMs: 1, stage: 'completed' },
+    { activeMs: 2, stage: 'entity', interval: { startMs: 0, endMs: 2 } },
+    {
+      activeMs: 5,
+      stage: 'coordinate-chunk',
+      interval: { startMs: 2, endMs: 7 },
+    },
+    { activeMs: 1, stage: 'completed', interval: { startMs: 7, endMs: 8 } },
   ]);
 });
 

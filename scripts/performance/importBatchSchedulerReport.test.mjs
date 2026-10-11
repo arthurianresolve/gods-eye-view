@@ -141,6 +141,109 @@ function validReport() {
   };
 }
 
+function traceAttributedReport() {
+  const report = validReport();
+  report.performanceAcceptanceEligible = false;
+  report.cooperativeScheduler.stepObserver =
+    'per-iterator-next timing with bounded V8 GC trace overlap; diagnostic-only';
+  const anchors = [];
+  const windows = [];
+  const summaryRows = [];
+  const cooperative = report.samples.filter(
+    (sample) => sample.mode === 'cooperative',
+  );
+  cooperative.push({
+    pair: 5,
+    mode: 'geometry-cooperative',
+    batchMetrics: report.largeGeometry.cooperative.batchMetrics,
+  });
+  cooperative.forEach((sample, index) => {
+    const label =
+      sample.mode === 'geometry-cooperative'
+        ? 'geometry:cooperative'
+        : `sample:${sample.pair}:${sample.mode}`;
+    const loadMarker = `gev-import-step:${label}`;
+    const stepMarker = `gev-import-step:step:${label}:entity:1`;
+    anchors.push(
+      { name: loadMarker, pageNowMs: 100 + index * 100, uncertaintyMs: 0.05 },
+      { name: stepMarker, pageNowMs: 120 + index * 100, uncertaintyMs: 0.05 },
+    );
+    const steps = iteratorSteps();
+    steps.slowStepWindows = [
+      {
+        stage: 'entity',
+        startMs: 112 + index * 100,
+        endMs: 120 + index * 100,
+        durationMs: 8,
+        markerName: stepMarker,
+        anchorUncertaintyMs: 0.05,
+      },
+    ];
+    steps.omittedSlowStepWindows = 0;
+    sample.batchMetrics.iteratorSteps = steps;
+    windows.push({
+      pair: sample.pair,
+      mode: sample.mode,
+      markerName: loadMarker,
+      startMs: 100 + index * 100,
+      endMs: 150 + index * 100,
+      overBudgetSteps: 1,
+      slowSteps: steps.slowStepWindows,
+      omittedSlowSteps: 0,
+    });
+    summaryRows.push({
+      pair: sample.pair,
+      mode: sample.mode,
+      aligned: true,
+      overBudgetSteps: 1,
+      recordedSlowSteps: 1,
+      omittedSlowSteps: 0,
+      v8GcSlicesOverlappingLoad: 0,
+      v8GcSlicesOtherThreadsOverlappingLoad: 0,
+      sameThreadGcOverlapMs: 0,
+      otherThreadGcOverlapMs: 0,
+      v8GcSlicesOverlappingSlowSteps: 0,
+      slowStepGcOverlapMs: 0,
+      traceProcessId: 1,
+      traceThreadId: 2,
+      steps: [
+        {
+          stage: 'entity',
+          aligned: true,
+          otherThreadGcSlices: 0,
+          otherThreadGcOverlapMs: 0,
+        },
+      ],
+    });
+  });
+  report.importTraceAttribution = {
+    schema: 'gev-import-trace-attribution/v1',
+    performanceAcceptanceEligible: false,
+    traceAnchors: anchors,
+    loadingWindows: windows,
+    traceSummary: {
+      schema: 'gev-import-trace-attribution/v1',
+      complete: true,
+      performanceAcceptanceEligible: false,
+      scope:
+        'Chrome trace capture spans the entire diagnostic fixture, including setup and teardown; attribution is restricted to the six measured loading windows.',
+      categories: 'devtools.timeline,disabled-by-default-v8.gc',
+      traceEventAccounting:
+        'Counts normalized markers, complete GC X slices, paired B/E GC slices, and instant observations. Unmatched/malformed GC records are omitted and make the summary incomplete.',
+      traceRelevantEvents: anchors.length,
+      retainedTraceEvents: anchors.length,
+      omittedTraceEvents: 0,
+      bufferUsagePeak: 0.1,
+      errors: [],
+      observedMarkers: anchors.map((anchor) => anchor.name).sort(),
+      gcSlices: [],
+      gcInstantObservations: [],
+      loadingWindows: summaryRows,
+    },
+  };
+  return report;
+}
+
 test('accepts complete paired production-scheduler evidence', () => {
   assert.deepEqual(validateImportBatchSchedulerReport(validReport(), commit), {
     valid: true,
@@ -194,6 +297,50 @@ test('accepts bounded iterator-step attribution only when excluded from acceptan
       error.includes('stage totals do not reconcile'),
     ),
   );
+});
+
+test('accepts complete loading trace with per-step same-trace anchors', () => {
+  const report = traceAttributedReport();
+  assert.deepEqual(validateImportBatchSchedulerReport(report, commit), {
+    valid: true,
+    errors: [],
+  });
+});
+
+test('rejects incomplete or misbound loading trace evidence', () => {
+  for (const mutate of [
+    (bad) => {
+      bad.importTraceAttribution.traceAnchors.pop();
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceAnchors.push(
+        bad.importTraceAttribution.traceAnchors[0],
+      );
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.complete = false;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.scope = 'loading only';
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.traceRelevantEvents += 1;
+    },
+    (bad) => {
+      bad.importTraceAttribution.traceSummary.loadingWindows[0].steps[0].aligned = false;
+    },
+    (bad) => {
+      bad.performanceAcceptanceEligible = true;
+    },
+    (bad) => {
+      delete bad.samples.find((sample) => sample.mode === 'cooperative')
+        .batchMetrics.iteratorSteps.slowStepWindows[0].markerName;
+    },
+  ]) {
+    const bad = traceAttributedReport();
+    mutate(bad);
+    assert.equal(validateImportBatchSchedulerReport(bad, commit).valid, false);
+  }
 });
 
 test('rejects a timer-injected candidate even when status says passed', () => {

@@ -53,6 +53,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/importEntityClearOrder.test.mjs',
   'scripts/performance/csvDecodeComparison.test.mjs',
   'scripts/performance/importBatchSchedulerReport.test.mjs',
+  'scripts/performance/importTraceAttribution.test.mjs',
   'scripts/performance/sampledCpuProfile.test.mjs',
   'scripts/performance/militaryTrackedFrameTimeRepro.test.mjs',
   'scripts/performance/windFrameProbe.test.mjs',

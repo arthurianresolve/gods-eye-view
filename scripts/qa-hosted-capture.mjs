@@ -12,6 +12,12 @@ import { validateInfrastructureCollectionReport } from './performance/infrastruc
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { validateImportBatchSchedulerReport } from './performance/importBatchSchedulerReport.mjs';
+import {
+  IMPORT_TRACE_CATEGORIES,
+  IMPORT_TRACE_EVENT_LIMIT,
+  createImportTraceEventCollector,
+  summarizeImportTraceAttribution,
+} from './performance/importTraceAttribution.mjs';
 import { startFixtureCpuProfile } from './performance/sampledCpuProfile.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
@@ -57,6 +63,84 @@ const closeOwnedBrowser = (ownedBrowser) =>
     timeoutMs: 5000,
     forceProcess: () => stopOwnedRecoveryProcessTree(ownedBrowser.process()),
   });
+async function startImportLoadingTrace(page) {
+  const session = await page.createCDPSession();
+  const collector = createImportTraceEventCollector(IMPORT_TRACE_EVENT_LIMIT);
+  let collectorError = null;
+  let bufferUsagePeak = null;
+  let completeResolve;
+  const completed = new Promise((resolve) => {
+    completeResolve = resolve;
+  });
+  const onData = ({ value }) => {
+    try {
+      collector.add(Array.isArray(value) ? value : []);
+    } catch (error) {
+      collectorError ||= String(error?.message || error).slice(0, 240);
+    }
+  };
+  const onBufferUsage = ({ percentFull }) => {
+    if (Number.isFinite(percentFull))
+      bufferUsagePeak = Math.max(bufferUsagePeak ?? 0, percentFull);
+  };
+  const onComplete = ({ dataLossOccurred } = {}) => {
+    if (dataLossOccurred) collectorError ||= 'trace-data-loss-reported';
+    completeResolve();
+  };
+  session.on('Tracing.dataCollected', onData);
+  session.on('Tracing.bufferUsage', onBufferUsage);
+  session.on('Tracing.tracingComplete', onComplete);
+  try {
+    await session.send('Tracing.start', {
+      categories: IMPORT_TRACE_CATEGORIES,
+      options: 'record-until-full',
+      bufferUsageReportingInterval: 100,
+    });
+  } catch (error) {
+    session.off('Tracing.dataCollected', onData);
+    session.off('Tracing.bufferUsage', onBufferUsage);
+    session.off('Tracing.tracingComplete', onComplete);
+    await session.detach().catch(() => {});
+    throw error;
+  }
+  let stopped = false;
+  return {
+    async stop() {
+      if (stopped) throw new Error('Import trace already stopped');
+      stopped = true;
+      let stopError = null;
+      let timeoutHandle = null;
+      try {
+        await session.send('Tracing.end');
+        await Promise.race([
+          completed,
+          new Promise((_, reject) => {
+            timeoutHandle = setTimeout(
+              () => reject(new Error('Import trace completion timed out')),
+              15_000,
+            );
+          }),
+        ]);
+      } catch (error) {
+        stopError = String(error?.message || error).slice(0, 240);
+      } finally {
+        if (timeoutHandle !== null) clearTimeout(timeoutHandle);
+        session.off('Tracing.dataCollected', onData);
+        session.off('Tracing.bufferUsage', onBufferUsage);
+        session.off('Tracing.tracingComplete', onComplete);
+        await session.detach().catch((error) => {
+          stopError ||= String(error?.message || error).slice(0, 240);
+        });
+      }
+      stopError ||= collectorError;
+      return {
+        ...collector.finish(),
+        bufferUsagePeak,
+        stopError,
+      };
+    },
+  };
+}
 const report = {
   schema: 'gev-hosted-native-renderer/v1',
   commit,
@@ -138,20 +222,32 @@ try {
     const importStepDiagnostics = process.argv.includes(
       '--import-step-diagnostics',
     );
-    if (profileImports && importStepDiagnostics)
+    const importStepAttribution = process.argv.includes(
+      '--import-step-attribution',
+    );
+    if (
+      [profileImports, importStepDiagnostics, importStepAttribution].filter(
+        Boolean,
+      ).length > 1
+    )
       throw new Error(
-        'CPU profile and per-step diagnostics must be separate runs.',
+        'Import CPU profile, step clocks, and V8 trace attribution must be separate runs.',
       );
     const importFixtureUrl = new URL(
       url.replace('capture-matrix.html', 'import-batches.html'),
     );
     if (importStepDiagnostics)
       importFixtureUrl.searchParams.set('step-diagnostics', '1');
+    if (importStepAttribution)
+      importFixtureUrl.searchParams.set('step-attribution', '1');
     await page.goto(importFixtureUrl.href, {
       waitUntil: 'networkidle0',
     });
     const cpuProfile = profileImports
       ? await startFixtureCpuProfile(page)
+      : null;
+    const importTrace = importStepAttribution
+      ? await startImportLoadingTrace(page)
       : null;
     if (profileImports) {
       report.performanceAcceptanceEligible = false;
@@ -163,6 +259,12 @@ try {
       report.stepDiagnosticsScope =
         'Per-iterator.next diagnosis run; the extra clock reads and aggregation exclude every latency and heartbeat value from performance acceptance.';
     }
+    if (importStepAttribution) {
+      report.performanceAcceptanceEligible = false;
+      report.importStepAttributionScope =
+        'Separate Chrome trace spans the diagnostic fixture run; only marker-aligned cooperative loading windows contribute GC attribution. V8 GC overlap is diagnostic and correlational, not causal; all latency/performance acceptance is excluded.';
+    }
+    let traceStopped = null;
     try {
       await page.click('#run');
       await page.waitForFunction(
@@ -175,6 +277,34 @@ try {
       if (profileImports) report.importBatches.profiled = true;
       if (importStepDiagnostics) report.importBatches.stepDiagnostic = true;
     } finally {
+      if (importTrace) {
+        traceStopped = await importTrace.stop();
+        if (!report.importBatches) {
+          report.importBatches = await page
+            .$eval('#result', (element) =>
+              element.textContent ? JSON.parse(element.textContent) : null,
+            )
+            .catch(() => null);
+        }
+        const fixtureAttribution = report.importBatches?.importTraceAttribution;
+        if (fixtureAttribution) {
+          try {
+            const summary = summarizeImportTraceAttribution({
+              trace: traceStopped,
+              anchors: fixtureAttribution.traceAnchors,
+              loadingWindows: fixtureAttribution.loadingWindows,
+            });
+            fixtureAttribution.traceSummary = summary;
+            report.importTraceAttribution = summary;
+          } catch (error) {
+            report.importTraceAttributionError = String(
+              error?.message || error,
+            ).slice(0, 240);
+          }
+        } else
+          report.importTraceAttributionError =
+            'Fixture result did not contain loading trace anchors/windows.';
+      }
       if (cpuProfile) {
         const { profile, ...summary } = await cpuProfile.stop();
         await mkdir('qa-artifacts', { recursive: true });
@@ -514,7 +644,8 @@ try {
     process.argv.includes('--calibration') ||
     process.argv.includes('--imports') ||
     process.argv.includes('--import-attribution') ||
-    process.argv.includes('--import-step-diagnostics')
+    process.argv.includes('--import-step-diagnostics') ||
+    process.argv.includes('--import-step-attribution')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

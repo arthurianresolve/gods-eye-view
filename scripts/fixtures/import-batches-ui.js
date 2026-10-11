@@ -19,6 +19,10 @@ import {
 } from '../performance/importFrameDiagnostics.mjs';
 import { summarizeRgbaDifferences } from '../performance/importPixelWitness.mjs';
 import { inspectImportedPointState } from '../performance/importPointState.mjs';
+import {
+  IMPORT_TRACE_ATTRIBUTION_SCHEMA,
+  MAX_IMPORT_SLOW_STEPS_PER_WINDOW,
+} from '../performance/importTraceAttribution.mjs';
 
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
@@ -96,6 +100,22 @@ const largeGeometryImports = [
 let report;
 let activeBatchMetrics = null;
 let collectIteratorStepDiagnostics = false;
+let collectImportTraceAttribution = false;
+let importTraceAnchors = [];
+let importTraceWindows = [];
+function markImportTrace(name) {
+  const markerName = `gev-import-step:${name}`;
+  const beforeMs = performance.now();
+  console.timeStamp(markerName);
+  const afterMs = performance.now();
+  const anchor = {
+    name: markerName,
+    pageNowMs: (beforeMs + afterMs) / 2,
+    uncertaintyMs: (afterMs - beforeMs) / 2,
+  };
+  importTraceAnchors.push(anchor);
+  return anchor;
+}
 function createIteratorStepMetrics() {
   return {
     totalSteps: 0,
@@ -108,6 +128,9 @@ function createIteratorStepMetrics() {
       completed: { count: 0, overBudget: 0, maxMs: 0 },
       other: { count: 0, overBudget: 0, maxMs: 0 },
     },
+    ...(collectImportTraceAttribution
+      ? { slowStepWindows: [], omittedSlowStepWindows: 0 }
+      : {}),
   };
 }
 function createBatchMetrics() {
@@ -126,7 +149,7 @@ function createBatchMetrics() {
       : {}),
   };
 }
-function recordIteratorStep(activeMs, stageName) {
+function recordIteratorStep(activeMs, stageName, interval) {
   const metrics = activeBatchMetrics?.iteratorSteps;
   if (!metrics) return;
   const stage = Object.hasOwn(metrics.stages, stageName) ? stageName : 'other';
@@ -138,6 +161,28 @@ function recordIteratorStep(activeMs, stageName) {
   if (activeMs > activeBatchMetrics.budgetMs) {
     metrics.overBudgetSteps += 1;
     stageMetrics.overBudget += 1;
+    if (collectImportTraceAttribution && activeBatchMetrics.traceLabel) {
+      const validInterval =
+        Number.isFinite(interval?.startMs) &&
+        Number.isFinite(interval?.endMs) &&
+        interval.endMs >= interval.startMs;
+      if (
+        validInterval &&
+        metrics.slowStepWindows.length < MAX_IMPORT_SLOW_STEPS_PER_WINDOW
+      ) {
+        const marker = markImportTrace(
+          `step:${activeBatchMetrics.traceLabel}:${stage}:${metrics.overBudgetSteps}`,
+        );
+        metrics.slowStepWindows.push({
+          stage,
+          startMs: interval.startMs,
+          endMs: interval.endMs,
+          durationMs: activeMs,
+          markerName: marker.name,
+          anchorUncertaintyMs: marker.uncertaintyMs,
+        });
+      } else metrics.omittedSlowStepWindows += 1;
+    }
   }
 }
 function recordBatch(batch) {
@@ -189,6 +234,15 @@ function metricSnapshot(metrics) {
           { ...values },
         ]),
       ),
+      ...(collectImportTraceAttribution
+        ? {
+            slowStepWindows: metrics.iteratorSteps.slowStepWindows.map(
+              (step) => ({ ...step }),
+            ),
+            omittedSlowStepWindows:
+              metrics.iteratorSteps.omittedSlowStepWindows,
+          }
+        : {}),
     };
   }
   return snapshot;
@@ -530,7 +584,11 @@ run.addEventListener('click', async () => {
     runOptions.get('diag') === '1' ||
     ['initial-load', 'steady-population'].includes(workload) ||
     requestedViewer === 'cesium';
-  collectIteratorStepDiagnostics = runOptions.get('step-diagnostics') === '1';
+  collectImportTraceAttribution = runOptions.get('step-attribution') === '1';
+  collectIteratorStepDiagnostics =
+    runOptions.get('step-diagnostics') === '1' || collectImportTraceAttribution;
+  importTraceAnchors = [];
+  importTraceWindows = [];
   frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
@@ -570,9 +628,11 @@ run.addEventListener('click', async () => {
       cancelOverride: false,
       targetBudgetMs: 4,
       batchObserver: 'onBatch metrics only; does not replace the scheduler',
-      stepObserver: collectIteratorStepDiagnostics
-        ? 'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance'
-        : 'disabled',
+      stepObserver: collectImportTraceAttribution
+        ? 'per-iterator-next timing with bounded V8 GC trace overlap; diagnostic-only'
+        : collectIteratorStepDiagnostics
+          ? 'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance'
+          : 'disabled',
       backendCounts: {},
     },
     scope:
@@ -582,6 +642,17 @@ run.addEventListener('click', async () => {
           performanceAcceptanceEligible: false,
           stepDiagnosticScope:
             'Diagnostic-only per-next perf.now sampling and aggregation. All import/capture latency and heartbeat values from this run are excluded from performance acceptance.',
+        }
+      : {}),
+    ...(collectImportTraceAttribution
+      ? {
+          performanceAcceptanceEligible: false,
+          importTraceAttribution: {
+            schema: IMPORT_TRACE_ATTRIBUTION_SCHEMA,
+            performanceAcceptanceEligible: false,
+            traceAnchors: importTraceAnchors,
+            loadingWindows: importTraceWindows,
+          },
         }
       : {}),
     checks: [],
@@ -757,18 +828,40 @@ run.addEventListener('click', async () => {
             gaps.push(time - previous);
             previous = time;
           }, 5);
+          const traceAnchor =
+            collectImportTraceAttribution && mode === 'cooperative'
+              ? markImportTrace(`sample:${pair}:${mode}`)
+              : null;
+          const loadStartMs = performance.now();
           const started = performance.now();
           let elapsedMs;
+          let loadEndMs = null;
           const batchMetrics =
             mode === 'cooperative' ? createBatchMetrics() : null;
+          if (batchMetrics && traceAnchor)
+            batchMetrics.traceLabel = `sample:${pair}:${mode}`;
           activeBatchMetrics = batchMetrics;
           try {
             await (mode === 'synchronous'
               ? layer.load(imports, { workspaceId: 'fixture' })
               : layer.loadAsync(imports, { workspaceId: 'fixture' }));
             elapsedMs = performance.now() - started;
+            loadEndMs = performance.now();
             await wait(20);
           } finally {
+            if (traceAnchor && batchMetrics?.iteratorSteps) {
+              const steps = batchMetrics.iteratorSteps;
+              importTraceWindows.push({
+                pair,
+                mode,
+                markerName: traceAnchor.name,
+                startMs: loadStartMs,
+                endMs: loadEndMs ?? performance.now(),
+                overBudgetSteps: steps.overBudgetSteps,
+                slowSteps: steps.slowStepWindows.map((step) => ({ ...step })),
+                omittedSlowSteps: steps.omittedSlowStepWindows,
+              });
+            }
             clearInterval(timer);
             activeBatchMetrics = null;
           }
@@ -925,11 +1018,31 @@ run.addEventListener('click', async () => {
     );
     layer.clear();
     const geometryBatchMetrics = createBatchMetrics();
+    if (collectImportTraceAttribution)
+      geometryBatchMetrics.traceLabel = 'geometry:cooperative';
     activeBatchMetrics = geometryBatchMetrics;
+    const geometryTraceAnchor = collectImportTraceAttribution
+      ? markImportTrace('geometry:cooperative')
+      : null;
+    const geometryLoadStartMs = performance.now();
     const asynchronousGeometryResult = await layer.loadAsync(
       largeGeometryImports,
       { workspaceId: geometryWorkspaceId },
     );
+    const geometryLoadEndMs = performance.now();
+    if (geometryTraceAnchor && geometryBatchMetrics.iteratorSteps) {
+      const steps = geometryBatchMetrics.iteratorSteps;
+      importTraceWindows.push({
+        pair: 5,
+        mode: 'geometry-cooperative',
+        markerName: geometryTraceAnchor.name,
+        startMs: geometryLoadStartMs,
+        endMs: geometryLoadEndMs,
+        overBudgetSteps: steps.overBudgetSteps,
+        slowSteps: steps.slowStepWindows.map((step) => ({ ...step })),
+        omittedSlowSteps: steps.omittedSlowStepWindows,
+      });
+    }
     activeBatchMetrics = null;
     const asynchronousGeometry = await geometrySnapshot(
       viewer,

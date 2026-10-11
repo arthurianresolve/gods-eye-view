@@ -1,5 +1,9 @@
 const BACKENDS = new Set(['scheduler.postTask', 'MessageChannel']);
 const BATCH_BACKENDS = new Set([...BACKENDS, 'synchronous-start']);
+const STEP_DIAGNOSTIC_OBSERVER =
+  'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance';
+const STEP_TRACE_OBSERVER =
+  'per-iterator-next timing with bounded V8 GC trace overlap; diagnostic-only';
 
 const array = (value) => (Array.isArray(value) ? value : []);
 
@@ -19,7 +23,7 @@ function validateBatchMetrics(
   metrics,
   errors,
   name,
-  { requireWake, requireStepMetrics = false },
+  { requireWake, requireStepMetrics = false, requireTraceAttribution = false },
 ) {
   add(
     errors,
@@ -198,6 +202,41 @@ function validateBatchMetrics(
     maximumStageMs === steps.maxStepMs,
     `${name} iterator maximum does not reconcile`,
   );
+  if (requireTraceAttribution) {
+    const windows = steps.slowStepWindows;
+    add(
+      errors,
+      Array.isArray(windows) && windows.length <= 128,
+      `${name} bounded slow-step windows missing`,
+    );
+    add(
+      errors,
+      Number.isInteger(steps.omittedSlowStepWindows) &&
+        steps.omittedSlowStepWindows >= 0 &&
+        array(windows).length + steps.omittedSlowStepWindows ===
+          steps.overBudgetSteps,
+      `${name} slow-step windows do not reconcile`,
+    );
+    for (const [index, window] of array(windows).entries())
+      add(
+        errors,
+        window &&
+          stages.includes(window.stage) &&
+          typeof window.markerName === 'string' &&
+          finite(window.startMs) &&
+          finite(window.endMs) &&
+          window.endMs >= window.startMs &&
+          finite(window.durationMs) &&
+          window.durationMs > metrics.budgetMs,
+        `${name} slow-step window ${index} is invalid`,
+      );
+  } else
+    add(
+      errors,
+      steps.slowStepWindows === undefined &&
+        steps.omittedSlowStepWindows === undefined,
+      `${name} has unrequested trace step windows`,
+    );
 }
 
 export function validateImportBatchSchedulerReport(report, expectedCommit) {
@@ -246,9 +285,9 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
     'scheduler observer contract changed',
   );
   const stepObserver = scheduler?.stepObserver;
+  const requireTraceAttribution = stepObserver === STEP_TRACE_OBSERVER;
   const requireStepMetrics =
-    stepObserver ===
-    'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance';
+    stepObserver === STEP_DIAGNOSTIC_OBSERVER || requireTraceAttribution;
   add(
     errors,
     stepObserver === undefined ||
@@ -261,6 +300,176 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
       errors,
       report?.performanceAcceptanceEligible === false,
       'per-step diagnostic must be excluded from performance acceptance',
+    );
+  if (requireTraceAttribution) {
+    const attribution =
+      report?.importTraceAttribution ||
+      report?.importBatches?.importTraceAttribution;
+    const summary = attribution?.traceSummary;
+    add(
+      errors,
+      attribution?.schema === 'gev-import-trace-attribution/v1',
+      'loading trace attribution schema missing',
+    );
+    add(
+      errors,
+      attribution?.performanceAcceptanceEligible === false,
+      'loading trace attribution must be excluded from acceptance',
+    );
+    add(
+      errors,
+      Array.isArray(attribution?.traceAnchors) &&
+        attribution.traceAnchors.length >= 6 &&
+        attribution.traceAnchors.length <= 774 &&
+        Array.isArray(attribution?.loadingWindows) &&
+        attribution.loadingWindows.length === 6,
+      'loading trace marker/window inventory incomplete',
+    );
+    add(
+      errors,
+      summary?.schema === 'gev-import-trace-attribution/v1' &&
+        summary?.complete === true &&
+        summary?.performanceAcceptanceEligible === false &&
+        typeof summary?.scope === 'string' &&
+        summary.scope.includes('entire diagnostic fixture') &&
+        summary.scope.includes('six measured loading windows') &&
+        summary?.categories === 'devtools.timeline,disabled-by-default-v8.gc' &&
+        typeof summary?.traceEventAccounting === 'string' &&
+        summary.traceEventAccounting.length <= 240 &&
+        Number.isInteger(summary?.traceRelevantEvents) &&
+        summary.traceRelevantEvents >= 0 &&
+        Number.isInteger(summary?.retainedTraceEvents) &&
+        summary.retainedTraceEvents >= 0 &&
+        summary.retainedTraceEvents <= 4096 &&
+        summary?.omittedTraceEvents === 0 &&
+        summary.traceRelevantEvents ===
+          summary.retainedTraceEvents + summary.omittedTraceEvents &&
+        Number.isFinite(summary?.bufferUsagePeak) &&
+        summary.bufferUsagePeak >= 0 &&
+        summary.bufferUsagePeak < 0.95 &&
+        Array.isArray(summary?.errors) &&
+        summary.errors.length === 0 &&
+        Array.isArray(summary?.observedMarkers) &&
+        Array.isArray(summary?.gcSlices) &&
+        summary.gcSlices.length <= 4096 &&
+        summary.gcSlices.every(
+          (event) =>
+            typeof event?.name === 'string' &&
+            finite(event.tsUs) &&
+            event.tsUs >= 0 &&
+            finite(event.durationUs) &&
+            event.durationUs >= 0 &&
+            Number.isInteger(event.pid) &&
+            Number.isInteger(event.tid),
+        ) &&
+        Array.isArray(summary?.gcInstantObservations) &&
+        summary.gcInstantObservations.length <= 4096 &&
+        summary.gcInstantObservations.every(
+          (event) =>
+            typeof event?.name === 'string' &&
+            finite(event.tsUs) &&
+            Number.isInteger(event.pid) &&
+            Number.isInteger(event.tid),
+        ) &&
+        Array.isArray(summary?.loadingWindows) &&
+        summary.loadingWindows.length === 6,
+      'complete bounded loading trace attribution missing',
+    );
+    const anchorNames = new Set(
+      array(attribution?.traceAnchors).map((anchor) => anchor?.name),
+    );
+    add(
+      errors,
+      anchorNames.size === array(attribution?.traceAnchors).length &&
+        JSON.stringify([...anchorNames].sort()) ===
+          JSON.stringify(array(summary?.observedMarkers).sort()) &&
+        array(attribution?.loadingWindows).every(
+          (window) =>
+            typeof window?.markerName === 'string' &&
+            anchorNames.has(window.markerName),
+        ),
+      'loading trace marker inventory is duplicated or incomplete',
+    );
+    for (const row of array(summary?.loadingWindows))
+      add(
+        errors,
+        row?.aligned === true &&
+          Number.isInteger(row.overBudgetSteps) &&
+          Number.isInteger(row.recordedSlowSteps) &&
+          row.omittedSlowSteps === 0 &&
+          Number.isInteger(row.v8GcSlicesOverlappingLoad) &&
+          Number.isInteger(row.v8GcSlicesOtherThreadsOverlappingLoad) &&
+          finite(row.sameThreadGcOverlapMs) &&
+          finite(row.otherThreadGcOverlapMs) &&
+          Number.isInteger(row.v8GcSlicesOverlappingSlowSteps) &&
+          finite(row.slowStepGcOverlapMs) &&
+          Number.isInteger(row.traceProcessId) &&
+          Number.isInteger(row.traceThreadId) &&
+          Array.isArray(row.steps) &&
+          row.steps.length === row.recordedSlowSteps &&
+          row.steps.every(
+            (step) =>
+              step.aligned === true &&
+              Number.isInteger(step.otherThreadGcSlices) &&
+              finite(step.otherThreadGcOverlapMs),
+          ),
+        'loading trace attribution row is incomplete',
+      );
+    const loadingWindows = array(attribution?.loadingWindows);
+    const expectedWindowKeys = [
+      ...Array.from({ length: 5 }, (_, pair) => `${pair}:cooperative`),
+      '5:geometry-cooperative',
+    ];
+    add(
+      errors,
+      JSON.stringify(
+        loadingWindows
+          .map((window) => `${window?.pair}:${window?.mode}`)
+          .sort(),
+      ) === JSON.stringify(expectedWindowKeys.sort()),
+      'loading trace windows do not match the five paired loads and geometry load',
+    );
+    for (const window of loadingWindows) {
+      const metrics =
+        window?.mode === 'geometry-cooperative'
+          ? report?.largeGeometry?.cooperative?.batchMetrics?.iteratorSteps
+          : report?.samples?.find(
+              (sample) =>
+                sample?.pair === window?.pair && sample?.mode === 'cooperative',
+            )?.batchMetrics?.iteratorSteps;
+      const metricSteps = array(metrics?.slowStepWindows);
+      const sameSteps =
+        metricSteps.length === array(window?.slowSteps).length &&
+        metricSteps.every((step, index) => {
+          const row = window.slowSteps[index];
+          return (
+            step?.markerName === row?.markerName &&
+            step?.stage === row?.stage &&
+            step?.startMs === row?.startMs &&
+            step?.endMs === row?.endMs &&
+            step?.durationMs === row?.durationMs
+          );
+        });
+      add(
+        errors,
+        metrics &&
+          window?.markerName &&
+          anchorNames.has(window.markerName) &&
+          array(window?.slowSteps).every((step) =>
+            anchorNames.has(step?.markerName),
+          ) &&
+          metrics.omittedSlowStepWindows === window.omittedSlowSteps &&
+          metrics.overBudgetSteps === window.overBudgetSteps &&
+          sameSteps,
+        'loading trace windows do not match iterator-step evidence',
+      );
+    }
+  } else
+    add(
+      errors,
+      report?.importTraceAttribution === undefined &&
+        report?.importBatches?.importTraceAttribution === undefined,
+      'unrequested loading trace attribution present',
     );
   const backendCounts = scheduler?.backendCounts;
   add(
@@ -342,6 +551,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
       {
         requireWake: true,
         requireStepMetrics,
+        requireTraceAttribution,
       },
     );
   for (const sample of synchronous)
@@ -420,7 +630,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
     geometry?.cooperative?.batchMetrics,
     errors,
     'large-geometry-cooperative',
-    { requireWake: true, requireStepMetrics },
+    { requireWake: true, requireStepMetrics, requireTraceAttribution },
   );
 
   const cancellation = report?.cancellation;
