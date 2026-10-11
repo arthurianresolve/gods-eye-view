@@ -57,6 +57,9 @@ test('destroy removes context records and permits a fresh replacement', async t 
     pendingJobs: 0,
     dataSources: 1,
     cacheEntries: 1,
+    surfaceCollectionOwners: 0,
+    surfacePoints: 0,
+    surfaceStems: 0,
   });
   const oldEntity = [...getContextStore().entities.values()][0].entity;
   assert.equal(getContextStore().entities.size, 1);
@@ -67,6 +70,9 @@ test('destroy removes context records and permits a fresh replacement', async t 
     pendingJobs: 0,
     dataSources: 0,
     cacheEntries: 1,
+    surfaceCollectionOwners: 0,
+    surfacePoints: 0,
+    surfaceStems: 0,
   });
   assert.equal(getContextStore().entities.size, 0, 'disable releases its records with the source');
   assert.equal(env.sources.size, 0, 'disable removes the built source from the scene');

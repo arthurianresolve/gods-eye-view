@@ -1273,7 +1273,7 @@ if (isMain) {
       status: report.status,
       reportPath: reportFile,
       pairs: report.pairs.length,
-      renderer: report.environment?.renderer?.renderer,
+      renderer: report.environment?.renderer,
       cleanup: report.cleanup,
     }),
   );
