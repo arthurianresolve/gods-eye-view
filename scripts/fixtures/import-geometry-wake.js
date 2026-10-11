@@ -14,6 +14,7 @@ const arms = new Set([
   'chunked-message-channel',
 ]);
 const arm = params.get('arm');
+const diagnosticMode = params.get('diagnostic') === 'geometry-load-profile';
 const CHUNK_SIZE = 256;
 const READY_TIMEOUT_MS = 20_000;
 const PNG_MAX_CHARS = 750_000;
@@ -33,6 +34,8 @@ let viewer;
 let layer;
 let wakeScheduler;
 let removeRenderErrorListener;
+let diagnosticRelease;
+let diagnosticPrepared;
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -291,7 +294,46 @@ async function waitForNativePick(target, expectedId) {
   );
 }
 
-async function capture(type) {
+function createPhaseRecorder() {
+  const phases = Object.fromEntries(
+    [
+      'record-selection',
+      'coordinate-conversion',
+      'entity-publication',
+      'evidence-envelope',
+      'context-registration',
+      'overlay-publication',
+      'render-request',
+      'clear',
+    ].map((name) => [name, { count: 0, totalMs: 0, maxMs: 0, over4Ms: 0 }]),
+  );
+  let eventCount = 0;
+  let invalidCount = 0;
+  return {
+    record({ phase, durationMs } = {}) {
+      eventCount++;
+      const row = phases[phase];
+      if (!row || !Number.isFinite(durationMs) || durationMs < 0) {
+        invalidCount++;
+        return;
+      }
+      row.count++;
+      row.totalMs += durationMs;
+      row.maxMs = Math.max(row.maxMs, durationMs);
+      if (durationMs > 4) row.over4Ms++;
+    },
+    snapshot() {
+      return {
+        schema: 'gev-import-geometry-phase-summary/v1',
+        eventCount,
+        invalidCount,
+        phases,
+      };
+    },
+  };
+}
+
+function prepareSample(type, diagnostic = false) {
   const { input, target } = fixture(type);
   const source = input[0];
   const expectedId = `gev-import:geometry-wake:${source.id}:${source.records[0].id}`;
@@ -304,9 +346,18 @@ async function capture(type) {
   const spans = [];
   let scheduledCount = 0;
   let initialActiveSpanMs = 0;
+  const phaseRecorder = diagnostic ? createPhaseRecorder() : null;
+  let recordPhases = true;
   const layerForSample = createImportedGeometryLayer({
     viewer,
     coordinatePreparationChunkSize: report.chunkSize,
+    ...(phaseRecorder
+      ? {
+          onDiagnosticPhase: (phase) => {
+            if (recordPhases) phaseRecorder.record(phase);
+          },
+        }
+      : {}),
     batchOptions: {
       now: () => performance.now(),
       schedule(callback) {
@@ -328,11 +379,67 @@ async function capture(type) {
     },
   });
   layer = layerForSample;
-  const startedAt = performance.now();
-  const pending = layer.loadAsync(input, { workspaceId: 'geometry-wake' });
-  initialActiveSpanMs = performance.now() - startedAt;
-  await pending;
-  const completedAt = performance.now();
+  return {
+    type,
+    input,
+    target,
+    expectedId,
+    spans,
+    phaseRecorder,
+    stopPhaseRecording() {
+      recordPhases = false;
+    },
+    startedAt: null,
+    completedAt: null,
+    loadPromise: null,
+    scheduledCount: () => scheduledCount,
+    initialActiveSpanMs: () => initialActiveSpanMs,
+    startLoad() {
+      const before = performance.now();
+      const markerName = `gev-import-step:geometry-profile:${type}`;
+      console.timeStamp(markerName);
+      const after = performance.now();
+      this.anchor = {
+        name: markerName,
+        pageNowMs: (before + after) / 2,
+        uncertaintyMs: after - before,
+      };
+      this.startedAt = after;
+      const pending = layer.loadAsync(input, { workspaceId: 'geometry-wake' });
+      initialActiveSpanMs = performance.now() - after;
+      this.initialActiveSpanMs = initialActiveSpanMs;
+      this.loadPromise = pending;
+      return pending;
+    },
+    async waitForLoad() {
+      if (!this.loadPromise)
+        throw new Error('Profile load has not been started.');
+      await this.loadPromise;
+      this.completedAt = performance.now();
+      console.timeStamp(`gev-import-step:geometry-profile-complete:${type}`);
+      return {
+        loadElapsedMs: this.completedAt - this.startedAt,
+        completedAt: this.completedAt,
+      };
+    },
+  };
+}
+
+async function finishSample(prepared, profile = null) {
+  const {
+    type,
+    target,
+    expectedId,
+    spans,
+    phaseRecorder,
+    startedAt,
+    completedAt,
+    anchor,
+    scheduledCount,
+    initialActiveSpanMs,
+  } = prepared;
+  if (!Number.isFinite(completedAt))
+    throw new Error('Geometry load did not complete before capture.');
   const loadElapsedMs = completedAt - startedAt;
   const entity = viewer.entities.getById(expectedId);
   check(entity, `Loaded Entity ${expectedId} was not published.`);
@@ -361,6 +468,7 @@ async function capture(type) {
     const pngDataUrl = canvas.toDataURL('image/png');
     check(pngDataUrl.length <= PNG_MAX_CHARS, 'PNG witness exceeded limit.');
     capture = {
+      completed: true,
       width: canvas.width,
       height: canvas.height,
       pixelSha256: [...new Uint8Array(digest)]
@@ -386,7 +494,7 @@ async function capture(type) {
     loadElapsedMs,
     initialActiveSpanMs,
     callbackCount: spans.length,
-    scheduleCount: scheduledCount,
+    scheduleCount: scheduledCount(),
     wakeMs: spans.map((span) => span.scheduledToWakeMs),
     activeCallbackMs: spans.map((span) => span.activeMs),
     maximumActiveSpanMs: Math.max(...activeSpans),
@@ -396,6 +504,19 @@ async function capture(type) {
     capture,
     renderSettings: renderSettings(),
   };
+  if (profile) {
+    sample.profile = {
+      mode: profile.mode,
+      profileStartedAtMs: profile.startedAtMs,
+      loadStartedAtMs: startedAt,
+      loadCompletedAtMs: completedAt,
+      profileStoppedAtMs: profile.stoppedAtMs,
+      anchor,
+      geometryPhaseSummary: phaseRecorder?.snapshot() ?? null,
+      profileStopRequestedBeforeCapture: true,
+      captureAndTeardownOutsideProfile: true,
+    };
+  }
 
   layer.clear();
   await waitForCompletedFrame(viewer);
@@ -416,6 +537,13 @@ async function capture(type) {
   layer.destroy();
   layer = null;
   return sample;
+}
+
+async function capture(type) {
+  const prepared = prepareSample(type);
+  await prepared.startLoad();
+  await prepared.waitForLoad();
+  return finishSample(prepared);
 }
 
 function waitForCompletedFrame(targetViewer) {
@@ -565,6 +693,106 @@ async function run() {
     msaa: viewer.scene.context?.msaa ?? null,
     webglContextAttributes: getSceneGl()?.getContextAttributes?.() ?? null,
   };
+  if (diagnosticMode) {
+    const geometryType = params.get('geometryType');
+    const profileMode = params.get('profileMode');
+    check(
+      ['LineString', 'Polygon'].includes(geometryType),
+      'Unknown diagnostic geometry type.',
+    );
+    check(
+      profileMode === 'cpu' || profileMode === 'heap',
+      'Unknown geometry profile mode.',
+    );
+    report.schema = 'gev-import-geometry-load-profile/v1';
+    report.diagnosticMode = 'geometry-load-profile';
+    report.profileMode = profileMode;
+    report.geometryType = geometryType;
+    report.status = 'ready';
+    report.profileStatus = 'ready';
+    report.profileStartedAtMs = null;
+    report.profileStoppedAtMs = null;
+    report.samples = [];
+    const publishProfileStatus = () => {
+      resultElement.textContent = JSON.stringify(report);
+    };
+    publishProfileStatus();
+    window.__importGeometryProfileControl = {
+      prepare() {
+        check(report.profileStatus === 'ready', 'Profile page is not ready.');
+        diagnosticPrepared = prepareSample(geometryType, true);
+        report.profileStatus = 'prepared';
+        publishProfileStatus();
+        return { geometryType, arm, profileMode };
+      },
+      markProfilerStarted() {
+        check(
+          report.profileStatus === 'prepared',
+          'Geometry load was not prepared.',
+        );
+        report.profileStartedAtMs = performance.now();
+      },
+      async startLoad() {
+        check(
+          diagnosticPrepared && Number.isFinite(report.profileStartedAtMs),
+          'Profiler start witness is missing.',
+        );
+        report.profileStatus = 'loading';
+        publishProfileStatus();
+        try {
+          diagnosticPrepared.startLoad();
+          await diagnosticPrepared.waitForLoad();
+          report.profileStatus = 'loaded';
+          publishProfileStatus();
+          return {
+            loadElapsedMs:
+              diagnosticPrepared.completedAt - diagnosticPrepared.startedAt,
+            geometryPhaseSummary: diagnosticPrepared.phaseRecorder.snapshot(),
+            anchor: diagnosticPrepared.anchor,
+          };
+        } catch (error) {
+          report.profileStatus = 'load-failed';
+          report.error = String(error?.message || error).slice(0, 800);
+          publishProfileStatus();
+          throw error;
+        }
+      },
+      async finishCapture() {
+        check(
+          report.profileStatus === 'loaded',
+          'Profiled load is incomplete.',
+        );
+        report.profileStoppedAtMs = performance.now();
+        diagnosticPrepared.stopPhaseRecording();
+        const sample = await finishSample(diagnosticPrepared, {
+          mode: profileMode,
+          startedAtMs: report.profileStartedAtMs,
+          stoppedAtMs: report.profileStoppedAtMs,
+        });
+        report.samples = [sample];
+        report.profileStatus = 'captured';
+        publishProfileStatus();
+        diagnosticRelease?.();
+        return sample;
+      },
+      abort(message) {
+        report.profileStatus = 'aborted';
+        report.status = 'failed';
+        report.error = String(message || 'Diagnostic run aborted.').slice(
+          0,
+          800,
+        );
+        publishProfileStatus();
+        diagnosticRelease?.();
+      },
+    };
+    await new Promise((resolve) => {
+      diagnosticRelease = resolve;
+    });
+    check(report.profileStatus === 'captured', 'Diagnostic did not capture.');
+    report.status = 'passed';
+    return;
+  }
   report.samples = [];
   for (const type of ['LineString', 'Polygon'])
     report.samples.push(await capture(type));

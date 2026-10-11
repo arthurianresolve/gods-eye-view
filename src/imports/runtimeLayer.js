@@ -35,8 +35,9 @@ function position(coordinate) {
   );
 }
 
-function positions(coordinates) {
-  return coordinates.map(position);
+function positions(coordinates, measurePhase) {
+  if (!measurePhase) return coordinates.map(position);
+  return measurePhase('coordinate-conversion', () => coordinates.map(position));
 }
 
 function fillPositionRange(coordinates, result, start, end) {
@@ -44,13 +45,19 @@ function fillPositionRange(coordinates, result, start, end) {
     result[index] = position(coordinates[index]);
 }
 
-function* positionsInChunks(coordinates, chunkSize) {
+function* positionsInChunks(coordinates, chunkSize, measurePhase) {
   const result = new Array(coordinates.length);
   // Keep per-coordinate conversion in an ordinary loop. The experimental
   // generator owns only chunk boundaries, never individual coordinates.
   for (let start = 0; start < coordinates.length; start += chunkSize) {
     const end = Math.min(start + chunkSize, coordinates.length);
-    fillPositionRange(coordinates, result, start, end);
+    if (measurePhase) {
+      measurePhase('coordinate-conversion', () =>
+        fillPositionRange(coordinates, result, start, end),
+      );
+    } else {
+      fillPositionRange(coordinates, result, start, end);
+    }
     if (end < coordinates.length) yield;
   }
   return result;
@@ -61,6 +68,7 @@ export function createImportedGeometryLayer({
   viewer,
   pointRepresentation = 'entity',
   coordinatePreparationChunkSize = 0,
+  onDiagnosticPhase = null,
   now = () => Date.now(),
   batchOptions = {},
   screenSpaceEventHandlerFactory = (canvas) =>
@@ -70,6 +78,8 @@ export function createImportedGeometryLayer({
     throw new TypeError('A Cesium viewer is required.');
   if (!POINT_REPRESENTATIONS.has(pointRepresentation))
     throw new TypeError('Unknown imported point representation.');
+  if (onDiagnosticPhase !== null && typeof onDiagnosticPhase !== 'function')
+    throw new TypeError('onDiagnosticPhase must be a function when provided.');
   validateCoordinatePreparationChunkSize(coordinatePreparationChunkSize);
   if (
     pointRepresentation === 'primitive-collection' &&
@@ -87,6 +97,26 @@ export function createImportedGeometryLayer({
     const picked = viewer.scene.pick(movement.position)?.id;
     if (picked?.__gevImportContextId) selectEntityContext(picked);
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  function measureDiagnosticPhase(phase, operation) {
+    if (!onDiagnosticPhase) return operation();
+    const startedAt = globalThis.performance?.now?.();
+    try {
+      return operation();
+    } finally {
+      const endedAt = globalThis.performance?.now?.();
+      if (Number.isFinite(startedAt) && Number.isFinite(endedAt)) {
+        try {
+          onDiagnosticPhase({
+            phase,
+            durationMs: Math.max(0, endedAt - startedAt),
+          });
+        } catch {
+          // Diagnostic observers must not change import behavior.
+        }
+      }
+    }
+  }
 
   function ensurePointPrimitiveCollection() {
     if (pointPrimitiveCollection) return pointPrimitiveCollection;
@@ -154,6 +184,11 @@ export function createImportedGeometryLayer({
   }
 
   function clear() {
+    if (!onDiagnosticPhase) return clearOwnedState();
+    return measureDiagnosticPhase('clear', clearOwnedState);
+  }
+
+  function clearOwnedState() {
     const previous = pending;
     pending = null;
     previous?.abort();
@@ -179,10 +214,11 @@ export function createImportedGeometryLayer({
   }
 
   function* build(imports, { workspaceId = 'active' } = {}) {
-    const { selected, total } = selectImportRenderRecords(
-      imports,
-      MAX_RENDERED_IMPORT_FEATURES,
-    );
+    const { selected, total } = onDiagnosticPhase
+      ? measureDiagnosticPhase('record-selection', () =>
+          selectImportRenderRecords(imports, MAX_RENDERED_IMPORT_FEATURES),
+        )
+      : selectImportRenderRecords(imports, MAX_RENDERED_IMPORT_FEATURES);
     const overlayEntries = [];
     for (const { record: feature, source } of selected) {
       const importId = source.id || 'import';
@@ -210,10 +246,14 @@ export function createImportedGeometryLayer({
           polyline: {
             positions:
               coordinatePreparationChunkSize === 0
-                ? positions(geometry.coordinates)
+                ? positions(
+                    geometry.coordinates,
+                    onDiagnosticPhase ? measureDiagnosticPhase : null,
+                  )
                 : yield* positionsInChunks(
                     geometry.coordinates,
                     coordinatePreparationChunkSize,
+                    onDiagnosticPhase ? measureDiagnosticPhase : null,
                   ),
             width: 3,
             material: Cesium.Color.CYAN,
@@ -227,15 +267,27 @@ export function createImportedGeometryLayer({
         let hierarchy;
         if (coordinatePreparationChunkSize === 0) {
           hierarchy = new Cesium.PolygonHierarchy(
-            positions(geometry.coordinates[0]),
+            positions(
+              geometry.coordinates[0],
+              onDiagnosticPhase ? measureDiagnosticPhase : null,
+            ),
             geometry.coordinates
               .slice(1)
-              .map((ring) => new Cesium.PolygonHierarchy(positions(ring))),
+              .map(
+                (ring) =>
+                  new Cesium.PolygonHierarchy(
+                    positions(
+                      ring,
+                      onDiagnosticPhase ? measureDiagnosticPhase : null,
+                    ),
+                  ),
+              ),
           );
         } else {
           const outer = yield* positionsInChunks(
             geometry.coordinates[0],
             coordinatePreparationChunkSize,
+            onDiagnosticPhase ? measureDiagnosticPhase : null,
           );
           const holes = [];
           for (let index = 1; index < geometry.coordinates.length; index++) {
@@ -244,6 +296,7 @@ export function createImportedGeometryLayer({
                 yield* positionsInChunks(
                   geometry.coordinates[index],
                   coordinatePreparationChunkSize,
+                  onDiagnosticPhase ? measureDiagnosticPhase : null,
                 ),
               ),
             );
@@ -282,10 +335,14 @@ export function createImportedGeometryLayer({
           edgeFade: 'keyhole',
           horizonCull: true,
         });
-      const entity = createEntity(id, label, shape);
+      const entity = onDiagnosticPhase
+        ? measureDiagnosticPhase('entity-publication', () =>
+            createEntity(id, label, shape),
+          )
+        : createEntity(id, label, shape);
       entity.__gevImportContextId = id;
       ownedEntities.set(id, entity);
-      const evidence = createEvidenceEnvelope({
+      const evidenceInput = {
         entityRef: { layerKey: IMPORTED_LAYER_ID, id: String(feature.id) },
         sourceId:
           source.kind === 'synthetic-demo'
@@ -310,26 +367,57 @@ export function createImportedGeometryLayer({
                 'Source time and coverage are only present when supplied in the imported file.',
               ],
         now: now(),
-      });
-      registerEntityContext(entity, {
-        id,
-        layerId: IMPORTED_LAYER_ID,
-        label,
-        evidence,
-        importedFeature: {
-          id: String(feature.id),
-          properties: feature.properties,
-        },
-      });
+      };
+      const evidence = onDiagnosticPhase
+        ? measureDiagnosticPhase('evidence-envelope', () =>
+            createEvidenceEnvelope(evidenceInput),
+          )
+        : createEvidenceEnvelope(evidenceInput);
+      if (onDiagnosticPhase) {
+        measureDiagnosticPhase('context-registration', () =>
+          registerEntityContext(entity, {
+            id,
+            layerId: IMPORTED_LAYER_ID,
+            label,
+            evidence,
+            importedFeature: {
+              id: String(feature.id),
+              properties: feature.properties,
+            },
+          }),
+        );
+      } else {
+        registerEntityContext(entity, {
+          id,
+          layerId: IMPORTED_LAYER_ID,
+          label,
+          evidence,
+          importedFeature: {
+            id: String(feature.id),
+            properties: feature.properties,
+          },
+        });
+      }
       yield;
     }
-    setOverlayEntries(IMPORTED_LAYER_ID, overlayEntries, {
-      cohortLimit: MAX_IMPORTED_OVERLAY_LABELS,
-      collisionCapacity: MAX_IMPORTED_OVERLAY_LABELS,
-      maxVisible: MAX_IMPORTED_OVERLAY_LABELS,
-    });
-    if (overlayEntries.length) setOverlaySourceVisible(IMPORTED_LAYER_ID, true);
-    viewer.scene.requestRender?.();
+    const publishOverlays = () => {
+      setOverlayEntries(IMPORTED_LAYER_ID, overlayEntries, {
+        cohortLimit: MAX_IMPORTED_OVERLAY_LABELS,
+        collisionCapacity: MAX_IMPORTED_OVERLAY_LABELS,
+        maxVisible: MAX_IMPORTED_OVERLAY_LABELS,
+      });
+      if (overlayEntries.length)
+        setOverlaySourceVisible(IMPORTED_LAYER_ID, true);
+    };
+    if (onDiagnosticPhase) {
+      measureDiagnosticPhase('overlay-publication', publishOverlays);
+      measureDiagnosticPhase('render-request', () =>
+        viewer.scene.requestRender?.(),
+      );
+    } else {
+      publishOverlays();
+      viewer.scene.requestRender?.();
+    }
     return {
       drawn: selected.length,
       omitted: Math.max(0, total - selected.length),

@@ -13,6 +13,7 @@ function fixture(
     advancePreparationClock = false,
     coordinatePreparationChunkSize = 0,
     pointRepresentation = 'entity',
+    onDiagnosticPhase = null,
   } = {},
 ) {
   const previous = globalThis.window;
@@ -45,6 +46,7 @@ function fixture(
     viewer,
     pointRepresentation,
     coordinatePreparationChunkSize,
+    onDiagnosticPhase,
     now: () => 1000,
     batchOptions: {
       now: () => (advancePreparationClock ? (clock += 2) : clock),
@@ -105,6 +107,77 @@ const records = (count) => [
     })),
   },
 ];
+
+test('opt-in import phase observer reports bounded work without affecting completion', (t) => {
+  const phases = [];
+  const env = fixture(t, {
+    onDiagnosticPhase: (entry) => {
+      phases.push(entry);
+      throw new Error('diagnostic observer failure');
+    },
+  });
+  const input = [
+    {
+      id: 'phase-fixture',
+      kind: 'geojson',
+      records: [
+        {
+          id: 'line',
+          properties: { name: 'Line' },
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [10, 40],
+              [11, 41],
+            ],
+          },
+        },
+        {
+          id: 'polygon',
+          properties: { name: 'Polygon' },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [10, 40],
+                [11, 40],
+                [11, 41],
+                [10, 40],
+              ],
+            ],
+          },
+        },
+      ],
+    },
+  ];
+
+  assert.deepEqual(env.layer.load(input), { drawn: 2, omitted: 0 });
+  assert.equal(env.layer.getState().featureCount, 2);
+  assert.deepEqual(
+    env.entities.values.map((entity) => entity.id),
+    [
+      'gev-import:active:phase-fixture:line',
+      'gev-import:active:phase-fixture:polygon',
+    ],
+  );
+  assert.ok(phases.length > 0);
+  assert.ok(
+    phases.every(
+      ({ phase, durationMs }) =>
+        typeof phase === 'string' &&
+        Number.isFinite(durationMs) &&
+        durationMs >= 0,
+    ),
+  );
+  assert.ok(phases.some(({ phase }) => phase === 'coordinate-conversion'));
+  assert.ok(phases.some(({ phase }) => phase === 'entity-publication'));
+  assert.ok(phases.some(({ phase }) => phase === 'context-registration'));
+
+  env.layer.clear();
+  assert.equal(env.layer.getState().featureCount, 0);
+  assert.equal(getContextStore().entities.size, 0);
+  assert.equal(phases.at(-1).phase, 'clear');
+});
 
 test('primitive point mode preserves Entity metadata, exact style, and native pick identity', (t) => {
   const env = fixture(t, { pointRepresentation: 'primitive-collection' });
@@ -336,9 +409,10 @@ function geometryValues(entity, type) {
   if (type === 'LineString')
     return entity.polyline.positions.getValue().map(({ x, y, z }) => [x, y, z]);
   const hierarchy = entity.polygon.hierarchy.getValue();
-  return [hierarchy.positions, ...hierarchy.holes.map((hole) => hole.positions)].map(
-    (ring) => ring.map(({ x, y, z }) => [x, y, z]),
-  );
+  return [
+    hierarchy.positions,
+    ...hierarchy.holes.map((hole) => hole.positions),
+  ].map((ring) => ring.map(({ x, y, z }) => [x, y, z]));
 }
 
 for (const type of ['LineString', 'Polygon']) {

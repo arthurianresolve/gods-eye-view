@@ -43,8 +43,24 @@ on:
             traffic,
             import-point-benefit,
             import-geometry-wake,
+            import-geometry-load-profile,
           ]
         default: collections
+      geometry_profile_mode:
+        description: Diagnostic sampler for an isolated large-geometry load
+        type: choice
+        options: [cpu, heap]
+        default: cpu
+      geometry_profile_arm:
+        description: Geometry preparation arm to profile
+        type: choice
+        options: [whole-feature-timer, chunked-timer, chunked-message-channel]
+        default: whole-feature-timer
+      geometry_profile_type:
+        description: Geometry type to profile
+        type: choice
+        options: [LineString, Polygon]
+        default: LineString
       hosted_gpu_probe:
         description: Probe native WebGL on free standard hosted runners
         type: boolean
@@ -777,7 +793,7 @@ jobs:
     name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
-    timeout-minutes: ${{ inputs.renderer_diagnostic == 'import-point-benefit' && 45 || inputs.renderer_diagnostic == 'import-geometry-wake' && 45 || inputs.renderer_diagnostic == 'traffic' && 20 || 10 }}
+    timeout-minutes: ${{ inputs.renderer_diagnostic == 'import-point-benefit' && 45 || inputs.renderer_diagnostic == 'import-geometry-wake' && 45 || inputs.renderer_diagnostic == 'import-geometry-load-profile' && 20 || inputs.renderer_diagnostic == 'traffic' && 20 || 10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -795,6 +811,9 @@ jobs:
       - name: Run selected project diagnostic with verified acceleration
         env:
           DIAGNOSTIC: ${{ inputs.renderer_diagnostic || 'collections' }}
+          GEOMETRY_PROFILE_MODE: ${{ inputs.geometry_profile_mode || 'cpu' }}
+          GEOMETRY_PROFILE_ARM: ${{ inputs.geometry_profile_arm || 'whole-feature-timer' }}
+          GEOMETRY_PROFILE_TYPE: ${{ inputs.geometry_profile_type || 'LineString' }}
           BASELINE_SHA: 4dfea32b4e63c0d28d22cd031e61e290e81f6f2a
           CANDIDATE_SHA: ${{ github.sha }}
         run: |
@@ -804,6 +823,11 @@ jobs:
             node scripts/performance/importPointRepresentationBenefit.mjs
           elif [ "$DIAGNOSTIC" = "import-geometry-wake" ]; then
             node scripts/qa-import-geometry-wake.mjs
+          elif [ "$DIAGNOSTIC" = "import-geometry-load-profile" ]; then
+            IMPORT_GEOMETRY_PROFILE_MODE="$GEOMETRY_PROFILE_MODE" \
+            IMPORT_GEOMETRY_PROFILE_ARM="$GEOMETRY_PROFILE_ARM" \
+            IMPORT_GEOMETRY_PROFILE_TYPE="$GEOMETRY_PROFILE_TYPE" \
+              node scripts/qa-import-geometry-load-profile.mjs
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
@@ -829,6 +853,14 @@ jobs:
         with:
           name: import-geometry-wake-${{ github.run_id }}
           path: qa-artifacts/import-geometry-wake
+          if-no-files-found: error
+          retention-days: 3
+      - name: Preserve large-geometry load profile after success or failure
+        if: always() && inputs.renderer_diagnostic == 'import-geometry-load-profile'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: import-geometry-load-profile-${{ github.run_id }}
+          path: qa-artifacts/import-geometry-load-profile
           if-no-files-found: error
           retention-days: 3
       - name: Preserve traffic evidence after success or failure
