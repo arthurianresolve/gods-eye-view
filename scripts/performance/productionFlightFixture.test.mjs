@@ -374,6 +374,44 @@ test('completed-render settling removes its listener on render, timeout, and can
   assert.equal(cancelled.scene.postRender.handlers.size, 0);
 });
 
+test('render boundary diagnostics distinguish update from draw and release every observer', async (t) => {
+  const { settleCompletedRender } = await import('./productionFlightFixture.mjs');
+  const phases = [];
+  t.mock.method(console, 'info', (line) => phases.push(JSON.parse(line.slice('[gev-render-boundary] '.length)).phase));
+  const make = () => {
+    const scene = {};
+    for (const name of ['preUpdate', 'postUpdate', 'preRender', 'postRender']) {
+      const callbacks = new Set();
+      scene[name] = { callbacks,
+        addEventListener(fn) { callbacks.add(fn); return () => callbacks.delete(fn); },
+        fire() { for (const fn of callbacks) fn(); },
+      };
+    }
+    return { scene };
+  };
+  for (const complete of [true, false]) {
+    phases.length = 0;
+    const viewer = make();
+    viewer.scene.requestRender = () => queueMicrotask(() => {
+      viewer.scene.preUpdate.fire(); viewer.scene.preUpdate.fire();
+      viewer.scene.postUpdate.fire(); viewer.scene.preRender.fire();
+      if (complete) viewer.scene.postRender.fire();
+    });
+    const pending = settleCompletedRender(viewer, 10, null, true);
+    if (complete) await pending;
+    else await assert.rejects(pending, /did not settle/);
+    assert.deepEqual(phases, ['entered', 'armed', 'requested', 'preUpdate', 'postUpdate', 'preRender', complete ? 'completed' : 'timeout']);
+    for (const event of Object.values(viewer.scene)) {
+      if (event.callbacks) assert.equal(event.callbacks.size, 0);
+    }
+  }
+  phases.length = 0;
+  const viewer = make();
+  viewer.scene.requestRender = () => queueMicrotask(() => viewer.scene.postRender.fire());
+  await settleCompletedRender(viewer, 10);
+  assert.deepEqual(phases, []);
+});
+
 test('entity-follow route requires matching fixture epochs, fresh source, and actual target motion', () => {
   const julian = (epoch) => {
     const value = epoch / 86_400_000 + 2_440_587.5;

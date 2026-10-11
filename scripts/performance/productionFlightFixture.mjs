@@ -336,11 +336,21 @@ export function installPhasedMonotonicWallClock(
 }
 
 /** Wait for one completed Cesium render after a held clock boundary. */
-export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal = null) {
+export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal = null, diagnostics = false) {
   const viewer = typeof viewerOrTimeout === 'number'
     ? globalThis.__godsEyeView?.viewer
     : viewerOrTimeout;
   if (typeof viewerOrTimeout === 'number') timeoutMs = viewerOrTimeout;
+  // Optional scalar diagnostics run only at a held, unmeasured boundary. The
+  // host can distinguish queued evaluation, update work, and a blocked draw
+  // even when the renderer cannot service another inspection request.
+  const report = (phase) => {
+    if (!diagnostics) return;
+    console.info('[gev-render-boundary] ' + JSON.stringify({
+      phase, pageNowMs: globalThis.performance?.now?.() ?? null,
+    }));
+  };
+  report('entered');
   if (!viewer?.scene?.postRender?.addEventListener || !Number.isFinite(timeoutMs) || timeoutMs <= 0)
     return Promise.reject(new TypeError('A viewer postRender event and positive timeout are required.'));
   return new Promise((resolve, reject) => {
@@ -348,20 +358,25 @@ export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal 
     let removeListener = null;
     let listener = null;
     let timer = null;
+    const removeDiagnostics = [];
     const startedAt = globalThis.performance?.now?.();
     const onAbort = () => finish(signal.reason || new Error('Completed render settling was aborted.'));
     const cleanup = () => {
       clearTimeout(timer);
+      for (const remove of removeDiagnostics.splice(0)) {
+        try { remove(); } catch {}
+      }
       try {
         if (typeof removeListener === 'function') removeListener();
         else if (listener) viewer.scene.postRender.removeEventListener?.(listener);
       } catch {}
       try { signal?.removeEventListener?.('abort', onAbort); } catch {}
     };
-    const finish = (error) => {
+    const finish = (error, phase = error ? 'failed' : 'completed') => {
       if (done) return;
       done = true;
       cleanup();
+      report(phase);
       if (error) reject(error);
       else resolve({ settleElapsedMs: Number.isFinite(startedAt) && Number.isFinite(globalThis.performance?.now?.())
         ? Math.max(0, globalThis.performance.now() - startedAt)
@@ -369,11 +384,26 @@ export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal 
     };
     if (signal?.aborted) return onAbort();
     signal?.addEventListener?.('abort', onAbort, { once: true });
-    timer = setTimeout(() => finish(new Error('Completed render did not settle before the boundary timeout.')), timeoutMs);
+    timer = setTimeout(() => finish(new Error('Completed render did not settle before the boundary timeout.'), 'timeout'), timeoutMs);
     try {
+      if (diagnostics) for (const name of ['preUpdate', 'postUpdate', 'preRender']) {
+        const event = viewer.scene[name];
+        if (!event?.addEventListener) continue;
+        let reported = false;
+        const callback = () => {
+          if (reported) return;
+          reported = true;
+          report(name);
+        };
+        const remove = event.addEventListener(callback);
+        removeDiagnostics.push(typeof remove === 'function'
+          ? remove : () => event.removeEventListener?.(callback));
+      }
       listener = () => finish();
       removeListener = viewer.scene.postRender.addEventListener(listener);
+      report('armed');
       viewer.scene.requestRender?.();
+      report('requested');
     } catch (error) { finish(error); }
   });
 }
