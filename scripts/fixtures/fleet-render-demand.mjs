@@ -313,8 +313,19 @@ async function createFixture(clock) {
                 );
                 return {
                   id: String(b.id),
+                  imageSource: String(b.image || ''),
                   width: b.width,
                   height: b.height,
+                  pixelOffset: [b.pixelOffset.x, b.pixelOffset.y],
+                  eyeOffset: vector(b.eyeOffset),
+                  scaleByDistance: b.scaleByDistance
+                    ? [
+                        b.scaleByDistance.near,
+                        b.scaleByDistance.nearValue,
+                        b.scaleByDistance.far,
+                        b.scaleByDistance.farValue,
+                      ]
+                    : null,
                   uv: [uv.x, uv.y, uv.width, uv.height],
                   actualPosition: vector(b._actualPosition),
                 };
@@ -448,6 +459,7 @@ async function createFixture(clock) {
     }
     async function capture(name) {
       let frameOutput;
+      let framebufferBytes;
       const remove = viewer.scene.postRender.addEventListener(() => {
         frameOutput = {
           output: output(),
@@ -457,16 +469,71 @@ async function createFixture(clock) {
           cameraMoveEnds: cameraEvents.length,
           renderState: renderState(),
         };
+        // Read the completed default framebuffer without changing bindings.
+        // Compare this with the production Canvas2D copy to separate renderer
+        // output from capture conversion. This is correctness instrumentation,
+        // never a latency sample or a new production capture implementation.
+        const gl = viewer.scene.context._gl;
+        check(
+          gl.getParameter(gl.FRAMEBUFFER_BINDING) === null,
+          'Capture framebuffer is not default',
+        );
+        if (gl.READ_FRAMEBUFFER_BINDING !== undefined)
+          check(
+            gl.getParameter(gl.READ_FRAMEBUFFER_BINDING) === null,
+            'Read framebuffer is not default',
+          );
+        if (gl.PIXEL_PACK_BUFFER_BINDING !== undefined)
+          check(
+            gl.getParameter(gl.PIXEL_PACK_BUFFER_BINDING) === null,
+            'Pixel pack buffer is occupied',
+          );
+        framebufferBytes = new Uint8Array(
+          gl.drawingBufferWidth * gl.drawingBufferHeight * 4,
+        );
+        gl.readPixels(
+          0,
+          0,
+          gl.drawingBufferWidth,
+          gl.drawingBufferHeight,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          framebufferBytes,
+        );
       });
       let canvas;
+      let rawCanvas;
       let captured;
       try {
         canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
         check(canvas && frameOutput, `${name}: completed frame unavailable`);
         remove();
+        for (const fleet of Object.values(frameOutput.renderState.fleets)) {
+          for (const sprite of fleet.sprites) {
+            sprite.imageSha256 = await sha(
+              new TextEncoder().encode(sprite.imageSource),
+            );
+            delete sprite.imageSource;
+          }
+        }
         const bytes = canvas
           .getContext('2d')
           .getImageData(0, 0, canvas.width, canvas.height).data;
+        // WebGL's origin is bottom-left; normalize row order only. Preserve
+        // all channels exactly and retain a PNG so the host can verify hashes.
+        const raw = new Uint8ClampedArray(framebufferBytes.length);
+        const stride = canvas.width * 4;
+        for (let row = 0; row < canvas.height; row++)
+          raw.set(
+            framebufferBytes.subarray(row * stride, (row + 1) * stride),
+            (canvas.height - 1 - row) * stride,
+          );
+        rawCanvas = document.createElement('canvas');
+        rawCanvas.width = canvas.width;
+        rawCanvas.height = canvas.height;
+        rawCanvas
+          .getContext('2d')
+          .putImageData(new ImageData(raw, canvas.width, canvas.height), 0, 0);
         let colored = 0;
         for (let i = 0; i < bytes.length; i += 4)
           if (bytes[i] > 40 || bytes[i + 1] > 40 || bytes[i + 2] > 40)
@@ -482,6 +549,12 @@ async function createFixture(clock) {
             sha256: await sha(bytes),
             coloredPixels: colored,
             png: canvas.toDataURL('image/png'),
+            framebuffer: {
+              width: canvas.width,
+              height: canvas.height,
+              sha256: await sha(raw),
+              png: rawCanvas.toDataURL('image/png'),
+            },
           },
         };
         if (name !== 'disabled')
@@ -503,6 +576,8 @@ async function createFixture(clock) {
       } finally {
         remove();
         if (canvas) canvas.width = canvas.height = 0;
+        if (rawCanvas) rawCanvas.width = rawCanvas.height = 0;
+        framebufferBytes = null;
       }
     }
     async function dispose() {
