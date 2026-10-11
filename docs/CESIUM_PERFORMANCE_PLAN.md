@@ -3989,3 +3989,29 @@ separate this accepted resource-release correction from unmeasured benefits.
 Hardware validation, full weather/effect comparisons and the current-candidate
 60-minute retained-memory plateau remain pending. This success does not establish
 the cause of previous intermittent Windows browser shutdown failures.
+
+## Current main/weather integration gate - 11 October 2026
+
+Candidate `260037cbe51cb187ec7ac1eca12fe9d10767269b` merges upstream main
+`591f299` with the independently validated regional bitmap cleanup. Published
+layer-token compatibility passes locally against both current fork/main and
+fork/dev (29 existing assignments, no new tokens). The candidate is not on dev.
+
+[CI run 38151528050](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38151528050)
+failed two checks. Windows preserved the settings and workspace but its Chrome
+parent exceeded the unchanged five-second shutdown deadline after acknowledging
+close in 7.36 ms and disconnecting in 30.79 ms. Forced cleanup followed. The
+browser journey failed its accessible-name snapshot for the SAVE QUERY button;
+its portable-panel step passed. Five other standard jobs passed.
+[Original failed evidence](performance-evidence/main-weather-38151528050/review.json)
+remains failed. The browser shutdown cause is unresolved.
+
+The accessibility fixture previously forced two panels open by changing CSS
+classes, bypassing the disclosure owner's preferred-panel state. Source review
+shows that automatic rail layout can collapse those surfaces. This is a plausible
+cause of the missing AX node, but the old log did not retain ignored reasons.
+The fixture now opens one surface at a time through its actual disclosure,
+checks that it remains exposed, and requires Chrome's computed accessible name
+instead of accepting a raw aria-labelledby ID. Failures retain AX and panel
+state. Code is implemented; hosted validation remains pending. No production
+panel behavior or browser-close deadline changed.

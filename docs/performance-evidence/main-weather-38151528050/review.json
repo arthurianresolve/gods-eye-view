@@ -1,0 +1,30 @@
+{
+  "testedCommit": "260037cbe51cb187ec7ac1eca12fe9d10767269b",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38151528050",
+  "status": "failed",
+  "acceptedForDev": false,
+  "recoverySha256": "e97a6d7d1d27bfa51ad2a043c1ca95a3d644567d4b44f726a4631ccf9f565bdd",
+  "recoverySource": "Exact compact JSON printed in the completed hosted job log; artifact upload was disabled.",
+  "failures": [
+    {
+      "check": "Windows install/update recovery",
+      "reason": "Graceful browser close did not complete.",
+      "settingsAndWorkspacePreserved": true,
+      "ownedPagesBeforeClose": 0,
+      "browserCloseAckMs": 7.36,
+      "browserDisconnectedMs": 30.7856,
+      "parentProcessExceededMs": 5000,
+      "forcedCleanup": true
+    },
+    {
+      "check": "Accessible names",
+      "reason": "SAVE QUERY button had no non-ignored AX node/name in the fixture snapshot.",
+      "followup": "Replace direct multi-panel CSS mutation with sequential disclosure-controlled inspection; require browser-computed AX names and preserve state on failure."
+    }
+  ],
+  "limits": [
+    "Five other standard jobs passed; browser job failure was its accessibility step, not portable-panel validation.",
+    "The timeout root cause remains unresolved; no unchanged rerun or increased deadline converts this failure into success.",
+    "Panel auto-collapse is a source-backed hypothesis for the missing AX node, not proven by the old failure log, which did not retain ignored reasons."
+  ]
+}
