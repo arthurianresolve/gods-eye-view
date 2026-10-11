@@ -1,5 +1,13 @@
 # Cesium performance plan
 
+The isolated Cesium no-op terrain-collision transform fix is accepted at
+f26f4dd738a518c6cefa96b5f809c5d9c53afa83 after all seven ordinary integration jobs
+and 111 tracking checks pass. It removes redundant tracked-camera transform
+writes while preserving actual terrain correction. [Exact scope and raw evidence](performance-evidence/cesium-collision-transform/README.md)
+are recorded separately from fleet scheduling, full-scene performance and physical
+Windows acceptance, which remain unfinished. No entire performance slice is
+completed by this component correction.
+
 Placement reuse at `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` is accepted as a
 component optimization after exact-source CPU, pixel, allocation, native font
 and all seven integration gates pass ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),
