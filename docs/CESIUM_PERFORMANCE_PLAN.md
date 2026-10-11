@@ -4183,3 +4183,21 @@ now fail the hosted trace run before the two-minute result wait. Omitted GC
 records gain bounded reason counts, while unsupported observations remain
 incomplete. Focused tests pass; hosted validation of the correction is pending.
 No import performance claim is made from either failed diagnostic.
+
+### S59 complete bounded loading trace - 11 October 2026
+
+Code implemented: flow edges are counted separately from duration events, timestamp
+preparation occurs before loading measurements, and the validator reconciles that
+preparation marker separately from measured anchors. Automatically validated: 31
+focused trace/session/report checks and hosted run [38149643758](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38149643758)
+pass at `4504a30f99a0008a7beae5a4a9fd530f103b8ec5`. The preceding run 38149480488 remains failed because
+its validator omitted the preparation marker from its inventory.
+
+The new report retains 5027 normalized timing records and accounts
+for 1170 flow edges with zero omissions. All six loading windows align;
+8 of 12 slow steps overlap same-thread GC and four do not. The maximum observed
+step is 89.9 ms. These instrumented observations
+do not pass the 4 ms application budget or establish GC as the sole cause. Next,
+attribute allocation/CPU work within loading only, preserving original entity
+order and all geometry. Physical Windows, interaction and retained-heap acceptance
+remain pending. [Raw report and independent review](performance-evidence/s59-import-trace-38149643758/review.json).

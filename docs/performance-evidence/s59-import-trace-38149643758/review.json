@@ -1,0 +1,69 @@
+{
+  "schema": "gev-import-trace-review/v1",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38149643758",
+  "testedCommit": "4504a30f99a0008a7beae5a4a9fd530f103b8ec5",
+  "rawSha256": "ce2bf446668f0b701139a86f1ee48dd457f0348d21b0c0c8d7856fd8d11e8137",
+  "rawBytes": 542514,
+  "sourceHashes": {
+    "scripts/fixtures/import-batches-ui.js": "52ee772b2730278906fe52d898954da2b92200402d827c75e5ee7d633df0c419",
+    "scripts/performance/importTraceAttribution.mjs": "378e15106b474c626e80441836ccd0d8598179bb66a5dec9b4bdf80c40bba32b",
+    "scripts/performance/importTraceSession.mjs": "37c69f75e00be38753d6e42d71a34c6ea67f056f3b580fe9ce2b0e3c191b14c7",
+    "scripts/performance/importBatchSchedulerReport.mjs": "532b27cf3b3afc61b7389a5aad18342c2e9aa5ac1b2974b6c7006ccbb1b99cd7",
+    "scripts/qa-hosted-capture.mjs": "0636f5094f9081bcf651847453ef6ce698eaa1639c39ec3208384fbc2457ea90",
+    "src/imports/cooperative.js": "307a55a7c42fda221520c53e2698a86894924048f9f99e7425b0c005a5efa015",
+    "src/imports/runtimeLayer.js": "6bb73ca801d4c0a100bc078ee7c6e0f87df3830a80ebe2a5ae8a6438f277aaff"
+  },
+  "diagnosticValidation": "passed",
+  "performanceAcceptanceEligible": false,
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+  "captureChecks": 12,
+  "pairedImports": 5,
+  "featuresPerImport": 5000,
+  "fullGeometryCoordinates": {
+    "line": 50000,
+    "polygon": 50000
+  },
+  "cancelledImports": 12,
+  "allPairsHaveMatchingReportedPixelAndOrderHashes": true,
+  "rawPixelBytesRetained": false,
+  "trace": {
+    "retained": 5027,
+    "flowEdges": 1170,
+    "omitted": 0,
+    "peakBufferUsage": 0.0055009364150464535,
+    "preparation": {
+      "name": "gev-import-step:preparation",
+      "callDurationMs": 2,
+      "uncertaintyMs": 1
+    },
+    "maxMeasuredAnchorUncertaintyMs": 1.5,
+    "loadingWindows": 6,
+    "slowSteps": 12,
+    "slowStepsWithSameThreadGcOverlap": 8,
+    "maxObservedStepMs": 89.89999999999418
+  },
+  "limitations": [
+    "Instrumented timings are diagnostic only; they cannot qualify the 4 ms batch, interaction or performance targets.",
+    "GC overlap is temporal evidence, not proof of cause. Four slow entity steps have no recorded same-thread GC overlap.",
+    "Apple paravirtual Metal is hosted supplemental evidence, not physical Windows hardware coverage.",
+    "Image parity is checked from fixture-reported hashes; raw pixel buffers are not present in this report.",
+    "No latency improvement or retention plateau is claimed."
+  ],
+  "previousRun": {
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38149480488",
+    "testedCommit": "4dab13e4de8ba9e72956265a3ff0ddff0ade9a4a",
+    "status": "failed",
+    "reason": "Preparation marker omitted from validator expected inventory; corrected in 4504a30. Earlier failed report remains unchanged."
+  }
+}
