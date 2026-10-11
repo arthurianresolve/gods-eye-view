@@ -4070,3 +4070,7 @@ the multi-second delay. Browser trace finalization may itself affect shutdown,
 which remains an inference requiring a separate control. Keep the original
 uninstrumented failure and the post-deadline natural-exit evidence authoritative;
 do not claim that a root cause or fix has been established by this trace.
+
+Shutdown tracing now requires the explicit `shutdown_trace` dispatch option.
+Its default is false so the normal bounded repetition diagnostic continues to
+collect uninstrumented close evidence. No acceptance deadline has changed.
