@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { trafficFixtureRandomSnapshot } from '../performance/trafficFixtureRandom.mjs';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { createTrafficLayer } from '../../src/layers/traffic/index.js';
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
@@ -645,6 +646,7 @@ function projectedSnapshot() {
       ].map((v) => Number(v.toFixed(9))),
     },
     clock: clockSnapshot(),
+    randomInput: trafficFixtureRandomSnapshot(),
     renderSettings: {
       viewport: {
         width: innerWidth,

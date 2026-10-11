@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import * as Cesium from 'cesium';
 import { EventEmitter } from 'node:events';
+import { createTrafficFixtureRandom } from './trafficFixtureRandom.mjs';
+import { transformTrafficFixtureRandom } from './trafficFixtureRandomTransform.mjs';
 import { installTrafficFixtureInterception } from './trafficFixtureInterception.mjs';
 import {
   compareTrafficRenderDemandRuns,
@@ -128,6 +130,12 @@ function makeRun(mode, appCommit, frames) {
               antialias: true,
               preserveDrawingBuffer: true,
             },
+          },
+          randomInput: {
+            adapter: 'traffic-owned-lcg/v1',
+            seed: 0x51f17e,
+            state: 20,
+            calls: { animation: 12, model: 0 },
           },
           clock: {
             requestedEpochMs,
@@ -658,5 +666,106 @@ test('fixture serializes real Julian dates at its integer millisecond precision'
     Date.parse(snapshot().currentTimeIso),
     scope.logicalNow,
     'real clock drift must remain observable',
+  );
+});
+
+test('traffic random input is independent of engine GUID allocation order', () => {
+  const oldSeed = createTrafficFixtureRandom();
+  const expected = [
+    oldSeed.random('animation'),
+    oldSeed.random('model'),
+    oldSeed.random('animation'),
+  ];
+  const adapted = createTrafficFixtureRandom();
+  const actual = [adapted.random('animation')];
+  // Real Cesium GUID allocation consumes 31 global Math.random calls per ID.
+  const original = Math.random;
+  let engineCalls = 0;
+  Math.random = () => {
+    engineCalls++;
+    return 0.4;
+  };
+  try {
+    for (let i = 0; i < 17; i++) Cesium.createGuid();
+    actual.push(adapted.random('model'));
+    for (let i = 0; i < 4; i++) Cesium.createGuid();
+    actual.push(adapted.random('animation'));
+  } finally {
+    Math.random = original;
+  }
+  assert.equal(engineCalls, 21 * 31);
+  assert.deepEqual(actual, expected);
+  assert.deepEqual(adapted.snapshot(), oldSeed.snapshot());
+  const snapshot = adapted.snapshot();
+  snapshot.calls.animation = -1;
+  assert.equal(adapted.snapshot().calls.animation, 2);
+  assert.throws(() => adapted.random('engine'), /Unknown traffic random owner/);
+});
+
+test('fixture random adapter rewrites only the declared production traffic call sites', async () => {
+  for (const [owner, count] of [
+    ['animation', 8],
+    ['model', 2],
+  ]) {
+    const path = new URL(
+      '../../src/layers/traffic/' + owner + '.js',
+      import.meta.url,
+    );
+    const source = await readFile(path, 'utf8');
+    const transformed = transformTrafficFixtureRandom(source, path.pathname);
+    assert.equal(transformed.callSites, count);
+    assert.equal(transformed.owner, owner);
+    assert.equal(
+      transformed.code
+        .split('\n')
+        .slice(1)
+        .join('\n')
+        .replaceAll(
+          "__gevTrafficFixtureRandom('" + owner + "')",
+          'Math.random()',
+        ),
+      source,
+    );
+    assert.equal((transformed.code.match(/Math\.random\(\)/g) || []).length, 0);
+    assert.throws(
+      () =>
+        transformTrafficFixtureRandom(
+          source + '\nMath.random();',
+          path.pathname,
+        ),
+      /call sites changed/,
+    );
+  }
+  assert.equal(
+    transformTrafficFixtureRandom(
+      'Math.random()',
+      '/node_modules/@cesium/engine/Source/Core/createGuid.js',
+    ),
+    null,
+  );
+  assert.equal(
+    transformTrafficFixtureRandom(
+      'Math.random()',
+      '/src/layers/other/animation.js',
+    ),
+    null,
+  );
+});
+
+test('traffic comparisons reject missing or mismatched independent random inputs', () => {
+  const baseline = makeRun('baseline', BASE, 250);
+  const candidate = makeRun('candidate', CANDIDATE, 0);
+  delete candidate.captures[0].snapshot.randomInput;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(candidate),
+    /random-input normalization/,
+  );
+  candidate.captures[0].snapshot.randomInput = structuredClone(
+    baseline.captures[0].snapshot.randomInput,
+  );
+  candidate.captures[0].snapshot.randomInput.calls.animation++;
+  assert.throws(
+    () => compareTrafficRenderDemandRuns(baseline, candidate),
+    /rendered output differs/,
   );
 });

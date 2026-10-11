@@ -104,7 +104,21 @@
         "message": "Traffic fixture clock was not frozen at the requested time in fading-retained-dots"
       },
       "completedTrials": 1
+    },
+    {
+      "run": "38122209754",
+      "commit": "168a5020723bca208461d9736371929112962252",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38122209754",
+      "file": "traffic-38122209754.json",
+      "sha256": "19379802dfc05b80651c19666429dbad60353980a71dc4fa65364c64f6c90b53",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic rendered output differs in return-arrival"
+      },
+      "completedTrials": 4,
+      "completedMatchingPairs": 1
     }
   ],
-  "acceptance": "None of these failed runs provides a completed traffic optimization comparison or physical desktop hardware acceptance."
+  "acceptance": "These failed runs do not establish an accepted five-pair traffic comparison or physical desktop coverage. Run 38122209754 completed one matching pair before failing the second pair."
 }

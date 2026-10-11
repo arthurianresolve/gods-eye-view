@@ -1173,5 +1173,8 @@
   "scripts/performance/trafficRenderDemand.test.mjs",
   "scripts/performance/trafficRenderDemandComparison.mjs",
   "scripts/fixtures/traffic-surface-readiness.test.mjs",
-  "scripts/performance/trafficFixtureInterception.mjs"
+  "scripts/performance/trafficFixtureInterception.mjs",
+  "scripts/performance/trafficFixtureRandom.mjs",
+  "scripts/performance/trafficFixtureRandomTransform.mjs",
+  "scripts/fixtures/traffic-render-demand.vite.mjs"
 ]

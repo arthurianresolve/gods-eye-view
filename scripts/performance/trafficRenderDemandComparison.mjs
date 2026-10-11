@@ -16,6 +16,10 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
+import {
+  transformTrafficFixtureRandom,
+  TRAFFIC_RANDOM_SOURCES,
+} from './trafficFixtureRandomTransform.mjs';
 import { installWorkerDiagnostics } from './workerDiagnostics.mjs';
 import { installTrafficFixtureInterception } from './trafficFixtureInterception.mjs';
 import {
@@ -63,6 +67,9 @@ assert.equal(
 await mkdir(output, { recursive: true });
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const fixtureNames = [
+  'scripts/fixtures/traffic-render-demand.vite.mjs',
+  'scripts/performance/trafficFixtureRandom.mjs',
+  'scripts/performance/trafficFixtureRandomTransform.mjs',
   'scripts/fixtures/traffic-render-demand.html',
   'scripts/fixtures/traffic-render-demand.mjs',
 ];
@@ -82,6 +89,7 @@ const gitBytes = (cwd, ref) => {
 };
 const TRAFFIC_SOURCES = [
   'src/layers/traffic/animation.js',
+  'src/layers/traffic/model.js',
   'src/layers/traffic/lifecycle.js',
   'src/layers/traffic/rendering.js',
   'src/layers/traffic/retention.js',
@@ -216,6 +224,8 @@ function serverFor(side, port) {
     process.execPath,
     [
       'node_modules/vite/bin/vite.js',
+      '--config',
+      'scripts/fixtures/traffic-render-demand.vite.mjs',
       '--host',
       '127.0.0.1',
       '--port',
@@ -606,7 +616,27 @@ try {
         ]),
       ),
     );
+    const randomAdaptation = {};
+    for (const owner of Object.keys(TRAFFIC_RANDOM_SOURCES)) {
+      const path = `src/layers/traffic/${owner}.js`;
+      const code = await readFile(resolve(root, path), 'utf8');
+      const transformed = transformTrafficFixtureRandom(
+        code,
+        resolve(root, path),
+      );
+      randomAdaptation[path] = {
+        originalSha256: hash(code),
+        servedSha256: hash(transformed.code),
+        callSites: transformed.callSites,
+      };
+    }
     report.sources[side] = {
+      randomAdaptation: {
+        kind: 'traffic-owned-lcg/v1',
+        scope:
+          'serve-time random-input normalization; correctness and empty-idle frames only, not motion latency',
+        files: randomAdaptation,
+      },
       commit: commits[side],
       trafficFiles: files,
       packageLockSha256: packageLock,

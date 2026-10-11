@@ -63,6 +63,19 @@ function validateCapture(capture, index) {
     typeof snapshot.renderSettings.maskedRenderer !== 'string'
   )
     fail(`Missing effective renderer settings in ${expected}`);
+  const random = snapshot.randomInput;
+  if (
+    random?.adapter !== 'traffic-owned-lcg/v1' ||
+    random.seed !== 0x51f17e ||
+    !Number.isSafeInteger(random.state) ||
+    random.state < 0 ||
+    random.state > 0xffffffff ||
+    !Number.isSafeInteger(random.calls?.animation) ||
+    random.calls.animation < 1 ||
+    !Number.isSafeInteger(random.calls?.model) ||
+    random.calls.model < 0
+  )
+    fail('Traffic random-input normalization is missing or invalid');
   const clock = snapshot.clock;
   if (
     !clock ||
