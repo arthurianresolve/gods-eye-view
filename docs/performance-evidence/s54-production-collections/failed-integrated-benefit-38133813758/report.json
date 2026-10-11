@@ -1,0 +1,313 @@
+{
+  "schema": "gev-infrastructure-benefit-comparison/v2",
+  "layerId": "local-dams",
+  "status": "failed",
+  "applicationCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+  "harnessCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+  "startedAt": "2026-10-11T10:58:14.656Z",
+  "renderClock": {
+    "iso": "2026-10-11T12:00:00.000Z",
+    "shouldAnimate": false
+  },
+  "measurementScope": {
+    "latency": "fresh-viewer-source-ready-to-first-usable-postRender-before-rgba-readback-hash-and-pick-verification-no-forced-gc",
+    "memory": "separate-fresh-viewer-post-forced-gc-js-heap-used-size-only",
+    "verificationCost": "postRender-rgba-readback-full-frame-hash-and-native-pick-search-run-after-the-first-usable-timestamp",
+    "retainedMemoryClaim": "none-js-heap-used-size-is-a-proxy-and-excludes-gpu-native-cesium-and-browser-process-memory",
+    "pairCountPerSuite": 5,
+    "alternation": "entities,candidate then candidate,entities within each suite"
+  },
+  "provenance": {
+    "node": "v24.14.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cesiumVersion": "1.138.0",
+    "files": {
+      "package-lock.json": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "patches/cesium-1.138.0-inertia.json": "934ca34f18a67e157dfa1813b65dd58f6a2a33571c590f047c27929281f5d951",
+      "patches/cesium-1.138.0-collision-transform.json": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79",
+      "src/data/infrastructure.js": "e80769a69ecbc46b75e8c7e2f8182cc53dc5b1e9f3f898bba9f51f4fbcfd2460",
+      "src/data/localGeojsonCore.js": "81a4e32bcc83ac8e0b5028b7bbfc8438b7082eb0dea410722fd2f1814634f778",
+      "src/data/localGeojsonLod.js": "cdc4f1734711816d161bee4cb000947fcc4d30ca0e819cd202e7a0e1289573fc",
+      "src/data/infrastructureOverlayEntry.js": "dec1ec7acbfcc618a60313ace9c68d8bb26a593fccf83351e65e9dcbbe7176e4",
+      "src/data/inputOwnership.js": "2ee8fa71db1d3049fdbd5299c563a94ea9e4bf08c6df29be4dd0a5e6b474dc03",
+      "src/app/localGeojsonServices.js": "b2edce7b92d408d072d0971cfb7e3d55fc673ac563a4c8e4975e536ba8d7c390",
+      "src/app/viewer.js": "d54423936748a2a20c170b0b7d9ac2cacd79d3f617a49b5963261cb31b943911",
+      "src/app/atmosphereCompat.js": "4682531175416e582d7992bffb6a32c7511e75042589068efa6bb50925be088b",
+      "src/app/cameraAnglesCompat.js": "6253c2f3dfb3783a2b6582e8d39ac5653dccc942f35309544d1d9ee83896857b",
+      "src/freshFrame.js": "56e2fb400e0af904d585d6c8dbf8039278a5182ce3d5b15c3df01b05e88e18ca",
+      "src/renderGovernor.js": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836",
+      "src/data/dataCredits.js": "48fc314729ca30fc95abb2160e5cd6f8da747fb0e0d66ed9e298c5c5e95562fb",
+      "src/sources/infrastructureData.js": "537b2d41961fef901fd6295e0ffa86d194a286e5ccb475019a419a6c93cfcd02",
+      "src/performance/performanceSnapshot.js": "b2cff39fe801afb9b78111111bdbaecf0cfc2427b8624baf4d80d18e8959af80",
+      "scripts/fixtures/infrastructure-benefit.html": "00abaa0601a7cddf94c357938cda17e0549d907027a05b7390ec441be2d59138",
+      "scripts/fixtures/infrastructure-benefit.mjs": "ddea2d78432e3200da20a8dadaec4ba9e398bc0402af3d04f7aa449e7a53daf0",
+      "scripts/fixtures/infrastructureNativePickOwnership.mjs": "1c8b74edb61b2a9975136f544032052833ee6c4bd968912f8a2d5d7c5dec35d1",
+      "scripts/fixtures/infrastructureFixtureLayer.mjs": "248cd4dc3087972977bc382ca1957af04752c057f5dce32465c23c91bd7409c0",
+      "scripts/fixtures/infrastructureFixtureCamera.mjs": "96bec8e5bc7542464e8f9058103ba9cb8b8beda362a5ee80245268c02044c27e",
+      "scripts/performance/infrastructureBenefitComparison.mjs": "cef2002de3d041d06ddf829c53644639578b4bb37434af529cef07bac510ee02",
+      "scripts/performance/infrastructureBenefitComparison.test.mjs": "f2335a3cfbf58d30439e74b2a4e01ee453201f24c2e1142a43845bef36c066c8",
+      "scripts/performance/rendererEvidence.mjs": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+      "scripts/performance/profileRecoveryPageOwnership.mjs": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+      "scripts/performance/fixtureInterception.mjs": "e94a13ae6df18925298fe167a7a6243503a6f1761555c2210be7c6e39501ff00"
+    },
+    "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+    "patchManifests": {
+      "patches/cesium-1.138.0-inertia.json": "934ca34f18a67e157dfa1813b65dd58f6a2a33571c590f047c27929281f5d951",
+      "patches/cesium-1.138.0-collision-transform.json": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79"
+    },
+    "installedDependencyBytes": {
+      "cesiumPackageSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+      "enginePackageSha256": "ea6007d927f9df91679fa94c22b541beea94c88c4fb7a89297970dcbf3866f70",
+      "cesiumVersion": "1.138.0",
+      "engineVersion": "22.3.0",
+      "cesiumFiles": {
+        "@cesium/engine/Source/Scene/ScreenSpaceCameraController.js": "a6fc009113bd302f45b100f0e8f22eae14b7ffc8a3b9ecef639af9e1ca07089e",
+        "cesium/Build/Cesium/Cesium.js": "14312c40d18a203c98501266f70f0191830c158627e5d88d1ec96bf8f9b4e7f2",
+        "cesium/Build/CesiumUnminified/Cesium.js": "7c0d49dd1c34eba8b740a5310b08fb59ced1405e7d399d710ef86d810224d063",
+        "cesium/Build/Cesium/index.cjs": "3aafe7d915b7596edc501189dda0e9d8daae5a76238324591f7da64e9175efef",
+        "cesium/Build/CesiumUnminified/index.cjs": "b2bdd3e35e38f2f7a985360bb955a343f239c71339f3b8fa549d5afa0c21f254"
+      }
+    }
+  },
+  "environment": {
+    "graphics": {
+      "featureStatus": {
+        "webgl": "enabled",
+        "webgl2": null,
+        "gpu_compositing": "enabled",
+        "opengl": "enabled_on"
+      },
+      "devices": [
+        {
+          "vendor": "Google Inc. (Apple)",
+          "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+          "driver": "26.6.2"
+        }
+      ]
+    },
+    "renderer": null,
+    "rendererClass": null
+  },
+  "pairs": [
+    {
+      "suite": "latency",
+      "index": 0,
+      "order": [
+        "entities",
+        "primitive-collections"
+      ],
+      "runs": {
+        "entities": {
+          "mode": "entities",
+          "suite": "latency",
+          "pairIndex": 0,
+          "orderIndex": 0,
+          "layerId": "local-dams",
+          "applicationCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+          "harnessCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+          "status": "failed",
+          "phase": "activating",
+          "pageErrors": [
+            "Native pick ownership index does not cover every layer surface."
+          ],
+          "externalRequests": [],
+          "interceptionErrors": [],
+          "cleanup": {
+            "sessionDetached": true,
+            "page": {
+              "closeCompleted": true,
+              "openPageCount": 0
+            },
+            "contextClosed": true,
+            "complete": true
+          },
+          "ready": {
+            "schema": "gev-infrastructure-benefit-trial/v1",
+            "status": "ready",
+            "phase": "ready",
+            "applicationCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+            "mode": "entities",
+            "layerId": "local-dams",
+            "source": {
+              "layerId": "local-dams",
+              "payloadSha256": "f2b6f3166bee6dba4f0b569553a14c84faeb0048eb522bacd4d9c78e93d30d30",
+              "payloadBytes": 730280,
+              "featureCount": 704,
+              "geometryKinds": {
+                "Polygon": 688,
+                "MultiPolygon": 4,
+                "Point": 5,
+                "LineString": 6,
+                "MultiLineString": 1
+              }
+            },
+            "renderTime": {
+              "iso": "2026-10-11T12:00:00.000Z",
+              "dayNumber": 2461325,
+              "secondsOfDay": 37,
+              "shouldAnimate": false
+            },
+            "settings": {
+              "width": 1200,
+              "height": 900,
+              "canvasCssWidth": 960,
+              "canvasCssHeight": 640,
+              "devicePixelRatio": 1,
+              "resolutionScale": 1,
+              "drawingBufferWidth": 960,
+              "drawingBufferHeight": 640,
+              "requestRenderMode": true,
+              "maximumRenderTimeChange": "Infinity",
+              "msaaSamples": 4,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true
+              },
+              "globeLighting": false
+            },
+            "environment": {
+              "appCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+              "harnessCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "vendor": "Google Inc. (Apple)",
+              "viewport": {
+                "width": 1200,
+                "height": 900,
+                "dpr": 1
+              },
+              "drawingBuffer": {
+                "width": 960,
+                "height": 640
+              },
+              "layers": [],
+              "cesiumVersion": "1.138.0"
+            },
+            "warmup": {
+              "normalPrimitives": 1,
+              "groundPrimitives": 1,
+              "dataSources": 0
+            }
+          },
+          "error": "Error: Error: Native pick ownership index does not cover every layer surface.\n    at check (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:29:25)\n    at createNativeOwnershipRows (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:138:3)\n    at runActivation (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:488:25)\n    at waitState (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/infrastructureBenefitComparison.mjs:948:15)\n    at async runOne (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/infrastructureBenefitComparison.mjs:1080:15)\n    at async file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/infrastructureBenefitComparison.mjs:1315:26",
+          "partial": {
+            "schema": "gev-infrastructure-benefit-trial/v1",
+            "status": "ready",
+            "phase": "activation-error",
+            "applicationCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+            "mode": "entities",
+            "layerId": "local-dams",
+            "source": {
+              "layerId": "local-dams",
+              "payloadSha256": "f2b6f3166bee6dba4f0b569553a14c84faeb0048eb522bacd4d9c78e93d30d30",
+              "payloadBytes": 730280,
+              "featureCount": 704,
+              "geometryKinds": {
+                "Polygon": 688,
+                "MultiPolygon": 4,
+                "Point": 5,
+                "LineString": 6,
+                "MultiLineString": 1
+              }
+            },
+            "renderTime": {
+              "iso": "2026-10-11T12:00:00.000Z",
+              "dayNumber": 2461325,
+              "secondsOfDay": 37,
+              "shouldAnimate": false
+            },
+            "settings": {
+              "width": 1200,
+              "height": 900,
+              "canvasCssWidth": 960,
+              "canvasCssHeight": 640,
+              "devicePixelRatio": 1,
+              "resolutionScale": 1,
+              "drawingBufferWidth": 960,
+              "drawingBufferHeight": 640,
+              "requestRenderMode": true,
+              "maximumRenderTimeChange": "Infinity",
+              "msaaSamples": 4,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true
+              },
+              "globeLighting": false
+            },
+            "environment": {
+              "appCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+              "harnessCommit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "vendor": "Google Inc. (Apple)",
+              "viewport": {
+                "width": 1200,
+                "height": 900,
+                "dpr": 1
+              },
+              "drawingBuffer": {
+                "width": 960,
+                "height": 640
+              },
+              "layers": [],
+              "cesiumVersion": "1.138.0"
+            },
+            "warmup": {
+              "normalPrimitives": 1,
+              "groundPrimitives": 1,
+              "dataSources": 0
+            },
+            "activationStartedAt": 12812.399999999994,
+            "initDurationMs": 0,
+            "error": "Error: Native pick ownership index does not cover every layer surface.\n    at check (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:29:25)\n    at createNativeOwnershipRows (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:138:3)\n    at runActivation (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:488:25)"
+          }
+        }
+      }
+    }
+  ],
+  "cleanup": {
+    "browserClosed": true,
+    "initialPageClosed": true,
+    "pagesClosed": true,
+    "sessionsDetached": true,
+    "serverClosed": true,
+    "sourceTreeUnchanged": true
+  },
+  "errors": [
+    "Error: Error: Native pick ownership index does not cover every layer surface.\n    at check (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:29:25)\n    at createNativeOwnershipRows (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:138:3)\n    at runActivation (http://127.0.0.1:5173/scripts/fixtures/infrastructure-benefit.mjs:488:25)\n    at waitState (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/infrastructureBenefitComparison.mjs:948:15)\n    at async runOne (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/infrastructureBenefitComparison.mjs:1080:15)\n    at async file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/infrastructureBenefitComparison.mjs:1315:26"
+  ],
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 23886.396,
+      "closeSettledHostMs": 24290.452042,
+      "closeElapsedMs": 404.05604200000016,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 393.18291699999827
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "finishedAt": "2026-10-11T10:58:37.417Z"
+}

@@ -12,7 +12,10 @@ import {
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
-import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
+import {
+  resolveInfrastructureNativePickOwner,
+  selectInfrastructureNativeSurfaceEntities,
+} from './infrastructureNativePickOwnership.mjs';
 
 const FRAME_TIMEOUT_MS = 12_000;
 const params = new URLSearchParams(location.search);
@@ -477,20 +480,6 @@ async function runActivation() {
     `${fixtureLayer.layerName} analyst surface inventory is incomplete.`,
   );
   const collections = primitiveCollections(viewer, fixtureLayer.layerId);
-  const pickRows = dataSource.entities.values.filter(
-    (entity) =>
-      entity.point || entity.polyline || mode === 'primitive-collections',
-  );
-  check(
-    pickRows.length === fixtureLayer.entityCount,
-    'Native pick inventory was unexpectedly truncated.',
-  );
-  const ownershipRows = createNativeOwnershipRows(
-    pickRows,
-    analystRecords,
-    renderTimeRef,
-    fixtureLayer.layerId,
-  );
   collectionByEntityRef = null;
   if (collections) {
     const byPoint = new Map();
@@ -506,6 +495,18 @@ async function runActivation() {
     );
     collectionByEntityRef = byPoint;
   }
+  const pickRows = selectInfrastructureNativeSurfaceEntities(
+    dataSource.entities.values,
+    mode,
+    collectionByEntityRef,
+    fixtureLayer.surfaceCount,
+  );
+  const ownershipRows = createNativeOwnershipRows(
+    pickRows,
+    analystRecords,
+    renderTimeRef,
+    fixtureLayer.layerId,
+  );
   state.sourceReadyAt = sourceReadyAt;
   state.sourceReadyElapsedMs = sourceReadyAt - startedAt;
   state.sourceReady = {

@@ -3993,3 +3993,9 @@ pairs, all seven ordinary integration jobs and all 111 tracking checks pass.
 The runtime traffic change is accepted; fleet scheduling remains excluded.
 [Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
 retain separate code, automated and hosted/physical hardware status.
+
+## S54 integration follow-up - 11 October 2026
+
+At `96bd0c3102b46ee04d85fba04252a3e2dd7cb4db`, the integrated dam correctness comparison passed: 20 independently decoded PNGs form ten pixel-identical baseline/candidate pairs. [Evidence](performance-evidence/s54-production-collections/integrated-dams-38133293001/review.json). The datacenter comparison failed in baseline setup while static stem primitives were unready, despite ready data sources; the candidate did not run. The fixture now includes public owned-primitive readiness and bounded phase timing within the unchanged eight-second deadline. [Preserved failure](performance-evidence/s54-production-collections/failed-integrated-datacenters-38133455950/review.json).
+
+The dam benefit comparison exposed a fixture inventory bug: twelve preserved line-only Entities were incorrectly required to have generated point/stem ownership. The corrected selection separately requires 704 generated surface pairs and 716 total Entities, and rejects missing or foreign collection owners. [Preserved failure and regression checks](performance-evidence/s54-production-collections/failed-integrated-benefit-38133813758/review.json). These fixture fixes are implemented and focused tests pass; rendered validation is pending. The production default remains Entity rendering. Neither failure is converted into a pass or a hardware performance claim.

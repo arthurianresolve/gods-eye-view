@@ -1,0 +1,10 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38133813758",
+  "commit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+  "rawSha256": "2ba92ec6d5b96b495769bf1ee5531e67de63735befc84519d4c23833167e3507",
+  "status": "failed",
+  "scope": "Fixture inventory failure before any latency pair completed; no benefit claim",
+  "cause": "The benchmark included 12 retained line-only dam Entities in the native point/stem ownership index. The analyst index correctly includes 704 generated surfaces, while the complete datasource contains 716 Entities. The datacenter source has no retained line-only Entities, concealing this mismatch in its earlier successful runs.",
+  "fix": "Build the native pick index from actual paired point/stem Graphics or exact collection owners. Require the full expected surface count independently of the unchanged total Entity count. Missing/foreign collection owners remain failures.",
+  "focusedTests": "23/23 native ownership and benefit validator tests passed on Node 24.16; rendered rerun pending"
+}

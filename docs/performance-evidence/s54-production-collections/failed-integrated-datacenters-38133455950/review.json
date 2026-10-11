@@ -1,0 +1,9 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38133455950",
+  "commit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+  "rawSha256": "4884c69f1e392eaf9ad84e9a638607b776a439c5ae781e0e23758cc9d9df2ba7",
+  "status": "failed",
+  "scope": "Hosted paravirtual Metal default Entity setup; candidate not run; no acceptance",
+  "finding": "At the failed native-pick search, both PolylineColorAppearance primitives reported ready:false/show:false despite dataSourceDisplay.ready:true. Eighteen completed captures; point picks succeeded but stem picks missed. Geometry and visible population were stable. This establishes an incomplete readiness predicate, not a confirmed worker defect or candidate regression.",
+  "next": "Require actual owned primitive readiness before sampling and retain phase timing. Preserve the existing eight-second setup deadline and fail if readiness never arrives."
+}

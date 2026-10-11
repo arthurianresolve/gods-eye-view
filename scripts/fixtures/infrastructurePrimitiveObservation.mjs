@@ -1,5 +1,34 @@
 // Bounded, read-only fixture diagnostics. Never alter readiness, show attributes,
 // worker ownership, or render demand to make an observation pass.
+export function readInfrastructurePrimitiveReadiness(scene, Cesium) {
+  const visited = new Set();
+  const pending = [];
+  let truncated = false;
+  function visit(primitive, path, depth) {
+    if (!primitive || visited.has(primitive)) return;
+    if (visited.size >= 64 || depth > 8) {
+      truncated = true;
+      return;
+    }
+    visited.add(primitive);
+    // Hidden replacement primitives still own unfinished work. A data-source
+    // update can report ready before its static visualizer publishes them.
+    if (primitive.ready === false)
+      pending.push({ path, type: primitive.constructor?.name || null });
+    if (primitive instanceof Cesium.PrimitiveCollection)
+      for (let index = 0; index < primitive.length; index++)
+        visit(primitive.get(index), `${path}/${index}`, depth + 1);
+  }
+  visit(scene.primitives, 'primitives', 0);
+  visit(scene.groundPrimitives, 'groundPrimitives', 0);
+  return {
+    ready: !truncated && pending.length === 0,
+    observedOwners: visited.size,
+    truncated,
+    pending,
+  };
+}
+
 export function observeInfrastructurePrimitives(scene, rows, Cesium) {
   const targets = rows
     .filter((row) => row.entityShow && row.point.show && row.stem.show)

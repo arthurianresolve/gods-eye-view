@@ -1,3 +1,34 @@
+/** Original line geometry is retained, but is not a generated point/stem pair. */
+export function selectInfrastructureNativeSurfaceEntities(
+  entities,
+  mode,
+  primitivesByEntity,
+  expectedCount,
+) {
+  if (
+    !Array.isArray(entities) ||
+    !['entities', 'primitive-collections'].includes(mode) ||
+    !Number.isSafeInteger(expectedCount) ||
+    expectedCount <= 0 ||
+    (mode === 'primitive-collections' && !(primitivesByEntity instanceof Map))
+  )
+    throw new Error('Invalid native surface inventory inputs.');
+  const surfaces = entities.filter((entity) => {
+    if (mode === 'entities') return Boolean(entity.point && entity.polyline);
+    const pair = primitivesByEntity.get(entity);
+    return pair?.point?.id === entity && pair?.stem?.id === entity;
+  });
+  if (
+    surfaces.length !== expectedCount ||
+    (mode === 'primitive-collections' &&
+      primitivesByEntity.size !== expectedCount)
+  )
+    throw new Error(
+      'Native point/stem inventory is incomplete or contains foreign owners.',
+    );
+  return surfaces;
+}
+
 /** Resolve a native pick to a visible surface owned by this layer and renderer. */
 export function resolveInfrastructureNativePickOwner({
   picked,

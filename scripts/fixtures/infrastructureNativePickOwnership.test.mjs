@@ -1,6 +1,93 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
+import {
+  resolveInfrastructureNativePickOwner,
+  selectInfrastructureNativeSurfaceEntities,
+} from './infrastructureNativePickOwnership.mjs';
+
+test('dam native surfaces exclude retained source lines without dropping source geometry', () => {
+  const surfaces = Array.from({ length: 704 }, (_, id) => ({
+    id,
+    point: {},
+    polyline: {},
+  }));
+  const lines = Array.from({ length: 12 }, (_, id) => ({
+    id: `line-${id}`,
+    polyline: {},
+  }));
+  const all = [...surfaces, ...lines];
+  assert.deepEqual(
+    selectInfrastructureNativeSurfaceEntities(all, 'entities', null, 704),
+    surfaces,
+  );
+  assert.equal(all.length, 716);
+  assert.ok(lines.every((line) => line.polyline));
+  const index = new Map(
+    surfaces.map((entity) => [
+      entity,
+      { point: { id: entity }, stem: { id: entity } },
+    ]),
+  );
+  for (const surface of surfaces) {
+    delete surface.point;
+    delete surface.polyline;
+  }
+  assert.deepEqual(
+    selectInfrastructureNativeSurfaceEntities(
+      all,
+      'primitive-collections',
+      index,
+      704,
+    ),
+    surfaces,
+  );
+});
+
+test('native surface inventory still rejects missing, mismatched and foreign collection owners', () => {
+  const surface = { id: 'surface' };
+  const other = { id: 'other' };
+  const index = new Map([
+    [surface, { point: { id: surface }, stem: { id: surface } }],
+  ]);
+  assert.throws(
+    () =>
+      selectInfrastructureNativeSurfaceEntities([surface], 'entities', null, 1),
+    /incomplete/,
+  );
+  assert.throws(
+    () =>
+      selectInfrastructureNativeSurfaceEntities(
+        [surface],
+        'primitive-collections',
+        index,
+        2,
+      ),
+    /incomplete/,
+  );
+  index.get(surface).stem.id = other;
+  assert.throws(
+    () =>
+      selectInfrastructureNativeSurfaceEntities(
+        [surface],
+        'primitive-collections',
+        index,
+        1,
+      ),
+    /incomplete/,
+  );
+  index.get(surface).stem.id = surface;
+  index.set(other, { point: { id: other }, stem: { id: other } });
+  assert.throws(
+    () =>
+      selectInfrastructureNativeSurfaceEntities(
+        [surface],
+        'primitive-collections',
+        index,
+        1,
+      ),
+    /foreign/,
+  );
+});
 
 class PointPrimitive {}
 class GroundPolylinePrimitive {}

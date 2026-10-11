@@ -14,6 +14,7 @@ import {
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
 import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
 import {
+  readInfrastructurePrimitiveReadiness,
   observeInfrastructurePrimitives,
   observeInfrastructureFrameDelivery,
 } from './infrastructurePrimitiveObservation.mjs';
@@ -738,7 +739,8 @@ async function runLayerLifetime(
       changedGeometryFrom,
       recordSample = true,
     ) => {
-      const deadline = performance.now() + 8000;
+      const started = performance.now();
+      const deadline = started + 8000;
       const readiness = createInfrastructureSampleReadiness();
       let completedCaptures = 0;
       let pickSearches = 0;
@@ -754,6 +756,10 @@ async function runLayerLifetime(
       let lodDiagnostics = null;
       let cameraPosition = null;
       let sceneReadiness = null;
+      let primitiveReadiness = null;
+      let previousPrimitiveReadiness = null;
+      const readinessTimeline = [];
+      let nativePickElapsedMs = 0;
       const primitiveObservations = [];
       const observePrimitives = (phase) => {
         if (primitiveObservations.length >= 8) return;
@@ -780,17 +786,35 @@ async function runLayerLifetime(
           dataSourcesReady: viewer.dataSourceDisplay.ready,
           globeTilesLoaded: viewer.scene.globe.tilesLoaded,
         };
+        primitiveReadiness = readInfrastructurePrimitiveReadiness(
+          viewer.scene,
+          Cesium,
+        );
+        const readinessSignature = JSON.stringify(primitiveReadiness);
+        if (
+          readinessSignature !== previousPrimitiveReadiness &&
+          readinessTimeline.length < 32
+        ) {
+          readinessTimeline.push({
+            elapsedMs: performance.now() - started,
+            completedCaptures,
+            ...primitiveReadiness,
+          });
+          previousPrimitiveReadiness = readinessSignature;
+        }
         geometryReady =
           (!changedGeometryFrom || hash !== changedGeometryFrom) &&
           infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition) &&
           sceneReadiness.dataSourcesReady === true &&
-          sceneReadiness.globeTilesLoaded === true;
+          sceneReadiness.globeTilesLoaded === true &&
+          primitiveReadiness.ready;
         stableFrames = readiness.observe(signature, {
           inputsReady: geometryReady,
         });
         if (readiness.takePickAttempt()) {
           observePrimitives('before-native-picks');
           pickSearches++;
+          const pickStarted = performance.now();
           pickDiagnostics = {
             examined: 0,
             hidden: 0,
@@ -808,6 +832,7 @@ async function runLayerLifetime(
             preferredPickEntityId,
             pickDiagnostics,
           );
+          nativePickElapsedMs += performance.now() - pickStarted;
           pointPick = target?.pointPick;
           stemPick = target?.stemPick;
           pickRow = target?.row;
@@ -827,6 +852,10 @@ async function runLayerLifetime(
           completedCaptures,
           pickSearches,
           pickDiagnostics,
+          sampleElapsedMs: performance.now() - started,
+          nativePickElapsedMs,
+          primitiveReadiness,
+          readinessTimeline,
           geometryReady,
           observedGeometry,
           changedGeometryFrom,
@@ -891,6 +920,10 @@ async function runLayerLifetime(
         lodDiagnostics,
         cameraPosition,
         sceneReadiness,
+        primitiveReadiness,
+        readinessTimeline,
+        sampleElapsedMs: performance.now() - started,
+        nativePickElapsedMs,
         pixelSha256: finalFrame.pixelSha256,
         pngBase64: finalFrame.pngBase64,
         pixelDifferenceCount: finalFrame.pixelsDifferentFromCorner,

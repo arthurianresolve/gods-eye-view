@@ -2,9 +2,59 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import {
+  readInfrastructurePrimitiveReadiness,
   observeInfrastructurePrimitives,
   observeInfrastructureFrameDelivery,
 } from './infrastructurePrimitiveObservation.mjs';
+
+test('hidden pending static geometry cannot satisfy ready data-source sampling', () => {
+  const { scene } = fixture();
+  const owner = scene.primitives.add(
+    new Cesium.PrimitiveCollection({ destroyPrimitives: false }),
+  );
+  const pending = owner.add({ ready: false, show: false });
+  const before = readInfrastructurePrimitiveReadiness(scene, Cesium);
+  assert.equal(before.ready, false);
+  assert.deepEqual(before.pending, [
+    { path: 'primitives/0/0', type: 'Object' },
+  ]);
+  pending.ready = true;
+  assert.equal(readInfrastructurePrimitiveReadiness(scene, Cesium).ready, true);
+  assert.equal(pending.show, false, 'observation must not reveal hidden work');
+});
+
+test('readiness checks all owned replacements and rejects truncated traversal', () => {
+  const { scene } = fixture();
+  scene.primitives.add({ ready: true });
+  const replacement = scene.primitives.add({ ready: false });
+  assert.equal(
+    readInfrastructurePrimitiveReadiness(scene, Cesium).ready,
+    false,
+  );
+  scene.primitives.remove(replacement);
+  assert.equal(readInfrastructurePrimitiveReadiness(scene, Cesium).ready, true);
+  for (let index = 0; index < 100; index++)
+    scene.primitives.add({ ready: true });
+  const limited = readInfrastructurePrimitiveReadiness(scene, Cesium);
+  assert.equal(limited.ready, false);
+  assert.equal(limited.truncated, true);
+  assert.equal(limited.observedOwners, 64);
+});
+
+test('readiness does not enumerate point buffers or request instance attributes', () => {
+  const { scene } = fixture();
+  scene.primitives.add({
+    ready: true,
+    length: 4362,
+    get() {
+      assert.fail('not an ownership collection');
+    },
+    getGeometryInstanceAttributes() {
+      assert.fail('readiness only');
+    },
+  });
+  assert.equal(readInfrastructurePrimitiveReadiness(scene, Cesium).ready, true);
+});
 
 function fixture() {
   const scene = {
