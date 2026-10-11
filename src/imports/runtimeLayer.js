@@ -39,11 +39,19 @@ function positions(coordinates) {
   return coordinates.map(position);
 }
 
+function fillPositionRange(coordinates, result, start, end) {
+  for (let index = start; index < end; index++)
+    result[index] = position(coordinates[index]);
+}
+
 function* positionsInChunks(coordinates, chunkSize) {
   const result = new Array(coordinates.length);
-  for (let index = 0; index < coordinates.length; index++) {
-    result[index] = position(coordinates[index]);
-    if (index + 1 < coordinates.length && (index + 1) % chunkSize === 0) yield;
+  // Keep per-coordinate conversion in an ordinary loop. The experimental
+  // generator owns only chunk boundaries, never individual coordinates.
+  for (let start = 0; start < coordinates.length; start += chunkSize) {
+    const end = Math.min(start + chunkSize, coordinates.length);
+    fillPositionRange(coordinates, result, start, end);
+    if (end < coordinates.length) yield;
   }
   return result;
 }
