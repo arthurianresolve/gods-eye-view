@@ -43,6 +43,7 @@ import {
   recoveryPageCleanupError,
   stopOwnedRecoveryProcessTree,
   validateRecoveryCloseObservationMs,
+  recoveryCloseRepetitionPlan,
 } from './performance/profileRecoveryPageOwnership.mjs';
 import {
   cleanupEarlyCesiumRendererProbe,
@@ -68,6 +69,11 @@ const candidateCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
   cwd: ROOT,
   encoding: 'utf8',
 }).trim();
+const closeRepetitionPlan = recoveryCloseRepetitionPlan(
+  Number(process.env.GEV_QA_CLOSE_REPETITIONS || 0),
+  priorCommit,
+  candidateCommit,
+);
 const rendererQueryTiming =
   process.env.GEV_QA_RENDERER_QUERY_TIMING === 'early' ? 'early' : 'late';
 const rendererExperimentVariant =
@@ -632,6 +638,17 @@ try {
   );
   serving = path.join(candidate, 'dist');
   await reopen('upgraded-application-same-profile');
+  // A declared finite diagnostic sequence compares both already-built revisions
+  // on the same recovered profile. Every failure propagates immediately; no retry
+  // can overwrite it with a later successful close.
+  for (const repetition of closeRepetitionPlan) {
+    serving = path.join(
+      repetition.variant === 'prior' ? previous : candidate,
+      'dist',
+    );
+    await reopen(repetition.id);
+  }
+  serving = path.join(candidate, 'dist');
   // The actual built candidate is damaged, rejected, and never served afterwards.
   await writeFile(
     path.join(candidate, 'dist', 'index.html'),
@@ -683,6 +700,7 @@ try {
       : null,
     browserVersion,
     postTimeoutObservationMs,
+    closeRepetitionPlan,
     viewport,
     hardwareRenderingValidated: false, // Recovery checks are not GPU evidence.
     timestamp: new Date().toISOString(),

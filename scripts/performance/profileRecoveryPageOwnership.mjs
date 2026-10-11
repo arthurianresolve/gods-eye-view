@@ -298,6 +298,29 @@ export async function stopOwnedRecoveryProcessTree(
   };
 }
 
+// Fixed diagnostic sequence, never repeat-until-success. Ordinary recovery uses 0.
+export function recoveryCloseRepetitionPlan(
+  count,
+  priorCommit,
+  candidateCommit,
+) {
+  if (!Number.isSafeInteger(count) || count < 0 || count > 8 || count % 2 !== 0)
+    throw new RangeError(
+      'Close repetitions must be an even integer from 0 to 8.',
+    );
+  if (
+    ![priorCommit, candidateCommit].every((commit) =>
+      /^[a-f0-9]{40}$/.test(commit || ''),
+    )
+  )
+    throw new TypeError('Close repetitions require exact source commits.');
+  return Array.from({ length: count }, (_, index) => ({
+    id: `shutdown-repeat-${index % 2 ? 'candidate' : 'prior'}-${Math.floor(index / 2) + 1}`,
+    variant: index % 2 ? 'candidate' : 'prior',
+    servedCommit: index % 2 ? candidateCommit : priorCommit,
+  }));
+}
+
 export function validateRecoveryCloseObservationMs(value) {
   if (!Number.isInteger(value) || value < 0 || value > 15000)
     throw new RangeError(

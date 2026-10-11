@@ -4005,3 +4005,23 @@ a late successful exit still fails recovery. This is implemented diagnostic
 instrumentation, not a root-cause fix. Focused ownership tests (25) pass, including
 late exit, unresolved close, expired observation, rejection, and invalid budgets.
 Hosted validation of the new diagnostic is pending.
+
+
+### Windows shutdown reproducibility follow-up
+
+[Diagnostic 38136959543](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38136959543)
+on `f7afba17cc33f6bd9be04aeccc837051c1ac9116` passed all five recovery stages.
+[Raw recovery evidence](performance-evidence/windows-close-observation-38136959543/windows-recovery.json)
+records natural parent exits after 296-443 ms, with no forced termination. The
+15-second post-deadline observation was configured but never entered. This does
+not reproduce or resolve the earlier five-second shutdown failure. The original
+failed report remains unchanged.
+
+The next diagnostic declares exactly eight additional same-profile reopens,
+alternating the verified prior and candidate builds four times before the damaged
+artifact test. Both artifact commits and the complete ordered plan are recorded.
+No failure is retried or converted to a pass; the first failure stops the sequence.
+Ordinary CI retains its original five stages with zero additional reopens.
+This tests whether the existing profile/application combination reproduces a
+late or stuck process without adding repeated installs/builds or changing the
+acceptance deadline. Hardware and application-performance claims are excluded.

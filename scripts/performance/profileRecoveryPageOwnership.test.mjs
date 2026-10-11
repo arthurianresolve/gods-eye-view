@@ -13,6 +13,7 @@ import {
   recoveryPageCleanupError,
   stopOwnedRecoveryProcessTree,
   validateRecoveryCloseObservationMs,
+  recoveryCloseRepetitionPlan,
 } from './profileRecoveryPageOwnership.mjs';
 
 const BASE = 'http://127.0.0.1:4173';
@@ -700,5 +701,27 @@ test('post-timeout observation rejects unbounded or malformed settings before cl
       },
     ),
     RangeError,
+  );
+});
+
+test('shutdown repetition plan is bounded, alternating and bound to exact revisions', () => {
+  const prior = 'a'.repeat(40),
+    candidate = 'b'.repeat(40);
+  assert.deepEqual(recoveryCloseRepetitionPlan(0, prior, candidate), []);
+  const plan = recoveryCloseRepetitionPlan(8, prior, candidate);
+  assert.equal(plan.length, 8);
+  assert.equal(new Set(plan.map((row) => row.id)).size, 8);
+  assert.deepEqual(
+    plan.map((row) => row.servedCommit),
+    [prior, candidate, prior, candidate, prior, candidate, prior, candidate],
+  );
+  for (const invalid of [-2, 1, 3, 10, 1.5, Infinity, NaN, '8'])
+    assert.throws(
+      () => recoveryCloseRepetitionPlan(invalid, prior, candidate),
+      RangeError,
+    );
+  assert.throws(
+    () => recoveryCloseRepetitionPlan(8, 'main', candidate),
+    TypeError,
   );
 });
