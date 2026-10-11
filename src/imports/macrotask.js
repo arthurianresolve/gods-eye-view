@@ -5,7 +5,9 @@ export function createMacrotaskScheduler({
   setTimer = setTimeout,
   clearTimer = clearTimeout,
 } = {}) {
+  let lastBackend = null;
   function timerTask(callback) {
+    lastBackend = 'setTimeout';
     const handle = { kind: 'timer', active: true, id: null };
     try {
       handle.id = setTimer(() => {
@@ -28,6 +30,7 @@ export function createMacrotaskScheduler({
       return timerTask(callback);
     }
     const handle = { kind: 'channel', active: true, channel, listener: null };
+    lastBackend = 'MessageChannel';
     const close = () => {
       if (!handle.active) return false;
       handle.active = false;
@@ -82,6 +85,7 @@ export function createMacrotaskScheduler({
           },
           { priority: 'user-visible', signal: controller.signal },
         );
+        lastBackend = 'scheduler.postTask';
       } catch {
         handle.active = false;
         return channelTask(callback);
@@ -116,5 +120,11 @@ export function createMacrotaskScheduler({
     }
   }
 
-  return { schedule, cancel };
+  return {
+    schedule,
+    cancel,
+    get lastBackend() {
+      return lastBackend;
+    },
+  };
 }

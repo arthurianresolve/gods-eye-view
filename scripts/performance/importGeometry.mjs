@@ -44,11 +44,15 @@ function runtimeIdentity(root) {
   );
   assert.deepEqual(bytes, committed, 'Runtime source must match HEAD bytes');
   const cesiumEntry = path.join(root, 'node_modules/cesium/Source/Cesium.js');
+  const schedulerSource = path.join(root, 'src/imports/macrotask.js');
   return {
     sourceCommit: commit,
     runtimeLayerSha256: hash(bytes),
     packageLockSha256: hash(readFileSync(path.join(root, 'package-lock.json'))),
     cesiumEntrySha256: hash(readFileSync(cesiumEntry)),
+    macrotaskSchedulerSha256: existsSync(schedulerSource)
+      ? hash(readFileSync(schedulerSource))
+      : null,
   };
 }
 
@@ -96,6 +100,19 @@ function lineOrPolygon(type) {
 
 async function runChild(root) {
   const identity = runtimeIdentity(root);
+  let taskScheduler;
+  if (identity.macrotaskSchedulerSha256) {
+    const { createMacrotaskScheduler } = await import(
+      pathToFileURL(path.join(root, 'src/imports/macrotask.js'))
+    );
+    taskScheduler = createMacrotaskScheduler();
+  } else {
+    taskScheduler = {
+      lastBackend: 'setTimeout',
+      schedule: (callback) => setTimeout(callback, 0),
+      cancel: (timer) => clearTimeout(timer),
+    };
+  }
   const cesiumEntry = path.join(root, 'node_modules/cesium/Source/Cesium.js');
   const Cesium = await import(pathToFileURL(cesiumEntry));
   const { createImportedGeometryLayer } = await import(
@@ -120,15 +137,19 @@ async function runChild(root) {
       schedule(callback) {
         const scheduledAt = performance.now();
         scheduledCallbacks++;
-        return setTimeout(() => {
+        return taskScheduler.schedule(() => {
           const callbackStartedAt = performance.now();
-          callback();
-          callbacks.push({
-            scheduledToWakeMs: callbackStartedAt - scheduledAt,
-            activeCallbackMs: performance.now() - callbackStartedAt,
-          });
-        }, 0);
+          try {
+            callback();
+          } finally {
+            callbacks.push({
+              scheduledToWakeMs: callbackStartedAt - scheduledAt,
+              activeCallbackMs: performance.now() - callbackStartedAt,
+            });
+          }
+        });
       },
+      cancel: (handle) => taskScheduler.cancel(handle),
     },
   });
 
@@ -181,6 +202,7 @@ async function runChild(root) {
             iteratorResumeCount,
             clockSampleCount: clockSamples,
             reportedScheduleCalls: scheduledCallbacks,
+            schedulerBackend: taskScheduler.lastBackend,
           });
         }
         layer.clear();
@@ -274,7 +296,7 @@ if (process.argv.includes('--child')) {
     ]).trim(),
     candidateParentCommit: git(candidate, ['rev-parse', 'HEAD^']).trim(),
     scope:
-      'Node-only geometry preparation. Five alternating pairs; each child performs three warmups before the measured run. The wake interval is enqueue-to-callback-start and combines timer clamping, event-loop queueing and scheduling; it is not timer-clamp-only attribution. Active spans include measurement wrapper overhead. No browser, rendering, GPU or interaction claim.',
+      'Node-only geometry preparation. Five alternating pairs; each child performs three warmups before the measured run. The baseline uses setTimeout; the candidate uses its committed cancellable macrotask scheduler. The wake interval is enqueue-to-callback-start and combines timer clamping, event-loop queueing and scheduling; it is not timer-clamp-only attribution. Active spans include measurement wrapper overhead. No browser, rendering, GPU or interaction claim.',
     samples: [],
   };
   atomicReport(output, report);
@@ -301,6 +323,18 @@ if (process.argv.includes('--child')) {
           variant === 'baseline' ? BASELINE_COMMIT : report.harnessCommit,
         );
         assert.equal(result.reports.length, 2);
+        const expectedBackends =
+          variant === 'baseline'
+            ? new Set(['setTimeout'])
+            : new Set(['scheduler.postTask', 'MessageChannel']);
+        assert.ok(
+          result.reports.every((row) =>
+            expectedBackends.has(row.schedulerBackend),
+          ),
+          `Unexpected ${variant} scheduler backend: ${result.reports
+            .map((row) => row.schedulerBackend)
+            .join(', ')}`,
+        );
         assert.ok(result.reports.every((row) => row.vertices === 50_000));
         assert.ok(
           result.reports.every(
