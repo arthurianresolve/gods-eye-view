@@ -1,5 +1,18 @@
 # Cesium performance plan
 
+S47/S59 diagnostic checkpoint (11 October 2026): observer run `38168778561`
+misses the five-second completed-render deadline before its first sample. Startup
+observer attribution was overwritten; `6721940d` preserves it independently and
+passes nine focused checks. [Original failure](performance-evidence/s47-observer-read-38168778561/README.md)
+remains failed; corrected run `38169235037` is in progress.
+
+The S59 CPU profile at `a6ff8485` completes a 50,000-position line load and natural
+cleanup but fails trace completeness because two flow-event identities were not
+retained. [Original profile and limits](performance-evidence/s59-load-profile-38168887546/README.md)
+remain incomplete. A separate pixel-digest field mismatch is fixed at `d6131adf`
+with 14 report checks passing; flow retention needs correction before another
+profile. No large-geometry runtime optimization is accepted by these diagnostics.
+
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
 256-coordinate chunking arms regress completion time in four of five pairs for
@@ -20,8 +33,11 @@ import, workspace replacement, cancellation and supersession checks, including
 the enforced teardown census. Its 60-minute hosted soak completes 252 cycles,
 with all 40 resource gauges unchanged and 1.183% maximum final-window heap growth.
 Missing browser-shutdown observations keep that envelope pending. The ownership
-reporting fix `7cea7aac` passes 84 focused tests; corrected run `38167171204` and
-standard CI `38167173641` are in progress before promotion.
+reporting fix `7cea7aac` passes 84 focused tests and all seven standard jobs in
+`38167173641`. Corrected soak `38167171204` is still in progress. Registration
+of the new helper tests in the full suites is checked by `38168624015` at
+`806d4d3c`: Node 24/26, onboarding and all three recovery jobs pass; the browser
+journey is still running. Promotion remains pending the final results.
 [Raw report and reporting fix](performance-evidence/hosted-soak-38162032244/README.md).
 
 S47 stage diagnostic `38165977957` fails at the unchanged child deadline during
