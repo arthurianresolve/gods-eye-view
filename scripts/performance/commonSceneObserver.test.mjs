@@ -127,12 +127,13 @@ test('early observer reuses verified identity without repeated renderer queries'
     throw new Error('redundant driver query');
   };
   for (let index = 0; index < 2; index++) {
+    windowObject.__gevRecoveryEarlyRendererProbe.queryDurationMs = index * 20;
     const cached = observeCommonScene({
       windowObject,
       useEarlyRendererProbe: true,
     });
     const witness = cached.environment.rendererObservation;
-    assert.equal(witness.queryDurationMs, 0);
+    assert.equal(Object.hasOwn(witness, 'queryDurationMs'), false);
     assert.equal(witness.contextMatchesScene, true);
     delete cached.environment.rendererObservation;
     assert.deepEqual(cached, before);

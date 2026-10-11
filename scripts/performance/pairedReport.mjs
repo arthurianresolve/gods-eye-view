@@ -1,3 +1,4 @@
+import { assertSceneMeasurementWindow } from './measureSceneWindow.mjs';
 import assert from 'node:assert/strict';
 import { assertCaptureIntegrity } from './captureIntegrity.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
@@ -688,6 +689,7 @@ function validateReport(report, side, expectedAppCommit) {
       sample.durationMs >= 60_000 && Number.isFinite(sample.durationMs),
       `${label}: actual measurement was shorter than 60 seconds`,
     );
+    assertSceneMeasurementWindow(sample, 60_000);
     assert.equal(
       sample.foregroundThroughout,
       true,

@@ -1194,5 +1194,7 @@
   "scripts/performance/trafficFixtureRandomTransform.mjs",
   "scripts/fixtures/traffic-render-demand.vite.mjs",
   "build/cesium-dependencies.js",
-  "src/tooling/cesiumDependencies.test.mjs"
+  "src/tooling/cesiumDependencies.test.mjs",
+  "scripts/performance/measureSceneWindow.mjs",
+  "scripts/performance/measureSceneWindow.test.mjs"
 ]

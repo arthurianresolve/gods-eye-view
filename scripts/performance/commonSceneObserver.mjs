@@ -193,7 +193,6 @@ export function observeCommonScene({
         ? {
             rendererObservation: {
               mode: 'early-verified-context',
-              queryDurationMs: early.queryDurationMs,
               canvasMatchesScene: true,
               contextMatchesScene: true,
               contextLost: false,
@@ -220,6 +219,9 @@ export function observeCommonScene({
       clockAvailable: clockAvailable && valid,
       totalMs: valid ? ended - observerStarted : null,
       reads: readCosts,
+      ...(useEarlyRendererProbe
+        ? { earlyRendererQueryDurationMs: early.queryDurationMs }
+        : {}),
       performanceAcceptanceEligible: false,
     };
   }

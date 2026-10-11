@@ -28,6 +28,33 @@ function validate(
   });
 }
 
+test('paired acceptance rejects absent or settlement-contaminated timing windows', () => {
+  for (const change of [
+    (sample) => {
+      delete sample.measurementWindow;
+    },
+    (sample) => {
+      sample.measurementWindow.includesSettlingFrames = true;
+    },
+    (sample) => {
+      sample.durationMs += 1000;
+    },
+    (sample) => {
+      sample.measurementWindow.endedAtMs += 1000;
+    },
+    (sample) => {
+      sample.measurementWindow.settlingElapsedMs = -1;
+    },
+  ]) {
+    const candidate = makeReport(candidateCommit);
+    change(candidate.captures[0]);
+    assert.throws(
+      () => validate(makeReport(baselineCommit), candidate),
+      /measurement window/,
+    );
+  }
+});
+
 test('valid paired reports calculate scenario medians, objective and regressions separately', () => {
   const result = validate();
   assert.equal(result.status, 'comparable');

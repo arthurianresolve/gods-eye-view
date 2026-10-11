@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { assertSceneMeasurementWindow } from './performance/measureSceneWindow.mjs';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createReadStream, readFileSync } from 'node:fs';
@@ -503,6 +504,7 @@ export function validateCaptureCliReport(report, expected) {
     assert.equal(samples.length, 2, `Expected two ${scenario} captures.`);
     assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
     for (const sample of samples) {
+      assertSceneMeasurementWindow(sample, 1000);
       assert.equal(sample.fixtureClock?.freshBrowserContext, true);
       assert.equal(sample.fixtureClock?.start?.startCount, 1);
       assert.equal(sample.fixtureClock?.sourceFreshness, 'current');

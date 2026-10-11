@@ -1,5 +1,23 @@
 # Cesium performance plan
 
+S47 timing-window correction (11 October 2026): run `38170201283` at
+`681e704a` observes 0.7-1.4 ms per scene read after early renderer identity
+reuse, but still fails the unchanged 180-second child limit after four samples.
+Five document probes clean up; the sixth cannot confirm cleanup after the
+parent timeout. This remains a failed diagnostic, with no comparison acceptance.
+
+Review found that final endpoint/settling frames were included in timing stats
+after the configured measurement ended. The capture callback now closes frame
+and long-task observers at the actual timing boundary and records final settling
+separately. Actual timer overshoot remains visible. The exact absolute camera
+endpoint and final frame are retained; camera errors reject promptly and release
+owned timing resources. Paired and smoke readers reject absent/inconsistent
+measurement boundaries. Earlier raw reports remain historical evidence.
+Early query durations now live with diagnostic costs, so different probe latency
+cannot masquerade as a changed visual setting across otherwise matched runs.
+Ninety focused measurement, comparison, observer, smoke and manifest checks
+pass. Complete hosted capture and physical hardware validation remain pending.
+
 S47 measured observer cost (11 October 2026): `38169235037` retains the missing
 startup attribution. Its two completed idle samples show 2.1-4.1 seconds in
 synchronous renderer/vendor reads, with other individual settings/population

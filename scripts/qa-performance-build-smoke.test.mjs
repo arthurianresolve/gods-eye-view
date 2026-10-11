@@ -112,6 +112,16 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
     [1, 2].map((run) => ({
       scenario,
       run,
+      durationMs: 1000,
+      measurementWindow: {
+        schema: 'gev-scene-measurement-window/v1',
+        requestedDurationMs: 1000,
+        startedAtMs: 100,
+        endedAtMs: 1100,
+        elapsedMs: 1000,
+        settlingElapsedMs: 16,
+        includesSettlingFrames: false,
+      },
       fixtureClock: {
         freshBrowserContext: true,
         start: { startCount: 1 },
@@ -191,11 +201,9 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
   ];
   source.buildProvenance.pageAssetAudit.workerAuditDocuments =
     workerAuditRoles.map((documentRole) => {
-      const measuredProviderDocument = documentRole.startsWith(
-        'provider-sample-',
-      );
-      const prewarm =
-        workerAuditMode === 'prewarm' && measuredProviderDocument;
+      const measuredProviderDocument =
+        documentRole.startsWith('provider-sample-');
+      const prewarm = workerAuditMode === 'prewarm' && measuredProviderDocument;
       return {
         documentRole,
         mode: prewarm ? 'prewarm' : 'diagnostic',
@@ -422,17 +430,22 @@ test('capture CLI validator requires the selected worker audit mode and per-samp
   const report = validCaptureCliReport('prewarm');
   const result = validateCaptureCliReport(report, expected);
   assert.equal(result.comparisonEligible, false);
-  assert.throws(
-    () => validateCaptureCliReport(report, { ...expected, workerAuditMode: 'diagnostic' }),
+  assert.throws(() =>
+    validateCaptureCliReport(report, {
+      ...expected,
+      workerAuditMode: 'diagnostic',
+    }),
   );
   const missingLateCheck = validCaptureCliReport('prewarm');
-  delete missingLateCheck.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].lateUseCheck;
+  delete missingLateCheck.source.buildProvenance.pageAssetAudit
+    .workerAuditDocuments[2].lateUseCheck;
   assert.throws(() => validateCaptureCliReport(missingLateCheck, expected));
   const missingRestore = validCaptureCliReport('prewarm');
   missingRestore.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].restoration.registryEmpty = false;
   assert.throws(() => validateCaptureCliReport(missingRestore, expected));
   const wrongPerDocumentMode = validCaptureCliReport('prewarm');
-  wrongPerDocumentMode.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].mode = 'diagnostic';
+  wrongPerDocumentMode.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].mode =
+    'diagnostic';
   assert.throws(() => validateCaptureCliReport(wrongPerDocumentMode, expected));
 });
 
