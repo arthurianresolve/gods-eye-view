@@ -22,3 +22,10 @@ This rejects it as an established fix for the remaining Windows frame failure;
 it does not measure the option's general performance or capture correctness.
 The production default and 400 ms capture deadline remain unchanged. The
 separate mixed-Cesium dependency failure has its own before/after evidence.
+
+A subsequent [1,200 by 1,000 viewport control](webgl2-full-viewport.json)
+places the entire unchanged 640 by 360 canvas inside the viewport. It still
+delivers only 59 callbacks, with a 999.7 ms maximum gap. This corroborates the
+historical full-viewport control already recorded in the performance plan;
+viewport clipping alone does not explain the stall. The viewport override was
+then reset. Desktop foreground/occlusion still requires a manual observation.
