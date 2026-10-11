@@ -527,10 +527,28 @@ async function reopen(label, { seed = false } = {}) {
         cleanupError = error;
       }
     }
+    // Prepare the helper while the owned page is still alive. Starting a new
+    // PowerShell process after page closure adds hundreds of milliseconds of
+    // drain time before Browser.close and changes the condition under study.
+    // The ready helper blocks on stdin until the close operation below.
+    let processObserver = null;
+    if (shutdownProcessSampling && browser) {
+      try {
+        processObserver = await observeWindowsOwnedProcess(browser.process());
+      } catch (error) {
+        pageOwnership.processObservation = {
+          status: 'unavailable',
+          reason: sanitizeDiagnosticText(error.message, 240),
+        };
+      }
+    }
     let pageCleanup = { closeCompleted: false, openPageCount: null };
+    let pageCleanupSettledHostMs = null;
+    let processObserverStartHostMs = null;
     const check = checks.at(-1)?.id === label ? checks.at(-1) : null;
     if (browser) {
       pageCleanup = await closeOwnedRecoveryPage(page, browser);
+      pageCleanupSettledHostMs = performance.now();
       pageOwnership.closeCompleted = pageCleanup.closeCompleted;
       pageOwnership.openPagesBeforeBrowserClose = pageCleanup.openPageCount;
       pageOwnership.unexpectedCreatedPageTargets = page
@@ -543,19 +561,9 @@ async function reopen(label, { seed = false } = {}) {
       forcedProcessTermination: false,
       observation: null,
     };
-    let processObserver = null;
-    if (shutdownProcessSampling && browser) {
-      try {
-        processObserver = await observeWindowsOwnedProcess(browser.process());
-      } catch (error) {
-        pageOwnership.processObservation = {
-          status: 'unavailable',
-          reason: sanitizeDiagnosticText(error.message, 240),
-        };
-      }
-    }
     try {
       if (browser) {
+        processObserverStartHostMs = performance.now();
         processObserver?.start();
         browserClose = await closeRecoveryBrowser(browser, {
           forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
@@ -565,8 +573,18 @@ async function reopen(label, { seed = false } = {}) {
       }
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);
-      if (processObserver)
-        pageOwnership.processObservation = await processObserver.finish();
+      if (processObserver) {
+        pageOwnership.processObservation = {
+          ...(await processObserver.finish()),
+          setupPhase: 'before-owned-page-close',
+          startPhase: 'after-owned-page-close-before-browser-close',
+          pageCleanupToStartSignalMs:
+            pageCleanupSettledHostMs === null ||
+            processObserverStartHostMs === null
+              ? null
+              : processObserverStartHostMs - pageCleanupSettledHostMs,
+        };
+      }
     }
     if (
       shutdownProcessSampling &&

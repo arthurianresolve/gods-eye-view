@@ -4113,3 +4113,18 @@ page closure and Browser.close and sampling changes the execution conditions.
 The earlier uninstrumented timeout remains authoritative. Its cause, an
 independently validated fix, and main integration remain pending. Software
 rendering on a hosted Windows runner is not hardware-performance evidence.
+
+### Windows process observer preparation control - 11 October 2026
+
+The next optional process observation prepares its helper before closing the
+owned page. The helper then waits on stdin and starts sampling immediately
+before Browser.close. This removes helper startup from the page-close to
+browser-close gap exposed by run 38146232032. The report declares setup/start
+phases and records that gap with the host monotonic clock. No artificial drain
+delay is introduced and the five-second gate is unchanged.
+
+Thirty-four focused process observation and recovery ownership tests pass,
+including a real disposable Node process on Windows. This corrects a
+diagnostic distortion, not the unresolved Chromium shutdown failure. The
+next hosted run must establish whether the original failure can be observed
+under these conditions; a pass without reproduction is not proof of a fix.
