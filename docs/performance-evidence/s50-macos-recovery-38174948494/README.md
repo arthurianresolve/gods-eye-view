@@ -29,9 +29,25 @@ are unchanged. Forty-nine focused tests pass, including all six platform/mode
 combinations, mismatched flags, and POSIX cleanup success/failure/timeout.
 
 [Matched macOS controls 38176078163](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38176078163)
-are pending at this correction. Blank, WebGL and Cesium controls can distinguish
-fixture teardown from whole-application behavior; they cannot by themselves
-validate application recovery or establish a root cause.
+pass all six controls at exact `ee45f9e1f55359cce14315b577f034d8fb77323f`.
+[The retained report](shutdown-38176078163.json) passes independent validation:
+blank closes in 1586/1597 ms, WebGL in 377/368 ms, and Cesium in 2356/132 ms
+(normal/navigation-first). Every process exits naturally before the unchanged
+five-second deadline. The small fixtures do not reproduce the application failure.
+
+[WebGL-only controls 38176248222](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38176248222)
+also pass at `496f75f4b444a2996e7da7e70965085ce6ce8eca`; the intervening commit
+changes documentation only. [Their retained report](shutdown-38176248222.json)
+passes independent validation with identical fixture and Cesium bundle digests.
+Normal/navigation-first closes take 390/149 ms for blank, 292/190 ms for WebGL,
+and 214/248 ms for Cesium. These are single diagnostic controls on separate
+hosted jobs, not a repeatable application performance comparison or root-cause proof.
+
+QA workflow `af704b60` makes the existing isolated recovery mode select the
+same OS and software backend as the controls while retaining ordinary matrix
+defaults. [Whole-application recovery 38176373283](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38176373283)
+tests WebGL-only SwiftShader on macOS at that exact revision. It is pending.
+Blank, WebGL and Cesium controls cannot substitute for application recovery.
 
 Implementation status: diagnostic platform mismatch fixed. Automated status:
 focused tests pass, whole-application macOS recovery remains failed. Hardware
