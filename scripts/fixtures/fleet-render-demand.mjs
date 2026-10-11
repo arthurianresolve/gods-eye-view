@@ -14,6 +14,7 @@ import {
   encodeFleetDrawState,
 } from './fleet-draw-state.mjs';
 import { runFleetEmptyLifecycle } from './fleet-empty-lifecycle.mjs';
+import { snapshotFleetModelProgramState } from './fleet-program-state.mjs';
 
 const EPOCH = Date.UTC(2026, 9, 8, 12);
 const IDS = {
@@ -172,6 +173,7 @@ async function createFixture(clock) {
     const errors = [];
     const phases = [];
     const cameraEvents = [];
+    const programSources = new Map();
     let publicationFrame = 0,
       latestFrame = null;
     const removers = [
@@ -479,6 +481,7 @@ async function createFixture(clock) {
           sourceEpochMs: sourceEpoch,
           cameraMoveEnds: cameraEvents.length,
           renderState: renderState(),
+          modelState: snapshotFleetModelProgramState(viewer),
         };
         // Read the completed default framebuffer without changing bindings.
         // Compare this with the production Canvas2D copy to separate renderer
@@ -528,6 +531,21 @@ async function createFixture(clock) {
         canvas = await captureFreshCesiumFrame(viewer, { timeoutMs: 400 });
         check(canvas && frameOutput, `${name}: completed frame unavailable`);
         remove();
+        for (const program of frameOutput.modelState.programs) {
+          for (const stage of ['vertex', 'fragment']) {
+            const source = program[`${stage}Source`];
+            if (source !== null) {
+              const digest = await sha(new TextEncoder().encode(source));
+              check(
+                programSources.size < 64 || programSources.has(digest),
+                'Shader source diagnostic limit exceeded',
+              );
+              programSources.set(digest, source);
+              program[`${stage}SourceSha256`] = digest;
+            }
+            delete program[`${stage}Source`];
+          }
+        }
         for (const state of Object.values(drawState))
           await encodeFleetDrawState(state);
         for (const fleet of Object.values(frameOutput.renderState.fleets)) {
@@ -640,6 +658,7 @@ async function createFixture(clock) {
       errors,
       phases,
       cameraEvents,
+      programSources,
       settings,
       setSourceIds(value) {
         sourceIds = value;
@@ -944,6 +963,7 @@ async function run() {
     if (fixture) {
       result.phases = fixture.phases;
       result.cameraEvents = fixture.cameraEvents;
+      result.programSources = Object.fromEntries(fixture.programSources);
     }
     try {
       if (fixture) result.cleanup = await fixture.dispose();

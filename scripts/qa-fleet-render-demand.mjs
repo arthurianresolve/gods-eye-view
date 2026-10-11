@@ -50,6 +50,7 @@ const files = [
   'scripts/fixtures/fleet-render-demand.mjs',
   'scripts/fixtures/fleet-draw-state.mjs',
   'scripts/fixtures/fleet-empty-lifecycle.mjs',
+  'scripts/fixtures/fleet-program-state.mjs',
 ];
 
 if (process.argv[2] === '--serve') {
