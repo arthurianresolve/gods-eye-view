@@ -1,0 +1,1553 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+  "platform": "darwin",
+  "timestamp": "2026-10-11T15:34:19.421Z",
+  "status": "passed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+    "harnessCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+    "capturedAt": "2026-10-11T15:34:32.656Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+        "harnessCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+        "harnessCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.",
+  "importPageErrors": [],
+  "performanceAcceptanceEligible": false,
+  "importLoadProfileScope": "Separate single-load CPU or sampled-allocation diagnostic. The profiler spans browser start/stop control clicks and wait/poll time around one warmed cooperative load, may include idle stacks and garbage collection, and stops before fresh-frame capture and teardown. Output is diagnostic-only, not performance acceptance.",
+  "importLoadProfile": {
+    "schema": "gev-sampled-cpu-attribution/v1",
+    "scope": "sample-weighted main-thread stacks including idle and garbage collection; not precise CPU execution, GPU timing, or performance acceptance",
+    "performanceAcceptanceEligible": false,
+    "profileWindowMs": 639.765,
+    "totalSampleWeightMs": 639.347,
+    "nodeCount": 58,
+    "sampleCount": 54,
+    "groupedLocations": 20,
+    "topLocations": [
+      {
+        "functionName": "(program)",
+        "url": "",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 5,
+        "sampledWeightMs": 386.101
+      },
+      {
+        "functionName": "(garbage collector)",
+        "url": "",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 10,
+        "sampledWeightMs": 100.462
+      },
+      {
+        "functionName": "(idle)",
+        "url": "",
+        "lineNumber": -1,
+        "columnNumber": -1,
+        "samples": 14,
+        "sampledWeightMs": 63.662
+      },
+      {
+        "functionName": "createEvidenceEnvelope",
+        "url": "/src/evidence/evidence.js",
+        "lineNumber": 212,
+        "columnNumber": 38,
+        "samples": 6,
+        "sampledWeightMs": 30.662999999999997
+      },
+      {
+        "functionName": "Event.addEventListener",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 18325,
+        "columnNumber": 43,
+        "samples": 3,
+        "sampledWeightMs": 8.767
+      },
+      {
+        "functionName": "PointGraphics.merge",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 59730,
+        "columnNumber": 40,
+        "samples": 1,
+        "sampledWeightMs": 5.09
+      },
+      {
+        "functionName": "addEventListener",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 18337,
+        "columnNumber": 25,
+        "samples": 1,
+        "sampledWeightMs": 4.985
+      },
+      {
+        "functionName": "EntityCollection.add",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 145313,
+        "columnNumber": 41,
+        "samples": 1,
+        "sampledWeightMs": 4.884
+      },
+      {
+        "functionName": "",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 152317,
+        "columnNumber": 17,
+        "samples": 2,
+        "sampledWeightMs": 4.864
+      },
+      {
+        "functionName": "GeometryVisualizer._insertUpdaterIntoBatch",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 171909,
+        "columnNumber": 63,
+        "samples": 1,
+        "sampledWeightMs": 4.83
+      },
+      {
+        "functionName": "schedule",
+        "url": "/src/imports/macrotask.js",
+        "lineNumber": 72,
+        "columnNumber": 19,
+        "samples": 1,
+        "sampledWeightMs": 4.633
+      },
+      {
+        "functionName": "GeometryUpdaterSet",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 169217,
+        "columnNumber": 27,
+        "samples": 1,
+        "sampledWeightMs": 4.485
+      },
+      {
+        "functionName": "createConstantProperty",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 43184,
+        "columnNumber": 31,
+        "samples": 1,
+        "sampledWeightMs": 3.417
+      },
+      {
+        "functionName": "set",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 150476,
+        "columnNumber": 17,
+        "samples": 1,
+        "sampledWeightMs": 3.011
+      },
+      {
+        "functionName": "step",
+        "url": "/src/imports/cooperative.js",
+        "lineNumber": 43,
+        "columnNumber": 17,
+        "samples": 1,
+        "sampledWeightMs": 2.407
+      },
+      {
+        "functionName": "PointVisualizer.update",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 173368,
+        "columnNumber": 43,
+        "samples": 1,
+        "sampledWeightMs": 2.125
+      },
+      {
+        "functionName": "JulianDate",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 17262,
+        "columnNumber": 19,
+        "samples": 1,
+        "sampledWeightMs": 1.711
+      },
+      {
+        "functionName": "writeCompressedAttrib12",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 151176,
+        "columnNumber": 32,
+        "samples": 1,
+        "sampledWeightMs": 1.355
+      },
+      {
+        "functionName": "Entity",
+        "url": "/node_modules/.vite/deps/cesium.js",
+        "lineNumber": 60803,
+        "columnNumber": 15,
+        "samples": 1,
+        "sampledWeightMs": 1.202
+      },
+      {
+        "functionName": "build",
+        "url": "/src/imports/runtimeLayer.js",
+        "lineNumber": 71,
+        "columnNumber": 17,
+        "samples": 1,
+        "sampledWeightMs": 0.693
+      }
+    ],
+    "omittedLocations": 0,
+    "profile": {
+      "startTime": 196303947,
+      "endTime": 196943712,
+      "nodes": [
+        {
+          "id": 1,
+          "callFrame": {
+            "functionName": "(root)",
+            "scriptId": "0",
+            "url": "",
+            "lineNumber": -1,
+            "columnNumber": -1
+          },
+          "children": [
+            2,
+            3,
+            4,
+            10,
+            20,
+            23,
+            36
+          ]
+        },
+        {
+          "id": 2,
+          "callFrame": {
+            "functionName": "(program)",
+            "scriptId": "0",
+            "url": "",
+            "lineNumber": -1,
+            "columnNumber": -1
+          }
+        },
+        {
+          "id": 3,
+          "callFrame": {
+            "functionName": "(idle)",
+            "scriptId": "0",
+            "url": "",
+            "lineNumber": -1,
+            "columnNumber": -1
+          }
+        },
+        {
+          "id": 4,
+          "callFrame": {
+            "functionName": "runControlledImportLoadProfile",
+            "scriptId": "59",
+            "url": "/scripts/performance/importLoadProfileControl.mjs",
+            "lineNumber": 18,
+            "columnNumber": 52
+          },
+          "children": [
+            5
+          ]
+        },
+        {
+          "id": 5,
+          "callFrame": {
+            "functionName": "load",
+            "scriptId": "45",
+            "url": "/scripts/fixtures/import-batches-ui.js",
+            "lineNumber": 811,
+            "columnNumber": 14
+          },
+          "children": [
+            6
+          ]
+        },
+        {
+          "id": 6,
+          "callFrame": {
+            "functionName": "loadAsync",
+            "scriptId": "51",
+            "url": "/src/imports/runtimeLayer.js",
+            "lineNumber": 222,
+            "columnNumber": 26
+          },
+          "children": [
+            7
+          ]
+        },
+        {
+          "id": 7,
+          "callFrame": {
+            "functionName": "consumeInBatches",
+            "scriptId": "61",
+            "url": "/src/imports/cooperative.js",
+            "lineNumber": 5,
+            "columnNumber": 32
+          },
+          "children": [
+            8
+          ]
+        },
+        {
+          "id": 8,
+          "callFrame": {
+            "functionName": "",
+            "scriptId": "61",
+            "url": "/src/imports/cooperative.js",
+            "lineNumber": 24,
+            "columnNumber": 21
+          },
+          "children": [
+            9
+          ]
+        },
+        {
+          "id": 9,
+          "callFrame": {
+            "functionName": "step",
+            "scriptId": "61",
+            "url": "/src/imports/cooperative.js",
+            "lineNumber": 43,
+            "columnNumber": 17
+          }
+        },
+        {
+          "id": 10,
+          "callFrame": {
+            "functionName": "render2",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 242078,
+            "columnNumber": 18
+          },
+          "children": [
+            11
+          ]
+        },
+        {
+          "id": 11,
+          "callFrame": {
+            "functionName": "CesiumWidget.render",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 242837,
+            "columnNumber": 40
+          },
+          "children": [
+            12,
+            47
+          ]
+        },
+        {
+          "id": 12,
+          "callFrame": {
+            "functionName": "Clock.tick",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 154036,
+            "columnNumber": 31
+          },
+          "children": [
+            13,
+            44
+          ]
+        },
+        {
+          "id": 13,
+          "callFrame": {
+            "functionName": "Event.raiseEvent",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 18385,
+            "columnNumber": 37
+          },
+          "children": [
+            14
+          ]
+        },
+        {
+          "id": 14,
+          "callFrame": {
+            "functionName": "CesiumWidget._onTick",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 242869,
+            "columnNumber": 41
+          },
+          "children": [
+            15
+          ]
+        },
+        {
+          "id": 15,
+          "callFrame": {
+            "functionName": "DataSourceDisplay.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 175485,
+            "columnNumber": 45
+          },
+          "children": [
+            16,
+            18,
+            41
+          ]
+        },
+        {
+          "id": 16,
+          "callFrame": {
+            "functionName": "GeometryVisualizer.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 171773,
+            "columnNumber": 46
+          },
+          "children": [
+            17,
+            37
+          ]
+        },
+        {
+          "id": 17,
+          "callFrame": {
+            "functionName": "GeometryUpdaterSet",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 169217,
+            "columnNumber": 27
+          },
+          "children": [
+            24,
+            38
+          ]
+        },
+        {
+          "id": 24,
+          "callFrame": {
+            "functionName": "Event.addEventListener",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 18325,
+            "columnNumber": 43
+          }
+        },
+        {
+          "id": 38,
+          "callFrame": {
+            "functionName": "EventHelper.add",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 145793,
+            "columnNumber": 36
+          },
+          "children": [
+            39
+          ]
+        },
+        {
+          "id": 39,
+          "callFrame": {
+            "functionName": "Event.addEventListener",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 18325,
+            "columnNumber": 43
+          },
+          "children": [
+            40
+          ]
+        },
+        {
+          "id": 40,
+          "callFrame": {
+            "functionName": "addEventListener",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 18337,
+            "columnNumber": 25
+          }
+        },
+        {
+          "id": 37,
+          "callFrame": {
+            "functionName": "GeometryVisualizer._insertUpdaterIntoBatch",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 171909,
+            "columnNumber": 63
+          }
+        },
+        {
+          "id": 18,
+          "callFrame": {
+            "functionName": "PointVisualizer.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 173368,
+            "columnNumber": 43
+          },
+          "children": [
+            19,
+            46
+          ]
+        },
+        {
+          "id": 19,
+          "callFrame": {
+            "functionName": "",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 152317,
+            "columnNumber": 17
+          }
+        },
+        {
+          "id": 46,
+          "callFrame": {
+            "functionName": "set",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 150476,
+            "columnNumber": 17
+          }
+        },
+        {
+          "id": 41,
+          "callFrame": {
+            "functionName": "PolylineVisualizer.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 175160,
+            "columnNumber": 46
+          },
+          "children": [
+            42
+          ]
+        },
+        {
+          "id": 42,
+          "callFrame": {
+            "functionName": "PolylineGeometryUpdater",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 174083,
+            "columnNumber": 32
+          },
+          "children": [
+            43
+          ]
+        },
+        {
+          "id": 43,
+          "callFrame": {
+            "functionName": "Event.addEventListener",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 18325,
+            "columnNumber": 43
+          }
+        },
+        {
+          "id": 44,
+          "callFrame": {
+            "functionName": "JulianDate.clone",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 17625,
+            "columnNumber": 27
+          },
+          "children": [
+            45
+          ]
+        },
+        {
+          "id": 45,
+          "callFrame": {
+            "functionName": "JulianDate",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 17262,
+            "columnNumber": 19
+          }
+        },
+        {
+          "id": 47,
+          "callFrame": {
+            "functionName": "Scene4.render",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 239540,
+            "columnNumber": 34
+          },
+          "children": [
+            48
+          ]
+        },
+        {
+          "id": 48,
+          "callFrame": {
+            "functionName": "tryAndCatchError",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 239527,
+            "columnNumber": 25
+          },
+          "children": [
+            49
+          ]
+        },
+        {
+          "id": 49,
+          "callFrame": {
+            "functionName": "render",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 239465,
+            "columnNumber": 15
+          },
+          "children": [
+            50
+          ]
+        },
+        {
+          "id": 50,
+          "callFrame": {
+            "functionName": "Scene4.updateAndExecuteCommands",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 238730,
+            "columnNumber": 52
+          },
+          "children": [
+            51
+          ]
+        },
+        {
+          "id": 51,
+          "callFrame": {
+            "functionName": "executeCommandsInViewport",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 238907,
+            "columnNumber": 34
+          },
+          "children": [
+            52
+          ]
+        },
+        {
+          "id": 52,
+          "callFrame": {
+            "functionName": "updateAndRenderPrimitives",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 239059,
+            "columnNumber": 34
+          },
+          "children": [
+            53
+          ]
+        },
+        {
+          "id": 53,
+          "callFrame": {
+            "functionName": "PrimitiveCollection.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 161467,
+            "columnNumber": 47
+          },
+          "children": [
+            54
+          ]
+        },
+        {
+          "id": 54,
+          "callFrame": {
+            "functionName": "PrimitiveCollection.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 161467,
+            "columnNumber": 47
+          },
+          "children": [
+            55
+          ]
+        },
+        {
+          "id": 55,
+          "callFrame": {
+            "functionName": "PrimitiveCollection.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 161467,
+            "columnNumber": 47
+          },
+          "children": [
+            56
+          ]
+        },
+        {
+          "id": 56,
+          "callFrame": {
+            "functionName": "EntityCluster.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 152453,
+            "columnNumber": 41
+          },
+          "children": [
+            57
+          ]
+        },
+        {
+          "id": 57,
+          "callFrame": {
+            "functionName": "PointPrimitiveCollection.update",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 151363,
+            "columnNumber": 52
+          },
+          "children": [
+            58
+          ]
+        },
+        {
+          "id": 58,
+          "callFrame": {
+            "functionName": "writeCompressedAttrib12",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 151176,
+            "columnNumber": 32
+          }
+        },
+        {
+          "id": 20,
+          "callFrame": {
+            "functionName": "scheduler.postTask.priority",
+            "scriptId": "68",
+            "url": "/src/imports/macrotask.js",
+            "lineNumber": 92,
+            "columnNumber": 10
+          },
+          "children": [
+            21
+          ]
+        },
+        {
+          "id": 21,
+          "callFrame": {
+            "functionName": "step",
+            "scriptId": "61",
+            "url": "/src/imports/cooperative.js",
+            "lineNumber": 43,
+            "columnNumber": 17
+          },
+          "children": [
+            22,
+            25
+          ]
+        },
+        {
+          "id": 22,
+          "callFrame": {
+            "functionName": "schedule",
+            "scriptId": "68",
+            "url": "/src/imports/macrotask.js",
+            "lineNumber": 72,
+            "columnNumber": 19
+          }
+        },
+        {
+          "id": 25,
+          "callFrame": {
+            "functionName": "build",
+            "scriptId": "51",
+            "url": "/src/imports/runtimeLayer.js",
+            "lineNumber": 71,
+            "columnNumber": 17
+          },
+          "children": [
+            26,
+            35
+          ]
+        },
+        {
+          "id": 26,
+          "callFrame": {
+            "functionName": "EntityCollection.add",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 145313,
+            "columnNumber": 41
+          },
+          "children": [
+            27
+          ]
+        },
+        {
+          "id": 27,
+          "callFrame": {
+            "functionName": "Entity",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 60803,
+            "columnNumber": 15
+          },
+          "children": [
+            28
+          ]
+        },
+        {
+          "id": 28,
+          "callFrame": {
+            "functionName": "Entity.merge",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 61219,
+            "columnNumber": 33
+          },
+          "children": [
+            29
+          ]
+        },
+        {
+          "id": 29,
+          "callFrame": {
+            "functionName": "set",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 43158,
+            "columnNumber": 17
+          },
+          "children": [
+            30
+          ]
+        },
+        {
+          "id": 30,
+          "callFrame": {
+            "functionName": "",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 60796,
+            "columnNumber": 64
+          },
+          "children": [
+            31
+          ]
+        },
+        {
+          "id": 31,
+          "callFrame": {
+            "functionName": "PointGraphics",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 59590,
+            "columnNumber": 22
+          },
+          "children": [
+            32
+          ]
+        },
+        {
+          "id": 32,
+          "callFrame": {
+            "functionName": "PointGraphics.merge",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 59730,
+            "columnNumber": 40
+          },
+          "children": [
+            33
+          ]
+        },
+        {
+          "id": 33,
+          "callFrame": {
+            "functionName": "set",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 43158,
+            "columnNumber": 17
+          },
+          "children": [
+            34
+          ]
+        },
+        {
+          "id": 34,
+          "callFrame": {
+            "functionName": "createConstantProperty",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 43184,
+            "columnNumber": 31
+          }
+        },
+        {
+          "id": 35,
+          "callFrame": {
+            "functionName": "createEvidenceEnvelope",
+            "scriptId": "66",
+            "url": "/src/evidence/evidence.js",
+            "lineNumber": 212,
+            "columnNumber": 38
+          }
+        },
+        {
+          "id": 23,
+          "callFrame": {
+            "functionName": "(garbage collector)",
+            "scriptId": "0",
+            "url": "",
+            "lineNumber": -1,
+            "columnNumber": -1
+          }
+        },
+        {
+          "id": 36,
+          "callFrame": {
+            "functionName": "PointGraphics.merge",
+            "scriptId": "10",
+            "url": "/node_modules/.vite/deps/cesium.js",
+            "lineNumber": 59730,
+            "columnNumber": 40
+          }
+        }
+      ],
+      "samples": [
+        2,
+        3,
+        3,
+        3,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        9,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        17,
+        19,
+        2,
+        22,
+        23,
+        23,
+        24,
+        34,
+        26,
+        35,
+        35,
+        23,
+        23,
+        35,
+        35,
+        36,
+        35,
+        27,
+        23,
+        37,
+        23,
+        23,
+        23,
+        23,
+        40,
+        23,
+        19,
+        18,
+        43,
+        43,
+        35,
+        25,
+        45,
+        46,
+        58,
+        2
+      ],
+      "timeDeltas": [
+        368082,
+        2793,
+        1925,
+        2807,
+        3769,
+        4939,
+        4279,
+        6320,
+        7441,
+        7515,
+        5170,
+        2407,
+        4997,
+        1235,
+        6735,
+        2380,
+        5126,
+        5012,
+        4485,
+        850,
+        4186,
+        4633,
+        5160,
+        5496,
+        1555,
+        3417,
+        4884,
+        5629,
+        4978,
+        19675,
+        1353,
+        4136,
+        5478,
+        5090,
+        7576,
+        1202,
+        20270,
+        4830,
+        4269,
+        6693,
+        16093,
+        456,
+        4985,
+        20997,
+        4014,
+        2125,
+        4798,
+        2414,
+        2866,
+        693,
+        1711,
+        3011,
+        1355,
+        5052
+      ]
+    },
+    "recomputation": "The normalized bounded CPU profile is retained so the summary can be independently recomputed; sample weights remain statistical estimates.",
+    "mode": "cpu",
+    "samplingInterval": 1000,
+    "profileScope": "Profiler window includes explicit browser start/stop control clicks and wait/poll time around one warmed cooperative load; it may include idle stacks and garbage collection. Fresh-frame capture and teardown are outside the window. Sampled profile summaries are diagnostic and not performance acceptance.",
+    "control": {
+      "fixtureReadyGateObserved": true,
+      "loadCompleteGateObserved": true,
+      "profilerStoppedBeforeFinishControl": true,
+      "captureAndTeardownOutsideProfile": true
+    }
+  },
+  "importBatches": {
+    "schema": "gev-import-batches/v2",
+    "applicationCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+    "harnessCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+    "capturedAt": "2026-10-11T15:34:36.749Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "featureLimit": 5000,
+    "workload": "single-cooperative-load-profile",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": true,
+    "diagnosticClassification": "opt-in browser scheduling diagnosis only; not performance acceptance",
+    "performanceAcceptanceEligible": false,
+    "importLoadProfileMode": "cpu",
+    "importLoadProfileScope": "Profiler window spans browser start/stop control clicks and wait/poll time around one warmed cooperative 5,000-point load; it may include idle stacks and garbage collection. Setup/warmup, fresh-frame capture, and teardown are outside the window. Diagnostic-only, not a latency or performance acceptance sample.",
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "pointVisualStateDiagnosticScope": "Version-pinned post-capture Entity/PointPrimitiveCollection state hashes; diagnostic work is outside import and capture elapsedMs and is not a performance sample.",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "cooperativeScheduler": {
+      "configuration": "production-default",
+      "scheduleOverride": false,
+      "cancelOverride": false,
+      "targetBudgetMs": 4,
+      "batchObserver": "disabled for the isolated profiler window to minimize diagnostic observer work",
+      "stepObserver": "disabled",
+      "backendCounts": {}
+    },
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "single-profiled-load-separated-from-capture-and-teardown",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": null,
+        "mode": "single-cooperative-load-profile",
+        "features": 5000,
+        "resources": {
+          "heapBytes": 241758263,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 29.900000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 29.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true,
+          "browserStateBefore": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 800,
+              "height": 600,
+              "visualWidth": 800,
+              "visualHeight": 600,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 316.875,
+              "right": 648,
+              "bottom": 676.875,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 316.875,
+              "right": 648,
+              "bottom": 600,
+              "width": 640,
+              "height": 283.125,
+              "area": 181200
+            },
+            "canvasViewportIntersectionRatio": 0.7864583333333334
+          },
+          "browserStateAfter": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 800,
+              "height": 600,
+              "visualWidth": 800,
+              "visualHeight": 600,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 316.875,
+              "right": 648,
+              "bottom": 676.875,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 316.875,
+              "right": 648,
+              "bottom": 600,
+              "width": 640,
+              "height": 283.125,
+              "area": 181200
+            },
+            "canvasViewportIntersectionRatio": 0.7864583333333334
+          }
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+      "harnessCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "warmupBatches": {
+      "available": false,
+      "reason": "batch observer disabled for profiler run"
+    },
+    "coldActivationMs": 471.70000000001164,
+    "warmedResources": {
+      "heapBytes": 117658189,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "importLoadProfile": {
+      "mode": "cpu",
+      "phases": {
+        "setupStartedAtMs": 1561.1999999999825,
+        "setupReadyAtMs": 2095,
+        "profilerGateReadyAtMs": 2564.2999999999884,
+        "loadingStartedAtMs": 2990.7999999999884,
+        "loadingEndedAtMs": 3203.5999999999767,
+        "loadingDurationMs": 212.79999999998836,
+        "profileStopRequestedBeforeCapture": true,
+        "captureStartedAtMs": 3296.399999999994,
+        "captureEndedAtMs": 3356.2999999999884,
+        "captureDurationMs": 59.89999999999418,
+        "teardownStartedAtMs": 3356.399999999994,
+        "teardownEndedAtMs": 3664.0999999999767
+      },
+      "workload": {
+        "mode": "cooperative",
+        "features": 5000,
+        "featureCountAfter": 5000,
+        "pendingJobsAfter": 0,
+        "batchObserver": "disabled during profiling"
+      },
+      "scope": "Profiler window spans browser start/stop control clicks and wait/poll time around one warmed cooperative 5,000-point load; it may include idle stacks and garbage collection. Setup/warmup, fresh-frame capture, and teardown are outside the window. Diagnostic-only, not a latency or performance acceptance sample.",
+      "performanceAcceptanceEligible": false
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true,
+    "browserLifecycleEvents": []
+  },
+  "importLoadProfileFixture": {
+    "mode": "cpu",
+    "phases": {
+      "setupStartedAtMs": 1561.1999999999825,
+      "setupReadyAtMs": 2095,
+      "profilerGateReadyAtMs": 2564.2999999999884,
+      "loadingStartedAtMs": 2990.7999999999884,
+      "loadingEndedAtMs": 3203.5999999999767,
+      "loadingDurationMs": 212.79999999998836,
+      "profileStopRequestedBeforeCapture": true,
+      "captureStartedAtMs": 3296.399999999994,
+      "captureEndedAtMs": 3356.2999999999884,
+      "captureDurationMs": 59.89999999999418,
+      "teardownStartedAtMs": 3356.399999999994,
+      "teardownEndedAtMs": 3664.0999999999767
+    },
+    "workload": {
+      "mode": "cooperative",
+      "features": 5000,
+      "featureCountAfter": 5000,
+      "pendingJobsAfter": 0,
+      "batchObserver": "disabled during profiling"
+    },
+    "scope": "Profiler window spans browser start/stop control clicks and wait/poll time around one warmed cooperative 5,000-point load; it may include idle stacks and garbage collection. Setup/warmup, fresh-frame capture, and teardown are outside the window. Diagnostic-only, not a latency or performance acceptance sample.",
+    "performanceAcceptanceEligible": false
+  },
+  "importBatchValidation": {
+    "notApplicable": true,
+    "performanceAcceptanceEligible": false,
+    "scope": "Single-load profiler report is not an import benchmark report.",
+    "errors": []
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 20063.142917,
+      "closeSettledHostMs": 20625.408834,
+      "closeElapsedMs": 562.2659170000006,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 544.0285000000003
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

@@ -4201,3 +4201,22 @@ do not pass the 4 ms application budget or establish GC as the sole cause. Next,
 attribute allocation/CPU work within loading only, preserving original entity
 order and all geometry. Physical Windows, interaction and retained-heap acceptance
 remain pending. [Raw report and independent review](performance-evidence/s59-import-trace-38149643758/review.json).
+
+### S59 isolated loading CPU and allocation profiles - 11 October 2026
+
+Code implemented: the opt-in profiler owns a bounded CDP session and separates
+one warmed import load from capture and teardown. Creation, startup, completion
+and timeout paths release owned profiler resources. Malformed or truncated
+evidence fails validation. Automatically validated: 31 focused tests and separate
+CPU/heap hosted runs pass at `388a1d69bde81ef1865cf7c237cebe55e26bed8a`. Root
+recomputed the CPU summary, verified both exact-commit reports and confirmed the
+same complete 5,000-point capture digest and natural browser shutdown.
+
+The CPU window includes control overhead and idle time; sampled weights are not
+precise load execution times. The allocation diagnostic points primarily toward
+Cesium entity/geometry-updater construction. The next experiment will isolate
+static imported point rendering while preserving Entity pick identities,
+evidence, order and appearance; production defaults remain unchanged until a
+matched comparison passes. The 4 ms budget, interaction targets, retained-heap
+plateau and physical Windows validation remain pending.
+[Reports, source identity and limits](performance-evidence/s59-import-load-profiles-388a1d6/README.md).

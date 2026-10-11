@@ -1,0 +1,47 @@
+{
+  "testedCommit": "388a1d69bde81ef1865cf7c237cebe55e26bed8a",
+  "reviewedAt": "2026-10-11T15:38:35.554Z",
+  "outcome": "both isolated diagnostics passed",
+  "codeImplemented": true,
+  "automaticallyValidated": true,
+  "hardwareValidated": false,
+  "performanceAcceptanceEligible": false,
+  "profiles": [
+    {
+      "mode": "cpu",
+      "runId": "38151772176",
+      "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38151772176",
+      "sha256": "533ddef31b877585f10e018fbff23c5445c2a32e9877e5e35509a2b983143eb3",
+      "profileNodeCount": 58,
+      "profileSampleCount": 54,
+      "profileWindowMs": 639.765,
+      "loadingDurationMs": 212.79999999998836,
+      "sampledAllocationBytes": null,
+      "omittedSummaryLocations": 0,
+      "summaryRecomputedFromRetainedProfile": true,
+      "freshFramePixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+    },
+    {
+      "mode": "heap",
+      "runId": "38151912129",
+      "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38151912129",
+      "sha256": "a4ace9fd14e01e291fe5d4a53cdc5cedfe125832df66c8b9fde6ddbbdd421b72",
+      "profileNodeCount": 265,
+      "profileSampleCount": 5779,
+      "profileWindowMs": null,
+      "loadingDurationMs": 212.90000000000873,
+      "sampledAllocationBytes": 96414772,
+      "omittedSummaryLocations": 81,
+      "summaryRecomputedFromRetainedProfile": false,
+      "freshFramePixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+    }
+  ],
+  "limitations": [
+    "One profiled load per mode; these are attribution diagnostics, not matched speedup or interaction acceptance.",
+    "CPU window includes control clicks and polling and is longer than the actual load; sample weights are not precise CPU execution time.",
+    "Heap sampling estimates include collected allocations; these are not retained-memory, GPU-memory or exact allocation totals.",
+    "CPU summary was independently recomputed from the bounded normalized profile. Heap retains only top 30 grouped locations; omitted locations cannot be independently reconstructed.",
+    "Hosted Apple paravirtual Metal does not qualify physical Windows hardware coverage.",
+    "Earlier over-budget import steps and retention failures remain unresolved."
+  ]
+}
