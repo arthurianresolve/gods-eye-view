@@ -1024,6 +1024,8 @@
   "scripts/qa-hosted-capture.mjs",
   "scripts/performance/hostedSourceProvenance.mjs",
   "scripts/performance/hostedSourceProvenance.test.mjs",
+  "scripts/performance/hostedSoakSession.mjs",
+  "scripts/performance/hostedSoakSession.test.mjs",
   "scripts/fixtures/import-batches-ui.js",
   "scripts/performance/importPointState.mjs",
   "scripts/performance/importPointState.test.mjs",
