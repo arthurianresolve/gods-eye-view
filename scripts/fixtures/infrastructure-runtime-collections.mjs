@@ -429,6 +429,11 @@ function findNativePickTarget(
   preferredEntityId = null,
   diagnostics,
 ) {
+  check(
+    ['local-dams', 'local-datacenters'].includes(layerId) &&
+      rows.every((row) => row.layerId === layerId),
+    'Native pick search layer identity does not match its surface inventory.',
+  );
   const rowsByEntity = new Map(rows.map((row) => [row.entity, row]));
   const primitivesByEntity = new Map();
   if (collections) {
@@ -778,7 +783,7 @@ async function runLayerLifetime(
             viewer,
             rows,
             collections,
-            targetLayer.layerId,
+            layer.layerId,
             preferredPickEntityId,
             pickDiagnostics,
           );
