@@ -1,0 +1,137 @@
+{
+  "candidateCommit": "05065532e1f6097546b00c3ac7961ccef2877184",
+  "summaries": [
+    {
+      "run": 38176785594,
+      "rawSha256": "ef7de2c766d7f0f7bc922d862955555d09af14b926ca9f6dbf56dc0a3f49e5ac",
+      "pairedLoadDeltaRatios": [
+        -0.6933471933474402,
+        -0.35582822085843563,
+        -0.049450549450277076,
+        -0.39426523297499266,
+        -0.2815126050414208
+      ],
+      "medianPairedLoadDeltaRatio": -0.35582822085843563,
+      "pairedLoadDeltaRatiosByShape": {
+        "line": [
+          -0.8213058419246415,
+          -0.22297297297236177,
+          0.9315068493189461,
+          -0.1986301369878169,
+          -0.4375000000001624
+        ],
+        "polygon": [
+          0.5617977528093562,
+          -0.4662921348311116,
+          -0.7064220183500691,
+          -0.6090225563897599,
+          -0.14285714285615292
+        ]
+      },
+      "medianLoadDeltaRatioByShape": {
+        "line": {
+          "load": -0.22297297297236177,
+          "firstUsable": -0.045334667151683945
+        },
+        "polygon": {
+          "load": -0.4662921348311116,
+          "firstUsable": -0.03677901854317587
+        }
+      },
+      "pairedFirstUsableDeltaRatios": [
+        -0.3960374414976608,
+        0.33939249796141246,
+        -0.06528,
+        -0.09025047215083173,
+        0.059603766580041906
+      ],
+      "medianPairedFirstUsableDeltaRatio": -0.06528,
+      "pairedFirstUsableDeltaRatiosByShape": {
+        "line": [
+          -0.29110249030159074,
+          0.292854714140005,
+          -0.045334667151683945,
+          -0.12213219616204443,
+          0.10695590899939664
+        ],
+        "polygon": [
+          -0.5696831642161938,
+          0.44771057094403616,
+          -0.11265932166776355,
+          -0.0057633630918485146,
+          -0.03677901854317587
+        ]
+      },
+      "regressionGate": "candidate median combined load and first-usable duration, plus each shape load and first-usable median, must not exceed baseline by more than 10%; frame capture/readback remains separate",
+      "regressionGatePassed": true,
+      "performanceAccepted": false,
+      "measuredScope": "hosted unprofiled browser comparison; loadAsync includes conversion and publication; first-usable combines loadAsync and native-render readiness; frame capture/readback is reported separately"
+    },
+    {
+      "run": 38177035584,
+      "rawSha256": "1fc97fc6455e657fcc4941dad08fbfc762594b727bb7c095c9e42dc423e0bcf2",
+      "pairedLoadDeltaRatios": [
+        -0.7739130434790201,
+        -0.3761467889932263,
+        -0.488721804511706,
+        -0.4081632653066073,
+        -0.35353535353072113
+      ],
+      "medianPairedLoadDeltaRatio": -0.4081632653066073,
+      "pairedLoadDeltaRatiosByShape": {
+        "line": [
+          -0.8367346938784904,
+          -0.46774193548674803,
+          -0.5217391304380836,
+          -0.48275862068861697,
+          -0.40350877192695805
+        ],
+        "polygon": [
+          -0.4117647058813459,
+          -0.2553191489380147,
+          -0.4531249999970157,
+          -0.3000000000029104,
+          -0.2857142857063663
+        ]
+      },
+      "medianLoadDeltaRatioByShape": {
+        "line": {
+          "load": -0.48275862068861697,
+          "firstUsable": -0.00243309002436515
+        },
+        "polygon": {
+          "load": -0.3000000000029104,
+          "firstUsable": 0.12137523875677639
+        }
+      },
+      "pairedFirstUsableDeltaRatios": [
+        -0.38039936007582953,
+        0.10663609001003675,
+        -0.08232526881720384,
+        0.04886704886703259,
+        0.08513850978572385
+      ],
+      "medianPairedFirstUsableDeltaRatio": 0.04886704886703259,
+      "pairedFirstUsableDeltaRatiosByShape": {
+        "line": [
+          -0.43062026125879393,
+          0.043824701195226905,
+          -0.00243309002436515,
+          -0.0752632127593167,
+          0.06692844677138887
+        ],
+        "polygon": [
+          -0.2876897133220518,
+          0.24230072463767263,
+          -0.23139358921441947,
+          0.28424589839885694,
+          0.12137523875677639
+        ]
+      },
+      "regressionGate": "candidate median combined load and first-usable duration, plus each shape load and first-usable median, must not exceed baseline by more than 10%; frame capture/readback remains separate",
+      "regressionGatePassed": false,
+      "performanceAccepted": false,
+      "measuredScope": "hosted unprofiled browser comparison; loadAsync includes conversion and publication; first-usable combines loadAsync and native-render readiness; frame capture/readback is reported separately"
+    }
+  ]
+}

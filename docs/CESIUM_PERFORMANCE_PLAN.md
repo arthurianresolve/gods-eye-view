@@ -84,6 +84,14 @@ QA now adopts this backend for macOS recovery; Linux keeps its existing backend.
 Full standard CI on the adoption commit is required before production promotion.
 These software checks do not establish physical GPU acceptance.
 
+S59 coordinate-kernel follow-up at `05065532` completes two five-pair
+[hosted comparisons](performance-evidence/s59-coordinate-kernel-05065532/README.md).
+Both preserve images, picking, settings and cleanup. Combined load improves
+35.58% and 40.82%, but the repeat has a 12.14% polygon first-usable regression
+against the unchanged 10% limit. The repeat fails; the scalar kernel remains
+opt-in and is not promoted. Large-feature four-millisecond batching remains
+unfinished. Readiness attribution is required before adoption.
+
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
 256-coordinate chunking arms regress completion time in four of five pairs for
