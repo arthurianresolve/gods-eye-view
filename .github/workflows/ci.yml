@@ -42,6 +42,7 @@ on:
             calibration,
             traffic,
             imports,
+            import-attribution,
           ]
         default: collections
       hosted_gpu_probe:
@@ -803,11 +804,13 @@ jobs:
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
       - name: Preserve renderer comparison evidence
-        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'imports')
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'imports' || inputs.renderer_diagnostic == 'import-attribution')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}
-          path: qa-artifacts/hosted-native-renderer.json
+          path: |
+            qa-artifacts/hosted-native-renderer.json
+            qa-artifacts/import-attribution.cpuprofile
           if-no-files-found: error
           retention-days: 3
       - name: Preserve traffic evidence after success or failure

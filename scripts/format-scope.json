@@ -1110,6 +1110,8 @@
   "scripts/fixtures/import-batches-ui.js",
   "scripts/performance/importBatchSchedulerReport.mjs",
   "scripts/performance/importBatchSchedulerReport.test.mjs",
+  "scripts/performance/sampledCpuProfile.mjs",
+  "scripts/performance/sampledCpuProfile.test.mjs",
   "scripts/performance/importGeometry.mjs",
   "src/imports/index.js",
   "src/ui/styles/workspaceLibrary.css",

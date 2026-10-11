@@ -12,6 +12,7 @@ import { validateInfrastructureCollectionReport } from './performance/infrastruc
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { validateImportBatchSchedulerReport } from './performance/importBatchSchedulerReport.mjs';
+import { startFixtureCpuProfile } from './performance/sampledCpuProfile.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -136,14 +137,42 @@ try {
     await page.goto(url.replace('capture-matrix.html', 'import-batches.html'), {
       waitUntil: 'networkidle0',
     });
-    await page.click('#run');
-    await page.waitForFunction(
-      () => document.querySelector('#result')?.textContent,
-      { timeout: 120_000 },
-    );
-    report.importBatches = await page.$eval('#result', (element) =>
-      JSON.parse(element.textContent),
-    );
+    const profileImports = process.argv.includes('--import-attribution');
+    const cpuProfile = profileImports
+      ? await startFixtureCpuProfile(page)
+      : null;
+    if (profileImports) {
+      report.performanceAcceptanceEligible = false;
+      report.profilingScope =
+        'Separate CPU attribution run; all latency and heartbeat values are profiled and excluded from performance acceptance.';
+    }
+    try {
+      await page.click('#run');
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 120_000 },
+      );
+      report.importBatches = await page.$eval('#result', (element) =>
+        JSON.parse(element.textContent),
+      );
+      if (profileImports) report.importBatches.profiled = true;
+    } finally {
+      if (cpuProfile) {
+        const { profile, ...summary } = await cpuProfile.stop();
+        await mkdir('qa-artifacts', { recursive: true });
+        await writeFile(
+          'qa-artifacts/import-attribution.cpuprofile',
+          JSON.stringify(profile),
+        );
+        report.importCpuAttribution = {
+          ...summary,
+          artifact: 'import-attribution.cpuprofile',
+          applicationCommit: commit,
+          harnessCommit: commit,
+          samplingIntervalUs: 1000,
+        };
+      }
+    }
     report.importBatchValidation = validateImportBatchSchedulerReport(
       report.importBatches,
       commit,
@@ -465,7 +494,8 @@ try {
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
-    process.argv.includes('--imports')
+    process.argv.includes('--imports') ||
+    process.argv.includes('--import-attribution')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(
