@@ -7,6 +7,7 @@ import {
   CABLE_BENEFIT_PAIRS,
   CABLE_BENEFIT_SCHEMA,
   CABLE_BENEFIT_SOURCE_PATHS,
+  cableTeardownRecord,
   summarizeCableBenefit,
   validateCableBenefit,
 } from './cableBenefitReport.mjs';
@@ -135,14 +136,17 @@ function makeRun(mode, suite, index, orderIndex) {
       listeners: 4,
     },
     teardown: {
-      layerDestroyed: true,
+      ...cableTeardownRecord({
+        phase: 'layer-destroyed',
+        teardown: {
+          dataSources: 0,
+          primitives: 2,
+          groundPrimitives: 1,
+          listeners: 0,
+          collections: 0,
+        },
+      }),
       viewerDestroyed: true,
-      ownerCountAfterDestroy: 0,
-      dataSources: 0,
-      primitives: 2,
-      groundPrimitives: 1,
-      listeners: 0,
-      collections: 0,
     },
     pointPick,
     stemPick,

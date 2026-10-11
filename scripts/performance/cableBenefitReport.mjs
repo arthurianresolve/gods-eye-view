@@ -62,6 +62,32 @@ const median = (values) => [...values].sort((a, b) => a - b)[2];
 const percent = (baseline, candidate) =>
   baseline === 0 ? null : (candidate / baseline - 1) * 100;
 
+/** Convert the observed fixture phase using the same contract checked below. */
+export function cableTeardownRecord(state) {
+  assert.equal(state.phase, 'layer-destroyed');
+  for (const key of [
+    'dataSources',
+    'listeners',
+    'collections',
+    'primitives',
+    'groundPrimitives',
+  ])
+    assert.ok(
+      Number.isSafeInteger(state.teardown?.[key]) && state.teardown[key] >= 0,
+      `Missing teardown ${key}`,
+    );
+  return {
+    layerDestroyed: true,
+    viewerDestroyed: false,
+    ownerCountAfterDestroy: state.teardown.collections,
+    dataSources: state.teardown.dataSources,
+    listeners: state.teardown.listeners,
+    collections: state.teardown.collections,
+    primitives: state.teardown.primitives,
+    groundPrimitives: state.teardown.groundPrimitives,
+  };
+}
+
 export function summarizeCableBenefit(report) {
   const summary = {};
   for (const [metric, suite, read] of [

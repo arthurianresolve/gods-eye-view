@@ -32,6 +32,7 @@ import {
   CABLE_BENEFIT_PAIRS,
   CABLE_BENEFIT_SCHEMA,
   CABLE_BENEFIT_SOURCE_PATHS,
+  cableTeardownRecord,
   summarizeCableBenefit,
   validateCableBenefit,
 } from './cableBenefitReport.mjs';
@@ -499,16 +500,7 @@ if (isMain) {
       record.phase = 'destroying-layer';
       await page.evaluate(() => window.__cableBenefit.destroyLayer());
       state = await waitForFixtureState(page, 'layer-destroyed', 10_000);
-      record.teardown = {
-        layerDestroyed: true,
-        viewerDestroyed: false,
-        ownerCountAfterDestroy: state.teardown.collections,
-        dataSources: state.teardown.dataSources,
-        listeners: state.teardown.listeners,
-        collections: state.teardown.collections,
-        normalPrimitiveCountAfterDestroy: state.teardown.primitives,
-        groundPrimitiveCountAfterDestroy: state.teardown.groundPrimitives,
-      };
+      record.teardown = cableTeardownRecord(state);
       if (suite === 'memory') record.memory.destroyed = await readHeap(session);
       record.phase = 'destroying-viewer';
       state = await page.evaluate(() => window.__cableBenefit.destroyViewer());
