@@ -65,6 +65,19 @@
         "message": "Traffic fixture failed: Local fixture tiles did not settle"
       },
       "completedTrials": 0
+    },
+    {
+      "run": "38121572694",
+      "commit": "5bf1bd5dbed9e70753bd575170563e40a3a89a46",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121572694",
+      "file": "traffic-38121572694.json",
+      "sha256": "fc8f1500d8800d469f29c9544b6bf38b634e60fcabcf82fdc32225c75742bbd2",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Timed out waiting for heatline geometry ready for visual control"
+      },
+      "completedTrials": 0
     }
   ],
   "acceptance": "None of these failed runs provides a completed traffic optimization comparison or physical desktop hardware acceptance."

@@ -16,6 +16,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
+import { installWorkerDiagnostics } from './workerDiagnostics.mjs';
 import {
   classifyRenderer,
   readBrowserGraphicsInfo,
@@ -119,6 +120,9 @@ const report = {
   harness: {
     commit: git(rootDir, ['rev-parse', 'HEAD']),
     runnerSha256: hash(await readFile(new URL(import.meta.url))),
+    workerDiagnosticsSha256: hash(
+      await readFile(new URL('./workerDiagnostics.mjs', import.meta.url)),
+    ),
     validatorSha256: hash(
       await readFile(new URL('./trafficRenderDemand.mjs', import.meta.url)),
     ),
@@ -377,10 +381,45 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
     : await browser.newPage();
   const externalRequests = [];
   const pageErrors = [];
+  const loadFailures = [];
+  const consoleErrors = [];
   const origin = new URL(url).origin;
   try {
     await page.bringToFront();
     page.on('pageerror', (error) => pageErrors.push(String(error)));
+    // Use the existing bounded worker observer. It records only task counters;
+    // the trial owns its page and closes all page resources on every exit.
+    await page.evaluateOnNewDocument(installWorkerDiagnostics);
+    const safeMessage = (value) =>
+      String(value)
+        .replace(/(?:https?|blob|data|file):[^\s"'<>]+/gi, '[redacted-url]')
+        .slice(0, 240);
+    page.on('console', (message) => {
+      if (message.type() === 'error' && consoleErrors.length < 16)
+        consoleErrors.push(safeMessage(message.text()));
+    });
+    const resourceKind = (request) => {
+      const path = new URL(request.url()).pathname;
+      return path.includes('/Workers/')
+        ? 'cesium-worker'
+        : path.includes('/Assets/')
+          ? 'cesium-asset'
+          : request.resourceType();
+    };
+    page.on('requestfailed', (request) => {
+      if (loadFailures.length < 16)
+        loadFailures.push({
+          kind: resourceKind(request),
+          reason: safeMessage(request.failure()?.errorText || 'requestfailed'),
+        });
+    });
+    page.on('response', (response) => {
+      if (response.status() >= 400 && loadFailures.length < 16)
+        loadFailures.push({
+          kind: resourceKind(response.request()),
+          status: response.status(),
+        });
+    });
     await page.setViewport({ width: 1024, height: 768, deviceScaleFactor: 1 });
     page.setDefaultNavigationTimeout(90_000);
     page.setDefaultTimeout(110_000);
@@ -410,6 +449,8 @@ async function runTrial(browser, url, side, pair, graphicsInfo, onRawResult) {
       JSON.parse(document.querySelector('#result').textContent),
     );
     run.pageErrors = pageErrors;
+    run.loadFailures = loadFailures;
+    run.consoleErrors = consoleErrors;
     await onRawResult(run);
     run.externalRequests = externalRequests;
     const renderer = run.captures?.[0]?.snapshot?.renderSettings?.renderer;

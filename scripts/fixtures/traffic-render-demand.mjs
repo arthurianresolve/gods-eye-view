@@ -767,6 +767,34 @@ function eventListenerCounts() {
   };
 }
 
+function failureSnapshot() {
+  const ground = viewer?.scene?.groundPrimitives;
+  return {
+    clockEpochMs: logicalNow,
+    traffic: layer?.getLoadingDiagnostics?.() || null,
+    stats: layer?.getStats?.() || null,
+    groundPrimitiveCount: ground?.length ?? null,
+    groundPrimitives: ground
+      ? Array.from({ length: Math.min(ground.length, 16) }, (_, index) => {
+          const primitive = ground.get(index);
+          return {
+            kind: primitive.constructor?.name || null,
+            ready: primitive.ready === true,
+            show: primitive.show,
+            asynchronous: primitive.asynchronous,
+            innerState: primitive._primitive?._state ?? null,
+            innerReady: primitive._primitive?.ready ?? null,
+            hasError: Boolean(primitive._primitive?._error),
+          };
+        })
+      : [],
+    globeTilesLoaded: viewer?.scene?.globe?.tilesLoaded ?? null,
+    terrainHeightsInitialized:
+      Cesium.ApproximateTerrainHeights?.initialized ?? null,
+    workers: globalThis.__gevSoakWorkers?.snapshot?.() || null,
+  };
+}
+
 async function run() {
   const originalDateNow = Date.now;
   const originalRandom = Math.random;
@@ -1203,6 +1231,9 @@ async function run() {
     report.status = 'passed';
   } catch (error) {
     primaryError = error;
+    try {
+      report.runtimeAtFailure = failureSnapshot();
+    } catch {}
     throw error;
   } finally {
     disposed = true;
