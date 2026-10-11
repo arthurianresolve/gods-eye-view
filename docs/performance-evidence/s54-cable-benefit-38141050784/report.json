@@ -1,0 +1,274 @@
+{
+  "schema": "gev-cable-reference-benefit/v1",
+  "status": "failed",
+  "applicationCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+  "harnessCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+  "sourceDirty": false,
+  "sourceChanged": false,
+  "hardwareRenderingValidated": false,
+  "benefitAccepted": false,
+  "startedAt": "2026-10-11T12:54:53.615Z",
+  "renderClock": {
+    "iso": "2026-10-11T12:34:56.000Z",
+    "shouldAnimate": false
+  },
+  "measurementScope": {
+    "latency": "fresh-browser-context-ready-to-first-three-ready-postRender-frames",
+    "memory": "separate-fresh-browser-context-post-forced-gc-js-heap-used-size-only",
+    "noBenefitClaim": "diagnostic-comparison-only-await-independent-review",
+    "pairCountPerSuite": 5,
+    "alternation": "entities,collections then collections,entities within each suite"
+  },
+  "provenance": {
+    "node": "v24.14.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cesiumVersion": "1.138.0",
+    "engineVersion": "22.3.0",
+    "files": {
+      "package-lock.json": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "patches/cesium-1.138.0-inertia.json": "934ca34f18a67e157dfa1813b65dd58f6a2a33571c590f047c27929281f5d951",
+      "patches/cesium-1.138.0-collision-transform.json": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79",
+      "src/app/viewer.js": "d54423936748a2a20c170b0b7d9ac2cacd79d3f617a49b5963261cb31b943911",
+      "src/app/atmosphereCompat.js": "4682531175416e582d7992bffb6a32c7511e75042589068efa6bb50925be088b",
+      "src/app/cameraAnglesCompat.js": "6253c2f3dfb3783a2b6582e8d39ac5653dccc942f35309544d1d9ee83896857b",
+      "src/freshFrame.js": "56e2fb400e0af904d585d6c8dbf8039278a5182ce3d5b15c3df01b05e88e18ca",
+      "src/performance/performanceSnapshot.js": "b2cff39fe801afb9b78111111bdbaecf0cfc2427b8624baf4d80d18e8959af80",
+      "src/renderGovernor.js": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836",
+      "src/layers/submarineCables/index.js": "abaea2ac677d09bab150f6f61271cc54fdbe919c212b4c3298e74fd08352c15f",
+      "src/layers/submarineCables/bundledSource.js": "4939454f6f13402019e01d8e37d8abbfd092d906ceae7c78374dd752b0bfb62e",
+      "src/layers/submarineCables/geometry.js": "43d6dfe6fc3dd2a7d7f553fb92a0c60b59956ae6a133665ef3d67a9c53abfa34",
+      "src/layers/submarineCables/ingestion.js": "42d005531c3e70043e718482c06ba199e2e368d6c570e8841c53c5b2edefc302",
+      "src/layers/submarineCables/lifecycle.js": "3858b0ca7f450d783343807a4866b569c08457ef014f498af940d2a0433d2ba3",
+      "src/layers/submarineCables/policy.js": "801de83816882c4d1a72a9cc4f1aa4dc97199ea9b852f6b8173fb41bef7de084",
+      "src/layers/submarineCables/rendering.js": "35f26ebd7587007b62d45552c146e5d56fd71352a0bbf87dfd190ee3e8aa2e59",
+      "src/layers/submarineCables/state.js": "46b6a4f22ea9b699db6c9f21f1ba05ceec4113f1477a48de86ad3dbe5fe86f9f",
+      "src/layers/submarineCables/surface.js": "42376c8e11a5d26b3067638c1b329eee7f1d3563cc1fe46cf212d6f5465b9011",
+      "src/layers/submarineCables/interaction.js": "4433b86b89140f9c7dec049a77130465a141d7d93f87c2ea07028f81b5c714af",
+      "src/layers/submarineCables/overlay.js": "f7c73befc30dc5785fe25cf30b498cea0148afc3cdda125b21a75e3bcbbea833",
+      "src/data/dataCredits.js": "48fc314729ca30fc95abb2160e5cd6f8da747fb0e0d66ed9e298c5c5e95562fb",
+      "src/data/local_data/telegeography_submarine_cables/cable-geo.json": "3d28db104e57982e7ae67fabe66f2ff8dc01e137458454e0de0032a8878c6bad",
+      "src/data/local_data/telegeography_submarine_cables/landing-point-geo.json": "11fc154189db51237099ffe1da2183984d666a906e5ed0e89b86421192eb622b",
+      "scripts/fixtures/cable-reference-benefit.html": "3bb458bee0c487e0845f21b566508b6cf69bff01ab382cede98a75b295e8fbb7",
+      "scripts/fixtures/cable-reference-benefit.mjs": "e120034ac383a6bf8dd7f72404f0bb9e0edc5022e9c8bdb6172ac3d066a838b0",
+      "scripts/fixtures/cableReferenceFixture.mjs": "0838e561526765463c6f148f9ce1f39165ebaaec47c823ebcca363d9ac745866",
+      "scripts/fixtures/cable-reference-collections-contract.mjs": "0bd0d15e4239732786e1ad2640a60a1582792b8ce8b41dac098c25957b8b3709",
+      "scripts/fixtures/cableCameraSweep.mjs": "471107f54ea91b81029eab99831f65b354cd78ce0235f553f4314abf4901e178",
+      "scripts/fixtures/cableFailureDiagnostics.mjs": "64536a4b20dbfcac8996e131f1cdbd91f6f7ac67ae5f08696a5267f344e23f48",
+      "scripts/fixtures/scenePrimitiveReadiness.mjs": "c61c2e98b48ed38d872e933b269308ae6152d43567ed9f8ff2bc5526cd17bbe4",
+      "scripts/performance/cableBenefitComparison.mjs": "332cc3c143397f0348cd8c2c494b4a5ab505844e2f25c996cfdf9e725e3e0c05",
+      "scripts/performance/cableBenefitReport.mjs": "870497bc739922c25df04cd3340f3aaf1a5d8152be2d64ee9d3b32a8f4a8679c",
+      "scripts/performance/cableBenefitReport.test.mjs": "c8bd89cc27d18c87748f07a8a7a84c9c48042142d690d816804a44a3baa8b068",
+      "scripts/fixtures/cableBenefitDeadline.test.mjs": "bf2a17c0d961e2d24b02ca77e6f74413b289bc226de72878b8adfa7e5ce6cb71",
+      "scripts/fixtures/cableDeadline.mjs": "3c4e050708d4eb7ba7f40eba484c1df3d5fc617568da652b34c3043f5d4e4fee",
+      "scripts/fixtures/cable-reference-collections-ui.js": "1b8f37f59b8e55cb1d2a4cfdd5facdd0a1c5e007299e2233f0a791b15b851f4f",
+      "scripts/performance/rendererEvidence.mjs": "993d1be9c8380ea983af717d2ca7453978b34c87b1e5c7f5f41bf8906e17e14c",
+      "scripts/performance/profileRecoveryPageOwnership.mjs": "66651c3e03170a26505e4ddde3d33938751d4f99b473e6062f162409c74df468",
+      "scripts/performance/fixtureInterception.mjs": "e94a13ae6df18925298fe167a7a6243503a6f1761555c2210be7c6e39501ff00"
+    },
+    "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+    "patchManifests": {
+      "patches/cesium-1.138.0-inertia.json": "934ca34f18a67e157dfa1813b65dd58f6a2a33571c590f047c27929281f5d951",
+      "patches/cesium-1.138.0-collision-transform.json": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79"
+    },
+    "installedDependencyBytes": {
+      "cesiumPackageSha256": "6c03a34ecfcd52c5a05edd6efb5eaec61b70e6647324090fae0ef4183224b0c4",
+      "enginePackageSha256": "ea6007d927f9df91679fa94c22b541beea94c88c4fb7a89297970dcbf3866f70",
+      "cesiumVersion": "1.138.0",
+      "engineVersion": "22.3.0",
+      "cesiumFiles": {
+        "@cesium/engine/Source/Scene/ScreenSpaceCameraController.js": "a6fc009113bd302f45b100f0e8f22eae14b7ffc8a3b9ecef639af9e1ca07089e",
+        "cesium/Build/Cesium/Cesium.js": "14312c40d18a203c98501266f70f0191830c158627e5d88d1ec96bf8f9b4e7f2",
+        "cesium/Build/CesiumUnminified/Cesium.js": "7c0d49dd1c34eba8b740a5310b08fb59ced1405e7d399d710ef86d810224d063",
+        "cesium/Build/Cesium/index.cjs": "3aafe7d915b7596edc501189dda0e9d8daae5a76238324591f7da64e9175efef",
+        "cesium/Build/CesiumUnminified/index.cjs": "b2bdd3e35e38f2f7a985360bb955a343f239c71339f3b8fa549d5afa0c21f254"
+      }
+    }
+  },
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "pairs": [
+    {
+      "suite": "latency",
+      "index": 0,
+      "order": [
+        "entities",
+        "collections"
+      ],
+      "runs": {
+        "entities": {
+          "mode": "entities",
+          "suite": "latency",
+          "index": 0,
+          "orderIndex": 0,
+          "applicationCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+          "harnessCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+          "phase": "activating",
+          "status": "failed",
+          "pageErrors": [],
+          "resourceFailures": [],
+          "externalRequests": [],
+          "interceptionErrors": [],
+          "sessionDetached": true,
+          "contextClosed": true,
+          "ready": true,
+          "warmup": {
+            "dataSources": 0,
+            "primitives": 0,
+            "groundPrimitives": 0
+          },
+          "environment": {
+            "appCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+            "harnessCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+            "vendor": "Google Inc. (Apple)",
+            "viewport": {
+              "width": 1200,
+              "height": 1000,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 960,
+              "height": 640
+            },
+            "layers": [],
+            "graphics": {
+              "featureStatus": {
+                "webgl": "enabled",
+                "webgl2": null,
+                "gpu_compositing": "enabled",
+                "opengl": "enabled_on"
+              },
+              "devices": [
+                {
+                  "vendor": "Google Inc. (Apple)",
+                  "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+                  "driver": "26.6.2"
+                }
+              ]
+            },
+            "rendererClass": {
+              "kind": "apple-paravirtual-metal",
+              "accelerationVerified": true,
+              "physicalDesktopCoverage": false
+            }
+          },
+          "memory": null,
+          "error": "Error: Fixture failed during enabled-settled: Disable/re-enable changed settled cable pixels.\n    at waitForState (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cableBenefitComparison.mjs:93:11)\n    at async runOne (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cableBenefitComparison.mjs:463:15)\n    at async file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cableBenefitComparison.mjs:626:11",
+          "partial": {
+            "schema": "gev-cable-reference-benefit-trial/v1",
+            "applicationCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+            "harnessCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+            "mode": "entities",
+            "status": "failed",
+            "source": {
+              "population": {
+                "cableFeatures": 712,
+                "cableSegments": 1913,
+                "landingFeatures": 1917,
+                "landingBillboards": 1917,
+                "referenceRecords": 2629
+              },
+              "cableGeoSha256": "3d28db104e57982e7ae67fabe66f2ff8dc01e137458454e0de0032a8878c6bad",
+              "landingGeoSha256": "11fc154189db51237099ffe1da2183984d666a906e5ed0e89b86421192eb622b",
+              "identitySha256": "3a8862bfe1504b935817d4581e27f9710a14ddf6829ddacc5751d5ba853e1984"
+            },
+            "renderClock": {
+              "iso": "2026-10-11T12:34:56.000Z",
+              "shouldAnimate": false
+            },
+            "settings": {
+              "sceneMode": "SCENE3D",
+              "globeShown": true,
+              "terrainProvider": "EllipsoidTerrainProvider",
+              "requestRenderMode": false,
+              "resolutionScale": 1,
+              "msaaSamples": 4,
+              "preserveDrawingBuffer": true,
+              "antialias": true,
+              "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+            },
+            "environment": {
+              "appCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+              "harnessCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "vendor": "Google Inc. (Apple)",
+              "viewport": {
+                "width": 1200,
+                "height": 1000,
+                "dpr": 1
+              },
+              "drawingBuffer": {
+                "width": 960,
+                "height": 640
+              },
+              "layers": []
+            },
+            "warmup": {
+              "dataSources": 0,
+              "primitives": 0,
+              "groundPrimitives": 0
+            },
+            "phase": "failed",
+            "error": "Disable/re-enable changed settled cable pixels."
+          },
+          "pageCleanup": {
+            "closeCompleted": true,
+            "openPageCount": 0
+          },
+          "cleanupErrors": [],
+          "cleanupComplete": true
+        }
+      }
+    }
+  ],
+  "cleanup": {
+    "initialPageClosed": true,
+    "pagesClosed": true,
+    "sessionsDetached": true,
+    "browserClosed": true,
+    "serverClosed": true,
+    "sourceTreeUnchanged": true
+  },
+  "error": "Error: Fixture failed during enabled-settled: Disable/re-enable changed settled cable pixels.\n    at waitForState (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cableBenefitComparison.mjs:93:11)\n    at async runOne (file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cableBenefitComparison.mjs:463:15)\n    at async file:///Users/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cableBenefitComparison.mjs:626:11",
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 39311.704209,
+      "closeSettledHostMs": 39599.177167,
+      "closeElapsedMs": 287.47295799999847,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 251.29249999999593
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "finishedAt": "2026-10-11T12:55:32.888Z"
+}

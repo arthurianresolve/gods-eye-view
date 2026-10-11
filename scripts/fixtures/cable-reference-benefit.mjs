@@ -36,6 +36,7 @@ let records = null;
 let activation = null;
 let disposed = false;
 let retainedImage = null;
+let failureImages = [];
 let state = null;
 
 function publish(phase, patch = {}) {
@@ -178,7 +179,8 @@ async function activate() {
   const firstImage = await capturePixels(viewer);
   const firstPixelSha256 = firstImage.pixelSha256;
   firstImage.rgba = null;
-  firstImage.pngBase64 = null;
+  const firstCamera = cameraVector(viewer);
+  const firstClock = Cesium.JulianDate.toIso8601(viewer.clock.currentTime, 3);
   const visibilityCycle = {
     cycles: 0,
     disabledOwnership: [],
@@ -261,12 +263,35 @@ async function activate() {
     visibilityCycle.cycles++;
   }
   const image = await capturePixels(viewer);
+  visibilityCycle.firstPixelSha256 = firstPixelSha256;
+  visibilityCycle.restoredPixelSha256 = image.pixelSha256;
+  if (image.pixelSha256 !== firstPixelSha256) {
+    // Preserve exactly these two failed witnesses. They are collected only on
+    // failure and cannot enter the successful forced-GC memory checkpoint.
+    failureImages = [firstImage, image].map((capture, index) => ({
+      label: index === 0 ? 'before-toggle' : 'after-toggle',
+      width: capture.width,
+      height: capture.height,
+      pixelSha256: capture.pixelSha256,
+      pngBase64: capture.pngBase64,
+    }));
+    publish('visual-equivalence-failed', {
+      timings,
+      visibilityCycle,
+      visualFailure: {
+        firstCamera,
+        restoredCamera: cameraVector(viewer),
+        firstClock,
+        restoredClock: Cesium.JulianDate.toIso8601(viewer.clock.currentTime, 3),
+        readiness: readScenePrimitiveReadiness(viewer.scene, Cesium),
+      },
+    });
+  }
   assert(
     image.pixelSha256 === firstPixelSha256,
     'Disable/re-enable changed settled cable pixels.',
   );
-  visibilityCycle.firstPixelSha256 = firstPixelSha256;
-  visibilityCycle.restoredPixelSha256 = image.pixelSha256;
+  firstImage.pngBase64 = null;
   retainedImage = image.pngBase64;
   const {
     refs,
@@ -323,6 +348,7 @@ async function destroyLayer() {
   records = null;
   activation = null;
   retainedImage = null;
+  failureImages = [];
   publish('layer-destroyed', {
     teardown: { ...remaining, listeners: 0, collections: 0 },
   });
@@ -407,6 +433,11 @@ async function prepare() {
       const image = retainedImage;
       retainedImage = null;
       return image;
+    },
+    takeFailureImages() {
+      const images = failureImages;
+      failureImages = [];
+      return images;
     },
     destroyLayer,
     destroyViewer() {

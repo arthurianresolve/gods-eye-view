@@ -1,0 +1,12 @@
+{
+  "testedCommit": "480af780359e6e0343c406f0e68a807f8c4d4ed2",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38141050784",
+  "outcome": "failed",
+  "completePairs": 0,
+  "benefitAccepted": false,
+  "hardwareValidated": false,
+  "error": "Disable/re-enable changed settled cable pixels.",
+  "observation": "First Entity trial reached readiness and matching source/geometry/style/pick identities on both re-enables, then rejected unequal pixel hashes. No candidate trial ran. No HTTP/page errors were reported and cleanup completed.",
+  "limitation": "The failed fixture discarded the original PNG before comparison and did not publish partial timing/visibility state. The archived report cannot identify the differing pixels or their cause.",
+  "nextDiagnostic": "Preserve exactly two bounded failure PNG witnesses plus both camera poses, fixed clock values, and public readiness state. The pixel-equality assertion and five-pair acceptance contract remain unchanged."
+}

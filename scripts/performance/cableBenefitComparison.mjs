@@ -540,6 +540,34 @@ if (isMain) {
           () => window.__cableBenefitState || null,
         );
       } catch {}
+      try {
+        const images = await page.evaluate(
+          () => window.__cableBenefit?.takeFailureImages?.() || [],
+        );
+        assert.ok(Array.isArray(images) && images.length <= 2);
+        record.failureImages = [];
+        for (let ordinal = 0; ordinal < images.length; ordinal++) {
+          const image = images[ordinal];
+          assert.equal(
+            image.label,
+            ordinal === 0 ? 'before-toggle' : 'after-toggle',
+          );
+          record.failureImages.push(
+            await persistPng(
+              output,
+              suite,
+              index,
+              `${mode}-${image.label}-failed`,
+              image.pngBase64,
+              image,
+            ),
+          );
+        }
+      } catch (imageError) {
+        record.failureImageError = String(
+          imageError?.message || imageError,
+        ).slice(0, 500);
+      }
     } finally {
       let cleanupErrors = [];
       if (session) {
