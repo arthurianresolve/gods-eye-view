@@ -1,0 +1,381 @@
+{
+  "schema": "gev-traffic-render-demand-acceptance/v1",
+  "run": "38123646848",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38123646848",
+  "commits": {
+    "baseline": "4dfea32b4e63c0d28d22cd031e61e290e81f6f2a",
+    "candidate": "bda6146d2c7f978e682421bd29a7c7f087b5a491"
+  },
+  "harnessCommit": "bda6146d2c7f978e682421bd29a7c7f087b5a491",
+  "codeImplemented": true,
+  "automaticallyValidated": "five hosted A/B pairs against current dev; report recomputed; 60 PNGs decoded and hashed; all heatline controls recomputed",
+  "hardwareValidated": "hosted Apple paravirtual Metal only; physical Windows pending",
+  "scope": "Traffic enabled-empty render demand and identical controlled visual states; not full application idle, motion latency or full S51 acceptance",
+  "baselineIdleFrames": [
+    237,
+    297,
+    240,
+    233,
+    236
+  ],
+  "candidateIdleFrames": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "independentlyDecodedAndHashedPngs": 60,
+  "exactMatchingPhasesPerPair": 5,
+  "sourceAndCesiumHashesUnchanged": true,
+  "files": [
+    {
+      "file": "pair-01/baseline/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-01/baseline/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-01/baseline/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-01/baseline/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-01/baseline/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-01/baseline/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-01/candidate/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-01/candidate/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-01/candidate/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-01/candidate/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-01/candidate/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-01/candidate/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-02/baseline/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-02/baseline/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-02/baseline/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-02/baseline/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-02/baseline/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-02/baseline/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-02/candidate/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-02/candidate/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-02/candidate/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-02/candidate/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-02/candidate/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-02/candidate/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-03/baseline/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-03/baseline/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-03/baseline/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-03/baseline/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-03/baseline/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-03/baseline/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-03/candidate/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-03/candidate/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-03/candidate/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-03/candidate/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-03/candidate/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-03/candidate/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-04/baseline/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-04/baseline/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-04/baseline/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-04/baseline/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-04/baseline/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-04/baseline/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-04/candidate/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-04/candidate/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-04/candidate/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-04/candidate/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-04/candidate/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-04/candidate/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-05/baseline/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-05/baseline/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-05/baseline/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-05/baseline/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-05/baseline/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-05/baseline/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "pair-05/candidate/fading-retained-dots.png",
+      "bytes": 49617,
+      "sha256": "789c87a10d9fba284db73ee4848b24524dea3d004dbebea67f08f3a42a1551bd"
+    },
+    {
+      "file": "pair-05/candidate/high-altitude-clear.png",
+      "bytes": 20290,
+      "sha256": "86fcf7fbdfe55c789016a8c4737d3ac87ebcfcdf7f634ce7a884c944ce9c8bba"
+    },
+    {
+      "file": "pair-05/candidate/jam-heatlines-disabled-control.png",
+      "bytes": 32355,
+      "sha256": "bf19dacc449986ddea8f56b79f44b5df6b1737f85fcab8b31e2c6542124fa6f5"
+    },
+    {
+      "file": "pair-05/candidate/jam-heatlines.png",
+      "bytes": 38297,
+      "sha256": "8a65382fef8d80f807adf12cd726408a74e25cc79c31a4e4529fb3de7e5fa8ad"
+    },
+    {
+      "file": "pair-05/candidate/populated.png",
+      "bytes": 58128,
+      "sha256": "4d9e1d93a7d97b8ed46bb0f69b07ce83d7c2e361ea6becdbf0d104b103de4073"
+    },
+    {
+      "file": "pair-05/candidate/return-arrival.png",
+      "bytes": 38365,
+      "sha256": "5646e4f769b9e0e276b2bca1e4b385813dda73981aa3776863286e3aa03fa8c0"
+    },
+    {
+      "file": "traffic-render-demand.json",
+      "bytes": 4890692,
+      "sha256": "45080f8fdb2def78e5760615f7edb03bc2811395dab57dbfcd8e20b691065aef"
+    },
+    {
+      "file": "tracking-38123689950.log",
+      "bytes": 79504,
+      "sha256": "7149f0e4da4d1e2c231a34a78818e4885536bd08b71fa11fbdac062f6e1703e0"
+    },
+    {
+      "file": "run-38123646848.json",
+      "bytes": 9454,
+      "sha256": "bd732cfa0967762ca265e91bc4c517761fb2b32bd173d48c98963eec2fedf328"
+    },
+    {
+      "file": "run-38123689950.json",
+      "bytes": 8551,
+      "sha256": "5470ad9582dd4fb58c74a6a1f69496e52d2e1105300e8905348e394b75d4c334"
+    },
+    {
+      "file": "run-38123641479.json",
+      "bytes": 32341,
+      "sha256": "160644c15bfaddb7956449e120e7824a019e06f07b466d980d20cde57f8708b5"
+    }
+  ],
+  "tracking": {
+    "run": "38123689950",
+    "passed": 111,
+    "failed": 0,
+    "skipped": 0,
+    "closeCompleted": true,
+    "forcedProcessTermination": false
+  },
+  "integration": {
+    "run": "38123641479",
+    "testedCommit": "bda6146d2c7f978e682421bd29a7c7f087b5a491",
+    "passedJobs": [
+      "Street Level browser gate",
+      "Node 24.14.0",
+      "Windows onboarding",
+      "Install and update recovery (macos-latest)",
+      "Node 26.x",
+      "Install and update recovery (ubuntu-latest)",
+      "Install and update recovery (windows-latest)"
+    ],
+    "skippedChecksAreNotPasses": true
+  },
+  "acceptedScope": "traffic render-demand component on current dev; physical Windows and full S51/S60 pending"
+}

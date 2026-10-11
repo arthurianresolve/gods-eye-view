@@ -8,7 +8,14 @@ are recorded separately from fleet scheduling, full-scene performance and physic
 Windows acceptance, which remain unfinished. No entire performance slice is
 completed by this component correction.
 
-S51 traffic demand has passed its isolated five-pair hosted comparison at c73bbeb: zero enabled-empty frames versus 254?302 baseline frames over ten seconds, with all five visual states matching in every pair. [Raw evidence and verification](performance-evidence/s51-traffic-render-demand/README.md) are retained. This integration candidate preserves the accepted camera correction and will rerun against the common 4dfea32 engine baseline. Full integration and physical Windows validation remain pending.
+S51 traffic render demand is accepted as a component at
+`bda6146d2c7f978e682421bd29a7c7f087b5a491` against current development baseline
+`4dfea32b4e63c0d28d22cd031e61e290e81f6f2a`. Five hosted pairs preserve exact
+controlled pixels while enabled-empty frames fall from 233-297 to zero per
+ten seconds. All seven integration jobs and 111 tracking checks pass at that
+exact revision. [Current-dev evidence](performance-evidence/s51-traffic-current-dev/README.md)
+includes independent verification of all 60 images. Physical Windows, full-scene
+performance and full S51/S60 acceptance remain pending.
 
 Placement reuse at `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` is accepted as a
 component optimization after exact-source CPU, pixel, allocation, native font
@@ -133,7 +140,7 @@ the earlier release requirements and historical results.
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
-| S51 render demand scheduling | Partial: per-owner deadlines, disposable render demand, satellite cadence, mission pilot, vessels and CCTV calibration scheduling; full layer rollout remains pending | Full integration CI passes at `996a8d3`; deadline/cancellation/teardown and focused integrity tests pass; mission trials remain tied to `7c68cdc` | Vessel endpoint comparisons pass at `65fd7f3`; five hosted calibration pairs at `996a8d3` preserve exact pixels with zero candidate idle frames; full application cadence and Windows browser-level acceleration verification remain pending |
+| S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
 | S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
@@ -3945,6 +3952,16 @@ This identifies an unresolved scheduling/completion trade-off; it is not an
 accepted activation improvement, browser interaction result or GPU comparison.
 Single-feature preparation and raw document decoding therefore remain S59 gaps.
 
-## S51 traffic render-demand comparison ? 11 October 2026
+## S51 traffic render-demand comparison - 11 October 2026
 
-The narrow traffic scheduler experiment now has five matching hosted A/B pairs at c73bbebb1f9be6579c42869ee0820bd8e5fa89d8 against e6ab561ad0e77a49219627e97573199f1db0af62. Enabled-empty traffic renders zero frames in each ten-second candidate observation, versus 254?302 in the baseline. Root independently checked 60 PNGs and recomputed every phase comparison and heatline control. Code and focused automatic validation are complete for this experiment; current-dev integration is still pending. Hosted Apple paravirtual Metal is supplemental evidence, not physical Windows coverage or full S51/S60 completion. See [raw evidence and limitations](performance-evidence/s51-traffic-render-demand/README.md).
+The narrow traffic scheduler experiment now has five matching hosted A/B pairs at c73bbebb1f9be6579c42869ee0820bd8e5fa89d8 against e6ab561ad0e77a49219627e97573199f1db0af62. Enabled-empty traffic renders zero frames in each ten-second candidate observation, versus 254-302 in the baseline. Root independently checked 60 PNGs and recomputed every phase comparison and heatline control. Code and focused automatic validation are complete for this experiment; current-dev integration is still pending. Hosted Apple paravirtual Metal is supplemental evidence, not physical Windows coverage or full S51/S60 completion. See [raw evidence and limitations](performance-evidence/s51-traffic-render-demand/README.md).
+
+### Current-dev traffic acceptance - 11 October 2026
+
+The initial isolated result above is now supplemented by exact integration
+candidate `bda6146d2c7f978e682421bd29a7c7f087b5a491` versus `4dfea32`.
+Both sides include the same accepted camera-transform patch. All five traffic
+pairs, all seven ordinary integration jobs and all 111 tracking checks pass.
+The runtime traffic change is accepted; fleet scheduling remains excluded.
+[Complete evidence and limits](performance-evidence/s51-traffic-current-dev/README.md)
+retain separate code, automated and hosted/physical hardware status.
