@@ -280,6 +280,18 @@ export function validateTrafficRenderDemandRun(input, expected = {}) {
   )
     fail('Traffic fixture did not produce all five captures');
   report.captures.forEach(validateCapture);
+  const fade = report.retentionFade;
+  if (
+    !fade ||
+    fade.midpointEpochMs - fade.startEpochMs !== 90 ||
+    fade.during?.populationPending !== true ||
+    fade.after?.populationPending !== false ||
+    fade.during.fetching ||
+    fade.during.flowPending ||
+    fade.during.heightPending ||
+    fade.during.surfaceRefining
+  )
+    fail('Retention fade did not progress under the controlled fixture clock');
   validateHeatlineVisualWitness(report.heatlineVisualWitness, report.captures);
   const abort = report.phases.find(
     (phase) => phase.name === 'disable-pending-request',
@@ -301,7 +313,9 @@ export function validateTrafficRenderDemandRun(input, expected = {}) {
     teardown.holds?.includes('traffic') ||
     !Number.isSafeInteger(teardown.primitiveCount) ||
     !Number.isSafeInteger(teardown.primitiveBaseline) ||
-    teardown.primitiveCount !== teardown.primitiveBaseline
+    teardown.primitiveCount !== teardown.primitiveBaseline ||
+    !Number.isSafeInteger(teardown.groundPrimitiveBaseline) ||
+    teardown.groundPrimitiveCount !== teardown.groundPrimitiveBaseline
   )
     fail('Traffic owner reinitialization/cleanup evidence is incomplete');
   if (

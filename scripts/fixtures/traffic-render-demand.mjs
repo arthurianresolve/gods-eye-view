@@ -30,6 +30,7 @@ let firstPopulationFrame = null;
 let capturesIssued = 0;
 let listenerBaseline = null;
 let primitiveBaseline = null;
+let groundPrimitiveBaseline = null;
 let listenersRemoved = false;
 let removeTileVisibleListener = null;
 let tileContentVisibleInFrame = [];
@@ -782,6 +783,7 @@ async function run() {
     surfaceUrls = tileState.urls;
     listenerBaseline = eventListenerCounts();
     primitiveBaseline = viewer.scene.primitives.length;
+    groundPrimitiveBaseline = viewer.scene.groundPrimitives.length;
     setClock(FIXTURE_EPOCH);
     layer = createTrafficLayer({ services: services(), source: source() });
     layer.setParams(
@@ -883,16 +885,45 @@ async function run() {
 
     setClock(FIXTURE_EPOCH + 2_000);
     layer.setParams({ densityScale: 0.2 });
-    await waitUntil(
-      () => !layer.getStats().loading,
-      8_000,
-      'retention reconciliation',
-    );
+    // A retiring population intentionally remains loading until its 180 ms
+    // fade expires. Let the owned RAF pump mark retirement at the frozen start
+    // time, then advance to its midpoint instead of waiting for completion.
+    await requestActiveFrame('retention reconciliation start');
+    await requestActiveFrame('retention retirement published');
+    const retentionAtStart = layer.getLoadingDiagnostics();
+    if (!retentionAtStart.populationPending)
+      throw new Error(
+        'Density reduction did not start a pending retention fade',
+      );
     setClock(FIXTURE_EPOCH + 2_090);
     await requestActiveFrame('retained fade snapshot');
     await capture('fading-retained-dots');
+    report.retentionFade = {
+      startEpochMs: FIXTURE_EPOCH + 2_000,
+      midpointEpochMs: logicalNow,
+      during: layer.getLoadingDiagnostics(),
+    };
 
     setClock(FIXTURE_EPOCH + 2_700);
+    await waitUntil(
+      () => !layer.getStats().loading,
+      8_000,
+      'retention completion after clock advance',
+    );
+    report.retentionFade.after = layer.getLoadingDiagnostics();
+    await waitUntil(
+      () => {
+        const primitives = viewer.scene.groundPrimitives;
+        return (
+          primitives.length > 0 &&
+          Array.from({ length: primitives.length }, (_, i) =>
+            primitives.get(i),
+          ).every((primitive) => primitive.ready)
+        );
+      },
+      8_000,
+      'heatline geometry ready for visual control',
+    );
     const heatlineCapture = await capture('jam-heatlines', {
       retainPixels: true,
     });
@@ -1076,6 +1107,8 @@ async function run() {
       holds: getRenderGovernorDiagnostics().holds || [],
       primitiveCount: viewer.scene.primitives.length,
       primitiveBaseline,
+      groundPrimitiveCount: viewer.scene.groundPrimitives.length,
+      groundPrimitiveBaseline,
       listenerBaseline,
       listenersAfterDestroy,
     });
@@ -1087,7 +1120,10 @@ async function run() {
       throw new Error(
         'Traffic layer listeners did not return to their pre-init baseline',
       );
-    if (viewer.scene.primitives.length !== primitiveBaseline)
+    if (
+      viewer.scene.primitives.length !== primitiveBaseline ||
+      viewer.scene.groundPrimitives.length !== groundPrimitiveBaseline
+    )
       throw new Error(
         'Traffic primitives did not return to their pre-init baseline',
       );

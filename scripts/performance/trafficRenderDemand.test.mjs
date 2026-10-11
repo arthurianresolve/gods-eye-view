@@ -77,6 +77,8 @@ function makeRun(mode, appCommit, frames) {
         holds: [],
         primitiveCount: 1,
         primitiveBaseline: 1,
+        groundPrimitiveBaseline: 0,
+        groundPrimitiveCount: 0,
       },
     ],
     captures: names.map((name, index) => {
@@ -132,6 +134,18 @@ function makeRun(mode, appCommit, frames) {
         },
       };
     }),
+    retentionFade: {
+      startEpochMs: EPOCH + 2000,
+      midpointEpochMs: EPOCH + 2090,
+      during: {
+        populationPending: true,
+        fetching: false,
+        flowPending: 0,
+        heightPending: false,
+        surfaceRefining: false,
+      },
+      after: { populationPending: false },
+    },
     heatlineVisualWitness: {
       sameRenderedDots: true,
       heatlinePngSha256: HASH,
@@ -486,6 +500,31 @@ test('traffic teardown rejects retained primitives after owner destruction', () 
     (phase) => phase.name === 'disable-reinitialize-destroy',
   );
   teardown.primitiveCount++;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(run),
+    /cleanup evidence is incomplete/,
+  );
+});
+
+test('retention fade requires clock advancement and completed retirement', () => {
+  const run = makeRun('candidate', CANDIDATE, 0);
+  run.retentionFade.midpointEpochMs = run.retentionFade.startEpochMs;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(run),
+    /controlled fixture clock/,
+  );
+  run.retentionFade.midpointEpochMs += 90;
+  run.retentionFade.after.populationPending = true;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(run),
+    /controlled fixture clock/,
+  );
+});
+
+test('traffic teardown rejects a leaked ground heatline primitive', () => {
+  const run = makeRun('candidate', CANDIDATE, 0);
+  run.phases.find((phase) => phase.name === 'disable-reinitialize-destroy')
+    .groundPrimitiveCount++;
   assert.throws(
     () => validateTrafficRenderDemandRun(run),
     /cleanup evidence is incomplete/,
