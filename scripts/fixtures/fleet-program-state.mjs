@@ -51,6 +51,79 @@ function julianDate(value) {
   };
 }
 
+/**
+ * Observe camera ownership at scene boundaries without calling camera getters,
+ * tracked position callbacks, controller updates, or entity-view updates. The
+ * raw local vectors distinguish a controller round trip from a new follow
+ * transform. This is bounded fixture evidence, never a production observer.
+ */
+export function observeFleetCameraFrames(
+  viewer,
+  { now, maxTransitions = 512 } = {},
+) {
+  if (typeof now !== 'function') throw new TypeError('Fixture clock required');
+  if (!Number.isSafeInteger(maxTransitions) || maxTransitions < 1)
+    throw new TypeError('Positive camera transition bound required');
+  const report = { transitions: [], truncated: false };
+  const previous = new Map();
+  let frame = 0;
+  const removers = [];
+  function record(stage) {
+    const camera = viewer.camera;
+    const widget = viewer.cesiumWidget;
+    const entityView = widget?._entityView;
+    const controller = viewer.scene.screenSpaceCameraController;
+    const state = {
+      logicalTimeMs: now(),
+      trackedId: viewer.trackedEntity?.gevTrackedId || null,
+      pendingEntityView: widget?._needTrackedEntityUpdate ?? null,
+      position: vector(camera.position),
+      direction: vector(camera.direction),
+      up: vector(camera.up),
+      right: vector(camera.right),
+      transform: matrix(camera._transform),
+      entityView: entityView
+        ? {
+            position: vector(entityView._lastCartesian),
+            offset: vector(entityView._offset3D),
+            mode: entityView._mode ?? null,
+          }
+        : null,
+      collision: {
+        enabled: controller?.enableCollisionDetection ?? null,
+        adjusted: controller?._adjustedHeightForTerrain ?? null,
+        lastGlobeHeight: scalar(controller?._lastGlobeHeight),
+      },
+    };
+    const signature = JSON.stringify(state);
+    if (previous.get(stage) === signature) return;
+    previous.set(stage, signature);
+    if (report.transitions.length >= maxTransitions) {
+      report.truncated = true;
+      return;
+    }
+    report.transitions.push({ stage, frame, ...state });
+  }
+  for (const stage of ['preUpdate', 'postUpdate', 'preRender', 'postRender']) {
+    removers.push(
+      viewer.scene[stage].addEventListener(() => {
+        if (stage === 'preUpdate') frame++;
+        record(stage);
+      }),
+    );
+  }
+  let disposed = false;
+  return {
+    report,
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      removers.forEach((remove) => remove());
+      previous.clear();
+    },
+  };
+}
+
 function fixtureModelId(value, expectedIds, entityToFixtureId) {
   if (typeof value === 'string' || typeof value === 'number') {
     const id = String(value);

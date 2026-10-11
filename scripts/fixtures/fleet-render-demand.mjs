@@ -19,6 +19,7 @@ import {
   snapshotFleetModelReadiness,
   snapshotFleetTrackedBillboards,
   snapshotFleetEnvironmentReadiness,
+  observeFleetCameraFrames,
 } from './fleet-program-state.mjs';
 
 const EPOCH = Date.UTC(2026, 9, 8, 12);
@@ -179,6 +180,11 @@ async function createFixture(clock) {
     const phases = [];
     const cameraEvents = [];
     const programSources = new Map();
+    const cameraTrace =
+      mode === 'correctness'
+        ? observeFleetCameraFrames(viewer, { now: clock.now })
+        : null;
+    setupCleanup.push(() => cameraTrace?.dispose());
     let publicationFrame = 0,
       latestFrame = null;
     const removers = [
@@ -768,6 +774,7 @@ async function createFixture(clock) {
     }
     async function dispose() {
       const failures = [];
+      cameraTrace?.dispose();
       for (const layer of [military, civil]) {
         try {
           layer.destroy(viewer);
@@ -802,6 +809,7 @@ async function createFixture(clock) {
       errors,
       phases,
       cameraEvents,
+      cameraTrace: cameraTrace?.report || null,
       programSources,
       settings,
       setSourceIds(value) {
@@ -1131,6 +1139,7 @@ async function run() {
     if (fixture) {
       result.phases = fixture.phases;
       result.cameraEvents = fixture.cameraEvents;
+      result.cameraTrace = fixture.cameraTrace;
       result.programSources = Object.fromEntries(fixture.programSources);
     }
     try {

@@ -5,7 +5,66 @@ import {
   snapshotFleetModelReadiness,
   snapshotFleetTrackedBillboards,
   snapshotFleetEnvironmentReadiness,
+  observeFleetCameraFrames,
 } from './fleet-program-state.mjs';
+
+test('camera trace reads raw state without updating the camera and releases its listeners', () => {
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
+      name,
+      new Cesium.Event(),
+    ]),
+  );
+  const camera = {
+    position: new Cesium.Cartesian3(1, 2, 3),
+    direction: new Cesium.Cartesian3(0, 0, -1),
+    up: new Cesium.Cartesian3(0, 1, 0),
+    right: new Cesium.Cartesian3(1, 0, 0),
+    _transform: Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY),
+    get positionWC() {
+      throw new Error('Must not update camera cache through getters');
+    },
+  };
+  let time = 80;
+  const viewer = { scene, camera, cesiumWidget: {} };
+  const trace = observeFleetCameraFrames(viewer, { now: () => time });
+  for (let i = 0; i < 3; i++)
+    for (const event of Object.values(scene)) event.raiseEvent();
+  assert.equal(trace.report.transitions.length, 4);
+  assert.deepEqual(trace.report.transitions[0].position, [1, 2, 3]);
+  camera.position.x = 4;
+  time = 160;
+  scene.preUpdate.raiseEvent();
+  assert.equal(trace.report.transitions.length, 5);
+  assert.deepEqual(trace.report.transitions[0].position, [1, 2, 3]);
+  assert.deepEqual(trace.report.transitions[4].position, [4, 2, 3]);
+  trace.dispose();
+  trace.dispose();
+  for (const event of Object.values(scene)) {
+    assert.equal(event.numberOfListeners, 0);
+    event.raiseEvent();
+  }
+  assert.equal(trace.report.transitions.length, 5);
+});
+
+test('camera trace explicitly reports bounded evidence truncation', () => {
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
+      name,
+      new Cesium.Event(),
+    ]),
+  );
+  let time = 0;
+  const trace = observeFleetCameraFrames(
+    { scene, camera: {}, cesiumWidget: {} },
+    { now: () => time++, maxTransitions: 2 },
+  );
+  for (let i = 0; i < 10; i++) scene.preUpdate.raiseEvent();
+  assert.equal(trace.report.transitions.length, 2);
+  assert.equal(trace.report.truncated, true);
+  assert.equal(trace.report.transitions[0].position, null);
+  trace.dispose();
+});
 
 function model({ id, ready = true, show = true, modelMatrix } = {}) {
   const result = Object.create(Cesium.Model.prototype);
