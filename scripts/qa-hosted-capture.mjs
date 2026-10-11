@@ -11,6 +11,7 @@ import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
+import { validateImportBatchSchedulerReport } from './performance/importBatchSchedulerReport.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -143,14 +144,13 @@ try {
     report.importBatches = await page.$eval('#result', (element) =>
       JSON.parse(element.textContent),
     );
-    if (
-      report.importBatches.applicationCommit !== commit ||
-      report.importBatches.status !== 'passed' ||
-      report.importBatches.samples?.length !== 10 ||
-      report.importBatches.checks?.length !== 2
-    )
+    report.importBatchValidation = validateImportBatchSchedulerReport(
+      report.importBatches,
+      commit,
+    );
+    if (!report.importBatchValidation.valid)
       throw new Error(
-        `Import comparison failed: ${report.importBatches.error || 'incomplete checks'}`,
+        `Import comparison failed: ${report.importBatches.error || report.importBatchValidation.errors.join('; ')}`,
       );
     if (
       process.argv.includes('--collections') &&

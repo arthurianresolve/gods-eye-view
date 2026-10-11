@@ -8,7 +8,12 @@ export function createMacrotaskScheduler({
   let lastBackend = null;
   function timerTask(callback) {
     lastBackend = 'setTimeout';
-    const handle = { kind: 'timer', active: true, id: null };
+    const handle = {
+      kind: 'timer',
+      backend: 'setTimeout',
+      active: true,
+      id: null,
+    };
     try {
       handle.id = setTimer(() => {
         if (!handle.active) return;
@@ -29,7 +34,13 @@ export function createMacrotaskScheduler({
     } catch {
       return timerTask(callback);
     }
-    const handle = { kind: 'channel', active: true, channel, listener: null };
+    const handle = {
+      kind: 'channel',
+      backend: 'MessageChannel',
+      active: true,
+      channel,
+      listener: null,
+    };
     lastBackend = 'MessageChannel';
     const close = () => {
       if (!handle.active) return false;
@@ -59,7 +70,7 @@ export function createMacrotaskScheduler({
     }
   }
 
-  function schedule(callback) {
+  function schedule(callback, onError) {
     if (typeof callback !== 'function')
       throw new TypeError('A scheduled callback must be a function.');
     if (
@@ -69,10 +80,12 @@ export function createMacrotaskScheduler({
       const controller = new AbortController();
       const handle = {
         kind: 'postTask',
+        backend: 'scheduler.postTask',
         active: true,
         controller,
         ran: false,
         fallback: null,
+        onError,
       };
       let task;
       try {
@@ -94,12 +107,18 @@ export function createMacrotaskScheduler({
       // both rejections; only a rejection before invocation should fall back.
       Promise.resolve(task).catch(() => {
         if (!handle.active || handle.ran) return;
-        handle.fallback = channelTask(() => {
-          if (!handle.active) return;
+        try {
+          handle.fallback = channelTask(() => {
+            if (!handle.active) return;
+            handle.active = false;
+            handle.ran = true;
+            callback();
+          });
+          handle.backend = handle.fallback.backend;
+        } catch (error) {
           handle.active = false;
-          handle.ran = true;
-          callback();
-        });
+          handle.onError?.(error);
+        }
       });
       return handle;
     }

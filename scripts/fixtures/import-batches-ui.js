@@ -28,9 +28,7 @@ const runOptions = new URLSearchParams(window.location.search);
 const requestedWorkload = runOptions.get('workload');
 const requestedViewer =
   runOptions.get('viewer') === 'cesium' ? 'cesium' : 'application-wrapper';
-if (
-  ['paired', 'synchronous', 'cooperative'].includes(requestedWorkload)
-)
+if (['paired', 'synchronous', 'cooperative'].includes(requestedWorkload))
   document.querySelector('#workload').value = requestedWorkload;
 if (['initial-load', 'steady-population'].includes(requestedWorkload))
   status.textContent = 'Diagnostic only: unchanged loaded population';
@@ -56,7 +54,142 @@ const imports = [
     })),
   },
 ];
+const LARGE_GEOMETRY_COORDINATES = 50_000;
+const IMPORT_VERTEX_LIMIT = 5_000;
+function coordinateRing(count, radius) {
+  const points = Array.from({ length: count - 1 }, (_, index) => {
+    const angle = (index / (count - 1)) * Math.PI * 2;
+    return [-97 + Math.cos(angle) * radius, 30 + Math.sin(angle) * radius, 25];
+  });
+  return [...points, [...points[0]]];
+}
+const largeGeometryImports = [
+  {
+    id: 'scheduler-probe',
+    kind: 'synthetic-demo',
+    attribution: 'Generated local scheduler fixture',
+    records: [
+      {
+        id: 'line',
+        properties: { name: 'Large line' },
+        geometry: {
+          type: 'LineString',
+          coordinates: coordinateRing(LARGE_GEOMETRY_COORDINATES, 0.1),
+        },
+      },
+      {
+        id: 'polygon',
+        properties: { name: 'Large polygon with hole' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            coordinateRing(LARGE_GEOMETRY_COORDINATES / 2, 0.1),
+            coordinateRing(LARGE_GEOMETRY_COORDINATES / 2, 0.02),
+          ],
+        },
+      },
+    ],
+  },
+];
 let report;
+let activeBatchMetrics = null;
+function createBatchMetrics() {
+  return {
+    budgetMs: 4,
+    totalBatches: 0,
+    yieldedBatches: 0,
+    queuedWakeCount: 0,
+    maxActiveBatchMs: 0,
+    maxEnqueueToWakeMs: null,
+    backends: {},
+    samples: [],
+    truncatedSamples: 0,
+  };
+}
+function recordBatch(batch) {
+  if (!activeBatchMetrics) return;
+  const metrics = activeBatchMetrics;
+  metrics.totalBatches++;
+  metrics.yieldedBatches += batch.yielded ? 1 : 0;
+  metrics.maxActiveBatchMs = Math.max(metrics.maxActiveBatchMs, batch.activeMs);
+  if (batch.schedulerBackend)
+    metrics.backends[batch.schedulerBackend] =
+      (metrics.backends[batch.schedulerBackend] || 0) + 1;
+  if (batch.enqueueToWakeMs !== null) {
+    metrics.queuedWakeCount++;
+    metrics.maxEnqueueToWakeMs =
+      metrics.maxEnqueueToWakeMs === null
+        ? batch.enqueueToWakeMs
+        : Math.max(metrics.maxEnqueueToWakeMs, batch.enqueueToWakeMs);
+  }
+  const sample = {
+    activeMs: batch.activeMs,
+    enqueueToWakeMs: batch.enqueueToWakeMs,
+    schedulerBackend: batch.schedulerBackend,
+    budgetMs: batch.budgetMs,
+    yielded: batch.yielded,
+  };
+  if (metrics.samples.length < 64) metrics.samples.push(sample);
+  else metrics.truncatedSamples++;
+}
+function metricSnapshot(metrics) {
+  return {
+    budgetMs: metrics.budgetMs,
+    totalBatches: metrics.totalBatches,
+    yieldedBatches: metrics.yieldedBatches,
+    queuedWakeCount: metrics.queuedWakeCount,
+    maxActiveBatchMs: metrics.maxActiveBatchMs,
+    maxEnqueueToWakeMs: metrics.maxEnqueueToWakeMs,
+    backends: { ...metrics.backends },
+    samples: metrics.samples.map((sample) => ({ ...sample })),
+    truncatedSamples: metrics.truncatedSamples,
+  };
+}
+async function geometrySnapshot(viewer, workspaceId) {
+  const prefix = `gev-import:${workspaceId}:scheduler-probe:`;
+  const entities = viewer.entities.values
+    .filter((entity) => String(entity.id).startsWith(prefix))
+    .sort((left, right) => String(left.id).localeCompare(String(right.id)));
+  const rows = [];
+  for (const entity of entities) {
+    let groups;
+    let geometryType;
+    if (entity.polyline) {
+      geometryType = 'LineString';
+      groups = [entity.polyline.positions.getValue(viewer.clock.currentTime)];
+    } else if (entity.polygon) {
+      geometryType = 'Polygon';
+      const hierarchy = entity.polygon.hierarchy.getValue(
+        viewer.clock.currentTime,
+      );
+      groups = [
+        hierarchy.positions,
+        ...hierarchy.holes.map((hole) => hole.positions),
+      ];
+    } else throw new Error(`Unexpected imported shape ${entity.id}`);
+    const counts = groups.map((positions) => positions.length);
+    const coordinateCount = counts.reduce((sum, count) => sum + count, 0);
+    const flattened = new Float64Array(coordinateCount * 3);
+    let offset = 0;
+    for (const positions of groups)
+      for (const position of positions) {
+        flattened[offset++] = position.x;
+        flattened[offset++] = position.y;
+        flattened[offset++] = position.z;
+      }
+    const digest = await crypto.subtle.digest('SHA-256', flattened);
+    rows.push({
+      id: entity.id,
+      geometryType,
+      coordinateCount,
+      ringCoordinateCounts: counts,
+      geometrySha256: [...new Uint8Array(digest)]
+        .map((value) => value.toString(16).padStart(2, '0'))
+        .join(''),
+    });
+  }
+  return rows;
+}
 function resources(viewer) {
   const collections = [];
   const visit = (value, depth = 0) => {
@@ -221,10 +354,11 @@ async function pixels(viewer, sample) {
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
   result.textContent = '';
-  const workload =
-    ['initial-load', 'steady-population'].includes(requestedWorkload)
-      ? requestedWorkload
-      : document.querySelector('#workload').value;
+  const workload = ['initial-load', 'steady-population'].includes(
+    requestedWorkload,
+  )
+    ? requestedWorkload
+    : document.querySelector('#workload').value;
   const diagnosticRun =
     runOptions.get('diag') === '1' ||
     ['initial-load', 'steady-population'].includes(workload) ||
@@ -232,7 +366,7 @@ run.addEventListener('click', async () => {
   frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
-    schema: 'gev-import-batches/v1',
+    schema: 'gev-import-batches/v2',
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     capturedAt: new Date().toISOString(),
@@ -242,6 +376,7 @@ run.addEventListener('click', async () => {
     foregroundUninterruptedScope:
       'document visibility only; does not verify desktop foreground or occlusion',
     fixture: 'synthetic-5000-import-points/v1',
+    featureLimit: IMPORT_VERTEX_LIMIT,
     workload,
     viewerConstruction: requestedViewer,
     diagnosticsEnabled: diagnosticRun,
@@ -257,8 +392,16 @@ run.addEventListener('click', async () => {
     observeCommands: document.querySelector('#observe-commands').checked,
     commandObservationScope:
       'Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison',
-      scope:
-        'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
+    cooperativeScheduler: {
+      configuration: 'production-default',
+      scheduleOverride: false,
+      cancelOverride: false,
+      targetBudgetMs: 4,
+      batchObserver: 'onBatch metrics only; does not replace the scheduler',
+      backendCounts: {},
+    },
+    scope:
+      'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
     checks: [],
     samples: [],
     renderErrors: [],
@@ -324,12 +467,23 @@ run.addEventListener('click', async () => {
       appCommit: report.applicationCommit,
       harnessCommit: report.harnessCommit,
     });
-    layer = createImportedGeometryLayer({ viewer });
+    layer = createImportedGeometryLayer({
+      viewer,
+      batchOptions: { onBatch: recordBatch },
+    });
     status.textContent = diagnosticRun
       ? 'Diagnostic only: warming the complete 5,000-point population'
       : 'Warming the complete point population';
     const coldAt = performance.now();
+    activeBatchMetrics = createBatchMetrics();
     await layer.loadAsync(imports, { workspaceId: 'fixture' });
+    report.warmupBatches = metricSnapshot(activeBatchMetrics);
+    for (const [backend, count] of Object.entries(
+      report.warmupBatches.backends,
+    ))
+      report.cooperativeScheduler.backendCounts[backend] =
+        (report.cooperativeScheduler.backendCounts[backend] || 0) + count;
+    activeBatchMetrics = null;
     await settledFrame(viewer);
     report.coldActivationMs = performance.now() - coldAt;
     report.warmedResources = resources(viewer);
@@ -417,6 +571,9 @@ run.addEventListener('click', async () => {
           }, 5);
           const started = performance.now();
           let elapsedMs;
+          const batchMetrics =
+            mode === 'cooperative' ? createBatchMetrics() : null;
+          activeBatchMetrics = batchMetrics;
           try {
             await (mode === 'synchronous'
               ? layer.load(imports, { workspaceId: 'fixture' })
@@ -425,6 +582,7 @@ run.addEventListener('click', async () => {
             await wait(20);
           } finally {
             clearInterval(timer);
+            activeBatchMetrics = null;
           }
           check(
             layer.getState().featureCount === 5000 &&
@@ -439,7 +597,15 @@ run.addEventListener('click', async () => {
             maxHeartbeatGapMs: Math.max(...gaps),
             features: 5000,
             resources: resources(viewer),
+            batchMetrics: batchMetrics ? metricSnapshot(batchMetrics) : null,
           };
+          if (batchMetrics)
+            for (const [backend, count] of Object.entries(
+              batchMetrics.backends,
+            ))
+              report.cooperativeScheduler.backendCounts[backend] =
+                (report.cooperativeScheduler.backendCounts[backend] || 0) +
+                count;
           report.samples.push(sample);
           // The capture operation owns its completed-frame wait. Request it from
           // the import task, rather than immediately chaining two postRender waits.
@@ -461,7 +627,89 @@ run.addEventListener('click', async () => {
       });
     }
     if (!['initial-load', 'steady-population'].includes(workload))
+      activeBatchMetrics = null;
+    status.textContent = 'Comparing complete single-feature geometry outputs';
+    layer.clear();
+    const geometryWorkspaceId = 'scheduler-geometry';
+    const synchronousGeometryResult = layer.load(largeGeometryImports, {
+      workspaceId: geometryWorkspaceId,
+    });
+    const synchronousGeometry = await geometrySnapshot(
+      viewer,
+      geometryWorkspaceId,
+    );
+    layer.clear();
+    const geometryBatchMetrics = createBatchMetrics();
+    activeBatchMetrics = geometryBatchMetrics;
+    const asynchronousGeometryResult = await layer.loadAsync(
+      largeGeometryImports,
+      { workspaceId: geometryWorkspaceId },
+    );
+    activeBatchMetrics = null;
+    const asynchronousGeometry = await geometrySnapshot(
+      viewer,
+      geometryWorkspaceId,
+    );
+    const geometryEquivalent =
+      JSON.stringify(synchronousGeometry) ===
+      JSON.stringify(asynchronousGeometry);
+    report.largeGeometry = {
+      featureLimit: IMPORT_VERTEX_LIMIT,
+      featureCount: 2,
+      sourceCoordinateCounts: {
+        LineString: LARGE_GEOMETRY_COORDINATES,
+        Polygon: LARGE_GEOMETRY_COORDINATES,
+      },
+      synchronous: {
+        drawn: synchronousGeometryResult.drawn,
+        omitted: synchronousGeometryResult.omitted,
+        rows: synchronousGeometry,
+      },
+      cooperative: {
+        drawn: asynchronousGeometryResult.drawn,
+        omitted: asynchronousGeometryResult.omitted,
+        rows: asynchronousGeometry,
+        batchMetrics: metricSnapshot(geometryBatchMetrics),
+      },
+      exactOutputParity: geometryEquivalent,
+    };
+    for (const [backend, count] of Object.entries(
+      geometryBatchMetrics.backends,
+    ))
+      report.cooperativeScheduler.backendCounts[backend] =
+        (report.cooperativeScheduler.backendCounts[backend] || 0) + count;
+    check(
+      synchronousGeometryResult.drawn === 2 &&
+        synchronousGeometryResult.omitted === 0 &&
+        asynchronousGeometryResult.drawn === 2 &&
+        asynchronousGeometryResult.omitted === 0 &&
+        synchronousGeometry.length === 2 &&
+        asynchronousGeometry.length === 2 &&
+        synchronousGeometry.find((row) => row.geometryType === 'LineString')
+          ?.coordinateCount === LARGE_GEOMETRY_COORDINATES &&
+        synchronousGeometry.find((row) => row.geometryType === 'Polygon')
+          ?.coordinateCount === LARGE_GEOMETRY_COORDINATES &&
+        geometryEquivalent,
+      'Cooperative geometry changed complete line/polygon output or identity.',
+    );
+    check(
+      geometryBatchMetrics.yieldedBatches > 0 &&
+        geometryBatchMetrics.queuedWakeCount > 0 &&
+        Object.keys(geometryBatchMetrics.backends).some((backend) =>
+          ['scheduler.postTask', 'MessageChannel'].includes(backend),
+        ),
+      'Large geometry did not exercise a production macrotask scheduler wake.',
+    );
+    report.cooperativeScheduler.observedBackendCount = Object.keys(
+      report.cooperativeScheduler.backendCounts,
+    ).length;
+    report.checks.push({
+      id: 'full-linestring-and-polygon-output-and-production-scheduler',
+      status: 'passed',
+    });
+    if (!['initial-load', 'steady-population'].includes(workload))
       status.textContent = 'Checking cancellation and repeated teardown';
+    let cancellationAbortErrors = 0;
     for (
       let i = 0;
       !['initial-load', 'steady-population'].includes(workload) && i < 12;
@@ -477,6 +725,7 @@ run.addEventListener('click', async () => {
         (await observed) === 'AbortError',
         'Cancelled work did not reject.',
       );
+      cancellationAbortErrors++;
       check(
         layer.getState().featureCount === 0 &&
           layer.getState().pendingJobs === 0 &&
@@ -490,6 +739,15 @@ run.addEventListener('click', async () => {
         id: 'twelve-cancelled-imports-release-ownership',
         status: 'passed',
       });
+    report.cancellation = {
+      attempted: ['initial-load', 'steady-population'].includes(workload)
+        ? 0
+        : 12,
+      abortErrors: cancellationAbortErrors,
+      pendingJobsAfter: layer.getPerformanceDiagnostics().pendingJobs,
+      featureCountAfter: layer.getState().featureCount,
+      ownershipReleased: layer.getState().featureCount === 0,
+    };
     check(
       !backgrounded,
       'Document visibility changed; rerun for valid measurements.',

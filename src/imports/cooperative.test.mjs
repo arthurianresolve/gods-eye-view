@@ -109,3 +109,42 @@ test('default start remains synchronous for existing consumers', async () => {
   assert.equal(started, true);
   await pending;
 });
+
+test('optional batch observation measures owned wakes without replacing the scheduler', async () => {
+  let clock = 0;
+  const queued = [];
+  const observations = [];
+  function* work() {
+    clock++;
+    yield;
+    clock++;
+    yield;
+    return 'complete';
+  }
+  const pending = consumeInBatches(work(), {
+    budgetMs: 1,
+    now: () => clock,
+    schedule(callback) {
+      const handle = { backend: 'controlled-task', callback };
+      queued.push(handle);
+      return handle;
+    },
+    cancel(handle) {
+      const index = queued.indexOf(handle);
+      if (index >= 0) queued.splice(index, 1);
+    },
+    onBatch(observation) {
+      observations.push(observation);
+    },
+  });
+  while (queued.length) queued.shift().callback();
+  assert.equal(await pending, 'complete');
+  assert.equal(observations.length, 3);
+  assert.equal(observations[0].schedulerBackend, 'injected');
+  assert.equal(observations[0].enqueueToWakeMs, null);
+  assert.equal(observations[1].schedulerBackend, 'controlled-task');
+  assert.equal(observations[1].enqueueToWakeMs, 0);
+  assert.equal(observations[1].budgetMs, 1);
+  assert.equal(observations[1].yielded, true);
+  assert.equal(observations[2].yielded, false);
+});

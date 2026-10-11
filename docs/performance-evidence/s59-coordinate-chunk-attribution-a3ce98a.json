@@ -1,0 +1,612 @@
+{
+  "schema": "gev-import-geometry-attribution/v1",
+  "status": "completed",
+  "capturedAt": "2026-10-11T11:39:44.784Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "harnessCommit": "a3ce98a7e5476d68c736173e33cf3a8db8ca0cdd",
+  "harnessSha256": "d1783498ceb55188f1d6d1a60db7f29134d06dc950fd0cf27062dc644c6b8b68",
+  "baselineCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+  "candidateMergeBaseCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+  "candidateParentCommit": "a7a691ac1cc81b0105b4294e32c4e95e2def6fb8",
+  "scope": "Node-only geometry preparation. Five alternating pairs; each child performs three warmups before the measured run. The wake interval is enqueue-to-callback-start and combines timer clamping, event-loop queueing and scheduling; it is not timer-clamp-only attribution. Active spans include measurement wrapper overhead. No browser, rendering, GPU or interaction claim.",
+  "samples": [
+    {
+      "pair": 0,
+      "variant": "baseline",
+      "sourceCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+      "runtimeLayerSha256": "dabf498db817696479fb78d7daea8871045870035b77f8079664e01a40410aad",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 24.2528999999995,
+          "initialSliceMs": 13.11830000000191,
+          "maximumActiveBatchMs": 13.11830000000191,
+          "totalActiveBatchMs": 13.448600000003353,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            10.808999999997468
+          ],
+          "totalScheduledToWakeMs": 10.808999999997468,
+          "activeCallbackMs": [
+            0.33030000000144355
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 17.91949999999997,
+          "initialSliceMs": 13.14969999999812,
+          "maximumActiveBatchMs": 13.14969999999812,
+          "totalActiveBatchMs": 13.413399999997637,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            4.506700000001729
+          ],
+          "totalScheduledToWakeMs": 4.506700000001729,
+          "activeCallbackMs": [
+            0.2636999999995169
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        }
+      ]
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "sourceCommit": "a3ce98a7e5476d68c736173e33cf3a8db8ca0cdd",
+      "runtimeLayerSha256": "cb11e8863a8718923b13b85fb8f75fd62c93d0af1aab32cff6b3823fcc82e5af",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 46.33159999999998,
+          "initialSliceMs": 4.125599999999849,
+          "maximumActiveBatchMs": 4.125599999999849,
+          "totalActiveBatchMs": 12.9420999999993,
+          "scheduledCallbackCount": 3,
+          "scheduledToWakeMs": [
+            10.100199999999859,
+            11.913800000000265,
+            11.414900000000216
+          ],
+          "totalScheduledToWakeMs": 33.42890000000034,
+          "activeCallbackMs": [
+            4.110099999999875,
+            4.11429999999973,
+            0.5920999999998457
+          ],
+          "iteratorResumeCount": 197,
+          "clockSampleCount": 200,
+          "reportedScheduleCalls": 3
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 45.88229999999976,
+          "initialSliceMs": 4.135299999999916,
+          "maximumActiveBatchMs": 4.135299999999916,
+          "totalActiveBatchMs": 13.40689999999995,
+          "scheduledCallbackCount": 3,
+          "scheduledToWakeMs": [
+            8.527500000000146,
+            12.017299999999977,
+            11.962300000000141
+          ],
+          "totalScheduledToWakeMs": 32.507100000000264,
+          "activeCallbackMs": [
+            4.049599999999828,
+            4.069400000000314,
+            1.152599999999893
+          ],
+          "iteratorResumeCount": 196,
+          "clockSampleCount": 199,
+          "reportedScheduleCalls": 3
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "variant": "candidate",
+      "sourceCommit": "a3ce98a7e5476d68c736173e33cf3a8db8ca0cdd",
+      "runtimeLayerSha256": "cb11e8863a8718923b13b85fb8f75fd62c93d0af1aab32cff6b3823fcc82e5af",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 48.94860000000017,
+          "initialSliceMs": 4.321300000000065,
+          "maximumActiveBatchMs": 4.321300000000065,
+          "totalActiveBatchMs": 17.14240000000018,
+          "scheduledCallbackCount": 4,
+          "scheduledToWakeMs": [
+            7.063200000000052,
+            0.17879999999968277,
+            13.99539999999979,
+            10.718099999999595
+          ],
+          "totalScheduledToWakeMs": 31.95549999999912,
+          "activeCallbackMs": [
+            4.155799999999999,
+            4.073699999999917,
+            4.300900000000183,
+            0.2907000000000153
+          ],
+          "iteratorResumeCount": 197,
+          "clockSampleCount": 201,
+          "reportedScheduleCalls": 4
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 34.96129999999994,
+          "initialSliceMs": 4.119899999999689,
+          "maximumActiveBatchMs": 4.119899999999689,
+          "totalActiveBatchMs": 12.268699999999626,
+          "scheduledCallbackCount": 2,
+          "scheduledToWakeMs": [
+            10.817000000000007,
+            11.914500000000317
+          ],
+          "totalScheduledToWakeMs": 22.731500000000324,
+          "activeCallbackMs": [
+            4.083799999999883,
+            4.065000000000055
+          ],
+          "iteratorResumeCount": 196,
+          "clockSampleCount": 198,
+          "reportedScheduleCalls": 2
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "variant": "baseline",
+      "sourceCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+      "runtimeLayerSha256": "dabf498db817696479fb78d7daea8871045870035b77f8079664e01a40410aad",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 41.96630000000005,
+          "initialSliceMs": 38.851500000000215,
+          "maximumActiveBatchMs": 38.851500000000215,
+          "totalActiveBatchMs": 39.177400000000034,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            2.794800000000123
+          ],
+          "totalScheduledToWakeMs": 2.794800000000123,
+          "activeCallbackMs": [
+            0.32589999999981956
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 16.08750000000009,
+          "initialSliceMs": 14.768500000000131,
+          "maximumActiveBatchMs": 14.768500000000131,
+          "totalActiveBatchMs": 15.09979999999996,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            0.9834000000000742
+          ],
+          "totalScheduledToWakeMs": 0.9834000000000742,
+          "activeCallbackMs": [
+            0.3312999999998283
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "baseline",
+      "sourceCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+      "runtimeLayerSha256": "dabf498db817696479fb78d7daea8871045870035b77f8079664e01a40410aad",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 50.01359999999977,
+          "initialSliceMs": 38.69549999999981,
+          "maximumActiveBatchMs": 38.69549999999981,
+          "totalActiveBatchMs": 38.97189999999955,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            11.043900000000122
+          ],
+          "totalScheduledToWakeMs": 11.043900000000122,
+          "activeCallbackMs": [
+            0.2763999999997395
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 31.000100000000202,
+          "initialSliceMs": 14.87480000000005,
+          "maximumActiveBatchMs": 14.87480000000005,
+          "totalActiveBatchMs": 15.156399999999849,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            15.847000000000207
+          ],
+          "totalScheduledToWakeMs": 15.847000000000207,
+          "activeCallbackMs": [
+            0.28159999999979846
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "candidate",
+      "sourceCommit": "a3ce98a7e5476d68c736173e33cf3a8db8ca0cdd",
+      "runtimeLayerSha256": "cb11e8863a8718923b13b85fb8f75fd62c93d0af1aab32cff6b3823fcc82e5af",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 30.10019999999986,
+          "initialSliceMs": 4.18100000000004,
+          "maximumActiveBatchMs": 4.18100000000004,
+          "totalActiveBatchMs": 10.784999999999854,
+          "scheduledCallbackCount": 2,
+          "scheduledToWakeMs": [
+            7.8663000000001375,
+            11.52310000000034
+          ],
+          "totalScheduledToWakeMs": 19.389400000000478,
+          "activeCallbackMs": [
+            4.0560999999997875,
+            2.547900000000027
+          ],
+          "iteratorResumeCount": 197,
+          "clockSampleCount": 199,
+          "reportedScheduleCalls": 2
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 47.627300000000105,
+          "initialSliceMs": 4.113800000000083,
+          "maximumActiveBatchMs": 4.11640000000034,
+          "totalActiveBatchMs": 14.836600000000544,
+          "scheduledCallbackCount": 3,
+          "scheduledToWakeMs": [
+            9.908399999999801,
+            10.97629999999981,
+            11.95530000000008
+          ],
+          "totalScheduledToWakeMs": 32.83999999999969,
+          "activeCallbackMs": [
+            4.089600000000246,
+            4.11640000000034,
+            2.5167999999998756
+          ],
+          "iteratorResumeCount": 196,
+          "clockSampleCount": 199,
+          "reportedScheduleCalls": 3
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "candidate",
+      "sourceCommit": "a3ce98a7e5476d68c736173e33cf3a8db8ca0cdd",
+      "runtimeLayerSha256": "cb11e8863a8718923b13b85fb8f75fd62c93d0af1aab32cff6b3823fcc82e5af",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 58.78830000000016,
+          "initialSliceMs": 4.1874000000002525,
+          "maximumActiveBatchMs": 4.1874000000002525,
+          "totalActiveBatchMs": 16.863400000001093,
+          "scheduledCallbackCount": 4,
+          "scheduledToWakeMs": [
+            6.336699999999837,
+            11.793999999999869,
+            11.995899999999892,
+            11.880500000000211
+          ],
+          "totalScheduledToWakeMs": 42.00709999999981,
+          "activeCallbackMs": [
+            4.089700000000448,
+            4.033300000000054,
+            4.159800000000359,
+            0.3931999999999789
+          ],
+          "iteratorResumeCount": 197,
+          "clockSampleCount": 201,
+          "reportedScheduleCalls": 4
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 32.939200000000255,
+          "initialSliceMs": 4.110800000000381,
+          "maximumActiveBatchMs": 4.143100000000231,
+          "totalActiveBatchMs": 12.291400000000522,
+          "scheduledCallbackCount": 2,
+          "scheduledToWakeMs": [
+            8.669199999999819,
+            12.00189999999975
+          ],
+          "totalScheduledToWakeMs": 20.67109999999957,
+          "activeCallbackMs": [
+            4.037499999999909,
+            4.143100000000231
+          ],
+          "iteratorResumeCount": 196,
+          "clockSampleCount": 198,
+          "reportedScheduleCalls": 2
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "baseline",
+      "sourceCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+      "runtimeLayerSha256": "dabf498db817696479fb78d7daea8871045870035b77f8079664e01a40410aad",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 15.929200000000037,
+          "initialSliceMs": 12.612100000000282,
+          "maximumActiveBatchMs": 12.612100000000282,
+          "totalActiveBatchMs": 12.858100000000377,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            3.0859999999997854
+          ],
+          "totalScheduledToWakeMs": 3.0859999999997854,
+          "activeCallbackMs": [
+            0.2460000000000946
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 15.80390000000034,
+          "initialSliceMs": 14.17430000000013,
+          "maximumActiveBatchMs": 14.17430000000013,
+          "totalActiveBatchMs": 14.457100000000082,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            1.3562999999999192
+          ],
+          "totalScheduledToWakeMs": 1.3562999999999192,
+          "activeCallbackMs": [
+            0.282799999999952
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "variant": "baseline",
+      "sourceCommit": "37afdc6d66b74487ee2280dacc38566ccb3a1530",
+      "runtimeLayerSha256": "dabf498db817696479fb78d7daea8871045870035b77f8079664e01a40410aad",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 56.27689999999984,
+          "initialSliceMs": 41.705299999999625,
+          "maximumActiveBatchMs": 41.705299999999625,
+          "totalActiveBatchMs": 42.063499999999294,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            14.214200000000346
+          ],
+          "totalScheduledToWakeMs": 14.214200000000346,
+          "activeCallbackMs": [
+            0.35819999999966967
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 31.126400000000103,
+          "initialSliceMs": 14.479200000000219,
+          "maximumActiveBatchMs": 14.479200000000219,
+          "totalActiveBatchMs": 14.910300000000007,
+          "scheduledCallbackCount": 1,
+          "scheduledToWakeMs": [
+            16.20600000000013
+          ],
+          "totalScheduledToWakeMs": 16.20600000000013,
+          "activeCallbackMs": [
+            0.43109999999978754
+          ],
+          "iteratorResumeCount": 2,
+          "clockSampleCount": 3,
+          "reportedScheduleCalls": 1
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "variant": "candidate",
+      "sourceCommit": "a3ce98a7e5476d68c736173e33cf3a8db8ca0cdd",
+      "runtimeLayerSha256": "cb11e8863a8718923b13b85fb8f75fd62c93d0af1aab32cff6b3823fcc82e5af",
+      "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+      "cesiumEntrySha256": "431ed63fa1720d75234675a7027a9719d3e4f345556c110feeabff5bbbfa5f33",
+      "reports": [
+        {
+          "type": "LineString",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "a8f45b0291baa7420b649128a3b80b429fe032e5b736dbb153a22b0879708be0",
+          "durationMs": 49.96239999999989,
+          "initialSliceMs": 4.13989999999967,
+          "maximumActiveBatchMs": 4.13989999999967,
+          "totalActiveBatchMs": 14.692699999999604,
+          "scheduledCallbackCount": 3,
+          "scheduledToWakeMs": [
+            11.54970000000003,
+            11.959199999999782,
+            11.822599999999966
+          ],
+          "totalScheduledToWakeMs": 35.33149999999978,
+          "activeCallbackMs": [
+            4.085299999999734,
+            4.096000000000004,
+            2.3715000000001965
+          ],
+          "iteratorResumeCount": 197,
+          "clockSampleCount": 200,
+          "reportedScheduleCalls": 3
+        },
+        {
+          "type": "Polygon",
+          "vertices": 50000,
+          "entityId": "gev-import:active:fixture:shape",
+          "geometrySha256": "ac80aac429f1488af4d5ec45b5f59221a85674f8caf0ea6aa4c9455d4afd4085",
+          "durationMs": 47.48700000000008,
+          "initialSliceMs": 4.125800000000254,
+          "maximumActiveBatchMs": 4.125800000000254,
+          "totalActiveBatchMs": 15.9675000000002,
+          "scheduledCallbackCount": 3,
+          "scheduledToWakeMs": [
+            8.63650000000007,
+            10.954600000000028,
+            11.98550000000023
+          ],
+          "totalScheduledToWakeMs": 31.576600000000326,
+          "activeCallbackMs": [
+            4.056700000000092,
+            4.052299999999832,
+            3.7327000000000226
+          ],
+          "iteratorResumeCount": 196,
+          "clockSampleCount": 199,
+          "reportedScheduleCalls": 3
+        }
+      ]
+    }
+  ],
+  "geometryEquivalent": true,
+  "packageLockEquivalent": true,
+  "cesiumEntryEquivalent": true,
+  "summary": {
+    "LineString": {
+      "baseline": {
+        "completionMs": 41.96630000000005,
+        "maximumActiveBatchMs": 38.69549999999981,
+        "scheduledWakeMs": 10.808999999997468,
+        "scheduledCallbacks": 1,
+        "iteratorResumes": 2
+      },
+      "candidate": {
+        "completionMs": 48.94860000000017,
+        "maximumActiveBatchMs": 4.18100000000004,
+        "scheduledWakeMs": 33.42890000000034,
+        "scheduledCallbacks": 3,
+        "iteratorResumes": 197
+      },
+      "completionDeltaPercent": 16.637873722487125
+    },
+    "Polygon": {
+      "baseline": {
+        "completionMs": 17.91949999999997,
+        "maximumActiveBatchMs": 14.479200000000219,
+        "scheduledWakeMs": 4.506700000001729,
+        "scheduledCallbacks": 1,
+        "iteratorResumes": 2
+      },
+      "candidate": {
+        "completionMs": 45.88229999999976,
+        "maximumActiveBatchMs": 4.125800000000254,
+        "scheduledWakeMs": 31.576600000000326,
+        "scheduledCallbacks": 3,
+        "iteratorResumes": 196
+      },
+      "completionDeltaPercent": 156.04676469767477
+    }
+  }
+}

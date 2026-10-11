@@ -9,7 +9,10 @@ export function consumeInBatches(iterator, options = {}) {
     now = () => performance.now(),
     budgetMs = 4,
     deferStart = false,
+    onBatch,
   } = options;
+  if (onBatch !== undefined && typeof onBatch !== 'function')
+    throw new TypeError('onBatch must be a function when provided.');
   const schedule = options.schedule ?? defaultScheduler.schedule;
   const cancel =
     options.cancel ??
@@ -18,6 +21,7 @@ export function consumeInBatches(iterator, options = {}) {
       : defaultScheduler.cancel);
   return new Promise((resolve, reject) => {
     let timer = null;
+    let wakeScheduledAt = null;
     let finished = false;
     const finish = (error, value) => {
       if (finished) return;
@@ -35,17 +39,47 @@ export function consumeInBatches(iterator, options = {}) {
     const abort = () =>
       finish(new DOMException('Import rendering cancelled.', 'AbortError'));
     const step = () => {
+      const currentTimer = timer;
       timer = null;
       if (finished) return;
       try {
         const started = now();
+        const enqueueToWakeMs =
+          onBatch && wakeScheduledAt !== null
+            ? Math.max(0, started - wakeScheduledAt)
+            : null;
+        wakeScheduledAt = null;
+        const schedulerBackend = onBatch
+          ? currentTimer?.backend ||
+            (options.schedule ? 'injected' : 'synchronous-start')
+          : null;
         do {
           if (signal?.aborted) return abort();
           const next = iterator.next();
           if (finished) return;
-          if (next.done) return finish(null, next.value);
+          if (next.done) {
+            if (onBatch)
+              onBatch({
+                activeMs: Math.max(0, now() - started),
+                enqueueToWakeMs,
+                schedulerBackend,
+                budgetMs,
+                yielded: false,
+              });
+            return finish(null, next.value);
+          }
         } while (now() - started < budgetMs);
-        timer = schedule(step);
+        if (onBatch) {
+          onBatch({
+            activeMs: Math.max(0, now() - started),
+            enqueueToWakeMs,
+            schedulerBackend,
+            budgetMs,
+            yielded: true,
+          });
+          wakeScheduledAt = now();
+        }
+        timer = schedule(step, (error) => finish(error));
       } catch (error) {
         finish(error);
       }
@@ -54,7 +88,8 @@ export function consumeInBatches(iterator, options = {}) {
     if (signal?.aborted) abort();
     else if (deferStart) {
       try {
-        timer = schedule(step);
+        if (onBatch) wakeScheduledAt = now();
+        timer = schedule(step, (error) => finish(error));
       } catch (error) {
         finish(error);
       }

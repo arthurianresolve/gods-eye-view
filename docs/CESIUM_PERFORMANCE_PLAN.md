@@ -1956,6 +1956,46 @@ measurement script was not retained, so the independently reproduced report abov
 is the reproducible acceptance evidence. Earlier exploratory polygon measurements
 used a rejected fixture and are not accepted performance results.
 
+**S59 scheduler attribution experiment - 11 October 2026.** A separate Node-only
+trial kept the four-ms consumer budget and complete 50,000-coordinate line and
+polygon outputs, while changing the yielded chunk size to 256 coordinates. The
+candidate bounded active batch work to about 4.1 ms, but median total completion
+increased from 41.97 to 48.95 ms for the line (+16.64%) and from 17.92 to 45.88
+ms for the polygon (+156.05%). Candidate enqueue-to-wake medians were 33.43 and
+31.58 ms, versus 10.81 and 4.51 ms for the baseline. This shows the completion
+cost of that particular chunk/scheduling combination; it does not isolate timer
+clamping as the cause.
+
+A follow-up kept the 256-coordinate work and replaced the timer wake with an
+owned cancellable macrotask scheduler. On Node 24.16.0/Windows, the committed
+candidate used `MessageChannel` for every measured wake. Across five alternating
+pairs, median line completion improved from 43.60 to 20.83 ms (-52.22%), but the
+candidate lost two line pairs by 68.52% and 94.66%. Polygon median completion
+improved from 15.93 to 12.56 ms (-21.16%) and the candidate won all five pairs.
+The largest candidate active batch was 8.57 ms for a line and 4.15 ms for a
+polygon, so four ms remains a target rather than a maximum. This is useful
+scheduler attribution, not an accepted import optimization: the line result is
+mixed, the comparison is Node-only, and no browser interaction or rendering
+claim follows from it.
+
+The comparison binds the baseline to `37afdc6d66b74487ee2280dacc38566ccb3a1530`,
+and the scheduler candidate/harness to `99eaef228316d16fff3f63d9e7853f98239f698e`.
+Both workloads retained exact output hashes; package-lock and Cesium ESM entry
+hashes matched. The reports and their SHA-256 digests are retained:
+
+- [256-coordinate chunk attribution](performance-evidence/s59-coordinate-chunk-attribution-a3ce98a.json), SHA-256 `90b84eadd0832b83f5cd721944ff49b875b12dae55a7aacd08bcd73441beca63`.
+- [macrotask scheduler comparison](performance-evidence/s59-task-scheduler-comparison-99eaef2.json), SHA-256 `ce2e3356077784abd0eeae31ffafffb16e472293ca40144de946d2d3830edbd`.
+- [preserved initial setup failure](performance-evidence/s59-task-scheduler-setup-failure-a7a691a.json), SHA-256 `e405aad6e5ce02c1e2cd5ccade3243590a79abec9c84829615e4aab1b0b592f5`. This attempt failed before samples because baseline and candidate loaded different Cesium ESM instances; the corrected `a3ce98a` harness aligned that import and retained the failure as provenance.
+
+The scheduler now has focused controls for successful `scheduler.postTask`,
+cancellation, synchronous and asynchronous fallback, callback rejection,
+fallback scheduling failure, and consumer error propagation. A separate hosted
+fixture/report contract exercises the production default scheduler without
+injecting schedule/cancel callbacks, checks five alternating 5,000-point pixel
+pairs, full 50,000-coordinate LineString and Polygon-with-hole parity, bounded
+batch/wake metrics, and repeated cancellation ownership. Hosted browser evidence
+has not yet been run for this packet.
+
 ### CCTV terrain-query cancellation - 10 October 2026
 
 GPT-6 Luna's `a0e7b10c1d2128de1544b53154c5bdb9e59a54a5` connects both catalog
