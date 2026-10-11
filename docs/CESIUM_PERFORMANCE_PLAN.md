@@ -191,6 +191,33 @@ retain their original UTF-16LE bytes and recorded hashes. This variant is also
 rejected for promotion. Its allocation increase must be explained and corrected
 before a fresh timing comparison; no performance benefit is claimed for it.
 
+### S52 corrected placement signature: ready for comparison - 11 October 2026
+
+The allocation increase is isolated to the moving anchor comparison path.
+Checking unequal anchors before `Object.is` removes the measured increase while
+retaining `Object.is` as the final equality decision, including signed zero and
+`NaN`. In the same isolated 250-entry workload, the failing signature measured
+13,682 bytes/frame and the correction measured 9,681.67 bytes/frame. Removing
+anchor or size locals alone did not change the failure. This is empirical
+allocation attribution; a specific V8 boxing mechanism has not been established.
+The [hash-bound controls and independent review](performance-evidence/s52-placement-revised-fixed/review.json)
+preserve source, worker and dependency identities, before/after checks and raw
+measurement chunks.
+
+The applied, formatted runtime SHA-256 is
+`936bd09078074958554d33e479e46046cf58822f05195082d7fae73e6889ddd6`.
+All [86 focused tests](performance-evidence/s52-placement-revised-fixed/focused.txt),
+the [13 allocation gates](performance-evidence/s52-placement-revised-fixed/allocation.txt)
+and a separate permanent above-cap allocation control pass without changing any
+budget. The [work witness](performance-evidence/s52-placement-revised-fixed/work-report.json)
+still matches sampled output and reduces variant builds from 28 to 14. The new
+configuration-transition regression is included in the permanent test suite.
+
+This correction is on the QA branch only. It has no accepted timing or rendered
+comparison yet. Repeat the unchanged eight-workload CPU matrix, 24-case Canvas2D
+matrix, native font failure control and integration gates at its frozen commit
+before promotion to `dev`. Both preceding failures remain historical evidence.
+
 ### S52 layout reuse: accepted component optimization - 11 October 2026
 
 A new experiment stores the font revision with each normalized entry's existing

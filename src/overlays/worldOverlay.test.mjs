@@ -3198,3 +3198,59 @@ test('S52 placement behavior restores ambient eligibility after a protected foot
     'the restored ambient placement remains clear of the moved protected footprint',
   );
 });
+
+test('S52 placement signature rebuilds moved configuration before returning to an older pose', (t) => {
+  const env = installMockEnvironment({ width: 640, height: 420, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+
+  let anchor = positionAtScreen(245, 205, 640, 420);
+  setOverlayEntries('placement-signature-cycle', [selectedEntry('same', {
+    position: () => anchor,
+    placement: 'above',
+    gapPx: 12,
+    interactive: true,
+  })]);
+  const capture = () => {
+    env.postRender.raise();
+    const live = getOverlayPaintRect('placement-signature-cycle', 'same');
+    if (!live) return null;
+    const rect = { x: live.x, y: live.y, w: live.w, h: live.h };
+    const hit = hitTestWorldOverlay(
+      rect.x + rect.w / 2,
+      rect.y + rect.h / 2,
+      { sourceId: 'placement-signature-cycle' },
+    );
+    return { rect, hit };
+  };
+
+  const original = capture();
+  assert.ok(original?.hit?.entry);
+  const normalized = original.hit.entry;
+  anchor = positionAtScreen(375, 245, 640, 420);
+  normalized.placement = 'right';
+  normalized.gapPx = 31;
+  const movedConfiguration = capture();
+  assert.ok(movedConfiguration?.hit?.entry);
+  assert.notDeepEqual(movedConfiguration.rect, original.rect);
+
+  // Keep the new anchor while restoring the old configuration. The previous
+  // geometry was built with a different gap/direction at this same anchor.
+  normalized.placement = 'above';
+  normalized.gapPx = 12;
+  const changedAtSameAnchor = capture();
+  assert.deepEqual(changedAtSameAnchor?.rect, {
+    ...original.rect, x: original.rect.x + 130, y: original.rect.y + 40,
+  }, 'old configuration at the new anchor must not reuse moved geometry');
+  assert.equal(changedAtSameAnchor?.hit?.entryId, 'same');
+  assert.deepEqual(capture()?.rect, changedAtSameAnchor.rect,
+    'the newly restored configuration remains stable at the new anchor');
+
+  anchor = positionAtScreen(245, 205, 640, 420);
+  normalized.placement = 'above';
+  normalized.gapPx = 12;
+  const restored = capture();
+  assert.deepEqual(restored?.rect, original.rect);
+  assert.equal(restored?.hit?.entryId, 'same');
+  assert.deepEqual(capture()?.rect, original.rect, 'a stable repeat uses the restored full signature');
+});

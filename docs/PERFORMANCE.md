@@ -17,6 +17,12 @@ preserve the failed performance acceptance. All seven ordinary integration jobs
 pass at `21523d5` ([results](performance-evidence/s52-placement-reuse/ci-run.json));
 this does not override the measured regression.
 
+A revised signature first exposed a repeatable allocation failure, then a
+targeted anchor guard removed it. The applied correction passes all 86 focused
+checks and 13 allocation gates, with unchanged budgets. It remains on QA pending
+fresh frozen timing, pixel and integration comparisons
+([evidence](CESIUM_PERFORMANCE_PLAN.md#s52-corrected-placement-signature-ready-for-comparison---11-october-2026)).
+
 Current status (11 October 2026): projection reuse at `33d9856` and normalized-entry
 layout reuse at `f25154a` are retained after separate five-pair, 24-case exact-pixel
 comparisons and isolated CPU comparisons. Layout's 35 ordinary-overlay pairs all

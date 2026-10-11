@@ -1856,17 +1856,6 @@ function getProjectionRecord(entry) {
       placementCacheSourceRevision: -1,
       placementCacheLayoutRevision: -1,
       placementCacheFontRevision: -1,
-      placementCacheAnchorX: Number.NaN,
-      placementCacheAnchorY: Number.NaN,
-      placementCacheWidth: Number.NaN,
-      placementCacheHeight: Number.NaN,
-      placementCacheViewportWidth: Number.NaN,
-      placementCacheViewportHeight: Number.NaN,
-      placementCacheGap: Number.NaN,
-      placementCacheLeaderOffset: Number.NaN,
-      placementCachePreferred: null,
-      placementCacheVerticalOnly: false,
-      placementCacheViewportMargin: Number.NaN,
       scaledPaintPlacement: { rect: {} },
     };
     record.candidate = {
@@ -2151,77 +2140,78 @@ function snapshotAndProject(
     measureOverlayEntry(_ctx, entry, layout);
     layout._fontRevision = fontRevision;
   }
-  record.placementInput.anchorX = record.screen.x;
-  record.placementInput.anchorY = record.screen.y;
-  record.placementInput.width = record.layout.w * record.paintScale;
-  record.placementInput.height = record.layout.h * record.paintScale;
-  record.placementInput.viewportWidth = _canvasWidth;
-  record.placementInput.viewportHeight = _canvasHeight;
+  const placementInput = record.placementInput;
+  const anchorX = record.screen.x;
+  const anchorY = record.screen.y;
+  const width = record.layout.w * record.paintScale;
+  const height = record.layout.h * record.paintScale;
+  let gap;
+  let leaderOffset;
   if (entry.anchorRadiusPx > 0) {
     const anchorScale = entry.anchorRadiusScale
       ? distanceScale(distance, entry.anchorRadiusScale)
       : 1;
     const anchorRadius = entry.anchorRadiusPx * anchorScale;
-    record.placementInput.gap =
+    gap =
       anchorRadius +
       Math.max(entry.minAnchorGapPx, anchorRadius + entry.anchorGapPaddingPx);
-    record.placementInput.leaderOffset = anchorRadius;
+    leaderOffset = anchorRadius;
   } else {
-    record.placementInput.gap = entry.gapPx;
-    record.placementInput.leaderOffset = entry.leaderOffsetPx;
+    gap = entry.gapPx;
+    leaderOffset = entry.leaderOffsetPx;
   }
-  record.placementInput.preferred = entry.placement;
-  record.placementInput.verticalOnly = entry.verticalOnly;
-  record.placementInput.viewportMargin = entry.viewportMargin;
+  const preferred = entry.placement;
+  const verticalOnly = entry.verticalOnly;
+  const viewportMargin = entry.viewportMargin;
+  // Reject unequal anchors before the exact signed-zero/NaN check. Keeping
+  // Object.is off the moving miss path avoids measured per-candidate allocation.
   const placementCacheMatches =
     record.placementCacheValid &&
+    (placementInput.anchorX === anchorX ||
+      (Number.isNaN(placementInput.anchorX) && Number.isNaN(anchorX))) &&
+    Object.is(placementInput.anchorX, anchorX) &&
+    (placementInput.anchorY === anchorY ||
+      (Number.isNaN(placementInput.anchorY) && Number.isNaN(anchorY))) &&
+    Object.is(placementInput.anchorY, anchorY) &&
     record.placementCacheEntry === entry &&
     record.placementCacheLayout === layout &&
     record.placementCacheSourceRevision === source.projectionRevision &&
     record.placementCacheLayoutRevision === _layoutRevision &&
     record.placementCacheFontRevision === fontRevision &&
-    Object.is(record.placementCacheAnchorX, record.placementInput.anchorX) &&
-    Object.is(record.placementCacheAnchorY, record.placementInput.anchorY) &&
-    Object.is(record.placementCacheWidth, record.placementInput.width) &&
-    Object.is(record.placementCacheHeight, record.placementInput.height) &&
-    Object.is(
-      record.placementCacheViewportWidth,
-      record.placementInput.viewportWidth,
-    ) &&
-    Object.is(
-      record.placementCacheViewportHeight,
-      record.placementInput.viewportHeight,
-    ) &&
-    Object.is(record.placementCacheGap, record.placementInput.gap) &&
-    Object.is(
-      record.placementCacheLeaderOffset,
-      record.placementInput.leaderOffset,
-    ) &&
-    record.placementCachePreferred === record.placementInput.preferred &&
-    record.placementCacheVerticalOnly === record.placementInput.verticalOnly &&
-    Object.is(
-      record.placementCacheViewportMargin,
-      record.placementInput.viewportMargin,
-    );
+    Object.is(placementInput.width, width) &&
+    Object.is(placementInput.height, height) &&
+    Object.is(placementInput.viewportWidth, _canvasWidth) &&
+    Object.is(placementInput.viewportHeight, _canvasHeight) &&
+    Object.is(placementInput.gap, gap) &&
+    Object.is(placementInput.leaderOffset, leaderOffset) &&
+    placementInput.preferred === preferred &&
+    placementInput.verticalOnly === verticalOnly &&
+    Object.is(placementInput.viewportMargin, viewportMargin);
   if (!placementCacheMatches) {
-    placementVariants(record.placementInput, record.placementVariants);
+    record.placementCacheValid = false;
+    placementInput.anchorX = anchorX;
+    placementInput.anchorY = anchorY;
+    placementInput.width = width;
+    placementInput.height = height;
+    placementInput.viewportWidth = _canvasWidth;
+    placementInput.viewportHeight = _canvasHeight;
+    placementInput.gap = gap;
+    placementInput.leaderOffset = leaderOffset;
+    placementInput.preferred = preferred;
+    placementInput.verticalOnly = verticalOnly;
+    placementInput.viewportMargin = viewportMargin;
+    placementVariants(placementInput, record.placementVariants);
     record.placementCacheValid = true;
-    record.placementCacheEntry = entry;
-    record.placementCacheLayout = layout;
-    record.placementCacheSourceRevision = source.projectionRevision;
-    record.placementCacheLayoutRevision = _layoutRevision;
-    record.placementCacheFontRevision = fontRevision;
-    record.placementCacheAnchorX = record.placementInput.anchorX;
-    record.placementCacheAnchorY = record.placementInput.anchorY;
-    record.placementCacheWidth = record.placementInput.width;
-    record.placementCacheHeight = record.placementInput.height;
-    record.placementCacheViewportWidth = record.placementInput.viewportWidth;
-    record.placementCacheViewportHeight = record.placementInput.viewportHeight;
-    record.placementCacheGap = record.placementInput.gap;
-    record.placementCacheLeaderOffset = record.placementInput.leaderOffset;
-    record.placementCachePreferred = record.placementInput.preferred;
-    record.placementCacheVerticalOnly = record.placementInput.verticalOnly;
-    record.placementCacheViewportMargin = record.placementInput.viewportMargin;
+    if (record.placementCacheEntry !== entry)
+      record.placementCacheEntry = entry;
+    if (record.placementCacheLayout !== layout)
+      record.placementCacheLayout = layout;
+    if (record.placementCacheSourceRevision !== source.projectionRevision)
+      record.placementCacheSourceRevision = source.projectionRevision;
+    if (record.placementCacheLayoutRevision !== _layoutRevision)
+      record.placementCacheLayoutRevision = _layoutRevision;
+    if (record.placementCacheFontRevision !== fontRevision)
+      record.placementCacheFontRevision = fontRevision;
   }
   // `record.placements` is filtered and pooled by collision arbitration below.
   // Keep the complete generated set separate so each hit can restore it without
