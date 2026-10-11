@@ -13,7 +13,10 @@ import {
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
 import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
-import { observeInfrastructurePrimitives } from './infrastructurePrimitiveObservation.mjs';
+import {
+  observeInfrastructurePrimitives,
+  observeInfrastructureFrameDelivery,
+} from './infrastructurePrimitiveObservation.mjs';
 import {
   compareInfrastructureRuntimeLifetimes,
   countInfrastructureGraphics,
@@ -508,10 +511,15 @@ function findNativePickTarget(
 
 async function captureFrame(viewer) {
   viewer.scene.requestRender();
-  const canvas = await captureFreshCesiumFrame(viewer, {
-    timeoutMs: FRAME_TIMEOUT_MS,
-  });
-  check(canvas, 'Fresh completed frame was unavailable.');
+  const { canvas, delivery } = await observeInfrastructureFrameDelivery(
+    viewer,
+    () => captureFreshCesiumFrame(viewer, { timeoutMs: FRAME_TIMEOUT_MS }),
+  );
+  if (!canvas) {
+    const error = new Error('Fresh completed frame was unavailable.');
+    error.frameDelivery = delivery;
+    throw error;
+  }
   try {
     const context = canvas.getContext('2d', { willReadFrequently: true });
     const pixels = context
@@ -1046,6 +1054,13 @@ async function runDiagnostic() {
     const renderTime = Cesium.JulianDate.now();
     viewer.clock.shouldAnimate = false;
     viewer.clock.currentTime = Cesium.JulianDate.clone(renderTime);
+    // Preserve actual renderer/build identity even if the very first completed
+    // frame fails. Never infer hardware from a previous successful tab.
+    report.environment = readPerformanceEnvironment({
+      viewer,
+      appCommit: report.applicationCommit,
+      harnessCommit: report.harnessCommit,
+    });
     report.viewerOwnedDisplayWarmup = await warmViewerDataSourceDisplay(viewer);
     const initialCamera = snapshotCamera(viewer);
     report.renderClock = {
@@ -1090,6 +1105,7 @@ async function runDiagnostic() {
     report.error = {
       name: error?.name || 'Error',
       message: String(error?.message || error),
+      frameDelivery: error?.frameDelivery ?? null,
     };
   } finally {
     removeRenderError?.();

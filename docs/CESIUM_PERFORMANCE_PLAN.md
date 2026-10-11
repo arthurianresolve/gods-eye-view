@@ -9,8 +9,17 @@ Timing remains variable, including one preparation pair above 10% and a cold
 first-frame outlier. These are instrumented activation and JS-only heap measurements
 on hosted paravirtual Metal, not full performance acceptance.
 [Raw evidence and limits](performance-evidence/s54-production-collections/README.md)
-are preserved. Datacenter, cable, integration and physical Windows validation
-remain open; the production default remains Entity-based.
+are preserved. Datacenter correctness now also passes at `4f5c55f`: independent
+PNG decoding verifies all 20 captures and ten exact native-pick/geometry/style
+pairs ([evidence](performance-evidence/s54-production-collections/datacenter-correctness-38130632782/review.json)).
+Its separate five-pair activation and JS-heap comparison also passes:
+median first-usable activation is 41.28% lower and enabled post-GC JS heap is
+16.13% lower ([evidence](performance-evidence/s54-production-collections/datacenter-benefit-38130908513/review.json)).
+These hosted results do not cover motion, GPU/native memory or soak stability. The earlier
+missing-stem default-Entity timeout remains unresolved; the successful diagnostic
+observes asynchronous stem readiness and is not proof of a runtime fix.
+Cable comparison, integration and physical Windows validation remain open;
+the production default remains Entity-based.
 
 The isolated Cesium no-op terrain-collision transform fix is accepted at
 f26f4dd738a518c6cefa96b5f809c5d9c53afa83 after all seven ordinary integration jobs

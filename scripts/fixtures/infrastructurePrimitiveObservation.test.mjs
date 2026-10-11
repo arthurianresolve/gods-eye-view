@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { observeInfrastructurePrimitives } from './infrastructurePrimitiveObservation.mjs';
+import {
+  observeInfrastructurePrimitives,
+  observeInfrastructureFrameDelivery,
+} from './infrastructurePrimitiveObservation.mjs';
 
 function fixture() {
   const scene = {
@@ -91,4 +94,60 @@ test('bounds owner traversal and does not enumerate point collection contents', 
   const result = observeInfrastructurePrimitives(scene, rows, Cesium);
   assert.equal(result.nodes.length, 64);
   assert.equal(result.truncated, true);
+});
+
+test('frame observation distinguishes no callbacks from a completed frame and removes listeners', async () => {
+  const preUpdate = new Cesium.Event();
+  const postRender = new Cesium.Event();
+  const viewer = {
+    useDefaultRenderLoop: true,
+    targetFrameRate: 60,
+    scene: {
+      preUpdate,
+      postRender,
+      requestRenderMode: true,
+      canvas: { width: 960, height: 640 },
+    },
+  };
+  const documentLike = {
+    visibilityState: 'visible',
+    hidden: false,
+    hasFocus: () => true,
+  };
+  const incomplete = await observeInfrastructureFrameDelivery(
+    viewer,
+    async () => null,
+    { documentLike },
+  );
+  assert.equal(incomplete.delivery.updates, 0);
+  assert.equal(incomplete.delivery.renderedFrames, 0);
+  assert.equal(incomplete.delivery.completed, false);
+  assert.deepEqual(incomplete.delivery.before, {
+    visibility: 'visible',
+    hidden: false,
+    focused: true,
+  });
+  const canvas = {};
+  const completed = await observeInfrastructureFrameDelivery(
+    viewer,
+    async () => {
+      preUpdate.raiseEvent();
+      postRender.raiseEvent();
+      return canvas;
+    },
+    { documentLike },
+  );
+  assert.equal(completed.canvas, canvas);
+  assert.equal(completed.delivery.updates, 1);
+  assert.equal(completed.delivery.renderedFrames, 1);
+  assert.equal(preUpdate.numberOfListeners, 0);
+  assert.equal(postRender.numberOfListeners, 0);
+  await assert.rejects(
+    observeInfrastructureFrameDelivery(viewer, async () => {
+      throw Error('capture rejected');
+    }),
+    /capture rejected/,
+  );
+  assert.equal(preUpdate.numberOfListeners, 0);
+  assert.equal(postRender.numberOfListeners, 0);
 });

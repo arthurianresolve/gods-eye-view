@@ -80,3 +80,43 @@ function sphere(value) {
       }
     : null;
 }
+
+export async function observeInfrastructureFrameDelivery(
+  viewer,
+  capture,
+  { documentLike = globalThis.document, now = () => performance.now() } = {},
+) {
+  const started = now();
+  let updates = 0;
+  let frames = 0;
+  const removers = [];
+  const documentState = () => ({
+    visibility: documentLike?.visibilityState ?? null,
+    hidden: documentLike?.hidden ?? null,
+    focused: documentLike?.hasFocus?.() ?? null,
+  });
+  const before = documentState();
+  try {
+    removers.push(viewer.scene.preUpdate.addEventListener(() => updates++));
+    removers.push(viewer.scene.postRender.addEventListener(() => frames++));
+    const canvas = await capture();
+    return {
+      canvas,
+      delivery: {
+        elapsedMs: now() - started,
+        updates,
+        renderedFrames: frames,
+        before,
+        after: documentState(),
+        defaultRenderLoop: viewer.useDefaultRenderLoop,
+        targetFrameRate: viewer.targetFrameRate,
+        requestRenderMode: viewer.scene.requestRenderMode,
+        width: viewer.scene.canvas.width,
+        height: viewer.scene.canvas.height,
+        completed: Boolean(canvas),
+      },
+    };
+  } finally {
+    for (const remove of removers) remove();
+  }
+}
