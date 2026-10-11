@@ -16,6 +16,10 @@ import { summarizeImportTraceAttribution } from './performance/importTraceAttrib
 import { startImportTraceSession } from './performance/importTraceSession.mjs';
 import { sanitizeDiagnosticText } from './performance/startupDiagnostics.mjs';
 import { startFixtureCpuProfile } from './performance/sampledCpuProfile.mjs';
+import {
+  startImportLoadProfile,
+  validateImportLoadProfileFixture,
+} from './performance/importLoadProfile.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -148,10 +152,24 @@ try {
     const importStepAttribution = process.argv.includes(
       '--import-step-attribution',
     );
+    const importLoadCpuProfile = process.argv.includes(
+      '--import-load-cpu-profile',
+    );
+    const importLoadHeapProfile = process.argv.includes(
+      '--import-load-heap-profile',
+    );
+    const importLoadProfileMode = importLoadCpuProfile
+      ? 'cpu'
+      : importLoadHeapProfile
+        ? 'heap'
+        : null;
     if (
       [profileImports, importStepDiagnostics, importStepAttribution].filter(
         Boolean,
-      ).length > 1
+      ).length +
+        Number(importLoadCpuProfile) +
+        Number(importLoadHeapProfile) >
+      1
     )
       throw new Error(
         'Import CPU profile, step clocks, and V8 trace attribution must be separate runs.',
@@ -163,12 +181,14 @@ try {
       importFixtureUrl.searchParams.set('step-diagnostics', '1');
     if (importStepAttribution)
       importFixtureUrl.searchParams.set('step-attribution', '1');
+    if (importLoadProfileMode)
+      importFixtureUrl.searchParams.set('load-profile', importLoadProfileMode);
     const importPageErrors = [];
     const onImportPageError = (error) => {
       if (importPageErrors.length < 8)
         importPageErrors.push(sanitizeDiagnosticText(error?.message, 240));
     };
-    if (importStepAttribution) {
+    if (importStepAttribution || importLoadProfileMode) {
       report.importPageErrors = importPageErrors;
       page.on('pageerror', onImportPageError);
     }
@@ -200,9 +220,42 @@ try {
       report.importStepAttributionScope =
         'Separate Chrome trace spans the diagnostic fixture run; only marker-aligned cooperative loading windows contribute GC attribution. V8 GC overlap is diagnostic and correlational, not causal; all latency/performance acceptance is excluded.';
     }
+    if (importLoadProfileMode) {
+      report.performanceAcceptanceEligible = false;
+      report.importLoadProfileScope =
+        'Separate single-load CPU or sampled-allocation diagnostic. The profiler starts after fixture setup/warmup and stops before fresh-frame capture and teardown; all output is diagnostic and excluded from performance acceptance.';
+    }
     let traceStopped = null;
+    let loadProfileOwner = null;
     try {
       await page.click('#run');
+      if (importLoadProfileMode) {
+        await page.waitForFunction(
+          () => window.__gevImportLoadProfileState === 'ready',
+          { timeout: 120_000 },
+        );
+        loadProfileOwner = await startImportLoadProfile(
+          page,
+          importLoadProfileMode,
+        );
+        await page.click('#load-profile-start');
+        await page.waitForFunction(
+          () => window.__gevImportLoadProfileState === 'loaded',
+          { timeout: 120_000 },
+        );
+        const profile = await loadProfileOwner.stop();
+        loadProfileOwner = null;
+        report.importLoadProfile = {
+          ...profile,
+          control: {
+            fixtureReadyGateObserved: true,
+            loadCompleteGateObserved: true,
+            profilerStoppedBeforeFinishControl: true,
+            captureAndTeardownOutsideProfile: true,
+          },
+        };
+        await page.click('#load-profile-finish');
+      }
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
         { timeout: 120_000 },
@@ -213,7 +266,7 @@ try {
       if (profileImports) report.importBatches.profiled = true;
       if (importStepDiagnostics) report.importBatches.stepDiagnostic = true;
     } catch (error) {
-      if (importStepAttribution) {
+      if (importStepAttribution || importLoadProfileMode) {
         let stateDeadline;
         try {
           report.importFailureState = await Promise.race([
@@ -241,7 +294,18 @@ try {
       throw error;
     } finally {
       page.off('pageerror', onImportPageError);
-      if (importStepAttribution) report.importPageErrors = importPageErrors;
+      if (importStepAttribution || importLoadProfileMode)
+        report.importPageErrors = importPageErrors;
+      if (loadProfileOwner) {
+        try {
+          await loadProfileOwner.stop();
+        } catch (error) {
+          report.importLoadProfileCleanupError = String(
+            error?.message || error,
+          ).slice(0, 240);
+        }
+        loadProfileOwner = null;
+      }
       if (importTrace) {
         traceStopped = await importTrace.stop();
         if (!report.importBatches) {
@@ -292,14 +356,34 @@ try {
         };
       }
     }
-    report.importBatchValidation = validateImportBatchSchedulerReport(
-      report.importBatches,
-      commit,
-    );
-    if (!report.importBatchValidation.valid)
-      throw new Error(
-        `Import comparison failed: ${report.importBatches.error || report.importBatchValidation.errors.join('; ')}`,
+    if (importLoadProfileMode) {
+      const loadingProfileValidation = validateImportLoadProfileFixture({
+        fixtureReport: report.importBatches,
+        profileReport: report.importLoadProfile,
+        mode: importLoadProfileMode,
+        commit,
+      });
+      if (!loadingProfileValidation.valid)
+        throw new Error(
+          `Single-load profiler fixture failed: ${report.importBatches?.error || loadingProfileValidation.errors.join('; ')}`,
+        );
+      report.importLoadProfileFixture = report.importBatches.importLoadProfile;
+      report.importBatchValidation = {
+        notApplicable: true,
+        performanceAcceptanceEligible: false,
+        scope: 'Single-load profiler report is not an import benchmark report.',
+        errors: [],
+      };
+    } else {
+      report.importBatchValidation = validateImportBatchSchedulerReport(
+        report.importBatches,
+        commit,
       );
+      if (!report.importBatchValidation.valid)
+        throw new Error(
+          `Import comparison failed: ${report.importBatches.error || report.importBatchValidation.errors.join('; ')}`,
+        );
+    }
     if (
       process.argv.includes('--collections') &&
       report.hardwareRenderingAvailable
@@ -616,7 +700,9 @@ try {
     process.argv.includes('--imports') ||
     process.argv.includes('--import-attribution') ||
     process.argv.includes('--import-step-diagnostics') ||
-    process.argv.includes('--import-step-attribution')
+    process.argv.includes('--import-step-attribution') ||
+    process.argv.includes('--import-load-cpu-profile') ||
+    process.argv.includes('--import-load-heap-profile')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

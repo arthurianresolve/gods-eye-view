@@ -18,6 +18,7 @@ import {
   observeImportFrameHealth,
 } from '../performance/importFrameDiagnostics.mjs';
 import { summarizeRgbaDifferences } from '../performance/importPixelWitness.mjs';
+import { runControlledImportLoadProfile } from '../performance/importLoadProfileControl.mjs';
 import { inspectImportedPointState } from '../performance/importPointState.mjs';
 import {
   IMPORT_TRACE_ATTRIBUTION_SCHEMA,
@@ -29,8 +30,11 @@ const status = document.querySelector('#status');
 const result = document.querySelector('#result');
 const download = document.querySelector('#download');
 const frameProbe = document.querySelector('#frame-probe');
+const loadProfileStart = document.querySelector('#load-profile-start');
+const loadProfileFinish = document.querySelector('#load-profile-finish');
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const runOptions = new URLSearchParams(window.location.search);
+const requestedLoadProfile = runOptions.get('load-profile');
 const requestedWorkload = runOptions.get('workload');
 const requestedViewer =
   runOptions.get('viewer') === 'cesium' ? 'cesium' : 'application-wrapper';
@@ -365,6 +369,7 @@ function settledFrame(viewer) {
     viewer.scene.requestRender();
   });
 }
+
 async function pixels(viewer, sample, { preserveBytes = false } = {}) {
   const started = performance.now();
   const browserStateBefore = report.diagnosticsEnabled
@@ -575,14 +580,21 @@ async function capturePostMismatchFrames(viewer, maximumFrames = 3) {
 
 run.addEventListener('click', async () => {
   run.disabled = download.disabled = frameProbe.disabled = true;
+  if (requestedLoadProfile) {
+    loadProfileStart.hidden = true;
+    loadProfileFinish.hidden = true;
+    window.__gevImportLoadProfileState = 'setting-up';
+  }
   result.textContent = '';
-  const workload = ['initial-load', 'steady-population'].includes(
-    requestedWorkload,
-  )
-    ? requestedWorkload
-    : document.querySelector('#workload').value;
+  const runStartedAtMs = performance.now();
+  const workload = requestedLoadProfile
+    ? 'single-cooperative-load-profile'
+    : ['initial-load', 'steady-population'].includes(requestedWorkload)
+      ? requestedWorkload
+      : document.querySelector('#workload').value;
   const diagnosticRun =
     runOptions.get('diag') === '1' ||
+    Boolean(requestedLoadProfile) ||
     ['initial-load', 'steady-population'].includes(workload) ||
     requestedViewer === 'cesium';
   collectImportTraceAttribution = runOptions.get('step-attribution') === '1';
@@ -613,6 +625,14 @@ run.addEventListener('click', async () => {
             'opt-in browser scheduling diagnosis only; not performance acceptance',
         }
       : {}),
+    ...(requestedLoadProfile
+      ? {
+          performanceAcceptanceEligible: false,
+          importLoadProfileMode: requestedLoadProfile,
+          importLoadProfileScope:
+            'One warmed cooperative 5,000-point load only. Setup/warmup and frame capture/teardown are outside the profiler window. This diagnostic is not a latency or performance acceptance sample.',
+        }
+      : {}),
     preserveDrawingBuffer,
     captureMode: document.querySelector('#capture-mode').value,
     pointVisualStateDiagnosticScope:
@@ -628,7 +648,9 @@ run.addEventListener('click', async () => {
       scheduleOverride: false,
       cancelOverride: false,
       targetBudgetMs: 4,
-      batchObserver: 'onBatch metrics only; does not replace the scheduler',
+      batchObserver: requestedLoadProfile
+        ? 'disabled for the isolated profiler window to minimize diagnostic observer work'
+        : 'onBatch metrics only; does not replace the scheduler',
       stepObserver: collectImportTraceAttribution
         ? 'per-iterator-next timing with bounded V8 GC trace overlap; diagnostic-only'
         : collectIteratorStepDiagnostics
@@ -677,6 +699,12 @@ run.addEventListener('click', async () => {
   };
   document.addEventListener('visibilitychange', visibility);
   try {
+    check(
+      requestedLoadProfile === null ||
+        requestedLoadProfile === 'cpu' ||
+        requestedLoadProfile === 'heap',
+      'Unknown loading profile mode.',
+    );
     check(
       /^[a-f0-9]{40}$/.test(report.applicationCommit || ''),
       'Exact source revision required.',
@@ -733,7 +761,7 @@ run.addEventListener('click', async () => {
     layer = createImportedGeometryLayer({
       viewer,
       batchOptions: {
-        onBatch: recordBatch,
+        ...(requestedLoadProfile ? {} : { onBatch: recordBatch }),
         ...(collectIteratorStepDiagnostics
           ? { onStep: recordIteratorStep }
           : {}),
@@ -743,11 +771,17 @@ run.addEventListener('click', async () => {
       ? 'Diagnostic only: warming the complete 5,000-point population'
       : 'Warming the complete point population';
     const coldAt = performance.now();
-    activeBatchMetrics = createBatchMetrics();
+    const warmupMetrics = requestedLoadProfile ? null : createBatchMetrics();
+    activeBatchMetrics = warmupMetrics;
     await layer.loadAsync(imports, { workspaceId: 'fixture' });
-    report.warmupBatches = metricSnapshot(activeBatchMetrics);
+    report.warmupBatches = warmupMetrics
+      ? metricSnapshot(warmupMetrics)
+      : {
+          available: false,
+          reason: 'batch observer disabled for profiler run',
+        };
     for (const [backend, count] of Object.entries(
-      report.warmupBatches.backends,
+      report.warmupBatches.backends || {},
     ))
       report.cooperativeScheduler.backendCounts[backend] =
         (report.cooperativeScheduler.backendCounts[backend] || 0) + count;
@@ -755,6 +789,90 @@ run.addEventListener('click', async () => {
     await settledFrame(viewer);
     report.coldActivationMs = performance.now() - coldAt;
     report.warmedResources = resources(viewer);
+
+    if (requestedLoadProfile) {
+      const setupReadyAtMs = performance.now();
+      layer.clear();
+      await wait(150);
+      await settledFrame(viewer);
+      check(
+        layer.getState().featureCount === 0 &&
+          layer.getState().pendingJobs === 0 &&
+          getContextStore().entities.size === 0,
+        'Profiled load must start from an empty fixture layer.',
+      );
+      status.textContent = `Setup complete; start the ${requestedLoadProfile} profiler before the single cooperative load.`;
+      const readyForProfileAtMs = performance.now();
+      const controlledLoad = await runControlledImportLoadProfile({
+        startButton: loadProfileStart,
+        finishButton: loadProfileFinish,
+        publishState: (state) => {
+          window.__gevImportLoadProfileState = state;
+        },
+        load: async () => {
+          await layer.loadAsync(imports, { workspaceId: 'fixture' });
+        },
+      });
+      const loadStartMs = controlledLoad.loadStartMs;
+      const loadEndMs = controlledLoad.loadEndMs;
+      check(
+        layer.getState().featureCount === 5000 &&
+          layer.getState().pendingJobs === 0 &&
+          getContextStore().entities.size === 5000,
+        'Profiled cooperative load did not complete the full point population.',
+      );
+      report.importLoadProfile = {
+        mode: requestedLoadProfile,
+        phases: {
+          setupStartedAtMs: runStartedAtMs,
+          setupReadyAtMs,
+          profilerGateReadyAtMs: readyForProfileAtMs,
+          loadingStartedAtMs: loadStartMs,
+          loadingEndedAtMs: loadEndMs,
+          loadingDurationMs: loadEndMs - loadStartMs,
+          profileStopRequestedBeforeCapture: true,
+        },
+        workload: {
+          mode: 'cooperative',
+          features: 5000,
+          featureCountAfter: layer.getState().featureCount,
+          pendingJobsAfter: layer.getState().pendingJobs,
+          batchObserver: 'disabled during profiling',
+        },
+        scope: report.importLoadProfileScope,
+        performanceAcceptanceEligible: false,
+      };
+      status.textContent =
+        'Load complete; stop the profiler before capture and teardown.';
+
+      const sample = {
+        pair: null,
+        mode: 'single-cooperative-load-profile',
+        features: 5000,
+        resources: resources(viewer),
+      };
+      const captureStartMs = performance.now();
+      const pixelSha256 = await pixels(viewer, sample);
+      const captureEndMs = performance.now();
+      sample.pixelSha256 = pixelSha256;
+      report.importLoadProfile.phases.captureStartedAtMs = captureStartMs;
+      report.importLoadProfile.phases.captureEndedAtMs = captureEndMs;
+      report.importLoadProfile.phases.captureDurationMs =
+        captureEndMs - captureStartMs;
+      report.samples.push(sample);
+      check(
+        typeof pixelSha256 === 'string' && pixelSha256.length === 64,
+        'Profiled import did not produce a fresh-frame pixel digest after profiling stopped.',
+      );
+      report.checks.push({
+        id: 'single-profiled-load-separated-from-capture-and-teardown',
+        status: 'passed',
+      });
+      report.status = 'passed';
+      window.__gevImportLoadProfileState = 'complete';
+      return;
+    }
+
     let expectedPixels = null;
     let expectedPixelCapture = null;
     if (workload === 'initial-load') {
@@ -1165,9 +1283,13 @@ run.addEventListener('click', async () => {
     report.status = 'failed';
     report.error = error.message;
   } finally {
+    if (report.importLoadProfile?.phases)
+      report.importLoadProfile.phases.teardownStartedAtMs = performance.now();
     layer?.destroy();
     if (viewer) uninstallRenderGovernor(viewer);
     viewer?.destroy();
+    if (report.importLoadProfile?.phases)
+      report.importLoadProfile.phases.teardownEndedAtMs = performance.now();
     document.removeEventListener('visibilitychange', visibility);
     report.documentVisibleThroughout = !backgrounded;
     report.documentFocusedAtEnd = document.hasFocus();
