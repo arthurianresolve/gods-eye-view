@@ -1,7 +1,9 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
-11 October follow-up: [standard integration at `b67cca57`](performance-evidence/import-point-current-dev/README.md)
+11 October follow-up: [standard integration at `1a8d4928`](performance-evidence/import-point-current-dev/README.md)
 passes all seven executed jobs and fifteen three-OS saved-profile checks.
+Collection lifecycle and teardown also pass at `fca2f991`; its 60-minute hosted
+soak is still running in `38162032244`.
 The [60-minute hosted retention result at `26f383ed`](performance-evidence/hosted-soak-38155558706/README.md)
 completes 252 cycles with stable application-resource counts and 1.568% maximum
 final-window heap growth. This is supplemental hosted Apple paravirtual Metal

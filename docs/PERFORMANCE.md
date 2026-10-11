@@ -4,8 +4,9 @@ Latest checkpoint (11 October 2026): the isolated imported-point comparison
 shows a -56.9% median paired cooperative-load change across five hosted pairs,
 with 55 exact image pairs and matching native picks. [Full results and limits](performance-evidence/import-point-current-dev/README.md)
 include slower synchronous capture waits; no full-scene motion claim is made.
-Integration CI passes at `b67cca57`; final collection-specific lifecycle
-validation is running at `1a8d4928` before promotion to dev.
+Integration CI and fifteen recovery stages pass at `1a8d4928`; collection-specific
+lifecycle and teardown validation pass at `fca2f991`. The frozen candidate's
+60-minute hosted soak (`38162032244`) is running before promotion to dev.
 
 The [historical 60-minute hosted soak](performance-evidence/hosted-soak-38155558706/README.md)
 at `26f383ed` completes 252 cycles with stable owner counts and 1.568% maximum

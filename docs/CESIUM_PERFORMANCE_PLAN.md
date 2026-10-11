@@ -1,12 +1,17 @@
 # Cesium performance plan
 
 Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
-Point integration passes all seven standard jobs at `b67cca57`. The corrected
-native import/workspace observer passes at `c3df3acc`; the separate controlled
-race case still used Entities in that report. Candidate `1a8d4928` closes that
-coverage gap by matching the app's collection renderer and records source/harness
-provenance for future hosted soaks. Sixty focused checks pass; exact-candidate
-lifecycle and standard CI are running. [Integration evidence and scope](performance-evidence/import-point-current-dev/README.md).
+Point integration passes all seven standard jobs and fifteen recovery stages at
+`1a8d4928`. Frozen candidate `fca2f991` also passes collection-specific native
+import, workspace replacement, cancellation and supersession checks, including
+the enforced teardown census. Its 60-minute hosted soak remains in progress in
+run `38162032244`. [Integration evidence and scope](performance-evidence/import-point-current-dev/README.md).
+
+S60 ingestion now accepts complete hosted soak envelopes at `f07ad0cf`, preserving
+the outer outcome, cleanup and exact artifact digest. Missing provenance stays
+pending; contradictory revisions and failed/forced cleanup fail validation.
+Eighty-four focused checks, 1,538 scoped formatting checks and package boundaries
+pass locally. These are reader checks, not new hardware or retention acceptance.
 
 The 60-minute hosted run at `26f383ed` passes operation and retention checks:
 252 cycles, 13 post-GC checkpoints, stable application ownership and 1.568%
@@ -20,7 +25,8 @@ The imported-point collection candidate passes five current-dev hosted pairs at
 `eb2d6d95ab35bdbbf964eea305226cae763b8a48`. Cooperative imports improve in all
 five pairs (median paired change -56.9%); independent decoding confirms 55 exact
 image pairs and matching native picks. The asynchronous application import path
-now selects this renderer on the QA branch, pending full integration checks.
+now selects this renderer on the QA branch; current-candidate soak review remains
+pending before promotion.
 [Raw comparison and limits](performance-evidence/import-point-current-dev/README.md)
 record slower synchronous capture waits separately. This is not full S59/S60,
 capture-speed, physical Windows or retained-heap acceptance.

@@ -9,8 +9,9 @@ It does not import the rejected scheduler/chunking experiment.
 
 The application integration in this change selects the collection renderer for
 its existing asynchronous workspace-import path. The layer's default remains
-Entity-compatible for other callers. Full application integration checks must
-pass before promotion to dev. The comparison alone does not complete S59/S60.
+Entity-compatible for other callers. Standard integration and collection-specific
+lifecycle checks pass as recorded below; current-candidate soak review remains
+pending before promotion to dev. The comparison alone does not complete S59/S60.
 
 ## Measured benefit
 
@@ -151,3 +152,31 @@ all 1,538 scoped formatting checks passing. Root also revalidated the original
 primitive into a copy and confirmed rejection. This offline regression check
 is distinct from a new browser run. The live driver retains its first warmed
 empty census for teardown instead of replacing the baseline after each cycle.
+
+## Frozen integration candidate
+
+[Standard run 38161339152](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38161339152)
+passes all seven executed jobs at `1a8d4928424f84349e4b9c6b411ce3f1b328459b`.
+The retained `recovery-1a8d4928-{windows,macos,ubuntu}.json` reports and
+[independent recovery review](recovery-1a8d4928-review.json) confirm all fifteen
+stages: matching settings, workspace bundles and the saved asset hash, one
+rendered feature, zero unexpected targets, no remaining pages before close,
+and natural browser exit code zero. Close times range from 272.24 to 2354.18 ms.
+These software-rendered recovery checks do not establish physical GPU coverage
+or explain historical hardware failures.
+
+[Lifecycle run 38162029677](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38162029677)
+passes at frozen candidate `fca2f991f493de80e73ea4c086609f9a084e4ea3`.
+Its [original artifact](lifecycle-38162029677.json) has SHA-256
+`df36b5e120fb9312faf5b597ee397adc0baed3e32ee416ccbeabf1e6f92c3858`.
+Root revalidated exact application/harness identity, fixture hashes, all three
+collection-rendered cases, zero page errors and the controlled owner's teardown
+against the first warmed baseline. The five import/clear cycles, five workspace
+replacements, five queued cancellations and five supersessions pass; browser
+shutdown takes 60.71 ms without forced termination. An offline copy containing
+one extra cleanup primitive is rejected. This directly exercises the final
+teardown assertion and does not relabel the older observer failure.
+
+The 60-minute hosted soak of this frozen candidate is still running in
+[run 38162032244](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38162032244).
+No result is claimed until its original report and cleanup have been reviewed.
