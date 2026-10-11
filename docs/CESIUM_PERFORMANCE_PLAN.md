@@ -4025,3 +4025,25 @@ Ordinary CI retains its original five stages with zero additional reopens.
 This tests whether the existing profile/application combination reproduces a
 late or stuck process without adding repeated installs/builds or changing the
 acceptance deadline. Hardware and application-performance claims are excluded.
+
+
+### Windows close repetition result - 11 October 2026
+
+The fixed eight-repetition diagnostic at
+`dccc70766020c6a1a0890ae0c9d77f945fc75780`
+[failed](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38138254834)
+on `shutdown-repeat-candidate-3`. The original four recovery checks and the
+first five repetitions passed. The remaining two repetitions and final
+failed-artifact rollback were not attempted after this failure. Preserve the
+[complete report](performance-evidence/windows-close-observation-38138254834/windows-recovery.json)
+and [CI record](performance-evidence/windows-close-observation-38138254834/ci.json).
+
+The failing check still preserved settings, the workspace bundle and asset
+hash, rendered the imported feature, and closed its only page. Browser.close was
+acknowledged at 18.2 ms and disconnected at 30.7 ms. The browser parent exited
+naturally with code zero at 5942.5 ms, after the unchanged five-second acceptance
+deadline. The additional observation lasted 937.1 ms and did not require process
+termination. This narrows the observed delay to process shutdown after protocol
+disconnection; it does not establish which Chromium subsystem delayed exit or
+prove an application/main-merge regression. Earlier prior-build failures remain
+relevant. The merge and Windows recovery gate remain unaccepted.
