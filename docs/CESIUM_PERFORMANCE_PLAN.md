@@ -1,5 +1,21 @@
 # Cesium performance plan
 
+Current checkpoint (11 October 2026): production dev remains at `643fed8f`.
+Point integration passes all seven standard jobs at `b67cca57`. The corrected
+native import/workspace observer passes at `c3df3acc`; the separate controlled
+race case still used Entities in that report. Candidate `1a8d4928` closes that
+coverage gap by matching the app's collection renderer and records source/harness
+provenance for future hosted soaks. Sixty focused checks pass; exact-candidate
+lifecycle and standard CI are running. [Integration evidence and scope](performance-evidence/import-point-current-dev/README.md).
+
+The 60-minute hosted run at `26f383ed` passes operation and retention checks:
+252 cycles, 13 post-GC checkpoints, stable application ownership and 1.568%
+maximum final-window heap growth. [Preserved report and limitations](performance-evidence/hosted-soak-38155558706/README.md).
+It predates point integration and lacks raw harness/cleanliness fields. It does
+not close current-candidate or physical Windows acceptance. The numbered slices
+remain partial; earlier entries below retain their historical scope.
+
+
 The imported-point collection candidate passes five current-dev hosted pairs at
 `eb2d6d95ab35bdbbf964eea305226cae763b8a48`. Cooperative imports improve in all
 five pairs (median paired change -56.9%); independent decoding confirms 55 exact

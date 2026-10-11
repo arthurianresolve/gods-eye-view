@@ -1,5 +1,19 @@
 # Performance baseline
 
+Latest checkpoint (11 October 2026): the isolated imported-point comparison
+shows a -56.9% median paired cooperative-load change across five hosted pairs,
+with 55 exact image pairs and matching native picks. [Full results and limits](performance-evidence/import-point-current-dev/README.md)
+include slower synchronous capture waits; no full-scene motion claim is made.
+Integration CI passes at `b67cca57`; final collection-specific lifecycle
+validation is running at `1a8d4928` before promotion to dev.
+
+The [historical 60-minute hosted soak](performance-evidence/hosted-soak-38155558706/README.md)
+at `26f383ed` completes 252 cycles with stable owner counts and 1.568% maximum
+heap growth over its conservative final window. Source-provenance gaps and its
+older commit keep this separate from final-candidate acceptance. Physical
+Windows comparisons and retention evidence remain outstanding.
+
+
 The direct-filter placement candidate `4686ea3` now completes its forty-pair
 isolated CPU comparison. Static and periodic infrastructure/radio paired
 medians improve 17.65-31.11%, with all twenty pairs improving. Moving generic

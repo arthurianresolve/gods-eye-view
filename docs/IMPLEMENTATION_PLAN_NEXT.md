@@ -1,5 +1,15 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
+11 October follow-up: [standard integration at `b67cca57`](performance-evidence/import-point-current-dev/README.md)
+passes all seven executed jobs and fifteen three-OS saved-profile checks.
+The [60-minute hosted retention result at `26f383ed`](performance-evidence/hosted-soak-38155558706/README.md)
+completes 252 cycles with stable application-resource counts and 1.568% maximum
+final-window heap growth. This is supplemental hosted Apple paravirtual Metal
+evidence from an older candidate, with raw harness/cleanliness fields absent.
+S44/S46 remain pending for the final candidate and primary physical Windows
+machine. Older results below are historical and do not substitute for that work.
+
+
 Status: Automated checkpoint on 11 October 2026 at
 `167ba62c047fe94f36d0d60066aa4d648ede7519`. Code, automated results and external
 acceptance are separate. [All seven selected CI jobs pass](performance-evidence/ci-167ba62.json),
