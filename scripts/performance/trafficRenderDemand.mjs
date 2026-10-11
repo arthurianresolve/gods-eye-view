@@ -120,6 +120,11 @@ function validateHeatlineVisualWitness(witness, captures) {
       JSON.stringify(witness.noHeatlineControlSnapshot.dots)
   )
     fail('Heatline control changed dot identity, projection, size or style');
+  if (
+    witness.noHeatlineControlSnapshot.stats?.heatLines !== 0 ||
+    witness.noHeatlineControlSnapshot.stats?.jamViz !== 'none'
+  )
+    fail('Heatline control did not remove the classified heatline geometry');
   const heatlineStats = { ...primary.snapshot.stats };
   const noHeatlineStats = { ...witness.noHeatlineControlSnapshot.stats };
   delete heatlineStats.heatLines;
@@ -128,6 +133,8 @@ function validateHeatlineVisualWitness(witness, captures) {
   delete noHeatlineStats.jamViz;
   if (
     JSON.stringify(heatlineStats) !== JSON.stringify(noHeatlineStats) ||
+    JSON.stringify(primary.snapshot.clock) !==
+      JSON.stringify(witness.noHeatlineControlSnapshot.clock) ||
     JSON.stringify(primary.snapshot.camera) !==
       JSON.stringify(witness.noHeatlineControlSnapshot.camera) ||
     JSON.stringify(primary.snapshot.renderSettings) !==
@@ -292,13 +299,16 @@ export function validateTrafficRenderDemandRun(input, expected = {}) {
   if (
     !teardown ||
     teardown.holds?.includes('traffic') ||
-    !Number.isSafeInteger(teardown.primitiveCount)
+    !Number.isSafeInteger(teardown.primitiveCount) ||
+    !Number.isSafeInteger(teardown.primitiveBaseline) ||
+    teardown.primitiveCount !== teardown.primitiveBaseline
   )
     fail('Traffic owner reinitialization/cleanup evidence is incomplete');
   if (
     report.cleanup?.viewerDestroyed !== true ||
     report.cleanup?.listenersRemoved !== true ||
-    report.cleanup?.governorUninstalled !== true
+    report.cleanup?.governorUninstalled !== true ||
+    (report.cleanup?.errors?.length || 0) > 0
   )
     fail('Traffic fixture cleanup did not complete');
   return report;

@@ -1,5 +1,12 @@
 # Cesium performance plan
 
+S51 traffic demand remains an isolated, unaccepted candidate. The first two
+hosted browser attempts failed during fixture setup before any traffic capture:
+teardown first masked the error; correcting that exposed a local tileset readiness
+timeout. [Raw failures and exact revisions](performance-evidence/s51-traffic-fixture-failures/README.md)
+remain preserved. Bounded readiness diagnostics and stricter heatline/primitive
+checks are being added; these harness changes do not establish runtime acceptance.
+
 Placement reuse at `4686ea3b6d33cf02e822f04e122bfb0afdcc9cf5` is accepted as a
 component optimization after exact-source CPU, pixel, allocation, native font
 and all seven integration gates pass ([acceptance record](performance-evidence/s52-placement-direct-filter/acceptance.json),

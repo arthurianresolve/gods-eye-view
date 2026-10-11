@@ -29,6 +29,7 @@ const sourceCalls = [];
 let firstPopulationFrame = null;
 let capturesIssued = 0;
 let listenerBaseline = null;
+let primitiveBaseline = null;
 let listenersRemoved = false;
 let removeTileVisibleListener = null;
 let tileContentVisibleInFrame = [];
@@ -169,6 +170,88 @@ async function addFixtureTileset(viewerInstance) {
   const glbBlob = URL.createObjectURL(
     new Blob([glb], { type: 'model/gltf-binary' }),
   );
+  let jsonBlob = null;
+  let tileset = null;
+  let phase = 'create-local-tileset';
+  let removePostRender = null;
+  let removeLoadProgress = null;
+  let removeTileFailed = null;
+  let removeRenderError = null;
+  let settleTimer = null;
+  let inspectFrame = null;
+  let readinessSettled = false;
+  const diagnosticCleanupErrors = [];
+  const loadProgressRecords = [];
+  const tileFailureRecords = [];
+  const renderErrorRecords = [];
+  const readinessReadErrors = [];
+  const diagnosticMessage = (error, fallback) =>
+    String(error?.message || error || fallback)
+      .replace(/(?:https?|blob|data|file):[^\s"'<>]+/gi, '[redacted-url]')
+      .slice(0, 240);
+  const removeOwned = (remove, owner) => {
+    if (typeof remove !== 'function') return;
+    try {
+      remove();
+    } catch (error) {
+      diagnosticCleanupErrors.push({
+        owner,
+        message: diagnosticMessage(error, 'Observer cleanup failed'),
+      });
+    }
+  };
+  const cleanupReadiness = () => {
+    if (settleTimer !== null) {
+      clearTimeout(settleTimer);
+      settleTimer = null;
+    }
+    if (inspectFrame !== null) {
+      cancelAnimationFrame(inspectFrame);
+      inspectFrame = null;
+    }
+    removeOwned(removePostRender, 'surface-post-render');
+    removePostRender = null;
+    removeOwned(removeLoadProgress, 'tileset-load-progress');
+    removeLoadProgress = null;
+    removeOwned(removeTileFailed, 'tileset-tile-failed');
+    removeTileFailed = null;
+    removeOwned(removeRenderError, 'scene-render-error');
+    removeRenderError = null;
+    removeOwned(removeTileVisibleListener, 'tileset-tile-visible');
+    removeTileVisibleListener = null;
+  };
+  const readinessSnapshot = () => ({
+    phase,
+    tilesetTilesLoaded: readReadinessValue(
+      'tileset.tilesLoaded',
+      () => tileset?.tilesLoaded,
+    ),
+    globeTilesLoaded: readReadinessValue(
+      'globe.tilesLoaded',
+      () => viewerInstance.scene.globe?.tilesLoaded,
+    ),
+    postRenderFrame: surfacePostRenderFrame,
+    latestVisibleTileContent: latestVisibleTileContent.slice(0, 16),
+    latestVisibleTileContentOverflow,
+    loadProgress: loadProgressRecords.slice(-8),
+    tileFailures: tileFailureRecords.slice(-8),
+    renderErrors: renderErrorRecords.slice(-8),
+    readinessReadErrors: readinessReadErrors.slice(-8),
+    observerCleanupErrors: diagnosticCleanupErrors.slice(-8),
+  });
+  function readReadinessValue(label, read) {
+    try {
+      const value = read();
+      return typeof value === 'boolean' ? value : null;
+    } catch (error) {
+      readinessReadErrors.push({
+        label,
+        message: diagnosticMessage(error, 'Readiness getter failed'),
+      });
+      if (readinessReadErrors.length > 8) readinessReadErrors.shift();
+      return null;
+    }
+  }
   const transform = Cesium.Transforms.eastNorthUpToFixedFrame(
     Cesium.Cartesian3.fromDegrees(CENTER.lon, CENTER.lat, 1.5),
   );
@@ -183,57 +266,116 @@ async function addFixtureTileset(viewerInstance) {
       content: { uri: glbBlob },
     },
   };
-  const jsonBlob = URL.createObjectURL(
+  jsonBlob = URL.createObjectURL(
     new Blob([JSON.stringify(tilesetJson)], { type: 'application/json' }),
   );
   try {
-    const tileset = await Cesium.Cesium3DTileset.fromUrl(jsonBlob, {
+    phase = 'load-tileset-json';
+    tileset = await Cesium.Cesium3DTileset.fromUrl(jsonBlob, {
       maximumScreenSpaceError: 1,
       maximumMemoryUsage: 16,
       dynamicScreenSpaceError: false,
     });
+    phase = 'add-tileset-to-scene';
     viewerInstance.scene.primitives.add(tileset);
-    await tileset.readyPromise;
     removeTileVisibleListener = tileset.tileVisible.addEventListener((tile) => {
       const content = tile.content;
       if (tileContentVisibleInFrame.length < 16) {
         tileContentVisibleInFrame.push({
           ready: content?.ready === true,
           type: content?.constructor?.name || null,
+          model3DTileContentInstance:
+            content instanceof Cesium.Model3DTileContent,
         });
       } else {
         tileContentVisibleOverflow = true;
       }
     });
-    const removePostRender = viewerInstance.scene.postRender.addEventListener(
-      () => {
-        surfacePostRenderFrame++;
-        latestVisibleTileContent = tileContentVisibleInFrame;
-        latestVisibleTileContentOverflow = tileContentVisibleOverflow;
-        tileContentVisibleInFrame = [];
-        tileContentVisibleOverflow = false;
+    removeLoadProgress = tileset.loadProgress.addEventListener(
+      (pendingRequests, processing) => {
+        loadProgressRecords.push({
+          atMonotonicMs: Number(performance.now().toFixed(3)),
+          pendingRequests:
+            Number.isSafeInteger(pendingRequests) && pendingRequests >= 0
+              ? pendingRequests
+              : null,
+          processing:
+            Number.isSafeInteger(processing) && processing >= 0
+              ? processing
+              : null,
+        });
+        if (loadProgressRecords.length > 8) loadProgressRecords.shift();
       },
     );
+    removeTileFailed = tileset.tileFailed.addEventListener((error) => {
+      tileFailureRecords.push({
+        atMonotonicMs: Number(performance.now().toFixed(3)),
+        name: String(error?.name || 'TileLoadError').slice(0, 80),
+        message: diagnosticMessage(error, 'Unknown tile failure'),
+      });
+      if (tileFailureRecords.length > 8) tileFailureRecords.shift();
+    });
+    removeRenderError = viewerInstance.scene.renderError?.addEventListener?.(
+      (_scene, error) => {
+        renderErrorRecords.push({
+          atMonotonicMs: Number(performance.now().toFixed(3)),
+          name: String(error?.name || 'RenderError').slice(0, 80),
+          message: diagnosticMessage(error, 'Unknown render error'),
+        });
+        if (renderErrorRecords.length > 8) renderErrorRecords.shift();
+      },
+    );
+    phase = 'wait-rendered-content';
+    removePostRender = viewerInstance.scene.postRender.addEventListener(() => {
+      surfacePostRenderFrame++;
+      latestVisibleTileContent = tileContentVisibleInFrame.slice(0, 16);
+      latestVisibleTileContentOverflow = tileContentVisibleOverflow;
+      tileContentVisibleInFrame = [];
+      tileContentVisibleOverflow = false;
+    });
     await new Promise((resolve, reject) => {
-      const started = performance.now();
-      const inspect = () => {
-        if (
-          tileset.tilesLoaded &&
-          viewerInstance.scene.globe.tilesLoaded &&
-          latestVisibleTileContent.some(
-            (content) => content.ready && content.type === 'Model3DTileContent',
-          )
-        ) {
-          removePostRender();
-          return resolve();
-        }
-        if (performance.now() - started > 15_000) {
-          removePostRender();
-          return reject(new Error('Local fixture tiles did not settle'));
-        }
-        requestAnimationFrame(inspect);
+      const finish = (error = null) => {
+        if (readinessSettled) return;
+        readinessSettled = true;
+        cleanupReadiness();
+        if (error) reject(error);
+        else if (diagnosticCleanupErrors.length)
+          reject(
+            new Error(
+              'Local fixture readiness listener cleanup failed: ' +
+                JSON.stringify(diagnosticCleanupErrors),
+            ),
+          );
+        else resolve();
       };
-      inspect();
+      const inspect = () => {
+        inspectFrame = null;
+        try {
+          if (
+            tileset.tilesLoaded &&
+            viewerInstance.scene.globe.tilesLoaded &&
+            latestVisibleTileContent.some(
+              (content) =>
+                content.ready && content.type === 'Model3DTileContent',
+            )
+          ) {
+            finish();
+            return;
+          }
+          inspectFrame = requestAnimationFrame(inspect);
+        } catch (error) {
+          finish(error);
+        }
+      };
+      try {
+        settleTimer = setTimeout(
+          () => finish(new Error('Local fixture tiles did not settle')),
+          15_000,
+        );
+        inspectFrame = requestAnimationFrame(inspect);
+      } catch (error) {
+        finish(error);
+      }
     });
     const canonicalTileset = JSON.parse(JSON.stringify(tilesetJson));
     canonicalTileset.root.content.uri = 'generated-glb://traffic-ground-plane';
@@ -254,9 +396,19 @@ async function addFixtureTileset(viewerInstance) {
     };
     return { tileset, urls: [glbBlob, jsonBlob] };
   } catch (error) {
-    URL.revokeObjectURL(glbBlob);
-    URL.revokeObjectURL(jsonBlob);
+    cleanupReadiness();
+    report.fixtureSurfaceProgress = readinessSnapshot();
+    try {
+      URL.revokeObjectURL(glbBlob);
+    } catch {}
+    if (jsonBlob) {
+      try {
+        URL.revokeObjectURL(jsonBlob);
+      } catch {}
+    }
     throw error;
+  } finally {
+    if (!readinessSettled) cleanupReadiness();
   }
 }
 
@@ -626,6 +778,7 @@ async function run() {
     const tileState = await addFixtureTileset(viewer);
     surfaceUrls = tileState.urls;
     listenerBaseline = eventListenerCounts();
+    primitiveBaseline = viewer.scene.primitives.length;
     setClock(FIXTURE_EPOCH);
     layer = createTrafficLayer({ services: services(), source: source() });
     layer.setParams(
@@ -745,7 +898,10 @@ async function run() {
       jamViz: 'none',
       densityScale: 0.200000001,
     };
-    layer.setParams(noHeatlineControlParams);
+    // jamViz applies on the next road rebuild in both compared revisions.
+    // Set it before the density-triggered rebuild, not in the same call.
+    layer.setParams({ jamViz: noHeatlineControlParams.jamViz });
+    layer.setParams({ densityScale: noHeatlineControlParams.densityScale });
     await requestActiveFrame('heatline disabled control');
     const noHeatlineCapture = await capture('jam-heatlines-disabled-control', {
       retainPixels: true,
@@ -788,6 +944,8 @@ async function run() {
     if (
       !sameDots ||
       changedPixels < 1 ||
+      noHeatlineCapture.snapshot.stats.heatLines !== 0 ||
+      noHeatlineCapture.snapshot.stats.jamViz !== 'none' ||
       report.heatlineVisualWitness.controlParamsEffective.jamViz !== 'none' ||
       report.heatlineVisualWitness.controlParamsEffective.densityScale !==
         Math.max(0.2, Math.min(2.5, noHeatlineControlParams.densityScale)) ||
@@ -796,7 +954,8 @@ async function run() {
       throw new Error(
         'The local tileset did not produce a visible heatline-only pixel difference',
       );
-    layer.setParams(restoredParams);
+    layer.setParams({ jamViz: restoredParams.jamViz });
+    layer.setParams({ densityScale: restoredParams.densityScale });
     await waitUntil(
       () =>
         layer.getStats().heatLines > 0 &&
@@ -913,6 +1072,7 @@ async function run() {
       name: 'disable-reinitialize-destroy',
       holds: getRenderGovernorDiagnostics().holds || [],
       primitiveCount: viewer.scene.primitives.length,
+      primitiveBaseline,
       listenerBaseline,
       listenersAfterDestroy,
     });
@@ -923,6 +1083,10 @@ async function run() {
     )
       throw new Error(
         'Traffic layer listeners did not return to their pre-init baseline',
+      );
+    if (viewer.scene.primitives.length !== primitiveBaseline)
+      throw new Error(
+        'Traffic primitives did not return to their pre-init baseline',
       );
     listenersRemoved = true;
     report.environment = {

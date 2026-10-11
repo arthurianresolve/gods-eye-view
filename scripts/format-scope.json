@@ -1171,5 +1171,6 @@
   "scripts/fixtures/traffic-render-demand.mjs",
   "scripts/performance/trafficRenderDemand.mjs",
   "scripts/performance/trafficRenderDemand.test.mjs",
-  "scripts/performance/trafficRenderDemandComparison.mjs"
+  "scripts/performance/trafficRenderDemandComparison.mjs",
+  "scripts/fixtures/traffic-surface-readiness.test.mjs"
 ]

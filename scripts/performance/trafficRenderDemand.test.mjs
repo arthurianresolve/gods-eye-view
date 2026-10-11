@@ -76,6 +76,7 @@ function makeRun(mode, appCommit, frames) {
         name: 'disable-reinitialize-destroy',
         holds: [],
         primitiveCount: 1,
+        primitiveBaseline: 1,
       },
     ],
     captures: names.map((name, index) => {
@@ -172,11 +173,11 @@ function makeRun(mode, appCommit, frames) {
             preserveDrawingBuffer: true,
           },
         },
-      },
-      clock: {
-        requestedEpochMs: EPOCH + 2700,
-        currentTimeIso: new Date(EPOCH + 2700).toISOString(),
-        shouldAnimate: false,
+        clock: {
+          requestedEpochMs: EPOCH + 2700,
+          currentTimeIso: new Date(EPOCH + 2700).toISOString(),
+          shouldAnimate: false,
+        },
       },
       changedPixels: 12,
       heatlineParamsBefore: { jamViz: 'heatline', densityScale: 0.2 },
@@ -458,5 +459,35 @@ test('failed setup reports its cause before missing renderer evidence', () => {
         captures: [],
       }),
     /Traffic fixture failed: Local fixture tiles did not settle/,
+  );
+});
+
+test('heatline control rejects leftover geometry, a changed clock, and cleanup errors', () => {
+  const run = makeRun('candidate', CANDIDATE, 0);
+  run.heatlineVisualWitness.noHeatlineControlSnapshot.stats.heatLines = 1;
+  assert.throws(() => validateTrafficRenderDemandRun(run), /did not remove/);
+  run.heatlineVisualWitness.noHeatlineControlSnapshot.stats.heatLines = 0;
+  run.heatlineVisualWitness.noHeatlineControlSnapshot.clock.requestedEpochMs++;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(run),
+    /unrelated rendered scene inputs/,
+  );
+  run.heatlineVisualWitness.noHeatlineControlSnapshot.clock.requestedEpochMs--;
+  run.cleanup.errors = [{ owner: 'viewer', message: 'disposal failed' }];
+  assert.throws(
+    () => validateTrafficRenderDemandRun(run),
+    /cleanup did not complete/,
+  );
+});
+
+test('traffic teardown rejects retained primitives after owner destruction', () => {
+  const run = makeRun('candidate', CANDIDATE, 0);
+  const teardown = run.phases.find(
+    (phase) => phase.name === 'disable-reinitialize-destroy',
+  );
+  teardown.primitiveCount++;
+  assert.throws(
+    () => validateTrafficRenderDemandRun(run),
+    /cleanup evidence is incomplete/,
   );
 });

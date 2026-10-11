@@ -1,0 +1,32 @@
+{
+  "schema": "gev-traffic-fixture-failure-record/v1",
+  "entries": [
+    {
+      "run": "38119550844",
+      "commit": "bbe6161740471bd47e59596d93889675d05926bf",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38119550844",
+      "file": "traffic-38119550844.json",
+      "sha256": "90ff4b38201c29b439ab26327997bb6fc4d04c734c6a250a6944bc8c7a6646c9",
+      "status": "failed",
+      "error": {
+        "name": "AssertionError",
+        "message": "baseline renderer acceleration was not verified\n\nfalse !== true\n"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38119931432",
+      "commit": "81b1b080f11f60e8ada7044ade597e22c445460b",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38119931432",
+      "file": "traffic-38119931432.json",
+      "sha256": "1535acfeda86488b1e97fb1efcc4eedb7bb890d5148aac689cbdd30a74392feb",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Local fixture tiles did not settle"
+      },
+      "completedTrials": 0
+    }
+  ],
+  "acceptance": "Neither run provides a traffic optimization comparison or physical desktop hardware acceptance."
+}
