@@ -255,6 +255,42 @@ test('browser close records an already-exited process and releases listeners', a
   assert.equal(outcome.observation.closeDeadlineMs, 25);
 });
 
+for (const platform of ['darwin', 'linux']) {
+  test(`${platform} fallback signals only the owned process group and waits for observed exit`, async () => {
+    const child = fakeBrowserProcess();
+    const calls = [];
+    const result = await stopOwnedRecoveryProcessTree(child, {
+      platform,
+      killProcess: (pid, signal) => {
+        calls.push({ pid, signal });
+        queueMicrotask(() => {
+          child.signalCode = signal;
+          child.emit('exit', null, signal);
+        });
+      },
+    });
+    assert.deepEqual(calls, [{ pid: -child.pid, signal: 'SIGTERM' }]);
+    assert.equal(result.attempted, true);
+    assert.equal(result.confirmed, true);
+    assert.equal(child.listenerCount('exit'), 0);
+    const denied = await stopOwnedRecoveryProcessTree(fakeBrowserProcess(), {
+      platform,
+      killProcess: () => {
+        throw new Error('denied');
+      },
+    });
+    assert.equal(denied.confirmed, false);
+    const live = fakeBrowserProcess();
+    const unobserved = await stopOwnedRecoveryProcessTree(live, {
+      platform,
+      killProcess: () => {},
+      exitTimeoutMs: 5,
+    });
+    assert.equal(unobserved.confirmed, false);
+    assert.equal(live.listenerCount('exit'), 0);
+  });
+}
+
 test('close trace ignores unrelated and pre-close protocol text without retaining it', () => {
   let now = 10;
   const trace = createRecoveryBrowserCloseTrace({ now: () => now });

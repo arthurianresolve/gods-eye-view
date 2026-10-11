@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {
   BROWSER_SHUTDOWN_CONTROLS,
+  assertShutdownRuntime,
   classifyBrowserShutdownControl,
   createBrowserShutdownReport,
   runBrowserShutdownControlMatrix,
@@ -29,6 +30,7 @@ import {
   setupDocument,
   startFixtureServer,
 } from '../qa-browser-shutdown.mjs';
+import { fixtureBrowserArgs } from '../qa-application-fixtures.mjs';
 
 const identity = () => ({
   sourceCommit: 'a'.repeat(40),
@@ -813,6 +815,55 @@ test('shutdown fixture identity requires the declared WebGL-only SwiftShader lau
       ),
     }),
   );
+});
+
+for (const platform of ['win32', 'darwin', 'linux']) {
+  for (const webglOnly of [false, true]) {
+    test(`shutdown runtime and reports support ${platform} with webglOnly=${webglOnly}`, async () => {
+      const runtime = {
+        platform,
+        rendererMode: { softwareRendering: true, webglOnly },
+        launchFlags: fixtureBrowserArgs({ softwareRendering: true, webglOnly }),
+      };
+      assertShutdownRuntime(runtime);
+      const report = await runBrowserShutdownControlMatrix({
+        identity: { ...identity(), ...runtime },
+        runControl: async (specification) => successfulResult(specification),
+      });
+      validateBrowserShutdownReport(report);
+      assert.equal(report.status, 'passed');
+      assert.deepEqual(report.identity.rendererMode, runtime.rendererMode);
+      assert.equal(report.identity.platform, platform);
+      assert.throws(() =>
+        assertShutdownRuntime({
+          ...runtime,
+          launchFlags: fixtureBrowserArgs({
+            softwareRendering: true,
+            webglOnly: !webglOnly,
+          }),
+        }),
+      );
+    });
+  }
+}
+
+test('shutdown runtime rejects unsupported platforms and ambiguous renderer flags', () => {
+  const valid = identity();
+  for (const platform of ['freebsd', '', null])
+    assert.throws(() => assertShutdownRuntime({ ...valid, platform }));
+  for (const rendererMode of [
+    { softwareRendering: false, webglOnly: true },
+    { softwareRendering: true },
+    null,
+  ])
+    assert.throws(() => assertShutdownRuntime({ ...valid, rendererMode }));
+  for (const launchFlags of [
+    null,
+    [],
+    [...valid.launchFlags, '--use-angle=metal'],
+    [...valid.launchFlags, valid.launchFlags[0]],
+  ])
+    assert.throws(() => assertShutdownRuntime({ ...valid, launchFlags }));
 });
 
 test('shutdown errors remove URL and path details before report storage', () => {

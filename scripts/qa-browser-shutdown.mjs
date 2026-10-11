@@ -29,6 +29,7 @@ import {
 import { withHostTimeout } from './performance/startupDiagnostics.mjs';
 import {
   BROWSER_SHUTDOWN_CLOSE_DEADLINE_MS,
+  assertShutdownRuntime,
   createBrowserShutdownReport,
   runBrowserShutdownControlMatrix,
   sanitizeShutdownError,
@@ -933,15 +934,15 @@ function waitForPageHide(readObservation, previousCount, timeoutMs) {
 
 export async function main() {
   activeReport = null;
-  if (process.platform !== 'win32')
-    throw new Error('Browser shutdown controls are Windows-only.');
-  if (
-    process.env.GEV_QA_SOFTWARE_RENDERING !== '1' ||
-    process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY !== '1'
-  )
-    throw new Error(
-      'Browser shutdown controls require the declared WebGL-only SwiftShader backend.',
-    );
+  const runtime = {
+    platform: process.platform,
+    launchFlags: fixtureBrowserArgs(),
+    rendererMode: {
+      softwareRendering: process.env.GEV_QA_SOFTWARE_RENDERING === '1',
+      webglOnly: process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1',
+    },
+  };
+  assertShutdownRuntime(runtime);
   const { out } = parseArgs(process.argv.slice(2));
   await mkdir(path.dirname(out), { recursive: true });
   const sourceCommit = gitText(['rev-parse', 'HEAD']);
@@ -967,7 +968,7 @@ export async function main() {
     sourceCleanAtStart,
     sourceCleanAtEnd: null,
     nodeVersion: process.version,
-    platform: process.platform,
+    ...runtime,
     osRelease: os.release().slice(0, 80),
     osVersion: os
       .version()
@@ -978,11 +979,6 @@ export async function main() {
     fixtureSha256,
     fixtureIdentity: 'blank-webgl2-cesium-installed-build-v1',
     fixtureBuildRecipe: 'direct-installed-cesium-static-tree-no-app-build',
-    launchFlags: fixtureBrowserArgs(),
-    rendererMode: {
-      softwareRendering: process.env.GEV_QA_SOFTWARE_RENDERING === '1',
-      webglOnly: process.env.GEV_QA_SWIFTSHADER_WEBGL_ONLY === '1',
-    },
     browserVersion: null,
   };
   if (!sourceCleanAtStart)

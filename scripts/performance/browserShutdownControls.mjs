@@ -13,6 +13,29 @@ export const BROWSER_SHUTDOWN_CONTROLS = Object.freeze([
 const SHA1 = /^[a-f0-9]{40}$/i;
 const SHA256 = /^[a-f0-9]{64}$/i;
 
+export function assertShutdownRuntime({ platform, rendererMode, launchFlags }) {
+  const expectedFlags = [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--use-gl=angle',
+    ...(rendererMode?.webglOnly
+      ? ['--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader']
+      : ['--use-angle=swiftshader']),
+  ];
+  if (
+    !['win32', 'darwin', 'linux'].includes(platform) ||
+    rendererMode?.softwareRendering !== true ||
+    typeof rendererMode?.webglOnly !== 'boolean' ||
+    !Array.isArray(launchFlags) ||
+    launchFlags.length !== expectedFlags.length ||
+    new Set(launchFlags).size !== expectedFlags.length ||
+    !expectedFlags.every((flag) => launchFlags.includes(flag))
+  )
+    throw new Error(
+      'Browser shutdown platform or declared software renderer is invalid.',
+    );
+}
+
 export function createBrowserShutdownReport(identity) {
   assertShutdownIdentity(identity);
   return {
@@ -28,6 +51,7 @@ export function createBrowserShutdownReport(identity) {
 }
 
 function assertShutdownIdentity(identity) {
+  assertShutdownRuntime(identity || {});
   if (
     !SHA1.test(identity?.sourceCommit || '') ||
     !SHA1.test(identity?.harnessCommit || '') ||
@@ -37,7 +61,6 @@ function assertShutdownIdentity(identity) {
       typeof identity.sourceCleanAtEnd !== 'boolean') ||
     typeof identity.nodeVersion !== 'string' ||
     !/^v\d+\.\d+\.\d+/.test(identity.nodeVersion) ||
-    identity.platform !== 'win32' ||
     typeof identity.osRelease !== 'string' ||
     identity.osRelease.length < 1 ||
     identity.osRelease.length > 80 ||
@@ -50,21 +73,7 @@ function assertShutdownIdentity(identity) {
     !SHA256.test(identity.fixtureSha256 || '') ||
     identity.fixtureIdentity !== 'blank-webgl2-cesium-installed-build-v1' ||
     identity.fixtureBuildRecipe !==
-      'direct-installed-cesium-static-tree-no-app-build' ||
-    identity.rendererMode?.softwareRendering !== true ||
-    identity.rendererMode?.webglOnly !== true ||
-    !Array.isArray(identity.launchFlags) ||
-    identity.launchFlags.length > 16 ||
-    identity.launchFlags.some(
-      (flag) => typeof flag !== 'string' || flag.length > 100,
-    ) ||
-    ![
-      '--no-sandbox',
-      '--disable-dev-shm-usage',
-      '--use-gl=angle',
-      '--use-angle=swiftshader-webgl',
-      '--enable-unsafe-swiftshader',
-    ].every((flag) => identity.launchFlags.includes(flag))
+      'direct-installed-cesium-static-tree-no-app-build'
   )
     throw new Error('Browser shutdown source or fixture identity is invalid.');
 }
