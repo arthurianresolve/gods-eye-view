@@ -11,10 +11,30 @@ const MEASURE_FRAMES = 180;
 // Pixel coordinates changed by the preserved first mixed/partitioned pair at
 // 9dacb7c. This is diagnostic targeting only; it does not affect rendering.
 const PRIOR_MISMATCH_PIXELS = Object.freeze([
-  [495, 18], [421, 285], [160, 338], [479, 338], [160, 339], [479, 339],
-  [152, 346], [153, 346], [486, 346], [487, 346], [152, 347], [487, 347],
-  [145, 353], [146, 353], [493, 353], [494, 353], [145, 354], [494, 354],
-  [319, 357], [320, 357], [319, 358], [320, 358], [319, 359], [320, 359],
+  [495, 18],
+  [421, 285],
+  [160, 338],
+  [479, 338],
+  [160, 339],
+  [479, 339],
+  [152, 346],
+  [153, 346],
+  [486, 346],
+  [487, 346],
+  [152, 347],
+  [487, 347],
+  [145, 353],
+  [146, 353],
+  [493, 353],
+  [494, 353],
+  [145, 354],
+  [494, 354],
+  [319, 357],
+  [320, 357],
+  [319, 358],
+  [320, 358],
+  [319, 359],
+  [320, 359],
 ]);
 const MAX_PROJECTED_POINTS_PER_PIXEL = 16;
 const MAX_RECORDED_FRUSTUMS = 16;
@@ -88,7 +108,9 @@ function snapshotRenderDiagnostics(
   const emittedCommands = Array.isArray(emittedCommandCapture?.commands)
     ? emittedCommandCapture.commands
     : [];
-  const emittedFrameNumber = Number.isInteger(emittedCommandCapture?.frameNumber)
+  const emittedFrameNumber = Number.isInteger(
+    emittedCommandCapture?.frameNumber,
+  )
     ? emittedCommandCapture.frameNumber
     : null;
   const truncatedEmittedCommandCount = Number.isInteger(
@@ -109,7 +131,8 @@ function snapshotRenderDiagnostics(
   const oit = view?.oit;
   let oitSupported = null;
   try {
-    if (typeof oit?.isSupported === 'function') oitSupported = oit.isSupported();
+    if (typeof oit?.isSupported === 'function')
+      oitSupported = oit.isSupported();
   } catch {
     oitSupported = null;
   }
@@ -133,7 +156,8 @@ function snapshotRenderDiagnostics(
           const limit = Math.min(commandCount, commands.length);
           for (let i = 0; i < limit; i++) {
             const ownerIndex = collections.indexOf(commands[i]?.owner);
-            if (ownerIndex >= 0) owners.push(ownerIndex === 0 ? 'core' : 'dense');
+            if (ownerIndex >= 0)
+              owners.push(ownerIndex === 0 ? 'core' : 'dense');
           }
           if (owners.length || commandCount > 0) {
             byPass.push({
@@ -141,7 +165,10 @@ function snapshotRenderDiagnostics(
               passName: passName(pass),
               commandCount,
               collectionOwners: owners.slice(0, MAX_RECORDED_POINT_COMMANDS),
-              truncatedOwners: Math.max(0, owners.length - MAX_RECORDED_POINT_COMMANDS),
+              truncatedOwners: Math.max(
+                0,
+                owners.length - MAX_RECORDED_POINT_COMMANDS,
+              ),
             });
           }
         }
@@ -167,12 +194,15 @@ function snapshotRenderDiagnostics(
   const scenePixelRatio = finiteOrNull(scene.pixelRatio);
   const czmPixelRatio = finiteOrNull(scene.context?.uniformState?.pixelRatio);
   const drawingBufferScale = {
-    x: Number.isFinite(scene.canvas?.clientWidth) && scene.canvas.clientWidth > 0
-      ? finiteOrNull(scene.drawingBufferWidth / scene.canvas.clientWidth)
-      : null,
-    y: Number.isFinite(scene.canvas?.clientHeight) && scene.canvas.clientHeight > 0
-      ? finiteOrNull(scene.drawingBufferHeight / scene.canvas.clientHeight)
-      : null,
+    x:
+      Number.isFinite(scene.canvas?.clientWidth) && scene.canvas.clientWidth > 0
+        ? finiteOrNull(scene.drawingBufferWidth / scene.canvas.clientWidth)
+        : null,
+    y:
+      Number.isFinite(scene.canvas?.clientHeight) &&
+      scene.canvas.clientHeight > 0
+        ? finiteOrNull(scene.drawingBufferHeight / scene.canvas.clientHeight)
+        : null,
   };
   if (typeof projection === 'function' && Number.isFinite(czmPixelRatio)) {
     for (const target of projectedTargets) {
@@ -181,7 +211,8 @@ function snapshotRenderDiagnostics(
     }
     for (const point of points) {
       const center = projection(scene, point.position, projected);
-      if (!center || !Number.isFinite(center.x) || !Number.isFinite(center.y)) continue;
+      if (!center || !Number.isFinite(center.x) || !Number.isFinite(center.y))
+        continue;
       projectedPointCount++;
       const pointSizePx = Number(point.pixelSize) * czmPixelRatio;
       if (!Number.isFinite(pointSizePx)) continue;
@@ -211,17 +242,20 @@ function snapshotRenderDiagnostics(
   return {
     cesiumVersion: typeof Cesium.VERSION === 'string' ? Cesium.VERSION : null,
     oit: {
-      requested: typeof scene.orderIndependentTranslucency === 'boolean'
-        ? scene.orderIndependentTranslucency
-        : null,
-      depthTextureAvailable: typeof scene.context?.depthTexture === 'boolean'
-        ? scene.context.depthTexture
-        : null,
+      requested:
+        typeof scene.orderIndependentTranslucency === 'boolean'
+          ? scene.orderIndependentTranslucency
+          : null,
+      depthTextureAvailable:
+        typeof scene.context?.depthTexture === 'boolean'
+          ? scene.context.depthTexture
+          : null,
       viewOitPresent: oit ? true : null,
       supported: typeof oitSupported === 'boolean' ? oitSupported : null,
-      active: typeof environmentState?.useOIT === 'boolean'
-        ? environmentState.useOIT
-        : null,
+      active:
+        typeof environmentState?.useOIT === 'boolean'
+          ? environmentState.useOIT
+          : null,
     },
     captureFrameNumber,
     emittedCommandFrameNumber: emittedFrameNumber,
@@ -257,7 +291,8 @@ function snapshotRenderDiagnostics(
       ? Math.max(0, frustumList.length - MAX_RECORDED_FRUSTUMS)
       : null,
     frustums,
-    projectedPointCount: typeof projection === 'function' ? projectedPointCount : null,
+    projectedPointCount:
+      typeof projection === 'function' ? projectedPointCount : null,
     projectedMismatchNeighborhoods: projectedTargets,
   };
 }
@@ -357,7 +392,11 @@ async function pixels(viewer, readFrameDiagnostics) {
           ? unsubscribe
           : () => scene.postRender.removeEventListener?.(onPostRender);
       diagnosticsTimer = setTimeout(
-        () => finish(reject, new Error('Matching postRender diagnostics timed out.')),
+        () =>
+          finish(
+            reject,
+            new Error('Matching postRender diagnostics timed out.'),
+          ),
         410,
       );
     } catch (error) {
@@ -397,7 +436,9 @@ async function pixels(viewer, readFrameDiagnostics) {
     return { capture, diagnostics };
   } finally {
     clearTimeout(diagnosticsTimer);
-    failDiagnostics?.(new Error('Capture completed before matching diagnostics.'));
+    failDiagnostics?.(
+      new Error('Capture completed before matching diagnostics.'),
+    );
     try {
       controller.abort();
     } catch {
@@ -464,7 +505,7 @@ function requireSamePixels(first, second, label) {
   throw new Error(`${label}: rendered pixels differ.`);
 }
 
-async function sample(viewer, mode) {
+async function sample(viewer, mode, boundsControl = null) {
   const scene = viewer.scene;
   const collections = [];
   const originalUpdates = [];
@@ -477,6 +518,9 @@ async function sample(viewer, mode) {
   let snapshotFrameNumber = null;
   let emittedPointCommands = [];
   let truncatedEmittedPointCommands = 0;
+  // Diagnostic intervention only, active after latency/submission measurement.
+  // Never promote command-bound replacement into the application renderer.
+  let captureBoundsOverride = null;
   const addCollection = () => {
     const collection = scene.primitives.add(
       new Cesium.PointPrimitiveCollection(),
@@ -496,16 +540,17 @@ async function sample(viewer, mode) {
         }
       }
       const commandList = frameState?.commandList;
-      const firstCommand = Array.isArray(commandList) ? commandList.length : null;
+      const firstCommand = Array.isArray(commandList)
+        ? commandList.length
+        : null;
       const commandFrameNumber = frameState?.frameNumber;
       if (!Number.isInteger(commandFrameNumber)) {
-        throw new Error('Cesium emitted command frameState.frameNumber was unavailable.');
+        throw new Error(
+          'Cesium emitted command frameState.frameNumber was unavailable.',
+        );
       }
       const result = update.call(this, frameState);
-      if (
-        firstCommand !== null &&
-        Array.isArray(commandList)
-      ) {
+      if (firstCommand !== null && Array.isArray(commandList)) {
         if (snapshotFrameNumber !== commandFrameNumber) {
           snapshotFrameNumber = commandFrameNumber;
           emittedPointCommands = [];
@@ -513,6 +558,9 @@ async function sample(viewer, mode) {
         }
         for (const command of commandList.slice(firstCommand)) {
           if (command?.owner === collection) {
+            if (captureBoundsOverride) {
+              command.boundingVolume = captureBoundsOverride;
+            }
             if (emittedPointCommands.length < MAX_RECORDED_POINT_COMMANDS) {
               emittedPointCommands.push(
                 snapshotPointCommand(command, collectionIndex, scene),
@@ -617,8 +665,9 @@ async function sample(viewer, mode) {
       .join('');
     captureCommandSnapshot = true;
     let captureResult;
-    try {
-      captureResult = await pixels(viewer, () =>
+    let boundsAttribution = null;
+    const captureCurrent = () =>
+      pixels(viewer, () =>
         snapshotRenderDiagnostics(
           scene,
           collections,
@@ -630,7 +679,63 @@ async function sample(viewer, mode) {
           points,
         ),
       );
+    try {
+      captureResult = await captureCurrent();
+      if (boundsControl) {
+        check(
+          mode === 'partitioned',
+          'Bounds attribution requires a partitioned sample.',
+        );
+        check(
+          positionSha256 === boundsControl.positionSha256,
+          'Bounds control positions differ.',
+        );
+        const bounds =
+          boundsControl.renderDiagnostics?.emittedPointCommands?.[0]?.bounds;
+        check(
+          bounds &&
+            [
+              bounds.center.x,
+              bounds.center.y,
+              bounds.center.z,
+              bounds.radius,
+            ].every(Number.isFinite),
+          'Mixed control bounds are unavailable.',
+        );
+        captureBoundsOverride = new Cesium.BoundingSphere(
+          new Cesium.Cartesian3(
+            bounds.center.x,
+            bounds.center.y,
+            bounds.center.z,
+          ),
+          bounds.radius,
+        );
+        const intervened = await captureCurrent();
+        captureBoundsOverride = null;
+        const restored = await captureCurrent();
+        check(
+          restored.capture.sha256 === captureResult.capture.sha256,
+          'Restoring natural command bounds did not restore the original image.',
+        );
+        boundsAttribution = {
+          scope:
+            'Capture-only command-bound intervention; not a production optimization or performance acceptance.',
+          sourceMixedPixels: boundsControl.pixels,
+          sourceMixedBounds: bounds,
+          naturalPixels: captureResult.capture.sha256,
+          intervenedPixels: intervened.capture.sha256,
+          restoredPixels: restored.capture.sha256,
+          interventionMatchesMixed:
+            intervened.capture.sha256 === boundsControl.pixels,
+          restorationMatchesNatural: true,
+          intervenedDiagnostics: intervened.diagnostics,
+          restoredDiagnostics: restored.diagnostics,
+          intervenedPng: intervened.capture.png,
+          restoredPng: restored.capture.png,
+        };
+      }
     } finally {
+      captureBoundsOverride = null;
       captureCommandSnapshot = false;
     }
     const { capture, diagnostics: renderDiagnostics } = captureResult;
@@ -649,6 +754,7 @@ async function sample(viewer, mode) {
       pixels: capture.sha256,
       positionSha256,
       renderDiagnostics,
+      boundsAttribution,
     };
     pixelFrames.set(snapshot, capture);
     check(snapshot.points === CORE + DENSE, 'Point population changed.');
@@ -671,13 +777,13 @@ run.addEventListener('click', async () => {
   output.textContent = '';
   pixelFrames = new WeakMap();
   report = {
-    schema: 'gev-point-collection-diagnostic/v2-command-diagnostics',
+    schema: 'gev-point-collection-diagnostic/v3-bounds-intervention',
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     timestamp: new Date().toISOString(),
     fixture: 'synthetic-840-core-10000-dense/v1',
     scope:
-      'Read-only emitted-command/frustum/OIT attribution on the existing fixed-frame comparison; no renderer setting changes and no GPU-time claim',
+      'Fixed-frame comparison plus capture-only command-bound intervention; original image gate is unchanged; no production optimization or GPU-time claim',
     warmupFrames: WARMUP_FRAMES,
     measurementFrames: MEASURE_FRAMES,
     pairs: 5,
@@ -731,7 +837,11 @@ run.addEventListener('click', async () => {
         pair % 2 ? ['partitioned', 'mixed'] : ['mixed', 'partitioned'];
       for (const mode of modes) {
         status.textContent = `Pair ${pair + 1}/5: ${mode}`;
-        const record = await sample(viewer, mode);
+        const record = await sample(
+          viewer,
+          mode,
+          mode === 'partitioned' ? report.controls[0] : null,
+        );
         record.pair = pair;
         report.samples.push(record);
       }
