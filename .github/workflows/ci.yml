@@ -63,7 +63,7 @@ on:
         type: boolean
         default: false
       shutdown_runner:
-        description: Free standard hosted OS for isolated browser shutdown controls
+        description: Free standard hosted OS for isolated shutdown or profile-recovery diagnostics
         type: choice
         options: [windows-latest, macos-latest, ubuntu-latest]
         default: windows-latest
@@ -284,7 +284,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && '["windows-latest"]' || '["windows-latest","macos-latest","ubuntu-latest"]') }}
+        # Keep the legacy mode name; its default remains Windows. The selected
+        # OS also permits whole-application follow-up to the shutdown controls.
+        os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && format('["{0}"]', inputs.shutdown_runner || 'windows-latest') || '["windows-latest","macos-latest","ubuntu-latest"]') }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
       # Exercise recovery with a deterministic software renderer on GPU-less bots.
@@ -292,7 +294,7 @@ jobs:
       GEV_QA_SOFTWARE_RENDERING: '1'
       # Windows install recovery uses the measured WebGL-only SwiftShader path.
       # Keep the full-driver software renderer available on other OS jobs.
-      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ matrix.os == 'windows-latest' && '1' || '0' }}
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (matrix.os == 'windows-latest' || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_renderer == 'swiftshader-webgl-only')) && '1' || '0' }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
