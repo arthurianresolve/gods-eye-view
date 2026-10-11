@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  countInfrastructureGraphics,
   compareInfrastructureRuntimeLifetimes,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
@@ -69,6 +70,7 @@ function sample(mode, caseId, pair) {
       entityCount: 16,
       surfaceEntityCount: 4,
       entitySurfaceGraphics: collection ? 0 : 4,
+      preservedGraphics: { points: 0, polylines: 7, polygons: 9 },
       rendererOwners: collection ? 1 : 0,
       rendererOwnerChildren: collection ? [2] : [],
       sceneDataSourceCount: 1,
@@ -134,6 +136,12 @@ function validReport() {
     schema: INFRASTRUCTURE_RUNTIME_SCHEMA,
     applicationCommit: commit,
     harnessCommit: commit,
+    environment: {
+      appCommit: commit,
+      harnessCommit: commit,
+      renderer: 'ANGLE test renderer',
+      drawingBuffer: { width: 960, height: 640 },
+    },
     source: {
       featureCount: 12,
       payloadBytes: 400,
@@ -307,5 +315,48 @@ test('runtime report recomputes comparisons and requires populated ownership bas
         expectedCommit: commit,
       }),
     /display was not warmed and restored/,
+  );
+});
+
+test('surface ownership excludes retained line geometry and still detects duplicate Graphics', () => {
+  const surface = { point: {}, polyline: {}, polygon: {} };
+  const line = { polyline: {} };
+  assert.deepEqual(countInfrastructureGraphics([surface, line], [surface]), {
+    surfaceGraphics: 1,
+    preservedGraphics: { points: 0, polylines: 1, polygons: 1 },
+  });
+  surface.point = surface.polyline = undefined;
+  assert.deepEqual(countInfrastructureGraphics([surface, line], [surface]), {
+    surfaceGraphics: 0,
+    preservedGraphics: { points: 0, polylines: 1, polygons: 1 },
+  });
+  surface.point = {};
+  assert.equal(
+    countInfrastructureGraphics([surface, line], [surface]).surfaceGraphics,
+    1,
+  );
+  const report = validReport();
+  report.lifetimes[1].samples[0].ownership.preservedGraphics.polylines--;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /Preserved source geometry inventory/,
+  );
+});
+
+test('runtime report requires observed renderer identity and drawing-buffer dimensions', () => {
+  const report = validReport();
+  report.environment.renderer = null;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /observed renderer environment/,
+  );
+  report.environment.renderer = 'ANGLE test renderer';
+  report.environment.drawingBuffer.width++;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, { expectedCommit: commit }),
+    /incomplete render or ownership evidence/,
   );
 });

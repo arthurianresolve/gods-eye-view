@@ -7,6 +7,7 @@ import { INFRASTRUCTURE_DATA_URLS } from '../../src/sources/infrastructureData.j
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
+  countInfrastructureGraphics,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
   INFRASTRUCTURE_RUNTIME_SCHEMA,
@@ -559,9 +560,11 @@ async function runLayerLifetime(
     check(anchor, 'Source anchor is not cartographic.');
     const renderState = () => {
       const owner = scanOwners(viewer);
-      const graphicCount = dataSource.entities.values.filter(
-        (entity) => entity.point || entity.polyline,
-      ).length;
+      const graphics = countInfrastructureGraphics(
+        dataSource.entities.values,
+        rows.map((row) => row.entity),
+      );
+      const graphicCount = graphics.surfaceGraphics;
       if (mode === 'entities')
         check(
           owner.count === 0 && graphicCount === rows.length,
@@ -588,6 +591,7 @@ async function runLayerLifetime(
         entityCount: dataSource.entities.values.length,
         surfaceEntityCount: rows.length,
         entitySurfaceGraphics: graphicCount,
+        preservedGraphics: graphics.preservedGraphics,
         rendererOwners: owner.count,
         rendererOwnerChildren: owner.childCounts,
       };
@@ -829,7 +833,11 @@ async function runDiagnostic() {
       secondsOfDay: renderTime.secondsOfDay,
       shouldAnimate: false,
     };
-    report.environment = await readPerformanceEnvironment(viewer.scene);
+    report.environment = readPerformanceEnvironment({
+      viewer,
+      appCommit: report.applicationCommit,
+      harnessCommit: report.harnessCommit,
+    });
     await runLayerLifetime(
       viewer,
       'entities',

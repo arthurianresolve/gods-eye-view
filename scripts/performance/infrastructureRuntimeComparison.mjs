@@ -91,6 +91,8 @@ function validateLifetime(lifetime, report) {
         row.frame.width <= 0 ||
         !Number.isSafeInteger(row.frame?.height) ||
         row.frame.height <= 0 ||
+        row.frame.width !== report.environment.drawingBuffer.width ||
+        row.frame.height !== report.environment.drawingBuffer.height ||
         !Number.isSafeInteger(row.frame?.completedStableFrames) ||
         row.frame.completedStableFrames < 3 ||
         JSON.stringify(row.clock) !== JSON.stringify(report.renderClock) ||
@@ -99,6 +101,11 @@ function validateLifetime(lifetime, report) {
         row.ownership.entityCount !== row.entityCount ||
         row.ownership.surfaceEntityCount !== row.surfaceCount ||
         !Number.isSafeInteger(row.ownership.entitySurfaceGraphics) ||
+        !['points', 'polylines', 'polygons'].every(
+          (key) =>
+            Number.isSafeInteger(row.ownership.preservedGraphics?.[key]) &&
+            row.ownership.preservedGraphics[key] >= 0,
+        ) ||
         !Number.isSafeInteger(row.ownership.rendererOwners) ||
         row.ownership.sceneDataSourceCount !==
           lifetime.sceneBaseline.dataSources + 1 ||
@@ -184,6 +191,17 @@ export function validateInfrastructureRuntimeReport(
     report.harnessCommit !== expectedCommit
   )
     fail('Infrastructure runtime source identity changed.');
+  if (
+    report.environment?.appCommit !== expectedCommit ||
+    report.environment?.harnessCommit !== expectedCommit ||
+    typeof report.environment?.renderer !== 'string' ||
+    !report.environment.renderer ||
+    !Number.isSafeInteger(report.environment?.drawingBuffer?.width) ||
+    report.environment.drawingBuffer.width <= 0 ||
+    !Number.isSafeInteger(report.environment?.drawingBuffer?.height) ||
+    report.environment.drawingBuffer.height <= 0
+  )
+    fail('Infrastructure observed renderer environment is missing or invalid.');
   if (report.status !== 'passed' || report.error || report.failedPhase)
     fail('Infrastructure runtime comparison did not pass.');
   if (
@@ -323,6 +341,11 @@ export function compareInfrastructureRuntimeLifetimes(baseline, candidate) {
       const equal = Object.fromEntries(
         exactFields.map((field) => [field, left[field] === right[field]]),
       );
+      if (
+        JSON.stringify(left.ownership.preservedGraphics) !==
+        JSON.stringify(right.ownership.preservedGraphics)
+      )
+        fail('Preserved source geometry inventory differs between renderers.');
       const picksEqual =
         JSON.stringify(left.pointPick) === JSON.stringify(right.pointPick) &&
         JSON.stringify(left.stemPick) === JSON.stringify(right.stemPick);
@@ -350,4 +373,21 @@ export function compareInfrastructureRuntimeLifetimes(baseline, candidate) {
     }
   }
   return comparisons;
+}
+
+/** Generated surface Graphics and original source geometry have separate owners. */
+export function countInfrastructureGraphics(entities, surfaceEntities) {
+  const surfaces = new Set(surfaceEntities);
+  let surfaceGraphics = 0;
+  const preservedGraphics = { points: 0, polylines: 0, polygons: 0 };
+  for (const entity of entities) {
+    if (surfaces.has(entity)) {
+      if (entity.point || entity.polyline) surfaceGraphics++;
+    } else {
+      if (entity.point) preservedGraphics.points++;
+      if (entity.polyline) preservedGraphics.polylines++;
+    }
+    if (entity.polygon) preservedGraphics.polygons++;
+  }
+  return { surfaceGraphics, preservedGraphics };
 }

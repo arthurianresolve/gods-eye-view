@@ -203,6 +203,12 @@ try {
         '#result',
         (element) => JSON.parse(element.textContent),
       );
+      if (report.infrastructureCollections.status !== 'passed')
+        throw new Error(
+          'Infrastructure fixture failed: ' +
+            (report.infrastructureCollections.error?.message ||
+              'incomplete report'),
+        );
       report.infrastructureGraphics = await readBrowserGraphicsInfo(browser);
       report.infrastructureRenderingEvidence = classifyRenderer(
         report.infrastructureCollections.environment?.renderer,
