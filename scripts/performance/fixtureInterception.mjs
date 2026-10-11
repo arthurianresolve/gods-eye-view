@@ -43,7 +43,9 @@ export async function interceptFixtureSession(
   onError,
   { onFulfilled } = {},
 ) {
-  client.on('Fetch.requestPaused', async (event) => {
+  let active = true;
+  const onPaused = async (event) => {
+    if (!active) return;
     let command = null;
     try {
       const [method, params] = await fixtureRequestCommand(
@@ -51,8 +53,10 @@ export async function interceptFixtureSession(
         base,
         respond,
       );
+      if (!active) return;
       command = method;
       await client.send(method, params);
+      if (!active) return;
       if (method === 'Fetch.fulfillRequest') {
         try {
           onFulfilled?.({
@@ -66,6 +70,9 @@ export async function interceptFixtureSession(
         }
       }
     } catch (error) {
+      // The owner releases this observer before disabling Fetch. Work already
+      // queued for that discarded document must not publish into a new one.
+      if (!active) return;
       // A broken fixture must not leave a worker fetch permanently suspended.
       await client
         .send('Fetch.failRequest', {
@@ -80,6 +87,18 @@ export async function interceptFixtureSession(
       )
         onError?.(error, { command, stage: 'request-resolution' });
     }
-  });
-  await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+  };
+  const dispose = () => {
+    if (!active) return;
+    active = false;
+    client.off?.('Fetch.requestPaused', onPaused);
+  };
+  client.on('Fetch.requestPaused', onPaused);
+  try {
+    await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+    return { dispose };
+  } catch (error) {
+    dispose();
+    throw error;
+  }
 }

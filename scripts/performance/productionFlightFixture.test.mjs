@@ -320,6 +320,40 @@ test('phased wall clock advances only through declared forward phases and caps b
   assert.equal(target.performance.now(), performanceTime);
 });
 
+test('fixture ownership releases late protocol work without suppressing active failures', async () => {
+  for (const phase of ['respond', 'send', 'active']) {
+    const client = new EventEmitter();
+    const errors = [], deliveries = [], calls = [];
+    let release;
+    const pending = new Promise((resolve) => { release = resolve; });
+    client.send = async (method) => {
+      calls.push(method);
+      if (method === 'Fetch.enable' || method === 'Fetch.failRequest') return;
+      if (phase === 'send') await pending;
+      throw new Error('Protocol error (Fetch.continueRequest): Fetch domain is not enabled');
+    };
+    const owner = await interceptFixtureSession(client, BASE,
+      async () => { if (phase === 'respond') await pending; return null; },
+      (error, detail) => errors.push({ message: error.message, ...detail }),
+      { onFulfilled: (value) => deliveries.push(value) });
+    const handler = client.listeners('Fetch.requestPaused')[0];
+    const work = handler({ requestId: 'owned', request: { url: `${BASE}asset.js`, method: 'GET' } });
+    await new Promise((resolve) => setImmediate(resolve));
+    if (phase !== 'active') owner.dispose();
+    release();
+    await work;
+    if (phase === 'active') {
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].command, 'Fetch.continueRequest');
+      assert.equal(errors[0].stage, 'request-resolution');
+    } else assert.deepEqual(errors, []);
+    if (phase === 'respond') assert.deepEqual(calls, ['Fetch.enable']);
+    assert.deepEqual(deliveries, []);
+    owner.dispose(); owner.dispose();
+    assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+  }
+});
+
 test('completed-render settling removes its listener on render, timeout, and cancellation', async () => {
   const { settleCompletedRender } =
     await import('./productionFlightFixture.mjs');

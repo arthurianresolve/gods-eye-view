@@ -420,6 +420,7 @@ if (ownedBrowserPidFile) {
 
 const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
+const fixtureInterceptionOwners = new Map();
 const performanceDiagnosticsDocuments = [];
 const earlyRendererProbes = new Map();
 const earlyRendererProbeCleanup = [];
@@ -471,7 +472,7 @@ async function configureFlightFixturePage(
   );
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);
-  await interceptFixtureSession(
+  const fixtureOwner = await interceptFixtureSession(
     session,
     new URL(url).origin + '/',
     (requestUrl, request) =>
@@ -496,6 +497,7 @@ async function configureFlightFixturePage(
       ? { onFulfilled: deliveryObserver.onFulfilled }
       : undefined,
   );
+  fixtureInterceptionOwners.set(session, fixtureOwner);
   return session;
 }
 
@@ -567,6 +569,8 @@ async function settleProviderRenderAtBoundary(
 
 async function releaseFlightFixtureSession(session) {
   if (!session) return;
+  fixtureInterceptionOwners.get(session)?.dispose();
+  fixtureInterceptionOwners.delete(session);
   const index = fixtureInterceptionSessions.indexOf(session);
   if (index >= 0) fixtureInterceptionSessions.splice(index, 1);
   await session.send('Fetch.disable').catch(() => {});
@@ -2154,6 +2158,7 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
+  for (const owner of fixtureInterceptionOwners.values()) owner.dispose();
   for (const targetPage of earlyRendererProbes.keys()) {
     try {
       await closeEarlyRendererProbeDocument(targetPage);
@@ -2163,10 +2168,8 @@ try {
       process.exitCode = 1;
     }
   }
-  for (const session of fixtureInterceptionSessions) {
-    await session.send('Fetch.disable').catch(() => {});
-    await session.detach().catch(() => {});
-  }
+  for (const session of [...fixtureInterceptionSessions])
+    await releaseFlightFixtureSession(session);
   try {
     await browser.close();
   } catch (error) {
