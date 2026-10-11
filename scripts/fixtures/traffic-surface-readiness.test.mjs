@@ -47,6 +47,12 @@ function createHarness({ tilesetLoaded = false, globeLoaded = false } = {}) {
     postRender: new MockEvent(),
     renderError: new MockEvent(),
     globe: {
+      tileLoadProgressEvent: new MockEvent(),
+      _surface: {
+        _tileLoadQueueHigh: [],
+        _tileLoadQueueMedium: [],
+        _tileLoadQueueLow: [],
+      },
       get tilesLoaded() {
         return globeLoaded;
       },
@@ -216,6 +222,16 @@ test('local surface timeout preserves bounded Cesium readiness diagnostics and r
     }),
   });
   harness.scene.postRender.raise();
+  const queuedTile = {
+    level: 12,
+    state: 1,
+    renderable: false,
+    data: { terrainState: 3 },
+  };
+  const queue = Array(25).fill(queuedTile);
+  harness.scene.globe._surface._tileLoadQueueHigh = queue;
+  for (let index = 0; index < 12; index++)
+    harness.scene.globe.tileLoadProgressEvent.raise(index + 25);
   harness.fireTimer();
 
   await assert.rejects(promise, /Local fixture tiles did not settle/);
@@ -239,11 +255,20 @@ test('local surface timeout preserves bounded Cesium readiness diagnostics and r
   );
   assert.equal(JSON.stringify(progress).includes('private'), false);
   assert.equal(progress.renderErrors.length, 1);
+  assert.equal(progress.globeProgressEvents, 12);
+  assert.equal(progress.globeLoadProgress.length, 8);
+  assert.equal(progress.globeLoadProgress[0].pendingTiles, 29);
+  assert.equal(progress.globeQueues.high.count, 25);
+  assert.equal(progress.globeQueues.high.sample.length, 16);
+  assert.equal(progress.globeQueues.high.sample[0].terrainState, 3);
+  assert.equal(harness.scene.globe._surface._tileLoadQueueHigh, queue);
+  assert.equal(queue.length, 25);
   assert.equal(harness.tileset.tileVisible.listeners.size, 0);
   assert.equal(harness.tileset.loadProgress.listeners.size, 0);
   assert.equal(harness.tileset.tileFailed.listeners.size, 0);
   assert.equal(harness.scene.renderError.listeners.size, 0);
   assert.equal(harness.scene.postRender.listeners.size, 0);
+  assert.equal(harness.scene.globe.tileLoadProgressEvent.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
   assert.equal(harness.timers.size, 0);
   assert.equal(harness.urls.size, 0);
@@ -280,6 +305,7 @@ test('visible completed tile resolves readiness and removes every temporary obse
   assert.equal(harness.tileset.tileFailed.listeners.size, 0);
   assert.equal(harness.scene.renderError.listeners.size, 0);
   assert.equal(harness.scene.postRender.listeners.size, 0);
+  assert.equal(harness.scene.globe.tileLoadProgressEvent.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
   assert.equal(harness.timers.size, 0);
   assert.equal(harness.urls.size, 2);
@@ -311,6 +337,7 @@ test('readiness predicate exceptions preserve diagnostics and release frame reso
   assert.equal(harness.tileset.tileFailed.listeners.size, 0);
   assert.equal(harness.scene.renderError.listeners.size, 0);
   assert.equal(harness.scene.postRender.listeners.size, 0);
+  assert.equal(harness.scene.globe.tileLoadProgressEvent.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
   assert.equal(harness.timers.size, 0);
   assert.equal(harness.urls.size, 0);

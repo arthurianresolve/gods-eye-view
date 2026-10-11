@@ -52,7 +52,20 @@
         "message": "Traffic fixture failed: Timed out waiting for retention reconciliation"
       },
       "completedTrials": 0
+    },
+    {
+      "run": "38121171275",
+      "commit": "d2d247674f0abfc4fb32a7be06dd180ab0a1faa3",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121171275",
+      "file": "traffic-38121171275.json",
+      "sha256": "92b21441f97004b1d1222ebf277094a7ef78b89b2a2d5d5f6070ddeb7349afa6",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Local fixture tiles did not settle"
+      },
+      "completedTrials": 0
     }
   ],
-  "acceptance": "Neither run provides a traffic optimization comparison or physical desktop hardware acceptance."
+  "acceptance": "None of these failed runs provides a completed traffic optimization comparison or physical desktop hardware acceptance."
 }

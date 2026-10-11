@@ -178,6 +178,7 @@ async function addFixtureTileset(viewerInstance) {
   let removeLoadProgress = null;
   let removeTileFailed = null;
   let removeRenderError = null;
+  let removeGlobeProgress = null;
   let settleTimer = null;
   let inspectFrame = null;
   let readinessSettled = false;
@@ -186,6 +187,8 @@ async function addFixtureTileset(viewerInstance) {
   const tileFailureRecords = [];
   const renderErrorRecords = [];
   const readinessReadErrors = [];
+  const globeProgressRecords = [];
+  let globeProgressEvents = 0;
   const diagnosticMessage = (error, fallback) =>
     String(error?.message || error || fallback)
       .replace(/(?:https?|blob|data|file):[^\s"'<>]+/gi, '[redacted-url]')
@@ -218,6 +221,8 @@ async function addFixtureTileset(viewerInstance) {
     removeTileFailed = null;
     removeOwned(removeRenderError, 'scene-render-error');
     removeRenderError = null;
+    removeOwned(removeGlobeProgress, 'globe-load-progress');
+    removeGlobeProgress = null;
     removeOwned(removeTileVisibleListener, 'tileset-tile-visible');
     removeTileVisibleListener = null;
   };
@@ -231,6 +236,9 @@ async function addFixtureTileset(viewerInstance) {
       'globe.tilesLoaded',
       () => viewerInstance.scene.globe?.tilesLoaded,
     ),
+    globeProgressEvents,
+    globeLoadProgress: globeProgressRecords.slice(-8),
+    globeQueues: globeQueueSnapshot(),
     postRenderFrame: surfacePostRenderFrame,
     latestVisibleTileContent: latestVisibleTileContent.slice(0, 16),
     latestVisibleTileContentOverflow,
@@ -240,6 +248,36 @@ async function addFixtureTileset(viewerInstance) {
     readinessReadErrors: readinessReadErrors.slice(-8),
     observerCleanupErrors: diagnosticCleanupErrors.slice(-8),
   });
+  // Read-only, bounded diagnostic of the pinned engine's terrain queue. Never
+  // mutate these queues or discard their work to make readiness appear true.
+  function globeQueueSnapshot() {
+    const surface = viewerInstance.scene.globe?._surface;
+    if (!surface) return null;
+    const result = {};
+    for (const [name, field] of [
+      ['high', '_tileLoadQueueHigh'],
+      ['medium', '_tileLoadQueueMedium'],
+      ['low', '_tileLoadQueueLow'],
+    ]) {
+      const queue = surface[field];
+      if (!Array.isArray(queue)) {
+        result[name] = null;
+        continue;
+      }
+      result[name] = {
+        count: queue.length,
+        sample: queue.slice(0, 16).map((tile) => ({
+          level: tile.level,
+          state: tile.state,
+          renderable: tile.renderable,
+          terrainState: tile.data?.terrainState ?? null,
+          hasMesh: Boolean(tile.data?.mesh),
+          hasVertexArray: Boolean(tile.data?.vertexArray),
+        })),
+      };
+    }
+    return result;
+  }
   function readReadinessValue(label, read) {
     try {
       const value = read();
@@ -329,6 +367,18 @@ async function addFixtureTileset(viewerInstance) {
         if (renderErrorRecords.length > 8) renderErrorRecords.shift();
       },
     );
+    removeGlobeProgress =
+      viewerInstance.scene.globe.tileLoadProgressEvent?.addEventListener?.(
+        (pendingTiles) => {
+          globeProgressEvents++;
+          globeProgressRecords.push({
+            atMonotonicMs: Number(performance.now().toFixed(3)),
+            pendingTiles,
+            queues: globeQueueSnapshot(),
+          });
+          if (globeProgressRecords.length > 8) globeProgressRecords.shift();
+        },
+      );
     phase = 'wait-rendered-content';
     removePostRender = viewerInstance.scene.postRender.addEventListener(() => {
       surfacePostRenderFrame++;
@@ -385,6 +435,7 @@ async function addFixtureTileset(viewerInstance) {
     canonicalTileset.root.content.uri = 'generated-glb://traffic-ground-plane';
     report.fixtureSurface = {
       kind: 'generated-local-3d-tiles-1.1-plane',
+      readiness: readinessSnapshot(),
       glbSha256: await bytesHash(glb),
       tilesetJsonSha256: await bytesHash(
         new TextEncoder().encode(JSON.stringify(canonicalTileset)),
