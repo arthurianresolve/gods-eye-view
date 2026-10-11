@@ -10,9 +10,12 @@ export function consumeInBatches(iterator, options = {}) {
     budgetMs = 4,
     deferStart = false,
     onBatch,
+    onStep,
   } = options;
   if (onBatch !== undefined && typeof onBatch !== 'function')
     throw new TypeError('onBatch must be a function when provided.');
+  if (onStep !== undefined && typeof onStep !== 'function')
+    throw new TypeError('onStep must be a function when provided.');
   const schedule = options.schedule ?? defaultScheduler.schedule;
   const cancel =
     options.cancel ??
@@ -55,7 +58,13 @@ export function consumeInBatches(iterator, options = {}) {
           : null;
         do {
           if (signal?.aborted) return abort();
+          const stepStarted = onStep ? now() : null;
           const next = iterator.next();
+          if (onStep)
+            onStep(
+              Math.max(0, now() - stepStarted),
+              next.done ? 'completed' : next.value,
+            );
           if (finished) return;
           if (next.done) {
             if (onBatch)

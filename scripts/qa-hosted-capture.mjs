@@ -134,10 +134,22 @@ try {
     report.reason = report.hardwareRenderingAvailable
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
-    await page.goto(url.replace('capture-matrix.html', 'import-batches.html'), {
+    const profileImports = process.argv.includes('--import-attribution');
+    const importStepDiagnostics = process.argv.includes(
+      '--import-step-diagnostics',
+    );
+    if (profileImports && importStepDiagnostics)
+      throw new Error(
+        'CPU profile and per-step diagnostics must be separate runs.',
+      );
+    const importFixtureUrl = new URL(
+      url.replace('capture-matrix.html', 'import-batches.html'),
+    );
+    if (importStepDiagnostics)
+      importFixtureUrl.searchParams.set('step-diagnostics', '1');
+    await page.goto(importFixtureUrl.href, {
       waitUntil: 'networkidle0',
     });
-    const profileImports = process.argv.includes('--import-attribution');
     const cpuProfile = profileImports
       ? await startFixtureCpuProfile(page)
       : null;
@@ -145,6 +157,11 @@ try {
       report.performanceAcceptanceEligible = false;
       report.profilingScope =
         'Separate CPU attribution run; all latency and heartbeat values are profiled and excluded from performance acceptance.';
+    }
+    if (importStepDiagnostics) {
+      report.performanceAcceptanceEligible = false;
+      report.stepDiagnosticsScope =
+        'Per-iterator.next diagnosis run; the extra clock reads and aggregation exclude every latency and heartbeat value from performance acceptance.';
     }
     try {
       await page.click('#run');
@@ -156,6 +173,7 @@ try {
         JSON.parse(element.textContent),
       );
       if (profileImports) report.importBatches.profiled = true;
+      if (importStepDiagnostics) report.importBatches.stepDiagnostic = true;
     } finally {
       if (cpuProfile) {
         const { profile, ...summary } = await cpuProfile.stop();

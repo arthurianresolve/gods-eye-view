@@ -149,6 +149,42 @@ test('optional batch observation measures owned wakes without replacing the sche
   assert.equal(observations[2].yielded, false);
 });
 
+test('optional step observation reports bounded iterator work without changing results', async () => {
+  let clock = 0;
+  const queued = [];
+  const steps = [];
+  function* work() {
+    clock += 2;
+    yield 'entity';
+    clock += 5;
+    yield 'coordinate-chunk';
+    clock += 1;
+    return 'complete';
+  }
+  const pending = consumeInBatches(work(), {
+    budgetMs: 4,
+    now: () => clock,
+    schedule(callback) {
+      queued.push(callback);
+      return callback;
+    },
+    cancel(callback) {
+      const index = queued.indexOf(callback);
+      if (index >= 0) queued.splice(index, 1);
+    },
+    onStep(activeMs, stage) {
+      steps.push({ activeMs, stage });
+    },
+  });
+  while (queued.length) queued.shift()();
+  assert.equal(await pending, 'complete');
+  assert.deepEqual(steps, [
+    { activeMs: 2, stage: 'entity' },
+    { activeMs: 5, stage: 'coordinate-chunk' },
+    { activeMs: 1, stage: 'completed' },
+  ]);
+});
+
 test('cancellation from a batch observer cannot enqueue another wake', async () => {
   for (const deferStart of [false, true]) {
     const controller = new AbortController();

@@ -33,7 +33,8 @@ function* positions(coordinates) {
   const result = new Array(coordinates.length);
   for (let index = 0; index < coordinates.length; index++) {
     result[index] = position(coordinates[index]);
-    if ((index + 1) % COORDINATE_PREPARATION_CHUNK === 0) yield;
+    if ((index + 1) % COORDINATE_PREPARATION_CHUNK === 0)
+      yield 'coordinate-chunk';
   }
   return result;
 }
@@ -127,7 +128,7 @@ export function createImportedGeometryLayer({
           },
         };
       } else {
-        yield;
+        yield 'unsupported-feature';
         continue;
       }
       const anchor =
@@ -188,7 +189,7 @@ export function createImportedGeometryLayer({
           properties: feature.properties,
         },
       });
-      yield;
+      yield 'entity';
     }
     setOverlayEntries(IMPORTED_LAYER_ID, overlayEntries, {
       cohortLimit: MAX_IMPORTED_OVERLAY_LABELS,

@@ -34,6 +34,21 @@ function batchMetrics() {
   };
 }
 
+function iteratorSteps() {
+  return {
+    totalSteps: 3,
+    overBudgetSteps: 1,
+    maxStepMs: 4.5,
+    stages: {
+      entity: { count: 1, overBudget: 1, maxMs: 4.5 },
+      'coordinate-chunk': { count: 1, overBudget: 0, maxMs: 1 },
+      'unsupported-feature': { count: 0, overBudget: 0, maxMs: 0 },
+      completed: { count: 1, overBudget: 0, maxMs: 0.5 },
+      other: { count: 0, overBudget: 0, maxMs: 0 },
+    },
+  };
+}
+
 function geometryRows() {
   return [
     {
@@ -131,6 +146,32 @@ test('accepts complete paired production-scheduler evidence', () => {
     valid: true,
     errors: [],
   });
+});
+
+test('accepts bounded iterator-step attribution only when excluded from acceptance', () => {
+  const report = validReport();
+  report.performanceAcceptanceEligible = false;
+  report.cooperativeScheduler.stepObserver =
+    'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance';
+  for (const sample of report.samples)
+    if (sample.mode === 'cooperative')
+      sample.batchMetrics.iteratorSteps = iteratorSteps();
+  report.largeGeometry.cooperative.batchMetrics.iteratorSteps = iteratorSteps();
+  assert.deepEqual(validateImportBatchSchedulerReport(report, commit), {
+    valid: true,
+    errors: [],
+  });
+
+  report.samples.find(
+    (sample) => sample.mode === 'cooperative',
+  ).batchMetrics.iteratorSteps.stages.entity.count = 2;
+  const invalid = validateImportBatchSchedulerReport(report, commit);
+  assert.equal(invalid.valid, false);
+  assert.ok(
+    invalid.errors.some((error) =>
+      error.includes('stage totals do not reconcile'),
+    ),
+  );
 });
 
 test('rejects a timer-injected candidate even when status says passed', () => {

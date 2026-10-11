@@ -95,6 +95,21 @@ const largeGeometryImports = [
 ];
 let report;
 let activeBatchMetrics = null;
+let collectIteratorStepDiagnostics = false;
+function createIteratorStepMetrics() {
+  return {
+    totalSteps: 0,
+    overBudgetSteps: 0,
+    maxStepMs: 0,
+    stages: {
+      entity: { count: 0, overBudget: 0, maxMs: 0 },
+      'coordinate-chunk': { count: 0, overBudget: 0, maxMs: 0 },
+      'unsupported-feature': { count: 0, overBudget: 0, maxMs: 0 },
+      completed: { count: 0, overBudget: 0, maxMs: 0 },
+      other: { count: 0, overBudget: 0, maxMs: 0 },
+    },
+  };
+}
 function createBatchMetrics() {
   return {
     budgetMs: 4,
@@ -106,7 +121,24 @@ function createBatchMetrics() {
     backends: {},
     samples: [],
     truncatedSamples: 0,
+    ...(collectIteratorStepDiagnostics
+      ? { iteratorSteps: createIteratorStepMetrics() }
+      : {}),
   };
+}
+function recordIteratorStep(activeMs, stageName) {
+  const metrics = activeBatchMetrics?.iteratorSteps;
+  if (!metrics) return;
+  const stage = Object.hasOwn(metrics.stages, stageName) ? stageName : 'other';
+  const stageMetrics = metrics.stages[stage];
+  metrics.totalSteps += 1;
+  metrics.maxStepMs = Math.max(metrics.maxStepMs, activeMs);
+  stageMetrics.count += 1;
+  stageMetrics.maxMs = Math.max(stageMetrics.maxMs, activeMs);
+  if (activeMs > activeBatchMetrics.budgetMs) {
+    metrics.overBudgetSteps += 1;
+    stageMetrics.overBudget += 1;
+  }
 }
 function recordBatch(batch) {
   if (!activeBatchMetrics) return;
@@ -135,7 +167,7 @@ function recordBatch(batch) {
   else metrics.truncatedSamples++;
 }
 function metricSnapshot(metrics) {
-  return {
+  const snapshot = {
     budgetMs: metrics.budgetMs,
     totalBatches: metrics.totalBatches,
     yieldedBatches: metrics.yieldedBatches,
@@ -146,6 +178,20 @@ function metricSnapshot(metrics) {
     samples: metrics.samples.map((sample) => ({ ...sample })),
     truncatedSamples: metrics.truncatedSamples,
   };
+  if (metrics.iteratorSteps) {
+    snapshot.iteratorSteps = {
+      totalSteps: metrics.iteratorSteps.totalSteps,
+      overBudgetSteps: metrics.iteratorSteps.overBudgetSteps,
+      maxStepMs: metrics.iteratorSteps.maxStepMs,
+      stages: Object.fromEntries(
+        Object.entries(metrics.iteratorSteps.stages).map(([stage, values]) => [
+          stage,
+          { ...values },
+        ]),
+      ),
+    };
+  }
+  return snapshot;
 }
 async function geometrySnapshot(viewer, workspaceId) {
   const prefix = `gev-import:${workspaceId}:scheduler-probe:`;
@@ -484,6 +530,7 @@ run.addEventListener('click', async () => {
     runOptions.get('diag') === '1' ||
     ['initial-load', 'steady-population'].includes(workload) ||
     requestedViewer === 'cesium';
+  collectIteratorStepDiagnostics = runOptions.get('step-diagnostics') === '1';
   frameDiagnostics = diagnosticRun ? createImportFrameDiagnostics() : null;
   const preserveDrawingBuffer = document.querySelector('#preserve').checked;
   report = {
@@ -523,10 +570,20 @@ run.addEventListener('click', async () => {
       cancelOverride: false,
       targetBudgetMs: 4,
       batchObserver: 'onBatch metrics only; does not replace the scheduler',
+      stepObserver: collectIteratorStepDiagnostics
+        ? 'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance'
+        : 'disabled',
       backendCounts: {},
     },
     scope:
       'isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim',
+    ...(collectIteratorStepDiagnostics
+      ? {
+          performanceAcceptanceEligible: false,
+          stepDiagnosticScope:
+            'Diagnostic-only per-next perf.now sampling and aggregation. All import/capture latency and heartbeat values from this run are excluded from performance acceptance.',
+        }
+      : {}),
     checks: [],
     samples: [],
     renderErrors: [],
@@ -594,7 +651,12 @@ run.addEventListener('click', async () => {
     });
     layer = createImportedGeometryLayer({
       viewer,
-      batchOptions: { onBatch: recordBatch },
+      batchOptions: {
+        onBatch: recordBatch,
+        ...(collectIteratorStepDiagnostics
+          ? { onStep: recordIteratorStep }
+          : {}),
+      },
     });
     status.textContent = diagnosticRun
       ? 'Diagnostic only: warming the complete 5,000-point population'

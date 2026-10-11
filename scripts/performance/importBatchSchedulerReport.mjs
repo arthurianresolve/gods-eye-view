@@ -15,7 +15,12 @@ function add(errors, valid, message) {
   if (!valid) errors.push(message);
 }
 
-function validateBatchMetrics(metrics, errors, name, { requireWake }) {
+function validateBatchMetrics(
+  metrics,
+  errors,
+  name,
+  { requireWake, requireStepMetrics = false },
+) {
   add(
     errors,
     metrics && typeof metrics === 'object',
@@ -117,6 +122,72 @@ function validateBatchMetrics(metrics, errors, name, { requireWake }) {
       `${name} sample ${index} yield state missing`,
     );
   }
+  const steps = metrics.iteratorSteps;
+  add(
+    errors,
+    requireStepMetrics
+      ? steps && typeof steps === 'object'
+      : steps === undefined,
+    `${name} iterator-step diagnostic mode mismatch`,
+  );
+  if (!requireStepMetrics || !steps || typeof steps !== 'object') return;
+  const stages = [
+    'entity',
+    'coordinate-chunk',
+    'unsupported-feature',
+    'completed',
+    'other',
+  ];
+  add(
+    errors,
+    Number.isInteger(steps.totalSteps) && steps.totalSteps > 0,
+    `${name} iterator step count is invalid`,
+  );
+  add(
+    errors,
+    Number.isInteger(steps.overBudgetSteps) &&
+      steps.overBudgetSteps >= 0 &&
+      steps.overBudgetSteps <= steps.totalSteps,
+    `${name} iterator over-budget count is invalid`,
+  );
+  add(errors, finite(steps.maxStepMs), `${name} maximum step time is invalid`);
+  const stageRows = steps.stages;
+  add(
+    errors,
+    stageRows &&
+      typeof stageRows === 'object' &&
+      !Array.isArray(stageRows) &&
+      JSON.stringify(Object.keys(stageRows).sort()) ===
+        JSON.stringify([...stages].sort()),
+    `${name} iterator stage counts are incomplete`,
+  );
+  if (!stageRows || typeof stageRows !== 'object' || Array.isArray(stageRows))
+    return;
+  let stageCount = 0;
+  let stageOverBudget = 0;
+  for (const stage of stages) {
+    const row = stageRows[stage];
+    add(
+      errors,
+      row &&
+        Number.isInteger(row.count) &&
+        row.count >= 0 &&
+        Number.isInteger(row.overBudget) &&
+        row.overBudget >= 0 &&
+        row.overBudget <= row.count &&
+        finite(row.maxMs),
+      `${name} iterator stage ${stage} is invalid`,
+    );
+    if (row && Number.isInteger(row.count)) stageCount += row.count;
+    if (row && Number.isInteger(row.overBudget))
+      stageOverBudget += row.overBudget;
+  }
+  add(
+    errors,
+    stageCount === steps.totalSteps &&
+      stageOverBudget === steps.overBudgetSteps,
+    `${name} iterator stage totals do not reconcile`,
+  );
 }
 
 export function validateImportBatchSchedulerReport(report, expectedCommit) {
@@ -164,6 +235,23 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
       'onBatch metrics only; does not replace the scheduler',
     'scheduler observer contract changed',
   );
+  const stepObserver = scheduler?.stepObserver;
+  const requireStepMetrics =
+    stepObserver ===
+    'per-iterator-next timing, grouped by existing yield stage; diagnostic overhead excluded from acceptance';
+  add(
+    errors,
+    stepObserver === undefined ||
+      stepObserver === 'disabled' ||
+      requireStepMetrics,
+    'unknown per-step observer contract',
+  );
+  if (requireStepMetrics)
+    add(
+      errors,
+      report?.performanceAcceptanceEligible === false,
+      'per-step diagnostic must be excluded from performance acceptance',
+    );
   const backendCounts = scheduler?.backendCounts;
   add(
     errors,
@@ -243,6 +331,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
       `pair-${sample.pair}-cooperative`,
       {
         requireWake: true,
+        requireStepMetrics,
       },
     );
   for (const sample of synchronous)
@@ -321,7 +410,7 @@ export function validateImportBatchSchedulerReport(report, expectedCommit) {
     geometry?.cooperative?.batchMetrics,
     errors,
     'large-geometry-cooperative',
-    { requireWake: true },
+    { requireWake: true, requireStepMetrics },
   );
 
   const cancellation = report?.cancellation;
