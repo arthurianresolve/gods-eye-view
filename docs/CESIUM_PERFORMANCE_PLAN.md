@@ -4056,7 +4056,6 @@ heartbeat maximum relative to synchronous creation; one worsens it. A comparison
 against the prior cooperative timer scheduler and attribution of indivisible
 application work remain necessary. No default on `dev` changes from this result.
 
-
 S59 attribution follow-up adds an isolated hosted `import-attribution` diagnostic.
 It samples the main thread during the existing complete import fixture, preserves
 a bounded CPU profile with URL query/origin details removed, and ranks sampled
@@ -4065,7 +4064,6 @@ acceptance. The profiler session is released after startup failure, normal stop,
 failed stop and failed disable; focused tests exercise those exit paths and
 reject malformed or oversized sampling data. This instrumentation does not alter
 runtime import scheduling. Hosted attribution is pending.
-
 
 ### S59 measured import attribution - 11 October 2026
 
