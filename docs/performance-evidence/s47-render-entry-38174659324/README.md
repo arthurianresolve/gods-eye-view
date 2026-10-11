@@ -19,7 +19,8 @@ protocol rejection, duplicate/obsolete events, missing timing evidence, and
 bounded diagnostic storage. Adopted formatting passes for 1,544 files.
 
 [Replacement run 38174825435](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38174825435)
-explicitly names application/harness `ac22669e`. Its outcome must be checked
-before claiming that the browser integration passes. Follow-up workflow-only
+explicitly names application/harness `ac22669e`. It completes three samples,
+then rejects a genuinely late page frame; [the separate result](../s47-separate-deadlines-38174825435/README.md)
+remains failed. Follow-up workflow-only
 commit `bddde802` makes an omitted candidate resolve to the dispatched immutable
 `github.sha`; it does not change the page or capture implementation being tested.

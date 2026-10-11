@@ -25,8 +25,11 @@ Follow-up `ac22669e` implements separate entry/render deadlines and rejects late
 `postRender` completion even when page timers are blocked. Thirty-seven focused
 checks and 1,544 adopted formatting checks pass. The first dispatch omitted its
 candidate SHA and failed before browser startup; [the preserved setup failure](performance-evidence/s47-render-entry-38174659324/README.md)
-records that limitation. Exact-commit smoke `38174825435` is running. The
-workflow's optional candidate now defaults to its dispatched immutable commit.
+records that limitation. [Exact-commit smoke `38174825435`](performance-evidence/s47-separate-deadlines-38174825435/README.md)
+completes three samples, then fails the page render deadline on the fourth:
+entry takes 4.86 ms, but the next update opportunity arrives over five seconds
+later. This preserves the late-frame failure and requires further attribution.
+The workflow's optional candidate now defaults to its dispatched immutable commit.
 
 S59 attribution: the [CPU/GC diagnostic at `d91e0873`](performance-evidence/s59-load-profile-38172396175/README.md)
 passes independent recomputation; coordinate conversion takes 14.6 ms of the
@@ -55,16 +58,17 @@ Deactivation/manual range changes cancel pending probes. Focused checks,
 formatting and package boundaries pass. [Rendered CCTV and terrain/picking jobs](performance-evidence/s50-surface-owner/README.md)
 pass at that exact revision, with five stable CCTV reuse cycles and all 171
 terrain workers completed. They are software-rendered lifecycle evidence;
-The integration candidate `7ab4f188` is in standard CI `38174089296` after
-1,543 formatting checks and package boundaries pass. Production promotion
-awaits that result and does not close full S50.
+The integration candidate `7ab4f188` passes [all seven standard jobs](performance-evidence/s50-surface-owner/validation-38174089296-ci.json)
+in `38174089296`, including three-OS recovery, Node 24/26 suites and builds,
+onboarding, and browser journeys. This does not close full S50.
 
 Review follow-up `8b68d54e` corrects map-bridge reconnection ownership: an old
 disposer cannot unsubscribe the replacement, old callbacks cannot publish under
 its owner, and equal generations across controllers do not suppress the new
 state. The regression failed before the repair; 31 focused checks and package
 boundaries pass afterward. This runtime change requires its own integrated CI
-result before production promotion.
+result before production promotion. Standard CI `38174948494` is running at
+docs-inclusive `0c7d678b`; dev remains `ba7c8738` until that validation completes.
 
 S59 large-geometry comparison (11 October 2026): the hosted browser experiment
 at `df63fc43` passes image, picking, cancellation and cleanup checks, but both
