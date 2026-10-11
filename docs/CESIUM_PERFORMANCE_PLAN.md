@@ -4024,3 +4024,7 @@ exercise pull-request-only published layer-token allocation checks. It does not
 supply cable activation/memory benefit, resolve variable dam activation latency,
 or supply physical Windows GPU evidence; those gates remain open. The default
 rendering mode is still Entity and this candidate remains isolated from dev.
+
+### Cable benefit activation deadline correction
+
+The initial five-pair cable benefit job at `9c09554` failed during its first Entity activation, with zero complete matched pairs. [Preserved failure and review](performance-evidence/s54-cable-benefit-38139806091/review.json) retain the raw report, the unknown-path HTTP 404, and successful cleanup. The activation loop declared a three-minute deadline but used the shared one-second frame wait. Commit `e77f77d` passes each activation/re-enable wait only the remaining absolute deadline, without extending that deadline or altering the older correctness fixture. It also records bounded HTTP failure paths and rejects missing resources. Eleven independently rerun focused tests pass. [Rendered validation](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38140471164) is pending at that exact commit. Cable benefit, physical Windows validation, and default rollout remain unaccepted.

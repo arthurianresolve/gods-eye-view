@@ -1,0 +1,24 @@
+{
+  "schema": "gev-evidence-review/v1",
+  "applicationCommit": "9c0955416511e190641e60c2e2a7147aa294ccec",
+  "harnessCommit": "9c0955416511e190641e60c2e2a7147aa294ccec",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38139806091",
+  "outcome": "failed",
+  "completePairs": 0,
+  "completedBenefitComparison": false,
+  "hardwareValidated": false,
+  "limitation": "The first Entity activation failed; no matched timing, pixel, or heap benefit can be inferred.",
+  "failure": "Timed out waiting for a completed cable scene frame.",
+  "diagnosis": "The activation and restore loops called the shared one-second frame waiter despite declaring an absolute 180-second activation deadline. A generic HTTP 404 was also observed; its path was not recorded, so it cannot be attributed retrospectively.",
+  "correctionCommit": "e77f77de35a7e75c3fc7a7531b59f83ea20018b8",
+  "correction": "Pass the remaining existing activation deadline to each frame wait; preserve the shared correctness fixture default. Record bounded HTTP failure paths and fail on any HTTP >=400. Declare a data favicon.",
+  "automaticChecks": {
+    "focusedTests": 11,
+    "passed": 11
+  },
+  "rerun": {
+    "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38140471164",
+    "testedCommit": "e77f77de35a7e75c3fc7a7531b59f83ea20018b8",
+    "status": "pending"
+  }
+}
