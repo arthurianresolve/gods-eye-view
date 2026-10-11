@@ -8,6 +8,17 @@ const CORE = 840;
 const DENSE = 10000;
 const WARMUP_FRAMES = 60;
 const MEASURE_FRAMES = 180;
+// Pixel coordinates changed by the preserved first mixed/partitioned pair at
+// 9dacb7c. This is diagnostic targeting only; it does not affect rendering.
+const PRIOR_MISMATCH_PIXELS = Object.freeze([
+  [495, 18], [421, 285], [160, 338], [479, 338], [160, 339], [479, 339],
+  [152, 346], [153, 346], [486, 346], [487, 346], [152, 347], [487, 347],
+  [145, 353], [146, 353], [493, 353], [494, 353], [145, 354], [494, 354],
+  [319, 357], [320, 357], [319, 358], [320, 358], [319, 359], [320, 359],
+]);
+const MAX_PROJECTED_POINTS_PER_PIXEL = 16;
+const MAX_RECORDED_FRUSTUMS = 16;
+const MAX_RECORDED_POINT_COMMANDS = 16;
 const run = document.querySelector('#run');
 const status = document.querySelector('#status');
 const output = document.querySelector('#result');
@@ -17,6 +28,239 @@ let pixelFrames = new WeakMap();
 const check = (value, message) => {
   if (!value) throw new Error(message);
 };
+
+function finiteOrNull(value) {
+  return Number.isFinite(value) ? value : null;
+}
+
+function passName(pass) {
+  for (const [name, value] of Object.entries(Cesium.Pass || {})) {
+    if (value === pass && Number.isInteger(value)) return name;
+  }
+  return null;
+}
+
+function snapshotPointCommand(command, collectionIndex, scene) {
+  const volume = command.boundingVolume;
+  const center = volume?.center;
+  let interval = null;
+  if (
+    volume &&
+    typeof volume.computePlaneDistances === 'function' &&
+    scene.camera?.positionWC &&
+    scene.camera?.directionWC
+  ) {
+    const result = { start: null, stop: null };
+    const measured = volume.computePlaneDistances(
+      scene.camera.positionWC,
+      scene.camera.directionWC,
+      result,
+    );
+    interval = {
+      near: finiteOrNull(measured?.start),
+      far: finiteOrNull(measured?.stop),
+    };
+  }
+  return {
+    collection: collectionIndex === 0 ? 'core' : 'dense',
+    pass: finiteOrNull(command.pass),
+    passName: passName(command.pass),
+    bounds: center
+      ? {
+          center: {
+            x: finiteOrNull(center.x),
+            y: finiteOrNull(center.y),
+            z: finiteOrNull(center.z),
+          },
+          radius: finiteOrNull(volume.radius),
+        }
+      : null,
+    cameraDepthInterval: interval,
+  };
+}
+
+function snapshotRenderDiagnostics(
+  scene,
+  collections,
+  emittedCommandCapture,
+  points,
+) {
+  const emittedCommands = Array.isArray(emittedCommandCapture?.commands)
+    ? emittedCommandCapture.commands
+    : [];
+  const emittedFrameNumber = Number.isInteger(emittedCommandCapture?.frameNumber)
+    ? emittedCommandCapture.frameNumber
+    : null;
+  const truncatedEmittedCommandCount = Number.isInteger(
+    emittedCommandCapture?.truncatedCount,
+  )
+    ? emittedCommandCapture.truncatedCount
+    : null;
+  const captureFrameNumber = scene.frameState?.frameNumber;
+  if (!Number.isInteger(captureFrameNumber)) {
+    throw new Error('Cesium capture frameState.frameNumber was unavailable.');
+  }
+  if (captureFrameNumber !== emittedFrameNumber) {
+    throw new Error(
+      `Command/capture frame mismatch: ${emittedFrameNumber ?? 'unavailable'} versus ${captureFrameNumber}.`,
+    );
+  }
+  const view = scene.view;
+  const oit = view?.oit;
+  let oitSupported = null;
+  try {
+    if (typeof oit?.isSupported === 'function') oitSupported = oit.isSupported();
+  } catch {
+    oitSupported = null;
+  }
+  const environmentState = scene.environmentState;
+  const frustumList = scene.frustumCommandsList;
+  const passCount = Number.isInteger(Cesium.Pass?.NUMBER_OF_PASSES)
+    ? Cesium.Pass.NUMBER_OF_PASSES
+    : null;
+  const frustums = Array.isArray(frustumList)
+    ? frustumList.slice(0, MAX_RECORDED_FRUSTUMS).map((frustum, index) => {
+        const byPass = [];
+        const count = passCount ?? frustum.indices?.length ?? 0;
+        for (let pass = 0; pass < count; pass++) {
+          const commandCount = Number.isInteger(frustum.indices?.[pass])
+            ? frustum.indices[pass]
+            : null;
+          if (commandCount === null) continue;
+          const commands = frustum.commands?.[pass];
+          if (!Array.isArray(commands)) continue;
+          const owners = [];
+          const limit = Math.min(commandCount, commands.length);
+          for (let i = 0; i < limit; i++) {
+            const ownerIndex = collections.indexOf(commands[i]?.owner);
+            if (ownerIndex >= 0) owners.push(ownerIndex === 0 ? 'core' : 'dense');
+          }
+          if (owners.length || commandCount > 0) {
+            byPass.push({
+              pass: finiteOrNull(pass),
+              passName: passName(pass),
+              commandCount,
+              collectionOwners: owners.slice(0, MAX_RECORDED_POINT_COMMANDS),
+              truncatedOwners: Math.max(0, owners.length - MAX_RECORDED_POINT_COMMANDS),
+            });
+          }
+        }
+        return {
+          index,
+          near: finiteOrNull(frustum.near),
+          far: finiteOrNull(frustum.far),
+          byPass,
+        };
+      })
+    : null;
+
+  const projectedTargets = PRIOR_MISMATCH_PIXELS.map(([x, y]) => ({
+    pixelIndex: { x, y },
+    pixelCenter: { x: x + 0.5, y: y + 0.5 },
+    points: [],
+    candidateCount: null,
+    truncatedPoints: null,
+  }));
+  const projection = Cesium.SceneTransforms?.worldToDrawingBufferCoordinates;
+  const projected = new Cesium.Cartesian2();
+  let projectedPointCount = 0;
+  const scenePixelRatio = finiteOrNull(scene.pixelRatio);
+  const czmPixelRatio = finiteOrNull(scene.context?.uniformState?.pixelRatio);
+  const drawingBufferScale = {
+    x: Number.isFinite(scene.canvas?.clientWidth) && scene.canvas.clientWidth > 0
+      ? finiteOrNull(scene.drawingBufferWidth / scene.canvas.clientWidth)
+      : null,
+    y: Number.isFinite(scene.canvas?.clientHeight) && scene.canvas.clientHeight > 0
+      ? finiteOrNull(scene.drawingBufferHeight / scene.canvas.clientHeight)
+      : null,
+  };
+  if (typeof projection === 'function' && Number.isFinite(czmPixelRatio)) {
+    for (const target of projectedTargets) {
+      target.candidateCount = 0;
+      target.truncatedPoints = 0;
+    }
+    for (const point of points) {
+      const center = projection(scene, point.position, projected);
+      if (!center || !Number.isFinite(center.x) || !Number.isFinite(center.y)) continue;
+      projectedPointCount++;
+      const pointSizePx = Number(point.pixelSize) * czmPixelRatio;
+      if (!Number.isFinite(pointSizePx)) continue;
+      const radiusPx = Math.max(0, pointSizePx * 0.5 + 1);
+      for (const target of projectedTargets) {
+        const dx = center.x - target.pixelCenter.x;
+        const dy = center.y - target.pixelCenter.y;
+        if (Math.abs(dx) > radiusPx || Math.abs(dy) > radiusPx) continue;
+        target.candidateCount++;
+        if (target.points.length < MAX_PROJECTED_POINTS_PER_PIXEL) {
+          target.points.push({
+            id: typeof point.id === 'string' ? point.id : null,
+            center: { x: finiteOrNull(center.x), y: finiteOrNull(center.y) },
+            pixelSize: finiteOrNull(point.pixelSize),
+            shaderPixelSizePx: finiteOrNull(pointSizePx),
+            coverageRadiusPx: finiteOrNull(radiusPx),
+            show: typeof point.show === 'boolean' ? point.show : null,
+            distancePx: Math.hypot(dx, dy),
+          });
+        } else {
+          target.truncatedPoints++;
+        }
+      }
+    }
+  }
+
+  return {
+    cesiumVersion: typeof Cesium.VERSION === 'string' ? Cesium.VERSION : null,
+    oit: {
+      requested: typeof scene.orderIndependentTranslucency === 'boolean'
+        ? scene.orderIndependentTranslucency
+        : null,
+      depthTextureAvailable: typeof scene.context?.depthTexture === 'boolean'
+        ? scene.context.depthTexture
+        : null,
+      viewOitPresent: oit ? true : null,
+      supported: typeof oitSupported === 'boolean' ? oitSupported : null,
+      active: typeof environmentState?.useOIT === 'boolean'
+        ? environmentState.useOIT
+        : null,
+    },
+    captureFrameNumber,
+    emittedCommandFrameNumber: emittedFrameNumber,
+    commandsMatchCaptureFrame: true,
+    pointPixelScaling: {
+      scenePixelRatio,
+      czmPixelRatio,
+      drawingBufferScale,
+      pointVertexShaderUsesCzmPixelRatio: true,
+      neighborhoodSemantics:
+        'Projected-center proximity using shader pixel size plus one drawing-buffer pixel; not exact fragment coverage.',
+    },
+    camera: {
+      positionWC: scene.camera?.positionWC
+        ? {
+            x: finiteOrNull(scene.camera.positionWC.x),
+            y: finiteOrNull(scene.camera.positionWC.y),
+            z: finiteOrNull(scene.camera.positionWC.z),
+          }
+        : null,
+      directionWC: scene.camera?.directionWC
+        ? {
+            x: finiteOrNull(scene.camera.directionWC.x),
+            y: finiteOrNull(scene.camera.directionWC.y),
+            z: finiteOrNull(scene.camera.directionWC.z),
+          }
+        : null,
+    },
+    emittedPointCommands: emittedCommands,
+    truncatedEmittedPointCommands: truncatedEmittedCommandCount,
+    frustumCount: Array.isArray(frustumList) ? frustumList.length : null,
+    truncatedFrustums: Array.isArray(frustumList)
+      ? Math.max(0, frustumList.length - MAX_RECORDED_FRUSTUMS)
+      : null,
+    frustums,
+    projectedPointCount: typeof projection === 'function' ? projectedPointCount : null,
+    projectedMismatchNeighborhoods: projectedTargets,
+  };
+}
 
 function summary(values) {
   const sorted = [...values].sort((a, b) => a - b);
@@ -75,10 +319,58 @@ function observeSubmissions(gl) {
   };
 }
 
-async function pixels(viewer) {
-  const canvas = await captureFreshCesiumFrame(viewer);
-  check(canvas, 'A completed capture frame was unavailable.');
+async function pixels(viewer, readFrameDiagnostics) {
+  const controller = new AbortController();
+  let removeDiagnostics;
+  let failDiagnostics;
+  let diagnosticsTimer;
+  let canvas;
+  let diagnosticsSettled = false;
+  const capturePromise = captureFreshCesiumFrame(viewer, {
+    signal: controller.signal,
+  });
+  const diagnosticsPromise = new Promise((resolve, reject) => {
+    const scene = viewer.scene;
+    const finish = (callback, value) => {
+      if (diagnosticsSettled) return;
+      diagnosticsSettled = true;
+      clearTimeout(diagnosticsTimer);
+      try {
+        removeDiagnostics?.();
+      } catch {
+        // Resolve the diagnostics promise even if listener removal throws.
+      }
+      callback(value);
+    };
+    const onPostRender = () => {
+      try {
+        finish(resolve, readFrameDiagnostics());
+      } catch (error) {
+        finish(reject, error);
+      }
+    };
+    failDiagnostics = (error) => finish(reject, error);
+    try {
+      const unsubscribe = scene.postRender.addEventListener(onPostRender);
+      removeDiagnostics =
+        typeof unsubscribe === 'function'
+          ? unsubscribe
+          : () => scene.postRender.removeEventListener?.(onPostRender);
+      diagnosticsTimer = setTimeout(
+        () => finish(reject, new Error('Matching postRender diagnostics timed out.')),
+        410,
+      );
+    } catch (error) {
+      finish(reject, error);
+    }
+  });
+  let diagnostics;
   try {
+    [canvas, diagnostics] = await Promise.all([
+      capturePromise,
+      diagnosticsPromise,
+    ]);
+    check(canvas, 'A completed capture frame was unavailable.');
     const bytes = canvas
       .getContext('2d')
       .getImageData(0, 0, canvas.width, canvas.height).data;
@@ -95,15 +387,33 @@ async function pixels(viewer) {
     ]
       .map((value) => value.toString(16).padStart(2, '0'))
       .join('');
-    return {
+    const capture = {
       sha256,
       bytes,
       png: canvas.toDataURL('image/png'),
       width: canvas.width,
       height: canvas.height,
     };
+    return { capture, diagnostics };
   } finally {
-    canvas.width = canvas.height = 0;
+    clearTimeout(diagnosticsTimer);
+    failDiagnostics?.(new Error('Capture completed before matching diagnostics.'));
+    try {
+      controller.abort();
+    } catch {
+      // Abort is best-effort; the bounded capture helper also owns a timeout.
+    }
+    try {
+      const settledCanvas = await capturePromise;
+      if (!canvas) canvas = settledCanvas;
+    } catch {
+      // Cleanup must not replace the original capture or diagnostics failure.
+    }
+    try {
+      if (canvas) canvas.width = canvas.height = 0;
+    } catch {
+      // Retain the primary error if a browser canvas rejects disposal.
+    }
   }
 }
 
@@ -160,23 +470,60 @@ async function sample(viewer, mode) {
   const originalUpdates = [];
   const cpuSamples = [];
   const intervals = [];
+  let frame = 0;
   let measured = false;
   let frameCpu = 0;
+  let captureCommandSnapshot = false;
+  let snapshotFrameNumber = null;
+  let emittedPointCommands = [];
+  let truncatedEmittedPointCommands = 0;
   const addCollection = () => {
     const collection = scene.primitives.add(
       new Cesium.PointPrimitiveCollection(),
     );
     collections.push(collection);
+    const collectionIndex = collections.length - 1;
     const update = collection.update;
     originalUpdates.push(update);
     collection.update = function (frameState) {
-      if (!measured) return update.call(this, frameState);
-      const started = performance.now();
-      try {
-        return update.call(this, frameState);
-      } finally {
-        frameCpu += performance.now() - started;
+      if (!captureCommandSnapshot) {
+        if (!measured) return update.call(this, frameState);
+        const started = performance.now();
+        try {
+          return update.call(this, frameState);
+        } finally {
+          frameCpu += performance.now() - started;
+        }
       }
+      const commandList = frameState?.commandList;
+      const firstCommand = Array.isArray(commandList) ? commandList.length : null;
+      const commandFrameNumber = frameState?.frameNumber;
+      if (!Number.isInteger(commandFrameNumber)) {
+        throw new Error('Cesium emitted command frameState.frameNumber was unavailable.');
+      }
+      const result = update.call(this, frameState);
+      if (
+        firstCommand !== null &&
+        Array.isArray(commandList)
+      ) {
+        if (snapshotFrameNumber !== commandFrameNumber) {
+          snapshotFrameNumber = commandFrameNumber;
+          emittedPointCommands = [];
+          truncatedEmittedPointCommands = 0;
+        }
+        for (const command of commandList.slice(firstCommand)) {
+          if (command?.owner === collection) {
+            if (emittedPointCommands.length < MAX_RECORDED_POINT_COMMANDS) {
+              emittedPointCommands.push(
+                snapshotPointCommand(command, collectionIndex, scene),
+              );
+            } else {
+              truncatedEmittedPointCommands++;
+            }
+          }
+        }
+      }
+      return result;
     };
     return collection;
   };
@@ -207,7 +554,6 @@ async function sample(viewer, mode) {
         }),
       );
     }
-    let frame = 0;
     let denseCursor = CORE;
     let previousFrameAt = null;
     let beganAt;
@@ -269,7 +615,25 @@ async function sample(viewer, mode) {
     ]
       .map((value) => value.toString(16).padStart(2, '0'))
       .join('');
-    const capture = await pixels(viewer);
+    captureCommandSnapshot = true;
+    let captureResult;
+    try {
+      captureResult = await pixels(viewer, () =>
+        snapshotRenderDiagnostics(
+          scene,
+          collections,
+          {
+            frameNumber: snapshotFrameNumber,
+            commands: emittedPointCommands,
+            truncatedCount: truncatedEmittedPointCommands,
+          },
+          points,
+        ),
+      );
+    } finally {
+      captureCommandSnapshot = false;
+    }
+    const { capture, diagnostics: renderDiagnostics } = captureResult;
     const snapshot = {
       mode,
       collections: collections.length,
@@ -284,6 +648,7 @@ async function sample(viewer, mode) {
       submissions: { ...submissions.counts },
       pixels: capture.sha256,
       positionSha256,
+      renderDiagnostics,
     };
     pixelFrames.set(snapshot, capture);
     check(snapshot.points === CORE + DENSE, 'Point population changed.');
@@ -306,13 +671,13 @@ run.addEventListener('click', async () => {
   output.textContent = '';
   pixelFrames = new WeakMap();
   report = {
-    schema: 'gev-point-collection-diagnostic/v1',
+    schema: 'gev-point-collection-diagnostic/v2-command-diagnostics',
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
     timestamp: new Date().toISOString(),
     fixture: 'synthetic-840-core-10000-dense/v1',
     scope:
-      'Instrumented fixed-frame submission diagnostic; not application motion, GPU time or an accepted optimization',
+      'Read-only emitted-command/frustum/OIT attribution on the existing fixed-frame comparison; no renderer setting changes and no GPU-time claim',
     warmupFrames: WARMUP_FRAMES,
     measurementFrames: MEASURE_FRAMES,
     pairs: 5,
