@@ -336,7 +336,7 @@ export function installPhasedMonotonicWallClock(
 }
 
 /** Wait for one completed Cesium render after a held clock boundary. */
-export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal = null, diagnostics = false) {
+export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal = null, diagnostics = false, boundaryId = null) {
   const viewer = typeof viewerOrTimeout === 'number'
     ? globalThis.__godsEyeView?.viewer
     : viewerOrTimeout;
@@ -345,9 +345,9 @@ export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal 
   // host can distinguish queued evaluation, update work, and a blocked draw
   // even when the renderer cannot service another inspection request.
   const report = (phase) => {
-    if (!diagnostics) return;
+    if (!diagnostics || (diagnostics === 'entry' && phase !== 'entered')) return;
     console.info('[gev-render-boundary] ' + JSON.stringify({
-      phase, pageNowMs: globalThis.performance?.now?.() ?? null,
+      phase, boundaryId, pageNowMs: globalThis.performance?.now?.() ?? null,
     }));
   };
   report('entered');
@@ -374,19 +374,24 @@ export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal 
     };
     const finish = (error, phase = error ? 'failed' : 'completed') => {
       if (done) return;
+      const elapsedMs = globalThis.performance?.now?.() - startedAt;
+      // A long draw can deliver postRender before an overdue timer callback.
+      // Such a frame must not pass the unchanged render deadline.
+      if (!error && (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs > timeoutMs)) {
+        error = new Error('Completed render did not settle before the boundary timeout.');
+        phase = 'timeout';
+      }
       done = true;
       cleanup();
       report(phase);
       if (error) reject(error);
-      else resolve({ settleElapsedMs: Number.isFinite(startedAt) && Number.isFinite(globalThis.performance?.now?.())
-        ? Math.max(0, globalThis.performance.now() - startedAt)
-        : null });
+      else resolve({ settleElapsedMs: elapsedMs });
     };
     if (signal?.aborted) return onAbort();
     signal?.addEventListener?.('abort', onAbort, { once: true });
     timer = setTimeout(() => finish(new Error('Completed render did not settle before the boundary timeout.'), 'timeout'), timeoutMs);
     try {
-      if (diagnostics) for (const name of ['preUpdate', 'postUpdate', 'preRender']) {
+      if (diagnostics === true) for (const name of ['preUpdate', 'postUpdate', 'preRender']) {
         const event = viewer.scene[name];
         if (!event?.addEventListener) continue;
         let reported = false;

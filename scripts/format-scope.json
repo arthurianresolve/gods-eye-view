@@ -1006,6 +1006,8 @@
   "src/tools/globePanel.test.mjs",
   "src/costEndpointThrottle.test.mjs",
   "scripts/capture-scene-performance.mjs",
+  "scripts/performance/renderBoundary.mjs",
+  "scripts/performance/renderBoundary.test.mjs",
   "scripts/performance/captureStageJournal.mjs",
   "scripts/performance/captureStageJournal.test.mjs",
   "scripts/qa-evidence-panel.mjs",

@@ -16,10 +16,10 @@ import {
   installFixedWallClock,
   installHeldMonotonicWallClock,
   installPhasedMonotonicWallClock,
-  settleCompletedRender,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
+import { settlePageRenderBoundary } from './performance/renderBoundary.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -506,65 +506,14 @@ async function settleProviderRenderAtBoundary(
   label,
   timeoutMs = 5000,
 ) {
-  let timer;
-  const startedAt = performance.now();
-  const diagnostic = { label, timeoutMs, events: [] };
-  const onConsole = (message) => {
-    const prefix = '[gev-render-boundary] ';
-    const value = message.text();
-    if (!value.startsWith(prefix) || diagnostic.events.length >= 12) return;
-    try {
-      const row = JSON.parse(value.slice(prefix.length));
-      if (
-        ![
-          'entered',
-          'armed',
-          'requested',
-          'preUpdate',
-          'postUpdate',
-          'preRender',
-          'completed',
-          'timeout',
-          'failed',
-        ].includes(row.phase)
-      )
-        return;
-      diagnostic.events.push({
-        phase: row.phase,
-        pageNowMs: Number.isFinite(row.pageNowMs) ? row.pageNowMs : null,
-        receivedAfterMs: performance.now() - startedAt,
-      });
-    } catch {}
-  };
-  if (measureReadCosts) {
-    (failureProgress.current.renderBoundaryDiagnostics ??= []).push(diagnostic);
-    targetPage.on('console', onConsole);
-  }
-  try {
-    return await Promise.race([
-      targetPage.evaluate(
-        settleCompletedRender,
-        timeoutMs,
-        undefined,
-        null,
-        measureReadCosts,
-      ),
-      new Promise((_, reject) => {
-        timer = setTimeout(
-          () =>
-            reject(
-              new Error(
-                `${label}: host did not observe a completed render within ${timeoutMs}ms.`,
-              ),
-            ),
-          timeoutMs + 1000,
-        );
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-    if (measureReadCosts) targetPage.off('console', onConsole);
-  }
+  const diagnostic = {};
+  (failureProgress.current.renderBoundaryDiagnostics ??= []).push(diagnostic);
+  return settlePageRenderBoundary(targetPage, {
+    label,
+    timeoutMs,
+    diagnostic,
+    verbose: measureReadCosts,
+  });
 }
 
 async function releaseFlightFixtureSession(session) {
