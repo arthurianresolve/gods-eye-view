@@ -66,6 +66,7 @@
       "src/imports/geojsonCsv.js",
       "src/imports/kmlGpx.js",
       "src/imports/cooperative.js",
+      "src/imports/macrotask.js",
       "src/director/packs/geojson.js",
       "src/director/packs/manifest.js",
       "src/director/documentFields.js"
@@ -1557,6 +1558,7 @@
       "src/imports/geojsonCsv.js",
       "src/imports/kmlGpx.js",
       "src/imports/cooperative.js",
+      "src/imports/macrotask.js",
       "src/imports/runtimeLayer.js",
       "src/imports/renderRecords.js",
       "src/ui/commandPalette.js",

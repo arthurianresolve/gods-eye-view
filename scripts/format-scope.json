@@ -1105,6 +1105,8 @@
   "src/ui/workspaceLibraryImport.test.mjs",
   "src/imports/runtimeLayer.js",
   "src/imports/runtimeLayer.test.mjs",
+  "src/imports/macrotask.js",
+  "src/imports/macrotask.test.mjs",
   "scripts/performance/importGeometry.mjs",
   "src/imports/index.js",
   "src/ui/styles/workspaceLibrary.css",

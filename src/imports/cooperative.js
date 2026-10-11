@@ -1,15 +1,21 @@
+import { createMacrotaskScheduler } from './macrotask.js';
+
+const defaultScheduler = createMacrotaskScheduler();
+
 /** Consume main-thread work in bounded batches, keeping one cancellable wake. */
-export function consumeInBatches(
-  iterator,
-  {
+export function consumeInBatches(iterator, options = {}) {
+  const {
     signal,
     now = () => performance.now(),
-    schedule = (callback) => setTimeout(callback, 0),
-    cancel = (timer) => clearTimeout(timer),
     budgetMs = 4,
     deferStart = false,
-  } = {},
-) {
+  } = options;
+  const schedule = options.schedule ?? defaultScheduler.schedule;
+  const cancel =
+    options.cancel ??
+    (options.schedule
+      ? (timer) => clearTimeout(timer)
+      : defaultScheduler.cancel);
   return new Promise((resolve, reject) => {
     let timer = null;
     let finished = false;
