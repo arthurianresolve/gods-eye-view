@@ -274,6 +274,69 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
 function validateRetentionReport(report, candidateCommit, environmentId) {
   const errors = [];
   const pending = [];
+  const hostedEnvelope = report?.schema === 'gev-hosted-native-renderer/v1';
+  if (hostedEnvelope) {
+    const envelope = report;
+    report = envelope.soak;
+    if (envelope.status === 'failed')
+      errors.push('Hosted soak envelope reports a failed run.');
+    else if (envelope.status !== 'passed')
+      pending.push('Hosted soak envelope did not reach a completed status.');
+    for (const field of ['commit', 'harnessCommit']) {
+      if (envelope[field] == null)
+        pending.push(`Hosted soak envelope ${field} is unavailable.`);
+      else if (envelope[field] !== candidateCommit)
+        errors.push(
+          `Hosted soak envelope ${field} does not match the candidate.`,
+        );
+    }
+    // Preserve both observations. Never fill missing inner provenance from
+    // the wrapper or let a passing inner run hide an outer cleanup failure.
+    for (const field of [
+      'sourceDirtyAtStart',
+      'harnessDirtyAtStart',
+      'sourceChangedDuringRun',
+      'harnessChangedDuringRun',
+    ]) {
+      if (envelope[field] === true)
+        errors.push(
+          `Hosted soak envelope ${field} reports changed or dirty source.`,
+        );
+      else if (envelope[field] !== false)
+        pending.push(`Hosted soak envelope ${field} is unavailable.`);
+      if (
+        envelope[field] != null &&
+        report?.[field] != null &&
+        envelope[field] !== report[field]
+      )
+        errors.push(`Hosted soak envelope and inner ${field} disagree.`);
+    }
+    if (
+      envelope.cleanupError ||
+      envelope.browserClose?.closeCompleted === false ||
+      envelope.browserClose?.forcedProcessTermination === true
+    )
+      errors.push('Hosted soak envelope reports incomplete browser cleanup.');
+    else if (envelope.browserClose?.closeCompleted !== true)
+      pending.push('Hosted soak browser cleanup evidence is unavailable.');
+    for (const environment of [envelope.environment, report?.environment]) {
+      if (environment?.hosted === false)
+        errors.push(
+          'Hosted soak envelope cannot establish physical desktop coverage.',
+        );
+      else if (environment?.hosted !== true)
+        pending.push('Hosted soak environment provenance is unavailable.');
+    }
+    const platforms = [
+      envelope.platform,
+      envelope.environment?.platform,
+      report?.environment?.platform,
+    ];
+    if (platforms.some((value) => typeof value !== 'string' || !value))
+      pending.push('Hosted soak platform identity is unavailable.');
+    else if (new Set(platforms).size !== 1)
+      errors.push('Hosted soak envelope and inner platforms disagree.');
+  }
   if (!report?.candidateCommit)
     pending.push('Raw soak candidateCommit is unavailable.');
   else if (report.candidateCommit !== candidateCommit)
@@ -375,6 +438,7 @@ function validateRetentionReport(report, candidateCommit, environmentId) {
   if (stability.status === 'failed') errors.push(...stability.failures);
   const renderer = classifyRecordedRenderer(report);
   const primaryEligible =
+    !hostedEnvelope &&
     renderer.kind === 'native-gpu' &&
     renderer.accelerationVerified === true &&
     renderer.physicalDesktopCoverage === true &&
@@ -382,6 +446,7 @@ function validateRetentionReport(report, candidateCommit, environmentId) {
   return {
     environmentId,
     candidateCommit,
+    artifactFormat: hostedEnvelope ? 'hosted-envelope' : 'standalone-soak',
     renderer,
     primaryEligible,
     stability,

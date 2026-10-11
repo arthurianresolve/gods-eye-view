@@ -132,6 +132,295 @@ async function createComparison(
   };
 }
 
+function makeHostedRetentionEnvelope() {
+  const environment = {
+    platform: 'darwin',
+    architecture: 'arm64',
+    osRelease: '25.6.0',
+    cpu: 'Apple M1 (Virtual)',
+    memoryBytes: 7 * 1024 ** 3,
+    hosted: true,
+  };
+  return {
+    schema: 'gev-hosted-native-renderer/v1',
+    status: 'passed',
+    commit: candidateCommit,
+    harnessCommit: candidateCommit,
+    sourceDirtyAtStart: false,
+    harnessDirtyAtStart: false,
+    sourceChangedDuringRun: false,
+    harnessChangedDuringRun: false,
+    platform: 'darwin',
+    environment: { ...environment },
+    browserClose: { closeCompleted: true, forcedProcessTermination: false },
+    soak: makeRetentionReport({
+      renderer: {
+        renderer:
+          'ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)',
+      },
+      environment: { ...environment },
+    }),
+  };
+}
+
+async function evaluateRetentionArtifact(setup, value, name = 'hosted-soak') {
+  const artifact = await setup.writeArtifact(name, value);
+  return evaluateManifestPerformanceEvidence(
+    { retention: [{ environmentId: name, report: artifact }] },
+    { manifestPath: setup.manifestPath, candidateCommit },
+  );
+}
+
+test('hosted soak envelope is consumed intact as supplemental evidence', async () => {
+  const setup = await setupManifest();
+  const envelope = makeHostedRetentionEnvelope();
+  const result = await evaluateRetentionArtifact(setup, envelope);
+  const row = result.retention[0];
+  assert.equal(row.status, 'passed', JSON.stringify(row));
+  assert.equal(row.artifactFormat, 'hosted-envelope');
+  assert.equal(row.artifact.sha256, digest(envelope));
+  assert.notEqual(row.artifact.sha256, digest(envelope.soak));
+  assert.equal(row.stability.status, 'passed');
+  assert.equal(row.renderer.kind, 'apple-paravirtual-metal');
+  assert.equal(row.renderer.accelerationVerified, true);
+  assert.equal(row.primaryEligible, false);
+  assert.equal(result.retentionOutcome.environments[0].status, 'supplemental');
+  assert.equal(result.retentionOutcome.status, 'pending');
+});
+
+test('failed hosted envelope or cleanup cannot be hidden by a passing inner soak', async (t) => {
+  for (const [name, patch, error] of [
+    [
+      'failed-run',
+      (value) => {
+        value.status = 'failed';
+      },
+      /failed run/,
+    ],
+    [
+      'cleanup-error',
+      (value) => {
+        value.cleanupError = 'close failed';
+      },
+      /incomplete browser cleanup/,
+    ],
+    [
+      'forced-close',
+      (value) => {
+        value.browserClose.forcedProcessTermination = true;
+      },
+      /incomplete browser cleanup/,
+    ],
+    [
+      'incomplete-close',
+      (value) => {
+        value.browserClose.closeCompleted = false;
+      },
+      /incomplete browser cleanup/,
+    ],
+  ]) {
+    await t.test(name, async () => {
+      const setup = await setupManifest();
+      const envelope = makeHostedRetentionEnvelope();
+      patch(envelope);
+      const result = await evaluateRetentionArtifact(setup, envelope, name);
+      assert.equal(result.retention[0].stability.status, 'passed');
+      assert.equal(result.retentionOutcome.status, 'failed');
+      assert.ok(
+        result.retention[0].errors.some((message) => error.test(message)),
+      );
+    });
+  }
+});
+
+test('hosted envelope rejects contradictory commits, source provenance and environments', async (t) => {
+  const cases = [
+    ...['commit', 'harnessCommit'].map((field) => [
+      `outer-${field}`,
+      (value) => {
+        value[field] = baselineCommit;
+      },
+      /does not match the candidate/,
+    ]),
+    ...['candidateCommit', 'applicationCommit', 'harnessCommit'].map(
+      (field) => [
+        `inner-${field}`,
+        (value) => {
+          value.soak[field] = baselineCommit;
+        },
+        /does not match the candidate/,
+      ],
+    ),
+    ...[
+      'sourceDirtyAtStart',
+      'harnessDirtyAtStart',
+      'sourceChangedDuringRun',
+      'harnessChangedDuringRun',
+    ].flatMap((field) => [
+      [
+        `outer-${field}`,
+        (value) => {
+          value[field] = true;
+        },
+        /dirty|disagree/,
+      ],
+      [
+        `inner-${field}`,
+        (value) => {
+          value.soak[field] = true;
+        },
+        /dirty|disagree/,
+      ],
+    ]),
+    [
+      'platform-mismatch',
+      (value) => {
+        value.soak.environment.platform = 'win32';
+      },
+      /platforms disagree/,
+    ],
+    [
+      'outer-platform-mismatch',
+      (value) => {
+        value.platform = 'linux';
+      },
+      /platforms disagree/,
+    ],
+    [
+      'hosted-mismatch',
+      (value) => {
+        value.soak.environment.hosted = false;
+      },
+      /physical desktop/,
+    ],
+  ];
+  for (const [name, patch, error] of cases) {
+    await t.test(name, async () => {
+      const setup = await setupManifest();
+      const envelope = makeHostedRetentionEnvelope();
+      patch(envelope);
+      const result = await evaluateRetentionArtifact(setup, envelope, name);
+      assert.equal(result.retentionOutcome.status, 'failed');
+      assert.ok(
+        result.retention[0].errors.some((message) => error.test(message)),
+      );
+      assert.equal(result.retention[0].primaryEligible, false);
+    });
+  }
+});
+
+test('missing hosted provenance stays pending without filling from the other level', async (t) => {
+  const cases = [
+    [
+      'outer-commit',
+      (value) => {
+        delete value.commit;
+      },
+      /envelope commit/,
+    ],
+    [
+      'outer-harness',
+      (value) => {
+        delete value.harnessCommit;
+      },
+      /envelope harnessCommit/,
+    ],
+    [
+      'inner-harness',
+      (value) => {
+        delete value.soak.harnessCommit;
+      },
+      /Raw soak harnessCommit/,
+    ],
+    [
+      'outer-cleanliness',
+      (value) => {
+        delete value.sourceDirtyAtStart;
+      },
+      /envelope sourceDirtyAtStart/,
+    ],
+    [
+      'inner-cleanliness',
+      (value) => {
+        delete value.soak.sourceDirtyAtStart;
+      },
+      /Raw soak source cleanliness/,
+    ],
+    [
+      'cleanup',
+      (value) => {
+        delete value.browserClose;
+      },
+      /cleanup evidence/,
+    ],
+    [
+      'hosted',
+      (value) => {
+        delete value.environment.hosted;
+      },
+      /environment provenance/,
+    ],
+    [
+      'platform',
+      (value) => {
+        delete value.soak.environment.platform;
+      },
+      /platform identity/,
+    ],
+    [
+      'unfinished',
+      (value) => {
+        value.status = 'running';
+      },
+      /completed status/,
+    ],
+  ];
+  for (const [name, patch, pending] of cases) {
+    await t.test(name, async () => {
+      const setup = await setupManifest();
+      const envelope = makeHostedRetentionEnvelope();
+      patch(envelope);
+      const result = await evaluateRetentionArtifact(setup, envelope, name);
+      assert.equal(result.retention[0].status, 'pending');
+      assert.ok(
+        result.retention[0].pending.some((message) => pending.test(message)),
+      );
+      assert.equal(result.retentionOutcome.status, 'pending');
+      assert.equal(result.retention[0].artifact.sha256, digest(envelope));
+    });
+  }
+});
+
+test('hosted report without a soak fails rather than becoming retention evidence', async () => {
+  const setup = await setupManifest();
+  const envelope = makeHostedRetentionEnvelope();
+  delete envelope.soak;
+  const result = await evaluateRetentionArtifact(setup, envelope);
+  assert.equal(result.retentionOutcome.status, 'failed');
+  assert.ok(
+    result.retention[0].errors.includes('Raw soak checkpoints are malformed.'),
+  );
+});
+
+test('changing only the hosted wrapper invalidates the manifest digest', async () => {
+  const setup = await setupManifest();
+  const envelope = makeHostedRetentionEnvelope();
+  const report = await setup.writeArtifact('hosted-soak', envelope);
+  envelope.status = 'failed';
+  await writeFile(
+    path.join(setup.directory, report.path),
+    JSON.stringify(envelope),
+  );
+  assert.throws(
+    () =>
+      evaluateManifestPerformanceEvidence(
+        { retention: [{ environmentId: 'hosted', report }] },
+        { manifestPath: setup.manifestPath, candidateCommit },
+      ),
+    /SHA-256 does not match/,
+  );
+});
+
 test('v2 paired evidence is digest-bound, recomputed, and remains pending for uncovered workloads', async () => {
   const setup = await setupManifest();
   setup.evidence.comparisons.push(await createComparison(setup));
@@ -228,6 +517,7 @@ test('raw retention is recomputed and requires source, duration, sorted checkpoi
   assert.equal(passed.retentionOutcome.status, 'passed');
   assert.equal(passed.retention[0].stability.status, 'passed');
   assert.equal(passed.retention[0].renderer.kind, 'native-gpu');
+  assert.equal(passed.retention[0].artifactFormat, 'standalone-soak');
 
   const noGc = await setup.writeArtifact(
     'soak-no-gc',

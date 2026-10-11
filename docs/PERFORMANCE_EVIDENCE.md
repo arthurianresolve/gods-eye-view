@@ -81,6 +81,17 @@ retention evidence. The final retained checkpoint must be within one second of
 the measured duration. Historical reports without the new provenance fields remain
 historical and cannot acquire those fields through inference.
 
+The same retention reference can point directly to the original
+`gev-hosted-native-renderer/v1` JSON emitted by the hosted capture runner with
+`--soak`. Its digest covers the complete envelope, including the run outcome and
+browser cleanup. The reader recomputes the nested `soak` and requires matching
+candidate/harness commits, clean-source observations and hosted platform identity
+at both levels. It does not extract the nested report into a new artifact or
+fill missing provenance from the envelope. An outer failure or incomplete
+browser close fails validation even when the inner soak passed. Missing
+provenance or cleanup evidence remains pending. Hosted results are supplemental
+and cannot establish physical Windows coverage.
+
 The capture producer records host identity and browser graphics after the timed
 samples, keeping those diagnostic queries outside latency measurements. Retained
 metrics record completion of `HeapProfiler.collectGarbage` only after the actual
