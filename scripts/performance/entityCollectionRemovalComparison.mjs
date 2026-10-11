@@ -38,7 +38,7 @@ export function removeOwnedByIdsBatched(collection, ids) {
 
   collection.suspendEvents();
   try {
-    removeByIdsIndividually(collection, ids);
+    for (const id of ids) collection.removeById(id);
   } finally {
     collection.resumeEvents();
   }
