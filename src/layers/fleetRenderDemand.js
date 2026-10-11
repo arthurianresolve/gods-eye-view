@@ -101,8 +101,17 @@ export function createFleetRenderDemand(
         isEnabled?.() &&
         !isTracked?.() &&
         canSchedule
-      )
-        scheduleWake(intervalMs);
+      ) {
+        // _fleetTick samples its logical timestamp at entry, but this callback
+        // runs only after the entire fleet pass has completed. Schedule against
+        // the remaining time from that sampled tick, so work time overlaps the
+        // cadence just as it does in the legacy preRender throttle.
+        const remaining = remainingDelayMs?.();
+        const delayMs = Number.isFinite(remaining)
+          ? Math.min(intervalMs, Math.max(0, remaining))
+          : intervalMs;
+        scheduleWake(delayMs);
+      }
     },
     dispose() {
       if (disposed) return;

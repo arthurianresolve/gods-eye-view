@@ -175,6 +175,51 @@ test('an early scheduled callback uses the remaining fleet deadline', () => {
   assert.equal(f.scheduled[1].delayMs, 3);
 });
 
+test('a completed fleet tick schedules from its sampled start, including work time', () => {
+  const f = fixture();
+  let nowMs = 100;
+  const state = { _lastFleetTickMs: 0 };
+  f.setEnabled(true);
+  f.scheduled[0].callback();
+  const fallbackWake = f.scheduled.at(-1);
+  const tick = createFleetTickCallback({
+    state,
+    demand: f.demand,
+    rendering: {
+      _fleetTick() {
+        state._lastFleetTickMs = nowMs;
+        nowMs += 12;
+        f.setRemaining(80 - (nowMs - state._lastFleetTickMs));
+      },
+    },
+  });
+
+  tick();
+
+  assert.equal(fallbackWake.cancelled, true);
+  assert.equal(
+    f.scheduled.at(-1).delayMs,
+    68,
+    'the 12 ms spent in the tick overlaps the 80 ms cadence',
+  );
+});
+
+test('a due tick schedules immediately and invalid deadline samples fall back safely', () => {
+  const f = fixture();
+  f.setEnabled(true);
+  for (const [remaining, expected] of [
+    [0, 0],
+    [-5, 0],
+    [Number.NaN, 80],
+    [Number.POSITIVE_INFINITY, 80],
+    [1000, 80],
+  ]) {
+    f.setRemaining(remaining);
+    f.demand.noteFrame();
+    assert.equal(f.scheduled.at(-1).delayMs, expected);
+  }
+});
+
 for (const [name, createIngestion] of [
   ['civil', createFlightIngestion],
   ['military', createMilitaryIngestion],
