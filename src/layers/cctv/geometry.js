@@ -647,6 +647,13 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     record.probeClampRangeM = null;
     const scene = layerState._viewer?.scene;
     const surfaceSource = services.mesh?.reconcileMeshFloorSource?.(scene);
+    if (surfaceSource?.pending) {
+      record.probeClampSource = null;
+      record.probeClampPendingSource = null;
+      record.probeClampPendingMapSwitch = true;
+      return;
+    }
+    record.probeClampPendingMapSwitch = false;
     record.probeClampSource = surfaceSource?.source || null;
     if (
       record.probeClampSource &&
@@ -698,6 +705,8 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     const hadClamp = Number.isFinite(record.probeClampRangeM);
     record.probeClampRangeM = null;
     record.probeClampSource = null;
+    record.probeClampPendingSource = null;
+    record.probeClampPendingMapSwitch = false;
     if (!hadClamp) return false;
     rewriteGeometry?.(record);
     return true;

@@ -285,6 +285,9 @@ export function createGround({ state: layerState, services, parts, source }) {
     const previousGoogleSource = layerState._googleGroundSource;
     let googleSourceChanged = false;
     const detail = event?.detail;
+    const activeRecord = layerState._recordById.get(layerState._activeCameraId);
+    const probeAwaitingSettledOwner =
+      !!activeRecord?.probeClampPendingMapSwitch;
     const observed =
       detail?.surfaceOwnerKnown === true
         ? { source: detail.surfaceOwner }
@@ -298,8 +301,17 @@ export function createGround({ state: layerState, services, parts, source }) {
       if (googleSourceChanged) parts.model.refreshProjectionTileset?.();
     }
     const regimeChanged = regime !== layerState._lastAppliedRegime;
-    if (!regimeChanged && !googleSourceChanged) return;
+    if (!regimeChanged && !googleSourceChanged && !probeAwaitingSettledOwner)
+      return;
     layerState._lastAppliedRegime = regime;
+
+    if (probeAwaitingSettledOwner && activeRecord) {
+      activeRecord.probeClampPendingMapSwitch = false;
+      activeRecord.probeClampPendingSource =
+        regime === 'google-3d' && layerState._enabled
+          ? observed?.source || null
+          : null;
+    }
 
     const sourceInvalidated = [];
     const sourceInvalidatedSet = new Set();
@@ -401,13 +413,18 @@ export function createGround({ state: layerState, services, parts, source }) {
     // The active camera may have just lost its shipped footprint (globe
     // regime) — resolve its DEM footprint for the new surface.
     let probeResolved = false;
-    if (googleSourceChanged && regime === 'google-3d')
+    if (
+      (googleSourceChanged || probeAwaitingSettledOwner) &&
+      regime === 'google-3d'
+    )
       probeResolved = updatePendingGoogleProbe();
     const active = layerState._recordById.get(layerState._activeCameraId);
     if (active && !probeResolved) void resolveFootprintGround(active);
     if (activeProbeInvalidated && regime === 'terrain-globe') {
-      active?.probeClampPendingSource &&
-        (active.probeClampPendingSource = null);
+      if (active) {
+        active.probeClampPendingSource = null;
+        active.probeClampPendingMapSwitch = false;
+      }
     }
     parts.presentation.notifyListeners();
   }

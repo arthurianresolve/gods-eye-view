@@ -262,6 +262,9 @@ export function createCalibration({
     // §9.1: touching range takes manual control — clear the activation clamp.
     if ('rangeScale' in patch) {
       record.probeClampRangeM = null;
+      record.probeClampSource = null;
+      record.probeClampPendingSource = null;
+      record.probeClampPendingMapSwitch = false;
     }
     const anchorMoved = calibrationPatchMovesAnchor(patch);
     if (options.transient === true && anchorMoved) {

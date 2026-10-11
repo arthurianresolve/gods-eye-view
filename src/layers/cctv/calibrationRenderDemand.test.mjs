@@ -110,3 +110,24 @@ test('accepted transient and committed calibration patches request their visible
     'anchor movement is resolved by the committed-ground owner',
   );
 });
+
+test('manual range ownership cancels a deferred activation obstruction probe', () => {
+  const fixture = createCalibrationFixture();
+  Object.assign(fixture.record, {
+    probeClampRangeM: null,
+    probeClampSource: null,
+    probeClampPendingSource: { id: 'old-owner' },
+    probeClampPendingMapSwitch: true,
+  });
+
+  assert.equal(
+    fixture.calibration.applyCalibrationPatch(fixture.record, {
+      rangeScale: 1.2,
+    }),
+    true,
+  );
+  assert.equal(fixture.record.probeClampRangeM, null);
+  assert.equal(fixture.record.probeClampSource, null);
+  assert.equal(fixture.record.probeClampPendingSource, null);
+  assert.equal(fixture.record.probeClampPendingMapSwitch, false);
+});

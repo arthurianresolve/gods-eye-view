@@ -157,6 +157,34 @@ test('same visible tileset keeps mesh samples and avoids geometry work', () => {
   assert.equal(env.active.groundSamples['google-3d'], 118);
 });
 
+test('settled owner runs an activation probe deferred during switching even when owner is unchanged', () => {
+  const env = setup();
+  env.active.probeClampPendingMapSwitch = true;
+  env.active.probeClampPendingSource = null;
+
+  env.ground.handleMapStackChanged({
+    detail: {
+      status: 'switching',
+      surfaceOwnerKnown: true,
+      surfaceOwner: env.ownerA,
+    },
+  });
+  assert.equal(env.calls.probes, 0);
+  assert.equal(env.active.probeClampPendingMapSwitch, true);
+
+  env.ground.handleMapStackChanged({
+    detail: {
+      status: 'ready',
+      surfaceOwnerKnown: true,
+      surfaceOwner: env.ownerA,
+    },
+  });
+  assert.equal(env.calls.probes, 1);
+  assert.equal(env.active.probeClampPendingMapSwitch, false);
+  assert.equal(env.active.probeClampPendingSource, null);
+  assert.equal(env.active.probeClampSource, env.ownerA);
+});
+
 test('switching event cannot rebind, while a settled new source defers the obstruction probe until tiles are ready', () => {
   const env = setup();
   env.setSource(env.ownerB);

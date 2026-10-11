@@ -49,10 +49,46 @@ function fixture() {
   return {
     record,
     geometry,
+    state,
+    services,
     writes: () => writes,
     placements: () => placements,
   };
 }
+
+test('activation during an unsettled map switch defers the obstruction raycast', () => {
+  const env = fixture();
+  let raycasts = 0;
+  env.state._viewer = {
+    scene: {
+      pickFromRay() {
+        raycasts++;
+      },
+    },
+  };
+  env.services.mesh.reconcileMeshFloorSource = () => ({
+    changed: false,
+    source: null,
+    pending: true,
+  });
+
+  env.geometry.runActivationObstructionProbe(env.record);
+  assert.equal(raycasts, 0);
+  assert.equal(env.record.probeClampPendingMapSwitch, true);
+
+  let rewrites = 0;
+  assert.equal(
+    env.geometry.clearProbeClampOnDeactivation(env.record, () => rewrites++),
+    false,
+  );
+  assert.equal(env.record.probeClampPendingMapSwitch, false);
+  assert.equal(env.record.probeClampPendingSource, null);
+  assert.equal(
+    rewrites,
+    0,
+    'cancelling an unapplied probe does not rewrite geometry',
+  );
+});
 
 test('unchanged camera activation and source metadata preserve materialized wire geometry', () => {
   const env = fixture();
