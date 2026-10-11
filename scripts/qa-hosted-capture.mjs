@@ -18,6 +18,7 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
+import { validateCableReferenceCollectionsReport } from './performance/cableReferenceCollections.mjs';
 
 if (process.env.GITHUB_ACTIONS !== 'true')
   throw new Error(
@@ -51,6 +52,8 @@ let vesselPage;
 let vesselSession;
 let calibrationPage;
 let calibrationSession;
+let cableReferencePage;
+let cableReferenceSession;
 const closeOwnedBrowser = (ownedBrowser) =>
   closeRecoveryBrowser(ownedBrowser, {
     timeoutMs: 5000,
@@ -133,6 +136,13 @@ try {
     report.reason = report.hardwareRenderingAvailable
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
+    if (
+      process.argv.includes('--cable-references') &&
+      !report.hardwareRenderingAvailable
+    )
+      throw new Error(
+        'Cable reference rendered comparison requires verified accelerated WebGL.',
+      );
     await page.goto(url.replace('capture-matrix.html', 'import-batches.html'), {
       waitUntil: 'networkidle0',
     });
@@ -410,6 +420,83 @@ try {
         expectedCommit: commit,
       });
     }
+    if (
+      process.argv.includes('--cable-references') &&
+      report.hardwareRenderingAvailable
+    ) {
+      report.cableReferencePageErrors = [];
+      report.cableReferenceInterceptionErrors = [];
+      report.cableReferenceExternalRequestCount = 0;
+      cableReferencePage = await browser.newPage();
+      cableReferencePage.on('pageerror', (error) => {
+        if (report.cableReferencePageErrors.length < 20)
+          report.cableReferencePageErrors.push(
+            String(error.message).slice(0, 500),
+          );
+      });
+      await cableReferencePage.setViewport({
+        width: 1200,
+        height: 1000,
+        deviceScaleFactor: 1,
+      });
+      cableReferenceSession = await cableReferencePage.createCDPSession();
+      await interceptFixtureSession(
+        cableReferenceSession,
+        new URL(url).origin,
+        (requestUrl) => {
+          if (
+            ['http:', 'https:'].includes(requestUrl.protocol) &&
+            requestUrl.origin !== new URL(url).origin
+          )
+            report.cableReferenceExternalRequestCount += 1;
+        },
+        (error) => {
+          if (report.cableReferenceInterceptionErrors.length < 20)
+            report.cableReferenceInterceptionErrors.push(
+              String(error.message).slice(0, 500),
+            );
+        },
+      );
+      await cableReferencePage.goto(
+        url.replace('capture-matrix.html', 'cable-reference-collections.html'),
+        { waitUntil: 'networkidle0' },
+      );
+      await cableReferencePage.click('#run');
+      const cableDeadline = Date.now() + 480_000;
+      for (;;) {
+        const result = await cableReferencePage.$eval('#result', (element) =>
+          element.textContent.trim() ? JSON.parse(element.textContent) : null,
+        );
+        if (result) {
+          report.cableReferenceCollections = result;
+          break;
+        }
+        if (Date.now() >= cableDeadline)
+          throw new Error('Cable reference collections fixture timeout');
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      report.cableReferenceGraphics = await readBrowserGraphicsInfo(browser);
+      report.cableReferenceRenderingEvidence = classifyRenderer(
+        report.cableReferenceCollections.environment?.renderer,
+        report.cableReferenceGraphics,
+      );
+      if (!report.cableReferenceRenderingEvidence.accelerationVerified)
+        throw new Error(
+          'Cable reference fixture did not retain verified acceleration',
+        );
+      if (
+        report.cableReferencePageErrors.length ||
+        report.cableReferenceInterceptionErrors.length ||
+        report.cableReferenceExternalRequestCount
+      )
+        throw new Error(
+          'Cable reference fixture had page errors or external requests',
+        );
+      validateCableReferenceCollectionsReport(
+        report.cableReferenceCollections,
+        { expectedCommit: commit },
+      );
+    }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       await browser.close();
       browser = null;
@@ -447,6 +534,11 @@ try {
       .evaluate(() => window.__vesselRenderDemandResult || null)
       .catch(() => null);
   }
+  if (cableReferencePage && !report.cableReferenceCollections) {
+    report.cableReferenceCollections = await cableReferencePage
+      .evaluate(() => window.__cableReferenceCollectionsResult || null)
+      .catch(() => null);
+  }
   report.status = 'failed';
   report.reason = `Native renderer probe failed: ${error.message}`;
   process.exitCode = 1;
@@ -462,6 +554,13 @@ try {
     await vesselSession.detach().catch((error) => {
       report.status = 'failed';
       report.vesselDetachError = error.message;
+      process.exitCode = 1;
+    });
+  }
+  if (cableReferenceSession) {
+    await cableReferenceSession.detach().catch((error) => {
+      report.status = 'failed';
+      report.cableReferenceDetachError = error.message;
       process.exitCode = 1;
     });
   }
@@ -481,7 +580,8 @@ try {
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--infrastructure-datacenters') ||
     process.argv.includes('--vessels') ||
-    process.argv.includes('--calibration')
+    process.argv.includes('--calibration') ||
+    process.argv.includes('--cable-references')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

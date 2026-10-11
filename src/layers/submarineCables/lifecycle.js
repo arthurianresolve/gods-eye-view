@@ -171,6 +171,12 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
         cacheEntries:
           Number(Boolean(state._cachedCableJson)) +
           Number(Boolean(state._cachedLandingJson)),
+        referenceRenderer: state._referenceRendererMode,
+        referenceCollections: state._referenceCollections ? 2 : 0,
+        referencePointPrimitives:
+          state._referenceCollections?.points?.length ?? 0,
+        referenceStemPrimitives:
+          state._referenceCollections?.stems?.length ?? 0,
       };
     },
   };

@@ -48,6 +48,7 @@ export function createRendering({ state }) {
     // sources need their own pass.
     state._markerBlendDone = false;
     state._loaded = false;
+    releaseReferenceCollections();
     state._referenceSweepGate.reset();
     for (const source of sources) {
       if (!source) continue;
@@ -65,6 +66,49 @@ export function createRendering({ state }) {
       state._landingDataSource.show = state._enabled;
     if (state._referenceDataSource)
       state._referenceDataSource.show = state._enabled;
+    if (state._referenceCollections) {
+      state._referenceCollections.points.show = state._enabled;
+      state._referenceCollections.stems.show = state._enabled;
+    }
+  }
+
+  function prepareReferenceCollections(viewer) {
+    if (state._referenceRendererMode !== 'collections') return;
+    if (state._referenceCollections) {
+      if (
+        state._referenceCollections.scenePrimitives !==
+        viewer?.scene?.primitives
+      )
+        throw new Error('Reference collections belong to a different scene');
+      return;
+    }
+    const scenePrimitives = viewer?.scene?.primitives;
+    if (!scenePrimitives?.add || !scenePrimitives?.remove)
+      throw new TypeError(
+        'Reference collection rendering requires scene primitives',
+      );
+    const points = new Cesium.PointPrimitiveCollection({
+      blendOption: Cesium.BlendOption.TRANSLUCENT,
+      show: state._enabled,
+    });
+    const stems = new Cesium.PolylineCollection({ show: state._enabled });
+    try {
+      scenePrimitives.add(points);
+      scenePrimitives.add(stems);
+      state._referenceCollections = { points, stems, scenePrimitives };
+    } catch (error) {
+      releaseOwnedCollection(scenePrimitives, stems);
+      releaseOwnedCollection(scenePrimitives, points);
+      throw error;
+    }
+  }
+
+  function releaseReferenceCollections() {
+    const collections = state._referenceCollections;
+    state._referenceCollections = null;
+    if (!collections) return;
+    releaseOwnedCollection(collections.scenePrimitives, collections.stems);
+    releaseOwnedCollection(collections.scenePrimitives, collections.points);
   }
 
   function styleCableEntity(entity, feature) {
@@ -92,6 +136,31 @@ export function createRendering({ state }) {
    */
 
   function applyMarkerBlendOnce() {
+    if (state._referenceRendererMode === 'collections') {
+      const landing = probeTranslucentMarkerBlend(state._landingDataSource);
+      if (landing.invariantFailed) {
+        state._markerBlendDone = true;
+        if (
+          !state._markerBlendInvariantWarned &&
+          import.meta.env?.DEV === true
+        ) {
+          state._markerBlendInvariantWarned = true;
+          console.error(
+            '[Data:telegeography-submarine-cables] EntityCluster marker-collection ' +
+              'shape changed — single-pass translucent blend skipped; markers fall ' +
+              "back to Cesium's default two-pass blend.",
+          );
+        }
+        return;
+      }
+      const landingBlend = commitTranslucentMarkerBlend(landing);
+      const pointsReady =
+        state._referenceCollections?.points?.blendOption ===
+        Cesium.BlendOption.TRANSLUCENT;
+      if (landingBlend.applied > 0 && pointsReady)
+        state._markerBlendDone = true;
+      return;
+    }
     const landing = probeTranslucentMarkerBlend(state._landingDataSource);
     const reference = probeTranslucentMarkerBlend(state._referenceDataSource);
     if (landing.invariantFailed || reference.invariantFailed) {
@@ -161,22 +230,55 @@ export function createRendering({ state }) {
       [base, tip],
     ];
 
-    const entity = state._referenceDataSource.entities.add({
-      id: `${kind}-reference-${state._referenceRecords.length}-${info.featureId || 'feature'}`,
-      position: tip,
-      polyline: {
-        positions: stemPositionBuffers[0],
-        width: kind === 'cable' ? 2 : 2.4,
-        material: new Cesium.ColorMaterialProperty(stemColor),
-      },
-      point: {
+    const id = `${kind}-reference-${state._referenceRecords.length}-${info.featureId || 'feature'}`;
+    const collections = state._referenceCollections;
+    const entity = state._referenceDataSource.entities.add(
+      collections
+        ? { id, position: tip }
+        : {
+            id,
+            position: tip,
+            polyline: {
+              positions: stemPositionBuffers[0],
+              width: kind === 'cable' ? 2 : 2.4,
+              material: new Cesium.ColorMaterialProperty(stemColor),
+            },
+            point: {
+              pixelSize: kind === 'cable' ? 7 : 8,
+              color: pointColor,
+              outlineColor: Cesium.Color.BLACK.withAlpha(0.65),
+              outlineWidth: 1,
+              disableDepthTestDistance: 0,
+            },
+          },
+    );
+
+    let pointPrimitive;
+    let polylinePrimitive;
+    if (collections) {
+      const rgba8StemColor = rgba8Color(stemColor);
+      pointPrimitive = collections.points.add({
+        id: entity,
+        position: tip,
+        show: false,
         pixelSize: kind === 'cable' ? 7 : 8,
         color: pointColor,
         outlineColor: Cesium.Color.BLACK.withAlpha(0.65),
         outlineWidth: 1,
         disableDepthTestDistance: 0,
-      },
-    });
+      });
+      polylinePrimitive = collections.stems.add({
+        id: entity,
+        positions: stemPositionBuffers[0],
+        show: false,
+        width: kind === 'cable' ? 2 : 2.4,
+        material: Cesium.Material.fromType('Color', {
+          color: rgba8StemColor,
+        }),
+      });
+      state._pickByEntity.set(pointPrimitive, info);
+      state._pickByEntity.set(polylinePrimitive, info);
+    }
 
     state._pickByEntity.set(entity, info);
     const record = {
@@ -187,6 +289,8 @@ export function createRendering({ state }) {
       nextTip: Cesium.Cartesian3.clone(tip),
       stemPositionBuffers,
       stemPositionBufferIndex: 0,
+      pointPrimitive,
+      polylinePrimitive,
       reference,
       kind,
       label: clampLabel(label),
@@ -216,6 +320,8 @@ export function createRendering({ state }) {
       if (record.entity.show !== visible) {
         record.entity.show = visible;
       }
+      if (record.pointPrimitive) record.pointPrimitive.show = visible;
+      if (record.polylinePrimitive) record.polylinePrimitive.show = visible;
       // Hidden stems keep their last geometry; this same sweep refreshes them
       // in the pass where they turn visible again.
       if (visible)
@@ -260,6 +366,8 @@ export function createRendering({ state }) {
   return {
     resetPublishSignature,
     releaseDataSources,
+    prepareReferenceCollections,
+    releaseReferenceCollections,
     updateVisibility,
     styleCableEntity,
     applyMarkerBlendOnce,
@@ -268,4 +376,21 @@ export function createRendering({ state }) {
     addReferenceStem,
     updateReferenceVisibility,
   };
+}
+
+function rgba8Color(color) {
+  return Cesium.Color.fromBytes(...color.toBytes());
+}
+
+function releaseOwnedCollection(scenePrimitives, collection) {
+  try {
+    scenePrimitives?.remove?.(collection);
+  } catch {
+    /* scene teardown or a failing collection implementation owns removal */
+  }
+  try {
+    if (!collection.isDestroyed()) collection.destroy();
+  } catch {
+    /* the owning scene may have destroyed the collection during removal */
+  }
 }

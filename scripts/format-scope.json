@@ -1196,5 +1196,17 @@
   "scripts/fixtures/infrastructurePrimitiveObservation.mjs",
   "scripts/fixtures/infrastructurePrimitiveObservation.test.mjs",
   "build/cesium-dependencies.js",
-  "src/tooling/cesiumDependencies.test.mjs"
+  "src/tooling/cesiumDependencies.test.mjs",
+  "src/layers/submarineCables/referenceCollections.test.mjs",
+  "scripts/fixtures/cable-reference-collections.html",
+  "scripts/fixtures/cable-reference-collections-ui.js",
+  "scripts/fixtures/cable-reference-collections-contract.mjs",
+  "scripts/fixtures/cableFailureDiagnostics.mjs",
+  "scripts/fixtures/cableFailureDiagnostics.test.mjs",
+  "scripts/fixtures/cableCameraSweep.mjs",
+  "scripts/fixtures/cableCameraSweep.test.mjs",
+  "scripts/performance/cableReferenceCollections.mjs",
+  "scripts/performance/cableReferenceCollections.test.mjs",
+  "scripts/fixtures/scenePrimitiveReadiness.mjs",
+  "scripts/fixtures/scenePrimitiveReadiness.test.mjs"
 ]

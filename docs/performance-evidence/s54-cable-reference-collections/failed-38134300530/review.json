@@ -1,0 +1,9 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38134300530",
+  "commit": "58f3b5d65931b238faecc9cecc9bab564a052687",
+  "status": "failed",
+  "rawSha256": "6c66cdff6671b3cc3c43a9c3abc36c3a831abc130530b1077c1ab75599e0dc1f",
+  "finding": "The camera-change native pick was still incomplete; its failure diagnostics called an unsupported cable-layer getLodDiagnostics method and masked the original evidence. Five baseline default-style samples completed; candidate did not run.",
+  "fix": "Publish original failure and partial picks first, then guard public getStats/getPerformanceDiagnostics and every optional viewer/image/geometry diagnostic independently.",
+  "validation": "13 focused tests passed, including the real cable layer API shape and throwing diagnostic accessors. Rendered validation remains pending."
+}
