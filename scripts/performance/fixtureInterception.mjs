@@ -44,12 +44,14 @@ export async function interceptFixtureSession(
   { onFulfilled } = {},
 ) {
   client.on('Fetch.requestPaused', async (event) => {
+    let command = null;
     try {
       const [method, params] = await fixtureRequestCommand(
         event,
         base,
         respond,
       );
+      command = method;
       await client.send(method, params);
       if (method === 'Fetch.fulfillRequest') {
         try {
@@ -60,7 +62,7 @@ export async function interceptFixtureSession(
             bodyBase64: params.body,
           });
         } catch (error) {
-          onError?.(error);
+          onError?.(error, { command, stage: 'delivery-observer' });
         }
       }
     } catch (error) {
@@ -76,7 +78,7 @@ export async function interceptFixtureSession(
           error.message,
         )
       )
-        onError(error);
+        onError?.(error, { command, stage: 'request-resolution' });
     }
   });
   await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });

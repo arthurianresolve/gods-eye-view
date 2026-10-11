@@ -481,11 +481,16 @@ async function configureFlightFixturePage(
         productionFlightFixture,
         new URL(url).origin + '/',
       ),
-    (error) => {
+    (error, detail) => {
       if (fixtureInterceptionErrors.length < 8)
-        fixtureInterceptionErrors.push(
-          String(error?.message || 'Fixture interception failed').slice(0, 240),
-        );
+        fixtureInterceptionErrors.push({
+          message: String(
+            error?.message || 'Fixture interception failed',
+          ).slice(0, 240),
+          command: detail?.command ?? null,
+          stage: detail?.stage ?? null,
+          capturePhase: failureProgress.phase,
+        });
     },
     deliveryObserver
       ? { onFulfilled: deliveryObserver.onFulfilled }
@@ -1121,10 +1126,14 @@ try {
 
   const summarizeFlightFixtureDelivery = async () => {
     if (!productionFlightFixture) return null;
-    if (fixtureInterceptionErrors.length)
+    if (fixtureInterceptionErrors.length) {
+      (failureProgress.current ??= {}).fixtureInterceptionErrors = [
+        ...fixtureInterceptionErrors,
+      ];
       throw new Error(
         `Provider fixture interception reported ${fixtureInterceptionErrors.length} bounded errors.`,
       );
+    }
     const observedCount = await page.evaluate(
       () =>
         window.__godsEyeView?.dataManager
