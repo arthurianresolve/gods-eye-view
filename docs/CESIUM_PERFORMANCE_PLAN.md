@@ -3974,3 +3974,10 @@ qualify current dev. Physical foreground/occlusion was unverified and 89.95%
 of the canvas intersected the viewport. No browser flags or visual settings
 were changed. The unresolved scheduling symptom remains; no root-cause or
 hardware-soak pass is claimed. [Raw observation and limitations](performance-evidence/windows-frame-delivery-20261011/review.json).
+
+After Chrome control was restored, a second five-second observation at 15:53 UTC
+still delivered only 48 frames, including a 1,000.8-ms gap, while 249 timer ticks
+continued. It uses the same older `9c482ca` fixture and does not qualify current
+dev. [Downloaded evidence and scope](performance-evidence/windows-frame-delivery-20261011/control-restored/README.md)
+preserve the result separately from the earlier run. Reliable physical Windows
+frame delivery and hardware acceptance remain unresolved.
