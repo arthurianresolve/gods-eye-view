@@ -1363,6 +1363,8 @@ async function pageSnapshot(page) {
           featureCount: importState?.featureCount ?? null,
           pendingJobs: importState?.pendingJobs ?? null,
           cacheEntries: importDiagnostics?.cacheEntries ?? null,
+          pointRepresentation:
+            importDiagnostics?.pointRepresentation ?? 'entity',
         },
         importEntityIds: importInventory.ids,
         importEntityRecords: importInventory.records,
@@ -1825,7 +1827,15 @@ export function installControlledRenderWaiterFactory() {
         renderWaits.add(row);
         listener = () => {
           if (scene.frameState.frameNumber <= startingFrame) return;
-          const current = snapshot();
+          let current;
+          try {
+            current = snapshot();
+          } catch (error) {
+            settled = true;
+            cleanup();
+            rejectPromise(error);
+            return;
+          }
           const ids = current.importEntityIds;
           const prefix = `gev-import:${workspaceId}:`;
           if (
@@ -1865,10 +1875,11 @@ async function installControlledImportOwner({ featureCount }) {
   const app = window.__godsEyeView;
   const appLayer = app?.importedGeometryLayer;
   const appState = appLayer?.getState?.();
-  const appIds =
-    app?.viewer?.entities?.values
-      ?.filter((entity) => String(entity.id).startsWith('gev-import:'))
-      .map((entity) => String(entity.id)) || [];
+  const appIds = window.__qaLifecycleImportInventory().ids;
+  const pointRepresentation =
+    appLayer?.getPerformanceDiagnostics?.().pointRepresentation ?? 'entity';
+  if (!['entity', 'primitive-collection'].includes(pointRepresentation))
+    throw new Error('Controlled import point representation is unsupported.');
   if (
     !app?.viewer?.scene ||
     appState?.featureCount !== 0 ||
@@ -1926,6 +1937,7 @@ async function installControlledImportOwner({ featureCount }) {
   };
   const layer = createImportedGeometryLayer({
     viewer: app.viewer,
+    pointRepresentation,
     batchOptions: { now: tick, schedule, cancel },
   });
 
@@ -1934,12 +1946,17 @@ async function installControlledImportOwner({ featureCount }) {
     const diagnostics = layer.getPerformanceDiagnostics();
     const viewer = app.viewer;
     const scene = viewer.scene;
-    const entities = viewer.entities.values.filter((entity) =>
-      String(entity.id).startsWith('gev-import:'),
+    if (diagnostics.pointRepresentation !== pointRepresentation)
+      throw new Error(
+        'Controlled import renderer differs from the application.',
+      );
+    const importInventory = window.__qaLifecycleImportInventory([
+      appLayer,
+      layer,
+    ]);
+    const applicationOwnerIds = importInventory.ids.filter(
+      (id) => !id.startsWith('gev-import:controlled-'),
     );
-    const applicationOwnerIds = entities
-      .map((entity) => String(entity.id))
-      .filter((id) => !id.startsWith('gev-import:controlled-'));
     const applicationContextCount = [...contextStore.entities.values()].filter(
       (record) =>
         record?.layerId === 'user-imports' &&
@@ -1951,18 +1968,10 @@ async function installControlledImportOwner({ featureCount }) {
         featureCount: state.featureCount,
         pendingJobs: diagnostics.pendingJobs,
         cacheEntries: diagnostics.cacheEntries,
+        pointRepresentation: diagnostics.pointRepresentation,
       },
-      importEntityIds: entities
-        .map((entity) => String(entity.id))
-        .slice(0, 5000),
-      importEntityRecords: entities.slice(0, 5000).map((entity) => {
-        const position = entity.position?.getValue(viewer.clock.currentTime);
-        return {
-          id: String(entity.id),
-          name: String(entity.name || ''),
-          position: position ? [position.x, position.y, position.z] : null,
-        };
-      }),
+      importEntityIds: importInventory.ids,
+      importEntityRecords: importInventory.records,
       scene: {
         entities: viewer.entities.values.length,
         dataSources: viewer.dataSources.length,
@@ -1977,6 +1986,7 @@ async function installControlledImportOwner({ featureCount }) {
         : null,
       renderedPopulation,
       applicationOwner: {
+        pointRepresentation,
         featureCount: appLayer.getState().featureCount,
         pendingJobs: appLayer.getState().pendingJobs,
         importedEntityIds: applicationOwnerIds.slice(0, 5000),

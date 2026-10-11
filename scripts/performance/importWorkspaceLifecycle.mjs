@@ -356,7 +356,9 @@ export function installLifecycleRenderWaiter(scope = window) {
   // The app-owned point renderer keeps metadata Entities outside
   // viewer.entities. Read both representations and verify the native owners;
   // metadata or feature counts alone must not satisfy the rendered census.
-  scope.__qaLifecycleImportInventory = () => {
+  scope.__qaLifecycleImportInventory = (
+    layers = [scope.__godsEyeView?.importedGeometryLayer],
+  ) => {
     const app = scope.__godsEyeView;
     const records = (app?.viewer?.entities?.values || [])
       .filter((entity) => String(entity.id).startsWith('gev-import:'))
@@ -370,8 +372,13 @@ export function installLifecycleRenderWaiter(scope = window) {
           position: position ? [position.x, position.y, position.z] : null,
         };
       });
-    const points = app?.importedGeometryLayer?.getPointRendererSnapshot?.();
-    if (points) {
+    for (const layer of layers) {
+      const representation =
+        layer?.getPerformanceDiagnostics?.().pointRepresentation;
+      const points = layer?.getPointRendererSnapshot?.();
+      if (representation === 'primitive-collection' && !points)
+        throw new Error('Imported point ownership inventory is unavailable.');
+      if (!points) continue;
       if (
         !Number.isSafeInteger(points.pointCount) ||
         points.pointCount < 0 ||
@@ -1787,9 +1794,20 @@ function assertControlledAppOwnerUntouched(snapshot) {
     owner?.pendingJobs !== 0 ||
     !Array.isArray(owner.importedEntityIds) ||
     owner.importedEntityIds.length !== 0 ||
-    owner.contextRecordCount !== 0
+    owner.contextRecordCount !== 0 ||
+    !controlledRendererMatchesApp(snapshot)
   )
     throw new Error('Controlled imports collided with the application owner.');
+}
+
+function controlledRendererMatchesApp(snapshot) {
+  const actual = snapshot?.imports?.pointRepresentation;
+  const expected = snapshot?.applicationOwner?.pointRepresentation;
+  // Historical reports did not declare the renderer; preserve their scope.
+  if (actual === undefined && expected === undefined) return true;
+  return (
+    ['entity', 'primitive-collection'].includes(expected) && actual === expected
+  );
 }
 
 export async function closeControlledOwnerAndContext({
@@ -2655,7 +2673,8 @@ export function validateImportWorkspaceLifecycleV2Report(
     snapshot.applicationOwner.pendingJobs === 0 &&
     Array.isArray(snapshot.applicationOwner.importedEntityIds) &&
     snapshot.applicationOwner.importedEntityIds.length === 0 &&
-    snapshot.applicationOwner.contextRecordCount === 0;
+    snapshot.applicationOwner.contextRecordCount === 0 &&
+    controlledRendererMatchesApp(snapshot);
   if (
     !untouchedAppOwner(controlled.baseline) ||
     !untouchedAppOwner(controlled.final) ||

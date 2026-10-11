@@ -101,3 +101,29 @@ function serialization and the existing timeout/cleanup controls. The same
 inventory supplies load, supersession and workspace checkpoints. Render and
 drain deadlines are unchanged. A new hosted lifecycle run is still required;
 these unit results do not relabel the failed run.
+
+## Application integration and controlled renderer follow-up
+
+[Standard CI 38159767176](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38159767176)
+passes all seven executed jobs at application integration commit
+`b67cca57b22743f03dacad36f9826279e93308ea`: Node 24/26 suites, builds,
+formatting, package boundaries, Windows onboarding, three-platform recovery,
+and all browser journeys. The three raw recovery reports and independent
+`recovery-b67cca57-review.json` verify all fifteen saved-settings/workspace
+checks, persisted asset hashes, zero unexpected pages and natural browser
+shutdown. These are functional recovery results; they do not diagnose the
+older Windows hardware/shutdown failures or establish hardware performance.
+
+[Lifecycle 38160466990](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38160466990)
+passes at observer fix `c3df3acc6ea3d61425329ce8d959ac7c908776d2`.
+The application performs five collection-rendered import/clear cycles and
+five workspace replacements. Its separate controlled cancellation/supersession
+case still constructs an Entity renderer. The raw report is preserved and is
+not evidence for collection cancellation/supersession in the full application.
+
+The follow-up matches that controlled owner to the app's effective renderer,
+records the representation in checkpoints, inventories both owners' native
+points, and rejects renderer mismatch. Missing native ownership now rejects
+and cleans up its completed-render waiter immediately. All 54 lifecycle tests
+pass. Collection-specific hosted cancellation/supersession remains pending
+until the corrected source is tested; deadlines and resource gates are unchanged.

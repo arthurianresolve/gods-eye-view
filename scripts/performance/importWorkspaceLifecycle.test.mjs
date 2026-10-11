@@ -1825,6 +1825,50 @@ test('collection renderer lifecycle inventory rejects missing, conflicting, and 
   ]);
 });
 
+test('controlled inventory includes both owners and rejects missing native collection evidence', () => {
+  const point = (id) => ({
+    id: `gev-import:${id}:file:point`,
+    name: id,
+    position: [1, 2, 3],
+  });
+  const appPoint = point('app');
+  const controlPoint = point('controlled-replacement-1');
+  const makeLayer = (record) => ({
+    getPerformanceDiagnostics: () => ({
+      pointRepresentation: 'primitive-collection',
+    }),
+    getPointRendererSnapshot: () => ({
+      pointCount: 1,
+      entityRows: [record],
+      primitiveRows: [record],
+    }),
+  });
+  const appLayer = makeLayer(appPoint);
+  const controlLayer = makeLayer(controlPoint);
+  const scope = {
+    __godsEyeView: {
+      viewer: { entities: { values: [] } },
+      importedGeometryLayer: appLayer,
+    },
+  };
+  vm.runInNewContext(`(${installLifecycleRenderWaiter.toString()})`)(scope);
+  assert.deepEqual(
+    Array.from(
+      scope.__qaLifecycleImportInventory([appLayer, controlLayer]).ids,
+    ),
+    [appPoint.id, controlPoint.id],
+  );
+  assert.throws(
+    () => scope.__qaLifecycleImportInventory([appLayer, appLayer]),
+    /duplicate/,
+  );
+  delete controlLayer.getPointRendererSnapshot;
+  assert.throws(
+    () => scope.__qaLifecycleImportInventory([appLayer, controlLayer]),
+    /unavailable/,
+  );
+});
+
 test('workspace render observation ignores an old matching frame until restore transitions', async () => {
   const listeners = new Set();
   const previousRestore = { status: 'applied', workspaceId: 'ws' };
@@ -2165,6 +2209,23 @@ test('browser-serialized waiter factory returns an owned waiter, not a Promise w
   assert.equal(rendered.importedEntityCount, 0);
   assert.equal(rendered.workspaceId, '__empty__');
   assert.equal(wait.done, true);
+  assert.equal(listeners.size, 0);
+  assert.equal(ownedTimers.size, 0);
+  assert.equal(timers.size, 0);
+  const inventoryFailure = window.__qaCreateControlledRenderWaiter({
+    scene,
+    snapshot: () => {
+      throw new Error('native owner missing');
+    },
+    renderWaits,
+    ownedTimers,
+    workspaceId: '__empty__',
+    count: 0,
+    timeoutMs: 100,
+  });
+  await assert.rejects(inventoryFailure.promise, /native owner missing/);
+  assert.equal(inventoryFailure.done, true);
+  assert.equal(renderWaits.size, 0);
   assert.equal(listeners.size, 0);
   assert.equal(ownedTimers.size, 0);
   assert.equal(timers.size, 0);
@@ -2639,6 +2700,15 @@ test('v2 lifecycle contract requires native cycles and separate controlled race 
   assert.throws(
     () => validateImportWorkspaceLifecycleReport(missingReadiness, expected),
     /Cold scene readiness/,
+  );
+
+  const wrongRenderer = structuredClone(report);
+  wrongRenderer.cases[2].baseline.imports.pointRepresentation = 'entity';
+  wrongRenderer.cases[2].baseline.applicationOwner.pointRepresentation =
+    'primitive-collection';
+  assert.throws(
+    () => validateImportWorkspaceLifecycleReport(wrongRenderer, expected),
+    /full-app import owner/,
   );
 
   assert.throws(

@@ -1,0 +1,63 @@
+{
+  "scope": "settings, persisted asset equality and natural browser cleanup; no GPU performance claim",
+  "candidateCommit": "b67cca57b22743f03dacad36f9826279e93308ea",
+  "reviews": [
+    {
+      "platform": "windows",
+      "checks": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "rawSha256": "ca51b39b0d508d6925410e3ede5b34ba0dca01d18d50865c2041a2b20a8e6e4a",
+      "naturalCloseMs": [
+        502.54980000000796,
+        370.27680000002147,
+        290.7123000000138,
+        483.95999999996275,
+        329.5902000000351
+      ],
+      "hardwareRenderingValidated": false
+    },
+    {
+      "platform": "macos",
+      "checks": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "rawSha256": "fa361cda8208acf389349ed07139ba5bc3438d856b216396ca207c2f16b4930e",
+      "naturalCloseMs": [
+        1153.1903749999983,
+        890.4890830000077,
+        2181.234625000012,
+        1641.0031249999884,
+        1323.3274580000143
+      ],
+      "hardwareRenderingValidated": false
+    },
+    {
+      "platform": "ubuntu",
+      "checks": [
+        "prior-install-saves-browser-workspace",
+        "interrupted-update-retained-application",
+        "prior-install-rollback-same-profile",
+        "upgraded-application-same-profile",
+        "failed-verification-rolls-back-and-reopens-assets"
+      ],
+      "rawSha256": "c73b3b1dcd1614f755d47d621da208492a7e272a6895e8cd6f6a8b5f7db0e4fd",
+      "naturalCloseMs": [
+        173.995852,
+        204.53900000000067,
+        199.58759099999588,
+        444.4144069999966,
+        330.47744099999545
+      ],
+      "hardwareRenderingValidated": false
+    }
+  ]
+}
