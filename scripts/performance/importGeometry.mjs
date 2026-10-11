@@ -9,10 +9,8 @@ import {
   renameSync,
   writeFileSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import * as Cesium from 'cesium';
 
 const BASELINE_COMMIT = '37afdc6d66b74487ee2280dacc38566ccb3a1530';
 const script = fileURLToPath(import.meta.url);
@@ -45,8 +43,7 @@ function runtimeIdentity(root) {
     null,
   );
   assert.deepEqual(bytes, committed, 'Runtime source must match HEAD bytes');
-  const requireFromRoot = createRequire(path.join(root, 'package.json'));
-  const cesiumEntry = requireFromRoot.resolve('cesium');
+  const cesiumEntry = path.join(root, 'node_modules/cesium/Source/Cesium.js');
   return {
     sourceCommit: commit,
     runtimeLayerSha256: hash(bytes),
@@ -99,6 +96,8 @@ function lineOrPolygon(type) {
 
 async function runChild(root) {
   const identity = runtimeIdentity(root);
+  const cesiumEntry = path.join(root, 'node_modules/cesium/Source/Cesium.js');
+  const Cesium = await import(pathToFileURL(cesiumEntry));
   const { createImportedGeometryLayer } = await import(
     pathToFileURL(path.join(root, 'src/imports/runtimeLayer.js'))
   );
@@ -268,6 +267,11 @@ if (process.argv.includes('--child')) {
     harnessCommit: git(candidate, ['rev-parse', 'HEAD']).trim(),
     harnessSha256: scriptSha256,
     baselineCommit: BASELINE_COMMIT,
+    candidateMergeBaseCommit: git(candidate, [
+      'merge-base',
+      BASELINE_COMMIT,
+      'HEAD',
+    ]).trim(),
     candidateParentCommit: git(candidate, ['rev-parse', 'HEAD^']).trim(),
     scope:
       'Node-only geometry preparation. Five alternating pairs; each child performs three warmups before the measured run. The wake interval is enqueue-to-callback-start and combines timer clamping, event-loop queueing and scheduling; it is not timer-clamp-only attribution. Active spans include measurement wrapper overhead. No browser, rendering, GPU or interaction claim.',
@@ -275,7 +279,11 @@ if (process.argv.includes('--child')) {
   };
   atomicReport(output, report);
   try {
-    assert.equal(report.candidateParentCommit, BASELINE_COMMIT);
+    assert.equal(
+      report.candidateMergeBaseCommit,
+      BASELINE_COMMIT,
+      'Candidate must descend from the exact single-feature baseline.',
+    );
     for (let pair = 0; pair < 5; pair++) {
       for (const variant of pair % 2
         ? ['candidate', 'baseline']
