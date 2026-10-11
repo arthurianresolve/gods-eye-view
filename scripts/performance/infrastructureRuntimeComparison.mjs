@@ -11,6 +11,8 @@ export const INFRASTRUCTURE_RUNTIME_CASES = Object.freeze([
   'camera-lod-update',
 ]);
 export const INFRASTRUCTURE_RUNTIME_PAIRS = 5;
+export const INFRASTRUCTURE_SAMPLING_CONTRACT =
+  'owned-ready-selected-frame/8s-v1';
 
 function fail(message) {
   throw new Error(message);
@@ -165,6 +167,23 @@ function validateLifetime(lifetime, report, layer) {
           'Preserved source geometry inventory differs from its layer contract.',
         );
       if (
+        report.samplingContract === INFRASTRUCTURE_SAMPLING_CONTRACT &&
+        (!infrastructureSampleComplete({
+          stableFrames: row.frame.completedStableFrames,
+          pointPick: row.pointPick,
+          stemPick: row.stemPick,
+          pickRow: row.entitySelectionIdentity,
+          selectionRendered: row.selectionRendered,
+          elapsedMs: row.settledElapsedMs,
+        }) ||
+          row.primitiveReadiness?.ready !== true ||
+          row.primitiveReadiness.truncated !== false ||
+          row.primitiveReadiness.pending?.length !== 0)
+      )
+        fail(
+          'Infrastructure sample has incomplete readiness, selection or deadline evidence.',
+        );
+      if (
         lifetime.mode === 'entities' &&
         (row.ownership.rendererOwners !== 0 ||
           row.ownership.entitySurfaceGraphics !== row.surfaceCount)
@@ -259,6 +278,11 @@ export function validateInfrastructureRuntimeReport(
 ) {
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
+  if (
+    report.samplingContract != null &&
+    report.samplingContract !== INFRASTRUCTURE_SAMPLING_CONTRACT
+  )
+    fail('Infrastructure sampling contract is unsupported.');
   if (
     report.applicationCommit !== expectedCommit ||
     report.harnessCommit !== expectedCommit
@@ -487,6 +511,26 @@ export function countInfrastructureGraphics(entities, surfaceEntities) {
     if (entity.polygon) preservedGraphics.polygons++;
   }
   return { surfaceGraphics, preservedGraphics };
+}
+
+/** A source-ready frame is insufficient until native selection is rendered. */
+export function infrastructureSampleComplete({
+  stableFrames,
+  pointPick,
+  stemPick,
+  pickRow,
+  selectionRendered,
+  elapsedMs,
+  deadlineMs = 8000,
+}) {
+  return (
+    stableFrames >= 3 &&
+    Boolean(pointPick && stemPick && pickRow) &&
+    selectionRendered === true &&
+    Number.isFinite(elapsedMs) &&
+    elapsedMs >= 0 &&
+    elapsedMs <= deadlineMs
+  );
 }
 
 /** A failed native pick is retried only after a new stable rendered state. */

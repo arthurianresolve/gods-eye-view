@@ -4,6 +4,8 @@ import { infrastructureFixtureLayer } from '../fixtures/infrastructureFixtureLay
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
+  infrastructureSampleComplete,
+  INFRASTRUCTURE_SAMPLING_CONTRACT,
   infrastructureCameraRevisionReady,
   compareInfrastructureRuntimeLifetimes,
   INFRASTRUCTURE_RUNTIME_CASES,
@@ -12,6 +14,54 @@ import {
 } from './infrastructureRuntimeComparison.mjs';
 
 const commit = 'a'.repeat(40);
+
+test('sampling requires a selected completed frame inside the unchanged deadline', () => {
+  const ready = {
+    stableFrames: 3,
+    pointPick: {},
+    stemPick: {},
+    pickRow: {},
+    selectionRendered: true,
+    elapsedMs: 7900,
+  };
+  assert.equal(infrastructureSampleComplete(ready), true);
+  assert.equal(
+    infrastructureSampleComplete({ ...ready, selectionRendered: false }),
+    false,
+  );
+  assert.equal(
+    infrastructureSampleComplete({ ...ready, elapsedMs: 8868 }),
+    false,
+  );
+  assert.equal(
+    infrastructureSampleComplete({ ...ready, elapsedMs: NaN }),
+    false,
+  );
+  assert.equal(
+    infrastructureSampleComplete({ ...ready, stemPick: null }),
+    false,
+  );
+});
+
+test('new reports cannot turn successful picks into post-selection or deadline evidence', () => {
+  const report = validReport();
+  report.samplingContract = INFRASTRUCTURE_SAMPLING_CONTRACT;
+  const validate = () =>
+    validateInfrastructureRuntimeReport(report, { expectedCommit: commit });
+  assert.throws(validate, /readiness, selection or deadline/);
+  for (const lifetime of report.lifetimes)
+    for (const row of lifetime.samples) {
+      row.primitiveReadiness = { ready: true, truncated: false, pending: [] };
+      row.selectionRendered = true;
+      row.settledElapsedMs = 7900;
+    }
+  assert.equal(validate(), true);
+  report.lifetimes[0].samples[0].settledElapsedMs = 8868;
+  assert.throws(validate, /readiness, selection or deadline/);
+  report.lifetimes[0].samples[0].settledElapsedMs = 7900;
+  report.lifetimes[0].samples[0].selectionRendered = false;
+  assert.throws(validate, /readiness, selection or deadline/);
+});
 const digest = 'b'.repeat(64);
 const renderClock = {
   iso: '2026-10-11T12:00:00.000Z',

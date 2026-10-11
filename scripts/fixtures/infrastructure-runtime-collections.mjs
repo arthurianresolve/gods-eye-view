@@ -4,7 +4,10 @@ import { createApplicationViewer } from '../../src/app/viewer.js';
 import { localGeoJsonServices } from '../../src/app/localGeojsonServices.js';
 import { createInfrastructureLayers } from '../../src/data/infrastructure.js';
 import { INFRASTRUCTURE_DATA_URLS } from '../../src/sources/infrastructureData.js';
-import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
+import {
+  captureFreshCesiumFrame,
+  renderFreshCesiumFrame,
+} from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
   assertInfrastructureSourceInventory,
@@ -22,9 +25,11 @@ import {
   compareInfrastructureRuntimeLifetimes,
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
+  infrastructureSampleComplete,
   infrastructureCameraRevisionReady,
   INFRASTRUCTURE_RUNTIME_CASES,
   INFRASTRUCTURE_RUNTIME_PAIRS,
+  INFRASTRUCTURE_SAMPLING_CONTRACT,
   validateInfrastructureRuntimeReport,
 } from '../performance/infrastructureRuntimeComparison.mjs';
 
@@ -743,6 +748,7 @@ async function runLayerLifetime(
       const deadline = started + 8000;
       const readiness = createInfrastructureSampleReadiness();
       let completedCaptures = 0;
+      let readinessFrames = 0;
       let pickSearches = 0;
       let pickDiagnostics = null;
       let stableFrames = 0;
@@ -760,6 +766,7 @@ async function runLayerLifetime(
       let previousPrimitiveReadiness = null;
       const readinessTimeline = [];
       let nativePickElapsedMs = 0;
+      let settledElapsedMs = null;
       const primitiveObservations = [];
       const observePrimitives = (phase) => {
         if (primitiveObservations.length >= 8) return;
@@ -769,7 +776,60 @@ async function runLayerLifetime(
           ...observeInfrastructurePrimitives(viewer.scene, rows, Cesium),
         });
       };
+      const sampleComplete = () =>
+        infrastructureSampleComplete({
+          stableFrames,
+          pointPick,
+          stemPick,
+          pickRow,
+          selectionRendered,
+          elapsedMs: performance.now() - started,
+        });
       while (performance.now() < deadline) {
+        // Do not repeatedly copy, encode, and hash a known incomplete frame.
+        // Use the existing completed-frame operation while workers materialize
+        // geometry, with the same per-frame and whole-sample deadlines.
+        const pendingGeometry = readInfrastructurePrimitiveReadiness(
+          viewer.scene,
+          Cesium,
+        );
+        if (
+          !pendingGeometry.ready ||
+          viewer.dataSourceDisplay.ready !== true ||
+          !infrastructureCameraRevisionReady(
+            targetLayer.getLodDiagnostics(),
+            finitePosition(viewer.camera.positionWC),
+          )
+        ) {
+          const rendered = await renderFreshCesiumFrame(viewer, {
+            timeoutMs: Math.min(
+              FRAME_TIMEOUT_MS,
+              Math.max(0, deadline - performance.now()),
+            ),
+          });
+          check(rendered, 'Fresh geometry-readiness frame was unavailable.');
+          readinessFrames++;
+          readiness.observe(null, { inputsReady: false });
+          stableFrames = 0;
+          primitiveReadiness = readInfrastructurePrimitiveReadiness(
+            viewer.scene,
+            Cesium,
+          );
+          const signature = JSON.stringify(primitiveReadiness);
+          if (
+            signature !== previousPrimitiveReadiness &&
+            readinessTimeline.length < 32
+          ) {
+            readinessTimeline.push({
+              elapsedMs: performance.now() - started,
+              completedCaptures,
+              readinessFrames,
+              ...primitiveReadiness,
+            });
+            previousPrimitiveReadiness = signature;
+          }
+          continue;
+        }
         finalFrame = await captureFrame(viewer);
         completedCaptures++;
         if (pickRow) selectionRendered = true;
@@ -836,13 +896,16 @@ async function runLayerLifetime(
           pointPick = target?.pointPick;
           stemPick = target?.stemPick;
           pickRow = target?.row;
+          selectionRendered = false;
           if (pickRow) preferredPickEntityId = pickRow.entityId;
           observePrimitives('after-native-picks');
         }
-        if (stableFrames >= 3 && pointPick && stemPick && selectionRendered)
+        if (sampleComplete()) {
+          settledElapsedMs = performance.now() - started;
           break;
+        }
       }
-      if (!(stableFrames >= 3 && pointPick && stemPick && pickRow)) {
+      if (!sampleComplete()) {
         observePrimitives('failed-sample');
         lifetime.failedSample = {
           primitiveObservations,
@@ -850,6 +913,8 @@ async function runLayerLifetime(
           pair,
           stableFrames,
           completedCaptures,
+          readinessFrames,
+          selectionRendered,
           pickSearches,
           pickDiagnostics,
           sampleElapsedMs: performance.now() - started,
@@ -882,7 +947,7 @@ async function runLayerLifetime(
         };
       }
       check(
-        stableFrames >= 3 && pointPick && stemPick && pickRow,
+        sampleComplete(),
         `${mode} ${caseId} did not settle with native point/stem picks.`,
       );
       check(
@@ -923,6 +988,9 @@ async function runLayerLifetime(
         primitiveReadiness,
         readinessTimeline,
         sampleElapsedMs: performance.now() - started,
+        readinessFrames,
+        selectionRendered,
+        settledElapsedMs,
         nativePickElapsedMs,
         pixelSha256: finalFrame.pixelSha256,
         pngBase64: finalFrame.pngBase64,
@@ -1036,6 +1104,7 @@ async function runLayerLifetime(
 
 async function runDiagnostic() {
   const report = {
+    samplingContract: INFRASTRUCTURE_SAMPLING_CONTRACT,
     schema: fixtureLayer.schema,
     applicationCommit: __GEV_APP_COMMIT__,
     harnessCommit: __GEV_APP_COMMIT__,
