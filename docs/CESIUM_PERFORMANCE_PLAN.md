@@ -3,7 +3,12 @@
 Latest isolated S48 shader-program diagnostic: the opt-in owned-context observer
 is implemented with bounded program/query rows, exact cleanup ownership and
 CLI/workflow/report validation. Root passes 151 focused checks with unchanged
-source hashes. Hosted integration and rendered attribution remain pending.
+source hashes. The first hosted diagnostic at `3384b8bd` finishes five samples
+but hits the unchanged child deadline before tracking run 2. Seven reached
+observers restore their wrappers; generic failure serialization drops the
+per-parameter detail, so complete attribution remains unavailable. Preserve
+the failed report and fix bounded evidence retention before another run.
+Standard integration CI remains pending.
 [Implementation, source/profile audit and limits](performance-evidence/s48-shader-program-attribution/README.md)
 keep whole-document synchronous GL-call time separate from GPU timing and
 matched performance. Production rendering defaults are unchanged; S48 remains partial.

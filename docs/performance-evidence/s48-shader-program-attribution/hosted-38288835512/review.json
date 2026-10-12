@@ -1,0 +1,123 @@
+{
+  "schema": "gev-shader-attribution-failed-run-review/v1",
+  "status": "failed-capture-preserved",
+  "commit": "3384b8bd7b4c9f68318802bc6525dde3329ffab2",
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38288835512",
+  "artifacts": [
+    {
+      "name": "performance-build-smoke.json",
+      "byteLength": 318374,
+      "sha256": "4b32aa0376e0a3f09495bad67406889f24fd7f0b7e4a4410058e10ef1e3aa2a3"
+    },
+    {
+      "name": "performance-build-smoke.json.capture-cli-report-candidate.json",
+      "byteLength": 215086,
+      "sha256": "2302a60fb3c239cba6c49d74a983d658f3e803a5e655809d3572dcef71b8e50a"
+    },
+    {
+      "name": "run.json",
+      "byteLength": 9238,
+      "sha256": "aa08a82c6d5d1a90fd082e89df966c8b5450f80c4da05e006ac3b5160ec4e0d3"
+    },
+    {
+      "name": "job-failure.log.gz",
+      "byteLength": 802,
+      "sha256": "256c8f2b7509655fa4da62c38e324cabbe4f2feda90df49c9db6d7b1a3a4f093"
+    }
+  ],
+  "failure": {
+    "phase": "prepare-fresh-provider-document",
+    "scenario": "selected-aircraft-tracking",
+    "run": 2,
+    "message": "Protocol error (Target.createTarget): Target closed",
+    "operator": null
+  },
+  "outerFailure": "Child process timed out; Wrote bounded failed-capture evidence. Capture failed during prepare-fresh-provider-document: Protocol error (Target.createTarget): Target closed Refreshed bounded failed-capture evidence after cleanup. Capture failed during prepare-fresh-provider-document: Protocol error (Target.createTarget): Target closed; cleanup confirmed (1).",
+  "completedSamples": 5,
+  "expectedSamples": 6,
+  "servedBytes": "pre-capture verified; post-capture verification missing",
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "documents": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "cleanupConfirmed": true,
+      "programCount": 7,
+      "queryCount": 21,
+      "queryElapsedMs": 1064.3000000000175,
+      "maximumQueryElapsedMs": 358.29999999998836,
+      "perParameterRowsPreserved": false
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "cleanupConfirmed": true,
+      "programCount": 19,
+      "queryCount": 57,
+      "queryElapsedMs": 7752.3000000000175,
+      "maximumQueryElapsedMs": 1573.5999999999767,
+      "perParameterRowsPreserved": false
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "documentId": "provider-document-1",
+      "cleanupConfirmed": true,
+      "programCount": 31,
+      "queryCount": 93,
+      "queryElapsedMs": 12888.800000000163,
+      "maximumQueryElapsedMs": 1956.6999999999825,
+      "perParameterRowsPreserved": false
+    },
+    {
+      "documentRole": "provider-sample-2",
+      "documentId": "provider-document-2",
+      "cleanupConfirmed": true,
+      "programCount": 31,
+      "queryCount": 93,
+      "queryElapsedMs": 14263.799999999843,
+      "maximumQueryElapsedMs": 1965.100000000035,
+      "perParameterRowsPreserved": false
+    },
+    {
+      "documentRole": "provider-sample-3",
+      "documentId": "provider-document-3",
+      "cleanupConfirmed": true,
+      "programCount": 26,
+      "queryCount": 78,
+      "queryElapsedMs": 6500.900000000023,
+      "maximumQueryElapsedMs": 1864.7000000000116,
+      "perParameterRowsPreserved": false
+    },
+    {
+      "documentRole": "provider-sample-4",
+      "documentId": "provider-document-4",
+      "cleanupConfirmed": true,
+      "programCount": 31,
+      "queryCount": 93,
+      "queryElapsedMs": 9852.299999999814,
+      "maximumQueryElapsedMs": 1728.5999999999767,
+      "perParameterRowsPreserved": false
+    },
+    {
+      "documentRole": "provider-sample-5",
+      "documentId": "provider-document-5",
+      "cleanupConfirmed": true,
+      "programCount": 32,
+      "queryCount": 96,
+      "queryElapsedMs": 8401.999999999884,
+      "maximumQueryElapsedMs": 1137,
+      "perParameterRowsPreserved": false
+    }
+  ],
+  "totalPrograms": 177,
+  "totalQueries": 531,
+  "totalQueryElapsedMs": 60724.39999999976,
+  "limitations": [
+    "The existing 180-second child deadline stopped the run; no deadline or fidelity reduction is justified by this evidence.",
+    "Reached observer and interception cleanup is confirmed; the eighth expected document did not complete.",
+    "Generic failure projection drops parameterNames at its depth limit; observer complete statuses do not make the projected records complete.",
+    "Program creation/link/query counts are consistent with initialization but cannot recover per-parameter identity or first/repeated query counts.",
+    "Times cover whole owned document lifetimes and synchronous native waiting, not GPU duration or matched performance.",
+    "Linux SwiftShader evidence is not physical Windows acceptance."
+  ]
+}
