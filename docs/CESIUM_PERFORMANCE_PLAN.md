@@ -1,5 +1,32 @@
 # Cesium performance plan
 
+Latest isolated S48 shader-program diagnostic: the opt-in owned-context observer
+is implemented with bounded program/query rows, exact cleanup ownership and
+CLI/workflow/report validation. Root passes 151 focused checks with unchanged
+source hashes. The first hosted diagnostic at `3384b8bd` finishes five samples
+but hits the unchanged child deadline before tracking run 2. Seven reached
+observers restore their wrappers; generic failure serialization drops the
+per-parameter detail, so complete attribution remains unavailable. Preserve
+the failed report and fix bounded evidence retention before another run.
+All seven standard integration jobs pass at exact `3384b8bd`; this does not
+validate the failed attribution run or the subsequent retention repair.
+The bounded retention repair now passes 159 independent focused checks with
+unchanged source hashes. Per-document checkpoints retain direct and late query
+rows separately, verify payload/reference hashes and commit/receipt provenance,
+and require matching document identities for complete captures. The general
+failure-report cap and all deadlines remain unchanged. The hosted repair run
+at `e54eaded` retains hash-bound parameter rows from six complete contexts:
+143 programs, 429 first queries and zero repeated same-parameter queries.
+LINK_STATUS accounts for 99.998% of synchronous query elapsed time, supporting
+first-use link synchronization in this Linux SwiftShader workload. The capture
+still fails after four of six samples at the unchanged child deadline; the
+seventh reached context is unavailable with unconfirmed cleanup. All seven
+standard CI jobs pass at exact `e54eaded` in run `38293247484`; later changes
+are documentation/evidence only. Neither failed run is performance acceptance.
+[Implementation, source/profile audit and limits](performance-evidence/s48-shader-program-attribution/README.md)
+keep whole-document synchronous GL-call time separate from GPU timing and
+matched performance. Production rendering defaults are unchanged; S48 remains partial.
+
 Latest S47 weather/wind capture packet: the full-application short diagnostic
 passes at exact `1e6f6f98`, with all fourteen fixture assets observed, four
 completed samples, stable populations/settings and confirmed owned cleanup.
@@ -864,7 +891,7 @@ the earlier release requirements and historical results.
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, weather/wind fixture capture, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded opt-in CPU/resource diagnostics, caller-tagged depth-pick observations, lifecycle-safe profiler/interception ownership and immutable renderer identity reads | Integrated diagnostic code at `f7e0709c` passes all seven standard CI jobs. Three complete hosted profiles identify shader-query and depth-pick readback costs; full ancestry and interval weights are replayed from hash-bound raw data. Dense capture and optional-profiling-disabled control both fail | Software-renderer attribution only; complete workload traces, allocation profiles, overhead comparisons and primary Windows evidence remain pending |
+| S48 attribution and resource diagnostics | Partial: bounded opt-in CPU/resource diagnostics, depth-pick and owned shader-program observations, lifecycle-safe profiler/interception ownership, immutable renderer reads and hash-bound failure checkpoints | All seven standard CI jobs pass at `e54eaded`. Failed hosted capture preserves six complete contexts: 143 programs, 429 first parameter queries, no repeated queries; first LINK_STATUS waits dominate. Independent raw replay verifies identities, scope and incomplete cleanup. Dense captures remain failed | Software-renderer attribution only; complete workload traces, allocation profiles, overhead comparisons and primary Windows evidence remain pending |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, unchanged geometry writes suppressed; exact runtime footprint poses prevent rounded-key collisions at `61c050ca` | Six old-runtime failures reproduced; 83 focused checks, five unchanged lifecycle cycles, late worker-result cases, five native calibration pairs and all seven integrated standard jobs pass at `40b9f5c9` | Hosted paravirtual Metal calibration hashes match; full terrain/pose visual matrix and physical Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |

@@ -4,113 +4,441 @@ const STATE_KEY = '__gevRecoveryEarlyRendererProbe';
 const CLEANUP_PROOF_KEY = '__gevRecoveryEarlyRendererProbeCleanupProof';
 
 /** Install an opt-in, one-shot hook on Cesium's real widget canvas only. */
-export async function installEarlyCesiumRendererProbe(page) {
-  const handle = await page.evaluateOnNewDocument((proofKey) => {
-    // Puppeteer runs evaluateOnNewDocument in subframes too. The probe belongs
-    // to the top-level Cesium viewer document only.
-    if (window !== window.top) return;
-    const key = '__gevRecoveryEarlyRendererProbe';
-    delete window[proofKey];
-    const prototype = HTMLCanvasElement.prototype;
-    const descriptor = Object.getOwnPropertyDescriptor(prototype, 'getContext');
-    const nativeGetContext = descriptor?.value;
-    if (typeof nativeGetContext !== 'function') {
-      window[key] = { error: 'native getContext unavailable' };
-      return;
-    }
-
-    const state = (window[key] = {
-      captured: false,
-      contextLost: false,
-      contextRestored: false,
-      renderer: null,
-      vendor: null,
-      contextAttributes: null,
-      parameterQueryCount: 0,
-      queryDurationMs: null,
-      error: null,
-      nativeGetContext,
-      canvas: null,
-      context: null,
-      listeners: [],
-    });
-    let active = true;
-    function restore() {
-      if (!active) return;
-      active = false;
-      Object.defineProperty(prototype, 'getContext', descriptor);
-    }
-    state.restore = restore;
-    Object.defineProperty(prototype, 'getContext', {
-      ...descriptor,
-      value: function (...args) {
-        const context = Reflect.apply(nativeGetContext, this, args);
-        if (
-          active &&
-          context &&
-          this instanceof HTMLCanvasElement &&
-          this.closest('.cesium-widget') &&
-          /^(webgl2?|experimental-webgl)$/i.test(String(args[0]))
-        ) {
-          restore();
-          state.captured = true;
-          state.canvas = this;
-          state.context = context;
-          const onLost = (event) => {
-            state.contextLost = true;
-          };
-          const onRestored = () => {
-            state.contextRestored = true;
-          };
-          try {
-            state.listeners.push(['webglcontextlost', onLost]);
-            this.addEventListener('webglcontextlost', onLost);
-            state.listeners.push(['webglcontextrestored', onRestored]);
-            this.addEventListener('webglcontextrestored', onRestored);
-          } catch (error) {
-            state.error = String(error?.message || error).slice(0, 240);
-          }
-          try {
-            const started = performance.now();
-            const attributes = context.getContextAttributes?.();
-            if (!attributes)
-              throw new Error('WebGL context attributes unavailable');
-            state.contextAttributes = Object.fromEntries(
-              [
-                'alpha',
-                'antialias',
-                'depth',
-                'failIfMajorPerformanceCaveat',
-                'powerPreference',
-                'premultipliedAlpha',
-                'preserveDrawingBuffer',
-                'stencil',
-                'desynchronized',
-              ]
-                .filter((key) => key in attributes)
-                .map((key) => [key, attributes[key]]),
-            );
-            const extension = context.getExtension('WEBGL_debug_renderer_info');
-            state.renderer = context.getParameter(
-              extension?.UNMASKED_RENDERER_WEBGL || context.RENDERER,
-            );
-            state.parameterQueryCount += 1;
-            state.vendor = context.getParameter(
-              extension?.UNMASKED_VENDOR_WEBGL || context.VENDOR,
-            );
-            state.parameterQueryCount += 1;
-            state.queryDurationMs = performance.now() - started;
-          } catch (error) {
-            state.error = String(error?.message || error).slice(0, 240);
-          }
-        }
-        return context;
-      },
-    });
-  }, CLEANUP_PROOF_KEY);
+export async function installEarlyCesiumRendererProbe(
+  page,
+  { shaderProgramAttribution = false } = {},
+) {
+  const handle = await page.evaluateOnNewDocument(
+    earlyRendererDocumentHook,
+    CLEANUP_PROOF_KEY,
+    shaderProgramAttribution === true,
+  );
   const identifier = handle?.identifier || null;
   if (identifier) scriptRemovalEntries(page).delete(identifier);
   return identifier;
+}
+
+/** Self-contained page hook, exported so tests execute the exact serialized producer. */
+export function earlyRendererDocumentHook(
+  proofKey,
+  shaderProgramAttributionEnabled = false,
+) {
+  function installShaderProgramAttribution(context) {
+    const MAX_PROGRAM_ROWS = 128;
+    const MAX_PNAMES_PER_PROGRAM = 4;
+    const METHODS = [
+      ['createProgram', null],
+      ['linkProgram', 0],
+      ['getProgramParameter', 0],
+      ['deleteProgram', 0],
+    ];
+    const names = new Map();
+    for (const name of [
+      'LINK_STATUS',
+      'ACTIVE_UNIFORMS',
+      'ACTIVE_ATTRIBUTES',
+      'VALIDATE_STATUS',
+    ]) {
+      const value = context?.[name];
+      if (Number.isSafeInteger(value)) names.set(value, name);
+    }
+    const programs = new WeakMap();
+    const rows = [];
+    const wrappers = [];
+    const totals = Object.fromEntries(
+      METHODS.map(([name]) => [
+        name,
+        { calls: 0, errors: 0, elapsedSumMs: 0, maxElapsedMs: 0 },
+      ]),
+    );
+    let nextProgramId = 1;
+    let untrackedProgramOperationCount = 0;
+    let pnameRowsOverflow = 0;
+    let installFailed = false;
+    let diagnosticFailed = false;
+    let ownerChanged = false;
+    let disposed = false;
+
+    const makeProgramRow = (program) => {
+      if (
+        !program ||
+        (typeof program !== 'object' && typeof program !== 'function')
+      )
+        return null;
+      const existing = programs.get(program);
+      if (existing) return existing;
+      if (rows.length >= MAX_PROGRAM_ROWS) {
+        untrackedProgramOperationCount += 1;
+        return null;
+      }
+      const row = {
+        programId: nextProgramId++,
+        createCalls: 0,
+        linkCalls: 0,
+        deleteCalls: 0,
+        parameterQueries: 0,
+        linkStatusKnown: null,
+        parameterNames: [],
+      };
+      programs.set(program, row);
+      rows.push(row);
+      return row;
+    };
+    const parameterRow = (row, pname) => {
+      if (!row) return null;
+      const numeric = Number.isSafeInteger(pname) ? pname : null;
+      const existing = row.parameterNames.find(
+        (entry) => entry.pname === numeric,
+      );
+      if (existing) return existing;
+      if (row.parameterNames.length >= MAX_PNAMES_PER_PROGRAM) {
+        pnameRowsOverflow += 1;
+        return null;
+      }
+      const entry = {
+        pname: numeric,
+        name: names.get(numeric) || 'other',
+        calls: 0,
+        firstQueries: 0,
+        repeatedQueries: 0,
+        linkCallBeforeQuery: 0,
+        linkConfirmedBeforeQuery: 0,
+        trueResults: 0,
+        falseResults: 0,
+        numericResults: 0,
+        otherResults: 0,
+        elapsedSumMs: 0,
+        maxElapsedMs: 0,
+      };
+      row.parameterNames.push(entry);
+      return entry;
+    };
+    const recordElapsed = (target, elapsed) => {
+      if (!target || !Number.isFinite(elapsed) || elapsed < 0) return;
+      target.elapsedSumMs += elapsed;
+      target.maxElapsedMs = Math.max(target.maxElapsedMs, elapsed);
+    };
+    for (const [name, programArgumentIndex] of METHODS) {
+      const original = context?.[name];
+      if (typeof original !== 'function') {
+        installFailed = true;
+        break;
+      }
+      const ownDescriptor =
+        Object.getOwnPropertyDescriptor(context, name) || null;
+      const wrapped = function (...args) {
+        if (disposed || this !== context)
+          return Reflect.apply(original, this, args);
+        let total = null;
+        let row = null;
+        let pname = null;
+        let queryPname = null;
+        let started = null;
+        try {
+          total = totals[name];
+          total.calls += 1;
+          queryPname = name === 'getProgramParameter' ? args[1] : null;
+          const program =
+            programArgumentIndex === null ? null : args[programArgumentIndex];
+          row = program ? makeProgramRow(program) : null;
+          pname =
+            name === 'getProgramParameter'
+              ? parameterRow(row, queryPname)
+              : null;
+          const repeatedQuery = Boolean(pname && pname.calls > 0);
+          if (pname) {
+            pname.calls += 1;
+            if (repeatedQuery) pname.repeatedQueries += 1;
+            else pname.firstQueries += 1;
+            if (row?.linkCalls > 0) pname.linkCallBeforeQuery += 1;
+            if (row?.linkStatusKnown === true)
+              pname.linkConfirmedBeforeQuery += 1;
+          }
+          if (name === 'linkProgram' && row) {
+            row.linkCalls += 1;
+            row.linkStatusKnown = null;
+          }
+          if (name === 'deleteProgram' && row) row.deleteCalls += 1;
+          if (name === 'getProgramParameter' && row) row.parameterQueries += 1;
+          started = performance.now();
+        } catch {
+          diagnosticFailed = true;
+        }
+        let result;
+        let didThrow = false;
+        let thrown;
+        try {
+          result = Reflect.apply(original, this, args);
+        } catch (error) {
+          didThrow = true;
+          thrown = error;
+        }
+        try {
+          if (didThrow && total) total.errors += 1;
+          if (started !== null) {
+            const elapsed = Math.max(0, performance.now() - started);
+            recordElapsed(total, elapsed);
+            recordElapsed(pname, elapsed);
+          }
+          if (name === 'createProgram' && result) {
+            row = makeProgramRow(result);
+            if (row) row.createCalls += 1;
+          }
+          if (
+            name === 'getProgramParameter' &&
+            queryPname === context.LINK_STATUS &&
+            typeof result === 'boolean' &&
+            row
+          )
+            row.linkStatusKnown = result;
+          if (pname && !didThrow) {
+            if (result === true) pname.trueResults += 1;
+            else if (result === false) pname.falseResults += 1;
+            else if (typeof result === 'number') pname.numericResults += 1;
+            else pname.otherResults += 1;
+          }
+        } catch {
+          diagnosticFailed = true;
+        }
+        if (didThrow) throw thrown;
+        return result;
+      };
+      try {
+        Object.defineProperty(context, name, {
+          ...(ownDescriptor || {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+          }),
+          value: wrapped,
+        });
+        if (context[name] !== wrapped)
+          throw new Error('method wrapper refused');
+        wrappers.push({ name, original, ownDescriptor, wrapped });
+      } catch {
+        installFailed = true;
+        break;
+      }
+    }
+
+    const restore = () => {
+      let restored = 0;
+      let changedOwnerCount = 0;
+      for (const entry of [...wrappers].reverse()) {
+        try {
+          if (context[entry.name] !== entry.wrapped) {
+            changedOwnerCount += 1;
+            continue;
+          }
+          if (entry.ownDescriptor)
+            Object.defineProperty(context, entry.name, entry.ownDescriptor);
+          else if (!delete context[entry.name])
+            throw new Error('delete refused');
+          if (context[entry.name] !== entry.original)
+            throw new Error('method restoration refused');
+          restored += 1;
+        } catch {
+          changedOwnerCount += 1;
+        }
+      }
+      ownerChanged ||= changedOwnerCount > 0;
+      return {
+        requestedMethodCount: METHODS.length,
+        installedMethodCount: wrappers.length,
+        restoredMethodCount: restored,
+        changedOwnerCount,
+        confirmed: changedOwnerCount === 0 && restored === wrappers.length,
+      };
+    };
+    const installationCleanup = installFailed ? restore() : null;
+
+    return {
+      snapshotAndDispose() {
+        if (disposed)
+          return {
+            schema: 'gev-shader-program-lifecycle/v1',
+            status: 'unavailable',
+            error: 'observer-already-disposed',
+            cleanup: { confirmed: false },
+          };
+        disposed = true;
+        const programRows = rows.map((row) => ({
+          programId: row.programId,
+          createCalls: row.createCalls,
+          linkCalls: row.linkCalls,
+          deleteCalls: row.deleteCalls,
+          parameterQueries: row.parameterQueries,
+          linkStatusKnown: row.linkStatusKnown,
+          parameterNames: row.parameterNames.map((entry) => ({
+            pname: entry.pname,
+            name: entry.name,
+            calls: entry.calls,
+            firstQueries: entry.firstQueries,
+            repeatedQueries: entry.repeatedQueries,
+            linkCallBeforeQuery: entry.linkCallBeforeQuery,
+            linkConfirmedBeforeQuery: entry.linkConfirmedBeforeQuery,
+            trueResults: entry.trueResults,
+            falseResults: entry.falseResults,
+            numericResults: entry.numericResults,
+            otherResults: entry.otherResults,
+            elapsedSumMs: entry.elapsedSumMs,
+            maxElapsedMs: entry.maxElapsedMs,
+          })),
+        }));
+        const cleanup = installationCleanup || restore();
+        const truncated =
+          untrackedProgramOperationCount > 0 || pnameRowsOverflow > 0;
+        const cleanupFailed = cleanup.confirmed !== true;
+        return {
+          schema: 'gev-shader-program-lifecycle/v1',
+          status:
+            installFailed || diagnosticFailed || cleanupFailed
+              ? 'unavailable'
+              : truncated
+                ? 'truncated'
+                : 'complete',
+          ...(installFailed || diagnosticFailed || cleanupFailed
+            ? {
+                error: installFailed
+                  ? 'method-install-failed'
+                  : cleanupFailed
+                    ? 'wrapper-owner-changed'
+                    : 'diagnostic-recording-failed',
+              }
+            : {}),
+          scope:
+            'owned WebGL context synchronous main-thread wrapper elapsed time; not GPU execution time or performance acceptance',
+          limits: {
+            maxProgramRows: MAX_PROGRAM_ROWS,
+            maxPnamesPerProgram: MAX_PNAMES_PER_PROGRAM,
+            untrackedProgramOperationCount,
+            pnameRowsOverflow,
+            truncated,
+          },
+          totals: Object.fromEntries(
+            METHODS.map(([name]) => [
+              name,
+              {
+                calls: totals[name].calls,
+                errors: totals[name].errors,
+                elapsedSumMs: totals[name].elapsedSumMs,
+                maxElapsedMs: totals[name].maxElapsedMs,
+              },
+            ]),
+          ),
+          programs: programRows,
+          cleanup,
+          ownerChanged,
+        };
+      },
+    };
+  }
+  // Puppeteer runs evaluateOnNewDocument in subframes too. The probe belongs
+  // to the top-level Cesium viewer document only.
+  if (window !== window.top) return;
+  const key = '__gevRecoveryEarlyRendererProbe';
+  delete window[proofKey];
+  const prototype = HTMLCanvasElement.prototype;
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, 'getContext');
+  const nativeGetContext = descriptor?.value;
+  if (typeof nativeGetContext !== 'function') {
+    window[key] = { error: 'native getContext unavailable' };
+    return;
+  }
+
+  const state = (window[key] = {
+    captured: false,
+    contextLost: false,
+    contextRestored: false,
+    renderer: null,
+    vendor: null,
+    contextAttributes: null,
+    parameterQueryCount: 0,
+    queryDurationMs: null,
+    error: null,
+    nativeGetContext,
+    canvas: null,
+    context: null,
+    listeners: [],
+    shaderProgramAttributionEnabled: shaderProgramAttributionEnabled === true,
+    shaderProgramAttribution: null,
+  });
+  let active = true;
+  function restore() {
+    if (!active) return;
+    active = false;
+    Object.defineProperty(prototype, 'getContext', descriptor);
+  }
+  state.restore = restore;
+  Object.defineProperty(prototype, 'getContext', {
+    ...descriptor,
+    value: function (...args) {
+      const context = Reflect.apply(nativeGetContext, this, args);
+      if (
+        active &&
+        context &&
+        this instanceof HTMLCanvasElement &&
+        this.closest('.cesium-widget') &&
+        /^(webgl2?|experimental-webgl)$/i.test(String(args[0]))
+      ) {
+        restore();
+        state.captured = true;
+        state.canvas = this;
+        state.context = context;
+        if (state.shaderProgramAttributionEnabled)
+          state.shaderProgramAttribution =
+            installShaderProgramAttribution(context);
+        const onLost = (event) => {
+          state.contextLost = true;
+        };
+        const onRestored = () => {
+          state.contextRestored = true;
+        };
+        try {
+          state.listeners.push(['webglcontextlost', onLost]);
+          this.addEventListener('webglcontextlost', onLost);
+          state.listeners.push(['webglcontextrestored', onRestored]);
+          this.addEventListener('webglcontextrestored', onRestored);
+        } catch (error) {
+          state.error = String(error?.message || error).slice(0, 240);
+        }
+        try {
+          const started = performance.now();
+          const attributes = context.getContextAttributes?.();
+          if (!attributes)
+            throw new Error('WebGL context attributes unavailable');
+          state.contextAttributes = Object.fromEntries(
+            [
+              'alpha',
+              'antialias',
+              'depth',
+              'failIfMajorPerformanceCaveat',
+              'powerPreference',
+              'premultipliedAlpha',
+              'preserveDrawingBuffer',
+              'stencil',
+              'desynchronized',
+            ]
+              .filter((key) => key in attributes)
+              .map((key) => [key, attributes[key]]),
+          );
+          const extension = context.getExtension('WEBGL_debug_renderer_info');
+          state.renderer = context.getParameter(
+            extension?.UNMASKED_RENDERER_WEBGL || context.RENDERER,
+          );
+          state.parameterQueryCount += 1;
+          state.vendor = context.getParameter(
+            extension?.UNMASKED_VENDOR_WEBGL || context.VENDOR,
+          );
+          state.parameterQueryCount += 1;
+          state.queryDurationMs = performance.now() - started;
+        } catch (error) {
+          state.error = String(error?.message || error).slice(0, 240);
+        }
+      }
+      return context;
+    },
+  });
 }
 
 /** Verify early evidence against Cesium's live scene without querying GL again. */
@@ -220,6 +548,333 @@ const RENDER_LOOP_RETIREMENT_STATUSES = new Set([
   'not-attempted',
 ]);
 
+export function boundedShaderProgramAttribution(value) {
+  const allowedStatuses = new Set(['complete', 'truncated', 'unavailable']);
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    value.schema !== 'gev-shader-program-lifecycle/v1' ||
+    !allowedStatuses.has(value.status)
+  )
+    return null;
+  const boundedCount = (count, max = 10_000_000) =>
+    Number.isSafeInteger(count) && count >= 0 && count <= max;
+  const boundedElapsed = (elapsed, max = 3_600_000) =>
+    Number.isFinite(elapsed) && elapsed >= 0 && elapsed <= max;
+  const cleanup = value.cleanup;
+  if (
+    !cleanup ||
+    typeof cleanup !== 'object' ||
+    Array.isArray(cleanup) ||
+    typeof cleanup.confirmed !== 'boolean' ||
+    !boundedCount(cleanup.requestedMethodCount, 4) ||
+    cleanup.requestedMethodCount !== 4 ||
+    !boundedCount(cleanup.installedMethodCount, 4) ||
+    !boundedCount(cleanup.restoredMethodCount, 4) ||
+    !boundedCount(cleanup.changedOwnerCount, 4) ||
+    cleanup.confirmed !==
+      (cleanup.changedOwnerCount === 0 &&
+        cleanup.installedMethodCount === cleanup.restoredMethodCount)
+  )
+    return null;
+  if (value.status === 'unavailable') {
+    if (
+      ![
+        'method-install-failed',
+        'observer-already-disposed',
+        'observer-not-installed',
+        'snapshot-failed',
+        'diagnostic-recording-failed',
+        'wrapper-owner-changed',
+      ].includes(value.error)
+    )
+      return null;
+    return {
+      schema: value.schema,
+      status: value.status,
+      error: value.error,
+      cleanup: {
+        confirmed: cleanup.confirmed,
+        requestedMethodCount: cleanup.requestedMethodCount,
+        installedMethodCount: cleanup.installedMethodCount,
+        restoredMethodCount: cleanup.restoredMethodCount,
+        changedOwnerCount: cleanup.changedOwnerCount,
+      },
+      ownerChanged: value.ownerChanged === true,
+    };
+  }
+  if (
+    value.scope !==
+      'owned WebGL context synchronous main-thread wrapper elapsed time; not GPU execution time or performance acceptance' ||
+    !value.limits ||
+    typeof value.limits !== 'object' ||
+    value.limits.maxProgramRows !== 128 ||
+    value.limits.maxPnamesPerProgram !== 4 ||
+    !boundedCount(value.limits.untrackedProgramOperationCount) ||
+    !boundedCount(value.limits.pnameRowsOverflow) ||
+    typeof value.limits.truncated !== 'boolean' ||
+    value.limits.truncated !==
+      (value.limits.untrackedProgramOperationCount > 0 ||
+        value.limits.pnameRowsOverflow > 0) ||
+    (value.status === 'truncated' && value.limits.truncated !== true) ||
+    (value.status === 'complete' && value.limits.truncated !== false) ||
+    !Array.isArray(value.programs) ||
+    value.programs.length > value.limits.maxProgramRows ||
+    !value.totals ||
+    typeof value.totals !== 'object' ||
+    Array.isArray(value.totals) ||
+    ![
+      'createProgram',
+      'linkProgram',
+      'getProgramParameter',
+      'deleteProgram',
+    ].every((name) => {
+      const row = value.totals[name];
+      return (
+        row &&
+        boundedCount(row.calls) &&
+        boundedCount(row.errors) &&
+        row.errors <= row.calls &&
+        boundedElapsed(row.elapsedSumMs) &&
+        boundedElapsed(row.maxElapsedMs, 60_000) &&
+        row.maxElapsedMs <= row.elapsedSumMs
+      );
+    })
+  )
+    return null;
+  const ids = new Set();
+  const validProgram = (program) => {
+    if (
+      !program ||
+      typeof program !== 'object' ||
+      !boundedCount(program.programId, Number.MAX_SAFE_INTEGER) ||
+      program.programId < 1 ||
+      ids.has(program.programId) ||
+      !['createCalls', 'linkCalls', 'deleteCalls', 'parameterQueries'].every(
+        (key) => boundedCount(program[key]),
+      ) ||
+      ![null, true, false].includes(program.linkStatusKnown) ||
+      !Array.isArray(program.parameterNames) ||
+      program.parameterNames.length > value.limits.maxPnamesPerProgram
+    )
+      return false;
+    ids.add(program.programId);
+    const pnames = new Set();
+    const namesValid = program.parameterNames.every((pname) => {
+      if (
+        !pname ||
+        typeof pname !== 'object' ||
+        ![
+          null,
+          ...[
+            'LINK_STATUS',
+            'ACTIVE_UNIFORMS',
+            'ACTIVE_ATTRIBUTES',
+            'VALIDATE_STATUS',
+            'other',
+          ],
+        ].includes(pname.name) ||
+        !(pname.pname === null || boundedCount(pname.pname, 0xffff)) ||
+        pnames.has(pname.pname) ||
+        ![
+          'calls',
+          'firstQueries',
+          'repeatedQueries',
+          'linkCallBeforeQuery',
+          'linkConfirmedBeforeQuery',
+          'trueResults',
+          'falseResults',
+          'numericResults',
+          'otherResults',
+        ].every((key) => boundedCount(pname[key])) ||
+        pname.calls < 1 ||
+        pname.firstQueries !== 1 ||
+        pname.firstQueries + pname.repeatedQueries !== pname.calls ||
+        pname.linkCallBeforeQuery > pname.calls ||
+        pname.linkConfirmedBeforeQuery > pname.calls ||
+        pname.trueResults +
+          pname.falseResults +
+          pname.numericResults +
+          pname.otherResults >
+          pname.calls ||
+        !boundedElapsed(pname.elapsedSumMs) ||
+        !boundedElapsed(pname.maxElapsedMs, 60_000) ||
+        pname.maxElapsedMs > pname.elapsedSumMs
+      )
+        return false;
+      pnames.add(pname.pname);
+      return true;
+    });
+    if (!namesValid) return false;
+    const attributedParameterQueries = program.parameterNames.reduce(
+      (sum, pname) => sum + pname.calls,
+      0,
+    );
+    return value.limits.pnameRowsOverflow > 0
+      ? attributedParameterQueries <= program.parameterQueries
+      : attributedParameterQueries === program.parameterQueries;
+  };
+  if (!value.programs.every(validProgram)) return null;
+  const aggregateCounts = {
+    createProgram: 0,
+    linkProgram: 0,
+    getProgramParameter: 0,
+    deleteProgram: 0,
+  };
+  for (const program of value.programs) {
+    aggregateCounts.createProgram += program.createCalls;
+    aggregateCounts.linkProgram += program.linkCalls;
+    aggregateCounts.getProgramParameter += program.parameterQueries;
+    aggregateCounts.deleteProgram += program.deleteCalls;
+  }
+  if (
+    Object.entries(aggregateCounts).some(
+      ([name, count]) => count > value.totals[name].calls,
+    ) ||
+    cleanup.confirmed !==
+      (cleanup.changedOwnerCount === 0 &&
+        cleanup.installedMethodCount === cleanup.restoredMethodCount)
+  )
+    return null;
+  if (
+    value.status === 'complete' &&
+    (value.limits.truncated ||
+      !cleanup.confirmed ||
+      cleanup.installedMethodCount !== 4 ||
+      cleanup.restoredMethodCount !== 4 ||
+      cleanup.changedOwnerCount !== 0 ||
+      value.ownerChanged !== false)
+  )
+    return null;
+  return {
+    schema: value.schema,
+    status: value.status,
+    scope: value.scope,
+    limits: {
+      maxProgramRows: value.limits.maxProgramRows,
+      maxPnamesPerProgram: value.limits.maxPnamesPerProgram,
+      untrackedProgramOperationCount:
+        value.limits.untrackedProgramOperationCount,
+      pnameRowsOverflow: value.limits.pnameRowsOverflow,
+      truncated: value.limits.truncated,
+    },
+    totals: Object.fromEntries(
+      [
+        'createProgram',
+        'linkProgram',
+        'getProgramParameter',
+        'deleteProgram',
+      ].map((name) => [
+        name,
+        {
+          calls: value.totals[name].calls,
+          errors: value.totals[name].errors,
+          elapsedSumMs: value.totals[name].elapsedSumMs,
+          maxElapsedMs: value.totals[name].maxElapsedMs,
+        },
+      ]),
+    ),
+    programs: value.programs.map((program) => ({
+      programId: program.programId,
+      createCalls: program.createCalls,
+      linkCalls: program.linkCalls,
+      deleteCalls: program.deleteCalls,
+      parameterQueries: program.parameterQueries,
+      linkStatusKnown: program.linkStatusKnown,
+      parameterNames: program.parameterNames.map((pname) => ({
+        pname: pname.pname,
+        name: pname.name,
+        calls: pname.calls,
+        firstQueries: pname.firstQueries,
+        repeatedQueries: pname.repeatedQueries,
+        linkCallBeforeQuery: pname.linkCallBeforeQuery,
+        linkConfirmedBeforeQuery: pname.linkConfirmedBeforeQuery,
+        trueResults: pname.trueResults,
+        falseResults: pname.falseResults,
+        numericResults: pname.numericResults,
+        otherResults: pname.otherResults,
+        elapsedSumMs: pname.elapsedSumMs,
+        maxElapsedMs: pname.maxElapsedMs,
+      })),
+    })),
+    cleanup: {
+      confirmed: cleanup.confirmed,
+      requestedMethodCount: cleanup.requestedMethodCount,
+      installedMethodCount: cleanup.installedMethodCount,
+      restoredMethodCount: cleanup.restoredMethodCount,
+      changedOwnerCount: cleanup.changedOwnerCount,
+    },
+    ownerChanged: value.ownerChanged === true,
+  };
+}
+
+export function createShaderProgramAttributionEnvelope(
+  cleanupRows,
+  expectedDocumentCount,
+) {
+  const expectedCount =
+    Number.isSafeInteger(expectedDocumentCount) &&
+    expectedDocumentCount >= 0 &&
+    expectedDocumentCount <= 40
+      ? expectedDocumentCount
+      : null;
+  const rows = Array.isArray(cleanupRows) ? cleanupRows : [];
+  const documents = rows
+    .filter((entry) => entry?.document?.shaderProgramAttribution)
+    .map((entry) => {
+      const attribution = boundedShaderProgramAttribution(
+        entry.document.shaderProgramAttribution,
+      );
+      return {
+        documentRole:
+          typeof entry.documentRole === 'string'
+            ? entry.documentRole.slice(0, 80)
+            : null,
+        documentId:
+          typeof entry.documentId === 'string'
+            ? entry.documentId.slice(0, 100)
+            : null,
+        status: attribution?.status || 'unavailable',
+        cleanupConfirmed:
+          entry.confirmed === true && attribution?.cleanup.confirmed === true,
+        totals: attribution?.totals || null,
+        trackedProgramCount: attribution?.programs?.length ?? null,
+        limits: attribution?.limits
+          ? {
+              untrackedProgramOperationCount:
+                attribution.limits.untrackedProgramOperationCount,
+              pnameRowsOverflow: attribution.limits.pnameRowsOverflow,
+            }
+          : null,
+      };
+    });
+  const identities = new Set(
+    documents.map((entry) => `${entry.documentRole}\u0000${entry.documentId}`),
+  );
+  const complete =
+    expectedCount !== null &&
+    documents.length === expectedCount &&
+    identities.size === expectedCount &&
+    documents.every(
+      (entry) =>
+        typeof entry.documentRole === 'string' &&
+        typeof entry.documentId === 'string' &&
+        entry.status === 'complete' &&
+        entry.cleanupConfirmed,
+    );
+  return {
+    enabled: true,
+    schema: 'gev-shader-program-attribution/v1',
+    status: complete ? 'complete' : 'incomplete',
+    performanceAcceptanceEligible: false,
+    scope:
+      'whole owned dense-investigation document lifetime from Cesium WebGL context acquisition through the existing document cleanup callback; it is not isolated to warmup or measurement and is not GPU execution time',
+    expectedDocumentCount: expectedCount,
+    documents,
+  };
+}
+
 function boundedLateDocumentOutcome(value) {
   if (
     !value ||
@@ -283,6 +938,13 @@ function boundedLateDocumentOutcome(value) {
     listenerRemovalFailedCount: boundedCount('listenerRemovalFailedCount'),
     stateDeleted: booleanOrNull('stateDeleted'),
     renderLoopRetirement,
+    ...(typeof value.shaderProgramAttribution === 'undefined'
+      ? {}
+      : {
+          shaderProgramAttribution: boundedShaderProgramAttribution(
+            value.shaderProgramAttribution,
+          ),
+        }),
     errorKind: LATE_DOCUMENT_ERROR_KINDS.has(value.errorKind)
       ? value.errorKind
       : null,
@@ -427,7 +1089,10 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
   page,
   scriptIdentifier,
   timeoutMs = 1_000,
-  { retireViewerRenderLoop = false } = {},
+  {
+    retireViewerRenderLoop = false,
+    requireShaderProgramAttribution = false,
+  } = {},
 ) {
   const startedAt = performance.now();
   const evidence = {
@@ -512,7 +1177,38 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
         }
         stage.status = status;
         for (const [key, value] of Object.entries(result || {}))
-          if (key !== 'status' && key in stage) stage[key] = value;
+          if (
+            key !== 'status' &&
+            (key in stage || key === 'shaderProgramAttribution')
+          ) {
+            if (key === 'shaderProgramAttribution') {
+              const bounded = boundedShaderProgramAttribution(value);
+              stage[key] = bounded || {
+                schema: 'gev-shader-program-lifecycle/v1',
+                status: 'unavailable',
+                error: 'snapshot-failed',
+                cleanup: {
+                  confirmed: false,
+                  requestedMethodCount: 4,
+                  installedMethodCount: 0,
+                  restoredMethodCount: 0,
+                  changedOwnerCount: 0,
+                },
+                ownerChanged: false,
+              };
+              if (
+                requireShaderProgramAttribution &&
+                (!bounded || bounded.cleanup.confirmed !== true)
+              ) {
+                stage.status = 'error';
+                stage.errorKind = bounded
+                  ? 'shader-wrapper-cleanup-unconfirmed'
+                  : 'shader-attribution-evidence-invalid';
+              }
+              continue;
+            }
+            stage[key] = value;
+          }
         stage.elapsedMs = Math.max(0, performance.now() - operationStartedAt);
         return result;
       })
@@ -587,7 +1283,12 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
     evidence.document.status = 'pending';
     const documentResult = await runStage(evidence.document, () =>
       page.evaluate(
-        (key, proofKey, shouldRetireViewerRenderLoop) => {
+        (
+          key,
+          proofKey,
+          shouldRetireViewerRenderLoop,
+          requireShaderProgramAttribution,
+        ) => {
           const pageExecutionStartedAt = performance.now();
           const renderLoopRetirement = shouldRetireViewerRenderLoop
             ? {
@@ -653,6 +1354,35 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
             stateDeleted: false,
             renderLoopRetirement,
           };
+          let shaderProgramAttributionCleanupConfirmed = true;
+          if (state?.shaderProgramAttributionEnabled === true) {
+            try {
+              record.shaderProgramAttribution =
+                state.shaderProgramAttribution?.snapshotAndDispose?.() || {
+                  schema: 'gev-shader-program-lifecycle/v1',
+                  status: 'unavailable',
+                  error: 'observer-not-installed',
+                  cleanup: { confirmed: false },
+                };
+            } catch {
+              record.shaderProgramAttribution = {
+                schema: 'gev-shader-program-lifecycle/v1',
+                status: 'unavailable',
+                error: 'snapshot-failed',
+                cleanup: { confirmed: false },
+              };
+            }
+            shaderProgramAttributionCleanupConfirmed =
+              record.shaderProgramAttribution.cleanup?.confirmed === true;
+          } else if (requireShaderProgramAttribution) {
+            shaderProgramAttributionCleanupConfirmed = false;
+            record.shaderProgramAttribution = {
+              schema: 'gev-shader-program-lifecycle/v1',
+              status: 'unavailable',
+              error: 'observer-not-installed',
+              cleanup: { confirmed: false },
+            };
+          }
           if (!state) {
             const proofMatches =
               proof &&
@@ -661,8 +1391,16 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
               typeof proof.nativeGetContext === 'function' &&
               Object.getOwnPropertyDescriptor(prototype, 'getContext')
                 ?.value === proof.nativeGetContext;
-            record.status = proofMatches ? 'already-confirmed' : 'unavailable';
-            record.errorKind = proofMatches ? null : 'cleanup-state-not-found';
+            record.status = requireShaderProgramAttribution
+              ? 'unavailable'
+              : proofMatches
+                ? 'already-confirmed'
+                : 'unavailable';
+            record.errorKind = requireShaderProgramAttribution
+              ? 'shader-attribution-state-not-found'
+              : proofMatches
+                ? null
+                : 'cleanup-state-not-found';
             record.hookRestored = Boolean(proofMatches);
             record.stateDeleted = true;
             return finish(record);
@@ -704,7 +1442,8 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
           const complete =
             record.hookRestored &&
             record.listenerRemovalFailedCount === 0 &&
-            remainingListeners.length === 0;
+            remainingListeners.length === 0 &&
+            shaderProgramAttributionCleanupConfirmed;
           if (!complete)
             record.errorKind = !record.hookRestored
               ? 'hook-restore-unconfirmed'
@@ -727,8 +1466,31 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
         STATE_KEY,
         CLEANUP_PROOF_KEY,
         retireViewerRenderLoop,
+        requireShaderProgramAttribution,
       ),
     );
+    if (
+      requireShaderProgramAttribution &&
+      !evidence.document.shaderProgramAttribution
+    ) {
+      evidence.document.shaderProgramAttribution = {
+        schema: 'gev-shader-program-lifecycle/v1',
+        status: 'unavailable',
+        error: 'observer-not-installed',
+        cleanup: {
+          confirmed: false,
+          requestedMethodCount: 4,
+          installedMethodCount: 0,
+          restoredMethodCount: 0,
+          changedOwnerCount: 0,
+        },
+        ownerChanged: false,
+      };
+      if (!['timeout', 'error'].includes(evidence.document.status)) {
+        evidence.document.status = 'error';
+        evidence.document.errorKind = 'shader-attribution-evidence-missing';
+      }
+    }
     documentOperationSettled = documentResult.settled;
     if (!documentResult.settled) {
       evidence.scriptRegistration.status = scriptIdentifier
@@ -779,12 +1541,13 @@ export function retireEarlyCesiumRendererProbeForCapturePage(
   page,
   scriptIdentifier,
   timeoutMs = 1_000,
+  options = {},
 ) {
   return cleanupEarlyCesiumRendererProbeWithEvidence(
     page,
     scriptIdentifier,
     timeoutMs,
-    { retireViewerRenderLoop: true },
+    { ...options, retireViewerRenderLoop: true },
   );
 }
 

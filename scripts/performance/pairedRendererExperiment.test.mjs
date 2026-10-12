@@ -1,15 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
+import { preserveShaderProgramAttributionArtifact } from '../qa-performance-build-smoke.mjs';
 import {
+  boundedShaderProgramAttribution,
   cleanupEarlyCesiumRendererProbe,
   cleanupEarlyCesiumRendererProbeWithEvidence,
+  createShaderProgramAttributionEnvelope,
+  earlyRendererDocumentHook,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
   retireEarlyCesiumRendererProbeForCapturePage,
   removeEarlyCesiumRendererProbeRegistrationWithEvidence,
 } from './earlyCesiumRendererProbe.mjs';
+import {
+  createShaderProgramAttributionCheckpoint,
+  persistShaderProgramAttributionCheckpoint,
+  validateShaderProgramAttributionCheckpoint,
+} from './shaderProgramAttributionArtifact.mjs';
 import { PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256 } from './profileRecoveryFixtureContract.mjs';
 import {
   evaluatePairedRendererExperiment,
@@ -355,7 +367,15 @@ function earlyProbePage(performanceStep = 5, topLevel = true) {
     return {
       RENDERER: 7937,
       VENDOR: 7936,
+      LINK_STATUS: 35714,
+      ACTIVE_UNIFORMS: 35718,
+      ACTIVE_ATTRIBUTES: 35721,
+      VALIDATE_STATUS: 35715,
       isContextLost: () => false,
+      createProgram: () => ({}),
+      linkProgram: () => undefined,
+      getProgramParameter: () => true,
+      deleteProgram: () => undefined,
       getContextAttributes: () => ({
         alpha: true,
         antialias: false,
@@ -1189,7 +1209,7 @@ test('late page cleanup retains bounded page timing without converting the host 
   const probe = earlyProbePage(1);
   await installEarlyCesiumRendererProbe(probe.page);
   const canvas = new probe.Canvas();
-  canvas.getContext('webgl2');
+  const context = canvas.getContext('webgl2');
   const evaluate = probe.page.evaluate;
   let releaseAcknowledgement;
   let pageOutcome;
@@ -1303,6 +1323,173 @@ test('late retirement acknowledgement remains a timeout but retains its bounded 
     cleanup.document.lateOutcome.renderLoopRetirement.confirmed,
     true,
   );
+});
+
+test('shader attribution timeout keeps its original failure and late snapshot', async (t) => {
+  const probe = earlyProbePage(1);
+  await installEarlyCesiumRendererProbe(probe.page, {
+    shaderProgramAttribution: true,
+  });
+  const context = new probe.Canvas().getContext('webgl2');
+  const program = context.createProgram();
+  context.linkProgram(program);
+  context.getProgramParameter(program, context.LINK_STATUS);
+  const evaluate = probe.page.evaluate;
+  let releaseAcknowledgement;
+  probe.page.evaluate = (...args) =>
+    new Promise((resolve, reject) => {
+      evaluate(...args).then((result) => {
+        releaseAcknowledgement = () => resolve(result);
+      }, reject);
+    });
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probe.page,
+    null,
+    5,
+    { requireShaderProgramAttribution: true },
+  );
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(cleanup.document.errorKind, 'operation-timeout');
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(typeof releaseAcknowledgement, 'function');
+
+  const directory = await mkdtemp(
+    path.join(await realpath(os.tmpdir()), 'gev-shader-late-checkpoint-'),
+  );
+  t.after(async () => rm(directory, { recursive: true, force: true }));
+  const sourcePath = path.join(
+    directory,
+    'capture.shader-program-attribution.json',
+  );
+  const artifactPath = path.join(
+    directory,
+    'smoke.shader-program-attribution.json',
+  );
+  const row = {
+    phase: 'measurement-boundary-cleanup',
+    documentRole: 'provider-idle-1',
+    documentId: 'timeout-document-1',
+    confirmed: cleanup.confirmed,
+    document: cleanup.document,
+  };
+  const attributionProvenance = {
+    appSha: 'a'.repeat(40),
+    harnessSha: 'b'.repeat(40),
+    receiptSha256: 'c'.repeat(64),
+  };
+  const beforeLate = await persistShaderProgramAttributionCheckpoint({
+    checkpointPath: sourcePath,
+    cleanupRows: [row],
+    expectedDocumentCount: 1,
+    provenance: attributionProvenance,
+  });
+  assert.equal(beforeLate.checkpoint.status, 'partial');
+  assert.equal(beforeLate.checkpoint.documents[0].lateAttribution, null);
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(cleanup.confirmed, false);
+
+  releaseAcknowledgement();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.lateCompletion, 'confirmed');
+  assert.equal(
+    cleanup.document.lateOutcome.shaderProgramAttribution.status,
+    'complete',
+  );
+  assert.equal(
+    cleanup.document.lateOutcome.shaderProgramAttribution.cleanup.confirmed,
+    true,
+  );
+
+  const afterLate = await persistShaderProgramAttributionCheckpoint({
+    checkpointPath: sourcePath,
+    cleanupRows: [row],
+    expectedDocumentCount: 1,
+    provenance: attributionProvenance,
+  });
+  assert.equal(afterLate.checkpoint.status, 'partial');
+  assert.equal(
+    afterLate.checkpoint.documents[0].lateOutcomeStatus,
+    'confirmed',
+  );
+  const ingested = await preserveShaderProgramAttributionArtifact(
+    sourcePath,
+    `${sourcePath}.ref.json`,
+    artifactPath,
+    attributionProvenance,
+  );
+  assert.equal(ingested.artifact.status, 'preserved');
+  const document = ingested.checkpoint.documents[0];
+  assert.equal(document.status, 'unavailable');
+  assert.equal(document.outerCleanupConfirmed, false);
+  assert.equal(document.cleanupConfirmed, false);
+  assert.equal(document.lateOutcomeStatus, 'confirmed');
+  assert.equal(
+    document.lateAttribution.programs[0].parameterNames[0].name,
+    'LINK_STATUS',
+  );
+  const originalFailure = createCaptureFailureReport({
+    source: {
+      appCommit: attributionProvenance.appSha,
+      harnessCommit: attributionProvenance.harnessSha,
+    },
+    fixture: null,
+    workload: { rendererProbeCleanup: [row] },
+    phase: 'outer-timeout',
+    error: new Error('outer timeout'),
+  });
+  assert.equal(originalFailure.failure.phase, 'outer-timeout');
+  assert.equal(
+    originalFailure.workload.rendererProbeCleanup[0].document.status,
+    'timeout',
+  );
+});
+
+test('shader envelope preserves unavailable and malformed observer evidence', () => {
+  const cleanup = {
+    schema: 'gev-early-renderer-probe-cleanup/v1',
+    confirmed: false,
+    documentRole: 'provider-idle-1',
+    documentId: 'document-1',
+    document: {
+      shaderProgramAttribution: {
+        schema: 'gev-shader-program-lifecycle/v1',
+        status: 'unavailable',
+        error: 'method-install-failed',
+        cleanup: {
+          confirmed: true,
+          requestedMethodCount: 4,
+          installedMethodCount: 2,
+          restoredMethodCount: 2,
+          changedOwnerCount: 0,
+        },
+        ownerChanged: false,
+      },
+    },
+  };
+  const unavailable = createShaderProgramAttributionEnvelope([cleanup], 1);
+  assert.equal(unavailable.status, 'incomplete');
+  assert.equal(unavailable.documents[0].status, 'unavailable');
+  assert.equal(unavailable.documents[0].trackedProgramCount, null);
+  assert.equal(unavailable.documents[0].limits, null);
+  assert.equal(unavailable.documents[0].cleanupConfirmed, false);
+
+  cleanup.document.shaderProgramAttribution = null;
+  const malformed = createShaderProgramAttributionEnvelope([cleanup], 1);
+  assert.equal(malformed.status, 'incomplete');
+  assert.equal(malformed.documents.length, 0);
+
+  cleanup.document.shaderProgramAttribution = {
+    schema: 'gev-shader-program-lifecycle/v1',
+    status: 'truncated',
+    cleanup: { confirmed: true },
+  };
+  const truncated = createShaderProgramAttributionEnvelope([cleanup], 1);
+  assert.equal(truncated.status, 'incomplete');
+  assert.equal(truncated.documents[0].status, 'unavailable');
+  assert.equal(truncated.documents[0].trackedProgramCount, null);
 });
 
 test('late document errors discard untrusted status and error fields after timeout', async () => {
@@ -1423,4 +1610,506 @@ test('early probe accepts a valid zero-duration clock sample', async () => {
   };
   const result = await readEarlyCesiumRendererProbe(page);
   assert.equal(result.queryDurationMs, 0);
+});
+
+test('shader lifecycle hook preserves GL calls and reports bounded program history', () => {
+  const listeners = new Map();
+  class Canvas {
+    closest(selector) {
+      return selector === '.cesium-widget' ? {} : null;
+    }
+    addEventListener(name, listener) {
+      listeners.set(name, listener);
+    }
+  }
+  const callLog = [];
+  const program = {};
+  const nullProgram = {};
+  const context = {
+    LINK_STATUS: 35714,
+    ACTIVE_UNIFORMS: 35718,
+    ACTIVE_ATTRIBUTES: 35721,
+    VALIDATE_STATUS: 35715,
+    getContextAttributes() {
+      return { alpha: false, antialias: true };
+    },
+    getExtension() {
+      return null;
+    },
+    getParameter() {
+      return 'test';
+    },
+    createProgram(...args) {
+      callLog.push(['createProgram', args, this]);
+      return program;
+    },
+    linkProgram(...args) {
+      callLog.push(['linkProgram', args, this]);
+      return undefined;
+    },
+    getProgramParameter(...args) {
+      callLog.push(['getProgramParameter', args, this]);
+      if (args[1] === 'throw-null') throw null;
+      if (args[1] === context.LINK_STATUS) return true;
+      if (args[1] === context.ACTIVE_UNIFORMS) return 4;
+      return nullProgram;
+    },
+    deleteProgram(...args) {
+      callLog.push(['deleteProgram', args, this]);
+      return undefined;
+    },
+  };
+  const originalMethods = Object.fromEntries(
+    [
+      'createProgram',
+      'linkProgram',
+      'getProgramParameter',
+      'deleteProgram',
+    ].map((name) => [name, context[name]]),
+  );
+  class HTMLCanvasElement extends Canvas {
+    getContext(kind) {
+      assert.equal(this, canvas);
+      return kind === 'webgl2' ? context : null;
+    }
+  }
+  const canvas = new HTMLCanvasElement();
+  const window = {};
+  window.top = window;
+  const sandbox = {
+    window,
+    HTMLCanvasElement,
+    performance: { now: () => 10 },
+    Map,
+    WeakMap,
+    Object,
+    Number,
+    Array,
+    String,
+    Boolean,
+    Math,
+    Reflect,
+    Error,
+  };
+  vm.runInNewContext(
+    `(${earlyRendererDocumentHook.toString()})("proof", true)`,
+    sandbox,
+  );
+  canvas.getContext('webgl2');
+  assert.equal(callLog.length, 0);
+  const created = context.createProgram('arg');
+  context.linkProgram(created, 'link-arg');
+  assert.equal(context.getProgramParameter(created, context.LINK_STATUS), true);
+  assert.equal(
+    context.getProgramParameter(created, context.ACTIVE_UNIFORMS),
+    4,
+  );
+  assert.equal(
+    context.getProgramParameter(created, context.ACTIVE_UNIFORMS),
+    4,
+  );
+  assert.equal(context.getProgramParameter(created, 12345), nullProgram);
+  context.linkProgram(created, 'second-link');
+  assert.equal(context.getProgramParameter(created, context.LINK_STATUS), true);
+  const foreignReceiver = {};
+  assert.equal(
+    context.getProgramParameter.call(
+      foreignReceiver,
+      created,
+      context.LINK_STATUS,
+    ),
+    true,
+  );
+  let didThrow = false;
+  let thrown;
+  try {
+    context.getProgramParameter(created, 'throw-null');
+  } catch (error) {
+    didThrow = true;
+    thrown = error;
+  }
+  assert.equal(didThrow, true);
+  assert.equal(thrown, null);
+  context.deleteProgram(created);
+  assert.deepEqual(
+    callLog.map(([name]) => name),
+    [
+      'createProgram',
+      'linkProgram',
+      'getProgramParameter',
+      'getProgramParameter',
+      'getProgramParameter',
+      'getProgramParameter',
+      'linkProgram',
+      'getProgramParameter',
+      'getProgramParameter',
+      'getProgramParameter',
+      'deleteProgram',
+    ],
+  );
+  const observer =
+    window.__gevRecoveryEarlyRendererProbe.shaderProgramAttribution;
+  assert.ok(observer);
+  const retainedWrapper = context.getProgramParameter;
+  const snapshot = observer.snapshotAndDispose();
+  assert.equal(snapshot.status, 'complete');
+  assert.equal(snapshot.totals.getProgramParameter.calls, 6);
+  assert.equal(snapshot.totals.getProgramParameter.errors, 1);
+  assert.equal(snapshot.programs.length, 1);
+  assert.equal(snapshot.programs[0].linkCalls, 2);
+  assert.equal(
+    JSON.stringify(
+      snapshot.programs[0].parameterNames.map((row) => [row.name, row.calls]),
+    ),
+    JSON.stringify([
+      ['LINK_STATUS', 2],
+      ['ACTIVE_UNIFORMS', 2],
+      ['other', 1],
+      ['other', 1],
+    ]),
+  );
+  assert.equal(snapshot.programs[0].parameterNames[0].linkCallBeforeQuery, 2);
+  assert.equal(
+    snapshot.programs[0].parameterNames[0].linkConfirmedBeforeQuery,
+    0,
+  );
+  assert.equal(
+    snapshot.programs[0].parameterNames[1].linkConfirmedBeforeQuery,
+    2,
+  );
+  assert.equal(snapshot.programs[0].parameterNames[1].firstQueries, 1);
+  assert.equal(snapshot.programs[0].parameterNames[1].repeatedQueries, 1);
+  assert.equal(snapshot.cleanup.confirmed, true);
+  assert.equal(snapshot.cleanup.restoredMethodCount, 4);
+  for (const name of Object.keys(originalMethods))
+    assert.equal(context[name], originalMethods[name]);
+  assert.equal(
+    retainedWrapper.call(context, created, context.LINK_STATUS),
+    true,
+  );
+  assert.equal(snapshot.totals.getProgramParameter.calls, 6);
+  assert.equal(callLog[8][2], foreignReceiver);
+  assert.equal(callLog.length, 12);
+  for (const invalid of [
+    { limits: null },
+    { totals: null },
+    { totals: [] },
+    {},
+  ]) {
+    assert.doesNotThrow(() => boundedShaderProgramAttribution(invalid));
+    assert.equal(boundedShaderProgramAttribution(invalid), null);
+  }
+  assert.equal(boundedShaderProgramAttribution({ totals: null }), null);
+  const missingParameterRows = structuredClone(snapshot);
+  missingParameterRows.programs[0].parameterNames = [];
+  assert.equal(boundedShaderProgramAttribution(missingParameterRows), null);
+  const forgedFirstQueryCount = structuredClone(snapshot);
+  forgedFirstQueryCount.programs[0].parameterNames[0].firstQueries = 0;
+  forgedFirstQueryCount.programs[0].parameterNames[0].repeatedQueries =
+    forgedFirstQueryCount.programs[0].parameterNames[0].calls;
+  assert.equal(boundedShaderProgramAttribution(forgedFirstQueryCount), null);
+  const withUnexpectedFields = structuredClone(snapshot);
+  withUnexpectedFields.totals.createProgram.requestBody = {
+    authorization: 'must-not-escape',
+  };
+  withUnexpectedFields.programs[0].unexpectedPayload = 'must-not-escape';
+  const bounded = boundedShaderProgramAttribution(withUnexpectedFields);
+  assert.equal(
+    Object.hasOwn(bounded.totals.createProgram, 'requestBody'),
+    false,
+  );
+  assert.equal(Object.hasOwn(bounded.programs[0], 'unexpectedPayload'), false);
+});
+
+test('shader attribution installation is opt-in and cleanup is owner-safe', async () => {
+  const disabled = earlyProbePage();
+  await installEarlyCesiumRendererProbe(disabled.page);
+  const disabledCanvas = new disabled.Canvas();
+  const disabledContext = disabledCanvas.getContext('webgl2');
+  assert.equal(
+    disabled.window.__gevRecoveryEarlyRendererProbe
+      .shaderProgramAttributionEnabled,
+    false,
+  );
+  assert.equal(disabledContext.createProgram.name, 'createProgram');
+
+  const enabled = earlyProbePage();
+  const identifier = await installEarlyCesiumRendererProbe(enabled.page, {
+    shaderProgramAttribution: true,
+  });
+  const canvas = new enabled.Canvas();
+  const context = canvas.getContext('webgl2');
+  const program = context.createProgram();
+  context.linkProgram(program);
+  assert.equal(context.getProgramParameter(program, context.LINK_STATUS), true);
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    enabled.page,
+    identifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  assert.equal(cleanup.confirmed, true);
+  const attribution = cleanup.document.shaderProgramAttribution;
+  assert.equal(attribution.status, 'complete');
+  assert.equal(attribution.cleanup.confirmed, true);
+  assert.equal(attribution.totals.getProgramParameter.calls, 1);
+  assert.equal(boundedShaderProgramAttribution(attribution).status, 'complete');
+
+  const replaced = earlyProbePage();
+  const replacedIdentifier = await installEarlyCesiumRendererProbe(
+    replaced.page,
+    { shaderProgramAttribution: true },
+  );
+  const replacedCanvas = new replaced.Canvas();
+  const replacedContext = replacedCanvas.getContext('webgl2');
+  const replacement = function replacementLink() {};
+  replacedContext.linkProgram = replacement;
+  const replacedCleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    replaced.page,
+    replacedIdentifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  assert.equal(replacedCleanup.confirmed, false);
+  assert.equal(
+    replacedCleanup.document.shaderProgramAttribution.status,
+    'unavailable',
+  );
+  assert.equal(
+    replacedCleanup.document.shaderProgramAttribution.cleanup.changedOwnerCount,
+    1,
+  );
+  assert.equal(replacedContext.linkProgram, replacement);
+
+  const throwingGetter = earlyProbePage();
+  const throwingIdentifier = await installEarlyCesiumRendererProbe(
+    throwingGetter.page,
+    { shaderProgramAttribution: true },
+  );
+  const throwingCanvas = new throwingGetter.Canvas();
+  const throwingContext = throwingCanvas.getContext('webgl2');
+  const wrappedMethods = Object.fromEntries(
+    ['createProgram', 'getProgramParameter', 'deleteProgram'].map((name) => [
+      name,
+      throwingContext[name],
+    ]),
+  );
+  const getterError = new Error('replacement getter sentinel');
+  Object.defineProperty(throwingContext, 'linkProgram', {
+    configurable: true,
+    get() {
+      throw getterError;
+    },
+  });
+  const throwingCleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    throwingGetter.page,
+    throwingIdentifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  assert.equal(throwingCleanup.confirmed, false);
+  for (const [name, wrapped] of Object.entries(wrappedMethods))
+    assert.notEqual(throwingContext[name], wrapped);
+  assert.equal(
+    throwingCleanup.document.shaderProgramAttribution.cleanup
+      .restoredMethodCount,
+    3,
+  );
+  assert.throws(
+    () => throwingContext.linkProgram,
+    (error) => error === getterError,
+  );
+
+  const partial = earlyProbePage();
+  const partialContext = partial.native('webgl2');
+  delete partialContext.deleteProgram;
+  Object.defineProperty(partial.Canvas.prototype, 'getContext', {
+    configurable: true,
+    writable: true,
+    value: () => partialContext,
+  });
+  const partialIdentifier = await installEarlyCesiumRendererProbe(
+    partial.page,
+    { shaderProgramAttribution: true },
+  );
+  const partialCanvas = new partial.Canvas();
+  partialCanvas.getContext('webgl2');
+  const partialCleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    partial.page,
+    partialIdentifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  assert.equal(partialCleanup.confirmed, true);
+  assert.equal(
+    partialCleanup.document.shaderProgramAttribution.status,
+    'unavailable',
+  );
+  assert.equal(
+    partialCleanup.document.shaderProgramAttribution.error,
+    'method-install-failed',
+  );
+  assert.equal(
+    partialCleanup.document.shaderProgramAttribution.cleanup.confirmed,
+    true,
+  );
+  assert.equal(
+    boundedShaderProgramAttribution(
+      partialCleanup.document.shaderProgramAttribution,
+    ).status,
+    'unavailable',
+  );
+
+  const forged = structuredClone(attribution);
+  forged.programs[0].parameterNames[0].elapsedSumMs = 'secret';
+  assert.equal(boundedShaderProgramAttribution(forged), null);
+  const truncated = structuredClone(attribution);
+  truncated.status = 'truncated';
+  assert.equal(boundedShaderProgramAttribution(truncated), null);
+});
+
+test('shader attribution records bounded overflow without confusing it with cleanup failure', async () => {
+  const fixture = earlyProbePage();
+  const identifier = await installEarlyCesiumRendererProbe(fixture.page, {
+    shaderProgramAttribution: true,
+  });
+  const canvas = new fixture.Canvas();
+  const context = canvas.getContext('webgl2');
+  const programs = Array.from({ length: 129 }, () => context.createProgram());
+  for (const pname of [1, 2, 3, 4, 5])
+    context.getProgramParameter(programs[0], pname);
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    fixture.page,
+    identifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  const attribution = cleanup.document.shaderProgramAttribution;
+  assert.equal(attribution.status, 'truncated');
+  assert.equal(attribution.limits.truncated, true);
+  assert.equal(attribution.limits.untrackedProgramOperationCount, 1);
+  assert.equal(attribution.limits.pnameRowsOverflow, 1);
+  assert.equal(attribution.programs.length, 128);
+  assert.equal(attribution.programs[0].parameterNames.length, 4);
+  assert.equal(attribution.cleanup.confirmed, true);
+  assert.equal(
+    boundedShaderProgramAttribution(attribution).status,
+    'truncated',
+  );
+  assert.equal(cleanup.confirmed, true);
+});
+
+test('shader checkpoint preserves actual pname rows across generic failure projection', async () => {
+  const fixture = earlyProbePage();
+  const identifier = await installEarlyCesiumRendererProbe(fixture.page, {
+    shaderProgramAttribution: true,
+  });
+  const context = new fixture.Canvas().getContext('webgl2');
+  const program = context.createProgram();
+  context.linkProgram(program);
+  context.getProgramParameter(program, context.LINK_STATUS);
+  context.getProgramParameter(program, context.ACTIVE_UNIFORMS);
+  context.getProgramParameter(program, context.ACTIVE_ATTRIBUTES);
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    fixture.page,
+    identifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  const row = {
+    phase: 'provider-sample-cleanup',
+    documentRole: 'provider-sample-idle-1',
+    documentId: 'sample-document-1',
+    confirmed: cleanup.confirmed,
+    document: cleanup.document,
+  };
+  const checkpoint = createShaderProgramAttributionCheckpoint([row], 3, {
+    appSha: 'a'.repeat(40),
+    harnessSha: 'b'.repeat(40),
+    receiptSha256: 'c'.repeat(64),
+  });
+  assert.equal(checkpoint.status, 'partial');
+  assert.equal(
+    checkpoint.documents[0].attribution.programs[0].parameterNames.length,
+    3,
+  );
+  const parsedCheckpoint = validateShaderProgramAttributionCheckpoint(
+    JSON.parse(JSON.stringify(checkpoint)),
+    {
+      appSha: 'a'.repeat(40),
+      harnessSha: 'b'.repeat(40),
+      receiptSha256: 'c'.repeat(64),
+    },
+  );
+  assert.equal(
+    parsedCheckpoint.documents[0].attribution.programs[0].parameterNames.length,
+    3,
+  );
+
+  const failure = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    fixture: null,
+    workload: { rendererProbeCleanup: [row] },
+    phase: 'outer-timeout',
+    error: new Error('outer timeout'),
+  });
+  const projected =
+    failure.workload.rendererProbeCleanup[0].document.shaderProgramAttribution;
+  assert.equal(projected.programs[0].parameterNames, undefined);
+  assert.equal(failure.failure.phase, 'outer-timeout');
+
+  const directory = await mkdtemp(
+    path.join(await realpath(os.tmpdir()), 'gev-shader-observer-projection-'),
+  );
+  try {
+    const sourcePath = path.join(
+      directory,
+      'actual.shader-program-attribution.json',
+    );
+    const referencePath = `${sourcePath}.ref.json`;
+    const artifactPath = path.join(
+      directory,
+      'smoke.shader-program-attribution.json',
+    );
+    const persisted = await persistShaderProgramAttributionCheckpoint({
+      checkpointPath: sourcePath,
+      cleanupRows: [row],
+      expectedDocumentCount: 3,
+      provenance: {
+        appSha: 'a'.repeat(40),
+        harnessSha: 'b'.repeat(40),
+        receiptSha256: 'c'.repeat(64),
+      },
+    });
+    assert.equal(persisted.artifact.status, 'partial');
+    const checkpointBytes = await readFile(sourcePath);
+    assert.ok(await readFile(referencePath));
+    const storedFailure = path.join(directory, 'capture-failure.json');
+    await writeFile(storedFailure, `${JSON.stringify(failure)}\n`);
+    const reportOnDisk = JSON.parse(await readFile(storedFailure, 'utf8'));
+    assert.equal(
+      reportOnDisk.workload.rendererProbeCleanup[0].document
+        .shaderProgramAttribution.programs[0].parameterNames,
+      undefined,
+    );
+    const sidecar = await preserveShaderProgramAttributionArtifact(
+      sourcePath,
+      referencePath,
+      artifactPath,
+      {
+        appSha: 'a'.repeat(40),
+        harnessSha: 'b'.repeat(40),
+        receiptSha256: 'c'.repeat(64),
+      },
+    );
+    assert.equal(sidecar.artifact.status, 'preserved');
+    assert.equal(
+      sidecar.checkpoint.documents[0].attribution.programs[0].parameterNames
+        .length,
+      3,
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

@@ -83,6 +83,10 @@ on:
         description: Record bounded caller-tagged depth-pick attribution in the dense capture (diagnostic only)
         type: boolean
         default: false
+      capture_shader_program_attribution:
+        description: Record bounded WebGL program lifecycle attribution in the dense capture (diagnostic only)
+        type: boolean
+        default: false
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -441,6 +445,7 @@ jobs:
           CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
           CAPTURE_FIRST_MOTION_CPU_PROFILE: ${{ inputs.capture_first_motion_cpu_profile && 'enabled' || 'disabled' }}
           CAPTURE_DEPTH_PICK_ATTRIBUTION: ${{ inputs.capture_depth_pick_attribution && 'enabled' || 'disabled' }}
+          CAPTURE_SHADER_PROGRAM_ATTRIBUTION: ${{ inputs.capture_shader_program_attribution && 'enabled' || 'disabled' }}
         run: >-
           node scripts/qa-performance-build-smoke.mjs
           --candidate-sha "$CANDIDATE_SHA"
@@ -449,6 +454,7 @@ jobs:
           --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
           --capture-first-motion-cpu-profile "$CAPTURE_FIRST_MOTION_CPU_PROFILE"
           --capture-depth-pick-attribution "$CAPTURE_DEPTH_PICK_ATTRIBUTION"
+          --capture-shader-program-attribution "$CAPTURE_SHADER_PROGRAM_ATTRIBUTION"
           --out "$RUNNER_TEMP/performance-build-smoke.json"
 
       - name: Print bounded smoke evidence
@@ -456,7 +462,7 @@ jobs:
         run: |
           evidence="$RUNNER_TEMP/performance-build-smoke.json"
           if [ -f "$evidence" ]; then
-            jq -c '{schema, status, baselineSha, candidateSha, failure: (if .failure then {phase: .failure.phase, message: (.failure.message | tostring | .[0:400])} else null end), variants: [(.variants // [])[] | {label, status, revision, failure: (.failure | if . then tostring | .[0:400] else null end), captureCliReportArtifact, captureCliFailure: (if .failureDetails.captureCliFailure then {summary: .failureDetails.captureCliFailure.summary, rawReportTruncated: .failureDetails.captureCliFailure.rawReportTruncated, rawReportUnavailable: .failureDetails.captureCliFailure.rawReportUnavailable, captureCliReportArtifact: .failureDetails.captureCliFailure.captureCliReportArtifact} else null end)}]}' "$evidence"
+            jq -c '{schema, status, baselineSha, candidateSha, failure: (if .failure then {phase: .failure.phase, message: (.failure.message | tostring | .[0:400])} else null end), variants: [(.variants // [])[] | {label, status, revision, failure: (.failure | if . then tostring | .[0:400] else null end), captureCliReportArtifact, shaderProgramAttributionArtifact, captureCliFailure: (if .failureDetails.captureCliFailure then {summary: .failureDetails.captureCliFailure.summary, rawReportTruncated: .failureDetails.captureCliFailure.rawReportTruncated, rawReportUnavailable: .failureDetails.captureCliFailure.rawReportUnavailable, captureCliReportArtifact: .failureDetails.captureCliFailure.captureCliReportArtifact, shaderProgramAttributionArtifact: .failureDetails.captureCliFailure.shaderProgramAttributionArtifact} else null end)}]}' "$evidence"
           else
             echo 'Performance build smoke report was not created.'
           fi
@@ -470,6 +476,7 @@ jobs:
             ${{ runner.temp }}/performance-build-smoke.json
             ${{ runner.temp }}/performance-build-smoke.json.cpu-profile/
             ${{ runner.temp }}/performance-build-smoke.json.capture-cli-report-*.json
+            ${{ runner.temp }}/performance-build-smoke.json.capture-cli-report-*.shader-program-attribution.json*
           if-no-files-found: warn
           retention-days: 3
 
