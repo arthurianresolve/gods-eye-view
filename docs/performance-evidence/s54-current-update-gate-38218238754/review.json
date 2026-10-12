@@ -1,0 +1,151 @@
+{
+  "applicationCommit": "5ba9a9408017771a2c91cb4b1f93610a6c73a1d6",
+  "harnessCommit": "5ba9a9408017771a2c91cb4b1f93610a6c73a1d6",
+  "rawBytes": 547243,
+  "rawSha256": "b05caa877a3ea667a5da8377aa409ef2b05d89debd89e9f6d93c0da30c13c7d1",
+  "validator": "default runtime report validation, no diagnostic opt-in",
+  "detailedInstrumentationAbsent": true,
+  "pairs": [
+    {
+      "caseId": "default-style",
+      "pair": 0,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 1,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 2,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 3,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 4,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 0,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 1,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 2,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 3,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 4,
+      "pngBytesIdentical": true,
+      "sourceGeometryStyleCameraClockEqual": true,
+      "nativeOwnersVerified": true
+    }
+  ],
+  "environment": {
+    "appCommit": "5ba9a9408017771a2c91cb4b1f93610a6c73a1d6",
+    "harnessCommit": "5ba9a9408017771a2c91cb4b1f93610a6c73a1d6",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "viewport": {
+      "width": 1200,
+      "height": 960,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 960,
+      "height": 640
+    },
+    "layers": []
+  },
+  "teardown": [
+    {
+      "mode": "entities",
+      "layerDestroyed": true,
+      "dataSourceRemoved": true,
+      "rendererOwnersRemoved": true,
+      "viewerKeptForNextLifetime": true,
+      "instrumentationRestored": true,
+      "ownerCountAfterDestroy": 0,
+      "dataSourceCountAfterDestroy": 0,
+      "scenePrimitiveCountAfterDestroy": 1,
+      "groundPrimitiveCountAfterDestroy": 1
+    },
+    {
+      "mode": "primitive-collections",
+      "layerDestroyed": true,
+      "dataSourceRemoved": true,
+      "rendererOwnersRemoved": true,
+      "viewerKeptForNextLifetime": true,
+      "instrumentationRestored": true,
+      "ownerCountAfterDestroy": 0,
+      "dataSourceCountAfterDestroy": 0,
+      "scenePrimitiveCountAfterDestroy": 1,
+      "groundPrimitiveCountAfterDestroy": 1
+    }
+  ],
+  "viewerCleanup": {
+    "viewerDestroyed": true
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 50097.978292,
+      "closeSettledHostMs": 50446.24925,
+      "closeElapsedMs": 348.270958000001,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 310.7743330000012
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "performanceAcceptance": false,
+  "physicalWindowsAcceptance": false
+}
