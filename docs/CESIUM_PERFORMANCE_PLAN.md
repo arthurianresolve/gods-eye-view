@@ -1,6 +1,6 @@
 # Cesium performance plan
 
-Latest isolated S48 shader-program diagnostic: the opt-in owned-context observer
+Integrated S48 shader-program diagnostic: the opt-in owned-context observer
 is implemented with bounded program/query rows, exact cleanup ownership and
 CLI/workflow/report validation. Root passes 151 focused checks with unchanged
 source hashes. The first hosted diagnostic at `3384b8bd` finishes five samples
