@@ -8,6 +8,7 @@ const VALID_STAGES = new Set([
   'listener-registered',
   'render-request-started',
   'render-request-completed',
+  'fixture-clock-held',
   'post-render',
   'page-timer-fired',
   'terminal',
@@ -27,6 +28,27 @@ export function createBoundaryProgressRecorder(record, field) {
     throw new TypeError('Render boundary progress owner is invalid.');
   return (observation) => {
     record[field] = structuredClone(observation);
+    if (field === 'warmupBoundaryObservation') {
+      const held = observation.progressEvents?.find(
+        (event) => event.stage === 'fixture-clock-held',
+      );
+      const details = held?.details;
+      if (details?.fixtureClockPhase === 'warmup-held') {
+        record.warmupBoundary = {
+          schema: 'gev-phased-monotonic-wall-clock/v1',
+          phase: details.fixtureClockPhase,
+          epochMs: details.fixtureClockEpochMs,
+          elapsedMs: details.fixtureClockElapsedMs,
+          warmupMs: details.fixtureClockWarmupMs,
+          measurementMs: details.fixtureClockMeasurementMs,
+          warmupNativeElapsedMs: details.fixtureClockWarmupNativeElapsedMs,
+          measurementNativeElapsedMs:
+            details.fixtureClockMeasurementNativeElapsedMs,
+          startCount: details.fixtureClockStartCount,
+          measurementStartCount: details.fixtureClockMeasurementStartCount,
+        };
+      }
+    }
   };
 }
 
@@ -231,10 +253,28 @@ function boundedProgressDetails(details) {
     'renderRequestCompleted',
     'postRenderObserved',
     'pageTimerFired',
+    'fixtureClockPhase',
+    'fixtureClockElapsedMs',
+    'fixtureClockEpochMs',
+    'fixtureClockWarmupMs',
+    'fixtureClockMeasurementMs',
+    'fixtureClockWarmupNativeElapsedMs',
+    'fixtureClockMeasurementNativeElapsedMs',
+    'fixtureClockStartCount',
+    'fixtureClockMeasurementStartCount',
   ]) {
     if (!Object.hasOwn(details, key)) continue;
     const value = details[key];
-    if (key === 'pageElapsedMs') {
+    if (key === 'fixtureClockMeasurementNativeElapsedMs' && value === null) {
+      bounded[key] = null;
+    } else if (
+      key === 'pageElapsedMs' ||
+      key === 'fixtureClockElapsedMs' ||
+      key === 'fixtureClockWarmupMs' ||
+      key === 'fixtureClockMeasurementMs' ||
+      key === 'fixtureClockWarmupNativeElapsedMs' ||
+      key === 'fixtureClockMeasurementNativeElapsedMs'
+    ) {
       if (
         typeof value === 'number' &&
         Number.isFinite(value) &&
@@ -242,6 +282,25 @@ function boundedProgressDetails(details) {
         value <= 30_000
       )
         bounded[key] = value;
+      else return null;
+    } else if (
+      key === 'fixtureClockStartCount' ||
+      key === 'fixtureClockMeasurementStartCount'
+    ) {
+      if (Number.isSafeInteger(value) && value >= 0 && value <= 1)
+        bounded[key] = value;
+      else return null;
+    } else if (key === 'fixtureClockEpochMs') {
+      if (
+        typeof value === 'number' &&
+        Number.isSafeInteger(value) &&
+        value >= 0 &&
+        value <= 8_640_000_000_000_000
+      )
+        bounded[key] = value;
+      else return null;
+    } else if (key === 'fixtureClockPhase') {
+      if (value === 'warmup-held') bounded[key] = value;
       else return null;
     } else if (typeof value === 'boolean') bounded[key] = value;
     else return null;

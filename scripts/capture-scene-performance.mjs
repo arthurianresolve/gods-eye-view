@@ -17,6 +17,7 @@ import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installFixtureWallClockOnPage,
+  holdProviderWarmupBoundary,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
@@ -58,6 +59,7 @@ import {
 } from './performance/cesiumWorkerBlobContract.mjs';
 import {
   runWorkerAuditAtWarmupBoundary,
+  readProviderWarmupBoundarySnapshot,
   PREWARM_WORKER_AUDIT_BOUNDARY,
 } from './performance/prewarmWorkerAuditBoundary.mjs';
 import {
@@ -1020,6 +1022,8 @@ async function settleProviderRenderAtBoundary(
   retireViewerRenderLoop = false,
   finalObservationFunction = null,
   finalObservationArgs = [],
+  beforeRenderRequestFunction = null,
+  beforeRenderRequestArgs = [],
 ) {
   return observeRenderBoundary({
     label,
@@ -1032,6 +1036,8 @@ async function settleProviderRenderAtBoundary(
         retireViewerRenderLoop,
         finalObservationFunction,
         finalObservationArgs,
+        beforeRenderRequestFunction,
+        beforeRenderRequestArgs,
       }),
     onProgress,
   });
@@ -2370,36 +2376,40 @@ try {
         auditMode: workerAuditMode,
         warmupMs,
         readWarmupBoundary: async () => {
-          fixtureBoundaryStart = productionFlightFixture
-            ? await page.evaluate(async () => {
-                const clock = window.__gevPhasedMonotonicWallClockV1;
-                const held = clock?.holdWarmupBoundary?.();
-                if (!held || held.phase !== 'warmup-held')
-                  throw new Error(
-                    'Provider fixture warmup did not reach its declared boundary.',
-                  );
-                return window.__gevPhasedMonotonicWallClockV1.snapshot();
-              })
-            : null;
+          if (productionFlightFixture) {
+            const warmupProgressRecord = failureProgress.current;
+            warmupBoundarySettle = await settleProviderRenderAtBoundary(
+              page,
+              'Warmup boundary',
+              5000,
+              warmupProgressRecord
+                ? createBoundaryProgressRecorder(
+                    warmupProgressRecord,
+                    'warmupBoundaryObservation',
+                  )
+                : undefined,
+              activeRenderBoundaryProgressBinding,
+              false,
+              null,
+              [],
+              holdProviderWarmupBoundary,
+              [warmupMs],
+            );
+            fixtureBoundaryStart =
+              readProviderWarmupBoundarySnapshot(warmupBoundarySettle);
+            failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
+            failureProgress.current.warmupBoundary = fixtureBoundaryStart;
+            if (warmupBoundarySettle?.status !== 'settled')
+              throw new Error(
+                warmupBoundarySettle?.error?.message ||
+                  'Provider fixture warmup completed-render boundary failed.',
+              );
+          }
           failureProgress.current.warmupBoundary = fixtureBoundaryStart;
           return fixtureBoundaryStart;
         },
         settleCompletedRender: async () => {
-          const warmupProgressRecord = failureProgress.current;
-          warmupBoundarySettle = productionFlightFixture
-            ? await settleProviderRenderAtBoundary(
-                page,
-                'Warmup boundary',
-                5000,
-                warmupProgressRecord
-                  ? createBoundaryProgressRecorder(
-                      warmupProgressRecord,
-                      'warmupBoundaryObservation',
-                    )
-                  : undefined,
-                activeRenderBoundaryProgressBinding,
-              )
-            : null;
+          if (!productionFlightFixture) warmupBoundarySettle = null;
           failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
           if (failureProgress.current.prewarmWorkerAudit) {
             failureProgress.current.prewarmWorkerAudit.fixtureClockElapsedMs =

@@ -1,11 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { observeRenderBoundary } from './renderBoundaryObservation.mjs';
+import {
+  createBoundaryProgressRecorder,
+  observeRenderBoundary,
+} from './renderBoundaryObservation.mjs';
 import {
   evaluateCompletedRenderDiagnostic,
   settleCompletedRenderDiagnostic,
 } from './settleCompletedRenderDiagnostic.mjs';
 import { observeTrackedEntityBoundary } from './trackingRoute.mjs';
+import {
+  holdProviderWarmupBoundary,
+  installPhasedMonotonicWallClock,
+} from './productionFlightFixture.mjs';
 
 class Event {
   handlers = new Set();
@@ -361,6 +368,264 @@ test('tracked endpoint helper is composed into the page function with JSON-only 
     );
     assert.equal(result.diagnostics.renderLoopRetirement.confirmed, true);
     assert.deepEqual(order, ['retired']);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('provider warmup clock hold and listener registration share one serialized page callback', async () => {
+  let monotonicNow = 10;
+  const trace = [];
+  const target = {
+    Date,
+    performance: { now: () => monotonicNow },
+    trace,
+  };
+  const fixedTime = Date.parse('2026-10-08T12:00:00.000Z');
+  installPhasedMonotonicWallClock(fixedTime, 1000, 1000, target);
+  target.__godsEyeView = null;
+  target.window = target;
+  target.__gevPhasedMonotonicWallClockV1.startWarmup();
+  monotonicNow += 1200;
+
+  const subject = viewer({ renderLoop: true });
+  target.__godsEyeView = { viewer: subject };
+  subject.scene.postRender.addEventListener = (handler) => {
+    trace.push('listener-registered');
+    subject.scene.postRender.handlers.add(handler);
+    return () => subject.scene.postRender.handlers.delete(handler);
+  };
+  subject.scene.requestRender = () => {
+    trace.push(
+      `render-requested-${target.__gevPhasedMonotonicWallClockV1.snapshot().phase}`,
+    );
+    queueMicrotask(() => subject.scene.postRender.fire());
+  };
+
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  const warmupRecord = {};
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: target,
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: target.__godsEyeView,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const pageFunction = new Function(`return (${fn.toString()});`)();
+        const jsonArgs = JSON.parse(JSON.stringify(args));
+        return pageFunction(...jsonArgs);
+      },
+    };
+    const result = await observeRenderBoundary({
+      label: 'atomic provider warmup boundary',
+      timeoutMs: 100,
+      prepareProgress: async (receive, invocationId) => {
+        const functionName = `__test_warmup_${invocationId.replaceAll('-', '')}`;
+        Object.defineProperty(globalThis, functionName, {
+          configurable: true,
+          value: (receivedId, stage, details) =>
+            receive(receivedId, stage, details),
+        });
+        return {
+          functionName,
+          dispose: () => delete globalThis[functionName],
+        };
+      },
+      evaluate: (pageTimeoutMs, binding) =>
+        evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+          ...binding,
+          beforeRenderRequestFunction: holdProviderWarmupBoundary,
+          beforeRenderRequestArgs: [1000],
+        }),
+      onProgress: createBoundaryProgressRecorder(
+        warmupRecord,
+        'warmupBoundaryObservation',
+      ),
+    });
+
+    assert.equal(result.status, 'settled');
+    assert.deepEqual(trace, [
+      'listener-registered',
+      'render-requested-warmup-held',
+    ]);
+    assert.deepEqual(
+      result.page.diagnostics.beforeRenderRequestObservation,
+      target.__gevPhasedMonotonicWallClockV1.snapshot(),
+    );
+    assert.equal(
+      result.page.diagnostics.beforeRenderRequestObservation.phase,
+      'warmup-held',
+    );
+    assert.equal(result.page.diagnostics.listenerRegistered, true);
+    assert.equal(result.page.diagnostics.cleanup.listenerRemoved, true);
+    const clockAck = result.progressEvents.find(
+      (event) => event.stage === 'fixture-clock-held',
+    );
+    assert.ok(
+      clockAck,
+      JSON.stringify({
+        ignored: result.ignoredProgressEvents,
+        events: result.progressEvents,
+      }),
+    );
+    assert.equal(clockAck.details.fixtureClockPhase, 'warmup-held');
+    assert.equal(clockAck.details.fixtureClockElapsedMs, 1000);
+    assert.equal(clockAck.details.fixtureClockEpochMs, fixedTime + 1000);
+    assert.deepEqual(
+      warmupRecord.warmupBoundary,
+      result.page.diagnostics.beforeRenderRequestObservation,
+    );
+    assert.equal(result.cleanup.progressBindingRemoved, true);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('atomic provider clock callback error removes the listener without requesting a render', async () => {
+  const subject = viewer({ renderLoop: true });
+  let renderRequests = 0;
+  subject.scene.requestRender = () => renderRequests++;
+  const result = await settleCompletedRenderDiagnostic(
+    subject,
+    100,
+    null,
+    null,
+    false,
+    null,
+    [],
+    () => {
+      throw new Error('fixture clock was not at warmup boundary');
+    },
+    [],
+  );
+  assert.equal(result.status, 'page-error');
+  assert.equal(
+    result.error.message,
+    'fixture clock was not at warmup boundary',
+  );
+  assert.equal(result.diagnostics.listenerRegistered, true);
+  assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+  assert.equal(renderRequests, 0);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('host progress preserves an atomic warmup snapshot when its page render times out', async () => {
+  let monotonicNow = 10;
+  const target = { Date, performance: { now: () => monotonicNow } };
+  target.window = target;
+  installPhasedMonotonicWallClock(
+    Date.parse('2026-10-08T12:00:00.000Z'),
+    1000,
+    1000,
+    target,
+  );
+  target.__gevPhasedMonotonicWallClockV1.startWarmup();
+  monotonicNow += 1100;
+  const subject = viewer({ requestRender: false });
+  subject.scene.requestRender = () => {};
+  target.__godsEyeView = { viewer: subject };
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  const failureRecord = {};
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: target,
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: target.__godsEyeView,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const pageFunction = new Function(`return (${fn.toString()});`)();
+        const pendingPageResult = pageFunction(
+          ...JSON.parse(JSON.stringify(args)),
+        );
+        pendingPageResult.catch(() => {});
+        return new Promise(() => {});
+      },
+    };
+    let failure;
+    try {
+      await observeRenderBoundary({
+        label: 'atomic provider warmup host timeout',
+        timeoutMs: 10,
+        hostGraceMs: 10,
+        prepareProgress: async (receive, invocationId) => {
+          const functionName = `__test_warmup_timeout_${invocationId.replaceAll('-', '')}`;
+          Object.defineProperty(globalThis, functionName, {
+            configurable: true,
+            value: (receivedId, stage, details) =>
+              receive(receivedId, stage, details),
+          });
+          return {
+            functionName,
+            dispose: () => delete globalThis[functionName],
+          };
+        },
+        evaluate: (pageTimeoutMs, binding) =>
+          evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+            ...binding,
+            beforeRenderRequestFunction: holdProviderWarmupBoundary,
+            beforeRenderRequestArgs: [1000],
+          }),
+        onProgress: createBoundaryProgressRecorder(
+          failureRecord,
+          'warmupBoundaryObservation',
+        ),
+      });
+    } catch (error) {
+      failure = error;
+    }
+    assert.ok(failure);
+    const observation = failure.boundaryObservation;
+    assert.equal(observation.status, 'host-observation-deadline');
+    assert.equal(observation.pendingPageResultAtDeadline, true);
+    assert.ok(
+      observation.progressEvents.some(
+        (event) =>
+          event.stage === 'fixture-clock-held' &&
+          event.details.fixtureClockPhase === 'warmup-held' &&
+          event.details.fixtureClockElapsedMs === 1000,
+      ),
+      JSON.stringify({
+        ignored: observation.ignoredProgressEvents,
+        events: observation.progressEvents,
+      }),
+    );
+    assert.ok(
+      observation.progressEvents.some(
+        (event) => event.stage === 'page-timer-fired',
+      ),
+    );
+    assert.deepEqual(
+      failureRecord.warmupBoundary,
+      target.__gevPhasedMonotonicWallClockV1.snapshot(),
+    );
+    assert.equal(observation.cleanup.progressBindingRemoved, true);
+    assert.equal(subject.scene.postRender.handlers.size, 0);
   } finally {
     if (previousWindow)
       Object.defineProperty(globalThis, 'window', previousWindow);

@@ -10,6 +10,8 @@ export function settleCompletedRenderDiagnostic(
   retireViewerRenderLoop = false,
   finalObservationFunction = null,
   finalObservationArgs = [],
+  beforeRenderRequestFunction = null,
+  beforeRenderRequestArgs = [],
 ) {
   const acknowledge = (stage, details) => {
     if (!progressFunctionName || !invocationId) return;
@@ -64,6 +66,8 @@ export function settleCompletedRenderDiagnostic(
           : null,
         finalObservation: null,
         finalObservationErrorName: null,
+        beforeRenderRequestObservation: null,
+        beforeRenderRequestErrorName: null,
         pageTimerFired: false,
         cleanup: { timerCleared: false, listenerRemoved: false },
       },
@@ -101,6 +105,8 @@ export function settleCompletedRenderDiagnostic(
         : null,
       finalObservation: null,
       finalObservationErrorName: null,
+      beforeRenderRequestObservation: null,
+      beforeRenderRequestErrorName: null,
       pageTimerFired: false,
       pageTimerElapsedMs: null,
       cleanup: { timerCleared: false, listenerRemoved: false },
@@ -238,6 +244,39 @@ export function settleCompletedRenderDiagnostic(
         listenerRegistered: true,
         pageElapsedMs: diagnostics.listenerRegistrationElapsedMs,
       });
+      if (typeof beforeRenderRequestFunction === 'function') {
+        try {
+          diagnostics.beforeRenderRequestObservation =
+            beforeRenderRequestFunction(
+              ...(Array.isArray(beforeRenderRequestArgs)
+                ? beforeRenderRequestArgs
+                : []),
+            );
+          const fixtureClock = diagnostics.beforeRenderRequestObservation;
+          if (fixtureClock?.schema === 'gev-phased-monotonic-wall-clock/v1')
+            acknowledge('fixture-clock-held', {
+              pageElapsedMs: elapsed(),
+              fixtureClockPhase: fixtureClock.phase,
+              fixtureClockElapsedMs: fixtureClock.elapsedMs,
+              fixtureClockEpochMs: fixtureClock.epochMs,
+              fixtureClockWarmupMs: fixtureClock.warmupMs,
+              fixtureClockMeasurementMs: fixtureClock.measurementMs,
+              fixtureClockWarmupNativeElapsedMs:
+                fixtureClock.warmupNativeElapsedMs,
+              fixtureClockMeasurementNativeElapsedMs:
+                fixtureClock.measurementNativeElapsedMs,
+              fixtureClockStartCount: fixtureClock.startCount,
+              fixtureClockMeasurementStartCount:
+                fixtureClock.measurementStartCount,
+            });
+        } catch (error) {
+          diagnostics.beforeRenderRequestErrorName = String(
+            error?.name || 'Error',
+          ).slice(0, 80);
+          finish(error);
+          return;
+        }
+      }
       if (renderRequestAvailable) {
         diagnostics.renderRequestStarted = true;
         diagnostics.renderRequestStartElapsedMs = elapsed();
@@ -270,15 +309,21 @@ export function evaluateCompletedRenderDiagnostic(
     retireViewerRenderLoop = false,
     finalObservationFunction = null,
     finalObservationArgs = [],
+    beforeRenderRequestFunction = null,
+    beforeRenderRequestArgs = [],
   },
 ) {
-  const pageFunction =
-    typeof finalObservationFunction === 'function'
-      ? createCompletedRenderDiagnosticWithObservation(
-          finalObservationFunction,
-          finalObservationArgs,
-        )
-      : settleCompletedRenderDiagnostic;
+  const hasBrowserCallbacks =
+    typeof finalObservationFunction === 'function' ||
+    typeof beforeRenderRequestFunction === 'function';
+  const pageFunction = hasBrowserCallbacks
+    ? createCompletedRenderDiagnosticWithObservation(
+        finalObservationFunction,
+        finalObservationArgs,
+        beforeRenderRequestFunction,
+        beforeRenderRequestArgs,
+      )
+    : settleCompletedRenderDiagnostic;
   const args = [
     pageTimeoutMs,
     pageTimeoutMs,
@@ -286,7 +331,7 @@ export function evaluateCompletedRenderDiagnostic(
     invocationId,
     retireViewerRenderLoop,
   ];
-  if (pageFunction === settleCompletedRenderDiagnostic) args.push(null, []);
+  if (!hasBrowserCallbacks) args.push(null, [], null, []);
   return targetPage.evaluate(pageFunction, ...args);
 }
 
@@ -296,18 +341,28 @@ export function evaluateCompletedRenderDiagnostic(
  * values passed as evaluate arguments are not serializable by Puppeteer.
  */
 export function createCompletedRenderDiagnosticWithObservation(
-  observationFunction,
-  observationArgs,
+  observationFunction = null,
+  observationArgs = [],
+  beforeRenderRequestFunction = null,
+  beforeRenderRequestArgs = [],
 ) {
   if (
-    typeof observationFunction !== 'function' ||
-    !Array.isArray(observationArgs)
+    (observationFunction !== null &&
+      typeof observationFunction !== 'function') ||
+    !Array.isArray(observationArgs) ||
+    (beforeRenderRequestFunction !== null &&
+      typeof beforeRenderRequestFunction !== 'function') ||
+    !Array.isArray(beforeRenderRequestArgs)
   )
     throw new TypeError(
-      'A browser observation function and argument array are required.',
+      'Browser observation callbacks and argument arrays are invalid.',
     );
-  const serializedArgs = JSON.stringify(observationArgs);
-  if (typeof serializedArgs !== 'string')
+  const serializedFinalArgs = JSON.stringify(observationArgs);
+  const serializedBeforeArgs = JSON.stringify(beforeRenderRequestArgs);
+  if (
+    typeof serializedFinalArgs !== 'string' ||
+    typeof serializedBeforeArgs !== 'string'
+  )
     throw new TypeError(
       'Browser observation arguments must be JSON serializable.',
     );
@@ -319,7 +374,8 @@ export function createCompletedRenderDiagnosticWithObservation(
     retireViewerRenderLoop,
   ) {
     const settle = ${settleCompletedRenderDiagnostic.toString()};
-    const observation = ${observationFunction.toString()};
+    const observation = ${observationFunction ? observationFunction.toString() : 'null'};
+    const beforeRenderRequest = ${beforeRenderRequestFunction ? beforeRenderRequestFunction.toString() : 'null'};
     return settle(
       viewerOrTimeout,
       timeoutMs,
@@ -327,7 +383,9 @@ export function createCompletedRenderDiagnosticWithObservation(
       invocationId,
       retireViewerRenderLoop,
       observation,
-      ${serializedArgs},
+      ${serializedFinalArgs},
+      beforeRenderRequest,
+      ${serializedBeforeArgs},
     );
   }`;
   return new Function(`return (${composed});`)();

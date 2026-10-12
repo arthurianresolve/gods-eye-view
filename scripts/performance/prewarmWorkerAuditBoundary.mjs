@@ -1,6 +1,21 @@
 export const PREWARM_WORKER_AUDIT_BOUNDARY =
   'after-warmup-and-completed-render-before-measurement';
 
+/** Extract the provider fixture clock snapshot from the host boundary envelope. */
+export function readProviderWarmupBoundarySnapshot(boundaryObservation) {
+  const snapshot =
+    boundaryObservation?.page?.diagnostics
+      ?.beforeRenderRequestObservation ?? null;
+  if (
+    snapshot?.schema !== 'gev-phased-monotonic-wall-clock/v1' ||
+    snapshot.phase !== 'warmup-held' ||
+    !Number.isFinite(snapshot.elapsedMs) ||
+    !Number.isSafeInteger(snapshot.epochMs)
+  )
+    return null;
+  return structuredClone(snapshot);
+}
+
 /** Run the warmup/render boundary and only then validate prewarmed worker bodies. */
 export async function runWorkerAuditAtWarmupBoundary({
   auditMode,

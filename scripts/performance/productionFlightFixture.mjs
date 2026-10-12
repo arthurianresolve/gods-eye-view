@@ -394,6 +394,28 @@ export function installPhasedMonotonicWallClock(
   return snapshot();
 }
 
+/** Hold the provider fixture clock at warmup completion inside the render probe. */
+export function holdProviderWarmupBoundary(warmupMs) {
+  const clock = globalThis.window?.__gevPhasedMonotonicWallClockV1;
+  const held = clock?.holdWarmupBoundary?.();
+  if (
+    !held ||
+    held.phase !== 'warmup-held' ||
+    held.elapsedMs !== warmupMs
+  )
+    throw new Error(
+      'Provider fixture warmup did not reach its declared boundary.',
+    );
+  const snapshot = clock.snapshot?.();
+  if (
+    !snapshot ||
+    snapshot.phase !== 'warmup-held' ||
+    snapshot.elapsedMs !== warmupMs
+  )
+    throw new Error('Provider fixture warmup boundary snapshot is invalid.');
+  return snapshot;
+}
+
 /** Wait for one completed Cesium render after a held clock boundary. */
 export function settleCompletedRender(viewerOrTimeout, timeoutMs = 5000, signal = null) {
   const viewer = typeof viewerOrTimeout === 'number'
