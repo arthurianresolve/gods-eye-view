@@ -75,7 +75,7 @@ on:
         type: boolean
         default: false
       capture_first_motion_cpu_profile:
-        description: Sample CPU stacks from first scripted-motion warmup through its measurement boundary (diagnostic only)
+        description: Sample first two idle and first scripted-motion windows (diagnostic only)
         type: boolean
         default: false
       upload_artifacts:

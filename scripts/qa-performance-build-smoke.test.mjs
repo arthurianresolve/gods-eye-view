@@ -1,14 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   compactCaptureCliFailure,
   parseSmokeArguments,
+  readProviderCpuProfileIndexSet,
   runBoundedChild,
   validateCaptureCliReport,
 } from './qa-performance-build-smoke.mjs';
@@ -598,46 +600,78 @@ function validInfrastructureCaptureCliReport(
   };
 }
 
-test('first-motion CPU profile evidence is bound to the target sample and stays ineligible', () => {
+test('provider CPU profile set binds first two idle and first motion windows to exact documents', () => {
   const report = validCaptureCliReport();
-  const profile = {
-    schema: 'gev-render-boundary-cpu-profile-ref/v1',
-    status: 'complete',
-    windowCapReached: false,
-    windowCapMs: null,
-    performanceAcceptanceEligible: false,
-    fileName: 'first-scripted-motion-cpu-profile.json',
-    sha256: 'a'.repeat(64),
-    byteLength: 2048,
-    profilerErrors: [],
-  };
-  const window = {
-    schema: 'gev-first-motion-cpu-profile-window/v1',
+  const targets = [
+    { scenario: 'idle', run: 1 },
+    { scenario: 'idle', run: 2 },
+    { scenario: 'scripted-motion', run: 1 },
+  ];
+  const profiles = targets.map((target, index) => {
+    const sample = report.captures.find(
+      (item) => item.scenario === target.scenario && item.run === target.run,
+    );
+    sample.captureOrdinal = report.captures.indexOf(sample);
+    sample.documentRole = `document-role-${index}`;
+    sample.documentId = `document-id-${index}`;
+    const key =
+      target.scenario === 'idle'
+        ? `provider-idle-${target.run}`
+        : `provider-scripted-motion-${target.run}`;
+    const profile = {
+      schema: 'gev-render-boundary-cpu-profile-ref/v1',
+      status: 'complete',
+      windowCapReached: false,
+      windowCapMs: null,
+      profileWindowMs: 5000,
+      stopOverrunMs: 0,
+      performanceAcceptanceEligible: false,
+      fileName: `${key}-cpu-profile.json`,
+      sha256: String(index + 1).repeat(64),
+      byteLength: 2048,
+      profilerErrors: [],
+      target: {
+        scenario: target.scenario,
+        run: target.run,
+        captureOrdinal: sample.captureOrdinal,
+        documentRole: sample.documentRole,
+        documentId: sample.documentId,
+      },
+    };
+    const window = {
+      schema: 'gev-provider-sample-cpu-profile-window/v1',
+      enabled: true,
+      targetScenario: target.scenario,
+      targetRun: target.run,
+      captureOrdinal: sample.captureOrdinal,
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+      status: 'complete',
+      windowCapReached: false,
+      windowCapMs: null,
+      profileWindowMs: 5000,
+      stopOverrunMs: 0,
+      profilerStarted: true,
+      profile,
+      scope:
+        'sample-bound window from immediately before warmup through its measurement boundary',
+      performanceAcceptanceEligible: false,
+    };
+    sample.providerSampleCpuProfile = structuredClone(window);
+    return window;
+  });
+  report.providerSampleCpuProfiles = {
     enabled: true,
-    targetScenario: 'scripted-motion',
-    targetRun: 1,
-    status: 'complete',
-    windowCapReached: false,
-    windowCapMs: null,
-    profilerStarted: true,
-    startedHostElapsedMs: 100,
-    windowStartRequestedHostElapsedMs: 101,
-    stopReason: 'measurement-boundary-settled-or-failed',
-    windowEndRequestedHostElapsedMs: 200,
-    completedHostElapsedMs: 201,
-    profile,
+    targets,
     scope:
-      'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+      'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
     performanceAcceptanceEligible: false,
+    status: 'complete',
+    profiles,
   };
-  report.firstMotionCpuProfile = window;
   report.comparisonReadiness.reasons.push(
-    'first-motion-cpu-profile-instrumentation-is-enabled',
+    'provider-sample-cpu-profile-instrumentation-is-enabled',
   );
-  const target = report.captures.find(
-    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
-  );
-  target.firstMotionCpuProfile = structuredClone(window);
   const expected = {
     appSha: 'b'.repeat(40),
     harnessSha: 'c'.repeat(40),
@@ -649,58 +683,198 @@ test('first-motion CPU profile evidence is bound to the target sample and stays 
 
   const sampleMissing = structuredClone(report);
   delete sampleMissing.captures.find(
-    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
-  ).firstMotionCpuProfile;
+    (sample) => sample.scenario === 'idle' && sample.run === 2,
+  ).providerSampleCpuProfile;
   assert.throws(() => validateCaptureCliReport(sampleMissing, expected));
 
   const eligible = structuredClone(report);
-  eligible.firstMotionCpuProfile.performanceAcceptanceEligible = true;
+  eligible.providerSampleCpuProfiles.performanceAcceptanceEligible = true;
   assert.throws(() => validateCaptureCliReport(eligible, expected));
 
-  const incomplete = structuredClone(report);
-  incomplete.firstMotionCpuProfile.status = 'incomplete';
-  incomplete.firstMotionCpuProfile.windowCapReached = true;
-  incomplete.firstMotionCpuProfile.windowCapMs = 60_000;
-  incomplete.firstMotionCpuProfile.profile.status = 'incomplete';
-  incomplete.firstMotionCpuProfile.profile.windowCapReached = true;
-  incomplete.firstMotionCpuProfile.profile.windowCapMs = 60_000;
-  const incompleteSample = incomplete.captures.find(
+  const mismatchedWindowTarget = structuredClone(report);
+  mismatchedWindowTarget.providerSampleCpuProfiles.profiles[2].profile.target.captureOrdinal = 3;
+  mismatchedWindowTarget.captures.find(
     (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).providerSampleCpuProfile = structuredClone(
+    mismatchedWindowTarget.providerSampleCpuProfiles.profiles[2],
   );
-  incompleteSample.firstMotionCpuProfile = structuredClone(
-    incomplete.firstMotionCpuProfile,
+  assert.throws(() =>
+    validateCaptureCliReport(mismatchedWindowTarget, expected),
   );
+
+  const wrongFiveRunOrdinal = structuredClone(report);
+  wrongFiveRunOrdinal.providerSampleCpuProfiles.profiles[2].captureOrdinal = 5;
+  wrongFiveRunOrdinal.providerSampleCpuProfiles.profiles[2].profile.target.captureOrdinal = 5;
+  wrongFiveRunOrdinal.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).providerSampleCpuProfile = structuredClone(
+    wrongFiveRunOrdinal.providerSampleCpuProfiles.profiles[2],
+  );
+  assert.throws(() => validateCaptureCliReport(wrongFiveRunOrdinal, expected));
+
+  const incomplete = structuredClone(report);
+  const cappedWindow = incomplete.providerSampleCpuProfiles.profiles[1];
+  cappedWindow.status = 'incomplete';
+  cappedWindow.windowCapReached = true;
+  cappedWindow.windowCapMs = 60_000;
+  cappedWindow.profile.status = 'incomplete';
+  cappedWindow.profile.windowCapReached = true;
+  cappedWindow.profile.windowCapMs = 60_000;
+  incomplete.captures.find(
+    (sample) => sample.scenario === 'idle' && sample.run === 2,
+  ).providerSampleCpuProfile = structuredClone(cappedWindow);
+  incomplete.providerSampleCpuProfiles.status = 'incomplete';
   assert.doesNotThrow(() => validateCaptureCliReport(incomplete, expected));
 
   const cappedWithCleanupError = structuredClone(incomplete);
-  cappedWithCleanupError.firstMotionCpuProfile.profile.profilerErrors = [
-    'Profiler.disable failed',
-  ];
+  cappedWithCleanupError.providerSampleCpuProfiles.profiles[1].profile.profilerErrors =
+    ['Profiler.disable failed'];
   cappedWithCleanupError.captures.find(
-    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
-  ).firstMotionCpuProfile = structuredClone(
-    cappedWithCleanupError.firstMotionCpuProfile,
+    (sample) => sample.scenario === 'idle' && sample.run === 2,
+  ).providerSampleCpuProfile = structuredClone(
+    cappedWithCleanupError.providerSampleCpuProfiles.profiles[1],
   );
   assert.throws(() =>
     validateCaptureCliReport(cappedWithCleanupError, expected),
   );
 
   const wrongArtifactName = structuredClone(report);
-  wrongArtifactName.firstMotionCpuProfile.profile.fileName =
+  wrongArtifactName.providerSampleCpuProfiles.profiles[0].profile.fileName =
     '../different-profile.json';
   wrongArtifactName.captures.find(
-    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
-  ).firstMotionCpuProfile = structuredClone(
-    wrongArtifactName.firstMotionCpuProfile,
+    (sample) => sample.scenario === 'idle' && sample.run === 1,
+  ).providerSampleCpuProfile = structuredClone(
+    wrongArtifactName.providerSampleCpuProfiles.profiles[0],
   );
   assert.throws(() => validateCaptureCliReport(wrongArtifactName, expected));
 
   const capMismatch = structuredClone(incomplete);
-  capMismatch.firstMotionCpuProfile.windowCapMs = 59_999;
+  capMismatch.providerSampleCpuProfiles.profiles[1].windowCapMs = 59_999;
   capMismatch.captures.find(
-    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
-  ).firstMotionCpuProfile = structuredClone(capMismatch.firstMotionCpuProfile);
+    (sample) => sample.scenario === 'idle' && sample.run === 2,
+  ).providerSampleCpuProfile = structuredClone(
+    capMismatch.providerSampleCpuProfiles.profiles[1],
+  );
   assert.throws(() => validateCaptureCliReport(capMismatch, expected));
+
+  const overrun = structuredClone(report);
+  const overrunWindow = overrun.providerSampleCpuProfiles.profiles[2];
+  overrunWindow.status = 'incomplete';
+  overrunWindow.profile.status = 'incomplete';
+  overrunWindow.profile.profileWindowMs = 60_500;
+  overrunWindow.profile.stopOverrunMs = 500;
+  overrunWindow.profileWindowMs = 60_500;
+  overrunWindow.stopOverrunMs = 500;
+  overrun.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).providerSampleCpuProfile = structuredClone(overrunWindow);
+  overrun.providerSampleCpuProfiles.status = 'incomplete';
+  assert.doesNotThrow(() => validateCaptureCliReport(overrun, expected));
+});
+
+test('failed later profile window preserves the earlier ordered sidecar indexes', async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-provider-profile-index-set-'),
+  );
+  try {
+    const targets = [
+      { scenario: 'idle', run: 1, key: 'provider-idle-1' },
+      { scenario: 'idle', run: 2, key: 'provider-idle-2' },
+      {
+        scenario: 'scripted-motion',
+        run: 1,
+        key: 'provider-scripted-motion-1',
+      },
+    ];
+    for (const target of targets) {
+      const captureOrdinal = target.scenario === 'idle' ? target.run - 1 : 5;
+      const profileBytes = Buffer.from(`profile-${captureOrdinal}`);
+      const profileRef = {
+        schema: 'gev-render-boundary-cpu-profile-ref/v1',
+        status: 'complete',
+        performanceAcceptanceEligible: false,
+        fileName: `${target.key}-cpu-profile.json`,
+        sha256: createHash('sha256').update(profileBytes).digest('hex'),
+        byteLength: profileBytes.byteLength,
+        profilerErrors: [],
+        target: {
+          scenario: target.scenario,
+          run: target.run,
+          captureOrdinal,
+          documentRole: `provider-sample-${captureOrdinal}`,
+          documentId: `document-${captureOrdinal}`,
+        },
+      };
+      await writeFile(path.join(directory, profileRef.fileName), profileBytes);
+      await writeFile(
+        path.join(directory, `${target.key}-cpu-profile-ref.json`),
+        `${JSON.stringify({
+          schema: 'gev-provider-sample-cpu-profile-index/v1',
+          performanceAcceptanceEligible: false,
+          target: {
+            scenario: target.scenario,
+            run: target.run,
+            captureOrdinal,
+            documentRole: `provider-sample-${captureOrdinal}`,
+            documentId: `document-${captureOrdinal}`,
+          },
+          profile: profileRef,
+        })}\n`,
+      );
+    }
+    const result = await readProviderCpuProfileIndexSet(directory);
+    assert.equal(result.status, 'all-targets-recorded');
+    assert.equal(result.invalidIndexCount, 0);
+    assert.deepEqual(
+      result.profiles.map(({ target }) => [target.scenario, target.run]),
+      [
+        ['idle', 1],
+        ['idle', 2],
+        ['scripted-motion', 1],
+      ],
+    );
+    assert.equal(result.profiles.length, 3);
+    assert.equal(
+      result.profiles.every((profile) => profile.artifactVerified),
+      true,
+    );
+    assert.equal(result.performanceAcceptanceEligible, false);
+
+    const motionIndexPath = path.join(
+      directory,
+      'provider-scripted-motion-1-cpu-profile-ref.json',
+    );
+    const motionIndex = JSON.parse(await readFile(motionIndexPath, 'utf8'));
+    assert.equal(motionIndex.target.captureOrdinal, 5);
+    motionIndex.profile.target.captureOrdinal = 2;
+    await writeFile(motionIndexPath, `${JSON.stringify(motionIndex)}\n`);
+    const rejected = await readProviderCpuProfileIndexSet(directory);
+    assert.equal(rejected.status, 'partial');
+    assert.equal(rejected.invalidIndexCount, 1);
+
+    for (const mutate of [
+      (index) => {
+        index.profile.schema = 'unknown-profile-ref/v1';
+      },
+      (index) => {
+        index.profile.performanceAcceptanceEligible = true;
+      },
+      (index) => {
+        index.profile.target.unexpected = true;
+      },
+    ]) {
+      const malformedIndex = JSON.parse(
+        await readFile(motionIndexPath, 'utf8'),
+      );
+      malformedIndex.profile.target.captureOrdinal = 5;
+      mutate(malformedIndex);
+      await writeFile(motionIndexPath, `${JSON.stringify(malformedIndex)}\n`);
+      const malformed = await readProviderCpuProfileIndexSet(directory);
+      assert.equal(malformed.invalidIndexCount, 1);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('capture CLI validator accepts only the complete six-sample hosted smoke contract', () => {

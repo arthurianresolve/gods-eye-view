@@ -34,7 +34,19 @@ function assertProfile(value, message) {
   if (!value) throw new Error(`Invalid CPU profile: ${message}`);
 }
 
-export function normalizeCpuProfile(profile) {
+export function normalizeCpuProfile(
+  profile,
+  {
+    maxDurationMs = MAX_PROFILE_WINDOW_MS,
+    scope = 'unspecified bounded capture window',
+  } = {},
+) {
+  assertProfile(
+    Number.isFinite(maxDurationMs) &&
+      maxDurationMs > 0 &&
+      maxDurationMs <= MAX_PROFILE_WINDOW_MS + PROFILE_OPERATION_TIMEOUT_MS,
+    'maximum duration bound',
+  );
   assertProfile(
     Array.isArray(profile?.nodes) &&
       profile.nodes.length > 0 &&
@@ -53,7 +65,7 @@ export function normalizeCpuProfile(profile) {
     Number.isFinite(profile.startTime) &&
       Number.isFinite(profile.endTime) &&
       profile.endTime >= profile.startTime &&
-      profile.endTime - profile.startTime <= MAX_PROFILE_WINDOW_MS * 1000,
+      profile.endTime - profile.startTime <= maxDurationMs * 1000,
     'time bounds',
   );
   const ids = new Set();
@@ -153,8 +165,7 @@ export function normalizeCpuProfile(profile) {
     .slice(0, 30);
   return {
     schema: 'gev-sampled-cpu-attribution/v1',
-    scope:
-      'Sampled main-thread stacks from first scripted-motion warmup through measurement-boundary completion or failure, including idle and garbage collection. Sample weights are statistical attribution, not precise CPU execution, GPU timing, or performance acceptance.',
+    scope: `Sampled main-thread stacks for ${String(scope).slice(0, 160)}, including idle and garbage collection. Sample weights are statistical attribution, not precise CPU execution, GPU timing, or performance acceptance.`,
     performanceAcceptanceEligible: false,
     profileWindowMs: (profile.endTime - profile.startTime) / 1000,
     nodeCount: nodes.length,
@@ -228,13 +239,18 @@ export async function runBoundedBoundaryProfile({
   artifactDirectory,
   fileName,
   operation,
+  target = null,
   onStarted = () => {},
   onProfile = () => {},
   indexFileName = null,
   maxWindowMs = null,
   operationTimeoutMs = PROFILE_OPERATION_TIMEOUT_MS,
 }) {
-  if (!Number.isInteger(operationTimeoutMs) || operationTimeoutMs < 1)
+  if (
+    !Number.isInteger(operationTimeoutMs) ||
+    operationTimeoutMs < 1 ||
+    operationTimeoutMs > PROFILE_OPERATION_TIMEOUT_MS
+  )
     throw new TypeError(
       'Profiler operation timeout must be a positive integer.',
     );
@@ -259,6 +275,7 @@ export async function runBoundedBoundaryProfile({
     label: String(label).slice(0, 80),
     status: 'incomplete',
     performanceAcceptanceEligible: false,
+    target,
     fileName,
     sha256: null,
     byteLength: null,
@@ -272,8 +289,9 @@ export async function runBoundedBoundaryProfile({
     const temporaryPath = `${indexPath}.${randomUUID()}.tmp`;
     const bytes = Buffer.from(
       `${JSON.stringify({
-        schema: 'gev-first-motion-cpu-profile-index/v1',
+        schema: 'gev-provider-sample-cpu-profile-index/v1',
         performanceAcceptanceEligible: false,
+        target,
         profile: record,
       })}\n`,
       'utf8',
@@ -416,7 +434,18 @@ export async function runBoundedBoundaryProfile({
 
   if (profile) {
     try {
-      const normalized = normalizeCpuProfile(profile);
+      const deliveryOverheadLimitMs = operationTimeoutMs;
+      const normalized = normalizeCpuProfile(profile, {
+        maxDurationMs:
+          (maxWindowMs ?? MAX_PROFILE_WINDOW_MS) + deliveryOverheadLimitMs,
+        scope: label,
+      });
+      const profileWindowMs = normalized.profileWindowMs;
+      const stopOverrunMs = Math.max(
+        0,
+        profileWindowMs - (maxWindowMs ?? MAX_PROFILE_WINDOW_MS),
+      );
+      const stopOverrun = stopOverrunMs > 0;
       const bytes = Buffer.from(`${JSON.stringify(normalized)}\n`, 'utf8');
       if (bytes.byteLength > MAX_PROFILE_BYTES)
         throw new Error('Normalized CPU profile exceeded the artifact bound.');
@@ -428,8 +457,10 @@ export async function runBoundedBoundaryProfile({
       record.byteLength = bytes.byteLength;
       record.windowCapReached = windowCapReached;
       record.windowCapMs = windowCapReached ? maxWindowMs : null;
+      record.profileWindowMs = profileWindowMs;
+      record.stopOverrunMs = stopOverrunMs;
       record.status =
-        record.profilerErrors.length === 0 && !windowCapReached
+        record.profilerErrors.length === 0 && !windowCapReached && !stopOverrun
           ? 'complete'
           : 'incomplete';
     } catch (error) {

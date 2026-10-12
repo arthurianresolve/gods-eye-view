@@ -58,7 +58,11 @@ import {
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
 import { runBoundedBoundaryProfile } from './performance/boundedCpuProfile.mjs';
-import { createFirstMotionCpuProfileWindow } from './performance/firstMotionCpuProfileWindow.mjs';
+import {
+  createProviderSampleCpuProfileWindow,
+  isProviderSampleCpuProfileTarget,
+  upsertProviderSampleCpuProfile,
+} from './performance/providerSampleCpuProfileWindow.mjs';
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
@@ -345,6 +349,13 @@ const infrastructureAssetRoutes = infrastructureWorkload
   : null;
 let infrastructureFixtureDelivery = null;
 const infrastructureResponseListeners = new Map();
+const providerSampleCpuProfileTargets = [
+  { scenario: 'idle', run: 1 },
+  { scenario: 'idle', run: 2 },
+  { scenario: 'scripted-motion', run: 1 },
+];
+const providerSampleCpuProfileScope =
+  'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing';
 const failureProgress = {
   phase: 'browser-startup',
   scenario: null,
@@ -377,12 +388,13 @@ const failureProgress = {
       : {}),
     ...(firstMotionCpuProfileEnabled
       ? {
-          firstMotionCpuProfile: {
+          providerSampleCpuProfiles: {
             enabled: true,
-            scope:
-              'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+            targets: providerSampleCpuProfileTargets,
+            scope: providerSampleCpuProfileScope,
             performanceAcceptanceEligible: false,
             status: 'pending',
+            profiles: [],
           },
         }
       : {}),
@@ -395,40 +407,75 @@ let activeRenderBoundaryProgressBindingRecord = null;
 const SCENE_FRAME_DIAGNOSTICS_KEY = '__gevS47SceneFrameTimingV1';
 const SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS = 750;
 let activeSceneFrameAttribution = null;
-let activeFirstMotionCpuProfile = null;
-let firstMotionCpuProfileRecord = null;
+let activeProviderSampleCpuProfile = null;
+const providerSampleCpuProfiles = [];
 
-async function startFirstMotionCpuProfile(targetPage, progressRecord) {
-  if (!firstMotionCpuProfileEnabled || activeFirstMotionCpuProfile) return null;
-  const window = createFirstMotionCpuProfileWindow({
+function providerSampleCpuProfileEnvelope() {
+  return {
+    enabled: true,
+    targets: providerSampleCpuProfileTargets,
+    scope: providerSampleCpuProfileScope,
+    performanceAcceptanceEligible: false,
+    status:
+      providerSampleCpuProfiles.length === 3 &&
+      providerSampleCpuProfiles.every((record) => record.status === 'complete')
+        ? 'complete'
+        : 'incomplete',
+    profiles: providerSampleCpuProfiles,
+  };
+}
+
+function shouldProfileProviderSample(scenario, run) {
+  return (
+    firstMotionCpuProfileEnabled &&
+    isProviderSampleCpuProfileTarget(scenario, run)
+  );
+}
+
+async function startProviderSampleCpuProfile(
+  targetPage,
+  progressRecord,
+  { scenario, run, captureOrdinal, documentRole, documentId },
+) {
+  if (!isProviderSampleCpuProfileTarget(scenario, run)) return null;
+  if (activeProviderSampleCpuProfile)
+    throw new Error('A provider sample CPU profile is already active.');
+  const window = createProviderSampleCpuProfileWindow({
     enabled: firstMotionCpuProfileEnabled,
     profileRunner: runBoundedBoundaryProfile,
     page: targetPage,
     artifactDirectory: cpuProfileArtifactDirectory,
+    targetScenario: scenario,
+    targetRun: run,
+    captureOrdinal,
+    documentRole,
+    documentId,
     onRecord(record) {
       if (record.profilerStarted !== null && !record.startedHostElapsedMs)
         record.startedHostElapsedMs = performance.now();
       if (record.profile && !record.completedHostElapsedMs)
         record.completedHostElapsedMs = performance.now();
-      failureProgress.workload.firstMotionCpuProfile = record;
+      upsertProviderSampleCpuProfile(providerSampleCpuProfiles, record);
+      failureProgress.workload.providerSampleCpuProfiles =
+        providerSampleCpuProfileEnvelope();
       if (failureProgress.current)
-        failureProgress.current.firstMotionCpuProfile = record;
+        failureProgress.current.providerSampleCpuProfile = record;
     },
   });
   const record = window.record;
   if (!record) return null;
-  firstMotionCpuProfileRecord = record;
-  progressRecord.firstMotionCpuProfile = record;
+  upsertProviderSampleCpuProfile(providerSampleCpuProfiles, record);
+  progressRecord.providerSampleCpuProfile = record;
   await window.started;
   record.windowStartRequestedHostElapsedMs = performance.now();
-  activeFirstMotionCpuProfile = window;
+  activeProviderSampleCpuProfile = window;
   return record;
 }
 
-async function stopFirstMotionCpuProfile(reason) {
-  const active = activeFirstMotionCpuProfile;
-  if (!active) return firstMotionCpuProfileRecord;
-  activeFirstMotionCpuProfile = null;
+async function stopProviderSampleCpuProfile(reason) {
+  const active = activeProviderSampleCpuProfile;
+  if (!active) return providerSampleCpuProfiles.at(-1) || null;
+  activeProviderSampleCpuProfile = null;
   active.record.windowEndRequestedHostElapsedMs = performance.now();
   try {
     await active.stop(reason);
@@ -2074,12 +2121,18 @@ try {
         run === 1;
       if (collectSceneFrameAttribution)
         await startSceneFrameAttribution(page, failureProgress.current);
-      const collectFirstMotionCpuProfile =
-        firstMotionCpuProfileEnabled &&
-        scenario === 'scripted-motion' &&
-        run === 1;
-      if (collectFirstMotionCpuProfile)
-        await startFirstMotionCpuProfile(page, failureProgress.current);
+      const collectProviderSampleCpuProfile = shouldProfileProviderSample(
+        scenario,
+        run,
+      );
+      if (collectProviderSampleCpuProfile)
+        await startProviderSampleCpuProfile(page, failureProgress.current, {
+          scenario,
+          run,
+          captureOrdinal: captures.length,
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+        });
       // Start the fixture epoch only after observer setup so its host cost is
       // outside both warmup and measurement render-boundary deadlines.
       const clockStart = productionFlightFixture
@@ -2473,8 +2526,8 @@ try {
             activeRenderBoundaryProgressBinding,
           );
         } finally {
-          if (collectFirstMotionCpuProfile)
-            await stopFirstMotionCpuProfile(
+          if (collectProviderSampleCpuProfile)
+            await stopProviderSampleCpuProfile(
               'measurement-boundary-settled-or-failed',
             );
           if (
@@ -2674,12 +2727,12 @@ try {
         );
       sample.documentRole = activeDocumentRole;
       sample.documentId = activeDocumentId;
-      if (
-        firstMotionCpuProfileEnabled &&
-        scenario === 'scripted-motion' &&
-        run === 1
-      )
-        sample.firstMotionCpuProfile = firstMotionCpuProfileRecord;
+      sample.captureOrdinal = captures.length;
+      if (collectProviderSampleCpuProfile)
+        sample.providerSampleCpuProfile =
+          providerSampleCpuProfiles.find(
+            (record) => record.captureOrdinal === captures.length,
+          ) || null;
       captures.push({ scenario, run, ...sample });
       failureProgress.current = null;
     }
@@ -2914,13 +2967,8 @@ try {
       : {}),
     ...(firstMotionCpuProfileEnabled
       ? {
-          firstMotionCpuProfile: {
-            enabled: true,
-            targetScenario: 'scripted-motion',
-            targetRun: 1,
-            scope:
-              'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
-            performanceAcceptanceEligible: false,
+          providerSampleCpuProfiles: {
+            ...providerSampleCpuProfileEnvelope(),
           },
         }
       : {}),
@@ -2945,7 +2993,7 @@ try {
     );
   if (firstMotionCpuProfileEnabled)
     comparisonReadinessReasons.push(
-      'first-motion-cpu-profile-instrumentation-is-enabled',
+      'provider-sample-cpu-profile-instrumentation-is-enabled',
     );
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
@@ -2959,7 +3007,11 @@ try {
         ? PREWARM_WORKER_AUDIT_BOUNDARY
         : 'during-capture-diagnostic-instrumentation',
     ...(firstMotionCpuProfileEnabled
-      ? { firstMotionCpuProfile: firstMotionCpuProfileRecord }
+      ? {
+          providerSampleCpuProfiles: {
+            ...providerSampleCpuProfileEnvelope(),
+          },
+        }
       : {}),
     ...(sceneFrameDiagnosticsEnabled
       ? {
@@ -3035,7 +3087,7 @@ try {
     process.exitCode = 1;
 } catch (error) {
   captureFailure = error;
-  await stopFirstMotionCpuProfile('capture-failed');
+  await stopProviderSampleCpuProfile('capture-failed');
   await stopSceneFrameAttribution(
     'capture-failed',
     failureProgress.current?.measurement ?? null,
@@ -3058,7 +3110,7 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
-  await stopFirstMotionCpuProfile('capture-finally');
+  await stopProviderSampleCpuProfile('capture-finally');
   await stopSceneFrameAttribution(
     'capture-finally',
     failureProgress.current?.measurement ?? null,

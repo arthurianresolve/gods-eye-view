@@ -96,6 +96,177 @@ const OPTION_KEYS = new Map([
   ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
 ]);
 
+const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
+  { scenario: 'idle', run: 1 },
+  { scenario: 'idle', run: 2 },
+  { scenario: 'scripted-motion', run: 1 },
+]);
+
+function providerCpuProfileKey(target) {
+  return target.scenario === 'idle'
+    ? `provider-idle-${target.run}`
+    : `provider-scripted-motion-${target.run}`;
+}
+
+function sameProviderCpuProfileTarget(left, right) {
+  const fields = [
+    'scenario',
+    'run',
+    'captureOrdinal',
+    'documentRole',
+    'documentId',
+  ];
+  return (
+    left !== null &&
+    typeof left === 'object' &&
+    !Array.isArray(left) &&
+    right !== null &&
+    typeof right === 'object' &&
+    !Array.isArray(right) &&
+    Object.keys(left).sort().join(',') === fields.slice().sort().join(',') &&
+    Object.keys(right).sort().join(',') === fields.slice().sort().join(',') &&
+    fields.every((field) => left[field] === right[field])
+  );
+}
+
+function validateProviderCpuProfileWindow(window, target, sample) {
+  assert.equal(window?.schema, 'gev-provider-sample-cpu-profile-window/v1');
+  assert.equal(window?.targetScenario, target.scenario);
+  assert.equal(window?.targetRun, target.run);
+  assert.ok(Number.isSafeInteger(sample?.captureOrdinal));
+  assert.ok(sample.captureOrdinal >= 0);
+  assert.equal(window?.captureOrdinal, sample.captureOrdinal);
+  assert.equal(window?.documentRole, sample.documentRole);
+  assert.equal(window?.documentId, sample.documentId);
+  assert.equal(window?.profilerStarted, true);
+  assert.equal(window?.performanceAcceptanceEligible, false);
+  assert.ok(['complete', 'incomplete'].includes(window?.status));
+  const ref = window.profile;
+  const key = providerCpuProfileKey(target);
+  assert.equal(ref?.schema, 'gev-render-boundary-cpu-profile-ref/v1');
+  assert.equal(ref?.performanceAcceptanceEligible, false);
+  assert.equal(
+    sameProviderCpuProfileTarget(ref?.target, {
+      scenario: target.scenario,
+      run: target.run,
+      captureOrdinal: sample.captureOrdinal,
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+    }),
+    true,
+  );
+  assert.equal(ref?.fileName, `${key}-cpu-profile.json`);
+  assert.equal(ref?.performanceAcceptanceEligible, false);
+  assert.ok(Array.isArray(ref?.profilerErrors));
+  assert.equal(ref.profilerErrors.length, 0);
+  assert.ok(Number.isFinite(ref?.profileWindowMs) && ref.profileWindowMs >= 0);
+  assert.ok(Number.isFinite(ref?.stopOverrunMs) && ref.stopOverrunMs >= 0);
+  assert.ok(ref.profileWindowMs <= 62_000);
+  assert.ok(ref.stopOverrunMs <= 2_000);
+  assert.equal(ref.stopOverrunMs, Math.max(0, ref.profileWindowMs - 60_000));
+  assert.ok(
+    (ref.status === 'complete' &&
+      ref.windowCapReached === false &&
+      ref.windowCapMs === null &&
+      ref.stopOverrunMs === 0) ||
+      (ref.status === 'incomplete' &&
+        ((ref.windowCapReached === true && ref.windowCapMs === 60_000) ||
+          (ref.windowCapReached === false &&
+            ref.windowCapMs === null &&
+            ref.stopOverrunMs > 0))),
+  );
+  assert.equal(window.status, ref.status);
+  assert.equal(window.windowCapReached, ref.windowCapReached);
+  assert.equal(window.windowCapMs, ref.windowCapMs);
+  assert.equal(window.profileWindowMs, ref.profileWindowMs);
+  assert.equal(window.stopOverrunMs, ref.stopOverrunMs);
+  assert.match(ref.sha256 || '', /^[a-f0-9]{64}$/);
+  assert.ok(
+    Number.isInteger(ref.byteLength) &&
+      ref.byteLength > 0 &&
+      ref.byteLength <= 8 * 1024 * 1024,
+  );
+}
+
+export async function readProviderCpuProfileIndexSet(directory) {
+  const profiles = [];
+  let invalidIndexCount = 0;
+  for (const target of PROVIDER_CPU_PROFILE_TARGETS) {
+    const key = providerCpuProfileKey(target);
+    const indexPath = path.join(directory, `${key}-cpu-profile-ref.json`);
+    let bytes;
+    try {
+      bytes = await readFile(indexPath);
+    } catch (error) {
+      if (error?.code === 'ENOENT') continue;
+      invalidIndexCount += 1;
+      continue;
+    }
+    try {
+      if (bytes.byteLength > 16 * 1024) {
+        invalidIndexCount += 1;
+        continue;
+      }
+      const index = JSON.parse(bytes.toString('utf8'));
+      if (
+        index?.schema !== 'gev-provider-sample-cpu-profile-index/v1' ||
+        index?.performanceAcceptanceEligible !== false ||
+        index.target?.scenario !== target.scenario ||
+        index.target?.run !== target.run ||
+        !Number.isSafeInteger(index.target?.captureOrdinal) ||
+        index.target.captureOrdinal < 0 ||
+        typeof index.target?.documentRole !== 'string' ||
+        index.target.documentRole.length < 1 ||
+        index.target.documentRole.length > 80 ||
+        typeof index.target?.documentId !== 'string' ||
+        index.target.documentId.length < 1 ||
+        index.target.documentId.length > 160 ||
+        index.profile?.schema !== 'gev-render-boundary-cpu-profile-ref/v1' ||
+        index.profile?.performanceAcceptanceEligible !== false ||
+        !['complete', 'incomplete'].includes(index.profile?.status) ||
+        !Array.isArray(index.profile?.profilerErrors) ||
+        index.profile.profilerErrors.length !== 0 ||
+        !sameProviderCpuProfileTarget(index.profile?.target, index.target) ||
+        index.profile?.fileName !== `${key}-cpu-profile.json` ||
+        !/^[a-f0-9]{64}$/.test(index.profile?.sha256 || '') ||
+        !Number.isSafeInteger(index.profile?.byteLength) ||
+        index.profile.byteLength < 1 ||
+        index.profile.byteLength > 8 * 1024 * 1024
+      ) {
+        invalidIndexCount += 1;
+        continue;
+      }
+      const profileBytes = await readFile(
+        path.join(directory, index.profile.fileName),
+      );
+      if (
+        profileBytes.byteLength !== index.profile.byteLength ||
+        profileBytes.byteLength > 8 * 1024 * 1024 ||
+        createHash('sha256').update(profileBytes).digest('hex') !==
+          index.profile.sha256
+      ) {
+        invalidIndexCount += 1;
+        continue;
+      }
+      profiles.push({ ...index, artifactVerified: true });
+    } catch {
+      invalidIndexCount += 1;
+    }
+  }
+  return {
+    schema: 'gev-provider-sample-cpu-profile-index-set/v1',
+    performanceAcceptanceEligible: false,
+    expectedTargets: PROVIDER_CPU_PROFILE_TARGETS,
+    status:
+      profiles.length === PROVIDER_CPU_PROFILE_TARGETS.length &&
+      invalidIndexCount === 0
+        ? 'all-targets-recorded'
+        : 'partial',
+    invalidIndexCount,
+    profiles,
+  };
+}
+
 export function parseSmokeArguments(argv) {
   const output = {};
   for (let index = 0; index < argv.length; index += 1) {
@@ -462,70 +633,49 @@ export function validateCaptureCliReport(report, expected) {
   assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
   if (expected.firstMotionCpuProfile) {
-    const profileEvidence = report.firstMotionCpuProfile;
-    assert.equal(
-      profileEvidence?.schema,
-      'gev-first-motion-cpu-profile-window/v1',
-    );
+    const profileEvidence = report.providerSampleCpuProfiles;
+    const targets = PROVIDER_CPU_PROFILE_TARGETS;
     assert.equal(profileEvidence?.enabled, true);
-    assert.equal(profileEvidence?.targetScenario, 'scripted-motion');
-    assert.equal(profileEvidence?.targetRun, 1);
-    assert.ok(
-      profileEvidence?.status === 'complete' ||
-        (profileEvidence?.status === 'incomplete' &&
-          profileEvidence?.windowCapReached === true),
-    );
-    assert.equal(profileEvidence?.profilerStarted, true);
+    assert.deepEqual(profileEvidence?.targets, targets);
     assert.equal(profileEvidence?.performanceAcceptanceEligible, false);
     assert.equal(
       profileEvidence?.scope,
-      'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+      'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
     );
-    const profileRef = profileEvidence?.profile;
-    assert.equal(profileRef?.schema, 'gev-render-boundary-cpu-profile-ref/v1');
-    assert.equal(
-      profileRef?.fileName,
-      'first-scripted-motion-cpu-profile.json',
+    assert.ok(['complete', 'incomplete'].includes(profileEvidence?.status));
+    assert.equal(profileEvidence?.profiles?.length, targets.length);
+    const samples = new Map(
+      (report.captures || []).map((sample) => [
+        `${sample.scenario}:${sample.run}`,
+        sample,
+      ]),
     );
-    assert.ok(
-      profileRef?.status === 'complete' ||
-        (profileRef?.status === 'incomplete' &&
-          profileRef?.windowCapReached === true),
-    );
-    assert.equal(profileEvidence.status, profileRef?.status);
-    assert.equal(
-      profileEvidence.windowCapReached,
-      profileRef?.windowCapReached,
-    );
-    assert.equal(profileEvidence.windowCapMs, profileRef?.windowCapMs);
-    assert.ok(Array.isArray(profileRef?.profilerErrors));
-    assert.equal(profileRef.profilerErrors.length, 0);
-    if (profileEvidence.status === 'complete') {
-      assert.equal(profileEvidence.windowCapReached, false);
-      assert.equal(profileEvidence.windowCapMs, null);
-    } else {
-      assert.equal(profileEvidence.windowCapReached, true);
-      assert.equal(profileEvidence.windowCapMs, 60_000);
+    for (let index = 0; index < targets.length; index += 1) {
+      const target = targets[index];
+      const window = profileEvidence.profiles[index];
+      const sample = samples.get(`${target.scenario}:${target.run}`);
+      assert.ok(sample, 'profile target capture sample is missing');
+      assert.equal(
+        sample.captureOrdinal,
+        report.captures.indexOf(sample),
+        'sample capture ordinal must match its position in the actual capture sequence',
+      );
+      validateProviderCpuProfileWindow(window, target, sample);
+      assert.deepEqual(sample.providerSampleCpuProfile, window);
     }
-    assert.equal(profileRef?.performanceAcceptanceEligible, false);
-    assert.match(profileRef?.sha256 || '', /^[a-f0-9]{64}$/);
-    assert.ok(
-      Number.isInteger(profileRef?.byteLength) &&
-        profileRef.byteLength > 0 &&
-        profileRef.byteLength <= 8 * 1024 * 1024,
+    assert.equal(
+      profileEvidence.status,
+      profileEvidence.profiles.every((window) => window.status === 'complete')
+        ? 'complete'
+        : 'incomplete',
     );
     assert.equal(
       report.comparisonReadiness?.reasons?.includes(
-        'first-motion-cpu-profile-instrumentation-is-enabled',
+        'provider-sample-cpu-profile-instrumentation-is-enabled',
       ),
       true,
     );
-    const profileSamples = report.captures?.filter(
-      (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
-    );
-    assert.equal(profileSamples?.length, 1);
-    assert.deepEqual(profileSamples[0].firstMotionCpuProfile, profileEvidence);
-  } else assert.equal(report.firstMotionCpuProfile, undefined);
+  } else assert.equal(report.providerSampleCpuProfiles, undefined);
   if (expected.sceneFrameDiagnostics) {
     assert.deepEqual(report.sceneFrameDiagnostics, {
       status: 'completed',
@@ -873,7 +1023,7 @@ export function validateCaptureCliReport(report, expected) {
     );
   if (expected.firstMotionCpuProfile)
     observedReadinessReasons.push(
-      'first-motion-cpu-profile-instrumentation-is-enabled',
+      'provider-sample-cpu-profile-instrumentation-is-enabled',
     );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
@@ -1587,51 +1737,40 @@ async function runCandidateCaptureCli({
       firstMotionCpuProfile,
     });
     if (firstMotionCpuProfile) {
-      const indexPath = path.join(
-        profileArtifactDirectory,
-        'first-scripted-motion-cpu-profile-ref.json',
-      );
-      const index = JSON.parse(await readFile(indexPath, 'utf8'));
-      assert.equal(index?.schema, 'gev-first-motion-cpu-profile-index/v1');
-      assert.equal(index?.performanceAcceptanceEligible, false);
-      const profileRef = index.profile;
-      assert.deepEqual(profileRef, captureReport.firstMotionCpuProfile.profile);
-      assert.equal(
-        profileRef?.fileName,
-        'first-scripted-motion-cpu-profile.json',
-      );
-      assert.ok(Array.isArray(profileRef?.profilerErrors));
-      assert.equal(profileRef.profilerErrors.length, 0);
-      assert.ok(
-        profileRef?.status === 'complete' ||
-          (profileRef?.status === 'incomplete' &&
-            profileRef?.windowCapReached === true),
-      );
-      assert.equal(
-        profileRef?.sha256,
-        captureReport.firstMotionCpuProfile.profile.sha256,
-      );
-      assert.equal(
-        profileRef?.status,
-        captureReport.firstMotionCpuProfile.profile.status,
-      );
-      assert.equal(
-        profileRef?.windowCapReached,
-        captureReport.firstMotionCpuProfile.profile.windowCapReached,
-      );
-      assert.equal(
-        profileRef?.windowCapMs,
-        captureReport.firstMotionCpuProfile.profile.windowCapMs,
-      );
-      const profileBytes = await readFile(
-        path.join(profileArtifactDirectory, profileRef.fileName),
-      );
-      assert.ok(profileBytes.byteLength <= 8 * 1024 * 1024);
-      assert.equal(profileBytes.byteLength, profileRef.byteLength);
-      assert.equal(
-        createHash('sha256').update(profileBytes).digest('hex'),
-        profileRef.sha256,
-      );
+      const evidence = captureReport.providerSampleCpuProfiles;
+      for (
+        let indexPosition = 0;
+        indexPosition < evidence.profiles.length;
+        indexPosition += 1
+      ) {
+        const window = evidence.profiles[indexPosition];
+        const target = PROVIDER_CPU_PROFILE_TARGETS[indexPosition];
+        const key = providerCpuProfileKey(target);
+        const indexPath = path.join(
+          profileArtifactDirectory,
+          `${key}-cpu-profile-ref.json`,
+        );
+        const index = JSON.parse(await readFile(indexPath, 'utf8'));
+        assert.equal(index?.schema, 'gev-provider-sample-cpu-profile-index/v1');
+        assert.equal(index?.performanceAcceptanceEligible, false);
+        assert.deepEqual(index.target, {
+          scenario: target.scenario,
+          run: target.run,
+          captureOrdinal: window.captureOrdinal,
+          documentRole: window.documentRole,
+          documentId: window.documentId,
+        });
+        assert.deepEqual(index.profile, window.profile);
+        const profileBytes = await readFile(
+          path.join(profileArtifactDirectory, index.profile.fileName),
+        );
+        assert.ok(profileBytes.byteLength <= 8 * 1024 * 1024);
+        assert.equal(profileBytes.byteLength, index.profile.byteLength);
+        assert.equal(
+          createHash('sha256').update(profileBytes).digest('hex'),
+          index.profile.sha256,
+        );
+      }
     }
     return validated;
   } catch (error) {
@@ -1646,25 +1785,9 @@ async function runCandidateCaptureCli({
       diagnostics: error.childDiagnostics || null,
     };
     if (firstMotionCpuProfile) {
-      const indexPath = path.join(
-        profileArtifactDirectory || `${reportPath}.cpu-profile`,
-        'first-scripted-motion-cpu-profile-ref.json',
-      );
-      try {
-        const index = JSON.parse(await readFile(indexPath, 'utf8'));
-        assert.equal(index?.schema, 'gev-first-motion-cpu-profile-index/v1');
-        assert.equal(index?.performanceAcceptanceEligible, false);
-        captureCliFailure.cpuProfileArtifact = {
-          schema: index.schema,
-          performanceAcceptanceEligible: false,
-          profile: index.profile,
-        };
-      } catch {
-        captureCliFailure.cpuProfileArtifact = {
-          status: 'unavailable',
-          performanceAcceptanceEligible: false,
-        };
-      }
+      const directory = profileArtifactDirectory || `${reportPath}.cpu-profile`;
+      captureCliFailure.cpuProfileArtifacts =
+        await readProviderCpuProfileIndexSet(directory);
     }
     error.captureCliFailure = captureCliFailure;
     throw error;

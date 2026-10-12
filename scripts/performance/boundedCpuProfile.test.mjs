@@ -92,7 +92,7 @@ test('bounded boundary profile runs the operation and persists a sanitized diges
         'utf8',
       ),
     );
-    assert.equal(index.schema, 'gev-first-motion-cpu-profile-index/v1');
+    assert.equal(index.schema, 'gev-provider-sample-cpu-profile-index/v1');
     assert.equal(index.profile.sha256, result.profile.sha256);
     assert.equal(index.performanceAcceptanceEligible, false);
     assert.deepEqual(
@@ -125,10 +125,17 @@ test('profile sidecar and hash index survive a later capture failure', async () 
     await assert.rejects(
       runBoundedBoundaryProfile({
         page,
-        label: 'first-motion',
+        label: 'provider-idle-1',
         artifactDirectory,
-        fileName: 'first-scripted-motion-cpu-profile.json',
-        indexFileName: 'first-scripted-motion-cpu-profile-ref.json',
+        fileName: 'provider-scripted-motion-1-cpu-profile.json',
+        indexFileName: 'provider-scripted-motion-1-cpu-profile-ref.json',
+        target: {
+          scenario: 'scripted-motion',
+          run: 1,
+          captureOrdinal: 2,
+          documentRole: 'main-capture',
+          documentId: 'document-03',
+        },
         operation: async () => {
           throw laterError;
         },
@@ -143,7 +150,7 @@ test('profile sidecar and hash index survive a later capture failure', async () 
       await readFile(
         path.join(
           artifactDirectory,
-          'first-scripted-motion-cpu-profile-ref.json',
+          'provider-scripted-motion-1-cpu-profile-ref.json',
         ),
         'utf8',
       ),
@@ -175,9 +182,9 @@ test('profile window cap stops profiling and preserves capped coverage without e
     let captureFinished = false;
     const result = await runBoundedBoundaryProfile({
       page,
-      label: 'first-motion',
+      label: 'provider-idle-1',
       artifactDirectory,
-      fileName: 'capped-profile.json',
+      fileName: 'provider-idle-1-cpu-profile.json',
       indexFileName: 'capped-profile-ref.json',
       maxWindowMs: 10,
       operation: () =>
@@ -211,7 +218,7 @@ test('profile window cap stops profiling and preserves capped coverage without e
   }
 });
 
-test('profile window cap cannot exceed the first-motion 60-second budget', async () => {
+test('profile window cap cannot exceed the provider sample 60-second budget', async () => {
   const artifactDirectory = await mkdtemp(
     path.join(os.tmpdir(), 'gev-boundary-profile-'),
   );
@@ -220,7 +227,7 @@ test('profile window cap cannot exceed the first-motion 60-second budget', async
     await assert.rejects(
       runBoundedBoundaryProfile({
         page,
-        label: 'first-motion',
+        label: 'provider-idle-1',
         artifactDirectory,
         fileName: 'bounded-profile.json',
         maxWindowMs: 60_001,
@@ -393,6 +400,15 @@ test('CPU profile normalization preserves cumulative ordering and redacts local 
   assert.ok(normalized.topLocations[0].sampledWeightMs >= 0);
 });
 
+test('CPU profile normalization rejects invalid or excessive duration bounds', () => {
+  for (const maxDurationMs of [Infinity, NaN, 0, -1, 62_001]) {
+    assert.throws(() => normalizeCpuProfile(profile(), { maxDurationMs }));
+  }
+  assert.doesNotThrow(() =>
+    normalizeCpuProfile(profile(62_000), { maxDurationMs: 62_000 }),
+  );
+});
+
 test('CPU profile URL allowlist treats relative and local absolute paths equally', () => {
   const profileData = profile();
   profileData.nodes = [
@@ -484,4 +500,18 @@ test('profiler command timeouts are bounded while the render operation still run
   } finally {
     await rm(artifactDirectory, { recursive: true, force: true });
   }
+});
+
+test('profiler operation timeout cannot exceed the protocol allowance', async () => {
+  await assert.rejects(
+    runBoundedBoundaryProfile({
+      page: {},
+      label: 'warmup',
+      artifactDirectory: os.tmpdir(),
+      fileName: 'bounded-timeout.json',
+      operation: async () => true,
+      operationTimeoutMs: 2001,
+    }),
+    /operation timeout/i,
+  );
 });
