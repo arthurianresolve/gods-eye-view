@@ -14,8 +14,14 @@ The bounded retention repair now passes 159 independent focused checks with
 unchanged source hashes. Per-document checkpoints retain direct and late query
 rows separately, verify payload/reference hashes and commit/receipt provenance,
 and require matching document identities for complete captures. The general
-failure-report cap and all deadlines remain unchanged. Fresh hosted validation
-of this repair remains pending; the original failed run stays failed.
+failure-report cap and all deadlines remain unchanged. The hosted repair run
+at `e54eaded` retains hash-bound parameter rows from six complete contexts:
+143 programs, 429 first queries and zero repeated same-parameter queries.
+LINK_STATUS accounts for 99.998% of synchronous query elapsed time, supporting
+first-use link synchronization in this Linux SwiftShader workload. The capture
+still fails after four of six samples at the unchanged child deadline; the
+seventh reached context is unavailable with unconfirmed cleanup. Standard CI
+for this repair is still running. Neither failed run is performance acceptance.
 [Implementation, source/profile audit and limits](performance-evidence/s48-shader-program-attribution/README.md)
 keep whole-document synchronous GL-call time separate from GPU timing and
 matched performance. Production rendering defaults are unchanged; S48 remains partial.
