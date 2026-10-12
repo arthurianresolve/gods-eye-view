@@ -1,0 +1,71 @@
+{
+  "schema": "gev-austin-satellite-epoch-root-replay/v1",
+  "recordedAt": "2026-10-12T21:55:36.394Z",
+  "verifierCommit": "665eec710cbf496ba9fe0d2543be17e72029b90f",
+  "verifierSourceSha256": "45239856d9c3825ac314e085a0964c9fc591fcc0539fcfe8a1e1f8a9160967b5",
+  "originalBrowserCaptureCommit": "61c72ea2411163c3d5906467b2bcfd32e275a987",
+  "raw": {
+    "path": "docs/performance-evidence/s47-austin-operating/root-review/satellite-browser-precision-raw.json",
+    "sha256": "060fe78a38785b5cab2ab833a481cccda2a020d7e6ea5d209192faba25ac147f",
+    "byteLength": 521679
+  },
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "status": "passed",
+  "cases": [
+    {
+      "frameStepMs": 16,
+      "boundary": "warmup-held",
+      "derivedEpochMs": 1791828029232,
+      "ageMs": 768,
+      "recordCount": 828,
+      "positionSha256": "d4f8f2371dac1102244b85511afe38ae98cc9d51292e9c62b8e74134eb75ebef",
+      "maximumResidualMeters": 0.000003141352562788422
+    },
+    {
+      "frameStepMs": 16,
+      "boundary": "measurement-complete",
+      "derivedEpochMs": 1791828089712,
+      "ageMs": 288,
+      "recordCount": 828,
+      "positionSha256": "76ded865301d04fcf636f2781cf070fc07b815d7f2ef086dfb3e299d5f01f901",
+      "maximumResidualMeters": 0.0000030943957672574175
+    },
+    {
+      "frameStepMs": 33,
+      "boundary": "warmup-held",
+      "derivedEpochMs": 1791828029667,
+      "ageMs": 333,
+      "recordCount": 828,
+      "positionSha256": "626fd448c61cf85e2a2904879c41ba44bd9f2b47ab288e0b4e13f0c8318086fb",
+      "maximumResidualMeters": 0.000003141352562788422
+    },
+    {
+      "frameStepMs": 33,
+      "boundary": "measurement-complete",
+      "derivedEpochMs": 1791828089004,
+      "ageMs": 996,
+      "recordCount": 828,
+      "positionSha256": "03abe8a4d9520dd4447ac78aa7e94ec3e1a7ae821fe913b0e8a43e49f897dee1",
+      "maximumResidualMeters": 0.000003101979823175005
+    },
+    {
+      "frameStepMs": 120,
+      "boundary": "warmup-held",
+      "derivedEpochMs": 1791828029160,
+      "ageMs": 840,
+      "recordCount": 828,
+      "positionSha256": "cd6ee20803e8d50d852dee0961ad7c43dabba8d2f320b49cc8f6be73f1a0db26",
+      "maximumResidualMeters": 0.0000031378756446727583
+    },
+    {
+      "frameStepMs": 120,
+      "boundary": "measurement-complete",
+      "derivedEpochMs": 1791828089640,
+      "ageMs": 360,
+      "recordCount": 828,
+      "positionSha256": "2ac7518ffc00205b1468c78d5f1aa9f920644abbc942b9ac4ddc907ec310a6a2",
+      "maximumResidualMeters": 0.0000031012499405373903
+    }
+  ],
+  "scope": "Independent replay of six preserved Windows Chrome numerical controls through the integrated verifier. No new browser rendering, full-scene capture, GPU or performance acceptance."
+}

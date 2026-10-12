@@ -134,3 +134,25 @@ SHA-256 5cb3cdb3b5490c3e7005d923273c1128c25e7b84f14358b8a8ce6fb0abe9c2c4. The st
 with the corrected drain consumer. This run has no completed measurements and
 does not diagnose the separate CCTV readiness timeout. No application runtime,
 worker interception or source readiness deadline changes in this correction.
+
+# Integrated sampled-epoch evidence checkpoint
+
+Commit be43a3219eafa561f751f96a3495d24408e605bb adds the bounded sampled-epoch
+producer and paired-report recomputation. The existing measurement boundary
+observations capture all 828 public satellite positions once; host verification
+derives the unique ISS epoch within the preceding second and checks every record
+against the exact pinned TLE bytes. Identity and position digests are bound to
+the same existing layer observations. The ISS witness uses that observation too.
+A coherent alternate-epoch substitution is rejected when its raw rows disagree
+with the captured digest. Ten full samples stay within the existing 8 MiB report
+artifact limit. Runtime update cadence and performance eligibility are unchanged.
+
+Root merged this implementation with the receipt fixes at
+665eec710cbf496ba9fe0d2543be17e72029b90f and independently passed all 68 focused
+checks plus package boundaries. An [independent replay](sampled-epoch-root-replay.json)
+verified all six preserved Windows Chrome numerical datasets through the new
+verifier. The maximum residual remains 3.142 micrometers across 828 records at
+each boundary. This is not a fresh rendered capture or performance acceptance.
+The current hosted receipt-only check for the preceding worker-count correction
+is [38313496758](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38313496758)
+at f2ef271d4aae0639fd08a8ac26e971d7993210d1; it does not include sampled-epoch code.
