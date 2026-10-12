@@ -8,8 +8,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `2f7de280e41f23fa2036b07c74d9bf21cfb01c32`.
-[All seven standard jobs pass](performance-evidence/s47-first-motion-cpu-profile-38210121293/standard-ci-dev-38209437236.json),
+Recorded integration checkpoint: `72df25ee8c8ea7f0fb94a7d4f00525fd00167290`.
+[All seven standard jobs pass](performance-evidence/s47-early-document-cpu-profile-38214581314/standard-ci-dev-38213470541.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -29,6 +29,15 @@ does not establish a fix for the failed shutdown.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
 diagnostic tooling, a command-palette focus repair, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
+
+The [early-document CPU diagnostic](performance-evidence/s47-early-document-cpu-profile-38214581314/README.md)
+at `626087cd` passes 49 independent focused tests and covers idle samples 1-2
+plus first motion, preserving actual document identities and bounded sidecars.
+Its hosted run fails earlier during fresh-document preparation, reporting two
+fixture interception errors before any profile starts. Error details are omitted
+from the failure artifact despite being collected internally. That reporting gap
+must be repaired before another run; no rendering root cause, performance pass or
+unchanged retry follows. Production defaults and capture deadlines remain intact.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. The dam and cable collection experiments are now
