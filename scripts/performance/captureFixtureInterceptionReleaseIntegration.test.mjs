@@ -14,7 +14,30 @@ const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
 const harnessSha = 'b'.repeat(40);
 const appSha = 'a'.repeat(40);
 
-async function runCaptureReleaseCase(t, { closeAckRejected = false } = {}) {
+async function readLifecycleWitness(witnessPath, childResult) {
+  try {
+    return await readFile(witnessPath, 'utf8');
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+    const details = {
+      status: childResult.status,
+      signal: childResult.signal,
+      spawnErrorCode: childResult.error?.code ?? null,
+      spawnError: String(childResult.error?.message || '').slice(0, 240),
+      stderr: String(childResult.stderr || '').slice(-1200),
+      stdout: String(childResult.stdout || '').slice(-600),
+    };
+    throw new Error(
+      `Capture CLI did not create its lifecycle witness: ${JSON.stringify(details)}`,
+      { cause: error },
+    );
+  }
+}
+
+async function runCaptureReleaseCase(
+  t,
+  { closeAckRejected = false, omitDisconnectedEventExport = false } = {},
+) {
   const tempRoot = await mkdtemp(
     path.join(os.tmpdir(), 'gev-fixture-release-cli-'),
   );
@@ -40,6 +63,11 @@ async function runCaptureReleaseCase(t, { closeAckRejected = false } = {}) {
   const cesiumBytes = Buffer.from('mock cesium bundle');
   await writeFile(cesiumPath, cesiumBytes);
   const receiptSha = 'c'.repeat(64);
+  const disconnectEventExport = omitDisconnectedEventExport
+    ? ''
+    : `export const CDPSessionEvent = {
+  Disconnected: Symbol('CDPSessionEvent.Disconnected'),
+};`;
   await writeFile(
     receiptPath,
     JSON.stringify({
@@ -158,6 +186,7 @@ const browser = {
 };
 export const executablePath = async () => 'mock-chrome';
 export async function launch() { return browser; }
+${disconnectEventExport}
 export default { executablePath, launch };
 `,
   );
@@ -229,7 +258,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
       },
     },
   );
-  const witness = await readFile(witnessPath, 'utf8');
+  const witness = await readLifecycleWitness(witnessPath, result);
   return { result, witness: witness.trim().split(/\r?\n/), reportPath };
 }
 
@@ -280,4 +309,19 @@ test('capture CLI keeps a rejected close acknowledgement failed after target clo
   assert.equal(release.targetClosed, true);
   assert.equal(release.confirmed, false);
   assert.equal(release.errorKind, 'cleanup-error');
+});
+
+test('missing lifecycle witness reports the child import error instead of only ENOENT', async (t) => {
+  await assert.rejects(
+    () =>
+      runCaptureReleaseCase(t, {
+        omitDisconnectedEventExport: true,
+      }),
+    (error) => {
+      assert.match(error.message, /CDPSessionEvent/);
+      assert.match(error.message, /does not provide an export/i);
+      assert.doesNotMatch(error.message, /ENOENT/);
+      return true;
+    },
+  );
 });
