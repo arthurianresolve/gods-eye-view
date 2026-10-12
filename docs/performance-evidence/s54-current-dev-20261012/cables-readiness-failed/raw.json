@@ -1,0 +1,3490 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+  "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+  "platform": "darwin",
+  "timestamp": "2026-10-12T00:16:39.690Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+    "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+    "capturedAt": "2026-10-12T00:16:50.055Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+        "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+        "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "sourceDirtyAtStart": false,
+  "harnessDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "harnessChangedDuringRun": false,
+  "importPageErrors": [],
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: Cable collection rendered comparison failed.",
+  "importBatches": {
+    "schema": "gev-import-batches/v2",
+    "applicationCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+    "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+    "capturedAt": "2026-10-12T00:16:52.900Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "pointRepresentation": "entity",
+    "featureLimit": 5000,
+    "mixedGeometryParityRequested": false,
+    "pointBenefitDiagnosticsRequested": false,
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 71.60000000009313,
+        "maxHeartbeatGapMs": 148.29999999981374,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 26.799999999813735,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 26.799999999813735,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 223992596,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 286.60000000009313,
+        "maxHeartbeatGapMs": 48.200000000186265,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 42.200000000186265,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 42.200000000186265,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 349384428,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 350.79999999981374,
+        "maxHeartbeatGapMs": 70.59999999962747,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 80.90000000037253,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 46.10000000009313,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 116259824,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 41.5,
+        "maxHeartbeatGapMs": 104.40000000037253,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 3.8000000002793968,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 3.8000000002793968,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 226634868,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 50.3000000002794,
+        "maxHeartbeatGapMs": 50.40000000037253,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 63.59999999962747,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 63.59999999962747,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 351197600,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 138.3000000002794,
+        "maxHeartbeatGapMs": 46.799999999813735,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 35.6999999997206,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 12.399999999906868,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 189108356,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 126.79999999981374,
+        "maxHeartbeatGapMs": 24.100000000093132,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 45.39999999990687,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 40.6999999997206,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 299169728,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 43.5,
+        "maxHeartbeatGapMs": 113.20000000018626,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 113010184,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 52.700000000186265,
+        "maxHeartbeatGapMs": 104.89999999990687,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 238502388,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 332,
+        "maxHeartbeatGapMs": 132.60000000009313,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 95.1999999997206,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 30.699999999720603,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 112839432,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+      "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "renderConfiguration": {
+      "viewerConstruction": "application-wrapper",
+      "pointRepresentation": "entity",
+      "preserveDrawingBuffer": true,
+      "captureMode": "pixels",
+      "renderDemand": true,
+      "msaaSamplesRequested": 4,
+      "antialias": true,
+      "msaaSupported": true,
+      "webglContextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      },
+      "sceneMode": 3,
+      "canvas": {
+        "cssWidth": 640,
+        "cssHeight": 360,
+        "drawingBufferWidth": 640,
+        "drawingBufferHeight": 360
+      },
+      "camera": {
+        "position": [
+          6463137,
+          0,
+          0
+        ],
+        "direction": [
+          -1,
+          0,
+          2.220446049250313e-16
+        ],
+        "up": [
+          2.220446049250313e-16,
+          2.220446049250313e-16,
+          1
+        ],
+        "frustumNear": 0.1,
+        "frustumFar": 10000000000,
+        "frustumFov": 1.0471975511965976
+      }
+    },
+    "coldActivationMs": 657,
+    "warmedResources": {
+      "heapBytes": 109783581,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "importedFeatureCount": 5000,
+      "entities": 5000,
+      "pointPrimitiveCount": 5000,
+      "entityPointCensus": {
+        "available": true,
+        "version": "1.138.0",
+        "activeEntityCount": 5000,
+        "pointCount": 5000
+      },
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        },
+        {
+          "type": "EntityClusterPointPrimitiveCollection",
+          "count": 5000,
+          "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+        }
+      ]
+    },
+    "cancellation": {
+      "attempted": 12,
+      "abortErrors": 12,
+      "pendingJobsAfter": 0,
+      "featureCountAfter": 0,
+      "pointPrimitiveCountAfter": 0,
+      "ownershipReleased": true
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "cableReferencePageErrors": [],
+  "cableReferenceInterceptionErrors": [],
+  "cableReferenceExternalRequestCount": 0,
+  "cableReferenceCollections": {
+    "schema": "gev-cable-reference-collections-render/v1",
+    "samplingContract": "owned-primitives-ready/v1",
+    "applicationCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+    "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+    "status": "failed",
+    "failedPhase": "entities-lifetime",
+    "error": "Error: Cable scene did not reach three stable completed frames.\n    at waitForStableScene (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:534:11)\n    at async waitForMapStage (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1102:7)\n    at async mapStackWitness (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1118:3)\n    at async runLifetime (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:219:31)\n    at async runComparison (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:735:24)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:886:16)",
+    "source": {
+      "population": {
+        "cableFeatures": 712,
+        "cableSegments": 1913,
+        "landingFeatures": 1917,
+        "landingBillboards": 1917,
+        "referenceRecords": 2629
+      },
+      "cableGeoSha256": "3d28db104e57982e7ae67fabe66f2ff8dc01e137458454e0de0032a8878c6bad",
+      "landingGeoSha256": "11fc154189db51237099ffe1da2183984d666a906e5ed0e89b86421192eb622b",
+      "identitySha256": "3a8862bfe1504b935817d4581e27f9710a14ddf6829ddacc5751d5ba853e1984"
+    },
+    "renderClock": {
+      "iso": "2026-10-11T12:34:56.000Z",
+      "shouldAnimate": false
+    },
+    "viewer": {
+      "baselineDataSources": 0,
+      "sceneMode": "SCENE3D",
+      "globeShown": true,
+      "terrainProvider": "EllipsoidTerrainProvider",
+      "lifetimeCount": 2
+    },
+    "settings": {
+      "sceneMode": "SCENE3D",
+      "globeShown": true,
+      "terrainProvider": "EllipsoidTerrainProvider",
+      "requestRenderMode": false,
+      "resolutionScale": 1,
+      "msaaSamples": 4,
+      "preserveDrawingBuffer": true,
+      "antialias": true,
+      "webglVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "environment": {
+      "appCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+      "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 1200,
+        "height": 1000,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 960,
+        "height": 640
+      },
+      "layers": []
+    },
+    "lifetimes": [
+      {
+        "mode": "entities",
+        "activationOrder": 0,
+        "status": "failed",
+        "population": {
+          "cableFeatures": 712,
+          "cableSegments": 1913,
+          "landingFeatures": 1917,
+          "landingBillboards": 1917,
+          "referenceRecords": 2629
+        },
+        "sourceIdentitySha256": null,
+        "sourceManifestSha256": "3a8862bfe1504b935817d4581e27f9710a14ddf6829ddacc5751d5ba853e1984",
+        "viewerSettingsSha256": null,
+        "viewerEnvironmentSha256": null,
+        "geometrySha256": null,
+        "styleSha256": null,
+        "overlaySha256": null,
+        "ownership": {
+          "baselineDataSources": 0,
+          "activeDataSources": 3,
+          "referenceGraphics": 5258,
+          "referenceCollections": 0,
+          "referencePoints": 0,
+          "referenceStems": 0
+        },
+        "teardown": null,
+        "samples": [],
+        "readinessFailure": {
+          "stage": "map-stack-photoreal",
+          "activeId": "photoreal",
+          "readiness": {
+            "stage": "map-stack-photoreal",
+            "observationCount": 239,
+            "truncated": true,
+            "observations": [
+              {
+                "phase": "first-post-render",
+                "frameNumber": {
+                  "available": true,
+                  "value": 27
+                },
+                "dataSourceDisplayReady": {
+                  "available": true,
+                  "value": true
+                },
+                "globeTilesLoaded": {
+                  "available": true,
+                  "value": true
+                },
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                }
+              },
+              {
+                "elapsedMs": 5.100000000093132,
+                "remainingMs": 11994.799999999814,
+                "frameNumber": 28,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              },
+              {
+                "elapsedMs": 11775.30000000028,
+                "remainingMs": 224.59999999962747,
+                "frameNumber": 260,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              },
+              {
+                "elapsedMs": 11794.30000000028,
+                "remainingMs": 205.59999999962747,
+                "frameNumber": 261,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              },
+              {
+                "elapsedMs": 11800.399999999907,
+                "remainingMs": 199.59999999962747,
+                "frameNumber": 262,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              },
+              {
+                "elapsedMs": 11911.600000000093,
+                "remainingMs": 88.29999999981374,
+                "frameNumber": 263,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              },
+              {
+                "elapsedMs": 11916.5,
+                "remainingMs": 83.39999999990687,
+                "frameNumber": 264,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              },
+              {
+                "elapsedMs": 11997,
+                "remainingMs": 2.8999999999068677,
+                "frameNumber": 265,
+                "dataSourceDisplayReady": true,
+                "globeTilesLoaded": true,
+                "primitiveReadiness": {
+                  "available": true,
+                  "value": {
+                    "ready": false,
+                    "observedOwners": 19,
+                    "truncated": false,
+                    "pending": [
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive"
+                      }
+                    ],
+                    "owners": [
+                      {
+                        "path": "primitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/0/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/1/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/2/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/0",
+                        "type": "EntityCluster",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "primitives/0/3/1",
+                        "type": "Primitive",
+                        "ready": true,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/0",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0",
+                        "type": "PrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/1/z-group-0/0",
+                        "type": "GroundPolylinePrimitive",
+                        "ready": false,
+                        "show": false
+                      },
+                      {
+                        "path": "groundPrimitives/0/2",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      },
+                      {
+                        "path": "groundPrimitives/0/3",
+                        "type": "OrderedGroundPrimitiveCollection",
+                        "ready": null,
+                        "show": true
+                      }
+                    ],
+                    "unsupportedOwners": []
+                  }
+                },
+                "stableFrames": 0,
+                "signatureStable": false
+              }
+            ]
+          },
+          "scene": {
+            "dataSourceDisplayReady": {
+              "available": true,
+              "value": true
+            },
+            "globeTilesLoaded": {
+              "available": true,
+              "value": true
+            },
+            "frameNumber": {
+              "available": true,
+              "value": 265
+            }
+          },
+          "layer": {
+            "performance": {
+              "available": true,
+              "value": {
+                "listeners": 4,
+                "pendingJobs": 0,
+                "dataSources": 3,
+                "cacheEntries": 2,
+                "referenceRenderer": "entities",
+                "referenceCollections": 0,
+                "referencePointPrimitives": 0,
+                "referenceStemPrimitives": 0
+              }
+            },
+            "stats": {
+              "available": true,
+              "value": {
+                "count": 2629,
+                "lastUpdate": 1791764222169,
+                "loading": false,
+                "loadingLabel": "",
+                "error": null,
+                "referenceLabelCount": 160
+              }
+            }
+          }
+        },
+        "error": "Error: Cable scene did not reach three stable completed frames.\n    at waitForStableScene (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:534:11)\n    at async waitForMapStage (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1102:7)\n    at async mapStackWitness (http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:1118:3)\n    at async runLifetime (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:219:31)\n    at async runComparison (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:735:24)\n    at async HTMLButtonElement.<anonymous> (http://127.0.0.1:4184/scripts/fixtures/cable-reference-collections-ui.js:886:16)"
+      }
+    ],
+    "comparisons": [],
+    "readinessFailure": {
+      "stage": "map-stack-photoreal",
+      "activeId": "photoreal",
+      "readiness": {
+        "stage": "map-stack-photoreal",
+        "observationCount": 239,
+        "truncated": true,
+        "observations": [
+          {
+            "phase": "first-post-render",
+            "frameNumber": {
+              "available": true,
+              "value": 27
+            },
+            "dataSourceDisplayReady": {
+              "available": true,
+              "value": true
+            },
+            "globeTilesLoaded": {
+              "available": true,
+              "value": true
+            },
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            }
+          },
+          {
+            "elapsedMs": 5.100000000093132,
+            "remainingMs": 11994.799999999814,
+            "frameNumber": 28,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          },
+          {
+            "elapsedMs": 11775.30000000028,
+            "remainingMs": 224.59999999962747,
+            "frameNumber": 260,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          },
+          {
+            "elapsedMs": 11794.30000000028,
+            "remainingMs": 205.59999999962747,
+            "frameNumber": 261,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          },
+          {
+            "elapsedMs": 11800.399999999907,
+            "remainingMs": 199.59999999962747,
+            "frameNumber": 262,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          },
+          {
+            "elapsedMs": 11911.600000000093,
+            "remainingMs": 88.29999999981374,
+            "frameNumber": 263,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          },
+          {
+            "elapsedMs": 11916.5,
+            "remainingMs": 83.39999999990687,
+            "frameNumber": 264,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          },
+          {
+            "elapsedMs": 11997,
+            "remainingMs": 2.8999999999068677,
+            "frameNumber": 265,
+            "dataSourceDisplayReady": true,
+            "globeTilesLoaded": true,
+            "primitiveReadiness": {
+              "available": true,
+              "value": {
+                "ready": false,
+                "observedOwners": 19,
+                "truncated": false,
+                "pending": [
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive"
+                  }
+                ],
+                "owners": [
+                  {
+                    "path": "primitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/0/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/1/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/2/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/0",
+                    "type": "EntityCluster",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "primitives/0/3/1",
+                    "type": "Primitive",
+                    "ready": true,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/0",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0",
+                    "type": "PrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/1/z-group-0/0",
+                    "type": "GroundPolylinePrimitive",
+                    "ready": false,
+                    "show": false
+                  },
+                  {
+                    "path": "groundPrimitives/0/2",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  },
+                  {
+                    "path": "groundPrimitives/0/3",
+                    "type": "OrderedGroundPrimitiveCollection",
+                    "ready": null,
+                    "show": true
+                  }
+                ],
+                "unsupportedOwners": []
+              }
+            },
+            "stableFrames": 0,
+            "signatureStable": false
+          }
+        ]
+      },
+      "scene": {
+        "dataSourceDisplayReady": {
+          "available": true,
+          "value": true
+        },
+        "globeTilesLoaded": {
+          "available": true,
+          "value": true
+        },
+        "frameNumber": {
+          "available": true,
+          "value": 265
+        }
+      },
+      "layer": {
+        "performance": {
+          "available": true,
+          "value": {
+            "listeners": 4,
+            "pendingJobs": 0,
+            "dataSources": 3,
+            "cacheEntries": 2,
+            "referenceRenderer": "entities",
+            "referenceCollections": 0,
+            "referencePointPrimitives": 0,
+            "referenceStemPrimitives": 0
+          }
+        },
+        "stats": {
+          "available": true,
+          "value": {
+            "count": 2629,
+            "lastUpdate": 1791764222169,
+            "loading": false,
+            "loadingLabel": "",
+            "error": null,
+            "referenceLabelCount": 160
+          }
+        }
+      }
+    }
+  },
+  "cableReferenceGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "cableReferenceRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 39849.403167,
+      "closeSettledHostMs": 40825.034125,
+      "closeElapsedMs": 975.6309580000016,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 928.0253750000047
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}
