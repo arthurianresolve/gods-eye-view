@@ -1,0 +1,72 @@
+{
+  "schema": "gev-s47-frame-attribution-review/v1",
+  "status": "failed-before-observer-installation",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38200958796",
+  "applicationCommit": "827223f5fafe71ec24db89096d0a3d0fe2ff812f",
+  "harnessCommit": "827223f5fafe71ec24db89096d0a3d0fe2ff812f",
+  "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "rawBytes": 36399,
+  "rawSha256": "d08137cea2f4ec6f36eb7315f55837590271647e58cca50cd32a39e41c8e8d7f",
+  "baselineBuildInspection": "passed",
+  "candidateFailure": {
+    "phase": "prepare-fresh-provider-document",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Worker blob audit did not fully restore and clear.",
+    "operator": null
+  },
+  "completedSamples": 0,
+  "evidenceTruncated": false,
+  "sceneFrameObserverInstalled": false,
+  "workerAuditRestoration": {
+    "nativeCreateObjectURLRestored": true,
+    "registryEmpty": true,
+    "createdScriptBlobCountAtRestore": 14,
+    "overflowCountAtRestore": 0,
+    "auditedCreatedScriptBlobCount": 12,
+    "auditedOverflowCount": 0,
+    "validatedCreatedScriptBlobCount": 12,
+    "observedWorkerTargetCount": 6,
+    "observedBlobRequestCount": 7
+  },
+  "populations": [
+    {
+      "checkpoint": "initial",
+      "layers": {
+        "flights": {
+          "enabled": true,
+          "count": 2500
+        },
+        "local-datacenters": {
+          "enabled": true,
+          "count": 4362
+        },
+        "local-dams": {
+          "enabled": true,
+          "count": 716
+        }
+      }
+    },
+    {
+      "checkpoint": "final-before-code-validation",
+      "layers": {
+        "flights": {
+          "enabled": true,
+          "count": 2500
+        },
+        "local-datacenters": {
+          "enabled": true,
+          "count": 4362
+        },
+        "local-dams": {
+          "enabled": true,
+          "count": 716
+        }
+      }
+    }
+  ],
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "scope": "Hosted SwiftShader integration failure; not physical Windows or performance acceptance.",
+  "analysis": "The diagnostic audit reads metadata and bodies before a separate awaited restore. Two further creations appear between the audited snapshot and restoration. The prewarm path already freezes records and restores in one page operation. This identifies a harness consistency race; it does not establish an application worker leak or explain the Windows frame stall."
+}

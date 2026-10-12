@@ -2,8 +2,8 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `1acda9eb379592e74bd0fd22d71231c36bc336db`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38198032300.json),
+Latest validated `dev` checkpoint: `c897c68cf39bd8abf01497176551e01c4ebedf7a`.
+[All seven standard jobs pass](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38199331590),
 including the command-palette focus repair, Node 24/26, all three recovery jobs,
 Windows onboarding and the browser journeys.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
@@ -79,6 +79,13 @@ window. The measured interval and long tasks remain large. These host receipt
 times do not establish GPU time or one-way dispatch delay. The harness stays
 unmerged pending attribution; deadlines remain unchanged and failed reports
 remain separate evidence.
+The [frame-attribution attempt at `827223f5`](performance-evidence/s47-frame-attribution-38200958796/README.md)
+fails before installing its new observer: the diagnostic worker audit validates
+12 blobs but counts 14 at restoration. Native-wrapper restoration and registry
+cleanup succeed. The diagnostic path still separates its asynchronous reads
+from restoration, while prewarm already uses an atomic snapshot. This harness
+race must be reproduced and fixed before another motion diagnostic; the run
+does not explain the remaining rendering delay or provide a timed sample.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
