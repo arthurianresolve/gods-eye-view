@@ -6,6 +6,12 @@ Recorded integration checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
 [All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38200576913.json),
 including the command-palette focus repair, Node 24/26, all three recovery jobs,
 Windows onboarding and the browser journeys.
+The subsequent docs-only dev check at `2d18433c` has a
+[fresh Windows recovery failure](performance-evidence/windows-recovery-38203843444/README.md).
+Its third prior-install stage preserves settings and workspace data, then
+Chrome acknowledges shutdown but does not exit naturally within five seconds.
+Forced cleanup remains a failure. Earlier green checks remain historical;
+current recovery acceptance requires diagnosis and fresh evidence.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
 diagnostic tooling, a command-palette focus repair, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
@@ -113,8 +119,9 @@ passes 58 independent focused tests and retains strict validation of frozen
 code. Its rendered run gets past audit, completes two idle samples and one
 motion sample, then reaches the unchanged 180-second capture-child deadline
 while preparing motion run 2. The motion observer cleans up and records
-multi-second update/render spans, but the bounded failure projection truncates
-script-level attribution. This is a failed short SwiftShader diagnostic, not
+multi-second update/render spans. Its observer intentionally omits function
+names and URLs; the bounded failure projection also truncates script timings.
+A separate CPU profile is needed for function attribution. This is a failed short SwiftShader diagnostic, not
 an accepted benchmark or a cause for the separate physical Windows stall.
 No unchanged retry or deadline increase is justified; the harness remains
 isolated pending complete integration evidence.
