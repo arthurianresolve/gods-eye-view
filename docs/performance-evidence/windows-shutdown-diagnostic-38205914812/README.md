@@ -34,3 +34,9 @@ evidence or final performance acceptance. The [raw report](report.json) is
 The [independent review](review.json) checks exact revision, all five stage
 results, preservation, natural exits and the diagnostic availability states.
 [CI metadata](ci-run.json) records the tested revision and job outcomes.
+
+The subsequent standard [dev run 38205998805](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38205998805)
+also passes all seven jobs at `e33717eacee90e6d7e597e327ab7c749c8f098b9`: Node
+24/26, Windows onboarding, recovery on Windows/Linux/macOS and browser journeys.
+It exercises the default path with shutdown diagnostics off. Its
+[exact-commit CI metadata](standard-ci-dev-38205998805.json) is retained separately.

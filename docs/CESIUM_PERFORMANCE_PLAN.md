@@ -2,16 +2,17 @@
 
 ## Current status - 12 October 2026
 
-Recorded integration checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38200576913.json),
-including the command-palette focus repair, Node 24/26, all three recovery jobs,
-Windows onboarding and the browser journeys.
-The subsequent docs-only dev check at `2d18433c` has a
-[fresh Windows recovery failure](performance-evidence/windows-recovery-38203843444/README.md).
+Recorded integration checkpoint: `e33717eacee90e6d7e597e327ab7c749c8f098b9`.
+[All seven standard jobs pass](performance-evidence/windows-shutdown-diagnostic-38205914812/standard-ci-dev-38205998805.json),
+including Node 24/26, all three recovery jobs, Windows onboarding and the browser
+journeys. This integration includes the bounded Windows shutdown diagnostic,
+which is off by default. Older reports remain historical evidence.
+The earlier dev check at `2d18433c` has a preserved
+[Windows recovery failure](performance-evidence/windows-recovery-38203843444/README.md).
 Its third prior-install stage preserves settings and workspace data, then
 Chrome acknowledges shutdown but does not exit naturally within five seconds.
-Forced cleanup remains a failure. Earlier green checks remain historical;
-current recovery acceptance requires diagnosis and fresh evidence.
+Forced cleanup remains a failure. The fresh successful runs do not explain
+that intermittent shutdown failure; root-cause diagnosis remains open.
 The bounded shutdown diagnostic at `eac89bb8` passes 30 independent tests and
 [all five hosted recovery stages](performance-evidence/windows-shutdown-diagnostic-38205914812/README.md)
 with natural exits. No timeout recurs, so the process snapshot path is not
