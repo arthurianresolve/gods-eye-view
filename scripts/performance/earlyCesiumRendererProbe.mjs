@@ -181,11 +181,68 @@ function cleanupStage(status = 'pending') {
   return {
     status,
     elapsedMs: null,
+    pageExecutionElapsedMs: null,
     errorKind: null,
     errorDetail: null,
     lateCompletion: null,
+    lateHostReceiptElapsedMs: null,
+    lateHostReceiptScope:
+      'host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling',
+    lateOutcome: null,
     lateErrorKind: null,
     lateErrorDetail: null,
+  };
+}
+
+const LATE_DOCUMENT_STATUSES = new Set([
+  'confirmed',
+  'already-confirmed',
+  'unavailable',
+  'error',
+]);
+const LATE_DOCUMENT_ERROR_KINDS = new Set([
+  'cleanup-state-not-found',
+  'hook-restore-unconfirmed',
+  'listener-removal-unconfirmed',
+  'cleanup-state-delete-unconfirmed',
+]);
+
+function boundedLateDocumentOutcome(value) {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    !LATE_DOCUMENT_STATUSES.has(value.status)
+  )
+    return null;
+  const booleanOrNull = (field) =>
+    typeof value[field] === 'boolean' ? value[field] : null;
+  const boundedCount = (field) =>
+    Number.isSafeInteger(value[field]) &&
+    value[field] >= 0 &&
+    value[field] <= 64
+      ? value[field]
+      : null;
+  const elapsed = value.pageExecutionElapsedMs;
+  if (!Number.isFinite(elapsed) || elapsed < 0 || elapsed > 60_000) return null;
+  return {
+    status: value.status,
+    pageExecutionElapsedMs: elapsed,
+    statePresent: booleanOrNull('statePresent'),
+    hookRestoreAttempted: booleanOrNull('hookRestoreAttempted'),
+    hookRestored: booleanOrNull('hookRestored'),
+    listenerCount: boundedCount('listenerCount'),
+    listenerRemovalAttemptedCount: boundedCount(
+      'listenerRemovalAttemptedCount',
+    ),
+    listenerRemovalConfirmedCount: boundedCount(
+      'listenerRemovalConfirmedCount',
+    ),
+    listenerRemovalFailedCount: boundedCount('listenerRemovalFailedCount'),
+    stateDeleted: booleanOrNull('stateDeleted'),
+    errorKind: LATE_DOCUMENT_ERROR_KINDS.has(value.errorKind)
+      ? value.errorKind
+      : null,
   };
 }
 
@@ -365,10 +422,34 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
           onConfirmed(result);
         if (timedOut) {
           stage.lateCompletion = status;
-          if (!['confirmed', 'already-confirmed'].includes(status)) {
-            stage.lateErrorKind = result?.errorKind || 'cleanup-incomplete';
-            stage.lateErrorDetail = result?.errorDetail || null;
+          stage.lateHostReceiptElapsedMs = Math.max(
+            0,
+            performance.now() - operationStartedAt,
+          );
+          if (stage === evidence.document) {
+            stage.lateOutcome = boundedLateDocumentOutcome(result);
+            if (!stage.lateOutcome) {
+              stage.lateCompletion = 'invalid-result';
+              stage.lateErrorKind = 'invalid-late-document-result';
+            } else if (
+              !['confirmed', 'already-confirmed'].includes(
+                stage.lateOutcome.status,
+              )
+            ) {
+              stage.lateErrorKind =
+                stage.lateOutcome.errorKind || 'cleanup-incomplete';
+            }
+          } else if (Number.isFinite(result?.pageExecutionElapsedMs)) {
+            stage.pageExecutionElapsedMs = result.pageExecutionElapsedMs;
+            if (!['confirmed', 'already-confirmed'].includes(status))
+              stage.lateErrorKind = result?.errorKind || 'cleanup-incomplete';
+          } else if (stage !== evidence.document) {
+            if (!['confirmed', 'already-confirmed'].includes(status))
+              stage.lateErrorKind = result?.errorKind || 'cleanup-incomplete';
           }
+          if (stage === evidence.document) stage.lateErrorDetail = null;
+          else if (stage.lateErrorKind)
+            stage.lateErrorDetail = result?.errorDetail || null;
           return result;
         }
         stage.status = status;
@@ -381,6 +462,10 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
         operationRejected = true;
         if (timedOut) {
           stage.lateCompletion = 'error';
+          stage.lateHostReceiptElapsedMs = Math.max(
+            0,
+            performance.now() - operationStartedAt,
+          );
           stage.lateErrorKind = safeCleanupErrorKind(
             error,
             stage === evidence.scriptRegistration,
@@ -436,6 +521,14 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
     const documentResult = await runStage(evidence.document, () =>
       page.evaluate(
         (key, proofKey) => {
+          const pageExecutionStartedAt = performance.now();
+          const finish = (record) => {
+            record.pageExecutionElapsedMs = Math.max(
+              0,
+              performance.now() - pageExecutionStartedAt,
+            );
+            return record;
+          };
           const state = window[key];
           const proof = window[proofKey];
           const prototype = HTMLCanvasElement.prototype;
@@ -464,7 +557,7 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
             record.errorKind = proofMatches ? null : 'cleanup-state-not-found';
             record.hookRestored = Boolean(proofMatches);
             record.stateDeleted = true;
-            return record;
+            return finish(record);
           }
           delete window[proofKey];
           record.hookRestoreAttempted = true;
@@ -521,7 +614,7 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
                 documentTimeOrigin: performance.timeOrigin,
               };
           }
-          return record;
+          return finish(record);
         },
         STATE_KEY,
         CLEANUP_PROOF_KEY,

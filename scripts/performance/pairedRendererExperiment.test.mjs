@@ -790,6 +790,7 @@ test('cleanup timeout preserves separate stages and records late completion', as
   assert.equal(evidence.document.lateCompletion, 'pending');
   finishDocument({
     status: 'confirmed',
+    pageExecutionElapsedMs: 6.25,
     statePresent: true,
     hookRestoreAttempted: true,
     hookRestored: true,
@@ -798,10 +799,49 @@ test('cleanup timeout preserves separate stages and records late completion', as
     listenerRemovalConfirmedCount: 0,
     listenerRemovalFailedCount: 0,
     stateDeleted: true,
+    errorKind: null,
+    debugUrl: 'https://user:secret@example.test/token/SECRET',
+    authorization: 'Bearer secret-token',
+    oversized: 'x'.repeat(100_000),
   });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(evidence.document.status, 'timeout');
   assert.equal(evidence.document.lateCompletion, 'confirmed');
+  assert.equal(evidence.confirmed, false);
+  assert.equal(evidence.document.errorKind, 'operation-timeout');
+  assert.equal(evidence.document.lateHostReceiptElapsedMs > 0, true);
+  assert.deepEqual(evidence.document.lateOutcome, {
+    status: 'confirmed',
+    pageExecutionElapsedMs: 6.25,
+    statePresent: true,
+    hookRestoreAttempted: true,
+    hookRestored: true,
+    listenerCount: 0,
+    listenerRemovalAttemptedCount: 0,
+    listenerRemovalConfirmedCount: 0,
+    listenerRemovalFailedCount: 0,
+    stateDeleted: true,
+    errorKind: null,
+  });
+  assert.equal(JSON.stringify(evidence).length < 2_000, true);
+  assert.doesNotMatch(
+    JSON.stringify(evidence),
+    /secret|example\.test|oversized/,
+  );
+  const failure = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    workload: { rendererProbeCleanup: [evidence] },
+    phase: 'cleanup',
+    error: new Error('cleanup timed out'),
+  });
+  assert.deepEqual(
+    failure.workload.rendererProbeCleanup[0].document.lateOutcome,
+    evidence.document.lateOutcome,
+  );
+  assert.equal(
+    failure.workload.rendererProbeCleanup[0].document.status,
+    'timeout',
+  );
   const retry = await cleanupEarlyCesiumRendererProbeWithEvidence(
     page,
     'script-id',
@@ -924,6 +964,115 @@ test('cleanup attempts every owned listener and bounded failure reports retain s
   assert.equal(evidence.document.listenerRemovalFailedCount, 1);
   assert.equal(evidence.scriptRegistration.status, 'confirmed');
   assert.equal(JSON.stringify(report).includes('remove failed'), false);
+});
+
+test('late page cleanup retains bounded page timing without converting the host timeout', async () => {
+  const probe = earlyProbePage(1);
+  await installEarlyCesiumRendererProbe(probe.page);
+  const canvas = new probe.Canvas();
+  canvas.getContext('webgl2');
+  const evaluate = probe.page.evaluate;
+  let releaseAcknowledgement;
+  let pageOutcome;
+  probe.page.evaluate = (...args) =>
+    new Promise((resolve, reject) => {
+      evaluate(...args).then((result) => {
+        pageOutcome = result;
+        releaseAcknowledgement = () => resolve(result);
+      }, reject);
+    });
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probe.page,
+    null,
+    5,
+  );
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(cleanup.document.errorKind, 'operation-timeout');
+  assert.equal(cleanup.document.lateCompletion, 'pending');
+  assert.equal(typeof releaseAcknowledgement, 'function');
+  releaseAcknowledgement();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(pageOutcome.status, 'confirmed');
+  assert.equal(
+    Number.isFinite(pageOutcome.pageExecutionElapsedMs) &&
+      pageOutcome.pageExecutionElapsedMs >= 0,
+    true,
+  );
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.lateCompletion, 'confirmed');
+  assert.equal(
+    cleanup.document.lateOutcome.pageExecutionElapsedMs,
+    pageOutcome.pageExecutionElapsedMs,
+  );
+  assert.equal(cleanup.document.lateHostReceiptElapsedMs >= 5, true);
+  assert.equal(cleanup.document.lateOutcome.listenerCount, 2);
+  assert.equal(cleanup.document.lateOutcome.listenerRemovalAttemptedCount, 2);
+  assert.equal(cleanup.document.lateOutcome.listenerRemovalConfirmedCount, 2);
+  assert.equal(cleanup.document.lateOutcome.stateDeleted, true);
+  assert.equal(Object.keys(cleanup.document.lateOutcome).length, 11);
+  assert.equal(JSON.stringify(cleanup).length < 2_000, true);
+});
+
+test('late document errors discard untrusted status and error fields after timeout', async () => {
+  for (const status of ['error', 'invalid status with secret']) {
+    let finishEvaluation;
+    const page = {
+      isClosed: () => false,
+      evaluate: () =>
+        new Promise((resolve) => {
+          finishEvaluation = resolve;
+        }),
+    };
+    const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+      page,
+      null,
+      5,
+    );
+    assert.equal(cleanup.document.status, 'timeout');
+    assert.equal(cleanup.confirmed, false);
+    finishEvaluation({
+      status,
+      pageExecutionElapsedMs: 4,
+      statePresent: true,
+      hookRestoreAttempted: true,
+      hookRestored: false,
+      listenerCount: 1,
+      listenerRemovalAttemptedCount: 1,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalFailedCount: 1,
+      stateDeleted: false,
+      errorKind: `Authorization: Basic ${'credential'.repeat(5000)}`,
+      errorDetail: 'C:/Users/private/token=very-secret',
+      url: 'https://example.test/private?token=secret',
+      oversized: 'x'.repeat(100_000),
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.equal(cleanup.document.status, 'timeout');
+    assert.equal(cleanup.document.errorKind, 'operation-timeout');
+    assert.equal(cleanup.confirmed, false);
+    assert.equal(
+      cleanup.document.lateCompletion,
+      status === 'error' ? 'error' : 'invalid-result',
+    );
+    assert.equal(
+      cleanup.document.lateErrorKind,
+      status === 'error'
+        ? 'cleanup-incomplete'
+        : 'invalid-late-document-result',
+    );
+    assert.equal(cleanup.document.lateErrorDetail, null);
+    assert.equal(cleanup.document.lateOutcome?.errorKind ?? null, null);
+    assert.equal(JSON.stringify(cleanup).length < 2_000, true);
+    assert.doesNotMatch(
+      JSON.stringify(cleanup),
+      /credential|private|very-secret|example\.test|oversized|Authorization/,
+    );
+  }
 });
 
 test('early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts', async () => {
