@@ -1,0 +1,1 @@
+{"asset":{"version":"1.1","gltfUpAxis":"Z"},"geometricError":5200,"root":{"boundingVolume":{"box":[0,0,0,2600,0,0,0,2600,0,0,0,5]},"geometricError":0,"refine":"ADD","transform":[0,1,0,0,0,0,1,0,1,0,0,0,6378138.5,0,0,1],"content":{"uri":"tile.glb"}}}

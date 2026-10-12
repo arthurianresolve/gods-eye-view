@@ -19,6 +19,12 @@ import {
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import {
+  createStreamedTileNetworkEvidence,
+  installStreamedTileServerEvidence,
+  readStreamedTileFixtureAssets,
+  STREAMED_TILE_PATHS,
+} from './performance/streamedTileNetworkEvidence.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ORIGIN = 'http://127.0.0.1:4174';
@@ -124,7 +130,12 @@ export function assertServedBuildIdentity(servedIdentity, expectedCommit) {
 
 export async function installTerrainFixtureRequestInterception(
   page,
-  { origin = ORIGIN, onExternalRequest = () => {}, onError = () => {} } = {},
+  {
+    origin = ORIGIN,
+    onExternalRequest = () => {},
+    onError = () => {},
+    onBeforeContinue = null,
+  } = {},
 ) {
   const client = await page.createCDPSession();
   try {
@@ -137,6 +148,7 @@ export async function installTerrainFixtureRequestInterception(
         return null;
       },
       onError,
+      { onBeforeContinue },
     );
     return client;
   } catch (error) {
@@ -168,6 +180,22 @@ async function closeWithin(operation, timeoutMs) {
   }
 }
 
+async function waitForEvidence(predicate, timeoutMs, label) {
+  const started = performance.now();
+  while (performance.now() - started <= timeoutMs) {
+    const value = predicate();
+    if (value) return value;
+    await sleep(
+      Math.min(50, Math.max(1, timeoutMs - (performance.now() - started))),
+    );
+  }
+  throw new Error(`${label} exceeded ${timeoutMs}ms.`);
+}
+
+async function streamedAssetEvidence() {
+  return readStreamedTileFixtureAssets();
+}
+
 async function writeReport(outPath, report) {
   await mkdir(path.dirname(outPath), { recursive: true });
   await writeFile(outPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
@@ -195,6 +223,12 @@ export async function runTerrainPickingLifecycle({
   const browserGraphicsInfo =
     deps.readBrowserGraphicsInfo || readBrowserGraphicsInfo;
   const rendererClassifier = deps.classifyRenderer || classifyRenderer;
+  const readTileAssets =
+    deps.readStreamedTileFixtureAssets || streamedAssetEvidence;
+  const createTileNetworkObserver =
+    deps.createStreamedTileNetworkEvidence || createStreamedTileNetworkEvidence;
+  const installTileServerObserver =
+    deps.installStreamedTileServerEvidence || installStreamedTileServerEvidence;
   const initialSource = getSourceIdentity();
   const outPath = path.resolve(ROOT, out);
   const report = {
@@ -209,6 +243,8 @@ export async function runTerrainPickingLifecycle({
     graphics: null,
     rendererClassification: null,
     servedBuildIdentity: null,
+    streamedTileAssets: null,
+    streamedTileHttpEvidence: null,
     pageErrors: [],
     externalRequestCount: 0,
     progress: { phase: 'startup' },
@@ -225,6 +261,11 @@ export async function runTerrainPickingLifecycle({
   let browser = null;
   let page = null;
   let fixtureSession = null;
+  let removeTileNetworkListeners = null;
+  let serverTileEvidence = null;
+  let tileNetworkEvidence = null;
+  let tileContentInterception = null;
+  let tileAssets = null;
   let primaryError = null;
   const errors = [];
   await writeReportFile(outPath, report);
@@ -234,6 +275,8 @@ export async function runTerrainPickingLifecycle({
       initialSource.cleanAtStart !== true
     )
       throw new Error('Fixture source must have a clean, exact Git commit.');
+    tileAssets = await readTileAssets();
+    report.streamedTileAssets = tileAssets;
     server = await serverFactory({
       configFile: path.join(ROOT, 'vite.config.js'),
       root: ROOT,
@@ -242,11 +285,35 @@ export async function runTerrainPickingLifecycle({
       server: { host: '127.0.0.1', port: 4174, strictPort: true },
     });
     await server.listen();
+    serverTileEvidence = installTileServerObserver(server.httpServer);
+    tileNetworkEvidence = createTileNetworkObserver({ origin: ORIGIN });
     report.progress = { phase: 'server-ready' };
     await writeReportFile(outPath, report);
     browser = await launchBrowser({ protocolTimeout: 15_000 });
     page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 760, deviceScaleFactor: 1 });
+    await page.exposeFunction('__s57WaitForStreamedTileContent', async () => {
+      await waitForEvidence(
+        () => {
+          const browserContent = tileNetworkEvidence?.snapshot().counts.content;
+          const serverContent = serverTileEvidence?.snapshot().counts.content;
+          return Boolean(
+            browserContent?.completed > 0 &&
+            serverContent?.successfulResponses > 0,
+          );
+        },
+        10_000,
+        'streamed tile content HTTP delivery',
+      );
+      return {
+        browser: tileNetworkEvidence.snapshot().counts.content,
+        server: serverTileEvidence.snapshot().counts.content,
+      };
+    });
+    await page.exposeFunction('__s57CaptureTileRequestCheckpoint', () => ({
+      browser: tileNetworkEvidence.snapshot(),
+      server: serverTileEvidence.snapshot(),
+    }));
     page.on('pageerror', (error) => {
       if (errors.length < 12) errors.push(sanitize(error));
       report.pageErrors = [...errors];
@@ -262,7 +329,53 @@ export async function runTerrainPickingLifecycle({
         if (errors.length < 12) errors.push(sanitize(error));
         report.pageErrors = [...errors];
       },
+      onBeforeContinue: async ({ url }) => {
+        if (tileContentInterception) return;
+        const requestUrl = new URL(url);
+        if (
+          requestUrl.origin !== ORIGIN ||
+          requestUrl.pathname !== STREAMED_TILE_PATHS.content
+        )
+          return;
+        const browserBeforeSupersession = tileNetworkEvidence.snapshot();
+        const serverBeforeSupersession = serverTileEvidence.snapshot();
+        await page.evaluate(
+          (evidence) => {
+            window.__s57StreamedTileContentPaused = true;
+            window.__s57StreamedTilePauseEvidence = evidence;
+          },
+          {
+            browser: browserBeforeSupersession,
+            server: serverBeforeSupersession,
+          },
+        );
+        const result = await page.evaluate(async () => {
+          if (typeof window.__s57SupersedeStreamedContentRequest !== 'function')
+            throw new Error(
+              'Streamed content supersession hook is unavailable.',
+            );
+          return window.__s57SupersedeStreamedContentRequest();
+        });
+        if (
+          result?.status !== 'passed' ||
+          result.activeStackAfterSupersession !== 'qa-terrain-flat' ||
+          result.tileSetHiddenAtDelivery !== true
+        )
+          throw new Error(
+            'Streamed content was not superseded before delivery.',
+          );
+        tileContentInterception = {
+          status: 'passed',
+          pauseObservedBeforeContinue: true,
+          activeStackAfterSupersession: result.activeStackAfterSupersession,
+          tileSetHiddenAtDelivery: result.tileSetHiddenAtDelivery,
+          browserAtPause: browserBeforeSupersession,
+          serverAtPause: serverBeforeSupersession,
+        };
+      },
     });
+    removeTileNetworkListeners = tileNetworkEvidence.attach(fixtureSession);
+    await fixtureSession.send('Network.enable');
     report.progress = { phase: 'fixture-navigation' };
     await page.goto(
       `${ORIGIN}/scripts/fixtures/terrain-picking-lifecycle.html`,
@@ -334,6 +447,8 @@ export async function runTerrainPickingLifecycle({
       fixtureCleanup: result.cleanup,
       cleanup: harnessCleanup,
     });
+    report.streamedTileAssets = tileAssets;
+    report.streamedTiles.httpInterception = tileContentInterception;
     const observedRenderer =
       result.initialReadiness?.scene?.renderer?.unmaskedRenderer ||
       result.initialReadiness?.scene?.renderer?.renderer ||
@@ -392,6 +507,48 @@ export async function runTerrainPickingLifecycle({
       }
     }
   } finally {
+    report.streamedTileAssets = tileAssets;
+    report.streamedTileHttpEvidence = {
+      assetIdentity: tileAssets,
+      browser: tileNetworkEvidence?.snapshot() || null,
+      server: serverTileEvidence?.snapshot() || null,
+      contentInterception: tileContentInterception,
+      networkListenerCleanupConfirmed: null,
+      serverListenerCleanupConfirmed: null,
+    };
+    if (report.streamedTiles && typeof report.streamedTiles === 'object') {
+      report.streamedTiles.httpInterception = tileContentInterception;
+    }
+    if (removeTileNetworkListeners && report.streamedTileHttpEvidence) {
+      try {
+        removeTileNetworkListeners();
+        report.streamedTileHttpEvidence.networkListenerCleanupConfirmed = true;
+      } catch (error) {
+        report.streamedTileHttpEvidence.networkListenerCleanupConfirmed = false;
+        report.streamedTileHttpEvidence.networkListenerCleanupError =
+          sanitize(error);
+        report.status = 'failed';
+        report.error ||= 'Streamed tile network observation cleanup failed.';
+        primaryError ||= error;
+      }
+    } else if (report.streamedTileHttpEvidence)
+      report.streamedTileHttpEvidence.networkListenerCleanupConfirmed = true;
+    if (serverTileEvidence) {
+      try {
+        report.streamedTileHttpEvidence.serverListenerCleanupConfirmed =
+          serverTileEvidence.cleanup();
+      } catch (error) {
+        if (report.streamedTileHttpEvidence) {
+          report.streamedTileHttpEvidence.serverListenerCleanupConfirmed = false;
+          report.streamedTileHttpEvidence.serverListenerCleanupError =
+            sanitize(error);
+        }
+        report.status = 'failed';
+        report.error ||= 'Streamed tile server observation cleanup failed.';
+        primaryError ||= error;
+      }
+    } else if (report.streamedTileHttpEvidence)
+      report.streamedTileHttpEvidence.serverListenerCleanupConfirmed = true;
     if (fixtureSession) {
       const detached = await closeWithin(() => fixtureSession.detach(), 1000);
       report.cleanup.cdpSessionDetached = detached.completed === true;
