@@ -2,6 +2,7 @@ import * as Cesium from 'cesium';
 import { MapSourceController } from '../../src/maps/controller.js';
 import { createSubmarineCableLayer } from '../../src/layers/submarineCables/index.js';
 import { installWorkerDiagnostics } from '../performance/workerDiagnostics.mjs';
+import { installTerrainCurrentUpdateReadinessObserver } from './terrainCurrentUpdateReadiness.mjs';
 
 installWorkerDiagnostics(window);
 window.__terrainPickingBuildIdentity = {
@@ -138,7 +139,14 @@ function diagnosticSnapshot(viewer, controller, cableLayer) {
   const workerCounters = snapshotWorkers();
   const canvas = viewer.scene.canvas;
   return {
-    map: controller.getPerformanceDiagnostics(),
+    map: {
+      activeStackId: controller.getActiveId(),
+      switchOrigin: controller.getSwitchOrigin(),
+      ...controller.getPerformanceDiagnostics(),
+      streamedTileMemoryBytes: null,
+      streamedTileMemoryUnavailableReason:
+        'local single-tile imagery and custom heightmap fixture; no streamed 3D tile memory source',
+    },
     cables: cableLayer.getPerformanceDiagnostics(),
     scene: {
       dataSources: viewer.dataSources.length,
@@ -241,6 +249,7 @@ async function waitForStableScene(
   label,
   timeoutMs = lifecycleDrainMs,
   onSample = null,
+  currentUpdateRequirement = null,
 ) {
   const started = performance.now();
   const history = [];
@@ -249,6 +258,7 @@ async function waitForStableScene(
   while (performance.now() - started <= timeoutMs) {
     const workers = snapshotWorkers();
     const pose = cameraPose(viewer);
+    const currentUpdateReadiness = currentUpdateRequirement?.() ?? null;
     const sample = {
       elapsedMs: performance.now() - started,
       frameNumber: viewer.scene.frameState.frameNumber,
@@ -259,6 +269,7 @@ async function waitForStableScene(
       workerCounters: workers,
       workerSignature: workerSignature(workers),
       camera: pose,
+      currentUpdateReadiness,
     };
     if (history.length < 64) history.push(sample);
     onSample?.(sample);
@@ -266,6 +277,8 @@ async function waitForStableScene(
       sample.tilesLoaded === true &&
       viewer.dataSourceDisplay.ready === true &&
       sample.pending === 0 &&
+      (currentUpdateRequirement === null ||
+        currentUpdateReadiness?.ready === true) &&
       sample.camera &&
       sample.frameNumber >= 0 &&
       previous &&
@@ -490,6 +503,19 @@ async function runFixture() {
       terrainCoverage:
         'local custom heightmap tiles and ellipsoid reset; no network quantized-mesh tiles',
     },
+    switchComparison: {
+      status: 'running',
+      order: 'counterbalanced-relief-flat-and-flat-relief',
+      timingBoundary:
+        'setStack promise completion and the separate stable-scene wait are observed independently; switch-to-settled wall time runs from just before setStack through the final ownership snapshot and includes those snapshot costs, so stage values are not summed as end-to-end time',
+      stableSceneGate:
+        'existing waitForStableScene predicates: globe tiles loaded, latched DataSourceDisplay.ready, zero worker pending, stable camera and worker signature with advancing postRender for at least 1000 ms; current DataSourceDisplay.update true is now additionally required for comparison switches',
+      checkpointScope:
+        'active source, provider cache/load counters, local heightmap request count, worker counters, pending ownership, and controller tile-memory estimate',
+      streamedTileMemoryBytes: null,
+      streamedTileMemoryUnavailableReason:
+        'fixture uses local single-tile imagery and a custom heightmap provider, not streamed 3D tiles',
+    },
     startedAt,
     initialReadiness: null,
     warmup: null,
@@ -524,11 +550,100 @@ async function runFixture() {
     }
   };
   const sceneObserver = (label) => (sample) => observe(label, sample);
-  const waitForScene = (label, timeoutMs = lifecycleDrainMs) =>
-    waitForStableScene(viewer, label, timeoutMs, sceneObserver(label));
+  const waitForScene = (
+    label,
+    timeoutMs = lifecycleDrainMs,
+    currentUpdateRequirement = null,
+  ) =>
+    waitForStableScene(
+      viewer,
+      label,
+      timeoutMs,
+      sceneObserver(label),
+      currentUpdateRequirement,
+    );
+  const runStackSwitch = async (targetStackId, label, measured) => {
+    const before = diagnosticSnapshot(viewer, controller, cableLayer);
+    const tileRequestsBefore = terrainCalls.tiles.count;
+    const generationResult = currentUpdateObserver?.beginGeneration();
+    if (!generationResult?.available)
+      throw new Error(
+        'Current DataSourceDisplay update observer is unavailable.',
+      );
+    const currentUpdateRequirement = () => {
+      const witness = currentUpdateObserver.read();
+      return {
+        generation: generationResult.generation,
+        ready: currentUpdateObserver.isCurrentFrameReady(
+          witness,
+          generationResult.generation,
+        ),
+        witness,
+      };
+    };
+    const startedAt = performance.now();
+    await controller.setStack(targetStackId);
+    const setStackElapsedMs = performance.now() - startedAt;
+    const afterSetStack = diagnosticSnapshot(viewer, controller, cableLayer);
+    const sceneReadiness = await waitForScene(
+      label,
+      lifecycleDrainMs,
+      currentUpdateRequirement,
+    );
+    const afterReady = diagnosticSnapshot(viewer, controller, cableLayer);
+    const switchToSettledElapsedMs = performance.now() - startedAt;
+    const beforeWorkers = workerTotals(before.workerCounters);
+    const readyWorkers = workerTotals(afterReady.workerCounters);
+    return {
+      status: sceneReadiness.status === 'ready' ? 'ready' : 'failed',
+      measured,
+      fromStackId: before.map.activeStackId,
+      toStackId: targetStackId,
+      switchOrigin: afterSetStack.map.switchOrigin,
+      setStackElapsedMs,
+      switchToSettledElapsedMs,
+      sceneReadinessElapsedMs: sceneReadiness.elapsedMs,
+      stableWindowMs: sceneReadiness.stableWindowMs,
+      currentUpdateReadiness: {
+        generation: generationResult.generation,
+        witness: sceneReadiness.final.currentUpdateReadiness?.witness || null,
+        ready: sceneReadiness.final.currentUpdateReadiness?.ready === true,
+      },
+      sceneReadiness: {
+        status: sceneReadiness.status,
+        label: sceneReadiness.label,
+        elapsedMs: sceneReadiness.elapsedMs,
+        stableWindowMs: sceneReadiness.stableWindowMs,
+        sampleCount: sceneReadiness.samples.length,
+        final: sceneReadiness.final,
+      },
+      sceneReadinessEvidence: sceneReadiness,
+      before,
+      afterSetStack,
+      afterReady,
+      providerLoadDelta:
+        afterReady.map.providerLoadsStarted - before.map.providerLoadsStarted,
+      providerCacheReuseDelta:
+        afterReady.map.providerCacheReuses - before.map.providerCacheReuses,
+      providerLoadFailureDelta:
+        afterReady.map.providerLoadFailures - before.map.providerLoadFailures,
+      cacheEntryDelta: afterReady.map.cacheEntries - before.map.cacheEntries,
+      pendingJobsAtSetStackCompletion: afterSetStack.map.pendingJobs,
+      pendingJobsAfterReadiness: afterReady.map.pendingJobs,
+      tileRequestsBefore: tileRequestsBefore,
+      tileRequestsAfter: terrainCalls.tiles.count,
+      tileRequestDelta: terrainCalls.tiles.count - tileRequestsBefore,
+      workerSubmittedDelta: readyWorkers.submitted - beforeWorkers.submitted,
+      workerCompletedDelta: readyWorkers.completed - beforeWorkers.completed,
+      workerPendingAfterReadiness: readyWorkers.pending,
+      estimatedTileBytesBefore: before.map.estimatedTileBytes,
+      estimatedTileBytesAfter: afterReady.map.estimatedTileBytes,
+    };
+  };
   let viewer;
   let controller;
   let cableLayer;
+  let currentUpdateObserver;
   let postRenderRemove;
   let originalMapEvents = 0;
   const mapEvents = new EventTarget();
@@ -758,30 +873,96 @@ async function runFixture() {
       throw new Error('Warm fixture baseline still owns pending work.');
     report.warmup = baseline;
     report.localTerrain = { tileRequests: terrainCalls.tiles.count };
+    const getCurrentEntityCollections = () => {
+      const entityCollections = [viewer.entities];
+      for (let index = 0; index < viewer.dataSources.length; index++) {
+        const dataSource = viewer.dataSources.get(index);
+        if (dataSource?.entities) entityCollections.push(dataSource.entities);
+      }
+      return [...new Set(entityCollections)];
+    };
+    const uniqueEntityCollections = getCurrentEntityCollections();
+    currentUpdateObserver = installTerrainCurrentUpdateReadinessObserver({
+      dataSourceDisplay: viewer.dataSourceDisplay,
+      scene: viewer.scene,
+      entityCollections: uniqueEntityCollections,
+      ownershipCollection: viewer.dataSources,
+      getCurrentEntityCollections,
+    });
+    report.switchComparison.currentUpdateObserver = {
+      available: currentUpdateObserver.available,
+      installErrorName: currentUpdateObserver.installErrorName,
+      entityCollectionCount: uniqueEntityCollections.length,
+      requirement:
+        'each switch waits for the existing DataSourceDisplay.update result true, bound to unchanged public EntityCollection contents, data-source ownership revision, exact collection identities, and that completed frame; no extra update calls',
+    };
+    if (!currentUpdateObserver.available)
+      throw new Error('Current update readiness proof could not be installed.');
     publish();
 
     for (let cycle = 1; cycle <= lifecycleCycles; cycle++) {
-      const row = { cycle, status: 'running', checkpoints: [] };
+      const flatFirst = cycle % 2 === 0;
+      const expectedStart = flatFirst ? 'qa-terrain-relief' : 'qa-terrain-flat';
+      const row = {
+        cycle,
+        status: 'running',
+        order: flatFirst ? 'flat-relief' : 'relief-flat',
+        warmStart: null,
+        switches: [],
+      };
       report.cycles.push(row);
       publish();
-      await controller.setStack('qa-terrain-relief');
-      row.relief = await waitForScene(`cycle-${cycle}-relief`);
-      row.reliefSnapshot = diagnosticSnapshot(viewer, controller, cableLayer);
-      if (
-        row.reliefSnapshot.scene.terrainProviderKind !==
-        'CustomHeightmapTerrainProvider'
-      )
-        throw new Error(`Cycle ${cycle} did not install local relief terrain.`);
-      await controller.setStack('qa-terrain-flat');
-      row.flat = await waitForScene(`cycle-${cycle}-flat`);
-      row.flatSnapshot = diagnosticSnapshot(viewer, controller, cableLayer);
-      if (!boundsMatch(row.flatSnapshot, baseline))
-        throw new Error(
-          `Cycle ${cycle} did not return to warmed ownership baseline.`,
+      if (controller.getActiveId() !== expectedStart) {
+        row.warmStart = await runStackSwitch(
+          expectedStart,
+          `cycle-${cycle}-counterbalance-setup`,
+          false,
         );
+        if (row.warmStart.status !== 'ready')
+          throw new Error(
+            `Cycle ${cycle} counterbalance setup did not settle.`,
+          );
+      }
+      const targets = flatFirst
+        ? ['qa-terrain-flat', 'qa-terrain-relief']
+        : ['qa-terrain-relief', 'qa-terrain-flat'];
+      for (const targetStackId of targets) {
+        const result = await runStackSwitch(
+          targetStackId,
+          `cycle-${cycle}-${targetStackId === 'qa-terrain-flat' ? 'flat' : 'relief'}`,
+          true,
+        );
+        row.switches.push(result);
+        if (targetStackId === 'qa-terrain-relief') {
+          row.relief = result.sceneReadinessEvidence;
+          row.reliefSnapshot = result.afterReady;
+          if (
+            row.reliefSnapshot.scene.terrainProviderKind !==
+            'CustomHeightmapTerrainProvider'
+          )
+            throw new Error(
+              `Cycle ${cycle} did not install local relief terrain.`,
+            );
+        } else {
+          row.flat = result.sceneReadinessEvidence;
+          row.flatSnapshot = result.afterReady;
+          if (!boundsMatch(row.flatSnapshot, baseline))
+            throw new Error(
+              `Cycle ${cycle} did not return to warmed ownership baseline.`,
+            );
+        }
+      }
       row.status = 'passed';
       publish();
     }
+    report.switchComparison.status = 'passed';
+    const comparisonObserverCleanup = currentUpdateObserver.dispose();
+    report.switchComparison.currentUpdateObserver.cleanupConfirmed =
+      comparisonObserverCleanup;
+    report.switchComparison.currentUpdateObserver.finalState =
+      currentUpdateObserver.snapshot();
+    if (!comparisonObserverCleanup)
+      throw new Error('Current update observer cleanup was not confirmed.');
 
     report.phase = 'stale-terrain-provider-replacement';
     publish();
@@ -990,6 +1171,19 @@ async function runFixture() {
     };
   } finally {
     report.phase = report.phase || 'cleanup';
+    if (currentUpdateObserver) {
+      const cleanupConfirmed = currentUpdateObserver.dispose();
+      report.switchComparison.currentUpdateObserver = {
+        ...(report.switchComparison.currentUpdateObserver || {}),
+        cleanupConfirmed,
+        finalState: currentUpdateObserver.snapshot(),
+      };
+      if (!cleanupConfirmed) {
+        report.status = 'failed';
+        report.failedPhase ||= 'current-update-observer-cleanup';
+        report.error ||= 'Current update observer ownership was not restored.';
+      }
+    }
     try {
       cableLayer?.destroy(viewer);
     } catch {}

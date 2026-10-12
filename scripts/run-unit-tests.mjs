@@ -51,6 +51,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/qa-mission-render-demand.test.mjs',
   'scripts/performance/cctvLifecycle.test.mjs',
   'scripts/performance/terrainPickingLifecycle.test.mjs',
+  'scripts/fixtures/terrainCurrentUpdateReadiness.test.mjs',
   'scripts/performance/trackedFrameTimeRepro.test.mjs',
   'scripts/performance/trackedFloorCoverage.test.mjs',
   'scripts/performance/s59DocumentDecodeComparison.test.mjs',

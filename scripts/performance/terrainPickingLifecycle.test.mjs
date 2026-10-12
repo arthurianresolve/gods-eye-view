@@ -14,11 +14,26 @@ import {
 
 function snapshot({
   terrainKind = 'EllipsoidTerrainProvider',
+  activeStackId = 'qa-terrain-flat',
   pending = 0,
   submitted = 8,
 } = {}) {
   return {
-    map: { cacheEntries: 4, pendingJobs: 0, imageryLayers: 1 },
+    map: {
+      activeStackId,
+      switchOrigin: 'manual',
+      cacheEntries: 4,
+      pendingJobs: 0,
+      imageryLayers: 1,
+      primitives: 0,
+      estimatedTileBytes: null,
+      providerLoadsStarted: 3,
+      providerCacheReuses: 4,
+      providerLoadFailures: 0,
+      streamedTileMemoryBytes: null,
+      streamedTileMemoryUnavailableReason:
+        'local single-tile imagery and custom heightmap fixture; no streamed 3D tile memory source',
+    },
     cables: {
       listeners: 4,
       pendingJobs: 0,
@@ -64,6 +79,97 @@ function snapshot({
 function validReport() {
   const relief = snapshot({ terrainKind: 'CustomHeightmapTerrainProvider' });
   const flat = snapshot();
+  let updateGeneration = 0;
+  const makeSwitch = (fromStackId, toStackId, measured = true) => {
+    const generation = ++updateGeneration;
+    const terrainKind =
+      toStackId === 'qa-terrain-relief'
+        ? 'CustomHeightmapTerrainProvider'
+        : 'EllipsoidTerrainProvider';
+    const before = snapshot({
+      activeStackId: fromStackId,
+      terrainKind:
+        fromStackId === 'qa-terrain-relief'
+          ? 'CustomHeightmapTerrainProvider'
+          : 'EllipsoidTerrainProvider',
+    });
+    const afterSetStack = snapshot({
+      activeStackId: toStackId,
+      terrainKind,
+    });
+    const afterReady = snapshot({ activeStackId: toStackId, terrainKind });
+    const sceneReadiness = {
+      status: 'ready',
+      label: 'synthetic-switch',
+      elapsedMs: 1050,
+      stableWindowMs: 1000,
+      sampleCount: 3,
+      samples: [],
+      final: {
+        frameNumber: 101,
+        currentUpdateReadiness: {
+          generation,
+          ready: true,
+          witness: {
+            completedRenderRevision: generation + 10,
+            updateSequenceAtPreRender: generation + 20,
+            updateSequenceAtPostRender: generation + 20,
+            updateGeneration: generation,
+            generationAtPreRender: generation,
+            generationAtPostRender: generation,
+            updateReturnedBoolean: true,
+            updateErrorName: null,
+            collectionRevisionAtUpdateEntry: 1,
+            collectionRevisionAtUpdateReturn: 1,
+            collectionRevisionAtPreRender: 1,
+            collectionRevisionAtPostRender: 1,
+            collectionOwnerRevisionAtUpdateEntry: 0,
+            collectionOwnerRevisionAtUpdateReturn: 0,
+            collectionOwnerRevisionAtPreRender: 0,
+            collectionOwnerRevisionAtPostRender: 0,
+            updateOccurredForFrame: true,
+          },
+        },
+      },
+    };
+    return {
+      status: 'ready',
+      measured,
+      fromStackId,
+      toStackId,
+      switchOrigin: 'manual',
+      setStackElapsedMs: 1.5,
+      switchToSettledElapsedMs: 1051.5,
+      sceneReadinessElapsedMs: sceneReadiness.elapsedMs,
+      stableWindowMs: sceneReadiness.stableWindowMs,
+      currentUpdateReadiness: sceneReadiness.final.currentUpdateReadiness,
+      sceneReadiness: {
+        status: 'ready',
+        label: sceneReadiness.label,
+        elapsedMs: sceneReadiness.elapsedMs,
+        stableWindowMs: sceneReadiness.stableWindowMs,
+        sampleCount: 3,
+        final: sceneReadiness.final,
+      },
+      before,
+      afterSetStack,
+      afterReady,
+      providerLoadDelta: 0,
+      providerCacheReuseDelta: 0,
+      providerLoadFailureDelta: 0,
+      cacheEntryDelta: 0,
+      pendingJobsAtSetStackCompletion: 0,
+      pendingJobsAfterReadiness: 0,
+      tileRequestsBefore: 0,
+      tileRequestsAfter: toStackId === 'qa-terrain-relief' ? 1 : 0,
+      tileRequestDelta: toStackId === 'qa-terrain-relief' ? 1 : 0,
+      workerSubmittedDelta: 0,
+      workerCompletedDelta: 0,
+      workerPendingAfterReadiness: 0,
+      estimatedTileBytesBefore: null,
+      estimatedTileBytesAfter: null,
+    };
+  };
   return {
     schema: 'gev-terrain-picking-lifecycle/v1',
     status: 'passed',
@@ -76,13 +182,74 @@ function validReport() {
       terrainCoverage:
         'local custom heightmap tiles and ellipsoid reset; no network quantized-mesh tiles',
     },
-    warmup: flat,
-    cycles: Array.from({ length: 5 }, (_, index) => ({
-      cycle: index + 1,
+    switchComparison: {
       status: 'passed',
-      reliefSnapshot: relief,
-      flatSnapshot: flat,
-    })),
+      order: 'counterbalanced-relief-flat-and-flat-relief',
+      timingBoundary:
+        'setStack promise completion and the separate stable-scene wait are observed independently; switch-to-settled wall time runs from just before setStack through the final ownership snapshot and includes those snapshot costs, so stage values are not summed as end-to-end time',
+      stableSceneGate:
+        'existing waitForStableScene predicates: globe tiles loaded, latched DataSourceDisplay.ready, zero worker pending, stable camera and worker signature with advancing postRender for at least 1000 ms; current DataSourceDisplay.update true is now additionally required for comparison switches',
+      checkpointScope:
+        'active source, provider cache/load counters, local heightmap request count, worker counters, pending ownership, and controller tile-memory estimate',
+      streamedTileMemoryBytes: null,
+      streamedTileMemoryUnavailableReason:
+        'fixture uses local single-tile imagery and a custom heightmap provider, not streamed 3D tiles',
+      currentUpdateObserver: {
+        available: true,
+        installErrorName: null,
+        entityCollectionCount: 4,
+        requirement:
+          'each switch waits for the existing DataSourceDisplay.update result true, bound to unchanged public EntityCollection contents, data-source ownership revision, exact collection identities, and that completed frame; no extra update calls',
+        cleanupConfirmed: true,
+        ownershipChanged: false,
+        entityCollectionsMatch: true,
+        finalState: {
+          available: true,
+          cleanupConfirmed: true,
+          updateRestoreStatus: 'restored',
+          generationCount: 14,
+          updateCallCount: 24,
+          collectionRevision: 1,
+          collectionOwnerRevision: 0,
+          ownershipChanged: false,
+          entityCollectionsMatch: true,
+          completedRenderRevision: 24,
+          installErrorName: null,
+        },
+      },
+    },
+    warmup: flat,
+    cycles: Array.from({ length: 5 }, (_, index) => {
+      const flatFirst = index % 2 === 1;
+      const start = flatFirst ? 'qa-terrain-relief' : 'qa-terrain-flat';
+      const firstTarget = flatFirst ? 'qa-terrain-flat' : 'qa-terrain-relief';
+      const secondTarget = flatFirst ? 'qa-terrain-relief' : 'qa-terrain-flat';
+      const warmStart =
+        index === 0
+          ? null
+          : makeSwitch(
+              flatFirst ? 'qa-terrain-flat' : 'qa-terrain-relief',
+              start,
+              false,
+            );
+      const first = makeSwitch(start, firstTarget);
+      const second = makeSwitch(firstTarget, secondTarget);
+      return {
+        cycle: index + 1,
+        status: 'passed',
+        order: flatFirst ? 'flat-relief' : 'relief-flat',
+        warmStart,
+        switches: [first, second],
+        reliefSnapshot:
+          firstTarget === 'qa-terrain-relief'
+            ? first.afterReady
+            : second.afterReady,
+        flatSnapshot:
+          firstTarget === 'qa-terrain-flat'
+            ? first.afterReady
+            : second.afterReady,
+      };
+    }),
     localTerrain: { tileRequests: 16 },
     firstTerrainTransition: {
       status: 'passed',
@@ -182,6 +349,7 @@ test('real local terrain and selection lifecycle report validates as a complete 
   assert.deepEqual(validateTerrainPickingLifecycleReport(validReport()), {
     status: 'passed',
     cycles: 5,
+    switchTransitions: 10,
     terrainTileRequests: 16,
     terrainTransitionWorkerSubmissions: 2,
     terrainTransitionWorkerCompletions: 2,
@@ -236,6 +404,99 @@ test('validator fails closed on external requests and malformed terrain evidence
   assert.throws(() =>
     validateTerrainPickingLifecycleReport(fabricatedCompletion),
   );
+});
+
+test('counterbalanced switch evidence separates activation, readiness and observed ownership', () => {
+  const report = validReport();
+  const result = validateTerrainPickingLifecycleReport(report);
+  assert.equal(result.switchTransitions, 10);
+  assert.equal(report.cycles[0].switches[0].fromStackId, 'qa-terrain-flat');
+  assert.equal(report.cycles[0].switches[0].toStackId, 'qa-terrain-relief');
+  assert.equal(report.cycles[1].switches[0].fromStackId, 'qa-terrain-relief');
+  assert.equal(report.cycles[1].switches[0].toStackId, 'qa-terrain-flat');
+  assert.equal(report.cycles[0].switches[0].setStackElapsedMs, 1.5);
+  assert.equal(report.cycles[0].switches[0].sceneReadinessElapsedMs, 1050);
+  assert.equal(report.cycles[0].switches[0].estimatedTileBytesAfter, null);
+  assert.equal(report.switchComparison.streamedTileMemoryBytes, null);
+});
+
+test('switch validator rejects wrong order, owner, timing, counter deltas and fabricated memory', () => {
+  const mutations = [
+    (report) => {
+      report.cycles[1].order = 'relief-flat';
+    },
+    (report) => {
+      report.cycles[0].switches[0].afterReady.map.activeStackId =
+        'qa-terrain-flat';
+    },
+    (report) => {
+      report.cycles[0].switches[0].setStackElapsedMs = -1;
+    },
+    (report) => {
+      report.cycles[0].switches[0].sceneReadinessElapsedMs =
+        report.cycles[0].switches[0].setStackElapsedMs;
+      report.cycles[0].switches[0].sceneReadiness.elapsedMs =
+        report.cycles[0].switches[0].setStackElapsedMs;
+    },
+    (report) => {
+      const row = report.cycles[0].switches[0];
+      row.switchToSettledElapsedMs =
+        row.setStackElapsedMs + row.sceneReadinessElapsedMs - 1;
+    },
+    (report) => {
+      const row = report.cycles[0].switches[0];
+      row.sceneReadinessElapsedMs = row.stableWindowMs - 1;
+      row.sceneReadiness.elapsedMs = row.sceneReadinessElapsedMs;
+    },
+    (report) => {
+      const row = report.cycles[0].switches[0];
+      row.afterReady.map.providerLoadsStarted =
+        row.before.map.providerLoadsStarted - 1;
+      row.providerLoadDelta = -1;
+    },
+    (report) => {
+      const row = report.cycles[0].switches[0];
+      row.afterReady.map.providerCacheReuses =
+        row.before.map.providerCacheReuses - 1;
+      row.providerCacheReuseDelta = -1;
+    },
+    (report) => {
+      report.cycles[0].switches[0].providerCacheReuseDelta = 9;
+    },
+    (report) => {
+      report.cycles[0].switches[0].workerSubmittedDelta = 1;
+    },
+    (report) => {
+      report.cycles[0].switches[0].tileRequestDelta = -1;
+    },
+    (report) => {
+      report.cycles[0].switches[0].estimatedTileBytesAfter = 1234;
+    },
+    (report) => {
+      report.switchComparison.streamedTileMemoryBytes = 0;
+    },
+    (report) => {
+      report.cycles[2].warmStart = null;
+    },
+    (report) => {
+      report.cycles[0].switches[0].currentUpdateReadiness.ready = false;
+    },
+    (report) => {
+      report.cycles[0].switches[0].currentUpdateReadiness.witness.updateReturnedBoolean = false;
+    },
+    (report) => {
+      report.switchComparison.currentUpdateObserver.cleanupConfirmed = false;
+    },
+    (report) => {
+      report.switchComparison.currentUpdateObserver.finalState.updateRestoreStatus =
+        'replaced-by-another-owner';
+    },
+  ];
+  for (const mutate of mutations) {
+    const report = validReport();
+    mutate(report);
+    assert.throws(() => validateTerrainPickingLifecycleReport(report));
+  }
 });
 
 function fixtureResult(status = 'passed') {
