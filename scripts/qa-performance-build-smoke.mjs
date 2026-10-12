@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createReadStream, readFileSync } from 'node:fs';
@@ -92,6 +93,7 @@ const OPTION_KEYS = new Map([
   ['--capture-worker-audit-mode', 'captureWorkerAuditMode'],
   ['--provider-fixture', 'providerFixture'],
   ['--capture-scene-frame-diagnostics', 'sceneFrameDiagnostics'],
+  ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
 ]);
 
 export function parseSmokeArguments(argv) {
@@ -121,6 +123,13 @@ export function parseSmokeArguments(argv) {
       throw new TypeError(
         'Scene frame diagnostics must be enabled or disabled.',
       );
+    if (
+      flag === '--capture-first-motion-cpu-profile' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'First-motion CPU profile must be enabled or disabled.',
+      );
     output[key] = value;
   }
   if (
@@ -140,6 +149,16 @@ export function parseSmokeArguments(argv) {
     );
   if (output.sceneFrameDiagnostics)
     output.sceneFrameDiagnostics = output.sceneFrameDiagnostics === 'enabled';
+  if (output.firstMotionCpuProfile)
+    output.firstMotionCpuProfile = output.firstMotionCpuProfile === 'enabled';
+  if (
+    output.firstMotionCpuProfile &&
+    output.providerFixture &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'First-motion CPU profiling requires the dense investigation fixture.',
+    );
   return output;
 }
 
@@ -442,6 +461,71 @@ export function validateCaptureCliReport(report, expected) {
   const workerAuditMode = expected.workerAuditMode || 'diagnostic';
   assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
+  if (expected.firstMotionCpuProfile) {
+    const profileEvidence = report.firstMotionCpuProfile;
+    assert.equal(
+      profileEvidence?.schema,
+      'gev-first-motion-cpu-profile-window/v1',
+    );
+    assert.equal(profileEvidence?.enabled, true);
+    assert.equal(profileEvidence?.targetScenario, 'scripted-motion');
+    assert.equal(profileEvidence?.targetRun, 1);
+    assert.ok(
+      profileEvidence?.status === 'complete' ||
+        (profileEvidence?.status === 'incomplete' &&
+          profileEvidence?.windowCapReached === true),
+    );
+    assert.equal(profileEvidence?.profilerStarted, true);
+    assert.equal(profileEvidence?.performanceAcceptanceEligible, false);
+    assert.equal(
+      profileEvidence?.scope,
+      'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+    );
+    const profileRef = profileEvidence?.profile;
+    assert.equal(profileRef?.schema, 'gev-render-boundary-cpu-profile-ref/v1');
+    assert.equal(
+      profileRef?.fileName,
+      'first-scripted-motion-cpu-profile.json',
+    );
+    assert.ok(
+      profileRef?.status === 'complete' ||
+        (profileRef?.status === 'incomplete' &&
+          profileRef?.windowCapReached === true),
+    );
+    assert.equal(profileEvidence.status, profileRef?.status);
+    assert.equal(
+      profileEvidence.windowCapReached,
+      profileRef?.windowCapReached,
+    );
+    assert.equal(profileEvidence.windowCapMs, profileRef?.windowCapMs);
+    assert.ok(Array.isArray(profileRef?.profilerErrors));
+    assert.equal(profileRef.profilerErrors.length, 0);
+    if (profileEvidence.status === 'complete') {
+      assert.equal(profileEvidence.windowCapReached, false);
+      assert.equal(profileEvidence.windowCapMs, null);
+    } else {
+      assert.equal(profileEvidence.windowCapReached, true);
+      assert.equal(profileEvidence.windowCapMs, 60_000);
+    }
+    assert.equal(profileRef?.performanceAcceptanceEligible, false);
+    assert.match(profileRef?.sha256 || '', /^[a-f0-9]{64}$/);
+    assert.ok(
+      Number.isInteger(profileRef?.byteLength) &&
+        profileRef.byteLength > 0 &&
+        profileRef.byteLength <= 8 * 1024 * 1024,
+    );
+    assert.equal(
+      report.comparisonReadiness?.reasons?.includes(
+        'first-motion-cpu-profile-instrumentation-is-enabled',
+      ),
+      true,
+    );
+    const profileSamples = report.captures?.filter(
+      (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+    );
+    assert.equal(profileSamples?.length, 1);
+    assert.deepEqual(profileSamples[0].firstMotionCpuProfile, profileEvidence);
+  } else assert.equal(report.firstMotionCpuProfile, undefined);
   if (expected.sceneFrameDiagnostics) {
     assert.deepEqual(report.sceneFrameDiagnostics, {
       status: 'completed',
@@ -786,6 +870,10 @@ export function validateCaptureCliReport(report, expected) {
   if (expected.sceneFrameDiagnostics)
     observedReadinessReasons.push(
       'scene-frame-attribution-instrumentation-is-enabled',
+    );
+  if (expected.firstMotionCpuProfile)
+    observedReadinessReasons.push(
+      'first-motion-cpu-profile-instrumentation-is-enabled',
     );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
@@ -1399,6 +1487,8 @@ async function runCandidateCaptureCli({
   providerFixture,
   workerAuditMode,
   sceneFrameDiagnostics = false,
+  firstMotionCpuProfile = false,
+  profileArtifactDirectory = null,
   startedAt,
   budgetMs,
 }) {
@@ -1468,6 +1558,15 @@ async function runCandidateCaptureCli({
   ];
   if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
   if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
+  if (firstMotionCpuProfile) {
+    if (typeof profileArtifactDirectory !== 'string')
+      throw new TypeError('CPU profile artifact directory is required.');
+    args.push(
+      '--first-motion-cpu-profile',
+      '--cpu-profile-artifact-directory',
+      profileArtifactDirectory,
+    );
+  }
   let captureReport = null;
   try {
     await runBoundedChild(process.execPath, args, {
@@ -1476,7 +1575,7 @@ async function runCandidateCaptureCli({
       ownedPidFile: browserPidPath,
     });
     captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
-    return validateCaptureCliReport(captureReport, {
+    const validated = validateCaptureCliReport(captureReport, {
       appSha: commit,
       harnessSha: harnessCommit,
       receiptSha256: build.receipt.receiptSha256,
@@ -1485,7 +1584,56 @@ async function runCandidateCaptureCli({
       fixedTime: fixture.fixedTime,
       workerAuditMode,
       sceneFrameDiagnostics,
+      firstMotionCpuProfile,
     });
+    if (firstMotionCpuProfile) {
+      const indexPath = path.join(
+        profileArtifactDirectory,
+        'first-scripted-motion-cpu-profile-ref.json',
+      );
+      const index = JSON.parse(await readFile(indexPath, 'utf8'));
+      assert.equal(index?.schema, 'gev-first-motion-cpu-profile-index/v1');
+      assert.equal(index?.performanceAcceptanceEligible, false);
+      const profileRef = index.profile;
+      assert.deepEqual(profileRef, captureReport.firstMotionCpuProfile.profile);
+      assert.equal(
+        profileRef?.fileName,
+        'first-scripted-motion-cpu-profile.json',
+      );
+      assert.ok(Array.isArray(profileRef?.profilerErrors));
+      assert.equal(profileRef.profilerErrors.length, 0);
+      assert.ok(
+        profileRef?.status === 'complete' ||
+          (profileRef?.status === 'incomplete' &&
+            profileRef?.windowCapReached === true),
+      );
+      assert.equal(
+        profileRef?.sha256,
+        captureReport.firstMotionCpuProfile.profile.sha256,
+      );
+      assert.equal(
+        profileRef?.status,
+        captureReport.firstMotionCpuProfile.profile.status,
+      );
+      assert.equal(
+        profileRef?.windowCapReached,
+        captureReport.firstMotionCpuProfile.profile.windowCapReached,
+      );
+      assert.equal(
+        profileRef?.windowCapMs,
+        captureReport.firstMotionCpuProfile.profile.windowCapMs,
+      );
+      const profileBytes = await readFile(
+        path.join(profileArtifactDirectory, profileRef.fileName),
+      );
+      assert.ok(profileBytes.byteLength <= 8 * 1024 * 1024);
+      assert.equal(profileBytes.byteLength, profileRef.byteLength);
+      assert.equal(
+        createHash('sha256').update(profileBytes).digest('hex'),
+        profileRef.sha256,
+      );
+    }
+    return validated;
   } catch (error) {
     if (!captureReport) {
       try {
@@ -1494,9 +1642,31 @@ async function runCandidateCaptureCli({
         // Preserve the bounded process error when no report was written.
       }
     }
-    error.captureCliFailure = compactCaptureCliFailure(captureReport) || {
+    const captureCliFailure = compactCaptureCliFailure(captureReport) || {
       diagnostics: error.childDiagnostics || null,
     };
+    if (firstMotionCpuProfile) {
+      const indexPath = path.join(
+        profileArtifactDirectory || `${reportPath}.cpu-profile`,
+        'first-scripted-motion-cpu-profile-ref.json',
+      );
+      try {
+        const index = JSON.parse(await readFile(indexPath, 'utf8'));
+        assert.equal(index?.schema, 'gev-first-motion-cpu-profile-index/v1');
+        assert.equal(index?.performanceAcceptanceEligible, false);
+        captureCliFailure.cpuProfileArtifact = {
+          schema: index.schema,
+          performanceAcceptanceEligible: false,
+          profile: index.profile,
+        };
+      } catch {
+        captureCliFailure.cpuProfileArtifact = {
+          status: 'unavailable',
+          performanceAcceptanceEligible: false,
+        };
+      }
+    }
+    error.captureCliFailure = captureCliFailure;
     throw error;
   }
 }
@@ -1513,6 +1683,8 @@ async function runRevision({
   workerAuditMode,
   providerFixture,
   sceneFrameDiagnostics = false,
+  firstMotionCpuProfile = false,
+  profileArtifactDirectory = null,
   infrastructureCaptureFixture,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
@@ -1935,6 +2107,8 @@ async function runRevision({
         providerFixture,
         workerAuditMode,
         sceneFrameDiagnostics,
+        firstMotionCpuProfile,
+        profileArtifactDirectory,
         startedAt,
         budgetMs,
       });
@@ -2077,6 +2251,7 @@ async function main() {
     captureWorkerAuditMode = 'diagnostic',
     providerFixture = 'dense-investigation',
     sceneFrameDiagnostics = false,
+    firstMotionCpuProfile = false,
   } = parseSmokeArguments(process.argv.slice(2));
   const infrastructureCaptureFixture =
     providerFixture === 'dense-investigation'
@@ -2115,6 +2290,14 @@ async function main() {
     harnessSha: harnessCommit,
     captureWorkerAuditMode,
     sceneFrameDiagnostics,
+    firstMotionCpuProfile,
+    ...(firstMotionCpuProfile
+      ? {
+          cpuProfileArtifactDirectory: path.basename(
+            `${outputPath}.cpu-profile`,
+          ),
+        }
+      : {}),
     candidateCaptureProviderFixture: providerFixture,
     startedAt: null,
     variants: [],
@@ -2188,6 +2371,10 @@ async function main() {
           budgetMs,
           workerAuditMode: captureWorkerAuditMode,
           sceneFrameDiagnostics,
+          firstMotionCpuProfile,
+          profileArtifactDirectory: firstMotionCpuProfile
+            ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
+            : null,
           providerFixture,
           infrastructureCaptureFixture,
         });

@@ -57,6 +57,8 @@ import {
 } from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
+import { runBoundedBoundaryProfile } from './performance/boundedCpuProfile.mjs';
+import { createFirstMotionCpuProfileWindow } from './performance/firstMotionCpuProfileWindow.mjs';
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
@@ -92,6 +94,13 @@ const providerFixtureTime = option(
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
 const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
+const firstMotionCpuProfileEnabled = args.includes(
+  '--first-motion-cpu-profile',
+);
+const cpuProfileArtifactDirectory = option(
+  '--cpu-profile-artifact-directory',
+  null,
+);
 const infrastructureWorkload = providerFixtureMode?.startsWith('infrastructure')
   ? createInfrastructureWorkloadFixture(
       providerFixtureMode,
@@ -209,6 +218,18 @@ if (workerAuditMode === 'prewarm' && !productionFlightFixture)
 if (sceneFrameDiagnosticsEnabled && !productionFlightFixture)
   throw new Error(
     '--scene-frame-diagnostics requires --provider-fixture dense-investigation.',
+  );
+if (firstMotionCpuProfileEnabled && !productionFlightFixture)
+  throw new Error(
+    '--first-motion-cpu-profile requires --provider-fixture dense-investigation.',
+  );
+if (firstMotionCpuProfileEnabled && !cpuProfileArtifactDirectory)
+  throw new Error(
+    '--first-motion-cpu-profile requires --cpu-profile-artifact-directory.',
+  );
+if (!firstMotionCpuProfileEnabled && cpuProfileArtifactDirectory)
+  throw new Error(
+    '--cpu-profile-artifact-directory requires --first-motion-cpu-profile.',
   );
 if (
   hostedFixture &&
@@ -354,6 +375,17 @@ const failureProgress = {
           },
         }
       : {}),
+    ...(firstMotionCpuProfileEnabled
+      ? {
+          firstMotionCpuProfile: {
+            enabled: true,
+            scope:
+              'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+            performanceAcceptanceEligible: false,
+            status: 'pending',
+          },
+        }
+      : {}),
   },
 };
 let captureFailure = null;
@@ -363,6 +395,49 @@ let activeRenderBoundaryProgressBindingRecord = null;
 const SCENE_FRAME_DIAGNOSTICS_KEY = '__gevS47SceneFrameTimingV1';
 const SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS = 750;
 let activeSceneFrameAttribution = null;
+let activeFirstMotionCpuProfile = null;
+let firstMotionCpuProfileRecord = null;
+
+async function startFirstMotionCpuProfile(targetPage, progressRecord) {
+  if (!firstMotionCpuProfileEnabled || activeFirstMotionCpuProfile) return null;
+  const window = createFirstMotionCpuProfileWindow({
+    enabled: firstMotionCpuProfileEnabled,
+    profileRunner: runBoundedBoundaryProfile,
+    page: targetPage,
+    artifactDirectory: cpuProfileArtifactDirectory,
+    onRecord(record) {
+      if (record.profilerStarted !== null && !record.startedHostElapsedMs)
+        record.startedHostElapsedMs = performance.now();
+      if (record.profile && !record.completedHostElapsedMs)
+        record.completedHostElapsedMs = performance.now();
+      failureProgress.workload.firstMotionCpuProfile = record;
+      if (failureProgress.current)
+        failureProgress.current.firstMotionCpuProfile = record;
+    },
+  });
+  const record = window.record;
+  if (!record) return null;
+  firstMotionCpuProfileRecord = record;
+  progressRecord.firstMotionCpuProfile = record;
+  await window.started;
+  record.windowStartRequestedHostElapsedMs = performance.now();
+  activeFirstMotionCpuProfile = window;
+  return record;
+}
+
+async function stopFirstMotionCpuProfile(reason) {
+  const active = activeFirstMotionCpuProfile;
+  if (!active) return firstMotionCpuProfileRecord;
+  activeFirstMotionCpuProfile = null;
+  active.record.windowEndRequestedHostElapsedMs = performance.now();
+  try {
+    await active.stop(reason);
+  } catch (error) {
+    active.record.status = 'failed';
+    active.record.error = boundedDiagnosticError(error);
+  }
+  return active.record;
+}
 
 function boundedDiagnosticError(error) {
   return {
@@ -1999,6 +2074,12 @@ try {
         run === 1;
       if (collectSceneFrameAttribution)
         await startSceneFrameAttribution(page, failureProgress.current);
+      const collectFirstMotionCpuProfile =
+        firstMotionCpuProfileEnabled &&
+        scenario === 'scripted-motion' &&
+        run === 1;
+      if (collectFirstMotionCpuProfile)
+        await startFirstMotionCpuProfile(page, failureProgress.current);
       // Start the fixture epoch only after observer setup so its host cost is
       // outside both warmup and measurement render-boundary deadlines.
       const clockStart = productionFlightFixture
@@ -2392,6 +2473,10 @@ try {
             activeRenderBoundaryProgressBinding,
           );
         } finally {
+          if (collectFirstMotionCpuProfile)
+            await stopFirstMotionCpuProfile(
+              'measurement-boundary-settled-or-failed',
+            );
           if (
             activeSceneFrameAttribution?.progressRecord ===
             measurementProgressRecord
@@ -2589,6 +2674,12 @@ try {
         );
       sample.documentRole = activeDocumentRole;
       sample.documentId = activeDocumentId;
+      if (
+        firstMotionCpuProfileEnabled &&
+        scenario === 'scripted-motion' &&
+        run === 1
+      )
+        sample.firstMotionCpuProfile = firstMotionCpuProfileRecord;
       captures.push({ scenario, run, ...sample });
       failureProgress.current = null;
     }
@@ -2821,6 +2912,18 @@ try {
           },
         }
       : {}),
+    ...(firstMotionCpuProfileEnabled
+      ? {
+          firstMotionCpuProfile: {
+            enabled: true,
+            targetScenario: 'scripted-motion',
+            targetRun: 1,
+            scope:
+              'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+            performanceAcceptanceEligible: false,
+          },
+        }
+      : {}),
     note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
   };
   const comparisonReadinessReasons = getCaptureReadinessReasons({
@@ -2840,6 +2943,10 @@ try {
     comparisonReadinessReasons.push(
       'scene-frame-attribution-instrumentation-is-enabled',
     );
+  if (firstMotionCpuProfileEnabled)
+    comparisonReadinessReasons.push(
+      'first-motion-cpu-profile-instrumentation-is-enabled',
+    );
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
@@ -2851,6 +2958,9 @@ try {
       workerAuditMode === 'prewarm'
         ? PREWARM_WORKER_AUDIT_BOUNDARY
         : 'during-capture-diagnostic-instrumentation',
+    ...(firstMotionCpuProfileEnabled
+      ? { firstMotionCpuProfile: firstMotionCpuProfileRecord }
+      : {}),
     ...(sceneFrameDiagnosticsEnabled
       ? {
           sceneFrameDiagnostics: {
@@ -2925,6 +3035,7 @@ try {
     process.exitCode = 1;
 } catch (error) {
   captureFailure = error;
+  await stopFirstMotionCpuProfile('capture-failed');
   await stopSceneFrameAttribution(
     'capture-failed',
     failureProgress.current?.measurement ?? null,
@@ -2947,6 +3058,7 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
+  await stopFirstMotionCpuProfile('capture-finally');
   await stopSceneFrameAttribution(
     'capture-finally',
     failureProgress.current?.measurement ?? null,

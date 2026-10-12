@@ -74,6 +74,10 @@ on:
         description: Add bounded CPU/event attribution to the first dense motion capture (ineligible for comparison)
         type: boolean
         default: false
+      capture_first_motion_cpu_profile:
+        description: Sample CPU stacks from first scripted-motion warmup through its measurement boundary (diagnostic only)
+        type: boolean
+        default: false
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -425,12 +429,14 @@ jobs:
           CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
           CAPTURE_PROVIDER_FIXTURE: ${{ inputs.capture_provider_fixture || 'dense-investigation' }}
           CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
+          CAPTURE_FIRST_MOTION_CPU_PROFILE: ${{ inputs.capture_first_motion_cpu_profile && 'enabled' || 'disabled' }}
         run: >-
           node scripts/qa-performance-build-smoke.mjs
           --candidate-sha "$CANDIDATE_SHA"
           --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
           --provider-fixture "$CAPTURE_PROVIDER_FIXTURE"
           --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
+          --capture-first-motion-cpu-profile "$CAPTURE_FIRST_MOTION_CPU_PROFILE"
           --out "$RUNNER_TEMP/performance-build-smoke.json"
 
       - name: Print bounded smoke evidence
@@ -448,7 +454,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: performance-build-smoke-${{ github.run_id }}
-          path: ${{ runner.temp }}/performance-build-smoke.json
+          path: |
+            ${{ runner.temp }}/performance-build-smoke.json
+            ${{ runner.temp }}/performance-build-smoke.json.cpu-profile/
           if-no-files-found: warn
           retention-days: 3
 

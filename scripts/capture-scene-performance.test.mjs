@@ -16,6 +16,25 @@ function invoke(args) {
   });
 }
 
+function verifiedFixtureArgs() {
+  return [
+    '--build-receipt',
+    path.join(ROOT, 'package.json'),
+    '--app-checkout',
+    ROOT,
+    '--harness-checkout',
+    ROOT,
+    '--build-root',
+    ROOT,
+    '--expected-app-sha',
+    'a'.repeat(40),
+    '--expected-harness-sha',
+    'b'.repeat(40),
+    '--served-base-url',
+    'http://127.0.0.1:4173',
+  ];
+}
+
 test('capture CLI recognizes an infrastructure workload before browser startup', () => {
   const result = invoke([
     '--provider-fixture',
@@ -47,4 +66,41 @@ test('capture CLI rejects unsupported infrastructure names and mixed populations
   ]);
   assert.notEqual(mixed.status, 0);
   assert.match(mixed.stderr, /cannot use aircraft or --mixed-layers/);
+});
+
+test('first-motion profiling rejects unsupported workload before browser startup', () => {
+  const wrongFixture = invoke([
+    ...verifiedFixtureArgs(),
+    '--provider-fixture',
+    'infrastructure-datacenters',
+    '--first-motion-cpu-profile',
+    '--cpu-profile-artifact-directory',
+    'unused-profile-output',
+  ]);
+  assert.notEqual(wrongFixture.status, 0);
+  assert.match(
+    wrongFixture.stderr,
+    /requires --provider-fixture dense-investigation/,
+  );
+  assert.doesNotMatch(
+    wrongFixture.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
+
+  const missingDirectory = invoke([
+    ...verifiedFixtureArgs(),
+    '--provider-fixture',
+    'dense-investigation',
+    '--mixed-layers',
+    '--first-motion-cpu-profile',
+  ]);
+  assert.notEqual(missingDirectory.status, 0);
+  assert.match(
+    missingDirectory.stderr,
+    /requires --cpu-profile-artifact-directory/,
+  );
+  assert.doesNotMatch(
+    missingDirectory.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
 });

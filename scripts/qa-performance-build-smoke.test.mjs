@@ -53,6 +53,35 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     ]),
     { sceneFrameDiagnostics: true, providerFixture: 'dense-investigation' },
   );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-first-motion-cpu-profile',
+      'enabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    { firstMotionCpuProfile: true, providerFixture: 'dense-investigation' },
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-first-motion-cpu-profile',
+        'enabled',
+        '--provider-fixture',
+        'infrastructure-datacenters',
+      ]),
+    /dense investigation fixture/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-first-motion-cpu-profile',
+        'yes',
+        '--provider-fixture',
+        'dense-investigation',
+      ]),
+    /enabled or disabled/,
+  );
   assert.throws(
     () =>
       parseSmokeArguments([
@@ -568,6 +597,111 @@ function validInfrastructureCaptureCliReport(
     performanceDiagnostics: { documents: diagnostics },
   };
 }
+
+test('first-motion CPU profile evidence is bound to the target sample and stays ineligible', () => {
+  const report = validCaptureCliReport();
+  const profile = {
+    schema: 'gev-render-boundary-cpu-profile-ref/v1',
+    status: 'complete',
+    windowCapReached: false,
+    windowCapMs: null,
+    performanceAcceptanceEligible: false,
+    fileName: 'first-scripted-motion-cpu-profile.json',
+    sha256: 'a'.repeat(64),
+    byteLength: 2048,
+    profilerErrors: [],
+  };
+  const window = {
+    schema: 'gev-first-motion-cpu-profile-window/v1',
+    enabled: true,
+    targetScenario: 'scripted-motion',
+    targetRun: 1,
+    status: 'complete',
+    windowCapReached: false,
+    windowCapMs: null,
+    profilerStarted: true,
+    startedHostElapsedMs: 100,
+    windowStartRequestedHostElapsedMs: 101,
+    stopReason: 'measurement-boundary-settled-or-failed',
+    windowEndRequestedHostElapsedMs: 200,
+    completedHostElapsedMs: 201,
+    profile,
+    scope:
+      'first scripted-motion run from immediately before warmup through measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+    performanceAcceptanceEligible: false,
+  };
+  report.firstMotionCpuProfile = window;
+  report.comparisonReadiness.reasons.push(
+    'first-motion-cpu-profile-instrumentation-is-enabled',
+  );
+  const target = report.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  );
+  target.firstMotionCpuProfile = structuredClone(window);
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    firstMotionCpuProfile: true,
+  };
+  assert.doesNotThrow(() => validateCaptureCliReport(report, expected));
+
+  const sampleMissing = structuredClone(report);
+  delete sampleMissing.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).firstMotionCpuProfile;
+  assert.throws(() => validateCaptureCliReport(sampleMissing, expected));
+
+  const eligible = structuredClone(report);
+  eligible.firstMotionCpuProfile.performanceAcceptanceEligible = true;
+  assert.throws(() => validateCaptureCliReport(eligible, expected));
+
+  const incomplete = structuredClone(report);
+  incomplete.firstMotionCpuProfile.status = 'incomplete';
+  incomplete.firstMotionCpuProfile.windowCapReached = true;
+  incomplete.firstMotionCpuProfile.windowCapMs = 60_000;
+  incomplete.firstMotionCpuProfile.profile.status = 'incomplete';
+  incomplete.firstMotionCpuProfile.profile.windowCapReached = true;
+  incomplete.firstMotionCpuProfile.profile.windowCapMs = 60_000;
+  const incompleteSample = incomplete.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  );
+  incompleteSample.firstMotionCpuProfile = structuredClone(
+    incomplete.firstMotionCpuProfile,
+  );
+  assert.doesNotThrow(() => validateCaptureCliReport(incomplete, expected));
+
+  const cappedWithCleanupError = structuredClone(incomplete);
+  cappedWithCleanupError.firstMotionCpuProfile.profile.profilerErrors = [
+    'Profiler.disable failed',
+  ];
+  cappedWithCleanupError.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).firstMotionCpuProfile = structuredClone(
+    cappedWithCleanupError.firstMotionCpuProfile,
+  );
+  assert.throws(() =>
+    validateCaptureCliReport(cappedWithCleanupError, expected),
+  );
+
+  const wrongArtifactName = structuredClone(report);
+  wrongArtifactName.firstMotionCpuProfile.profile.fileName =
+    '../different-profile.json';
+  wrongArtifactName.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).firstMotionCpuProfile = structuredClone(
+    wrongArtifactName.firstMotionCpuProfile,
+  );
+  assert.throws(() => validateCaptureCliReport(wrongArtifactName, expected));
+
+  const capMismatch = structuredClone(incomplete);
+  capMismatch.firstMotionCpuProfile.windowCapMs = 59_999;
+  capMismatch.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).firstMotionCpuProfile = structuredClone(capMismatch.firstMotionCpuProfile);
+  assert.throws(() => validateCaptureCliReport(capMismatch, expected));
+});
 
 test('capture CLI validator accepts only the complete six-sample hosted smoke contract', () => {
   const result = validateCaptureCliReport(validCaptureCliReport(), {

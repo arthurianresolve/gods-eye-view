@@ -35,6 +35,8 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/glCompletionProbe.test.mjs',
   'scripts/performance/pairedRendererExperiment.test.mjs',
   'scripts/performance/importFrameDiagnostics.test.mjs',
+  'scripts/performance/boundedCpuProfile.test.mjs',
+  'scripts/performance/firstMotionCpuProfileWindow.test.mjs',
   'scripts/performance/importPointState.test.mjs',
   'scripts/performance/importPointRepresentationComparison.test.mjs',
   'scripts/performance/importPointRepresentationBenefit.test.mjs',
