@@ -25,9 +25,10 @@ completes all twenty captures at `12b2b6c9`, but all five camera-change pairs
 still differ (114 pixels, different geometry, identical final camera). Map
 classification changes replace the ground-line owner in both modes. The
 notification control retains its owner; its timing includes initial geometry
-readiness. Geometry-level attribution at `9752656c` is now in its
-[hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38195525961);
-collection defaults stay off.
+readiness. The [geometry attribution run at `9752656c`](performance-evidence/s54-cable-geometry-38195525961/README.md)
+captures the complete Entity witness, then times out in its later lifecycle
+checks before the collection comparison. That partial result preserves the
+failure; collection defaults stay off.
 S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
@@ -61,12 +62,14 @@ with an 18.5 ms maximum gap. Changing pixels does not eliminate the stall;
 the physical window's occlusion state is unverified. Historical checkpoints below retain their original failures
 and limitations; their old branch/promotion statements are not the current state.
 
-The animated diagnostic branch's standard CI fails the inspector focus-return
-check at `qa-accessibility.mjs:61`; six other jobs pass. Its failure lacks
-phase/focus-state attribution, so the branch is not promoted. The existing
-timeout and focus requirement remain unchanged. Bounded diagnostics are committed
-at `5d0e3391` and their [exact CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38194930631)
-is in progress. This is separate from the minimal WebGL frame stall.
+The animated diagnostic branch's earlier standard CI fails the inspector
+focus-return check at `qa-accessibility.mjs:61`; six other jobs pass. Bounded
+focus diagnostics at `5d0e3391` subsequently pass
+[all seven jobs](performance-evidence/windows-gpu-20261012/standard-ci-focus-diagnostic-38194930631.json).
+The earlier failure is still unresolved; a passing instrumented run does not
+prove its cause or remediation. The existing timeout and focus requirement
+remain unchanged. Diagnostic tooling can be integrated independently of that
+open focus investigation and the minimal WebGL frame stall.
 
 ## Historical integration checkpoints
 
