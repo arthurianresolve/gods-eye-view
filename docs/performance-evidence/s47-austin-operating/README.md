@@ -229,3 +229,14 @@ preserves this finding and its source hashes. Deterministic source sampling or
 explicit validation of the sampled source times remains required for matched
 acceptance. The diagnostic capture also remains ineligible for latency
 acceptance until a mode without profiling instrumentation is validated.
+
+## Preserve acquired TLE bytes in Git
+
+Hosted run [38307249499](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38307249499)
+failed during fixture setup before browser validation: the six TLE snapshots
+no longer matched their acquisition metadata. The [byte-integrity audit](root-review/git-fixture-byte-integrity-initial.json)
+shows Git's default text normalization changed every acquired CRLF file to LF.
+The fix marks only these immutable `.tle` payloads as binary for Git checkout;
+the original bytes and acquisition hashes are restored rather than rewriting
+their provenance. The failed run remains preserved and is not treated as an
+application or browser result.
