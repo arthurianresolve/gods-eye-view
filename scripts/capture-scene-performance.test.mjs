@@ -104,3 +104,35 @@ test('first-motion profiling rejects unsupported workload before browser startup
     /Browser was not found|Could not find Chrome/,
   );
 });
+
+test('shader program attribution is opt-in only for the dense capture fixture', () => {
+  const missingFixture = invoke([
+    ...verifiedFixtureArgs(),
+    '--shader-program-attribution',
+  ]);
+  assert.notEqual(missingFixture.status, 0);
+  assert.match(
+    missingFixture.stderr,
+    /requires --provider-fixture dense-investigation/,
+  );
+  assert.doesNotMatch(
+    missingFixture.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
+
+  const wrongFixture = invoke([
+    ...verifiedFixtureArgs(),
+    '--provider-fixture',
+    'infrastructure-datacenters',
+    '--shader-program-attribution',
+  ]);
+  assert.notEqual(wrongFixture.status, 0);
+  assert.match(
+    wrongFixture.stderr,
+    /requires --provider-fixture dense-investigation/,
+  );
+  assert.doesNotMatch(
+    wrongFixture.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
+});

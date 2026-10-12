@@ -38,6 +38,11 @@ import {
   WEATHER_EFFECTS_WORKLOAD_ID,
 } from './performance/weatherEffectsWorkloadFixture.mjs';
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
+import {
+  boundedShaderProgramAttribution,
+  createShaderProgramAttributionEnvelope,
+  earlyRendererDocumentHook,
+} from './performance/earlyCesiumRendererProbe.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 function producerFixtureClock(fixedTime) {
@@ -129,6 +134,90 @@ const EXPECTED_FIXTURE_SHA256 = createProductionFlightFixture({
   fixedTime: '2026-10-08T12:00:00.000Z',
 }).sha256;
 
+function produceShaderAttributionFromSerializedHook() {
+  let now = 0;
+  const program = {};
+  const gl = {
+    LINK_STATUS: 1,
+    RENDERER: 2,
+    VENDOR: 3,
+    createProgram: () => program,
+    linkProgram: () => undefined,
+    getProgramParameter: (_program, pname) => pname === 1,
+    deleteProgram: () => undefined,
+    getContextAttributes: () => ({ antialias: true, depth: true }),
+    getExtension: () => null,
+    getParameter: (pname) =>
+      pname === 2 ? 'Fixture renderer' : 'Fixture vendor',
+  };
+  class HTMLCanvasElement {
+    closest() {
+      return {};
+    }
+
+    addEventListener() {}
+
+    removeEventListener() {}
+  }
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+    configurable: true,
+    writable: true,
+    value: () => gl,
+  });
+  const window = {};
+  window.top = window;
+  const page = vm.createContext({
+    HTMLCanvasElement,
+    performance: { now: () => now++ },
+    window,
+  });
+  const serializedHook = vm.runInContext(
+    `(${earlyRendererDocumentHook.toString()})`,
+    page,
+  );
+  serializedHook('__proof', true);
+  const canvas = new HTMLCanvasElement();
+  canvas.closest = () => ({ className: 'cesium-widget' });
+  const context = HTMLCanvasElement.prototype.getContext.call(canvas, 'webgl2');
+  const created = context.createProgram();
+  context.linkProgram(created);
+  context.getProgramParameter(created, context.LINK_STATUS);
+  const snapshot =
+    window.__gevRecoveryEarlyRendererProbe.shaderProgramAttribution.snapshotAndDispose();
+  return boundedShaderProgramAttribution(snapshot);
+}
+
+function addShaderAttributionToCaptureReport(report) {
+  const sourceSnapshot = produceShaderAttributionFromSerializedHook();
+  const documents = report.performanceDiagnostics.documents.map(
+    (entry, index) => ({
+      ...entry,
+      documentId: `shader-document-${index + 1}`,
+    }),
+  );
+  report.performanceDiagnostics.documents = documents;
+  const cleanupRows = documents.map(({ documentRole, documentId }) => ({
+    documentRole,
+    documentId,
+    confirmed: true,
+    document: {
+      status: 'confirmed',
+      shaderProgramAttribution: structuredClone(sourceSnapshot),
+    },
+  }));
+  report.workload.rendererProbeCleanup = cleanupRows;
+  report.workload.rendererProbeCleanupOmittedCount = 0;
+  report.workload.performanceAcceptanceEligible = false;
+  report.workload.shaderProgramAttribution =
+    createShaderProgramAttributionEnvelope(cleanupRows, documents.length);
+  report.comparisonReadiness.reasons.push(
+    'shader-program-attribution-instrumentation-is-enabled',
+  );
+  report.comparisonReadiness.reason =
+    report.comparisonReadiness.reasons.join('; ');
+  return report;
+}
+
 test('smoke CLI parser preserves the candidate SHA and output path', () => {
   const sha = 'a'.repeat(40);
   assert.deepEqual(
@@ -171,6 +260,31 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     ]),
     { depthPickAttribution: true, providerFixture: 'dense-investigation' },
   );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-shader-program-attribution',
+      'enabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    {
+      shaderProgramAttribution: true,
+      providerFixture: 'dense-investigation',
+    },
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-shader-program-attribution',
+      'disabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    {
+      shaderProgramAttribution: false,
+      providerFixture: 'dense-investigation',
+    },
+  );
+  assert.deepEqual(parseSmokeArguments([]), {});
   assert.throws(
     () =>
       parseSmokeArguments([
@@ -194,6 +308,26 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
   assert.throws(
     () => parseSmokeArguments(['--capture-depth-pick-attribution', 'maybe']),
     /enabled or disabled/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments(['--capture-shader-program-attribution', 'maybe']),
+    /enabled or disabled/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments(['--capture-shader-program-attribution', 'enabled']),
+    /dense investigation fixture/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-shader-program-attribution',
+        'enabled',
+        '--provider-fixture',
+        'infrastructure-datacenters',
+      ]),
+    /dense investigation fixture/,
   );
   assert.throws(
     () =>
@@ -1344,6 +1478,121 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
         fixtureSha256: EXPECTED_FIXTURE_SHA256,
       }),
     /sampleCount/,
+  );
+});
+
+test('shader attribution smoke validation binds serialized producer records and remains ineligible', () => {
+  const report = addShaderAttributionToCaptureReport(validCaptureCliReport());
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    shaderProgramAttribution: true,
+  };
+  const validation = validateCaptureCliReport(report, expected);
+  assert.equal(validation.status, 'passed');
+  assert.equal(validation.comparisonEligible, false);
+  assert.equal(report.workload.performanceAcceptanceEligible, false);
+  assert.equal(
+    report.comparisonReadiness.reasons.includes(
+      'shader-program-attribution-instrumentation-is-enabled',
+    ),
+    true,
+  );
+  assert.equal(
+    report.workload.shaderProgramAttribution.documents.length,
+    report.workload.startupRuns + 1 + report.captures.length,
+  );
+
+  const expectations = buildCaptureCliValidationExpectations({
+    build: { receipt: { receiptSha256: expected.receiptSha256 } },
+    commit: expected.appSha,
+    harnessCommit: expected.harnessSha,
+    fixture: {
+      sha256: expected.fixtureSha256,
+      fixedTime: report.fixtureDelivery.fixedTime,
+    },
+    providerFixture: 'dense-investigation',
+    workerAuditMode: 'diagnostic',
+    sceneFrameDiagnostics: false,
+    firstMotionCpuProfile: false,
+    depthPickAttribution: false,
+    shaderProgramAttribution: true,
+  });
+  assert.equal(expectations.shaderProgramAttribution, true);
+  assert.doesNotThrow(() => validateCaptureCliReport(report, expectations));
+
+  for (const [label, mutate] of [
+    [
+      'missing envelope',
+      (copy) => delete copy.workload.shaderProgramAttribution,
+    ],
+    [
+      'incomplete envelope',
+      (copy) => (copy.workload.shaderProgramAttribution.status = 'incomplete'),
+    ],
+    [
+      'performance eligible envelope',
+      (copy) =>
+        (copy.workload.shaderProgramAttribution.performanceAcceptanceEligible = true),
+    ],
+    [
+      'missing document cleanup',
+      (copy) => copy.workload.rendererProbeCleanup.pop(),
+    ],
+    [
+      'truncated per-document observation',
+      (copy) =>
+        (copy.workload.rendererProbeCleanup[0].document.shaderProgramAttribution.status =
+          'truncated'),
+    ],
+    [
+      'unconfirmed method restoration',
+      (copy) =>
+        (copy.workload.rendererProbeCleanup[0].document.shaderProgramAttribution.cleanup.confirmed = false),
+    ],
+    [
+      'summary does not match producer totals',
+      (copy) =>
+        (copy.workload.shaderProgramAttribution.documents[0].totals.createProgram.calls += 1),
+    ],
+    [
+      'duplicate document identity',
+      (copy) =>
+        (copy.workload.shaderProgramAttribution.documents[1].documentId =
+          copy.workload.shaderProgramAttribution.documents[0].documentId),
+    ],
+    [
+      'jointly forged cleanup and envelope identity',
+      (copy) => {
+        copy.workload.rendererProbeCleanup[0].documentId =
+          'replacement-document';
+        copy.workload.shaderProgramAttribution.documents[0].documentId =
+          'replacement-document';
+      },
+    ],
+  ]) {
+    const invalid = structuredClone(report);
+    mutate(invalid);
+    assert.throws(
+      () => validateCaptureCliReport(invalid, expected),
+      undefined,
+      label,
+    );
+  }
+
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(validCaptureCliReport(), {
+      ...expected,
+      shaderProgramAttribution: false,
+    }),
+  );
+  assert.throws(() =>
+    validateCaptureCliReport(report, {
+      ...expected,
+      shaderProgramAttribution: false,
+    }),
   );
 });
 

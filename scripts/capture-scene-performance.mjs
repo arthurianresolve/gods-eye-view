@@ -38,6 +38,7 @@ import {
 } from './performance/rendererEvidence.mjs';
 import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
+  createShaderProgramAttributionEnvelope,
   installEarlyCesiumRendererProbe,
   retireEarlyCesiumRendererProbeForCapturePage,
   readEarlyCesiumRendererProbe,
@@ -125,6 +126,9 @@ const firstMotionCpuProfileEnabled = args.includes(
   '--first-motion-cpu-profile',
 );
 const depthPickAttributionEnabled = args.includes('--depth-pick-attribution');
+const shaderProgramAttributionEnabled = args.includes(
+  '--shader-program-attribution',
+);
 const cpuProfileArtifactDirectory = option(
   '--cpu-profile-artifact-directory',
   null,
@@ -272,6 +276,10 @@ if (depthPickAttributionEnabled && !productionFlightFixture)
   throw new Error(
     '--depth-pick-attribution requires --provider-fixture dense-investigation.',
   );
+if (shaderProgramAttributionEnabled && !productionFlightFixture)
+  throw new Error(
+    '--shader-program-attribution requires --provider-fixture dense-investigation.',
+  );
 if (firstMotionCpuProfileEnabled && !cpuProfileArtifactDirectory)
   throw new Error(
     '--first-motion-cpu-profile requires --cpu-profile-artifact-directory.',
@@ -403,13 +411,17 @@ const infrastructureResponseListeners = new Map();
 const earlyRendererProbeScripts = new Map();
 function recordRendererProbeCleanupEvidence(evidence) {
   const records = failureProgress.workload.rendererProbeCleanup || [];
-  if (records.length >= 16) {
+  const maximumRecords = shaderProgramAttributionEnabled ? 40 : 16;
+  if (records.length >= maximumRecords) {
     records.shift();
     failureProgress.workload.rendererProbeCleanupOmittedCount =
       (failureProgress.workload.rendererProbeCleanupOmittedCount || 0) + 1;
   }
   records.push(evidence);
   failureProgress.workload.rendererProbeCleanup = records;
+  if (shaderProgramAttributionEnabled)
+    failureProgress.workload.shaderProgramAttribution =
+      shaderProgramAttributionEnvelope();
 }
 async function cleanupEarlyRendererProbeForPage(
   page,
@@ -430,11 +442,13 @@ async function cleanupEarlyRendererProbeForPage(
         page,
         scriptIdentifier,
         1_000,
+        { requireShaderProgramAttribution: shaderProgramAttributionEnabled },
       )
     : await cleanupEarlyCesiumRendererProbeWithEvidence(
         page,
         scriptIdentifier,
         1_000,
+        { requireShaderProgramAttribution: shaderProgramAttributionEnabled },
       );
   if (hasRegistration && retireViewerRenderLoop)
     evidence.registrationRemovalBoundary = 'owned-document-retirement';
@@ -450,6 +464,12 @@ async function cleanupEarlyRendererProbeForPage(
     );
   if (hasRegistration) earlyRendererProbeScripts.delete(page);
   return true;
+}
+function shaderProgramAttributionEnvelope() {
+  return createShaderProgramAttributionEnvelope(
+    failureProgress.workload.rendererProbeCleanup || [],
+    startupRuns + 1 + 3 * runs,
+  );
 }
 const providerSampleCpuProfileTargets = [
   { scenario: 'idle', run: 1 },
@@ -517,6 +537,20 @@ const failureProgress = {
               'opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration',
             status: 'pending',
             samples: [],
+          },
+        }
+      : {}),
+    ...(shaderProgramAttributionEnabled
+      ? {
+          shaderProgramAttribution: {
+            enabled: true,
+            schema: 'gev-shader-program-attribution/v1',
+            status: 'incomplete',
+            performanceAcceptanceEligible: false,
+            scope:
+              'whole owned dense-investigation document lifetime from Cesium WebGL context acquisition through the existing document cleanup callback; it is not isolated to warmup or measurement and is not GPU execution time',
+            expectedDocumentCount: startupRuns + 1 + 3 * runs,
+            documents: [],
           },
         }
       : {}),
@@ -1639,7 +1673,9 @@ try {
     );
     earlyRendererProbeScripts.set(
       auditPage,
-      await installEarlyCesiumRendererProbe(auditPage),
+      await installEarlyCesiumRendererProbe(auditPage, {
+        shaderProgramAttribution: shaderProgramAttributionEnabled,
+      }),
     );
     if (captureProvenance)
       await auditPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
@@ -1665,7 +1701,9 @@ try {
     await startupPage.setBypassServiceWorker(true);
     earlyRendererProbeScripts.set(
       startupPage,
-      await installEarlyCesiumRendererProbe(startupPage),
+      await installEarlyCesiumRendererProbe(startupPage, {
+        shaderProgramAttribution: shaderProgramAttributionEnabled,
+      }),
     );
     const { documentRole: startupDocumentRole, documentId: startupDocumentId } =
       startupDocumentTopology.diagnostics[run - 1];
@@ -3837,6 +3875,12 @@ try {
     ],
     rendererLoopRetirementsOmittedCount:
       failureProgress.workload.rendererLoopRetirementsOmittedCount || 0,
+    ...(shaderProgramAttributionEnabled
+      ? {
+          shaderProgramAttribution: shaderProgramAttributionEnvelope(),
+          performanceAcceptanceEligible: false,
+        }
+      : {}),
     fixtureInterceptionReleases: [
       ...(failureProgress.workload.fixtureInterceptionReleases || []),
     ],
@@ -3965,6 +4009,10 @@ try {
   if (depthPickAttributionEnabled)
     comparisonReadinessReasons.push(
       'depth-pick-attribution-instrumentation-is-enabled',
+    );
+  if (shaderProgramAttributionEnabled)
+    comparisonReadinessReasons.push(
+      'shader-program-attribution-instrumentation-is-enabled',
     );
   if (weatherEffectsWorkload)
     comparisonReadinessReasons.push(
@@ -4162,6 +4210,7 @@ if (captureFailure && !failureReportWritten) {
   captureFailure &&
   (sceneFrameDiagnosticsEnabled ||
     depthPickAttributionEnabled ||
+    shaderProgramAttributionEnabled ||
     failureProgress.workload.fixtureInterceptionReleases.length > 0)
 ) {
   try {

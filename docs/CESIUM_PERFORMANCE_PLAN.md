@@ -1,5 +1,13 @@
 # Cesium performance plan
 
+Latest isolated S48 shader-program diagnostic: the opt-in owned-context observer
+is implemented with bounded program/query rows, exact cleanup ownership and
+CLI/workflow/report validation. Root passes 151 focused checks with unchanged
+source hashes. Hosted integration and rendered attribution remain pending.
+[Implementation, source/profile audit and limits](performance-evidence/s48-shader-program-attribution/README.md)
+keep whole-document synchronous GL-call time separate from GPU timing and
+matched performance. Production rendering defaults are unchanged; S48 remains partial.
+
 Latest S47 weather/wind capture packet: the full-application short diagnostic
 passes at exact `1e6f6f98`, with all fourteen fixture assets observed, four
 completed samples, stable populations/settings and confirmed owned cleanup.

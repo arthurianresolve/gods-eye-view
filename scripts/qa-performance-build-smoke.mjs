@@ -63,6 +63,7 @@ import {
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloadContract.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
+import { boundedShaderProgramAttribution } from './performance/earlyCesiumRendererProbe.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 export const MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES = 8 * 1024 * 1024;
@@ -112,6 +113,7 @@ const OPTION_KEYS = new Map([
   ['--capture-scene-frame-diagnostics', 'sceneFrameDiagnostics'],
   ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
   ['--capture-depth-pick-attribution', 'depthPickAttribution'],
+  ['--capture-shader-program-attribution', 'shaderProgramAttribution'],
 ]);
 
 const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
@@ -328,6 +330,13 @@ export function parseSmokeArguments(argv) {
       throw new TypeError(
         'Depth-pick attribution must be enabled or disabled.',
       );
+    if (
+      flag === '--capture-shader-program-attribution' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'Shader program attribution must be enabled or disabled.',
+      );
     output[key] = value;
   }
   if (
@@ -353,12 +362,22 @@ export function parseSmokeArguments(argv) {
     throw new TypeError(
       'Depth-pick attribution requires the dense investigation fixture.',
     );
+  if (
+    output.shaderProgramAttribution === 'enabled' &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'Shader program attribution requires the dense investigation fixture.',
+    );
   if (output.sceneFrameDiagnostics)
     output.sceneFrameDiagnostics = output.sceneFrameDiagnostics === 'enabled';
   if (output.firstMotionCpuProfile)
     output.firstMotionCpuProfile = output.firstMotionCpuProfile === 'enabled';
   if (output.depthPickAttribution)
     output.depthPickAttribution = output.depthPickAttribution === 'enabled';
+  if (output.shaderProgramAttribution)
+    output.shaderProgramAttribution =
+      output.shaderProgramAttribution === 'enabled';
   if (
     output.firstMotionCpuProfile &&
     output.providerFixture &&
@@ -781,6 +800,18 @@ export function validateCaptureCliReport(report, expected) {
       true,
     );
   } else assert.equal(report.workload?.depthPickAttribution, undefined);
+  if (expected.shaderProgramAttribution) {
+    const envelope = report.workload?.shaderProgramAttribution;
+    assert.equal(report.workload?.performanceAcceptanceEligible, false);
+    assert.equal(envelope?.enabled, true);
+    assert.equal(envelope?.schema, 'gev-shader-program-attribution/v1');
+    assert.equal(envelope?.status, 'complete');
+    assert.equal(envelope?.performanceAcceptanceEligible, false);
+    assert.equal(
+      envelope?.scope,
+      'whole owned dense-investigation document lifetime from Cesium WebGL context acquisition through the existing document cleanup callback; it is not isolated to warmup or measurement and is not GPU execution time',
+    );
+  } else assert.equal(report.workload?.shaderProgramAttribution, undefined);
   if (expected.sceneFrameDiagnostics) {
     assert.deepEqual(report.sceneFrameDiagnostics, {
       status: 'completed',
@@ -1047,6 +1078,78 @@ export function validateCaptureCliReport(report, expected) {
     diagnosticDocuments.map((entry) => entry.documentRole).sort(),
     expectedRoles,
   );
+  if (expected.shaderProgramAttribution) {
+    const envelope = report.workload.shaderProgramAttribution;
+    assert.equal(envelope.expectedDocumentCount, expectedDiagnosticCount);
+    assert.equal(envelope.documents.length, expectedDiagnosticCount);
+    const cleanupRows = report.workload.rendererProbeCleanup;
+    assert.ok(Array.isArray(cleanupRows));
+    assert.equal(cleanupRows.length, expectedDiagnosticCount);
+    assert.equal(report.workload.rendererProbeCleanupOmittedCount, 0);
+    const diagnosticIdentities = diagnosticDocuments.map((entry) => {
+      assert.equal(typeof entry.documentRole, 'string');
+      assert.equal(typeof entry.documentId, 'string');
+      assert.ok(entry.documentId.length > 0);
+      return `${entry.documentRole}\u0000${entry.documentId}`;
+    });
+    assert.equal(new Set(diagnosticIdentities).size, expectedDiagnosticCount);
+    const cleanupByIdentity = new Map();
+    for (const entry of cleanupRows) {
+      const identity = `${entry.documentRole}\u0000${entry.documentId}`;
+      assert.equal(cleanupByIdentity.has(identity), false);
+      cleanupByIdentity.set(identity, entry);
+      assert.equal(entry.confirmed, true);
+      const observer = entry.document?.shaderProgramAttribution;
+      assert.ok(
+        observer,
+        `Missing shader attribution for ${entry.documentRole}.`,
+      );
+      assert.deepEqual(
+        observer,
+        boundedShaderProgramAttribution(observer),
+        'shader attribution must match its allowlisted bounded schema',
+      );
+      assert.equal(observer.status, 'complete');
+      assert.equal(observer.cleanup.confirmed, true);
+      assert.equal(observer.cleanup.requestedMethodCount, 4);
+      assert.equal(observer.cleanup.installedMethodCount, 4);
+      assert.equal(observer.cleanup.restoredMethodCount, 4);
+      assert.equal(observer.cleanup.changedOwnerCount, 0);
+    }
+    const evidenceIdentities = new Set();
+    for (const entry of envelope.documents) {
+      const identity = `${entry.documentRole}\u0000${entry.documentId}`;
+      assert.equal(evidenceIdentities.has(identity), false);
+      evidenceIdentities.add(identity);
+      const cleanup = cleanupByIdentity.get(identity);
+      assert.ok(
+        cleanup,
+        `Shader evidence has unknown document ${entry.documentRole}.`,
+      );
+      assert.equal(entry.status, 'complete');
+      assert.equal(entry.cleanupConfirmed, true);
+      const raw = boundedShaderProgramAttribution(
+        cleanup.document.shaderProgramAttribution,
+      );
+      assert.deepEqual(entry.totals, raw.totals);
+      assert.equal(entry.trackedProgramCount, raw.programs.length);
+      assert.deepEqual(entry.limits, {
+        untrackedProgramOperationCount:
+          raw.limits.untrackedProgramOperationCount,
+        pnameRowsOverflow: raw.limits.pnameRowsOverflow,
+      });
+    }
+    assert.equal(evidenceIdentities.size, expectedDiagnosticCount);
+    assert.deepEqual(
+      [...evidenceIdentities].sort(),
+      [...cleanupByIdentity.keys()].sort(),
+    );
+    assert.deepEqual(
+      [...evidenceIdentities].sort(),
+      diagnosticIdentities.sort(),
+      'shader evidence must cover the exact documents in the diagnostic inventory',
+    );
+  }
   const workerAuditDocuments = pageAudit.workerAuditDocuments;
   assert.ok(Array.isArray(workerAuditDocuments));
   assert.deepEqual(
@@ -1133,6 +1236,10 @@ export function validateCaptureCliReport(report, expected) {
   if (expected.depthPickAttribution)
     observedReadinessReasons.push(
       'depth-pick-attribution-instrumentation-is-enabled',
+    );
+  if (expected.shaderProgramAttribution)
+    observedReadinessReasons.push(
+      'shader-program-attribution-instrumentation-is-enabled',
     );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
@@ -2433,6 +2540,7 @@ export function buildCaptureCliValidationExpectations({
   sceneFrameDiagnostics,
   firstMotionCpuProfile,
   depthPickAttribution,
+  shaderProgramAttribution,
 }) {
   return {
     appSha: commit,
@@ -2450,6 +2558,9 @@ export function buildCaptureCliValidationExpectations({
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
     depthPickAttribution,
+    ...(typeof shaderProgramAttribution === 'boolean'
+      ? { shaderProgramAttribution }
+      : {}),
   };
 }
 
@@ -2466,6 +2577,7 @@ async function runCandidateCaptureCli({
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
+  shaderProgramAttribution = false,
   captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   startedAt,
@@ -2538,6 +2650,7 @@ async function runCandidateCaptureCli({
   if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
   if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
   if (depthPickAttribution) args.push('--depth-pick-attribution');
+  if (shaderProgramAttribution) args.push('--shader-program-attribution');
   if (firstMotionCpuProfile) {
     if (typeof profileArtifactDirectory !== 'string')
       throw new TypeError('CPU profile artifact directory is required.');
@@ -2574,6 +2687,7 @@ async function runCandidateCaptureCli({
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
         depthPickAttribution,
+        shaderProgramAttribution,
       }),
     );
     if (firstMotionCpuProfile) {
@@ -2646,6 +2760,7 @@ async function runRevision({
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
+  shaderProgramAttribution = false,
   captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   infrastructureCaptureFixture,
@@ -3113,6 +3228,7 @@ async function runRevision({
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
         depthPickAttribution,
+        shaderProgramAttribution,
         captureCliReportArtifactPath,
         profileArtifactDirectory,
         startedAt,
@@ -3293,6 +3409,7 @@ async function main() {
     sceneFrameDiagnostics = false,
     firstMotionCpuProfile = false,
     depthPickAttribution = false,
+    shaderProgramAttribution = false,
   } = parseSmokeArguments(process.argv.slice(2));
   assertSha(candidateSha, 'Candidate SHA');
   assert.notEqual(
@@ -3341,6 +3458,7 @@ async function main() {
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
     depthPickAttribution,
+    shaderProgramAttribution,
     ...(firstMotionCpuProfile
       ? {
           cpuProfileArtifactDirectory: path.basename(
@@ -3424,6 +3542,7 @@ async function main() {
           sceneFrameDiagnostics,
           firstMotionCpuProfile,
           depthPickAttribution,
+          shaderProgramAttribution,
           captureCliReportArtifactPath: `${outputPath}.capture-cli-report-${label}.json`,
           profileArtifactDirectory: firstMotionCpuProfile
             ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
