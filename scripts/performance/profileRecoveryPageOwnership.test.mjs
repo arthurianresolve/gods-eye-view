@@ -1,16 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import {
   applyRecoveryCleanupFailure,
   assertInitialRecoveryPage,
   assertOwnedRecoveryPage,
+  captureOwnedBrowserProcessTree,
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
+  createOwnedProcessTreePowerShellCommand,
   createRecoveryBrowserCloseTrace,
   createRecoveryPageTargetGuard,
   countRecoveryApplicationPages,
   recoveryPageCleanupError,
+  summarizeOwnedProcessTree,
   stopOwnedRecoveryProcessTree,
 } from './profileRecoveryPageOwnership.mjs';
 
@@ -154,6 +158,415 @@ function fakeBrowserProcess({ exitCode = null, signalCode = null } = {}) {
   return child;
 }
 
+test('owned process snapshot keeps only a bounded rooted tree and safe fields', () => {
+  const snapshot = summarizeOwnedProcessTree(
+    [
+      {
+        pid: 1234,
+        ppid: 1,
+        image: 'chrome.exe',
+        category: 'browser',
+        commandLine: 'secret',
+      },
+      {
+        pid: 1235,
+        ppid: 1234,
+        image: 'chrome.exe',
+        category: 'renderer',
+        path: 'C:\\private',
+      },
+      {
+        pid: 1236,
+        ppid: 1235,
+        image: 'chrome_crashpad_handler.exe',
+        category: 'crashpad',
+      },
+      { pid: 9999, ppid: 1, image: 'unrelated.exe', category: 'other' },
+    ],
+    1234,
+  );
+  assert.deepEqual(snapshot, {
+    status: 'available',
+    rootPid: 1234,
+    rows: [
+      { pid: 1234, ppid: 1, image: 'chrome.exe', category: 'browser' },
+      { pid: 1235, ppid: 1234, image: 'chrome.exe', category: 'renderer' },
+      {
+        pid: 1236,
+        ppid: 1235,
+        image: 'chrome_crashpad_handler.exe',
+        category: 'crashpad',
+      },
+    ],
+    processCount: 3,
+    truncated: false,
+  });
+  assert.equal(JSON.stringify(snapshot).includes('secret'), false);
+  assert.equal(JSON.stringify(snapshot).includes('private'), false);
+  assert.equal(
+    summarizeOwnedProcessTree(
+      [{
+        pid: 1234,
+        ppid: 1,
+        image: 'chrome.exe',
+        category: 'some-unapproved-role',
+      }],
+      1234,
+    ).status,
+    'unavailable',
+  );
+  assert.equal(
+    summarizeOwnedProcessTree(
+      [
+        { pid: 1234, ppid: 1, image: 'chrome.exe', category: 'browser' },
+        { pid: 1235, ppid: 1234, image: 'chrome.exe', category: 'renderer' },
+      ],
+      1234,
+      2,
+    ).truncated,
+    false,
+  );
+  assert.equal(
+    summarizeOwnedProcessTree(
+      [
+        { pid: 1234, ppid: 1, image: 'chrome.exe' },
+        { pid: 1235, ppid: 1234, image: 'chrome.exe' },
+      ],
+      1234,
+      1,
+    ).truncated,
+    true,
+  );
+});
+
+test('Windows process tree capture is bounded and omits command lines', () => {
+  let invocation;
+  const snapshot = captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+    platform: 'win32',
+    timeoutMs: 321,
+    maxRows: 12,
+    execFile: (executable, args, options) => {
+      invocation = { executable, args, options };
+      return JSON.stringify({
+        rows: [{
+          pid: 1234,
+          ppid: 1,
+          image: 'chrome.exe',
+          category: 'browser',
+        }],
+        truncated: false,
+      });
+    },
+  });
+  assert.equal(snapshot.status, 'available');
+  assert.equal(invocation.executable, 'powershell.exe');
+  assert.equal(invocation.options.timeout, 321);
+  assert.equal(invocation.options.maxBuffer <= 12_000, true);
+  assert.match(invocation.args.join(' '), /Get-CimInstance Win32_Process/);
+  assert.match(invocation.args.join(' '), /ProcessId,ParentProcessId,Name/);
+  assert.match(invocation.args.join(' '), /-Filter \$commandFilter -Property ProcessId,CommandLine/);
+  assert.match(invocation.args.join(' '), /--type=\(\[A-Za-z0-9_-\]\+\)/);
+  assert.doesNotMatch(invocation.args.join(' '), /Select-Object ProcessId,ParentProcessId,Name,CommandLine/);
+  assert.doesNotMatch(invocation.args.join(' '), /ExecutablePath/);
+  assert.deepEqual(
+    captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+      platform: 'darwin',
+      execFile: () => assert.fail('unsupported platform must not invoke query'),
+    }),
+    { status: 'unavailable', reason: 'unsupported-platform' },
+  );
+  assert.deepEqual(
+    captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+      platform: 'win32',
+      timeoutMs: 10_000,
+      execFile: () => assert.fail('invalid deadline must not invoke query'),
+    }),
+    { status: 'unavailable', reason: 'process-snapshot-limits-invalid' },
+  );
+  assert.deepEqual(
+    captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+      platform: 'win32',
+      execFile: () => 'x'.repeat(12_001),
+    }),
+    { status: 'unavailable', reason: 'process-list-overflow' },
+  );
+  assert.equal(
+    captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+      platform: 'win32',
+      execFile: () =>
+        JSON.stringify({
+          rows: [{ pid: 1234, ppid: 1, image: 'chrome.exe' }],
+          truncated: false,
+        }),
+    }).rows[0].category,
+    'unavailable',
+  );
+  assert.deepEqual(
+    captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+      platform: 'win32',
+      execFile: () =>
+        JSON.stringify({
+          rows: [{ pid: 1234, ppid: 1, image: 'chrome.exe', category: 'browser' }],
+        }),
+    }),
+    { status: 'unavailable', reason: 'process-list-invalid' },
+  );
+});
+
+test('PowerShell skips command-line queries when the owned root is absent', {
+  skip: process.platform !== 'win32',
+}, () => {
+  const prefix = [
+    '$script:commandLineQueryCalled = $false',
+    'function Get-CimInstance {',
+    '  [CmdletBinding()]',
+    '  param([Parameter(Position=0)][string]$ClassName, [string[]]$Property, [string]$Filter)',
+    '  if ($Property -contains "CommandLine") { $script:commandLineQueryCalled = $true; return @() }',
+    '  return @([pscustomobject]@{ ProcessId=1234; ParentProcessId=1; Name="unrelated.exe" })',
+    '}',
+  ].join('\n');
+  const script = [
+    prefix,
+    createOwnedProcessTreePowerShellCommand(9999, 64),
+    'if ($script:commandLineQueryCalled) { "COMMAND_LINE_QUERY_RAN" } else { "NO_COMMAND_LINE_QUERY" }',
+  ].join('\n');
+  const output = execFileSync(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', script],
+    { encoding: 'utf8', timeout: 5000, windowsHide: true },
+  );
+  assert.match(output, /NO_COMMAND_LINE_QUERY/);
+  assert.doesNotMatch(output, /COMMAND_LINE_QUERY_RAN/);
+});
+
+test('PowerShell derives roles only from command lines for owned process IDs', {
+  skip: process.platform !== 'win32',
+}, () => {
+  const prefix = [
+    '$script:commandLineFilter = $null',
+    'function Get-CimInstance {',
+    '  [CmdletBinding()]',
+    '  param([Parameter(Position=0)][string]$ClassName, [string[]]$Property, [string]$Filter)',
+    '  if ($Property -contains "CommandLine") {',
+    '    $script:commandLineFilter = $Filter',
+    '    return @(',
+    '      [pscustomobject]@{ ProcessId=1234; CommandLine="chrome.exe --user-data-dir=C:\\private" },',
+    '      [pscustomobject]@{ ProcessId=1235; CommandLine="chrome.exe --type=renderer --user-data-dir=C:\\private" }',
+    '    )',
+    '  }',
+    '  return @(',
+    '    [pscustomobject]@{ ProcessId=1234; ParentProcessId=1; Name="chrome.exe" },',
+    '    [pscustomobject]@{ ProcessId=1235; ParentProcessId=1234; Name="chrome.exe" },',
+    '    [pscustomobject]@{ ProcessId=9999; ParentProcessId=1; Name="unrelated.exe" }',
+    '  )',
+    '}',
+  ].join('\n');
+  const script = [
+    prefix,
+    createOwnedProcessTreePowerShellCommand(1234, 64),
+    'if ($script:commandLineFilter -ne "ProcessId = 1234 OR ProcessId = 1235") { throw "owned PID filter mismatch" }',
+  ].join('\n');
+  const output = execFileSync(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', script],
+    { encoding: 'utf8', timeout: 5000, windowsHide: true },
+  );
+  assert.match(output, /"category":"browser"/);
+  assert.match(output, /"category":"renderer"/);
+  assert.doesNotMatch(output, /C:\\\\private|user-data-dir/);
+});
+
+test('process snapshot failure remains unavailable instead of affecting cleanup', () => {
+  assert.deepEqual(
+    captureOwnedBrowserProcessTree(fakeBrowserProcess(), {
+      platform: 'win32',
+      execFile: () => {
+        const error = new Error('private path');
+        error.code = 'ETIMEDOUT';
+        throw error;
+      },
+    }),
+    { status: 'unavailable', reason: 'process-snapshot-timeout' },
+  );
+});
+
+test('close diagnostics capture target types and process tree before forced cleanup', async () => {
+  const child = fakeBrowserProcess();
+  const browser = new EventEmitter();
+  const order = [];
+  browser.process = () => child;
+  browser.isConnected = () => true;
+  browser.targets = () => [
+    { type: () => 'page', url: () => 'https://private.invalid/path?secret=1' },
+    { type: () => 'service_worker' },
+    { type: () => 'future-target-type' },
+  ];
+  browser.close = () => {
+    browser.emit('disconnected');
+    return new Promise(() => {});
+  };
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 15,
+    shutdownDiagnostics: {
+      processTreeSnapshot: (ownedChild) => {
+        order.push('process-snapshot');
+        assert.equal(ownedChild, child);
+        return {
+          status: 'available',
+          rootPid: child.pid,
+          rows: [
+            {
+              pid: child.pid,
+              ppid: 1,
+              image: 'chrome.exe',
+              category: 'browser',
+            },
+          ],
+          processCount: 1,
+          truncated: false,
+        };
+      },
+    },
+    forceProcess: async () => {
+      order.push('forced-cleanup');
+      return { attempted: true, confirmed: false, reason: 'request-failed' };
+    },
+  });
+
+  assert.deepEqual(order, ['process-snapshot', 'forced-cleanup']);
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  const diagnostics = outcome.observation.shutdownDiagnostics;
+  assert.equal(diagnostics.targetTypeCounts.beforeClose.status, 'available');
+  assert.deepEqual(diagnostics.targetTypeCounts.beforeClose.counts, {
+    background_page: 0,
+    browser: 0,
+    page: 1,
+    service_worker: 1,
+    shared_worker: 0,
+    webview: 0,
+    worker: 0,
+    other: 1,
+  });
+  assert.equal(
+    diagnostics.targetTypeCounts.atDisconnect.reason,
+    'browser-disconnected',
+  );
+  assert.equal(
+    diagnostics.targetTypeCounts.atTimeout.reason,
+    'browser-disconnected',
+  );
+  assert.equal(diagnostics.processTreeBeforeForce.processCount, 1);
+  assert.equal(
+    JSON.stringify(diagnostics).includes('private.invalid'),
+    false,
+  );
+  assert.equal(
+    JSON.stringify(diagnostics).includes('secret=1'),
+    false,
+  );
+  assert.equal(browser.listenerCount('disconnected'), 0);
+  assert.equal(child.listenerCount('exit'), 0);
+});
+
+test('shutdown diagnostic errors do not prevent forced cleanup or alter failed close', async () => {
+  const child = fakeBrowserProcess();
+  const browser = new EventEmitter();
+  let forced = false;
+  browser.process = () => child;
+  browser.isConnected = () => true;
+  browser.targets = () => {
+    throw new Error('target query contains private data');
+  };
+  browser.close = () => new Promise(() => {});
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 10,
+    shutdownDiagnostics: {
+      processTreeSnapshot: () => {
+        throw new Error('process path must not be retained');
+      },
+    },
+    forceProcess: async () => {
+      forced = true;
+      return { attempted: true, confirmed: true };
+    },
+  });
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, true);
+  assert.equal(forced, true);
+  assert.equal(
+    outcome.observation.shutdownDiagnostics.targetTypeCounts.beforeClose.reason,
+    'target-query-failed',
+  );
+  assert.equal(
+    outcome.observation.shutdownDiagnostics.processTreeBeforeForce.reason,
+    'process-snapshot-failed',
+  );
+  assert.equal(
+    JSON.stringify(outcome).includes('private data'),
+    false,
+  );
+  assert.equal(
+    JSON.stringify(outcome).includes('process path'),
+    false,
+  );
+});
+
+test('timeout target inventory is captured when the browser has not disconnected', async () => {
+  const browser = new EventEmitter();
+  browser.process = () => fakeBrowserProcess();
+  browser.isConnected = () => true;
+  browser.targets = () => [{ type: () => 'page' }];
+  browser.close = () => new Promise(() => {});
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 10,
+    shutdownDiagnostics: {
+      processTreeSnapshot: () => ({ status: 'unavailable', reason: 'not-needed' }),
+    },
+    forceProcess: async () => ({ attempted: true, confirmed: false }),
+  });
+
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(
+    outcome.observation.shutdownDiagnostics.targetTypeCounts.atTimeout.status,
+    'available',
+  );
+  assert.equal(
+    outcome.observation.shutdownDiagnostics.targetTypeCounts.atTimeout.counts.page,
+    1,
+  );
+});
+
+test('pre-close diagnostics do not extend close timing and timing origins stay explicit', async () => {
+  let clock = 100;
+  const child = fakeBrowserProcess();
+  const browser = new EventEmitter();
+  browser.process = () => child;
+  browser.isConnected = () => true;
+  browser.targets = () => {
+    clock += 900;
+    child.exitCode = 0;
+    child.emit('exit', 0, null);
+    return [];
+  };
+  browser.close = async () => {
+    clock += 20;
+  };
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 50,
+    now: () => clock,
+    shutdownDiagnostics: true,
+  });
+
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.observation.closeElapsedMs, 20);
+  assert.equal(outcome.observation.processExit.elapsedMs, 900);
+  assert.deepEqual(outcome.observation.timingOrigins, {
+    closeElapsedMs: 'browser.close invocation',
+    processExitElapsedMs: 'closeRecoveryBrowser entry',
+  });
+});
+
 test('owned process stop distinguishes pre-existing exit from confirmed taskkill', async () => {
   const exited = fakeBrowserProcess({ exitCode: 0 });
   let spawnCalls = 0;
@@ -253,6 +666,7 @@ test('browser close records an already-exited process and releases listeners', a
   assert.equal(child.listenerCount('exit'), 0);
   assert.equal(outcome.observation.closeStatus, 'completed');
   assert.equal(outcome.observation.closeDeadlineMs, 25);
+  assert.equal(Object.hasOwn(outcome.observation, 'shutdownDiagnostics'), false);
 });
 
 for (const platform of ['darwin', 'linux']) {

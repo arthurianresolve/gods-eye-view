@@ -1,5 +1,249 @@
-import { spawn as defaultSpawn } from 'node:child_process';
+import {
+  execFileSync as defaultExecFileSync,
+  spawn as defaultSpawn,
+} from 'node:child_process';
 import { withHostTimeout } from './startupDiagnostics.mjs';
+
+const TARGET_TYPES = Object.freeze([
+  'background_page',
+  'browser',
+  'page',
+  'service_worker',
+  'shared_worker',
+  'webview',
+  'worker',
+  'other',
+]);
+const PROCESS_ROLES = new Set([
+  'browser',
+  'renderer',
+  'gpu',
+  'utility',
+  'crashpad',
+  'other',
+  'unavailable',
+]);
+const MAX_PROCESS_TREE_ROWS = 64;
+const MAX_PROCESS_TREE_OUTPUT_BYTES = 12_000;
+const PROCESS_TREE_TIMEOUT_MS = 1_500;
+
+function unavailableSnapshot(reason) {
+  return { status: 'unavailable', reason };
+}
+
+function targetTypeSnapshot(browser) {
+  if (browser?.isConnected?.() === false)
+    return unavailableSnapshot('browser-disconnected');
+  let targets;
+  try {
+    targets = browser?.targets?.();
+  } catch {
+    return unavailableSnapshot('target-query-failed');
+  }
+  if (!Array.isArray(targets))
+    return unavailableSnapshot('target-list-unavailable');
+  const counts = Object.fromEntries(TARGET_TYPES.map((type) => [type, 0]));
+  let malformedTargetCount = 0;
+  for (const target of targets) {
+    let type;
+    try {
+      type = target?.type?.();
+    } catch {
+      malformedTargetCount += 1;
+      counts.other += 1;
+      continue;
+    }
+    if (typeof type !== 'string') {
+      malformedTargetCount += 1;
+      counts.other += 1;
+      continue;
+    }
+    counts[Object.hasOwn(counts, type) ? type : 'other'] += 1;
+  }
+  return {
+    status: 'available',
+    source: 'browser.targets',
+    targetCount: targets.length,
+    counts,
+    malformedTargetCount,
+  };
+}
+
+/** Validate and reduce a process listing to the owned Chrome process tree only. */
+export function summarizeOwnedProcessTree(rawRows, rootPid, maxRows = MAX_PROCESS_TREE_ROWS) {
+  if (!Number.isSafeInteger(rootPid) || rootPid < 1)
+    return unavailableSnapshot('owned-browser-pid-unavailable');
+  if (!Array.isArray(rawRows)) return unavailableSnapshot('process-list-invalid');
+  if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > MAX_PROCESS_TREE_ROWS)
+    return unavailableSnapshot('process-limit-invalid');
+
+  const rows = [];
+  const byPid = new Map();
+  for (const item of rawRows) {
+    const pid = Number(item?.pid ?? item?.ProcessId);
+    const ppid = Number(item?.ppid ?? item?.ParentProcessId);
+    const rawImage = item?.image ?? item?.Name;
+    const category = item?.category;
+    if (
+      !Number.isSafeInteger(pid) ||
+      pid < 1 ||
+      !Number.isSafeInteger(ppid) ||
+      ppid < 0 ||
+      typeof rawImage !== 'string' ||
+      !rawImage ||
+      /[\\/]/.test(rawImage) ||
+      rawImage.length > 80 ||
+      !/^[A-Za-z0-9_.-]+$/.test(rawImage) ||
+      (category !== undefined && !PROCESS_ROLES.has(category)) ||
+      byPid.has(pid)
+    )
+      return unavailableSnapshot('process-list-invalid');
+    const row = {
+      pid,
+      ppid,
+      image: rawImage,
+      category: category || 'unavailable',
+    };
+    byPid.set(pid, row);
+    rows.push(row);
+  }
+  if (!byPid.has(rootPid)) return unavailableSnapshot('owned-browser-not-in-process-list');
+
+  const included = new Set([rootPid]);
+  const owned = [byPid.get(rootPid)];
+  const queue = [rootPid];
+  while (queue.length && owned.length < maxRows) {
+    const parentPid = queue.shift();
+    for (const row of rows) {
+      if (row.ppid !== parentPid || included.has(row.pid)) continue;
+      included.add(row.pid);
+      owned.push(row);
+      queue.push(row.pid);
+      if (owned.length >= maxRows) break;
+    }
+  }
+  const truncated = rows.some(
+    (row) => !included.has(row.pid) && included.has(row.ppid),
+  );
+  return {
+    status: 'available',
+    rootPid,
+    rows: owned,
+    processCount: owned.length,
+    truncated,
+  };
+}
+
+export function createOwnedProcessTreePowerShellCommand(rootPid, maxRows) {
+  return `$rootPid = ${rootPid}\n` +
+    `$limit = ${maxRows}\n` +
+    '$all = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,Name -ErrorAction Stop | Select-Object ProcessId,ParentProcessId,Name)\n' +
+    '$root = $all | Where-Object { [int]$_.ProcessId -eq $rootPid } | Select-Object -First 1\n' +
+    '$result = @()\n' +
+    '$seen = @{}\n' +
+    'if ($null -ne $root) {\n' +
+    '  $result += [pscustomobject]@{ pid=[int]$root.ProcessId; ppid=[int]$root.ParentProcessId; image=[string]$root.Name }\n' +
+    '  $seen[[string]$rootPid] = $true; $frontier = @($rootPid)\n' +
+    '  while ($frontier.Count -gt 0) {\n' +
+    '    $next = @()\n' +
+    '    foreach ($process in $all) {\n' +
+    '      $childPid = [int]$process.ProcessId; $parentPid = [int]$process.ParentProcessId\n' +
+    '      if (($frontier -contains $parentPid) -and (-not $seen.ContainsKey([string]$childPid))) {\n' +
+    '        if ($result.Count -ge $limit) { $truncated = $true; continue }\n' +
+    '        $seen[[string]$childPid] = $true\n' +
+    '        $result += [pscustomobject]@{ pid=$childPid; ppid=$parentPid; image=[string]$process.Name }\n' +
+    '        $next += $childPid\n' +
+    '      }\n' +
+    '    }\n' +
+    '    $frontier = $next\n' +
+    '  }\n' +
+    '}\n' +
+    '$truncated = @($all | Where-Object { (-not $seen.ContainsKey([string]$_.ProcessId)) -and $seen.ContainsKey([string]$_.ParentProcessId) }).Count -gt 0\n' +
+    'if ($result.Count -gt 0) {\n' +
+    '  $roleByPid = @{}\n' +
+    '  $commandFilter = (@($result | ForEach-Object { "ProcessId = $($_.pid)" }) -join " OR ")\n' +
+    '  $rolesAvailable = $true\n' +
+    '  try {\n' +
+    '    $ownedCommands = @(Get-CimInstance Win32_Process -Filter $commandFilter -Property ProcessId,CommandLine -ErrorAction Stop)\n' +
+    '    foreach ($ownedCommand in $ownedCommands) {\n' +
+    '      $commandLine = [string]$ownedCommand.CommandLine\n' +
+    '      $typeMatch = [regex]::Match($commandLine, "(?:^|\\s)--type=([A-Za-z0-9_-]+)(?:\\s|$)")\n' +
+    '      if ([string]::IsNullOrWhiteSpace($commandLine)) { $roleByPid[[string]$ownedCommand.ProcessId] = "unavailable"; continue }\n' +
+    '      $role = "other"\n' +
+    '      if ([int]$ownedCommand.ProcessId -eq $rootPid -and -not $typeMatch.Success -and ($result | Where-Object { [int]$_.pid -eq $rootPid -and $_.image -match "^chrome(?:\\.exe)?$" })) { $role = "browser" }\n' +
+    '      elseif ($result | Where-Object { [int]$_.pid -eq [int]$ownedCommand.ProcessId -and $_.image -match "^chrome_crashpad_handler(?:\\.exe)?$" }) { $role = "crashpad" }\n' +
+    '      elseif ($typeMatch.Success) {\n' +
+    '        switch ($typeMatch.Groups[1].Value) {\n' +
+    '          "renderer" { $role = "renderer" }\n' +
+    '          "gpu-process" { $role = "gpu" }\n' +
+    '          "utility" { $role = "utility" }\n' +
+    '          "crashpad-handler" { $role = "crashpad" }\n' +
+    '          default { $role = "other" }\n' +
+    '        }\n' +
+    '      }\n' +
+    '      $roleByPid[[string]$ownedCommand.ProcessId] = $role\n' +
+    '    }\n' +
+    '  } catch { $rolesAvailable = $false }\n' +
+    '  foreach ($row in $result) {\n' +
+    '    if ($rolesAvailable -and $roleByPid.ContainsKey([string]$row.pid)) { $row | Add-Member -NotePropertyName category -NotePropertyValue $roleByPid[[string]$row.pid] }\n' +
+    '    else { $row | Add-Member -NotePropertyName category -NotePropertyValue "unavailable" }\n' +
+    '  }\n' +
+    '}\n' +
+    '[pscustomobject]@{ rows=@($result); truncated=$truncated } | ConvertTo-Json -Compress -Depth 3';
+}
+
+/** Bounded Windows snapshot; arguments are queried only for owned PIDs and never retained or emitted. */
+export function captureOwnedBrowserProcessTree(
+  child,
+  {
+    platform = process.platform,
+    execFile = defaultExecFileSync,
+    timeoutMs = PROCESS_TREE_TIMEOUT_MS,
+    maxRows = MAX_PROCESS_TREE_ROWS,
+  } = {},
+) {
+  if (platform !== 'win32') return unavailableSnapshot('unsupported-platform');
+  const rootPid = child?.pid;
+  if (!Number.isSafeInteger(rootPid) || rootPid < 1)
+    return unavailableSnapshot('owned-browser-pid-unavailable');
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > PROCESS_TREE_TIMEOUT_MS ||
+    !Number.isSafeInteger(maxRows) ||
+    maxRows < 1 ||
+    maxRows > MAX_PROCESS_TREE_ROWS
+  )
+    return unavailableSnapshot('process-snapshot-limits-invalid');
+  try {
+    const output = execFile(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-Command', createOwnedProcessTreePowerShellCommand(rootPid, maxRows)],
+      {
+        encoding: 'utf8',
+        timeout: timeoutMs,
+        maxBuffer: MAX_PROCESS_TREE_OUTPUT_BYTES,
+        windowsHide: true,
+      },
+    );
+    if (typeof output !== 'string' || Buffer.byteLength(output, 'utf8') > MAX_PROCESS_TREE_OUTPUT_BYTES)
+      return unavailableSnapshot('process-list-overflow');
+    const parsed = JSON.parse(output);
+    if (typeof parsed?.truncated !== 'boolean')
+      return unavailableSnapshot('process-list-invalid');
+    const summarized = summarizeOwnedProcessTree(parsed?.rows, rootPid, maxRows);
+    if (summarized.status !== 'available') return summarized;
+    return { ...summarized, truncated: parsed.truncated === true || summarized.truncated };
+  } catch (error) {
+    return unavailableSnapshot(
+      error?.code === 'ETIMEDOUT'
+        ? 'process-snapshot-timeout'
+        : error?.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'
+          ? 'process-list-overflow'
+          : 'process-snapshot-failed',
+    );
+  }
+}
 
 function applicationPages(pages, baseUrl) {
   const appOrigin = new URL(baseUrl).origin;
@@ -305,10 +549,11 @@ export async function closeRecoveryBrowser(
     forceProcess,
     now = () => performance.now(),
     closeTrace = null,
+    shutdownDiagnostics = null,
   } = {},
 ) {
   const child = browser.process?.() ?? null;
-  const startedAt = now();
+  const helperStartedAt = now();
   let processExit = null;
   const initialExit = () => {
     const code = child?.exitCode;
@@ -319,10 +564,34 @@ export async function closeRecoveryBrowser(
   const processExitedBeforeClose = processExit !== null;
   if (processExit) processExit = { ...processExit, elapsedMs: null };
   const onExit = (code, signal) => {
-    processExit = { code, signal, elapsedMs: Math.max(0, now() - startedAt) };
+    processExit = {
+      code,
+      signal,
+      elapsedMs: Math.max(0, now() - helperStartedAt),
+    };
   };
   if (!processExit) child?.once?.('exit', onExit);
-  const onDisconnected = () => closeTrace?.recordDisconnected?.();
+  const targetTypeCounts = {};
+  let diagnosticProcessTree = null;
+  let disconnected = false;
+  const diagnosticsEnabled = Boolean(shutdownDiagnostics);
+  const unavailable = (reason) => unavailableSnapshot(reason);
+  const captureTargets = (phase) => {
+    if (!diagnosticsEnabled) return;
+    try {
+      targetTypeCounts[phase] = disconnected
+        ? unavailable('browser-disconnected')
+        : targetTypeSnapshot(browser);
+    } catch {
+      targetTypeCounts[phase] = unavailable('target-snapshot-failed');
+    }
+  };
+  const onDisconnected = () => {
+    disconnected = true;
+    closeTrace?.recordDisconnected?.();
+    if (diagnosticsEnabled)
+      targetTypeCounts.atDisconnect = unavailable('browser-disconnected');
+  };
 
   const settleWithin = async (operation) => {
     let timer;
@@ -350,6 +619,8 @@ export async function closeRecoveryBrowser(
   let forceProcessCallbackInvoked = false;
   try {
     browser.on?.('disconnected', onDisconnected);
+    captureTargets('beforeClose');
+    const closeStartedAt = now();
     closeTrace?.begin?.();
     const closeResult = await settleWithin(() => browser.close());
     const closeCompleted = closeResult.kind === 'resolved';
@@ -359,7 +630,7 @@ export async function closeRecoveryBrowser(
         ? 'timed-out'
         : 'rejected';
     const closeSettledAt = now();
-    const closeElapsedMs = Math.max(0, closeSettledAt - startedAt);
+    const closeElapsedMs = Math.max(0, closeSettledAt - closeStartedAt);
     let closeRejectionName = null;
     let forceProcessElapsedMs = null;
 
@@ -369,6 +640,22 @@ export async function closeRecoveryBrowser(
         typeof name === 'string' && /^[A-Za-z][A-Za-z0-9]*$/.test(name)
           ? name.slice(0, 48)
           : 'Error';
+    }
+
+    if (!closeCompleted) {
+      captureTargets(
+        closeResult.kind === 'timeout' ? 'atTimeout' : 'atCloseFailure',
+      );
+      if (diagnosticsEnabled) {
+        try {
+          diagnosticProcessTree =
+            typeof shutdownDiagnostics?.processTreeSnapshot === 'function'
+              ? shutdownDiagnostics.processTreeSnapshot(child)
+              : captureOwnedBrowserProcessTree(child);
+        } catch {
+          diagnosticProcessTree = unavailable('process-snapshot-failed');
+        }
+      }
     }
 
     if (!closeCompleted && forceProcess) {
@@ -412,13 +699,25 @@ export async function closeRecoveryBrowser(
       observation: {
         closeStatus,
         closeDeadlineMs: timeoutMs,
-        closeStartHostMs: startedAt,
+        closeStartHostMs: closeStartedAt,
         closeSettledHostMs: closeSettledAt,
         closeElapsedMs,
+        timingOrigins: {
+          closeElapsedMs: 'browser.close invocation',
+          processExitElapsedMs: 'closeRecoveryBrowser entry',
+        },
         closeRejectionName,
         processExitedBeforeClose,
         processExit,
         protocolCloseTrace,
+        ...(diagnosticsEnabled
+          ? {
+              shutdownDiagnostics: {
+                targetTypeCounts,
+                processTreeBeforeForce: diagnosticProcessTree,
+              },
+            }
+          : {}),
         forceProcessStatus,
         forceProcessAttempted,
         forceProcessCallbackInvoked,
