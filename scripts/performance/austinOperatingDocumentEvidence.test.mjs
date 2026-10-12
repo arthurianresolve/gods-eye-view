@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { createAustinOperatingDocumentEvidence } from './austinOperatingDocumentEvidence.mjs';
+import {
+  interceptFixtureSession,
+  closeTargetBeforeFixtureInterceptionRelease,
+} from './fixtureInterception.mjs';
 
 const delivery = {
   schema: 'gev-austin-operating-delivery/v1',
@@ -10,6 +15,18 @@ const delivery = {
 };
 
 function release(overrides = {}) {
+  const drain = {
+    schema: 'gev-fixture-interception-drain/v1',
+    confirmed: true,
+    listenerRemovalConfirmed: true,
+    pendingAtStop: 2,
+    pendingCommandsAfterDrain: 0,
+    pendingPreparationsAfterDrain: 0,
+    pendingAbortSubscriptionsAfterDrain: 0,
+    rejectedDrainOperations: 0,
+    drainCommandFailures: 0,
+    unexpectedLateRequestCount: 0,
+  };
   return {
     schema: 'gev-flight-fixture-session-release/v1',
     sessionOrdinal: 7,
@@ -17,11 +34,13 @@ function release(overrides = {}) {
     documentId: 'provider-document-1',
     confirmed: true,
     targetClosed: true,
-    stop: { confirmed: true, pendingAtStop: 2, pendingAfterDrain: 0 },
+    stop: structuredClone(drain),
     interception: {
+      schema: 'gev-fixture-interception-release/v1',
       confirmed: true,
-      fetchDisable: 'acknowledged',
-      detach: 'acknowledged',
+      interception: structuredClone(drain),
+      fetchDisable: 'target-closed',
+      detach: 'target-closed',
     },
     ...overrides,
   };
@@ -88,10 +107,71 @@ test('Austin document evidence requires a valid identity and fully drained relea
   ]) {
     assert.equal(evidence([release()], overrides).cleanup.confirmed, false);
   }
-  for (const pendingAfterDrain of [undefined, 1]) {
-    const changed = release({
-      stop: { confirmed: true, pendingAtStop: 1, pendingAfterDrain },
-    });
-    assert.equal(evidence([changed]).cleanup.confirmed, false);
-  }
+  for (const key of [
+    'pendingCommandsAfterDrain',
+    'pendingPreparationsAfterDrain',
+    'pendingAbortSubscriptionsAfterDrain',
+    'rejectedDrainOperations',
+    'drainCommandFailures',
+    'unexpectedLateRequestCount',
+  ])
+    for (const value of [undefined, 1, -1, NaN]) {
+      for (const target of ['stop', 'final']) {
+        const changed = release();
+        const drain =
+          target === 'stop' ? changed.stop : changed.interception.interception;
+        drain[key] = value;
+        assert.equal(
+          evidence([changed]).cleanup.confirmed,
+          false,
+          `${target}.${key}`,
+        );
+      }
+    }
+  const legacy = release();
+  legacy.stop = { confirmed: true, pendingAfterDrain: 0 };
+  assert.equal(evidence([legacy]).cleanup.confirmed, false);
+});
+
+test('Austin evidence consumes the real interception producer after target closure', async () => {
+  const client = new EventEmitter();
+  const commands = [];
+  client.send = async (method) => {
+    commands.push(method);
+    return {};
+  };
+  const interception = await interceptFixtureSession(
+    client,
+    'http://127.0.0.1:4173/',
+    () => ({ status: 200, contentType: 'application/json', body: '{}' }),
+    (error) => {
+      throw error;
+    },
+  );
+  await Promise.all(
+    client.listeners('Fetch.requestPaused').map((listener) =>
+      listener({
+        requestId: 'owned-request',
+        request: { url: 'http://127.0.0.1:4173/api/test', method: 'GET' },
+      }),
+    ),
+  );
+  const stop = await interception.stopAndDrain();
+  let closed = false;
+  const page = {
+    isClosed: () => closed,
+    close: async () => {
+      closed = true;
+    },
+  };
+  const targetRelease = await closeTargetBeforeFixtureInterceptionRelease(
+    page,
+    interception,
+  );
+  assert.equal(targetRelease.confirmed, true);
+  assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+  assert.equal('pendingAfterDrain' in stop, false);
+  const record = release({ stop, interception: targetRelease.release });
+  assert.equal(evidence([record]).cleanup.confirmed, true);
+  assert.ok(commands.includes('Fetch.fulfillRequest'));
 });

@@ -1,5 +1,21 @@
 const clone = (value) => (value == null ? null : structuredClone(value));
 
+function isDrained(record) {
+  return (
+    record?.schema === 'gev-fixture-interception-drain/v1' &&
+    record.confirmed === true &&
+    record.listenerRemovalConfirmed === true &&
+    [
+      'pendingCommandsAfterDrain',
+      'pendingPreparationsAfterDrain',
+      'pendingAbortSubscriptionsAfterDrain',
+      'rejectedDrainOperations',
+      'drainCommandFailures',
+      'unexpectedLateRequestCount',
+    ].every((key) => record[key] === 0)
+  );
+}
+
 /** Bind one Austin document's fixture delivery to its owned CDP-session release. */
 export function createAustinOperatingDocumentEvidence({
   documentRole,
@@ -32,10 +48,10 @@ export function createAustinOperatingDocumentEvidence({
     disposed === true &&
     release?.confirmed === true &&
     release?.targetClosed === true &&
-    release?.stop?.confirmed === true &&
-    Number.isSafeInteger(release?.stop?.pendingAfterDrain) &&
-    release.stop.pendingAfterDrain === 0 &&
-    release?.interception?.confirmed === true;
+    isDrained(release?.stop) &&
+    release?.interception?.schema === 'gev-fixture-interception-release/v1' &&
+    release.interception.confirmed === true &&
+    isDrained(release.interception.interception);
   return {
     schema: 'gev-austin-operating-document-evidence/v1',
     documentRole: typeof documentRole === 'string' ? documentRole : null,

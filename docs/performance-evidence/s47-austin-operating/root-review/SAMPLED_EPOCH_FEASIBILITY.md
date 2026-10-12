@@ -25,9 +25,10 @@ records share the same physical trajectory, so no position mismatch resulted.
 The report records this correction and uses CSS versus ISS for the distinct-orbit
 negative. Source hashes and identity validation remain independently necessary.
 
-This is a feasibility result, not a benchmark change or acceptance. Browser versus
-Node numerical behavior, immutable baseline compatibility, complete cached-position
-capture, bounded serialization, and paired visual checks still need validation.
+This is a feasibility result, not a benchmark change or acceptance. The narrow
+Chrome numerical control below now covers browser versus Node calculations.
+Immutable baseline compatibility, complete application cached-position capture,
+bounded serialization, and paired visual checks still need validation.
 The satellite cadence blocker must remain until that integration passes. No
 existing position checksum or source-identity requirement should be discarded.
 
@@ -47,3 +48,71 @@ byte-for-byte: 129,611 bytes, SHA-256
 Its truncated diagnostic envelope is not full performance evidence. A bounded
 per-layer observation on readiness failure is the next diagnostic step; increasing
 the deadline or relaxing readiness would not establish the cause.
+
+# Windows Chrome numerical control
+
+The [visible browser control](satellite-browser-precision.mjs) bundles the actual
+production renderer, controls, orbit propagation and Cesium point collection
+setters. It runs the same six simulated frame-cadence cases in Windows Chrome 154. Node 24.16 independently searches for the sampled epoch and recomputes all
+positions from the pinned TLEs. The production clock function is serialized into
+the browser as the capture harness does; its containing module also has Node-only
+imports and cannot be bundled directly for a browser.
+
+All six cases pass, with 828 identities per case and a greatest Cartesian residual
+of 3.142 micrometers. The [summary](satellite-browser-precision.json) records source
+and bundle hashes, browser identity, exact derived times, and raw-record hashes.
+The [original browser payload](satellite-browser-precision-raw.json) is 521,679
+bytes, SHA-256
+`060fe78a38785b5cab2ab833a481cccda2a020d7e6ea5d209192faba25ac147f`.
+The summary is 4,556 bytes, SHA-256
+`a20021997dee45c01e80094ee37d014773412dfe3ef39070651260b27d0d40b8`.
+
+This control creates no WebGL context. It validates the proposed numerical
+tolerance in this browser, not actual frame delivery, full-application capture,
+baseline compatibility, visual equivalence or GPU performance. The temporary
+loopback server and browser tab were closed after completion.
+
+Run the reproduction from a checkout with dependencies, naming an immutable
+source checkout and a fresh output directory. Open the printed loopback URL in
+Chrome and click **Run six browser controls**:
+
+```sh
+node docs/performance-evidence/s47-austin-operating/root-review/satellite-browser-precision.mjs <checkout> <new-output-directory>
+```
+
+# CCTV readiness and cleanup consumer correction
+
+Run [38311295634](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38311295634)
+at `61c72ea2411163c3d5906467b2bcfd32e275a987` again fails the unchanged 60-second
+source-readiness deadline, this time in the initial Austin document. The new
+snapshot identifies CCTV: all 250 camera records are present, but native geometry
+loading is still true. Satellites, ALPR, installations, radio and wind are ready.
+The next snapshot additionally preserves existing native geometry loaded/total
+counts and bounded CCTV resource counts; readiness and its deadline are unchanged.
+
+The [original CLI failure](hosted-smoke-38311295634-cli-failed.json) is 36,047
+bytes, SHA-256
+`4e0bf33969efc04fe25af6de854cfed518bc59b5b2f74d61b01a39645257ebec`.
+It also exposes a separate cleanup-consumer defect: the Austin evidence adapter
+expects `pendingAfterDrain`, which the actual interception producer does not
+emit. That producer reports command, preparation and abort-subscription counts
+separately. Earlier unit fixtures had invented the missing aggregate field.
+
+The corrected consumer checks all actual drain counters, listener removal and
+error/late-request counts at stop and release. A regression uses the real
+interception controller through request fulfillment, stop and page closure.
+Missing or nonzero drain/error counters remain failures. The
+[independent raw replay](cleanup-consumer-replay.json) changes both document
+cleanup classifications from incomplete to confirmed without altering the raw
+artifact. The capture's readiness timeout remains failed; this replay is not
+permission to accept an incomplete capture.
+
+Standard CI [38309375637](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38309375637)
+at `eeb6dfdd` has six successful jobs. Its unfinished browser gate was cancelled by
+the workflow concurrency policy when the newer merged-commit standard run was
+started. It is not a fully passing CI run. Exact merged-commit run
+[38311292251](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38311292251)
+at `61c72ea2411163c3d5906467b2bcfd32e275a987` now passes all seven standard
+jobs: Node 24/26, Windows onboarding, Linux/macOS/Windows recovery and the browser
+gate. This validates the merged checkpoint, not the subsequent cleanup-consumer
+correction or incomplete performance capture.
