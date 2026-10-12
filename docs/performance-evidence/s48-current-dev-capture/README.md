@@ -176,3 +176,22 @@ reject this repeated pose write as a direct camera-change cause at that pose.
 This is not a rendered experiment: initial layer-enable order, other poses,
 GPU work and browser scheduling remain untested by this control. No runtime
 scheduling change follows from this negative result.
+
+## Integrated attribution follow-up
+
+The reviewed tooling and its preserved evidence were fast-forwarded to `dev`
+at `0d2324e64824b59b3b02fea50932deda4e572c08`; application, harness and test
+code are unchanged from the all-green standard CI commit `f7e0709c`.
+
+The raw-profile replay now preserves full sampled ancestry for `readPixels`,
+`getProgramParameter` and `bufferData`, and divides sample weights across
+two-second intervals relative to each profile start. It checks that every
+interval and function total reconciles with the original sample deltas.
+Every sampled `readPixels` leaf in the three profiles descends from Cesium
+`pickPosition`, through two sampled ancestry paths. Shader-program query
+weight occurs across multiple intervals, rather than only the first interval.
+These observations narrow the next attribution work to scene picking and
+shader preparation; they do not prove redundant work or justify eliminating
+queries. The intervals are not mapped to warmup or measurement because those
+clock domains have not been independently aligned. Sampling weights include
+native waits and remain distinct from GPU execution time.

@@ -57,6 +57,21 @@ const profiles = report.workload.providerSampleCpuProfiles.profiles.map(
     assert.equal(profile.samples.length, profile.timeDeltas.length);
     const nodes = new Map(profile.nodes.map((node) => [node.id, node]));
     const weights = new Map();
+    const parents = new Map();
+    for (const node of profile.nodes) {
+      for (const child of node.children || []) {
+        assert.ok(nodes.has(child));
+        assert.equal(parents.has(child), false);
+        parents.set(child, node.id);
+      }
+    }
+    const nativeNames = new Set([
+      'readPixels',
+      'getProgramParameter',
+      'bufferData',
+    ]);
+    const nativeStacks = new Map();
+    const nativeBins = new Map();
     let totalUs = 0;
     profile.samples.forEach((id, i) => {
       assert.ok(nodes.has(id));
@@ -65,7 +80,43 @@ const profiles = report.workload.providerSampleCpuProfiles.profiles.map(
       totalUs += delta;
       const label = nodes.get(id).callFrame.functionName || '(anonymous)';
       weights.set(label, (weights.get(label) || 0) + delta);
+      if (nativeNames.has(label)) {
+        const stack = [];
+        const visited = new Set();
+        let cursor = id;
+        while (cursor !== undefined) {
+          assert.equal(visited.has(cursor), false);
+          visited.add(cursor);
+          stack.push(nodes.get(cursor).callFrame.functionName || '(anonymous)');
+          cursor = parents.get(cursor);
+        }
+        const key = JSON.stringify(stack);
+        nativeStacks.set(key, (nativeStacks.get(key) || 0) + delta);
+        // Bucket by cumulative profile deltas, without treating host/page
+        // timestamps as interchangeable or claiming a warmup/measurement phase.
+        let cursorUs = totalUs - delta;
+        while (cursorUs < totalUs) {
+          const bin = Math.floor(cursorUs / 2_000_000);
+          const endUs = Math.min(totalUs, (bin + 1) * 2_000_000);
+          const counts = nativeBins.get(bin) || {};
+          counts[label] = (counts[label] || 0) + endUs - cursorUs;
+          nativeBins.set(bin, counts);
+          cursorUs = endUs;
+        }
+      }
     });
+    for (const name of nativeNames) {
+      const sum = [...nativeBins.values()].reduce(
+        (total, bin) => total + (bin[name] || 0),
+        0,
+      );
+      assert.equal(sum, weights.get(name) || 0);
+    }
+    for (const counts of nativeBins.values()) {
+      assert.ok(
+        Object.values(counts).reduce((total, us) => total + us, 0) <= 2_000_000,
+      );
+    }
     return {
       scenario: window.targetScenario,
       run: window.targetRun,
@@ -73,6 +124,19 @@ const profiles = report.workload.providerSampleCpuProfiles.profiles.map(
       samples: profile.samples.length,
       windowMs: (profile.endTime - profile.startTime) / 1000,
       sampledDeltaMs: totalUs / 1000,
+      nativeStackWeights: [...nativeStacks]
+        .sort((a, b) => b[1] - a[1])
+        .map(([stack, weight]) => ({
+          stack: JSON.parse(stack),
+          sampledDeltaMs: weight / 1000,
+        })),
+      nativeTwoSecondBins: [...nativeBins].map(([bin, counts]) => ({
+        profileOffsetStartMs: bin * 2000,
+        profileOffsetEndMs: (bin + 1) * 2000,
+        sampledDeltaMs: Object.fromEntries(
+          Object.entries(counts).map(([name, us]) => [name, us / 1000]),
+        ),
+      })),
       topLeafWeightsMs: Object.fromEntries(
         [...weights]
           .sort((a, b) => b[1] - a[1])
@@ -157,6 +221,14 @@ console.log(
   JSON.stringify({
     status: 'failed-capture-preserved',
     completedSamples: 4,
-    profiles,
+    profiles: profiles.map(
+      ({ scenario, run, status, samples, topLeafWeightsMs }) => ({
+        scenario,
+        run,
+        status,
+        samples,
+        topLeafWeightsMs,
+      }),
+    ),
   }),
 );

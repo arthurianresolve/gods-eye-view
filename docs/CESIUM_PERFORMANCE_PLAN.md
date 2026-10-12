@@ -1,5 +1,10 @@
 # Cesium performance plan
 
+Integrated diagnostic checkpoint: `dev` is at `0d2324e6`, with application,
+harness and test code matching the seven passing standard jobs at `f7e0709c`.
+The failed performance captures remain failed; this does not complete a slice
+or establish a performance gain.
+
 The [current-dev S48 diagnostic port](performance-evidence/s48-current-dev-capture/README.md)
 preserves the newer camera/prewarm and streamed-map ownership fixes. Root full
 Node 24 validation passes 7,413 checks with zero failures and ten existing skips,
@@ -33,7 +38,7 @@ confirms all three fixture releases and reached renderer cleanups, but run
 `38265309601` fails idle sample 1 warmup before measurement. The raw report
 preserves expensive initial-pose and prewarm picks, a zero-ms same-revision
 repeat, and sampled upload/shader-query costs; the profile remains incomplete
-after a profiler-disable timeout. The candidate is outside production `dev`;
+after a profiler-disable timeout. This isolated tooling is now included in the current-dev port above;
 S48 and hardware/performance acceptance remain partial.
 
 Latest isolated S48 experiment at `7f4f5e07` confirms every reached renderer
@@ -844,7 +849,7 @@ the earlier release requirements and historical results.
 | Slice | Code implemented | Automatically validated | Hardware validated |
 | --- | --- | --- | --- |
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
-| S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
+| S48 attribution and resource diagnostics | Partial: bounded opt-in CPU/resource diagnostics, caller-tagged depth-pick observations, lifecycle-safe profiler/interception ownership and immutable renderer identity reads | Integrated diagnostic code at `f7e0709c` passes all seven standard CI jobs. Three complete hosted profiles identify shader-query and depth-pick readback costs; full ancestry and interval weights are replayed from hash-bound raw data. Dense capture and optional-profiling-disabled control both fail | Software-renderer attribution only; complete workload traces, allocation profiles, overhead comparisons and primary Windows evidence remain pending |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
 | S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, unchanged geometry writes suppressed; exact runtime footprint poses prevent rounded-key collisions at `61c050ca` | Six old-runtime failures reproduced; 83 focused checks, five unchanged lifecycle cycles, late worker-result cases, five native calibration pairs and all seven integrated standard jobs pass at `40b9f5c9` | Hosted paravirtual Metal calibration hashes match; full terrain/pose visual matrix and physical Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |

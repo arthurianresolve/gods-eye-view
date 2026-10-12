@@ -221,6 +221,298 @@
       "samples": 16973,
       "windowMs": 20539.521,
       "sampledDeltaMs": 20539.144,
+      "nativeStackWeights": [
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "eh",
+            "N",
+            "F$",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 4050.124
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "get",
+            "wre",
+            "fYe",
+            "Jr.update",
+            "tc.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 2303.826
+        },
+        {
+          "stack": [
+            "readPixels",
+            "od.readPixels",
+            "qE.getDepth",
+            "fa.pickPositionWorldCoordinates",
+            "fa.pickPosition",
+            "yi.pickPosition",
+            "gE",
+            "m_",
+            "h_",
+            "c",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1999.751
+        },
+        {
+          "stack": [
+            "readPixels",
+            "od.readPixels",
+            "qE.getDepth",
+            "fa.pickPositionWorldCoordinates",
+            "fa.pickPosition",
+            "yi.pickPosition",
+            "gE",
+            "zwe",
+            "by",
+            "d",
+            "(anonymous)",
+            "mR.raiseEvent",
+            "K5.checkForCameraUpdates",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1779.287
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createIndexBuffer",
+            "xA.fromGeometry",
+            "mYe",
+            "Jr.update",
+            "Vx.update",
+            "ad.update",
+            "tc.update",
+            "Cp.update",
+            "tc.update",
+            "tc.update",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1746.196
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "zD.execute",
+            "Fte.execute",
+            "R_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 381.915
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "eh",
+            "WCt",
+            "mb.executeCommands",
+            "e._executeOITFunction",
+            "YRt",
+            "F$",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 91.849
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "IX.update",
+            "KL.update",
+            "l8e",
+            "_o.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 87.021
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "xA.fromGeometry",
+            "mYe",
+            "Jr.update",
+            "Vx.update",
+            "ad.update",
+            "tc.update",
+            "Cp.update",
+            "tc.update",
+            "tc.update",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 5.594
+        }
+      ],
+      "nativeTwoSecondBins": [
+        {
+          "profileOffsetStartMs": 0,
+          "profileOffsetEndMs": 2000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 652.235
+          }
+        },
+        {
+          "profileOffsetStartMs": 2000,
+          "profileOffsetEndMs": 4000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1997.854
+          }
+        },
+        {
+          "profileOffsetStartMs": 4000,
+          "profileOffsetEndMs": 6000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 85.565,
+            "readPixels": 1618.712
+          }
+        },
+        {
+          "profileOffsetStartMs": 6000,
+          "profileOffsetEndMs": 8000,
+          "sampledDeltaMs": {
+            "readPixels": 160.575,
+            "bufferData": 851.27
+          }
+        },
+        {
+          "profileOffsetStartMs": 8000,
+          "profileOffsetEndMs": 10000,
+          "sampledDeltaMs": {
+            "bufferData": 900.52,
+            "getProgramParameter": 542.621,
+            "readPixels": 461.91
+          }
+        },
+        {
+          "profileOffsetStartMs": 10000,
+          "profileOffsetEndMs": 12000,
+          "sampledDeltaMs": {
+            "readPixels": 1537.841,
+            "getProgramParameter": 234.787
+          }
+        },
+        {
+          "profileOffsetStartMs": 12000,
+          "profileOffsetEndMs": 14000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 900.784
+          }
+        },
+        {
+          "profileOffsetStartMs": 14000,
+          "profileOffsetEndMs": 16000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1134.914
+          }
+        },
+        {
+          "profileOffsetStartMs": 16000,
+          "profileOffsetEndMs": 18000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1365.975
+          }
+        }
+      ],
       "topLeafWeightsMs": {
         "getProgramParameter": 6914.735,
         "(idle)": 5143.977,
@@ -243,6 +535,393 @@
       "samples": 15207,
       "windowMs": 18667.636,
       "sampledDeltaMs": 18667.38,
+      "nativeStackWeights": [
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "get",
+            "wre",
+            "fYe",
+            "Jr.update",
+            "tc.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 3089.795
+        },
+        {
+          "stack": [
+            "readPixels",
+            "od.readPixels",
+            "qE.getDepth",
+            "fa.pickPositionWorldCoordinates",
+            "fa.pickPosition",
+            "yi.pickPosition",
+            "gE",
+            "zwe",
+            "by",
+            "d",
+            "(anonymous)",
+            "mR.raiseEvent",
+            "K5.checkForCameraUpdates",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 2740.891
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "zD.execute",
+            "Fte.execute",
+            "R_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1605.276
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "eh",
+            "N",
+            "F$",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1469.255
+        },
+        {
+          "stack": [
+            "readPixels",
+            "od.readPixels",
+            "qE.getDepth",
+            "fa.pickPositionWorldCoordinates",
+            "fa.pickPosition",
+            "yi.pickPosition",
+            "gE",
+            "m_",
+            "h_",
+            "c",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1432.694
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "IX.update",
+            "KL.update",
+            "l8e",
+            "_o.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 605.279
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "FBe",
+            "xa.commit",
+            "ym.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 469.373
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "eh",
+            "WCt",
+            "mb.executeCommands",
+            "e._executeOITFunction",
+            "YRt",
+            "F$",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 204.79
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "xA.fromGeometry",
+            "mYe",
+            "Jr.update",
+            "Vx.update",
+            "ad.update",
+            "tc.update",
+            "Cp.update",
+            "tc.update",
+            "tc.update",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 5.871
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createIndexBuffer",
+            "xA.fromGeometry",
+            "mYe",
+            "Jr.update",
+            "Vx.update",
+            "ad.update",
+            "tc.update",
+            "Cp.update",
+            "tc.update",
+            "tc.update",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 3.326
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "FBe",
+            "xa.commit",
+            "Lm.update",
+            "nf.update",
+            "tc.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1.071
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "mr._createVertexArrayForMesh",
+            "kgt",
+            "Pgt",
+            "mr.processStateMachine",
+            "Zr.loadTile",
+            "Aq",
+            "Hbt",
+            "zm.endFrame",
+            "Zf.endFrame",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1.016
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "FBe",
+            "xa.commit",
+            "ym.update",
+            "nf.update",
+            "tc.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1.015
+        }
+      ],
+      "nativeTwoSecondBins": [
+        {
+          "profileOffsetStartMs": 0,
+          "profileOffsetEndMs": 2000,
+          "sampledDeltaMs": {
+            "bufferData": 1.071,
+            "getProgramParameter": 602.863
+          }
+        },
+        {
+          "profileOffsetStartMs": 2000,
+          "profileOffsetEndMs": 4000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 708.073,
+            "readPixels": 749.251
+          }
+        },
+        {
+          "profileOffsetStartMs": 4000,
+          "profileOffsetEndMs": 6000,
+          "sampledDeltaMs": {
+            "readPixels": 1991.64
+          }
+        },
+        {
+          "profileOffsetStartMs": 6000,
+          "profileOffsetEndMs": 8000,
+          "sampledDeltaMs": {
+            "bufferData": 1.015,
+            "readPixels": 1254.71
+          }
+        },
+        {
+          "profileOffsetStartMs": 8000,
+          "profileOffsetEndMs": 10000,
+          "sampledDeltaMs": {
+            "readPixels": 177.984,
+            "bufferData": 478.57,
+            "getProgramParameter": 184.502
+          }
+        },
+        {
+          "profileOffsetStartMs": 10000,
+          "profileOffsetEndMs": 12000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1996.74
+          }
+        },
+        {
+          "profileOffsetStartMs": 12000,
+          "profileOffsetEndMs": 14000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1811.188
+          }
+        },
+        {
+          "profileOffsetStartMs": 14000,
+          "profileOffsetEndMs": 16000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1671.029
+          }
+        },
+        {
+          "profileOffsetStartMs": 18000,
+          "profileOffsetEndMs": 20000,
+          "sampledDeltaMs": {
+            "bufferData": 1.016
+          }
+        }
+      ],
       "topLeafWeightsMs": {
         "getProgramParameter": 6974.395,
         "readPixels": 4173.585,
@@ -265,6 +944,326 @@
       "samples": 19959,
       "windowMs": 24086.851,
       "sampledDeltaMs": 24085.783,
+      "nativeStackWeights": [
+        {
+          "stack": [
+            "readPixels",
+            "od.readPixels",
+            "qE.getDepth",
+            "fa.pickPositionWorldCoordinates",
+            "fa.pickPosition",
+            "yi.pickPosition",
+            "gE",
+            "zwe",
+            "by",
+            "d",
+            "(anonymous)",
+            "mR.raiseEvent",
+            "K5.checkForCameraUpdates",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 5678.484
+        },
+        {
+          "stack": [
+            "readPixels",
+            "od.readPixels",
+            "qE.getDepth",
+            "fa.pickPositionWorldCoordinates",
+            "fa.pickPosition",
+            "yi.pickPosition",
+            "gE",
+            "m_",
+            "h_",
+            "c",
+            "(root)"
+          ],
+          "sampledDeltaMs": 5536.108
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "get",
+            "wre",
+            "fYe",
+            "Jr.update",
+            "tc.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 3092.204
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "eh",
+            "N",
+            "F$",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 2075.578
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "zD.execute",
+            "Fte.execute",
+            "R_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1558.404
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "IX.update",
+            "KL.update",
+            "l8e",
+            "_o.update",
+            "tc.update",
+            "tc.update",
+            "b",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 530.679
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createVertexBuffer",
+            "xA.fromGeometry",
+            "mYe",
+            "Jr.update",
+            "Vx.update",
+            "ad.update",
+            "tc.update",
+            "Cp.update",
+            "tc.update",
+            "tc.update",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 482.585
+        },
+        {
+          "stack": [
+            "getProgramParameter",
+            "b1e",
+            "hie",
+            "OD",
+            "gA._bind",
+            "SBe",
+            "od.draw",
+            "CR.execute",
+            "eh",
+            "WCt",
+            "mb.executeCommands",
+            "e._executeOITFunction",
+            "YRt",
+            "F$",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 218.426
+        },
+        {
+          "stack": [
+            "bufferData",
+            "Gc",
+            "Gc.createIndexBuffer",
+            "xA.fromGeometry",
+            "mYe",
+            "Jr.update",
+            "Vx.update",
+            "ad.update",
+            "tc.update",
+            "Cp.update",
+            "tc.update",
+            "tc.update",
+            "V_e",
+            "zy",
+            "yi.updateAndExecuteCommands",
+            "lGt",
+            "CT",
+            "yi.render",
+            "qo.render",
+            "n",
+            "(root)"
+          ],
+          "sampledDeltaMs": 1.07
+        }
+      ],
+      "nativeTwoSecondBins": [
+        {
+          "profileOffsetStartMs": 0,
+          "profileOffsetEndMs": 2000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 530.679
+          }
+        },
+        {
+          "profileOffsetStartMs": 2000,
+          "profileOffsetEndMs": 4000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 760.076,
+            "readPixels": 856.707
+          }
+        },
+        {
+          "profileOffsetStartMs": 4000,
+          "profileOffsetEndMs": 6000,
+          "sampledDeltaMs": {
+            "readPixels": 1971.826
+          }
+        },
+        {
+          "profileOffsetStartMs": 6000,
+          "profileOffsetEndMs": 8000,
+          "sampledDeltaMs": {
+            "readPixels": 1256.398
+          }
+        },
+        {
+          "profileOffsetStartMs": 8000,
+          "profileOffsetEndMs": 10000,
+          "sampledDeltaMs": {
+            "readPixels": 188.54,
+            "bufferData": 482.578,
+            "getProgramParameter": 619.416
+          }
+        },
+        {
+          "profileOffsetStartMs": 10000,
+          "profileOffsetEndMs": 12000,
+          "sampledDeltaMs": {
+            "bufferData": 1.077,
+            "getProgramParameter": 1420.607
+          }
+        },
+        {
+          "profileOffsetStartMs": 12000,
+          "profileOffsetEndMs": 14000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1790.386
+          }
+        },
+        {
+          "profileOffsetStartMs": 14000,
+          "profileOffsetEndMs": 16000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 1997.805
+          }
+        },
+        {
+          "profileOffsetStartMs": 16000,
+          "profileOffsetEndMs": 18000,
+          "sampledDeltaMs": {
+            "getProgramParameter": 356.322,
+            "readPixels": 1585.778
+          }
+        },
+        {
+          "profileOffsetStartMs": 18000,
+          "profileOffsetEndMs": 20000,
+          "sampledDeltaMs": {
+            "readPixels": 1338.557
+          }
+        },
+        {
+          "profileOffsetStartMs": 20000,
+          "profileOffsetEndMs": 22000,
+          "sampledDeltaMs": {
+            "readPixels": 2000
+          }
+        },
+        {
+          "profileOffsetStartMs": 22000,
+          "profileOffsetEndMs": 24000,
+          "sampledDeltaMs": {
+            "readPixels": 2000
+          }
+        },
+        {
+          "profileOffsetStartMs": 24000,
+          "profileOffsetEndMs": 26000,
+          "sampledDeltaMs": {
+            "readPixels": 16.786
+          }
+        }
+      ],
       "topLeafWeightsMs": {
         "readPixels": 11214.592,
         "getProgramParameter": 7475.291,
