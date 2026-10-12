@@ -21,7 +21,7 @@ import {
   createBoundaryProgressRecorder,
   observeRenderBoundary,
 } from './performance/renderBoundaryObservation.mjs';
-import { settleCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
+import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -497,13 +497,8 @@ async function settleProviderRenderAtBoundary(
         dispose: () => targetPage.removeExposedFunction(functionName),
       };
     },
-    evaluate: (pageTimeoutMs, { progressFunctionName, invocationId }) =>
-      targetPage.evaluate(
-        settleCompletedRenderDiagnostic,
-        pageTimeoutMs,
-        progressFunctionName,
-        invocationId,
-      ),
+    evaluate: (pageTimeoutMs, progressBinding) =>
+      evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, progressBinding),
     onProgress,
   });
 }

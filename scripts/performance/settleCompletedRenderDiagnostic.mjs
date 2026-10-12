@@ -185,3 +185,17 @@ export function settleCompletedRenderDiagnostic(
     }
   });
 }
+
+export function evaluateCompletedRenderDiagnostic(
+  targetPage,
+  pageTimeoutMs,
+  { progressFunctionName, invocationId },
+) {
+  return targetPage.evaluate(
+    settleCompletedRenderDiagnostic,
+    pageTimeoutMs,
+    pageTimeoutMs,
+    progressFunctionName,
+    invocationId,
+  );
+}

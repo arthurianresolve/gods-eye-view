@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { observeRenderBoundary } from './renderBoundaryObservation.mjs';
-import { settleCompletedRenderDiagnostic } from './settleCompletedRenderDiagnostic.mjs';
+import {
+  evaluateCompletedRenderDiagnostic,
+  settleCompletedRenderDiagnostic,
+} from './settleCompletedRenderDiagnostic.mjs';
 
 class Event {
   handlers = new Set();
@@ -116,4 +119,35 @@ test('host binding receives owned page phase acknowledgements and is removed', a
   assert.equal(result.cleanup.progressBindingRemoved, true);
   assert.equal(hostSnapshots.at(-1).cleanup.progressBindingRemoved, true);
   assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('page evaluate argument order delivers the invocation and host observes page entry', async () => {
+  const subject = viewer({ render: true });
+  const invocationId = 'render-boundary-owned-id';
+  const progressFunctionName = '__test_render_boundary_ack';
+  const hostSnapshots = [];
+  const previousView = globalThis.__godsEyeView;
+  const previousBinding = globalThis[progressFunctionName];
+  globalThis.__godsEyeView = { viewer: subject };
+  globalThis[progressFunctionName] = (receivedId, stage, details) => {
+    hostSnapshots.push({ receivedId, stage, details });
+  };
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => fn(...args),
+    };
+    const result = await evaluateCompletedRenderDiagnostic(targetPage, 100, {
+      progressFunctionName,
+      invocationId,
+    });
+
+    assert.equal(result.status, 'settled');
+    assert.equal(hostSnapshots[0].receivedId, invocationId);
+    assert.equal(hostSnapshots[0].stage, 'page-entry');
+  } finally {
+    if (previousView === undefined) delete globalThis.__godsEyeView;
+    else globalThis.__godsEyeView = previousView;
+    if (previousBinding === undefined) delete globalThis[progressFunctionName];
+    else globalThis[progressFunctionName] = previousBinding;
+  }
 });
