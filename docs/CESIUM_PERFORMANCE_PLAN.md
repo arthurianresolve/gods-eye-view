@@ -6,7 +6,9 @@ completed samples, stable populations/settings and confirmed owned cleanup.
 All seven standard jobs pass at the same revision. Independent raw replay then
 finds and fixes a missing cleanup-validation gate: the original successful
 report still passes, while ten corrupted reports are rejected. Root passes
-76 focused checks for the correction; its integration CI remains pending.
+76 focused checks for the correction; all seven standard integration jobs
+pass at exact `d3134124` in
+[run 38284389582](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38284389582).
 [Raw reports, replay and limitations](performance-evidence/s47-weather-effects-capture/README.md)
 separate this SwiftShader integration evidence from matched performance and
 physical Windows acceptance. S47/S58/S60 remain partial.
