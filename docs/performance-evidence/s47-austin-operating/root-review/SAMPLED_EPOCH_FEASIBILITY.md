@@ -289,3 +289,43 @@ import error remains visible. Root merged this correction at
 readiness, failure-report, smoke and CLI lifecycle tests. The full standard
 workflow still needs to validate the corrected revision; this local result does
 not change the outcome of the earlier failed jobs.
+
+# Corrected integration checkpoint and native renderer diagnostic
+
+Standard CI [38319069167](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38319069167)
+passes all seven jobs at `debafa026810fd162a7d4d048a2a5ef75ac645f6`: Node
+24/26, Windows onboarding, Linux/macOS/Windows installation recovery and the
+browser gate. The [exact-revision checkpoint](ci-checkpoint-debafa02.json)
+preserves the job URLs and outcomes. This validates the CLI-stub correction;
+it neither changes earlier failed runs nor explains the intermittent Windows
+Chrome shutdown timeout.
+
+GPT-6 Luna's `cea1a3bd73ffe80b8af5441b820affa558784688` adds an optional
+`macos-native-diagnostic` backend, integrated on this QA branch at
+`652913fd894f8977973e7aa8409cfcf566c71f1b`. Root independently passes all 42
+focused tests serially, including actual capture-CLI lifecycle tests and native
+report validation. Integrated formatting passes 1,618 files; import/package
+boundaries pass. An initial parallel local run timed out one existing 15-second
+CLI subprocess; the unchanged deadline passes on serial rerun. That observation
+is retained as a local test-execution limitation, not an application failure or
+proof of its cause.
+
+The backend uses the standard `macos-latest` GitHub-hosted runner for this public
+repository. Parent and child Chrome launches omit software-renderer flags and
+must verify the observed Cesium renderer against bounded Chromium acceleration
+evidence. Missing, contradictory, software-fallback or substituted evidence
+fails validation. Native reports remain explicitly ineligible for comparison
+and physical-desktop performance acceptance. Ordinary Windows capture arguments
+and the default hosted SwiftShader mode remain unchanged. Populations, visual
+settings and the original readiness deadline are preserved.
+
+The first native Austin diagnostic is
+[38320527836](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38320527836),
+and the native packet's standard integration run is
+[38320791275](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38320791275).
+Both target `652913fd894f8977973e7aa8409cfcf566c71f1b`; their outcomes were
+pending when this checkpoint was written. A hosted Metal run can establish
+full-fixture reachability, but differences in OS, CPU and browser prevent a
+causal GPU-versus-software comparison without same-host controls. The packet
+remains on QA pending actual capture validation; `dev` is not promoted by these
+unit-test results.
