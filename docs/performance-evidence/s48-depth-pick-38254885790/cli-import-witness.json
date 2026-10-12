@@ -1,0 +1,45 @@
+{
+  "node": "v24.16.0",
+  "platform": "win32",
+  "timeoutMs": 5000,
+  "outcomes": [
+    {
+      "label": "old",
+      "status": 1,
+      "error": null,
+      "durationMs": 2327.409,
+      "browserDependencies": [
+        "puppeteer",
+        "./qa-application-fixtures.mjs",
+        "puppeteer"
+      ],
+      "report": {
+        "schema": "gev-performance-build-smoke/v1",
+        "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+        "status": "failed",
+        "failure": {
+          "phase": "setup",
+          "message": "Candidate SHA must be a full lowercase Git SHA."
+        },
+        "finishedAt": "2026-10-12T13:26:12.865Z"
+      }
+    },
+    {
+      "label": "candidate",
+      "status": 1,
+      "error": null,
+      "durationMs": 2001.6064000000001,
+      "browserDependencies": [],
+      "report": {
+        "schema": "gev-performance-build-smoke/v1",
+        "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+        "status": "failed",
+        "failure": {
+          "phase": "setup",
+          "message": "Candidate SHA must be a full lowercase Git SHA."
+        },
+        "finishedAt": "2026-10-12T13:26:14.874Z"
+      }
+    }
+  ]
+}

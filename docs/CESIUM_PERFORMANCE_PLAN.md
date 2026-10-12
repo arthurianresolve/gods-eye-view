@@ -2,6 +2,14 @@
 
 ## Current status - 12 October 2026
 
+Latest isolated S48 diagnostic at `d1da56e4` completes six short samples but
+fails its final cleanup with an out-of-scope `page` reference. Its enlarged
+completed report exceeds the inline failure budget, so caller/frame rows were
+not preserved; three CPU profiles are intact and independently replayed.
+[The original failure and next correction](performance-evidence/s48-depth-pick-38254885790/README.md)
+are recorded. This is a harness failure, not a performance or Windows pass.
+The candidate stays outside `dev`; S48 remains partial.
+
 Latest S49 ownership follow-up: the action-runner prewarm fix at `3907df04`,
 integrated as `92e449ae`, removes the camera listener and queued debounce/idle
 work after final runner disposal. Seven lifecycle regressions fail against
