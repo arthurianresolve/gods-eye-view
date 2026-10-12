@@ -174,3 +174,54 @@ frames; this is a hypothesis source, not proof that either path ran here.
 The exact Chrome build's source was not available through the web reader.
 Production rendering, preservation, antialiasing, browser flags and drivers
 remain unchanged.
+
+## Exact-revision integration checks
+
+Both the reconciled dev revision `416296730846ae3fb9022fedaad1fef4c9b6d86f`
+and delayed-start fixture revision `6087231ae1482ff953b3b75bc0e91f722547809e`
+pass all seven standard CI jobs: Node 24/26 tests and production builds,
+Windows onboarding, Windows/macOS/Linux installation and recovery, and the
+browser journey gate. The complete records are retained for
+[dev run 38191969671](standard-ci-dev-38191969671.json) and
+[fixture run 38191970099](standard-ci-fixture-38191970099.json), including
+individual step outcomes and GitHub run URLs. The optional soak and other
+dispatch-only diagnostics were skipped; the PR-only layer-token check was
+also skipped. These passes do not resolve the separately reproduced Windows
+frame-delivery stall or qualify the final performance candidate.
+
+## Static and animated pixel controls
+
+Fixture-only commit `a92c69217e95c3a61d74d81c9e8f4274b14c7f1d` adds a
+static/animated selection using the same shader, uniform update and draw path.
+Only the green channel of the cyan point color changes with elapsed time in
+the animated arm. Geometry, the 5,000-point count, drawing-buffer dimensions,
+antialiasing and preservation remain fixed. Thirteen focused tests pass.
+
+The ordered A/B/B/A sequence below uses A=static and B=animated, followed by
+plain RAF. Every run waits ten seconds before setup, then measures five
+seconds. No local test, build or formatting job ran during the sequence, and
+there were no browser calls during the observation windows.
+
+| Control | Frames / five seconds | Maximum RAF gap | Maximum 20 ms timer gap |
+| --- | --- | --- | --- |
+| [A1 static](pixel-a1-static.json) | 41 | 550.2 ms | 21.2 ms |
+| [B1 animated](pixel-b1-animated.json) | 53 | 533.1 ms | 21.9 ms |
+| [B2 animated](pixel-b2-animated.json) | 42 | 550.1 ms | 21.7 ms |
+| [A2 static](pixel-a2-static.json) | 43 | 549.6 ms | 21.4 ms |
+| [Plain RAF](pixel-plain-raf.json) | 301 | 18.5 ms | 22.0 ms |
+
+[Independent raw-file review](pixel-control-review.json) verifies exact build
+identity, matching 894x585 viewports, 640x360 buffers, full canvas intersection,
+unchanged start/end layout, context attributes, the Intel hardware renderer,
+preparation and reported focus/visibility. The animated endpoint uniform
+values match their elapsed-time formula and differ; static values stay at
+one. All runs have zero recorded visibility/focus changes and no context loss.
+Copied raw files retain their original bytes and SHA-256 hashes.
+
+Changing pixels does not eliminate this frame-delivery stall. Identical-pixel
+output alone therefore does not explain these observations. The healthy
+heartbeat and plain-RAF reference narrow the reproduction but do not identify
+a compositor, driver or application root cause. These short controls are not
+GPU execution-time measurements, image-equivalence checks, or hardware-soak
+acceptance. Desktop occlusion remains unverified; the user has been asked
+whether the physical Chrome window was fully visible and uncovered.
