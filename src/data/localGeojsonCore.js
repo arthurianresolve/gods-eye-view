@@ -641,6 +641,10 @@ export function createLocalGeoJsonLayer(
       active: _activeLodIds.size,
       budgetLimit: _lastLodBudgetLimit,
       computed: _lodComputed,
+      geometryDirty: _stemGeometryDirty,
+      cameraPosition: _lodComputed
+        ? [_lastLodCameraPos.x, _lastLodCameraPos.y, _lastLodCameraPos.z]
+        : null,
     }),
 
     /**

@@ -41,6 +41,7 @@ export const INFRASTRUCTURE_FIXTURE_LAYERS = Object.freeze({
   }),
 });
 
+export const DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID = 'local-datacenters';
 export const DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID = 'local-dams';
 
 export function infrastructureFixtureLayer(

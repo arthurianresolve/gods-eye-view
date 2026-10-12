@@ -8,7 +8,7 @@ import { readPerformanceEnvironment } from '../../src/performance/performanceSna
 import { countInfrastructureGraphics } from '../performance/infrastructureRuntimeComparison.mjs';
 import {
   assertInfrastructureSourceInventory,
-  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
@@ -18,8 +18,10 @@ const FRAME_TIMEOUT_MS = 12_000;
 const params = new URLSearchParams(location.search);
 const mode = params.get('mode');
 const fixtureLayer = infrastructureFixtureLayer(
-  params.get('layerId') || DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  params.get('layerId') || DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
 );
+if (fixtureLayer.layerId !== DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID)
+  throw new Error('The benefit fixture supports datacenters only.');
 const statusNode = document.querySelector('#status');
 const outputNode = document.querySelector('#result');
 const container = document.querySelector('#viewer');
@@ -811,7 +813,7 @@ async function prepare() {
   layersRef = createInfrastructureLayers({
     ...localGeoJsonServices,
     ...(mode === 'primitive-collections'
-      ? { infrastructureSurfaceRenderer: mode }
+      ? { datacenterSurfaceRenderer: mode }
       : {}),
   });
   layerRef = layersRef.find((layer) => layer.id === fixtureLayer.layerId);

@@ -93,14 +93,14 @@ test('infrastructure factory preserves identity and creates independent state wi
   });
 });
 
-test('infrastructure factory passes the opt-in surface renderer to both local layers', () => {
+test('infrastructure factory scopes the opt-in surface renderer to datacenters only', () => {
   const layers = createInfrastructureLayers({
     ...services(),
-    infrastructureSurfaceRenderer: 'primitive-collections',
+    datacenterSurfaceRenderer: 'primitive-collections',
   });
   assert.deepEqual(
     layers.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
-    ['primitive-collections', 'primitive-collections'],
+    ['primitive-collections', 'entities'],
   );
   layers.forEach((layer) => layer.destroy());
 });

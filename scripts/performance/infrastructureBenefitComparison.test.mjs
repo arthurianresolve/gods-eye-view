@@ -404,6 +404,44 @@ test('datacenter benefit evidence binds the complete untruncated inventory', () 
   );
 });
 
+test('datacenter benefit evidence requires source, layer, and owner provenance', () => {
+  for (const path of [
+    'scripts/fixtures/infrastructureFixtureLayer.mjs',
+    'scripts/fixtures/infrastructureFixtureCamera.mjs',
+    'scripts/fixtures/infrastructureNativePickOwnership.mjs',
+  ]) {
+    const report = validReport('local-datacenters');
+    delete report.provenance.files[path];
+    assert.throws(
+      () =>
+        validateInfrastructureBenefitReport(report, {
+          expectedCommit: commit,
+          expectedLayerId: 'local-datacenters',
+        }),
+      /source or installed Cesium identity is incomplete/,
+      path,
+    );
+  }
+
+  for (const remove of [
+    (run) => delete run.layerId,
+    (run) => delete run.source.layerId,
+    (run) => delete run.surfacePopulation.layerId,
+    (run) => delete run.surfacePopulation.preservedGraphics,
+  ]) {
+    const report = validReport('local-datacenters');
+    remove(report.pairs[0].runs.entities);
+    assert.throws(
+      () =>
+        validateInfrastructureBenefitReport(report, {
+          expectedCommit: commit,
+          expectedLayerId: 'local-datacenters',
+        }),
+      /source identity|selected a different|population is incomplete|preserved source geometry/,
+    );
+  }
+});
+
 test('datacenter benefit evidence binds independent native owners and exact picks', () => {
   const report = validReport('local-datacenters');
   const baseline = report.pairs[0].runs.entities.firstUsable.target;

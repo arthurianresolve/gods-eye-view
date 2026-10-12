@@ -26,11 +26,12 @@ import {
 import {
   assertInfrastructureSourceInventory,
   DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from '../fixtures/infrastructureFixtureLayer.mjs';
 
 export const INFRASTRUCTURE_BENEFIT_SCHEMA =
-  'gev-infrastructure-benefit-comparison/v2';
+  'gev-infrastructure-benefit-comparison/v3';
 export const INFRASTRUCTURE_BENEFIT_MODES = Object.freeze([
   'entities',
   'primitive-collections',
@@ -485,7 +486,7 @@ export function validateInfrastructureBenefitReport(
     'scripts/performance/infrastructureBenefitComparison.mjs',
     'scripts/performance/infrastructureBenefitComparison.test.mjs',
   ];
-  if (layer.layerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID)
+  if (layer.layerId === DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID)
     requiredSourcePaths.push(
       'scripts/fixtures/infrastructureFixtureLayer.mjs',
       'scripts/fixtures/infrastructureFixtureCamera.mjs',
@@ -751,8 +752,13 @@ if (isMain) {
   const requestedLayerId =
     layerOption >= 0
       ? process.argv[layerOption + 1]
-      : DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+      : DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID;
   const selectedLayer = infrastructureFixtureLayer(requestedLayerId);
+  assert.equal(
+    selectedLayer.layerId,
+    DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+    'This candidate measures the datacenter layer only.',
+  );
   assert.ok(
     outputPath,
     'Usage: infrastructureBenefitComparison.mjs OUTPUT_DIR [--layer-id local-datacenters]',

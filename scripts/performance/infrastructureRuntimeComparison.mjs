@@ -1,11 +1,12 @@
 import {
   assertInfrastructureSourceInventory,
   DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from '../fixtures/infrastructureFixtureLayer.mjs';
 
 export const INFRASTRUCTURE_RUNTIME_SCHEMA =
-  'gev-infrastructure-runtime-renderers/v3';
+  'gev-infrastructure-runtime-renderers/v4';
 export const INFRASTRUCTURE_RUNTIME_CASES = Object.freeze([
   'default-style',
   'camera-lod-update',

@@ -1594,7 +1594,12 @@ test('getLodDiagnostics reports the active/total split and the band budget', asy
   });
 
   assert.deepEqual(env.layer.getLodDiagnostics(), {
-    total: 150, active: 0, budgetLimit: 0, computed: false,
+    total: 150,
+    active: 0,
+    budgetLimit: 0,
+    computed: false,
+    geometryDirty: true,
+    cameraPosition: null,
   }, 'before the first walk: materialized but not yet selected');
 
   env.preRender.raise();

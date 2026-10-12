@@ -11,7 +11,7 @@ import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
-import { DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
+import { DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -241,29 +241,21 @@ try {
           `Collection diagnostic failed: ${report.pointCollections.error || 'incomplete samples'}`,
         );
     }
-    const infrastructureDiagnostic =
-      process.argv.includes('--infrastructure') ||
-      process.argv.includes('--infrastructure-datacenters');
-    if (infrastructureDiagnostic && report.hardwareRenderingAvailable) {
+    if (
+      process.argv.includes('--infrastructure') &&
+      report.hardwareRenderingAvailable
+    ) {
       await page.setViewport({
         width: 1200,
         height: 960,
         deviceScaleFactor: 1,
       });
-      const infrastructureUrl = new URL(
-        url.replace(
-          'capture-matrix.html',
-          'infrastructure-runtime-collections.html',
-        ),
+      await page.goto(
+        url.replace('capture-matrix.html', 'infrastructure-collections.html'),
+        { waitUntil: 'networkidle0' },
       );
-      const expectedLayerId = process.argv.includes(
-        '--infrastructure-datacenters',
-      )
-        ? 'local-datacenters'
-        : DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
-      if (expectedLayerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID)
-        infrastructureUrl.searchParams.set('layerId', expectedLayerId);
-      await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
+      await page.select('#color-encoding', 'entity-color-attribute-byte');
+      await page.click('#run');
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
         { timeout: 360_000, polling: 100 },
@@ -286,11 +278,55 @@ try {
           ?.stemColorEncoding !== 'entity-color-attribute-byte'
       )
         throw new Error(
-          'Infrastructure run did not execute the production RGBA8 collection candidate',
+          'Infrastructure run did not execute the explicitly selected RGBA8 candidate',
         );
-      validateInfrastructureRuntimeReport(report.infrastructureCollections, {
+      validateInfrastructureCollectionReport(report.infrastructureCollections, {
         expectedCommit: commit,
-        expectedLayerId,
+      });
+    }
+    if (
+      process.argv.includes('--infrastructure-datacenters') &&
+      report.hardwareRenderingAvailable
+    ) {
+      await page.setViewport({
+        width: 1200,
+        height: 960,
+        deviceScaleFactor: 1,
+      });
+      const infrastructureUrl = new URL(
+        url.replace(
+          'capture-matrix.html',
+          'infrastructure-runtime-collections.html',
+        ),
+      );
+      infrastructureUrl.searchParams.set(
+        'layerId',
+        DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+      );
+      await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
+      await page.waitForFunction(
+        () => document.querySelector('#result')?.textContent,
+        { timeout: 360_000, polling: 100 },
+      );
+      report.infrastructureDatacenters = await page.$eval(
+        '#result',
+        (element) => JSON.parse(element.textContent),
+      );
+      report.infrastructureDatacentersGraphics =
+        await readBrowserGraphicsInfo(browser);
+      report.infrastructureDatacentersRenderingEvidence = classifyRenderer(
+        report.infrastructureDatacenters.environment?.renderer,
+        report.infrastructureDatacentersGraphics,
+      );
+      if (
+        !report.infrastructureDatacentersRenderingEvidence.accelerationVerified
+      )
+        throw new Error(
+          'Datacenter viewer did not retain verified acceleration.',
+        );
+      validateInfrastructureRuntimeReport(report.infrastructureDatacenters, {
+        expectedCommit: commit,
+        expectedLayerId: DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
       });
     }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {

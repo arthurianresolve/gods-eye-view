@@ -798,7 +798,7 @@ jobs:
     name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
-    timeout-minutes: ${{ inputs.renderer_diagnostic == 'import-point-benefit' && 45 || inputs.renderer_diagnostic == 'traffic' && 20 || 10 }}
+    timeout-minutes: ${{ inputs.renderer_diagnostic == 'import-point-benefit' && 45 || inputs.renderer_diagnostic == 'datacenter-benefit' && 45 || inputs.renderer_diagnostic == 'traffic' && 20 || 10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:

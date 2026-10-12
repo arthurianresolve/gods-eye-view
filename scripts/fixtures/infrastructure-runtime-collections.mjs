@@ -8,7 +8,7 @@ import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
   assertInfrastructureSourceInventory,
-  DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+  DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
@@ -25,8 +25,10 @@ import {
 const FRAME_TIMEOUT_MS = 400;
 const fixtureLayer = infrastructureFixtureLayer(
   new URLSearchParams(location.search).get('layerId') ||
-    DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+    DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
 );
+if (fixtureLayer.layerId !== DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID)
+  throw new Error('The runtime comparison fixture supports datacenters only.');
 const container = document.querySelector('#viewer');
 const status = document.querySelector('#status');
 const output = document.querySelector('#result');
@@ -619,7 +621,7 @@ async function runLayerLifetime(
   const layerStart = performance.now();
   const services = { ...localGeoJsonServices };
   if (mode === 'primitive-collections')
-    services.infrastructureSurfaceRenderer = mode;
+    services.datacenterSurfaceRenderer = mode;
   const layers = createInfrastructureLayers(services);
   const targetLayer = layers.find(
     (candidate) => candidate.id === layer.layerId,
