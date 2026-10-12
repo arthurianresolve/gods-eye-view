@@ -37,3 +37,18 @@ failure is established by this harness error. The branch remains outside dev.
   20,878 bytes, SHA-256 `21ad706539120e02462e9b9465415c6c9f927a74f0ddb4e14aa20098bca17c71`.
 - [Independent byte/source/cleanup review](review.json).
 - [Terminal workflow metadata](run.json).
+
+An [independent controlled reproduction](release-original-reproduction.mjs)
+using the actual interception module and a deferred responder produces the
+same error: Fetch.enable, Fetch.disable, then stale Fetch.continueRequest and
+Fetch.failRequest commands; the owned listener remains registered.
+[Exact observations and source hash](release-original-reproduction.json)
+establish a reproducible ordering defect matching the failure. The session
+is a protocol stub, so this does not reconstruct the live browser timeline.
+
+The fix must also preserve fixture isolation. Current Chromium source shows
+[Fetch.disable resets the interceptor](https://github.com/chromium/chromium/blob/main/content/browser/devtools/protocol/fetch_handler.cc),
+whose [request detach path resumes unresolved requests](https://github.com/chromium/chromium/blob/main/content/browser/devtools/devtools_url_loader_interceptor.cc).
+This source review informs the teardown design; it does not verify the exact
+Chrome 152 binary. Test pending external/API requests explicitly so release
+cannot silently turn fixture requests into live-provider traffic.
