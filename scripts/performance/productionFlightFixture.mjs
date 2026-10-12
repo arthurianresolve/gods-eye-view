@@ -309,6 +309,7 @@ export function installPhasedMonotonicWallClock(
   if (typeof nativeNow !== 'function')
     throw new Error('Native performance clock is required for phased wall time.');
   let phase = 'setup';
+  let runOrdinal = 1;
   let phaseStartedAt = null;
   let elapsedWarmupMs = 0;
   let elapsedMeasurementMs = 0;
@@ -351,16 +352,29 @@ export function installPhasedMonotonicWallClock(
       : measurementNativeElapsedMs,
     startCount: phase === 'setup' ? 0 : 1,
     measurementStartCount: ['measurement', 'complete'].includes(phase) ? 1 : 0,
+    runOrdinal,
   });
+  const assertExpectedRunOrdinal = (expectedRunOrdinal) => {
+    if (
+      expectedRunOrdinal !== undefined &&
+      expectedRunOrdinal !== null &&
+      expectedRunOrdinal !== runOrdinal
+    )
+      throw new Error(
+        `Phased clock callback belongs to run ${expectedRunOrdinal}; current run is ${runOrdinal}.`,
+      );
+  };
   const clock = Object.freeze({
     schema: 'gev-phased-monotonic-wall-clock/v1',
-    startWarmup() {
+    startWarmup(expectedRunOrdinal = null) {
+      assertExpectedRunOrdinal(expectedRunOrdinal);
       if (phase !== 'setup') throw new Error('Warmup can start only once from setup.');
       phase = 'warmup';
       phaseStartedAt = nativeNow();
       return snapshot();
     },
-    holdWarmupBoundary() {
+    holdWarmupBoundary(expectedRunOrdinal = null) {
+      assertExpectedRunOrdinal(expectedRunOrdinal);
       if (phase !== 'warmup') throw new Error('Warmup boundary requires active warmup.');
       const elapsed = Math.min(warmupMs, elapsedWarmupMs + Math.max(0, nativeNow() - phaseStartedAt));
       if (elapsed < warmupMs) throw new Error('Warmup boundary reached too early.');
@@ -370,13 +384,15 @@ export function installPhasedMonotonicWallClock(
       phaseStartedAt = null;
       return snapshot();
     },
-    startMeasurement() {
+    startMeasurement(expectedRunOrdinal = null) {
+      assertExpectedRunOrdinal(expectedRunOrdinal);
       if (phase !== 'warmup-held') throw new Error('Measurement requires the held warmup boundary.');
       phase = 'measurement';
       phaseStartedAt = nativeNow();
       return snapshot();
     },
-    finishMeasurement() {
+    finishMeasurement(expectedRunOrdinal = null) {
+      assertExpectedRunOrdinal(expectedRunOrdinal);
       if (phase !== 'measurement') throw new Error('Measurement can finish only once while active.');
       const elapsed = Math.min(measurementMs, elapsedMeasurementMs + Math.max(0, nativeNow() - phaseStartedAt));
       if (elapsed < measurementMs) throw new Error('Measurement boundary reached too early.');
@@ -384,6 +400,19 @@ export function installPhasedMonotonicWallClock(
       measurementNativeElapsedMs = Math.max(0, nativeNow() - phaseStartedAt);
       phase = 'complete';
       phaseStartedAt = null;
+      return snapshot();
+    },
+    resetForNextRun(expectedRunOrdinal = null) {
+      assertExpectedRunOrdinal(expectedRunOrdinal);
+      if (phase !== 'complete')
+        throw new Error('A phased clock can reset only after a completed run.');
+      phase = 'setup';
+      phaseStartedAt = null;
+      elapsedWarmupMs = 0;
+      elapsedMeasurementMs = 0;
+      warmupNativeElapsedMs = null;
+      measurementNativeElapsedMs = null;
+      runOrdinal += 1;
       return snapshot();
     },
     snapshot,
@@ -395,9 +424,9 @@ export function installPhasedMonotonicWallClock(
 }
 
 /** Hold the provider fixture clock at warmup completion inside the render probe. */
-export function holdProviderWarmupBoundary(warmupMs) {
+export function holdProviderWarmupBoundary(warmupMs, expectedRunOrdinal = null) {
   const clock = globalThis.window?.__gevPhasedMonotonicWallClockV1;
-  const held = clock?.holdWarmupBoundary?.();
+  const held = clock?.holdWarmupBoundary?.(expectedRunOrdinal);
   if (
     !held ||
     held.phase !== 'warmup-held' ||
@@ -414,6 +443,19 @@ export function holdProviderWarmupBoundary(warmupMs) {
   )
     throw new Error('Provider fixture warmup boundary snapshot is invalid.');
   return snapshot;
+}
+
+/**
+ * Provider samples on fresh documents each begin at run one; the Austin
+ * operating workload deliberately reuses one measured document.
+ */
+export function expectedFixtureRunOrdinal({
+  sharedDocument = false,
+  completedSampleCount = 0,
+} = {}) {
+  if (!Number.isSafeInteger(completedSampleCount) || completedSampleCount < 0)
+    throw new TypeError('Completed fixture sample count must be nonnegative.');
+  return sharedDocument ? completedSampleCount + 1 : 1;
 }
 
 /** Wait for one completed Cesium render after a held clock boundary. */

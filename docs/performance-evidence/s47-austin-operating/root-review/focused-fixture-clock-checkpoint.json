@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-12T20:04:00.805Z",
+  "scope": "Local focused Node suites only; capture producer is still WIP.",
+  "sourceHashesBefore": {
+    "scripts/performance/austinOperatingWorkloadContract.mjs": "a178f957dfc756c32f88a6ad855a966551e4de28639c55736bf8d9d5e777a672",
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "1bd4817458c4b3906fc8d41b0ea438f01f0372eb83bd55fd460b46027c84e5e3",
+    "scripts/performance/austinOperatingWorkloadFixture.test.mjs": "6b3c184ef77247b318feff5d3c340c8612928a53079639be257f7421f91454ec",
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801",
+    "scripts/performance/productionFlightFixture.test.mjs": "7accb61860f7414f5524603b3176cdfeaf6edd9a433fde72a303b8ea649af620"
+  },
+  "sourceHashesAfter": {
+    "scripts/performance/austinOperatingWorkloadContract.mjs": "a178f957dfc756c32f88a6ad855a966551e4de28639c55736bf8d9d5e777a672",
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "1bd4817458c4b3906fc8d41b0ea438f01f0372eb83bd55fd460b46027c84e5e3",
+    "scripts/performance/austinOperatingWorkloadFixture.test.mjs": "6b3c184ef77247b318feff5d3c340c8612928a53079639be257f7421f91454ec",
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801",
+    "scripts/performance/productionFlightFixture.test.mjs": "7accb61860f7414f5524603b3176cdfeaf6edd9a433fde72a303b8ea649af620"
+  },
+  "output": "✔ composed fixture pins full declared populations and preserves source epochs (45.5629ms)\n✔ actual native adapters consume the pinned/synthetic source endpoint bodies (90.4383ms)\n✔ owned requests are strict about method, group, viewport and tile identity (28.1903ms)\n✔ native-style method accessors and per-view installation responses preserve endpoint ownership (23.5663ms)\n✔ document delivery does not require the entire route tile inventory (23.084ms)\n✔ fulfilled responses are hash checked and missing pinned response routes fail closed (22.9578ms)\n✔ fulfilled synthetic CCTV frames cannot claim an unknown camera ID (24.0923ms)\n✔ required asset summaries reject unknown IDs and missing installation delivery (22.0042ms)\n✔ installation delivery has a hard 32-variant bound (62.0593ms)\n✔ production flight fixture is deterministic, bounded OpenSky payload data (22.34ms)\n✔ production fixture rejects subsecond epochs that OpenSky rows cannot represent (0.5183ms)\n✔ real flight source accepts all generated vectors and applies its freshness window (15.6852ms)\n✔ flight fixture response is restricted to same-origin GET /api/flights (0.5591ms)\n✔ fixture delivery is recorded only after CDP fulfillment acknowledgement (3.1092ms)\n✔ fixture delivery rejects acknowledged bytes that differ from the fixture (0.5139ms)\n✔ failed CDP fulfillment acknowledgement never counts as delivered (1.0041ms)\n✔ fixed page clock changes Date wall time without replacing performance time (0.4444ms)\n✔ infrastructure fixture wall clock stays frozen while monotonic time advances (0.5509ms)\n✔ fixture wall-clock selection preserves dense advancing and capture-held contracts (0.4659ms)\n✔ held monotonic wall clock starts once without replacing native timers or monotonic time (0.785ms)\n✔ phased wall clock advances only through declared forward phases and caps boundaries (1.0945ms)\n✔ phased clock rejects callbacks retained from a prior completed run (0.3356ms)\n✔ phased fixture ordinals distinguish reused Austin from fresh provider documents (0.1742ms)\n✔ completed-render settling removes its listener on render, timeout, and cancellation (11.4239ms)\n✔ entity-follow route requires matching fixture epochs, fresh source, and actual target motion (1.696ms)\nℹ tests 25\nℹ suites 0\nℹ pass 25\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2305.3497\n"
+}

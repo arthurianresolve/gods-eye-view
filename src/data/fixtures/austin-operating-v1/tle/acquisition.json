@@ -1,0 +1,65 @@
+{
+  "schema": "gev-austin-tle-acquisition/v1",
+  "rows": [
+    {
+      "group": "stations",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle",
+      "fetchedAt": "2026-10-12T18:54:50.585Z",
+      "status": 200,
+      "filename": "stations.tle",
+      "byteLength": 3192,
+      "sha256": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c",
+      "accepted": true
+    },
+    {
+      "group": "visual",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle",
+      "fetchedAt": "2026-10-12T18:54:51.590Z",
+      "status": 200,
+      "filename": "visual.tle",
+      "byteLength": 26040,
+      "sha256": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9",
+      "accepted": true
+    },
+    {
+      "group": "gps-ops",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=tle",
+      "fetchedAt": "2026-10-12T18:54:51.844Z",
+      "status": 200,
+      "filename": "gps-ops.tle",
+      "byteLength": 5376,
+      "sha256": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909",
+      "accepted": true
+    },
+    {
+      "group": "glo-ops",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=glo-ops&FORMAT=tle",
+      "fetchedAt": "2026-10-12T18:54:52.072Z",
+      "status": 200,
+      "filename": "glo-ops.tle",
+      "byteLength": 4536,
+      "sha256": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f",
+      "accepted": true
+    },
+    {
+      "group": "galileo",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=galileo&FORMAT=tle",
+      "fetchedAt": "2026-10-12T18:54:52.575Z",
+      "status": 200,
+      "filename": "galileo.tle",
+      "byteLength": 5376,
+      "sha256": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255",
+      "accepted": true
+    },
+    {
+      "group": "geo",
+      "url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=geo&FORMAT=tle",
+      "fetchedAt": "2026-10-12T18:54:54.307Z",
+      "status": 200,
+      "filename": "geo.tle",
+      "byteLength": 95088,
+      "sha256": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14",
+      "accepted": true
+    }
+  ]
+}

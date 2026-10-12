@@ -1,0 +1,248 @@
+{
+  "schema": "austin-operating-alpr-acquisition/v1",
+  "fetchedAt": "2026-10-12T18:57:33.928Z",
+  "manifest": {
+    "url": "https://tiles.dontgetflocked.com/cameras-us-hourly.json",
+    "status": 200,
+    "byteLength": 33871,
+    "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6",
+    "contentType": "application/json",
+    "tileTemplate": "https://tiles.dontgetflocked.com/cameras-us-hourly/{z}/{x}/{y}.mvt",
+    "bounds": [
+      -159.609375,
+      17.685895,
+      -64.599609,
+      61.616843
+    ],
+    "minzoom": 0,
+    "maxzoom": 14
+  },
+  "tiles": [
+    {
+      "z": 11,
+      "x": 466,
+      "y": 842,
+      "filename": "466-842.pbf",
+      "status": 200,
+      "byteLength": 3950,
+      "sha256": "f421c3e69a288c325a71945d2b85d055891c72ca67d1de3c07de3fffdd79d75b",
+      "fetchedAt": "2026-10-12T18:57:35.127Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 466,
+      "y": 843,
+      "filename": "466-843.pbf",
+      "status": 200,
+      "byteLength": 1541,
+      "sha256": "07ed7c26edec913071060b227afb585fb2a3271df10563fa91d9122a379ef908",
+      "fetchedAt": "2026-10-12T18:57:35.952Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 466,
+      "y": 844,
+      "filename": "466-844.pbf",
+      "status": 200,
+      "byteLength": 669,
+      "sha256": "1ee790139577ecec3d7db902c0550cc3e0b45fb38f6742de3b6e23560b77b0ce",
+      "fetchedAt": "2026-10-12T18:57:36.678Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 467,
+      "y": 841,
+      "filename": "467-841.pbf",
+      "status": 200,
+      "byteLength": 4831,
+      "sha256": "2838a55799a1d1f8dc12b7cb644e228ad8cfdbdb93d1b039534fce5fb2d3fe04",
+      "fetchedAt": "2026-10-12T19:19:34.350Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 467,
+      "y": 842,
+      "filename": "467-842.pbf",
+      "status": 200,
+      "byteLength": 2732,
+      "sha256": "7340ed2ec59c74f85e3ce95692b52d41d77cba8c7bf984f765e05604da35c84d",
+      "fetchedAt": "2026-10-12T18:57:35.369Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 467,
+      "y": 843,
+      "filename": "467-843.pbf",
+      "status": 200,
+      "byteLength": 8102,
+      "sha256": "4a64c26bc61652b7598237e0703c270e51ac6fafcf4e812b504748ab8772c9ff",
+      "fetchedAt": "2026-10-12T18:57:36.191Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 467,
+      "y": 844,
+      "filename": "467-844.pbf",
+      "status": 200,
+      "byteLength": 4793,
+      "sha256": "03c879fbe7ffd6d59ebb528b334cb226098d9fcec846db4957f299d365b811a5",
+      "fetchedAt": "2026-10-12T18:57:36.939Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 468,
+      "y": 841,
+      "filename": "468-841.pbf",
+      "status": 200,
+      "byteLength": 8809,
+      "sha256": "98987429b8177efb8d58cfef1a1391b3b9c210ec47246b572535c3ad8232d9d9",
+      "fetchedAt": "2026-10-12T19:19:34.569Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 468,
+      "y": 842,
+      "filename": "468-842.pbf",
+      "status": 200,
+      "byteLength": 10002,
+      "sha256": "673f87bd9e930ff31e26af762e8eaebc3c47e41495d9328291046f561868953f",
+      "fetchedAt": "2026-10-12T18:57:35.728Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 468,
+      "y": 843,
+      "filename": "468-843.pbf",
+      "status": 200,
+      "byteLength": 2188,
+      "sha256": "96e57750486c54188a140680616b1ce7ee869b2b34ecccf8bfd2dda936f97643",
+      "fetchedAt": "2026-10-12T18:57:36.471Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 468,
+      "y": 844,
+      "filename": "468-844.pbf",
+      "status": 200,
+      "byteLength": 1143,
+      "sha256": "ff5f97e3481e56c0bf1dd57c439fb87226513ebe7571493d68372c0dea2a7042",
+      "fetchedAt": "2026-10-12T18:57:37.219Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 469,
+      "y": 841,
+      "filename": "469-841.pbf",
+      "status": 200,
+      "byteLength": 1236,
+      "sha256": "26887e537f4019cabc46c192741a221e51f8f0b8bb542f87f0b863b0f4369de2",
+      "fetchedAt": "2026-10-12T19:19:34.834Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 469,
+      "y": 842,
+      "filename": "469-842.pbf",
+      "status": 200,
+      "byteLength": 1704,
+      "sha256": "3f764678f2231fa14d421d844289908e9b05ad72d7d9211553360ab1a7e934df",
+      "fetchedAt": "2026-10-12T19:19:35.301Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 469,
+      "y": 843,
+      "filename": "469-843.pbf",
+      "status": 200,
+      "byteLength": 200,
+      "sha256": "fde51e20e3fade229056b4643622494f943363ea83ca13c618e1b2ff9c530e15",
+      "fetchedAt": "2026-10-12T19:19:35.725Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 470,
+      "y": 841,
+      "filename": "470-841.pbf",
+      "status": 200,
+      "byteLength": 526,
+      "sha256": "de3165dd78d76485c6933c8dc7729071c2f5f9b11f538e57bfc04b1bdc60634e",
+      "fetchedAt": "2026-10-12T19:19:35.079Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 470,
+      "y": 842,
+      "filename": "470-842.pbf",
+      "status": 200,
+      "byteLength": 543,
+      "sha256": "8a53ff39c54e644ececaefda2b2c528ea6204d560429aad4b765b3a7ad5f306b",
+      "fetchedAt": "2026-10-12T19:19:35.518Z",
+      "contentType": "application/x-protobuf"
+    },
+    {
+      "z": 11,
+      "x": 470,
+      "y": 843,
+      "filename": "470-843.pbf",
+      "status": 200,
+      "byteLength": 317,
+      "sha256": "23afa406147f734c425c1852a2d73d54dd61d81a0f115e3a18518d8d7c3f41c9",
+      "fetchedAt": "2026-10-12T19:19:35.964Z",
+      "contentType": "application/x-protobuf"
+    }
+  ],
+  "sourceProvenance": {
+    "upstreamRepository": "https://github.com/flockhopper3/deflock-data",
+    "checkedDate": "2026-10-12",
+    "underlyingData": "OpenStreetMap contributors",
+    "attribution": "© OpenStreetMap contributors",
+    "license": {
+      "name": "Open Database License 1.0",
+      "url": "https://opendatacommons.org/licenses/odbl/1-0/"
+    },
+    "copyrightNoticeUrl": "https://www.openstreetmap.org/copyright",
+    "codeLicenseDoesNotCoverData": true
+  },
+  "routeCoverage": {
+    "routeAudit": "qa-artifacts/austin-operating-review/route-audit.json",
+    "zoom": 11,
+    "requiredTiles": [
+      "11/467/841",
+      "11/468/841",
+      "11/469/841",
+      "11/470/841",
+      "11/467/842",
+      "11/468/842",
+      "11/469/842",
+      "11/470/842",
+      "11/467/843",
+      "11/468/843",
+      "11/469/843",
+      "11/470/843"
+    ],
+    "retainedOriginalNineTileAcquisition": true,
+    "excludedOriginalTiles": [
+      "11/466/842",
+      "11/466/843",
+      "11/466/844",
+      "11/467/844",
+      "11/468/844"
+    ],
+    "note": "Runtime fixture serves the exact 12-tile route union sampled from the existing 60-second camera path; original nine snapshot bytes and fetchedAt records remain unchanged."
+  }
+}

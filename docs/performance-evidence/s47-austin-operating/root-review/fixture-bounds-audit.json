@@ -1,0 +1,33 @@
+{
+  "schema": "gev-independent-austin-fixture-bounds-audit/v1",
+  "checkedAt": "2026-10-12T20:28:05.183Z",
+  "scope": "Local Node contract checks only; not a memory-profile, browser, hardware, or complete capture result.",
+  "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+  "sourceHashBefore": "fa5b3860b8caddc9eb6e7f7451c0dfa75db41f1b6faaf3c5761f1e623d7af953",
+  "sourceHashAfter": "fa5b3860b8caddc9eb6e7f7451c0dfa75db41f1b6faaf3c5761f1e623d7af953",
+  "checks": [
+    {
+      "id": "thirty-two-distinct-acknowledged-variants-retained",
+      "pass": true
+    },
+    {
+      "id": "repeat-response-increments-existing-variant-without-new-entry",
+      "pass": true
+    },
+    {
+      "id": "thirty-third-variant-rejects-and-invalidates-success-summary",
+      "pass": true
+    },
+    {
+      "id": "repeated-overflow-errors-have-bounded-redacted-history",
+      "pass": true
+    },
+    {
+      "id": "missing-required-source-and-unknown-requirements-fail-closed",
+      "pass": true
+    }
+  ],
+  "acknowledgedDistinctVariantsBeforeOverflow": 32,
+  "responsesAfterRepeat": 33,
+  "retainedErrorRowsAfter101Overflows": 16
+}

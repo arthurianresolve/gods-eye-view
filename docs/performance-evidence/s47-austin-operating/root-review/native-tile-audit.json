@@ -1,0 +1,102 @@
+{
+  "schema": "gev-root-native-alpr-tile-audit/v1",
+  "checkedAt": "2026-10-12T19:32:59.109Z",
+  "scope": "Acquisition bytes and native decode verified; geographic counts use the actual native nearby-area function sampled by the preceding math audit. No rendered visibility or browser readiness acceptance.",
+  "rows": [
+    {
+      "identity": "10/232/420",
+      "byteLength": 1474,
+      "sha256": "5756233d184a98270bbd7a6d33beb18a5e5ec312806d6ac7da2fed86c5c38777",
+      "decodedRecords": 20
+    },
+    {
+      "identity": "10/232/421",
+      "byteLength": 651,
+      "sha256": "1af059098980540fe5d5fa14ed4b9a4ab08c521e30b30ec359beb2a7d6faf5b3",
+      "decodedRecords": 7
+    },
+    {
+      "identity": "10/232/422",
+      "byteLength": 198,
+      "sha256": "7f53dbcd2563680857a00cea0a7250b3c258b8974ed86bb24019279bd30bee91",
+      "decodedRecords": 1
+    },
+    {
+      "identity": "10/233/420",
+      "byteLength": 7223,
+      "sha256": "6de753d863d19f5ce42ab6c5609f946b503187eb0fdeaaaf04c28090f92f3574",
+      "decodedRecords": 114
+    },
+    {
+      "identity": "10/233/421",
+      "byteLength": 15960,
+      "sha256": "8cdaced8e1c263721707a8ffe788b503c2b2db5226a5f658137ad0d855831a88",
+      "decodedRecords": 244
+    },
+    {
+      "identity": "10/233/422",
+      "byteLength": 7004,
+      "sha256": "5d3a4d03c035e3b034c0342a1d8ec8628f6f69a902b9b4df7be678310139045c",
+      "decodedRecords": 108
+    },
+    {
+      "identity": "10/234/420",
+      "byteLength": 11805,
+      "sha256": "f1a8320e4d524fd144a9dab1c02cc6b07a593581d80de85ceee0d6002d565ee8",
+      "decodedRecords": 175
+    },
+    {
+      "identity": "10/234/421",
+      "byteLength": 13749,
+      "sha256": "14fa7945f94f6c82fa5050c3930a9d480ab7e4719dc03a054df5fdc2851fef33",
+      "decodedRecords": 213
+    },
+    {
+      "identity": "10/234/422",
+      "byteLength": 1679,
+      "sha256": "50ebf9364b3d8c56d13e360ca1dfc28c159e38f14415ff24d0fa0ffb06589ed4",
+      "decodedRecords": 23
+    },
+    {
+      "identity": "10/235/420",
+      "byteLength": 526,
+      "sha256": "f34b0032b9c3296fbc1a841458ca2183562a3ae403ca9721407100c96ce67f1f",
+      "decodedRecords": 5
+    },
+    {
+      "identity": "10/235/421",
+      "byteLength": 853,
+      "sha256": "188fde858b15099378f76bc676e7463d5665220f930fd3c621fba033a5e5fb3b",
+      "decodedRecords": 11
+    },
+    {
+      "identity": "10/235/422",
+      "byteLength": 2100,
+      "sha256": "7da9834a2242a6251e55bc3ccbd9dc5608735b21b13f8aeef6e603b2bc160105",
+      "decodedRecords": 31
+    }
+  ],
+  "uniqueCatalogCount": 952,
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "nativeNearbyCount": 776,
+      "sortedIdsSha256": "0155e5b17c156250d386e4405e972b7a3513cb48217f774df201152a37ce10f7"
+    },
+    {
+      "elapsedMs": 1000,
+      "nativeNearbyCount": 777,
+      "sortedIdsSha256": "e09c772a70897c20de07dde5d933ba331fde5670c94e95604a96a4cb3cacb4e2"
+    },
+    {
+      "elapsedMs": 30000,
+      "nativeNearbyCount": 746,
+      "sortedIdsSha256": "91b2cd6eb3e6394e72c3002eea41034b47099674dc35bfa183587e5014cfb4be"
+    },
+    {
+      "elapsedMs": 60000,
+      "nativeNearbyCount": 704,
+      "sortedIdsSha256": "bd1194e5672c4009929f0d526395b5269e89d33c05f9da20d1c1cca56b2de58a"
+    }
+  ]
+}

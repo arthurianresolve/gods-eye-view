@@ -1,0 +1,35 @@
+{
+  "schema": "gev-phased-clock-reentry-audit/v1",
+  "checkedAt": "2026-10-12T19:47:16.299Z",
+  "sourceHashBefore": "4180bc3345d3d3561a3156a046f079d59819403a213e74fde9ca2a5d6badcd7a",
+  "sourceHashAfter": "4180bc3345d3d3561a3156a046f079d59819403a213e74fde9ca2a5d6badcd7a",
+  "scope": "A retained bare transition callback without an expected run token; not a browser or production lifecycle reproduction.",
+  "beforeLate": {
+    "schema": "gev-phased-monotonic-wall-clock/v1",
+    "phase": "warmup",
+    "epochMs": 1791828001000,
+    "elapsedMs": 1000,
+    "warmupMs": 1000,
+    "measurementMs": 1000,
+    "warmupNativeElapsedMs": 1000,
+    "measurementNativeElapsedMs": null,
+    "startCount": 1,
+    "measurementStartCount": 0,
+    "runOrdinal": 2
+  },
+  "afterLate": {
+    "schema": "gev-phased-monotonic-wall-clock/v1",
+    "phase": "warmup-held",
+    "epochMs": 1791828001000,
+    "elapsedMs": 1000,
+    "warmupMs": 1000,
+    "measurementMs": 1000,
+    "warmupNativeElapsedMs": 1000,
+    "measurementNativeElapsedMs": null,
+    "startCount": 1,
+    "measurementStartCount": 0,
+    "runOrdinal": 2
+  },
+  "rejected": false,
+  "error": null
+}

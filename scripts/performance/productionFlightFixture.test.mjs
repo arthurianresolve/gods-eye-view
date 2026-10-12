@@ -9,6 +9,7 @@ import {
   installFrozenWallClock,
   installHeldMonotonicWallClock,
   installPhasedMonotonicWallClock,
+  expectedFixtureRunOrdinal,
   installFixtureWallClockOnPage,
   selectFixtureWallClockInstaller,
   assertObservedTrackingRoute,
@@ -365,6 +366,7 @@ test('phased wall clock advances only through declared forward phases and caps b
   const completed = clock.finishMeasurement();
   assert.equal(completed.phase, 'complete');
   assert.equal(completed.epochMs, fixed + 2000);
+  assert.equal(completed.runOrdinal, 1);
   performanceTime += 20_000;
   assert.equal(
     target.Date.now(),
@@ -373,7 +375,77 @@ test('phased wall clock advances only through declared forward phases and caps b
   );
   assert.throws(() => clock.startWarmup(), /only once/);
   assert.throws(() => clock.finishMeasurement(), /only once/);
+  const nextRun = clock.resetForNextRun();
+  assert.equal(nextRun.phase, 'setup');
+  assert.equal(nextRun.epochMs, fixed);
+  assert.equal(nextRun.elapsedMs, 0);
+  assert.equal(nextRun.runOrdinal, 2);
+  assert.throws(() => clock.resetForNextRun(), /completed run/);
+  clock.startWarmup();
+  assert.throws(() => clock.resetForNextRun(), /completed run/);
+  performanceTime += 1000;
+  const nextWarmup = clock.holdWarmupBoundary();
+  assert.equal(nextWarmup.runOrdinal, 2);
+  clock.startMeasurement();
+  performanceTime += 1000;
+  const nextComplete = clock.finishMeasurement();
+  assert.equal(nextComplete.runOrdinal, 2);
   assert.equal(target.performance.now(), performanceTime);
+});
+
+test('phased clock rejects callbacks retained from a prior completed run', () => {
+  let performanceTime = 10;
+  const target = { Date, performance: { now: () => performanceTime } };
+  const fixed = Date.parse('2026-10-12T18:00:00.000Z');
+  installPhasedMonotonicWallClock(fixed, 1000, 1000, target);
+  const clock = target.__gevPhasedMonotonicWallClockV1;
+  const finishRun = (runOrdinal) => {
+    clock.startWarmup(runOrdinal);
+    performanceTime += 1000;
+    clock.holdWarmupBoundary(runOrdinal);
+    clock.startMeasurement(runOrdinal);
+    performanceTime += 1000;
+    return clock.finishMeasurement(runOrdinal);
+  };
+
+  const completedRun1 = finishRun(1);
+  assert.equal(completedRun1.phase, 'complete');
+  const run1BoundaryCallback = () => clock.holdWarmupBoundary(1);
+
+  clock.resetForNextRun(1);
+  clock.startWarmup(2);
+  performanceTime += 1000;
+  assert.throws(run1BoundaryCallback, /belongs to run 1; current run is 2/);
+  assert.equal(clock.snapshot().phase, 'warmup');
+  assert.equal(clock.snapshot().runOrdinal, 2);
+  assert.equal(target.Date.now(), fixed + 1000);
+
+  clock.holdWarmupBoundary(2);
+  clock.startMeasurement(2);
+  performanceTime += 1000;
+  const completedRun2 = clock.finishMeasurement(2);
+  assert.equal(completedRun2.runOrdinal, 2);
+  assert.throws(() => clock.resetForNextRun(1), /belongs to run 1; current run is 2/);
+  assert.equal(clock.snapshot().phase, 'complete');
+});
+
+test('phased fixture ordinals distinguish reused Austin from fresh provider documents', () => {
+  assert.equal(
+    expectedFixtureRunOrdinal({ sharedDocument: true, completedSampleCount: 0 }),
+    1,
+  );
+  assert.equal(
+    expectedFixtureRunOrdinal({ sharedDocument: true, completedSampleCount: 9 }),
+    10,
+  );
+  assert.equal(
+    expectedFixtureRunOrdinal({ sharedDocument: false, completedSampleCount: 9 }),
+    1,
+  );
+  assert.throws(
+    () => expectedFixtureRunOrdinal({ sharedDocument: true, completedSampleCount: -1 }),
+    /nonnegative/,
+  );
 });
 
 test('completed-render settling removes its listener on render, timeout, and cancellation', async () => {
