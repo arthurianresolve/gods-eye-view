@@ -2,6 +2,15 @@
 
 ## Current status - 12 October 2026
 
+Latest S50 correction: [exact camera-pose ownership at `61c050ca`](performance-evidence/s50-exact-pose/README.md)
+prevents rounded `p1` key collisions from retaining stale DEM supports, accepting
+late terrain responses, or admitting shipped supports for a calibrated pose.
+Six old-runtime regression failures are fixed; all 83 focused checks pass. The
+five-cycle CCTV lifecycle and five-pair native calibration checks pass at the
+exact clean candidate, with independent raw-report revalidation. Standard
+integration CI is pending. This is a specific revision-ownership repair; full
+S50 terrain/pose visual coverage and physical Windows acceptance remain open.
+
 Latest S47 diagnostic: [terminal-observation retirement at `fda1cb88`](performance-evidence/s47-observation-retirement-38237890055/README.md)
 passes baseline smoke, three candidate samples, all five reached document
 cleanup gates and all three CPU-profile teardowns. The complete run still fails
