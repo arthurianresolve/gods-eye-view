@@ -764,6 +764,16 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     validatedDocumentCount,
     'Worker blob observations must correspond one-to-one with validated document audits',
   );
+  assert.deepEqual(
+    blobAudits,
+    workerDocuments
+      .filter(
+        (entry) =>
+          entry.validation?.status === 'receipt-derived-worker-blobs-validated',
+      )
+      .map((entry) => entry.validation),
+    'Worker blob observations must preserve each document validation in order',
+  );
   const workerSourceHashes = new Set(
     workerDocuments
       .filter((entry) => entry.validation)

@@ -453,6 +453,10 @@ function validInfrastructureCaptureCliReport(
           status: 'receipt-derived-worker-blobs-validated',
           auditMode: 'diagnostic',
           embeddedWorkerSourceSha256: workerSourceSha256,
+          validatedWorkerCount:
+            documentRole === 'main-setup'
+              ? 100
+              : Number(documentRole.at(-1)) + 1,
         }
       : null;
     return {
@@ -630,6 +634,16 @@ test('capture CLI validates the selected infrastructure workload and rejects den
   assert.throws(
     () => validateCaptureCliReport(unownedObservation, expected),
     /one-to-one with validated document audits/,
+  );
+
+  const duplicatedObservation = validInfrastructureCaptureCliReport();
+  const duplicateAudits =
+    duplicatedObservation.source.buildProvenance.pageAssetAudit
+      .cesiumWorkerBlobAudits;
+  duplicateAudits[1] = structuredClone(duplicateAudits[0]);
+  assert.throws(
+    () => validateCaptureCliReport(duplicatedObservation, expected),
+    /preserve each document validation in order/,
   );
 
   const malformedObservation = validInfrastructureCaptureCliReport();
