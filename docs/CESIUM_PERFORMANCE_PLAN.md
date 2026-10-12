@@ -4316,3 +4316,12 @@ all 27 recorded source hashes and 40 decoded images (20 exact renderer pairs).
 The full artifact and failed acceptance are preserved alongside the datacenter
 result. Dam adoption remains blocked on source-ready attribution and resolution
 of the measured regression; lower heap does not convert it to a pass.
+
+S47 infrastructure capture selection at `87fad3fd` passes 39 focused tests,
+formatting and package boundaries after merging current dev. The first
+[hosted smoke 38188605428](performance-evidence/s47-infrastructure-smoke-38188605428/README.md)
+fails the additional candidate capture before any timing sample. The datacenter
+population is correct, but the static fixture uses an existing advancing wall
+clock adapter while requiring a frozen epoch. The failed report and source
+attribution are preserved. The adapter requires correction; no timestamp check
+is relaxed and no performance claim is made from this setup run.
