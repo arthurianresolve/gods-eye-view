@@ -3393,7 +3393,7 @@ async function runCandidateCaptureCli({
       const { validateAustinSatelliteEpochCaptureReport } =
         await import('./performance/austinSatelliteSampledEpoch.mjs');
       validateAustinSatelliteEpochCaptureReport({
-        fixture: austinOperatingCaptureFixture,
+        fixture,
         warmupMs: captureReport.workload?.warmupMs,
         durationPerSampleMs: captureReport.workload?.durationPerSampleMs,
         captures: captureReport.captures,

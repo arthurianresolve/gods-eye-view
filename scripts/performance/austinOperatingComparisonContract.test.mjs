@@ -16,7 +16,11 @@ import {
   createAustinOperatingFixtureDelivery,
   createAustinOperatingWorkloadFixture,
 } from './austinOperatingWorkloadFixture.mjs';
-import { createObservedAustinOperatingComparisonContract } from './captureComparisonContract.mjs';
+import {
+  createObservedAustinOperatingComparisonContract,
+  readSettledRenderBoundaryElapsedMs,
+} from './captureComparisonContract.mjs';
+import { observeRenderBoundary } from './renderBoundaryObservation.mjs';
 import {
   normalizeAustinSatelliteWitness,
   summarizeAustinNativePopulations,
@@ -538,6 +542,62 @@ test('Austin comparison contract is built from real fixture delivery acknowledgm
     input.contract.fixtureDelivery.sampleDocuments.every(
       (row) => row.populations.before.length === 6,
     ),
+  );
+});
+
+test('Austin measurement contract consumes the settled render-boundary producer result', async () => {
+  const boundary = await observeRenderBoundary({
+    label: 'Austin measurement boundary',
+    timeoutMs: 100,
+    evaluate: async () => ({
+      status: 'settled',
+      settleElapsedMs: 27.3,
+      diagnostics: {
+        phase: 'settled',
+        pageEntryElapsedMs: 0,
+        pageElapsedMs: 27.3,
+        listenerRegistered: true,
+        listenerRegistrationElapsedMs: 1,
+        renderRequestStarted: true,
+        renderRequestStartElapsedMs: 2,
+        renderRequestCompleted: true,
+        renderRequestCompleteElapsedMs: 3,
+        postRenderObserved: true,
+        postRenderElapsedMs: 27.3,
+        pageTimerFired: false,
+        pageTimerElapsedMs: null,
+        cleanup: { timerCleared: true, listenerRemoved: true },
+      },
+    }),
+  });
+  const input = await makeObservedPairInput();
+  input.captures[0].austinOperatingClock.measurementBoundarySettleNativeMs =
+    readSettledRenderBoundaryElapsedMs(boundary, 'Austin measurement');
+  const contract = createObservedAustinOperatingComparisonContract({
+    fixture: input.fixture,
+    fixtureDelivery: input.fixtureDelivery,
+    environment: input.environment,
+    captures: input.captures,
+    scenarios: input.scenarios,
+    workload: {
+      warmupMs: input.workload.warmupMs,
+      durationPerSampleMs: input.workload.durationPerSampleMs,
+      runsPerScenario: input.workload.runsPerScenario,
+    },
+  });
+
+  assert.equal(contract.schema, 'gev-performance-comparison-contract/v1');
+  assert.equal(
+    input.captures[0].austinOperatingClock.measurementBoundarySettleNativeMs,
+    27.3,
+  );
+  assert.throws(
+    () =>
+      readSettledRenderBoundaryElapsedMs(
+        { status: 'host-observation-deadline', settleElapsedMs: null },
+        'Austin measurement',
+      ),
+    /did not settle/,
   );
 });
 
