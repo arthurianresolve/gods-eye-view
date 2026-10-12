@@ -2,7 +2,7 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
+Recorded integration checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
 [All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38200576913.json),
 including the command-palette focus repair, Node 24/26, all three recovery jobs,
 Windows onboarding and the browser journeys.
@@ -11,7 +11,13 @@ diagnostic tooling, a command-palette focus repair, evidence and documentation. 
 readback speedup or resolve the Windows frame-delivery failure.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
-defaults. Datacenter component comparisons show repeatable activation and JS
+defaults. The dam and cable collection experiments are now
+**rejected for promotion**, under the plan's measured-benefit and visual gates;
+their source and failed evidence remain on the isolated QA branch. This is an
+experiment disposition, not completion of S54. The datacenter candidate remains
+isolated for physical Windows and mixed-layer acceptance. See the
+[disposition and remaining work](performance-evidence/s54-current-dev-20261012/README.md#experiment-disposition---12-october-2026).
+Datacenter component comparisons show repeatable activation and JS
 heap benefits with identical captured pixels. The fresh dam comparison regresses
 source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
 the earlier cable map-switch readiness failures remain unresolved. A subsequent
@@ -93,8 +99,25 @@ fails before installing its new observer: the diagnostic worker audit validates
 12 blobs but counts 14 at restoration. Native-wrapper restoration and registry
 cleanup succeed. The diagnostic path still separates its asynchronous reads
 from restoration, while prewarm already uses an atomic snapshot. This harness
-race must be reproduced and fixed before another motion diagnostic; the run
-does not explain the remaining rendering delay or provide a timed sample.
+race was subsequently reproduced and repaired at `6ca6373e`. Its
+[rendered check](performance-evidence/s47-atomic-audit-38202268223/README.md)
+keeps creation/restoration counts consistent at 14 and confirms native-wrapper
+restoration and empty registry. It still fails before any sample: one worker
+target is observed after the frozen boundary. The current guard rejects every
+late target, including potential delayed publication of already-frozen code.
+That distinction needs a deterministic test and exact URL/body validation;
+new or unaudited executable targets must remain failures. This result does not
+explain the remaining rendering delay or provide a timed sample.
+The [delayed-publication correction at `788b2bd8`](performance-evidence/s47-delayed-publication-38203199807/README.md)
+passes 58 independent focused tests and retains strict validation of frozen
+code. Its rendered run gets past audit, completes two idle samples and one
+motion sample, then reaches the unchanged 180-second capture-child deadline
+while preparing motion run 2. The motion observer cleans up and records
+multi-second update/render spans, but the bounded failure projection truncates
+script-level attribution. This is a failed short SwiftShader diagnostic, not
+an accepted benchmark or a cause for the separate physical Windows stall.
+No unchanged retry or deadline increase is justified; the harness remains
+isolated pending complete integration evidence.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
@@ -493,7 +516,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
-| S54 infrastructure batching | Partial: identity separation, opt-in datacenter/dam collections and cable reference collections; Entity defaults retained | Datacenters at `d05e5415` improve activation and retained JS heap with 20 exact image pairs; dams regress source-ready time 15.02% and fail benefit acceptance. Cable lifetime isolation at `dc1f416c` produces 10 independently verified exact image pairs and passing collection cleanup, but fails Entity re-enable cycle 0. Prior mismatches remain unexplained | Hosted Apple paravirtual Metal only. Cable lifecycle and repeatability gates remain unresolved; physical Windows acceptance and the final candidate soak remain pending |
+| S54 infrastructure batching | Partial: identity separation implemented; dam/cable prototypes rejected for promotion, datacenter candidate isolated; Entity defaults retained | Datacenters at `d05e5415` improve activation and retained JS heap with 20 exact image pairs. Dams regress source-ready time 15.02%; cable camera-change mismatches recur and lifecycle runs fail. Failed experiments are preserved, without unchanged retries or relaxed gates | Hosted Apple paravirtual Metal only. Datacenter physical Windows and mixed-layer acceptance remain pending; no full S54 or final-soak acceptance |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
