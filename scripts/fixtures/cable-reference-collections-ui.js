@@ -315,7 +315,10 @@ async function runLifetime({
         mode,
         sourceRecords,
         readinessDeadline,
-        lifetime.readinessByCase[caseId],
+        {
+          stage: `case-${caseId}-stable-scene`,
+          legacyObservations: lifetime.readinessByCase[caseId],
+        },
       );
       cameraContracts[caseId] = cameraContract(
         viewer,

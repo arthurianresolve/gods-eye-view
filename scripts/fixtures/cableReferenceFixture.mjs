@@ -11,7 +11,9 @@ import {
   appendCableFailureDiagnostics,
   attachCableReadinessFailure,
   cableFailureDiagnostics,
+  appendLegacyCableReadinessObservation,
   createCableReadinessTrace,
+  normalizeCableReadinessOptions,
 } from './cableFailureDiagnostics.mjs';
 import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
 import {
@@ -453,19 +455,36 @@ export async function waitForStableScene(
   deadline = performance.now() + STABLE_TIMEOUT_MS,
   options = {},
 ) {
-  const stage = options?.stage || 'scene-stability';
-  const trace = options?.trace || createCableReadinessTrace(stage);
+  const normalizedOptions = normalizeCableReadinessOptions(options);
+  const { stage, trace, legacyObservations } = normalizedOptions;
   const startedAt = performance.now();
   let previous = null;
   let stableFrames = 0;
   const observe = (primitiveReadiness = null, result = null) => {
     const diagnostics = cableFailureDiagnostics(viewer, layer);
+    const frameNumber = diagnostics.scene.frameNumber.available
+      ? diagnostics.scene.frameNumber.value
+      : null;
+    const dataSourceDisplayReady =
+      diagnostics.scene.dataSourceDisplayReady.available &&
+      diagnostics.scene.dataSourceDisplayReady.value === true;
+    const globeTilesLoaded =
+      diagnostics.scene.globeTilesLoaded.available &&
+      diagnostics.scene.globeTilesLoaded.value === true;
+    const remainingMs = Math.max(0, deadline - performance.now());
+    if (legacyObservations)
+      appendLegacyCableReadinessObservation(legacyObservations, {
+        remainingMs,
+        frameNumber,
+        dataSourceDisplayReady,
+        primitiveReadiness,
+      });
     trace.record({
       elapsedMs: Math.max(0, performance.now() - startedAt),
-      remainingMs: Math.max(0, deadline - performance.now()),
-      frameNumber: diagnostics.scene.frameNumber,
-      dataSourceDisplayReady: diagnostics.scene.dataSourceDisplayReady,
-      globeTilesLoaded: diagnostics.scene.globeTilesLoaded,
+      remainingMs,
+      frameNumber,
+      dataSourceDisplayReady,
+      globeTilesLoaded,
       primitiveReadiness: primitiveReadiness
         ? { available: true, value: primitiveReadiness }
         : {
@@ -479,7 +498,12 @@ export async function waitForStableScene(
   try {
     while (performance.now() < deadline) {
       const remainingMs = deadline - performance.now();
-      await waitForPostRender(viewer, Math.min(1000, remainingMs));
+      try {
+        await waitForPostRender(viewer, Math.min(1000, remainingMs));
+      } catch (error) {
+        if (performance.now() < deadline) throw error;
+        break;
+      }
       let primitiveReadiness;
       try {
         primitiveReadiness = readScenePrimitiveReadiness(viewer.scene, Cesium);

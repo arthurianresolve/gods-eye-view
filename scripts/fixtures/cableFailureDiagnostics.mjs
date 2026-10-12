@@ -57,6 +57,30 @@ export function createCableReadinessTrace(stage) {
   };
 }
 
+/** Adapt the older successful-case observation-array argument without changing its schema. */
+export function normalizeCableReadinessOptions(options) {
+  if (Array.isArray(options))
+    return {
+      stage: 'scene-stability',
+      trace: createCableReadinessTrace('scene-stability'),
+      legacyObservations: options,
+    };
+  const stage = options?.stage || 'scene-stability';
+  return {
+    stage,
+    trace: options?.trace || createCableReadinessTrace(stage),
+    legacyObservations: Array.isArray(options?.legacyObservations)
+      ? options.legacyObservations
+      : null,
+  };
+}
+
+export function appendLegacyCableReadinessObservation(target, observation) {
+  if (!Array.isArray(target)) return;
+  if (target.length >= 32) target.splice(1, 1);
+  target.push(observation);
+}
+
 /** Capture optional diagnostics without masking the caller's primary failure. */
 export function cableFailureDiagnostics(viewer, layer) {
   return {

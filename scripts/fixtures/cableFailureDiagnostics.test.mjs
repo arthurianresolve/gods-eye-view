@@ -4,8 +4,10 @@ import { createSubmarineCableLayer } from '../../src/layers/submarineCables/inde
 import {
   appendCableFailureDiagnostics,
   attachCableReadinessFailure,
+  appendLegacyCableReadinessObservation,
   createCableReadinessTrace,
   MAX_CABLE_READINESS_OBSERVATIONS,
+  normalizeCableReadinessOptions,
 } from './cableFailureDiagnostics.mjs';
 
 function makeLayer() {
@@ -172,4 +174,32 @@ test('readiness failure attaches serializable stage evidence without masking the
 
 test('readiness trace requires a useful stage label', () => {
   assert.throws(() => createCableReadinessTrace(''), /stage label/);
+});
+
+test('legacy case observation arrays retain their existing schema and cap', () => {
+  const observations = [];
+  const options = normalizeCableReadinessOptions({
+    stage: 'case-camera-change-stable-scene',
+    legacyObservations: observations,
+  });
+  assert.equal(options.legacyObservations, observations);
+  assert.equal(options.stage, 'case-camera-change-stable-scene');
+  for (let frameNumber = 1; frameNumber <= 40; frameNumber += 1)
+    appendLegacyCableReadinessObservation(observations, {
+      remainingMs: 1000 - frameNumber,
+      frameNumber,
+      dataSourceDisplayReady: true,
+      primitiveReadiness: { ready: true },
+    });
+  assert.equal(observations.length, 32);
+  assert.deepEqual(Object.keys(observations.at(-1)).sort(), [
+    'dataSourceDisplayReady',
+    'frameNumber',
+    'primitiveReadiness',
+    'remainingMs',
+  ]);
+  assert.deepEqual(
+    observations.map(({ frameNumber }) => frameNumber),
+    [1, ...Array.from({ length: 31 }, (_, index) => index + 10)],
+  );
 });
