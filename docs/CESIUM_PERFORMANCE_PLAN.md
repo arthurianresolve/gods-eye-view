@@ -8,8 +8,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `361fa0951ec2a3a15211b6d364d1939ddb32d52c`.
-[All seven standard jobs pass](performance-evidence/s47-renderer-cleanup-timing-38225433300/standard-ci-dev-38224369007.json),
+Recorded integration checkpoint: `4562e8ecf952708260fb5496f5d9dba5f74e3648`.
+[All seven standard jobs pass](performance-evidence/s47-fixture-clock-contract-38228543716/standard-ci-dev-38227328030.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -98,7 +98,11 @@ cleanups confirmed within the unchanged one-second gate. The outer validator
 then fails because it reads an obsolete fixture-clock `start` field. Repair
 `e3f7e096` validates the current phased producer, passes 70 focused tests, and
 accepts the six retained clock records without changing the failed report.
-Its replacement exact-commit integration run is separate. No renderer/vendor
+Its [replacement exact-commit run](performance-evidence/s47-fixture-clock-contract-38228543716/README.md)
+fails earlier again: main-setup retirement exceeds one second before any sample,
+and the late response says `Target closed`. Moving document retirement ahead of
+worker/fixture teardown is the next isolated ownership correction; the timeout
+and clock-integrity gates remain unchanged. No renderer/vendor
 `getParameter` calls are sampled in the three new profiles; application depth
 picking and Cesium shader preparation remain prominent sampled stacks. This is
 instrumented SwiftShader attribution, not latency or physical Windows acceptance.
@@ -116,8 +120,8 @@ limit. Its [exact-commit workflow passes](performance-evidence/s57-artifact-log-
 root independently validates ten measured transitions, four setup transitions,
 stable four-entry provider caches, no new factory loads during measured switches,
 zero pending work at ready boundaries and all native selection/recovery cases.
-The fixture is integrated through `68ccdb92`; a new standard integration run is
-separate. Failed artifacts are preserved. Actual streamed 3D Tiles coverage,
+The fixture is integrated through `68ccdb92`; all seven standard jobs pass at
+`4562e8ec`. Failed artifacts are preserved. Actual streamed 3D Tiles coverage,
 physical Windows and full S57 acceptance remain gaps.
 
 A [fresh Windows Chrome tab](performance-evidence/windows-webgl-current-window-20261012/README.md)
