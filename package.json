@@ -90,8 +90,8 @@
     "satellite.js": "^6.0.2"
   },
   "devDependencies": {
-    "eslint": "9.39.1",
-    "globals": "16.5.0",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
     "prettier": "3.9.6",
     "puppeteer": "^25.10.0",
     "sharp": "^0.35.4",
