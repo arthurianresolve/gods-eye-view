@@ -6,6 +6,25 @@ const hashIds = (ids) =>
     .update(ids.slice().sort().join('\n'), 'utf8')
     .digest('hex');
 
+export function normalizeAustinSatelliteWitness(record) {
+  const noradId = Number.isSafeInteger(record?.noradId)
+    ? record.noradId
+    : record?.id;
+  if (
+    !Number.isSafeInteger(noradId) ||
+    !Number.isFinite(record?.latitude) ||
+    !Number.isFinite(record?.longitude) ||
+    !Number.isFinite(record?.altitudeM)
+  )
+    return null;
+  return {
+    noradId,
+    latitude: record.latitude,
+    longitude: record.longitude,
+    altitudeM: record.altitudeM,
+  };
+}
+
 /** Validate source catalogs separately from viewport-filtered populations. */
 export function assertAustinPopulationEvidence(state, fixture, label) {
   if (!Array.isArray(state?.selectedLayers))

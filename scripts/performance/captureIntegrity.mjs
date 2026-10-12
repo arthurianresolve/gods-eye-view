@@ -11,9 +11,16 @@ const canonical = (value) => {
       .map((key) => [key, canonical(value[key])]),
   );
 };
-export const comparableCaptureConditions = (conditions, qualityMode) => {
+export const comparableCaptureConditions = (
+  conditions,
+  qualityMode,
+  { dynamicPopulationIds = [] } = {},
+) => {
   const copy = structuredClone(conditions);
   copy.environment.layers.sort((a, b) => a.id.localeCompare(b.id));
+  for (const layer of copy.environment.layers)
+    if (dynamicPopulationIds.includes(layer.id)) delete layer.count;
+  if (dynamicPopulationIds.length) delete copy.environment.totalObjects;
   // This one-time diagnostic query is preserved in the report, but its cost
   // varies by fresh document and is not an effective scene condition.
   if (copy.environment.rendererEvidence)
@@ -37,6 +44,7 @@ export function assertCaptureIntegrity(
     expectedFixture = null,
     expectedWarmupMs = null,
     expectedMeasurementMs = null,
+    dynamicPopulationIds = [],
   } = {},
 ) {
   assert.match(
@@ -160,10 +168,12 @@ export function assertCaptureIntegrity(
     const before = comparableCaptureConditions(
       sample.conditions.before,
       qualityMode,
+      { dynamicPopulationIds },
     );
     const after = comparableCaptureConditions(
       sample.conditions.after,
       qualityMode,
+      { dynamicPopulationIds },
     );
     assert.deepEqual(
       after,

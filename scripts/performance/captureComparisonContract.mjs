@@ -1,8 +1,22 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { DENSE_FLIGHT_FIXTURE_ID } from './productionFlightFixture.mjs';
 import { assertInfrastructureClockObservation } from './infrastructureWorkloadContract.mjs';
+import {
+  AUSTIN_OPERATING_FIXED_TIME,
+  AUSTIN_OPERATING_LAYER_COUNTS,
+  AUSTIN_OPERATING_REQUIRED_ALPR_TILES,
+  AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+  AUSTIN_OPERATING_VISUAL_STATE,
+  AUSTIN_OPERATING_WIND_VALID_TIME,
+} from './austinOperatingWorkloadContract.mjs';
+import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+const hashCanonicalIds = (ids) =>
+  createHash('sha256')
+    .update(ids.slice().sort().join('\n'), 'utf8')
+    .digest('hex');
 const REQUIRED_POPULATIONS = Object.freeze({
   flights: 2500,
   'local-datacenters': 4362,
@@ -507,6 +521,472 @@ export function createObservedInfrastructureComparisonContract({
   };
 }
 
+/** Build the Austin operating contract from per-document native observations. */
+export function createObservedAustinOperatingComparisonContract({
+  fixture,
+  fixtureDelivery,
+  environment,
+  captures,
+  scenarios,
+  workload,
+} = {}) {
+  assert.equal(fixture?.schema, 'gev-austin-operating-fixture/v1');
+  assert.equal(fixture?.workloadId, 'austin-operating-v1');
+  assert.equal(fixture?.fixedTime, AUSTIN_OPERATING_FIXED_TIME);
+  assert.equal(fixture?.windSourceTime, AUSTIN_OPERATING_WIND_VALID_TIME);
+  assert.match(fixture?.sha256 || '', SHA256);
+  assert.deepEqual(fixture?.expectedLayerCounts, AUSTIN_OPERATING_LAYER_COUNTS);
+  assert.equal(
+    fixtureDelivery?.schema,
+    'gev-austin-operating-capture-delivery/v1',
+  );
+  assert.equal(fixtureDelivery?.status, 'observed');
+  assert.equal(fixtureDelivery?.fixtureId, fixture.id);
+  assert.equal(fixtureDelivery?.fixtureSha256, fixture.sha256);
+  assert.equal(fixtureDelivery?.fixedTime, fixture.fixedTime);
+  assert.equal(fixtureDelivery?.windSourceTime, fixture.windSourceTime);
+  assert.equal(fixtureDelivery?.windSourceAgeMs, fixture.windSourceAgeMs);
+  assert.ok(environment && typeof environment.userAgent === 'string');
+  const browserMatch = environment.userAgent.match(
+    /(HeadlessChrome|Chrome|Chromium)\/([\d.]+)/,
+  );
+  assert.ok(browserMatch, 'browser identity was not observed');
+  assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
+  assert.ok(
+    Number.isInteger(workload?.runsPerScenario) && workload.runsPerScenario > 0,
+  );
+  assert.ok(Number.isInteger(workload?.warmupMs) && workload.warmupMs >= 0);
+  assert.ok(
+    Number.isInteger(workload?.durationPerSampleMs) &&
+      workload.durationPerSampleMs > 0,
+  );
+  assert.equal(captures?.length, scenarios.length * workload.runsPerScenario);
+
+  const requiredIds = [
+    ...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+    'installations',
+  ].sort();
+  const requiredTileKeys = AUSTIN_OPERATING_REQUIRED_ALPR_TILES.map((tile) =>
+    tile.join('/'),
+  ).sort();
+  const sourceHashes = new Map();
+  let referenceSettings = null;
+  const routes = {};
+  for (const [index, sample] of captures.entries()) {
+    const expectedScenario =
+      scenarios[Math.floor(index / workload.runsPerScenario)];
+    const expectedRun = (index % workload.runsPerScenario) + 1;
+    assert.equal(
+      sample.scenario,
+      expectedScenario,
+      `capture ${index + 1} is out of scenario order`,
+    );
+    assert.equal(
+      sample.run,
+      expectedRun,
+      `capture ${index + 1} is out of run order`,
+    );
+    assert.equal(sample.documentRole, `provider-sample-${index + 1}`);
+    assert.ok(
+      typeof sample.documentId === 'string' && sample.documentId.length > 0,
+    );
+    const clock = sample.austinOperatingClock;
+    assert.equal(clock?.schema, 'gev-austin-operating-capture-clock/v1');
+    assert.equal(clock.fixedHarnessTime, fixture.fixedTime);
+    assert.equal(
+      clock.runOrdinal,
+      1,
+      'every sample uses a fresh single-run document',
+    );
+    assert.equal(clock.configuredWarmupMs, workload.warmupMs);
+    assert.equal(clock.configuredMeasurementMs, workload.durationPerSampleMs);
+    assert.equal(clock.start?.epochMs, fixture.fixedTimeMs);
+    assert.equal(
+      clock.measurementStart?.epochMs,
+      fixture.fixedTimeMs + workload.warmupMs,
+    );
+    assert.equal(
+      clock.wallClockBeforeMs,
+      fixture.fixedTimeMs + workload.warmupMs,
+    );
+    assert.equal(
+      clock.wallClockAfterMs,
+      fixture.fixedTimeMs + workload.warmupMs + workload.durationPerSampleMs,
+    );
+    assert.equal(clock.windSourceTime, fixture.windSourceTime);
+    assert.equal(
+      clock.windSourceValidAtBeforeMs,
+      Date.parse(fixture.windSourceTime),
+    );
+    assert.equal(
+      clock.windSourceValidAtAfterMs,
+      Date.parse(fixture.windSourceTime),
+    );
+    assert.equal(
+      clock.windSourceAgeBeforeMs,
+      clock.wallClockBeforeMs - Date.parse(fixture.windSourceTime),
+    );
+    assert.equal(
+      clock.windSourceAgeAfterMs,
+      clock.wallClockAfterMs - Date.parse(fixture.windSourceTime),
+    );
+    assert.equal(clock.measurementEnd?.phase, 'complete');
+    assert.equal(clock.measurementEnd?.runOrdinal, 1);
+    assert.equal(
+      clock.measurementEnd?.elapsedMs,
+      workload.warmupMs + workload.durationPerSampleMs,
+    );
+    assert.ok(
+      Number.isFinite(clock.measurementBoundarySettleNativeMs) &&
+        clock.measurementBoundarySettleNativeMs >= 0,
+    );
+    assert.ok(clock.satelliteWitnessBefore?.noradId === 25544);
+    assert.ok(clock.satelliteWitnessAfter?.noradId === 25544);
+    assert.ok(Number.isFinite(clock.satelliteWitnessBefore.latitude));
+    assert.ok(Number.isFinite(clock.satelliteWitnessAfter.latitude));
+    assert.notDeepEqual(
+      [
+        clock.satelliteWitnessBefore.latitude,
+        clock.satelliteWitnessBefore.longitude,
+      ],
+      [
+        clock.satelliteWitnessAfter.latitude,
+        clock.satelliteWitnessAfter.longitude,
+      ],
+      `capture ${index + 1} satellite did not move during its advancing clock phase`,
+    );
+    const expectedRoute =
+      expectedScenario === 'idle' ? 'parked-v1' : 'elapsed-move-right-v1';
+    assert.equal(sample.cameraPath?.id, expectedRoute);
+    assert.ok(sample.cameraPath?.start?.position);
+    assert.equal(
+      sample.cameraPath?.elapsedDurationMs,
+      workload.durationPerSampleMs,
+    );
+    routes[expectedScenario] ||= structuredClone(sample.cameraPath);
+    assert.deepEqual(sample.cameraPath, routes[expectedScenario]);
+
+    const sampleDelivery = sample.fixtureDelivery;
+    assert.equal(sampleDelivery?.schema, 'gev-austin-operating-delivery/v1');
+    assert.equal(sampleDelivery?.status, 'observed');
+    assert.equal(sampleDelivery?.fixtureId, fixture.id);
+    assert.equal(sampleDelivery?.fixtureSha256, fixture.sha256);
+    assert.equal(sampleDelivery?.fixedTime, fixture.fixedTime);
+    assert.deepEqual([...sampleDelivery.requiredAssetIds].sort(), requiredIds);
+    assert.deepEqual(
+      [...sampleDelivery.alprTileCoverage.requiredForDocument].sort(),
+      requiredTileKeys,
+    );
+    assert.deepEqual([...sampleDelivery.alprTileCoverage.missingRequired], []);
+    const observedTileKeys = sampleDelivery.alprTileCoverage.requested.map(
+      (tile) => `${tile.z}/${tile.x}/${tile.y}`,
+    );
+    assert.deepEqual(
+      [...observedTileKeys].sort(),
+      requiredTileKeys,
+      `capture ${index + 1} did not observe every required native route tile`,
+    );
+    assert.equal(new Set(observedTileKeys).size, observedTileKeys.length);
+    assert.equal(
+      sampleDelivery.alprTileCoverage.fullRouteCoverageComplete,
+      true,
+    );
+    for (const id of AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS) {
+      const asset = fixture.assets.find((row) => row.id === id);
+      const delivered = sampleDelivery.deliveredAssets?.find(
+        (row) => row.id === id,
+      );
+      assert.ok(
+        asset && delivered,
+        `capture ${index + 1} is missing response ${id}`,
+      );
+      assert.equal(
+        delivered.sha256,
+        asset.sha256,
+        `capture ${index + 1} delivered response hash differs for ${id}`,
+      );
+      assert.ok(
+        Number.isSafeInteger(delivered.responseCount) &&
+          delivered.responseCount > 0,
+      );
+    }
+    assert.equal(
+      sampleDelivery.installations.sourceCatalog.sha256,
+      fixture.assets.find((row) => row.id === 'installations').sha256,
+    );
+    assert.equal(
+      sampleDelivery.installations.sourceCatalog.sourceCount,
+      AUSTIN_OPERATING_LAYER_COUNTS['military-installations'],
+    );
+    assert.ok(sampleDelivery.installations.responseVariants.length >= 1);
+    assert.ok(sampleDelivery.installations.responseVariants.length <= 32);
+    const deliveredInstallationIds = new Set();
+    for (const variant of sampleDelivery.installations.responseVariants) {
+      assert.match(variant.sha256 || '', SHA256);
+      assert.ok(
+        Number.isSafeInteger(variant.byteLength) && variant.byteLength > 0,
+      );
+      assert.ok(
+        Number.isSafeInteger(variant.responseCount) &&
+          variant.responseCount > 0,
+      );
+      assert.ok(
+        Number.isSafeInteger(variant.elementCount) && variant.elementCount >= 0,
+      );
+      assert.ok(Array.isArray(variant.elementIds));
+      assert.equal(variant.elementIds.length, variant.elementCount);
+      assert.equal(new Set(variant.elementIds).size, variant.elementIds.length);
+      for (const id of variant.elementIds) deliveredInstallationIds.add(id);
+    }
+    for (const tile of sampleDelivery.alprTileCoverage.requested) {
+      const id = `alpr-${tile.z}-${tile.x}-${tile.y}`;
+      const asset = fixture.assets.find((row) => row.id === id);
+      assert.ok(
+        asset,
+        `capture ${index + 1} requested undeclared ALPR tile ${id}`,
+      );
+      assert.equal(tile.sha256, asset.sha256);
+      assert.ok(
+        Number.isSafeInteger(tile.responseCount) && tile.responseCount > 0,
+      );
+    }
+
+    const layerSnapshots = [
+      clock.selectedLayersBefore,
+      clock.selectedLayersAfter,
+    ];
+    for (const [boundaryIndex, layers] of layerSnapshots.entries()) {
+      assert.deepEqual(
+        layers?.map((row) => row.id),
+        Object.keys(AUSTIN_OPERATING_LAYER_COUNTS),
+      );
+      for (const layer of layers) {
+        assert.equal(layer.enabled, true);
+        assert.equal(
+          layer.expectedSourceCatalogCount,
+          AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+        );
+        assert.ok(Number.isSafeInteger(layer.count) && layer.count >= 0);
+        if (
+          ['alpr-cameras', 'military-installations', 'radio'].includes(layer.id)
+        )
+          assert.ok(
+            Number.isSafeInteger(layer.viewportCount) &&
+              layer.viewportCount >= 0,
+          );
+        else assert.equal(layer.viewportCount, null);
+        assert.equal(layer.loading, layer.id === 'satellites' ? null : false);
+        assert.equal(layer.error, null);
+        if (layer.id === 'military-installations') {
+          const observedIds = layer.sourcePopulation?.identityIds;
+          assert.ok(Number.isSafeInteger(layer.sourcePopulation?.count));
+          assert.ok(layer.sourcePopulation.count >= 1);
+          assert.ok(
+            layer.sourcePopulation.count <=
+              AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+          );
+          assert.ok(Array.isArray(observedIds));
+          assert.equal(observedIds.length, layer.sourcePopulation.count);
+          assert.equal(new Set(observedIds).size, observedIds.length);
+          assert.equal(
+            layer.sourcePopulation.sha256,
+            hashCanonicalIds(observedIds),
+          );
+        } else {
+          assert.equal(
+            layer.sourcePopulation?.count,
+            AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+          );
+          if (layer.id === 'wind')
+            assert.equal(layer.sourcePopulation?.sha256, null);
+          else {
+            assert.match(layer.sourcePopulation?.sha256 || '', SHA256);
+            assert.equal(
+              layer.sourcePopulation.sha256,
+              fixture.sourcePopulationHashes?.[layer.id],
+              `capture ${index + 1} ${layer.id} identities differ from the pinned source catalog`,
+            );
+          }
+        }
+        assert.equal(layer.sourcePopulation?.truncated, false);
+        if (layer.id !== 'military-installations') {
+          const previousHash = sourceHashes.get(layer.id);
+          if (previousHash)
+            assert.equal(layer.sourcePopulation.sha256, previousHash);
+          else sourceHashes.set(layer.id, layer.sourcePopulation.sha256);
+        }
+        if (layer.id === 'satellites' && boundaryIndex === 1)
+          assert.match(layer.sourcePopulation.positionSha256 || '', SHA256);
+        if (layer.id === 'military-installations') {
+          assert.ok(layer.sourcePopulation.count >= 1);
+          assert.ok(
+            layer.sourcePopulation.count <=
+              AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+          );
+          assert.ok(Array.isArray(layer.sourcePopulation.identityIds));
+          assert.equal(
+            layer.sourcePopulation.identityIds.length,
+            layer.sourcePopulation.count,
+          );
+          assert.ok(
+            layer.sourcePopulation.identityIds.every((id) =>
+              deliveredInstallationIds.has(id),
+            ),
+            `capture ${index + 1} installation identity is not acknowledged by its delivered response variants`,
+          );
+        }
+      }
+    }
+    const visualBefore = clock.visualSettingsBefore;
+    const visualAfter = clock.visualSettingsAfter;
+    for (const observedSettings of [visualBefore, visualAfter]) {
+      assert.equal(
+        observedSettings?.qualityMode,
+        AUSTIN_OPERATING_VISUAL_STATE.qualityMode,
+      );
+      assert.equal(
+        observedSettings?.densityPct,
+        AUSTIN_OPERATING_VISUAL_STATE.densityPct,
+      );
+      assert.equal(
+        observedSettings?.detectionMode,
+        AUSTIN_OPERATING_VISUAL_STATE.detectionMode,
+      );
+      assert.equal(observedSettings?.resolutionScale, 1);
+      assert.equal(observedSettings?.fxaa, true);
+    }
+    assert.deepEqual(visualBefore, visualAfter);
+    assert.deepEqual(sample.settings?.before, sample.settings?.after);
+    assert.equal(
+      sample.settings?.before?.qualityMode,
+      AUSTIN_OPERATING_VISUAL_STATE.qualityMode,
+    );
+    assert.equal(
+      sample.settings?.before?.densityPct,
+      AUSTIN_OPERATING_VISUAL_STATE.densityPct,
+    );
+    assert.equal(
+      sample.settings?.before?.detectionMode,
+      AUSTIN_OPERATING_VISUAL_STATE.detectionMode,
+    );
+    assert.deepEqual(
+      sample.conditions?.before?.settings,
+      sample.settings?.before,
+    );
+    assert.deepEqual(
+      sample.conditions?.after?.settings,
+      sample.settings?.after,
+    );
+    if (referenceSettings)
+      assert.deepEqual(sample.settings.before, referenceSettings);
+    else referenceSettings = structuredClone(sample.settings.before);
+  }
+  assert.deepEqual(
+    fixtureDelivery.sampleDocuments.map((row) => [
+      row.scenario,
+      row.run,
+      row.documentRole,
+      row.documentId,
+    ]),
+    captures.map((row) => [
+      row.scenario,
+      row.run,
+      row.documentRole,
+      row.documentId,
+    ]),
+  );
+  assert.deepEqual(
+    fixtureDelivery.sampleDocuments.map((row) => row.populations),
+    captures.map((sample) => summarizeAustinNativePopulations(sample)),
+    'fixture delivery must retain the exact native before/after populations for every sample',
+  );
+  assert.deepEqual(
+    fixtureDelivery.sampleDocuments.map((row) => row.delivery),
+    captures.map((sample) => sample.fixtureDelivery),
+    'fixture delivery must retain the exact raw per-document response acknowledgments',
+  );
+  assert.equal(
+    fixtureDelivery.requiredAssetIds.includes('cctv-raw-catalog'),
+    false,
+  );
+  assert.equal(
+    fixtureDelivery.sourceProvenance.radio.includes('synthetic'),
+    true,
+  );
+  assert.equal(
+    fixtureDelivery.sourceProvenance.installations.includes('synthetic'),
+    true,
+  );
+  assert.ok(
+    Number.isInteger(environment.viewport?.width) &&
+      environment.viewport.width > 0,
+  );
+  assert.ok(
+    Number.isInteger(environment.viewport?.height) &&
+      environment.viewport.height > 0,
+  );
+  assert.ok(
+    Number.isInteger(environment.drawingBuffer?.width) &&
+      environment.drawingBuffer.width > 0,
+  );
+  assert.ok(
+    Number.isInteger(environment.drawingBuffer?.height) &&
+      environment.drawingBuffer.height > 0,
+  );
+
+  return {
+    schema: 'gev-performance-comparison-contract/v1',
+    workloadId: fixture.workloadId,
+    fixture: {
+      id: fixture.id,
+      sha256: fixture.sha256,
+      fixedTime: fixture.fixedTime,
+      windSourceTime: fixture.windSourceTime,
+      windSourceAgeMs: fixture.windSourceAgeMs,
+      sourceProvenance: structuredClone(fixture.provenance),
+      expectedLayerCounts: structuredClone(fixture.expectedLayerCounts),
+      sourcePopulationHashes: structuredClone(fixture.sourcePopulationHashes),
+      sourcePopulationIds: structuredClone(fixture.sourcePopulationIds),
+      assets: fixture.assets.map(({ id, sha256, byteLength }) => ({
+        id,
+        sha256,
+        byteLength,
+      })),
+    },
+    fixtureDelivery: {
+      schema: fixtureDelivery.schema,
+      status: fixtureDelivery.status,
+      fixtureId: fixtureDelivery.fixtureId,
+      fixtureSha256: fixtureDelivery.fixtureSha256,
+      fixedTime: fixtureDelivery.fixedTime,
+      windSourceTime: fixtureDelivery.windSourceTime,
+      sampleDocuments: fixtureDelivery.sampleDocuments.map(
+        ({ scenario, run, documentRole, documentId, populations }) => ({
+          scenario,
+          run,
+          documentRole,
+          documentId,
+          populations: structuredClone(populations),
+        }),
+      ),
+    },
+    routes,
+    browser: { name: browserMatch[1], version: browserMatch[2] },
+    rendering: {
+      viewport: structuredClone(environment.viewport),
+      drawingBuffer: structuredClone(environment.drawingBuffer),
+    },
+    populations: Object.entries(AUSTIN_OPERATING_LAYER_COUNTS).map(
+      ([id, count]) => ({ id, enabled: true, count }),
+    ),
+    visual: structuredClone(AUSTIN_OPERATING_VISUAL_STATE),
+    // Austin reports both timelines but has no blanket improvement objective:
+    // idle cadence is expected to remain stable, not improve by 20%.
+    objectiveScenarios: [],
+    workload: structuredClone(workload),
+  };
+}
+
 /** Return concrete reasons a capture is diagnostic-only or incomplete. */
 export function getCaptureComparisonIneligibilityReasons({
   contract = null,
@@ -578,6 +1058,8 @@ export function getCaptureComparisonIneligibilityReasons({
     fixture?.schema === 'gev-infrastructure-fixture-manifest/v1';
   const weatherEffectsFixture =
     fixture?.schema === 'gev-weather-effects-fixture/v1';
+  const austinOperatingFixture =
+    fixture?.schema === 'gev-austin-operating-fixture/v1';
   const sharedDocumentFixture = infrastructureFixture || weatherEffectsFixture;
   if (fixture && diagnosticsDocuments.length > 0) {
     const expectedRoles = [
@@ -637,7 +1119,7 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
-  if (fixture && !sharedDocumentFixture)
+  if (fixture && !sharedDocumentFixture && !austinOperatingFixture)
     reasons.push(
       'provider-fixture-is-static-count-only-not-trajectory-equivalent',
     );
@@ -656,14 +1138,23 @@ export function getCaptureComparisonIneligibilityReasons({
           ? 'required-infrastructure-objective-workloads-are-incomplete'
           : 'required-weather-effects-objective-workloads-are-incomplete',
       );
+  } else if (austinOperatingFixture) {
+    if (
+      !workload?.scenarios?.includes('idle') ||
+      !workload?.scenarios?.includes('scripted-motion')
+    )
+      reasons.push(
+        'required-austin-operating-objective-workloads-are-incomplete',
+      );
   } else if (
     !workload?.scenarios?.includes('scripted-motion') ||
     !workload?.scenarios?.includes('selected-aircraft-tracking')
   )
     reasons.push('required-dense-objective-workloads-are-incomplete');
-  reasons.push(
-    'latency-comparison-remains-disabled-pending-uninstrumented-capture',
-  );
+  if (!austinOperatingFixture)
+    reasons.push(
+      'latency-comparison-remains-disabled-pending-uninstrumented-capture',
+    );
   return [...new Set(reasons)];
 }
 

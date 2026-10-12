@@ -1,10 +1,22 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   assertCaptureIntegrity,
   comparableCaptureConditions,
 } from './captureIntegrity.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
+import {
+  createCaptureDocumentTopology,
+  createObservedAustinOperatingComparisonContract,
+} from './captureComparisonContract.mjs';
+import {
+  AUSTIN_OPERATING_LAYER_COUNTS,
+  AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+  AUSTIN_OPERATING_VISUAL_STATE,
+  AUSTIN_OPERATING_WORKLOAD_ID,
+} from './austinOperatingWorkloadContract.mjs';
+import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -38,6 +50,12 @@ const validCount = (value, label) =>
     Number.isInteger(value) && value >= 0,
     `${label} must be a non-negative integer`,
   );
+const isAustinContract = (contract) =>
+  contract?.workloadId === AUSTIN_OPERATING_WORKLOAD_ID;
+const hashCanonicalIds = (ids) =>
+  createHash('sha256')
+    .update(ids.slice().sort().join('\n'), 'utf8')
+    .digest('hex');
 
 function validateContract(report, label) {
   const contract = report.comparisonContract;
@@ -60,19 +78,36 @@ function validateContract(report, label) {
   );
   requireText(contract.workloadId, `${label}: workload identity`);
   const contractDelivery = contract.fixtureDelivery;
+  const austin = isAustinContract(contract);
   assert.equal(
     contractDelivery?.schema,
-    'gev-fixture-delivery-observation/v1',
+    austin
+      ? 'gev-austin-operating-capture-delivery/v1'
+      : 'gev-fixture-delivery-observation/v1',
     `${label}: observed fixture delivery contract is required`,
   );
   assert.equal(contractDelivery.status, 'observed');
-  requireText(contractDelivery.method, `${label}: delivery method`);
   assert.equal(contractDelivery.fixtureSha256, contract.fixture.sha256);
   assert.equal(contractDelivery.fixedTime, contract.fixture.fixedTime);
-  validCount(
-    contractDelivery.observedFlightsCount,
-    `${label}: observed fixture flight population`,
-  );
+  if (austin) {
+    requireText(contract.fixture.id, `${label}: Austin fixture instance id`);
+    assert.equal(contract.fixture.fixedTime, '2026-10-12T18:00:00.000Z');
+    assert.equal(contract.fixture.windSourceTime, '2026-10-08T12:00:00.000Z');
+    assert.deepEqual(contract.visual, AUSTIN_OPERATING_VISUAL_STATE);
+    assert.ok(Array.isArray(contractDelivery.sampleDocuments));
+    assert.ok(contract.fixture.sourcePopulationHashes);
+    assert.ok(contract.fixture.sourcePopulationIds);
+    assert.deepEqual(
+      contract.fixture.expectedLayerCounts,
+      AUSTIN_OPERATING_LAYER_COUNTS,
+    );
+  } else {
+    requireText(contractDelivery.method, `${label}: delivery method`);
+    validCount(
+      contractDelivery.observedFlightsCount,
+      `${label}: observed fixture flight population`,
+    );
+  }
   assert.ok(
     contract.routes && typeof contract.routes === 'object',
     `${label}: route descriptors are required`,
@@ -85,10 +120,11 @@ function validateContract(report, label) {
     Array.isArray(contract.objectiveScenarios),
     `${label}: objective scenarios are required`,
   );
-  assert.ok(
-    contract.objectiveScenarios.length,
-    `${label}: objective scenarios must be declared`,
-  );
+  if (!austin)
+    assert.ok(
+      contract.objectiveScenarios.length,
+      `${label}: objective scenarios must be declared`,
+    );
   assert.equal(
     new Set(contract.objectiveScenarios).size,
     contract.objectiveScenarios.length,
@@ -162,6 +198,19 @@ function validateContract(report, label) {
       );
     }
   }
+  if (austin) {
+    assert.deepEqual(
+      ids.slice().sort(),
+      Object.keys(AUSTIN_OPERATING_LAYER_COUNTS).sort(),
+      `${label}: Austin source catalog inventory differs`,
+    );
+    for (const [id, count] of Object.entries(AUSTIN_OPERATING_LAYER_COUNTS))
+      assert.equal(
+        populations.find((row) => row.id === id)?.count,
+        count,
+        `${label}: Austin source catalog count differs for ${id}`,
+      );
+  }
 
   const browser = contract.browser;
   requireText(browser?.name, `${label}: browser name`);
@@ -184,6 +233,83 @@ function validateContract(report, label) {
   return contract;
 }
 
+function validateAustinSamplePopulationBindings(report, contract, label) {
+  const expectedHashes = contract.fixture.sourcePopulationHashes;
+  const expectedIds = contract.fixture.sourcePopulationIds;
+  const layerIds = Object.keys(AUSTIN_OPERATING_LAYER_COUNTS).sort();
+  const documents = contract.fixtureDelivery.sampleDocuments;
+  assert.equal(documents.length, report.captures.length);
+  for (let index = 0; index < report.captures.length; index += 1) {
+    const sample = report.captures[index];
+    const document = documents[index];
+    assert.deepEqual(
+      document.populations,
+      summarizeAustinNativePopulations(sample),
+      `${label}: Austin report population snapshots differ from the captured clock witness`,
+    );
+    assert.deepEqual(
+      [document.scenario, document.run, document.documentRole, document.documentId],
+      [sample.scenario, sample.run, sample.documentRole, sample.documentId],
+      `${label}: Austin population evidence is bound to another sample document`,
+    );
+    for (const boundary of ['before', 'after']) {
+      const populations = document.populations?.[boundary];
+      const point = sample.conditions?.[boundary];
+      assert.ok(Array.isArray(populations), `${label}: missing Austin ${boundary} populations`);
+      const enabledLayers = point?.environment?.layers
+        ?.filter((row) => row?.enabled === true)
+        .map((row) => row.id)
+        .sort();
+      assert.deepEqual(
+        enabledLayers,
+        layerIds,
+        `${label}: ${sample.scenario} run ${sample.run} ${boundary} enabled layers differ`,
+      );
+      assert.deepEqual(
+        populations.map((row) => row.id).sort(),
+        layerIds,
+        `${label}: ${sample.scenario} run ${sample.run} ${boundary} population inventory differs`,
+      );
+      for (const row of populations) {
+        const layer = point.environment.layers.find((entry) => entry.id === row.id);
+        assert.equal(row.enabled, true);
+        assert.equal(
+          row.count,
+          layer?.count,
+          `${label}: ${sample.scenario} run ${sample.run} ${boundary} ${row.id} count is not bound to capture conditions`,
+        );
+        assert.equal(row.error, null);
+        assert.equal(row.loading, row.id === 'satellites' ? null : false);
+        assert.equal(row.sourcePopulation?.truncated, false);
+        if (row.id === 'military-installations') {
+          const ids = row.sourcePopulation?.identityIds;
+          const allowed = new Set(expectedIds[row.id] || []);
+          assert.ok(Array.isArray(ids));
+          assert.equal(ids.length, row.sourcePopulation.count);
+          assert.equal(new Set(ids).size, ids.length);
+          assert.ok(ids.every((id) => allowed.has(id)));
+          assert.equal(row.sourcePopulation.sha256, hashCanonicalIds(ids));
+          assert.ok(
+            Number.isSafeInteger(row.viewportCount) &&
+              row.viewportCount >= 1 &&
+              row.viewportCount <= ids.length,
+          );
+        } else {
+          assert.equal(
+            row.sourcePopulation?.count,
+            AUSTIN_OPERATING_LAYER_COUNTS[row.id],
+          );
+          if (row.id === 'wind') assert.equal(row.sourcePopulation.sha256, null);
+          else assert.equal(row.sourcePopulation.sha256, expectedHashes[row.id]);
+        }
+        if (['alpr-cameras', 'military-installations', 'radio'].includes(row.id))
+          assert.ok(Number.isSafeInteger(row.viewportCount) && row.viewportCount >= 0);
+        else assert.equal(row.viewportCount, null);
+      }
+    }
+  }
+}
+
 function validateFixtureDelivery(report, contract, label) {
   assert.equal(
     report.comparisonEligible,
@@ -191,6 +317,68 @@ function validateFixtureDelivery(report, contract, label) {
     `${label}: capture is not marked comparison-eligible`,
   );
   const delivery = report.fixtureDelivery;
+  if (isAustinContract(contract)) {
+    assert.equal(
+      delivery?.schema,
+      'gev-austin-operating-capture-delivery/v1',
+      `${label}: observed Austin fixture delivery is required`,
+    );
+    assert.equal(delivery.status, 'observed');
+    assert.equal(delivery.fixtureId, contract.fixture.id);
+    assert.equal(delivery.fixtureSha256, contract.fixture.sha256);
+    assert.equal(delivery.fixedTime, contract.fixture.fixedTime);
+    assert.deepEqual(
+      delivery.sampleDocuments.map(
+        ({ scenario, run, documentRole, documentId, populations }) => ({
+          scenario,
+          run,
+          documentRole,
+          documentId,
+          populations,
+        }),
+      ),
+      contract.fixtureDelivery.sampleDocuments,
+      `${label}: report and contract Austin document evidence differ`,
+    );
+    const expectedAssets = [...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS, 'installations'].sort();
+    assert.deepEqual([...delivery.requiredAssetIds].sort(), expectedAssets);
+    const topology = createCaptureDocumentTopology({
+      startupRuns: report.workload?.startupRuns,
+      captureCount: report.captures?.length,
+    });
+    const owners = report.workload?.austinOperatingFixtureDocuments;
+    assert.ok(Array.isArray(owners));
+    assert.deepEqual(
+      owners
+        .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+        .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+      topology.workerAudits
+        .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+        .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+      `${label}: Austin document owner set differs from capture topology`,
+    );
+    for (const owner of owners) {
+      assert.equal(owner.cleanup?.confirmed, true);
+      assert.equal(owner.interceptionRelease?.confirmed, true);
+      assert.equal(owner.interceptionRelease?.targetClosed, true);
+    }
+    for (const document of delivery.sampleDocuments) {
+      const owner = owners.find(
+        (entry) =>
+          entry.documentRole === document.documentRole &&
+          entry.documentId === document.documentId,
+      );
+      assert.ok(owner, `${label}: missing Austin owner cleanup record`);
+      assert.equal(owner.delivery?.status, 'observed');
+    }
+    assert.deepEqual(
+      delivery.sampleDocuments.map((document) => document.delivery),
+      report.captures.map((sample) => sample.fixtureDelivery),
+      `${label}: top-level per-document delivery differs from captured evidence`,
+    );
+    validateAustinSamplePopulationBindings(report, contract, label);
+    return;
+  }
   assert.equal(
     delivery?.schema,
     'gev-fixture-delivery-observation/v1',
@@ -530,6 +718,26 @@ function validateReport(report, side, expectedAppCommit) {
   const contract = validateContract(report, side);
   validateFixtureDelivery(report, contract, side);
   const { workload, environment, captures } = report;
+  const austin = isAustinContract(contract);
+  if (austin) {
+    const rebuilt = createObservedAustinOperatingComparisonContract({
+      fixture: workload?.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment,
+      captures,
+      scenarios: workload?.scenarios,
+      workload: {
+        warmupMs: workload?.warmupMs,
+        durationPerSampleMs: workload?.durationPerSampleMs,
+        runsPerScenario: workload?.runsPerScenario,
+      },
+    });
+    equal(
+      rebuilt,
+      contract,
+      `${side}: report comparison contract is not derived from its Austin producer evidence`,
+    );
+  }
   assert.equal(
     workload?.warmupMs,
     30_000,
@@ -590,6 +798,27 @@ function validateReport(report, side, expectedAppCommit) {
     contract.fixture.fixedTime,
     `${side}: fixed fixture time does not match comparison contract`,
   );
+  if (austin) {
+    assert.deepEqual(
+      contract.fixture.sourcePopulationHashes,
+      workload.fixture?.sourcePopulationHashes,
+      `${side}: pinned Austin source hashes differ from the loaded fixture`,
+    );
+    assert.deepEqual(
+      contract.fixture.sourcePopulationIds,
+      workload.fixture?.sourcePopulationIds,
+      `${side}: pinned Austin source identities differ from the loaded fixture`,
+    );
+    assert.deepEqual(
+      contract.fixture.assets,
+      workload.fixture?.assets?.map(({ id, sha256, byteLength }) => ({
+        id,
+        sha256,
+        byteLength,
+      })),
+      `${side}: pinned Austin asset identities differ from the loaded fixture`,
+    );
+  }
   assert.ok(
     Array.isArray(workload.scenarios) && workload.scenarios.length,
     `${side}: declared scenarios are required`,
@@ -640,15 +869,17 @@ function validateReport(report, side, expectedAppCommit) {
     expectedAppCommit,
     `${side}: report environment has the wrong application build`,
   );
-  const actualPopulations = layerSignature(
-    environment.layers,
-    `${side} environment`,
-  );
-  equal(
-    actualPopulations,
-    populationSignature(contract.populations),
-    `${side}: comparison contract populations do not match capture environment`,
-  );
+  if (!austin) {
+    const actualPopulations = layerSignature(
+      environment.layers,
+      `${side} environment`,
+    );
+    equal(
+      actualPopulations,
+      populationSignature(contract.populations),
+      `${side}: comparison contract populations do not match capture environment`,
+    );
+  }
   for (const [scenario, route] of Object.entries(contract.routes))
     validateRoute(
       route,
@@ -661,9 +892,9 @@ function validateReport(report, side, expectedAppCommit) {
       },
     );
 
-  const counts = Object.fromEntries(
-    contract.populations.map((row) => [row.id, row.count]),
-  );
+  const counts = austin
+    ? {}
+    : Object.fromEntries(contract.populations.map((row) => [row.id, row.count]));
   assertCaptureIntegrity(captures, {
     expectedCommit: expectedAppCommit,
     qualityMode: 'manual',
@@ -672,6 +903,9 @@ function validateReport(report, side, expectedAppCommit) {
     expectedFixture: { ...contract.fixture, count: workload.fixture?.count },
     expectedWarmupMs: workload.warmupMs,
     expectedMeasurementMs: workload.durationPerSampleMs,
+    ...(austin
+      ? { dynamicPopulationIds: ['alpr-cameras', 'military-installations', 'radio'] }
+      : {}),
   });
 
   const byScenario = new Map(
@@ -743,11 +977,12 @@ function validateReport(report, side, expectedAppCommit) {
         `${label}: resolution scale`,
       );
       finiteNonNegative(point.settings?.msaaSamples, `${label}: MSAA samples`);
-      equal(
-        layerSignature(point.environment?.layers, label),
-        populationSignature(contract.populations),
-        `${label}: sample populations do not match contract`,
-      );
+      if (!austin)
+        equal(
+          layerSignature(point.environment?.layers, label),
+          populationSignature(contract.populations),
+          `${label}: sample populations do not match contract`,
+        );
       assert.equal(
         point.environment?.renderer,
         environment.renderer,
@@ -1033,9 +1268,11 @@ export function validatePairedPerformanceReports({
 
   const workloadObjectiveScenarios =
     baseline.comparisonContract.objectiveScenarios;
-  const workloadObjectiveAssessed = workloadObjectiveScenarios.every(
-    (scenario) => scenarios[scenario]?.status === 'measured',
-  );
+  const workloadObjectiveAssessed =
+    workloadObjectiveScenarios.length > 0 &&
+    workloadObjectiveScenarios.every(
+      (scenario) => scenarios[scenario]?.status === 'measured',
+    );
   const workloadObjectiveResults = Object.fromEntries(
     workloadObjectiveScenarios.map((scenario) => {
       const result = scenarios[scenario];

@@ -57,10 +57,12 @@ import {
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
+  createObservedAustinOperatingComparisonContract,
   createCaptureDocumentTopology,
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloadContract.mjs';
+import { AUSTIN_OPERATING_WORKLOAD_ID } from './performance/austinOperatingWorkloadContract.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 import { boundedShaderProgramAttribution } from './performance/earlyCesiumRendererProbe.mjs';
@@ -313,7 +315,8 @@ export function parseSmokeArguments(argv) {
       flag === '--provider-fixture' &&
       value !== 'dense-investigation' &&
       !INFRASTRUCTURE_WORKLOAD_IDS.includes(value) &&
-      value !== WEATHER_EFFECTS_WORKLOAD_ID
+      value !== WEATHER_EFFECTS_WORKLOAD_ID &&
+      value !== AUSTIN_OPERATING_WORKLOAD_ID
     )
       throw new TypeError('Provider fixture must be a registered workload.');
     if (
@@ -745,6 +748,8 @@ export function assertProviderFixtureCaptureClock(
 }
 
 export function validateCaptureCliReport(report, expected) {
+  if (expected.providerFixture === AUSTIN_OPERATING_WORKLOAD_ID)
+    return validateAustinOperatingCaptureCliReport(report, expected);
   if (expected.providerFixture === WEATHER_EFFECTS_WORKLOAD_ID)
     return validateWeatherEffectsCaptureCliReport(report, expected);
   if (expected.providerFixture?.startsWith('infrastructure'))
@@ -1329,6 +1334,90 @@ export function validateCaptureCliReport(report, expected) {
     limitations: [
       'Hosted software-rendering CLI integration only; not hardware or paired performance evidence.',
       'The static production flight fixture verifies source delivery and populations, not a complete moving trajectory contract.',
+    ],
+  };
+}
+
+function validateAustinOperatingCaptureCliReport(report, expected) {
+  const fixture = expected.austinOperatingFixture;
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(
+    report.workerAuditMode,
+    expected.workerAuditMode || 'diagnostic',
+  );
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  assert.equal(fixture?.schema, 'gev-austin-operating-fixture/v1');
+  assert.equal(fixture?.workloadId, AUSTIN_OPERATING_WORKLOAD_ID);
+  assert.equal(fixture?.fixedTime, expected.fixedTime);
+  assert.equal(report.workload?.providerFixture, AUSTIN_OPERATING_WORKLOAD_ID);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.deepEqual(report.workload?.fixture, fixture);
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.ok(
+    report.comparisonReadiness?.status === 'not-ready' &&
+      report.comparisonReadiness.reasons.length > 0,
+    'short Austin hosted smoke must remain comparison-ineligible',
+  );
+  assert.equal(report.captures?.length, 4);
+  createObservedAustinOperatingComparisonContract({
+    fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+    workload: {
+      warmupMs: report.workload.warmupMs,
+      durationPerSampleMs: report.workload.durationPerSampleMs,
+      runsPerScenario: report.workload.runsPerScenario,
+    },
+  });
+  const topology = createCaptureDocumentTopology({
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  assertWeatherCaptureCleanupEvidence(report.workload, topology);
+  assert.equal(
+    report.fixtureDelivery?.schema,
+    'gev-austin-operating-capture-delivery/v1',
+  );
+  assert.equal(report.fixtureDelivery?.fixtureId, fixture.id);
+  assert.equal(report.fixtureDelivery?.fixtureSha256, fixture.sha256);
+  assert.deepEqual(
+    report.comparisonContract?.fixtureDelivery?.sampleDocuments,
+    report.fixtureDelivery.sampleDocuments,
+  );
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    renderer: report.environment.renderer,
+    fixtureSha256: report.fixtureDelivery.fixtureSha256,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    captures: report.captures.map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+      fixtureDelivery: sample.fixtureDelivery,
+      populations: sample.austinOperatingClock,
+    })),
+    rawReport: report,
+    limitations: [
+      'Four-sample Austin provider wiring smoke only; not the required five-run, 30-second warmup and 60-second comparison workload.',
+      'Synthetic radio and installation sources are benchmark fixtures and do not establish live Austin source coverage.',
+      'Software rendering cannot support hardware performance claims.',
     ],
   };
 }
@@ -2865,6 +2954,7 @@ export function buildCaptureCliValidationExpectations({
   firstMotionCpuProfile,
   depthPickAttribution,
   shaderProgramAttribution,
+  austinOperatingFixture,
 }) {
   return {
     appSha: commit,
@@ -2877,7 +2967,9 @@ export function buildCaptureCliValidationExpectations({
       ? { infrastructureFixture: fixture }
       : providerFixture === WEATHER_EFFECTS_WORKLOAD_ID
         ? { weatherEffectsFixture: fixture }
-        : {}),
+        : providerFixture === AUSTIN_OPERATING_WORKLOAD_ID
+          ? { austinOperatingFixture: fixture }
+          : {}),
     workerAuditMode,
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
@@ -3125,6 +3217,7 @@ async function runRevision({
   profileArtifactDirectory = null,
   infrastructureCaptureFixture,
   weatherEffectsCaptureFixture,
+  austinOperatingCaptureFixture,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -3582,7 +3675,9 @@ async function runRevision({
         fixture:
           providerFixture === 'dense-investigation'
             ? flightFixture
-            : infrastructureCaptureFixture || weatherEffectsCaptureFixture,
+            : infrastructureCaptureFixture ||
+              weatherEffectsCaptureFixture ||
+              austinOperatingCaptureFixture,
         providerFixture,
         workerAuditMode,
         sceneFrameDiagnostics,
@@ -3779,6 +3874,7 @@ async function main() {
   );
   let infrastructureCaptureFixture = null;
   let weatherEffectsCaptureFixture = null;
+  let austinOperatingCaptureFixture = null;
   if (providerFixture.startsWith('infrastructure')) {
     const { createInfrastructureWorkloadFixture } =
       await import('./performance/infrastructureWorkloadFixture.mjs');
@@ -3788,6 +3884,10 @@ async function main() {
     const { createWeatherEffectsWorkloadFixture } =
       await import('./performance/weatherEffectsWorkloadFixture.mjs');
     weatherEffectsCaptureFixture = createWeatherEffectsWorkloadFixture();
+  } else if (providerFixture === AUSTIN_OPERATING_WORKLOAD_ID) {
+    const { createAustinOperatingWorkloadFixture } =
+      await import('./performance/austinOperatingWorkloadFixture.mjs');
+    austinOperatingCaptureFixture = createAustinOperatingWorkloadFixture();
   }
   const outputPath = path.resolve(
     out ||
@@ -3910,6 +4010,7 @@ async function main() {
           providerFixture,
           infrastructureCaptureFixture,
           weatherEffectsCaptureFixture,
+          austinOperatingCaptureFixture,
         });
         Object.assign(variant, result);
       } catch (error) {

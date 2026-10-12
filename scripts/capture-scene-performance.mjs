@@ -17,6 +17,7 @@ import {
 import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
+  expectedFixtureRunOrdinal,
   installFixtureWallClockOnPage,
   holdProviderWarmupBoundary,
   assertObservedTrackingRoute,
@@ -100,6 +101,20 @@ import {
   createInfrastructureWorkloadFixture,
   resolveInfrastructureFixtureAssetRoutes,
 } from './performance/infrastructureWorkloadFixture.mjs';
+import {
+  AUSTIN_OPERATING_FIXED_TIME,
+  AUSTIN_OPERATING_WORKLOAD_ID,
+  AUSTIN_OPERATING_VISUAL_STATE,
+  AUSTIN_OPERATING_REQUIRED_ALPR_TILES,
+  AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+} from './performance/austinOperatingWorkloadContract.mjs';
+import { createAustinOperatingDocumentEvidence } from './performance/austinOperatingDocumentEvidence.mjs';
+import {
+  assertAustinPopulationEvidence,
+  assertAustinStableCatalogs,
+  normalizeAustinSatelliteWitness,
+  summarizeAustinNativePopulations,
+} from './performance/austinOperatingPopulationEvidence.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -117,6 +132,10 @@ const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
 const providerFixtureMode = option('--provider-fixture', null);
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
+const austinOperatingWorkloadSelected =
+  providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
+let austinOperatingModule = null;
+let austinOperatingWorkload = null;
 const providerFixtureTime = option(
   '--provider-fixture-time',
   '2026-10-08T12:00:00.000Z',
@@ -160,7 +179,8 @@ if (
   providerFixtureMode &&
   providerFixtureMode !== 'dense-investigation' &&
   !infrastructureWorkload &&
-  !weatherEffectsWorkload
+  !weatherEffectsWorkload &&
+  !austinOperatingWorkloadSelected
 )
   throw new Error(
     '--provider-fixture must be dense-investigation or a registered static workload.',
@@ -174,7 +194,9 @@ if (
     'The dense provider fixture requires --mixed-layers and must not use --fixture-aircraft.',
   );
 if (
-  (infrastructureWorkload || weatherEffectsWorkload) &&
+  (infrastructureWorkload ||
+    weatherEffectsWorkload ||
+    austinOperatingWorkloadSelected) &&
   (fixtureAircraftCount !== 0 || args.includes('--mixed-layers'))
 )
   throw new Error(
@@ -196,7 +218,10 @@ const effectiveFixtureAircraftCount = productionFlightFixture
 const expectedDensityPct = Number(
   option(
     '--expected-density',
-    effectiveFixtureAircraftCount && qualityMode === 'manual' ? '75' : 'NaN',
+    (effectiveFixtureAircraftCount || austinOperatingWorkloadSelected) &&
+      qualityMode === 'manual'
+      ? '75'
+      : 'NaN',
   ),
 );
 const startupRuns = Math.max(
@@ -255,7 +280,8 @@ if (
 if (
   (productionFlightFixture ||
     infrastructureWorkload ||
-    weatherEffectsWorkload) &&
+    weatherEffectsWorkload ||
+    austinOperatingWorkloadSelected) &&
   !buildProvenanceEnabled
 )
   throw new Error(
@@ -294,7 +320,8 @@ if (
   (!(
     productionFlightFixture ||
     infrastructureWorkload ||
-    weatherEffectsWorkload
+    weatherEffectsWorkload ||
+    austinOperatingWorkloadSelected
   ) ||
     !softwareRendering ||
     !buildProvenanceEnabled)
@@ -408,6 +435,7 @@ const infrastructureAssetRoutes = infrastructureWorkload
 let infrastructureFixtureDelivery = null;
 let weatherEffectsFixtureDelivery = null;
 let weatherEffectsFixtureAbortController = null;
+const austinOperatingFixtureDeliveries = [];
 const infrastructureResponseListeners = new Map();
 const earlyRendererProbeScripts = new Map();
 async function refreshShaderProgramAttributionCheckpoint() {
@@ -504,7 +532,10 @@ const failureProgress = {
   startupSamples: [],
   completedSamples: [],
   fixture:
-    productionFlightFixture || infrastructureWorkload || weatherEffectsWorkload,
+    productionFlightFixture ||
+    infrastructureWorkload ||
+    weatherEffectsWorkload ||
+    austinOperatingWorkload,
   fixtureDelivery: null,
   fixtureInterceptionErrors: [],
   workload: {
@@ -1039,6 +1070,30 @@ if (
 )
   throw new Error('--expected-density must be a number from 0 to 100');
 
+if (austinOperatingWorkloadSelected) {
+  if (providerFixtureTime !== AUSTIN_OPERATING_FIXED_TIME)
+    throw new TypeError(
+      `Austin operating fixture time must be ${AUSTIN_OPERATING_FIXED_TIME}.`,
+    );
+  if (
+    qualityMode !== 'manual' ||
+    detectionMode !== AUSTIN_OPERATING_VISUAL_STATE.detectionMode ||
+    expectedDensityPct !== AUSTIN_OPERATING_VISUAL_STATE.densityPct ||
+    fixtureAircraftCount !== 0 ||
+    mixedLayers
+  )
+    throw new Error(
+      'Austin operating capture requires Manual/DENSE/75, zero aircraft and no mixed-layer override.',
+    );
+  austinOperatingModule =
+    await import('./performance/austinOperatingWorkloadFixture.mjs');
+  austinOperatingWorkload =
+    austinOperatingModule.createAustinOperatingWorkloadFixture(
+      providerFixtureTime,
+    );
+  failureProgress.fixture = austinOperatingWorkload;
+}
+
 const browser = await puppeteer.launch({
   headless: args.includes('--headless') ? 'new' : false,
   protocolTimeout: protocolTimeoutMs,
@@ -1184,6 +1239,105 @@ async function configureWeatherEffectsFixturePage(
   return session;
 }
 
+async function configureAustinOperatingFixturePage(
+  page,
+  {
+    documentRole = 'unclassified',
+    documentId = null,
+    phasedClock = false,
+  } = {},
+) {
+  if (!austinOperatingWorkload) return null;
+  const delivery = austinOperatingModule.createAustinOperatingFixtureDelivery(
+    austinOperatingWorkload,
+    buildProvenanceOptions.baseUrl || url,
+  );
+  const owner = {
+    delivery,
+    documentRole,
+    documentId,
+    sessionOrdinal: null,
+    disposed: false,
+    disposeReason: null,
+    finalEvidence: null,
+    error: null,
+  };
+  austinOperatingFixtureDeliveries.push(owner);
+  await installFixtureWallClockOnPage(
+    page,
+    austinOperatingWorkload.fixedTimeMs,
+    { infrastructure: !phasedClock, phasedClock },
+    phasedClock ? [warmupMs, seconds * 1000] : [],
+  );
+  const session = await page.createCDPSession();
+  fixtureInterceptionSessions.push(session);
+  const sessionContext = {
+    sessionOrdinal: ++fixtureInterceptionSessionOrdinal,
+    documentRole,
+    documentId,
+    page,
+    lifecycleStage: 'active',
+  };
+  owner.sessionOrdinal = sessionContext.sessionOrdinal;
+  fixtureInterceptionSessionContexts.set(session, sessionContext);
+  sessionContext.interception = await interceptFixtureSession(
+    session,
+    new URL(url).origin + '/',
+    (requestUrl, request) => delivery.respond(requestUrl, request),
+    fixtureInterceptionErrorRecorder.onError,
+    {
+      onFulfilled: delivery.onFulfilled,
+      getErrorContext: () => ({ ...sessionContext }),
+    },
+  );
+  return { session, delivery, owner };
+}
+
+function publishAustinOperatingFixtureDocumentEvidence() {
+  failureProgress.workload.austinOperatingFixtureDocuments =
+    austinOperatingFixtureDeliveries.map((owner) =>
+      createAustinOperatingDocumentEvidence({
+        documentRole: owner.documentRole,
+        documentId: owner.documentId,
+        sessionOrdinal: owner.sessionOrdinal,
+        delivery: owner.finalEvidence,
+        releaseRecords: failureProgress.workload.fixtureInterceptionReleases,
+        disposed: owner.disposed,
+        disposeReason: owner.disposeReason,
+        error: owner.error,
+      }),
+    );
+}
+
+function finalizeAustinOperatingFixtureDelivery(owner, reason) {
+  if (!owner || owner.disposed) return;
+  try {
+    owner.finalEvidence = owner.delivery.summarize({
+      requiredAssetIds: [],
+      requiredAlprTiles: [],
+    });
+  } catch (error) {
+    owner.error = {
+      name: String(error?.name || 'Error').slice(0, 80),
+      message: String(error?.message || error).slice(0, 240),
+    };
+    throw error;
+  } finally {
+    owner.disposeReason = reason;
+    try {
+      owner.delivery.dispose();
+      owner.disposed = true;
+    } catch (error) {
+      owner.error ||= {
+        name: String(error?.name || 'Error').slice(0, 80),
+        message: String(error?.message || error).slice(0, 240),
+      };
+      throw error;
+    }
+    publishAustinOperatingFixtureDocumentEvidence();
+  }
+}
+
 function observeWeatherEffectsRuntimeState() {
   const manager = window.__godsEyeView?.dataManager;
   if (!manager?.layers?.get)
@@ -1205,6 +1359,273 @@ function observeWeatherEffectsRuntimeState() {
     windPaused: wind?.paused,
   };
   return { clock, sourceObservationTimes, visualState, wind };
+}
+
+async function observeAustinOperatingRuntimeState(
+  selectedLayerIds,
+  expectedSourceCounts,
+) {
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
+  const layers = manager?.layers;
+  const viewer = app?.viewer;
+  if (!manager || !layers?.get || !viewer)
+    throw new Error('Austin operating source state is unavailable.');
+  const digestRows = async (rows, project) => {
+    if (typeof project !== 'function') return null;
+    const projected = rows.slice(0, 1000).map(project).sort();
+    const bytes = new TextEncoder().encode(projected.join('\n'));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)]
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+  };
+  const summarizeRows = async (
+    rows,
+    identityProject,
+    positionProject = null,
+    includeIdentityIds = false,
+  ) => {
+    if (!Array.isArray(rows))
+      return {
+        count: null,
+        sha256: null,
+        positionSha256: null,
+        truncated: false,
+      };
+    return {
+      count: rows.length,
+      sha256: await digestRows(rows, identityProject),
+      positionSha256: await digestRows(rows, positionProject),
+      ...(includeIdentityIds
+        ? { identityIds: rows.slice(0, 1000).map(identityProject).sort() }
+        : {}),
+      truncated: rows.length > 1000,
+    };
+  };
+  const selectedLayers = await Promise.all(
+    selectedLayerIds.map(async (id) => {
+      const entry = layers.get(id);
+      const module = entry?.module;
+      const stats = module?.getStats?.() ?? entry?.stats ?? null;
+      let sourceRows = null;
+      let identityProjection = null;
+      let positionProjection = null;
+      if (id === 'satellites') {
+        sourceRows = module?.getAllPositions?.(1000) ?? null;
+        identityProjection = (row) => String(row.id);
+        positionProjection = (row) =>
+          `${row.id}|${row.latitude}|${row.longitude}|${row.altitudeM}`;
+      } else if (id === 'cctv') {
+        sourceRows =
+          module?.getDetectableObjects?.({ maxCount: 1000, seed: 0 }) ?? null;
+        identityProjection = (row) => String(row.sourceId);
+        positionProjection = (row) =>
+          `${row.sourceId}|${row.position?.x}|${row.position?.y}|${row.position?.z}`;
+      } else if (id === 'alpr-cameras' || id === 'military-installations') {
+        sourceRows = module?.getAnalystRecords?.(1000) ?? null;
+        identityProjection = (row) => String(row.id);
+        positionProjection = (row) => `${row.id}|${row.lat}|${row.lon}`;
+      } else if (id === 'radio') {
+        const accepted = module?.getAcceptedCatalogSnapshot?.();
+        sourceRows = accepted?.stationIds ?? null;
+        identityProjection = (row) => String(row);
+      }
+      const sourcePopulation = sourceRows
+        ? await summarizeRows(
+            sourceRows,
+            identityProjection,
+            positionProjection,
+            id === 'military-installations',
+          )
+        : {
+            count: id === 'wind' ? (stats?.count ?? null) : null,
+            sha256: null,
+            positionSha256: null,
+            truncated: false,
+          };
+      return {
+        id,
+        enabled: manager.isEnabled(id) === true,
+        count: Number.isSafeInteger(stats?.count) ? stats.count : null,
+        sourcePopulation,
+        expectedSourceCatalogCount: Number.isSafeInteger(
+          expectedSourceCounts?.[id],
+        )
+          ? expectedSourceCounts[id]
+          : null,
+        viewportCount:
+          id === 'radio' && Number.isSafeInteger(stats?.filtered)
+            ? stats.filtered
+            : (id === 'alpr-cameras' || id === 'military-installations') &&
+                Number.isSafeInteger(stats?.count)
+              ? stats.count
+              : null,
+        nearbyCount:
+          id === 'alpr-cameras' && Number.isSafeInteger(stats?.count)
+            ? stats.count
+            : null,
+        onScreenCount:
+          id === 'alpr-cameras' && Number.isSafeInteger(stats?.onScreen)
+            ? stats.onScreen
+            : null,
+        filteredCount: Number.isSafeInteger(stats?.filtered)
+          ? stats.filtered
+          : null,
+        loading: typeof stats?.loading === 'boolean' ? stats.loading : null,
+        error:
+          typeof stats?.error === 'string' ? stats.error.slice(0, 160) : null,
+        stale: typeof stats?.stale === 'boolean' ? stats.stale : null,
+        sourceStatus:
+          typeof stats?.status === 'string' ? stats.status.slice(0, 40) : null,
+        params: id === 'wind' ? (module?.getParams?.() ?? null) : null,
+        windValidAt: id === 'wind' ? (stats?.validAt ?? null) : null,
+        windIssuedAt: id === 'wind' ? (stats?.issuedAt ?? null) : null,
+        windModel: id === 'wind' ? (stats?.model ?? null) : null,
+      };
+    }),
+  );
+  const satellite = layers.get('satellites')?.module;
+  const satelliteRecord =
+    satellite?.getAllPositions?.(300)?.find((record) => record.id === 25544) ??
+    null;
+  const clock = viewer.clock?.currentTime;
+  return {
+    wallClockMs: Date.now(),
+    phasedClock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
+    windSourceAgeMs: Date.now() - Date.parse('2026-10-08T12:00:00.000Z'),
+    cesiumClock: clock
+      ? {
+          dayNumber: clock.dayNumber,
+          secondsOfDay: clock.secondsOfDay,
+          shouldAnimate: viewer.clock.shouldAnimate === true,
+          multiplier: viewer.clock.multiplier,
+        }
+      : null,
+    selectedLayers,
+    satelliteWitness: satelliteRecord
+      ? {
+          noradId: satelliteRecord.id,
+          latitude: satelliteRecord.latitude,
+          longitude: satelliteRecord.longitude,
+          altitudeM: satelliteRecord.altitudeM,
+        }
+      : null,
+  };
+}
+
+function austinOperatingSourcesReady(selectedLayerIds) {
+  const manager = window.__godsEyeView?.dataManager;
+  if (!manager?.layers?.get || !window.__godsEyeView?.viewer) return false;
+  return selectedLayerIds.every((id) => {
+    const entry = manager.layers.get(id);
+    const stats = entry?.module?.getStats?.() ?? entry?.stats;
+    return (
+      manager.isEnabled(id) === true &&
+      Number.isSafeInteger(stats?.count) &&
+      stats.count > 0 &&
+      stats.loading !== true &&
+      !stats.error
+    );
+  });
+}
+
+async function configureAustinOperatingPage(fixture) {
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
+  const viewer = app?.viewer;
+  if (!manager || !viewer)
+    throw new Error('Austin operating fixture needs the application viewer.');
+  const controller = app.styleManager?._adaptiveQuality;
+  const qualityControl = document.getElementById('presentation-quality-mode');
+  const densityControl = document.getElementById('detection-density-slider');
+  if (!controller?.setMode || !qualityControl || !densityControl)
+    throw new Error('Austin quality controls are unavailable.');
+  qualityControl.value = fixture.visualState.qualityMode;
+  qualityControl.dispatchEvent(new Event('change', { bubbles: true }));
+  const services = app.styleManager?.services;
+  if (
+    typeof services?.setDetectionModeByLabel !== 'function' ||
+    typeof services?.getDetectionTuning !== 'function' ||
+    typeof services?.getDetectionMode !== 'function'
+  )
+    throw new Error('Austin detection workload controls are unavailable.');
+  densityControl.value = String(fixture.visualState.densityPct);
+  densityControl.dispatchEvent(new Event('input', { bubbles: true }));
+  services.setDetectionModeByLabel(fixture.visualState.detectionMode);
+  if (
+    controller.getMode() !== fixture.visualState.qualityMode ||
+    densityControl.value !== String(fixture.visualState.densityPct) ||
+    services.getDetectionTuning()?.densityPct !==
+      fixture.visualState.densityPct ||
+    services.getDetectionMode() !== fixture.visualState.detectionMode
+  )
+    throw new Error(
+      'Austin detection/quality settings did not match the fixture contract.',
+    );
+  const clock = viewer.clock;
+  if (!clock?.currentTime)
+    throw new Error('Austin Cesium Julian clock is unavailable.');
+  clock.shouldAnimate = false;
+  clock.multiplier = 0;
+  clock.currentTime.dayNumber = fixture.clock.dayNumber;
+  clock.currentTime.secondsOfDay = fixture.clock.secondsOfDay;
+  const route = fixture.route;
+  const destination = viewer.scene.globe.ellipsoid.cartographicToCartesian({
+    longitude: (route.center.longitude * Math.PI) / 180,
+    latitude: (route.center.latitude * Math.PI) / 180,
+    height: route.altitudeM,
+  });
+  viewer.camera.cancelFlight?.();
+  viewer.camera.setView({
+    destination,
+    orientation: {
+      heading: (route.headingDeg * Math.PI) / 180,
+      pitch: (route.pitchDeg * Math.PI) / 180,
+      roll: 0,
+    },
+  });
+  viewer.scene.requestRender();
+  const selected = new Set(fixture.selectedLayerIds);
+  for (const layer of manager.getAll()) {
+    if (layer.enabled && !selected.has(layer.id))
+      await manager.setEnabled(layer.id, false);
+  }
+  for (const id of fixture.selectedLayerIds) {
+    const entry = manager.layers?.get(id);
+    if (!entry?.module)
+      throw new Error(`Austin operating layer ${id} is unavailable.`);
+    if (id === 'wind') entry.module.setParams(fixture.visualState.wind);
+    if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+  }
+  const camera = viewer.camera;
+  window.__gevPerformanceHome = {
+    position: camera.position.clone(),
+    direction: camera.direction.clone(),
+    up: camera.up.clone(),
+    transform: camera.transform.clone(),
+  };
+  return {
+    cesiumClock: {
+      dayNumber: clock.currentTime.dayNumber,
+      secondsOfDay: clock.currentTime.secondsOfDay,
+      shouldAnimate: clock.shouldAnimate === true,
+      multiplier: clock.multiplier,
+    },
+    wallClockMs: Date.now(),
+    enabledLayerIds: manager
+      .getAll()
+      .filter((layer) => manager.isEnabled(layer.id))
+      .map((layer) => layer.id)
+      .sort(),
+    qualityMode: controller.getMode(),
+    densityControl: {
+      id: densityControl.id,
+      value: densityControl.value,
+      densityPct: services.getDetectionTuning()?.densityPct,
+    },
+    detectionMode: services.getDetectionMode(),
+  };
 }
 
 async function settleProviderRenderAtBoundary(
@@ -1689,6 +2110,11 @@ try {
       weatherEffectsFixtureDelivery,
       { documentRole, documentId },
     );
+    const austinFixture = await configureAustinOperatingFixturePage(auditPage, {
+      documentRole,
+      documentId,
+      phasedClock: Boolean(austinOperatingWorkload),
+    });
     earlyRendererProbeScripts.set(
       auditPage,
       await installEarlyCesiumRendererProbe(auditPage, {
@@ -1700,6 +2126,7 @@ try {
     return {
       fixtureSession,
       weatherFixtureSession,
+      austinFixture,
       auditState: auditPageCodeRequests(auditPage),
       infrastructureFixtureDelivery: documentInfrastructureDelivery,
     };
@@ -1732,6 +2159,10 @@ try {
         documentRole: startupDocumentRole,
         documentId: startupDocumentId,
       },
+    );
+    const startupAustinFixture = await configureAustinOperatingFixturePage(
+      startupPage,
+      { documentRole: startupDocumentRole, documentId: startupDocumentId },
     );
     if (captureProvenance)
       await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
@@ -1812,10 +2243,13 @@ try {
       documentId: startupDocumentId,
       auditMode: 'diagnostic',
     });
-    if (startupFixtureSession) {
-      const startupInterceptionStopped = await stopFlightFixtureSession(
-        startupFixtureSession,
-      );
+    for (const ownedSession of [
+      startupFixtureSession,
+      startupAustinFixture?.session,
+    ]) {
+      if (!ownedSession) continue;
+      const startupInterceptionStopped =
+        await stopFlightFixtureSession(ownedSession);
       if (!startupInterceptionStopped?.confirmed)
         throw new Error(
           'Startup fixture interception stop and command drain were not confirmed.',
@@ -1828,7 +2262,16 @@ try {
       documentId: startupDocumentId,
     });
     await context.close();
-    await releaseFlightFixtureSession(startupFixtureSession);
+    for (const ownedSession of [
+      startupFixtureSession,
+      startupAustinFixture?.session,
+    ])
+      await releaseFlightFixtureSession(ownedSession);
+    if (startupAustinFixture?.owner)
+      finalizeAustinOperatingFixtureDelivery(
+        startupAustinFixture.owner,
+        'startup-page-closed-after-session-release',
+      );
   }
 
   process.stdout.write('[performance] preparing measured scene\n');
@@ -1854,6 +2297,12 @@ try {
   );
   infrastructureFixtureDelivery =
     initialPageAttachment.infrastructureFixtureDelivery;
+  let austinOperatingFixtureDelivery =
+    initialPageAttachment.austinFixture?.delivery || null;
+  let activeAustinFixtureSession =
+    initialPageAttachment.austinFixture?.session || null;
+  let activeAustinFixtureOwner =
+    initialPageAttachment.austinFixture?.owner || null;
   let activeFixtureSession = initialPageAttachment.fixtureSession;
   let captureAuditState = initialPageAttachment.auditState;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -2148,6 +2597,130 @@ try {
       observed.environment.layers,
       observed.environment.layers,
     );
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
+
+  let austinOperatingSetupObservation = null;
+  async function configureAndObserveAustinDocument(targetPage) {
+    const before = await targetPage.evaluate(
+      configureAustinOperatingPage,
+      austinOperatingWorkload,
+    );
+    const expectedEnabledIds = [
+      ...austinOperatingWorkload.selectedLayerIds,
+    ].sort();
+    if (
+      JSON.stringify(before.enabledLayerIds) !==
+        JSON.stringify(expectedEnabledIds) ||
+      before.wallClockMs !== austinOperatingWorkload.fixedTimeMs ||
+      before.qualityMode !== austinOperatingWorkload.visualState.qualityMode ||
+      before.densityControl?.id !== 'detection-density-slider' ||
+      before.densityControl?.value !==
+        String(austinOperatingWorkload.visualState.densityPct) ||
+      before.densityControl?.densityPct !==
+        austinOperatingWorkload.visualState.densityPct ||
+      before.detectionMode !==
+        austinOperatingWorkload.visualState.detectionMode ||
+      before.cesiumClock?.dayNumber !==
+        austinOperatingWorkload.clock.dayNumber ||
+      before.cesiumClock?.secondsOfDay !==
+        austinOperatingWorkload.clock.secondsOfDay ||
+      before.cesiumClock?.shouldAnimate !== false ||
+      before.cesiumClock?.multiplier !== 0
+    )
+      throw new Error(
+        `Austin operating setup did not match its fixed route/clock/settings: ${JSON.stringify(before)}`,
+      );
+    await targetPage.waitForFunction(
+      austinOperatingSourcesReady,
+      { timeout: fixtureTimeoutMs, polling: 100 },
+      austinOperatingWorkload.selectedLayerIds,
+    );
+    const observed = await targetPage.evaluate(observeCommonScene, {
+      appCommit: source.appCommit,
+    });
+    const runtimeState = await targetPage.evaluate(
+      observeAustinOperatingRuntimeState,
+      austinOperatingWorkload.selectedLayerIds,
+      austinOperatingWorkload.expectedLayerCounts,
+    );
+    assertAustinPopulationEvidence(
+      runtimeState,
+      austinOperatingWorkload,
+      'setup',
+    );
+    if (
+      runtimeState.wallClockMs !== austinOperatingWorkload.fixedTimeMs ||
+      runtimeState.windSourceAgeMs !==
+        austinOperatingWorkload.windSourceAgeMs ||
+      runtimeState.cesiumClock?.dayNumber !==
+        austinOperatingWorkload.clock.dayNumber ||
+      runtimeState.cesiumClock?.secondsOfDay !==
+        austinOperatingWorkload.clock.secondsOfDay ||
+      runtimeState.cesiumClock?.shouldAnimate !== false ||
+      runtimeState.cesiumClock?.multiplier !== 0 ||
+      runtimeState.selectedLayers.length !== expectedEnabledIds.length ||
+      runtimeState.selectedLayers.some(
+        (layer) => !layer.enabled || layer.error || layer.loading === true,
+      ) ||
+      runtimeState.selectedLayers.find((layer) => layer.id === 'satellites')
+        ?.count !== austinOperatingWorkload.expectedLayerCounts.satellites ||
+      runtimeState.selectedLayers.find((layer) => layer.id === 'wind')
+        ?.windValidAt !== Date.parse(austinOperatingWorkload.windSourceTime) ||
+      runtimeState.selectedLayers.find((layer) => layer.id === 'wind')?.params
+        ?.model !== austinOperatingWorkload.visualState.wind.model ||
+      runtimeState.selectedLayers.find((layer) => layer.id === 'wind')?.params
+        ?.overlay !== austinOperatingWorkload.visualState.wind.overlay ||
+      runtimeState.selectedLayers.find((layer) => layer.id === 'wind')?.params
+        ?.paused !== false ||
+      runtimeState.selectedLayers.find((layer) => layer.id === 'wind')?.params
+        ?.units !== austinOperatingWorkload.visualState.wind.units ||
+      observed.settings?.qualityMode !==
+        austinOperatingWorkload.visualState.qualityMode ||
+      observed.settings?.densityPct !==
+        austinOperatingWorkload.visualState.densityPct ||
+      observed.settings?.detectionMode !==
+        austinOperatingWorkload.visualState.detectionMode ||
+      runtimeState.satelliteWitness?.noradId !== 25544 ||
+      !Number.isFinite(runtimeState.satelliteWitness?.latitude) ||
+      !Number.isFinite(runtimeState.satelliteWitness?.longitude)
+    )
+      throw new Error(
+        `Austin native source readiness did not match its fixture contract: ${JSON.stringify(runtimeState)}`,
+      );
+    const selectedRows = observed.environment.layers
+      .filter((layer) => layer.enabled)
+      .map((layer) => layer.id)
+      .sort();
+    if (JSON.stringify(selectedRows) !== JSON.stringify(expectedEnabledIds))
+      throw new Error(
+        `Austin enabled layer population contains missing or unexpected layers: ${JSON.stringify(selectedRows)}`,
+      );
+    const requiredAssetIds = [
+      ...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+      'installations',
+    ];
+    const delivery = austinOperatingFixtureDelivery.summarize({
+      requiredAssetIds,
+      requiredAlprTiles: AUSTIN_OPERATING_REQUIRED_ALPR_TILES.map(
+        ([z, x, y]) => ({ z, x, y }),
+      ),
+    });
+    return { before, commonScene: observed, runtimeState, delivery };
+  }
+  if (austinOperatingWorkload) {
+    failureProgress.phase = 'configure-austin-operating-fixture';
+    const setup = await configureAndObserveAustinDocument(page);
+    failureProgress.current = {
+      phase: failureProgress.phase,
+      fixtureId: austinOperatingWorkload.id,
+      fixtureSha256: austinOperatingWorkload.sha256,
+      setup: setup.before,
+    };
+    fixtureDelivery = setup.delivery;
+    austinOperatingSetupObservation = setup;
+    failureProgress.current.austinSetupObservation =
+      austinOperatingSetupObservation;
     failureProgress.fixtureDelivery = fixtureDelivery;
   }
 
@@ -2606,6 +3179,7 @@ try {
   let providerSampleDocumentIndex = 0;
   async function prepareFreshProviderDocument() {
     providerSampleDocumentIndex += 1;
+    const retiringAustinOwner = activeAustinFixtureOwner;
     await retireProviderDocument({
       retireRenderer: async () => {
         const expectedAttributionOwner = activeDepthPickAttribution;
@@ -2631,7 +3205,7 @@ try {
       auditWorkers: async () => {
         if (providerSampleWorkerAuditComplete) return;
         await auditPageWorkerBlobs(page, captureAuditState, {
-          documentRole: 'main-setup',
+          documentRole: activeDocumentRole,
           documentId: activeDocumentId,
           auditMode: 'diagnostic',
         });
@@ -2646,28 +3220,45 @@ try {
           );
       },
       stopInterception: async () => {
-        const stopped = await stopFlightFixtureSession(activeFixtureSession);
-        if (!stopped?.confirmed)
-          throw new Error(
-            'Fixture interception stop and command drain were not confirmed.',
-          );
+        for (const session of [
+          activeFixtureSession,
+          activeAustinFixtureSession,
+        ].filter(Boolean)) {
+          const stopped = await stopFlightFixtureSession(session);
+          if (!stopped?.confirmed)
+            throw new Error(
+              'Fixture interception stop and command drain were not confirmed.',
+            );
+        }
       },
       closeDocument: async () => {
         if (providerContext) await providerContext.close();
         else await page.close();
       },
-      releaseInterception: () =>
-        releaseFlightFixtureSession(activeFixtureSession),
+      releaseInterception: async () => {
+        for (const session of [
+          activeFixtureSession,
+          activeAustinFixtureSession,
+        ].filter(Boolean))
+          await releaseFlightFixtureSession(session);
+      },
     });
+    if (retiringAustinOwner)
+      finalizeAustinOperatingFixtureDelivery(
+        retiringAustinOwner,
+        'provider-document-retired-after-interception-release',
+      );
     providerContext = await browser.createBrowserContext();
     page = await providerContext.newPage();
     activePage = page;
     ({ documentRole: activeDocumentRole, documentId: activeDocumentId } =
       captureDocumentTopology.samples[providerSampleDocumentIndex - 1]);
-    flightFixtureDelivery = createFlightFixtureDeliveryObserver(
-      productionFlightFixture,
-      new URL(url).origin + '/',
-    );
+    flightFixtureDelivery = productionFlightFixture
+      ? createFlightFixtureDeliveryObserver(
+          productionFlightFixture,
+          new URL(url).origin + '/',
+        )
+      : null;
     const pageAttachment = await attachMeasuredPage(
       page,
       flightFixtureDelivery,
@@ -2677,6 +3268,10 @@ try {
       },
     );
     activeFixtureSession = pageAttachment.fixtureSession;
+    austinOperatingFixtureDelivery =
+      pageAttachment.austinFixture?.delivery || null;
+    activeAustinFixtureSession = pageAttachment.austinFixture?.session || null;
+    activeAustinFixtureOwner = pageAttachment.austinFixture?.owner || null;
     captureAuditState = pageAttachment.auditState;
     captureAuditState.workerUrls.clear();
     captureAuditState.blobUrls.clear();
@@ -2739,86 +3334,106 @@ try {
       throw new Error(
         'Provider-fixture page is controlled by a service worker.',
       );
-    const initialEpoch = await page.evaluate(() => ({
-      now: Date.now(),
-      clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
-    }));
-    if (
-      initialEpoch.now !== productionFlightFixture.fixedTimeMs ||
-      initialEpoch.clock?.phase !== 'setup'
-    )
-      throw new Error(
-        `Provider-fixture document did not start at the held epoch: ${JSON.stringify(initialEpoch)}`,
-      );
-    await page.evaluate(
-      async ({ qualityMode: mode, detectionMode: requestedDetectionMode }) => {
-        const app = window.__godsEyeView;
-        const manager = app.dataManager;
-        if (!manager.isEnabled('flights'))
-          await manager.setEnabled('flights', true);
-        const controller = app.styleManager?._adaptiveQuality;
-        if (controller && !controller.setMode(mode))
-          throw new Error('Presentation quality controller is unavailable');
-        if (!controller && mode !== 'manual')
-          throw new Error('Requested quality profile is unavailable');
-        const services = app.styleManager?.services;
-        if (typeof services?.setDetectionModeByLabel !== 'function')
-          throw new Error('Detection workload controls are unavailable');
-        services.setDetectionModeByLabel(requestedDetectionMode);
-        if (services.getDetectionMode() !== requestedDetectionMode)
-          throw new Error('Detection workload mode did not match the request');
-        for (const id of ['local-datacenters', 'local-dams']) {
-          const entry = manager.layers.get(id);
-          if (!entry) throw new Error(`Missing required mixed layer ${id}`);
-          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
-        }
-        const viewer = app.viewer;
-        const destination =
-          viewer.scene.globe.ellipsoid.cartographicToCartesian({
-            longitude: (-97.7431 * Math.PI) / 180,
-            latitude: (30.2672 * Math.PI) / 180,
-            height: 130_000,
-          });
-        viewer.camera.cancelFlight?.();
-        viewer.camera.setView({
-          destination,
-          orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
-        });
-        viewer.scene.requestRender();
-      },
-      { qualityMode, detectionMode },
-    );
-    await page.waitForFunction(
-      (counts) => {
-        const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
-        const getLayer = (id) => layers.find((entry) => entry.id === id);
-        return (
-          ['flights', 'local-datacenters', 'local-dams'].every(
-            (id) => getLayer(id)?.enabled === true,
-          ) &&
-          getLayer('flights')?.stats?.count === counts.flights &&
-          getLayer('local-datacenters')?.stats?.count === counts.datacenters &&
-          getLayer('local-dams')?.stats?.count === counts.dams
-        );
-      },
-      { timeout: fixtureTimeoutMs, polling: 100 },
-      {
-        flights: productionFlightFixture.count,
-        datacenters: mixedLayerCounts.datacenters,
-        dams: mixedLayerCounts.dams,
-      },
-    );
-    fixtureDelivery = await summarizeFlightFixtureDelivery();
-    failureProgress.fixtureDelivery = fixtureDelivery;
-    await page.evaluate(() => {
-      const camera = window.__godsEyeView.viewer.camera;
-      window.__gevPerformanceHome = {
-        position: camera.position.clone(),
-        direction: camera.direction.clone(),
-        up: camera.up.clone(),
-        transform: camera.transform.clone(),
+    if (austinOperatingWorkload) {
+      failureProgress.phase = 'configure-austin-operating-sample-document';
+      failureProgress.current = {
+        ...failureProgress.current,
+        phase: failureProgress.phase,
       };
-    });
+      const setup = await configureAndObserveAustinDocument(page);
+      austinOperatingSetupObservation = setup;
+      fixtureDelivery = setup.delivery;
+      failureProgress.current.austinSetupObservation = setup;
+      failureProgress.fixtureDelivery = fixtureDelivery;
+    }
+    if (productionFlightFixture) {
+      const initialEpoch = await page.evaluate(() => ({
+        now: Date.now(),
+        clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
+      }));
+      if (
+        initialEpoch.now !== productionFlightFixture.fixedTimeMs ||
+        initialEpoch.clock?.phase !== 'setup'
+      )
+        throw new Error(
+          `Provider-fixture document did not start at the held epoch: ${JSON.stringify(initialEpoch)}`,
+        );
+      await page.evaluate(
+        async ({
+          qualityMode: mode,
+          detectionMode: requestedDetectionMode,
+        }) => {
+          const app = window.__godsEyeView;
+          const manager = app.dataManager;
+          if (!manager.isEnabled('flights'))
+            await manager.setEnabled('flights', true);
+          const controller = app.styleManager?._adaptiveQuality;
+          if (controller && !controller.setMode(mode))
+            throw new Error('Presentation quality controller is unavailable');
+          if (!controller && mode !== 'manual')
+            throw new Error('Requested quality profile is unavailable');
+          const services = app.styleManager?.services;
+          if (typeof services?.setDetectionModeByLabel !== 'function')
+            throw new Error('Detection workload controls are unavailable');
+          services.setDetectionModeByLabel(requestedDetectionMode);
+          if (services.getDetectionMode() !== requestedDetectionMode)
+            throw new Error(
+              'Detection workload mode did not match the request',
+            );
+          for (const id of ['local-datacenters', 'local-dams']) {
+            const entry = manager.layers.get(id);
+            if (!entry) throw new Error(`Missing required mixed layer ${id}`);
+            if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+          }
+          const viewer = app.viewer;
+          const destination =
+            viewer.scene.globe.ellipsoid.cartographicToCartesian({
+              longitude: (-97.7431 * Math.PI) / 180,
+              latitude: (30.2672 * Math.PI) / 180,
+              height: 130_000,
+            });
+          viewer.camera.cancelFlight?.();
+          viewer.camera.setView({
+            destination,
+            orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+          });
+          viewer.scene.requestRender();
+        },
+        { qualityMode, detectionMode },
+      );
+      await page.waitForFunction(
+        (counts) => {
+          const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
+          const getLayer = (id) => layers.find((entry) => entry.id === id);
+          return (
+            ['flights', 'local-datacenters', 'local-dams'].every(
+              (id) => getLayer(id)?.enabled === true,
+            ) &&
+            getLayer('flights')?.stats?.count === counts.flights &&
+            getLayer('local-datacenters')?.stats?.count ===
+              counts.datacenters &&
+            getLayer('local-dams')?.stats?.count === counts.dams
+          );
+        },
+        { timeout: fixtureTimeoutMs, polling: 100 },
+        {
+          flights: productionFlightFixture.count,
+          datacenters: mixedLayerCounts.datacenters,
+          dams: mixedLayerCounts.dams,
+        },
+      );
+      fixtureDelivery = await summarizeFlightFixtureDelivery();
+      failureProgress.fixtureDelivery = fixtureDelivery;
+      await page.evaluate(() => {
+        const camera = window.__godsEyeView.viewer.camera;
+        window.__gevPerformanceHome = {
+          position: camera.position.clone(),
+          direction: camera.direction.clone(),
+          up: camera.up.clone(),
+          transform: camera.transform.clone(),
+        };
+      });
+    }
   }
 
   for (const scenario of scenarios) {
@@ -2828,7 +3443,7 @@ try {
       failureProgress.run = run;
       failureProgress.current = { phase: failureProgress.phase, scenario, run };
       process.stdout.write(`[performance] ${scenario} ${run}/${runs}\n`);
-      if (productionFlightFixture) {
+      if (productionFlightFixture || austinOperatingWorkload) {
         failureProgress.phase = 'prepare-fresh-provider-document';
         failureProgress.current.phase = failureProgress.phase;
         await prepareFreshProviderDocument();
@@ -2940,12 +3555,47 @@ try {
         });
       // Start the fixture epoch only after observer setup so its host cost is
       // outside both warmup and measurement render-boundary deadlines.
-      const clockStart = productionFlightFixture
+      const hasPhasedFixtureClock = Boolean(
+        productionFlightFixture || austinOperatingWorkload,
+      );
+      const phaseRunOrdinal = hasPhasedFixtureClock
+        ? expectedFixtureRunOrdinal({
+            sharedDocument: false,
+            completedSampleCount: captures.length,
+          })
+        : null;
+      const clockStart = hasPhasedFixtureClock
         ? await page.evaluate(
-            () =>
-              window.__gevPhasedMonotonicWallClockV1?.startWarmup?.() ?? null,
+            ({ resetCompletedRun, expectedRunOrdinal }) => {
+              const clock = window.__gevPhasedMonotonicWallClockV1;
+              if (!clock)
+                throw new Error('Phased fixture clock is unavailable.');
+              let before = clock.snapshot();
+              if (before.phase === 'complete' && resetCompletedRun)
+                before = clock.resetForNextRun(expectedRunOrdinal - 1);
+              if (before.phase !== 'setup')
+                throw new Error(
+                  `Fixture clock cannot start warmup from ${before.phase}.`,
+                );
+              const started = clock.startWarmup(expectedRunOrdinal);
+              return { before, started };
+            },
+            {
+              resetCompletedRun: false,
+              expectedRunOrdinal: phaseRunOrdinal,
+            },
           )
         : null;
+      if (
+        austinOperatingWorkload &&
+        (clockStart?.before?.runOrdinal !== phaseRunOrdinal ||
+          clockStart?.started?.runOrdinal !== phaseRunOrdinal ||
+          clockStart?.started?.phase !== 'warmup' ||
+          clockStart?.started?.epochMs !== austinOperatingWorkload.fixedTimeMs)
+      )
+        throw new Error(
+          `Austin phased clock did not start its declared run: ${JSON.stringify(clockStart)}`,
+        );
       failureProgress.current.clockStart = clockStart;
       // Each workload/run receives the declared warmup, including tracking.
       failureProgress.phase = 'warmup';
@@ -2968,7 +3618,7 @@ try {
         auditMode: workerAuditMode,
         warmupMs,
         readWarmupBoundary: async () => {
-          if (productionFlightFixture) {
+          if (productionFlightFixture || austinOperatingWorkload) {
             const warmupProgressRecord = failureProgress.current;
             try {
               warmupBoundarySettle = await settleProviderRenderAtBoundary(
@@ -2995,7 +3645,7 @@ try {
                     ]
                   : [],
                 holdProviderWarmupBoundary,
-                [warmupMs],
+                [warmupMs, phaseRunOrdinal],
               );
             } catch (error) {
               if (depthPickAttributionEnabled && activeDepthPickAttribution) {
@@ -3013,6 +3663,15 @@ try {
             }
             fixtureBoundaryStart =
               readProviderWarmupBoundarySnapshot(warmupBoundarySettle);
+            if (
+              austinOperatingWorkload &&
+              (fixtureBoundaryStart?.runOrdinal !== phaseRunOrdinal ||
+                fixtureBoundaryStart?.epochMs !==
+                  austinOperatingWorkload.fixedTimeMs + warmupMs)
+            )
+              throw new Error(
+                `Austin warmup boundary clock snapshot is invalid: ${JSON.stringify(fixtureBoundaryStart)}`,
+              );
             if (depthPickAttributionEnabled && activeDepthPickAttribution) {
               const observation =
                 warmupBoundarySettle?.page?.diagnostics?.finalObservation ??
@@ -3036,7 +3695,8 @@ try {
           return fixtureBoundaryStart;
         },
         settleCompletedRender: async () => {
-          if (!productionFlightFixture) warmupBoundarySettle = null;
+          if (!productionFlightFixture && !austinOperatingWorkload)
+            warmupBoundarySettle = null;
           failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
           if (failureProgress.current.prewarmWorkerAudit) {
             failureProgress.current.prewarmWorkerAudit.fixtureClockElapsedMs =
@@ -3075,18 +3735,25 @@ try {
         failureProgress.current.prewarmWorkerAuditTimingBoundary =
           prewarmWorkerAuditTimingBoundary;
       if (trackingStart) failureProgress.current.trackingStart = trackingStart;
-      const fixtureMeasurementStart = productionFlightFixture
-        ? await page.evaluate(() => ({
-            clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
-            wallTimeMs: Date.now(),
-            flightStats:
-              window.__godsEyeView?.dataManager?.layers
-                ?.get('flights')
-                ?.module?.getStats?.() ?? null,
-            documentVisible: !document.hidden,
-            documentFocused: document.hasFocus(),
-          }))
-        : null;
+      const fixtureMeasurementStart =
+        productionFlightFixture || austinOperatingWorkload
+          ? await page.evaluate(() => ({
+              clock:
+                window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
+              wallTimeMs: Date.now(),
+              flightStats:
+                window.__godsEyeView?.dataManager?.layers
+                  ?.get('flights')
+                  ?.module?.getStats?.() ?? null,
+              satelliteWitness:
+                window.__godsEyeView?.dataManager?.layers
+                  ?.get('satellites')
+                  ?.module?.getAllPositions?.(300)
+                  ?.find((record) => record.id === 25544) ?? null,
+              documentVisible: !document.hidden,
+              documentFocused: document.hasFocus(),
+            }))
+          : null;
       failureProgress.phase = 'validate-measurement-start';
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.measurementStart = fixtureMeasurementStart;
@@ -3111,9 +3778,51 @@ try {
         throw new Error(
           `Provider fixture was stale or unfocused at measurement start: ${JSON.stringify(fixtureMeasurementStart)}`,
         );
+      if (
+        austinOperatingWorkload &&
+        (fixtureMeasurementStart.clock?.phase !== 'warmup-held' ||
+          fixtureMeasurementStart.clock?.runOrdinal !== phaseRunOrdinal ||
+          fixtureMeasurementStart.clock?.elapsedMs !== warmupMs ||
+          fixtureMeasurementStart.wallTimeMs !==
+            austinOperatingWorkload.fixedTimeMs + warmupMs ||
+          fixtureMeasurementStart.clock?.epochMs !==
+            austinOperatingWorkload.fixedTimeMs + warmupMs ||
+          fixtureMeasurementStart.satelliteWitness?.id !== 25544 ||
+          !Number.isFinite(
+            fixtureMeasurementStart.satelliteWitness?.latitude,
+          ) ||
+          !Number.isFinite(
+            fixtureMeasurementStart.satelliteWitness?.longitude,
+          ) ||
+          !austinOperatingSetupObservation?.runtimeState?.satelliteWitness ||
+          (fixtureMeasurementStart.satelliteWitness.latitude ===
+            austinOperatingSetupObservation.runtimeState.satelliteWitness
+              .latitude &&
+            fixtureMeasurementStart.satelliteWitness.longitude ===
+              austinOperatingSetupObservation.runtimeState.satelliteWitness
+                .longitude) ||
+          !fixtureMeasurementStart.documentVisible ||
+          !fixtureMeasurementStart.documentFocused)
+      )
+        throw new Error(
+          `Austin fixture clock or satellite witness was invalid at measurement start: ${JSON.stringify(fixtureMeasurementStart)}`,
+        );
       const sceneBefore = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      const austinStateBefore = austinOperatingWorkload
+        ? await page.evaluate(
+            observeAustinOperatingRuntimeState,
+            austinOperatingWorkload.selectedLayerIds,
+            austinOperatingWorkload.expectedLayerCounts,
+          )
+        : null;
+      if (austinOperatingWorkload)
+        assertAustinPopulationEvidence(
+          austinStateBefore,
+          austinOperatingWorkload,
+          `${scenario} run ${run} measurement start`,
+        );
       const weatherStateBefore = weatherEffectsWorkload
         ? await page.evaluate(observeWeatherEffectsRuntimeState)
         : null;
@@ -3121,7 +3830,13 @@ try {
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
       const sample = await page.evaluate(
-        async ({ durationMs, scenarioName, delay, recordFrameWindow }) => {
+        async ({
+          durationMs,
+          scenarioName,
+          delay,
+          recordFrameWindow,
+          expectedRunOrdinal,
+        }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
           const stagedClock = window.__gevPhasedMonotonicWallClockV1;
@@ -3166,7 +3881,7 @@ try {
           let motionFinished = Promise.resolve();
           let finishMotion = () => {};
           try {
-            if (stagedClock) stagedClock.startMeasurement();
+            if (stagedClock) stagedClock.startMeasurement(expectedRunOrdinal);
             const startedAt = performance.now();
             const measurementWait = new Promise((resolve) => {
               measurementTimer = setTimeout(() => {
@@ -3219,7 +3934,8 @@ try {
               }, 1000);
             }
             await measurementWait;
-            const clockEnd = stagedClock?.finishMeasurement?.() ?? null;
+            const clockEnd =
+              stagedClock?.finishMeasurement?.(expectedRunOrdinal) ?? null;
             active = false;
             await motionFinished;
             clearInterval(delayTimer);
@@ -3318,12 +4034,13 @@ try {
           scenarioName: scenario,
           delay: delayMs,
           recordFrameWindow: collectSceneFrameAttribution,
+          expectedRunOrdinal: phaseRunOrdinal,
         },
       );
       failureProgress.current.measurement = sample;
       if (boundaryProgressBindingRecord)
         sample.renderBoundaryProgressBinding = boundaryProgressBindingRecord;
-      if (productionFlightFixture) {
+      if (productionFlightFixture || austinOperatingWorkload) {
         failureProgress.phase = 'validate-provider-fixture-clock';
         failureProgress.current.phase = failureProgress.phase;
         const clockEnd = await page.evaluate(() => ({
@@ -3336,24 +4053,42 @@ try {
               ?.get('flights')
               ?.module?.getStats?.() ?? null,
         }));
-        const fixtureAgeMs =
-          clockEnd.wallTimeMs - productionFlightFixture.fixedTimeMs;
-        if (
-          clockEnd.clock.startCount !== 1 ||
-          clockEnd.clock.phase !== 'complete' ||
-          clockEnd.clock.elapsedMs !== warmupMs + seconds * 1000 ||
-          fixtureAgeMs < 0 ||
-          fixtureAgeMs > 120_000 ||
-          clockEnd.flightStats?.lastUpdate !==
-            productionFlightFixture.fixedTimeMs ||
-          clockEnd.flightStats?.stale !== false ||
-          clockEnd.flightStats?.count !== productionFlightFixture.count ||
+        let fixtureAgeMs = null;
+        if (productionFlightFixture) {
+          fixtureAgeMs =
+            clockEnd.wallTimeMs - productionFlightFixture.fixedTimeMs;
+          if (
+            clockEnd.clock.startCount !== 1 ||
+            clockEnd.clock.phase !== 'complete' ||
+            clockEnd.clock.elapsedMs !== warmupMs + seconds * 1000 ||
+            fixtureAgeMs < 0 ||
+            fixtureAgeMs > 120_000 ||
+            clockEnd.flightStats?.lastUpdate !==
+              productionFlightFixture.fixedTimeMs ||
+            clockEnd.flightStats?.stale !== false ||
+            clockEnd.flightStats?.count !== productionFlightFixture.count ||
+            !sample.foregroundThroughout ||
+            !clockEnd.documentVisible ||
+            !clockEnd.documentFocused
+          )
+            throw new Error(
+              `Provider-fixture capture clock/freshness/foreground contract failed: ${JSON.stringify({ clock: clockEnd.clock, fixtureAgeMs, flightStats: clockEnd.flightStats, documentVisible: clockEnd.documentVisible, documentFocused: clockEnd.documentFocused })}`,
+            );
+        } else if (
+          sample.phasedClockEnd?.startCount !== 1 ||
+          sample.phasedClockEnd?.phase !== 'complete' ||
+          sample.phasedClockEnd?.runOrdinal !== phaseRunOrdinal ||
+          sample.phasedClockEnd?.elapsedMs !== warmupMs + seconds * 1000 ||
+          sample.phasedClockEnd?.epochMs !==
+            austinOperatingWorkload.fixedTimeMs + warmupMs + seconds * 1000 ||
+          clockEnd.wallTimeMs !==
+            austinOperatingWorkload.fixedTimeMs + warmupMs + seconds * 1000 ||
           !sample.foregroundThroughout ||
           !clockEnd.documentVisible ||
           !clockEnd.documentFocused
         )
           throw new Error(
-            `Provider-fixture capture clock/freshness/foreground contract failed: ${JSON.stringify({ clock: clockEnd.clock, fixtureAgeMs, flightStats: clockEnd.flightStats, documentVisible: clockEnd.documentVisible, documentFocused: clockEnd.documentFocused })}`,
+            `Austin phased clock/foreground contract failed: ${JSON.stringify({ clock: sample.phasedClockEnd, clockEnd })}`,
           );
         failureProgress.phase = 'measurement-boundary-render-wait';
         failureProgress.current.phase = failureProgress.phase;
@@ -3371,7 +4106,7 @@ try {
                 )
               : undefined,
             activeRenderBoundaryProgressBinding,
-            true,
+            Boolean(productionFlightFixture || austinOperatingWorkload),
             scenario === 'selected-aircraft-tracking'
               ? observeTrackedEntityBoundary
               : depthPickAttributionEnabled
@@ -3465,43 +4200,45 @@ try {
             'Tracked entity endpoint was unavailable at the terminal postRender observation.',
           );
         }
-        sample.fixtureClock = {
-          schema: 'gev-provider-fixture-capture-clock/v1',
-          fixedTime: productionFlightFixture.fixedTime,
-          start: trackingResult.clockStart,
-          measurementStart: fixtureMeasurementStart.clock,
-          warmupBoundary: fixtureBoundaryStart,
-          actualWarmupElapsedMs: fixtureBoundaryStart.warmupNativeElapsedMs,
-          warmupBoundarySettleNativeMs: warmupBoundarySettle.settleElapsedMs,
-          ageAtMeasurementStartMs:
-            fixtureMeasurementStart.wallTimeMs -
-            productionFlightFixture.fixedTimeMs,
-          end: clockEnd.clock,
-          configuredMeasurementMs: seconds * 1000,
-          measurementPhaseNativeElapsedMs:
-            sample.phasedClockEnd?.measurementNativeElapsedMs ?? null,
-          measuredWindowElapsedMs:
-            sample.phasedClockEnd?.measurementNativeElapsedMs ?? null,
-          measurementClockElapsedMs: seconds * 1000,
-          measurementBoundarySettleNativeMs:
-            measurementBoundarySettle.settleElapsedMs,
-          ageAtEndMs: fixtureAgeMs,
-          sourceFreshness: 'current',
-          freshnessWindowMs: 120_000,
-          appDocumentReinitialized: true,
-          freshBrowserContext: true,
-        };
+        if (productionFlightFixture)
+          sample.fixtureClock = {
+            schema: 'gev-provider-fixture-capture-clock/v1',
+            fixedTime: productionFlightFixture.fixedTime,
+            start: trackingResult.clockStart,
+            measurementStart: fixtureMeasurementStart.clock,
+            warmupBoundary: fixtureBoundaryStart,
+            actualWarmupElapsedMs: fixtureBoundaryStart.warmupNativeElapsedMs,
+            warmupBoundarySettleNativeMs: warmupBoundarySettle.settleElapsedMs,
+            ageAtMeasurementStartMs:
+              fixtureMeasurementStart.wallTimeMs -
+              productionFlightFixture.fixedTimeMs,
+            end: clockEnd.clock,
+            configuredMeasurementMs: seconds * 1000,
+            measurementPhaseNativeElapsedMs:
+              sample.phasedClockEnd?.measurementNativeElapsedMs ?? null,
+            measuredWindowElapsedMs:
+              sample.phasedClockEnd?.measurementNativeElapsedMs ?? null,
+            measurementClockElapsedMs: seconds * 1000,
+            measurementBoundarySettleNativeMs:
+              measurementBoundarySettle.settleElapsedMs,
+            ageAtEndMs: fixtureAgeMs,
+            sourceFreshness: 'current',
+            freshnessWindowMs: 120_000,
+            appDocumentReinitialized: true,
+            freshBrowserContext: true,
+          };
         sample.renderLoopRetirement =
           measurementBoundarySettle.page?.diagnostics?.renderLoopRetirement ??
           null;
-        recordRendererLoopRetirement({
-          phase: 'provider-sample-measurement-post-render',
-          scenario,
-          run,
-          documentRole: activeDocumentRole,
-          documentId: activeDocumentId,
-          ...sample.renderLoopRetirement,
-        });
+        if (sample.renderLoopRetirement)
+          recordRendererLoopRetirement({
+            phase: 'provider-sample-measurement-post-render',
+            scenario,
+            run,
+            documentRole: activeDocumentRole,
+            documentId: activeDocumentId,
+            ...sample.renderLoopRetirement,
+          });
         if (scenario === 'selected-aircraft-tracking') {
           const cameraPose = (boundary) => ({
             dateEpochMs: boundary.dateEpochMs,
@@ -3530,9 +4267,11 @@ try {
             measurementMs: seconds * 1000,
           });
         }
-        fixtureDelivery = await summarizeFlightFixtureDelivery();
-        failureProgress.fixtureDelivery = fixtureDelivery;
-        sample.fixtureDelivery = fixtureDelivery;
+        if (!austinOperatingWorkload) {
+          fixtureDelivery = await summarizeFlightFixtureDelivery();
+          failureProgress.fixtureDelivery = fixtureDelivery;
+          sample.fixtureDelivery = fixtureDelivery;
+        }
         if (workerAuditMode === 'prewarm') {
           if (!activePrewarmedWorkerInventory || !activePrewarmedWorkerDocument)
             throw new Error('Provider sample has no active prewarm inventory.');
@@ -3565,9 +4304,119 @@ try {
       const sceneAfter = await page.evaluate(observeCommonScene, {
         appCommit: source.appCommit,
       });
+      const austinStateAfter = austinOperatingWorkload
+        ? await page.evaluate(
+            observeAustinOperatingRuntimeState,
+            austinOperatingWorkload.selectedLayerIds,
+            austinOperatingWorkload.expectedLayerCounts,
+          )
+        : null;
+      if (austinOperatingWorkload) {
+        assertAustinPopulationEvidence(
+          austinStateAfter,
+          austinOperatingWorkload,
+          `${scenario} run ${run} measurement end`,
+        );
+        assertAustinStableCatalogs(
+          austinStateBefore,
+          austinStateAfter,
+          `${scenario} run ${run}`,
+        );
+      }
       const weatherStateAfter = weatherEffectsWorkload
         ? await page.evaluate(observeWeatherEffectsRuntimeState)
         : null;
+      if (austinOperatingWorkload) {
+        const requiredAssetIds = [
+          ...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+          'installations',
+        ];
+        fixtureDelivery = austinOperatingFixtureDelivery.summarize({
+          requiredAssetIds,
+          requiredAlprTiles: AUSTIN_OPERATING_REQUIRED_ALPR_TILES.map(
+            ([z, x, y]) => ({ z, x, y }),
+          ),
+        });
+        sample.fixtureDelivery = fixtureDelivery;
+        sample.austinOperatingClock = {
+          schema: 'gev-austin-operating-capture-clock/v1',
+          fixedHarnessTime: austinOperatingWorkload.fixedTime,
+          runOrdinal: phaseRunOrdinal,
+          configuredWarmupMs: warmupMs,
+          configuredMeasurementMs: seconds * 1000,
+          start: clockStart.started,
+          measurementStart: fixtureMeasurementStart.clock,
+          warmupBoundary: fixtureBoundaryStart,
+          measurementEnd: sample.phasedClockEnd,
+          measurementBoundarySettleNativeMs:
+            measurementBoundarySettle.settleElapsedMs,
+          wallClockBeforeMs: fixtureMeasurementStart.wallTimeMs,
+          wallClockAfterMs: clockEnd.wallTimeMs,
+          windSourceTime: austinOperatingWorkload.windSourceTime,
+          windSourceValidAtBeforeMs:
+            austinStateBefore?.selectedLayers?.find(
+              (layer) => layer.id === 'wind',
+            )?.windValidAt ?? null,
+          windSourceValidAtAfterMs:
+            austinStateAfter?.selectedLayers?.find(
+              (layer) => layer.id === 'wind',
+            )?.windValidAt ?? null,
+          windSourceAgeBeforeMs: austinStateBefore?.windSourceAgeMs ?? null,
+          windSourceAgeAfterMs: austinStateAfter?.windSourceAgeMs ?? null,
+          satelliteWitnessBefore: normalizeAustinSatelliteWitness(
+            fixtureMeasurementStart.satelliteWitness,
+          ),
+          satelliteWitnessAfter: austinStateAfter?.satelliteWitness ?? null,
+          selectedLayersBefore: austinStateBefore?.selectedLayers ?? null,
+          selectedLayersAfter: austinStateAfter?.selectedLayers ?? null,
+          visualSettingsBefore: sceneBefore.settings,
+          visualSettingsAfter: sceneAfter.settings,
+          cameraStart: sceneBefore.camera,
+          cameraEnd: sceneAfter.camera,
+          fixtureDelivery,
+        };
+        const beforeWitness = fixtureMeasurementStart.satelliteWitness;
+        const afterWitness = austinStateAfter?.satelliteWitness;
+        const windBefore = austinStateBefore?.selectedLayers?.find(
+          (layer) => layer.id === 'wind',
+        );
+        const windAfter = austinStateAfter?.selectedLayers?.find(
+          (layer) => layer.id === 'wind',
+        );
+        if (
+          !beforeWitness ||
+          afterWitness?.noradId !== 25544 ||
+          (beforeWitness.latitude === afterWitness.latitude &&
+            beforeWitness.longitude === afterWitness.longitude) ||
+          austinStateBefore?.selectedLayers?.find(
+            (layer) => layer.id === 'satellites',
+          )?.sourcePopulation?.positionSha256 ===
+            austinStateAfter?.selectedLayers?.find(
+              (layer) => layer.id === 'satellites',
+            )?.sourcePopulation?.positionSha256 ||
+          !windBefore ||
+          !windAfter ||
+          windBefore.windValidAt !==
+            Date.parse(austinOperatingWorkload.windSourceTime) ||
+          windAfter.windValidAt !==
+            Date.parse(austinOperatingWorkload.windSourceTime) ||
+          windBefore.params?.model !==
+            austinOperatingWorkload.visualState.wind.model ||
+          windBefore.params?.overlay !==
+            austinOperatingWorkload.visualState.wind.overlay ||
+          windBefore.params?.paused !== false ||
+          windBefore.params?.units !==
+            austinOperatingWorkload.visualState.wind.units ||
+          JSON.stringify(sceneBefore.settings) !==
+            JSON.stringify(sceneAfter.settings)
+        )
+          throw new Error(
+            `Austin source/clock/settings contract failed at ${scenario} run ${run}.`,
+          );
+        failureProgress.fixtureDelivery = fixtureDelivery;
+        failureProgress.current.austinOperatingClock =
+          sample.austinOperatingClock;
+      }
       failureProgress.current.after = sceneAfter;
       failureProgress.phase = 'validate-sample-integrity';
       failureProgress.current.phase = failureProgress.phase;
@@ -3799,7 +4648,34 @@ try {
             environment.layers,
             captures.at(-1)?.layers || environment.layers,
           )
-        : null;
+        : austinOperatingWorkload
+          ? {
+              schema: 'gev-austin-operating-capture-delivery/v1',
+              status: 'observed',
+              fixtureId: austinOperatingWorkload.id,
+              fixtureSha256: austinOperatingWorkload.sha256,
+              fixedTime: austinOperatingWorkload.fixedTime,
+              windSourceTime: austinOperatingWorkload.windSourceTime,
+              windSourceAgeMs: austinOperatingWorkload.windSourceAgeMs,
+              requiredAssetIds: [
+                ...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+                'installations',
+              ],
+              requiredAlprTiles: AUSTIN_OPERATING_REQUIRED_ALPR_TILES.map(
+                ([z, x, y]) => `${z}/${x}/${y}`,
+              ),
+              sampleDocuments: captures.map((sample) => ({
+                scenario: sample.scenario,
+                run: sample.run,
+                documentRole: sample.documentRole,
+                documentId: sample.documentId,
+                delivery: sample.fixtureDelivery,
+                populations: summarizeAustinNativePopulations(sample),
+              })),
+              documentOwners: [],
+              sourceProvenance: austinOperatingWorkload.provenance,
+            }
+          : null;
   if (weatherEffectsWorkload)
     fixtureDelivery = {
       ...fixtureDelivery,
@@ -3839,6 +4715,15 @@ try {
         ? weatherEffectsWorkload.expectedLayerCounts
         : {}),
     },
+    ...(austinOperatingWorkload
+      ? {
+          dynamicPopulationIds: [
+            'alpr-cameras',
+            'military-installations',
+            'radio',
+          ],
+        }
+      : {}),
     ...(productionFlightFixture
       ? {
           expectedFixture: productionFlightFixture,
@@ -3848,7 +4733,10 @@ try {
       : {}),
   });
   const comparisonFixture =
-    productionFlightFixture || infrastructureWorkload || weatherEffectsWorkload;
+    productionFlightFixture ||
+    infrastructureWorkload ||
+    weatherEffectsWorkload ||
+    austinOperatingWorkload;
   const comparisonContract = productionFlightFixture
     ? createObservedDenseComparisonContract({
         fixture: productionFlightFixture,
@@ -3865,7 +4753,20 @@ try {
           captures,
           scenarios,
         })
-      : null;
+      : austinOperatingWorkload
+        ? createObservedAustinOperatingComparisonContract({
+            fixture: austinOperatingWorkload,
+            fixtureDelivery,
+            environment,
+            captures,
+            scenarios,
+            workload: {
+              warmupMs,
+              durationPerSampleMs: seconds * 1000,
+              runsPerScenario: runs,
+            },
+          })
+        : null;
   if (page && activeDepthPickAttribution)
     await disposeDepthPickAttributionForPage(page, activeDepthPickAttribution);
   if (page)
@@ -3877,6 +4778,21 @@ try {
     });
   for (const session of [...fixtureInterceptionSessions])
     await releaseFlightFixtureSession(session);
+  if (austinOperatingWorkload) {
+    for (const owner of austinOperatingFixtureDeliveries)
+      finalizeAustinOperatingFixtureDelivery(
+        owner,
+        owner.disposed
+          ? owner.disposeReason
+          : 'capture-success-after-session-release',
+      );
+    publishAustinOperatingFixtureDocumentEvidence();
+    fixtureDelivery = {
+      ...fixtureDelivery,
+      documentOwners: failureProgress.workload.austinOperatingFixtureDocuments,
+    };
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
   const workload = {
     warmupMs,
     durationPerSampleMs: seconds * 1000,
@@ -3893,6 +4809,13 @@ try {
     ],
     rendererLoopRetirementsOmittedCount:
       failureProgress.workload.rendererLoopRetirementsOmittedCount || 0,
+    ...(austinOperatingWorkload
+      ? {
+          austinOperatingFixtureDocuments: [
+            ...(failureProgress.workload.austinOperatingFixtureDocuments || []),
+          ],
+        }
+      : {}),
     ...(shaderProgramAttributionEnabled
       ? {
           shaderProgramAttribution: shaderProgramAttributionEnvelope(),
@@ -3910,17 +4833,24 @@ try {
           performanceAcceptanceEligible: false,
         }
       : {}),
-    fixture: infrastructureWorkload || weatherEffectsWorkload || fixture,
+    fixture:
+      infrastructureWorkload ||
+      weatherEffectsWorkload ||
+      austinOperatingWorkload ||
+      fixture,
     providerFixture: infrastructureWorkload
       ? infrastructureWorkload.workloadId
       : weatherEffectsWorkload
         ? weatherEffectsWorkload.workloadId
-        : productionFlightFixture
-          ? 'dense-investigation'
-          : null,
+        : austinOperatingWorkload
+          ? austinOperatingWorkload.workloadId
+          : productionFlightFixture
+            ? 'dense-investigation'
+            : null,
     fixtureId:
       infrastructureWorkload?.id ||
       weatherEffectsWorkload?.id ||
+      austinOperatingWorkload?.id ||
       productionFlightFixture?.id ||
       null,
     injectedDelayMs: delayMs,
@@ -3979,7 +4909,10 @@ try {
     cameraPath:
       'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
     detectionMode:
-      fixture || infrastructureWorkload || weatherEffectsWorkload
+      fixture ||
+      infrastructureWorkload ||
+      weatherEffectsWorkload ||
+      austinOperatingWorkload
         ? detectionMode
         : null,
     populationStableAcrossSamples,
@@ -4038,6 +4971,7 @@ try {
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
     );
+  const comparisonEligible = comparisonReadinessReasons.length === 0;
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
@@ -4086,21 +5020,16 @@ try {
     capturedAt: new Date().toISOString(),
     source,
     url: new URL(url).origin,
-    comparisonEligible: false,
+    comparisonEligible,
     ...(comparisonContract ? { comparisonContract } : {}),
     comparisonReadiness: {
-      status: 'not-ready',
+      status: comparisonEligible ? 'ready' : 'not-ready',
       workerAuditTimingBoundary:
         workerAuditMode === 'prewarm'
           ? PREWARM_WORKER_AUDIT_BOUNDARY
           : 'during-capture-diagnostic-instrumentation',
-      reasons:
-        comparisonReadinessReasons.length > 0
-          ? comparisonReadinessReasons
-          : ['comparison-eligibility-is-not-enabled-by-this-capture-path'],
-      reason:
-        comparisonReadinessReasons.join('; ') ||
-        'comparison-eligibility-is-not-enabled-by-this-capture-path',
+      reasons: comparisonReadinessReasons,
+      reason: comparisonReadinessReasons.join('; ') || null,
     },
     ...(fixtureDelivery ? { fixtureDelivery } : {}),
     environment,
@@ -4195,6 +5124,19 @@ try {
       process.exitCode = 1;
     }
   }
+  for (const owner of austinOperatingFixtureDeliveries) {
+    if (owner.disposed) continue;
+    try {
+      finalizeAustinOperatingFixtureDelivery(
+        owner,
+        'capture-finally-after-session-release',
+      );
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
+  publishAustinOperatingFixtureDocumentEvidence();
   weatherEffectsFixtureDelivery?.dispose();
   for (const [
     responsePage,
@@ -4232,7 +5174,8 @@ if (captureFailure && !failureReportWritten) {
   (sceneFrameDiagnosticsEnabled ||
     depthPickAttributionEnabled ||
     shaderProgramAttributionEnabled ||
-    failureProgress.workload.fixtureInterceptionReleases.length > 0)
+    failureProgress.workload.fixtureInterceptionReleases.length > 0 ||
+    austinOperatingFixtureDeliveries.length > 0)
 ) {
   try {
     await writeCaptureFailure(captureFailure, { refresh: true });

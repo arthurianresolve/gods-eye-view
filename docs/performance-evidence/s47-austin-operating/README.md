@@ -64,11 +64,22 @@ and a fully drained request queue. Source and test hashes remained unchanged
 during this independent run. The capture producer and paired-report validator
 are still outside this checkpoint's scope.
 
+After formatting and commit, the independent [committed-checkpoint recheck](root-review/focused-austin-ownership-committed.json)
+also passes all 33 tests at `cd44d1df2bdcbb0e9ed401c4f813ea2a5709b998`.
+The fixture/clock/ownership files match that commit; capture/comparison/smoke
+work remains uncommitted and outside these test imports.
+
 The [baseline source check](root-review/baseline-source-compatibility.json)
 confirms that all six native endpoint adapters and the ALPR viewport implementation
 are byte-identical between the frozen `eb8c682` baseline and the current candidate
 ancestor. This supports using the same fixture routes on both builds; it does not
 replace a built-application compatibility check.
+
+The [observer API review](root-review/baseline-observer-api-compatibility.json)
+also finds all 13 required native getter declarations in both revisions. Four
+complete modules are unchanged; satellite and CCTV edits are outside the
+observed getters. This is a static compatibility check, not proof that both
+production builds complete the browser workload.
 
 ## Corrected native route coverage
 
@@ -169,3 +180,26 @@ node docs/performance-evidence/s47-austin-operating/root-review/installation-pop
 Each command writes its current local observation to the adjacent JSON report.
 The clock audit deliberately expects the native rewind failure to reproduce;
 a successful audit does not mean that a shared-document capture is acceptable.
+
+## Paired report integrity review
+
+The [initial paired delivery audit](root-review/paired-delivery-integrity-initial.json)
+preserves three failures in the unfinished integration: replacing an acknowledged
+asset hash, removing acknowledged ALPR tiles, or removing acknowledged installation
+identities still produced a comparable pair. The validator checked copied summary
+fields without revalidating those raw delivery records. The unchanged positive
+control passed. Exact working-tree file hashes were stable during the replay;
+these observations do not describe the committed fixture checkpoint alone.
+
+The [replay script](root-review/paired-delivery-integrity-audit.mjs) uses the real
+fixture delivery producer with synthetic browser and build observations. It is a
+Node integrity check, not browser or hardware evidence. Run it with a new output
+filename to retain the original failures:
+
+```sh
+node docs/performance-evidence/s47-austin-operating/root-review/paired-delivery-integrity-audit.mjs paired-delivery-integrity-corrected.json
+```
+
+The repair and permanent rejection tests are required before the Austin integration
+can be accepted. The diagnostic capture also remains ineligible for latency
+acceptance until a mode without profiling instrumentation is validated.

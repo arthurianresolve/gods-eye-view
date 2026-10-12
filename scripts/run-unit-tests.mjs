@@ -74,6 +74,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/austinOperatingDocumentEvidence.test.mjs',
   'scripts/performance/austinOperatingPopulationEvidence.test.mjs',
   'scripts/performance/austinOperatingWorkloadFixture.test.mjs',
+  'scripts/performance/austinOperatingComparisonContract.test.mjs',
   'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
   'scripts/capture-scene-performance.test.mjs',
   'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
