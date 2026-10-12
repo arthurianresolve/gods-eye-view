@@ -7,7 +7,12 @@ import { createSubmarineCableLayer } from '../../src/layers/submarineCables/inde
 import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import { createCableCameraSweepGate } from './cableCameraSweep.mjs';
-import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
+import {
+  appendCableFailureDiagnostics,
+  attachCableReadinessFailure,
+  cableFailureDiagnostics,
+  createCableReadinessTrace,
+} from './cableFailureDiagnostics.mjs';
 import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
 import {
   CABLE_REFERENCE_RENDER_CASES,
@@ -446,48 +451,70 @@ export async function waitForStableScene(
   mode,
   sourceRecords,
   deadline = performance.now() + STABLE_TIMEOUT_MS,
-  observations = null,
+  options = {},
 ) {
+  const stage = options?.stage || 'scene-stability';
+  const trace = options?.trace || createCableReadinessTrace(stage);
+  const startedAt = performance.now();
   let previous = null;
   let stableFrames = 0;
-  while (performance.now() < deadline) {
-    const remainingMs = deadline - performance.now();
-    try {
+  const observe = (primitiveReadiness = null, result = null) => {
+    const diagnostics = cableFailureDiagnostics(viewer, layer);
+    trace.record({
+      elapsedMs: Math.max(0, performance.now() - startedAt),
+      remainingMs: Math.max(0, deadline - performance.now()),
+      frameNumber: diagnostics.scene.frameNumber,
+      dataSourceDisplayReady: diagnostics.scene.dataSourceDisplayReady,
+      globeTilesLoaded: diagnostics.scene.globeTilesLoaded,
+      primitiveReadiness: primitiveReadiness
+        ? { available: true, value: primitiveReadiness }
+        : {
+            available: false,
+            error: result?.primitiveReadinessError || 'not-observed',
+          },
+      stableFrames,
+      signatureStable: result?.signatureStable ?? false,
+    });
+  };
+  try {
+    while (performance.now() < deadline) {
+      const remainingMs = deadline - performance.now();
       await waitForPostRender(viewer, Math.min(1000, remainingMs));
-    } catch (error) {
-      if (performance.now() >= deadline) break;
-      throw error;
+      let primitiveReadiness;
+      try {
+        primitiveReadiness = readScenePrimitiveReadiness(viewer.scene, Cesium);
+      } catch (error) {
+        observe(null, {
+          primitiveReadinessError: String(error?.message || error).slice(
+            0,
+            300,
+          ),
+        });
+        throw error;
+      }
+      const ready =
+        viewer.dataSourceDisplay.ready === true &&
+        viewer.scene.globe.tilesLoaded === true &&
+        primitiveReadiness.ready;
+      if (!ready) {
+        previous = null;
+        stableFrames = 0;
+        observe(primitiveReadiness);
+        continue;
+      }
+      const next = sceneSignature(viewer, layer, mode, sourceRecords);
+      const signatureStable = next === previous;
+      if (signatureStable) stableFrames += 1;
+      else stableFrames = 0;
+      previous = next;
+      observe(primitiveReadiness, { signatureStable });
+      if (stableFrames >= 3) return stableFrames + 1;
     }
-    const primitiveReadiness = readScenePrimitiveReadiness(
-      viewer.scene,
-      Cesium,
-    );
-    if (observations) {
-      const observation = {
-        remainingMs: deadline - performance.now(),
-        frameNumber: viewer.scene.frameState?.frameNumber ?? null,
-        dataSourceDisplayReady: viewer.dataSourceDisplay.ready === true,
-        primitiveReadiness,
-      };
-      if (observations.length === 32) observations.splice(1, 1);
-      observations.push(observation);
-    }
-    if (
-      viewer.dataSourceDisplay.ready !== true ||
-      viewer.scene.globe.tilesLoaded !== true ||
-      !primitiveReadiness.ready
-    ) {
-      previous = null;
-      stableFrames = 0;
-      continue;
-    }
-    const next = sceneSignature(viewer, layer, mode, sourceRecords);
-    if (next === previous) stableFrames += 1;
-    else stableFrames = 0;
-    previous = next;
-    if (stableFrames >= 3) return stableFrames + 1;
+    throw new Error('Cable scene did not reach three stable completed frames.');
+  } catch (error) {
+    attachCableReadinessFailure(error, trace, viewer, layer, { stage });
+    throw error;
   }
-  throw new Error('Cable scene did not reach three stable completed frames.');
 }
 
 export function setMapStack(viewer, mapEvents, activeId) {
@@ -1022,23 +1049,54 @@ export function createFixtureViewer(
 
 export async function mapStackWitness(viewer, mapEvents, layer) {
   const cableSource = dataSource(viewer, 'TeleGeography Submarine Cables');
-  setMapStack(viewer, mapEvents, 'photoreal');
-  await waitForPostRender(viewer);
-  await waitForStableScene(
-    viewer,
-    layer,
-    layer.__fixtureMode,
-    layer.__fixtureRecords,
-  );
+  const waitForMapStage = async (activeId, stage) => {
+    const trace = createCableReadinessTrace(stage);
+    try {
+      setMapStack(viewer, mapEvents, activeId);
+      await waitForPostRender(viewer);
+      const diagnostics = cableFailureDiagnostics(viewer, layer);
+      let primitiveReadiness;
+      try {
+        primitiveReadiness = readScenePrimitiveReadiness(viewer.scene, Cesium);
+      } catch (error) {
+        trace.record({
+          phase: 'first-post-render',
+          frameNumber: diagnostics.scene.frameNumber,
+          dataSourceDisplayReady: diagnostics.scene.dataSourceDisplayReady,
+          globeTilesLoaded: diagnostics.scene.globeTilesLoaded,
+          primitiveReadiness: {
+            available: false,
+            error: String(error?.message || error).slice(0, 300),
+          },
+        });
+        throw error;
+      }
+      trace.record({
+        phase: 'first-post-render',
+        frameNumber: diagnostics.scene.frameNumber,
+        dataSourceDisplayReady: diagnostics.scene.dataSourceDisplayReady,
+        globeTilesLoaded: diagnostics.scene.globeTilesLoaded,
+        primitiveReadiness: { available: true, value: primitiveReadiness },
+      });
+      await waitForStableScene(
+        viewer,
+        layer,
+        layer.__fixtureMode,
+        layer.__fixtureRecords,
+        undefined,
+        { stage, trace },
+      );
+    } catch (error) {
+      attachCableReadinessFailure(error, trace, viewer, layer, {
+        stage,
+        activeId,
+      });
+      throw error;
+    }
+  };
+  await waitForMapStage('photoreal', 'map-stack-photoreal');
   const photoreal = sourceClassification(cableSource, viewer.clock.currentTime);
-  setMapStack(viewer, mapEvents, 'osm');
-  await waitForPostRender(viewer);
-  await waitForStableScene(
-    viewer,
-    layer,
-    layer.__fixtureMode,
-    layer.__fixtureRecords,
-  );
+  await waitForMapStage('osm', 'map-stack-terrain-restore');
   const terrain = sourceClassification(cableSource, viewer.clock.currentTime);
   assert(
     photoreal.length === 1 && photoreal[0] === 'CESIUM_3D_TILE',

@@ -581,6 +581,8 @@ async function runLifetime({
     return lifetime;
   } catch (error) {
     lifetime.status = 'failed';
+    if (error?.cableReadinessFailure)
+      lifetime.readinessFailure = error.cableReadinessFailure;
     lifetime.error = String(error?.stack || error?.message || error).slice(
       0,
       4000,
@@ -837,6 +839,12 @@ async function runComparison() {
     report.status = 'passed';
   } catch (error) {
     report.status = 'failed';
+    const activeReadinessFailure = report.lifetimes
+      .map((lifetime) => lifetime.readinessFailure)
+      .filter(Boolean)
+      .at(-1);
+    if (activeReadinessFailure)
+      report.readinessFailure = activeReadinessFailure;
     report.error = String(error?.stack || error?.message || error).slice(
       0,
       5000,

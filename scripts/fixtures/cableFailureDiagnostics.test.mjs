@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSubmarineCableLayer } from '../../src/layers/submarineCables/index.js';
-import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
+import {
+  appendCableFailureDiagnostics,
+  attachCableReadinessFailure,
+  createCableReadinessTrace,
+  MAX_CABLE_READINESS_OBSERVATIONS,
+} from './cableFailureDiagnostics.mjs';
 
 function makeLayer() {
   return createSubmarineCableLayer({
@@ -115,4 +120,56 @@ test('throwing optional diagnostics stay isolated and keep partial pick failure'
     available: false,
     error: 'stats method failed',
   });
+});
+
+test('readiness traces retain a bounded first-and-latest frame window', () => {
+  const trace = createCableReadinessTrace('map-stack-photoreal');
+  for (let frameNumber = 1; frameNumber <= 20; frameNumber += 1)
+    trace.record({ frameNumber, ready: frameNumber === 20 });
+
+  const snapshot = trace.snapshot();
+  assert.equal(snapshot.stage, 'map-stack-photoreal');
+  assert.equal(snapshot.observationCount, 20);
+  assert.equal(snapshot.truncated, true);
+  assert.equal(snapshot.observations.length, MAX_CABLE_READINESS_OBSERVATIONS);
+  assert.deepEqual(
+    snapshot.observations.map(({ frameNumber }) => frameNumber),
+    [1, 2, 15, 16, 17, 18, 19, 20],
+  );
+});
+
+test('readiness failure attaches serializable stage evidence without masking the cause', () => {
+  const cause = new Error('completed-frame timeout');
+  const trace = createCableReadinessTrace('map-stack-terrain-restore');
+  const viewer = {
+    get dataSourceDisplay() {
+      throw new Error('display diagnostic unavailable');
+    },
+    scene: {
+      globe: {
+        get tilesLoaded() {
+          throw new Error('tiles diagnostic unavailable');
+        },
+      },
+      get frameState() {
+        throw new Error('frame diagnostic unavailable');
+      },
+    },
+  };
+  const failure = attachCableReadinessFailure(cause, trace, viewer, {});
+
+  assert.equal(cause.message, 'completed-frame timeout');
+  assert.equal(cause.cableReadinessFailure, failure);
+  assert.equal(failure.stage, 'map-stack-terrain-restore');
+  assert.equal(failure.readiness.observationCount, 1);
+  assert.equal(failure.readiness.observations[0].phase, 'failure');
+  assert.deepEqual(failure.scene.dataSourceDisplayReady, {
+    available: false,
+    error: 'display diagnostic unavailable',
+  });
+  assert.doesNotThrow(() => JSON.stringify(failure));
+});
+
+test('readiness trace requires a useful stage label', () => {
+  assert.throws(() => createCableReadinessTrace(''), /stage label/);
 });
