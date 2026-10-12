@@ -69,3 +69,13 @@ export const AUSTIN_OPERATING_VISUAL_STATE = Object.freeze({
   aircraftCount: 0,
   optionalStarlinkCatalog: false,
 });
+
+// Read-only settings observed on the matched application build: WebGL reports
+// antialiasing enabled, the viewer uses 4x MSAA, and Cesium's FXAA post-process
+// stage remains disabled by default.
+export const AUSTIN_OPERATING_RENDERING_STATE = Object.freeze({
+  resolutionScale: 1,
+  msaaSamples: 4,
+  antialias: true,
+  fxaa: false,
+});
