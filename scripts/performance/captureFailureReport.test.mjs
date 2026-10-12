@@ -1,9 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import {
   createCaptureFailureReport,
   MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  writeCaptureFailureReportFile,
 } from './captureFailureReport.mjs';
 
 const source = {
@@ -82,6 +86,32 @@ test('failure artifact preserves bounded current and completed sample evidence w
       }),
     /unsupported capture report schema/,
   );
+});
+
+test('post-cleanup failure refresh is atomic and preserves the initial artifact on rejection', async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'capture-failure-refresh-'),
+  );
+  const filePath = path.join(directory, 'report.json');
+  try {
+    await writeCaptureFailureReportFile(filePath, '{"state":"initial"}\n');
+    await assert.rejects(
+      writeCaptureFailureReportFile(
+        filePath,
+        'x'.repeat(MAX_CAPTURE_FAILURE_REPORT_BYTES + 1),
+        { refresh: true },
+      ),
+      /hard limit/,
+    );
+    assert.equal(await readFile(filePath, 'utf8'), '{"state":"initial"}\n');
+    await writeCaptureFailureReportFile(filePath, '{"state":"late"}\n', {
+      refresh: true,
+    });
+    assert.equal(await readFile(filePath, 'utf8'), '{"state":"late"}\n');
+    assert.deepEqual(await readdir(directory), ['report.json']);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('failure artifact redacts secrets and stays within its hard byte cap', () => {

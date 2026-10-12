@@ -49,8 +49,12 @@ import {
   runWorkerAuditAtWarmupBoundary,
   PREWARM_WORKER_AUDIT_BOUNDARY,
 } from './performance/prewarmWorkerAuditBoundary.mjs';
-import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
+import {
+  createCaptureFailureReport,
+  writeCaptureFailureReportFile,
+} from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
+import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
@@ -85,6 +89,7 @@ const providerFixtureTime = option(
   '2026-10-08T12:00:00.000Z',
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
+const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
 const infrastructureWorkload = providerFixtureMode?.startsWith('infrastructure')
   ? createInfrastructureWorkloadFixture(
       providerFixtureMode,
@@ -198,6 +203,10 @@ if (
 if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   throw new Error(
     'Prewarm worker auditing requires the verified dense production fixture.',
+  );
+if (sceneFrameDiagnosticsEnabled && !productionFlightFixture)
+  throw new Error(
+    '--scene-frame-diagnostics requires --provider-fixture dense-investigation.',
   );
 if (
   hostedFixture &&
@@ -333,12 +342,277 @@ const failureProgress = {
       : null,
     detectionMode,
     mixedLayers,
+    ...(sceneFrameDiagnosticsEnabled
+      ? {
+          sceneFrameDiagnostics: {
+            enabled: true,
+            scope:
+              'first scripted-motion run; installed before warmup and stopped after its measurement boundary',
+            eligibleForComparison: false,
+          },
+        }
+      : {}),
   },
 };
 let captureFailure = null;
 let failureReportWritten = false;
 let activeRenderBoundaryProgressBinding = null;
 let activeRenderBoundaryProgressBindingRecord = null;
+const SCENE_FRAME_DIAGNOSTICS_KEY = '__gevS47SceneFrameTimingV1';
+const SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS = 750;
+let activeSceneFrameAttribution = null;
+
+function boundedDiagnosticError(error) {
+  return {
+    name: String(error?.name || 'Error').slice(0, 80),
+    message: String(error?.message || error).slice(0, 240),
+  };
+}
+
+async function withSceneFrameDiagnosticTimeout(promise, label) {
+  let timer;
+  const outcome = await Promise.race([
+    Promise.resolve(promise).then(
+      (value) => ({ status: 'completed', value }),
+      (error) => ({ status: 'failed', error }),
+    ),
+    new Promise((resolve) => {
+      timer = setTimeout(
+        () =>
+          resolve({
+            status: 'timeout',
+            error: Object.assign(new Error(`${label} timed out.`), {
+              name: 'TimeoutError',
+            }),
+          }),
+        SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS,
+      );
+    }),
+  ]);
+  clearTimeout(timer);
+  return outcome;
+}
+
+async function startSceneFrameAttribution(targetPage, progressRecord) {
+  const record = {
+    schema: 'gev-scene-frame-attribution/v1',
+    status: 'installing',
+    scope:
+      'first scripted-motion run; installed before warmup and stopped after measurement-boundary settlement; bounded CPU/event timing, not GPU duration',
+    eligibleForComparison: false,
+    observerOriginPerformanceNowMs: null,
+    measurementWindowRelativeMs: null,
+    observation: null,
+    cleanup: 'pending',
+  };
+  progressRecord.sceneFrameAttribution = record;
+  const installPromise = Promise.resolve().then(() =>
+    targetPage.evaluate(createSceneFrameTimingDiagnostics, undefined, {
+      storeAs: SCENE_FRAME_DIAGNOSTICS_KEY,
+      maxEntries: 32,
+    }),
+  );
+  const installed = await withSceneFrameDiagnosticTimeout(
+    installPromise,
+    'Scene frame diagnostic setup',
+  );
+  if (installed.status !== 'completed') {
+    record.status =
+      installed.status === 'timeout' ? 'setup-timeout' : 'setup-failed';
+    record.error = boundedDiagnosticError(installed.error);
+    if (installed.status === 'timeout') {
+      // If the page recovers after the host setup bound, release a late observer
+      // from its owning page. This never changes the capture result.
+      record.lateCleanup = { status: 'pending' };
+      installPromise
+        .then(async (result) => {
+          if (result?.status !== 'installed') {
+            record.lateCleanup = { status: 'not-installed' };
+            return;
+          }
+          const cleanup = await releaseLateSceneFrameAttribution(targetPage);
+          record.lateCleanup = {
+            status:
+              cleanup.status === 'completed' &&
+              cleanup.value?.result?.cleanupComplete === true
+                ? 'confirmed'
+                : cleanup.status === 'timeout'
+                  ? 'timeout'
+                  : 'unconfirmed',
+          };
+          if (record.lateCleanup.status === 'confirmed')
+            record.cleanup = 'confirmed-after-timeout';
+          progressRecord.sceneFrameAttribution = record;
+        })
+        .catch((error) => {
+          record.lateCleanup = {
+            status: 'failed',
+            error: boundedDiagnosticError(error),
+          };
+          progressRecord.sceneFrameAttribution = record;
+        });
+    }
+    throw installed.error;
+  }
+  if (
+    installed.value?.status !== 'installed' ||
+    !Number.isFinite(installed.value.originPerformanceNowMs)
+  ) {
+    record.status = 'setup-invalid';
+    record.cleanup = 'unconfirmed';
+    try {
+      const cleanup = await releaseLateSceneFrameAttribution(targetPage);
+      if (
+        cleanup.status === 'completed' &&
+        cleanup.value?.result?.cleanupComplete === true
+      )
+        record.cleanup = 'confirmed';
+    } catch {
+      // The malformed setup result remains the primary diagnostic failure.
+    }
+    throw new Error('Scene frame diagnostic install result is malformed.');
+  }
+  record.status = 'recording';
+  record.observerOriginPerformanceNowMs =
+    installed.value.originPerformanceNowMs;
+  activeSceneFrameAttribution = {
+    page: targetPage,
+    record,
+    progressRecord,
+    stopPromise: null,
+  };
+  return record;
+}
+
+async function releaseLateSceneFrameAttribution(targetPage) {
+  return withSceneFrameDiagnosticTimeout(
+    targetPage.evaluate((key) => {
+      const controller = globalThis[key];
+      try {
+        return {
+          status: controller?.stop ? 'released' : 'missing',
+          result: controller?.stop?.() ?? null,
+        };
+      } finally {
+        delete globalThis[key];
+      }
+    }, SCENE_FRAME_DIAGNOSTICS_KEY),
+    'Late scene frame diagnostic cleanup',
+  );
+}
+
+async function stopSceneFrameAttribution(reason, sample = null) {
+  const active = activeSceneFrameAttribution;
+  if (!active) return null;
+  if (!active.stopPromise) {
+    active.stopPromise = (async () => {
+      active.record.status = 'stopping';
+      active.record.stopReason = reason;
+      let stopping;
+      let stopOperation;
+      try {
+        stopOperation = Promise.resolve().then(() =>
+          active.page.evaluate((key) => {
+            const controller = globalThis[key];
+            if (!controller || typeof controller.stop !== 'function')
+              return { status: 'missing' };
+            try {
+              return { status: 'stopped', observation: controller.stop() };
+            } finally {
+              delete globalThis[key];
+            }
+          }, SCENE_FRAME_DIAGNOSTICS_KEY),
+        );
+        stopping = await withSceneFrameDiagnosticTimeout(
+          stopOperation,
+          'Scene frame diagnostic cleanup',
+        );
+      } catch (error) {
+        stopping = { status: 'failed', error };
+      }
+      const outcome = stopping;
+      if (outcome.status === 'completed') {
+        const observation = outcome.value?.observation ?? null;
+        const eventsAvailable =
+          observation?.sceneEventAvailability?.update === true &&
+          observation?.sceneEventAvailability?.render === true;
+        const cleanupComplete =
+          outcome.value?.status === 'stopped' &&
+          observation?.cleanupComplete === true;
+        active.record.status =
+          outcome.value?.status === 'stopped' &&
+          cleanupComplete &&
+          eventsAvailable
+            ? 'completed'
+            : outcome.value?.status === 'stopped'
+              ? 'incomplete'
+              : outcome.value?.status || 'incomplete';
+        active.record.cleanup = cleanupComplete ? 'confirmed' : 'unconfirmed';
+        active.record.observation = observation;
+        const origin = active.record.observerOriginPerformanceNowMs;
+        const window = sample?.sceneFrameDiagnosticWindow;
+        if (
+          Number.isFinite(origin) &&
+          Number.isFinite(window?.startPerformanceNowMs) &&
+          Number.isFinite(window?.timerFiredPerformanceNowMs)
+        )
+          active.record.measurementWindowRelativeMs = {
+            startMs: Math.max(0, window.startPerformanceNowMs - origin),
+            timerFiredMs: Math.max(
+              0,
+              window.timerFiredPerformanceNowMs - origin,
+            ),
+          };
+      } else {
+        active.record.status =
+          outcome.status === 'timeout' ? 'stop-timeout' : 'stop-failed';
+        active.record.cleanup = 'unconfirmed';
+        active.record.error = boundedDiagnosticError(outcome.error);
+        if (outcome.status === 'timeout' && stopOperation) {
+          active.record.lateCleanup = { status: 'pending' };
+          stopOperation
+            .then((value) => {
+              const observation = value?.observation ?? null;
+              const confirmed =
+                value?.status === 'stopped' &&
+                observation?.cleanupComplete === true;
+              active.record.lateCleanup = {
+                status: confirmed ? 'confirmed' : 'unconfirmed',
+              };
+              if (confirmed) active.record.cleanup = 'confirmed-after-timeout';
+              if (observation) active.record.observation = observation;
+              active.progressRecord.sceneFrameAttribution = active.record;
+              if (sample) sample.sceneFrameAttribution = active.record;
+            })
+            .catch((error) => {
+              active.record.lateCleanup = {
+                status: 'failed',
+                error: boundedDiagnosticError(error),
+              };
+              active.progressRecord.sceneFrameAttribution = active.record;
+            });
+        }
+      }
+      if (sample) {
+        delete sample.sceneFrameDiagnosticWindow;
+        sample.sceneFrameAttribution = active.record;
+      }
+      active.progressRecord.sceneFrameAttribution = active.record;
+      return active.record;
+    })().catch((error) => {
+      active.record.status = 'stop-failed';
+      active.record.cleanup = 'unconfirmed';
+      active.record.error = boundedDiagnosticError(error);
+      active.progressRecord.sceneFrameAttribution = active.record;
+      return active.record;
+    });
+  }
+  const stopped = await active.stopPromise;
+  if (activeSceneFrameAttribution === active)
+    activeSceneFrameAttribution = null;
+  return stopped;
+}
+
 async function disposeActiveRenderBoundaryProgressBinding(reason) {
   const binding = activeRenderBoundaryProgressBinding;
   const record = activeRenderBoundaryProgressBindingRecord;
@@ -365,7 +639,7 @@ async function disposeActiveRenderBoundaryProgressBinding(reason) {
     return record.cleanup;
   }
 }
-async function writeCaptureFailure(error) {
+async function writeCaptureFailure(error, { refresh = false } = {}) {
   const report = createCaptureFailureReport({
     source,
     fixture: failureProgress.fixture,
@@ -392,9 +666,12 @@ async function writeCaptureFailure(error) {
   });
   const json = `${JSON.stringify(report, null, 2)}\n`;
   if (out) {
-    await fs.mkdir(path.dirname(path.resolve(out)), { recursive: true });
-    await fs.writeFile(out, json, 'utf8');
-    process.stderr.write('Wrote bounded failed-capture evidence.\n');
+    await writeCaptureFailureReportFile(out, json, { refresh });
+    process.stderr.write(
+      refresh
+        ? 'Refreshed bounded failed-capture evidence after cleanup.\n'
+        : 'Wrote bounded failed-capture evidence.\n',
+    );
   } else process.stdout.write(json);
   process.stderr.write(
     `Capture failed during ${report.failure.phase}: ${report.failure.message}\n`,
@@ -1636,6 +1913,12 @@ try {
           throw error;
         }
       }
+      const collectSceneFrameAttribution =
+        sceneFrameDiagnosticsEnabled &&
+        scenario === 'scripted-motion' &&
+        run === 1;
+      if (collectSceneFrameAttribution)
+        await startSceneFrameAttribution(page, failureProgress.current);
       // Start the fixture epoch only after observer setup so its host cost is
       // outside both warmup and measurement render-boundary deadlines.
       const clockStart = productionFlightFixture
@@ -1777,7 +2060,7 @@ try {
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
       const sample = await page.evaluate(
-        async ({ durationMs, scenarioName, delay }) => {
+        async ({ durationMs, scenarioName, delay, recordFrameWindow }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
           const stagedClock = window.__gevPhasedMonotonicWallClockV1;
@@ -1817,6 +2100,7 @@ try {
           let motionStartedAt = null;
           let motionDistance = 0;
           let measurementTimer = null;
+          let measurementTimerFiredPerformanceNowMs = null;
           let delayTimer = null;
           let motionFinished = Promise.resolve();
           let finishMotion = () => {};
@@ -1824,7 +2108,11 @@ try {
             if (stagedClock) stagedClock.startMeasurement();
             const startedAt = performance.now();
             const measurementWait = new Promise((resolve) => {
-              measurementTimer = setTimeout(resolve, durationMs);
+              measurementTimer = setTimeout(() => {
+                if (recordFrameWindow)
+                  measurementTimerFiredPerformanceNowMs = performance.now();
+                resolve();
+              }, durationMs);
             });
             if (scenarioName === 'scripted-motion') {
               // Rebuild the pose from one elapsed-time sample on every frame.
@@ -1944,6 +2232,15 @@ try {
                 motionDistanceM: motionDistance,
               },
               phasedClockEnd: clockEnd,
+              ...(recordFrameWindow
+                ? {
+                    sceneFrameDiagnosticWindow: {
+                      startPerformanceNowMs: startedAt,
+                      timerFiredPerformanceNowMs:
+                        measurementTimerFiredPerformanceNowMs,
+                    },
+                  }
+                : {}),
             };
           } finally {
             active = false;
@@ -1955,7 +2252,12 @@ try {
             document.removeEventListener('visibilitychange', onVisibility);
           }
         },
-        { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
+        {
+          durationMs: seconds * 1000,
+          scenarioName: scenario,
+          delay: delayMs,
+          recordFrameWindow: collectSceneFrameAttribution,
+        },
       );
       failureProgress.current.measurement = sample;
       if (boundaryProgressBindingRecord)
@@ -1995,18 +2297,30 @@ try {
         failureProgress.phase = 'measurement-boundary-render-wait';
         failureProgress.current.phase = failureProgress.phase;
         const measurementProgressRecord = failureProgress.current;
-        const measurementBoundarySettle = await settleProviderRenderAtBoundary(
-          page,
-          'Measurement boundary',
-          5000,
-          measurementProgressRecord
-            ? createBoundaryProgressRecorder(
-                measurementProgressRecord,
-                'measurementBoundaryObservation',
-              )
-            : undefined,
-          activeRenderBoundaryProgressBinding,
-        );
+        let measurementBoundarySettle;
+        try {
+          measurementBoundarySettle = await settleProviderRenderAtBoundary(
+            page,
+            'Measurement boundary',
+            5000,
+            measurementProgressRecord
+              ? createBoundaryProgressRecorder(
+                  measurementProgressRecord,
+                  'measurementBoundaryObservation',
+                )
+              : undefined,
+            activeRenderBoundaryProgressBinding,
+          );
+        } finally {
+          if (
+            activeSceneFrameAttribution?.progressRecord ===
+            measurementProgressRecord
+          )
+            await stopSceneFrameAttribution(
+              'measurement-boundary-settled-or-failed',
+              measurementProgressRecord.measurement,
+            );
+        }
         const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
           'both-boundaries-complete',
         );
@@ -2415,6 +2729,18 @@ try {
     detectionMode: fixture || infrastructureWorkload ? detectionMode : null,
     populationStableAcrossSamples,
     cameraPathStableAcrossSamples,
+    ...(sceneFrameDiagnosticsEnabled
+      ? {
+          sceneFrameDiagnostics: {
+            enabled: true,
+            targetScenario: 'scripted-motion',
+            targetRun: 1,
+            scope:
+              'installed before warmup, stopped after measurement-boundary settlement; bounded CPU/event timing, not GPU duration',
+            eligibleForComparison: false,
+          },
+        }
+      : {}),
     note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
   };
   const comparisonReadinessReasons = getCaptureReadinessReasons({
@@ -2430,6 +2756,10 @@ try {
     workerAuditMode,
     hardwareRequired,
   });
+  if (sceneFrameDiagnosticsEnabled)
+    comparisonReadinessReasons.push(
+      'scene-frame-attribution-instrumentation-is-enabled',
+    );
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
@@ -2441,6 +2771,28 @@ try {
       workerAuditMode === 'prewarm'
         ? PREWARM_WORKER_AUDIT_BOUNDARY
         : 'during-capture-diagnostic-instrumentation',
+    ...(sceneFrameDiagnosticsEnabled
+      ? {
+          sceneFrameDiagnostics: {
+            status: captures.some(
+              (sample) =>
+                sample.scenario === 'scripted-motion' &&
+                sample.run === 1 &&
+                sample.sceneFrameAttribution?.status === 'completed' &&
+                sample.sceneFrameAttribution?.cleanup === 'confirmed' &&
+                sample.sceneFrameAttribution?.observation
+                  ?.sceneEventAvailability?.update === true &&
+                sample.sceneFrameAttribution?.observation
+                  ?.sceneEventAvailability?.render === true,
+            )
+              ? 'completed'
+              : 'incomplete',
+            targetScenario: 'scripted-motion',
+            targetRun: 1,
+            eligibleForComparison: false,
+          },
+        }
+      : {}),
     performanceDiagnostics: {
       requested:
         'disabled-after-app-ready-before-warmup-when-supported-per-document',
@@ -2493,6 +2845,10 @@ try {
     process.exitCode = 1;
 } catch (error) {
   captureFailure = error;
+  await stopSceneFrameAttribution(
+    'capture-failed',
+    failureProgress.current?.measurement ?? null,
+  );
   await disposeActiveRenderBoundaryProgressBinding('capture-failed');
   if (failureProgress.phase === 'final-integrity-check') {
     const failedSample = String(error?.message || '').match(
@@ -2511,6 +2867,10 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
+  await stopSceneFrameAttribution(
+    'capture-finally',
+    failureProgress.current?.measurement ?? null,
+  );
   await disposeActiveRenderBoundaryProgressBinding('capture-finally');
   for (const session of fixtureInterceptionSessions) {
     await session.send('Fetch.disable').catch(() => {});
@@ -2545,5 +2905,13 @@ if (captureFailure && !failureReportWritten) {
     await writeCaptureFailure(captureFailure);
   } catch {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
+  }
+} else if (captureFailure && sceneFrameDiagnosticsEnabled) {
+  try {
+    await writeCaptureFailure(captureFailure, { refresh: true });
+  } catch {
+    process.stderr.write(
+      'Could not refresh bounded failed-capture evidence after cleanup; preserving the initial report.\n',
+    );
   }
 }

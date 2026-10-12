@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import test from 'node:test';
 import {
   createImportFrameDiagnostics,
@@ -126,6 +127,180 @@ test('rejected browser observers remain unavailable and are disconnected', () =>
   assert.equal(trace.stop().entries.longtask, null);
   assert.deepEqual(trace.stop().observerErrors, ['longtask']);
   assert.equal(disconnected, 1);
+});
+
+test('scene timing helper is self-contained when serialized into a browser context', () => {
+  const callbacks = new Set();
+  const event = {
+    addEventListener(callback) {
+      callbacks.add(callback);
+      return () => callbacks.delete(callback);
+    },
+  };
+  let time = 20;
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
+      name,
+      event,
+    ]),
+  );
+  const context = vm.createContext({
+    performance: { now: () => time },
+    PerformanceObserver: undefined,
+  });
+  const browserFunction = vm.runInContext(
+    `(${createSceneFrameTimingDiagnostics.toString()})`,
+    context,
+  );
+  const installed = browserFunction(scene, {
+    maxEntries: 4,
+    storeAs: '__gevS47FrameTimingTest',
+  });
+  assert.equal(installed.status, 'installed');
+  assert.equal(
+    vm.runInContext(
+      'globalThis.__gevS47FrameTimingTest !== undefined',
+      context,
+    ),
+    true,
+  );
+  event.addEventListener(() => {});
+  time += 10;
+  const stopped = vm.runInContext(
+    'globalThis.__gevS47FrameTimingTest.stop()',
+    context,
+  );
+  assert.equal(stopped.originPerformanceNowMs, 20);
+  assert.equal(stopped.elapsedMs, 10);
+  assert.equal(stopped.entries.longtask, null);
+  assert.equal(callbacks.size, 1);
+});
+
+test('scene timing owner does not overwrite an occupied global key', () => {
+  const callbacks = new Set();
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
+      name,
+      {
+        addEventListener(listener) {
+          callbacks.add(listener);
+          return () => callbacks.delete(listener);
+        },
+      },
+    ]),
+  );
+  const existing = { stop() {} };
+  globalThis.__gevSceneFrameAlreadyOwned = existing;
+  try {
+    assert.throws(
+      () =>
+        createSceneFrameTimingDiagnostics(scene, {
+          storeAs: '__gevSceneFrameAlreadyOwned',
+        }),
+      /owner key is already occupied/,
+    );
+    assert.equal(globalThis.__gevSceneFrameAlreadyOwned, existing);
+    assert.equal(callbacks.size, 0);
+  } finally {
+    delete globalThis.__gevSceneFrameAlreadyOwned;
+  }
+});
+
+test('scene timing cleanup attempts every observer and listener after cleanup errors', () => {
+  const calls = [];
+  const makeEvent = (name, throwOnRemove = false) => ({
+    addEventListener() {
+      return () => {
+        calls.push(name);
+        if (throwOnRemove) throw new Error('cleanup failed');
+      };
+    },
+  });
+  class Observer {
+    static supportedEntryTypes = ['longtask'];
+
+    observe() {}
+    takeRecords() {
+      return [];
+    }
+    disconnect() {
+      calls.push('observer');
+      throw new Error('disconnect failed');
+    }
+  }
+  const scene = {
+    preUpdate: makeEvent('preUpdate', true),
+    postUpdate: makeEvent('postUpdate'),
+    preRender: makeEvent('preRender'),
+    postRender: makeEvent('postRender'),
+  };
+  const trace = createSceneFrameTimingDiagnostics(scene, {
+    PerformanceObserverClass: Observer,
+  });
+  const result = trace.stop();
+  assert.deepEqual(calls, [
+    'observer',
+    'preUpdate',
+    'postUpdate',
+    'preRender',
+    'postRender',
+  ]);
+  assert.deepEqual(result.cleanupErrors, [
+    'observer:longtask',
+    'listener:preUpdate',
+  ]);
+  assert.equal(result.cleanupComplete, false);
+  assert.equal(trace.stop(), result);
+});
+
+test('partial scene listener installation releases earlier listeners', () => {
+  let removed = 0;
+  const scene = {
+    preUpdate: {
+      addEventListener() {
+        return () => removed++;
+      },
+    },
+    postUpdate: {
+      addEventListener() {
+        throw new Error('registration failed');
+      },
+    },
+    preRender: { addEventListener() {} },
+    postRender: { addEventListener() {} },
+  };
+  assert.throws(
+    () =>
+      createSceneFrameTimingDiagnostics(scene, {
+        PerformanceObserverClass: null,
+      }),
+    /Could not install bounded/,
+  );
+  assert.equal(removed, 1);
+});
+
+test('missing scene event APIs are unavailable rather than reported as zero events', () => {
+  const scene = {
+    preRender: {
+      addEventListener() {
+        return () => {};
+      },
+    },
+    postRender: {
+      addEventListener() {
+        return () => {};
+      },
+    },
+  };
+  const result = createSceneFrameTimingDiagnostics(scene, {
+    PerformanceObserverClass: null,
+  }).stop();
+  assert.deepEqual(result.sceneEventAvailability, {
+    update: false,
+    render: true,
+  });
+  assert.equal(result.counts.update, null);
+  assert.deepEqual(result.spans.update, []);
 });
 
 class EventTargetStub {

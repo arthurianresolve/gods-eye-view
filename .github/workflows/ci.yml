@@ -70,6 +70,10 @@ on:
             infrastructure,
           ]
         default: dense-investigation
+      capture_scene_frame_diagnostics:
+        description: Add bounded CPU/event attribution to the first dense motion capture (ineligible for comparison)
+        type: boolean
+        default: false
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -420,11 +424,13 @@ jobs:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
           CAPTURE_PROVIDER_FIXTURE: ${{ inputs.capture_provider_fixture || 'dense-investigation' }}
+          CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
         run: >-
           node scripts/qa-performance-build-smoke.mjs
           --candidate-sha "$CANDIDATE_SHA"
           --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
           --provider-fixture "$CAPTURE_PROVIDER_FIXTURE"
+          --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
           --out "$RUNNER_TEMP/performance-build-smoke.json"
 
       - name: Print bounded smoke evidence

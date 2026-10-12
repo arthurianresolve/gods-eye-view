@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import os from 'node:os';
@@ -20,6 +21,7 @@ import {
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
 import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
+import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXPECTED_FIXTURE_SHA256 = createProductionFlightFixture({
@@ -41,6 +43,29 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
       'prewarm',
     ]),
     { candidateSha: sha, captureWorkerAuditMode: 'prewarm' },
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-scene-frame-diagnostics',
+      'enabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    { sceneFrameDiagnostics: true, providerFixture: 'dense-investigation' },
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-scene-frame-diagnostics',
+        'enabled',
+        '--provider-fixture',
+        'infrastructure-dams',
+      ]),
+    /dense investigation fixture/,
+  );
+  assert.throws(
+    () => parseSmokeArguments(['--capture-scene-frame-diagnostics', 'maybe']),
+    /enabled or disabled/,
   );
   for (const providerFixture of [
     'infrastructure-datacenters',
@@ -588,6 +613,135 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
         fixtureSha256: EXPECTED_FIXTURE_SHA256,
       }),
     /sampleCount/,
+  );
+});
+
+test('scene frame attribution is bounded and permanently ineligible for comparison', () => {
+  const makeEvent = () => {
+    const listeners = new Set();
+    return {
+      addEventListener(listener) {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      fire() {
+        for (const listener of listeners) listener();
+      },
+      get listenerCount() {
+        return listeners.size;
+      },
+    };
+  };
+  let pageNow = 100;
+  const scene = Object.fromEntries(
+    ['preUpdate', 'postUpdate', 'preRender', 'postRender'].map((name) => [
+      name,
+      makeEvent(),
+    ]),
+  );
+  const page = vm.createContext({
+    performance: { now: () => pageNow },
+    PerformanceObserver: undefined,
+  });
+  const serializedHelper = vm.runInContext(
+    `(${createSceneFrameTimingDiagnostics.toString()})`,
+    page,
+  );
+  const trace = serializedHelper(scene, {
+    PerformanceObserverClass: null,
+    maxEntries: 32,
+  });
+  scene.preUpdate.fire();
+  pageNow = 103;
+  scene.postUpdate.fire();
+  scene.preRender.fire();
+  pageNow = 121;
+  scene.postRender.fire();
+  const actualObservation = trace.stop();
+  for (const event of Object.values(scene))
+    assert.equal(event.listenerCount, 0);
+
+  const report = validCaptureCliReport();
+  report.sceneFrameDiagnostics = {
+    status: 'completed',
+    targetScenario: 'scripted-motion',
+    targetRun: 1,
+    eligibleForComparison: false,
+  };
+  report.comparisonReadiness.reasons.push(
+    'scene-frame-attribution-instrumentation-is-enabled',
+  );
+  report.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).sceneFrameAttribution = {
+    schema: 'gev-scene-frame-attribution/v1',
+    status: 'completed',
+    scope: 'bounded test evidence',
+    cleanup: 'confirmed',
+    eligibleForComparison: false,
+    observerOriginPerformanceNowMs: actualObservation.originPerformanceNowMs,
+    measurementWindowRelativeMs: { startMs: 5, timerFiredMs: 18 },
+    observation: actualObservation,
+  };
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    sceneFrameDiagnostics: true,
+  };
+  assert.doesNotThrow(() => validateCaptureCliReport(report, expected));
+
+  const accepted = structuredClone(report);
+  accepted.comparisonEligible = true;
+  assert.throws(() => validateCaptureCliReport(accepted, expected));
+
+  const incomplete = structuredClone(report);
+  incomplete.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).sceneFrameAttribution.status = 'stop-timeout';
+  assert.throws(() => validateCaptureCliReport(incomplete, expected));
+
+  const unbounded = structuredClone(report);
+  unbounded.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).sceneFrameAttribution.observation.entries.longtask = Array(33).fill({
+    startMs: 1,
+    durationMs: 100,
+  });
+  assert.throws(() => validateCaptureCliReport(unbounded, expected));
+
+  const unexplained = structuredClone(report);
+  unexplained.comparisonReadiness.reasons = [];
+  assert.throws(() => validateCaptureCliReport(unexplained, expected));
+
+  const wrongTarget = structuredClone(report);
+  wrongTarget.sceneFrameDiagnostics.targetRun = 2;
+  assert.throws(() => validateCaptureCliReport(wrongTarget, expected));
+
+  const malformedSpan = structuredClone(report);
+  malformedSpan.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).sceneFrameAttribution.observation.spans.render = [
+    { startMs: 5000, durationMs: -1 },
+  ];
+  assert.throws(() => validateCaptureCliReport(malformedSpan, expected));
+
+  const malformedEntry = structuredClone(report);
+  malformedEntry.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).sceneFrameAttribution.observation.entries.longtask = [
+    { startMs: -1, durationMs: 1 },
+  ];
+  assert.throws(() => validateCaptureCliReport(malformedEntry, expected));
+
+  const unexpectedDiagnosticField = structuredClone(report);
+  unexpectedDiagnosticField.captures.find(
+    (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+  ).sceneFrameAttribution.observation.providerUrl =
+    'https://example.invalid/private';
+  assert.throws(() =>
+    validateCaptureCliReport(unexpectedDiagnosticField, expected),
   );
 });
 

@@ -91,6 +91,7 @@ const OPTION_KEYS = new Map([
   ['--out', 'out'],
   ['--capture-worker-audit-mode', 'captureWorkerAuditMode'],
   ['--provider-fixture', 'providerFixture'],
+  ['--capture-scene-frame-diagnostics', 'sceneFrameDiagnostics'],
 ]);
 
 export function parseSmokeArguments(argv) {
@@ -113,6 +114,13 @@ export function parseSmokeArguments(argv) {
       !INFRASTRUCTURE_WORKLOAD_IDS.includes(value)
     )
       throw new TypeError('Provider fixture must be a registered workload.');
+    if (
+      flag === '--capture-scene-frame-diagnostics' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'Scene frame diagnostics must be enabled or disabled.',
+      );
     output[key] = value;
   }
   if (
@@ -122,6 +130,16 @@ export function parseSmokeArguments(argv) {
     throw new TypeError(
       'Infrastructure provider fixtures support diagnostic worker auditing only.',
     );
+  if (
+    output.sceneFrameDiagnostics === 'enabled' &&
+    output.providerFixture &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'Scene frame diagnostics require the dense investigation fixture.',
+    );
+  if (output.sceneFrameDiagnostics)
+    output.sceneFrameDiagnostics = output.sceneFrameDiagnostics === 'enabled';
   return output;
 }
 
@@ -424,6 +442,216 @@ export function validateCaptureCliReport(report, expected) {
   const workerAuditMode = expected.workerAuditMode || 'diagnostic';
   assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
+  if (expected.sceneFrameDiagnostics) {
+    assert.deepEqual(report.sceneFrameDiagnostics, {
+      status: 'completed',
+      targetScenario: 'scripted-motion',
+      targetRun: 1,
+      eligibleForComparison: false,
+    });
+    assert.equal(report.sceneFrameDiagnostics?.status, 'completed');
+    assert.equal(report.sceneFrameDiagnostics?.eligibleForComparison, false);
+    assert.equal(
+      report.comparisonReadiness?.reasons?.includes(
+        'scene-frame-attribution-instrumentation-is-enabled',
+      ),
+      true,
+    );
+    const targets = report.captures?.filter(
+      (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+    );
+    assert.equal(targets?.length, 1);
+    const target = targets[0];
+    const evidence = target?.sceneFrameAttribution;
+    assert.ok(
+      evidence && typeof evidence === 'object' && !Array.isArray(evidence),
+    );
+    assert.ok(
+      Object.keys(evidence).every((key) =>
+        [
+          'schema',
+          'status',
+          'scope',
+          'eligibleForComparison',
+          'observerOriginPerformanceNowMs',
+          'measurementWindowRelativeMs',
+          'observation',
+          'cleanup',
+          'stopReason',
+          'error',
+        ].includes(key),
+      ),
+    );
+    assert.equal(evidence.schema, 'gev-scene-frame-attribution/v1');
+    assert.equal(evidence?.status, 'completed');
+    assert.equal(evidence?.cleanup, 'confirmed');
+    assert.equal(evidence?.eligibleForComparison, false);
+    assert.ok(Number.isFinite(evidence?.observerOriginPerformanceNowMs));
+    assert.ok(
+      Number.isFinite(evidence?.measurementWindowRelativeMs?.startMs) &&
+        Number.isFinite(evidence?.measurementWindowRelativeMs?.timerFiredMs) &&
+        evidence.measurementWindowRelativeMs.timerFiredMs >=
+          evidence.measurementWindowRelativeMs.startMs &&
+        evidence.measurementWindowRelativeMs.timerFiredMs <=
+          evidence.observation?.elapsedMs,
+    );
+    assert.deepEqual(Object.keys(evidence.measurementWindowRelativeMs).sort(), [
+      'startMs',
+      'timerFiredMs',
+    ]);
+    const observation = evidence.observation;
+    assert.ok(
+      observation &&
+        Number.isFinite(observation.elapsedMs) &&
+        observation.elapsedMs >= 0 &&
+        observation.elapsedMs <= 120_000,
+    );
+    assert.deepEqual(Object.keys(observation.spans || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation).sort(), [
+      'cleanupComplete',
+      'cleanupErrors',
+      'counts',
+      'elapsedMs',
+      'entries',
+      'observerErrors',
+      'originPerformanceNowMs',
+      'overflow',
+      'sceneEventAvailability',
+      'scope',
+      'spans',
+    ]);
+    assert.ok(
+      Number.isFinite(observation.originPerformanceNowMs) &&
+        observation.originPerformanceNowMs ===
+          evidence.observerOriginPerformanceNowMs,
+    );
+    assert.equal(observation.sceneEventAvailability?.update, true);
+    assert.equal(observation.sceneEventAvailability?.render, true);
+    assert.ok(
+      Array.isArray(observation.cleanupErrors) &&
+        observation.cleanupErrors.length === 0,
+    );
+    assert.equal(observation.cleanupComplete, true);
+    assert.deepEqual(Object.keys(observation.counts || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation.overflow || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation.entries || {}).sort(), [
+      'long-animation-frame',
+      'longtask',
+    ]);
+    for (const kind of ['update', 'render']) {
+      assert.ok(Array.isArray(observation.spans[kind]));
+      assert.ok(observation.spans[kind].length <= 32);
+      for (const span of observation.spans[kind]) {
+        assert.deepEqual(Object.keys(span).sort(), ['durationMs', 'startMs']);
+        assert.ok(Number.isFinite(span.startMs) && span.startMs >= 0);
+        assert.ok(
+          Number.isFinite(span.durationMs) &&
+            span.durationMs >= 0 &&
+            span.durationMs <= observation.elapsedMs,
+        );
+        assert.ok(span.startMs <= observation.elapsedMs);
+      }
+    }
+    for (const kind of ['update', 'render']) {
+      assert.ok(
+        Number.isInteger(observation.counts?.[kind]) &&
+          observation.counts[kind] >= observation.spans[kind].length &&
+          observation.counts[kind] <= 1_000_000,
+      );
+      assert.equal(typeof observation.overflow?.[kind], 'boolean');
+      if (observation.counts[kind] > 32)
+        assert.equal(observation.overflow[kind], true);
+    }
+    assert.ok(Array.isArray(observation.observerErrors));
+    assert.ok(observation.observerErrors.length <= 3);
+    assert.ok(
+      observation.observerErrors.every((type) =>
+        ['longtask', 'long-animation-frame'].includes(type),
+      ),
+    );
+    for (const key of ['longtask', 'long-animation-frame']) {
+      const entries = observation.entries?.[key];
+      assert.ok(
+        entries === null || (Array.isArray(entries) && entries.length <= 32),
+      );
+      if (entries === null) continue;
+      for (const entry of entries) {
+        assert.deepEqual(
+          Object.keys(entry).sort(),
+          key === 'longtask'
+            ? ['durationMs', 'startMs']
+            : [
+                'blockingDuration',
+                'durationMs',
+                'renderStart',
+                'scripts',
+                'startMs',
+                'styleAndLayoutStart',
+              ],
+        );
+        assert.ok(Number.isFinite(entry.startMs) && entry.startMs >= 0);
+        assert.ok(
+          Number.isFinite(entry.durationMs) &&
+            entry.durationMs >= 0 &&
+            entry.startMs + entry.durationMs <= observation.elapsedMs + 1,
+        );
+        if (key === 'long-animation-frame') {
+          for (const metric of [
+            'blockingDuration',
+            'renderStart',
+            'styleAndLayoutStart',
+          ])
+            assert.ok(
+              entry[metric] === null ||
+                (Number.isFinite(entry[metric]) && entry[metric] >= 0),
+            );
+          assert.ok(Array.isArray(entry.scripts) && entry.scripts.length <= 8);
+          for (const script of entry.scripts) {
+            assert.deepEqual(Object.keys(script).sort(), [
+              'durationMs',
+              'forcedStyleAndLayoutDurationMs',
+              'invokerType',
+            ]);
+            assert.ok(
+              script.durationMs === null ||
+                (Number.isFinite(script.durationMs) &&
+                  script.durationMs >= 0 &&
+                  script.durationMs <= entry.durationMs),
+            );
+            assert.ok(
+              [
+                'classic-script',
+                'module-script',
+                'event-listener',
+                'user-callback',
+                'resolve-promise',
+                'reject-promise',
+                'unknown',
+              ].includes(script.invokerType),
+            );
+            assert.ok(
+              script.forcedStyleAndLayoutDurationMs === null ||
+                (Number.isFinite(script.forcedStyleAndLayoutDurationMs) &&
+                  script.forcedStyleAndLayoutDurationMs >= 0 &&
+                  script.forcedStyleAndLayoutDurationMs <= entry.durationMs),
+            );
+          }
+        }
+      }
+    }
+    assert.equal(JSON.stringify(evidence).includes('sourceURL'), false);
+  } else {
+    assert.equal(report.sceneFrameDiagnostics, undefined);
+  }
   assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 6 });
   assert.equal(report.source?.appCommit, expected.appSha);
   assert.equal(report.source?.harnessCommit, expected.harnessSha);
@@ -555,6 +783,10 @@ export function validateCaptureCliReport(report, expected) {
     workerBlobAuditMode: workerAuditMode,
     hardwareRequired: false,
   });
+  if (expected.sceneFrameDiagnostics)
+    observedReadinessReasons.push(
+      'scene-frame-attribution-instrumentation-is-enabled',
+    );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
     report.comparisonReadiness?.reasons,
@@ -1166,6 +1398,7 @@ async function runCandidateCaptureCli({
   fixture,
   providerFixture,
   workerAuditMode,
+  sceneFrameDiagnostics = false,
   startedAt,
   budgetMs,
 }) {
@@ -1234,6 +1467,7 @@ async function runCandidateCaptureCli({
     reportPath,
   ];
   if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
+  if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
   let captureReport = null;
   try {
     await runBoundedChild(process.execPath, args, {
@@ -1250,6 +1484,7 @@ async function runCandidateCaptureCli({
       providerFixture,
       fixedTime: fixture.fixedTime,
       workerAuditMode,
+      sceneFrameDiagnostics,
     });
   } catch (error) {
     if (!captureReport) {
@@ -1277,6 +1512,7 @@ async function runRevision({
   budgetMs,
   workerAuditMode,
   providerFixture,
+  sceneFrameDiagnostics = false,
   infrastructureCaptureFixture,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
@@ -1698,6 +1934,7 @@ async function runRevision({
             : infrastructureCaptureFixture,
         providerFixture,
         workerAuditMode,
+        sceneFrameDiagnostics,
         startedAt,
         budgetMs,
       });
@@ -1839,6 +2076,7 @@ async function main() {
     out,
     captureWorkerAuditMode = 'diagnostic',
     providerFixture = 'dense-investigation',
+    sceneFrameDiagnostics = false,
   } = parseSmokeArguments(process.argv.slice(2));
   const infrastructureCaptureFixture =
     providerFixture === 'dense-investigation'
@@ -1876,6 +2114,7 @@ async function main() {
     candidateSha,
     harnessSha: harnessCommit,
     captureWorkerAuditMode,
+    sceneFrameDiagnostics,
     candidateCaptureProviderFixture: providerFixture,
     startedAt: null,
     variants: [],
@@ -1948,6 +2187,7 @@ async function main() {
           startedAt,
           budgetMs,
           workerAuditMode: captureWorkerAuditMode,
+          sceneFrameDiagnostics,
           providerFixture,
           infrastructureCaptureFixture,
         });

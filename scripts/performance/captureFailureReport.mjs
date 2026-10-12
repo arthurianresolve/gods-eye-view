@@ -1,6 +1,35 @@
 import { Buffer } from 'node:buffer';
+import { randomUUID } from 'node:crypto';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
 export const MAX_CAPTURE_FAILURE_REPORT_BYTES = 256 * 1024;
+
+/** Write a bounded failure artifact, optionally refreshing it atomically. */
+export async function writeCaptureFailureReportFile(
+  filePath,
+  json,
+  { refresh = false } = {},
+) {
+  if (typeof filePath !== 'string' || !filePath || typeof json !== 'string')
+    throw new TypeError('Capture failure report path and JSON are required.');
+  if (Buffer.byteLength(json, 'utf8') > MAX_CAPTURE_FAILURE_REPORT_BYTES)
+    throw new Error('Bounded capture failure report exceeded its hard limit.');
+  const resolvedPath = path.resolve(filePath);
+  await mkdir(path.dirname(resolvedPath), { recursive: true });
+  if (!refresh) {
+    await writeFile(resolvedPath, json, 'utf8');
+    return;
+  }
+  const temporaryPath = `${resolvedPath}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporaryPath, json, { encoding: 'utf8', flag: 'wx' });
+    await rename(temporaryPath, resolvedPath);
+  } catch (error) {
+    await rm(temporaryPath, { force: true }).catch(() => {});
+    throw error;
+  }
+}
 
 const SENSITIVE_KEY =
   /^(?:url|body|bodybase64|payload|headers|authorization|token|password|secret|states|commandline)$/i;
