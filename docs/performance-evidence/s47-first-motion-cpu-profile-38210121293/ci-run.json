@@ -1,0 +1,15 @@
+{
+  "runId": 38210121293,
+  "headSha": "73e6c72cc7e7acc6cbb957dd94a6a902e7e489f3",
+  "status": "completed",
+  "conclusion": "failure",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38210121293",
+  "jobs": [
+    {
+      "id": 114682191783,
+      "name": "Baseline-compatible performance build smoke",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ]
+}
