@@ -3459,13 +3459,9 @@ function createPrewarmHarness({ pickPosition, positionCartographic } = {}) {
   const calls = { pickPosition: 0, pickEllipsoid: 0, getPickRay: 0 };
   const position = Cesium.Cartesian3.fromDegrees(-97.74, 30.26, 900_000);
   const surface = Cesium.Cartesian3.fromDegrees(-97.74, 30.26, 0);
-  let moveEndListener = null;
+  const moveEnd = new Cesium.Event();
   const camera = {
-    moveEnd: {
-      addEventListener(listener) {
-        moveEndListener = listener;
-      },
-    },
+    moveEnd,
     positionWC: position,
     heading: Cesium.Math.toRadians(28),
     pitch: Cesium.Math.toRadians(-45),
@@ -3508,10 +3504,238 @@ function createPrewarmHarness({ pickPosition, positionCartographic } = {}) {
   return {
     viewer,
     calls,
-    fireMoveEnd: () => moveEndListener?.(),
-    hasListener: () => !!moveEndListener,
+    fireMoveEnd: () => moveEnd.raiseEvent(),
+    moveEnd,
+    hasListener: () => moveEnd.numberOfListeners > 0,
   };
 }
+
+function withOwnedPrewarmQueues(
+  run,
+  { idle = true, cancellableIdle = true } = {},
+) {
+  const priorWindow = globalThis.window;
+  let nextId = 0;
+  const timers = new Map();
+  const idleCallbacks = new Map();
+  const allTimerCallbacks = [];
+  const allIdleCallbacks = [];
+  const windowStub = {
+    setTimeout(callback, delay) {
+      const id = ++nextId;
+      timers.set(id, { callback, delay });
+      allTimerCallbacks.push({ id, callback, delay });
+      return id;
+    },
+    clearTimeout(id) {
+      timers.delete(id);
+    },
+  };
+  if (idle) {
+    windowStub.requestIdleCallback = (callback, options) => {
+      const id = ++nextId;
+      idleCallbacks.set(id, { callback, options });
+      allIdleCallbacks.push({ id, callback, options });
+      return id;
+    };
+    if (cancellableIdle)
+      windowStub.cancelIdleCallback = (id) => idleCallbacks.delete(id);
+  }
+  globalThis.window = windowStub;
+  const fireTimer = (id) => {
+    const pending = timers.get(id);
+    timers.delete(id);
+    pending?.callback();
+  };
+  const fireNextTimer = () => {
+    const id = timers.keys().next().value;
+    if (id !== undefined) fireTimer(id);
+  };
+  const fireIdle = (id) => {
+    const pending = idleCallbacks.get(id);
+    idleCallbacks.delete(id);
+    pending?.callback({ didTimeout: false, timeRemaining: () => 20 });
+  };
+  try {
+    return run({
+      timers,
+      idleCallbacks,
+      allTimerCallbacks,
+      allIdleCallbacks,
+      fireTimer,
+      fireNextTimer,
+      fireIdle,
+    });
+  } finally {
+    if (priorWindow === undefined) delete globalThis.window;
+    else globalThis.window = priorWindow;
+  }
+}
+
+function createPrewarmRunner(viewer) {
+  return createGevActionRunner({
+    viewer,
+    styleManager: {},
+    dataManager: {
+      layers: new Map(),
+      isEnabled: () => false,
+      getAll: () => [],
+    },
+  });
+}
+
+test('disposing a runner removes the moveEnd listener and cancels a pending debounce', () => {
+  withOwnedPrewarmQueues(({ timers, allTimerCallbacks }) => {
+    const harness = createPrewarmHarness();
+    const runner = createPrewarmRunner(harness.viewer);
+    harness.fireMoveEnd();
+    assert.equal(harness.moveEnd.numberOfListeners, 1);
+    assert.equal(timers.size, 1);
+    assert.equal([...timers.values()][0].delay, 120);
+    runner.dispose();
+    runner.dispose();
+    assert.equal(harness.moveEnd.numberOfListeners, 0);
+    assert.equal(timers.size, 0);
+    allTimerCallbacks[0].callback();
+    assert.equal(harness.calls.pickPosition, 0);
+  });
+});
+
+test('a retired debounce delivery cannot replace newer moveEnd work', () => {
+  withOwnedPrewarmQueues(
+    ({ timers, allTimerCallbacks, idleCallbacks, fireTimer, fireIdle }) => {
+      const harness = createPrewarmHarness();
+      const runner = createPrewarmRunner(harness.viewer);
+      harness.fireMoveEnd();
+      const retiredTimer = allTimerCallbacks[0];
+      harness.fireMoveEnd();
+      const currentTimerId = [...timers.keys()][0];
+      assert.ok(currentTimerId);
+      retiredTimer.callback();
+      assert.deepEqual([...timers.keys()], [currentTimerId]);
+      assert.equal(idleCallbacks.size, 0);
+      fireTimer(currentTimerId);
+      assert.equal(idleCallbacks.size, 1);
+      retiredTimer.callback();
+      assert.equal(idleCallbacks.size, 1);
+      fireIdle([...idleCallbacks.keys()][0]);
+      assert.equal(harness.calls.pickPosition, 1);
+      runner.dispose();
+    },
+  );
+});
+
+test('disposing cancels a queued idle prewarm and stale delivery cannot pick', () => {
+  withOwnedPrewarmQueues(
+    ({ idleCallbacks, allIdleCallbacks, fireNextTimer }) => {
+      const harness = createPrewarmHarness();
+      const runner = createPrewarmRunner(harness.viewer);
+      harness.fireMoveEnd();
+      fireNextTimer();
+      assert.equal(idleCallbacks.size, 1);
+      assert.equal(allIdleCallbacks[0].options.timeout, 500);
+      const staleIdle = allIdleCallbacks[0].callback;
+      runner.dispose();
+      assert.equal(harness.moveEnd.numberOfListeners, 0);
+      assert.equal(idleCallbacks.size, 0);
+      staleIdle({ didTimeout: false, timeRemaining: () => 20 });
+      assert.equal(harness.calls.pickPosition, 0);
+    },
+  );
+});
+
+test('a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work', () => {
+  withOwnedPrewarmQueues(
+    ({ idleCallbacks, allIdleCallbacks, fireNextTimer, fireIdle }) => {
+      const harness = createPrewarmHarness();
+      const runner = createPrewarmRunner(harness.viewer);
+      harness.fireMoveEnd();
+      fireNextTimer();
+      const staleIdle = allIdleCallbacks[0];
+      harness.fireMoveEnd();
+      assert.equal(idleCallbacks.size, 1);
+      staleIdle.callback({ didTimeout: false, timeRemaining: () => 20 });
+      assert.equal(harness.calls.pickPosition, 0);
+      fireNextTimer();
+      const activeId = allIdleCallbacks[1].id;
+      fireIdle(activeId);
+      assert.equal(harness.calls.pickPosition, 1);
+      runner.dispose();
+    },
+    { cancellableIdle: false },
+  );
+});
+
+test('shared runners keep one viewer lease until the final disposer releases it', () => {
+  withOwnedPrewarmQueues(({ fireNextTimer, idleCallbacks, fireIdle }) => {
+    const harness = createPrewarmHarness();
+    const first = createPrewarmRunner(harness.viewer);
+    const second = createPrewarmRunner(harness.viewer);
+    assert.equal(harness.moveEnd.numberOfListeners, 1);
+    first.dispose();
+    assert.equal(harness.moveEnd.numberOfListeners, 1);
+    harness.fireMoveEnd();
+    fireNextTimer();
+    fireIdle([...idleCallbacks.keys()][0]);
+    assert.equal(harness.calls.pickPosition, 1);
+    second.dispose();
+    second.dispose();
+    assert.equal(harness.moveEnd.numberOfListeners, 0);
+    harness.fireMoveEnd();
+    assert.equal(harness.calls.pickPosition, 1);
+  });
+});
+
+test('prewarm leases are independent per viewer and can be reinitialized safely', () => {
+  withOwnedPrewarmQueues(
+    ({ allIdleCallbacks, fireNextTimer, idleCallbacks, fireIdle }) => {
+      const firstHarness = createPrewarmHarness();
+      const first = createPrewarmRunner(firstHarness.viewer);
+      firstHarness.fireMoveEnd();
+      fireNextTimer();
+      const staleAfterReinit = allIdleCallbacks[0].callback;
+      first.dispose();
+
+      const second = createPrewarmRunner(firstHarness.viewer);
+      firstHarness.fireMoveEnd();
+      fireNextTimer();
+      staleAfterReinit({ didTimeout: false, timeRemaining: () => 20 });
+      assert.equal(firstHarness.calls.pickPosition, 0);
+      fireIdle([...idleCallbacks.keys()][0]);
+      assert.equal(firstHarness.calls.pickPosition, 1);
+      second.dispose();
+
+      const viewerA = createPrewarmHarness();
+      const viewerB = createPrewarmHarness();
+      const runnerA = createPrewarmRunner(viewerA.viewer);
+      const runnerB = createPrewarmRunner(viewerB.viewer);
+      runnerA.dispose();
+      assert.equal(viewerA.moveEnd.numberOfListeners, 0);
+      assert.equal(viewerB.moveEnd.numberOfListeners, 1);
+      viewerB.fireMoveEnd();
+      fireNextTimer();
+      fireIdle([...idleCallbacks.keys()][0]);
+      assert.equal(viewerA.calls.pickPosition, 0);
+      assert.equal(viewerB.calls.pickPosition, 1);
+      runnerB.dispose();
+    },
+  );
+});
+
+test('the no-requestIdleCallback fallback still runs after the 120 ms debounce', () => {
+  withOwnedPrewarmQueues(
+    ({ fireNextTimer }) => {
+      const harness = createPrewarmHarness();
+      const runner = createPrewarmRunner(harness.viewer);
+      harness.fireMoveEnd();
+      fireNextTimer();
+      assert.equal(harness.calls.pickPosition, 1);
+      runner.dispose();
+      assert.equal(harness.moveEnd.numberOfListeners, 0);
+    },
+    { idle: false },
+  );
+});
 
 /** Drive the prewarm's debounce + idle callback by hand, deterministically. */
 function withCapturedTimers(run) {

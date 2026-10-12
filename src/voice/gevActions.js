@@ -292,6 +292,7 @@ function cachesFor(service) {
 const VISIBLE_ENTITY_SHORTLIST = 64;
 const BASEMAP_CONTEXT_WAIT_MS = 1500;
 const viewTargetCache = new WeakMap();
+const viewTargetPrewarmOwners = new WeakMap();
 
 /** Create application actions over the supplied scene and services. */
 export function createGevActionRunner({
@@ -327,7 +328,7 @@ export function createGevActionRunner({
         investigationTime,
       }),
     ));
-  installViewTargetPrewarm(viewer);
+  const releaseViewTargetPrewarm = installViewTargetPrewarm(viewer);
   initCameraVerbs(viewer, getViewTargetCartesian);
   // Nested calls (select_nearest_aircraft composing layer + flight) use the
   // raw runner; only the outer call gets a voice envelope.
@@ -1262,8 +1263,12 @@ export function createGevActionRunner({
   /** Voice was removed: nothing may run or write again. */
   runVoiceAction.dispose = () => {
     if (disposed) return;
-    runVoiceAction.resetConversation();
     disposed = true;
+    try {
+      runVoiceAction.resetConversation();
+    } finally {
+      releaseViewTargetPrewarm();
+    }
   };
   return runVoiceAction;
 }
@@ -2653,38 +2658,101 @@ export async function getBasemapLabelContext(
 }
 
 function installViewTargetPrewarm(viewer) {
-  if (viewer.__gevViewTargetPrewarmInstalled) return;
-  viewer.__gevViewTargetPrewarmInstalled = true;
-  let timer = null;
-  let reportedPrewarmFailure = false;
-  viewer.camera.moveEnd.addEventListener(() => {
-    if (timer) window.clearTimeout(timer);
-    timer = window.setTimeout(() => {
-      timer = null;
-      // Belt and braces. Validating the pick is the fix; this catch exists
-      // because an idle callback is an UNCAUGHT context — nothing above it can
-      // handle a surprise from the scene graph, and a red console error on a
-      // plain camera flight is worse than a cold cache. Reported once per
-      // viewer so a repeating cause cannot spam the console.
-      const warm = () => {
+  let owner = viewTargetPrewarmOwners.get(viewer);
+  if (!owner) {
+    const win = globalThis.window;
+    owner = {
+      active: true,
+      references: 0,
+      timer: null,
+      idle: null,
+      idleGeneration: 0,
+      reportedPrewarmFailure: false,
+      removeMoveEnd: null,
+    };
+    const cancelIdle = () => {
+      owner.idleGeneration += 1;
+      const pending = owner.idle;
+      owner.idle = null;
+      if (pending && typeof win?.cancelIdleCallback === 'function') {
         try {
-          getViewTargetCartographic(viewer);
-        } catch (error) {
-          if (reportedPrewarmFailure) return;
-          reportedPrewarmFailure = true;
-          console.debug(
-            '[Voice] view-target prewarm skipped:',
-            error?.message || error,
-          );
+          win.cancelIdleCallback(pending.id);
+        } catch {
+          // Generation invalidation still prevents a delivered callback.
         }
-      };
-      if (typeof window.requestIdleCallback === 'function') {
-        window.requestIdleCallback(warm, { timeout: 500 });
-      } else {
-        warm();
       }
-    }, 120);
-  });
+    };
+    const cancelTimer = () => {
+      if (owner.timer === null) return;
+      try {
+        win?.clearTimeout?.(owner.timer);
+      } catch {
+        // The callback's active/generation checks remain authoritative.
+      }
+      owner.timer = null;
+    };
+    const onMoveEnd = () => {
+      if (!owner.active) return;
+      cancelTimer();
+      cancelIdle();
+      const generation = owner.idleGeneration;
+      owner.timer = win.setTimeout(() => {
+        if (!owner.active || generation !== owner.idleGeneration) return;
+        owner.timer = null;
+        // Belt and braces. Validating the pick is the fix; this catch exists
+        // because an idle callback is an UNCAUGHT context — nothing above it
+        // can handle a surprise from the scene graph.
+        const warm = () => {
+          if (!owner.active || generation !== owner.idleGeneration) return;
+          owner.idle = null;
+          try {
+            getViewTargetCartographic(viewer);
+          } catch (error) {
+            if (owner.reportedPrewarmFailure) return;
+            owner.reportedPrewarmFailure = true;
+            console.debug(
+              '[Voice] view-target prewarm skipped:',
+              error?.message || error,
+            );
+          }
+        };
+        if (typeof win.requestIdleCallback === 'function') {
+          const id = win.requestIdleCallback(warm, { timeout: 500 });
+          owner.idle = { id, generation };
+        } else {
+          warm();
+        }
+      }, 120);
+    };
+    const remove = viewer.camera.moveEnd.addEventListener(onMoveEnd);
+    owner.removeMoveEnd =
+      typeof remove === 'function'
+        ? remove
+        : () => viewer.camera.moveEnd.removeEventListener?.(onMoveEnd);
+    owner.cancelIdle = cancelIdle;
+    owner.cancelTimer = cancelTimer;
+    viewTargetPrewarmOwners.set(viewer, owner);
+    viewer.__gevViewTargetPrewarmInstalled = true;
+  }
+  owner.references += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    owner.references = Math.max(0, owner.references - 1);
+    if (owner.references > 0 || !owner.active) return;
+    owner.active = false;
+    owner.cancelTimer?.();
+    owner.cancelIdle?.();
+    try {
+      owner.removeMoveEnd?.();
+    } finally {
+      if (viewTargetPrewarmOwners.get(viewer) === owner)
+        viewTargetPrewarmOwners.delete(viewer);
+      if (viewer.__gevViewTargetPrewarmInstalled === true)
+        delete viewer.__gevViewTargetPrewarmInstalled;
+    }
+  };
 }
 
 function adjustCameraZoom(viewer, args) {
