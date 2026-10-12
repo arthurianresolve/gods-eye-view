@@ -63,6 +63,17 @@ collapses exceptions and timeouts, so the exact failing cleanup step is unknown.
 Bounded phase-specific evidence is the next correction; all deadlines stay fixed.
 This is an isolated harness repair, not a demonstrated runtime performance gain.
 
+The [cleanup diagnostic at `4f3f8de8`](performance-evidence/s47-renderer-cleanup-evidence-38221367337/README.md)
+reproduces and identifies the phase: baseline document cleanup succeeds in
+869.320 ms with the hook restored and both listeners removed. Future-document
+registration removal consumes the remaining 130.480 ms of the shared one-second
+budget and acknowledges completion late. The run correctly remains failed,
+before candidate capture. Eighty-four independent focused tests pass. The next
+ownership correction retires the future-navigation registration immediately
+after its one required navigation while preserving current-document context
+listeners through measurement. No deadline increase or GPU/root-cause claim
+follows from this diagnostic.
+
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. The dam and cable collection experiments are now
 **rejected for promotion**, under the plan's measured-benefit and visual gates;
