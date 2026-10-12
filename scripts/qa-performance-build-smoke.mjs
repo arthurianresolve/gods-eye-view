@@ -50,8 +50,13 @@ import {
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 import {
   createObservedDenseComparisonContract,
+  createObservedInfrastructureComparisonContract,
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
+import {
+  createInfrastructureWorkloadFixture,
+  INFRASTRUCTURE_WORKLOAD_IDS,
+} from './performance/infrastructureWorkloadFixture.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 const ROOT = await realpath(
@@ -81,6 +86,7 @@ const OPTION_KEYS = new Map([
   ['--candidate-sha', 'candidateSha'],
   ['--out', 'out'],
   ['--capture-worker-audit-mode', 'captureWorkerAuditMode'],
+  ['--provider-fixture', 'providerFixture'],
 ]);
 
 export function parseSmokeArguments(argv) {
@@ -97,8 +103,21 @@ export function parseSmokeArguments(argv) {
       !['diagnostic', 'prewarm'].includes(value)
     )
       throw new TypeError('Worker audit mode must be diagnostic or prewarm.');
+    if (
+      flag === '--provider-fixture' &&
+      value !== 'dense-investigation' &&
+      !INFRASTRUCTURE_WORKLOAD_IDS.includes(value)
+    )
+      throw new TypeError('Provider fixture must be a registered workload.');
     output[key] = value;
   }
+  if (
+    output.providerFixture?.startsWith('infrastructure') &&
+    output.captureWorkerAuditMode === 'prewarm'
+  )
+    throw new TypeError(
+      'Infrastructure provider fixtures support diagnostic worker auditing only.',
+    );
   return output;
 }
 
@@ -344,6 +363,8 @@ export function runBoundedChild(
 }
 
 export function validateCaptureCliReport(report, expected) {
+  if (expected.providerFixture?.startsWith('infrastructure'))
+    return validateInfrastructureCaptureCliReport(report, expected);
   assert.equal(report?.schema, 'gev-performance-capture/v1');
   const workerAuditMode = expected.workerAuditMode || 'diagnostic';
   assert.equal(report.workerAuditMode, workerAuditMode);
@@ -614,6 +635,154 @@ export function validateCaptureCliReport(report, expected) {
   };
 }
 
+function validateInfrastructureCaptureCliReport(report, expected) {
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
+  assert.equal(report.workerAuditMode, 'diagnostic');
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, 'diagnostic');
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6);
+  for (const audit of pageAudit.cesiumWorkerBlobAudits)
+    assert.equal(audit.status, 'receipt-derived-worker-blobs-validated');
+
+  const fixture = createInfrastructureWorkloadFixture(
+    expected.providerFixture,
+    expected.fixedTime,
+  );
+  assert.equal(report.workload?.providerFixture, expected.providerFixture);
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.equal(report.environment?.startup?.runCount, 1);
+  assert.equal(
+    report.environment?.startup?.measurement,
+    'one measured app document; cache disabled before navigation',
+  );
+  const observedContract = createObservedInfrastructureComparisonContract({
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+  });
+  assert.deepEqual(report.workload.fixture, fixture);
+  assert.deepEqual(report.comparisonContract, observedContract);
+  const diagnostics = report.performanceDiagnostics?.documents;
+  assert.ok(Array.isArray(diagnostics));
+  assert.equal(diagnostics.length, 1 + 1 + report.captures.length);
+  const expectedRoles = [
+    'startup-1',
+    'main-setup',
+    ...report.captures.map((_, index) => `provider-sample-${index + 1}`),
+  ].sort();
+  assert.deepEqual(
+    diagnostics.map((entry) => entry.documentRole).sort(),
+    expectedRoles,
+  );
+  for (const entry of diagnostics) {
+    assert.equal(entry.requested, true);
+    assert.equal(entry.disabled, true);
+  }
+  const workerDocuments = pageAudit.workerAuditDocuments;
+  assert.ok(Array.isArray(workerDocuments));
+  assert.deepEqual(
+    workerDocuments.map((entry) => entry.documentRole).sort(),
+    expectedRoles,
+  );
+  for (const entry of workerDocuments) {
+    assert.equal(entry.mode, 'diagnostic');
+    assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+    assert.equal(entry.restoration?.registryEmpty, true);
+    assert.equal(entry.restoration?.overflowCountAtRestore, 0);
+    assert.equal(
+      entry.restoration?.createdScriptBlobCountAtRestore,
+      entry.restoration?.auditedCreatedScriptBlobCount,
+    );
+  }
+  const readinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: observedContract,
+    fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    source: report.source,
+    environment: report.environment,
+    workload: report.workload,
+    captures: report.captures,
+    diagnosticsDocuments: diagnostics,
+    workerBlobAuditInstrumented: true,
+    workerBlobAuditMode: 'diagnostic',
+    hardwareRequired: false,
+  });
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.deepEqual(report.comparisonReadiness?.reasons, readinessReasons);
+  assert.ok(
+    readinessReasons.includes(
+      'latency-comparison-remains-disabled-pending-uninstrumented-capture',
+    ),
+  );
+  assert.match(report.environment?.renderer || '', /swiftshader/i);
+  assert.equal(report.environment?.hardwareEligible, false);
+  assert.equal(report.captures?.length, 4);
+  for (const scenario of report.workload.scenarios) {
+    const samples = report.captures.filter((sample) => sample.scenario === scenario);
+    assert.equal(samples.length, 2);
+    assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
+    for (const sample of samples) {
+      const expectedLayers = Object.entries(fixture.expectedLayerCounts)
+        .map(([id, count]) => ({ id, enabled: true, count }))
+        .sort((left, right) => left.id.localeCompare(right.id));
+      const observedLayers = (sample.layers || [])
+        .filter((layer) => Object.hasOwn(fixture.expectedLayerCounts, layer.id))
+        .map(({ id, enabled, count }) => ({ id, enabled, count }))
+        .sort((left, right) => left.id.localeCompare(right.id));
+      assert.deepEqual(observedLayers, expectedLayers);
+      assert.equal(sample.fixtureDelivery?.fixtureSha256, fixture.sha256);
+      assert.equal(sample.settings?.before?.qualityMode, 'manual');
+      assert.deepEqual(sample.settings?.before, sample.settings?.after);
+      assert.equal(sample.conditions?.before?.visible, true);
+      assert.equal(sample.conditions?.after?.visible, true);
+      assert.equal(sample.conditions?.before?.focused, true);
+      assert.equal(sample.conditions?.after?.focused, true);
+      assert.equal(sample.foregroundThroughout, true);
+      assert.ok(sample.cameraPath?.id);
+    }
+  }
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    providerFixture: expected.providerFixture,
+    fixtureSha256: fixture.sha256,
+    renderer: report.environment.renderer,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    rawReport: report,
+    limitations: [
+      'Hosted software-rendering infrastructure capture only; not hardware or paired performance evidence.',
+      'Infrastructure capture is diagnostic and does not establish baseline/candidate visual parity.',
+    ],
+  };
+}
+
 export function compactCaptureCliFailure(report) {
   if (!report || typeof report !== 'object') return null;
   const serialized = `${JSON.stringify(report, null, 2)}\n`;
@@ -869,6 +1038,7 @@ async function runCandidateCaptureCli({
   served,
   tempRoot,
   fixture,
+  providerFixture,
   workerAuditMode,
   startedAt,
   budgetMs,
@@ -892,12 +1062,11 @@ async function runCandidateCaptureCli({
     '--url',
     served.baseUrl,
     '--provider-fixture',
-    'dense-investigation',
+    providerFixture,
     '--provider-fixture-time',
     fixture.fixedTime,
     '--worker-audit-mode',
     workerAuditMode,
-    '--mixed-layers',
     '--quality-mode',
     'manual',
     '--detection-mode',
@@ -938,6 +1107,7 @@ async function runCandidateCaptureCli({
     '--out',
     reportPath,
   ];
+  if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
   let captureReport = null;
   try {
     await runBoundedChild(process.execPath, args, {
@@ -951,6 +1121,8 @@ async function runCandidateCaptureCli({
       harnessSha: harnessCommit,
       receiptSha256: build.receipt.receiptSha256,
       fixtureSha256: fixture.sha256,
+      providerFixture,
+      fixedTime: fixture.fixedTime,
       workerAuditMode,
     });
   } catch (error) {
@@ -978,6 +1150,8 @@ async function runRevision({
   startedAt,
   budgetMs,
   workerAuditMode,
+  providerFixture,
+  infrastructureCaptureFixture,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -1392,7 +1566,11 @@ async function runRevision({
         harnessCommit,
         served,
         tempRoot,
-        fixture: flightFixture,
+        fixture:
+          providerFixture === 'dense-investigation'
+            ? flightFixture
+            : infrastructureCaptureFixture,
+        providerFixture,
         workerAuditMode,
         startedAt,
         budgetMs,
@@ -1534,7 +1712,12 @@ async function main() {
     candidateSha,
     out,
     captureWorkerAuditMode = 'diagnostic',
+    providerFixture = 'dense-investigation',
   } = parseSmokeArguments(process.argv.slice(2));
+  const infrastructureCaptureFixture =
+    providerFixture === 'dense-investigation'
+      ? null
+      : createInfrastructureWorkloadFixture(providerFixture);
   const outputPath = path.resolve(
     out ||
       path.join(
@@ -1567,12 +1750,14 @@ async function main() {
     candidateSha,
     harnessSha: harnessCommit,
     captureWorkerAuditMode,
+    candidateCaptureProviderFixture: providerFixture,
     startedAt: null,
     variants: [],
     limitations: [
       'Local build receipts are unsigned and do not attest hardware or release provenance.',
       'The browser request audit records code paths; it does not independently attest response bytes.',
       'The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.',
+      'The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.',
       'Software rendering is explicit SwiftShader and cannot support hardware performance claims.',
     ],
     failure: null,
@@ -1637,6 +1822,8 @@ async function main() {
           startedAt,
           budgetMs,
           workerAuditMode: captureWorkerAuditMode,
+          providerFixture,
+          infrastructureCaptureFixture,
         });
         Object.assign(variant, result);
       } catch (error) {

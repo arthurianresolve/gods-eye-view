@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   createObservedDenseComparisonContract,
+  createObservedInfrastructureComparisonContract,
   getCaptureComparisonIneligibilityReasons,
   getCaptureReadinessReasons,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
+import { createInfrastructureWorkloadFixture } from './infrastructureWorkloadFixture.mjs';
 
 const fixture = createProductionFlightFixture({
   count: 2500,
@@ -237,5 +239,114 @@ test('missing diagnostics document observations are explicitly ineligible', () =
     reasons.includes(
       'application-diagnostics-were-not-disabled-in-every-document',
     ),
+  );
+});
+
+function makeInfrastructureObservation() {
+  const fixture = createInfrastructureWorkloadFixture(
+    'infrastructure-datacenters',
+    '2026-10-08T12:00:00.000Z',
+  );
+  const populations = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const settings = {
+    qualityMode: 'manual',
+    densityPct: 75,
+    detectionMode: 'DENSE',
+    resolutionScale: 1,
+    msaaSamples: 4,
+    antialias: true,
+    fxaa: true,
+  };
+  const cesiumClock = {
+    currentTime: fixture.clock,
+    shouldAnimate: false,
+    multiplier: 0,
+  };
+  const assets = fixture.assets.map((asset) => ({
+    id: asset.id,
+    sha256: asset.sha256,
+    byteLength: asset.byteLength,
+    status: 200,
+    responseCount: 1,
+  }));
+  const fixtureDelivery = {
+    schema: 'gev-infrastructure-fixture-delivery-observation/v1',
+    status: 'observed',
+    method: 'actual same-origin bundled asset response bodies SHA-256 verified',
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+    assets,
+    populationsBefore: populations,
+    populationsAfter: populations,
+  };
+  const captures = ['idle', 'scripted-motion'].map((scenario) => ({
+    scenario,
+    run: 1,
+    layers: populations,
+    settings: { before: settings, after: settings },
+    fixtureDelivery,
+    infrastructureFixtureClock: {
+      fixedTime: fixture.fixedTime,
+      wallClockBeforeMs: fixture.fixedTimeMs,
+      wallClockAfterMs: fixture.fixedTimeMs,
+      cesiumBefore: cesiumClock,
+      cesiumAfter: cesiumClock,
+    },
+    conditions: {
+      before: { environment: { layers: populations } },
+      after: { environment: { layers: populations } },
+    },
+    cameraPath: { id: `${scenario}-route-v1` },
+  }));
+  const environment = {
+    userAgent: 'Mozilla/5.0 Chrome/154.0.0.0 Safari/537.36',
+    layers: populations,
+    viewport: { width: 1440, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1440, height: 900 },
+  };
+  return {
+    fixture,
+    populations,
+    settings,
+    fixtureDelivery,
+    captures,
+    environment,
+  };
+}
+
+test('infrastructure comparison exports observed workloads without dense objective claims', () => {
+  const observed = makeInfrastructureObservation();
+  const contract = createObservedInfrastructureComparisonContract({
+    ...observed,
+    scenarios: ['idle', 'scripted-motion'],
+  });
+  assert.equal(contract.workloadId, 'infrastructure-datacenters');
+  assert.deepEqual(contract.populations, observed.populations);
+  assert.deepEqual(contract.objectiveScenarios, []);
+});
+
+test('infrastructure contract rejects altered source populations and clock', () => {
+  const observed = makeInfrastructureObservation();
+  const args = () => ({ ...observed, scenarios: ['idle', 'scripted-motion'] });
+  const wrongPopulation = args();
+  wrongPopulation.captures = structuredClone(observed.captures);
+  wrongPopulation.captures[0].layers[0].count += 1;
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract(wrongPopulation),
+  );
+  const wrongClock = args();
+  wrongClock.captures = structuredClone(observed.captures);
+  wrongClock.captures[0].infrastructureFixtureClock.wallClockAfterMs += 1;
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract(wrongClock),
+  );
+  const unsupported = args();
+  unsupported.scenarios = ['idle', 'selected-aircraft-tracking'];
+  assert.throws(
+    () => createObservedInfrastructureComparisonContract(unsupported),
+    /selected-aircraft-tracking/,
   );
 });

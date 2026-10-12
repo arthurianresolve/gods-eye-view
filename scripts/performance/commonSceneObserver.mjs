@@ -102,6 +102,21 @@ export function observeCommonScene({
   for (const key of ['antialias', 'fxaa'])
     if (typeof settings[key] !== 'boolean') fail(`effective ${key}`);
 
+  const currentTime = viewer.clock?.currentTime;
+  const cesiumClock =
+    currentTime &&
+    Number.isFinite(currentTime.dayNumber) &&
+    Number.isFinite(currentTime.secondsOfDay)
+      ? {
+          currentTime: {
+            dayNumber: currentTime.dayNumber,
+            secondsOfDay: currentTime.secondsOfDay,
+          },
+          shouldAnimate: viewer.clock.shouldAnimate,
+          multiplier: viewer.clock.multiplier,
+        }
+      : null;
+
   return {
     environment: {
       userAgent: windowObject.navigator?.userAgent || null,
@@ -124,6 +139,8 @@ export function observeCommonScene({
       appCommit,
     },
     settings,
+    wallClockEpochMs: windowObject.Date.now(),
+    cesiumClock,
     camera: {
       position: readVector(viewer.camera.position),
       direction: readVector(viewer.camera.direction),

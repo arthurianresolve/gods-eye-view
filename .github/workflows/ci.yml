@@ -58,6 +58,18 @@ on:
         type: choice
         options: [diagnostic, prewarm]
         default: diagnostic
+      capture_provider_fixture:
+        description: Candidate capture workload inside the build smoke (infrastructure modes remain diagnostic only)
+        type: choice
+        options:
+          [
+            dense-investigation,
+            infrastructure-datacenters,
+            infrastructure-dams,
+            infrastructure-cables,
+            infrastructure,
+          ]
+        default: dense-investigation
       upload_artifacts:
         description: Upload extra evidence artifacts (otherwise evidence stays in job logs)
         type: boolean
@@ -407,10 +419,12 @@ jobs:
         env:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
+          CAPTURE_PROVIDER_FIXTURE: ${{ inputs.capture_provider_fixture || 'dense-investigation' }}
         run: >-
           node scripts/qa-performance-build-smoke.mjs
           --candidate-sha "$CANDIDATE_SHA"
           --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
+          --provider-fixture "$CAPTURE_PROVIDER_FIXTURE"
           --out "$RUNNER_TEMP/performance-build-smoke.json"
 
       - name: Print bounded smoke evidence

@@ -53,6 +53,11 @@ function fakeWindow() {
           transform,
         },
         resolutionScale: 1,
+        clock: {
+          currentTime: { dayNumber: 2_461_000, secondsOfDay: 43_200 },
+          shouldAnimate: false,
+          multiplier: 0,
+        },
       },
       styleManager: style,
       dataManager: { getAll: () => [layer] },
@@ -62,6 +67,7 @@ function fakeWindow() {
     innerHeight: 360,
     devicePixelRatio: 1,
     document: { hasFocus: () => true, hidden: false },
+    Date: { now: () => 1_797_840_000_000 },
   };
 }
 
@@ -81,6 +87,12 @@ test('common observer emits shared Cesium scene and effective workload inputs', 
   assert.equal(observed.environment.appCommit, 'a'.repeat(40));
   assert.equal(observed.settings.densityPct, 75);
   assert.equal(observed.settings.qualityMode, 'manual');
+  assert.deepEqual(observed.cesiumClock, {
+    currentTime: { dayNumber: 2_461_000, secondsOfDay: 43_200 },
+    shouldAnimate: false,
+    multiplier: 0,
+  });
+  assert.equal(observed.wallClockEpochMs, 1_797_840_000_000);
   assert.equal(observed.camera.transform.length, 16);
 });
 

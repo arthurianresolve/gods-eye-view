@@ -50,8 +50,15 @@ import { createCaptureFailureReport } from './performance/captureFailureReport.m
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
 import {
   createObservedDenseComparisonContract,
+  createObservedInfrastructureComparisonContract,
   getCaptureReadinessReasons,
 } from './performance/captureComparisonContract.mjs';
+import {
+  assertInfrastructureClockObservation,
+  createInfrastructureFixtureDeliveryObserver,
+  createInfrastructureWorkloadFixture,
+  resolveInfrastructureFixtureAssetRoutes,
+} from './performance/infrastructureWorkloadFixture.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -73,23 +80,44 @@ const providerFixtureTime = option(
   '2026-10-08T12:00:00.000Z',
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
+const infrastructureWorkload = providerFixtureMode?.startsWith('infrastructure')
+  ? createInfrastructureWorkloadFixture(
+      providerFixtureMode,
+      providerFixtureTime,
+    )
+  : null;
 if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
   throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
-if (providerFixtureMode && providerFixtureMode !== 'dense-investigation')
-  throw new Error('--provider-fixture supports only dense-investigation');
 if (
   providerFixtureMode &&
-  (fixtureAircraftCount !== 0 || !args.includes('--mixed-layers'))
+  providerFixtureMode !== 'dense-investigation' &&
+  !infrastructureWorkload
+)
+  throw new Error(
+    '--provider-fixture must be dense-investigation or a registered infrastructure workload.',
+  );
+if (
+  providerFixtureMode &&
+  (fixtureAircraftCount !== 0 || !args.includes('--mixed-layers')) &&
+  providerFixtureMode === 'dense-investigation'
 )
   throw new Error(
     'The dense provider fixture requires --mixed-layers and must not use --fixture-aircraft.',
   );
-const productionFlightFixture = providerFixtureMode
-  ? createProductionFlightFixture({
-      count: 2500,
-      fixedTime: providerFixtureTime,
-    })
-  : null;
+if (
+  infrastructureWorkload &&
+  (fixtureAircraftCount !== 0 || args.includes('--mixed-layers'))
+)
+  throw new Error(
+    'Infrastructure workloads select their exact layer population and cannot use aircraft or --mixed-layers.',
+  );
+const productionFlightFixture =
+  providerFixtureMode === 'dense-investigation'
+    ? createProductionFlightFixture({
+        count: 2500,
+        fixedTime: providerFixtureTime,
+      })
+    : null;
 const qualityMode = option('--quality-mode', 'manual');
 const detectionMode = String(option('--detection-mode', 'DENSE')).toUpperCase();
 const mixedLayers = args.includes('--mixed-layers');
@@ -147,9 +175,12 @@ if (
   throw new Error(
     'Verified capture requires --build-receipt, --app-checkout, --harness-checkout, --build-root, --expected-app-sha, --expected-harness-sha and --served-base-url together.',
   );
-if (productionFlightFixture && !buildProvenanceEnabled)
+if (
+  (productionFlightFixture || infrastructureWorkload) &&
+  !buildProvenanceEnabled
+)
   throw new Error(
-    'The production flight fixture requires verified build provenance options.',
+    'Comparison fixtures require verified build provenance options.',
   );
 if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   throw new Error(
@@ -157,10 +188,12 @@ if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   );
 if (
   hostedFixture &&
-  (!productionFlightFixture || !softwareRendering || !buildProvenanceEnabled)
+  (!(productionFlightFixture || infrastructureWorkload) ||
+    !softwareRendering ||
+    !buildProvenanceEnabled)
 )
   throw new Error(
-    '--hosted-fixture requires the verified production fixture and explicit software rendering.',
+    '--hosted-fixture requires a registered verified fixture and explicit software rendering.',
   );
 const actualHarnessRoot = await fs.realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
@@ -188,8 +221,9 @@ function harnessSourceRevision(root) {
 const harnessSource = harnessSourceRevision(actualHarnessRoot);
 let captureProvenance = null;
 let captureWorkerContract = null;
+let buildReceipt = null;
 if (buildProvenanceEnabled) {
-  const receipt = JSON.parse(
+  buildReceipt = JSON.parse(
     await fs.readFile(buildProvenanceOptions.receipt, 'utf8'),
   );
   const requestedHarnessRoot = await fs.realpath(
@@ -214,20 +248,20 @@ if (buildProvenanceEnabled) {
     );
   captureProvenance = await beginCaptureBuildProvenance({
     ...buildProvenanceOptions,
-    receipt,
+    receipt: buildReceipt,
     harnessRoot: requestedHarnessRoot,
     actualHarnessRoot,
     captureUrl: url,
   });
   const bundlePath = 'cesium/Cesium.js';
-  if (!receipt.assets.some((asset) => asset.path === bundlePath))
+  if (!buildReceipt.assets.some((asset) => asset.path === bundlePath))
     throw new Error('Verified build receipt is missing the Cesium bundle.');
   captureWorkerContract = deriveCesiumEmbeddedWorkerContract({
     bundlePath,
     bundleBytes: await fs.readFile(
       path.join(buildProvenanceOptions.buildRoot, ...bundlePath.split('/')),
     ),
-    assets: receipt.assets,
+    assets: buildReceipt.assets,
   });
   if (effectiveFixtureAircraftCount && !productionFlightFixture)
     throw new Error(
@@ -257,6 +291,15 @@ const source = {
     : 'unverified-exploratory-capture',
   reason: harnessSource.reason,
 };
+const infrastructureAssetRoutes = infrastructureWorkload
+  ? resolveInfrastructureFixtureAssetRoutes(
+      infrastructureWorkload,
+      buildReceipt?.assets,
+      buildProvenanceOptions.baseUrl,
+    )
+  : null;
+let infrastructureFixtureDelivery = null;
+const infrastructureResponseListeners = new Map();
 const failureProgress = {
   phase: 'browser-startup',
   scenario: null,
@@ -264,7 +307,7 @@ const failureProgress = {
   current: null,
   startupSamples: [],
   completedSamples: [],
-  fixture: productionFlightFixture,
+  fixture: productionFlightFixture || infrastructureWorkload,
   fixtureDelivery: null,
   workload: {
     warmupMs,
@@ -711,6 +754,22 @@ try {
     });
     await auditPage.setCacheEnabled(false);
     await auditPage.setBypassServiceWorker(true);
+    const documentInfrastructureDelivery = infrastructureWorkload
+      ? createInfrastructureFixtureDeliveryObserver(infrastructureWorkload, {
+          assetRoutes: infrastructureAssetRoutes,
+          baseUrl: buildProvenanceOptions.baseUrl,
+        })
+      : null;
+    if (documentInfrastructureDelivery) {
+      await auditPage.evaluateOnNewDocument(
+        installFixedWallClock,
+        infrastructureWorkload.fixedTimeMs,
+      );
+      const responseListener = (response) =>
+        documentInfrastructureDelivery.onResponse(response);
+      auditPage.on('response', responseListener);
+      infrastructureResponseListeners.set(auditPage, responseListener);
+    }
     const fixtureSession = await configureFlightFixturePage(
       auditPage,
       deliveryObserver,
@@ -724,6 +783,7 @@ try {
     return {
       fixtureSession,
       auditState: auditPageCodeRequests(auditPage),
+      infrastructureFixtureDelivery: documentInfrastructureDelivery,
     };
   }
   for (let run = 1; run <= startupRuns; run += 1) {
@@ -841,6 +901,8 @@ try {
     page,
     flightFixtureDelivery,
   );
+  infrastructureFixtureDelivery =
+    initialPageAttachment.infrastructureFixtureDelivery;
   let activeFixtureSession = initialPageAttachment.fixtureSession;
   let captureAuditState = initialPageAttachment.auditState;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -982,7 +1044,8 @@ try {
         },
       )
     : null;
-  failureProgress.fixture = productionFlightFixture || fixture;
+  failureProgress.fixture =
+    productionFlightFixture || infrastructureWorkload || fixture;
 
   const summarizeFlightFixtureDelivery = async () => {
     if (!productionFlightFixture) return null;
@@ -1014,6 +1077,121 @@ try {
       productionFlightFixture.count,
     );
     fixtureDelivery = await summarizeFlightFixtureDelivery();
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
+
+  if (infrastructureWorkload) {
+    failureProgress.phase = 'configure-infrastructure-fixture';
+    const before = await page.evaluate(
+      async ({
+        selectedLayerIds,
+        clock,
+        qualityMode: mode,
+        detectionMode: requestedDetectionMode,
+        camera,
+      }) => {
+        const app = window.__godsEyeView;
+        const manager = app?.dataManager;
+        const viewer = app?.viewer;
+        if (!manager || !viewer)
+          throw new Error(
+            'Infrastructure fixture needs the application viewer.',
+          );
+        const selected = new Set(selectedLayerIds);
+        for (const layer of manager.getAll()) {
+          if (layer.enabled && !selected.has(layer.id))
+            await manager.setEnabled(layer.id, false);
+        }
+        for (const id of selectedLayerIds) {
+          if (!manager.layers?.has(id))
+            throw new Error(`Missing infrastructure layer ${id}.`);
+          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+        }
+        const controller = app.styleManager?._adaptiveQuality;
+        if (!controller?.setMode?.(mode))
+          throw new Error('Presentation quality controller is unavailable.');
+        const services = app.styleManager?.services;
+        if (typeof services?.setDetectionModeByLabel !== 'function')
+          throw new Error('Detection workload controls are unavailable.');
+        services.setDetectionModeByLabel(requestedDetectionMode);
+        if (services.getDetectionMode() !== requestedDetectionMode)
+          throw new Error('Detection workload mode did not match the request.');
+        const cesiumClock = viewer.clock;
+        if (
+          !cesiumClock?.currentTime ||
+          !Number.isFinite(cesiumClock.currentTime.dayNumber) ||
+          !Number.isFinite(cesiumClock.currentTime.secondsOfDay)
+        )
+          throw new Error('Cesium Julian clock is unavailable.');
+        cesiumClock.shouldAnimate = false;
+        cesiumClock.multiplier = 0;
+        cesiumClock.currentTime.dayNumber = clock.dayNumber;
+        cesiumClock.currentTime.secondsOfDay = clock.secondsOfDay;
+        const destination =
+          viewer.scene.globe.ellipsoid.cartographicToCartesian({
+            longitude: (camera.longitudeDeg * Math.PI) / 180,
+            latitude: (camera.latitudeDeg * Math.PI) / 180,
+            height: camera.altitudeM,
+          });
+        viewer.camera.cancelFlight?.();
+        viewer.camera.setView({
+          destination,
+          orientation: {
+            heading: (camera.headingDeg * Math.PI) / 180,
+            pitch: (camera.pitchDeg * Math.PI) / 180,
+            roll: 0,
+          },
+        });
+        viewer.scene.requestRender();
+        return manager.getAll().map((layer) => ({
+          id: layer.id,
+          enabled: Boolean(layer.enabled),
+          count: Number.isInteger(layer.stats?.count)
+            ? layer.stats.count
+            : null,
+        }));
+      },
+      {
+        selectedLayerIds: infrastructureWorkload.selectedLayerIds,
+        clock: infrastructureWorkload.clock,
+        qualityMode,
+        detectionMode,
+        camera: infrastructureWorkload.camera,
+      },
+    );
+    failureProgress.current = {
+      phase: failureProgress.phase,
+      populationsBeforeLoad: before,
+      fixtureId: infrastructureWorkload.id,
+      fixtureSha256: infrastructureWorkload.sha256,
+    };
+    await page.waitForFunction(
+      (expected) => {
+        const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
+        return Object.entries(expected).every(([id, count]) => {
+          const layer = layers.find((row) => row.id === id);
+          return layer?.enabled === true && layer?.stats?.count === count;
+        });
+      },
+      { timeout: fixtureTimeoutMs, polling: 100 },
+      infrastructureWorkload.expectedLayerCounts,
+    );
+    const observed = await page.evaluate(observeCommonScene, {
+      appCommit: source.appCommit,
+    });
+    assertInfrastructureClockObservation(
+      observed.cesiumClock,
+      infrastructureWorkload,
+      'setup',
+    );
+    if (observed.wallClockEpochMs !== infrastructureWorkload.fixedTimeMs)
+      throw new Error(
+        'Infrastructure document wall clock did not remain at the fixture epoch.',
+      );
+    fixtureDelivery = await infrastructureFixtureDelivery.summarize(
+      observed.environment.layers,
+      observed.environment.layers,
+    );
     failureProgress.fixtureDelivery = fixtureDelivery;
   }
 
@@ -1115,7 +1293,9 @@ try {
   environment.startup = {
     runs: startupSamples,
     runCount: startupSamples.length,
-    measurement: 'cache-disabled fresh browser contexts',
+    measurement: infrastructureWorkload
+      ? 'one measured app document; cache disabled before navigation'
+      : 'cache-disabled fresh browser contexts',
     performancePageInitialSettleMs: mainStartupElapsedMs,
   };
   const softwareRenderer =
@@ -1130,7 +1310,9 @@ try {
   failureProgress.scenarios = scenarios;
   const captures = [];
   failureProgress.completedSamples = captures;
-  failureProgress.phase = 'verify-dense-populations';
+  failureProgress.phase = infrastructureWorkload
+    ? 'verify-infrastructure-populations'
+    : 'verify-dense-populations';
   const mixedLayerCounts = productionFlightFixture
     ? await page.evaluate(() => {
         const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
@@ -1816,6 +1998,38 @@ try {
           visible: sceneAfter.environment.visible,
         },
       };
+      if (infrastructureWorkload) {
+        assertInfrastructureClockObservation(
+          sceneBefore.cesiumClock,
+          infrastructureWorkload,
+          `${scenario} run ${run} before`,
+        );
+        assertInfrastructureClockObservation(
+          sceneAfter.cesiumClock,
+          infrastructureWorkload,
+          `${scenario} run ${run} after`,
+        );
+        if (
+          sceneBefore.wallClockEpochMs !== infrastructureWorkload.fixedTimeMs ||
+          sceneAfter.wallClockEpochMs !== infrastructureWorkload.fixedTimeMs
+        )
+          throw new Error(
+            `Infrastructure fixture wall clock drifted during ${scenario} run ${run}.`,
+          );
+        sample.infrastructureFixtureClock = {
+          fixedTime: infrastructureWorkload.fixedTime,
+          wallClockBeforeMs: sceneBefore.wallClockEpochMs,
+          wallClockAfterMs: sceneAfter.wallClockEpochMs,
+          cesiumBefore: sceneBefore.cesiumClock,
+          cesiumAfter: sceneAfter.cesiumClock,
+        };
+        fixtureDelivery = await infrastructureFixtureDelivery.summarize(
+          sceneBefore.environment.layers,
+          sceneAfter.environment.layers,
+        );
+        sample.fixtureDelivery = fixtureDelivery;
+        failureProgress.fixtureDelivery = fixtureDelivery;
+      }
       if (scenario !== 'selected-aircraft-tracking' || !productionFlightFixture)
         sample.cameraPath = describeObservedRoute({
           scenario,
@@ -1926,7 +2140,14 @@ try {
   failureProgress.scenario = null;
   failureProgress.run = null;
   failureProgress.current = null;
-  fixtureDelivery = await summarizeFlightFixtureDelivery();
+  fixtureDelivery = productionFlightFixture
+    ? await summarizeFlightFixtureDelivery()
+    : infrastructureWorkload
+      ? await infrastructureFixtureDelivery.summarize(
+          environment.layers,
+          captures.at(-1)?.layers || environment.layers,
+        )
+      : null;
   failureProgress.fixtureDelivery = fixtureDelivery;
   if (productionFlightFixture) {
     const perSampleResponseCounts = captures.map((sample) => ({
@@ -1953,6 +2174,9 @@ try {
     expectedCounts: {
       ...(fixture ? { flights: effectiveFixtureAircraftCount } : {}),
       ...(mixedLayers ? { 'local-datacenters': 4362, 'local-dams': 716 } : {}),
+      ...(infrastructureWorkload
+        ? infrastructureWorkload.expectedLayerCounts
+        : {}),
     },
     ...(productionFlightFixture
       ? {
@@ -1962,6 +2186,7 @@ try {
         }
       : {}),
   });
+  const comparisonFixture = productionFlightFixture || infrastructureWorkload;
   const comparisonContract = productionFlightFixture
     ? createObservedDenseComparisonContract({
         fixture: productionFlightFixture,
@@ -1970,14 +2195,27 @@ try {
         captures,
         scenarios,
       })
-    : null;
+    : infrastructureWorkload
+      ? createObservedInfrastructureComparisonContract({
+          fixture: infrastructureWorkload,
+          fixtureDelivery,
+          environment,
+          captures,
+          scenarios,
+        })
+      : null;
   const comparisonReadinessReasons = getCaptureReadinessReasons({
     contract: comparisonContract,
-    fixture: productionFlightFixture,
+    fixture: comparisonFixture,
     fixtureDelivery,
     source,
     environment,
     workload: {
+      providerFixture: infrastructureWorkload
+        ? infrastructureWorkload.workloadId
+        : productionFlightFixture
+          ? 'dense-investigation'
+          : null,
       warmupMs,
       durationPerSampleMs: seconds * 1000,
       runsPerScenario: runs,
@@ -2038,7 +2276,7 @@ try {
       runsPerScenario: runs,
       startupRuns: startupSamples.length,
       scenarios,
-      fixture,
+      fixture: infrastructureWorkload || fixture,
       ...(productionFlightFixture
         ? {
             providerFixtureLifecycle: {
@@ -2060,6 +2298,20 @@ try {
             },
           }
         : {}),
+      ...(infrastructureWorkload
+        ? {
+            infrastructureFixtureLifecycle: {
+              scope:
+                'one measured app document per capture process; each asset response is matched to its verified build-receipt URL and SHA-256, with populations observed before and after every sample',
+              clock:
+                'Date.now remains at the declared whole-millisecond epoch; Cesium currentTime is set from Cesium.JulianDate.fromDate with shouldAnimate=false and multiplier=0',
+              camera: structuredClone(infrastructureWorkload.camera),
+              routeScope:
+                'idle and elapsed-time scripted camera motion, reset from the same captured home pose before every run',
+              freshBrowserContextPerSample: false,
+            },
+          }
+        : {}),
       mixedLayers: mixedLayerFixture,
       qualityMode,
       expectedDensityPct: Number.isFinite(expectedDensityPct)
@@ -2067,7 +2319,7 @@ try {
         : null,
       cameraPath:
         'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
-      detectionMode: fixture ? detectionMode : null,
+      detectionMode: fixture || infrastructureWorkload ? detectionMode : null,
       injectedDelayMs: delayMs,
       populationStableAcrossSamples,
       cameraPathStableAcrossSamples,
@@ -2116,6 +2368,20 @@ try {
     await session.send('Fetch.disable').catch(() => {});
     await session.detach().catch(() => {});
   }
+  for (const [
+    responsePage,
+    responseListener,
+  ] of infrastructureResponseListeners) {
+    try {
+      if (typeof responsePage.off === 'function')
+        responsePage.off('response', responseListener);
+      else responsePage.removeListener('response', responseListener);
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
+  infrastructureResponseListeners.clear();
   try {
     await browser.close();
   } catch (error) {

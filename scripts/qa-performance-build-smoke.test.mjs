@@ -15,8 +15,10 @@ import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureRe
 import { createProductionFlightFixture } from './performance/productionFlightFixture.mjs';
 import {
   createObservedDenseComparisonContract,
+  createObservedInfrastructureComparisonContract,
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
+import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXPECTED_FIXTURE_SHA256 = createProductionFlightFixture({
@@ -39,6 +41,16 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     ]),
     { candidateSha: sha, captureWorkerAuditMode: 'prewarm' },
   );
+  for (const providerFixture of [
+    'infrastructure-datacenters',
+    'infrastructure-dams',
+    'infrastructure-cables',
+    'infrastructure',
+  ])
+    assert.deepEqual(
+      parseSmokeArguments(['--provider-fixture', providerFixture]),
+      { providerFixture },
+    );
   assert.throws(
     () => parseSmokeArguments(['--candidate-sha', sha, '--unknown', 'x']),
     /Unknown option/,
@@ -52,6 +64,20 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
         'guess',
       ]),
     /Worker audit mode/,
+  );
+  assert.throws(
+    () => parseSmokeArguments(['--provider-fixture', 'infrastructure-unknown']),
+    /registered workload/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--provider-fixture',
+        'infrastructure-datacenters',
+        '--capture-worker-audit-mode',
+        'prewarm',
+      ]),
+    /diagnostic worker auditing only/,
   );
 });
 
@@ -318,6 +344,168 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
   };
 }
 
+function validInfrastructureCaptureCliReport(providerFixture = 'infrastructure-datacenters') {
+  const fixedTime = '2026-10-08T12:00:00.000Z';
+  const fixture = createInfrastructureWorkloadFixture(providerFixture, fixedTime);
+  const layers = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const settings = {
+    qualityMode: 'manual',
+    densityPct: 75,
+    detectionMode: 'DENSE',
+    resolutionScale: 1,
+    msaaSamples: 4,
+    antialias: true,
+    fxaa: true,
+  };
+  const assets = fixture.assets.map((asset) => ({
+    id: asset.id,
+    sha256: asset.sha256,
+    byteLength: asset.byteLength,
+    status: 200,
+    responseCount: 1,
+  }));
+  const fixtureDelivery = {
+    schema: 'gev-infrastructure-fixture-delivery-observation/v1',
+    status: 'observed',
+    method: 'actual same-origin bundled asset response bodies SHA-256 verified',
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime,
+    assets,
+    populationsBefore: layers,
+    populationsAfter: layers,
+  };
+  const cesiumClock = {
+    currentTime: fixture.clock,
+    shouldAnimate: false,
+    multiplier: 0,
+  };
+  const captures = ['idle', 'scripted-motion'].flatMap((scenario) =>
+    [1, 2].map((run) => ({
+      scenario,
+      run,
+      layers,
+      settings: { before: settings, after: settings },
+      fixtureDelivery,
+      infrastructureFixtureClock: {
+        fixedTime,
+        wallClockBeforeMs: fixture.fixedTimeMs,
+        wallClockAfterMs: fixture.fixedTimeMs,
+        cesiumBefore: cesiumClock,
+        cesiumAfter: cesiumClock,
+      },
+      conditions: {
+        before: { visible: true, focused: true, environment: { layers } },
+        after: { visible: true, focused: true, environment: { layers } },
+      },
+      foregroundThroughout: true,
+      cameraPath: { id: `${scenario}-v1` },
+    })),
+  );
+  const environment = {
+    userAgent: 'Mozilla/5.0 HeadlessChrome/154.0.0.0 Safari/537.36',
+    renderer: 'ANGLE (SwiftShader Device)',
+    hardwareEligible: false,
+    layers,
+    viewport: { width: 1280, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1280, height: 900 },
+    startup: {
+      runCount: 1,
+      measurement: 'one measured app document; cache disabled before navigation',
+    },
+  };
+  const workload = {
+    providerFixture,
+    fixture,
+    warmupMs: 1000,
+    durationPerSampleMs: 1000,
+    runsPerScenario: 2,
+    startupRuns: 1,
+    scenarios: ['idle', 'scripted-motion'],
+    injectedDelayMs: 0,
+  };
+  const diagnosticRoles = [
+    'startup-1',
+    'main-setup',
+    ...captures.map((_, index) => `provider-sample-${index + 1}`),
+  ];
+  const diagnostics = diagnosticRoles.map((documentRole) => ({
+    documentRole,
+    requested: true,
+    hookAvailable: true,
+    disabled: true,
+  }));
+  const workerAuditDocuments = diagnosticRoles.map((documentRole) => ({
+    documentRole,
+    mode: 'diagnostic',
+    restoration: {
+      nativeCreateObjectURLRestored: true,
+      registryEmpty: true,
+      overflowCountAtRestore: 0,
+      createdScriptBlobCountAtRestore: 0,
+      auditedCreatedScriptBlobCount: 0,
+    },
+  }));
+  const source = {
+    appCommit: 'b'.repeat(40),
+    harnessCommit: 'c'.repeat(40),
+    provenanceStatus: 'verified-local-build-and-served-assets-before-and-after',
+    buildProvenance: {
+      status: 'verified-local-build-and-served-assets-before-and-after',
+      receiptSha256: 'd'.repeat(64),
+      pageAssetAudit: {
+        workerAuditMode: 'diagnostic',
+        scriptRequestCount: 10,
+        loadedAssetPaths: ['assets/app.js'],
+        unexpectedAssetPaths: [],
+        cesiumWorkerBlobAudits: Array.from({ length: 6 }, () => ({
+          status: 'receipt-derived-worker-blobs-validated',
+        })),
+        workerAuditDocuments,
+      },
+    },
+  };
+  const comparisonContract = createObservedInfrastructureComparisonContract({
+    fixture,
+    fixtureDelivery,
+    environment,
+    captures,
+    scenarios: workload.scenarios,
+  });
+  const comparisonReadinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: comparisonContract,
+    fixture,
+    fixtureDelivery,
+    source,
+    environment,
+    workload,
+    captures,
+    diagnosticsDocuments: diagnostics,
+    workerBlobAuditInstrumented: true,
+    workerBlobAuditMode: 'diagnostic',
+    hardwareRequired: false,
+  });
+  return {
+    schema: 'gev-performance-capture/v1',
+    workerAuditMode: 'diagnostic',
+    comparisonEligible: false,
+    integrity: { status: 'passed', sampleCount: 4 },
+    source,
+    workload,
+    environment,
+    fixtureDelivery,
+    captures,
+    comparisonContract,
+    comparisonReadiness: {
+      status: 'not-ready',
+      reasons: comparisonReadinessReasons,
+    },
+    performanceDiagnostics: { documents: diagnostics },
+  };
+}
+
 test('capture CLI validator accepts only the complete six-sample hosted smoke contract', () => {
   const result = validateCaptureCliReport(validCaptureCliReport(), {
     appSha: 'b'.repeat(40),
@@ -362,6 +550,35 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
         fixtureSha256: EXPECTED_FIXTURE_SHA256,
       }),
     /sampleCount/,
+  );
+});
+
+test('capture CLI validates the selected infrastructure workload and rejects dense substitution', () => {
+  const report = validInfrastructureCaptureCliReport();
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: report.workload.fixture.sha256,
+    providerFixture: 'infrastructure-datacenters',
+    fixedTime: report.workload.fixture.fixedTime,
+  };
+  const result = validateCaptureCliReport(report, expected);
+  assert.equal(result.status, 'passed');
+  assert.equal(result.comparisonEligible, false);
+  assert.equal(result.providerFixture, expected.providerFixture);
+  assert.equal(result.captureCount, 4);
+
+  const wrongCount = validInfrastructureCaptureCliReport();
+  wrongCount.captures[0].layers[0].count += 1;
+  assert.throws(() => validateCaptureCliReport(wrongCount, expected));
+
+  const wrongWorkload = validInfrastructureCaptureCliReport('infrastructure-dams');
+  assert.throws(() =>
+    validateCaptureCliReport(wrongWorkload, {
+      ...expected,
+      providerFixture: 'infrastructure-datacenters',
+    }),
   );
 });
 
