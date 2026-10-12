@@ -1,0 +1,6411 @@
+{
+  "schema": "gev-performance-capture/v1",
+  "workerAuditMode": "diagnostic",
+  "workerAuditTimingBoundary": "during-capture-diagnostic-instrumentation",
+  "performanceDiagnostics": {
+    "requested": "disabled-after-app-ready-before-warmup-when-supported-per-document",
+    "documents": [
+      {
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1",
+        "requested": true,
+        "hookAvailable": true,
+        "disabled": true
+      },
+      {
+        "documentRole": "main-setup",
+        "documentId": "main-measured-document",
+        "requested": true,
+        "hookAvailable": true,
+        "disabled": true
+      }
+    ]
+  },
+  "capturedAt": "2026-10-12T17:09:43.593Z",
+  "source": {
+    "harnessCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+    "harnessDirtyWorktree": false,
+    "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+    "appWorktreeState": "clean",
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "verified-local-build-and-served-assets-before-and-after",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "dd02edd3b26d53b981358d84380c8c70b277095da3686b568d99373c82bacd53",
+      "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+      "harnessCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+      "buildRecipe": {
+        "packageJsonSha256": "95eac8a541ca9b44d9622899957f6ccbb527903e42e283688a6d7c1881adb17e",
+        "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+        "buildScriptSha256": "1c744850d821f3b09655b15a59f6ccfd1af0aa06b7441da9ca9029f536016e4e",
+        "buildScriptName": "build",
+        "dependencyInstall": "npm ci --no-audit --no-fund",
+        "buildInvocation": "npm run build -- --outDir <new-empty-task-owned-directory>",
+        "nodeVersion": "v24.14.0",
+        "npmVersion": "11.9.0"
+      },
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "dd02edd3b26d53b981358d84380c8c70b277095da3686b568d99373c82bacd53",
+        "assetCount": 436,
+        "totalAssetBytes": 43983899
+      },
+      "after": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "dd02edd3b26d53b981358d84380c8c70b277095da3686b568d99373c82bacd53",
+        "assetCount": 436,
+        "totalAssetBytes": 43983899
+      },
+      "pageAssetAudit": {
+        "scope": "receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence",
+        "workerAuditMode": "diagnostic",
+        "scriptRequestCount": 6,
+        "loadedAssetPaths": [
+          "assets/egm96-universal.esm-D6y_VLZc.js",
+          "assets/index-D3_XUlb8.js",
+          "cesium/Cesium.js"
+        ],
+        "cesiumWorkerBlobAudits": [
+          {
+            "schema": "gev-cesium-worker-blob-audit/v1",
+            "status": "receipt-derived-worker-blobs-validated",
+            "auditMode": "diagnostic",
+            "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+            "createdScriptBlobCount": 8,
+            "validatedWorkerCount": 4,
+            "validatedCreatedWrapperCount": 4,
+            "unobservedCreatedWrapperCount": 0,
+            "validatedEmbeddedSourceCount": 4,
+            "validatedModuleIds": [
+              "createVerticesFromHeightmap",
+              "createVerticesFromQuantizedTerrainMesh",
+              "incrementallyBuildTerrainPicker",
+              "transferTypedArrayTest"
+            ],
+            "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "scriptBlobSha256": [
+              "3b607c4c50858e5a644e80a3cef6c0bfa772bd590dd45143816a15380d14c92c",
+              "5ccc16881f9db55ae948cf3c9eb91b7b464e1ed188942e96ec7d538a42da0d17",
+              "6f1602912c10d54e777c00ff8c5b20f97e4954877e0d44077e8133bad56e57af",
+              "8f7dd2c67c5f2f8dfb978d3abbd4406000994a26c3cfa040679887f1267fcf7a",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+            ],
+            "validatedWrapperSha256": [
+              "3b607c4c50858e5a644e80a3cef6c0bfa772bd590dd45143816a15380d14c92c",
+              "5ccc16881f9db55ae948cf3c9eb91b7b464e1ed188942e96ec7d538a42da0d17",
+              "6f1602912c10d54e777c00ff8c5b20f97e4954877e0d44077e8133bad56e57af",
+              "8f7dd2c67c5f2f8dfb978d3abbd4406000994a26c3cfa040679887f1267fcf7a"
+            ],
+            "readBytes": 3673622,
+            "retentionByteCapBytes": 33554432
+          },
+          {
+            "schema": "gev-cesium-worker-blob-audit/v1",
+            "status": "receipt-derived-worker-blobs-validated",
+            "auditMode": "diagnostic",
+            "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+            "createdScriptBlobCount": 14,
+            "validatedWorkerCount": 7,
+            "validatedCreatedWrapperCount": 7,
+            "unobservedCreatedWrapperCount": 0,
+            "validatedEmbeddedSourceCount": 7,
+            "validatedModuleIds": [
+              "combineGeometry",
+              "createGeometry",
+              "createVerticesFromHeightmap",
+              "incrementallyBuildTerrainPicker",
+              "transferTypedArrayTest"
+            ],
+            "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "scriptBlobSha256": [
+              "34740fc121790d1f08a4a5bc2e452b827cabe90bbad40e2aa7a1405f5f4b7a11",
+              "40fe860aca05c6efe7795d88f53987cf977e86a56a4fb4332df179d2676ebb9d",
+              "638e44ec365fa8f65c87bfb659241bfd917da0d500fe3695f5d5e307cce07bf1",
+              "8445020048ce8f732746df3db31d77ce2b53283357e2fa4c5e57542f836299fd",
+              "98bfaeb782f8e990624f3a18f1fd97beef3467145b7c590183082dd754468b4f",
+              "c692f2cb7e2175aa1f84445b6fcf0c5088a83f33e5ed3b801b345bbd868227c2",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "dd1213e5d61d65530e2976961f443a62abd0e02f1bee30d1e87ea76da40853d9"
+            ],
+            "validatedWrapperSha256": [
+              "34740fc121790d1f08a4a5bc2e452b827cabe90bbad40e2aa7a1405f5f4b7a11",
+              "40fe860aca05c6efe7795d88f53987cf977e86a56a4fb4332df179d2676ebb9d",
+              "638e44ec365fa8f65c87bfb659241bfd917da0d500fe3695f5d5e307cce07bf1",
+              "8445020048ce8f732746df3db31d77ce2b53283357e2fa4c5e57542f836299fd",
+              "98bfaeb782f8e990624f3a18f1fd97beef3467145b7c590183082dd754468b4f",
+              "c692f2cb7e2175aa1f84445b6fcf0c5088a83f33e5ed3b801b345bbd868227c2",
+              "dd1213e5d61d65530e2976961f443a62abd0e02f1bee30d1e87ea76da40853d9"
+            ],
+            "readBytes": 6428769,
+            "retentionByteCapBytes": 33554432
+          }
+        ],
+        "workerAuditDocuments": [
+          {
+            "documentRole": "startup-1",
+            "documentId": "startup-document-1",
+            "mode": "diagnostic",
+            "validation": {
+              "schema": "gev-cesium-worker-blob-audit/v1",
+              "status": "receipt-derived-worker-blobs-validated",
+              "auditMode": "diagnostic",
+              "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+              "createdScriptBlobCount": 8,
+              "validatedWorkerCount": 4,
+              "validatedCreatedWrapperCount": 4,
+              "unobservedCreatedWrapperCount": 0,
+              "validatedEmbeddedSourceCount": 4,
+              "validatedModuleIds": [
+                "createVerticesFromHeightmap",
+                "createVerticesFromQuantizedTerrainMesh",
+                "incrementallyBuildTerrainPicker",
+                "transferTypedArrayTest"
+              ],
+              "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "scriptBlobSha256": [
+                "3b607c4c50858e5a644e80a3cef6c0bfa772bd590dd45143816a15380d14c92c",
+                "5ccc16881f9db55ae948cf3c9eb91b7b464e1ed188942e96ec7d538a42da0d17",
+                "6f1602912c10d54e777c00ff8c5b20f97e4954877e0d44077e8133bad56e57af",
+                "8f7dd2c67c5f2f8dfb978d3abbd4406000994a26c3cfa040679887f1267fcf7a",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+              ],
+              "validatedWrapperSha256": [
+                "3b607c4c50858e5a644e80a3cef6c0bfa772bd590dd45143816a15380d14c92c",
+                "5ccc16881f9db55ae948cf3c9eb91b7b464e1ed188942e96ec7d538a42da0d17",
+                "6f1602912c10d54e777c00ff8c5b20f97e4954877e0d44077e8133bad56e57af",
+                "8f7dd2c67c5f2f8dfb978d3abbd4406000994a26c3cfa040679887f1267fcf7a"
+              ],
+              "readBytes": 3673622,
+              "retentionByteCapBytes": 33554432
+            },
+            "restoration": {
+              "nativeCreateObjectURLRestored": true,
+              "registryEmpty": true,
+              "createdScriptBlobCountAtRestore": 8,
+              "overflowCountAtRestore": 0,
+              "auditedCreatedScriptBlobCount": 8,
+              "auditedOverflowCount": 0,
+              "publicationBoundary": {
+                "workerTargetCountAtBoundary": 4,
+                "blobRequestCountAtBoundary": 4,
+                "lateWorkerTargetCount": 0,
+                "lateBlobRequestCount": 0,
+                "delayedValidatedWorkerTargetCount": 0,
+                "delayedValidatedBlobRequestCount": 0,
+                "unvalidatedLateWorkerTargetCount": 0,
+                "unvalidatedLateBlobRequestCount": 0
+              }
+            },
+            "observedWorkerTargetCount": 4,
+            "observedBlobRequestCount": 4
+          },
+          {
+            "documentRole": "main-measured",
+            "documentId": "main-measured-document",
+            "mode": "diagnostic",
+            "validation": {
+              "schema": "gev-cesium-worker-blob-audit/v1",
+              "status": "receipt-derived-worker-blobs-validated",
+              "auditMode": "diagnostic",
+              "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+              "createdScriptBlobCount": 14,
+              "validatedWorkerCount": 7,
+              "validatedCreatedWrapperCount": 7,
+              "unobservedCreatedWrapperCount": 0,
+              "validatedEmbeddedSourceCount": 7,
+              "validatedModuleIds": [
+                "combineGeometry",
+                "createGeometry",
+                "createVerticesFromHeightmap",
+                "incrementallyBuildTerrainPicker",
+                "transferTypedArrayTest"
+              ],
+              "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "scriptBlobSha256": [
+                "34740fc121790d1f08a4a5bc2e452b827cabe90bbad40e2aa7a1405f5f4b7a11",
+                "40fe860aca05c6efe7795d88f53987cf977e86a56a4fb4332df179d2676ebb9d",
+                "638e44ec365fa8f65c87bfb659241bfd917da0d500fe3695f5d5e307cce07bf1",
+                "8445020048ce8f732746df3db31d77ce2b53283357e2fa4c5e57542f836299fd",
+                "98bfaeb782f8e990624f3a18f1fd97beef3467145b7c590183082dd754468b4f",
+                "c692f2cb7e2175aa1f84445b6fcf0c5088a83f33e5ed3b801b345bbd868227c2",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                "dd1213e5d61d65530e2976961f443a62abd0e02f1bee30d1e87ea76da40853d9"
+              ],
+              "validatedWrapperSha256": [
+                "34740fc121790d1f08a4a5bc2e452b827cabe90bbad40e2aa7a1405f5f4b7a11",
+                "40fe860aca05c6efe7795d88f53987cf977e86a56a4fb4332df179d2676ebb9d",
+                "638e44ec365fa8f65c87bfb659241bfd917da0d500fe3695f5d5e307cce07bf1",
+                "8445020048ce8f732746df3db31d77ce2b53283357e2fa4c5e57542f836299fd",
+                "98bfaeb782f8e990624f3a18f1fd97beef3467145b7c590183082dd754468b4f",
+                "c692f2cb7e2175aa1f84445b6fcf0c5088a83f33e5ed3b801b345bbd868227c2",
+                "dd1213e5d61d65530e2976961f443a62abd0e02f1bee30d1e87ea76da40853d9"
+              ],
+              "readBytes": 6428769,
+              "retentionByteCapBytes": 33554432
+            },
+            "restoration": {
+              "nativeCreateObjectURLRestored": true,
+              "registryEmpty": true,
+              "createdScriptBlobCountAtRestore": 14,
+              "overflowCountAtRestore": 0,
+              "auditedCreatedScriptBlobCount": 14,
+              "auditedOverflowCount": 0,
+              "publicationBoundary": {
+                "workerTargetCountAtBoundary": 7,
+                "blobRequestCountAtBoundary": 7,
+                "lateWorkerTargetCount": 0,
+                "lateBlobRequestCount": 0,
+                "delayedValidatedWorkerTargetCount": 0,
+                "delayedValidatedBlobRequestCount": 0,
+                "unvalidatedLateWorkerTargetCount": 0,
+                "unvalidatedLateBlobRequestCount": 0
+              }
+            },
+            "observedWorkerTargetCount": 7,
+            "observedBlobRequestCount": 7
+          }
+        ],
+        "unexpectedAssetPaths": []
+      }
+    },
+    "provenanceStatus": "verified-local-build-and-served-assets-before-and-after",
+    "reason": null
+  },
+  "url": "http://127.0.0.1:38501",
+  "comparisonEligible": false,
+  "comparisonReadiness": {
+    "status": "not-ready",
+    "workerAuditTimingBoundary": "during-capture-diagnostic-instrumentation",
+    "reasons": [
+      "observed-comparison-contract-incomplete",
+      "warmup-is-not-30-seconds",
+      "measurement-is-not-60-seconds",
+      "capture-does-not-have-five-runs-per-scenario",
+      "hardware-performance-acceptance-was-not-requested-or-verified",
+      "receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented",
+      "latency-comparison-remains-disabled-pending-uninstrumented-capture",
+      "weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance"
+    ],
+    "reason": "observed-comparison-contract-incomplete; warmup-is-not-30-seconds; measurement-is-not-60-seconds; capture-does-not-have-five-runs-per-scenario; hardware-performance-acceptance-was-not-requested-or-verified; receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented; latency-comparison-remains-disabled-pending-uninstrumented-capture; weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance"
+  },
+  "fixtureDelivery": {
+    "schema": "gev-weather-effects-fixture-delivery/v1",
+    "status": "observed",
+    "workloadId": "austin-weather-effects-v1",
+    "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "assets": [
+      {
+        "id": "radar-manifest",
+        "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+        "byteLength": 277,
+        "contentType": "application/json",
+        "responseCount": 1
+      },
+      {
+        "id": "radar-tile-0",
+        "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+        "byteLength": 96080,
+        "contentType": "image/png",
+        "responseCount": 16
+      },
+      {
+        "id": "radar-tile-1",
+        "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+        "byteLength": 82173,
+        "contentType": "image/png",
+        "responseCount": 16
+      },
+      {
+        "id": "radar-tile-2",
+        "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+        "byteLength": 78229,
+        "contentType": "image/png",
+        "responseCount": 24
+      },
+      {
+        "id": "clouds-regional-manifest",
+        "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+        "byteLength": 286,
+        "contentType": "application/json",
+        "responseCount": 1
+      },
+      {
+        "id": "clouds-regional-tile-0",
+        "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+        "byteLength": 85934,
+        "contentType": "image/png",
+        "responseCount": 16
+      },
+      {
+        "id": "clouds-regional-tile-1",
+        "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+        "byteLength": 90656,
+        "contentType": "image/png",
+        "responseCount": 16
+      },
+      {
+        "id": "clouds-regional-tile-2",
+        "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+        "byteLength": 90938,
+        "contentType": "image/png",
+        "responseCount": 24
+      },
+      {
+        "id": "lightning-manifest",
+        "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+        "byteLength": 282,
+        "contentType": "application/json",
+        "responseCount": 1
+      },
+      {
+        "id": "lightning-tile-0",
+        "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+        "byteLength": 93276,
+        "contentType": "image/png",
+        "responseCount": 18
+      },
+      {
+        "id": "lightning-tile-1",
+        "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+        "byteLength": 97435,
+        "contentType": "image/png",
+        "responseCount": 18
+      },
+      {
+        "id": "lightning-tile-2",
+        "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+        "byteLength": 97969,
+        "contentType": "image/png",
+        "responseCount": 27
+      },
+      {
+        "id": "wind-manifest",
+        "sha256": "005349951b66a7c63d42770810a7610fa440ef2d44e7d740e8e67aecf5d8e72d",
+        "byteLength": 289,
+        "contentType": "application/json",
+        "responseCount": 1
+      },
+      {
+        "id": "wind-grid",
+        "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+        "byteLength": 521280,
+        "contentType": "application/octet-stream",
+        "responseCount": 1
+      }
+    ],
+    "populationsBefore": [
+      {
+        "id": "weather-lightning",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-radar",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "wind",
+        "enabled": true,
+        "count": 65160
+      }
+    ],
+    "populationsAfter": [
+      {
+        "id": "weather-lightning",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-radar",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "wind",
+        "enabled": true,
+        "count": 65160
+      }
+    ],
+    "routeErrors": [],
+    "cameraObservation": {
+      "longitudeDeg": -97.74309999999998,
+      "latitudeDeg": 30.267199999999992,
+      "altitudeM": 11999.999999999502,
+      "headingDeg": 19.99999999999998,
+      "pitchDeg": -45.00000000000003
+    },
+    "timelinePreflight": {
+      "selectedTimes": [
+        [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        [
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z"
+        ],
+        [
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z"
+        ],
+        [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ]
+      ],
+      "playback": {
+        "mode": "history",
+        "playing": true,
+        "intervalMs": 2000,
+        "displayedAtStart": [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        }
+      },
+      "sourceObservationTimes": [
+        "2026-10-08T12:00:00.000Z",
+        "2026-10-08T12:00:00.000Z",
+        "2026-10-08T12:00:00.000Z"
+      ],
+      "wind": {
+        "params": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false,
+          "units": "km/h"
+        },
+        "stats": {
+          "count": 65160,
+          "lastUpdate": 1791417600000,
+          "issuedAt": 1791417600000,
+          "validAt": 1791460800000,
+          "error": null,
+          "countLabel": "Forecast",
+          "loading": false,
+          "model": "GFS",
+          "overlay": "speed",
+          "paused": false,
+          "stale": false,
+          "source": "NOAA GFS",
+          "validTime": "2026-10-08 12:00 UTC"
+        }
+      }
+    }
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "vendor": "Google Inc. (Google)",
+    "rendererEvidence": {
+      "source": "early-cesium-context-creation",
+      "canvasMatchesScene": true,
+      "contextMatchesScene": true,
+      "contextLost": false,
+      "contextRestored": false,
+      "parameterQueryCount": 2,
+      "queryDurationMs": 1.6000000000058208,
+      "contextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "desynchronized": false
+      }
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 1440,
+      "height": 900
+    },
+    "focused": true,
+    "visible": true,
+    "layers": [
+      {
+        "id": "bhote-koshi-2026",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "bhote-koshi-locator",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "flights",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-adsb",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "earthquakes",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "fire-perimeters",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "alpr-cameras",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "street-level",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "satellites",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "rocket-launches",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "traffic",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "cctv",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "radio",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "transit",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "bikeshare",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "directions",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "recent-imagery",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "ais-live-vessels",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military-installations",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military-awareness",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "wind",
+        "enabled": true,
+        "count": 65160
+      },
+      {
+        "id": "weather-radar",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-lightning",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-cyclones",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-datacenters",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-dams",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "telegeography-submarine-cables",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-firms",
+        "enabled": false,
+        "count": 0
+      }
+    ],
+    "totalObjects": 65163,
+    "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+    "startup": {
+      "runs": [
+        {
+          "run": 1,
+          "cacheDisabled": true,
+          "appReadyMs": 4162,
+          "initialSettleMs": 5897,
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+          "platform": "Linux x86_64",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1440,
+            "height": 900
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 2476.199999999997,
+          "memory": {
+            "usedJsHeapBytes": 44989771,
+            "reason": null
+          },
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "retired-with-final-observation",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "elapsedMs": 0
+          },
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "rendererEvidence": {
+            "source": "early-cesium-context-creation",
+            "contextAttributes": {
+              "alpha": false,
+              "antialias": true,
+              "depth": true,
+              "failIfMajorPerformanceCaveat": false,
+              "powerPreference": "high-performance",
+              "premultipliedAlpha": true,
+              "preserveDrawingBuffer": true,
+              "stencil": true,
+              "desynchronized": false
+            },
+            "queryDurationMs": 2.2000000000116415,
+            "parameterQueryCount": 2
+          }
+        }
+      ],
+      "runCount": 1,
+      "measurement": "cache-disabled fresh browser contexts",
+      "performancePageInitialSettleMs": 294
+    },
+    "hardwareEligible": false
+  },
+  "hostEnvironment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "osRelease": "6.17.0-1022-azure",
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logicalCpus": 4,
+    "memoryBytes": 16765370368,
+    "hosted": true,
+    "runnerImage": "ubuntu24",
+    "runnerImageVersion": "20261004.327.1"
+  },
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Google)",
+        "device": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+        "driver": "5.0.0"
+      }
+    ]
+  },
+  "integrity": {
+    "status": "passed",
+    "sampleCount": 4
+  },
+  "workload": {
+    "warmupMs": 1000,
+    "durationPerSampleMs": 1000,
+    "runsPerScenario": 2,
+    "startupRuns": 1,
+    "scenarios": [
+      "idle",
+      "scripted-motion"
+    ],
+    "rendererProbeCleanup": [
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 28.97891299999901,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 13.996767000000546,
+          "pageExecutionElapsedMs": 0.19999999999708962,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "already-disabled",
+            "before": false,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 14.615454999999201,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "startup-document-retirement",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1"
+      },
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 8.839540999993915,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 4.412003999997978,
+          "pageExecutionElapsedMs": 0.20000000001164153,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "confirmed",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0.20000000001164153
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 4.345924000008381,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "capture-document-retirement",
+        "documentRole": "main-measured",
+        "documentId": "main-measured-document"
+      }
+    ],
+    "rendererProbeCleanupOmittedCount": 0,
+    "rendererLoopRetirements": [
+      {
+        "phase": "startup-final-details",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1",
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0
+      }
+    ],
+    "rendererLoopRetirementsOmittedCount": 0,
+    "fixtureInterceptionReleases": [
+      {
+        "schema": "gev-flight-fixture-session-release/v1",
+        "sessionOrdinal": 1,
+        "documentRole": "main-measured",
+        "documentId": "main-measured-document",
+        "interception": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "stop": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true,
+        "targetClosed": true
+      }
+    ],
+    "fixture": {
+      "schema": "gev-weather-effects-fixture/v1",
+      "id": "weather-effects-austin-v1",
+      "workloadId": "austin-weather-effects-v1",
+      "fixedTime": "2026-10-08T12:00:00.000Z",
+      "timeline": [
+        "2026-10-08T11:50:00.000Z",
+        "2026-10-08T11:55:00.000Z",
+        "2026-10-08T12:00:00.000Z"
+      ],
+      "expectedLayerCounts": {
+        "weather-radar": 1,
+        "weather-satellite": 1,
+        "weather-lightning": 1,
+        "wind": 65160
+      },
+      "selectedLayerIds": [
+        "weather-radar",
+        "weather-satellite",
+        "weather-lightning",
+        "wind"
+      ],
+      "camera": {
+        "id": "austin-weather-oblique-v1",
+        "longitudeDeg": -97.7431,
+        "latitudeDeg": 30.2672,
+        "altitudeM": 12000,
+        "headingDeg": 20,
+        "pitchDeg": -45
+      },
+      "visualState": {
+        "qualityMode": "manual",
+        "detectionMode": "DENSE",
+        "densityPct": 75,
+        "weather": [
+          "weather-radar",
+          "weather-satellite",
+          "weather-lightning"
+        ],
+        "wind": {
+          "model": "gfs",
+          "overlay": "speed",
+          "paused": false
+        },
+        "weatherClock": {
+          "mode": "latest",
+          "selectedTime": "2026-10-08T12:00:00.000Z"
+        }
+      },
+      "manifests": {
+        "radar": {
+          "schemaVersion": 1,
+          "product": "radar",
+          "bounds": {
+            "west": -130,
+            "south": 20,
+            "east": -60,
+            "north": 55
+          },
+          "times": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "latest": "2026-10-08T12:00:00.000Z",
+          "tileSize": 256,
+          "maxLevel": 6,
+          "tilingScheme": "geographic"
+        },
+        "clouds-regional": {
+          "schemaVersion": 1,
+          "product": "clouds-regional",
+          "bounds": {
+            "west": -150,
+            "south": 5,
+            "east": -40,
+            "north": 70
+          },
+          "times": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "latest": "2026-10-08T12:00:00.000Z",
+          "tileSize": 256,
+          "maxLevel": 6,
+          "tilingScheme": "geographic"
+        },
+        "lightning": {
+          "schemaVersion": 1,
+          "product": "lightning",
+          "bounds": {
+            "west": -180,
+            "south": -60,
+            "east": 180,
+            "north": 60
+          },
+          "times": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "latest": "2026-10-08T12:00:00.000Z",
+          "tileSize": 256,
+          "maxLevel": 6,
+          "tilingScheme": "geographic"
+        }
+      },
+      "windManifest": {
+        "model": "gfs",
+        "overlay": "none",
+        "cycle": {
+          "runIso": "2026-10-08T00:00:00.000Z",
+          "validIso": "2026-10-08T12:00:00.000Z",
+          "forecastHour": 12
+        },
+        "level": "surface",
+        "units": "m/s",
+        "grid": {
+          "nx": 360,
+          "ny": 181,
+          "lo1": 0,
+          "la1": 90,
+          "dx": 1,
+          "dy": 1
+        },
+        "gridUrl": "/api/wind/grid/gfs-weather-effects-v1.bin?model=gfs"
+      },
+      "assets": [
+        {
+          "id": "radar-manifest",
+          "path": "src/data/fixtures/weather-effects-v1/radar.manifest.json",
+          "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+          "byteLength": 277,
+          "contentType": "application/json"
+        },
+        {
+          "id": "radar-tile-0",
+          "path": "src/data/fixtures/weather-effects-v1/radar-0.tile.png",
+          "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+          "byteLength": 96080,
+          "contentType": "image/png"
+        },
+        {
+          "id": "radar-tile-1",
+          "path": "src/data/fixtures/weather-effects-v1/radar-1.tile.png",
+          "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+          "byteLength": 82173,
+          "contentType": "image/png"
+        },
+        {
+          "id": "radar-tile-2",
+          "path": "src/data/fixtures/weather-effects-v1/radar-2.tile.png",
+          "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+          "byteLength": 78229,
+          "contentType": "image/png"
+        },
+        {
+          "id": "clouds-regional-manifest",
+          "path": "src/data/fixtures/weather-effects-v1/clouds-regional.manifest.json",
+          "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+          "byteLength": 286,
+          "contentType": "application/json"
+        },
+        {
+          "id": "clouds-regional-tile-0",
+          "path": "src/data/fixtures/weather-effects-v1/clouds-regional-0.tile.png",
+          "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+          "byteLength": 85934,
+          "contentType": "image/png"
+        },
+        {
+          "id": "clouds-regional-tile-1",
+          "path": "src/data/fixtures/weather-effects-v1/clouds-regional-1.tile.png",
+          "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+          "byteLength": 90656,
+          "contentType": "image/png"
+        },
+        {
+          "id": "clouds-regional-tile-2",
+          "path": "src/data/fixtures/weather-effects-v1/clouds-regional-2.tile.png",
+          "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+          "byteLength": 90938,
+          "contentType": "image/png"
+        },
+        {
+          "id": "lightning-manifest",
+          "path": "src/data/fixtures/weather-effects-v1/lightning.manifest.json",
+          "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+          "byteLength": 282,
+          "contentType": "application/json"
+        },
+        {
+          "id": "lightning-tile-0",
+          "path": "src/data/fixtures/weather-effects-v1/lightning-0.tile.png",
+          "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+          "byteLength": 93276,
+          "contentType": "image/png"
+        },
+        {
+          "id": "lightning-tile-1",
+          "path": "src/data/fixtures/weather-effects-v1/lightning-1.tile.png",
+          "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+          "byteLength": 97435,
+          "contentType": "image/png"
+        },
+        {
+          "id": "lightning-tile-2",
+          "path": "src/data/fixtures/weather-effects-v1/lightning-2.tile.png",
+          "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+          "byteLength": 97969,
+          "contentType": "image/png"
+        },
+        {
+          "id": "wind-manifest",
+          "path": null,
+          "sha256": "005349951b66a7c63d42770810a7610fa440ef2d44e7d740e8e67aecf5d8e72d",
+          "byteLength": 289,
+          "contentType": "application/json"
+        },
+        {
+          "id": "wind-grid",
+          "path": "src/data/fixtures/weather-effects-v1/gfs-weather-grid.bin",
+          "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+          "byteLength": 521280,
+          "contentType": "application/octet-stream"
+        }
+      ],
+      "fixedTimeMs": 1791460800000,
+      "manifestSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+      "sha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+      "clock": {
+        "dayNumber": 2461322,
+        "secondsOfDay": 37
+      }
+    },
+    "providerFixture": "austin-weather-effects-v1",
+    "fixtureId": "weather-effects-austin-v1",
+    "injectedDelayMs": 0,
+    "hardwareRequired": false,
+    "weatherEffectsFixtureLifecycle": {
+      "scope": "one measured app document; bundled deterministic manifests, time-indexed imagery tiles and GFS grid are fulfilled only for exact same-origin GET routes; all three advertised history frames are selected through application timeline controls before timed samples",
+      "fixedHarnessClock": "Date.now and Cesium currentTime are pinned to the declared UTC fixture epoch; weather observation timestamps remain source times and wind animation remains enabled",
+      "camera": {
+        "id": "austin-weather-oblique-v1",
+        "longitudeDeg": -97.7431,
+        "latitudeDeg": 30.2672,
+        "altitudeM": 12000,
+        "headingDeg": 20,
+        "pitchDeg": -45
+      },
+      "observedCamera": {
+        "longitudeDeg": -97.74309999999998,
+        "latitudeDeg": 30.267199999999992,
+        "altitudeM": 11999.999999999502,
+        "headingDeg": 19.99999999999998,
+        "pitchDeg": -45.00000000000003
+      },
+      "playback": {
+        "mode": "history",
+        "playing": true,
+        "intervalMs": 2000,
+        "displayedAtStart": [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        "visualState": {
+          "satelliteProduct": "clouds-regional",
+          "satelliteInfrared": "filtered",
+          "radarOpacity": "strong",
+          "lightningOpacity": "strong",
+          "windModel": "gfs",
+          "windOverlay": "speed",
+          "windPaused": false
+        }
+      },
+      "timeline": [
+        [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ],
+        [
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z",
+          "2026-10-08T11:55:00.000Z"
+        ],
+        [
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z",
+          "2026-10-08T11:50:00.000Z"
+        ],
+        [
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z",
+          "2026-10-08T12:00:00.000Z"
+        ]
+      ],
+      "sourceObservationTimes": [
+        "2026-10-08T12:00:00.000Z",
+        "2026-10-08T12:00:00.000Z",
+        "2026-10-08T12:00:00.000Z"
+      ],
+      "freshBrowserContextPerSample": false,
+      "performanceAcceptanceEligible": false
+    },
+    "performanceAcceptanceEligible": false,
+    "mixedLayers": null,
+    "qualityMode": "manual",
+    "expectedDensityPct": 75,
+    "cameraPath": "elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking",
+    "detectionMode": "DENSE",
+    "populationStableAcrossSamples": true,
+    "cameraPathStableAcrossSamples": true,
+    "note": "Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state."
+  },
+  "motionBudget": {
+    "maxP95FrameMs": null,
+    "status": "not-configured",
+    "failures": [],
+    "note": "Idle rendering is intentionally sparse and is excluded from motion frame budgets."
+  },
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "durationMs": 1346,
+      "renderedFrameCount": 2,
+      "frameCount": 1,
+      "frameIntervalMs": {
+        "p50": 864.6000000000058,
+        "p95": 864.6000000000058,
+        "max": 864.6000000000058,
+        "samples": 1,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 0,
+        "maxMs": null
+      },
+      "memory": {
+        "usedJsHeapBytes": 69390028
+      },
+      "layers": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "flights",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-dams",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0
+        }
+      ],
+      "totalObjects": 65163,
+      "focused": true,
+      "visible": true,
+      "trackedAircraftId": null,
+      "injectedDelayMs": 0,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "detection": {
+        "mode": null,
+        "reason": "Candidate-only detection diagnostics are disabled for comparable capture."
+      },
+      "performanceSnapshot": null,
+      "performanceSnapshotReason": "Candidate-only runtime snapshots are disabled for comparable capture.",
+      "foregroundThroughout": true,
+      "cameraPath": {
+        "id": "parked-v1",
+        "start": {
+          "position": {
+            "x": -744223.8056744909,
+            "y": -5473386.05884697,
+            "z": 3202039.505247089
+          },
+          "direction": {
+            "x": 0.36704585088703406,
+            "y": 0.9044233903355411,
+            "z": 0.21747568682631793
+          },
+          "up": {
+            "x": 0.20248062607303247,
+            "y": -0.30586980426556665,
+            "z": 0.930293103760109
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 1000,
+        "motionDistanceM": 0
+      },
+      "phasedClockEnd": null,
+      "settings": {
+        "before": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        },
+        "after": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        }
+      },
+      "conditions": {
+        "before": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        },
+        "after": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        }
+      },
+      "weatherEffectsClock": {
+        "fixedHarnessTime": "2026-10-08T12:00:00.000Z",
+        "wallClockBeforeMs": 1791460800000,
+        "wallClockAfterMs": 1791460800000,
+        "cesiumBefore": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "cesiumAfter": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "weatherPlayback": {
+          "mode": "history",
+          "playing": true,
+          "intervalMs": 2000,
+          "displayedAtStart": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          }
+        },
+        "selectedTimesPreflight": [
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ],
+          [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        ],
+        "weatherStateBefore": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T12:00:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        },
+        "weatherStateAfter": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T11:50:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        }
+      },
+      "fixtureDelivery": {
+        "schema": "gev-weather-effects-fixture-delivery/v1",
+        "status": "observed",
+        "workloadId": "austin-weather-effects-v1",
+        "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+        "fixedTime": "2026-10-08T12:00:00.000Z",
+        "assets": [
+          {
+            "id": "radar-manifest",
+            "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+            "byteLength": 277,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "radar-tile-0",
+            "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+            "byteLength": 96080,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "radar-tile-1",
+            "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+            "byteLength": 82173,
+            "contentType": "image/png",
+            "responseCount": 7
+          },
+          {
+            "id": "radar-tile-2",
+            "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+            "byteLength": 78229,
+            "contentType": "image/png",
+            "responseCount": 15
+          },
+          {
+            "id": "clouds-regional-manifest",
+            "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+            "byteLength": 286,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "clouds-regional-tile-0",
+            "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+            "byteLength": 85934,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "clouds-regional-tile-1",
+            "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+            "byteLength": 90656,
+            "contentType": "image/png",
+            "responseCount": 7
+          },
+          {
+            "id": "clouds-regional-tile-2",
+            "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+            "byteLength": 90938,
+            "contentType": "image/png",
+            "responseCount": 15
+          },
+          {
+            "id": "lightning-manifest",
+            "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+            "byteLength": 282,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "lightning-tile-0",
+            "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+            "byteLength": 93276,
+            "contentType": "image/png",
+            "responseCount": 17
+          },
+          {
+            "id": "lightning-tile-1",
+            "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+            "byteLength": 97435,
+            "contentType": "image/png",
+            "responseCount": 8
+          },
+          {
+            "id": "lightning-tile-2",
+            "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+            "byteLength": 97969,
+            "contentType": "image/png",
+            "responseCount": 17
+          },
+          {
+            "id": "wind-manifest",
+            "sha256": "005349951b66a7c63d42770810a7610fa440ef2d44e7d740e8e67aecf5d8e72d",
+            "byteLength": 289,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "wind-grid",
+            "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+            "byteLength": 521280,
+            "contentType": "application/octet-stream",
+            "responseCount": 1
+          }
+        ],
+        "populationsBefore": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "populationsAfter": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "routeErrors": [],
+        "cameraObservation": {
+          "longitudeDeg": -97.74309999999998,
+          "latitudeDeg": 30.267199999999992,
+          "altitudeM": 11999.999999999502,
+          "headingDeg": 19.99999999999998,
+          "pitchDeg": -45.00000000000003
+        },
+        "timelinePreflight": {
+          "selectedTimes": [
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            [
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z"
+            ],
+            [
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z"
+            ],
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ]
+          ],
+          "playback": {
+            "mode": "history",
+            "playing": true,
+            "intervalMs": 2000,
+            "displayedAtStart": [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            "visualState": {
+              "satelliteProduct": "clouds-regional",
+              "satelliteInfrared": "filtered",
+              "radarOpacity": "strong",
+              "lightningOpacity": "strong",
+              "windModel": "gfs",
+              "windOverlay": "speed",
+              "windPaused": false
+            }
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "wind": {
+            "params": {
+              "model": "gfs",
+              "overlay": "speed",
+              "paused": false,
+              "units": "km/h"
+            },
+            "stats": {
+              "count": 65160,
+              "lastUpdate": 1791417600000,
+              "issuedAt": 1791417600000,
+              "validAt": 1791460800000,
+              "error": null,
+              "countLabel": "Forecast",
+              "loading": false,
+              "model": "GFS",
+              "overlay": "speed",
+              "paused": false,
+              "stale": false,
+              "source": "NOAA GFS",
+              "validTime": "2026-10-08 12:00 UTC"
+            }
+          }
+        }
+      },
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "captureOrdinal": 0
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "durationMs": 2360.399999999994,
+      "renderedFrameCount": 2,
+      "frameCount": 1,
+      "frameIntervalMs": {
+        "p50": 1986.1999999999825,
+        "p95": 1986.1999999999825,
+        "max": 1986.1999999999825,
+        "samples": 1,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 0,
+        "maxMs": null
+      },
+      "memory": {
+        "usedJsHeapBytes": 54062724
+      },
+      "layers": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "flights",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-dams",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0
+        }
+      ],
+      "totalObjects": 65163,
+      "focused": true,
+      "visible": true,
+      "trackedAircraftId": null,
+      "injectedDelayMs": 0,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "detection": {
+        "mode": null,
+        "reason": "Candidate-only detection diagnostics are disabled for comparable capture."
+      },
+      "performanceSnapshot": null,
+      "performanceSnapshotReason": "Candidate-only runtime snapshots are disabled for comparable capture.",
+      "foregroundThroughout": true,
+      "cameraPath": {
+        "id": "parked-v1",
+        "start": {
+          "position": {
+            "x": -744223.8056744909,
+            "y": -5473386.05884697,
+            "z": 3202039.505247089
+          },
+          "direction": {
+            "x": 0.36704585088703406,
+            "y": 0.9044233903355411,
+            "z": 0.21747568682631793
+          },
+          "up": {
+            "x": 0.20248062607303247,
+            "y": -0.30586980426556665,
+            "z": 0.930293103760109
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 1000,
+        "motionDistanceM": 0
+      },
+      "phasedClockEnd": null,
+      "settings": {
+        "before": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        },
+        "after": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        }
+      },
+      "conditions": {
+        "before": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        },
+        "after": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        }
+      },
+      "weatherEffectsClock": {
+        "fixedHarnessTime": "2026-10-08T12:00:00.000Z",
+        "wallClockBeforeMs": 1791460800000,
+        "wallClockAfterMs": 1791460800000,
+        "cesiumBefore": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "cesiumAfter": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "weatherPlayback": {
+          "mode": "history",
+          "playing": true,
+          "intervalMs": 2000,
+          "displayedAtStart": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          }
+        },
+        "selectedTimesPreflight": [
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ],
+          [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        ],
+        "weatherStateBefore": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T11:50:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        },
+        "weatherStateAfter": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T11:50:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        }
+      },
+      "fixtureDelivery": {
+        "schema": "gev-weather-effects-fixture-delivery/v1",
+        "status": "observed",
+        "workloadId": "austin-weather-effects-v1",
+        "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+        "fixedTime": "2026-10-08T12:00:00.000Z",
+        "assets": [
+          {
+            "id": "radar-manifest",
+            "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+            "byteLength": 277,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "radar-tile-0",
+            "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+            "byteLength": 96080,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "radar-tile-1",
+            "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+            "byteLength": 82173,
+            "contentType": "image/png",
+            "responseCount": 9
+          },
+          {
+            "id": "radar-tile-2",
+            "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+            "byteLength": 78229,
+            "contentType": "image/png",
+            "responseCount": 15
+          },
+          {
+            "id": "clouds-regional-manifest",
+            "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+            "byteLength": 286,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "clouds-regional-tile-0",
+            "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+            "byteLength": 85934,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "clouds-regional-tile-1",
+            "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+            "byteLength": 90656,
+            "contentType": "image/png",
+            "responseCount": 9
+          },
+          {
+            "id": "clouds-regional-tile-2",
+            "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+            "byteLength": 90938,
+            "contentType": "image/png",
+            "responseCount": 15
+          },
+          {
+            "id": "lightning-manifest",
+            "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+            "byteLength": 282,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "lightning-tile-0",
+            "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+            "byteLength": 93276,
+            "contentType": "image/png",
+            "responseCount": 18
+          },
+          {
+            "id": "lightning-tile-1",
+            "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+            "byteLength": 97435,
+            "contentType": "image/png",
+            "responseCount": 10
+          },
+          {
+            "id": "lightning-tile-2",
+            "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+            "byteLength": 97969,
+            "contentType": "image/png",
+            "responseCount": 17
+          },
+          {
+            "id": "wind-manifest",
+            "sha256": "005349951b66a7c63d42770810a7610fa440ef2d44e7d740e8e67aecf5d8e72d",
+            "byteLength": 289,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "wind-grid",
+            "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+            "byteLength": 521280,
+            "contentType": "application/octet-stream",
+            "responseCount": 1
+          }
+        ],
+        "populationsBefore": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "populationsAfter": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "routeErrors": [],
+        "cameraObservation": {
+          "longitudeDeg": -97.74309999999998,
+          "latitudeDeg": 30.267199999999992,
+          "altitudeM": 11999.999999999502,
+          "headingDeg": 19.99999999999998,
+          "pitchDeg": -45.00000000000003
+        },
+        "timelinePreflight": {
+          "selectedTimes": [
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            [
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z"
+            ],
+            [
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z"
+            ],
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ]
+          ],
+          "playback": {
+            "mode": "history",
+            "playing": true,
+            "intervalMs": 2000,
+            "displayedAtStart": [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            "visualState": {
+              "satelliteProduct": "clouds-regional",
+              "satelliteInfrared": "filtered",
+              "radarOpacity": "strong",
+              "lightningOpacity": "strong",
+              "windModel": "gfs",
+              "windOverlay": "speed",
+              "windPaused": false
+            }
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "wind": {
+            "params": {
+              "model": "gfs",
+              "overlay": "speed",
+              "paused": false,
+              "units": "km/h"
+            },
+            "stats": {
+              "count": 65160,
+              "lastUpdate": 1791417600000,
+              "issuedAt": 1791417600000,
+              "validAt": 1791460800000,
+              "error": null,
+              "countLabel": "Forecast",
+              "loading": false,
+              "model": "GFS",
+              "overlay": "speed",
+              "paused": false,
+              "stale": false,
+              "source": "NOAA GFS",
+              "validTime": "2026-10-08 12:00 UTC"
+            }
+          }
+        }
+      },
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "captureOrdinal": 1
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "durationMs": 1880,
+      "renderedFrameCount": 3,
+      "frameCount": 2,
+      "frameIntervalMs": {
+        "p50": 348,
+        "p95": 804.0999999999767,
+        "max": 804.0999999999767,
+        "samples": 2,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 789
+      },
+      "memory": {
+        "usedJsHeapBytes": 59384816
+      },
+      "layers": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "flights",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-dams",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0
+        }
+      ],
+      "totalObjects": 65163,
+      "focused": true,
+      "visible": true,
+      "trackedAircraftId": null,
+      "injectedDelayMs": 0,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "detection": {
+        "mode": null,
+        "reason": "Candidate-only detection diagnostics are disabled for comparable capture."
+      },
+      "performanceSnapshot": null,
+      "performanceSnapshotReason": "Candidate-only runtime snapshots are disabled for comparable capture.",
+      "foregroundThroughout": true,
+      "cameraPath": {
+        "id": "elapsed-move-right-v1",
+        "start": {
+          "position": {
+            "x": -744223.8056744909,
+            "y": -5473386.05884697,
+            "z": 3202039.505247089
+          },
+          "direction": {
+            "x": 0.36704585088703406,
+            "y": 0.9044233903355411,
+            "z": 0.21747568682631793
+          },
+          "up": {
+            "x": 0.20248062607303247,
+            "y": -0.30586980426556665,
+            "z": 0.930293103760109
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 1000,
+        "motionDistanceM": 320
+      },
+      "phasedClockEnd": null,
+      "settings": {
+        "before": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        },
+        "after": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        }
+      },
+      "conditions": {
+        "before": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        },
+        "after": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        }
+      },
+      "weatherEffectsClock": {
+        "fixedHarnessTime": "2026-10-08T12:00:00.000Z",
+        "wallClockBeforeMs": 1791460800000,
+        "wallClockAfterMs": 1791460800000,
+        "cesiumBefore": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "cesiumAfter": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "weatherPlayback": {
+          "mode": "history",
+          "playing": true,
+          "intervalMs": 2000,
+          "displayedAtStart": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          }
+        },
+        "selectedTimesPreflight": [
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ],
+          [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        ],
+        "weatherStateBefore": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T11:55:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        },
+        "weatherStateAfter": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T11:55:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        }
+      },
+      "fixtureDelivery": {
+        "schema": "gev-weather-effects-fixture-delivery/v1",
+        "status": "observed",
+        "workloadId": "austin-weather-effects-v1",
+        "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+        "fixedTime": "2026-10-08T12:00:00.000Z",
+        "assets": [
+          {
+            "id": "radar-manifest",
+            "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+            "byteLength": 277,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "radar-tile-0",
+            "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+            "byteLength": 96080,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "radar-tile-1",
+            "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+            "byteLength": 82173,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "radar-tile-2",
+            "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+            "byteLength": 78229,
+            "contentType": "image/png",
+            "responseCount": 15
+          },
+          {
+            "id": "clouds-regional-manifest",
+            "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+            "byteLength": 286,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "clouds-regional-tile-0",
+            "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+            "byteLength": 85934,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "clouds-regional-tile-1",
+            "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+            "byteLength": 90656,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "clouds-regional-tile-2",
+            "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+            "byteLength": 90938,
+            "contentType": "image/png",
+            "responseCount": 15
+          },
+          {
+            "id": "lightning-manifest",
+            "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+            "byteLength": 282,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "lightning-tile-0",
+            "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+            "byteLength": 93276,
+            "contentType": "image/png",
+            "responseCount": 18
+          },
+          {
+            "id": "lightning-tile-1",
+            "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+            "byteLength": 97435,
+            "contentType": "image/png",
+            "responseCount": 18
+          },
+          {
+            "id": "lightning-tile-2",
+            "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+            "byteLength": 97969,
+            "contentType": "image/png",
+            "responseCount": 17
+          },
+          {
+            "id": "wind-manifest",
+            "sha256": "005349951b66a7c63d42770810a7610fa440ef2d44e7d740e8e67aecf5d8e72d",
+            "byteLength": 289,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "wind-grid",
+            "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+            "byteLength": 521280,
+            "contentType": "application/octet-stream",
+            "responseCount": 1
+          }
+        ],
+        "populationsBefore": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "populationsAfter": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "routeErrors": [],
+        "cameraObservation": {
+          "longitudeDeg": -97.74309999999998,
+          "latitudeDeg": 30.267199999999992,
+          "altitudeM": 11999.999999999502,
+          "headingDeg": 19.99999999999998,
+          "pitchDeg": -45.00000000000003
+        },
+        "timelinePreflight": {
+          "selectedTimes": [
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            [
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z"
+            ],
+            [
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z"
+            ],
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ]
+          ],
+          "playback": {
+            "mode": "history",
+            "playing": true,
+            "intervalMs": 2000,
+            "displayedAtStart": [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            "visualState": {
+              "satelliteProduct": "clouds-regional",
+              "satelliteInfrared": "filtered",
+              "radarOpacity": "strong",
+              "lightningOpacity": "strong",
+              "windModel": "gfs",
+              "windOverlay": "speed",
+              "windPaused": false
+            }
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "wind": {
+            "params": {
+              "model": "gfs",
+              "overlay": "speed",
+              "paused": false,
+              "units": "km/h"
+            },
+            "stats": {
+              "count": 65160,
+              "lastUpdate": 1791417600000,
+              "issuedAt": 1791417600000,
+              "validAt": 1791460800000,
+              "error": null,
+              "countLabel": "Forecast",
+              "loading": false,
+              "model": "GFS",
+              "overlay": "speed",
+              "paused": false,
+              "stale": false,
+              "source": "NOAA GFS",
+              "validTime": "2026-10-08 12:00 UTC"
+            }
+          }
+        }
+      },
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "captureOrdinal": 2
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "durationMs": 2529,
+      "renderedFrameCount": 3,
+      "frameCount": 2,
+      "frameIntervalMs": {
+        "p50": 347.30000000001746,
+        "p95": 1231.5,
+        "max": 1231.5,
+        "samples": 2,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 1222
+      },
+      "memory": {
+        "usedJsHeapBytes": 58134459
+      },
+      "layers": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "flights",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-dams",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0
+        }
+      ],
+      "totalObjects": 65163,
+      "focused": true,
+      "visible": true,
+      "trackedAircraftId": null,
+      "injectedDelayMs": 0,
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "detection": {
+        "mode": null,
+        "reason": "Candidate-only detection diagnostics are disabled for comparable capture."
+      },
+      "performanceSnapshot": null,
+      "performanceSnapshotReason": "Candidate-only runtime snapshots are disabled for comparable capture.",
+      "foregroundThroughout": true,
+      "cameraPath": {
+        "id": "elapsed-move-right-v1",
+        "start": {
+          "position": {
+            "x": -744223.8056744909,
+            "y": -5473386.05884697,
+            "z": 3202039.505247089
+          },
+          "direction": {
+            "x": 0.36704585088703406,
+            "y": 0.9044233903355411,
+            "z": 0.21747568682631793
+          },
+          "up": {
+            "x": 0.20248062607303247,
+            "y": -0.30586980426556665,
+            "z": 0.930293103760109
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 1000,
+        "motionDistanceM": 320
+      },
+      "phasedClockEnd": null,
+      "settings": {
+        "before": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        },
+        "after": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true,
+          "style": "normal",
+          "map": "osm",
+          "visualState": {
+            "style": "normal",
+            "bloom": {
+              "enabled": false,
+              "intensity": 0,
+              "version": 2
+            },
+            "sharpen": {
+              "enabled": true,
+              "intensity": 49
+            },
+            "hud": {
+              "visible": true,
+              "variant": "tactical"
+            },
+            "detection": {
+              "mode": "DENSE",
+              "density": 75,
+              "allocation": "ELASTIC",
+              "fadePct": 7,
+              "outsideOpacityPct": 1
+            },
+            "scope": {
+              "enabled": true,
+              "featherPct": 11
+            },
+            "mapStack": "osm",
+            "styleParams": {
+              "retro": {
+                "pixelation": 5,
+                "distortion": 0,
+                "instability": 0.4
+              },
+              "surveillance": {
+                "gain": 0.55,
+                "bloom": 0.3,
+                "scanlineStr": 1,
+                "pixelation": 2.5
+              },
+              "thermal": {
+                "sensitivity": 0.75,
+                "bloom": 0.65,
+                "mode": 0,
+                "pixelation": 1.5,
+                "palette": 0
+              },
+              "anime": {
+                "saturation": 1,
+                "edgeThick": 0.5
+              },
+              "noir": {
+                "contrastAmt": 1.2,
+                "grainAmt": 0.5,
+                "vignetteAmt": 0.5
+              },
+              "snow": {
+                "density": 0.6,
+                "wind": 0.5
+              }
+            }
+          }
+        }
+      },
+      "conditions": {
+        "before": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        },
+        "after": {
+          "environment": {
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+            "vendor": "Google Inc. (Google)",
+            "rendererEvidence": {
+              "source": "early-cesium-context-creation",
+              "canvasMatchesScene": true,
+              "contextMatchesScene": true,
+              "contextLost": false,
+              "contextRestored": false,
+              "parameterQueryCount": 2,
+              "queryDurationMs": 1.6000000000058208,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "failIfMajorPerformanceCaveat": false,
+                "powerPreference": "high-performance",
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true,
+                "desynchronized": false
+              }
+            },
+            "viewport": {
+              "width": 1440,
+              "height": 900,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 900
+            },
+            "focused": true,
+            "visible": true,
+            "layers": [
+              {
+                "id": "bhote-koshi-2026",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bhote-koshi-locator",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "flights",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-adsb",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "earthquakes",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "fire-perimeters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "alpr-cameras",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "street-level",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "satellites",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "rocket-launches",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "traffic",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "cctv",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "radio",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "transit",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "bikeshare",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "directions",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "recent-imagery",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "ais-live-vessels",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-installations",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "military-awareness",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "wind",
+                "enabled": true,
+                "count": 65160
+              },
+              {
+                "id": "weather-radar",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-satellite",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-lightning",
+                "enabled": true,
+                "count": 1
+              },
+              {
+                "id": "weather-cyclones",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-datacenters",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-dams",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "telegeography-submarine-cables",
+                "enabled": false,
+                "count": 0
+              },
+              {
+                "id": "local-firms",
+                "enabled": false,
+                "count": 0
+              }
+            ],
+            "totalObjects": 65163,
+            "appCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1"
+          },
+          "settings": {
+            "qualityMode": "manual",
+            "densityPct": 75,
+            "detectionMode": "DENSE",
+            "resolutionScale": 1,
+            "antialias": true,
+            "msaaSamples": 4,
+            "fxaa": false,
+            "bloom": false,
+            "sharpen": true,
+            "style": "normal",
+            "map": "osm",
+            "visualState": {
+              "style": "normal",
+              "bloom": {
+                "enabled": false,
+                "intensity": 0,
+                "version": 2
+              },
+              "sharpen": {
+                "enabled": true,
+                "intensity": 49
+              },
+              "hud": {
+                "visible": true,
+                "variant": "tactical"
+              },
+              "detection": {
+                "mode": "DENSE",
+                "density": 75,
+                "allocation": "ELASTIC",
+                "fadePct": 7,
+                "outsideOpacityPct": 1
+              },
+              "scope": {
+                "enabled": true,
+                "featherPct": 11
+              },
+              "mapStack": "osm",
+              "styleParams": {
+                "retro": {
+                  "pixelation": 5,
+                  "distortion": 0,
+                  "instability": 0.4
+                },
+                "surveillance": {
+                  "gain": 0.55,
+                  "bloom": 0.3,
+                  "scanlineStr": 1,
+                  "pixelation": 2.5
+                },
+                "thermal": {
+                  "sensitivity": 0.75,
+                  "bloom": 0.65,
+                  "mode": 0,
+                  "pixelation": 1.5,
+                  "palette": 0
+                },
+                "anime": {
+                  "saturation": 1,
+                  "edgeThick": 0.5
+                },
+                "noir": {
+                  "contrastAmt": 1.2,
+                  "grainAmt": 0.5,
+                  "vignetteAmt": 0.5
+                },
+                "snow": {
+                  "density": 0.6,
+                  "wind": 0.5
+                }
+              }
+            }
+          },
+          "focused": true,
+          "visible": true
+        }
+      },
+      "weatherEffectsClock": {
+        "fixedHarnessTime": "2026-10-08T12:00:00.000Z",
+        "wallClockBeforeMs": 1791460800000,
+        "wallClockAfterMs": 1791460800000,
+        "cesiumBefore": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "cesiumAfter": {
+          "currentTime": {
+            "dayNumber": 2461322,
+            "secondsOfDay": 37
+          },
+          "shouldAnimate": false,
+          "multiplier": 0
+        },
+        "weatherPlayback": {
+          "mode": "history",
+          "playing": true,
+          "intervalMs": 2000,
+          "displayedAtStart": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          }
+        },
+        "selectedTimesPreflight": [
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ],
+          [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ],
+          [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        ],
+        "weatherStateBefore": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T11:55:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        },
+        "weatherStateAfter": {
+          "clock": {
+            "mode": "history",
+            "target": "2026-10-08T12:00:00.000Z",
+            "playing": true
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ],
+          "visualState": {
+            "satelliteProduct": "clouds-regional",
+            "satelliteInfrared": "filtered",
+            "radarOpacity": "strong",
+            "lightningOpacity": "strong",
+            "windModel": "gfs",
+            "windOverlay": "speed",
+            "windPaused": false
+          },
+          "wind": {
+            "model": "gfs",
+            "overlay": "speed",
+            "paused": false,
+            "units": "km/h"
+          }
+        }
+      },
+      "fixtureDelivery": {
+        "schema": "gev-weather-effects-fixture-delivery/v1",
+        "status": "observed",
+        "workloadId": "austin-weather-effects-v1",
+        "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+        "fixedTime": "2026-10-08T12:00:00.000Z",
+        "assets": [
+          {
+            "id": "radar-manifest",
+            "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+            "byteLength": 277,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "radar-tile-0",
+            "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+            "byteLength": 96080,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "radar-tile-1",
+            "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+            "byteLength": 82173,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "radar-tile-2",
+            "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+            "byteLength": 78229,
+            "contentType": "image/png",
+            "responseCount": 17
+          },
+          {
+            "id": "clouds-regional-manifest",
+            "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+            "byteLength": 286,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "clouds-regional-tile-0",
+            "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+            "byteLength": 85934,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "clouds-regional-tile-1",
+            "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+            "byteLength": 90656,
+            "contentType": "image/png",
+            "responseCount": 16
+          },
+          {
+            "id": "clouds-regional-tile-2",
+            "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+            "byteLength": 90938,
+            "contentType": "image/png",
+            "responseCount": 17
+          },
+          {
+            "id": "lightning-manifest",
+            "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+            "byteLength": 282,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "lightning-tile-0",
+            "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+            "byteLength": 93276,
+            "contentType": "image/png",
+            "responseCount": 18
+          },
+          {
+            "id": "lightning-tile-1",
+            "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+            "byteLength": 97435,
+            "contentType": "image/png",
+            "responseCount": 18
+          },
+          {
+            "id": "lightning-tile-2",
+            "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+            "byteLength": 97969,
+            "contentType": "image/png",
+            "responseCount": 19
+          },
+          {
+            "id": "wind-manifest",
+            "sha256": "005349951b66a7c63d42770810a7610fa440ef2d44e7d740e8e67aecf5d8e72d",
+            "byteLength": 289,
+            "contentType": "application/json",
+            "responseCount": 1
+          },
+          {
+            "id": "wind-grid",
+            "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+            "byteLength": 521280,
+            "contentType": "application/octet-stream",
+            "responseCount": 1
+          }
+        ],
+        "populationsBefore": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "populationsAfter": [
+          {
+            "id": "weather-lightning",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-radar",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "weather-satellite",
+            "enabled": true,
+            "count": 1
+          },
+          {
+            "id": "wind",
+            "enabled": true,
+            "count": 65160
+          }
+        ],
+        "routeErrors": [],
+        "cameraObservation": {
+          "longitudeDeg": -97.74309999999998,
+          "latitudeDeg": 30.267199999999992,
+          "altitudeM": 11999.999999999502,
+          "headingDeg": 19.99999999999998,
+          "pitchDeg": -45.00000000000003
+        },
+        "timelinePreflight": {
+          "selectedTimes": [
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            [
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z",
+              "2026-10-08T11:55:00.000Z"
+            ],
+            [
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z",
+              "2026-10-08T11:50:00.000Z"
+            ],
+            [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ]
+          ],
+          "playback": {
+            "mode": "history",
+            "playing": true,
+            "intervalMs": 2000,
+            "displayedAtStart": [
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z",
+              "2026-10-08T12:00:00.000Z"
+            ],
+            "visualState": {
+              "satelliteProduct": "clouds-regional",
+              "satelliteInfrared": "filtered",
+              "radarOpacity": "strong",
+              "lightningOpacity": "strong",
+              "windModel": "gfs",
+              "windOverlay": "speed",
+              "windPaused": false
+            }
+          },
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ],
+          "wind": {
+            "params": {
+              "model": "gfs",
+              "overlay": "speed",
+              "paused": false,
+              "units": "km/h"
+            },
+            "stats": {
+              "count": 65160,
+              "lastUpdate": 1791417600000,
+              "issuedAt": 1791417600000,
+              "validAt": 1791460800000,
+              "error": null,
+              "countLabel": "Forecast",
+              "loading": false,
+              "model": "GFS",
+              "overlay": "speed",
+              "paused": false,
+              "stale": false,
+              "source": "NOAA GFS",
+              "validTime": "2026-10-08 12:00 UTC"
+            }
+          }
+        }
+      },
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "captureOrdinal": 3
+    }
+  ]
+}

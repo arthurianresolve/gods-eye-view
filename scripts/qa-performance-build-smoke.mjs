@@ -1248,6 +1248,12 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
   assert.equal(report.workload?.startupRuns, 1);
   assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
   assert.equal(report.workload?.performanceAcceptanceEligible, false);
+  const captureTopology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures?.length,
+  });
+  assertWeatherCaptureCleanupEvidence(report.workload, captureTopology);
   const lifecycle = report.workload?.weatherEffectsFixtureLifecycle;
   assert.equal(lifecycle?.freshBrowserContextPerSample, false);
   assert.equal(lifecycle?.performanceAcceptanceEligible, false);
@@ -1585,6 +1591,169 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
       'The preflight exercises the three fixed weather frames and starts the weather clock playback; it does not complete the full 90-second performance acceptance workload.',
     ],
   };
+}
+
+function assertWeatherCaptureCleanupEvidence(workload, topology) {
+  const cleanup = workload?.rendererProbeCleanup;
+  assert.ok(
+    Array.isArray(cleanup),
+    'Renderer probe cleanup evidence is required.',
+  );
+  assert.equal(workload.rendererProbeCleanupOmittedCount, 0);
+  const expectedDocuments = topology.workerAudits;
+  assert.deepEqual(
+    cleanup
+      .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+      .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+    [...expectedDocuments].sort((a, b) =>
+      a.documentRole.localeCompare(b.documentRole),
+    ),
+    'Every owned weather capture document must have exactly one cleanup record.',
+  );
+  for (const expectedDocument of expectedDocuments) {
+    const evidence = cleanup.find(
+      (entry) =>
+        entry.documentRole === expectedDocument.documentRole &&
+        entry.documentId === expectedDocument.documentId,
+    );
+    assert.equal(evidence?.confirmed, true);
+    assert.equal(evidence?.document?.status, 'confirmed');
+    assert.equal(evidence?.document?.statePresent, true);
+    assert.equal(evidence?.document?.hookRestoreAttempted, true);
+    assert.equal(evidence?.document?.hookRestored, true);
+    assert.equal(evidence?.document?.stateDeleted, true);
+    assert.ok(
+      Number.isSafeInteger(evidence?.document?.listenerCount) &&
+        evidence.document.listenerCount >= 0,
+    );
+    assert.equal(evidence?.document?.listenerRemovalFailedCount, 0);
+    assert.equal(
+      evidence?.document?.listenerRemovalConfirmedCount,
+      evidence?.document?.listenerRemovalAttemptedCount,
+    );
+    assert.equal(
+      evidence?.document?.listenerRemovalAttemptedCount,
+      evidence?.document?.listenerCount,
+    );
+    assert.ok(
+      ['confirmed', 'already-confirmed'].includes(
+        evidence?.scriptRegistration?.status,
+      ),
+    );
+    assert.equal(evidence?.scriptRegistration?.errorKind, null);
+    assert.match(
+      evidence?.scriptRegistration?.verification || '',
+      /^puppeteer-registration-removal-acknowledged;/,
+    );
+    assert.equal(evidence?.document?.renderLoopRetirement?.requested, true);
+    assert.equal(evidence?.document?.renderLoopRetirement?.confirmed, true);
+    assert.equal(evidence?.document?.renderLoopRetirement?.after, false);
+  }
+
+  const retirements = workload.rendererLoopRetirements;
+  assert.ok(Array.isArray(retirements));
+  assert.equal(workload.rendererLoopRetirementsOmittedCount, 0);
+  const startupDocument = topology.workerAudits.find((entry) =>
+    entry.documentRole.startsWith('startup-'),
+  );
+  assert.equal(retirements.length, 1);
+  const startupRetirement = retirements[0];
+  assert.equal(startupRetirement.phase, 'startup-final-details');
+  assert.equal(startupRetirement.documentRole, startupDocument?.documentRole);
+  assert.equal(startupRetirement.documentId, startupDocument?.documentId);
+  assert.equal(startupRetirement.requested, true);
+  assert.equal(startupRetirement.confirmed, true);
+  assert.equal(startupRetirement.after, false);
+
+  const measuredDocuments = [
+    ...new Map(
+      topology.samples.map((entry) => [entry.documentId, entry]),
+    ).values(),
+  ];
+  const releases = workload.fixtureInterceptionReleases;
+  assert.ok(
+    Array.isArray(releases),
+    'Fixture session release evidence is required.',
+  );
+  assert.deepEqual(
+    releases
+      .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+      .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+    measuredDocuments
+      .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+      .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+    'Each measured fixture document must release its owned interception session.',
+  );
+  for (const expectedDocument of measuredDocuments) {
+    const release = releases.find(
+      (entry) =>
+        entry.documentRole === expectedDocument.documentRole &&
+        entry.documentId === expectedDocument.documentId,
+    );
+    assert.equal(release?.confirmed, true);
+    assert.equal(release?.targetClosed, true);
+    assert.equal(release?.stop?.confirmed, true);
+    assert.equal(release?.stop?.listenerRemovalConfirmed, true);
+    for (const field of [
+      'pendingAtStop',
+      'pendingPreparationAtStop',
+      'pendingAbortSubscriptionsAtStop',
+      'pendingCommandsAtStop',
+    ])
+      assert.ok(
+        Number.isSafeInteger(release?.stop?.[field]) &&
+          release.stop[field] >= 0,
+        `Fixture release ${field} must be a nonnegative observed count.`,
+      );
+    assert.equal(release?.stop?.pendingCommandsAfterDrain, 0);
+    assert.equal(release?.stop?.pendingPreparationsAfterDrain, 0);
+    assert.equal(release?.stop?.pendingAbortSubscriptionsAfterDrain, 0);
+    assert.equal(release?.stop?.rejectedDrainOperations, 0);
+    assert.equal(release?.stop?.drainCommandFailures, 0);
+    assert.equal(release?.stop?.unexpectedLateRequestCount, 0);
+    assert.equal(release?.interception?.confirmed, true);
+    assert.equal(release?.interception?.interception?.confirmed, true);
+    for (const field of [
+      'pendingAtStop',
+      'pendingPreparationAtStop',
+      'pendingAbortSubscriptionsAtStop',
+      'pendingCommandsAtStop',
+    ])
+      assert.ok(
+        Number.isSafeInteger(release?.interception?.interception?.[field]) &&
+          release.interception.interception[field] >= 0,
+        `Interception drain ${field} must be a nonnegative observed count.`,
+      );
+    assert.equal(
+      release?.interception?.interception?.listenerRemovalConfirmed,
+      true,
+    );
+    assert.equal(
+      release?.interception?.interception?.pendingCommandsAfterDrain,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.pendingPreparationsAfterDrain,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.pendingAbortSubscriptionsAfterDrain,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.unexpectedLateRequestCount,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.rejectedDrainOperations,
+      0,
+    );
+    assert.equal(release?.interception?.interception?.drainCommandFailures, 0);
+    assert.equal(release?.interception?.fetchDisable, 'target-closed');
+    assert.equal(release?.interception?.detach, 'target-closed');
+    assert.equal(release?.fetchDisable, 'target-closed');
+    assert.equal(release?.detach, 'target-closed');
+  }
 }
 
 function assertPositiveCount(assets, id) {

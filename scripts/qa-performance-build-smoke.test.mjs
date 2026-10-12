@@ -823,6 +823,117 @@ async function validWeatherEffectsCaptureCliReport() {
         playback,
       },
     });
+  report.workload.rendererProbeCleanup = [
+    {
+      documentRole: 'startup-1',
+      documentId: topology.workerAudits[0].documentId,
+      confirmed: true,
+      document: {
+        status: 'confirmed',
+        statePresent: true,
+        hookRestoreAttempted: true,
+        hookRestored: true,
+        stateDeleted: true,
+        listenerCount: 2,
+        listenerRemovalAttemptedCount: 2,
+        listenerRemovalConfirmedCount: 2,
+        listenerRemovalFailedCount: 0,
+        renderLoopRetirement: {
+          requested: true,
+          confirmed: true,
+          after: false,
+        },
+      },
+      scriptRegistration: {
+        status: 'confirmed',
+        errorKind: null,
+        verification:
+          'puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable',
+      },
+    },
+    {
+      documentRole: 'main-measured',
+      documentId: topology.workerAudits[1].documentId,
+      confirmed: true,
+      document: {
+        status: 'confirmed',
+        statePresent: true,
+        hookRestoreAttempted: true,
+        hookRestored: true,
+        stateDeleted: true,
+        listenerCount: 2,
+        listenerRemovalAttemptedCount: 2,
+        listenerRemovalConfirmedCount: 2,
+        listenerRemovalFailedCount: 0,
+        renderLoopRetirement: {
+          requested: true,
+          confirmed: true,
+          after: false,
+        },
+      },
+      scriptRegistration: {
+        status: 'confirmed',
+        errorKind: null,
+        verification:
+          'puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable',
+      },
+    },
+  ];
+  report.workload.rendererProbeCleanupOmittedCount = 0;
+  report.workload.rendererLoopRetirements = [
+    {
+      phase: 'startup-final-details',
+      documentRole: 'startup-1',
+      documentId: topology.workerAudits[0].documentId,
+      requested: true,
+      confirmed: true,
+      after: false,
+    },
+  ];
+  report.workload.rendererLoopRetirementsOmittedCount = 0;
+  report.workload.fixtureInterceptionReleases = [
+    {
+      documentRole: 'main-measured',
+      documentId: topology.workerAudits[1].documentId,
+      confirmed: true,
+      targetClosed: true,
+      stop: {
+        confirmed: true,
+        listenerRemovalConfirmed: true,
+        pendingAtStop: 0,
+        pendingPreparationAtStop: 0,
+        pendingAbortSubscriptionsAtStop: 0,
+        pendingCommandsAtStop: 0,
+        pendingCommandsAfterDrain: 0,
+        pendingPreparationsAfterDrain: 0,
+        pendingAbortSubscriptionsAfterDrain: 0,
+        rejectedDrainOperations: 0,
+        drainCommandFailures: 0,
+        unexpectedLateRequestCount: 0,
+      },
+      interception: {
+        confirmed: true,
+        fetchDisable: 'target-closed',
+        detach: 'target-closed',
+        interception: {
+          confirmed: true,
+          listenerRemovalConfirmed: true,
+          pendingAtStop: 0,
+          pendingPreparationAtStop: 0,
+          pendingAbortSubscriptionsAtStop: 0,
+          pendingCommandsAtStop: 0,
+          pendingCommandsAfterDrain: 0,
+          pendingPreparationsAfterDrain: 0,
+          pendingAbortSubscriptionsAfterDrain: 0,
+          rejectedDrainOperations: 0,
+          drainCommandFailures: 0,
+          unexpectedLateRequestCount: 0,
+        },
+      },
+      fetchDisable: 'target-closed',
+      detach: 'target-closed',
+    },
+  ];
   report.environment.layers = layers;
   report.fixtureDelivery = fixtureDelivery;
   report.comparisonContract = null;
@@ -1604,6 +1715,97 @@ test('capture CLI validates the actual weather fixture manifest, timeline, state
   assert.equal(result.status, 'passed');
   assert.equal(result.captureCount, 4);
   assert.equal(result.comparisonEligible, false);
+  const inFlightAtShutdown = structuredClone(report);
+  inFlightAtShutdown.workload.fixtureInterceptionReleases[0].stop.pendingAtStop = 2;
+  inFlightAtShutdown.workload.fixtureInterceptionReleases[0].interception.interception.pendingCommandsAtStop = 1;
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(inFlightAtShutdown, expected),
+  );
+
+  for (const [label, mutate] of [
+    [
+      'unconfirmed renderer cleanup',
+      (copy) => (copy.workload.rendererProbeCleanup[0].confirmed = false),
+    ],
+    [
+      'missing renderer cleanup',
+      (copy) => (copy.workload.rendererProbeCleanup = []),
+    ],
+    [
+      'mismatched renderer cleanup owner',
+      (copy) =>
+        (copy.workload.rendererProbeCleanup[1].documentId = 'wrong-document'),
+    ],
+    [
+      'unconfirmed interception release',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].confirmed = false),
+    ],
+    [
+      'missing interception release',
+      (copy) => (copy.workload.fixtureInterceptionReleases = []),
+    ],
+    [
+      'mismatched interception release owner',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].documentId =
+          'wrong-document'),
+    ],
+    [
+      'missing startup retirement',
+      (copy) => (copy.workload.rendererLoopRetirements = []),
+    ],
+    [
+      'mismatched startup retirement owner',
+      (copy) =>
+        (copy.workload.rendererLoopRetirements[0].documentId =
+          'wrong-document'),
+    ],
+    [
+      'unconfirmed measured render-loop retirement',
+      (copy) =>
+        (copy.workload.rendererProbeCleanup[1].document.renderLoopRetirement.confirmed = false),
+    ],
+    [
+      'missing listener removal counts',
+      (copy) => {
+        delete copy.workload.rendererProbeCleanup[0].document
+          .listenerRemovalAttemptedCount;
+        delete copy.workload.rendererProbeCleanup[0].document
+          .listenerRemovalConfirmedCount;
+      },
+    ],
+    [
+      'retirement has wrong phase',
+      (copy) =>
+        (copy.workload.rendererLoopRetirements[0].phase = 'unrelated-success'),
+    ],
+    [
+      'nested interception drain failure',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].interception.interception.drainCommandFailures = 1),
+    ],
+    [
+      'missing nested in-flight count',
+      (copy) =>
+        delete copy.workload.fixtureInterceptionReleases[0].interception
+          .interception.pendingCommandsAtStop,
+    ],
+    [
+      'nested interception did not close',
+      (copy) =>
+        (copy.workload.fixtureInterceptionReleases[0].interception.fetchDisable =
+          'failed'),
+    ],
+  ]) {
+    const invalid = structuredClone(report);
+    mutate(invalid);
+    assert.throws(
+      () => validateCaptureCliReport(invalid, expected),
+      undefined,
+      label,
+    );
+  }
 
   const missingFixture = { ...expected };
   delete missingFixture.weatherEffectsFixture;

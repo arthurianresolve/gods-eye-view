@@ -1,0 +1,30 @@
+{
+  "schema": "gev-weather-cleanup-validator-negative-control/v1",
+  "testedCommit": "1e6f6f9874d09a3b13a4e140da3c904834500db1",
+  "sourceSha256": "d303a5eb4c950e1670497e96be35743939f16f0e4fbb88542e179d5970db6f1c",
+  "rawReportSha256": "b3f6e809991e83893dd4c84518abe26703a928375140cf0d79b4dacc8bef60c6",
+  "positiveStatus": "passed",
+  "results": [
+    {
+      "name": "unconfirmed renderer cleanup",
+      "outcome": "accepted"
+    },
+    {
+      "name": "missing renderer cleanup",
+      "outcome": "accepted"
+    },
+    {
+      "name": "unconfirmed interception release",
+      "outcome": "accepted"
+    },
+    {
+      "name": "missing interception release",
+      "outcome": "accepted"
+    },
+    {
+      "name": "missing render-loop retirement",
+      "outcome": "accepted"
+    }
+  ],
+  "scope": "Offline mutated-report controls reveal missing validation. The original report records successful cleanup; this is not an observed application cleanup failure."
+}
