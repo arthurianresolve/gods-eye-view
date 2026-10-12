@@ -52,11 +52,14 @@ const page = {
 };
 const puppeteer = {
   executablePath: async () => 'mock-chrome',
-  launch: async () => ({
+  launch: async (options) => {
+    record('launch-args:' + JSON.stringify(options.args ?? []));
+    return {
     createBrowserContext: async () => ({ newPage: async () => page }),
     newPage: async () => page,
     close: async () => record('browser-close'),
-  }),
+    };
+  },
 };
 export const CDPSessionEvent = {
   Disconnected: Symbol('CDPSessionEvent.Disconnected'),
@@ -106,7 +109,17 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   assert.equal(result.status, 1, result.stderr);
   assert.match(result.stderr, /sentinel-after-domcontentloaded/);
   const events = (await readFile(witnessPath, 'utf8')).trim().split(/\r?\n/);
-  assert.deepEqual(events, [
+  assert.match(events[0], /^launch-args:/);
+  const ordinaryHardwareLaunchArgs = JSON.parse(
+    events[0].slice('launch-args:'.length),
+  );
+  assert.ok(Array.isArray(ordinaryHardwareLaunchArgs));
+  assert.equal(ordinaryHardwareLaunchArgs.includes('--use-gl=angle'), false);
+  assert.equal(
+    ordinaryHardwareLaunchArgs.includes('--use-angle=swiftshader'),
+    false,
+  );
+  assert.deepEqual(events.slice(1), [
     'goto-domcontentloaded',
     'wait-for-viewer',
     'document-cleanup',

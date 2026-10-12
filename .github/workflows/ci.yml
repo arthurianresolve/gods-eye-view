@@ -72,6 +72,11 @@ on:
             austin-operating-v1,
           ]
         default: dense-investigation
+      capture_renderer_backend:
+        description: Browser backend for the hosted smoke; native macOS is diagnostic only
+        type: choice
+        options: [swiftshader, macos-native-diagnostic]
+        default: swiftshader
       capture_scene_frame_diagnostics:
         description: Add bounded dense attribution or Austin setup-readiness history (ineligible for comparison)
         type: boolean
@@ -408,7 +413,7 @@ jobs:
   performance-build-smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'performance-build-smoke'
     name: Baseline-compatible performance build smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.capture_renderer_backend == 'macos-native-diagnostic' && 'macos-latest' || 'ubuntu-latest' }}
     timeout-minutes: 15
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
@@ -431,7 +436,7 @@ jobs:
           cat > "$RUNNER_TEMP/performance-build-smoke.json" <<'JSON'
           {"schema":"gev-performance-build-smoke/v1","scope":"hosted-browser integration smoke only; no hardware performance result or paired acceptance","status":"not-run","failure":{"phase":"runner-setup","message":"Smoke script did not complete."}}
           JSON
-          echo "GEV_PERF_SMOKE_STARTED_AT_MS=$(date +%s%3N)" >> "$GITHUB_ENV"
+          echo "GEV_PERF_SMOKE_STARTED_AT_MS=$(node -p 'Date.now()')" >> "$GITHUB_ENV"
 
       - name: Install harness dependencies and headless Chrome
         run: |
@@ -443,6 +448,7 @@ jobs:
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           CAPTURE_WORKER_AUDIT_MODE: ${{ inputs.capture_worker_audit_mode || 'diagnostic' }}
           CAPTURE_PROVIDER_FIXTURE: ${{ inputs.capture_provider_fixture || 'dense-investigation' }}
+          CAPTURE_RENDERER_BACKEND: ${{ inputs.capture_renderer_backend || 'swiftshader' }}
           CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
           CAPTURE_FIRST_MOTION_CPU_PROFILE: ${{ inputs.capture_first_motion_cpu_profile && 'enabled' || 'disabled' }}
           CAPTURE_DEPTH_PICK_ATTRIBUTION: ${{ inputs.capture_depth_pick_attribution && 'enabled' || 'disabled' }}
@@ -452,6 +458,7 @@ jobs:
           --candidate-sha "$CANDIDATE_SHA"
           --capture-worker-audit-mode "$CAPTURE_WORKER_AUDIT_MODE"
           --provider-fixture "$CAPTURE_PROVIDER_FIXTURE"
+          --capture-renderer-backend "$CAPTURE_RENDERER_BACKEND"
           --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
           --capture-first-motion-cpu-profile "$CAPTURE_FIRST_MOTION_CPU_PROFILE"
           --capture-depth-pick-attribution "$CAPTURE_DEPTH_PICK_ATTRIBUTION"

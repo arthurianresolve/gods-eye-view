@@ -1220,6 +1220,8 @@
   "src/hudSummaryContext.test.mjs",
   "scripts/capture-scene-performance.test.mjs",
   "scripts/performance/captureRendererProbeRetirementIntegration.test.mjs",
+  "scripts/performance/hostedRendererBackend.mjs",
+  "scripts/performance/hostedRendererBackend.test.mjs",
   "scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs",
   "scripts/qa-performance-build-smoke.mjs",
   "scripts/qa-performance-build-smoke.test.mjs",
