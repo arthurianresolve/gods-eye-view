@@ -13,7 +13,11 @@ The separate [capture diagnostic](performance-evidence/s48-current-dev-capture/R
 finishes four samples and three complete CPU profiles, then fails at the outer
 180-second child deadline before tracking warmup can finish. Final cleanup and
 post-capture byte verification are incomplete. No performance gain or hardware
-acceptance is claimed; S47/S48 remain partial and promotion awaits integration.
+acceptance is claimed; S47/S48 remain partial. The repaired diagnostic tooling
+passes all seven standard jobs at exact `f7e0709c` in
+[run 38272643470](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38272643470).
+This supports tooling integration; optional soak/performance jobs and PR-only
+layer-token checks were not run and remain separate.
 The subsequent control at `f7e0709c` disables optional profiling with runtime,
 visual settings and deadlines unchanged. It still fails idle warmup before any
 sample; the completed-frame result and final cleanup acknowledgement arrive

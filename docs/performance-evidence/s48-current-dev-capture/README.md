@@ -20,10 +20,11 @@ exception reported with its phase. Superseded hooks cannot send late commands.
 
 Implementation and automated results are recorded independently from browser
 and hardware acceptance. The full local Node 24 suite passes. Hosted Node 24/26
-then found a timing assertion error; its repair requires fresh integration
-before promotion. The separate hosted capture failed at its outer process
-deadline after four samples. No complete capture, performance comparison,
-Windows soak or final-candidate pass is claimed.
+then found a timing assertion error; the repaired commit `f7e0709c` passes all
+seven standard integration jobs. This establishes the diagnostic tooling
+integration gate, not performance acceptance. The separate hosted capture
+failed at its outer process deadline after four samples. No complete capture,
+performance comparison, Windows soak or final-candidate pass is claimed.
 
 ## Invalid-input startup repair
 
@@ -147,3 +148,31 @@ show that optional profiling is not required for this warmup failure. This
 single control cannot measure profiler overhead or identify a driver, engine,
 application or host-scheduling cause. No deadline is increased and neither
 failed report is accepted as a performance comparison.
+
+## Standard integration result
+
+[Run 38272643470](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38272643470)
+passes all seven selected standard jobs at exact commit
+`f7e0709c8536fb8ca63619fd5288ae3a4123602e`: Node 24.14.0 and 26.x,
+Windows onboarding, Windows/macOS/Ubuntu recovery, and the Street Level browser
+journeys. Formatting, package boundaries and production builds pass within
+these jobs. The [terminal job/step record](standard-38272643470.json) preserves
+the selected and skipped checks. Optional performance, tracking and soak jobs
+were skipped; PR-only published layer-token checks also did not run.
+
+The subsequent commits add evidence and documentation only. This result
+supports integrating the reviewed diagnostic tooling into `dev`; it does not
+validate an exact final release candidate or close S47, S48 or S60. The two
+failed capture runs above remain failed.
+
+## Saved-camera-pose control
+
+The [installed-engine control](normal-control-38272847654/camera-setup-review.mjs)
+uses Cesium 1.138.0 Camera and its real View camera-change comparator in Node.
+At the dense fixture pose, applying the saved position/direction/up a second
+time causes no camera-change event. A one-metre movement negative control
+causes one event. [Raw values](normal-control-38272847654/camera-setup-review.json)
+reject this repeated pose write as a direct camera-change cause at that pose.
+This is not a rendered experiment: initial layer-enable order, other poses,
+GPU work and browser scheduling remain untested by this control. No runtime
+scheduling change follows from this negative result.
