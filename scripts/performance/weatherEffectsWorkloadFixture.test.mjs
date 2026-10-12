@@ -11,6 +11,7 @@ import { createWindSource } from '../../src/layers/wind/source.js';
 import { createWindLayer } from '../../src/layers/wind/index.js';
 import { createWeatherClock } from '../../src/layers/weather/clock.js';
 import { createInvestigationWeatherAdapter } from '../../src/time/weatherAdapter.js';
+import * as weatherEffectsFixtureApi from './weatherEffectsWorkloadFixture.mjs';
 import {
   assertWeatherEffectsClock,
   createWeatherEffectsFixtureDelivery,
@@ -22,6 +23,39 @@ import {
 
 const BASE = 'http://127.0.0.1:4173/';
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+
+test('capture producer resolves weather fixture operations from its lazy module namespace', () => {
+  const captureSource = readFileSync(
+    new URL('../capture-scene-performance.mjs', import.meta.url),
+    'utf8',
+  );
+  const dynamicOperations = [
+    'createWeatherEffectsWorkloadFixture',
+    'createWeatherEffectsFixtureDelivery',
+    'assertWeatherEffectsWindState',
+    'assertWeatherEffectsClock',
+    'createWeatherEffectsFixtureLifecycle',
+  ];
+
+  for (const operation of dynamicOperations) {
+    assert.equal(typeof weatherEffectsFixtureApi[operation], 'function');
+    assert.match(
+      captureSource,
+      new RegExp(`weatherEffectsModule\\.${operation}\\s*\\(`),
+      `${operation} must resolve through the dynamically loaded fixture module`,
+    );
+    assert.doesNotMatch(
+      captureSource,
+      new RegExp(`(^|[^.\\w])${operation}\\s*\\(`, 'm'),
+      `${operation} must not be referenced as an unbound identifier`,
+    );
+  }
+  assert.match(
+    captureSource,
+    /weatherEffectsModule\s*=\s*\n?\s*await import\('\.\/performance\/weatherEffectsWorkloadFixture\.mjs'\)/,
+    'the CLI must load weather fixture code dynamically after argument validation',
+  );
+});
 
 test('weather-effects descriptor pins source assets, populations, route and epoch', () => {
   const fixture = createWeatherEffectsWorkloadFixture();

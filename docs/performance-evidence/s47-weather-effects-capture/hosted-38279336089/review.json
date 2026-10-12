@@ -1,0 +1,37 @@
+{
+  "schema": "gev-weather-fixture-failure-review/v1",
+  "runId": 38279336089,
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38279336089",
+  "commit": "60b6a9b9ad40edd3859f1b0190c191406b3a3577",
+  "status": "failed",
+  "failure": {
+    "phase": "main-navigation",
+    "scenario": null,
+    "run": null,
+    "message": "createWeatherEffectsFixtureDelivery is not defined",
+    "operator": null
+  },
+  "startupSampleCount": 1,
+  "completedSampleCount": 0,
+  "baselineSmoke": "passed",
+  "childCleanup": "confirmed by owned child outcome",
+  "attribution": "New QA constructor call was not qualified through the dynamically imported weather fixture module. No weather samples ran; this is not a GPU or application-rendering result.",
+  "files": {
+    "job-failure.log": {
+      "byteLength": 3335,
+      "sha256": "a44cd58402bbda2bfeffa3abd838010c96476c9c0a701763adabe6767c99f924"
+    },
+    "performance-build-smoke.json": {
+      "byteLength": 43152,
+      "sha256": "215ea458d6d937b9f94ccf7f756f11ca8baffa25f62b6bab6182d2c4e8b9c634"
+    },
+    "performance-build-smoke.json.capture-cli-report-candidate.json": {
+      "byteLength": 6638,
+      "sha256": "e37c4700d5c8345188b5a24039de0167d8a1a9e89dc56e0482a45cc2529aba15"
+    },
+    "run.json": {
+      "byteLength": 9160,
+      "sha256": "eb9792d11b5db61abcdab2cebfa09cfe85b60a8cbc2ec450ea36f8ebe6d5e388"
+    }
+  }
+}

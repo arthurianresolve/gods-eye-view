@@ -14,7 +14,9 @@ Pending delivery waits are abortable and release timers/listeners on cancellatio
 
 Root independently ran five focused Node 24.16.0 suites: **59 passed, zero failures, zero skips**. The [validation record](local-validation.json) contains the exact command, source hashes, log hash and timing; the [raw log](local-validation.log.gz) is compressed without editing. Source hashes were unchanged during the run. Luna also checked formatting, syntax, import directions and package boundaries.
 
-Hosted application validation and the new standard CI run are pending. Local source/contract checks do not prove that the full browser journey passes.
+The first [hosted application run 38279336089](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38279336089) fails at exact `60b6a9b9`: `createWeatherEffectsFixtureDelivery is not defined`. Its constructor call was not qualified through the dynamically imported fixture module. The baseline compatibility smoke passes; candidate startup completes, but no weather sample runs. The owned child exits with cleanup confirmed. [Raw reports, run metadata and hash-bound review](hosted-38279336089/review.json) preserve this QA wiring failure. It is not GPU or application-rendering evidence. Standard CI remains a separate run; a focused correction and new browser validation are required.
+
+The namespace correction qualifies the actual constructor and all clock assertions through the lazy module. Early failures now retain the weather fixture identity. Root independently reran five suites: **60 passed, zero failures/skips**. The producer-binding regression fails against the actual `60b6a9b9` source and passes after correction; [record and log hashes](namespace-fix-validation.json) preserve both outcomes. Hosted replacement validation is pending.
 
 ## Remaining scope
 

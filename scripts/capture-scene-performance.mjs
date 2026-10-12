@@ -465,7 +465,8 @@ const failureProgress = {
   current: null,
   startupSamples: [],
   completedSamples: [],
-  fixture: productionFlightFixture || infrastructureWorkload,
+  fixture:
+    productionFlightFixture || infrastructureWorkload || weatherEffectsWorkload,
   fixtureDelivery: null,
   fixtureInterceptionErrors: [],
   workload: {
@@ -1625,10 +1626,11 @@ try {
       },
     );
     if (weatherEffectsWorkload) {
-      weatherEffectsFixtureDelivery = createWeatherEffectsFixtureDelivery(
-        weatherEffectsWorkload,
-        buildProvenanceOptions.baseUrl,
-      );
+      weatherEffectsFixtureDelivery =
+        weatherEffectsModule.createWeatherEffectsFixtureDelivery(
+          weatherEffectsWorkload,
+          buildProvenanceOptions.baseUrl,
+        );
     }
     const weatherFixtureSession = await configureWeatherEffectsFixturePage(
       auditPage,
@@ -2315,7 +2317,7 @@ try {
     const observed = await page.evaluate(observeCommonScene, {
       appCommit: source.appCommit,
     });
-    assertWeatherEffectsClock(
+    weatherEffectsModule.assertWeatherEffectsClock(
       observed,
       weatherEffectsWorkload,
       'weather-effects setup',
@@ -3538,12 +3540,12 @@ try {
         failureProgress.fixtureDelivery = fixtureDelivery;
       }
       if (weatherEffectsWorkload) {
-        assertWeatherEffectsClock(
+        weatherEffectsModule.assertWeatherEffectsClock(
           sceneBefore,
           weatherEffectsWorkload,
           `${scenario} run ${run} before`,
         );
-        assertWeatherEffectsClock(
+        weatherEffectsModule.assertWeatherEffectsClock(
           sceneAfter,
           weatherEffectsWorkload,
           `${scenario} run ${run} after`,
