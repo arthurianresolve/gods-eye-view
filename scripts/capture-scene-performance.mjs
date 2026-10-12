@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import puppeteer from 'puppeteer';
+import puppeteer, { CDPSessionEvent } from 'puppeteer';
 import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
@@ -29,6 +29,11 @@ import {
   prepareRenderBoundaryProgressBinding,
 } from './performance/renderBoundaryObservation.mjs';
 import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
+import {
+  createAustinOperatingReadinessHistory,
+  encodeAustinOperatingReadinessSnapshot,
+  waitForAustinOperatingReadiness,
+} from './performance/austinOperatingReadinessHistory.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -148,6 +153,8 @@ const providerFixtureTime = option(
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
 const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
+const austinReadinessHistoryEnabled =
+  sceneFrameDiagnosticsEnabled && austinOperatingWorkloadSelected;
 const firstMotionCpuProfileEnabled = args.includes(
   '--first-motion-cpu-profile',
 );
@@ -303,9 +310,13 @@ if (workerAuditMode === 'receipt-only' && !austinOperatingWorkloadSelected)
   throw new Error(
     'Receipt-only worker auditing requires the verified Austin operating fixture.',
   );
-if (sceneFrameDiagnosticsEnabled && !productionFlightFixture)
+if (
+  sceneFrameDiagnosticsEnabled &&
+  !productionFlightFixture &&
+  !austinOperatingWorkloadSelected
+)
   throw new Error(
-    '--scene-frame-diagnostics requires --provider-fixture dense-investigation.',
+    '--scene-frame-diagnostics requires --provider-fixture dense-investigation or austin-operating-v1.',
   );
 if (firstMotionCpuProfileEnabled && !productionFlightFixture)
   throw new Error(
@@ -566,13 +577,30 @@ const failureProgress = {
       : null,
     detectionMode,
     mixedLayers,
-    ...(sceneFrameDiagnosticsEnabled
+    ...(sceneFrameDiagnosticsEnabled && productionFlightFixture
       ? {
           sceneFrameDiagnostics: {
             enabled: true,
             scope:
               'first scripted-motion run; installed before warmup and stopped after its measurement boundary',
             eligibleForComparison: false,
+          },
+        }
+      : {}),
+    ...(austinReadinessHistoryEnabled
+      ? {
+          austinOperatingReadinessHistory: {
+            enabled: true,
+            schema: 'gev-austin-operating-readiness-history/v1',
+            scope:
+              'host-retained Runtime.evaluate snapshots at no more than 1 Hz during Austin setup readiness waits only; no measurement-window polling; host command elapsed time is diagnostic and not CPU/GPU time',
+            intervalMs: 1000,
+            entryLimit: 16,
+            omittedCount: 0,
+            documentOmittedCount: 0,
+            documents: [],
+            samples: [],
+            performanceAcceptanceEligible: false,
           },
         }
       : {}),
@@ -617,6 +645,46 @@ const failureProgress = {
       : {}),
   },
 };
+function recordAustinOperatingReadinessHistory(history) {
+  if (!austinReadinessHistoryEnabled || !history) return;
+  const evidence = failureProgress.workload.austinOperatingReadinessHistory;
+  if (!evidence) return;
+  const documentRecord = {
+    documentRole: history.documentRole,
+    documentId: history.documentId,
+    phase: history.phase,
+    status: history.status,
+    stopReason: history.stopReason,
+    intervalMs: history.intervalMs,
+    omittedCount: history.omittedCount,
+    session: history.session,
+  };
+  if (evidence.documents.length < 40) evidence.documents.push(documentRecord);
+  else evidence.documentOmittedCount += 1;
+  for (const sample of history.samples || []) {
+    if (evidence.samples.length === evidence.entryLimit) {
+      evidence.samples.shift();
+      evidence.omittedCount += 1;
+    }
+    const { snapshot, ...sampleMetadata } = sample;
+    const snapshotJson = snapshot
+      ? encodeAustinOperatingReadinessSnapshot(snapshot)
+      : null;
+    const invalidSnapshot = Boolean(snapshot) && snapshotJson === null;
+    evidence.samples.push({
+      ...sampleMetadata,
+      status: invalidSnapshot ? 'invalid-snapshot' : sample.status,
+      errorKind: invalidSnapshot
+        ? 'snapshot-exceeds-bounded-report-size'
+        : sample.errorKind,
+      snapshotEncoding: snapshotJson ? 'austin-layer-tuples-v1' : null,
+      snapshotJson,
+    });
+  }
+  evidence.omittedCount += history.omittedCount || 0;
+  if (failureProgress.current)
+    failureProgress.current.austinOperatingReadinessHistory = history;
+}
 // At most 5 startup + 1 setup + (3 scenarios × 10 repetitions) = 36.
 const MAX_RENDER_LOOP_RETIREMENT_RECORDS = 40;
 function recordRendererLoopRetirement(record) {
@@ -2807,13 +2875,28 @@ try {
       throw new Error(
         `Austin operating setup did not match its fixed route/clock/settings: ${JSON.stringify(before)}`,
       );
-    try {
-      await targetPage.waitForFunction(
-        austinOperatingSourcesReady,
-        { timeout: fixtureTimeoutMs, polling: 100 },
-        austinOperatingWorkload.selectedLayerIds,
-      );
-    } catch (error) {
+    const historyObserver = austinReadinessHistoryEnabled
+      ? createAustinOperatingReadinessHistory(targetPage, {
+          observerSource:
+            austinOperatingModule.observeAustinOperatingReadinessFailure.toString(),
+          selectedLayerIds: austinOperatingWorkload.selectedLayerIds,
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+          phase: 'source-readiness-wait',
+          disconnectedEvent: CDPSessionEvent.Disconnected,
+        })
+      : null;
+    const readiness = await waitForAustinOperatingReadiness(
+      () =>
+        targetPage.waitForFunction(
+          austinOperatingSourcesReady,
+          { timeout: fixtureTimeoutMs, polling: 100 },
+          austinOperatingWorkload.selectedLayerIds,
+        ),
+      historyObserver,
+    );
+    recordAustinOperatingReadinessHistory(readiness.history);
+    if (readiness.error) {
       const observed = await withSceneFrameDiagnosticTimeout(
         targetPage.evaluate(
           austinOperatingModule.observeAustinOperatingReadinessFailure,
@@ -2841,7 +2924,7 @@ try {
           (failureProgress.workload
             .austinOperatingReadinessFailureOmittedCount || 0) + 1;
       failureProgress.workload.austinOperatingReadinessFailures = records;
-      throw error;
+      throw readiness.error;
     }
     const observed = await targetPage.evaluate(observeCommonScene, {
       appCommit: source.appCommit,
@@ -3752,6 +3835,7 @@ try {
       }
       const collectSceneFrameAttribution =
         sceneFrameDiagnosticsEnabled &&
+        Boolean(productionFlightFixture) &&
         scenario === 'scripted-motion' &&
         run === 1;
       if (collectSceneFrameAttribution)
@@ -5098,6 +5182,13 @@ try {
           austinOperatingFixtureDocuments: [
             ...(failureProgress.workload.austinOperatingFixtureDocuments || []),
           ],
+          ...(austinReadinessHistoryEnabled
+            ? {
+                austinOperatingReadinessHistory: structuredClone(
+                  failureProgress.workload.austinOperatingReadinessHistory,
+                ),
+              }
+            : {}),
         }
       : {}),
     ...(shaderProgramAttributionEnabled
@@ -5201,7 +5292,7 @@ try {
         : null,
     populationStableAcrossSamples,
     cameraPathStableAcrossSamples,
-    ...(sceneFrameDiagnosticsEnabled
+    ...(sceneFrameDiagnosticsEnabled && productionFlightFixture
       ? {
           sceneFrameDiagnostics: {
             enabled: true,
@@ -5247,9 +5338,13 @@ try {
     workerAuditMode,
     hardwareRequired,
   });
-  if (sceneFrameDiagnosticsEnabled)
+  if (sceneFrameDiagnosticsEnabled && productionFlightFixture)
     comparisonReadinessReasons.push(
       'scene-frame-attribution-instrumentation-is-enabled',
+    );
+  if (austinReadinessHistoryEnabled)
+    comparisonReadinessReasons.push(
+      'austin-setup-readiness-history-instrumentation-is-enabled',
     );
   if (firstMotionCpuProfileEnabled)
     comparisonReadinessReasons.push(
@@ -5288,7 +5383,7 @@ try {
           },
         }
       : {}),
-    ...(sceneFrameDiagnosticsEnabled
+    ...(sceneFrameDiagnosticsEnabled && productionFlightFixture
       ? {
           sceneFrameDiagnostics: {
             status: captures.some(

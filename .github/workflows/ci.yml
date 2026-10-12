@@ -73,7 +73,7 @@ on:
           ]
         default: dense-investigation
       capture_scene_frame_diagnostics:
-        description: Add bounded CPU/event attribution to the first dense motion capture (ineligible for comparison)
+        description: Add bounded dense attribution or Austin setup-readiness history (ineligible for comparison)
         type: boolean
         default: false
       capture_first_motion_cpu_profile:

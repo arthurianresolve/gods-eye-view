@@ -16,6 +16,7 @@ import {
   parseSmokeArguments,
   preserveCaptureCliReportArtifact,
   readProviderCpuProfileIndexSet,
+  validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
   validateCaptureCliReport,
 } from './qa-performance-build-smoke.mjs';
@@ -256,6 +257,15 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
   );
   assert.deepEqual(
     parseSmokeArguments([
+      '--capture-scene-frame-diagnostics',
+      'enabled',
+      '--provider-fixture',
+      'austin-operating-v1',
+    ]),
+    { sceneFrameDiagnostics: true, providerFixture: 'austin-operating-v1' },
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
       '--capture-first-motion-cpu-profile',
       'enabled',
       '--provider-fixture',
@@ -359,7 +369,7 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
         '--provider-fixture',
         'infrastructure-dams',
       ]),
-    /dense investigation fixture/,
+    /dense investigation or Austin operating fixture/,
   );
   assert.throws(
     () => parseSmokeArguments(['--capture-scene-frame-diagnostics', 'maybe']),
@@ -413,6 +423,146 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
         'dense-investigation',
       ]),
     /Austin operating fixture/,
+  );
+});
+
+test('Austin readiness-history smoke contract rejects unbounded or mismatched host samples', () => {
+  const fixture = { selectedLayerIds: ['satellites', 'cctv'] };
+  const makeHistory = () => ({
+    enabled: true,
+    schema: 'gev-austin-operating-readiness-history/v1',
+    scope: 'host snapshots; no measurement polling; not CPU/GPU time',
+    intervalMs: 1000,
+    entryLimit: 16,
+    attachTimeoutMs: 1000,
+    commandTimeoutMs: 1500,
+    performanceAcceptanceEligible: false,
+    omittedCount: 0,
+    documentOmittedCount: 0,
+    documents: [
+      {
+        documentRole: 'provider-sample',
+        documentId: 'sample-1',
+        phase: 'source-readiness-wait',
+        status: 'stalled',
+        intervalMs: 1000,
+        omittedCount: 0,
+        session: { detachStatus: 'confirmed' },
+      },
+    ],
+    samples: [
+      {
+        sequence: 1,
+        documentRole: 'provider-sample',
+        documentId: 'sample-1',
+        phase: 'source-readiness-wait',
+        status: 'observed',
+        hostStartedAtMs: 10,
+        hostCompletedAtMs: 11,
+        snapshotEncoding: 'austin-layer-tuples-v1',
+        snapshotJson: JSON.stringify({
+          schema: 'gev-austin-readiness-failure/v1',
+          selectedLayerCount: 2,
+          layers: [
+            [
+              'satellites',
+              true,
+              828,
+              false,
+              828,
+              828,
+              'ready',
+              null,
+              0,
+              0,
+              2,
+              0,
+            ],
+            [
+              'cctv',
+              true,
+              250,
+              true,
+              17,
+              250,
+              'geometry-loading',
+              null,
+              0,
+              3,
+              2,
+              0,
+            ],
+          ],
+        }),
+      },
+    ],
+  });
+  const reasons = ['austin-setup-readiness-history-instrumentation-is-enabled'];
+  assert.equal(
+    validateAustinOperatingReadinessHistoryEnvelope(
+      makeHistory(),
+      fixture,
+      reasons,
+    ),
+    true,
+  );
+
+  const delayedHostAck = makeHistory();
+  delayedHostAck.samples[0].hostCompletedAtMs = 4010;
+  assert.equal(
+    validateAustinOperatingReadinessHistoryEnvelope(
+      delayedHostAck,
+      fixture,
+      reasons,
+    ),
+    true,
+  );
+
+  const regressingHostTime = makeHistory();
+  regressingHostTime.samples.push({
+    ...regressingHostTime.samples[0],
+    sequence: 2,
+    hostStartedAtMs: 9,
+    hostCompletedAtMs: 10,
+  });
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(
+      regressingHostTime,
+      fixture,
+      reasons,
+    ),
+  );
+
+  const unknownDocument = makeHistory();
+  unknownDocument.samples[0].documentId = 'replacement-document';
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(
+      unknownDocument,
+      fixture,
+      reasons,
+    ),
+  );
+
+  const wrongLayerOrder = makeHistory();
+  const decoded = JSON.parse(wrongLayerOrder.samples[0].snapshotJson);
+  decoded.layers.reverse();
+  wrongLayerOrder.samples[0].snapshotJson = JSON.stringify(decoded);
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(
+      wrongLayerOrder,
+      fixture,
+      reasons,
+    ),
+  );
+
+  const tooMany = makeHistory();
+  tooMany.samples = Array.from({ length: 17 }, () => tooMany.samples[0]);
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(tooMany, fixture, reasons),
+  );
+
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(makeHistory(), fixture, []),
   );
 });
 
@@ -2808,6 +2958,7 @@ const puppeteer = {
     close: async () => record('browser-close'),
   }),
 };
+export const CDPSessionEvent = { Disconnected: Symbol('CDPSession.Disconnected') };
 export default puppeteer;
 `,
   );
