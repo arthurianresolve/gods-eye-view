@@ -397,3 +397,33 @@ identifier is suppressed. No repository dependency or lint configuration is
 changed by this diagnostic. These are harness correctness defects, and the
 next correction must cover the complete successful report path before another
 capture is accepted.
+
+# Scope correction independently checked
+
+Luna's correction `e12e1d33b638fad2c7cf208787fb86dcc4ea098c` repairs
+all four unresolved project references without changing the application, fixture
+populations, visual settings, or timeouts. Root independently passes all 91
+tests across the boundary observer, completed-render diagnostics, Austin
+comparison contract, capture contract, capture CLI, and outer smoke suites.
+The integration commit is `9e66e4a274f311b0a6b08f4ca636a9ff2cef3e7f`; its scripts are
+byte-equivalent to the reviewed and tested Luna revision. The added contract
+test exercises the observer result consumed by the comparison contract; it does
+not by itself execute the complete capture CLI's successful lexical path.
+
+A fresh [scope audit](scope-audit-9e66e4a2.json) on the integrated revision
+reports zero errors and warnings across 17 capture/Austin modules and tests.
+Source hashes are recorded for every checked file. The exported boundary helper
+validates the page-reported completed-render wait, not host or GPU execution
+time. A new real hosted capture remains necessary before successful-path
+acceptance; both preceding failed native reports remain failed.
+
+The earlier native-backend integration revision `652913fd` now has all
+[seven standard CI jobs passing](ci-checkpoint-652913fd.json), including
+Node 24/26, Windows onboarding, Linux/macOS/Windows recovery, and browser gates.
+That run predates the boundary/scope corrections and does not validate them.
+
+Fresh reconciliation on 2026-10-13 confirms fork and upstream `main` both
+resolve to `8b8ccc9a81379e8b40d4be67610570ee5b159512`. Local and remote
+`dev` remain `726e404b50a6586f9eb9085ca2478f605dfc698c`, 608 commits ahead
+and zero behind main. This QA branch contains dev and main already. No additional
+main merge, rebase, or discarded diff is required.

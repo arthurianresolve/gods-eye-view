@@ -1,0 +1,94 @@
+{
+  "schema": "gev-harness-scope-audit/v1",
+  "tool": "ESLint 9.39.1",
+  "sourceCommit": "9e66e4a274f311b0a6b08f4ca636a9ff2cef3e7f",
+  "rule": "no-undef:error",
+  "configuration": "No repository or inline config; explicit standard Node/browser globals only.",
+  "files": [
+    {
+      "file": "scripts/capture-scene-performance.mjs",
+      "sourceSha256": "12b2353059a67cbdeb80d038bcaa5e522ac5299c282c2c07c06ddfe811e85992",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+      "sourceSha256": "6b6e7ed71ede757f84139d6e99f40137f553a6c5427d381396a94c3b0036790d",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingDocumentEvidence.mjs",
+      "sourceSha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingDocumentEvidence.test.mjs",
+      "sourceSha256": "ef6a28841f5122a79a24e799c5a27229ec01b3ba0634064a1db582814abbbd57",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingPopulationEvidence.mjs",
+      "sourceSha256": "c64db48ae50019f4da6bf2e62d92b8c5e030ac576b056e0ba86f384fe8c32846",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingPopulationEvidence.test.mjs",
+      "sourceSha256": "afd00835ab9fd6bddc029f2a63c45f942b42274419a2e7024a54cb48934ea8cb",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingReadinessHistory.mjs",
+      "sourceSha256": "d15411baf67d932ee8d6849353b785b4a158b8b31863cfd98a00c0840c979ef4",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingReadinessHistory.test.mjs",
+      "sourceSha256": "392f273d0c235175a421a45ef1b07bc1f5876ba96192fff47edba9f8347737bf",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingWorkloadContract.mjs",
+      "sourceSha256": "01958a2f70d79641462c130e2968d8c4a8b4872bab40032387b11418815b7d74",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingWorkloadFixture.mjs",
+      "sourceSha256": "f7cc9f0276f4692850c73da56969e1f1ccdb73197e709d9241dca9cec75c8074",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
+      "sourceSha256": "aa7c63425818a47e2c498dd35054de8f0dba1e0d8a3035740f7cc2b748ffb605",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinSatelliteSampledEpoch.mjs",
+      "sourceSha256": "45239856d9c3825ac314e085a0964c9fc591fcc0539fcfe8a1e1f8a9160967b5",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
+      "sourceSha256": "945a3caea1b6feaa186f3639b41a8a7d718f1ce7c222008be1798bc1ec88b084",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/captureComparisonContract.mjs",
+      "sourceSha256": "d2954c0b1b06c7be8108db083927115df21198fd5561ab280954ed9f3c25a92e",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/hostedRendererBackend.mjs",
+      "sourceSha256": "96dd8ea97d17753ce306f92da1a928d99d0c3b7fa1792419e5f7ebdd32cdeea4",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/renderBoundaryObservation.mjs",
+      "sourceSha256": "ab12a6a518e37227931052796840cce34a227d8e7c68f0fecdd037a0cb3bbbc0",
+      "errors": []
+    },
+    {
+      "file": "scripts/qa-performance-build-smoke.mjs",
+      "sourceSha256": "6d28a575c6fb882cd3faaeb12270687826f816a7bf60287cfbdd12af63346941",
+      "errors": []
+    }
+  ]
+}
