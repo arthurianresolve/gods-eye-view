@@ -52,6 +52,21 @@ export function infrastructureFixtureLayer(
   return INFRASTRUCTURE_FIXTURE_LAYERS[layerId];
 }
 
+export function assertInfrastructureRuntimeLayerIdentity(
+  runtimeLayer,
+  expectedFixture,
+) {
+  if (
+    !expectedFixture ||
+    !Object.hasOwn(INFRASTRUCTURE_FIXTURE_LAYERS, expectedFixture.layerId) ||
+    runtimeLayer?.id !== expectedFixture.layerId
+  )
+    throw new Error(
+      'Production infrastructure layer identity differs from fixture.',
+    );
+  return runtimeLayer.id;
+}
+
 export function assertInfrastructureSourceInventory(source, expectedLayer) {
   const expected =
     typeof expectedLayer === 'string'

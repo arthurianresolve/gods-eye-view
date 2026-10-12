@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createInfrastructureLayers } from '../../src/data/infrastructure.js';
+import {
+  assertInfrastructureRuntimeLayerIdentity,
+  infrastructureFixtureLayer,
+} from './infrastructureFixtureLayer.mjs';
 import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
 
 class PointPrimitive {}
@@ -73,6 +78,44 @@ test('a native overlapping hit resolves to its actual datacenter owner', () => {
   assert.equal(result.row.entity, context.pointEntity);
   assert.equal(result.row.sourceRecordId, 'point-source');
   assert.equal(result.primitiveType, 'PointPrimitive');
+});
+
+test('factory public layer id binds the fixture descriptor to native pick ownership', () => {
+  const fixture = infrastructureFixtureLayer('local-datacenters');
+  const runtimeLayer = createInfrastructureLayers({}).find(
+    (candidate) => candidate.id === fixture.layerId,
+  );
+  const layerId = assertInfrastructureRuntimeLayerIdentity(
+    runtimeLayer,
+    fixture,
+  );
+  const context = rows();
+  for (const row of context.rowsByEntity.values()) row.layerId = layerId;
+  assert.equal(layerId, 'local-datacenters');
+  assert.equal(
+    resolveInfrastructureNativePickOwner({
+      picked: {
+        id: context.pointEntity,
+        primitive: new PointPrimitive(),
+      },
+      kind: 'point',
+      requestedEntity: context.requestedEntity,
+      rowsByEntity: context.rowsByEntity,
+      primitivesByEntity: null,
+      layerId,
+      mode: 'entities',
+      Cesium,
+    }).row.entity,
+    context.pointEntity,
+  );
+  assert.throws(
+    () =>
+      assertInfrastructureRuntimeLayerIdentity(runtimeLayer, {
+        ...fixture,
+        layerId: 'local-dams',
+      }),
+    /identity differs from fixture/,
+  );
 });
 
 test('default Entity picks accept the baseline null collection-index shape', () => {

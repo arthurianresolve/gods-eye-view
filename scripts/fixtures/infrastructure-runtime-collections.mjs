@@ -8,6 +8,7 @@ import { captureFreshCesiumFrame } from '../../src/freshFrame.js';
 import { readPerformanceEnvironment } from '../../src/performance/performanceSnapshot.js';
 import {
   assertInfrastructureSourceInventory,
+  assertInfrastructureRuntimeLayerIdentity,
   DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from './infrastructureFixtureLayer.mjs';
@@ -627,6 +628,10 @@ async function runLayerLifetime(
     (candidate) => candidate.id === layer.layerId,
   );
   check(targetLayer, `Production ${layer.layerName} layer did not construct.`);
+  const targetLayerId = assertInfrastructureRuntimeLayerIdentity(
+    targetLayer,
+    layer,
+  );
   let dataSource;
   let restored = true;
   try {
@@ -780,7 +785,7 @@ async function runLayerLifetime(
             viewer,
             rows,
             collections,
-            targetLayer.layerId,
+            targetLayerId,
             preferredPickEntityId,
             pickDiagnostics,
           );
