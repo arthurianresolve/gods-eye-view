@@ -8,8 +8,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `8d785290510ab86b1b19d99529ef66b2cad73eb2`.
-[All seven standard jobs pass](performance-evidence/s47-renderer-cleanup-lifetime-38222535286/standard-ci-dev-38221816254.json),
+Recorded integration checkpoint: `361fa0951ec2a3a15211b6d364d1939ddb32d52c`.
+[All seven standard jobs pass](performance-evidence/s47-renderer-cleanup-timing-38225433300/standard-ci-dev-38224369007.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -81,6 +81,28 @@ confirms that removal in 889.862 ms, but final document cleanup itself now excee
 the unchanged one-second deadline and completes late. Candidate measurements are
 not reached. Browser scheduling delay versus cleanup execution remains unmeasured;
 the correction stays isolated and the complete cleanup gate remains failed.
+
+The [page-local timing diagnostic at `a342c54a`](performance-evidence/s47-renderer-cleanup-timing-38225433300/README.md)
+passes 90 independent focused tests. Baseline smoke cleanup passes, but candidate
+capture fails while replacing its main setup document, before measured samples.
+The timed-out operation takes 0.100 ms inside the page and acknowledges completion
+after 1,975.751 ms. The hook and both listeners are removed; the original timeout
+remains failed. This locates the delay outside the cleanup callback without
+distinguishing task scheduling, protocol delivery or host scheduling. A bounded
+retired-document render-loop experiment follows; measured windows and deadlines
+remain unchanged.
+
+The [S57 map-switch comparison at `3453fab5`](performance-evidence/s57-stream-comparison-38225231367/README.md)
+executes five switch pairs and the native selection/recovery cases, then fails
+report validation. Its publisher omits required ownership fields and overwrites
+the comparison snapshot after later intentional collection replacements. Repair
+`0c221261` freezes evidence at observer retirement and passes 46 focused checks,
+formatting and package boundaries. Its [rendered fixture and unchanged validator pass](performance-evidence/s57-observer-epoch-38226108308/README.md),
+but the workflow fails afterward because its log printer rejects the 3.2 MB raw
+report. The full artifact survives. Correction `14f903cb` logs artifact identity
+instead of its payload, preserving both the full upload and the existing log
+limit; its workflow check is pending. Failed artifacts are preserved. Actual
+streamed 3D Tiles coverage remains a separate gap.
 
 A [fresh Windows Chrome tab](performance-evidence/windows-webgl-current-window-20261012/README.md)
 restores screenshot delivery at an observed 894 x 529 viewport, while the old
