@@ -847,6 +847,7 @@
   "src/director/document.test.mjs",
   "src/director/camera.test.mjs",
   "src/scenes/cameraMotion.test.mjs",
+  "src/cameraVerbsOwnership.test.mjs",
   "scripts/qa-director-camera.mjs",
   "src/director/packs/packs.test.mjs",
   "src/director/packs/geojson.js",
