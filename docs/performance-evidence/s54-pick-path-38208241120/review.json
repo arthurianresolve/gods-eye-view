@@ -1,0 +1,118 @@
+{
+  "applicationCommit": "8ae0a4dd4518bd33811e6bf2d0c73e2f6542be9a",
+  "harnessCommit": "8ae0a4dd4518bd33811e6bf2d0c73e2f6542be9a",
+  "raw": {
+    "file": "report.json",
+    "bytes": 68586,
+    "sha256": "3db4cbf1351af02b47c5175a6c1458e245306d720e7dc24a68f219df909ae34f"
+  },
+  "scope": "bounded native-pick order diagnosis; no acceptance or physical hardware claim",
+  "status": "failed",
+  "observations": [
+    {
+      "candidateEntityId": "1176042553",
+      "phase": "initial-stable-render",
+      "revision": 22,
+      "captureFrameState": {
+        "completedRenderRevision": 22,
+        "cameraPosition": [
+          1269592.603032521,
+          -3656060.9769391217,
+          -5207202.216888088
+        ],
+        "renderClockIso": "2026-10-12T05:31:45.459Z"
+      },
+      "pointScreen": {
+        "x": 479.99999999999847,
+        "y": 272.2665537328594
+      },
+      "stemScreen": {
+        "x": 480,
+        "y": 300.49999026523113
+      },
+      "controls": [
+        {
+          "name": "point-and-stem-before-selection",
+          "results": [
+            "owned-hit",
+            "miss"
+          ]
+        },
+        {
+          "name": "point-select-then-stem",
+          "results": [
+            "owned-hit",
+            "miss"
+          ]
+        },
+        {
+          "name": "stem-only",
+          "results": [
+            "miss"
+          ]
+        }
+      ]
+    },
+    {
+      "candidateEntityId": "1182624646",
+      "phase": "initial-stable-render",
+      "revision": 22,
+      "captureFrameState": {
+        "completedRenderRevision": 22,
+        "cameraPosition": [
+          1269592.603032521,
+          -3656060.9769391217,
+          -5207202.216888088
+        ],
+        "renderClockIso": "2026-10-12T05:31:45.459Z"
+      },
+      "pointScreen": {
+        "x": 480.6481226590425,
+        "y": 271.9258007348043
+      },
+      "stemScreen": {
+        "x": 480.6126530843398,
+        "y": 300.1777951675766
+      },
+      "controls": [
+        {
+          "name": "point-and-stem-before-selection",
+          "results": [
+            "owned-hit",
+            "miss"
+          ]
+        },
+        {
+          "name": "point-select-then-stem",
+          "results": [
+            "owned-hit",
+            "miss"
+          ]
+        },
+        {
+          "name": "stem-only",
+          "results": [
+            "miss"
+          ]
+        }
+      ]
+    }
+  ],
+  "completedCaptures": 18,
+  "stableFrames": 3,
+  "ordinaryPickAttempts": 1,
+  "subsequentFrameControls": 0,
+  "declaredGeometryReady": true,
+  "declaredDataSourcesReady": true,
+  "visibleSurfaceRecords": 2,
+  "pixelObservation": "point-only; stem probe lies on background pixels",
+  "retiredOwnedObservers": true,
+  "viewerDestroyed": true,
+  "browserNaturalExit": true,
+  "limitations": [
+    "No subsequent-frame control completed before the existing sample deadline.",
+    "Scene.pick can perform internal preparation even when postRender revision, camera and clock are unchanged.",
+    "The earlier failing run eventually captured visible stems, so this does not prove stems never materialize.",
+    "Hosted Apple Paravirtual Metal is not physical Windows evidence."
+  ]
+}
