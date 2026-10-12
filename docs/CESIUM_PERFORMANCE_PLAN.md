@@ -2,8 +2,8 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `32b8c74cfc132213d000294d058821645ee0dd96`.
-[All seven standard jobs pass](performance-evidence/s54-current-dev-20261012/dev-ci-32b8c74c.json).
+Latest validated `dev` checkpoint: `416296730846ae3fb9022fedaad1fef4c9b6d86f`.
+[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38191969671.json).
 Runtime is unchanged from `bbca229f`; intervening changes are evidence and
 documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
@@ -26,7 +26,12 @@ the frozen-clock correction completes four samples, but
 The [next run](performance-evidence/s47-infrastructure-smoke-38190043475/README.md)
 preserves a bounded capture projection and exposes a broader producer/validator
 mismatch: infrastructure uses one measured document, while validation assumed
-the dense workload's per-sample documents. Contract repair remains in progress.
+the dense workload's per-sample documents. The
+[contract repair at `c21b3f21`](performance-evidence/s47-infrastructure-smoke-38193087266/README.md)
+now passes the actual datacenter capture CLI and independent validation of
+its complete raw report. Dams, cables and combined infrastructure still need
+their own executable checks; the dam run is underway. No timing acceptance
+is claimed from this short, instrumented SwiftShader smoke.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
@@ -34,7 +39,10 @@ candidate's full matched captures/retention soak remain pending.
 [Current integration and S54 evidence](performance-evidence/s54-current-dev-20261012/README.md)
 records exact revisions and separates implementation, automatic checks and
 hardware coverage. The Windows GPU configuration export confirms hardware
-acceleration only. Historical checkpoints below retain their original failures
+acceleration only. New matched static/animated WebGL controls at `a92c6921`
+retain 533-550 ms frame gaps while plain RAF reaches 301 frames in five seconds
+with an 18.5 ms maximum gap. Changing pixels does not eliminate the stall;
+the physical window's occlusion state is unverified. Historical checkpoints below retain their original failures
 and limitations; their old branch/promotion statements are not the current state.
 
 ## Historical integration checkpoints
