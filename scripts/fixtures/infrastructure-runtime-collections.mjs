@@ -25,6 +25,18 @@ import {
   runInfrastructurePickPathControls,
 } from './infrastructurePickPathDiagnostic.mjs';
 import {
+  INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_DEPTH,
+  INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_OWNERS,
+  INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_POINT_CHILDREN,
+  INFRASTRUCTURE_PRIMITIVE_READINESS_WINDOW_MS,
+  collectInfrastructurePrimitiveReadiness,
+  createInfrastructurePrimitiveReadinessEnvelope,
+  createInfrastructurePrimitiveReadinessLifetime,
+  infrastructurePrimitiveReadinessDiagnosticRequested,
+  observePrimitiveReadinessAfterFailure,
+  selectPrimitiveReadinessTargets,
+} from './infrastructurePrimitiveReadinessDiagnostic.mjs';
+import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
   infrastructureCameraRevisionReady,
@@ -37,6 +49,8 @@ const FRAME_TIMEOUT_MS = 400;
 const fixtureSearchParams = new URLSearchParams(location.search);
 const pickPathDiagnosticEnabled =
   pickPathDiagnosticRequested(fixtureSearchParams);
+const primitiveReadinessDiagnosticEnabled =
+  infrastructurePrimitiveReadinessDiagnosticRequested(fixtureSearchParams);
 const fixtureLayer = infrastructureFixtureLayer(
   fixtureSearchParams.get('layerId') ||
     DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
@@ -540,6 +554,21 @@ function createPickPathDiagnosticState(report, mode) {
   return state;
 }
 
+function createPrimitiveReadinessDiagnosticState(report, mode) {
+  const envelope = report.instrumentation?.primitiveReadinessDiagnostic;
+  if (!envelope) return null;
+  const lifetime = createInfrastructurePrimitiveReadinessLifetime(
+    envelope,
+    mode,
+  );
+  return {
+    envelope,
+    report: lifetime.report,
+    ownerIds: lifetime.ownerIds,
+    renderRevisionObserver: null,
+  };
+}
+
 function runPickPathDiagnosticFrame({
   viewer,
   rows,
@@ -713,12 +742,18 @@ function runPickPathDiagnosticFrame({
   }
 }
 
-async function captureFrame(viewer, captureFrameState = null) {
+async function captureFrame(
+  viewer,
+  captureFrameState = null,
+  timeoutMs = FRAME_TIMEOUT_MS,
+  signal = undefined,
+) {
   viewer.scene.requestRender();
   return processOwnedCapturedFrame({
     async capture() {
       const canvas = await captureFreshCesiumFrame(viewer, {
-        timeoutMs: FRAME_TIMEOUT_MS,
+        timeoutMs,
+        signal,
       });
       check(canvas, 'Fresh completed frame was unavailable.');
       return canvas;
@@ -728,6 +763,7 @@ async function captureFrame(viewer, captureFrameState = null) {
       canvas,
       { completedFrameState, completedFrameStateErrorName },
     ) {
+      check(!signal?.aborted, 'Diagnostic frame processing was cancelled.');
       const context = canvas.getContext('2d', { willReadFrequently: true });
       const pixels = context
         .getImageData(0, 0, canvas.width, canvas.height)
@@ -889,6 +925,10 @@ async function runLayerLifetime(
     teardown: null,
   };
   const pickPathDiagnostic = createPickPathDiagnosticState(report, mode);
+  const primitiveReadinessDiagnostic = createPrimitiveReadinessDiagnosticState(
+    report,
+    mode,
+  );
   const ownersBefore = scanOwners(viewer, layer.layerId);
   lifetime.sceneBaseline = {
     dataSources: viewer.dataSources.length,
@@ -1183,6 +1223,127 @@ async function runLayerLifetime(
               }
             : null,
         };
+        if (primitiveReadinessDiagnostic) Object.freeze(lifetime.failedSample);
+        if (primitiveReadinessDiagnostic) {
+          const targets = selectPrimitiveReadinessTargets(rows);
+          const gateFailure = {
+            caseId,
+            pair,
+            status: 'failed',
+            stableFrames,
+            completedCaptures,
+            pickSearches,
+            geometryReady,
+            sourceReady: sceneReadiness?.dataSourcesReady ?? null,
+            pointPickObserved: Boolean(pointPick),
+            stemPickObserved: Boolean(stemPick),
+          };
+          const diagnostic = primitiveReadinessDiagnostic.report;
+          const diagnosticStartedAt = performance.now();
+          let diagnosticRenderRequested = false;
+          diagnostic.status = 'observed';
+          diagnostic.originalGate = gateFailure;
+          diagnostic.targets = targets.map((target) => ({ ...target }));
+          try {
+            diagnostic.initialSnapshot =
+              collectInfrastructurePrimitiveReadiness({
+                Cesium,
+                viewer,
+                candidates: targets,
+                entityById: new Map(
+                  rows.map((row) => [row.entityId, row.entity]),
+                ),
+                ownerIds: primitiveReadinessDiagnostic.ownerIds,
+                maxOwners: INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_OWNERS,
+                maxDepth: INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_DEPTH,
+                maxPointChildren:
+                  INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_POINT_CHILDREN,
+              });
+            diagnostic.targets = diagnostic.targets.map((target, index) => ({
+              ...target,
+              pointStatus:
+                diagnostic.initialSnapshot.targets[index]?.pointStatus ||
+                'unknown',
+              stemStatus:
+                diagnostic.initialSnapshot.targets[index]?.stemStatus ||
+                'unknown',
+            }));
+            const observer = createCompletedRenderRevisionObserver(viewer);
+            primitiveReadinessDiagnostic.renderRevisionObserver = observer;
+            diagnostic.renderRevisionObserver = {
+              available: observer.available,
+              cleanupConfirmed: false,
+              ...(observer.errorName ? { errorName: observer.errorName } : {}),
+            };
+            diagnostic.postFailureObservation =
+              await observePrimitiveReadinessAfterFailure({
+                gateFailure,
+                capture: ({ signal, markRenderRequested }) => {
+                  if (!observer.available)
+                    throw new Error(
+                      'Post-render revision observer is unavailable.',
+                    );
+                  markRenderRequested();
+                  diagnosticRenderRequested = true;
+                  return captureFrame(
+                    viewer,
+                    () => ({
+                      ...observer.read(),
+                      primitiveReadiness:
+                        collectInfrastructurePrimitiveReadiness({
+                          Cesium,
+                          viewer,
+                          candidates: targets,
+                          entityById: new Map(
+                            rows.map((row) => [row.entityId, row.entity]),
+                          ),
+                          ownerIds: primitiveReadinessDiagnostic.ownerIds,
+                          maxOwners:
+                            INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_OWNERS,
+                          maxDepth:
+                            INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_DEPTH,
+                          maxPointChildren:
+                            INFRASTRUCTURE_PRIMITIVE_READINESS_MAX_POINT_CHILDREN,
+                        }),
+                    }),
+                    FRAME_TIMEOUT_MS,
+                    signal,
+                  );
+                },
+              });
+            if (
+              diagnostic.postFailureObservation.status !==
+              'completed-frame-observed'
+            )
+              diagnostic.status = 'partial-or-diagnostic-error';
+          } catch (error) {
+            diagnostic.status = 'partial-or-diagnostic-error';
+            const diagnosticElapsedMs = Math.max(
+              0,
+              performance.now() - diagnosticStartedAt,
+            );
+            diagnostic.postFailureObservation = {
+              phase: 'post-failure-later-frame-observation',
+              originalGateFailed: true,
+              acceptanceEligible: false,
+              originalGate: gateFailure,
+              requestedDiagnosticRender: diagnosticRenderRequested,
+              additionalPickCalls: 0,
+              durationBudgetMs: INFRASTRUCTURE_PRIMITIVE_READINESS_WINDOW_MS,
+              elapsedMs: diagnosticElapsedMs,
+              overBudget:
+                diagnosticElapsedMs >
+                INFRASTRUCTURE_PRIMITIVE_READINESS_WINDOW_MS,
+              status: 'diagnostic-error',
+              frame: null,
+              errorName: ['TypeError', 'DeveloperError', 'RangeError'].includes(
+                error?.name,
+              )
+                ? error.name
+                : 'Error',
+            };
+          }
+        }
       }
       check(
         stableFrames >= 3 && pointPick && stemPick && pickRow,
@@ -1348,6 +1509,21 @@ async function runLayerLifetime(
           0,
         );
     }
+    if (primitiveReadinessDiagnostic?.renderRevisionObserver) {
+      const observer = primitiveReadinessDiagnostic.renderRevisionObserver;
+      const cleanupConfirmed = observer.dispose();
+      Object.assign(
+        primitiveReadinessDiagnostic.report.renderRevisionObserver,
+        {
+          available: observer.available,
+          cleanupConfirmed,
+          ...(observer.errorName ? { errorName: observer.errorName } : {}),
+        },
+      );
+      if (!cleanupConfirmed)
+        primitiveReadinessDiagnostic.report.status =
+          'partial-or-diagnostic-error';
+    }
     if (!report.lifetimes.includes(lifetime)) report.lifetimes.push(lifetime);
   }
   if (lifetime.teardownError) throw new Error(lifetime.teardownError);
@@ -1355,6 +1531,10 @@ async function runLayerLifetime(
 }
 
 async function runDiagnostic() {
+  check(
+    !(pickPathDiagnosticEnabled && primitiveReadinessDiagnosticEnabled),
+    'Primitive-readiness and pick-path diagnostics must run separately.',
+  );
   const report = {
     schema: fixtureLayer.schema,
     applicationCommit: __GEV_APP_COMMIT__,
@@ -1373,31 +1553,41 @@ async function runDiagnostic() {
     comparisons: [],
     cleanup: { viewerDestroyed: false },
     error: null,
-    ...(pickPathDiagnosticEnabled
+    ...(pickPathDiagnosticEnabled || primitiveReadinessDiagnosticEnabled
       ? {
           instrumentation: {
-            pickPathDiagnostic: {
-              schema: INFRASTRUCTURE_PICK_PATH_DIAGNOSTIC_SCHEMA,
-              enabled: true,
-              instrumented: true,
-              diagnosticOnly: true,
-              performanceAcceptanceEligible: false,
-              pickAcceptanceEligible: false,
-              scope:
-                'synchronous native scene picks in three selection-order controls; diagnostic calls never satisfy fixture pick gates',
-              frameWitnessSemantics:
-                'postRender count, camera position and clock only; scene.pick may advance internal preparation',
-              maxCandidatesPerLifetime:
-                INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME,
-              maxCompletedRenderRevisionsPerCandidate:
-                INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE,
-              maxPickCallsPerLifetime:
-                INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME,
-              maxPickCalls: INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_REPORT,
-              pickCalls: 0,
-              status: 'running',
-              lifetimes: [],
-            },
+            ...(pickPathDiagnosticEnabled
+              ? {
+                  pickPathDiagnostic: {
+                    schema: INFRASTRUCTURE_PICK_PATH_DIAGNOSTIC_SCHEMA,
+                    enabled: true,
+                    instrumented: true,
+                    diagnosticOnly: true,
+                    performanceAcceptanceEligible: false,
+                    pickAcceptanceEligible: false,
+                    scope:
+                      'synchronous native scene picks in three selection-order controls; diagnostic calls never satisfy fixture pick gates',
+                    frameWitnessSemantics:
+                      'postRender count, camera position and clock only; scene.pick may advance internal preparation',
+                    maxCandidatesPerLifetime:
+                      INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME,
+                    maxCompletedRenderRevisionsPerCandidate:
+                      INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE,
+                    maxPickCallsPerLifetime:
+                      INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME,
+                    maxPickCalls: INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_REPORT,
+                    pickCalls: 0,
+                    status: 'running',
+                    lifetimes: [],
+                  },
+                }
+              : {}),
+            ...(primitiveReadinessDiagnosticEnabled
+              ? {
+                  primitiveReadinessDiagnostic:
+                    createInfrastructurePrimitiveReadinessEnvelope(),
+                }
+              : {}),
           },
         }
       : {}),
@@ -1490,6 +1680,16 @@ async function runDiagnostic() {
         sum + (Number.isSafeInteger(item.pickCalls) ? item.pickCalls : 0),
       0,
     );
+  }
+  const primitiveReadinessEnvelope =
+    report.instrumentation?.primitiveReadinessDiagnostic;
+  if (primitiveReadinessEnvelope) {
+    primitiveReadinessEnvelope.status =
+      primitiveReadinessEnvelope.lifetimes.some(
+        (item) => item.status !== 'not-triggered',
+      )
+        ? 'partial-or-diagnostic-error'
+        : 'not-triggered';
   }
   if (report.status === 'passed') {
     try {

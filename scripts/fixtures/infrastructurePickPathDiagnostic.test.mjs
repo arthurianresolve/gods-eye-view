@@ -50,6 +50,28 @@ test('witness-read failure remains diagnostic-only and releases the copied frame
   assert.deepEqual(events, ['capture', 'witness', 'process', 'release']);
 });
 
+test('cancellation after capture handoff still releases the acquired canvas', async () => {
+  const controller = new AbortController();
+  const canvas = { released: false };
+  await assert.rejects(
+    processOwnedCapturedFrame({
+      async capture() {
+        controller.abort();
+        return canvas;
+      },
+      process() {
+        assert.equal(controller.signal.aborted, true);
+        throw new Error('diagnostic cancelled after capture');
+      },
+      release(actualCanvas) {
+        actualCanvas.released = true;
+      },
+    }),
+    /diagnostic cancelled after capture/,
+  );
+  assert.equal(canvas.released, true);
+});
+
 test('a primary frame-processing error survives a later cleanup error', async () => {
   const primary = new Error('frame processing failed');
   await assert.rejects(

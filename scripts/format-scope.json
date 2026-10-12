@@ -1026,6 +1026,8 @@
   "scripts/fixtures/infrastructure-runtime-collections.mjs",
   "scripts/fixtures/infrastructurePickPathDiagnostic.mjs",
   "scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs",
+  "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs",
+  "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs",
   "scripts/fixtures/infrastructureNativePickOwnership.mjs",
   "scripts/fixtures/infrastructureNativePickOwnership.test.mjs",
   "scripts/fixtures/infrastructureFixtureLayer.mjs",

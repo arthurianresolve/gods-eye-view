@@ -381,6 +381,24 @@ test('diagnostic option requires its evidence and rejects unknown instrumentatio
   );
 });
 
+test('primitive-readiness instrumentation is never eligible for runtime acceptance', () => {
+  const report = validReport('local-datacenters');
+  report.instrumentation = {
+    primitiveReadinessDiagnostic: {
+      schema: 'gev-infrastructure-primitive-readiness/v1',
+      diagnosticOnly: true,
+    },
+  };
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /not acceptance eligible/,
+  );
+});
+
 test('runtime report validates independent default and production lifetimes', () => {
   assert.equal(
     validateInfrastructureRuntimeReport(validReport(), {

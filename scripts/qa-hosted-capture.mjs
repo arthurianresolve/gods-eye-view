@@ -13,6 +13,10 @@ import { validateInfrastructureCollectionReport } from './performance/infrastruc
 import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
 import { DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
 import { infrastructurePickPathDiagnosticOptionEnabled } from './fixtures/infrastructurePickPathDiagnostic.mjs';
+import {
+  infrastructurePrimitiveReadinessDiagnosticOptionEnabled,
+  validateInfrastructurePrimitiveReadinessReport,
+} from './fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -33,6 +37,8 @@ if (process.env.GITHUB_ACTIONS !== 'true')
   );
 const infrastructurePickPathDiagnostic =
   infrastructurePickPathDiagnosticOptionEnabled(process.argv);
+const infrastructurePrimitiveReadinessDiagnostic =
+  infrastructurePrimitiveReadinessDiagnosticOptionEnabled(process.argv);
 const commit = process.env.GITHUB_SHA;
 let server;
 let serverError = null;
@@ -308,6 +314,11 @@ try {
       );
       if (infrastructurePickPathDiagnostic)
         infrastructureUrl.searchParams.set('pick-path-diagnostic', '1');
+      if (infrastructurePrimitiveReadinessDiagnostic)
+        infrastructureUrl.searchParams.set(
+          'primitive-readiness-diagnostic',
+          '1',
+        );
       await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
@@ -317,6 +328,10 @@ try {
         '#result',
         (element) => JSON.parse(element.textContent),
       );
+      if (infrastructurePrimitiveReadinessDiagnostic)
+        validateInfrastructurePrimitiveReadinessReport(
+          report.infrastructureDatacenters,
+        );
       report.infrastructureDatacentersGraphics =
         await readBrowserGraphicsInfo(browser);
       report.infrastructureDatacentersRenderingEvidence = classifyRenderer(
