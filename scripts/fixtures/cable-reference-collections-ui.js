@@ -63,6 +63,10 @@ import {
   createFixtureViewer,
   mapStackWitness,
 } from './cableReferenceFixture.mjs';
+import {
+  recordCableLifecycleFailure,
+  runCableRendererLifetimes,
+} from './cableLifetimeIsolation.mjs';
 
 async function runLifetime({
   viewer,
@@ -72,6 +76,7 @@ async function runLifetime({
   sourceManifestSha256,
   targets,
   report,
+  setLifecycleStage = () => {},
 }) {
   const overlay = createOverlayHost();
   const mapEvents = new EventTarget();
@@ -109,8 +114,11 @@ async function runLifetime({
   const ownedCollectionLifetimes = [];
   report.lifetimes.push(lifetime);
   try {
+    setLifecycleStage('layer-init');
     layer.init(viewer);
+    setLifecycleStage('initial-enable');
     layer.enable(viewer);
+    setLifecycleStage('initial-population');
     await waitForPopulation(viewer, layer, sourceRecords);
     const data = {
       cable: dataSource(viewer, 'TeleGeography Submarine Cables'),
@@ -218,8 +226,10 @@ async function runLifetime({
 
     // Warm the lazy EntityCluster collections and exercise both real map-stack
     // classifications before capturing the common terrain-visible state.
+    setLifecycleStage('initial-map-stack-classification');
     const mapClassification = await mapStackWitness(viewer, mapEvents, layer);
     lifetime.mapClassificationAttribution = mapClassification.attribution;
+    setLifecycleStage('initial-scene-stability');
     await waitForStableScene(viewer, layer, mode, sourceRecords);
 
     const hashes = await sourceGeometryHash();
@@ -236,6 +246,7 @@ async function runLifetime({
     const cameraSweeps = {};
     lifetime.readinessByCase = {};
     for (const caseId of CABLE_REFERENCE_RENDER_CASES) {
+      setLifecycleStage(`case-${caseId}-camera-setup`);
       const targetCase = caseTargets[caseId];
       const readinessDeadline = performance.now() + STABLE_TIMEOUT_MS;
       let sweep = null;
@@ -312,6 +323,7 @@ async function runLifetime({
         };
       }
       lifetime.readinessByCase[caseId] = [];
+      setLifecycleStage(`case-${caseId}-scene-stability`);
       await waitForStableScene(
         viewer,
         layer,
@@ -329,6 +341,7 @@ async function runLifetime({
         caseId,
         CASES[caseId].rangeMeters,
       );
+      setLifecycleStage(`case-${caseId}-native-picking`);
       const baselineTarget = report.__nativeTargets?.[caseId] || null;
       const selected = nativeTargets(
         viewer,
@@ -426,9 +439,11 @@ async function runLifetime({
           `${caseId} collection native picks resolved different owners.`,
         );
       }
+      setLifecycleStage(`case-${caseId}-map-stack-witness`);
       const classification = await mapStackWitness(viewer, mapEvents, layer, {
         includeAttribution: false,
       });
+      setLifecycleStage(`case-${caseId}-capture`);
       for (
         let sample = 0;
         sample < CABLE_REFERENCE_RENDER_SAMPLES;
@@ -554,9 +569,11 @@ async function runLifetime({
           };
         },
       });
+      setLifecycleStage(`case-${caseId}-geometry-witness-complete`);
     }
 
     for (let cycle = 0; cycle < 2; cycle += 1) {
+      setLifecycleStage('disable', cycle);
       const priorSources = viewer.dataSources.length;
       layer.disable();
       assert(
@@ -575,12 +592,15 @@ async function runLifetime({
           );
         layer.__fixtureCollections = null;
       }
+      setLifecycleStage('disabled-render-drain', cycle);
       await waitForPostRender(viewer);
       assert(
         viewer.dataSources.length === baselineDataSources,
         'Disable left cable DataSources attached.',
       );
+      setLifecycleStage('reenable', cycle);
       layer.enable(viewer);
+      setLifecycleStage('reenable-population', cycle);
       await waitForPopulation(viewer, layer, sourceRecords);
       if (mode === 'collections') {
         const source = dataSource(viewer, 'TeleGeography Cable References');
@@ -590,7 +610,9 @@ async function runLifetime({
         );
         ownedCollectionLifetimes.push(layer.__fixtureCollections);
       }
+      setLifecycleStage('reenable-scene-stability', cycle);
       await waitForStableScene(viewer, layer, mode, sourceRecords);
+      setLifecycleStage('reenable-contract-checks', cycle);
       assert(
         viewer.dataSources.length === priorSources,
         'Re-enable did not rebuild the same DataSource population.',
@@ -601,7 +623,9 @@ async function runLifetime({
         'Re-enable lost source records.',
       );
     }
+    setLifecycleStage('layer-destroy');
     layer.destroy(viewer);
+    setLifecycleStage('layer-destroy-render-drain');
     await waitForPostRender(viewer);
     const afterDestroy = layer.getPerformanceDiagnostics();
     const collectionsDestroyed = ownedCollectionLifetimes.every((owner) =>
@@ -719,118 +743,170 @@ async function runComparison() {
     );
     report.renderClock.iso = FIXED_ISO;
     const modes = ['entities', 'collections'];
-    for (let index = 0; index < modes.length; index += 1) {
-      const mode = modes[index];
-      report.failedPhase = `${mode}-viewer-init`;
-      viewer = createFixtureViewer(targets.default.cartesian);
-      const settings = viewerSettings(viewer);
-      const environment = readPerformanceEnvironment({
-        viewer,
-        appCommit: EXPECTED_COMMIT,
-        harnessCommit: EXPECTED_COMMIT,
-      });
-      assert(settings.sceneMode === 'SCENE3D', 'Fixture is not in 3D mode.');
-      assert(settings.globeShown === true, 'Fixture globe is hidden.');
-      assert(
-        settings.terrainProvider === 'EllipsoidTerrainProvider',
-        'Fixture terrain provider changed.',
-      );
-      assert(
-        settings.resolutionScale === 1,
-        'Viewer resolution scale is not 1.',
-      );
-      assert(settings.msaaSamples === 4, 'Viewer MSAA setting is not 4.');
-      assert(
-        settings.preserveDrawingBuffer === true,
-        'Framebuffer preservation is unavailable.',
-      );
-      assert(
-        settings.antialias === true,
-        'WebGL context antialiasing is unavailable.',
-      );
-      assert(
-        viewer.dataSources.length === 0,
-        'Fixture viewer did not start without DataSources.',
-      );
-      assert(
-        environment.viewport.width === 1200 &&
-          environment.viewport.height === 1000 &&
-          environment.viewport.dpr === 1,
-        'Fixture CSS viewport changed.',
-      );
-      assert(
-        environment.drawingBuffer.width === 960 &&
-          environment.drawingBuffer.height === 640,
-        'Fixture drawing buffer changed.',
-      );
-      if (index === 0) {
-        report.settings = settings;
-        report.environment = environment;
-        report.viewer = {
-          baselineDataSources: viewer.dataSources.length,
-          sceneMode: settings.sceneMode,
-          globeShown: settings.globeShown,
-          terrainProvider: settings.terrainProvider,
-          lifetimeCount: 2,
-        };
-      } else {
+    await runCableRendererLifetimes({
+      modes,
+      report,
+      createViewer: (mode, index, { setStage }) => {
+        if (!report.error) report.failedPhase = `${mode}-viewer-init`;
+        setStage('viewer-init');
+        viewer = createFixtureViewer(targets.default.cartesian);
+        const settings = viewerSettings(viewer);
+        const environment = readPerformanceEnvironment({
+          viewer,
+          appCommit: EXPECTED_COMMIT,
+          harnessCommit: EXPECTED_COMMIT,
+        });
+        assert(settings.sceneMode === 'SCENE3D', 'Fixture is not in 3D mode.');
+        assert(settings.globeShown === true, 'Fixture globe is hidden.');
         assert(
-          JSON.stringify(settings) === JSON.stringify(report.settings),
-          'Fresh viewer settings differ between renderer lifetimes.',
+          settings.terrainProvider === 'EllipsoidTerrainProvider',
+          'Fixture terrain provider changed.',
         );
         assert(
-          JSON.stringify(environment) === JSON.stringify(report.environment),
-          'Fresh viewer environment differs between renderer lifetimes.',
+          settings.resolutionScale === 1,
+          'Viewer resolution scale is not 1.',
         );
-      }
-      report.failedPhase = `${mode}-fixed-clock`;
-      assert(
-        Cesium.JulianDate.toIso8601(viewer.clock.currentTime, 3) === FIXED_ISO,
-        'Cesium clock differs from the fixed fixture time.',
-      );
-      assert(
-        !viewer.clock.shouldAnimate,
-        'Cesium clock is advancing during captures.',
-      );
-      report.failedPhase = `${mode}-lifetime`;
-      const lifetime = await runLifetime({
-        viewer,
-        mode,
-        activationOrder: index,
-        sourceRecords: sourceData.records,
-        sourceManifestSha256: sourceData.report.identitySha256,
-        targets,
-        report,
-      });
-      lifetime.viewerSettingsSha256 = await shaJson(settings);
-      lifetime.viewerEnvironmentSha256 = await shaJson(environment);
-      viewer.destroy();
-      viewer = null;
-    }
+        assert(settings.msaaSamples === 4, 'Viewer MSAA setting is not 4.');
+        assert(
+          settings.preserveDrawingBuffer === true,
+          'Framebuffer preservation is unavailable.',
+        );
+        assert(
+          settings.antialias === true,
+          'WebGL context antialiasing is unavailable.',
+        );
+        assert(
+          viewer.dataSources.length === 0,
+          'Fixture viewer did not start without DataSources.',
+        );
+        assert(
+          environment.viewport.width === 1200 &&
+            environment.viewport.height === 1000 &&
+            environment.viewport.dpr === 1,
+          'Fixture CSS viewport changed.',
+        );
+        assert(
+          environment.drawingBuffer.width === 960 &&
+            environment.drawingBuffer.height === 640,
+          'Fixture drawing buffer changed.',
+        );
+        if (index === 0) {
+          report.settings = settings;
+          report.environment = environment;
+          report.viewer = {
+            baselineDataSources: viewer.dataSources.length,
+            sceneMode: settings.sceneMode,
+            globeShown: settings.globeShown,
+            terrainProvider: settings.terrainProvider,
+            lifetimeCount: 2,
+          };
+        } else {
+          assert(
+            JSON.stringify(settings) === JSON.stringify(report.settings),
+            'Fresh viewer settings differ between renderer lifetimes.',
+          );
+          assert(
+            JSON.stringify(environment) === JSON.stringify(report.environment),
+            'Fresh viewer environment differs between renderer lifetimes.',
+          );
+        }
+        return viewer;
+      },
+      executeLifetime: async (ownedViewer, mode, index, { setStage }) => {
+        setStage('fixed-clock');
+        if (!report.error) report.failedPhase = `${mode}-fixed-clock`;
+        assert(
+          Cesium.JulianDate.toIso8601(ownedViewer.clock.currentTime, 3) ===
+            FIXED_ISO,
+          'Cesium clock differs from the fixed fixture time.',
+        );
+        assert(
+          !ownedViewer.clock.shouldAnimate,
+          'Cesium clock is advancing during captures.',
+        );
+        setStage('renderer-lifetime');
+        if (!report.error) report.failedPhase = `${mode}-lifetime`;
+        const lifetime = await runLifetime({
+          viewer: ownedViewer,
+          mode,
+          activationOrder: index,
+          sourceRecords: sourceData.records,
+          sourceManifestSha256: sourceData.report.identitySha256,
+          targets,
+          report,
+          setLifecycleStage: setStage,
+        });
+        lifetime.viewerSettingsSha256 = await shaJson(report.settings);
+        lifetime.viewerEnvironmentSha256 = await shaJson(report.environment);
+        return lifetime;
+      },
+      compareAvailable: async (completedOutcomes) => {
+        const destruction = completedOutcomes.at(-1)?.viewerDestroyed;
+        if (destruction === true) viewer = null;
+        report.viewer ||= {};
+        report.viewer.completedLifetimeCount = completedOutcomes.length;
+        report.viewer.destroyedLifetimeCount = completedOutcomes.filter(
+          (outcome) => outcome.viewerDestroyed,
+        ).length;
+      },
+    });
     delete report.__nativeTargets;
-    report.failedPhase = 'cross-mode-comparison';
+    if (!report.error) report.failedPhase = 'cross-mode-comparison';
     let comparisonIndex = 0;
+    let comparedGeometryCount = 0;
+    let exactComparisonCount = 0;
+    let comparisonFailure = null;
+    const entityLifetime = report.lifetimes.find(
+      (lifetime) => lifetime.mode === 'entities',
+    );
+    const collectionLifetime = report.lifetimes.find(
+      (lifetime) => lifetime.mode === 'collections',
+    );
     for (const caseId of CABLE_REFERENCE_RENDER_CASES) {
       for (
         let sample = 0;
         sample < CABLE_REFERENCE_RENDER_SAMPLES;
         sample += 1
       ) {
-        const entity = report.lifetimes[0].samples.find(
+        const entity = entityLifetime?.samples.find(
           (row) => row.caseId === caseId && row.sample === sample,
         );
-        const candidate = report.lifetimes[1].samples.find(
+        const candidate = collectionLifetime?.samples.find(
           (row) => row.caseId === caseId && row.sample === sample,
         );
-        assert(
-          entity && candidate,
-          `Missing matched ${caseId} sample ${sample + 1}.`,
-        );
+        comparisonIndex += 1;
+        if (!entity || !candidate) {
+          const missingModes = [];
+          if (!entity) missingModes.push('entities');
+          if (!candidate) missingModes.push('collections');
+          report.comparisons.push({
+            caseId,
+            sample,
+            status: 'unavailable',
+            missingModes,
+            entityCaptured: Boolean(entity),
+            collectionCaptured: Boolean(candidate),
+          });
+          continue;
+        }
+        comparedGeometryCount += 1;
+        if (
+          !entity.__rgba ||
+          !candidate.__rgba ||
+          entity.__rgba.length !== candidate.__rgba.length
+        ) {
+          report.comparisons.push({
+            caseId,
+            sample,
+            status: 'invalid',
+            reason: 'RGBA capture buffers are missing or have different sizes.',
+            entityBufferLength: entity.__rgba?.length ?? null,
+            collectionBufferLength: candidate.__rgba?.length ?? null,
+          });
+          comparisonFailure ||= `${caseId} sample ${sample + 1} has invalid RGBA capture buffers.`;
+          continue;
+        }
         let pixelDifferenceCount = 0;
-        assert(
-          entity.__rgba.length === candidate.__rgba.length,
-          'Entity/collection screenshot buffer length differs.',
-        );
         for (let index = 0; index < entity.__rgba.length; index += 4) {
           if (
             entity.__rgba[index] !== candidate.__rgba[index] ||
@@ -848,6 +924,7 @@ async function runComparison() {
         const sameSourceIdentities =
           entity.sourceIdentitySha256 === candidate.sourceIdentitySha256;
         const samePick = (left, right) =>
+          Boolean(left && right) &&
           JSON.stringify([
             left.kind,
             left.sourceKind,
@@ -856,19 +933,20 @@ async function runComparison() {
             left.sourceOrdinal,
             left.screen,
           ]) ===
-          JSON.stringify([
-            right.kind,
-            right.sourceKind,
-            right.entityId,
-            right.sourceRecordId,
-            right.sourceOrdinal,
-            right.screen,
-          ]);
+            JSON.stringify([
+              right.kind,
+              right.sourceKind,
+              right.entityId,
+              right.sourceRecordId,
+              right.sourceOrdinal,
+              right.screen,
+            ]);
         const samePointPick = samePick(entity.pointPick, candidate.pointPick);
         const sameStemPick = samePick(entity.stemPick, candidate.stemPick);
-        report.comparisons.push({
+        const comparison = {
           caseId,
           sample,
+          status: 'compared',
           pixelDifferenceCount,
           pixelSha256: entity.pixelSha256,
           exactPixels,
@@ -877,43 +955,75 @@ async function runComparison() {
           sameSourceIdentities,
           samePointPick,
           sameStemPick,
-        });
+        };
+        report.comparisons.push(comparison);
+        if (
+          exactPixels &&
+          sameGeometry &&
+          sameStyle &&
+          sameSourceIdentities &&
+          samePointPick &&
+          sameStemPick
+        ) {
+          exactComparisonCount += 1;
+        } else {
+          comparisonFailure ||= `${caseId} sample ${sample + 1} differs across renderers.`;
+        }
         delete entity.__rgba;
         delete candidate.__rgba;
-        assert(
-          exactPixels,
-          `${caseId} sample ${sample + 1} has pixel differences.`,
-        );
-        assert(
-          sameGeometry && sameStyle && sameSourceIdentities,
-          `${caseId} sample ${sample + 1} geometry/style/source identity differs.`,
-        );
-        assert(
-          samePointPick && sameStemPick,
-          `${caseId} sample ${sample + 1} native picks differ.`,
-        );
-        comparisonIndex += 1;
       }
     }
-    assert(
-      comparisonIndex === 10,
-      'Expected ten complete matched renderer snapshots.',
-    );
-    report.failedPhase = null;
-    report.status = 'passed';
+    report.comparisonSummary = {
+      expectedPairs: comparisonIndex,
+      capturedPairs: comparedGeometryCount,
+      exactPairs: exactComparisonCount,
+      unavailablePairs: comparisonIndex - comparedGeometryCount,
+    };
+    if (comparisonIndex !== 10 || comparedGeometryCount !== 10) {
+      recordCableLifecycleFailure(report, {
+        mode: 'comparison',
+        activationOrder: null,
+        stage: 'matched-capture-completeness',
+        message: `Captured ${comparedGeometryCount} of ${comparisonIndex} expected matched samples.`,
+      });
+    }
+    if (comparisonFailure) {
+      recordCableLifecycleFailure(report, {
+        mode: 'comparison',
+        activationOrder: null,
+        stage: 'geometry-and-rendered-parity',
+        message: comparisonFailure,
+      });
+    }
+    if (!report.failures?.length && exactComparisonCount === 10) {
+      report.failedPhase = null;
+      report.status = 'passed';
+    } else {
+      report.status = 'failed';
+    }
   } catch (error) {
+    const failure = {
+      mode: 'comparison',
+      activationOrder: null,
+      stage: report.failedPhase || 'comparison',
+      message: String(error?.stack || error?.message || error).slice(0, 3000),
+    };
+    report.failures ||= [];
+    report.failures.push(failure);
     report.status = 'failed';
+    if (!report.error) {
+      report.failedPhase = failure.stage;
+      report.error = failure.message;
+    }
     const activeReadinessFailure = report.lifetimes
       .map((lifetime) => lifetime.readinessFailure)
-      .filter(Boolean)
-      .at(-1);
-    if (activeReadinessFailure)
+      .filter(Boolean)[0];
+    if (activeReadinessFailure && !report.readinessFailure)
       report.readinessFailure = activeReadinessFailure;
-    report.error = String(error?.stack || error?.message || error).slice(
-      0,
-      5000,
-    );
   } finally {
+    for (const lifetime of report.lifetimes || []) {
+      for (const sample of lifetime.samples || []) delete sample.__rgba;
+    }
     if (viewer) {
       try {
         if (viewer.isDestroyed() === false) viewer.destroy();

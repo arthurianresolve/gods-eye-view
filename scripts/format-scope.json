@@ -1219,6 +1219,8 @@
   "scripts/fixtures/cable-reference-collections-contract.mjs",
   "scripts/fixtures/cableFailureDiagnostics.mjs",
   "scripts/fixtures/cableFailureDiagnostics.test.mjs",
+  "scripts/fixtures/cableLifetimeIsolation.mjs",
+  "scripts/fixtures/cableLifetimeIsolation.test.mjs",
   "scripts/fixtures/cableClassificationAttribution.mjs",
   "scripts/fixtures/cableClassificationAttribution.test.mjs",
   "scripts/fixtures/cableGeometryAttribution.mjs",
