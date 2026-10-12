@@ -43,6 +43,12 @@ import {
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
 import {
+  assertVerifiedNativeRendererEvidence,
+  nativeRendererDiagnosticEvidence,
+  rendererLaunchArgs,
+  validateNativeRendererDiagnosticHost,
+} from './performance/hostedRendererBackend.mjs';
+import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   createShaderProgramAttributionEnvelope,
   installEarlyCesiumRendererProbe,
@@ -267,9 +273,21 @@ const ownedBrowserPidFile = option('--owned-browser-pid-file', null);
 const hardwareRequired = args.includes('--hardware-required');
 const softwareRendering = args.includes('--software-rendering');
 const hostedFixture = args.includes('--hosted-fixture');
+const nativeRenderingDiagnostic = args.includes(
+  '--native-rendering-diagnostic',
+);
+if (nativeRenderingDiagnostic) validateNativeRendererDiagnosticHost();
 if (hardwareRequired && softwareRendering)
   throw new Error(
     '--hardware-required cannot be combined with --software-rendering',
+  );
+if (nativeRenderingDiagnostic && softwareRendering)
+  throw new Error(
+    '--native-rendering-diagnostic cannot be combined with --software-rendering',
+  );
+if (nativeRenderingDiagnostic && hardwareRequired)
+  throw new Error(
+    '--native-rendering-diagnostic is diagnostic-only and cannot be combined with --hardware-required',
   );
 const appCommitOverride = option('--app-commit', null);
 const appWorktreeStateOverride = option('--app-worktree-state', null);
@@ -346,11 +364,25 @@ if (
     weatherEffectsWorkload ||
     austinOperatingWorkloadSelected
   ) ||
-    !softwareRendering ||
+    !(softwareRendering || nativeRenderingDiagnostic) ||
     !buildProvenanceEnabled)
 )
   throw new Error(
-    '--hosted-fixture requires a registered verified fixture and explicit software rendering.',
+    '--hosted-fixture requires a registered verified fixture and an explicit hosted rendering backend.',
+  );
+if (
+  nativeRenderingDiagnostic &&
+  (!hostedFixture ||
+    !buildProvenanceEnabled ||
+    !(
+      productionFlightFixture ||
+      infrastructureWorkload ||
+      weatherEffectsWorkload ||
+      austinOperatingWorkloadSelected
+    ))
+)
+  throw new Error(
+    '--native-rendering-diagnostic requires a registered verified hosted fixture.',
   );
 const actualHarnessRoot = await fs.realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
@@ -566,6 +598,14 @@ const failureProgress = {
     rendererProbeCleanupOmittedCount: 0,
     rendererLoopRetirements: [],
     rendererLoopRetirementsOmittedCount: 0,
+    ...(nativeRenderingDiagnostic
+      ? {
+          nativeRendererDiagnostic: {
+            requestedBackend: 'macos-native-diagnostic',
+            performanceAcceptanceEligible: false,
+          },
+        }
+      : {}),
     fixtureInterceptionReleases: [],
     warmupMs,
     durationPerSampleMs: seconds * 1000,
@@ -1193,13 +1233,13 @@ const browser = await puppeteer.launch({
     '--disable-renderer-backgrounding',
     '--disable-background-timer-throttling',
     ...(hostedFixture ? ['--no-sandbox', '--disable-dev-shm-usage'] : []),
-    ...(softwareRendering
-      ? [
-          '--use-gl=angle',
-          '--use-angle=swiftshader',
-          '--enable-unsafe-swiftshader',
-        ]
-      : []),
+    ...rendererLaunchArgs(
+      nativeRenderingDiagnostic
+        ? 'macos-native-diagnostic'
+        : softwareRendering
+          ? 'swiftshader'
+          : null,
+    ),
   ],
 });
 if (ownedBrowserPidFile) {
@@ -2513,6 +2553,9 @@ try {
   activePage = await browser.newPage();
   let page = activePage;
   let providerContext = null;
+  let nativeRendererEvidence = null;
+  let graphics = null;
+  let graphicsRead = false;
   let flightFixtureDelivery = productionFlightFixture
     ? createFlightFixtureDeliveryObserver(
         productionFlightFixture,
@@ -2564,6 +2607,25 @@ try {
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
+  if (nativeRenderingDiagnostic) {
+    const earlyRenderer = await page.evaluate(() => ({
+      renderer: window.__gevRecoveryEarlyRendererProbe?.renderer ?? null,
+      vendor: window.__gevRecoveryEarlyRendererProbe?.vendor ?? null,
+    }));
+    graphics = await readBrowserGraphicsInfo(browser);
+    graphicsRead = true;
+    nativeRendererEvidence = nativeRendererDiagnosticEvidence({
+      renderer: earlyRenderer.renderer,
+      vendor: earlyRenderer.vendor,
+      graphics,
+    });
+    failureProgress.workload.nativeRendererDiagnostic = nativeRendererEvidence;
+    assertVerifiedNativeRendererEvidence(
+      nativeRendererEvidence,
+      earlyRenderer.renderer,
+      earlyRenderer.vendor,
+    );
+  }
   await disableCaptureDiagnostics(page, 'main-setup', activeDocumentId);
   const readyMs = Date.now();
   await page.waitForFunction(
@@ -3394,7 +3456,30 @@ try {
       environment.renderer || '',
     );
   environment.hardwareEligible =
-    Boolean(environment.renderer) && !softwareRenderer;
+    Boolean(environment.renderer) &&
+    !softwareRenderer &&
+    !nativeRenderingDiagnostic;
+  if (nativeRenderingDiagnostic) {
+    const currentRendererEvidence = nativeRendererDiagnosticEvidence({
+      renderer: environment.renderer,
+      vendor: environment.vendor,
+      graphics,
+    });
+    if (
+      currentRendererEvidence.observedRenderer !==
+        nativeRendererEvidence.observedRenderer ||
+      currentRendererEvidence.observedWebglVendor !==
+        nativeRendererEvidence.observedWebglVendor
+    )
+      throw new Error(
+        'Cesium renderer changed after native diagnostic verification.',
+      );
+    assertVerifiedNativeRendererEvidence(
+      nativeRendererEvidence,
+      environment.renderer,
+      environment.vendor,
+    );
+  }
 
   const scenarios = ['idle', 'scripted-motion'];
   if (fixture) scenarios.push('selected-aircraft-tracking');
@@ -5358,6 +5443,10 @@ try {
     comparisonReadinessReasons.push(
       'shader-program-attribution-instrumentation-is-enabled',
     );
+  if (nativeRenderingDiagnostic)
+    comparisonReadinessReasons.push(
+      'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+    );
   if (weatherEffectsWorkload)
     comparisonReadinessReasons.push(
       'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
@@ -5366,7 +5455,7 @@ try {
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
-  const graphics = await readBrowserGraphicsInfo(browser);
+  if (!graphicsRead) graphics = await readBrowserGraphicsInfo(browser);
   const report = {
     schema: 'gev-performance-capture/v1',
     workerAuditMode,
@@ -5411,6 +5500,9 @@ try {
       documents: performanceDiagnosticsDocuments,
     },
     capturedAt: new Date().toISOString(),
+    ...(nativeRendererEvidence
+      ? { nativeRendererDiagnostic: nativeRendererEvidence }
+      : {}),
     source,
     url: new URL(url).origin,
     comparisonEligible,
@@ -5446,6 +5538,8 @@ try {
   } else {
     process.stdout.write(json);
   }
+  if (nativeRendererEvidence && nativeRendererEvidence.status !== 'verified')
+    process.exitCode = 2;
   if (hardwareRequired && !environment.hardwareEligible) process.exitCode = 2;
   // Idle governor frames are intentionally sparse and are not a motion
   // performance failure. Apply an explicit frame budget only to the moving

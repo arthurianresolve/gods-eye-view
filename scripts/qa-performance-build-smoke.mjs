@@ -64,6 +64,16 @@ import {
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloadContract.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './performance/austinOperatingWorkloadContract.mjs';
 import { validateReceiptOnlyWorkerAuditEnvelope } from './performance/receiptOnlyWorkerAudit.mjs';
+import {
+  assertVerifiedNativeRendererEvidence,
+  captureCliRendererArgs,
+  DEFAULT_CAPTURE_RENDERER_BACKEND,
+  NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+  nativeRendererDiagnosticEvidence,
+  rendererLaunchArgs,
+  validateNativeRendererDiagnosticHost,
+} from './performance/hostedRendererBackend.mjs';
+import { readBrowserGraphicsInfo } from './performance/rendererEvidence.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 import { boundedShaderProgramAttribution } from './performance/earlyCesiumRendererProbe.mjs';
@@ -124,6 +134,7 @@ const OPTION_KEYS = new Map([
   ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
   ['--capture-depth-pick-attribution', 'depthPickAttribution'],
   ['--capture-shader-program-attribution', 'shaderProgramAttribution'],
+  ['--capture-renderer-backend', 'captureRendererBackend'],
 ]);
 
 const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
@@ -312,6 +323,11 @@ export function parseSmokeArguments(argv) {
       !['diagnostic', 'prewarm', 'receipt-only'].includes(value)
     )
       throw new TypeError('Worker audit mode is invalid.');
+    if (
+      flag === '--capture-renderer-backend' &&
+      !['swiftshader', 'macos-native-diagnostic'].includes(value)
+    )
+      throw new TypeError('Capture renderer backend is invalid.');
     if (
       flag === '--provider-fixture' &&
       value !== 'dense-investigation' &&
@@ -758,6 +774,16 @@ export function assertProviderFixtureCaptureClock(
 }
 
 export function validateCaptureCliReport(report, expected) {
+  validateRendererBackendEvidence(report, expected.captureRendererBackend);
+  const nativeRendererReason =
+    'hosted-native-renderer-diagnostic-is-ineligible-for-comparison';
+  const readinessReasons = report?.comparisonReadiness?.reasons;
+  assert.ok(Array.isArray(readinessReasons));
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND) {
+    assert.ok(readinessReasons.includes(nativeRendererReason));
+    assert.equal(report.comparisonEligible, false);
+    assert.equal(report.environment?.hardwareEligible, false);
+  } else assert.equal(readinessReasons.includes(nativeRendererReason), false);
   if (expected.providerFixture === AUSTIN_OPERATING_WORKLOAD_ID)
     return validateAustinOperatingCaptureCliReport(report, expected);
   if (expected.providerFixture === WEATHER_EFFECTS_WORKLOAD_ID)
@@ -1263,6 +1289,10 @@ export function validateCaptureCliReport(report, expected) {
     observedReadinessReasons.push(
       'shader-program-attribution-instrumentation-is-enabled',
     );
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    observedReadinessReasons.push(
+      'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+    );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
     report.comparisonReadiness?.reasons,
@@ -1273,7 +1303,9 @@ export function validateCaptureCliReport(report, expected) {
       'latency-comparison-remains-disabled-pending-uninstrumented-capture',
     ),
   );
-  assert.match(report.environment?.renderer || '', /swiftshader/i);
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    assert.ok(report.environment?.renderer);
+  else assert.match(report.environment?.renderer || '', /swiftshader/i);
   assert.equal(report.environment?.hardwareEligible, false);
   assert.equal(report.captures?.length, 6);
   assert.equal(report.fixtureDelivery?.status, 'observed');
@@ -1342,10 +1374,27 @@ export function validateCaptureCliReport(report, expected) {
     })),
     rawReport: report,
     limitations: [
-      'Hosted software-rendering CLI integration only; not hardware or paired performance evidence.',
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted native-renderer CLI integration only; not physical desktop or paired performance evidence.'
+        : 'Hosted software-rendering CLI integration only; not hardware or paired performance evidence.',
       'The static production flight fixture verifies source delivery and populations, not a complete moving trajectory contract.',
     ],
   };
+}
+
+export function validateRendererBackendEvidence(
+  report,
+  backend = DEFAULT_CAPTURE_RENDERER_BACKEND,
+) {
+  if (backend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    return assertVerifiedNativeRendererEvidence(
+      report?.nativeRendererDiagnostic,
+      report?.environment?.renderer,
+      report?.environment?.vendor,
+    );
+  assert.equal(backend, DEFAULT_CAPTURE_RENDERER_BACKEND);
+  assert.equal(report?.nativeRendererDiagnostic, undefined);
+  return true;
 }
 
 export function validateAustinOperatingReadinessHistoryEnvelope(
@@ -1596,7 +1645,9 @@ function validateAustinOperatingCaptureCliReport(report, expected) {
     limitations: [
       'Four-sample Austin provider wiring smoke only; not the required five-run, 30-second warmup and 60-second comparison workload.',
       'Synthetic radio and installation sources are benchmark fixtures and do not establish live Austin source coverage.',
-      'Software rendering cannot support hardware performance claims.',
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted native rendering is diagnostic only; it does not establish physical desktop coverage or paired performance evidence.'
+        : 'Software rendering cannot support hardware performance claims.',
     ],
   };
 }
@@ -1969,7 +2020,9 @@ function validateWeatherEffectsCaptureCliReport(report, expected) {
     scenarios: report.workload.scenarios,
     rawReport: report,
     limitations: [
-      'Hosted short software-rendering weather/effects fixture diagnostic only; not hardware or paired performance evidence.',
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted short native-renderer weather/effects fixture diagnostic only; not physical desktop or paired performance evidence.'
+        : 'Hosted short software-rendering weather/effects fixture diagnostic only; not hardware or paired performance evidence.',
       'The preflight exercises the three fixed weather frames and starts the weather clock playback; it does not complete the full 90-second performance acceptance workload.',
     ],
   };
@@ -2329,6 +2382,10 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     workerBlobAuditMode: 'diagnostic',
     hardwareRequired: false,
   });
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    readinessReasons.push(
+      'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+    );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(report.comparisonReadiness?.reasons, readinessReasons);
   assert.ok(
@@ -2336,7 +2393,9 @@ function validateInfrastructureCaptureCliReport(report, expected) {
       'latency-comparison-remains-disabled-pending-uninstrumented-capture',
     ),
   );
-  assert.match(report.environment?.renderer || '', /swiftshader/i);
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    assert.ok(report.environment?.renderer);
+  else assert.match(report.environment?.renderer || '', /swiftshader/i);
   assert.equal(report.environment?.hardwareEligible, false);
   assert.equal(report.captures?.length, 4);
   for (const scenario of report.workload.scenarios) {
@@ -2377,7 +2436,9 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     scenarios: report.workload.scenarios,
     rawReport: report,
     limitations: [
-      'Hosted software-rendering infrastructure capture only; not hardware or paired performance evidence.',
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted native-renderer infrastructure capture only; not physical desktop or paired performance evidence.'
+        : 'Hosted software-rendering infrastructure capture only; not hardware or paired performance evidence.',
       'Infrastructure capture is diagnostic and does not establish baseline/candidate visual parity.',
     ],
   };
@@ -3133,6 +3194,7 @@ export function buildCaptureCliValidationExpectations({
   firstMotionCpuProfile,
   depthPickAttribution,
   shaderProgramAttribution,
+  captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   austinOperatingFixture,
   receiptOnlyWorkerContract,
 }) {
@@ -3151,6 +3213,9 @@ export function buildCaptureCliValidationExpectations({
           ? { austinOperatingFixture: fixture }
           : {}),
     workerAuditMode,
+    ...(captureRendererBackend !== DEFAULT_CAPTURE_RENDERER_BACKEND
+      ? { captureRendererBackend }
+      : {}),
     ...(receiptOnlyWorkerContract ? { receiptOnlyWorkerContract } : {}),
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
@@ -3171,6 +3236,7 @@ async function runCandidateCaptureCli({
   fixture,
   providerFixture,
   workerAuditMode,
+  captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
@@ -3241,7 +3307,6 @@ async function runCandidateCaptureCli({
     '--protocol-timeout-ms',
     '120000',
     '--headless',
-    '--software-rendering',
     '--hosted-fixture',
     '--owned-browser-pid-file',
     browserPidPath,
@@ -3262,6 +3327,7 @@ async function runCandidateCaptureCli({
     '--out',
     reportPath,
   ];
+  args.push(...captureCliRendererArgs(captureRendererBackend));
   if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
   if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
   if (depthPickAttribution) args.push('--depth-pick-attribution');
@@ -3315,6 +3381,7 @@ async function runCandidateCaptureCli({
         fixture,
         providerFixture,
         workerAuditMode,
+        captureRendererBackend,
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
         depthPickAttribution,
@@ -3413,6 +3480,8 @@ async function runRevision({
   startedAt,
   budgetMs,
   workerAuditMode,
+  captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
+  browserGraphics = null,
   providerFixture,
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
@@ -3494,6 +3563,7 @@ async function runRevision({
   };
   let failure = null;
   let result = null;
+  let nativeRendererEvidence = null;
   try {
     const captureUrl = served.baseUrl;
     phase = 'verify-served-assets-before';
@@ -3624,6 +3694,22 @@ async function runRevision({
       timeout: 60_000,
       polling: 100,
     });
+    if (captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND) {
+      const earlyRenderer = await page.evaluate(() => ({
+        renderer: window.__gevRecoveryEarlyRendererProbe?.renderer ?? null,
+        vendor: window.__gevRecoveryEarlyRendererProbe?.vendor ?? null,
+      }));
+      nativeRendererEvidence = nativeRendererDiagnosticEvidence({
+        renderer: earlyRenderer.renderer,
+        vendor: earlyRenderer.vendor,
+        graphics: browserGraphics,
+      });
+      assertVerifiedNativeRendererEvidence(
+        nativeRendererEvidence,
+        earlyRenderer.renderer,
+        earlyRenderer.vendor,
+      );
+    }
     await page.waitForFunction(
       () => Boolean(window.__godsEyeView?.styleManager?.getVisualState),
       { timeout: 30_000, polling: 100 },
@@ -3696,12 +3782,29 @@ async function runRevision({
     const before = await page.evaluate(observeCommonScene, {
       appCommit: commit,
     });
+    if (
+      nativeRendererEvidence &&
+      before.environment?.renderer !== nativeRendererEvidence.observedRenderer
+    )
+      throw new Error(
+        'Smoke scene renderer differs from its early native diagnostic observation.',
+      );
     const routeStart = before.camera;
     const routeStartMs = await page.evaluate(() => performance.now());
     await new Promise((resolve) => setTimeout(resolve, 250));
     const after = await page.evaluate(observeCommonScene, {
       appCommit: commit,
     });
+    if (
+      nativeRendererEvidence &&
+      (after.environment?.renderer !==
+        nativeRendererEvidence.observedRenderer ||
+        after.environment?.vendor !==
+          nativeRendererEvidence.observedWebglVendor)
+    )
+      throw new Error(
+        'Observed renderer changed during the hosted native diagnostic.',
+      );
     const routeEndMs = await page.evaluate(() => performance.now());
     const fixtureClockEnd = await page.evaluate(() => ({
       clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
@@ -3732,8 +3835,15 @@ async function runRevision({
       measurement: { cameraPath: { id: 'integration-smoke-idle' } },
     });
     const renderer = after.environment.renderer.toLowerCase();
-    if (!renderer.includes('swiftshader'))
+    if (captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND) {
+      assertVerifiedNativeRendererEvidence(
+        nativeRendererEvidence,
+        after.environment.renderer,
+        after.environment.vendor,
+      );
+    } else if (!renderer.includes('swiftshader')) {
       throw new Error('Observed renderer does not identify SwiftShader.');
+    }
     phase = 'served-assets-postcheck';
     const postVerification = await provenance.verifyAfterCapture();
     phase = 'final-page-health-and-code-path-audit';
@@ -3885,6 +3995,7 @@ async function runRevision({
               austinOperatingCaptureFixture,
         providerFixture,
         workerAuditMode,
+        captureRendererBackend,
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
         depthPickAttribution,
@@ -3945,14 +4056,15 @@ async function runRevision({
       rendererProbeCleanupOmittedCount,
       serviceWorker: serviceWorkerState,
       browser: {
-        softwareRenderingRequested: true,
-        flags: [
-          '--use-gl=angle',
-          '--use-angle=swiftshader',
-          '--enable-unsafe-swiftshader',
-        ],
+        requestedBackend: captureRendererBackend,
+        softwareRenderingRequested:
+          captureRendererBackend === DEFAULT_CAPTURE_RENDERER_BACKEND,
+        flags: rendererLaunchArgs(captureRendererBackend),
         observedRenderer: after.environment.renderer,
         observedVendor: after.environment.vendor,
+        ...(nativeRendererEvidence
+          ? { nativeRendererDiagnostic: nativeRendererEvidence }
+          : {}),
       },
       route,
       observerBefore: simplifyObservation(before),
@@ -3977,6 +4089,7 @@ async function runRevision({
       rendererProbeCleanup,
       rendererProbeCleanupOmittedCount,
       densePopulationObservations,
+      ...(nativeRendererEvidence ? { nativeRendererEvidence } : {}),
     };
     failure = error;
   } finally {
@@ -4070,6 +4183,7 @@ async function main() {
     firstMotionCpuProfile = false,
     depthPickAttribution = false,
     shaderProgramAttribution = false,
+    captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   } = parseSmokeArguments(process.argv.slice(2));
   assertSha(candidateSha, 'Candidate SHA');
   assert.notEqual(
@@ -4120,6 +4234,9 @@ async function main() {
     candidateSha,
     harnessSha: harnessCommit,
     captureWorkerAuditMode,
+    captureRendererBackend,
+    comparisonEligible: false,
+    performanceAcceptanceEligible: false,
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
     depthPickAttribution,
@@ -4139,7 +4256,9 @@ async function main() {
       'The browser request audit records code paths; it does not independently attest response bytes.',
       'The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.',
       'The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.',
-      'Software rendering is explicit SwiftShader and cannot support hardware performance claims.',
+      captureRendererBackend === DEFAULT_CAPTURE_RENDERER_BACKEND
+        ? 'Software rendering is explicit SwiftShader and cannot support hardware performance claims.'
+        : 'Native rendering on a hosted macOS runner is a reachability diagnostic; Metal may be paravirtualized and is not physical desktop or paired performance evidence.',
     ],
     failure: null,
   };
@@ -4152,9 +4271,12 @@ async function main() {
   const budgetMs = DEFAULT_BUDGET_MS;
   let temporary = null;
   let browser = null;
+  let browserGraphics = null;
   const worktrees = [];
   const cleanupErrors = [];
   try {
+    if (captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+      validateNativeRendererDiagnosticHost();
     if (Date.now() - startedAt > budgetMs)
       throw new Error('Smoke time budget expired during runner setup.');
     const runnerTemp = await realpath(process.env.RUNNER_TEMP || os.tmpdir());
@@ -4175,11 +4297,11 @@ async function main() {
       args: [
         '--no-sandbox',
         '--disable-dev-shm-usage',
-        '--use-gl=angle',
-        '--use-angle=swiftshader',
-        '--enable-unsafe-swiftshader',
+        ...rendererLaunchArgs(captureRendererBackend),
       ],
     });
+    if (captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+      browserGraphics = await readBrowserGraphicsInfo(browser);
     for (const [index, [label, commit]] of [
       ['baseline', BASELINE_SHA],
       ['candidate', candidateSha],
@@ -4204,6 +4326,8 @@ async function main() {
           startedAt,
           budgetMs,
           workerAuditMode: captureWorkerAuditMode,
+          captureRendererBackend,
+          browserGraphics,
           sceneFrameDiagnostics,
           firstMotionCpuProfile,
           depthPickAttribution,

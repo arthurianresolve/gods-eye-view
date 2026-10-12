@@ -19,7 +19,10 @@ import {
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
   validateCaptureCliReport,
+  validateRendererBackendEvidence,
 } from './qa-performance-build-smoke.mjs';
+import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
+import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 import {
   createProductionFlightFixture,
@@ -307,6 +310,17 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     },
   );
   assert.deepEqual(parseSmokeArguments([]), {});
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-renderer-backend',
+      NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+    ]),
+    { captureRendererBackend: NATIVE_MACOS_DIAGNOSTIC_BACKEND },
+  );
+  assert.throws(
+    () => parseSmokeArguments(['--capture-renderer-backend', 'native']),
+    /renderer backend is invalid/,
+  );
   assert.throws(
     () =>
       parseSmokeArguments([
@@ -423,6 +437,71 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
         'dense-investigation',
       ]),
     /Austin operating fixture/,
+  );
+});
+
+test('capture report renderer validation binds verified evidence to the observed renderer', () => {
+  const renderer =
+    'ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)';
+  const nativeEvidence = nativeRendererDiagnosticEvidence({
+    renderer,
+    vendor: 'Apple Inc.',
+    graphics: {
+      featureStatus: { webgl: 'enabled', webgl2: 'enabled' },
+    },
+  });
+  const report = {
+    environment: { renderer, vendor: 'Apple Inc.' },
+    nativeRendererDiagnostic: nativeEvidence,
+  };
+  assert.equal(
+    validateRendererBackendEvidence(report, NATIVE_MACOS_DIAGNOSTIC_BACKEND),
+    nativeEvidence,
+  );
+  assert.equal(validateRendererBackendEvidence({ environment: {} }), true);
+  assert.throws(
+    () => validateRendererBackendEvidence(report),
+    /Expected values to be strictly equal/,
+  );
+  const missingVendor = structuredClone(report);
+  delete missingVendor.environment.vendor;
+  assert.throws(
+    () =>
+      validateRendererBackendEvidence(
+        missingVendor,
+        NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+      ),
+    /accelerated graphics/,
+  );
+  const mismatchedVendor = structuredClone(report);
+  mismatchedVendor.environment.vendor = 'Different vendor';
+  assert.throws(
+    () =>
+      validateRendererBackendEvidence(
+        mismatchedVendor,
+        NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+      ),
+    /accelerated graphics/,
+  );
+  const contradictory = structuredClone(report);
+  contradictory.environment.renderer = 'Google SwiftShader';
+  assert.throws(
+    () =>
+      validateRendererBackendEvidence(
+        contradictory,
+        NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+      ),
+    /accelerated graphics/,
+  );
+  const disabled = structuredClone(report);
+  disabled.nativeRendererDiagnostic.featureStatus.webgl = 'disabled';
+  assert.throws(
+    () =>
+      validateRendererBackendEvidence(
+        disabled,
+        NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+      ),
+    /accelerated graphics/,
   );
 });
 
@@ -817,6 +896,55 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
     },
     captures,
   };
+}
+
+function addNativeRendererDiagnosticToDenseReport(report) {
+  const renderer =
+    'ANGLE (Apple, ANGLE Metal Renderer: Apple M2, Unspecified Version)';
+  const vendor = 'Apple Inc.';
+  report.environment.renderer = renderer;
+  report.environment.vendor = vendor;
+  report.environment.hardwareEligible = false;
+  report.nativeRendererDiagnostic = nativeRendererDiagnosticEvidence({
+    renderer,
+    vendor,
+    graphics: {
+      featureStatus: {
+        webgl: 'enabled',
+        webgl2: 'enabled',
+        gpu_compositing: 'enabled',
+        opengl: 'enabled_on',
+      },
+    },
+  });
+  report.comparisonContract = createObservedDenseComparisonContract({
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+  });
+  report.comparisonReadiness.reasons = getCaptureComparisonIneligibilityReasons(
+    {
+      contract: report.comparisonContract,
+      fixture: report.workload.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      source: report.source,
+      environment: report.environment,
+      workload: report.workload,
+      captures: report.captures,
+      diagnosticsDocuments: report.performanceDiagnostics.documents,
+      workerBlobAuditInstrumented: true,
+      workerBlobAuditMode: 'diagnostic',
+      hardwareRequired: false,
+    },
+  );
+  report.comparisonReadiness.reasons.push(
+    'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+  );
+  report.comparisonReadiness.reason =
+    report.comparisonReadiness.reasons.join('; ');
+  return report;
 }
 
 function validInfrastructureCaptureCliReport(
@@ -1651,6 +1779,53 @@ test('capture CLI validator accepts only the complete six-sample hosted smoke co
       }),
     /sampleCount/,
   );
+});
+
+test('capture CLI accepts verified hosted native reports only with the recomputed ineligibility reason', () => {
+  const expected = {
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: EXPECTED_FIXTURE_SHA256,
+    captureRendererBackend: NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+  };
+  const report = addNativeRendererDiagnosticToDenseReport(
+    validCaptureCliReport(),
+  );
+  assert.equal(validateCaptureCliReport(report, expected).status, 'passed');
+
+  const missingReason = structuredClone(report);
+  missingReason.comparisonReadiness.reasons =
+    missingReason.comparisonReadiness.reasons.filter(
+      (reason) =>
+        reason !==
+        'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+    );
+  missingReason.comparisonReadiness.reason =
+    missingReason.comparisonReadiness.reasons.join('; ');
+  assert.throws(() => validateCaptureCliReport(missingReason, expected));
+
+  const alteredReason = structuredClone(report);
+  alteredReason.comparisonReadiness.reasons =
+    alteredReason.comparisonReadiness.reasons.map((reason) =>
+      reason ===
+      'hosted-native-renderer-diagnostic-is-ineligible-for-comparison'
+        ? 'hosted-native-renderer-diagnostic-is-eligible-for-comparison'
+        : reason,
+    );
+  alteredReason.comparisonReadiness.reason =
+    alteredReason.comparisonReadiness.reasons.join('; ');
+  assert.throws(() => validateCaptureCliReport(alteredReason, expected));
+
+  for (const field of ['comparisonEligible', 'hardwareEligible']) {
+    const contradictory = structuredClone(report);
+    if (field === 'comparisonEligible') contradictory.comparisonEligible = true;
+    else contradictory.environment.hardwareEligible = true;
+    assert.throws(
+      () => validateCaptureCliReport(contradictory, expected),
+      `Native diagnostic must keep ${field} false.`,
+    );
+  }
 });
 
 test('shader attribution smoke validation binds serialized producer records and remains ineligible', () => {
