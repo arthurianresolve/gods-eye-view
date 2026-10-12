@@ -13,9 +13,7 @@ import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
-  installFixedWallClock,
-  installHeldMonotonicWallClock,
-  installPhasedMonotonicWallClock,
+  installFixtureWallClockOnPage,
   settleCompletedRender,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
@@ -432,14 +430,11 @@ async function configureFlightFixturePage(
   { holdClockUntilCapture = false, phasedClock = false } = {},
 ) {
   if (!productionFlightFixture) return;
-  await page.evaluateOnNewDocument(
-    phasedClock
-      ? installPhasedMonotonicWallClock
-      : holdClockUntilCapture
-        ? installHeldMonotonicWallClock
-        : installFixedWallClock,
+  await installFixtureWallClockOnPage(
+    page,
     productionFlightFixture.fixedTimeMs,
-    ...(phasedClock ? [warmupMs, seconds * 1000] : []),
+    { phasedClock, holdClockUntilCapture },
+    phasedClock ? [warmupMs, seconds * 1000] : [],
   );
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);
@@ -761,9 +756,10 @@ try {
         })
       : null;
     if (documentInfrastructureDelivery) {
-      await auditPage.evaluateOnNewDocument(
-        installFixedWallClock,
+      await installFixtureWallClockOnPage(
+        auditPage,
         infrastructureWorkload.fixedTimeMs,
+        { infrastructure: true },
       );
       const responseListener = (response) =>
         documentInfrastructureDelivery.onResponse(response);

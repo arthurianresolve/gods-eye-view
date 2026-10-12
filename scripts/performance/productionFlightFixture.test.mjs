@@ -6,8 +6,11 @@ import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installFixedWallClock,
+  installFrozenWallClock,
   installHeldMonotonicWallClock,
   installPhasedMonotonicWallClock,
+  installFixtureWallClockOnPage,
+  selectFixtureWallClockInstaller,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './productionFlightFixture.mjs';
@@ -245,6 +248,59 @@ test('fixed page clock changes Date wall time without replacing performance time
   assert.equal(Number.isInteger(target.Date.now()), true);
   assert.equal(new target.Date().getTime(), fixed + 1500);
   assert.equal(target.performance.now(), 1623.5);
+});
+
+test('infrastructure fixture wall clock stays frozen while monotonic time advances', () => {
+  let performanceTime = 123.5;
+  const target = { Date, performance: { now: () => performanceTime } };
+  const fixed = Date.parse('2026-10-08T12:00:00.000Z');
+  let installedClock = null;
+  const fakePage = {
+    evaluateOnNewDocument(installer, ...args) {
+      installedClock = installer;
+      return installer(...args, target);
+    },
+  };
+  installFixtureWallClockOnPage(fakePage, fixed, { infrastructure: true });
+  assert.equal(installedClock, installFrozenWallClock);
+
+  assert.equal(target.Date.now(), fixed);
+  assert.equal(new target.Date().getTime(), fixed);
+  assert.equal(new target.Date(0).getTime(), 0);
+  assert.equal(
+    new target.Date('2020-01-02T03:04:05.000Z').toISOString(),
+    '2020-01-02T03:04:05.000Z',
+  );
+  assert.equal(target.Date(), new Date(fixed).toString());
+  assert.equal(target.Date(fixed + 1000), new Date(fixed).toString());
+  assert.equal(target.performance.now(), 123.5);
+
+  performanceTime += 90_000;
+  assert.equal(target.Date.now(), fixed);
+  assert.equal(new target.Date().getTime(), fixed);
+  assert.equal(target.performance.now(), 90_123.5);
+});
+
+test('fixture wall-clock selection preserves dense advancing and capture-held contracts', () => {
+  assert.equal(
+    selectFixtureWallClockInstaller({ phasedClock: true }),
+    installPhasedMonotonicWallClock,
+  );
+  assert.equal(
+    selectFixtureWallClockInstaller({ holdClockUntilCapture: true }),
+    installHeldMonotonicWallClock,
+  );
+  assert.equal(
+    selectFixtureWallClockInstaller(),
+    installFixedWallClock,
+  );
+
+  let performanceTime = 10;
+  const target = { Date, performance: { now: () => performanceTime } };
+  const fixed = Date.parse('2026-10-08T12:00:00.000Z');
+  selectFixtureWallClockInstaller()(fixed, target);
+  performanceTime += 2500;
+  assert.equal(target.Date.now(), fixed + 2500);
 });
 
 test('held monotonic wall clock starts once without replacing native timers or monotonic time', () => {
