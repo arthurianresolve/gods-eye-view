@@ -39,6 +39,12 @@ accepts the point identities, but both stem picks return no object. It delivers
 21 completed captures with ready geometry, then fails without a paired sample.
 The remaining pick failure needs attribution; the independent benefit fixture
 cannot override it.
+The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit-38205683313/README.md)
+completes twenty runs with verified native owners and twenty byte-identical
+image pairs. Whole-activation median improves 22.12% and enabled JS heap
+16.15%, while source-ready median worsens 36.99% in a different phase of that
+activation. Phase attribution and the separate runtime pick failure still
+block acceptance; this is hosted component evidence only.
 Datacenter component comparisons show repeatable activation and JS
 heap benefits with identical captured pixels. The fresh dam comparison regresses
 source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
