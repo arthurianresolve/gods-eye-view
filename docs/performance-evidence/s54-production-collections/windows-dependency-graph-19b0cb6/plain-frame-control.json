@@ -1,0 +1,84 @@
+{
+  "schema": "gev-webgl-frame-delivery/v1",
+  "appCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+  "harnessCommit": "19b0cb60c47f8161a4c07855d0343d43cccc30c8",
+  "scope": "diagnostic-only browser frame-delivery observation; not performance acceptance",
+  "mode": "plain-raf",
+  "outcome": "duration-complete",
+  "startedAt": "2026-10-11T10:31:57.273Z",
+  "elapsedMs": 5001,
+  "requestedDurationMs": 5000,
+  "desktopForegroundVerification": "unavailable",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "focusedAtStart": true,
+    "visibilityAtStart": "visible"
+  },
+  "pointCount": null,
+  "viewport": {
+    "width": 888,
+    "height": 529
+  },
+  "canvas": {
+    "width": 640,
+    "height": 360,
+    "rect": {
+      "left": 16,
+      "top": 259.375,
+      "right": 658,
+      "bottom": 621.375,
+      "width": 642,
+      "height": 362
+    },
+    "viewportIntersection": {
+      "width": 642,
+      "height": 269.625,
+      "fraction": 0.7448204419889503
+    }
+  },
+  "contextAttributes": null,
+  "renderer": null,
+  "rendererMetadataReadAfterWindow": true,
+  "frames": 296,
+  "firstFrameAtMs": 39.199999928474426,
+  "buckets": [
+    {
+      "startMs": 0,
+      "endMs": 1000,
+      "frames": 56
+    },
+    {
+      "startMs": 1000,
+      "endMs": 2000,
+      "frames": 60
+    },
+    {
+      "startMs": 2000,
+      "endMs": 3000,
+      "frames": 60
+    },
+    {
+      "startMs": 3000,
+      "endMs": 4000,
+      "frames": 60
+    },
+    {
+      "startMs": 4000,
+      "endMs": 5000,
+      "frames": 60
+    }
+  ],
+  "maximumFrameGapMs": 74.10000002384186,
+  "trailingFrameGapMs": 13.600000023841858,
+  "frameClock": "performance.now sampled inside each native requestAnimationFrame callback",
+  "timer": {
+    "intervalMs": 20,
+    "ticks": 246,
+    "maximumGapMs": 66.80000007152557,
+    "trailingGapMs": 0
+  },
+  "finalVisibility": "visible",
+  "finalFocused": true,
+  "contextLost": false,
+  "events": []
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Infrastructure renderer activation and memory measurement</title>
+    <style>
+      body {
+        margin: 12px;
+        color: #e8edf5;
+        background: #10151e;
+        font:
+          14px/1.45 system-ui,
+          sans-serif;
+      }
+      #viewer {
+        width: 960px;
+        height: 640px;
+        max-width: calc(100vw - 24px);
+        overflow: hidden;
+      }
+      #result {
+        max-width: 960px;
+        max-height: 180px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="status" role="status">Preparing fixture</p>
+    <div id="viewer"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script type="module" src="./infrastructure-benefit.mjs"></script>
+  </body>
+</html>

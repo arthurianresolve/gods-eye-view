@@ -295,7 +295,12 @@ export function updateCableReferenceStem(
   stemPositions[0] = record.base;
   stemPositions[1] = record.tip;
   record.entity.position.setValue(record.tip);
-  record.entity.polyline.positions.setValue(stemPositions);
+  if (record.pointPrimitive && record.polylinePrimitive) {
+    record.pointPrimitive.position = record.tip;
+    record.polylinePrimitive.positions = stemPositions;
+  } else {
+    record.entity.polyline.positions.setValue(stemPositions);
+  }
   return true;
 }
 

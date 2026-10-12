@@ -1,0 +1,10 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38133293001",
+  "commit": "96bd0c3102b46ee04d85fba04252a3e2dd7cb4db",
+  "rawSha256": "f7c44435b46d8c8ae8932bd1380bd61a0163a835370ae56e46caa4b931628d12",
+  "verifiedImages": 20,
+  "uniqueDecodedPngs": 2,
+  "exactPairs": 10,
+  "strictValidator": "passed",
+  "scope": "Hosted paravirtual Metal correctness only; not physical Windows or performance acceptance"
+}

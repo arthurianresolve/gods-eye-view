@@ -9,7 +9,8 @@ import {
 import { createRenderedSoakDriver } from './qa-rendered-soak-driver.mjs';
 import { runMixedUseSoak } from './qa-mixed-use-soak.mjs';
 import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
-import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
+import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
+import { DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -18,6 +19,7 @@ import {
   closeRecoveryBrowser,
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
+import { validateCableReferenceCollectionsReport } from './performance/cableReferenceCollections.mjs';
 import {
   assessHostedSourceFinish,
   assessHostedSourceStart,
@@ -37,6 +39,8 @@ let vesselPage;
 let vesselSession;
 let calibrationPage;
 let calibrationSession;
+let cableReferencePage;
+let cableReferenceSession;
 const closeOwnedBrowser = (ownedBrowser) =>
   closeRecoveryBrowser(ownedBrowser, {
     timeoutMs: 5000,
@@ -160,6 +164,13 @@ try {
     report.reason = report.hardwareRenderingAvailable
       ? 'Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.'
       : 'Standard runner did not expose verified acceleration. Hardware acceptance remains pending.';
+    if (
+      process.argv.includes('--cable-references') &&
+      !report.hardwareRenderingAvailable
+    )
+      throw new Error(
+        'Cable reference rendered comparison requires verified accelerated WebGL.',
+      );
     const importUrl = new URL(
       url.replace('capture-matrix.html', 'import-batches.html'),
     );
@@ -239,21 +250,29 @@ try {
           `Collection diagnostic failed: ${report.pointCollections.error || 'incomplete samples'}`,
         );
     }
-    if (
-      process.argv.includes('--infrastructure') &&
-      report.hardwareRenderingAvailable
-    ) {
+    const infrastructureDiagnostic =
+      process.argv.includes('--infrastructure') ||
+      process.argv.includes('--infrastructure-datacenters');
+    if (infrastructureDiagnostic && report.hardwareRenderingAvailable) {
       await page.setViewport({
         width: 1200,
         height: 960,
         deviceScaleFactor: 1,
       });
-      await page.goto(
-        url.replace('capture-matrix.html', 'infrastructure-collections.html'),
-        { waitUntil: 'networkidle0' },
+      const infrastructureUrl = new URL(
+        url.replace(
+          'capture-matrix.html',
+          'infrastructure-runtime-collections.html',
+        ),
       );
-      await page.select('#color-encoding', 'entity-color-attribute-byte');
-      await page.click('#run');
+      const expectedLayerId = process.argv.includes(
+        '--infrastructure-datacenters',
+      )
+        ? 'local-datacenters'
+        : DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID;
+      if (expectedLayerId !== DEFAULT_INFRASTRUCTURE_FIXTURE_LAYER_ID)
+        infrastructureUrl.searchParams.set('layerId', expectedLayerId);
+      await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
         { timeout: 360_000, polling: 100 },
@@ -262,6 +281,12 @@ try {
         '#result',
         (element) => JSON.parse(element.textContent),
       );
+      if (report.infrastructureCollections.status !== 'passed')
+        throw new Error(
+          'Infrastructure fixture failed: ' +
+            (report.infrastructureCollections.error?.message ||
+              'incomplete report'),
+        );
       report.infrastructureGraphics = await readBrowserGraphicsInfo(browser);
       report.infrastructureRenderingEvidence = classifyRenderer(
         report.infrastructureCollections.environment?.renderer,
@@ -276,10 +301,11 @@ try {
           ?.stemColorEncoding !== 'entity-color-attribute-byte'
       )
         throw new Error(
-          'Infrastructure run did not execute the explicitly selected RGBA8 candidate',
+          'Infrastructure run did not execute the production RGBA8 collection candidate',
         );
-      validateInfrastructureCollectionReport(report.infrastructureCollections, {
+      validateInfrastructureRuntimeReport(report.infrastructureCollections, {
         expectedCommit: commit,
+        expectedLayerId,
       });
     }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
@@ -454,6 +480,83 @@ try {
         expectedCommit: commit,
       });
     }
+    if (
+      process.argv.includes('--cable-references') &&
+      report.hardwareRenderingAvailable
+    ) {
+      report.cableReferencePageErrors = [];
+      report.cableReferenceInterceptionErrors = [];
+      report.cableReferenceExternalRequestCount = 0;
+      cableReferencePage = await browser.newPage();
+      cableReferencePage.on('pageerror', (error) => {
+        if (report.cableReferencePageErrors.length < 20)
+          report.cableReferencePageErrors.push(
+            String(error.message).slice(0, 500),
+          );
+      });
+      await cableReferencePage.setViewport({
+        width: 1200,
+        height: 1000,
+        deviceScaleFactor: 1,
+      });
+      cableReferenceSession = await cableReferencePage.createCDPSession();
+      await interceptFixtureSession(
+        cableReferenceSession,
+        new URL(url).origin,
+        (requestUrl) => {
+          if (
+            ['http:', 'https:'].includes(requestUrl.protocol) &&
+            requestUrl.origin !== new URL(url).origin
+          )
+            report.cableReferenceExternalRequestCount += 1;
+        },
+        (error) => {
+          if (report.cableReferenceInterceptionErrors.length < 20)
+            report.cableReferenceInterceptionErrors.push(
+              String(error.message).slice(0, 500),
+            );
+        },
+      );
+      await cableReferencePage.goto(
+        url.replace('capture-matrix.html', 'cable-reference-collections.html'),
+        { waitUntil: 'networkidle0' },
+      );
+      await cableReferencePage.click('#run');
+      const cableDeadline = Date.now() + 480_000;
+      for (;;) {
+        const result = await cableReferencePage.$eval('#result', (element) =>
+          element.textContent.trim() ? JSON.parse(element.textContent) : null,
+        );
+        if (result) {
+          report.cableReferenceCollections = result;
+          break;
+        }
+        if (Date.now() >= cableDeadline)
+          throw new Error('Cable reference collections fixture timeout');
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      report.cableReferenceGraphics = await readBrowserGraphicsInfo(browser);
+      report.cableReferenceRenderingEvidence = classifyRenderer(
+        report.cableReferenceCollections.environment?.renderer,
+        report.cableReferenceGraphics,
+      );
+      if (!report.cableReferenceRenderingEvidence.accelerationVerified)
+        throw new Error(
+          'Cable reference fixture did not retain verified acceleration',
+        );
+      if (
+        report.cableReferencePageErrors.length ||
+        report.cableReferenceInterceptionErrors.length ||
+        report.cableReferenceExternalRequestCount
+      )
+        throw new Error(
+          'Cable reference fixture had page errors or external requests',
+        );
+      validateCableReferenceCollectionsReport(
+        report.cableReferenceCollections,
+        { expectedCommit: commit },
+      );
+    }
     if (process.argv.includes('--soak') && report.hardwareRenderingAvailable) {
       const probeBrowser = browser;
       browser = null;
@@ -482,6 +585,11 @@ try {
       .evaluate(() => window.__vesselRenderDemandResult || null)
       .catch(() => null);
   }
+  if (cableReferencePage && !report.cableReferenceCollections) {
+    report.cableReferenceCollections = await cableReferencePage
+      .evaluate(() => window.__cableReferenceCollectionsResult || null)
+      .catch(() => null);
+  }
   report.status = 'failed';
   report.reason = `Native renderer probe failed: ${error.message}`;
   process.exitCode = 1;
@@ -497,6 +605,13 @@ try {
     await vesselSession.detach().catch((error) => {
       report.status = 'failed';
       report.vesselDetachError = error.message;
+      process.exitCode = 1;
+    });
+  }
+  if (cableReferenceSession) {
+    await cableReferenceSession.detach().catch((error) => {
+      report.status = 'failed';
+      report.cableReferenceDetachError = error.message;
       process.exitCode = 1;
     });
   }
@@ -550,11 +665,14 @@ try {
   }
   if (
     process.argv.includes('--infrastructure') ||
+    process.argv.includes('--infrastructure-datacenters') ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
     process.argv.includes('--import-point-entity') ||
     process.argv.includes('--import-point-collection') ||
-    process.argv.includes('--soak')
+    process.argv.includes('--import-point-benefit-diagnostics') ||
+    process.argv.includes('--soak') ||
+    process.argv.includes('--cable-references')
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

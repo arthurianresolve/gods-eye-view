@@ -1,0 +1,30 @@
+✔ converged focus treatment stays within the GC-bracketed allocation budget (6419.5539ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6584.2565
+✔ steady moving-source frames stay in budget below collision capacity (8270.0452ms)
+✔ steady moving-source frames stay in budget above collision capacity (8519.8355ms)
+✔ steady moving-source frames stay in budget with both local infrastructure sources live (10706.6787ms)
+✔ steady moving-source frames stay in budget with infrastructure and FIRMS live (10314.246ms)
+✔ steady moving-source frames stay in budget with infrastructure, FIRMS, and vessels live (13865.9251ms)
+✔ steady moving-source frames stay in budget with infrastructure, FIRMS, ambient vessels, and tracked readout live (13665.8642ms)
+✔ steady moving-source frames stay in budget with all Phase 3 sources and CCTV thumbnails live (15110.8726ms)
+✔ steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort (7464.328ms)
+✔ steady moving-source frames stay in budget with final Phase 5 host sources live (pre-cable-migration surface) (17411.9597ms)
+✔ steady moving-source frames stay in budget with final Phase 5 sources and bounded rocket-mission markers live (17114.4152ms)
+✔ steady moving-source frames stay in budget with every shared-host source and bounded Radio text live (20410.1171ms)
+✔ steady moving-source frames stay in budget with the bounded submarine-cable reference cohort (7862.4885ms)
+✔ steady moving-source frames stay in budget with the Dense detection lane active over 5,000 observations (22952.4716ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 179329.269

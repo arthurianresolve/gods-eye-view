@@ -71,6 +71,94 @@ test('performance monitor records frames and releases its listener', () => {
   assert.equal(removed, 1);
 });
 
+test('performance snapshots retain bounded S54 collection counts through teardown', () => {
+  let now = 0;
+  let listener = null;
+  let surface = {
+    surfaceCollectionOwners: 2,
+    surfacePoints: 716,
+    surfaceStems: 699,
+    referenceCollections: 2,
+    referencePointPrimitives: 2629,
+    referenceStemPrimitives: 2629,
+    referenceRenderer: 'primitive-collections',
+    sourceUrl: 'https://private.invalid/data.json',
+  };
+  const monitor = createPerformanceMonitor({
+    now: () => now,
+    viewer: {
+      scene: {
+        canvas: { width: 800, height: 600 },
+        postRender: { addEventListener(callback) { listener = callback; } },
+      },
+    },
+    readOwnership: () => ({
+      infrastructure: surface,
+      submarineCables: surface,
+    }),
+  });
+
+  now = 10;
+  listener?.();
+  const active = monitor.getSnapshot();
+  assert.deepEqual(active.resources.ownerResources, {
+    infrastructure: {
+      surfaceCollectionOwners: 2,
+      surfacePoints: 716,
+      surfaceStems: 699,
+      referenceCollections: 2,
+      referencePointPrimitives: 2629,
+      referenceStemPrimitives: 2629,
+    },
+    submarineCables: {
+      surfaceCollectionOwners: 2,
+      surfacePoints: 716,
+      surfaceStems: 699,
+      referenceCollections: 2,
+      referencePointPrimitives: 2629,
+      referenceStemPrimitives: 2629,
+    },
+  });
+  assert.equal(
+    JSON.stringify(active.resources.ownerResources).includes(
+      'primitive-collections',
+    ),
+    false,
+  );
+  assert.equal(
+    JSON.stringify(active.resources.ownerResources).includes(
+      'private.invalid',
+    ),
+    false,
+  );
+
+  surface = Object.fromEntries(
+    Object.keys(surface).map((field) => [field, 0]),
+  );
+  now = 20;
+  listener?.();
+  const destroyed = monitor.getSnapshot();
+  assert.deepEqual(destroyed.resources.ownerResources, {
+    infrastructure: {
+      surfaceCollectionOwners: 0,
+      surfacePoints: 0,
+      surfaceStems: 0,
+      referenceCollections: 0,
+      referencePointPrimitives: 0,
+      referenceStemPrimitives: 0,
+    },
+    submarineCables: {
+      surfaceCollectionOwners: 0,
+      surfacePoints: 0,
+      surfaceStems: 0,
+      referenceCollections: 0,
+      referencePointPrimitives: 0,
+      referenceStemPrimitives: 0,
+    },
+  });
+  monitor.destroy();
+});
+
 test('performance monitor can be disabled without installing a render listener', () => {
   let listeners = 0;
   const viewer = Object.defineProperty({}, 'scene', {

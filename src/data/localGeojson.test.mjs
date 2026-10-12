@@ -53,31 +53,96 @@ class MockLayerEvent {
  */
 async function createRealLocalLayerHarness({
   sampleHeightSupported = false,
-  sampleHeight = () => { throw new Error('tiles not sampleable yet'); },
+  sampleHeight = () => {
+    throw new Error('tiles not sampleable yet');
+  },
+  surfaceRenderer = 'entities',
+  primitiveAddThrowsAfterAttach = false,
+  featureCount = 1,
 } = {}) {
   const originalFetch = globalThis.fetch;
   const originalWindow = globalThis.window;
+  const originalHtmlCanvasElement = globalThis.HTMLCanvasElement;
+  const originalHtmlImageElement = globalThis.HTMLImageElement;
+  const originalImageBitmap = globalThis.ImageBitmap;
+  const originalOffscreenCanvas = globalThis.OffscreenCanvas;
+  if (surfaceRenderer === 'primitive-collections') {
+    globalThis.HTMLCanvasElement ??= class HTMLCanvasElement {};
+    globalThis.HTMLImageElement ??= class HTMLImageElement {};
+    globalThis.ImageBitmap ??= class ImageBitmap {};
+    globalThis.OffscreenCanvas ??= class OffscreenCanvas {};
+  }
+  let browserStubsRestored = false;
+  const restoreBrowserClassStubs = () => {
+    if (browserStubsRestored) return;
+    browserStubsRestored = true;
+    if (originalHtmlCanvasElement === undefined)
+      delete globalThis.HTMLCanvasElement;
+    else globalThis.HTMLCanvasElement = originalHtmlCanvasElement;
+    if (originalHtmlImageElement === undefined)
+      delete globalThis.HTMLImageElement;
+    else globalThis.HTMLImageElement = originalHtmlImageElement;
+    if (originalImageBitmap === undefined) delete globalThis.ImageBitmap;
+    else globalThis.ImageBitmap = originalImageBitmap;
+    if (originalOffscreenCanvas === undefined)
+      delete globalThis.OffscreenCanvas;
+    else globalThis.OffscreenCanvas = originalOffscreenCanvas;
+  };
   const preRender = new MockLayerEvent();
   const moveEnd = new MockLayerEvent();
   const dataSources = [];
   const hostCalls = [];
+  const primitiveOwners = [];
+  let clickAction = null;
+  let picked = null;
+  const flyToCalls = [];
+  const primitives = {
+    add(primitive) {
+      primitiveOwners.push(primitive);
+      if (primitiveAddThrowsAfterAttach)
+        throw new Error('scene primitive add failed after partial attach');
+      return primitive;
+    },
+    remove(primitive) {
+      const index = primitiveOwners.indexOf(primitive);
+      if (index < 0) return false;
+      primitiveOwners.splice(index, 1);
+      if (!primitive.isDestroyed()) primitive.destroy();
+      return true;
+    },
+    contains(primitive) {
+      return primitiveOwners.includes(primitive);
+    },
+  };
+  const features = Array.from({ length: featureCount }, (_, index) => {
+    const shift = index * 0.03;
+    return {
+      type: 'Feature',
+      id: index === 0 ? 'real-dam' : `real-dam-${index}`,
+      properties: {
+        name: index === 0 ? 'Runtime Dam' : `Runtime Dam ${index}`,
+        tags: { associated_river: 'Test River' },
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-97.7 + shift, 30.2],
+            [-97.69 + shift, 30.2],
+            [-97.69 + shift, 30.21],
+            [-97.7 + shift, 30.2],
+          ],
+        ],
+      },
+    };
+  });
+  const geojsonLines = features
+    .map((feature) => JSON.stringify(feature))
+    .join('\n');
   globalThis.fetch = async () => ({
     ok: true,
     status: 200,
-    text: async () => JSON.stringify({
-      type: 'Feature',
-      id: 'real-dam',
-      properties: { name: 'Runtime Dam', tags: { associated_river: 'Test River' } },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[
-          [-97.70, 30.20],
-          [-97.69, 30.20],
-          [-97.69, 30.21],
-          [-97.70, 30.20],
-        ]],
-      },
-    }),
+    text: async () => geojsonLines,
   });
   globalThis.window = { dispatchEvent() {} };
   let sampleHeightImpl = sampleHeight;
@@ -90,7 +155,10 @@ async function createRealLocalLayerHarness({
   const viewer = {
     selectedEntity: undefined,
     dataSources: {
-      add(dataSource) { dataSources.push(dataSource); return dataSource; },
+      add(dataSource) {
+        dataSources.push(dataSource);
+        return dataSource;
+      },
       remove(dataSource) {
         const index = dataSources.indexOf(dataSource);
         if (index >= 0) dataSources.splice(index, 1);
@@ -101,10 +169,13 @@ async function createRealLocalLayerHarness({
       positionWC: Cesium.Cartesian3.fromDegrees(-97.695, 30.205, 100_000),
       frustum: { fov: Math.PI / 3 },
       moveEnd,
-      flyTo() {},
+      flyTo(options) {
+        flyToCalls.push(options);
+      },
     },
     scene: {
       canvas: { clientWidth: 800, clientHeight: 600 },
+      primitives,
       preRender,
       sampleHeightSupported,
       sampleHeight: (...args) => {
@@ -112,7 +183,9 @@ async function createRealLocalLayerHarness({
         return sampleHeightImpl(...args);
       },
       screenSpaceCameraController: { enableInputs: true },
-      pick() { return null; },
+      pick() {
+        return picked;
+      },
       requestRender() {},
     },
   };
@@ -121,10 +194,13 @@ async function createRealLocalLayerHarness({
     url: '/runtime-dam.geojsonl',
     name: 'Runtime Dams',
     color: '#0088ff',
+    surfaceRenderer,
     overlayHost,
     projectToWindow: () => ({ x: 400, y: 300 }),
     screenSpaceEventHandlerFactory: () => ({
-      setInputAction() {},
+      setInputAction(action) {
+        clickAction = action;
+      },
       destroy() {},
     }),
   });
@@ -138,14 +214,25 @@ async function createRealLocalLayerHarness({
     viewer,
     dataSources,
     hostCalls,
+    primitiveOwners,
+    flyToCalls,
     preRender,
     moveEnd,
     sampleCalls,
     /** Swap scene.sampleHeight mid-test (e.g. tiles finally arrive). */
-    setSampleHeight(next) { sampleHeightImpl = next; },
+    setSampleHeight(next) {
+      sampleHeightImpl = next;
+    },
+    setPicked(next) {
+      picked = next;
+    },
+    click(position = {}) {
+      clickAction?.({ position });
+    },
     cleanup() {
       if (originalWindow === undefined) delete globalThis.window;
       else globalThis.window = originalWindow;
+      restoreBrowserClassStubs();
     },
   };
 }
@@ -339,6 +426,258 @@ test('slow parked frames do not keep republishing the same local overlay cohort'
   await env.layer.enable(env.viewer);
   env.preRender.raise();
   assert.equal(publications().length, 3, 're-enable must republish after clearing the host');
+});
+
+test('opt-in surface collections retain Entity metadata and native pick identity', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'primitive-collections',
+    featureCount: 100,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+
+  const entity = env.dataSources[0].entities.values[0];
+  const diagnostics = env.layer.getSurfaceRendererDiagnostics();
+  assert.deepEqual(diagnostics, {
+    mode: 'primitive-collections',
+    owners: 1,
+    points: 100,
+    stems: 100,
+    attached: true,
+  });
+  assert.equal(env.primitiveOwners.length, 1);
+  assert.equal(
+    entity.polygon?.hierarchy != null,
+    true,
+    'polygon metadata/rendering remains on the Entity',
+  );
+  assert.equal(entity.name, 'Runtime Dam');
+  assert.ok(
+    entity.properties,
+    'feature properties remain available for analysis',
+  );
+  assert.equal(
+    entity.point,
+    undefined,
+    'point Graphics are released in candidate mode',
+  );
+  assert.equal(
+    entity.polyline,
+    undefined,
+    'polyline Graphics are released in candidate mode',
+  );
+
+  const owner = env.primitiveOwners[0];
+  const pointIndex = Array.from(
+    { length: owner.get(0).length },
+    (_, index) => index,
+  ).find((index) => owner.get(0).get(index).id === entity);
+  const point = owner.get(0).get(pointIndex);
+  const stem = owner.get(1).get(pointIndex);
+  assert.equal(point.id, entity, 'point picks resolve to the original Entity');
+  assert.equal(stem.id, entity, 'stem picks resolve to the original Entity');
+  assert.ok(
+    Cesium.Cartesian3.equals(
+      point.position,
+      entity.position.getValue(Cesium.JulianDate.now()),
+    ),
+  );
+  assert.equal(point.pixelSize, 10);
+  assert.equal(point.outlineWidth, 2);
+  assert.equal(point.disableDepthTestDistance, Number.POSITIVE_INFINITY);
+  assert.equal(stem.width, 3.5);
+  const rgba = Cesium.ColorGeometryInstanceAttribute.toValue(
+    Cesium.Color.fromCssColorString('#0088ff'),
+  );
+  const byteColor = Cesium.Color.fromBytes(...rgba);
+  assert.ok(
+    Cesium.Color.equals(stem.material.uniforms.color, byteColor),
+    'stem material uses the validated RGBA8-encoded color',
+  );
+
+  env.preRender.raise();
+  assert.equal(
+    point.show,
+    entity.show,
+    'collection visibility follows entity LOD/horizon state',
+  );
+  assert.equal(
+    stem.show,
+    entity.show,
+    'stem visibility follows entity LOD/horizon state',
+  );
+  env.setPicked({ id: entity });
+  env.click({ x: 4, y: 9 });
+  assert.equal(env.viewer.selectedEntity, entity);
+  assert.equal(
+    env.flyToCalls.length,
+    1,
+    'collection pick uses the existing Entity selection path',
+  );
+  assert.ok(
+    Math.abs(
+      Cesium.Cartographic.fromCartesian(env.flyToCalls[0].destination).height -
+        5000,
+    ) < 0.001,
+  );
+
+  const previousTip = Cesium.Cartesian3.clone(point.position);
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.ok(
+    Cesium.Cartesian3.distance(previousTip, point.position) > 1,
+    'camera/LOD geometry refresh updates the owned point primitive',
+  );
+  assert.ok(
+    Cesium.Cartesian3.equals(stem.positions[1], point.position),
+    'the stem endpoint and point remain on the same mutable tip',
+  );
+
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    50_000_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  const highAltitudeLod = env.layer.getLodDiagnostics();
+  assert.ok(
+    highAltitudeLod.active < highAltitudeLod.total,
+    'the distant camera excludes at least one test surface from the production LOD budget',
+  );
+  assert.ok(
+    Array.from({ length: owner.get(0).length }, (_, index) =>
+      owner.get(0).get(index),
+    ).some((candidate) => !candidate.show),
+    'out-of-LOD collection points are hidden',
+  );
+  assert.ok(
+    Array.from({ length: owner.get(1).length }, (_, index) =>
+      owner.get(1).get(index),
+    ).some((candidate) => !candidate.show),
+    'out-of-LOD collection stems are hidden',
+  );
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(
+    point.show,
+    entity.show,
+    'collection point becomes eligible when LOD returns',
+  );
+  assert.equal(
+    stem.show,
+    entity.show,
+    'collection stem becomes eligible when LOD returns',
+  );
+
+  const originalOwner = owner;
+  env.layer.disable(env.viewer);
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().owners, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(
+    originalOwner.isDestroyed(),
+    true,
+    'disable releases the primitive owner',
+  );
+  await env.layer.enable(env.viewer);
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().owners, 1);
+  assert.equal(
+    env.primitiveOwners.length,
+    1,
+    're-enable creates one fresh owner',
+  );
+  assert.notEqual(env.primitiveOwners[0], originalOwner);
+});
+
+test('default Entity mode retains native point and stem Graphics', async (t) => {
+  const env = await createRealLocalLayerHarness({ featureCount: 3 });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = env.dataSources[0].entities.values;
+  assert.equal(entities.length, 3);
+  assert.ok(
+    entities.every((entity) => entity.point instanceof Cesium.PointGraphics),
+  );
+  assert.ok(
+    entities.every(
+      (entity) => entity.polyline instanceof Cesium.PolylineGraphics,
+    ),
+  );
+});
+
+test('surface collection mode rejects stale or unsupported ownership and destroy releases it', async (t) => {
+  assert.throws(
+    () =>
+      createLocalGeoJsonLayer({
+        id: 'invalid',
+        url: '/invalid',
+        name: 'Invalid',
+        color: '#fff',
+        surfaceRenderer: 'unknown',
+      }),
+    /Unsupported local infrastructure surface renderer/,
+  );
+
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'primitive-collections',
+  });
+  const owner = env.primitiveOwners[0];
+  env.layer.destroy(env.viewer);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(owner.isDestroyed(), true);
+  assert.deepEqual(env.layer.getSurfaceRendererDiagnostics(), {
+    mode: 'primitive-collections',
+    owners: 0,
+    points: 0,
+    stems: 0,
+    attached: false,
+  });
+  await env.layer.enable(env.viewer);
+  assert.equal(
+    env.primitiveOwners.length,
+    0,
+    'destroyed layer cannot resurrect its collection',
+  );
+  env.cleanup();
+});
+
+test('surface collection rollback removes a partially attached owner', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'primitive-collections',
+    primitiveAddThrowsAfterAttach: true,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+
+  assert.equal(
+    env.primitiveOwners.length,
+    0,
+    'a scene.add failure after attachment must remove the exact owner',
+  );
+  assert.equal(env.dataSources.length, 0);
+  assert.deepEqual(env.layer.getSurfaceRendererDiagnostics(), {
+    mode: 'primitive-collections',
+    owners: 0,
+    points: 0,
+    stems: 0,
+    attached: false,
+  });
 });
 
 test('real layer disable clears its published host entries and balances settle listeners', async () => {
@@ -1256,6 +1595,7 @@ test('getLodDiagnostics reports the active/total split and the band budget', asy
 
   assert.deepEqual(env.layer.getLodDiagnostics(), {
     total: 150, active: 0, budgetLimit: 0, computed: false,
+    geometryDirty: true, cameraPosition: null,
   }, 'before the first walk: materialized but not yet selected');
 
   env.preRender.raise();
@@ -1264,13 +1604,19 @@ test('getLodDiagnostics reports the active/total split and the band budget', asy
   assert.equal(global.active, INFRA_LOD_ACTIVE_MIN);
   assert.equal(global.budgetLimit, INFRA_LOD_ACTIVE_MIN);
   assert.equal(global.computed, true);
+  assert.equal(global.geometryDirty, false);
+  assert.deepEqual(global.cameraPosition, [env.viewer.camera.positionWC.x, env.viewer.camera.positionWC.y, env.viewer.camera.positionWC.z]);
   assert.ok(global.active < global.total, 'active < total means the declutter is engaged');
 
   env.setCameraHeight(60_000);
   env.moveEnd.raise();
+  assert.equal(env.layer.getLodDiagnostics().geometryDirty, true);
+  assert.deepEqual(env.layer.getLodDiagnostics().cameraPosition, global.cameraPosition, 'diagnostics retain the consumed pose until geometry is updated');
   clock.advance(500);
   env.preRender.raise();
   const regional = env.layer.getLodDiagnostics();
+  assert.equal(regional.geometryDirty, false);
+  assert.notDeepEqual(regional.cameraPosition, global.cameraPosition);
   assert.equal(regional.active, 150, 'regional band lifts the cap above the in-view count');
   assert.ok(regional.budgetLimit >= 150, `regional budget widened (${regional.budgetLimit})`);
 });

@@ -1,0 +1,12 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38135671321",
+  "commit": "ea74f49f9afabf14791d1b0d722c6fd3bc294850",
+  "rawSha256": "06c688526c73a910c7dd88c35dde716bb1f4636492a2745f369556eac7ad1092",
+  "strictValidator": "passed",
+  "verifiedImages": 20,
+  "uniqueDecodedPngs": 2,
+  "exactPairs": 10,
+  "samplingContract": "owned-primitives-ready/v1",
+  "scope": "Hosted paravirtual Metal correctness: full bundled reference population, point/stem native ownership, final camera sweep, classification, disable/re-enable and teardown. No activation/memory benefit, physical Windows, motion p95 or soak acceptance. Production default remains Entity.",
+  "readinessFinding": "After the final camera sweep, DataSourceDisplay reported ready while owned replacement Primitive primitives/0/3/2 stayed unready (recorded at frames 115 and 228-254). It materialized before the final stable observation at frame 258 with 3296.2 ms remaining of the unchanged 12-second deadline. Valid Entity stem picks then resolve to Primitive/PolylineColorAppearance; collection picks resolve to Polyline. The old fixture used stable source metadata and ready DataSourceDisplay alone, so it could sample before actual replacement geometry existed. This run closes that fixture readiness gap without a production geometry change."
+}

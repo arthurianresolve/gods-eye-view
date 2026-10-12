@@ -1,0 +1,89 @@
+{
+  "cesiumVersion": "1.138.0",
+  "updaterScene": "actual PolylineGeometryUpdater with terrain support disabled by context.depthTexture=false",
+  "updateProtocol": "mutate reusable base/tip Cartesian3 objects, alternate two [base, tip] arrays, call Entity.position.setValue(tip), then PolylineGraphics.positions.setValue(array)",
+  "rows": [
+    {
+      "update": 1,
+      "doubleBuffered": {
+        "propertyChanges": 1,
+        "entityChanges": 1,
+        "geometryChanges": 1
+      },
+      "sharedBuffer": {
+        "propertyChanges": 0,
+        "entityChanges": 0,
+        "geometryChanges": 0
+      }
+    },
+    {
+      "update": 2,
+      "doubleBuffered": {
+        "propertyChanges": 2,
+        "entityChanges": 2,
+        "geometryChanges": 2
+      },
+      "sharedBuffer": {
+        "propertyChanges": 0,
+        "entityChanges": 0,
+        "geometryChanges": 0
+      }
+    },
+    {
+      "update": 3,
+      "doubleBuffered": {
+        "propertyChanges": 3,
+        "entityChanges": 3,
+        "geometryChanges": 3
+      },
+      "sharedBuffer": {
+        "propertyChanges": 0,
+        "entityChanges": 0,
+        "geometryChanges": 0
+      }
+    },
+    {
+      "update": 4,
+      "doubleBuffered": {
+        "propertyChanges": 4,
+        "entityChanges": 4,
+        "geometryChanges": 4
+      },
+      "sharedBuffer": {
+        "propertyChanges": 0,
+        "entityChanges": 0,
+        "geometryChanges": 0
+      }
+    },
+    {
+      "update": 5,
+      "doubleBuffered": {
+        "propertyChanges": 5,
+        "entityChanges": 5,
+        "geometryChanges": 5
+      },
+      "sharedBuffer": {
+        "propertyChanges": 0,
+        "entityChanges": 0,
+        "geometryChanges": 0
+      }
+    },
+    {
+      "update": 6,
+      "doubleBuffered": {
+        "propertyChanges": 6,
+        "entityChanges": 6,
+        "geometryChanges": 6
+      },
+      "sharedBuffer": {
+        "propertyChanges": 0,
+        "entityChanges": 0,
+        "geometryChanges": 0
+      }
+    }
+  ],
+  "interpretation": {
+    "productionPatternRaisesGeometryChangedEveryUpdate": true,
+    "sharedArrayWouldSuppressPolylineGeometryChanged": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "testedCommit": "e77f77de35a7e75c3fc7a7531b59f83ea20018b8",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38140471164",
+  "outcome": "failed",
+  "completePairs": 0,
+  "benefitAccepted": false,
+  "hardwareValidated": false,
+  "error": "waitForStableScene is not defined",
+  "observation": "The frame-readiness loop completed, then the fixture referenced a shared helper without importing it. HTTP failure and page error lists are empty. All cleanup completed.",
+  "correction": "Restore the shared helper import. ESLint no-undef independently checked the benefit fixture and shared helpers with explicit browser/build globals; 11 focused tests and syntax check pass.",
+  "limitation": "Syntax checks and synthetic report-validator tests did not execute this browser activation path. No timing, pixel, or memory benefit is inferred."
+}

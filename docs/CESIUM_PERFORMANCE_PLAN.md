@@ -192,6 +192,27 @@ source features, retaining native Entity IDs and one reference per source.
 separate this correctness repair from infrastructure batching and hardware
 acceptance. The exact-commit CI record includes Windows/Linux/macOS recovery.
 
+The S54 production collection prototype passes the bundled-dams correctness
+comparison at `51cfdb3` and complete measurement runs at `c218b19` and `d880071`.
+Independent decoding verifies all 80 benefit-run images. After removing discarded
+temporary Graphics, the enabled post-GC JS heap delta improves 11.08%; source-ready
+latency is 7.59% higher by median, compared with 39.24% in the first experiment.
+Timing remains variable, including one preparation pair above 10% and a cold
+first-frame outlier. These are instrumented activation and JS-only heap measurements
+on hosted paravirtual Metal, not full performance acceptance.
+[Raw evidence and limits](performance-evidence/s54-production-collections/README.md)
+are preserved. Datacenter correctness now also passes at `4f5c55f`: independent
+PNG decoding verifies all 20 captures and ten exact native-pick/geometry/style
+pairs ([evidence](performance-evidence/s54-production-collections/datacenter-correctness-38130632782/review.json)).
+Its separate five-pair activation and JS-heap comparison also passes:
+median first-usable activation is 41.28% lower and enabled post-GC JS heap is
+16.13% lower ([evidence](performance-evidence/s54-production-collections/datacenter-benefit-38130908513/review.json)).
+These hosted results do not cover motion, GPU/native memory or soak stability. The earlier
+missing-stem default-Entity timeout remains unresolved; the successful diagnostic
+observes asynchronous stem readiness and is not proof of a runtime fix.
+Cable comparison, integration and physical Windows validation remain open;
+the production default remains Entity-based.
+
 The isolated Cesium no-op terrain-collision transform fix is accepted at
 f26f4dd738a518c6cefa96b5f809c5d9c53afa83 after all seven ordinary integration jobs
 and 111 tracking checks pass. It removes redundant tracked-camera transform
@@ -335,7 +356,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
-| S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
+| S54 infrastructure batching | Partial: stable record identity, opt-in production datacenter/dam/cable reference collections, native fixtures and bounded ownership-readiness gates; defaults remain Entity | Datacenters at `db49092`: 20 exact correctness captures and 40 paired benefit captures; cables at `ea74f49`: 20 exact captures with native picks, map classification and teardown. Dam heap reduction repeats, latency remains unattributed. Combined integration validation remains pending | Hosted paravirtual Metal is supplemental; Windows, cable benefit and full S54/S60 acceptance remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
@@ -3822,8 +3843,13 @@ shared history to manufacture a per-slice delivery record.
 - **S53:** satellite scratch reuse and unchanged-write suppression are present.
   Frequency-based collection partitioning, tracked-object isolation, batched
   membership and measured allocation/upload benefits are still outstanding.
-- **S54:** implement measured static infrastructure batching with feature/pick
-  identity preserved and temporary construction data released.
+- **S54:** static infrastructure collection prototypes are integrated in the
+  current-dev QA candidate with Entity rendering still the default. Historical
+  hosted comparisons include exact dam/datacenter and cable images and a 10.50%
+  lower enabled JS-heap delta for cable, while cable activation speedup was not
+  established. These results are not fresh validation of this current-dev
+  integration. Current-revision rendered/benefit checks, physical Windows
+  validation and full rollout gates remain pending.
 - **S55:** measure and consolidate tracking time/pose/projection work, preserving
   camera authority across manual, aircraft, cockpit, CCTV and replay transitions.
 - **S56:** [fresh-frame capture](../src/freshFrame.js) copies inside `postRender`
@@ -4206,3 +4232,111 @@ at `26f383ed` both pass all seven standard jobs. They are now integrated on dev;
 the candidate/pending statements above describe the earlier failed gate only.
 [Current integration evidence](performance-evidence/main-weather-38152867100/README.md)
 preserves both successful runs and the earlier failures separately.
+## S54 integration follow-up - 11 October 2026
+
+At `96bd0c3102b46ee04d85fba04252a3e2dd7cb4db`, the integrated dam correctness comparison passed: 20 independently decoded PNGs form ten pixel-identical baseline/candidate pairs. [Evidence](performance-evidence/s54-production-collections/integrated-dams-38133293001/review.json). The datacenter comparison failed in baseline setup while static stem primitives were unready, despite ready data sources; the candidate did not run. The fixture now includes public owned-primitive readiness and bounded phase timing within the unchanged eight-second deadline. [Preserved failure](performance-evidence/s54-production-collections/failed-integrated-datacenters-38133455950/review.json).
+
+The dam benefit comparison exposed a fixture inventory bug: twelve preserved line-only Entities were incorrectly required to have generated point/stem ownership. The corrected selection separately requires 704 generated surface pairs and 716 total Entities, and rejects missing or foreign collection owners. [Preserved failure and regression checks](performance-evidence/s54-production-collections/failed-integrated-benefit-38133813758/review.json). These fixture fixes are implemented and focused tests pass; rendered validation is pending. The production default remains Entity rendering. Neither failure is converted into a pass or a hardware performance claim.
+
+The datacenter follow-up at `6cf9272` produced twenty independently decoded PNGs with ten exact baseline/candidate pairs, but root review found a sampling acceptance gap: its first Entity sample took 8,868.1 ms against the eight-second setup deadline. The final check also omitted the required frame after native selection. [Partial evidence and limitation](performance-evidence/s54-production-collections/integrated-datacenters-38134123522/review.json). The fixture now waits for unfinished geometry using the existing no-copy completed-frame API, reserves pixel capture for materialized geometry, and requires the selected frame within the same deadline. A new explicit sampling contract rejects missing selection, unready primitives and deadline overruns. Twenty focused primitive/readiness/validator checks pass; exact rendered validation remains pending.
+
+All seven ordinary integration jobs passed at `96bd0c3`, including Windows update recovery and the browser journeys. [Saved exact-commit CI](performance-evidence/s54-production-collections/integration-ci-96bd0c3.json). The corrected dam benefit run at `6cf9272` validates forty PNGs and twenty exact phase pairs, with an 11.07% lower enabled JS-heap delta. However, source-ready and first-usable medians regress by 26.35% and 38.95%. [Raw data and review](performance-evidence/s54-production-collections/integrated-dams-benefit-38134302813/review.json). This is not accepted for default rollout: a frozen-revision repeat is investigating the regression. These hosted measures exclude physical Windows, motion p95 and GPU/native memory.
+
+A second frozen dam comparison at `6cf9272` preserves forty exact PNGs and an 11.23% lower enabled JS-heap delta, but reports -1.28% source-ready and -5.50% first-usable medians. [Repeat evidence](performance-evidence/s54-production-collections/integrated-dams-benefit-38134607010/review.json). The earlier regression did not reproduce, while the baseline absolute first-usable median itself doubled (1,601.4 to 3,213.7 ms). Memory reduction is repeatable within the JS-heap proxy; latency remains insufficiently attributed. Default rollout remains pending rather than selecting the favorable run.
+
+The strict datacenter rerun at `db49092` passes all twenty samples within the unchanged eight-second deadline (maximum 6,767.8 ms), with every selected frame rendered and ten independently verified exact pixel pairs. [Correctness evidence](performance-evidence/s54-production-collections/integrated-datacenters-38134821279/review.json). Its fresh five-pair latency and separate five-pair GC comparison validates forty PNGs, twenty exact phase pairs, a 47.46% lower first-usable-after-source-ready median and a 16.05% lower enabled JS-heap delta. [Benefit evidence](performance-evidence/s54-production-collections/integrated-datacenters-benefit-38134982876/review.json). These results reproduce the earlier hosted datacenter benefit after integration. They do not establish dense motion p95, physical Windows coverage, GPU memory or long-soak stability; default rollout remains pending those remaining gates.
+
+### Combined S54 candidate
+
+The infrastructure QA branch now combines the separately tested dam/datacenter and cable reference implementations. This is an isolated candidate; the application still defaults to Entity rendering. [Cable correctness and readiness evidence](performance-evidence/s54-cable-reference-collections/rendered-38135671321/review.json) preserves twenty independently decoded images and ten exact pairs. The earlier cable failure came from sampling ready source metadata while replacement geometry was still unready; the explicit public-owner readiness gate corrects that fixture distinction within the existing deadline. Full combined checks, cable activation/memory comparisons, and physical Windows evidence remain separate requirements.
+
+
+The combined S54 candidate `d1ee4e80776f0611bff2673f250746724925159e`
+passed all seven applicable jobs in
+[CI 38136119166](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38136119166):
+Node 24/26 suites and production builds, Windows onboarding, Windows/macOS/Linux
+installation recovery, and the full browser gate including portable-panel
+checks. [Exact job record](performance-evidence/s54-production-collections/ci-d1ee4e8.json)
+retains skipped optional diagnostics separately. This workflow dispatch did not
+exercise pull-request-only published layer-token allocation checks. It does not
+supply cable activation/memory benefit, resolve variable dam activation latency,
+or supply physical Windows GPU evidence; those gates remain open. The default
+rendering mode is still Entity and this candidate remains isolated from dev.
+
+### Cable benefit activation deadline correction
+
+The initial five-pair cable benefit job at `9c09554` failed during its first Entity activation, with zero complete matched pairs. [Preserved failure and review](performance-evidence/s54-cable-benefit-38139806091/review.json) retain the raw report, the unknown-path HTTP 404, and successful cleanup. The activation loop declared a three-minute deadline but used the shared one-second frame wait. Commit `e77f77d` passes each activation/re-enable wait only the remaining absolute deadline, without extending that deadline or altering the older correctness fixture. It also records bounded HTTP failure paths and rejects missing resources. Eleven independently rerun focused tests pass. [Rendered validation](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38140471164) is pending at that exact commit. Cable benefit, physical Windows validation, and default rollout remain unaccepted.
+
+The rerun at `e77f77d` completed frame readiness but failed on a missing `waitForStableScene` import. [Preserved second failure](performance-evidence/s54-cable-benefit-38140471164/review.json) records zero complete pairs, no HTTP failures, and complete cleanup. The import is restored, and an independent undefined-reference check covers the benefit module plus both shared helper modules. The eleven focused tests and JavaScript syntax check pass. Browser validation remains required; neither failed run establishes a cable performance benefit.
+
+At `480af78`, [the next cable comparison](performance-evidence/s54-cable-benefit-38141050784/review.json) passed activation and source/geometry/style/pick identity restoration but rejected different pixels after disabling/re-enabling the Entity baseline. No collection trial or complete pair ran. This is an unresolved visual-equivalence failure, not performance evidence. The fixture now preserves the two failed PNGs and camera/clock/readiness snapshots to locate the difference; the exact-pixel gate remains unchanged.
+
+The [failure-image diagnostic at `cd5bbed`](performance-evidence/s54-cable-benefit-38141341702/review.json) identifies missing ground cable segments in the initial image at an identical camera and clock. The readiness walker did not descend through Cesium ordered ground collections, while `DataSourceDisplay.ready` is sticky after its first success. The fixture now reads the ordered child list under explicit Cesium 1.138 version/shape guards and fails closed for unsupported layouts. This is a read-only private-owner probe in the fixture, not an engine mutation or public API guarantee. Sixteen focused tests pass, including unfinished ground geometry and unknown shapes. Exact rendered validation is pending; earlier ground-cable captures must not be treated as proof of complete geometry merely because their source records and images matched.
+
+### Cable complete-geometry comparison and baseline correction
+
+[Run 38141699421 at `c53ea94`](performance-evidence/s54-cable-benefit-38141699421/review.json)
+completed five latency pairs and five separate forced-GC pairs. Independent PNG
+decoding verifies all twenty images and ten exact renderer pairs, including full
+ground geometry and both visibility restores. The report still **fails**:
+teardown leaves one normal and one ground display container whereas the fixture
+recorded zero before the first DataSource was ever added. Cesium 1.138
+`DataSourceDisplay` creates these viewer-owned containers lazily and retains them
+until viewer destruction. This is a cold-versus-warmed baseline error, not proof
+of a layer leak or a reason to remove engine-owned containers.
+
+The fixture now materializes the empty default-entity display through an exact
+public-API add/remove pair before measurement and records three completed warmup
+frames. It requires zero remaining warmup entities and a warmed 0-DataSource,
+1-normal, 1-ground baseline. Exact teardown equality and all pixel/ownership
+gates remain required. The report validator also rejects missing or contradictory
+primitive-readiness witnesses. The old report remains failed; the corrected
+measurement requires fresh validation.
+
+The failed run's population-ready median regresses 40.28%, while ready-frame
+median improves 7.82% with inconsistent individual pairs. Enabled JS-heap delta
+is 10.69% lower across five pairs. These are diagnostic results with an invalid
+baseline, not an accepted activation or stability improvement. Default Entity
+rendering remains in place. No physical Windows, motion p95, GPU-memory, or
+60-minute retention claim follows from this hosted run.
+
+### Cable warmed-baseline result — 11 October 2026
+
+[Run 38143057626 at `f5cd245`](performance-evidence/s54-cable-benefit-38143057626/review.json)
+passes the corrected report contract. Root independently verified the exact
+commit's 39 source hashes and decoded all twenty PNGs: ten Entity/collection
+pairs match exactly. All twenty trials restore source, geometry, style and
+native point/stem picking through two visibility cycles. Layer teardown returns
+to the warmed display baseline with zero owned listeners or reference
+collections; every viewer, browser context and server is then released.
+
+Five separate forced-GC pairs reduce the median enabled JS-heap delta from
+139,357,364 to 124,728,988 bytes (10.50%), with each pair improving 10.31–10.64%.
+This supports a hosted JS-memory reduction at these settings. It does not
+measure GPU/native memory. Population-ready median changes from 683.7 to
+672.3 ms (-1.67%); first-three-ready-frame median changes from 6,617.5 to
+6,961.7 ms (+5.20%). Individual timings vary, so no activation speedup is
+accepted. The previous cold-baseline failure remains failed and is not pooled
+with this corrected run.
+
+Code and focused automated correctness are implemented and validated for this
+cable experiment. Final benefit acceptance and default rollout remain pending:
+Apple paravirtual Metal / Chrome 152 is supplemental hosted evidence, and
+physical Windows validation, mixed-layer behavior and long-run retention remain
+separate gates. Entity rendering stays the default.
+
+### S54 current-dev integration candidate - 12 October 2026
+
+The opt-in datacenter/dam and cable-reference prototypes from
+`f4c5413e` are merged into a review candidate based on current dev
+`acc471e4`. This integration preserves the current-dev provenance, recovery,
+and traffic workflow paths and retains Entity rendering as the default.
+The measurements above belong to their recorded historical revisions; they
+are not fresh integrated results. Current-revision rendered and benefit checks,
+primary Windows validation, and remaining full-scope rollout gates are pending.
+
+This merge candidate's S54 runtime/fixture packet was implemented by GPT-6 Luna.
+The focused S54 fixture/runtime checks pass 140/140; the additional performance
+snapshot and ownership/lifecycle checks pass 19/19. Formatting and both package
+boundary checks pass, and the production build succeeds. These checks do not
+replace fresh rendered/benefit results for this integrated revision.

@@ -1,0 +1,20 @@
+{
+  "command": "node scripts/run-unit-tests.mjs",
+  "runtime": "Node 24.16.0, Windows",
+  "scope": "Working-tree runtime and test files match d880071; HEAD changed from evidence-only commit to implementation commit during the run without further runtime edits.",
+  "exitCode": 1,
+  "tests": 7019,
+  "passed": 7008,
+  "failed": 1,
+  "skipped": 10,
+  "durationMs": 595661.2636,
+  "allocationSuites": "not reached because the general suite failed",
+  "failure": "src/services/requests.test.mjs:78, a failed probe is retried after its backoff, not on every query",
+  "actual": {
+    "unavailable": true,
+    "code": "OVERPASS_NOT_CONFIGURED",
+    "retryable": false
+  },
+  "expected": [],
+  "rawLogSha256": "43104eb042ee4beaa3c7f3c1eca803d4182a5895a387e725f492d1d04b7e29bf"
+}

@@ -1,0 +1,15 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38134607010",
+  "commit": "6cf92724b2af272e0c164f062eeed713e08bd259",
+  "rawSha256": "16582ee94920f2e1c0fb2180a313732cc840fc1d53f965a4e8d9598994aa56fd",
+  "strictValidator": "passed",
+  "verifiedImages": 40,
+  "exactPhasePairs": 20,
+  "uniqueDecodedPngs": 1,
+  "sourceReadyMedianChangePercent": -1.28369704749689,
+  "firstUsableMedianChangePercent": -5.504558608456433,
+  "enabledHeapDeltaMedianChangePercent": -11.2283396704146,
+  "scope": "Frozen repeat of 38134302813; five hosted latency pairs and five separate forced-GC JS-heap pairs. No physical Windows, motion p95, GPU/native memory or full soak claim.",
+  "acceptance": "pending-latency-attribution",
+  "comparison": "The repeat preserves an 11.23% enabled JS-heap reduction. Its source-ready and first-usable changes are -1.28% and -5.50%, so the preceding +26.35%/+38.95% regression did not reproduce. Absolute baseline first-usable time changed from 1601.4 to 3213.7 ms across runs. This variance is not a basis for a latency improvement claim or default rollout."
+}

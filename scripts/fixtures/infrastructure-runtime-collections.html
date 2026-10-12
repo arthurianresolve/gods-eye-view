@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Production infrastructure renderer comparison</title>
+    <style>
+      body {
+        margin: 12px;
+        color: #e8edf5;
+        background: #10151e;
+        font:
+          14px/1.45 system-ui,
+          sans-serif;
+      }
+      #viewer {
+        width: 960px;
+        height: 640px;
+        max-width: calc(100vw - 24px);
+        overflow: hidden;
+      }
+      #result {
+        max-width: 960px;
+        max-height: 220px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Production infrastructure renderer comparison</h1>
+    <p>
+      Runs separate production layer lifetimes in the same viewer. The baseline
+      uses the default Entity graphics; the candidate uses the opt-in production
+      primitive collections.
+    </p>
+    <p id="status" role="status">Starting</p>
+    <div id="viewer"></div>
+    <div id="credits"></div>
+    <pre id="result"></pre>
+    <script
+      type="module"
+      src="./infrastructure-runtime-collections.mjs"
+    ></script>
+  </body>
+</html>

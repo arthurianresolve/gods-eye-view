@@ -1,0 +1,12 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38134123522",
+  "commit": "6cf92724b2af272e0c164f062eeed713e08bd259",
+  "rawSha256": "fc29428c6e5fe0d3542c4faf40d0a6b27042a3d4de564f32e29a94672cb8bae2",
+  "verifiedImages": 20,
+  "uniqueDecodedPngs": 2,
+  "exactPairs": 10,
+  "strictValidator": "passed",
+  "scope": "Hosted paravirtual Metal correctness only; no physical Windows or performance acceptance. Prior Entity cold-readiness failure remains preserved.",
+  "samplingAcceptance": "failed",
+  "limitations": "Independent pixels and native ownership agree, but baseline first-sample work took 8868.1 ms against an 8000 ms setup deadline. Code review found that a synchronous pick could cross the deadline and the final check did not require a subsequent selected frame. The original validator passed; this does not satisfy the corrected sampling contract. Preserve as partial visual evidence, not complete S54 acceptance."
+}

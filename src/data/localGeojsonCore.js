@@ -38,6 +38,10 @@ const GROUND_SAMPLE_MAX_ABS_HEIGHT_M = 9000;
  * 30 × 2 s ≈ 60 s, far longer than a tile stream-in.
  */
 export const GROUND_SAMPLE_MAX_ARMED_RETRIES = 30;
+export const LOCAL_INFRASTRUCTURE_SURFACE_RENDERERS = Object.freeze([
+  'entities',
+  'primitive-collections',
+]);
 /** Ignore sub-metre camera-derived stem-tip noise at camera settle. */
 export const LOCAL_STEM_TIP_EPSILON_M = 0.5;
 const LOCAL_STEM_TIP_EPSILON_SQ = LOCAL_STEM_TIP_EPSILON_M ** 2;
@@ -288,6 +292,63 @@ export function localDatasetError(error) {
   return message ? `dataset unavailable (${message})` : 'dataset unavailable';
 }
 
+function createLocalSurfaceCollections(records, baseColor, layerId) {
+  const owner = new Cesium.PrimitiveCollection({ destroyPrimitives: true });
+  Object.defineProperty(owner, '__gevLocalInfrastructureLayerId', {
+    value: layerId,
+    configurable: false,
+    enumerable: false,
+  });
+  owner.show = false;
+  const points = new Cesium.PointPrimitiveCollection();
+  const stems = new Cesium.PolylineCollection();
+  const encodedStemBytes =
+    Cesium.ColorGeometryInstanceAttribute.toValue(baseColor);
+  const stemColor = Cesium.Color.fromBytes(
+    encodedStemBytes[0],
+    encodedStemBytes[1],
+    encodedStemBytes[2],
+    encodedStemBytes[3],
+  );
+
+  try {
+    owner.add(points);
+    owner.add(stems);
+    for (const record of records) {
+      const entity = record.entity;
+      record.pointPrimitive = points.add({
+        id: entity,
+        position: record.tip,
+        pixelSize: 10,
+        color: baseColor,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        show: true,
+      });
+      record.stemPrimitive = stems.add({
+        id: entity,
+        positions: record.stemPositionBuffers[record.stemPositionBufferIndex],
+        width: 3.5,
+        material: Cesium.Material.fromType('Color', { color: stemColor }),
+        show: true,
+      });
+    }
+  } catch (error) {
+    if (!owner.isDestroyed()) owner.destroy();
+    throw error;
+  }
+
+  // Metadata and polygon graphics stay on each Entity. Collection picks carry
+  // that same Entity so the existing context and selection path stays intact.
+  for (const record of records) {
+    record.entity.point = undefined;
+    record.entity.polyline = undefined;
+  }
+
+  return { owner, points, stems, attached: false, viewer: null };
+}
+
 /**
  * A minimal, rock-solid native implementation for loading local GeoJSON Data.
  * Draws 3D stems (polylines) attached to Point entities and ensures
@@ -310,6 +371,7 @@ export function createLocalGeoJsonLayer(
     labels = true,
     labelMax = DEFAULT_LABEL_MAX,
     labelGridPx = DEFAULT_LABEL_GRID_PX,
+    surfaceRenderer = 'entities',
     screenSpaceEventHandlerFactory = (canvas) =>
       new Cesium.ScreenSpaceEventHandler(canvas),
     projectToWindow = (scene, position) =>
@@ -326,6 +388,10 @@ export function createLocalGeoJsonLayer(
     hideOsmCredit,
   },
 ) {
+  if (!LOCAL_INFRASTRUCTURE_SURFACE_RENDERERS.includes(surfaceRenderer))
+    throw new TypeError(
+      `Unsupported local infrastructure surface renderer: ${surfaceRenderer}`,
+    );
   let _dataSource = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -338,6 +404,8 @@ export function createLocalGeoJsonLayer(
   let _cameraMoveEndRemover = null;
   let _stemRecords = [];
   let _pickFeatureByEntity = new WeakMap();
+  let _stemRecordByEntity = new WeakMap();
+  let _surfaceCollections = null;
   let _stemGeometryDirty = true;
   let _lastVisibilityUpdate = 0;
   let _destroyed = false;
@@ -438,12 +506,43 @@ export function createLocalGeoJsonLayer(
    * survive a disable is the per-frame visualizer walk and the entity memory.
    * @param {object} viewer
    */
+  const CURRENT_SURFACE_COLLECTIONS = Symbol('current surface collections');
+  const releaseSurfaceCollections = (
+    viewer,
+    expectedCollections = CURRENT_SURFACE_COLLECTIONS,
+  ) => {
+    // No argument is the intentional current-owner release used by disable.
+    // An explicit null is a failed/incomplete build and must not acquire a
+    // different owner from this layer's later lifetime.
+    const collections =
+      expectedCollections === CURRENT_SURFACE_COLLECTIONS
+        ? _surfaceCollections
+        : expectedCollections;
+    if (!collections) return;
+    if (_surfaceCollections === collections) _surfaceCollections = null;
+    try {
+      if (collections.attached)
+        (collections.viewer ?? viewer)?.scene?.primitives?.remove(
+          collections.owner,
+        );
+    } catch {
+      // A stale viewer can race teardown; the owner still needs disposal.
+    }
+    try {
+      if (!collections.owner.isDestroyed()) collections.owner.destroy();
+    } catch {
+      // The scene may already have destroyed the primitive owner.
+    }
+  };
+
   const releaseDataSource = (viewer) => {
+    releaseSurfaceCollections(viewer);
     if (!_dataSource) return;
     const source = _dataSource;
     _dataSource = null;
     _stemRecords = [];
     _pickFeatureByEntity = new WeakMap();
+    _stemRecordByEntity = new WeakMap();
     _stemGeometryDirty = true;
     _lastVisibilityUpdate = Number.NEGATIVE_INFINITY;
     removeEntityContextsForLayer(id);
@@ -515,6 +614,18 @@ export function createLocalGeoJsonLayer(
       pendingJobs: Number(Boolean(_loadPromise)),
       dataSources: Number(Boolean(_dataSource)),
       cacheEntries: Number(Boolean(_cachedFeatures)),
+      surfaceCollectionOwners: Number(Boolean(_surfaceCollections)),
+      surfacePoints: _surfaceCollections?.points.length ?? 0,
+      surfaceStems: _surfaceCollections?.stems.length ?? 0,
+    }),
+
+    /** Actual owned point/stem collections for opt-in representation checks. */
+    getSurfaceRendererDiagnostics: () => ({
+      mode: surfaceRenderer,
+      owners: Number(Boolean(_surfaceCollections)),
+      points: _surfaceCollections?.points.length ?? 0,
+      stems: _surfaceCollections?.stems.length ?? 0,
+      attached: _surfaceCollections?.attached ?? false,
     }),
 
     /**
@@ -530,6 +641,10 @@ export function createLocalGeoJsonLayer(
       active: _activeLodIds.size,
       budgetLimit: _lastLodBudgetLimit,
       computed: _lodComputed,
+      geometryDirty: _stemGeometryDirty,
+      cameraPosition: _lodComputed
+        ? [_lastLodCameraPos.x, _lastLodCameraPos.y, _lastLodCameraPos.z]
+        : null,
     }),
 
     /**
@@ -583,6 +698,7 @@ export function createLocalGeoJsonLayer(
             // clear its error or retry.
             _error = null;
             let loaded = null;
+            let buildingSurfaceCollections = null;
             // Whether the scene has actually accepted `loaded` — the two rollback
             // windows (before vs after the add settles) need different cleanup.
             let addedToScene = false;
@@ -743,23 +859,31 @@ export function createLocalGeoJsonLayer(
                   [base, tip],
                   [base, tip],
                 ];
-                feature.polyline = new Cesium.PolylineGraphics({
-                  positions: stemPositionBuffers[0],
-                  width: 3.5,
-                  material: new Cesium.ColorMaterialProperty(baseColor),
-                });
-                feature.point = new Cesium.PointGraphics({
-                  pixelSize: 10,
-                  color: baseColor,
-                  outlineColor: Cesium.Color.BLACK,
-                  outlineWidth: 2,
-                  // Never depth-cull the anchor against the photoreal mesh —
-                  // globe-horizon culling is handled by the pre-render occluder.
-                  disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                });
+                if (surfaceRenderer === 'entities') {
+                  feature.polyline = new Cesium.PolylineGraphics({
+                    positions: stemPositionBuffers[0],
+                    width: 3.5,
+                    material: new Cesium.ColorMaterialProperty(baseColor),
+                  });
+                  feature.point = new Cesium.PointGraphics({
+                    pixelSize: 10,
+                    color: baseColor,
+                    outlineColor: Cesium.Color.BLACK,
+                    outlineWidth: 2,
+                    // Never depth-cull the anchor against the photoreal mesh —
+                    // globe-horizon culling is handled by the pre-render occluder.
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                  });
+                } else {
+                  // GeoJsonDataSource may have supplied marker Graphics for
+                  // point features. Keep the candidate surface on the owned
+                  // collections without allocating replacement Graphics.
+                  feature.point = undefined;
+                  feature.polyline = undefined;
+                }
 
                 const priority = labelPriorityFromProperties(properties, id);
-                _stemRecords.push({
+                const stemRecord = {
                   id: recordId,
                   featureRecord,
                   entity: feature,
@@ -783,7 +907,23 @@ export function createLocalGeoJsonLayer(
                         accent: color,
                       })
                     : null,
-                });
+                };
+                _stemRecords.push(stemRecord);
+                _stemRecordByEntity.set(feature, stemRecord);
+              }
+              if (surfaceRenderer === 'primitive-collections') {
+                buildingSurfaceCollections = createLocalSurfaceCollections(
+                  _stemRecords,
+                  baseColor,
+                  id,
+                );
+                _surfaceCollections = buildingSurfaceCollections;
+                // Mark ownership before add(): if the scene implementation
+                // partially attaches and then throws, the rollback still
+                // attempts removal and always destroys this exact owner.
+                buildingSurfaceCollections.attached = true;
+                buildingSurfaceCollections.viewer = viewer;
+                viewer.scene.primitives.add(buildingSurfaceCollections.owner);
               }
               // Setup finished — publish it.
               _dataSource = loaded;
@@ -811,11 +951,14 @@ export function createLocalGeoJsonLayer(
                 }
               }
               loaded = null;
+              if (buildingSurfaceCollections)
+                releaseSurfaceCollections(viewer, buildingSurfaceCollections);
               if (_destroyed) return;
               removeEntityContextsForLayer(id);
               _count = 0;
               _stemRecords = [];
               _pickFeatureByEntity = new WeakMap();
+              _stemRecordByEntity = new WeakMap();
               console.error(`Failed to load ${id}:`, e);
             }
 
@@ -851,6 +994,11 @@ export function createLocalGeoJsonLayer(
                     if (positions && positions.length > 0) {
                       targetPos = positions[0];
                     }
+                  } else if (
+                    _surfaceCollections &&
+                    _stemRecordByEntity.has(entity)
+                  ) {
+                    targetPos = _stemRecordByEntity.get(entity).base;
                   } else if (entity.polygon && entity.polygon.hierarchy) {
                     // If it's a polygon, just fly to its center
                     const hierarchy = entity.polygon.hierarchy.getValue(
@@ -1004,6 +1152,13 @@ export function createLocalGeoJsonLayer(
             const isVisible = isActive && occluder.isPointVisible(record.base);
             if (record.entity.show !== isVisible)
               record.entity.show = isVisible;
+            if (
+              record.pointPrimitive &&
+              record.pointPrimitive.show !== isVisible
+            )
+              record.pointPrimitive.show = isVisible;
+            if (record.stemPrimitive && record.stemPrimitive.show !== isVisible)
+              record.stemPrimitive.show = isVisible;
 
             // Records outside the globe-LOD active set carry no visible stem,
             // so skip every per-frame cost for them — geometry trig, the
@@ -1102,6 +1257,7 @@ export function createLocalGeoJsonLayer(
         return;
       }
       if (_dataSource) _dataSource.show = true;
+      if (_surfaceCollections) _surfaceCollections.owner.show = true;
       viewer.scene.requestRender?.();
     },
 
@@ -1127,6 +1283,7 @@ export function createLocalGeoJsonLayer(
       _cachedFeatures = null;
       _stemRecords = [];
       _pickFeatureByEntity = new WeakMap();
+      _stemRecordByEntity = new WeakMap();
       _count = 0;
       _lastUpdate = null;
       _error = null;
@@ -1255,7 +1412,9 @@ function updateLocalStemGeometry(viewer, record, now, knownDistance = null) {
   stemPositions[0] = record.base;
   stemPositions[1] = record.tip;
   record.entity.position.setValue(record.tip);
-  record.entity.polyline.positions.setValue(stemPositions);
+  if (record.pointPrimitive) record.pointPrimitive.position = record.tip;
+  if (record.stemPrimitive) record.stemPrimitive.positions = stemPositions;
+  else record.entity.polyline.positions.setValue(stemPositions);
   return true;
 }
 

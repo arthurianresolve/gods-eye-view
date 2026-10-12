@@ -12,6 +12,12 @@ const OWNER_RESOURCE_FIELDS = Object.freeze([
   'providerLoadsStarted',
   'providerCacheReuses',
   'providerLoadFailures',
+  'surfaceCollectionOwners',
+  'surfacePoints',
+  'surfaceStems',
+  'referenceCollections',
+  'referencePointPrimitives',
+  'referenceStemPrimitives',
 ]);
 
 function finite(value) {
