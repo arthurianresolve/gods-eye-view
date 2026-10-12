@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   createBoundaryProgressRecorder,
   observeRenderBoundary,
+  prepareRenderBoundaryProgressBinding,
 } from './renderBoundaryObservation.mjs';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
 
@@ -406,4 +407,394 @@ test('boundary progress recorder remains bound to the invocation owner after cur
     failure.progress.current.measurementBoundaryObservation.invocationId,
     'invocation-a',
   );
+});
+
+test('preinstalled document binding covers warmup and measurement without boundary setup cost', async () => {
+  const exposed = new Map();
+  const order = [];
+  const page = {
+    async exposeFunction(name, callback) {
+      order.push('binding-installed');
+      exposed.set(name, callback);
+    },
+    async removeExposedFunction(name) {
+      order.push('binding-removed');
+      exposed.delete(name);
+    },
+  };
+  const binding = await prepareRenderBoundaryProgressBinding({
+    page,
+    ownerId: 'provider-sample:document-a',
+  });
+  const records = [];
+  for (const label of ['warmup', 'measurement']) {
+    const progress = [];
+    const result = await observeRenderBoundary({
+      label,
+      timeoutMs: 100,
+      progressBinding: binding,
+      evaluate: async (_timeout, current) => {
+        order.push(`${label}-boundary-started`);
+        const callback = exposed.get(current.progressFunctionName);
+        assert.equal(typeof callback, 'function');
+        await callback(current.invocationId, 'page-entry', {
+          pageElapsedMs: 0,
+        });
+        return {
+          status: 'settled',
+          settleElapsedMs: 4,
+          diagnostics: pageDiagnostics(),
+        };
+      },
+      onProgress: (entry) => progress.push(entry),
+    });
+    records.push(result.invocationId);
+    assert.equal(result.progressBindingOwnerId, binding.ownerId);
+    assert.equal(result.progressBindingSetupElapsedMs, binding.setupElapsedMs);
+    assert.equal(result.hostProgressBindingSetupElapsedMs, null);
+    assert.equal(result.cleanup.progressInvocationReleased, true);
+    assert.equal(result.cleanup.progressBindingRemoved, null);
+    assert.equal(progress.at(-1).pageEntryObserved, true);
+    assert.equal(exposed.has(binding.functionName), true);
+  }
+  assert.equal(new Set(records).size, 2);
+  assert.deepEqual(order, [
+    'binding-installed',
+    'warmup-boundary-started',
+    'measurement-boundary-started',
+  ]);
+  const cleanup = await binding.dispose();
+  assert.equal(cleanup.removed, true);
+  assert.equal(exposed.size, 0);
+  assert.equal(order.at(-1), 'binding-removed');
+});
+
+test('late acknowledgements remain bound to their invocation and cannot update the next record', async () => {
+  const exposed = new Map();
+  const page = {
+    async exposeFunction(name, callback) {
+      exposed.set(name, callback);
+    },
+    async removeExposedFunction(name) {
+      exposed.delete(name);
+    },
+  };
+  const binding = await prepareRenderBoundaryProgressBinding({
+    page,
+    ownerId: 'provider-sample:document-b',
+  });
+  let staleInvocationId;
+  const firstProgress = [];
+  await assert.rejects(
+    observeRenderBoundary({
+      label: 'stalled warmup',
+      timeoutMs: 8,
+      hostGraceMs: 0,
+      progressBinding: binding,
+      evaluate: (_timeout, current) => {
+        staleInvocationId = current.invocationId;
+        return new Promise(() => {});
+      },
+      onProgress: (entry) => firstProgress.push(entry),
+    }),
+    /host observation deadline/,
+  );
+  const secondProgress = [];
+  let currentInvocationId;
+  const result = await observeRenderBoundary({
+    label: 'measurement',
+    timeoutMs: 100,
+    progressBinding: binding,
+    evaluate: async (_timeout, current) => {
+      currentInvocationId = current.invocationId;
+      await exposed.get(binding.functionName)(
+        current.invocationId,
+        'page-entry',
+        { pageElapsedMs: 0 },
+      );
+      return {
+        status: 'settled',
+        settleElapsedMs: 2,
+        diagnostics: pageDiagnostics(),
+      };
+    },
+    onProgress: (entry) => secondProgress.push(entry),
+  });
+  const malformedAccepted = await exposed.get(binding.functionName)(
+    'not-a-uuid',
+    'page-entry',
+    { pageElapsedMs: 0 },
+  );
+  const staleAccepted = await exposed.get(binding.functionName)(
+    staleInvocationId,
+    'page-entry',
+    { pageElapsedMs: 0 },
+  );
+  assert.equal(malformedAccepted.accepted, false);
+  assert.notEqual(staleInvocationId, currentInvocationId);
+  assert.equal(staleAccepted.accepted, false);
+  assert.deepEqual(binding.ignoredCallbacks, {
+    malformedInvocation: 1,
+    unownedInvocation: 1,
+  });
+  assert.equal(firstProgress.at(-1).progressEvents.length, 0);
+  assert.equal(result.pageEntryObserved, true);
+  assert.equal(secondProgress.at(-1).progressEvents.length, 1);
+  assert.equal((await binding.dispose()).removed, true);
+});
+
+test('late document-binding setup schedules cleanup without treating install as success', async () => {
+  let resolveInstall;
+  let removed = 0;
+  const page = {
+    exposeFunction: () =>
+      new Promise((resolve) => {
+        resolveInstall = resolve;
+      }),
+    removeExposedFunction: async () => {
+      removed += 1;
+    },
+  };
+  await assert.rejects(
+    prepareRenderBoundaryProgressBinding({
+      page,
+      ownerId: 'provider-sample:document-c',
+      timeoutMs: 5,
+    }),
+    (error) => {
+      assert.equal(error.name, 'TimeoutError');
+      assert.equal(error.lateRemovalScheduled, true);
+      return true;
+    },
+  );
+  resolveInstall();
+  await delay(5);
+  assert.equal(removed, 1);
+});
+
+test('failed document-binding setup attempts owner-local cleanup and preserves setup error', async () => {
+  let removed = 0;
+  const page = {
+    exposeFunction: async () => {
+      throw new Error('binding setup rejected');
+    },
+    removeExposedFunction: async () => {
+      removed += 1;
+    },
+  };
+  await assert.rejects(
+    prepareRenderBoundaryProgressBinding({
+      page,
+      ownerId: 'provider-sample:document-e',
+    }),
+    /binding setup rejected/,
+  );
+  assert.equal(removed, 1);
+});
+
+test('persistent binding cleanup is bounded and reports an unremoved owner', async () => {
+  const page = {
+    async exposeFunction() {},
+    removeExposedFunction: () => new Promise(() => {}),
+  };
+  const binding = await prepareRenderBoundaryProgressBinding({
+    page,
+    ownerId: 'provider-sample:document-d',
+  });
+  const cleanup = await binding.dispose();
+  assert.equal(cleanup.removed, false);
+  assert.equal(cleanup.error.name, 'TimeoutError');
+  assert.ok(cleanup.elapsedMs >= 200 && cleanup.elapsedMs < 1000);
+});
+
+test('concurrent binding disposal waits for the same pending removal outcome', async () => {
+  let finishRemoval;
+  let removeCalls = 0;
+  const page = {
+    async exposeFunction() {},
+    removeExposedFunction() {
+      removeCalls += 1;
+      return new Promise((resolve) => {
+        finishRemoval = resolve;
+      });
+    },
+  };
+  const binding = await prepareRenderBoundaryProgressBinding({
+    page,
+    ownerId: 'provider-sample:concurrent-dispose',
+  });
+  const first = binding.dispose();
+  await delay(0);
+  const second = binding.dispose();
+  let settled = false;
+  second.then(() => {
+    settled = true;
+  });
+  await delay(0);
+  assert.equal(settled, false);
+  assert.equal(removeCalls, 1);
+  finishRemoval();
+  const [firstResult, secondResult] = await Promise.all([first, second]);
+  assert.deepEqual(secondResult, firstResult);
+  assert.equal(firstResult.removed, true);
+  assert.ok(firstResult.elapsedMs >= 0);
+});
+
+test('concurrent disposal shares removal rejection and timeout results', async (t) => {
+  await t.test('rejection', async () => {
+    let removeCalls = 0;
+    const binding = await prepareRenderBoundaryProgressBinding({
+      page: {
+        async exposeFunction() {},
+        async removeExposedFunction() {
+          removeCalls += 1;
+          throw new Error('remove rejected');
+        },
+      },
+      ownerId: 'provider-sample:concurrent-rejection',
+    });
+    const first = binding.dispose();
+    const second = binding.dispose();
+    const [firstResult, secondResult] = await Promise.all([first, second]);
+    assert.deepEqual(secondResult, firstResult);
+    assert.equal(firstResult.removed, false);
+    assert.equal(firstResult.error.message, 'remove rejected');
+    assert.equal(removeCalls, 1);
+  });
+
+  await t.test('timeout', async () => {
+    let removeCalls = 0;
+    const binding = await prepareRenderBoundaryProgressBinding({
+      page: {
+        async exposeFunction() {},
+        removeExposedFunction() {
+          removeCalls += 1;
+          return new Promise(() => {});
+        },
+      },
+      ownerId: 'provider-sample:concurrent-timeout',
+    });
+    const first = binding.dispose();
+    const second = binding.dispose();
+    const [firstResult, secondResult] = await Promise.all([first, second]);
+    assert.deepEqual(secondResult, firstResult);
+    assert.equal(firstResult.removed, false);
+    assert.equal(firstResult.error.name, 'TimeoutError');
+    assert.equal(removeCalls, 1);
+  });
+});
+
+test('invocation unregistration errors use invocation cleanup evidence', async () => {
+  const progress = [];
+  const result = await observeRenderBoundary({
+    label: 'invocation cleanup rejection',
+    timeoutMs: 100,
+    progressBinding: {
+      functionName: '__gevRenderBoundary_test',
+      ownerId: 'provider-sample:registration-error',
+      register: () => true,
+      unregister: () => {
+        throw new Error('invocation unregister rejected');
+      },
+    },
+    evaluate: async () => ({
+      status: 'settled',
+      settleElapsedMs: 1,
+      diagnostics: pageDiagnostics(),
+    }),
+    onProgress: (entry) => progress.push(entry),
+  });
+  assert.equal(
+    result.cleanup.progressInvocationError.message,
+    'invocation unregister rejected',
+  );
+  assert.equal(result.cleanup.progressBindingError, undefined);
+  assert.equal(
+    progress.at(-1).cleanup.progressInvocationError.message,
+    'invocation unregister rejected',
+  );
+});
+
+test('failure reports retain progress-binding setup and boundary-timeout ownership', async (t) => {
+  await t.test('setup failure', () => {
+    const current = {
+      phase: 'prepare-render-boundary-binding',
+      renderBoundaryProgressBinding: {
+        ownerId: 'provider-sample:document-setup-failure',
+        status: 'setup-timeout',
+        setupTimeoutMs: 5000,
+        setupElapsedMs: 5000,
+        cleanup: null,
+        lateRemovalScheduled: true,
+      },
+    };
+    const report = createCaptureFailureReport({
+      phase: current.phase,
+      error: new Error('binding install timed out'),
+      current,
+    });
+    assert.deepEqual(
+      report.progress.current.renderBoundaryProgressBinding,
+      current.renderBoundaryProgressBinding,
+    );
+  });
+
+  await t.test('boundary timeout after cleanup', async () => {
+    const exposed = new Map();
+    const page = {
+      async exposeFunction(name, callback) {
+        exposed.set(name, callback);
+      },
+      async removeExposedFunction(name) {
+        exposed.delete(name);
+      },
+    };
+    const binding = await prepareRenderBoundaryProgressBinding({
+      page,
+      ownerId: 'provider-sample:document-boundary-failure',
+    });
+    const current = {
+      phase: 'measurement-boundary-render-wait',
+      renderBoundaryProgressBinding: {
+        ownerId: binding.ownerId,
+        status: 'ready',
+        setupTimeoutMs: 5000,
+        setupElapsedMs: binding.setupElapsedMs,
+        cleanup: null,
+      },
+    };
+    try {
+      await observeRenderBoundary({
+        label: 'measurement boundary',
+        timeoutMs: 5,
+        hostGraceMs: 0,
+        progressBinding: binding,
+        evaluate: () => new Promise(() => {}),
+        onProgress: (observation) => {
+          current.measurementBoundaryObservation = observation;
+        },
+      });
+      assert.fail('Expected boundary timeout.');
+    } catch (error) {
+      current.renderBoundaryProgressBinding.cleanup = await binding.dispose();
+      current.renderBoundaryProgressBinding.status = 'disposed';
+      const report = createCaptureFailureReport({
+        phase: current.phase,
+        error,
+        current,
+      });
+      assert.equal(
+        report.progress.current.renderBoundaryProgressBinding.ownerId,
+        binding.ownerId,
+      );
+      assert.equal(
+        report.progress.current.renderBoundaryProgressBinding.cleanup.removed,
+        true,
+      );
+      assert.equal(
+        report.progress.current.measurementBoundaryObservation.status,
+        'host-observation-deadline',
+      );
+    }
+  });
 });

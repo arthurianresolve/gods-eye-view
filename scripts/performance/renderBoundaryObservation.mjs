@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 const MAX_PROGRESS_EVENTS = 8;
 const CLEANUP_TIMEOUT_MS = 250;
+const BINDING_SETUP_TIMEOUT_MS = 5000;
 const VALID_STAGES = new Set([
   'page-entry',
   'listener-registered',
@@ -37,6 +38,185 @@ function boundedError(error) {
       240,
     ),
   };
+}
+
+function timeoutResult(
+  promise,
+  timeoutMs,
+  message,
+  setTimer = setTimeout,
+  clearTimer = clearTimeout,
+) {
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise).then(
+      (value) => ({ kind: 'completed', value }),
+      (error) => ({ kind: 'error', error }),
+    ),
+    new Promise((resolve) => {
+      timer = setTimer(
+        () =>
+          resolve({
+            kind: 'timeout',
+            error: Object.assign(new Error(message), { name: 'TimeoutError' }),
+          }),
+        timeoutMs,
+      );
+    }),
+  ]).finally(() => clearTimer(timer));
+}
+
+/** Install one bounded host binding owned by a single Puppeteer page/document. */
+export async function prepareRenderBoundaryProgressBinding({
+  page,
+  ownerId,
+  timeoutMs = BINDING_SETUP_TIMEOUT_MS,
+  now = () => globalThis.performance?.now?.() ?? Date.now(),
+  setTimer = setTimeout,
+  clearTimer = clearTimeout,
+}) {
+  if (
+    !page ||
+    typeof page.exposeFunction !== 'function' ||
+    typeof page.removeExposedFunction !== 'function' ||
+    typeof ownerId !== 'string' ||
+    !ownerId ||
+    ownerId.length > 160 ||
+    !Number.isFinite(timeoutMs) ||
+    timeoutMs <= 0
+  )
+    throw new TypeError('Render boundary binding owner is invalid.');
+
+  const name = `__gevRenderBoundary_${randomUUID().replaceAll('-', '')}`;
+  const handlers = new Map();
+  const ignoredCallbacks = { malformedInvocation: 0, unownedInvocation: 0 };
+  const setupStartedAt = now();
+  let disposed = false;
+  let removePromise = null;
+  let disposePromise = null;
+  const remove = () => {
+    if (!removePromise)
+      removePromise = Promise.resolve().then(() =>
+        page.removeExposedFunction(name),
+      );
+    return removePromise;
+  };
+  const exposed = Promise.resolve().then(() =>
+    page.exposeFunction(name, (invocationId, stage, details) => {
+      if (
+        disposed ||
+        typeof invocationId !== 'string' ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          invocationId,
+        )
+      ) {
+        ignoredCallbacks.malformedInvocation = Math.min(
+          999,
+          ignoredCallbacks.malformedInvocation + 1,
+        );
+        return { accepted: false };
+      }
+      const receiver = handlers.get(invocationId);
+      if (!receiver) {
+        ignoredCallbacks.unownedInvocation = Math.min(
+          999,
+          ignoredCallbacks.unownedInvocation + 1,
+        );
+        return { accepted: false };
+      }
+      try {
+        return receiver(invocationId, stage, details);
+      } catch {
+        return { accepted: false };
+      }
+    }),
+  );
+  const setup = await timeoutResult(
+    exposed,
+    timeoutMs,
+    'Render boundary progress binding setup timed out.',
+    setTimer,
+    clearTimer,
+  );
+  if (setup.kind !== 'completed') {
+    disposed = true;
+    handlers.clear();
+    // If installation resolves after the host deadline, remove only this
+    // uniquely named binding from its owning page.
+    if (setup.kind === 'timeout') {
+      exposed.then(
+        () => remove().catch(() => {}),
+        () => {},
+      );
+    } else {
+      const cleanup = await timeoutResult(
+        remove(),
+        CLEANUP_TIMEOUT_MS,
+        'Failed setup cleanup timed out.',
+        setTimer,
+        clearTimer,
+      );
+      if (cleanup.kind !== 'completed')
+        setup.error.cleanupError = boundedError(cleanup.error);
+      throw setup.error;
+    }
+    throw Object.assign(setup.error, {
+      name: 'TimeoutError',
+      lateRemovalScheduled: true,
+    });
+  }
+
+  let cleanupElapsedMs = null;
+  let cleanupError = null;
+  const binding = {
+    functionName: name,
+    ownerId,
+    setupElapsedMs: Math.max(0, now() - setupStartedAt),
+    register(invocationId, receiver) {
+      if (
+        disposed ||
+        typeof invocationId !== 'string' ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          invocationId,
+        ) ||
+        typeof receiver !== 'function' ||
+        handlers.has(invocationId)
+      )
+        return false;
+      handlers.set(invocationId, receiver);
+      return true;
+    },
+    unregister(invocationId) {
+      return handlers.delete(invocationId);
+    },
+    ignoredCallbacks,
+    dispose() {
+      if (!disposePromise) {
+        disposed = true;
+        handlers.clear();
+        disposePromise = (async () => {
+          const cleanupStartedAt = now();
+          const outcome = await timeoutResult(
+            remove(),
+            CLEANUP_TIMEOUT_MS,
+            'Render boundary progress binding cleanup timed out.',
+            setTimer,
+            clearTimer,
+          );
+          cleanupElapsedMs = Math.max(0, now() - cleanupStartedAt);
+          if (outcome.kind === 'error' || outcome.kind === 'timeout')
+            cleanupError = boundedError(outcome.error);
+          return {
+            removed: outcome.kind === 'completed',
+            elapsedMs: cleanupElapsedMs,
+            error: cleanupError,
+          };
+        })();
+      }
+      return disposePromise;
+    },
+  };
+  return binding;
 }
 
 function boundedProgressDetails(details) {
@@ -91,7 +271,7 @@ async function disposeBinding(binding, observation, now) {
       Promise.resolve()
         .then(() => binding.dispose())
         .then(
-          () => ({ kind: 'disposed' }),
+          (value) => ({ kind: 'disposed', value }),
           (error) => ({ kind: 'error', error }),
         ),
       new Promise((resolve) => {
@@ -101,35 +281,58 @@ async function disposeBinding(binding, observation, now) {
         );
       }),
     ]);
-    observation.cleanup.progressBindingRemoved = outcome.kind === 'disposed';
+    if (binding.registration) {
+      observation.cleanup.progressInvocationReleased =
+        outcome.kind === 'disposed' && outcome.value === true;
+    } else {
+      observation.cleanup.progressBindingRemoved = outcome.kind === 'disposed';
+    }
     if (outcome.kind === 'error')
-      observation.cleanup.progressBindingError = boundedError(outcome.error);
+      observation.cleanup[
+        binding.registration
+          ? 'progressInvocationError'
+          : 'progressBindingError'
+      ] = boundedError(outcome.error);
     if (outcome.kind === 'timeout')
-      observation.cleanup.progressBindingError = {
+      observation.cleanup[
+        binding.registration
+          ? 'progressInvocationError'
+          : 'progressBindingError'
+      ] = {
         name: 'TimeoutError',
         message:
           'Progress binding cleanup exceeded its bounded cleanup window.',
       };
   } catch (error) {
-    observation.cleanup.progressBindingRemoved = false;
-    observation.cleanup.progressBindingError = boundedError(error);
+    observation.cleanup[
+      binding.registration
+        ? 'progressInvocationReleased'
+        : 'progressBindingRemoved'
+    ] = false;
+    observation.cleanup[
+      binding.registration ? 'progressInvocationError' : 'progressBindingError'
+    ] = boundedError(error);
   } finally {
     clearTimeout(timer);
     observation.cleanup.progressBindingCleanupElapsedMs = Math.max(
       0,
       now() - cleanupStartedAt,
     );
+    if (binding.registration)
+      observation.cleanup.progressInvocationReleaseElapsedMs =
+        observation.cleanup.progressBindingCleanupElapsedMs;
   }
 }
 
 /**
  * Observe one page-side completed-render probe without changing its deadline.
- * A temporary exposed binding provides host-receipt timestamps for page phases;
- * those timestamps share the host clock and are not inferred from page clocks.
+ * A preinstalled document binding or optional temporary binding provides
+ * host-receipt timestamps; they are not inferred from page clocks.
  */
 export async function observeRenderBoundary({
   evaluate,
   prepareProgress,
+  progressBinding,
   label,
   timeoutMs = 5000,
   hostGraceMs = 1000,
@@ -146,7 +349,16 @@ export async function observeRenderBoundary({
     timeoutMs <= 0 ||
     !Number.isFinite(hostGraceMs) ||
     hostGraceMs < 0 ||
-    (prepareProgress !== undefined && typeof prepareProgress !== 'function')
+    (prepareProgress !== undefined && typeof prepareProgress !== 'function') ||
+    (progressBinding !== undefined &&
+      (!progressBinding ||
+        typeof progressBinding.functionName !== 'string' ||
+        !/^__[A-Za-z0-9_]{1,100}$/.test(progressBinding.functionName) ||
+        typeof progressBinding.ownerId !== 'string' ||
+        !progressBinding.ownerId ||
+        typeof progressBinding.register !== 'function' ||
+        typeof progressBinding.unregister !== 'function')) ||
+    (prepareProgress !== undefined && progressBinding !== undefined)
   )
     throw new TypeError('Render boundary observer arguments are invalid.');
 
@@ -161,6 +373,8 @@ export async function observeRenderBoundary({
     hostElapsedMs: 0,
     hostDispatchElapsedMs: 0,
     hostProgressBindingSetupElapsedMs: null,
+    progressBindingOwnerId: progressBinding?.ownerId ?? null,
+    progressBindingSetupElapsedMs: progressBinding?.setupElapsedMs ?? null,
     pageEntryObserved: false,
     pageEntryHostReceiptElapsedMs: null,
     progressEvents: [],
@@ -173,7 +387,8 @@ export async function observeRenderBoundary({
     latePageResultObserved: false,
     cleanup: {
       hostTimerCleared: false,
-      progressBindingRemoved: prepareProgress ? null : true,
+      progressBindingRemoved: prepareProgress || progressBinding ? null : true,
+      progressInvocationReleased: progressBinding ? null : true,
       progressBindingCleanupElapsedMs: null,
     },
   };
@@ -317,7 +532,25 @@ export async function observeRenderBoundary({
 
   try {
     let pageResult;
-    if (prepareProgress) {
+    if (progressBinding) {
+      const registered = progressBinding.register(
+        invocationId,
+        receiveProgress,
+      );
+      if (!registered)
+        throw new Error(
+          'Render boundary progress invocation registration failed.',
+        );
+      activeBinding = {
+        functionName: progressBinding.functionName,
+        registration: true,
+        dispose: () => progressBinding.unregister(invocationId),
+      };
+      pageResult = await Promise.race([
+        startPageEvaluation(activeBinding),
+        hostTimeout,
+      ]);
+    } else if (prepareProgress) {
       const bindingSetupStartedAt = now();
       preparePromise = Promise.resolve()
         .then(() => prepareProgress(receiveProgress, invocationId))

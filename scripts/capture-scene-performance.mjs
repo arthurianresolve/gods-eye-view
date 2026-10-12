@@ -20,6 +20,7 @@ import {
 import {
   createBoundaryProgressRecorder,
   observeRenderBoundary,
+  prepareRenderBoundaryProgressBinding,
 } from './performance/renderBoundaryObservation.mjs';
 import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
@@ -336,6 +337,34 @@ const failureProgress = {
 };
 let captureFailure = null;
 let failureReportWritten = false;
+let activeRenderBoundaryProgressBinding = null;
+let activeRenderBoundaryProgressBindingRecord = null;
+async function disposeActiveRenderBoundaryProgressBinding(reason) {
+  const binding = activeRenderBoundaryProgressBinding;
+  const record = activeRenderBoundaryProgressBindingRecord;
+  if (!binding || !record) return null;
+  activeRenderBoundaryProgressBinding = null;
+  activeRenderBoundaryProgressBindingRecord = null;
+  record.status = 'disposing';
+  record.disposeReason = reason;
+  try {
+    const cleanup = await binding.dispose();
+    record.cleanup = cleanup;
+    record.ignoredCallbacks = { ...binding.ignoredCallbacks };
+    record.status = cleanup.removed ? 'disposed' : 'cleanup-failed';
+    return cleanup;
+  } catch (error) {
+    record.status = 'cleanup-failed';
+    record.cleanup = {
+      removed: false,
+      error: {
+        name: String(error?.name || 'Error').slice(0, 80),
+        message: String(error?.message || error).slice(0, 240),
+      },
+    };
+    return record.cleanup;
+  }
+}
 async function writeCaptureFailure(error) {
   const report = createCaptureFailureReport({
     source,
@@ -484,21 +513,19 @@ async function settleProviderRenderAtBoundary(
   label,
   timeoutMs = 5000,
   onProgress,
+  progressBinding,
 ) {
   return observeRenderBoundary({
     label,
     timeoutMs,
     hostGraceMs: 1000,
-    prepareProgress: async (receiveProgress, invocationId) => {
-      const functionName = `__gevRenderBoundary_${invocationId.replaceAll('-', '')}`;
-      await targetPage.exposeFunction(functionName, receiveProgress);
-      return {
-        functionName,
-        dispose: () => targetPage.removeExposedFunction(functionName),
-      };
-    },
+    progressBinding,
     evaluate: (pageTimeoutMs, progressBinding) =>
-      evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, progressBinding),
+      evaluateCompletedRenderDiagnostic(
+        targetPage,
+        pageTimeoutMs,
+        progressBinding,
+      ),
     onProgress,
   });
 }
@@ -1377,6 +1404,12 @@ try {
       });
       providerSampleWorkerAuditComplete = true;
     }
+    const bindingCleanup =
+      await disposeActiveRenderBoundaryProgressBinding('document-replaced');
+    if (bindingCleanup && !bindingCleanup.removed)
+      throw new Error(
+        'Render-boundary binding cleanup failed before document replacement.',
+      );
     await releaseFlightFixtureSession(activeFixtureSession);
     if (providerContext) await providerContext.close();
     else await page.close();
@@ -1520,7 +1553,6 @@ try {
       failureProgress.current.phase = failureProgress.phase;
       const trackingResult = await page.evaluate(
         async ({ scenarioName, hasFixture }) => {
-          const fixtureClock = window.__gevPhasedMonotonicWallClockV1;
           const app = window.__godsEyeView;
           const viewer = app.viewer;
           const flights = app.dataManager.layers.get('flights')?.module;
@@ -1551,17 +1583,71 @@ try {
             });
             viewer.scene.requestRender();
           }
-          // Release wall time only after fixture/tracking/camera setup has
-          // settled. Warmup and capture then share one monotonic epoch.
-          const clockStart = fixtureClock?.startWarmup?.() ?? null;
-          return { trackedAircraftId, clockStart };
+          return { trackedAircraftId };
         },
         { scenarioName: scenario, hasFixture: Boolean(fixture) },
       );
       const trackingSetup = trackingResult?.trackedAircraftId ?? null;
       failureProgress.current.trackingSetup = trackingSetup;
-      failureProgress.current.clockStart = trackingResult?.clockStart ?? null;
+      let boundaryProgressBindingRecord = null;
+      if (productionFlightFixture) {
+        failureProgress.phase = 'prepare-render-boundary-binding';
+        failureProgress.current.phase = failureProgress.phase;
+        boundaryProgressBindingRecord = {
+          ownerId: `${activeDocumentRole}:${activeDocumentId}`.slice(0, 160),
+          status: 'setup-pending',
+          setupTimeoutMs: 5000,
+          setupElapsedMs: null,
+          cleanup: null,
+        };
+        failureProgress.current.renderBoundaryProgressBinding =
+          boundaryProgressBindingRecord;
+        const setupStartedAt = performance.now();
+        try {
+          activeRenderBoundaryProgressBinding =
+            await prepareRenderBoundaryProgressBinding({
+              page,
+              ownerId: boundaryProgressBindingRecord.ownerId,
+              timeoutMs: boundaryProgressBindingRecord.setupTimeoutMs,
+            });
+          activeRenderBoundaryProgressBindingRecord =
+            boundaryProgressBindingRecord;
+          boundaryProgressBindingRecord.setupElapsedMs =
+            activeRenderBoundaryProgressBinding.setupElapsedMs;
+          boundaryProgressBindingRecord.status = 'ready';
+        } catch (error) {
+          boundaryProgressBindingRecord.setupElapsedMs = Math.max(
+            0,
+            performance.now() - setupStartedAt,
+          );
+          boundaryProgressBindingRecord.status =
+            error?.name === 'TimeoutError' ? 'setup-timeout' : 'setup-failed';
+          boundaryProgressBindingRecord.error = {
+            name: String(error?.name || 'Error').slice(0, 80),
+            message: String(error?.message || error).slice(0, 240),
+          };
+          boundaryProgressBindingRecord.lateRemovalScheduled =
+            error?.lateRemovalScheduled === true;
+          if (error?.cleanupError)
+            boundaryProgressBindingRecord.cleanup = {
+              removed: false,
+              error: error.cleanupError,
+            };
+          throw error;
+        }
+      }
+      // Start the fixture epoch only after observer setup so its host cost is
+      // outside both warmup and measurement render-boundary deadlines.
+      const clockStart = productionFlightFixture
+        ? await page.evaluate(
+            () =>
+              window.__gevPhasedMonotonicWallClockV1?.startWarmup?.() ?? null,
+          )
+        : null;
+      failureProgress.current.clockStart = clockStart;
       // Each workload/run receives the declared warmup, including tracking.
+      failureProgress.phase = 'warmup';
+      failureProgress.current.phase = failureProgress.phase;
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
       let fixtureBoundaryStart = null;
@@ -1607,6 +1693,7 @@ try {
                       'warmupBoundaryObservation',
                     )
                   : undefined,
+                activeRenderBoundaryProgressBinding,
               )
             : null;
           failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
@@ -1871,6 +1958,8 @@ try {
         { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
       );
       failureProgress.current.measurement = sample;
+      if (boundaryProgressBindingRecord)
+        sample.renderBoundaryProgressBinding = boundaryProgressBindingRecord;
       if (productionFlightFixture) {
         failureProgress.phase = 'validate-provider-fixture-clock';
         failureProgress.current.phase = failureProgress.phase;
@@ -1916,7 +2005,15 @@ try {
                 'measurementBoundaryObservation',
               )
             : undefined,
+          activeRenderBoundaryProgressBinding,
         );
+        const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
+          'both-boundaries-complete',
+        );
+        if (bindingCleanup && !bindingCleanup.removed)
+          throw new Error(
+            'Render-boundary binding cleanup failed after sample boundaries.',
+          );
         const trackingEnd =
           scenario === 'selected-aircraft-tracking'
             ? await page.evaluate(
@@ -2396,6 +2493,7 @@ try {
     process.exitCode = 1;
 } catch (error) {
   captureFailure = error;
+  await disposeActiveRenderBoundaryProgressBinding('capture-failed');
   if (failureProgress.phase === 'final-integrity-check') {
     const failedSample = String(error?.message || '').match(
       /^(idle|scripted-motion|selected-aircraft-tracking) run (\d+):/,
@@ -2413,6 +2511,7 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
+  await disposeActiveRenderBoundaryProgressBinding('capture-finally');
   for (const session of fixtureInterceptionSessions) {
     await session.send('Fetch.disable').catch(() => {});
     await session.detach().catch(() => {});
