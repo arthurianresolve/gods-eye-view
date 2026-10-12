@@ -291,6 +291,85 @@ function expectedWeatherTile(url, fixture) {
   return `${product}-tile-${manifest.times.indexOf(time)}`;
 }
 
+function requestMethod(request) {
+  const method = request?.method;
+  return typeof method === 'function' ? method.call(request) : method;
+}
+
+function safeWeatherRequestIdentity(url, request) {
+  const method = requestMethod(request);
+  const safeMethod =
+    typeof method === 'string' && /^[A-Z]{1,12}$/.test(method)
+      ? method
+      : 'INVALID-METHOD';
+  const knownPaths = new Map([
+    ['/api/weather/manifest', 'api.weather.manifest'],
+    ['/api/weather/tile', 'api.weather.tile'],
+    ['/api/wind/manifest', 'api.wind.manifest'],
+    ['/api/wind/grid/gfs-weather-effects-v1.bin', 'api.wind.grid'],
+  ]);
+  const safePath = knownPaths.get(url.pathname) || 'api.weather-or-wind.other';
+  const allowedKeys = new Set([
+    'product',
+    'time',
+    'z',
+    'x',
+    'y',
+    'size',
+    'bbox',
+    'model',
+  ]);
+  const entries = [...url.searchParams.entries()];
+  const queryKeys = [...new Set(entries.map(([key]) => key))]
+    .slice(0, 8)
+    .map((key) => (allowedKeys.has(key) ? key : 'other'))
+    .sort();
+  const safeValues = [];
+  for (const key of [
+    'product',
+    'model',
+    'time',
+    'z',
+    'x',
+    'y',
+    'size',
+    'bbox',
+  ]) {
+    const values = url.searchParams.getAll(key);
+    if (values.length !== 1) continue;
+    const value = values[0];
+    let safeValue = null;
+    if (
+      key === 'product' &&
+      ['radar', 'clouds', 'clouds-regional', 'lightning'].includes(value)
+    )
+      safeValue = value;
+    else if (key === 'model' && ['gfs', 'ifs'].includes(value))
+      safeValue = value;
+    else if (
+      key === 'time' &&
+      /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value)
+    )
+      safeValue = value;
+    else if (['z', 'x', 'y', 'size'].includes(key) && /^\d{1,6}$/.test(value))
+      safeValue = value;
+    else if (
+      key === 'bbox' &&
+      /^-?\d{1,3}(?:\.\d{1,8})?(?:,-?\d{1,3}(?:\.\d{1,8})?){3}$/.test(value)
+    )
+      safeValue = value;
+    if (safeValue !== null) safeValues.push(`${key}=${safeValue}`);
+  }
+  return `${safeMethod} ${safePath} queryKeys=${queryKeys.join(',') || 'none'} unexpectedQueryKeyCount=${entries.filter(([key]) => !allowedKeys.has(key)).length} duplicateQueryKeyCount=${entries.length - new Set(entries.map(([key]) => key)).size}${safeValues.length ? ` ${safeValues.join(' ')}` : ''}`;
+}
+
+function isWeatherEffectsRoute(url, origin) {
+  return (
+    url.origin === origin &&
+    /^\/api\/(?:weather|wind)(?:\/|$)/.test(url.pathname)
+  );
+}
+
 export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
   if (fixture?.schema !== 'gev-weather-effects-fixture/v1')
     throw new TypeError('A registered weather-effects fixture is required.');
@@ -300,7 +379,18 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
   const routeErrors = [];
   const maxRecords = 8192;
   const responseWaiters = new Set();
+  const routeErrorWaiters = new Set();
   let disposed = false;
+
+  function recordRouteError(error, identity) {
+    if (routeErrors.length < 32)
+      routeErrors.push({ request: identity, message: error.message });
+    for (const waiter of routeErrorWaiters) {
+      routeErrorWaiters.delete(waiter);
+      waiter.cleanup();
+      waiter.resolve(error);
+    }
+  }
 
   function dispose() {
     if (disposed) return false;
@@ -310,6 +400,11 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
       waiter.reject(new Error('Weather fixture delivery was disposed.'));
     }
     responseWaiters.clear();
+    for (const waiter of routeErrorWaiters) {
+      waiter.cleanup();
+      waiter.reject(new Error('Weather fixture delivery was disposed.'));
+    }
+    routeErrorWaiters.clear();
     return true;
   }
 
@@ -322,7 +417,7 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
   }
 
   function route(url, request) {
-    if (url.origin !== origin || request?.method !== 'GET') return null;
+    if (url.origin !== origin || requestMethod(request) !== 'GET') return null;
     if (url.pathname === '/api/weather/manifest') {
       if (!exactSearchParams(url, ['product'])) return null;
       const product = url.searchParams.get('product');
@@ -355,15 +450,12 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
       if (disposed) throw new Error('Weather fixture delivery is disposed.');
       const id = route(url, request);
       if (!id) {
-        if (
-          url.origin === origin &&
-          /^\/api\/(?:weather|wind)(?:\/|$)/.test(url.pathname)
-        ) {
+        if (isWeatherEffectsRoute(url, origin)) {
+          const identity = safeWeatherRequestIdentity(url, request);
           const error = new Error(
-            'Unexpected or malformed weather-effects fixture request.',
+            `Unexpected or malformed weather-effects fixture request (${identity}).`,
           );
-          if (routeErrors.length < 32)
-            routeErrors.push({ path: url.pathname, message: error.message });
+          recordRouteError(error, identity);
           throw error;
         }
         return null;
@@ -380,7 +472,18 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
         throw new RangeError('Weather fixture response inventory overflow.');
       const url = new URL(href);
       const id = route(url, { method });
-      if (!id) throw new Error('Fulfilled response has no fixture route.');
+      if (!id) {
+        // Same-origin API fallback responses for unrelated layers are not part
+        // of this fixture's delivery inventory. Owned weather/wind paths still
+        // fail closed and retain only bounded, allowlisted request identity.
+        if (!isWeatherEffectsRoute(url, origin)) return;
+        const identity = safeWeatherRequestIdentity(url, { method });
+        const error = new Error(
+          `Fulfilled weather response has no fixture route (${identity}).`,
+        );
+        recordRouteError(error, identity);
+        throw error;
+      }
       const asset = assets.get(id);
       const bytes = Buffer.from(bodyBase64 || '', 'base64');
       if (
@@ -445,6 +548,30 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
       }
       return true;
     },
+    waitForRouteError({ signal } = {}) {
+      if (disposed)
+        return Promise.reject(
+          new Error('Weather fixture delivery was disposed.'),
+        );
+      if (routeErrors.length) return Promise.resolve(routeErrors[0]);
+      signal?.throwIfAborted();
+      return new Promise((resolve, reject) => {
+        const onAbort = () => {
+          routeErrorWaiters.delete(waiter);
+          waiter.cleanup();
+          reject(signal.reason || new Error('Weather route wait was aborted.'));
+        };
+        const waiter = {
+          resolve,
+          reject,
+          cleanup() {
+            signal?.removeEventListener('abort', onAbort);
+          },
+        };
+        routeErrorWaiters.add(waiter);
+        signal?.addEventListener('abort', onAbort, { once: true });
+      });
+    },
     dispose,
     summarize(populationsBefore, populationsAfter) {
       if (routeErrors.length)
@@ -495,6 +622,188 @@ export function createWeatherEffectsFixtureDelivery(fixture, baseUrl) {
     },
     routeErrors,
   };
+}
+
+/** Small failure-only snapshot for the four selected weather/wind layers. */
+export function observeWeatherEffectsLayerState() {
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
+  if (!manager?.layers?.get || !manager?.getAll)
+    return { status: 'unavailable', layers: [], clock: null };
+  const ids = [
+    'weather-radar',
+    'weather-satellite',
+    'weather-lightning',
+    'wind',
+  ];
+  const rows = new Map(manager.getAll().map((row) => [row.id, row]));
+  const layers = ids.map((id) => {
+    const row = rows.get(id);
+    const module = manager.layers.get(id)?.module;
+    const stats = module?.getStats?.();
+    const params = module?.getParams?.();
+    return {
+      id,
+      enabled: row?.enabled ?? null,
+      count:
+        Number.isSafeInteger(row?.stats?.count) && row.stats.count >= 0
+          ? row.stats.count
+          : null,
+      loading: typeof stats?.loading === 'boolean' ? stats.loading : null,
+      error:
+        typeof stats?.error === 'string' && stats.error
+          ? stats.error
+              .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')
+              .replace(/\b[A-Za-z]:[\\/][^\s"'<>]+/g, '[path]')
+              .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [redacted]')
+              .replace(/\bBasic\s+[A-Za-z0-9+/]+=*/gi, 'Basic [redacted]')
+              .replace(
+                /\b(token|password|secret|authorization)\b["']?\s*[:=]\s*["']?[^"'&\s,;}\]]+/gi,
+                '$1=[redacted]',
+              )
+              .slice(0, 120)
+          : null,
+      observedAt:
+        typeof stats?.observedAt === 'string' &&
+        /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(stats.observedAt)
+          ? stats.observedAt
+          : null,
+      ...(id === 'weather-satellite'
+        ? {
+            product:
+              typeof params?.product === 'string'
+                ? params.product.slice(0, 32)
+                : null,
+            infrared:
+              typeof params?.infrared === 'string'
+                ? params.infrared.slice(0, 24)
+                : null,
+          }
+        : {}),
+      ...(id === 'wind'
+        ? {
+            model:
+              typeof params?.model === 'string'
+                ? params.model.slice(0, 16)
+                : null,
+            overlay:
+              typeof params?.overlay === 'string'
+                ? params.overlay.slice(0, 24)
+                : null,
+            paused: typeof params?.paused === 'boolean' ? params.paused : null,
+          }
+        : {}),
+    };
+  });
+  const clock = manager.layers
+    .get('weather-radar')
+    ?.module?.getDiagnostics?.()?.clock;
+  return {
+    status: 'observed',
+    layers,
+    clock: clock
+      ? {
+          mode: typeof clock.mode === 'string' ? clock.mode.slice(0, 16) : null,
+          target: typeof clock.target === 'string' ? clock.target : null,
+          playing: typeof clock.playing === 'boolean' ? clock.playing : null,
+        }
+      : null,
+  };
+}
+
+export async function waitForWeatherEffectsReadiness(
+  page,
+  { expectedLayerCounts, selectedLayerIds },
+  delivery,
+  timeoutMs,
+) {
+  const abortController = new AbortController();
+  let ownedHandle = null;
+  let handleDisposal = null;
+  let primaryError = null;
+  const disposeOwnedHandle = () => {
+    if (!ownedHandle) return Promise.resolve();
+    handleDisposal ||= Promise.resolve().then(() => ownedHandle.dispose());
+    return handleDisposal;
+  };
+  try {
+    const result = await Promise.race([
+      page
+        .waitForFunction(
+          ({ expected, selectedLayerIds }) => {
+            const manager = window.__godsEyeView?.dataManager;
+            const rows = manager?.getAll?.() || [];
+            const states = selectedLayerIds.map((id) => {
+              const row = rows.find((item) => item.id === id);
+              const stats = manager?.layers?.get(id)?.module?.getStats?.();
+              return {
+                id,
+                enabled: row?.enabled ?? null,
+                count:
+                  Number.isSafeInteger(row?.stats?.count) &&
+                  row.stats.count >= 0
+                    ? row.stats.count
+                    : null,
+                loading:
+                  typeof stats?.loading === 'boolean' ? stats.loading : null,
+                error:
+                  typeof stats?.error === 'string'
+                    ? stats.error.slice(0, 120)
+                    : null,
+                observedAt:
+                  typeof stats?.observedAt === 'string'
+                    ? stats.observedAt.slice(0, 40)
+                    : null,
+              };
+            });
+            if (states.some((state) => state.enabled && state.error))
+              return { status: 'failed', layers: states };
+            const ready = Object.entries(expected).every(([id, count]) => {
+              const layer = rows.find((row) => row.id === id);
+              return (
+                layer?.enabled === true &&
+                layer?.stats?.count === count &&
+                layer?.stats?.loading === false &&
+                !layer?.stats?.error
+              );
+            });
+            return ready ? { status: 'ready', layers: states } : false;
+          },
+          {
+            timeout: timeoutMs,
+            polling: 100,
+            signal: abortController.signal,
+          },
+          { expected: expectedLayerCounts, selectedLayerIds },
+        )
+        .then(async (handle) => {
+          ownedHandle = handle;
+          if (abortController.signal.aborted) {
+            await disposeOwnedHandle();
+            throw new Error('Weather readiness wait was aborted.');
+          }
+          return { kind: 'readiness', handle };
+        }),
+      delivery
+        .waitForRouteError({ signal: abortController.signal })
+        .then((routeError) => ({ kind: 'route-error', routeError })),
+    ]);
+    if (result.kind === 'route-error')
+      throw new Error(
+        `Weather fixture interception failed: ${result.routeError.message}`,
+      );
+    return await result.handle.jsonValue();
+  } catch (error) {
+    primaryError = error;
+    throw error;
+  } finally {
+    abortController.abort();
+    try {
+      await disposeOwnedHandle();
+    } catch (error) {
+      if (!primaryError) throw error;
+    }
+  }
 }
 
 export function assertWeatherEffectsClock(observation, fixture, label) {

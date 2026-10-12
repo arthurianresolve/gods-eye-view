@@ -2188,22 +2188,52 @@ try {
       fixtureSha256: weatherEffectsWorkload.sha256,
     };
     weatherCameraObservation = before.camera;
-    await page.waitForFunction(
-      (expected) => {
-        const rows = window.__godsEyeView?.dataManager?.getAll?.() || [];
-        return Object.entries(expected).every(([id, count]) => {
-          const layer = rows.find((row) => row.id === id);
-          return (
-            layer?.enabled === true &&
-            layer?.stats?.count === count &&
-            layer?.stats?.loading === false &&
-            !layer?.stats?.error
-          );
-        });
-      },
-      { timeout: fixtureTimeoutMs, polling: 100 },
-      weatherEffectsWorkload.expectedLayerCounts,
-    );
+    const recordWeatherLayerFailure = async () => {
+      let layerState = { status: 'unavailable', layers: [], clock: null };
+      try {
+        const snapshot = await withSceneFrameDiagnosticTimeout(
+          page.evaluate(weatherEffectsModule.observeWeatherEffectsLayerState),
+          'Weather selected-layer failure snapshot',
+        );
+        if (snapshot.status === 'completed') layerState = snapshot.value;
+        else
+          layerState = {
+            status: 'unavailable',
+            reason:
+              snapshot.status === 'timeout'
+                ? 'snapshot-timeout'
+                : 'snapshot-error',
+            layers: [],
+            clock: null,
+          };
+      } catch {
+        // Keep the readiness failure primary if the read-only snapshot fails.
+      }
+      failureProgress.current.weatherLayerStatesAtFailure = layerState;
+      failureProgress.current.weatherFixtureDeliveryAtFailure = {
+        responseCounts: weatherEffectsFixtureDelivery.snapshot(),
+        routeErrors: weatherEffectsFixtureDelivery.routeErrors.slice(0, 8),
+      };
+    };
+    try {
+      const layerReadiness =
+        await weatherEffectsModule.waitForWeatherEffectsReadiness(
+          page,
+          weatherEffectsWorkload,
+          weatherEffectsFixtureDelivery,
+          fixtureTimeoutMs,
+        );
+      if (layerReadiness?.status !== 'ready') {
+        await recordWeatherLayerFailure();
+        throw new Error(
+          'Weather selected layer source failed before population readiness.',
+        );
+      }
+    } catch (error) {
+      if (!failureProgress.current.weatherLayerStatesAtFailure)
+        await recordWeatherLayerFailure();
+      throw error;
+    }
     const frameResults = await page.evaluate(async (times) => {
       const root = document.querySelector('.weather-readout');
       const previous = root?.querySelector(
@@ -2311,7 +2341,10 @@ try {
           return row?.enabled === true && row?.stats?.count === count;
         });
       },
-      { timeout: fixtureTimeoutMs, polling: 100 },
+      {
+        timeout: fixtureTimeoutMs,
+        polling: 100,
+      },
       weatherEffectsWorkload.expectedLayerCounts,
     );
     const observed = await page.evaluate(observeCommonScene, {
@@ -4055,7 +4088,6 @@ try {
   weatherEffectsFixtureAbortController?.abort(
     new Error('Weather fixture capture ended.'),
   );
-  weatherEffectsFixtureDelivery?.dispose();
   await stopProviderSampleCpuProfile('capture-finally');
   await stopSceneFrameAttribution(
     'capture-finally',
@@ -4095,6 +4127,7 @@ try {
       process.exitCode = 1;
     }
   }
+  weatherEffectsFixtureDelivery?.dispose();
   for (const [
     responsePage,
     responseListener,

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import test from 'node:test';
 import * as Cesium from 'cesium';
 import {
@@ -11,11 +13,16 @@ import { createWindSource } from '../../src/layers/wind/source.js';
 import { createWindLayer } from '../../src/layers/wind/index.js';
 import { createWeatherClock } from '../../src/layers/weather/clock.js';
 import { createInvestigationWeatherAdapter } from '../../src/time/weatherAdapter.js';
+import {
+  createFixtureInterceptionErrorRecorder,
+  interceptFixtureSession,
+} from './fixtureInterception.mjs';
 import * as weatherEffectsFixtureApi from './weatherEffectsWorkloadFixture.mjs';
 import {
   assertWeatherEffectsClock,
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsWorkloadFixture,
+  waitForWeatherEffectsReadiness,
   WEATHER_EFFECTS_FIXED_TIME,
   WEATHER_EFFECTS_LAYER_COUNTS,
   assertWeatherEffectsWindState,
@@ -30,24 +37,28 @@ test('capture producer resolves weather fixture operations from its lazy module 
     'utf8',
   );
   const dynamicOperations = [
-    'createWeatherEffectsWorkloadFixture',
-    'createWeatherEffectsFixtureDelivery',
-    'assertWeatherEffectsWindState',
-    'assertWeatherEffectsClock',
-    'createWeatherEffectsFixtureLifecycle',
+    { name: 'createWeatherEffectsWorkloadFixture', invoked: true },
+    { name: 'createWeatherEffectsFixtureDelivery', invoked: true },
+    { name: 'observeWeatherEffectsLayerState', invoked: false },
+    { name: 'waitForWeatherEffectsReadiness', invoked: true },
+    { name: 'assertWeatherEffectsWindState', invoked: true },
+    { name: 'assertWeatherEffectsClock', invoked: true },
+    { name: 'createWeatherEffectsFixtureLifecycle', invoked: true },
   ];
 
-  for (const operation of dynamicOperations) {
-    assert.equal(typeof weatherEffectsFixtureApi[operation], 'function');
+  for (const { name, invoked } of dynamicOperations) {
+    assert.equal(typeof weatherEffectsFixtureApi[name], 'function');
     assert.match(
       captureSource,
-      new RegExp(`weatherEffectsModule\\.${operation}\\s*\\(`),
-      `${operation} must resolve through the dynamically loaded fixture module`,
+      new RegExp(
+        `weatherEffectsModule\\.${name}${invoked ? '\\s*\\(' : '(?=\\s*[,)])'}`,
+      ),
+      `${name} must resolve through the dynamically loaded fixture module`,
     );
     assert.doesNotMatch(
       captureSource,
-      new RegExp(`(^|[^.\\w])${operation}\\s*\\(`, 'm'),
-      `${operation} must not be referenced as an unbound identifier`,
+      new RegExp(`(^|[^.\\w])${name}\\s*\\(`, 'm'),
+      `${name} must not be referenced as an unbound identifier`,
     );
   }
   assert.match(
@@ -283,6 +294,263 @@ test('fixture responder enforces exact query and method, then audits tile bytes'
     route('/api/weather/unknown'),
     /Unexpected or malformed/,
   );
+});
+
+test('real fixture interception accepts accessor methods, ignores unrelated API fallback and diagnoses owned malformed routes', async () => {
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const delivery = createWeatherEffectsFixtureDelivery(fixture, BASE);
+  const client = new EventEmitter();
+  const commands = [];
+  client.send = async (method, params) => {
+    commands.push({ method, params });
+    return {};
+  };
+  const recorder = createFixtureInterceptionErrorRecorder();
+  const controller = await interceptFixtureSession(
+    client,
+    BASE,
+    (url, request) => delivery.respond(url, request),
+    recorder.onError,
+    {
+      onFulfilled: delivery.onFulfilled,
+      getErrorContext: () => ({
+        documentRole: 'main-measured',
+        documentId: 'main-measured-document',
+        sessionOrdinal: 1,
+        lifecycleStage: 'active',
+      }),
+    },
+  );
+  const request = async (pathname) => {
+    const event = {
+      requestId: `request-${commands.length}`,
+      request: { url: new URL(pathname, BASE).href, method: 'GET' },
+    };
+    await Promise.all(
+      client
+        .listeners('Fetch.requestPaused')
+        .map((listener) => listener(event)),
+    );
+  };
+
+  try {
+    await request('/api/weather/manifest?product=radar');
+    assert.equal(delivery.snapshot()['radar-manifest'], 1);
+
+    await request('/api/aircraft?token=unrelated-secret');
+    assert.equal(
+      commands.filter(({ method }) => method === 'Fetch.fulfillRequest').length,
+      2,
+      'the generic same-origin API fallback is fulfilled but excluded from weather asset counts',
+    );
+    assert.equal(recorder.records.length, 0);
+
+    const routeFailurePromise = delivery.waitForRouteError();
+    await request(
+      '/api/weather/manifest?product=radar&token=must-not-be-retained',
+    );
+    const routeFailure = await routeFailurePromise;
+    assert.match(routeFailure.message, /GET api\.weather\.manifest/);
+    assert.equal(recorder.records.length, 1);
+    assert.equal(recorder.records[0].phase, 'request-command');
+    assert.match(recorder.records[0].message, /GET api\.weather\.manifest/);
+    assert.match(recorder.records[0].message, /product=radar/);
+    assert.match(recorder.records[0].message, /unexpectedQueryKeyCount=1/);
+    assert.equal(
+      recorder.records[0].message.includes('must-not-be-retained'),
+      false,
+    );
+    assert.equal(
+      delivery.routeErrors[0].request.includes('must-not-be-retained'),
+      false,
+    );
+    assert.equal(commands.at(-1).method, 'Fetch.failRequest');
+  } finally {
+    await controller.stopAndDrain();
+    delivery.dispose();
+  }
+});
+
+test('weather route-error wait is cancellable and rejects on disposal', async () => {
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const delivery = createWeatherEffectsFixtureDelivery(fixture, BASE);
+  const controller = new AbortController();
+  const waiting = delivery.waitForRouteError({ signal: controller.signal });
+  controller.abort(new Error('readiness completed'));
+  await assert.rejects(waiting, /readiness completed/);
+
+  const disposedDelivery = createWeatherEffectsFixtureDelivery(fixture, BASE);
+  const disposedWait = disposedDelivery.waitForRouteError();
+  disposedDelivery.dispose();
+  await assert.rejects(disposedWait, /disposed/);
+  delivery.dispose();
+});
+
+test('weather readiness aborts polling on owned route failure and disposes late handles', async () => {
+  let readinessSignal;
+  let resolveReadiness;
+  let lateHandleDisposed = false;
+  const page = {
+    waitForFunction(_predicate, options) {
+      readinessSignal = options.signal;
+      return new Promise((resolve) => {
+        resolveReadiness = resolve;
+      });
+    },
+  };
+  const delivery = {
+    waitForRouteError({ signal }) {
+      return new Promise((resolve, reject) => {
+        if (signal.aborted) reject(signal.reason);
+        else
+          signal.addEventListener('abort', () => reject(signal.reason), {
+            once: true,
+          });
+        queueMicrotask(() => resolve(new Error('owned weather route failed')));
+      });
+    },
+  };
+  const readiness = waitForWeatherEffectsReadiness(
+    page,
+    { expectedLayerCounts: {}, selectedLayerIds: [] },
+    delivery,
+    60_000,
+  );
+  await assert.rejects(readiness, /owned weather route failed/);
+  assert.equal(readinessSignal.aborted, true);
+
+  resolveReadiness({
+    async jsonValue() {
+      return { status: 'ready', layers: [] };
+    },
+    async dispose() {
+      lateHandleDisposed = true;
+    },
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(lateHandleDisposed, true);
+
+  let simultaneousHandleDisposals = 0;
+  await assert.rejects(
+    waitForWeatherEffectsReadiness(
+      {
+        waitForFunction: async () => ({
+          async jsonValue() {
+            return { status: 'ready', layers: [] };
+          },
+          async dispose() {
+            simultaneousHandleDisposals += 1;
+          },
+        }),
+      },
+      { expectedLayerCounts: {}, selectedLayerIds: [] },
+      {
+        waitForRouteError: async () => new Error('simultaneous route failure'),
+      },
+      60_000,
+    ),
+    /simultaneous route failure/,
+  );
+  assert.equal(simultaneousHandleDisposals, 1);
+
+  const readFailure = new Error('readiness handle read failed');
+  let failedHandleDisposals = 0;
+  await assert.rejects(
+    waitForWeatherEffectsReadiness(
+      {
+        waitForFunction: async () => ({
+          async jsonValue() {
+            throw readFailure;
+          },
+          async dispose() {
+            failedHandleDisposals += 1;
+            throw new Error('handle disposal also failed');
+          },
+        }),
+      },
+      { expectedLayerCounts: {}, selectedLayerIds: [] },
+      {
+        waitForRouteError({ signal }) {
+          return new Promise((_resolve, reject) => {
+            signal.addEventListener('abort', () => reject(signal.reason), {
+              once: true,
+            });
+          });
+        },
+      },
+      60_000,
+    ),
+    (error) => error === readFailure,
+  );
+  assert.equal(failedHandleDisposals, 1);
+});
+
+test('weather failure snapshot is page-serializable and exposes only bounded selected-layer state', () => {
+  const managerRows = [
+    { id: 'weather-radar', enabled: true, stats: { count: 0 } },
+    { id: 'weather-satellite', enabled: true, stats: { count: 0 } },
+    { id: 'weather-lightning', enabled: true, stats: { count: 0 } },
+    { id: 'wind', enabled: true, stats: { count: 0 } },
+    { id: 'private-layer', enabled: true, stats: { count: 123 } },
+  ];
+  const modules = new Map(
+    managerRows.map((row) => [
+      row.id,
+      {
+        getStats: () => ({
+          loading: row.id === 'weather-radar',
+          error:
+            row.id === 'weather-radar'
+              ? 'source unavailable at https://private.invalid/map?token=must-hide'
+              : null,
+          observedAt: null,
+        }),
+        getParams: () =>
+          row.id === 'weather-satellite'
+            ? { product: 'clouds-regional', infrared: 'filtered' }
+            : row.id === 'wind'
+              ? { model: 'gfs', overlay: 'speed', paused: false }
+              : {},
+        getDiagnostics: () =>
+          row.id === 'weather-radar'
+            ? {
+                clock: { mode: 'history', target: fixtureTime, playing: false },
+              }
+            : null,
+      },
+    ]),
+  );
+  const fixtureTime = WEATHER_EFFECTS_FIXED_TIME;
+  const window = {
+    __godsEyeView: {
+      dataManager: {
+        getAll: () => managerRows,
+        layers: { get: (id) => ({ module: modules.get(id) }) },
+      },
+    },
+  };
+  const observed = JSON.parse(
+    JSON.stringify(
+      runInNewContext(
+        `(${weatherEffectsFixtureApi.observeWeatherEffectsLayerState.toString()})()`,
+        { window },
+      ),
+    ),
+  );
+  assert.equal(observed.status, 'observed');
+  assert.deepEqual(
+    observed.layers.map(({ id }) => id),
+    ['weather-radar', 'weather-satellite', 'weather-lightning', 'wind'],
+  );
+  assert.equal(observed.layers[0].loading, true);
+  assert.equal(observed.layers[0].error, 'source unavailable at [url]');
+  assert.equal(observed.layers[1].product, 'clouds-regional');
+  assert.deepEqual(observed.clock, {
+    mode: 'history',
+    target: fixtureTime,
+    playing: false,
+  });
+  assert.equal(JSON.stringify(observed).includes('private-layer'), false);
 });
 
 test('weather delivery fails closed on missing source, wrong bytes or population drift', async () => {

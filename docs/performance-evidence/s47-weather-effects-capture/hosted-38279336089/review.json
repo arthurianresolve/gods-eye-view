@@ -17,10 +17,6 @@
   "childCleanup": "confirmed by owned child outcome",
   "attribution": "New QA constructor call was not qualified through the dynamically imported weather fixture module. No weather samples ran; this is not a GPU or application-rendering result.",
   "files": {
-    "job-failure.log": {
-      "byteLength": 3335,
-      "sha256": "a44cd58402bbda2bfeffa3abd838010c96476c9c0a701763adabe6767c99f924"
-    },
     "performance-build-smoke.json": {
       "byteLength": 43152,
       "sha256": "215ea458d6d937b9f94ccf7f756f11ca8baffa25f62b6bab6182d2c4e8b9c634"
@@ -32,6 +28,14 @@
     "run.json": {
       "byteLength": 9160,
       "sha256": "eb9792d11b5db61abcdab2cebfa09cfe85b60a8cbc2ec450ea36f8ebe6d5e388"
+    },
+    "job-failure.log.gz": {
+      "byteLength": 769,
+      "sha256": "0ce2b2829f761df84f8f453ae12bcc676e10bd33a7027eaff9c56ddfd16b6036"
     }
+  },
+  "uncompressedJobLog": {
+    "byteLength": 3335,
+    "sha256": "a44cd58402bbda2bfeffa3abd838010c96476c9c0a701763adabe6767c99f924"
   }
 }
