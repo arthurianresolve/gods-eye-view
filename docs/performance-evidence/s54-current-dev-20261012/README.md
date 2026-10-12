@@ -97,3 +97,43 @@ The automatic [dev push CI run](https://github.com/arthurianresolve/gods-eye-vie
 also passes all seven standard jobs at `bbca229f`. Its full job/step outcomes
 are retained in `dev-push-ci-bbca229f.json`; optional hardware/soak and PR-only
 published layer-token checks remain skipped.
+
+## Experiment disposition - 12 October 2026
+
+The optional **dam and cable collection prototypes are rejected for promotion**.
+Production retains Entity rendering. Their isolated source and historical
+artifacts remain available; this disposition does not turn failed or missing
+acceptance checks into passes.
+
+- Dams reduce enabled post-GC JavaScript heap by 11.05%, but the source-ready
+  median regresses 15.02%, with four of five latency pairs slower. The memory
+  reduction does not override the existing 10% regression gate.
+- Cables repeatedly differ at the camera-change pose (50, 114 and 162 pixels).
+  One intervening exact-pixel comparison does not explain those failures.
+  Lifecycle failures affect both modes across separate runs. The latest
+  [expanded diagnostic](../s54-reenable-coverage-38201597528/README.md) fails
+  before any matched pair, during initial ground geometry preparation; it
+  cannot establish a candidate-versus-baseline regression or benefit.
+- Datacenters retain their separate candidate status: five matched latency and
+  memory pairs show benefit, with twenty exact image pairs. Physical Windows,
+  mixed-layer behavior and full-scene acceptance are still missing. Those
+  checks must target an isolated datacenter candidate, without the rejected
+  dam/cable changes.
+
+No unchanged cable rerun or increased readiness deadline is planned. Any new
+cable optimization needs a distinct, evidence-backed hypothesis and a fresh
+comparison. In particular, initial geometry activation must be measured
+separately from classification changes after geometry is ready. The present
+same-classification control includes initial preparation.
+
+The classification reconstruction observation identifies a possible future
+ownership change, not an accepted patch: a layer-owned ground primitive may
+support classification changes without reconstruction. Reaching into Cesium's
+Entity-owned batches would leave incompatible ownership and property state;
+such mutation is not a supported repair. A new implementation would have to
+preserve clamping, colors, widths, identities, picking and destruction under
+explicit layer ownership.
+
+S54 therefore remains partial. This recorded rejection satisfies the plan's
+requirement to decide unsuccessful experiments without retaining an unnecessary
+production change; it does not complete the remaining datacenter validation.
