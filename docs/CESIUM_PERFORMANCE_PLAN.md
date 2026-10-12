@@ -2,16 +2,24 @@
 
 ## Current status - 12 October 2026
 
-Latest validated runtime checkpoint: `bbca229f0077b8443db04395c106677684d2ef61`
-on `dev`. Both the manual and automatic push CI runs pass all seven standard
-jobs. The HUD summary ownership fix is integrated; it does not establish a GPU
+Latest validated `dev` checkpoint: `16e426ee5685d3d45e6fe5d39f91d2e22b086741`.
+[All seven standard jobs pass](performance-evidence/s54-current-dev-20261012/dev-ci-16e426ee.json).
+Runtime is unchanged from `bbca229f`; intervening changes are evidence and
+documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. Datacenter component comparisons show repeatable activation and JS
-heap benefits with identical captured pixels, while the cable map-switch
-readiness test remains failed. S47's additional infrastructure workloads are
-under implementation/review; Austin, weather/effects and map-streaming workload
+heap benefits with identical captured pixels. The fresh dam comparison regresses
+source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
+the earlier cable map-switch readiness failures remain unresolved. A subsequent
+[cable comparison](performance-evidence/s54-cable-camera-38188781699/README.md)
+passes readiness but fails all five camera-change image pairs with 50 different
+pixels and different final geometry. A reproduced final-settling threshold issue
+is under repair. S47's additional infrastructure workloads are under review:
+the frozen-clock correction completes four samples, but
+[outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
+Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
 
@@ -389,7 +397,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
-| S54 infrastructure batching | Partial: identity separation and native comparison fixture; Entity-compatible color encoding validated in the fixture; production representation unchanged | 16 fixture checks pass; `fdc2ab9` passes five exact-pixel pairs for each of two styles, native picks and cleanup; earlier direct-uniform failure retained | Hosted paravirtual Metal visual comparison passes; production activation/memory benefit and physical Windows acceptance remain pending |
+| S54 infrastructure batching | Partial: identity separation, opt-in datacenter/dam collections and cable reference collections; Entity defaults retained | Current-dev component checks preserve identities, picks and teardown. At `d05e5415`, datacenters improve activation and retained JS heap with 20 exact image pairs; dams regress source-ready time 15.02% and fail benefit acceptance. At `eea44e57`, cable camera-change geometry and all five image pairs differ; convergence repair is under review | Hosted Apple paravirtual Metal only. Earlier cable readiness failures remain unresolved; physical Windows acceptance and the final candidate soak remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
@@ -4305,3 +4313,22 @@ they do not establish motion p95, physical Windows performance or a retained-hea
 plateau. Dam/cable benefit acceptance, full-application coverage and the final
 soak remain pending. Entity defaults remain unchanged. The user-supplied Windows
 GPU export establishes hardware acceleration only.
+
+The [dam comparison 38188217630](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38188217630)
+at `d05e5415` completes successfully as a measurement but fails benefit acceptance.
+Median source-ready time increases 15.02% (four of five pairs slower), above the
+10% regression limit; first usable time after source-ready increases 2.93%, with
+one pair at +19.42%. Enabled post-GC JS heap increase falls 11.05%. Root verifies
+all 27 recorded source hashes and 40 decoded images (20 exact renderer pairs).
+The full artifact and failed acceptance are preserved alongside the datacenter
+result. Dam adoption remains blocked on source-ready attribution and resolution
+of the measured regression; lower heap does not convert it to a pass.
+
+S47 infrastructure capture selection at `87fad3fd` passes 39 focused tests,
+formatting and package boundaries after merging current dev. The first
+[hosted smoke 38188605428](performance-evidence/s47-infrastructure-smoke-38188605428/README.md)
+fails the additional candidate capture before any timing sample. The datacenter
+population is correct, but the static fixture uses an existing advancing wall
+clock adapter while requiring a frozen epoch. The failed report and source
+attribution are preserved. The adapter requires correction; no timestamp check
+is relaxed and no performance claim is made from this setup run.

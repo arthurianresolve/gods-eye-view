@@ -76,6 +76,23 @@ samples do not establish a long-run retained-heap plateau. The renderer remains
 hosted Apple paravirtual Metal; there is no physical Windows performance claim.
 Entity rendering remains the default and S54 remains partial.
 
+The subsequent [dam benefit run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38188217630)
+at the same `d05e5415` revision passes report consistency, 27 exact source hashes,
+40 independently decoded image hashes (20 identical renderer pairs), native
+picking and recorded ownership cleanup. Its performance acceptance **fails**:
+source-ready median rises from 167.8 ms to 193.0 ms (+15.02%), exceeding the
+unchanged 10% regression threshold; four of five latency pairs are slower at
+this boundary. First usable delivery after source-ready changes from 2,637.6 ms
+to 2,714.9 ms (+2.93%), with one pair regressing 19.42%. Enabled post-GC JS heap
+increase falls from 37,257,892 to 33,142,496 bytes (-11.05%).
+
+The complete artifact and independent review in `dams-benefit/` explicitly keep
+`benefitAccepted: false`. The successful CI job means the measurement completed
+and its consistency checks passed; it does not override the measured regression.
+Earlier variable dam timing results remain historical evidence. Source-ready
+cost attribution is required before adoption; no unchanged retry or default
+change is justified by this result.
+
 The automatic [dev push CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187169259)
 also passes all seven standard jobs at `bbca229f`. Its full job/step outcomes
 are retained in `dev-push-ci-bbca229f.json`; optional hardware/soak and PR-only
