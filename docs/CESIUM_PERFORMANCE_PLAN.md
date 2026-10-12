@@ -8,8 +8,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `63b2d8527d3d4be3816d55d69e9ac57c2376f7b0`.
-[All seven standard jobs pass](performance-evidence/s54-current-update-readiness-38216619573/standard-ci-dev-38215303033.json),
+Recorded integration checkpoint: `111382fb0ff8d3f64bb4cff2a87177beb4eecb7b`.
+[All seven standard jobs pass](performance-evidence/s47-common-renderer-evidence-38219550027/standard-ci-dev-38218701144.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -52,6 +52,16 @@ reads will move to the existing early context probe, preserving live settings
 and population checks. Other leading stacks include application depth picking
 and Cesium shader preparation. This is diagnostic SwiftShader evidence, not
 performance acceptance. No failure filters or render deadlines were relaxed.
+
+The isolated renderer-evidence repair at `2de9501c` passes 83 independent focused
+tests. Identity queries now occur once at real Cesium context creation; later
+observers retain live context/settings/population checks. Variable query costs
+remain reported without changing matched workload equality. Its
+[hosted check](performance-evidence/s47-common-renderer-evidence-38219550027/README.md)
+fails during baseline probe cleanup, before candidate measurements. The old helper
+collapses exceptions and timeouts, so the exact failing cleanup step is unknown.
+Bounded phase-specific evidence is the next correction; all deadlines stay fixed.
+This is an isolated harness repair, not a demonstrated runtime performance gain.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. The dam and cable collection experiments are now
@@ -109,8 +119,11 @@ The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit
 completes twenty runs with verified native owners and twenty byte-identical
 image pairs. Whole-activation median improves 22.12% and enabled JS heap
 16.15%, while source-ready median worsens 36.99% in a different phase of that
-activation. Phase attribution and the separate runtime pick failure still
-block acceptance; this is hosted component evidence only.
+activation. Subsequent source review confirms that the two renderers place work
+on different sides of the source-ready boundary, and the current-update gate
+above closes the hosted pick/capture correctness check. Physical Windows,
+mixed-layer and final retention acceptance remain open; this is hosted component
+evidence only.
 Datacenter component comparisons show repeatable activation and JS
 heap benefits with identical captured pixels. The fresh dam comparison regresses
 source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
