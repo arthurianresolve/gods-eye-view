@@ -1,0 +1,97 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "3faa0afb894d862f0f8c8c1fdb5254a9feb4d338",
+  "harnessSha": "3faa0afb894d862f0f8c8c1fdb5254a9feb4d338",
+  "captureWorkerAuditMode": "diagnostic",
+  "sceneFrameDiagnostics": true,
+  "firstMotionCpuProfile": true,
+  "cpuProfileArtifactDirectory": "performance-build-smoke.json.cpu-profile",
+  "candidateCaptureProviderFixture": "dense-investigation",
+  "startedAt": "2026-10-12T08:16:25.188Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Smoke cleanup failed.",
+      "failureDetails": {
+        "phase": "cleanup",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "cleanupErrors": [
+          "Early renderer probe cleanup was not confirmed."
+        ],
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-registration-removal/v1",
+            "confirmed": true,
+            "timeoutMs": 1000,
+            "elapsedMs": 889.8618989999995,
+            "currentDocumentUntouched": true,
+            "scriptRegistration": {
+              "status": "confirmed",
+              "elapsedMs": 889.8618989999995,
+              "errorKind": null,
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "application-navigation"
+          },
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": false,
+            "timeoutMs": 1000,
+            "elapsedMs": 999.8514090000026,
+            "document": {
+              "status": "timeout",
+              "elapsedMs": 999.5979439999937,
+              "errorKind": "operation-timeout",
+              "errorDetail": null,
+              "lateCompletion": "confirmed",
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "statePresent": null,
+              "hookRestoreAttempted": false,
+              "hookRestored": null,
+              "listenerCount": null,
+              "listenerRemovalAttemptedCount": 0,
+              "listenerRemovalConfirmedCount": 0,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": null
+            },
+            "scriptRegistration": {
+              "status": "not-attempted",
+              "elapsedMs": null,
+              "errorKind": "document-stage-did-not-settle",
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            }
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Smoke cleanup failed.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-12T08:17:31.256Z",
+  "durationMs": 66068
+}
