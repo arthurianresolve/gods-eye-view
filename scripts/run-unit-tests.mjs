@@ -67,6 +67,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/fixtures/cableCameraSweep.test.mjs',
   'scripts/fixtures/cableFailureDiagnostics.test.mjs',
   'scripts/fixtures/cableClassificationAttribution.test.mjs',
+  'scripts/fixtures/cableGeometryAttribution.test.mjs',
   'scripts/fixtures/scenePrimitiveReadiness.test.mjs',
   'scripts/qa-candidate.test.mjs',
   'scripts/qa-install-recovery.test.mjs',

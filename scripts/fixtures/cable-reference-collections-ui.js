@@ -9,6 +9,7 @@ import { readPerformanceEnvironment } from '../../src/performance/performanceSna
 import { createCableCameraSweepGate } from './cableCameraSweep.mjs';
 import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
 import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
+import { recordCableReferenceGeometryAttribution } from './cableGeometryAttribution.mjs';
 import {
   CABLE_REFERENCE_RENDER_CASES,
   CABLE_REFERENCE_RENDER_POPULATION,
@@ -500,6 +501,59 @@ async function runLifetime({
       }
       // Each natural point/stem pick is bound to the same owner in both
       // renderer lifetimes, even when overlapping geometry makes them differ.
+
+      // This witness is outside the capture loop. It preserves exact public
+      // reference coordinates so a failed whole-scene hash can be attributed
+      // to stable records and visibility without changing the pixel gate.
+      await recordCableReferenceGeometryAttribution(report, {
+        caseId,
+        mode,
+        readSnapshot: async () => {
+          const geometry = sourceGeometryEvidence(
+            viewer,
+            mode,
+            layer,
+            sourceRecords,
+          );
+          const lastSample = lifetime.samples.find(
+            (sample) =>
+              sample.caseId === caseId &&
+              sample.sample === CABLE_REFERENCE_RENDER_SAMPLES - 1,
+          );
+          const witnessedGeometrySha256 = await shaJson({
+            sourceGeometry: geometry.sourceGeometry,
+            referenceGeometry: geometry.referenceGeometry,
+          });
+          return {
+            mode,
+            sourceGeometrySha256: await shaJson(geometry.sourceGeometry),
+            referenceGeometrySha256: await shaJson(geometry.referenceGeometry),
+            witnessedGeometrySha256,
+            cameraSha256: await shaJson(cameraContracts[caseId]),
+            postLoopWitnessAfterSample: lastSample?.sample ?? null,
+            matchesLastSampleGeometry:
+              witnessedGeometrySha256 === lastSample?.geometrySha256,
+            referenceIdentitySha256: await shaJson({
+              sourceRecords: sourceRecords.map(
+                ({ kind, id }, sourceOrdinal) => ({
+                  kind,
+                  id,
+                  sourceOrdinal,
+                }),
+              ),
+              referenceEntityIds: geometry.referenceGeometry.map(
+                ({ entityId }) => entityId,
+              ),
+            }),
+            sourceCounts: {
+              cableRows: geometry.sourceGeometry.cableRows.length,
+              landingRows: geometry.sourceGeometry.landingRows.length,
+              referenceRows: geometry.referenceGeometry.length,
+            },
+            referenceRows: geometry.referenceGeometry,
+          };
+        },
+      });
     }
 
     for (let cycle = 0; cycle < 2; cycle += 1) {
