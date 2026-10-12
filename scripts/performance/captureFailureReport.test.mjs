@@ -160,6 +160,69 @@ test('failure projection retains the bounded Austin source-readiness layer snaps
   );
 });
 
+test('failure projection retains flattened Austin readiness history through outer smoke compaction', () => {
+  const snapshotJson = JSON.stringify({
+    schema: 'gev-austin-readiness-failure/v1',
+    selectedLayerCount: 2,
+    layers: [
+      ['satellites', true, 828, false, 828, 828, 'ready', null, 0, 0, 2, 0],
+      ['cctv', true, 250, true, 17, 250, 'geometry-loading', null, 0, 3, 2, 0],
+    ],
+  });
+  const report = createCaptureFailureReport({
+    source,
+    fixture: { id: 'austin-operating-composed-v1', sha256: 'd'.repeat(64) },
+    workload: {
+      austinOperatingReadinessHistory: {
+        enabled: true,
+        schema: 'gev-austin-operating-readiness-history/v1',
+        intervalMs: 1000,
+        entryLimit: 16,
+        omittedCount: 0,
+        documents: [
+          {
+            documentRole: 'provider-sample',
+            documentId: 'sample-1',
+            phase: 'source-readiness-wait',
+            status: 'stalled',
+            intervalMs: 1000,
+            omittedCount: 0,
+            session: { detachStatus: 'confirmed' },
+          },
+        ],
+        samples: [
+          {
+            documentRole: 'provider-sample',
+            documentId: 'sample-1',
+            phase: 'source-readiness-wait',
+            status: 'observed',
+            hostStartedAtMs: 12,
+            hostCompletedAtMs: 15,
+            snapshotEncoding: 'austin-layer-tuples-v1',
+            snapshotJson,
+          },
+        ],
+      },
+    },
+    phase: 'configure-austin-operating-sample-document',
+    error: new Error('existing source readiness timeout'),
+  });
+  assert.equal(report.status, 'failed');
+  const history = report.workload.austinOperatingReadinessHistory;
+  assert.equal(history.samples.length, 1);
+  assert.equal(history.samples[0].documentId, 'sample-1');
+  assert.equal(history.samples[0].snapshotJson, snapshotJson);
+  assert.deepEqual(JSON.parse(history.samples[0].snapshotJson).layers[1], [
+    'cctv', true, 250, true, 17, 250, 'geometry-loading', null, 0, 3, 2, 0,
+  ]);
+
+  const outer = compactCaptureCliFailure(report);
+  const outerHistory = outer.rawReport.workload.austinOperatingReadinessHistory;
+  assert.equal(outerHistory.samples[0].snapshotJson, snapshotJson);
+  assert.equal(outerHistory.documents[0].documentRole, 'provider-sample');
+  assert.equal(outer.rawReport.failure.message, 'existing source readiness timeout');
+});
+
 test('post-cleanup failure refresh is atomic and preserves the initial artifact on rejection', async () => {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), 'capture-failure-refresh-'),

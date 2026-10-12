@@ -368,10 +368,11 @@ export function parseSmokeArguments(argv) {
   if (
     output.sceneFrameDiagnostics === 'enabled' &&
     output.providerFixture &&
-    output.providerFixture !== 'dense-investigation'
+    output.providerFixture !== 'dense-investigation' &&
+    output.providerFixture !== AUSTIN_OPERATING_WORKLOAD_ID
   )
     throw new TypeError(
-      'Scene frame diagnostics require the dense investigation fixture.',
+      'Scene frame diagnostics require the dense investigation or Austin operating fixture.',
     );
   if (
     output.depthPickAttribution === 'enabled' &&
@@ -1347,6 +1348,130 @@ export function validateCaptureCliReport(report, expected) {
   };
 }
 
+export function validateAustinOperatingReadinessHistoryEnvelope(
+  history,
+  fixture,
+  comparisonReadinessReasons,
+) {
+  assert.equal(history?.enabled, true);
+  assert.equal(history?.schema, 'gev-austin-operating-readiness-history/v1');
+  assert.equal(history?.intervalMs, 1000);
+  assert.equal(history?.entryLimit, 16);
+  assert.ok(
+    Number.isSafeInteger(history?.attachTimeoutMs) &&
+      history.attachTimeoutMs >= 1 &&
+      history.attachTimeoutMs <= 1000,
+  );
+  assert.ok(
+    Number.isSafeInteger(history?.commandTimeoutMs) &&
+      history.commandTimeoutMs >= 1 &&
+      history.commandTimeoutMs <= 2000,
+  );
+  assert.equal(history?.performanceAcceptanceEligible, false);
+  assert.equal(history?.scope.includes('not CPU/GPU time'), true);
+  assert.ok(Array.isArray(history?.documents));
+  assert.ok(history.documents.length > 0 && history.documents.length <= 40);
+  assert.ok(Array.isArray(history?.samples));
+  assert.ok(history.samples.length <= 16);
+  assert.ok(
+    Number.isSafeInteger(history.omittedCount) && history.omittedCount >= 0,
+  );
+  assert.ok(
+    Number.isSafeInteger(history.documentOmittedCount) &&
+      history.documentOmittedCount >= 0,
+  );
+  for (const document of history.documents) {
+    assert.match(document.documentRole, /^[a-z0-9-]{1,48}$/i);
+    assert.match(document.documentId, /^[a-z0-9._:-]{1,96}$/i);
+    assert.equal(document.phase, 'source-readiness-wait');
+    assert.equal(document.intervalMs, 1000);
+    assert.ok(Number.isSafeInteger(document.omittedCount));
+    assert.ok(document.omittedCount >= 0);
+    assert.ok(document.session && typeof document.session === 'object');
+  }
+  let previousSequence = 0;
+  let previousCompletion = null;
+  for (const sample of history.samples) {
+    assert.ok(
+      Number.isSafeInteger(sample.sequence) &&
+        sample.sequence > previousSequence,
+    );
+    previousSequence = sample.sequence;
+    assert.ok(
+      history.documents.some(
+        (document) =>
+          document.documentRole === sample.documentRole &&
+          document.documentId === sample.documentId &&
+          document.phase === sample.phase,
+      ),
+    );
+    assert.ok(
+      sample.hostStartedAtMs === null ||
+        (Number.isFinite(sample.hostStartedAtMs) &&
+          sample.hostStartedAtMs >= 0),
+    );
+    assert.ok(Number.isFinite(sample.hostCompletedAtMs));
+    assert.ok(sample.hostCompletedAtMs >= 0);
+    if (sample.hostStartedAtMs !== null) {
+      assert.ok(sample.hostCompletedAtMs >= sample.hostStartedAtMs);
+      if (previousCompletion !== null)
+        assert.ok(sample.hostStartedAtMs >= previousCompletion);
+    }
+    if (previousCompletion !== null)
+      assert.ok(sample.hostCompletedAtMs >= previousCompletion);
+    previousCompletion = sample.hostCompletedAtMs;
+    assert.ok(
+      [
+        'observed',
+        'command-timeout',
+        'evaluation-failed',
+        'invalid-snapshot',
+        'session-timeout',
+        'session-create-failed',
+        'session-listener-failed',
+        'disconnected',
+      ].includes(sample.status),
+    );
+    if (sample.status === 'observed') {
+      assert.equal(sample.snapshotEncoding, 'austin-layer-tuples-v1');
+      assert.ok(typeof sample.snapshotJson === 'string');
+      assert.ok(Buffer.byteLength(sample.snapshotJson, 'utf8') <= 1024);
+      const snapshot = JSON.parse(sample.snapshotJson);
+      assert.equal(snapshot.schema, 'gev-austin-readiness-failure/v1');
+      assert.equal(
+        snapshot.selectedLayerCount,
+        fixture.selectedLayerIds.length,
+      );
+      assert.ok(Array.isArray(snapshot.layers));
+      assert.equal(snapshot.layers.length, fixture.selectedLayerIds.length);
+      assert.ok(
+        snapshot.layers.every(
+          (layer) => Array.isArray(layer) && layer.length === 12,
+        ),
+      );
+      assert.deepEqual(
+        snapshot.layers.map((layer) => layer[0]),
+        fixture.selectedLayerIds,
+      );
+      for (const layer of snapshot.layers) {
+        for (const count of layer.slice(8))
+          assert.ok(
+            count === null || (Number.isSafeInteger(count) && count >= 0),
+          );
+      }
+    } else {
+      assert.equal(sample.snapshotJson, null);
+      assert.equal(sample.snapshotEncoding, null);
+    }
+  }
+  assert.ok(
+    comparisonReadinessReasons.includes(
+      'austin-setup-readiness-history-instrumentation-is-enabled',
+    ),
+  );
+  return true;
+}
+
 function validateAustinOperatingCaptureCliReport(report, expected) {
   const fixture = expected.austinOperatingFixture;
   assert.equal(report?.schema, 'gev-performance-capture/v1');
@@ -1378,6 +1503,16 @@ function validateAustinOperatingCaptureCliReport(report, expected) {
       report.comparisonReadiness.reasons.length > 0,
     'short Austin hosted smoke must remain comparison-ineligible',
   );
+  if (expected.sceneFrameDiagnostics) {
+    validateAustinOperatingReadinessHistoryEnvelope(
+      report.workload?.austinOperatingReadinessHistory,
+      fixture,
+      report.comparisonReadiness.reasons,
+    );
+    assert.equal(report.sceneFrameDiagnostics, undefined);
+  } else {
+    assert.equal(report.workload?.austinOperatingReadinessHistory, undefined);
+  }
   if (expected.workerAuditMode === 'receipt-only') {
     const topology = createCaptureDocumentTopology({
       startupRuns: report.workload.startupRuns,
