@@ -74,6 +74,27 @@ test('TLE catalog numbers decode decimal and Alpha-5 identifiers', () => {
   assert.equal(decodeTleCatalogNumber('A00X0'), null);
 });
 
+for (const missingLine of [1, 2]) {
+  test(`TLE parsing resumes after a set missing line ${missingLine}`, () => {
+    const sets = Array.from({ length: 8 }, (_, i) => {
+      const lines = TLE.trim().split('\n').slice(0, 3);
+      lines[0] = `SAT ${i}`;
+      return lines;
+    });
+    sets[1].splice(missingLine, 1);
+    const entries = parseTleText(sets.flat().join('\r\n'));
+    assert.deepEqual(
+      entries.map((entry) => entry.name),
+      ['SAT 0', 'SAT 2', 'SAT 3', 'SAT 4', 'SAT 5', 'SAT 6', 'SAT 7'],
+    );
+    assert.ok(
+      entries.every(
+        (entry) => entry.line1.startsWith('1 ') && entry.line2.startsWith('2 '),
+      ),
+    );
+  });
+}
+
 test('the next pass defaults to the ISS and reports times, peak and direction', async () => {
   const catalog = composeCatalog({
     tools: coreTools,
