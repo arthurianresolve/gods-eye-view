@@ -329,3 +329,41 @@ full-fixture reachability, but differences in OS, CPU and browser prevent a
 causal GPU-versus-software comparison without same-host controls. The packet
 remains on QA pending actual capture validation; `dev` is not promoted by these
 unit-test results.
+
+# Native Austin result: readiness reached, warmup contract failed
+
+Run [38320527836](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38320527836)
+at `652913fd894f8977973e7aa8409cfcf566c71f1b` fails during the first idle
+warmup with `Render boundary observer arguments are invalid.` Zero measurement
+samples complete. The observed renderer is Apple paravirtual Metal, with
+Chromium reporting WebGL acceleration enabled. The baseline inspection passes;
+the candidate reaches both initial Austin setup and its first fresh provider
+document's source-readiness boundary.
+
+The subsequent setup observation preserves the requested Manual/Dense 75%
+settings and selected populations: 828 satellites, 250 CCTV cameras, 776
+viewport-selected ALPR cameras, 357 installations, 750 radios and 65,160 wind
+cells. These are source/setup observations, not completed frame measurements or
+visual-equivalence acceptance. Both readiness samplers separately reach their
+1.5-second command limit and stop; their sessions and owned listeners are
+confirmed removed. Root recomputes all three fixture-document cleanup results
+from actual drain/release records and confirms the stored results.
+
+The [independent review](native-38320527836-review.json) binds the tested
+revision, observed renderer, selected populations and cleanup records to the
+unchanged downloaded artifacts:
+
+- [Outer smoke report](hosted-native-38320527836-smoke-failed.json): 220,255 bytes;
+  SHA-256 `b91be12f89615e1b5548eb8ea2593acf3d43134c64e6715239aefd73d28d2a76`.
+- [Raw failed capture](hosted-native-38320527836-cli-failed.json): 145,345 bytes;
+  SHA-256 `a1c8156a3c755e21dd5b47a2bc7cc83ecde6f0e72218e9b2d44b62ac5d7e6af5`.
+
+The immediate cause is a capture-harness contract mismatch: Austin uses the
+shared render-boundary path while its absent optional progress binding is
+represented by `null`; the observer only accepted omission. The native backend
+made this later stage reachable. This report does not demonstrate a Cesium
+runtime defect or a Windows hardware recovery fix. Luna's narrow correction
+`ff04a619` accepts the absent binding and retains rejection of malformed actual
+bindings. Root independently passes 45 boundary, completed-render and actual
+capture-CLI tests. A hosted rerun is still required; the original failed run
+remains failed.
