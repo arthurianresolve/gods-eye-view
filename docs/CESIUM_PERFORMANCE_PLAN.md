@@ -19,6 +19,10 @@ pixels and different final geometry. A reproduced final-settling threshold issue
 is under repair. S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
+The [next run](performance-evidence/s47-infrastructure-smoke-38190043475/README.md)
+preserves a bounded capture projection and exposes a broader producer/validator
+mismatch: infrastructure uses one measured document, while validation assumed
+the dense workload's per-sample documents. Contract repair remains in progress.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
