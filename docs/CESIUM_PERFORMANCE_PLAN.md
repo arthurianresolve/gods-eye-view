@@ -92,6 +92,17 @@ distinguishing task scheduling, protocol delivery or host scheduling. A bounded
 retired-document render-loop experiment follows; measured windows and deadlines
 remain unchanged.
 
+The [retired-document experiment at `09fec83f`](performance-evidence/s47-retire-render-loop-38227044680/README.md)
+completes all six captures and three CPU profiles, with all eight CLI document
+cleanups confirmed within the unchanged one-second gate. The outer validator
+then fails because it reads an obsolete fixture-clock `start` field. Repair
+`e3f7e096` validates the current phased producer, passes 70 focused tests, and
+accepts the six retained clock records without changing the failed report.
+Its replacement exact-commit integration run is separate. No renderer/vendor
+`getParameter` calls are sampled in the three new profiles; application depth
+picking and Cesium shader preparation remain prominent sampled stacks. This is
+instrumented SwiftShader attribution, not latency or physical Windows acceptance.
+
 The [S57 map-switch comparison at `3453fab5`](performance-evidence/s57-stream-comparison-38225231367/README.md)
 executes five switch pairs and the native selection/recovery cases, then fails
 report validation. Its publisher omits required ownership fields and overwrites
@@ -690,7 +701,7 @@ the earlier release requirements and historical results.
 | S54 infrastructure batching | Partial: identity separation implemented; dam/cable prototypes rejected for promotion, datacenter candidate isolated; Entity defaults retained | Datacenters at `d05e5415` improve activation and retained JS heap with 20 exact image pairs. Dams regress source-ready time 15.02%; cable camera-change mismatches recur and lifecycle runs fail. Failed experiments are preserved, without unchanged retries or relaxed gates | Hosted Apple paravirtual Metal only. Datacenter physical Windows and mixed-layer acceptance remain pending; no full S54 or final-soak acceptance |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
-| S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
+| S57 map-resource lifetime | Partial: generation guards, cached provider ownership and comparison leases; numeric cache/pending/memory diagnostics; current-frame readiness and counterbalanced map-switch comparison; existing detail/cache targets retained | 47 focused checks and hosted component workflow pass at `14f903cb`; ten measured local heightmap/imagery switches, four setup transitions, native re-enable picks, stale/late ownership and natural cleanup independently checked; integrated through `68ccdb92` | Actual streamed 3D Tiles, matched activation/performance comparisons and physical Windows remain pending; hosted paravirtual Metal is supplemental |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
 | S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards and header-only CSV setup; full document decoding and wider UI maintenance remain | All seven integration jobs pass at `9a665b2`; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental |

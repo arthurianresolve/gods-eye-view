@@ -1,0 +1,388 @@
+{
+  "schema": "gev-diagnostic-artifact-review/v1",
+  "sourceCommit": "09fec83fdd8cbc41965e79dfaf6df2614c6a07d4",
+  "workflowConclusion": "failure",
+  "scope": "Original failed smoke plus exact CPU sidecars; no full raw validator replay because the outer report is compacted. Profile weights are sampled stacks, not precise CPU or GPU execution durations.",
+  "performanceAcceptanceEligible": false,
+  "files": [
+    {
+      "file": "report.json",
+      "bytes": 312588,
+      "sha256": "d78589285fc0749ef017bc3f1e642b9b11610ce4952cab275b10660957fc21da"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile-ref.json",
+      "bytes": 804,
+      "sha256": "f4e7d2eb8556c1dd80cf304fa616eda524e93d5d64086d1fdc50708e0817bb01"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile.json",
+      "bytes": 236209,
+      "sha256": "78788b2a727e7eeceff3dc61eb1394740e0346a067f649449eee40997716d489"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile-ref.json",
+      "bytes": 804,
+      "sha256": "1f0c31448324dfe302494a2a6c13090c89dd55403b02ecd47799c2965d6e423f"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile.json",
+      "bytes": 249330,
+      "sha256": "cd72c858df4f1c92046822f8d714047e018943d952ae20e878696825c806bd30"
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile-ref.json",
+      "bytes": 848,
+      "sha256": "22433d328fff6b599a23e6153ab592966cd5777a4ade015abc79bcb7b8e3ed9a"
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile.json",
+      "bytes": 259917,
+      "sha256": "61acf35504297e23893bd7b563b7a25dedca57df16ea2dce7046d2a63af57a76"
+    }
+  ],
+  "failure": {
+    "message": "Expected values to be strictly equal: undefined !== 1 ",
+    "phase": "candidate"
+  },
+  "rawReportTruncated": true,
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "clockSchema": "gev-provider-fixture-capture-clock/v1",
+      "measurementStartPhase": "warmup-held",
+      "endPhase": "complete",
+      "legacyStartFieldPresent": false
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "clockSchema": "gev-provider-fixture-capture-clock/v1",
+      "measurementStartPhase": "warmup-held",
+      "endPhase": "complete",
+      "legacyStartFieldPresent": false
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "clockSchema": "gev-provider-fixture-capture-clock/v1",
+      "measurementStartPhase": "warmup-held",
+      "endPhase": "complete",
+      "legacyStartFieldPresent": false
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "clockSchema": "gev-provider-fixture-capture-clock/v1",
+      "measurementStartPhase": "warmup-held",
+      "endPhase": "complete",
+      "legacyStartFieldPresent": false
+    },
+    {
+      "scenario": "selected-aircraft-tracking",
+      "run": 1,
+      "clockSchema": "gev-provider-fixture-capture-clock/v1",
+      "measurementStartPhase": "warmup-held",
+      "endPhase": "complete",
+      "legacyStartFieldPresent": false
+    },
+    {
+      "scenario": "selected-aircraft-tracking",
+      "run": 2,
+      "clockSchema": "gev-provider-fixture-capture-clock/v1",
+      "measurementStartPhase": "warmup-held",
+      "endPhase": "complete",
+      "legacyStartFieldPresent": false
+    }
+  ],
+  "documentCleanup": [
+    {
+      "documentRole": "startup-1",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 15.71174500000052,
+      "pageExecutionElapsedMs": 0.1999999999825377,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0.10000000000582077
+      }
+    },
+    {
+      "documentRole": "main-setup",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 1.4823490000017046,
+      "pageExecutionElapsedMs": 0.1999999999825377,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0
+      }
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 1.8798280000046361,
+      "pageExecutionElapsedMs": 0.10000000000582077,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0
+      }
+    },
+    {
+      "documentRole": "provider-sample-2",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 3.868199000004097,
+      "pageExecutionElapsedMs": 0.20000000001164153,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0.10000000000582077
+      }
+    },
+    {
+      "documentRole": "provider-sample-3",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 8.288847000003443,
+      "pageExecutionElapsedMs": 0.09999999997671694,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0.09999999997671694
+      }
+    },
+    {
+      "documentRole": "provider-sample-4",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 11.138245000009192,
+      "pageExecutionElapsedMs": 0.20000000001164153,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0.20000000001164153
+      }
+    },
+    {
+      "documentRole": "provider-sample-5",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 1.4638299999933224,
+      "pageExecutionElapsedMs": 0.1000000000349246,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0.1000000000349246
+      }
+    },
+    {
+      "documentRole": "provider-sample-6",
+      "confirmed": true,
+      "timeoutMs": 1000,
+      "hostElapsedMs": 2.0499929999932647,
+      "pageExecutionElapsedMs": 0.20000000001164153,
+      "renderLoopRetirement": {
+        "requested": true,
+        "status": "confirmed",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "pageExecutionElapsedMs": 0.20000000001164153
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile.json",
+      "profileWindowMs": 11272.048,
+      "topSampledLocations": [
+        {
+          "functionName": "getProgramParameter",
+          "sampledMs": 4068.38
+        },
+        {
+          "functionName": "readPixels",
+          "sampledMs": 3842.086
+        },
+        {
+          "functionName": "(idle)",
+          "sampledMs": 1310.234
+        },
+        {
+          "functionName": "(program)",
+          "sampledMs": 792.085
+        },
+        {
+          "functionName": "bufferData",
+          "sampledMs": 216.553
+        },
+        {
+          "functionName": "(garbage collector)",
+          "sampledMs": 89.976
+        },
+        {
+          "functionName": "_i.cartesianToCartographic",
+          "sampledMs": 57.26
+        },
+        {
+          "functionName": "aGe",
+          "sampledMs": 30.433
+        },
+        {
+          "functionName": "(anonymous)",
+          "sampledMs": 28.887
+        },
+        {
+          "functionName": "querySelectorAll",
+          "sampledMs": 24.039
+        },
+        {
+          "functionName": "Bn.createTypedArray",
+          "sampledMs": 23.864
+        },
+        {
+          "functionName": "Jr.getGeometryInstanceAttributes",
+          "sampledMs": 22.819
+        }
+      ],
+      "getParameterSampledMs": 0
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile.json",
+      "profileWindowMs": 12709.797,
+      "topSampledLocations": [
+        {
+          "functionName": "getProgramParameter",
+          "sampledMs": 6259.007
+        },
+        {
+          "functionName": "readPixels",
+          "sampledMs": 2708.119
+        },
+        {
+          "functionName": "(idle)",
+          "sampledMs": 1730.716
+        },
+        {
+          "functionName": "(program)",
+          "sampledMs": 683.025
+        },
+        {
+          "functionName": "bufferData",
+          "sampledMs": 253.484
+        },
+        {
+          "functionName": "(garbage collector)",
+          "sampledMs": 94.319
+        },
+        {
+          "functionName": "_i.cartesianToCartographic",
+          "sampledMs": 36.652
+        },
+        {
+          "functionName": "(anonymous)",
+          "sampledMs": 31.572
+        },
+        {
+          "functionName": "Jr.getGeometryInstanceAttributes",
+          "sampledMs": 27.384
+        },
+        {
+          "functionName": "get",
+          "sampledMs": 26.798
+        },
+        {
+          "functionName": "querySelectorAll",
+          "sampledMs": 26.152
+        },
+        {
+          "functionName": "aGe",
+          "sampledMs": 23.339
+        }
+      ],
+      "getParameterSampledMs": 0
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile.json",
+      "profileWindowMs": 17253.755,
+      "topSampledLocations": [
+        {
+          "functionName": "readPixels",
+          "sampledMs": 6008.895
+        },
+        {
+          "functionName": "(idle)",
+          "sampledMs": 4888.849
+        },
+        {
+          "functionName": "getProgramParameter",
+          "sampledMs": 3599.405
+        },
+        {
+          "functionName": "bufferData",
+          "sampledMs": 1042.761
+        },
+        {
+          "functionName": "(program)",
+          "sampledMs": 766.411
+        },
+        {
+          "functionName": "(garbage collector)",
+          "sampledMs": 173.734
+        },
+        {
+          "functionName": "_i.cartesianToCartographic",
+          "sampledMs": 37.116
+        },
+        {
+          "functionName": "aGe",
+          "sampledMs": 34.002
+        },
+        {
+          "functionName": "U",
+          "sampledMs": 25.3
+        },
+        {
+          "functionName": "(anonymous)",
+          "sampledMs": 24.812
+        },
+        {
+          "functionName": "Bn.createTypedArray",
+          "sampledMs": 20.265
+        },
+        {
+          "functionName": "Wue",
+          "sampledMs": 19.449
+        }
+      ],
+      "getParameterSampledMs": 0
+    }
+  ]
+}
