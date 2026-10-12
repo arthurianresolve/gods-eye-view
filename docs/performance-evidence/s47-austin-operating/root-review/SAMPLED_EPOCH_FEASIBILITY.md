@@ -189,3 +189,28 @@ Preserved raw evidence:
 
 - [hosted-smoke-38313496758-cli-failed.json](hosted-smoke-38313496758-cli-failed.json): 34434 bytes; SHA-256 1f104f60ca5839de302b40bb485b21b02ea91f788a4e44d317ae15a7f30fea29.
 - [hosted-windows-recovery-38312885340.json](hosted-windows-recovery-38312885340.json): 8648 bytes; SHA-256 ee6c52dcbedd2c5cee84c2650e9f118c2810903627d86c97cb1555efc1fd965e.
+
+# Integrated checks and isolated Windows recovery at 9cb2a7b8
+
+Standard CI [38314355177](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177)
+passes all seven jobs at `9cb2a7b84c2cf545823388595bdd500b389a7bdd`:
+Node 24/26, Windows onboarding, Linux/macOS/Windows installation recovery and
+the browser gate. These checks cover the integrated sampled-epoch and strict
+cleanup validation changes. The [checkpoint record](ci-checkpoint-9cb2a7b8.json)
+binds their tested revision and individual job URLs.
+
+The separately dispatched Windows recovery diagnostic
+[38314447553](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314447553)
+also passes at the same revision with the existing SwiftShader WebGL backend.
+All five installation, interrupted-update and rollback cycles preserve settings
+and workspace contents and close without forced process termination. Graceful
+close times range from 441 to 1,720 ms, within the unchanged five-second deadline.
+The [downloaded raw artifact](hosted-windows-recovery-38314447553.json) is
+18,119 bytes, SHA-256
+`b1e358ca56156a69c4343a694ba14580d1ad63f46cd589fb6cbfd6fd9d7ed76e`.
+
+This passing diagnostic does not reproduce or explain the earlier intermittent
+Chrome process-shutdown timeout. No timeout process-tree snapshot was triggered.
+The earlier failed report remains failed. Austin source readiness also remains
+unresolved; these integration and recovery passes provide no completed Austin
+performance samples or physical-GPU acceptance.
