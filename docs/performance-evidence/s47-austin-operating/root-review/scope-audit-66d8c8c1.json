@@ -1,0 +1,55 @@
+{
+  "schema": "gev-harness-scope-audit/v1",
+  "tool": "ESLint 9.39.1",
+  "sourceCommit": "66d8c8c169f53a358f2e8ac9a3a65b25fe171fab",
+  "rule": "no-undef:error",
+  "configuration": "No repository or inline config; explicit standard Node/browser globals only.",
+  "files": [
+    {
+      "file": "scripts/capture-scene-performance.mjs",
+      "sourceSha256": "e4e62c5e19e982d617a4091fd436ef7a1d1761965b8b1824e93aae308c1633fe",
+      "errors": [
+        {
+          "message": "'measurementBoundarySettle' is not defined.",
+          "line": 4759,
+          "column": 13,
+          "ruleId": "no-undef"
+        },
+        {
+          "message": "'clockEnd' is not defined.",
+          "line": 4761,
+          "column": 29,
+          "ruleId": "no-undef"
+        },
+        {
+          "message": "'createObservedAustinOperatingComparisonContract' is not defined.",
+          "line": 5204,
+          "column": 11,
+          "ruleId": "no-undef"
+        }
+      ]
+    },
+    {
+      "file": "scripts/performance/hostedRendererBackend.mjs",
+      "sourceSha256": "96dd8ea97d17753ce306f92da1a928d99d0c3b7fa1792419e5f7ebdd32cdeea4",
+      "errors": []
+    },
+    {
+      "file": "scripts/performance/renderBoundaryObservation.mjs",
+      "sourceSha256": "ab12a6a518e37227931052796840cce34a227d8e7c68f0fecdd037a0cb3bbbc0",
+      "errors": []
+    },
+    {
+      "file": "scripts/qa-performance-build-smoke.mjs",
+      "sourceSha256": "05c1b62d0335937aa3ebb24809ba21e2eba87119c022a67872a8a701e73f77d1",
+      "errors": [
+        {
+          "message": "'austinOperatingCaptureFixture' is not defined.",
+          "line": 3396,
+          "column": 18,
+          "ruleId": "no-undef"
+        }
+      ]
+    }
+  ]
+}

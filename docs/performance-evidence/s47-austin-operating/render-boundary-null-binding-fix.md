@@ -4,7 +4,7 @@ The native-renderer diagnostic `38320527836` reached the first Austin idle
 warmup after initial setup and the first fresh provider document passed source
 readiness. It then failed before completing a sample with
 `Render boundary observer arguments are invalid.` The preserved raw failure
-report is `qa-artifacts/native-austin-38320527836/performance-build-smoke.json.capture-cli-report-candidate.json`
+report is [the unchanged downloaded capture](root-review/hosted-native-38320527836-cli-failed.json)
 (145,345 bytes; SHA-256
 `a1c8156a3c755e21dd5b47a2bc7cc83ecde6f0e72218e9b2d44b62ac5d7e6af5`).
 

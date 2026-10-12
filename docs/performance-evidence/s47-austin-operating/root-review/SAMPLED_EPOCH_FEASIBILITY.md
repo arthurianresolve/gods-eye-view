@@ -367,3 +367,33 @@ runtime defect or a Windows hardware recovery fix. Luna's narrow correction
 bindings. Root independently passes 45 boundary, completed-render and actual
 capture-CLI tests. A hosted rerun is still required; the original failed run
 remains failed.
+
+# Native boundary rerun and successful-path scope audit
+
+Run [38321326898](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38321326898)
+at `66d8c8c169f53a358f2e8ac9a3a65b25fe171fab` gets past the optional-binding
+failure. Both warmup and measurement render boundaries settle, observe
+`postRender`, and remove their page listeners and timers. Their page wait times
+are 27.3 and 29.8 ms; these are boundary waits, not motion latency or GPU time.
+The measurement boundary confirms final-post-render loop retirement. Sample
+assembly then throws `measurementBoundarySettle is not defined`, so zero
+complete samples are published and the run remains failed.
+
+Root revalidates the native renderer and all three document cleanup records in
+the [independent review](native-38321326898-review.json). The unchanged
+[outer smoke report](hosted-native-38321326898-smoke-failed.json) is 300,044
+bytes (SHA-256 `45e203f7a70cf4fc90affd63164e373e30883f69d9d3b020659862425579eb31`);
+the [raw failed capture](hosted-native-38321326898-cli-failed.json) is 207,316
+bytes (SHA-256 `5f959cf026cb793f07162048643b76b0bad5d52f4abe14c63f802ef934c6b1f0`).
+
+An additional read-only ESLint 9.39.1 `no-undef` audit finds four unresolved
+project references in the complete capture and outer smoke scripts. The
+measurement result and `clockEnd` are consumed outside their declaration block;
+the Austin comparison-contract function is called without its import; and the
+outer CLI validator refers to an Austin fixture variable owned by another
+function. The [scope audit](scope-audit-66d8c8c1.json) records exact source hashes
+and locations. Only standard Node/browser globals are declared; no project
+identifier is suppressed. No repository dependency or lint configuration is
+changed by this diagnostic. These are harness correctness defects, and the
+next correction must cover the complete successful report path before another
+capture is accepted.
