@@ -279,3 +279,13 @@ excerpts are preserved for [Node 24](node-ci-115036767698-failure-excerpt.txt) a
 [Node 26](node-ci-115036767729-failure-excerpt.txt). This is a test-double contract
 regression introduced by the diagnostic packet; the existing lifecycle assertions
 must continue to run after the stubs are corrected.
+
+Commit `032307c7b056d1d4938d6a5943db86001144cc8d` corrects the two affected
+Puppeteer stubs without changing the runtime import or lifecycle assertions.
+Missing-witness failures now include bounded child-process diagnostics, and a
+negative control deliberately omits the named export to verify that the original
+import error remains visible. Root merged this correction at
+`67dbc77b79fe74474310ea26156f3f7e8e292ab8` and independently passed all 48
+readiness, failure-report, smoke and CLI lifecycle tests. The full standard
+workflow still needs to validate the corrected revision; this local result does
+not change the outcome of the earlier failed jobs.
