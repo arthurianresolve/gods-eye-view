@@ -43,8 +43,15 @@ The reporting gap is repaired on the isolated branch at `9ec1172c`: up to eight
 sanitized errors preserve their document/session owner, callback phase and
 active/releasing/released lifecycle. Failure-artifact creation and outer smoke
 compaction retain this evidence. Thirty independent focused tests pass; the
-[exact-commit hosted check](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38217259994)
-is in progress. No failure filters or render deadlines were relaxed.
+[exact-commit hosted check](performance-evidence/s47-interception-failure-evidence-38217259994/README.md)
+completes three samples and all three CPU profiles, then fails at the unchanged
+180-second capture-child deadline during the fourth sample. No interception
+errors recur. The profiles attribute 2.1-3.0 seconds of sampled stack weight per
+window to the harness's renderer/vendor `getParameter` calls; those immutable
+reads will move to the existing early context probe, preserving live settings
+and population checks. Other leading stacks include application depth picking
+and Cesium shader preparation. This is diagnostic SwiftShader evidence, not
+performance acceptance. No failure filters or render deadlines were relaxed.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. The dam and cable collection experiments are now
@@ -91,6 +98,13 @@ observer ownership is restored, and Chrome exits naturally. This closes that
 instrumented hosted correctness check; it does not establish physical Windows,
 latency, mixed-layer or final-soak acceptance. The earlier 16-pixel failure remains
 preserved, and production Entity defaults remain unchanged.
+The [standard gate at `5ba9a940`](performance-evidence/s54-current-update-gate-38218238754/README.md)
+makes that current-update condition mandatory for ordinary datacenter captures,
+without requiring diagnostic mode. Seventy independent focused tests pass;
+the normal hosted report passes its default validator, all ten PNG pairs are
+byte-identical, native point/stem ownership is verified, and teardown and natural
+browser exit pass. The current hosted component correctness gate is closed;
+physical Windows, mixed-layer and final performance/retention acceptance remain.
 The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit-38205683313/README.md)
 completes twenty runs with verified native owners and twenty byte-identical
 image pairs. Whole-activation median improves 22.12% and enabled JS heap
