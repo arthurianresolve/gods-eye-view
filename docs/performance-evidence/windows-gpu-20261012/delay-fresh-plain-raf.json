@@ -1,0 +1,162 @@
+{
+  "schema": "gev-webgl-frame-delivery/v1",
+  "appCommit": "6087231ae1482ff953b3b75bc0e91f722547809e",
+  "harnessCommit": "6087231ae1482ff953b3b75bc0e91f722547809e",
+  "scope": "diagnostic-only browser frame-delivery observation; not performance acceptance",
+  "mode": "plain-raf",
+  "outcome": "duration-complete",
+  "startedAt": "2026-10-12T01:24:17.772Z",
+  "elapsedMs": 5001,
+  "requestedDurationMs": 5000,
+  "preparation": {
+    "requestedDelayMs": 10000,
+    "actualDelayMs": 10003.700000001118,
+    "started": {
+      "focused": true,
+      "visibility": "visible",
+      "viewport": {
+        "width": 894,
+        "height": 585
+      }
+    },
+    "completed": {
+      "focused": true,
+      "visibility": "visible",
+      "viewport": {
+        "width": 894,
+        "height": 585
+      }
+    },
+    "changes": {
+      "focus": false,
+      "visibility": false,
+      "viewport": false
+    },
+    "changeEvents": [],
+    "outcome": "elapsed",
+    "cancelReason": null
+  },
+  "contextSetupElapsedMs": 0.09999999962747097,
+  "desktopForegroundVerification": "unavailable",
+  "browser": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "focusedAtStart": true,
+    "visibilityAtStart": "visible"
+  },
+  "pointCount": null,
+  "preserveDrawingBufferRequested": null,
+  "canvasBoundsAtStart": {
+    "viewport": {
+      "width": 894,
+      "height": 585
+    },
+    "canvas": {
+      "width": 640,
+      "height": 360,
+      "rect": {
+        "left": 4,
+        "top": 163.5625,
+        "right": 646,
+        "bottom": 525.5625,
+        "width": 642,
+        "height": 362
+      },
+      "viewportIntersection": {
+        "width": 642,
+        "height": 362,
+        "fraction": 1
+      }
+    }
+  },
+  "canvasBoundsAtEnd": {
+    "viewport": {
+      "width": 894,
+      "height": 585
+    },
+    "canvas": {
+      "width": 640,
+      "height": 360,
+      "rect": {
+        "left": 4,
+        "top": 163.5625,
+        "right": 646,
+        "bottom": 525.5625,
+        "width": 642,
+        "height": 362
+      },
+      "viewportIntersection": {
+        "width": 642,
+        "height": 362,
+        "fraction": 1
+      }
+    }
+  },
+  "viewport": {
+    "width": 894,
+    "height": 585
+  },
+  "canvas": {
+    "width": 640,
+    "height": 360,
+    "rect": {
+      "left": 4,
+      "top": 163.5625,
+      "right": 646,
+      "bottom": 525.5625,
+      "width": 642,
+      "height": 362
+    },
+    "viewportIntersection": {
+      "width": 642,
+      "height": 362,
+      "fraction": 1
+    }
+  },
+  "contextAttributesAtStart": null,
+  "contextAttributesAtEnd": null,
+  "contextAttributes": null,
+  "renderer": null,
+  "rendererMetadataReadAfterWindow": true,
+  "frames": 301,
+  "firstFrameAtMs": 0.900000000372529,
+  "buckets": [
+    {
+      "startMs": 0,
+      "endMs": 1000,
+      "frames": 61
+    },
+    {
+      "startMs": 1000,
+      "endMs": 2000,
+      "frames": 60
+    },
+    {
+      "startMs": 2000,
+      "endMs": 3000,
+      "frames": 60
+    },
+    {
+      "startMs": 3000,
+      "endMs": 4000,
+      "frames": 60
+    },
+    {
+      "startMs": 4000,
+      "endMs": 5000,
+      "frames": 60
+    }
+  ],
+  "maximumFrameGapMs": 23.899999998509884,
+  "trailingFrameGapMs": 17,
+  "frameClock": "performance.now sampled inside each native requestAnimationFrame callback",
+  "timer": {
+    "intervalMs": 20,
+    "ticks": 250,
+    "maximumGapMs": 22.09999999962747,
+    "trailingGapMs": 0
+  },
+  "finalVisibility": "visible",
+  "finalFocused": true,
+  "contextLost": false,
+  "events": []
+}

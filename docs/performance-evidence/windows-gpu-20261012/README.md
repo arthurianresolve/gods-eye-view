@@ -131,3 +131,46 @@ download succeeded, but the browser-control connection subsequently became
 unattached before the delayed arm could run. A1 is retained; the comparison,
 physical foreground/occlusion verification, capture acceptance and hardware
 soak remain pending. This short diagnostic does not justify a runtime change.
+
+## Delayed-start diagnostic: completed controls
+
+A fresh tab in the same authorized Chrome instance restored control. The
+immediate/delayed pair was restarted there, keeping the earlier A1 above as a
+separate observation. The ordered A/B/B/A sequence uses A=immediate and
+B=ten-second preparation, followed by delayed plain RAF. No local test, build
+or formatting process ran during the sequence. Each run used a coordinate
+click and an immediate state observation; no further browser calls occurred
+until the observation period finished. In delayed runs that initial browser
+call completed during preparation, before WebGL setup and measurement.
+
+| Control | Frames / five seconds | Maximum RAF gap | Maximum 20 ms timer gap |
+| --- | --- | --- | --- |
+| [A1 immediate](delay-fresh-a1-immediate.json) | 68 | 600.6 ms | 22.3 ms |
+| [B1 delayed](delay-fresh-b1-ten-seconds.json) | 36 | 850.0 ms | 21.5 ms |
+| [B2 delayed](delay-fresh-b2-ten-seconds.json) | 45 | 849.7 ms | 21.1 ms |
+| [A2 immediate](delay-fresh-a2-immediate.json) | 65 | 683.3 ms | 23.5 ms |
+| [Delayed plain RAF](delay-fresh-plain-raf.json) | 301 | 23.9 ms | 22.1 ms |
+
+[Independent file review](delay-control-review.json) records raw hashes,
+timestamps, actual preparation durations and context-setup times. All five
+reports identify exact fixture commit `6087231a`. All four WebGL reports have
+identical context attributes, 5,000 points, 640x360 buffers, 894x585 viewports,
+full canvas intersection, unchanged start/end bounds, and the Intel hardware
+renderer. Focus/visibility remain true/visible; preparation has no recorded
+changes. No run loses its context during observation. Plain RAF creates no
+WebGL context. The delayed WebGL waits are 10,015.2 and 10,015.1 ms; the plain
+RAF wait is 10,003.7 ms.
+
+Delaying setup does not eliminate the WebGL frame gap, so initial automation
+overlap alone does not explain these observations. This is not a GPU timing
+measurement and does not establish a driver defect. Desktop occlusion remains
+unavailable; capture correctness and the physical hardware soak remain open.
+
+The minimal WebGL fixture currently draws identical pixels each frame. A
+separate animated-pixel control and compositor attribution are useful next
+diagnostics. Chromium's [published compositor implementation](https://chromium.googlesource.com/chromium/src/+/refs/heads/master/components/viz/service/frame_sinks/compositor_frame_sink_support.cc)
+contains throttling paths for unresponsive clients and excessive undrawn
+frames; this is a hypothesis source, not proof that either path ran here.
+The exact Chrome build's source was not available through the web reader.
+Production rendering, preservation, antialiasing, browser flags and drivers
+remain unchanged.
