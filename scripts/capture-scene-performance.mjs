@@ -73,6 +73,7 @@ import {
   upsertProviderSampleCpuProfile,
 } from './performance/providerSampleCpuProfileWindow.mjs';
 import { retireProviderDocument } from './performance/providerDocumentRetirement.mjs';
+import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
@@ -442,6 +443,8 @@ const failureProgress = {
   workload: {
     rendererProbeCleanup: [],
     rendererProbeCleanupOmittedCount: 0,
+    rendererLoopRetirements: [],
+    rendererLoopRetirementsOmittedCount: 0,
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
@@ -476,6 +479,13 @@ const failureProgress = {
       : {}),
   },
 };
+// At most 5 startup + 1 setup + (3 scenarios × 10 repetitions) = 36.
+const MAX_RENDER_LOOP_RETIREMENT_RECORDS = 40;
+function recordRendererLoopRetirement(record) {
+  const rows = failureProgress.workload.rendererLoopRetirements;
+  if (rows.length < MAX_RENDER_LOOP_RETIREMENT_RECORDS) rows.push(record);
+  else failureProgress.workload.rendererLoopRetirementsOmittedCount += 1;
+}
 let captureFailure = null;
 let failureReportWritten = false;
 let activeRenderBoundaryProgressBinding = null;
@@ -1007,6 +1017,9 @@ async function settleProviderRenderAtBoundary(
   timeoutMs = 5000,
   onProgress,
   progressBinding,
+  retireViewerRenderLoop = false,
+  finalObservationFunction = null,
+  finalObservationArgs = [],
 ) {
   return observeRenderBoundary({
     label,
@@ -1014,11 +1027,12 @@ async function settleProviderRenderAtBoundary(
     hostGraceMs: 1000,
     progressBinding,
     evaluate: (pageTimeoutMs, progressBinding) =>
-      evaluateCompletedRenderDiagnostic(
-        targetPage,
-        pageTimeoutMs,
-        progressBinding,
-      ),
+      evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+        ...progressBinding,
+        retireViewerRenderLoop,
+        finalObservationFunction,
+        finalObservationArgs,
+      }),
     onProgress,
   });
 }
@@ -1491,32 +1505,24 @@ try {
       );
     const initialSettleMs = Date.now() - startedAt;
     const earlyRenderer = await readEarlyCesiumRendererProbe(startupPage);
-    const details = await startupPage.evaluate(() => {
-      const viewer = window.__godsEyeView.viewer;
-      return {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        viewport: {
-          width: innerWidth,
-          height: innerHeight,
-          dpr: devicePixelRatio,
-        },
-        drawingBuffer: {
-          width: viewer.scene.canvas.width,
-          height: viewer.scene.canvas.height,
-        },
-        focused: document.hasFocus(),
-        visible: !document.hidden,
-        navigationMs:
-          performance.getEntriesByType('navigation')[0]?.duration ?? null,
-        memory: performance.memory
-          ? { usedJsHeapBytes: performance.memory.usedJSHeapSize, reason: null }
-          : {
-              usedJsHeapBytes: null,
-              reason: 'performance.memory is unavailable in this browser',
-            },
-      };
+    const terminalStartupObservation = await startupPage.evaluate(
+      observeTerminalViewerState,
+      'startup-details',
+    );
+    const details = {
+      ...terminalStartupObservation.observation,
+      renderLoopRetirement: terminalStartupObservation.renderLoopRetirement,
+    };
+    recordRendererLoopRetirement({
+      phase: 'startup-final-details',
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
+      ...terminalStartupObservation.renderLoopRetirement,
     });
+    if (terminalStartupObservation.renderLoopRetirement.confirmed !== true)
+      throw new Error(
+        'Startup document render loop retirement at its final details observation was not confirmed.',
+      );
     details.renderer = earlyRenderer.renderer;
     details.vendor = earlyRenderer.vendor;
     details.rendererEvidence = {
@@ -1720,18 +1726,19 @@ try {
   failureProgress.fixture =
     productionFlightFixture || infrastructureWorkload || fixture;
 
-  const summarizeFlightFixtureDelivery = async () => {
+  const summarizeFlightFixtureDelivery = async (observedCount = undefined) => {
     if (!productionFlightFixture) return null;
     if (fixtureInterceptionErrors.length)
       throw new Error(
         `Provider fixture interception reported ${fixtureInterceptionErrors.length} bounded errors.`,
       );
-    const observedCount = await page.evaluate(
-      () =>
-        window.__godsEyeView?.dataManager
-          ?.getAll?.()
-          ?.find((entry) => entry.id === 'flights')?.stats?.count ?? null,
-    );
+    if (observedCount === undefined)
+      observedCount = await page.evaluate(
+        () =>
+          window.__godsEyeView?.dataManager
+            ?.getAll?.()
+            ?.find((entry) => entry.id === 'flights')?.stats?.count ?? null,
+      );
     return flightFixtureDelivery.summarize(observedCount);
   };
   let fixtureDelivery = null;
@@ -2011,6 +2018,42 @@ try {
     throw new Error(
       `Provider-fixture mixed populations are incomplete: ${JSON.stringify(mixedLayerCounts)}`,
     );
+
+  if (productionFlightFixture) {
+    const terminalSetupObservation = await page.evaluate(
+      observeTerminalViewerState,
+      'layer-population',
+      ['flights', 'local-datacenters', 'local-dams'],
+    );
+    recordRendererLoopRetirement({
+      phase: 'main-setup-final-population',
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+      population: terminalSetupObservation.observation,
+      ...terminalSetupObservation.renderLoopRetirement,
+    });
+    if (terminalSetupObservation.renderLoopRetirement.confirmed !== true)
+      throw new Error(
+        'Main setup render loop retirement at its final population observation was not confirmed.',
+      );
+    const expectedSetupPopulation = {
+      flights: productionFlightFixture.count,
+      'local-datacenters': 4362,
+      'local-dams': 716,
+    };
+    if (
+      Object.entries(expectedSetupPopulation).some(
+        ([id, count]) =>
+          terminalSetupObservation.observation[id]?.enabled !== true ||
+          terminalSetupObservation.observation[id]?.count !== count,
+      )
+    )
+      throw new Error('Provider setup terminal population changed.');
+    fixtureDelivery = await summarizeFlightFixtureDelivery(
+      terminalSetupObservation.observation.flights.count,
+    );
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
 
   let providerSampleDocumentIndex = 0;
   async function prepareFreshProviderDocument() {
@@ -2688,7 +2731,26 @@ try {
                 )
               : undefined,
             activeRenderBoundaryProgressBinding,
+            true,
+            scenario === 'selected-aircraft-tracking'
+              ? observeTrackedEntityBoundary
+              : null,
+            scenario === 'selected-aircraft-tracking' ? ['flights:000001'] : [],
           );
+        } catch (error) {
+          const retirement =
+            error.boundaryObservation?.page?.diagnostics
+              ?.renderLoopRetirement ?? null;
+          if (retirement)
+            recordRendererLoopRetirement({
+              phase: 'provider-sample-measurement-post-render',
+              scenario,
+              run,
+              documentRole: activeDocumentRole,
+              documentId: activeDocumentId,
+              ...retirement,
+            });
+          throw error;
         } finally {
           if (collectProviderSampleCpuProfile)
             await stopProviderSampleCpuProfile(
@@ -2712,10 +2774,7 @@ try {
           );
         const trackingEnd =
           scenario === 'selected-aircraft-tracking'
-            ? await page.evaluate(
-                observeTrackedEntityBoundary,
-                'flights:000001',
-              )
+            ? measurementBoundarySettle.page?.diagnostics?.finalObservation
             : null;
         if (trackingEnd) {
           sample.trackingObservation = {
@@ -2723,6 +2782,10 @@ try {
             end: trackingEnd,
           };
           failureProgress.current.trackingEnd = trackingEnd;
+        } else if (scenario === 'selected-aircraft-tracking') {
+          throw new Error(
+            'Tracked entity endpoint was unavailable at the terminal postRender observation.',
+          );
         }
         sample.fixtureClock = {
           schema: 'gev-provider-fixture-capture-clock/v1',
@@ -2750,6 +2813,17 @@ try {
           appDocumentReinitialized: true,
           freshBrowserContext: true,
         };
+        sample.renderLoopRetirement =
+          measurementBoundarySettle.page?.diagnostics?.renderLoopRetirement ??
+          null;
+        recordRendererLoopRetirement({
+          phase: 'provider-sample-measurement-post-render',
+          scenario,
+          run,
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+          ...sample.renderLoopRetirement,
+        });
         if (scenario === 'selected-aircraft-tracking') {
           const cameraPose = (boundary) => ({
             dateEpochMs: boundary.dateEpochMs,
@@ -3074,6 +3148,11 @@ try {
     ],
     rendererProbeCleanupOmittedCount:
       failureProgress.workload.rendererProbeCleanupOmittedCount || 0,
+    rendererLoopRetirements: [
+      ...(failureProgress.workload.rendererLoopRetirements || []),
+    ],
+    rendererLoopRetirementsOmittedCount:
+      failureProgress.workload.rendererLoopRetirementsOmittedCount || 0,
     fixture: infrastructureWorkload || fixture,
     providerFixture: infrastructureWorkload
       ? infrastructureWorkload.workloadId

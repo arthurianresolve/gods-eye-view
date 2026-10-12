@@ -1024,6 +1024,8 @@
   "scripts/performance/renderBoundaryObservation.test.mjs",
   "scripts/performance/settleCompletedRenderDiagnostic.mjs",
   "scripts/performance/settleCompletedRenderDiagnostic.test.mjs",
+  "scripts/performance/terminalViewerObservation.mjs",
+  "scripts/performance/terminalViewerObservation.test.mjs",
   "scripts/performance/captureComparisonContract.mjs",
   "scripts/performance/captureComparisonContract.test.mjs",
   "scripts/performance/commonSceneObserver.mjs",

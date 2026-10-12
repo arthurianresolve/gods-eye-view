@@ -67,6 +67,7 @@ import {
   createInfrastructureWorkloadFixture,
   INFRASTRUCTURE_WORKLOAD_IDS,
 } from './performance/infrastructureWorkloadFixture.mjs';
+import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 const ROOT = await realpath(
@@ -1935,6 +1936,7 @@ async function runRevision({
   let workerBlobDiagnostics = null;
   let densePopulationObservations = [];
   let finalDenseLayerPopulation = null;
+  let terminalRenderLoopRetirement = null;
   let phase = 'browser-page-setup';
   const pageErrors = [];
   const cleanupErrors = [];
@@ -2220,10 +2222,21 @@ async function runRevision({
       throw new Error(
         'Application code request audit exceeded its bounded event capacity.',
       );
-    finalDenseLayerPopulation = await readDenseLayerPopulation();
+    const terminalPopulation = await page.evaluate(
+      observeTerminalViewerState,
+      'layer-population',
+      Object.keys(expectedLayerCounts),
+    );
+    finalDenseLayerPopulation = terminalPopulation.observation;
+    terminalRenderLoopRetirement = terminalPopulation.renderLoopRetirement;
+    if (terminalRenderLoopRetirement.confirmed !== true)
+      throw new Error(
+        'Smoke viewer render loop retirement at final population observation was not confirmed.',
+      );
     densePopulationObservations.push({
       checkpoint: 'final-before-code-validation',
       layers: finalDenseLayerPopulation,
+      renderLoopRetirement: terminalRenderLoopRetirement,
     });
     const blobCodeRequests = finalAuditSnapshot.requests
       .filter((request) => request.url.startsWith('blob:'))
@@ -2389,6 +2402,7 @@ async function runRevision({
           'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
       },
       ...(captureCliDiagnostic ? { captureCliDiagnostic } : {}),
+      terminalRenderLoopRetirement,
       rendererProbeCleanup,
       rendererProbeCleanupOmittedCount,
       serviceWorker: serviceWorkerState,
@@ -2421,6 +2435,7 @@ async function runRevision({
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
+      terminalRenderLoopRetirement,
       rendererProbeCleanup,
       rendererProbeCleanupOmittedCount,
       densePopulationObservations,

@@ -7,6 +7,9 @@ export function settleCompletedRenderDiagnostic(
   timeoutMs = 5000,
   progressFunctionName = null,
   invocationId = null,
+  retireViewerRenderLoop = false,
+  finalObservationFunction = null,
+  finalObservationArgs = [],
 ) {
   const acknowledge = (stage, details) => {
     if (!progressFunctionName || !invocationId) return;
@@ -49,6 +52,18 @@ export function settleCompletedRenderDiagnostic(
         renderRequestStarted: false,
         renderRequestCompleted: false,
         postRenderObserved: false,
+        renderLoopRetirement: retireViewerRenderLoop
+          ? {
+              requested: true,
+              status: 'not-attempted',
+              before: null,
+              after: null,
+              confirmed: false,
+              elapsedMs: null,
+            }
+          : null,
+        finalObservation: null,
+        finalObservationErrorName: null,
         pageTimerFired: false,
         cleanup: { timerCleared: false, listenerRemoved: false },
       },
@@ -74,6 +89,18 @@ export function settleCompletedRenderDiagnostic(
       renderRequestCompleteElapsedMs: null,
       postRenderObserved: false,
       postRenderElapsedMs: null,
+      renderLoopRetirement: retireViewerRenderLoop
+        ? {
+            requested: true,
+            status: 'not-attempted',
+            before: null,
+            after: null,
+            confirmed: false,
+            elapsedMs: null,
+          }
+        : null,
+      finalObservation: null,
+      finalObservationErrorName: null,
       pageTimerFired: false,
       pageTimerElapsedMs: null,
       cleanup: { timerCleared: false, listenerRemoved: false },
@@ -153,7 +180,55 @@ export function settleCompletedRenderDiagnostic(
           postRenderObserved: true,
           pageElapsedMs: diagnostics.postRenderElapsedMs,
         });
-        finish();
+        let finalObservationError = null;
+        if (typeof finalObservationFunction === 'function') {
+          try {
+            diagnostics.finalObservation = finalObservationFunction(
+              ...(Array.isArray(finalObservationArgs)
+                ? finalObservationArgs
+                : []),
+            );
+          } catch (error) {
+            diagnostics.finalObservationErrorName = String(
+              error?.name || 'Error',
+            ).slice(0, 80);
+            finalObservationError = error;
+          }
+        }
+        let retirementError = null;
+        if (retireViewerRenderLoop) {
+          const retirementStartedAt = elapsed();
+          const retirement = diagnostics.renderLoopRetirement;
+          try {
+            if (typeof viewer.useDefaultRenderLoop !== 'boolean') {
+              retirement.status = 'viewer-render-loop-unavailable';
+            } else {
+              retirement.before = viewer.useDefaultRenderLoop;
+              if (retirement.before) viewer.useDefaultRenderLoop = false;
+              retirement.after = viewer.useDefaultRenderLoop;
+              retirement.confirmed =
+                retirement.before === true && retirement.after === false;
+              retirement.status = retirement.confirmed
+                ? 'retired-at-final-post-render'
+                : retirement.before === false
+                  ? 'already-disabled-before-final-post-render'
+                  : 'viewer-render-loop-not-disabled';
+            }
+          } catch {
+            retirement.status = 'viewer-render-loop-set-failed';
+          }
+          const retirementCompletedAt = elapsed();
+          retirement.elapsedMs =
+            Number.isFinite(retirementStartedAt) &&
+            Number.isFinite(retirementCompletedAt)
+              ? Math.max(0, retirementCompletedAt - retirementStartedAt)
+              : null;
+          if (!retirement.confirmed)
+            retirementError = new Error(
+              'Viewer render loop retirement at the final postRender boundary was not confirmed.',
+            );
+        }
+        finish(finalObservationError || retirementError);
       };
       removeListener = viewer.scene.postRender.addEventListener(listener);
       diagnostics.listenerRegistered = true;
@@ -189,13 +264,71 @@ export function settleCompletedRenderDiagnostic(
 export function evaluateCompletedRenderDiagnostic(
   targetPage,
   pageTimeoutMs,
-  { progressFunctionName, invocationId },
+  {
+    progressFunctionName,
+    invocationId,
+    retireViewerRenderLoop = false,
+    finalObservationFunction = null,
+    finalObservationArgs = [],
+  },
 ) {
-  return targetPage.evaluate(
-    settleCompletedRenderDiagnostic,
+  const pageFunction =
+    typeof finalObservationFunction === 'function'
+      ? createCompletedRenderDiagnosticWithObservation(
+          finalObservationFunction,
+          finalObservationArgs,
+        )
+      : settleCompletedRenderDiagnostic;
+  const args = [
     pageTimeoutMs,
     pageTimeoutMs,
     progressFunctionName,
     invocationId,
-  );
+    retireViewerRenderLoop,
+  ];
+  if (pageFunction === settleCompletedRenderDiagnostic) args.push(null, []);
+  return targetPage.evaluate(pageFunction, ...args);
+}
+
+/**
+ * Compose trusted browser function sources on the host, so Puppeteer only
+ * serializes one self-contained page function and JSON-safe arguments. Function
+ * values passed as evaluate arguments are not serializable by Puppeteer.
+ */
+export function createCompletedRenderDiagnosticWithObservation(
+  observationFunction,
+  observationArgs,
+) {
+  if (
+    typeof observationFunction !== 'function' ||
+    !Array.isArray(observationArgs)
+  )
+    throw new TypeError(
+      'A browser observation function and argument array are required.',
+    );
+  const serializedArgs = JSON.stringify(observationArgs);
+  if (typeof serializedArgs !== 'string')
+    throw new TypeError(
+      'Browser observation arguments must be JSON serializable.',
+    );
+  const composed = `function composedCompletedRenderDiagnostic(
+    viewerOrTimeout,
+    timeoutMs,
+    progressFunctionName,
+    invocationId,
+    retireViewerRenderLoop,
+  ) {
+    const settle = ${settleCompletedRenderDiagnostic.toString()};
+    const observation = ${observationFunction.toString()};
+    return settle(
+      viewerOrTimeout,
+      timeoutMs,
+      progressFunctionName,
+      invocationId,
+      retireViewerRenderLoop,
+      observation,
+      ${serializedArgs},
+    );
+  }`;
+  return new Function(`return (${composed});`)();
 }
