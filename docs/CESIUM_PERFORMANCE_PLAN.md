@@ -107,6 +107,13 @@ and clock-integrity gates remain unchanged. No renderer/vendor
 picking and Cesium shader preparation remain prominent sampled stacks. This is
 instrumented SwiftShader attribution, not latency or physical Windows acceptance.
 
+The retirement-order correction at `29dc9f51` now runs the existing bounded
+document retirement before worker audit, progress-binding disposal and fixture
+interception teardown. A failed retirement prevents those later steps, leaving
+outer cleanup responsible for the document. Root passes 64 focused tests; adopted
+formatting and package boundaries pass. The exact-commit hosted run is separate;
+this isolated change does not establish that the recurring timeout is resolved.
+
 The [S57 map-switch comparison at `3453fab5`](performance-evidence/s57-stream-comparison-38225231367/README.md)
 executes five switch pairs and the native selection/recovery cases, then fails
 report validation. Its publisher omits required ownership fields and overwrites
@@ -123,6 +130,17 @@ zero pending work at ready boundaries and all native selection/recovery cases.
 The fixture is integrated through `68ccdb92`; all seven standard jobs pass at
 `4562e8ec`. Failed artifacts are preserved. Actual streamed 3D Tiles coverage,
 physical Windows and full S57 acceptance remain gaps.
+
+The first [actual HTTP 3D Tiles candidate at `bd347221`](performance-evidence/s57-tiles-streaming-38230236414/README.md)
+passes 26 root-focused checks but fails its hosted content-supersession phase.
+The manifest is delivered and the stale factory does not replace the flat owner.
+After a content request is paused and the map is superseded, Chrome ends the
+request before it reaches the server. The fixture records no cancellation reason
+and incorrectly waits only for delivery. A correction must distinguish observed
+cancellation from failure, verify real delivery after reactivation, and await
+independent browser HTTP observations before capturing checkpoints. All owned
+observers and the tileset are cleaned up, but no warmed tile pair completes.
+This component remains isolated and the failed artifact is preserved.
 
 A [fresh Windows Chrome tab](performance-evidence/windows-webgl-current-window-20261012/README.md)
 restores screenshot delivery at an observed 894 x 529 viewport, while the old
