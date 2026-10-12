@@ -30,6 +30,19 @@ not be interpreted as ordinary latency. A later-frame observation and the
 actual primitive/worker readiness need attribution; raising the sample deadline
 or using these diagnostic calls to satisfy acceptance is not a fix.
 
+Source inspection identifies a specific limitation in that readiness signal.
+The installed `cesium@1.138.0` / `@cesium/engine@22.3.0`
+`DataSourceDisplay.update()` returns the current visualizer result, but its
+`ready` property retains `this._ready || result` once it first becomes ready.
+The fixture reads that retained property after changing geometry. It therefore
+cannot establish that the current stem primitive has completed construction.
+This explains why the reported flag can disagree with visible materialization;
+it does not establish why construction was late in this run. The next diagnostic
+must distinguish current primitive readiness from the retained display flag,
+without forcing extra data-source updates or changing the acceptance deadline.
+The inspected `Source/DataSources/DataSourceDisplay.js` has SHA-256
+`2d845534a1bc01a2dd490d6258f64b2b8764591be51e0fd366225ce6093ae4c4`.
+
 Only the Entity control is reached: zero paired samples and zero collection
 lifetimes complete. The diagnostic observer is removed, the layer is destroyed,
 its data source is removed, the viewer is destroyed and Chrome exits naturally
