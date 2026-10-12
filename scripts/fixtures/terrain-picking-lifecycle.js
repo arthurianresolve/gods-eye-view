@@ -2,7 +2,10 @@ import * as Cesium from 'cesium';
 import { MapSourceController } from '../../src/maps/controller.js';
 import { createSubmarineCableLayer } from '../../src/layers/submarineCables/index.js';
 import { installWorkerDiagnostics } from '../performance/workerDiagnostics.mjs';
-import { installTerrainCurrentUpdateReadinessObserver } from './terrainCurrentUpdateReadiness.mjs';
+import {
+  installTerrainCurrentUpdateReadinessObserver,
+  finalizeTerrainCurrentUpdateObservation,
+} from './terrainCurrentUpdateReadiness.mjs';
 
 installWorkerDiagnostics(window);
 window.__terrainPickingBuildIdentity = {
@@ -956,12 +959,12 @@ async function runFixture() {
       publish();
     }
     report.switchComparison.status = 'passed';
-    const comparisonObserverCleanup = currentUpdateObserver.dispose();
-    report.switchComparison.currentUpdateObserver.cleanupConfirmed =
-      comparisonObserverCleanup;
-    report.switchComparison.currentUpdateObserver.finalState =
-      currentUpdateObserver.snapshot();
-    if (!comparisonObserverCleanup)
+    report.switchComparison.currentUpdateObserver =
+      finalizeTerrainCurrentUpdateObservation(
+        currentUpdateObserver,
+        report.switchComparison.currentUpdateObserver,
+      );
+    if (!report.switchComparison.currentUpdateObserver.cleanupConfirmed)
       throw new Error('Current update observer cleanup was not confirmed.');
 
     report.phase = 'stale-terrain-provider-replacement';
@@ -1172,13 +1175,12 @@ async function runFixture() {
   } finally {
     report.phase = report.phase || 'cleanup';
     if (currentUpdateObserver) {
-      const cleanupConfirmed = currentUpdateObserver.dispose();
-      report.switchComparison.currentUpdateObserver = {
-        ...(report.switchComparison.currentUpdateObserver || {}),
-        cleanupConfirmed,
-        finalState: currentUpdateObserver.snapshot(),
-      };
-      if (!cleanupConfirmed) {
+      report.switchComparison.currentUpdateObserver =
+        finalizeTerrainCurrentUpdateObservation(
+          currentUpdateObserver,
+          report.switchComparison.currentUpdateObserver,
+        );
+      if (!report.switchComparison.currentUpdateObserver.cleanupConfirmed) {
         report.status = 'failed';
         report.failedPhase ||= 'current-update-observer-cleanup';
         report.error ||= 'Current update observer ownership was not restored.';

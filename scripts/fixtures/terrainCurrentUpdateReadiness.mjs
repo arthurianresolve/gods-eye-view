@@ -41,6 +41,7 @@ export function installTerrainCurrentUpdateReadinessObserver({
   let installErrorName = null;
   let updateRestoreStatus = 'not-installed';
   let cleanupConfirmed = false;
+  let disposedSnapshot = null;
   const removeCollectionChanged = [];
   let removePreRender = null;
   let removePostRender = null;
@@ -188,9 +189,13 @@ export function installTerrainCurrentUpdateReadinessObserver({
         updateRestoreStatus = 'restore-failed';
       }
       cleanupConfirmed = cleanupOk;
+      // The observer owns only the comparison epoch. Later selection/recovery
+      // cases intentionally replace collections after this observer is retired.
+      disposedSnapshot = observer.snapshot();
       return cleanupConfirmed;
     },
     snapshot() {
+      if (disposedSnapshot) return { ...disposedSnapshot };
       return {
         available: observer.available,
         cleanupConfirmed,
@@ -385,4 +390,20 @@ export function installTerrainCurrentUpdateReadinessObserver({
     observer.available = false;
   }
   return observer;
+}
+
+/** Publish the same retired observation at the comparison and finally boundaries. */
+export function finalizeTerrainCurrentUpdateObservation(
+  observer,
+  metadata = {},
+) {
+  const cleanupConfirmed = observer.dispose();
+  const finalState = observer.snapshot();
+  return {
+    ...metadata,
+    cleanupConfirmed,
+    ownershipChanged: finalState.ownershipChanged,
+    entityCollectionsMatch: finalState.entityCollectionsMatch,
+    finalState,
+  };
 }
