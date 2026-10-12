@@ -41,8 +41,16 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
             if (!state._enabled || !state._loaded) return;
             if (!state._referenceSweepGate.shouldRun(viewer.camera)) return;
             const forceStemUpdate = state._forceReferenceStemUpdate;
-            parts.rendering.updateReferenceVisibility({ forceStemUpdate });
+            const stemGeometryChanged =
+              parts.rendering.updateReferenceVisibility({ forceStemUpdate });
             state._forceReferenceStemUpdate = false;
+            // Scene clears its render-request flag before preRender. A terminal
+            // sweep changes ConstantProperty after DataSourceDisplay has
+            // already consumed it, so request exactly one frame to upload the
+            // final geometry. Ordinary motion sweeps already occur inside a
+            // flowing frame and do not add another request.
+            if (forceStemUpdate && stemGeometryChanged)
+              viewer.scene.requestRender?.();
           },
         );
       }
@@ -72,6 +80,7 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
 
     disable() {
       state._enabled = false;
+      state._forceReferenceStemUpdate = false;
       state._overlayPublisher.hide();
       parts.rendering.resetPublishSignature();
       if (state._loading && state._abort) {
@@ -121,6 +130,7 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
       }
       state._viewer = null;
       state._enabled = false;
+      state._forceReferenceStemUpdate = false;
       state._loading = false;
       state._loaded = false;
       state._count = 0;

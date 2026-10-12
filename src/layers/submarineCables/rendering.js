@@ -304,10 +304,11 @@ export function createRendering({ state }) {
   }
 
   function updateReferenceVisibility({ forceStemUpdate = false } = {}) {
-    if (!state._enabled || !state._viewer?.camera) return;
+    if (!state._enabled || !state._viewer?.camera) return false;
     const cameraPos = state._viewer.camera.positionWC;
-    if (!cameraPos) return;
+    if (!cameraPos) return false;
 
+    let stemGeometryChanged = false;
     const canvasHeight = state._viewer.scene?.canvas?.clientHeight || 1080;
     const fov = state._viewer.camera.frustum?.fov || Math.PI / 3;
     const occluder = new Cesium.EllipsoidalOccluder(
@@ -326,13 +327,14 @@ export function createRendering({ state }) {
       // Hidden stems keep their last geometry; this same sweep refreshes them
       // in the pass where they turn visible again.
       if (visible)
-        updateCableReferenceStem(
-          record,
-          cameraPos,
-          canvasHeight,
-          fov,
-          forceStemUpdate,
-        );
+        stemGeometryChanged =
+          updateCableReferenceStem(
+            record,
+            cameraPos,
+            canvasHeight,
+            fov,
+            forceStemUpdate,
+          ) || stemGeometryChanged;
     }
     for (const record of state._surfaceRecords) {
       const visible = occluder.isPointVisible(record.base);
@@ -360,7 +362,7 @@ export function createRendering({ state }) {
     // The marker collections are created lazily by the visualizers, so the
     // single-pass blend is applied on the sweep cadence until both landed.
     if (!state._markerBlendDone) applyMarkerBlendOnce();
-    if (!changed) return;
+    if (!changed) return stemGeometryChanged;
     state._overlayPublisher.publish(state._publishScratch);
     state._lastPublishedCount = winners.length;
     for (let i = 0; i < winners.length; i++) {
@@ -369,6 +371,7 @@ export function createRendering({ state }) {
     }
     state._lastPublishedIds.length = winners.length;
     state._lastPublishedPriorities.length = winners.length;
+    return stemGeometryChanged;
   }
   return {
     resetPublishSignature,

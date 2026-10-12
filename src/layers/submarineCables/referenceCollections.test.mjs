@@ -60,7 +60,7 @@ test('camera moveEnd forces cable stems to the exact final pose after epsilon su
     finalDistance * ((2 * Math.tan(fov / 2)) / canvasHeight) * 66;
   const expectedTip = Cesium.Cartesian3.fromDegrees(0, 0, expectedTipHeight);
 
-  function runPath(previousDistance) {
+  function runPath(previousDistance, exitBeforeSweep = null) {
     const base = Cesium.Cartesian3.fromDegrees(0, 0, 0);
     const initialTip = Cesium.Cartesian3.fromDegrees(0, 0, 700);
     const firstBuffer = [base, initialTip];
@@ -123,11 +123,14 @@ test('camera moveEnd forces cable stems to the exact final pose after epsilon su
       expectedTip,
     );
 
+    let requestRenderCount = 0;
     const scene = {
       preRender: new Cesium.Event(),
       globe: { show: true },
       canvas: { clientHeight: canvasHeight },
-      requestRender() {},
+      requestRender() {
+        requestRenderCount += 1;
+      },
     };
     const camera = {
       positionWC: Cesium.Cartesian3.fromDegrees(0, 0, previousDistance),
@@ -163,11 +166,45 @@ test('camera moveEnd forces cable stems to the exact final pose after epsilon su
     scene.preRender.raiseEvent();
     camera.positionWC = Cesium.Cartesian3.fromDegrees(0, 0, finalDistance);
     camera.moveEnd.raiseEvent();
+    const moveEndRequestCount = requestRenderCount;
+    if (exitBeforeSweep) {
+      if (exitBeforeSweep === 'disabled') layer.disable(viewer);
+      else layer.destroy(viewer);
+      scene.preRender.raiseEvent();
+      const afterExitRequestCount = requestRenderCount;
+      if (exitBeforeSweep === 'disabled') layer.destroy(viewer);
+      camera.moveEnd.raiseEvent();
+      scene.preRender.raiseEvent();
+      return {
+        moveEndRequestCount,
+        afterExitRequestCount,
+        afterDestroyedRequestCount: requestRenderCount,
+        forceStemUpdate: state._forceReferenceStemUpdate,
+      };
+    }
     scene.preRender.raiseEvent();
+    const afterTerminalSweepRequestCount = requestRenderCount;
+    scene.preRender.raiseEvent();
+    const afterFollowupRequestCount = requestRenderCount;
 
     const finalTip = Cesium.Cartesian3.clone(record.tip);
+    layer.disable(viewer);
+    camera.moveEnd.raiseEvent();
+    scene.preRender.raiseEvent();
+    const afterDisabledRequestCount = requestRenderCount;
     layer.destroy(viewer);
-    return { finalTip, ordinaryFinalUpdate, ordinaryFinalError };
+    camera.moveEnd.raiseEvent();
+    scene.preRender.raiseEvent();
+    return {
+      finalTip,
+      ordinaryFinalUpdate,
+      ordinaryFinalError,
+      moveEndRequestCount,
+      afterTerminalSweepRequestCount,
+      afterFollowupRequestCount,
+      afterDisabledRequestCount,
+      afterDestroyedRequestCount: requestRenderCount,
+    };
   }
 
   const nearPath = runPath(finalDistance + 3);
@@ -179,6 +216,33 @@ test('camera moveEnd forces cable stems to the exact final pose after epsilon su
   assert.equal(coarsePath.ordinaryFinalError, 0);
   assert.deepEqual(nearPath.finalTip, expectedTip);
   assert.deepEqual(coarsePath.finalTip, expectedTip);
+  for (const path of [nearPath, coarsePath]) {
+    assert.equal(path.moveEndRequestCount, 1);
+    assert.equal(path.afterTerminalSweepRequestCount, 2);
+    assert.equal(path.afterFollowupRequestCount, 2);
+    assert.equal(path.afterDisabledRequestCount, 2);
+    assert.equal(path.afterDestroyedRequestCount, 2);
+  }
+
+  const unchangedPath = runPath(finalDistance);
+  assert.deepEqual(unchangedPath.finalTip, expectedTip);
+  assert.equal(unchangedPath.moveEndRequestCount, 1);
+  assert.equal(unchangedPath.afterTerminalSweepRequestCount, 1);
+  assert.equal(unchangedPath.afterFollowupRequestCount, 1);
+  assert.equal(unchangedPath.afterDisabledRequestCount, 1);
+  assert.equal(unchangedPath.afterDestroyedRequestCount, 1);
+
+  const disabledBeforeSweep = runPath(finalDistance + 3, 'disabled');
+  assert.equal(disabledBeforeSweep.moveEndRequestCount, 1);
+  assert.equal(disabledBeforeSweep.afterExitRequestCount, 1);
+  assert.equal(disabledBeforeSweep.afterDestroyedRequestCount, 1);
+  assert.equal(disabledBeforeSweep.forceStemUpdate, false);
+
+  const destroyedBeforeSweep = runPath(finalDistance + 3, 'destroyed');
+  assert.equal(destroyedBeforeSweep.moveEndRequestCount, 1);
+  assert.equal(destroyedBeforeSweep.afterExitRequestCount, 1);
+  assert.equal(destroyedBeforeSweep.afterDestroyedRequestCount, 1);
+  assert.equal(destroyedBeforeSweep.forceStemUpdate, false);
 });
 
 test('owned reference collections preserve metadata IDs, style, sweep, picks, and teardown', (t) => {
