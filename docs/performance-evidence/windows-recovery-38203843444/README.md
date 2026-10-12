@@ -43,3 +43,21 @@ The [raw report](report.json) is 6,389 bytes, SHA-256
 It was extracted from the job's marked evidence record because this ordinary
 push run preserves recovery evidence in logs. The [review](review.json) and
 [CI metadata](ci-run.json) retain the failed result and exact revision.
+
+A subsequent [Windows recovery control](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38204992455/job/114666400881)
+on isolated datacenter revision `9a0b6a08` passes all five stages with natural
+exits, including the rollback stage in 257.1 ms. Its
+[raw report](control-38204992455.json) is separate evidence. This confirms
+that the failure is intermittent; the successful control does not identify
+or fix its cause.
+
+The bounded diagnostic is implemented separately at
+[`eac89bb8`](https://github.com/arthurianresolve/gods-eye-view/commit/eac89bb80d7f7db8131d7ddd516b4112c146f278).
+It adds opt-in target-type counts and a Windows process snapshot limited to
+64 owned process records, 12 KB of output and 1,500 ms. Process roles are
+derived only from the owned PID list; paths and command lines are not emitted.
+An absent root skips the command-line query. Disconnected or failed observations
+remain unavailable, and force-kill remains failed shutdown. Thirty focused
+tests pass independently, including executable PowerShell scope checks and
+explicit timing origins. The [diagnostic run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38205914812)
+is pending; instrumentation is not a root-cause fix or acceptance result.

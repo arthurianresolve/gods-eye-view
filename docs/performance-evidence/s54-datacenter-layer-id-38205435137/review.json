@@ -1,0 +1,92 @@
+{
+  "commit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+  "harnessCommit": "f09aa36a9e54be7a53c78ce36b16d9e9b6b5567c",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38205435137",
+  "artifact": {
+    "bytes": 58470,
+    "sha256": "feefaf5dd80a88fd41de4d516ebf2ba280197ac8a51740404f5cdc1ce7f3e9f5"
+  },
+  "status": "failed",
+  "physicalHardwareCoverage": false,
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+  "sampleCount": 0,
+  "completedComparisons": 0,
+  "failedMode": "entities",
+  "failedCase": "default-style",
+  "completedCaptures": 21,
+  "stableFrames": 1,
+  "geometryReady": true,
+  "sourceReady": true,
+  "surfaceCount": 4362,
+  "visibleSurfaces": 2,
+  "pickDiagnostics": {
+    "examined": 4362,
+    "hidden": 4360,
+    "offscreen": 0,
+    "coincident": 0,
+    "pointMisses": 0,
+    "stemMisses": 2,
+    "rejections": [
+      {
+        "kind": "stem",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1176042553",
+        "actualEntityId": null,
+        "primitiveType": null,
+        "appearanceType": null
+      },
+      {
+        "kind": "stem",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1182624646",
+        "actualEntityId": null,
+        "primitiveType": null,
+        "appearanceType": null
+      }
+    ]
+  },
+  "lastFramePixelSha256": "a62c412b818c2375bdfae66dfefe6ab17398f0aec94f33a4b0fa4314e617db70",
+  "teardown": {
+    "layerDestroyed": true,
+    "dataSourceRemoved": true,
+    "rendererOwnersRemoved": true,
+    "viewerKeptForNextLifetime": true,
+    "instrumentationRestored": true,
+    "ownerCountAfterDestroy": 0,
+    "dataSourceCountAfterDestroy": 0,
+    "scenePrimitiveCountAfterDestroy": 1,
+    "groundPrimitiveCountAfterDestroy": 1
+  },
+  "viewerCleanup": {
+    "viewerDestroyed": true
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 35807.79925,
+      "closeSettledHostMs": 36307.244917,
+      "closeElapsedMs": 499.44566700000723,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 479.3054170000032
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "interpretation": "Point picks pass their owner check after the layer identity fix; both attempted stem picks return no object. No sample or comparison completes. Completed-frame delivery continues; this is not a zero-frame failure.",
+  "limitations": [
+    "Underlying stem-pick cause not established",
+    "Candidate collection lifetime not reached",
+    "No new benefit or physical hardware acceptance"
+  ]
+}

@@ -12,6 +12,10 @@ Its third prior-install stage preserves settings and workspace data, then
 Chrome acknowledges shutdown but does not exit naturally within five seconds.
 Forced cleanup remains a failure. Earlier green checks remain historical;
 current recovery acceptance requires diagnosis and fresh evidence.
+The bounded shutdown diagnostic at `eac89bb8` passes 30 independent tests and
+is under hosted validation. A separate Windows control at `9a0b6a08` passes
+all five recovery stages without forced exits, confirming intermittency; it
+does not establish a fix for the failed shutdown.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
 diagnostic tooling, a command-palette focus repair, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
@@ -29,7 +33,12 @@ fails in the Entity control: the fixture passes a nonexistent `layerId`
 property instead of the layer API's `id`, rejecting native picks despite
 settled geometry and completed frames. Correcting that caller and rerunning
 the exact-commit check precede new benefit acceptance; the failed report is
-preserved and production defaults remain unchanged.
+preserved and production defaults remain unchanged. The
+[corrected run at `f09aa36a`](performance-evidence/s54-datacenter-layer-id-38205435137/README.md)
+accepts the point identities, but both stem picks return no object. It delivers
+21 completed captures with ready geometry, then fails without a paired sample.
+The remaining pick failure needs attribution; the independent benefit fixture
+cannot override it.
 Datacenter component comparisons show repeatable activation and JS
 heap benefits with identical captured pixels. The fresh dam comparison regresses
 source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
