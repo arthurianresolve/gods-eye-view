@@ -1,0 +1,50 @@
+{
+  "schema": "gev-s48-depth-pick-bundle-mapping/v1",
+  "sourceCommit": "0602cbe267449ac1b5f89c5b17996c93cb5a306e",
+  "initialNoEnvBuild": {
+    "asset": "index-DtMeaZ-z.js",
+    "sha256": "4208eca2ad96f41538df9111c3afc4b3a3ac7d6710c5904050d8ec553f8cafc3"
+  },
+  "mappedSourceMapBuild": {
+    "asset": "dist/assets/index-CUIHVnTU.js",
+    "sha256": "3d6cc5636b8fd9e318ed2fbc8d989facad666ce12127a1e84926cc70099d982d",
+    "sourceMapSha256": "27447d34b47cf64a569f5e4de228e51d8b7794fc4b26cba53d29237835a4fcad",
+    "appCommitDefine": "0602cbe267449ac1b5f89c5b17996c93cb5a306e"
+  },
+  "profileCoordinatesAreZeroBased": true,
+  "targets": [
+    {
+      "generatedLine": 1418,
+      "generatedColumn": 510268,
+      "original": {
+        "source": "../../src/voice/gevActions.js",
+        "line": 2669,
+        "column": 0,
+        "name": null
+      },
+      "context": "ewarmInstalled)return;e.__gevViewTargetPrewarmInstalled=!0;let t=null,n=!1;e.camera.moveEnd.addEventListener(()=>{t&&window.clearTimeout(t),t=window.setTimeout(()=>{t=null;const i=()=>{try{u_(e)}catch(o){if(n)return;n=!0,console.debug(\"[Voice] view-target prewarm skipped:\",(o==null?void 0:o.message)||o)}};typeof window.requestIdleCallback==\"function\"?window.requestIdleCallback(i,{timeout:500}):i()},120)})}function eAe(e,t){con"
+    },
+    {
+      "generatedLine": 1418,
+      "generatedColumn": 532560,
+      "original": {
+        "source": "../../src/voice/gevActions.js",
+        "line": 4091,
+        "column": 0,
+        "name": "getViewTargetCartographic"
+      },
+      "context": "||null,precision:e,confidence:(i==null?void 0:i.confidence)||null,note:\"Camera altitude is high, so this is approximate basemap context rather than a precise address.\"}}function u_(e){const t=IAe(e),n=Nx.get(e);if((n==null?void 0:n.signature)===t&&performance.now()-n.cachedAt<2500)return n.target;const i=d_(e),o=i&&Cesium.Cartographic.fromCartesian(i)||null;return Nx.set(e,{signature:t,target:o,cachedAt:performance.now()}),o}f"
+    },
+    {
+      "generatedLine": 1418,
+      "generatedColumn": 533050,
+      "original": {
+        "source": "../../src/voice/gevActions.js",
+        "line": 4135,
+        "column": 0,
+        "name": "getViewTargetCartesian"
+      },
+      "context": "urn[Cesium.Math.toDegrees(n.latitude).toFixed(5),Cesium.Math.toDegrees(n.longitude).toFixed(5),Math.round(n.height/2),t.heading.toFixed(3),t.pitch.toFixed(3)].join(\":\")}function d_(e){var a;const t=e.scene,n=t.canvas,i=n.clientWidth||n.width||0,o=n.clientHeight||n.height||0,r=new Cesium.Cartesian2(i/2,o/2);let s=null;if(t.pickPositionSupported&&typeof t.pickPosition==\"function\")try{s=t.pickPosition(r)}catch{s=null}if(!gi(s)&&e"
+    }
+  ]
+}

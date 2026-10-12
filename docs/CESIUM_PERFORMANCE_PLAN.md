@@ -2,6 +2,15 @@
 
 ## Current status - 12 October 2026
 
+Latest S48 attribution: [independent CPU-profile replay and source mapping](performance-evidence/s48-depth-pick-attribution/README.md)
+verify all four preserved profiles' sample totals. The failed `0602cbe2` idle
+warmup has 2,205.398 ms of sampled native depth readback under the camera-target
+background prewarm callback. Buffer uploads and shader-program queries are also
+prominent. These are statistical synchronous API samples, not measured GPU time
+or a matched performance comparison. Cesium already caches same-window picks
+within its cache lifetime; caller/frame observations must establish useful
+reuse before another cache or scheduling change is accepted. S48 remains partial.
+
 Latest S50 correction: [exact camera-pose ownership at `61c050ca`](performance-evidence/s50-exact-pose/README.md)
 prevents rounded `p1` key collisions from retaining stale DEM supports, accepting
 late terrain responses, or admitting shipped supports for a calibrated pose.
