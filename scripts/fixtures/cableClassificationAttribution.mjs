@@ -33,22 +33,32 @@ function countsFor(rows) {
 export function compareCableClassificationRows(before, after) {
   checkedRows(before, 'Before');
   checkedRows(after, 'After');
+  const beforeById = new Map(before.map((row) => [row.id, row]));
+  const afterById = new Map(after.map((row) => [row.id, row]));
   let changedEntityCount = 0;
   const sharedLength = Math.min(before.length, after.length);
   let identityOrderStable = before.length === after.length;
   for (let index = 0; index < sharedLength; index += 1) {
     if (before[index].id !== after[index].id) identityOrderStable = false;
-    if (
-      before[index].id === after[index].id &&
-      before[index].classification !== after[index].classification
-    )
+  }
+  for (const [id, beforeRow] of beforeById) {
+    const afterRow = afterById.get(id);
+    if (afterRow && beforeRow.classification !== afterRow.classification)
       changedEntityCount += 1;
   }
+  const addedEntityCount = after.filter(
+    (row) => !beforeById.has(row.id),
+  ).length;
+  const removedEntityCount = before.filter(
+    (row) => !afterById.has(row.id),
+  ).length;
   return {
     beforeCount: before.length,
     afterCount: after.length,
     identityOrderStable,
     changedEntityCount,
+    addedEntityCount,
+    removedEntityCount,
     before: countsFor(before),
     after: countsFor(after),
   };

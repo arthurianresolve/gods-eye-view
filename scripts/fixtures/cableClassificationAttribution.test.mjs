@@ -16,6 +16,8 @@ test('classification control reports unchanged same-classification notifications
     afterCount: 2,
     identityOrderStable: true,
     changedEntityCount: 0,
+    addedEntityCount: 0,
+    removedEntityCount: 0,
     before: { TERRAIN: 2, CESIUM_3D_TILE: 0, BOTH: 0 },
     after: { TERRAIN: 2, CESIUM_3D_TILE: 0, BOTH: 0 },
   });
@@ -41,6 +43,26 @@ test('classification transition counts changed rows and detects identity/order d
     [...after].reverse(),
   );
   assert.equal(reordered.identityOrderStable, false);
+  assert.equal(reordered.changedEntityCount, 1);
+  assert.equal(reordered.addedEntityCount, 0);
+  assert.equal(reordered.removedEntityCount, 0);
+});
+
+test('classification changes compare stable IDs when identities are added or removed', () => {
+  const changed = compareCableClassificationRows(
+    [
+      { id: 'kept', classification: 'TERRAIN' },
+      { id: 'removed', classification: 'CESIUM_3D_TILE' },
+    ],
+    [
+      { id: 'added', classification: 'BOTH' },
+      { id: 'kept', classification: 'CESIUM_3D_TILE' },
+    ],
+  );
+  assert.equal(changed.identityOrderStable, false);
+  assert.equal(changed.changedEntityCount, 1);
+  assert.equal(changed.addedEntityCount, 1);
+  assert.equal(changed.removedEntityCount, 1);
 });
 
 test('classification rows reject duplicate identities, unknown kinds, and oversized input', () => {
