@@ -19,8 +19,10 @@ latency trials or full-application visual coverage. Representative decoded
 images are retained alongside each raw report and independent review.
 
 The actual renderer is Apple paravirtual Metal on a standard GitHub-hosted Mac.
-Physical Windows coverage, activation/heap benefit at this integrated commit,
-mixed-layer behavior, motion p95 and long-run retention remain pending. The GPU
+Physical Windows coverage, mixed-layer behavior, motion p95 and long-run
+retention remain pending. Datacenter activation/heap results at the subsequent
+diagnostic-only revision are recorded below; dam and cable benefit acceptance
+remain open. The GPU
 configuration export from the user's Windows machine does not satisfy these
 acceptance requirements.
 
@@ -52,3 +54,29 @@ browser journeys. The saved `s54-ci-bc892f7c.json` retains step outcomes.
 Optional diagnostics/soak and PR-only published layer-token checks were skipped.
 This success does not override the separately failed cable probe, and does not
 claim full integration validation of the later diagnostics-only `d05e5415`.
+
+The [datacenter benefit run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187703722)
+passes at `d05e5415`. Five alternating latency pairs use fresh viewers without
+forced GC. Five separate memory pairs use forced-GC JavaScript heap samples.
+Root reran the exact-commit report validator, checked all 27 recorded source
+files against Git bytes, and independently decoded all 40 PNGs. Their dimensions,
+file and RGBA hashes match; all 20 renderer image pairs are identical.
+The full artifact and review are preserved in `datacenters-benefit/`.
+
+| Metric (median of five runs per mode) | Entities | Collections | Change |
+| --- | ---: | ---: | ---: |
+| Source ready | 333.7 ms | 297.5 ms | -10.85% |
+| First usable frame after source ready | 3,277.9 ms | 2,339.4 ms | -28.63% |
+| Enabled post-GC JS heap increase | 163,935,120 bytes | 137,603,476 bytes | -16.06% |
+
+All five latency pairs improve first-usable delivery. The heap result is a
+JavaScript heap proxy, excluding GPU, native Cesium and browser-process memory.
+Layer/viewer cleanup passes the recorded ownership checks, but these fresh-viewer
+samples do not establish a long-run retained-heap plateau. The renderer remains
+hosted Apple paravirtual Metal; there is no physical Windows performance claim.
+Entity rendering remains the default and S54 remains partial.
+
+The automatic [dev push CI run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187169259)
+also passes all seven standard jobs at `bbca229f`. Its full job/step outcomes
+are retained in `dev-push-ci-bbca229f.json`; optional hardware/soak and PR-only
+published layer-token checks remain skipped.

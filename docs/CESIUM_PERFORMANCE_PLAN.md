@@ -4247,8 +4247,9 @@ Root fast-forwarded local and remote `dev` to that exact tested commit. The
 focused HUD/voice suite passes 120 checks; five targeted baseline negative
 controls fail for the expected ownership and duplicate-context assertions.
 These tests establish cleanup and context-call behavior, not individual GPU
-readback counts or a resolution of the Windows frame stall. The automatic
-push-triggered CI run is a separate run, not additional completed evidence.
+readback counts or a resolution of the Windows frame stall. The separate
+automatic [push-triggered CI run 38187169259](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187169259)
+now also passes all seven standard jobs at the same revision.
 The [saved CI response](performance-evidence/s54-current-dev-20261012/hud-ci-bbca229f.json)
 preserves job and step outcomes; optional hardware/soak and PR-only published
 layer-token checks were skipped.
@@ -4264,7 +4265,20 @@ retained, so the cause remains unresolved; the failed result is not retried
 unchanged or converted to a pass.
 
 [Raw results and scoped review](performance-evidence/s54-current-dev-20261012/README.md)
-separate the successful component checks from the cable failure. Current-revision
-benefit measurements, full-application coverage, physical Windows validation and
-the final retained-memory soak remain pending. The user-supplied hardware GPU
-configuration export establishes the active renderer only.
+separate the successful component checks from the cable failure. A subsequent
+diagnostic at `d05e5415` retains the failed readiness predicate: one hidden
+GroundPolylinePrimitive stays unready while frames continue and data-source/globe
+readiness remain true. The build/worker cause remains unresolved; no readiness
+condition or deadline was relaxed.
+
+The fresh [datacenter benefit run 38187703722](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187703722)
+passes at `d05e5415`. Five alternating latency pairs show a 28.63% reduction in
+median time from source-ready to first usable frame, with all five pairs improving.
+Five separate forced-GC pairs show 16.06% lower enabled JavaScript heap increase.
+Root independently verified the report, 27 recorded Git source hashes and 40
+decoded PNG/RGBA hashes (20 identical renderer pairs). Full raw evidence is linked
+above. These hosted Apple paravirtual Metal measurements cover one component;
+they do not establish motion p95, physical Windows performance or a retained-heap
+plateau. Dam/cable benefit acceptance, full-application coverage and the final
+soak remain pending. Entity defaults remain unchanged. The user-supplied Windows
+GPU export establishes hardware acceleration only.
