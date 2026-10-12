@@ -15,6 +15,16 @@ import {
 import { setInfrastructureFixtureCamera } from './infrastructureFixtureCamera.mjs';
 import { resolveInfrastructureNativePickOwner } from './infrastructureNativePickOwnership.mjs';
 import {
+  INFRASTRUCTURE_PICK_PATH_DIAGNOSTIC_SCHEMA,
+  INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME,
+  INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_REPORT,
+  INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME,
+  INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE,
+  pickPathDiagnosticRequested,
+  processOwnedCapturedFrame,
+  runInfrastructurePickPathControls,
+} from './infrastructurePickPathDiagnostic.mjs';
+import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
   infrastructureCameraRevisionReady,
@@ -24,8 +34,11 @@ import {
 } from '../performance/infrastructureRuntimeComparison.mjs';
 
 const FRAME_TIMEOUT_MS = 400;
+const fixtureSearchParams = new URLSearchParams(location.search);
+const pickPathDiagnosticEnabled =
+  pickPathDiagnosticRequested(fixtureSearchParams);
 const fixtureLayer = infrastructureFixtureLayer(
-  new URLSearchParams(location.search).get('layerId') ||
+  fixtureSearchParams.get('layerId') ||
     DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
 );
 if (fixtureLayer.layerId !== DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID)
@@ -502,38 +515,250 @@ function findNativePickTarget(
   return null;
 }
 
-async function captureFrame(viewer) {
-  viewer.scene.requestRender();
-  const canvas = await captureFreshCesiumFrame(viewer, {
-    timeoutMs: FRAME_TIMEOUT_MS,
-  });
-  check(canvas, 'Fresh completed frame was unavailable.');
-  try {
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    const pixels = context
-      .getImageData(0, 0, canvas.width, canvas.height)
-      .data.slice();
-    let nonCorner = 0;
-    for (let offset = 4; offset < pixels.length; offset += 4) {
+function createPickPathDiagnosticState(report, mode) {
+  const envelope = report.instrumentation?.pickPathDiagnostic;
+  if (!envelope) return null;
+  const state = {
+    mode,
+    envelope,
+    candidateEntityIds: null,
+    revisionsByCandidate: new Map(),
+    renderRevisionObserver: null,
+    budget: {
+      calls: 0,
+      limit: INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME,
+    },
+    report: {
+      mode,
+      maxPickCalls: INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME,
+      pickCalls: 0,
+      status: 'running',
+      observations: [],
+    },
+  };
+  envelope.lifetimes.push(state.report);
+  return state;
+}
+
+function runPickPathDiagnosticFrame({
+  viewer,
+  rows,
+  collections,
+  layerId,
+  state,
+  caseId,
+  pair,
+  completedRenderRevision,
+  renderSignature,
+  cameraPosition,
+  renderClock,
+  captureFrameState,
+  readFrameState,
+}) {
+  if (
+    !state ||
+    state.report.observations.length >=
+      INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME *
+        INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE
+  )
+    return;
+
+  if (!state.candidateEntityIds) {
+    const candidates = [];
+    for (const row of rows) {
+      if (!row.entityShow || !row.point.show || !row.stem.show) continue;
+      const pointScreen = projectNativePick(viewer, row, 'point');
+      const stemScreen = projectNativePick(viewer, row, 'stem');
       if (
-        pixels[offset] !== pixels[0] ||
-        pixels[offset + 1] !== pixels[1] ||
-        pixels[offset + 2] !== pixels[2] ||
-        pixels[offset + 3] !== pixels[3]
+        !pointScreen ||
+        !stemScreen ||
+        Math.hypot(
+          pointScreen.x - stemScreen.x,
+          pointScreen.y - stemScreen.y,
+        ) <= 8
       )
-        nonCorner++;
+        continue;
+      candidates.push({ row, pointScreen, stemScreen });
+      if (
+        candidates.length >=
+        INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME
+      )
+        break;
     }
-    return {
-      pixels,
-      pixelSha256: await sha256(pixels),
-      pngBase64: canvas.toDataURL('image/png').split(',')[1] || '',
-      width: canvas.width,
-      height: canvas.height,
-      pixelsDifferentFromCorner: nonCorner,
-    };
-  } finally {
-    canvas.width = canvas.height = 0;
+    if (candidates.length === 0) return;
+    state.candidateEntityIds = candidates.map(
+      (candidate) => candidate.row.entityId,
+    );
   }
+
+  const rowsByEntity = new Map(rows.map((row) => [row.entity, row]));
+  const primitivesByEntity = new Map();
+  if (collections) {
+    for (let index = 0; index < collections.points.length; index++) {
+      const point = collections.points.get(index);
+      const stem = collections.stems.get(index);
+      if (point?.id && point.id === stem?.id)
+        primitivesByEntity.set(point.id, { point, stem });
+    }
+  }
+  for (const candidateEntityId of state.candidateEntityIds) {
+    const candidateRevisions =
+      state.revisionsByCandidate.get(candidateEntityId) || 0;
+    if (
+      candidateRevisions >= INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE
+    )
+      continue;
+    const phase =
+      candidateRevisions === 0
+        ? 'initial-stable-render'
+        : 'subsequent-completed-render';
+    if (
+      state.budget.calls + 5 >
+      INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME
+    )
+      break;
+    const row = rows.find((item) => item.entityId === candidateEntityId);
+    if (!row || !row.entityShow || !row.point.show || !row.stem.show) {
+      state.report.observations.push({
+        phase,
+        caseId,
+        pair,
+        candidateEntityId,
+        completedRenderRevision,
+        renderSignature,
+        status: 'candidate-not-visible',
+        pickCalls: 0,
+      });
+      state.revisionsByCandidate.set(candidateEntityId, candidateRevisions + 1);
+      continue;
+    }
+    const pointScreen = projectNativePick(viewer, row, 'point');
+    const stemScreen = projectNativePick(viewer, row, 'stem');
+    if (
+      !pointScreen ||
+      !stemScreen ||
+      Math.hypot(pointScreen.x - stemScreen.x, pointScreen.y - stemScreen.y) <=
+        8
+    ) {
+      state.report.observations.push({
+        phase,
+        caseId,
+        pair,
+        candidateEntityId,
+        completedRenderRevision,
+        renderSignature,
+        status: 'candidate-not-pickable-in-view',
+        pickCalls: 0,
+      });
+      state.revisionsByCandidate.set(candidateEntityId, candidateRevisions + 1);
+      continue;
+    }
+    const observation = runInfrastructurePickPathControls({
+      pick: (_kind, screenPosition) =>
+        viewer.scene.pick(
+          new Cesium.Cartesian2(screenPosition.x, screenPosition.y),
+        ),
+      resolve: (picked, kind) => {
+        const owner = resolveInfrastructureNativePickOwner({
+          picked,
+          kind,
+          requestedEntity: row.entity,
+          rowsByEntity,
+          primitivesByEntity,
+          layerId,
+          mode: collections ? 'primitive-collections' : 'entities',
+          Cesium,
+        });
+        const entityId =
+          owner?.row.entityId ||
+          (typeof picked?.id?.id === 'string' ? picked.id.id : null);
+        return {
+          ownerVerified: Boolean(owner),
+          entityId,
+          sourceRecordId: owner?.row.sourceRecordId || null,
+          primitiveType:
+            owner?.primitiveType ||
+            picked?.primitive?.constructor?.name ||
+            null,
+          appearanceType:
+            owner?.appearanceType ||
+            picked?.primitive?.appearance?.constructor?.name ||
+            null,
+          selectionValue: owner?.row.entity || picked?.id || null,
+        };
+      },
+      getSelection: () => viewer.selectedEntity,
+      setSelection: (entity) => {
+        viewer.selectedEntity = entity;
+      },
+      candidateEntityId,
+      pointScreen,
+      stemScreen,
+      completedRenderRevision,
+      renderSignature,
+      phase,
+      budget: state.budget,
+      captureFrameState,
+      readFrameState,
+    });
+    state.report.pickCalls = state.budget.calls;
+    state.report.observations.push({
+      ...observation,
+      caseId,
+      pair,
+      cameraPosition: cameraPosition?.slice(0, 3),
+      renderClockIso: renderClock?.iso || null,
+    });
+    state.revisionsByCandidate.set(candidateEntityId, candidateRevisions + 1);
+  }
+}
+
+async function captureFrame(viewer, captureFrameState = null) {
+  viewer.scene.requestRender();
+  return processOwnedCapturedFrame({
+    async capture() {
+      const canvas = await captureFreshCesiumFrame(viewer, {
+        timeoutMs: FRAME_TIMEOUT_MS,
+      });
+      check(canvas, 'Fresh completed frame was unavailable.');
+      return canvas;
+    },
+    readFrameState: captureFrameState,
+    async process(
+      canvas,
+      { completedFrameState, completedFrameStateErrorName },
+    ) {
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      const pixels = context
+        .getImageData(0, 0, canvas.width, canvas.height)
+        .data.slice();
+      let nonCorner = 0;
+      for (let offset = 4; offset < pixels.length; offset += 4) {
+        if (
+          pixels[offset] !== pixels[0] ||
+          pixels[offset + 1] !== pixels[1] ||
+          pixels[offset + 2] !== pixels[2] ||
+          pixels[offset + 3] !== pixels[3]
+        )
+          nonCorner++;
+      }
+      return {
+        pixels,
+        pixelSha256: await sha256(pixels),
+        pngBase64: canvas.toDataURL('image/png').split(',')[1] || '',
+        width: canvas.width,
+        height: canvas.height,
+        ...(completedFrameState ? { completedFrameState } : {}),
+        ...(completedFrameStateErrorName
+          ? { completedFrameStateErrorName }
+          : {}),
+        pixelsDifferentFromCorner: nonCorner,
+      };
+    },
+    release(canvas) {
+      canvas.width = canvas.height = 0;
+    },
+  });
 }
 
 function setCamera(viewer, anchor, height) {
@@ -589,6 +814,57 @@ function snapshotClock(viewer) {
   };
 }
 
+function createCompletedRenderRevisionObserver(viewer) {
+  let completedRenderRevision = 0;
+  let disposed = false;
+  let remove = null;
+  const safeErrorName = (error) =>
+    ['TypeError', 'DeveloperError', 'RangeError'].includes(error?.name)
+      ? error.name
+      : 'Error';
+  const observer = {
+    available: false,
+    cleanupConfirmed: false,
+    errorName: null,
+    read() {
+      return {
+        completedRenderRevision,
+        cameraPosition: finitePosition(viewer.camera.positionWC),
+        renderClockIso: snapshotClock(viewer).iso,
+      };
+    },
+    dispose() {
+      if (disposed) return observer.cleanupConfirmed;
+      disposed = true;
+      try {
+        if (typeof remove !== 'function')
+          throw new Error('Post-render observer removal is unavailable.');
+        remove();
+        observer.cleanupConfirmed = true;
+      } catch (error) {
+        observer.errorName = safeErrorName(error);
+      }
+      return observer.cleanupConfirmed;
+    },
+  };
+  const onPostRender = () => {
+    completedRenderRevision++;
+  };
+  try {
+    const removeListener =
+      viewer.scene.postRender.addEventListener(onPostRender);
+    remove =
+      typeof removeListener === 'function'
+        ? removeListener
+        : () => viewer.scene.postRender.removeEventListener(onPostRender);
+    observer.available = true;
+  } catch (error) {
+    observer.errorName = safeErrorName(error);
+    observer.dispose();
+  }
+  return observer;
+}
+
 async function runLayerLifetime(
   viewer,
   mode,
@@ -612,6 +888,7 @@ async function runLayerLifetime(
     renderClock: report.renderClock,
     teardown: null,
   };
+  const pickPathDiagnostic = createPickPathDiagnosticState(report, mode);
   const ownersBefore = scanOwners(viewer, layer.layerId);
   lifetime.sceneBaseline = {
     dataSources: viewer.dataSources.length,
@@ -632,6 +909,19 @@ async function runLayerLifetime(
     targetLayer,
     layer,
   );
+  if (pickPathDiagnostic) {
+    pickPathDiagnostic.renderRevisionObserver =
+      createCompletedRenderRevisionObserver(viewer);
+    pickPathDiagnostic.report.renderRevisionObserver = {
+      available: pickPathDiagnostic.renderRevisionObserver.available,
+      cleanupConfirmed: false,
+      ...(pickPathDiagnostic.renderRevisionObserver.errorName
+        ? { errorName: pickPathDiagnostic.renderRevisionObserver.errorName }
+        : {}),
+    };
+    if (!pickPathDiagnostic.renderRevisionObserver.available)
+      pickPathDiagnostic.report.status = 'diagnostic-error';
+  }
   let dataSource;
   let restored = true;
   try {
@@ -747,8 +1037,14 @@ async function runLayerLifetime(
       let cameraPosition = null;
       let sceneReadiness = null;
       while (performance.now() < deadline) {
-        finalFrame = await captureFrame(viewer);
+        finalFrame = await captureFrame(
+          viewer,
+          pickPathDiagnostic?.renderRevisionObserver.available
+            ? () => pickPathDiagnostic.renderRevisionObserver.read()
+            : null,
+        );
         completedCaptures++;
+        const captureFrameState = finalFrame.completedFrameState || null;
         if (pickRow) selectionRendered = true;
         rows = readRows();
         const hash = await sha256(
@@ -770,6 +1066,64 @@ async function runLayerLifetime(
         stableFrames = readiness.observe(signature, {
           inputsReady: geometryReady,
         });
+        if (
+          pickPathDiagnostic &&
+          pickPathDiagnostic.renderRevisionObserver.available &&
+          recordSample &&
+          geometryReady &&
+          (pickPathDiagnostic.candidateEntityIds || stableFrames >= 3)
+        ) {
+          try {
+            if (finalFrame.completedFrameStateErrorName)
+              throw Object.assign(
+                new Error('Completed-render witness could not be read.'),
+                { name: finalFrame.completedFrameStateErrorName },
+              );
+            runPickPathDiagnosticFrame({
+              viewer,
+              rows,
+              collections,
+              layerId: targetLayerId,
+              state: pickPathDiagnostic,
+              caseId,
+              pair,
+              completedRenderRevision:
+                captureFrameState?.completedRenderRevision,
+              renderSignature: signature,
+              cameraPosition,
+              renderClock: report.renderClock,
+              captureFrameState,
+              readFrameState: () =>
+                pickPathDiagnostic.renderRevisionObserver.read(),
+            });
+          } catch (error) {
+            pickPathDiagnostic.report.status = 'diagnostic-error';
+            if (
+              pickPathDiagnostic.report.observations.length <
+              INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME *
+                INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE
+            )
+              pickPathDiagnostic.report.observations.push({
+                phase: 'diagnostic-error',
+                caseId,
+                pair,
+                candidateEntityId: null,
+                completedRenderRevision:
+                  captureFrameState?.completedRenderRevision || null,
+                renderSignature: signature,
+                status: 'diagnostic-error',
+                errorName: [
+                  'TypeError',
+                  'DeveloperError',
+                  'RangeError',
+                  'PickError',
+                ].includes(error?.name)
+                  ? error.name
+                  : 'Error',
+                pickCalls: 0,
+              });
+          }
+        }
         if (readiness.takePickAttempt()) {
           pickSearches++;
           pickDiagnostics = {
@@ -972,6 +1326,28 @@ async function runLayerLifetime(
       lifetime.status = 'failed';
       lifetime.teardownError ||= `${mode} layer lifetime failed teardown ownership checks.`;
     }
+    if (pickPathDiagnostic) {
+      const observer = pickPathDiagnostic.renderRevisionObserver;
+      const cleanupConfirmed = observer.dispose();
+      Object.assign(pickPathDiagnostic.report.renderRevisionObserver, {
+        available: observer.available,
+        cleanupConfirmed,
+        ...(observer.errorName ? { errorName: observer.errorName } : {}),
+      });
+      if (!cleanupConfirmed && pickPathDiagnostic.report.status === 'running')
+        pickPathDiagnostic.report.status = 'diagnostic-error';
+      if (pickPathDiagnostic.report.status === 'running')
+        pickPathDiagnostic.report.status = lifetime.status;
+      else if (lifetime.status === 'failed')
+        pickPathDiagnostic.report.status = 'failed';
+      pickPathDiagnostic.report.pickCalls = pickPathDiagnostic.budget.calls;
+      pickPathDiagnostic.envelope.pickCalls =
+        pickPathDiagnostic.envelope.lifetimes.reduce(
+          (sum, item) =>
+            sum + (Number.isSafeInteger(item.pickCalls) ? item.pickCalls : 0),
+          0,
+        );
+    }
     if (!report.lifetimes.includes(lifetime)) report.lifetimes.push(lifetime);
   }
   if (lifetime.teardownError) throw new Error(lifetime.teardownError);
@@ -997,6 +1373,34 @@ async function runDiagnostic() {
     comparisons: [],
     cleanup: { viewerDestroyed: false },
     error: null,
+    ...(pickPathDiagnosticEnabled
+      ? {
+          instrumentation: {
+            pickPathDiagnostic: {
+              schema: INFRASTRUCTURE_PICK_PATH_DIAGNOSTIC_SCHEMA,
+              enabled: true,
+              instrumented: true,
+              diagnosticOnly: true,
+              performanceAcceptanceEligible: false,
+              pickAcceptanceEligible: false,
+              scope:
+                'synchronous native scene picks in three selection-order controls; diagnostic calls never satisfy fixture pick gates',
+              frameWitnessSemantics:
+                'postRender count, camera position and clock only; scene.pick may advance internal preparation',
+              maxCandidatesPerLifetime:
+                INFRASTRUCTURE_PICK_PATH_MAX_CANDIDATES_PER_LIFETIME,
+              maxCompletedRenderRevisionsPerCandidate:
+                INFRASTRUCTURE_PICK_PATH_MAX_REVISIONS_PER_CANDIDATE,
+              maxPickCallsPerLifetime:
+                INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_LIFETIME,
+              maxPickCalls: INFRASTRUCTURE_PICK_PATH_MAX_CALLS_PER_REPORT,
+              pickCalls: 0,
+              status: 'running',
+              lifetimes: [],
+            },
+          },
+        }
+      : {}),
   };
   let viewer;
   try {
@@ -1072,10 +1476,26 @@ async function runDiagnostic() {
       }
     }
   }
+  const pickPathEnvelope = report.instrumentation?.pickPathDiagnostic;
+  if (pickPathEnvelope) {
+    pickPathEnvelope.status =
+      pickPathEnvelope.lifetimes.length === 2 &&
+      pickPathEnvelope.lifetimes.every(
+        (item) => item.status === 'passed' && item.observations.length > 0,
+      )
+        ? 'complete'
+        : 'partial-or-diagnostic-error';
+    pickPathEnvelope.pickCalls = pickPathEnvelope.lifetimes.reduce(
+      (sum, item) =>
+        sum + (Number.isSafeInteger(item.pickCalls) ? item.pickCalls : 0),
+      0,
+    );
+  }
   if (report.status === 'passed') {
     try {
       validateInfrastructureRuntimeReport(report, {
         expectedCommit: report.applicationCommit,
+        allowPickPathDiagnostic: pickPathDiagnosticEnabled,
       });
     } catch (error) {
       report.status = 'failed';

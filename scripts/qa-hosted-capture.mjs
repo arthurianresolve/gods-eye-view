@@ -12,6 +12,7 @@ import { runHostedSoakSession } from './performance/hostedSoakSession.mjs';
 import { validateInfrastructureCollectionReport } from './performance/infrastructureCollectionExperiment.mjs';
 import { validateInfrastructureRuntimeReport } from './performance/infrastructureRuntimeComparison.mjs';
 import { DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID } from './fixtures/infrastructureFixtureLayer.mjs';
+import { infrastructurePickPathDiagnosticOptionEnabled } from './fixtures/infrastructurePickPathDiagnostic.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -30,6 +31,8 @@ if (process.env.GITHUB_ACTIONS !== 'true')
   throw new Error(
     'Run this hosted-renderer probe in GitHub Actions. Local Chrome validation uses the visible fixture.',
   );
+const infrastructurePickPathDiagnostic =
+  infrastructurePickPathDiagnosticOptionEnabled(process.argv);
 const commit = process.env.GITHUB_SHA;
 let server;
 let serverError = null;
@@ -303,6 +306,8 @@ try {
         'layerId',
         DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
       );
+      if (infrastructurePickPathDiagnostic)
+        infrastructureUrl.searchParams.set('pick-path-diagnostic', '1');
       await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
@@ -327,6 +332,7 @@ try {
       validateInfrastructureRuntimeReport(report.infrastructureDatacenters, {
         expectedCommit: commit,
         expectedLayerId: DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
+        allowPickPathDiagnostic: infrastructurePickPathDiagnostic,
       });
     }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
@@ -598,6 +604,7 @@ try {
   if (
     process.argv.includes('--infrastructure') ||
     process.argv.includes('--infrastructure-datacenters') ||
+    infrastructurePickPathDiagnostic ||
     process.argv.includes('--vessels') ||
     process.argv.includes('--calibration') ||
     process.argv.includes('--import-point-entity') ||

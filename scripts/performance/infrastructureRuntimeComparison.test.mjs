@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { infrastructureFixtureLayer } from '../fixtures/infrastructureFixtureLayer.mjs';
+import { runInfrastructurePickPathControls } from '../fixtures/infrastructurePickPathDiagnostic.mjs';
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
@@ -228,6 +229,157 @@ function validReport(layerId = 'local-dams') {
     cleanup: { viewerDestroyed: true },
   };
 }
+
+function pickPathDiagnosticEnvelope() {
+  const makeObservation = () => {
+    const selected = { value: { id: 'prior' } };
+    const frameState = {
+      completedRenderRevision: 1,
+      cameraPosition: [1, 2, 3],
+      renderClockIso: renderClock.iso,
+    };
+    return {
+      ...runInfrastructurePickPathControls({
+        pick(kind) {
+          return { id: { id: `${kind}-owner` } };
+        },
+        resolve(picked) {
+          return {
+            ownerVerified: true,
+            entityId: picked.id.id,
+            sourceRecordId: `${picked.id.id}-source`,
+            selectionValue: picked.id,
+          };
+        },
+        getSelection: () => selected.value,
+        setSelection: (value) => {
+          selected.value = value;
+        },
+        candidateEntityId: 'candidate-1',
+        pointScreen: { x: 120, y: 200 },
+        stemScreen: { x: 120, y: 230 },
+        completedRenderRevision: 1,
+        renderSignature: `${'c'.repeat(64)}:${'d'.repeat(64)}`,
+        phase: 'initial-stable-render',
+        budget: { calls: 0, limit: 5 },
+        captureFrameState: frameState,
+        readFrameState: () => frameState,
+      }),
+      caseId: 'default-style',
+      pair: 0,
+      cameraPosition: [1, 2, 3],
+      renderClockIso: renderClock.iso,
+    };
+  };
+  return {
+    schema: 'gev-infrastructure-pick-path-diagnostic/v1',
+    enabled: true,
+    instrumented: true,
+    diagnosticOnly: true,
+    performanceAcceptanceEligible: false,
+    pickAcceptanceEligible: false,
+    scope:
+      'synchronous native scene picks in three selection-order controls; diagnostic calls never satisfy fixture pick gates',
+    frameWitnessSemantics:
+      'postRender count, camera position and clock only; scene.pick may advance internal preparation',
+    maxCandidatesPerLifetime: 2,
+    maxCompletedRenderRevisionsPerCandidate: 2,
+    maxPickCallsPerLifetime: 20,
+    maxPickCalls: 40,
+    pickCalls: 10,
+    status: 'complete',
+    lifetimes: [
+      {
+        mode: 'entities',
+        maxPickCalls: 20,
+        pickCalls: 5,
+        status: 'passed',
+        renderRevisionObserver: { available: true, cleanupConfirmed: true },
+        observations: [makeObservation()],
+      },
+      {
+        mode: 'primitive-collections',
+        maxPickCalls: 20,
+        pickCalls: 5,
+        status: 'passed',
+        renderRevisionObserver: { available: true, cleanupConfirmed: true },
+        observations: [makeObservation()],
+      },
+    ],
+  };
+}
+
+test('pick-path instrumentation is excluded from acceptance unless explicitly opted in', () => {
+  const report = validReport('local-datacenters');
+  report.instrumentation = {
+    pickPathDiagnostic: pickPathDiagnosticEnvelope(),
+  };
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /not acceptance eligible/,
+  );
+  assert.equal(
+    validateInfrastructureRuntimeReport(report, {
+      expectedCommit: commit,
+      expectedLayerId: 'local-datacenters',
+      allowPickPathDiagnostic: true,
+    }),
+    true,
+  );
+  const incomplete = structuredClone(report);
+  incomplete.instrumentation.pickPathDiagnostic.status =
+    'partial-or-diagnostic-error';
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(incomplete, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+        allowPickPathDiagnostic: true,
+      }),
+    /diagnostic is incomplete/,
+  );
+  const forged = structuredClone(report);
+  forged.instrumentation.pickPathDiagnostic.pickAcceptanceEligible = true;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(forged, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+        allowPickPathDiagnostic: true,
+      }),
+    /malformed/,
+  );
+});
+
+test('diagnostic option requires its evidence and rejects unknown instrumentation fields', () => {
+  const report = validReport('local-datacenters');
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+        allowPickPathDiagnostic: true,
+      }),
+    /evidence is missing/,
+  );
+  report.instrumentation = {
+    pickPathDiagnostic: pickPathDiagnosticEnvelope(),
+    payload: 'unexpected',
+  };
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+        allowPickPathDiagnostic: true,
+      }),
+    /not acceptance eligible/,
+  );
+});
 
 test('runtime report validates independent default and production lifetimes', () => {
   assert.equal(

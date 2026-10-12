@@ -4,6 +4,7 @@ import {
   DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
   infrastructureFixtureLayer,
 } from '../fixtures/infrastructureFixtureLayer.mjs';
+import { validateInfrastructurePickPathEnvelope } from '../fixtures/infrastructurePickPathDiagnostic.mjs';
 
 export const INFRASTRUCTURE_RUNTIME_SCHEMA =
   'gev-infrastructure-runtime-renderers/v4';
@@ -256,7 +257,7 @@ function validateLifetime(lifetime, report, layer) {
 
 export function validateInfrastructureRuntimeReport(
   report,
-  { expectedCommit, expectedLayerId } = {},
+  { expectedCommit, expectedLayerId, allowPickPathDiagnostic = false } = {},
 ) {
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
@@ -296,6 +297,26 @@ export function validateInfrastructureRuntimeReport(
     fail('Infrastructure observed renderer environment is missing or invalid.');
   if (report.status !== 'passed' || report.error || report.failedPhase)
     fail('Infrastructure runtime comparison did not pass.');
+  if (report.instrumentation !== undefined) {
+    if (
+      allowPickPathDiagnostic !== true ||
+      !report.instrumentation ||
+      Object.keys(report.instrumentation).length !== 1 ||
+      !Object.hasOwn(report.instrumentation, 'pickPathDiagnostic')
+    )
+      fail('Instrumented infrastructure reports are not acceptance eligible.');
+    try {
+      validateInfrastructurePickPathEnvelope(
+        report.instrumentation.pickPathDiagnostic,
+      );
+      if (report.instrumentation.pickPathDiagnostic.status !== 'complete')
+        fail('Requested infrastructure pick-path diagnostic is incomplete.');
+    } catch (error) {
+      fail(error?.message || 'Infrastructure pick-path diagnostic is invalid.');
+    }
+  } else if (allowPickPathDiagnostic === true) {
+    fail('Requested pick-path diagnostic evidence is missing.');
+  }
   if (
     !Number.isSafeInteger(report.source?.payloadBytes) ||
     report.source.payloadBytes <= 0 ||

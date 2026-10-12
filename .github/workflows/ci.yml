@@ -39,6 +39,7 @@ on:
             wind,
             infrastructure,
             infrastructure-datacenters,
+            infrastructure-datacenters-pick-path,
             vessels,
             calibration,
             traffic,
@@ -827,6 +828,8 @@ jobs:
             node scripts/performance/infrastructureBenefitComparison.mjs qa-artifacts/datacenter-benefit --layer-id local-datacenters
           elif [ "$DIAGNOSTIC" = "infrastructure-datacenters" ]; then
             node scripts/qa-hosted-capture.mjs --infrastructure-datacenters
+          elif [ "$DIAGNOSTIC" = "infrastructure-datacenters-pick-path" ]; then
+            node scripts/qa-hosted-capture.mjs --infrastructure-datacenters --infrastructure-pick-path-diagnostic
           else
             node scripts/qa-hosted-capture.mjs --"$DIAGNOSTIC"
           fi
@@ -839,7 +842,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Preserve datacenter runtime evidence
-        if: always() && inputs.renderer_diagnostic == 'infrastructure-datacenters'
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure-datacenters' || inputs.renderer_diagnostic == 'infrastructure-datacenters-pick-path')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: infrastructure-datacenters-${{ github.run_id }}

@@ -60,6 +60,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/windFrameProbe.test.mjs',
   'scripts/performance/infrastructureCollectionExperiment.test.mjs',
   'scripts/performance/infrastructureRuntimeComparison.test.mjs',
+  'scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs',
   'scripts/performance/infrastructureBenefitComparison.test.mjs',
   'scripts/fixtures/infrastructureNativePickOwnership.test.mjs',
   'scripts/fixtures/infrastructureFixtureCamera.test.mjs',
