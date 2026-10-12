@@ -105,3 +105,29 @@ Desktop occlusion remains unavailable. Next work must attribute the remaining
 minimal-WebGL scheduling stall separately from the hosted HUD depth-read cost.
 These diagnostics do not replace matched performance runs or the sixty-minute
 retention soak.
+
+## Delayed-start diagnostic: initial arm
+
+Fixture commit `6087231ae1482ff953b3b75bc0e91f722547809e` adds an optional
+ten-second delay before canvas/context/program setup. The observation itself
+remains five seconds. Preparation conditions, delay and context-setup time are
+reported separately; ten focused tests, formatting and package boundaries pass.
+
+The [immediate A1 report](delay-a1-immediate.json), downloaded unchanged, has
+SHA-256 `80c27c787aebe487d2afd4ebfa8c38780020c28761d1161089c3307d2d952d9b`.
+At 2026-10-12T01:16:43.357Z it records 40 frames over 5,002.1 ms, a 1,000 ms
+maximum RAF gap, and 250 heartbeat ticks with a 22.7 ms maximum timer gap.
+The renderer remains Intel UHD 620 / ANGLE D3D11, with a 640x360 buffer,
+5,000 points, antialiasing and preservation enabled. The full canvas is inside
+the 894x585 viewport at both endpoints; focus and visibility stay unchanged,
+with no context loss. Context setup takes 12.1 ms. No local builds or tests
+overlap this measurement.
+
+The run uses a coordinate click followed immediately by the required browser
+state observation, then no browser calls during the remaining measurement.
+The planned delayed arm tests whether that immediate observation overlaps
+frame delivery; this is a hypothesis, not an established cause. The report
+download succeeded, but the browser-control connection subsequently became
+unattached before the delayed arm could run. A1 is retained; the comparison,
+physical foreground/occlusion verification, capture acceptance and hardware
+soak remain pending. This short diagnostic does not justify a runtime change.

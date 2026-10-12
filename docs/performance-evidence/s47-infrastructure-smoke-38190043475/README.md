@@ -7,3 +7,9 @@ The shared comparison-readiness check also reports incomplete diagnostic coverag
 The new failure envelope successfully preserves a bounded, redacted projection of the completed capture. It explicitly marks truncation: some nested condition and contract fields are omitted, so this projection supports diagnosis but cannot independently revalidate the complete original capture. The report remains failed.
 
 This is a short SwiftShader diagnostic with no hardware or performance acceptance.
+
+[Standard CI 38190045446](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38190045446)
+passes all seven normal jobs on this same `b3f4386e` revision: Node 24/26,
+Windows onboarding, three-platform installation/recovery and browser journeys.
+The [job record](standard-ci.json) retains exact outcomes. Optional jobs were
+skipped; this success does not override the separate failed performance smoke.
