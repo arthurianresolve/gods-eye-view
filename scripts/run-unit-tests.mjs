@@ -8,6 +8,7 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
   'src/overlays/worldOverlayAllocation.test.mjs',
 ]);
 const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
+  'scripts/accessibilityFocusDiagnostics.test.mjs',
   'scripts/performance/cesiumDisabledInputInertia.test.mjs',
   'scripts/performance/cesiumTerrainCollisionTransform.test.mjs',
   'scripts/apply-cesium-patches.test.mjs',
