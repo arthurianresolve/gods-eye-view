@@ -576,7 +576,7 @@ test('Austin rendering contract matches observed viewer defaults and labels chan
           captures,
         }),
       new RegExp(
-        `Austin ${sample.scenario} run ${sample.run} before visual property ${property} differs`,
+        `${sample.scenario} run ${sample.run}: Austin before visual property ${property} differs`,
       ),
       `${property} mutation must fail with its sample/boundary/property label`,
     );
@@ -600,7 +600,7 @@ test('Austin capture setting copies stay bound to the native visual observations
         ...input,
         captures,
       }),
-    /Austin idle run 1 capture settings before differ from the native before observation/,
+    /idle run 1: Austin capture settings before differ from the native before observation/,
   );
 });
 
