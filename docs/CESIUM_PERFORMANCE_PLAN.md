@@ -8,8 +8,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `111382fb0ff8d3f64bb4cff2a87177beb4eecb7b`.
-[All seven standard jobs pass](performance-evidence/s47-common-renderer-evidence-38219550027/standard-ci-dev-38218701144.json),
+Recorded integration checkpoint: `8d785290510ab86b1b19d99529ef66b2cad73eb2`.
+[All seven standard jobs pass](performance-evidence/s47-renderer-cleanup-lifetime-38222535286/standard-ci-dev-38221816254.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -81,6 +81,15 @@ confirms that removal in 889.862 ms, but final document cleanup itself now excee
 the unchanged one-second deadline and completes late. Candidate measurements are
 not reached. Browser scheduling delay versus cleanup execution remains unmeasured;
 the correction stays isolated and the complete cleanup gate remains failed.
+
+A [fresh Windows Chrome tab](performance-evidence/windows-webgl-current-window-20261012/README.md)
+restores screenshot delivery at an observed 894 x 529 viewport, while the old
+fixture reported only 83 CSS pixels of document width. The standalone WebGL
+diagnostic still delivers just 13 frames in five seconds (maximum gap 1,016.8 ms),
+versus 300 callbacks and a 24.7-ms maximum gap for the no-WebGL control. Focus,
+visibility and canvas intersection remain stable; desktop occlusion and system
+load are unverified. This preserves fresh failure evidence at fixture `a92c6921`,
+not current-dev or hardware acceptance, and does not establish a driver cause.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. The dam and cable collection experiments are now
