@@ -55,6 +55,16 @@ six stem misses, with selection restored. Its last image contains only the
 point, despite declared geometry/data-source readiness. The prior failed run
 eventually captured visible stems. No later-frame control completed before
 the existing deadline, leaving actual stem materialization/readiness unresolved.
+The [current-primitive diagnostic at `7a169618`](performance-evidence/s54-primitive-readiness-38212601518/README.md)
+passes 48 focused tests and completes both renderer lifetimes in its hosted run;
+the prior readiness failure does not recur, so its post-failure observer remains
+untriggered. The run instead exposes a duplicate fixture comparator that rejects
+expected renderer-specific pick metadata. Repair `24bebb1b` uses the existing
+shared identity comparator and passes 15 focused tests. Independent decoding of
+all twenty PNGs finds nine identical pairs and a 16-pixel difference in the first
+camera-change pair. Replaying the raw report with the repaired comparator still
+rejects that image difference. The visual cause remains unresolved; no unchanged
+rerun, performance acceptance or production promotion follows.
 The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit-38205683313/README.md)
 completes twenty runs with verified native owners and twenty byte-identical
 image pairs. Whole-activation median improves 22.12% and enabled JS heap
