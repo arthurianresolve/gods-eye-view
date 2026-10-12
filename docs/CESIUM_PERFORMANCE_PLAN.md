@@ -5,9 +5,15 @@ preserves the newer camera/prewarm and streamed-map ownership fixes. Root full
 Node 24 validation passes 7,413 checks with zero failures and ten existing skips,
 including all fourteen allocation gates. That integration exposed and repaired
 an eager Cesium import before invalid CLI argument rejection; the five-second
-limit and fixture timestamp semantics are unchanged. Exact-commit hosted
-validation remains pending on the isolated QA branch. S48 and hardware
-acceptance remain partial.
+limit and fixture timestamp semantics are unchanged. Hosted Node 24/26 at
+`73018ec5` then expose a test assertion comparing different timing origins;
+the repair compares timeout and late acknowledgement from the same stage
+origin and passes 36 focused checks. Production deadlines are unchanged.
+The separate [capture diagnostic](performance-evidence/s48-current-dev-capture/README.md)
+finishes four samples and three complete CPU profiles, then fails at the outer
+180-second child deadline before tracking warmup can finish. Final cleanup and
+post-capture byte verification are incomplete. No performance gain or hardware
+acceptance is claimed; S47/S48 remain partial and promotion awaits integration.
 
 Latest isolated S48 fixture-release ownership repair at `947f1e12` passes
 117 focused tests and independent original/candidate actual-CLI checks.

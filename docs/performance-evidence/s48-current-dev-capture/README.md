@@ -19,9 +19,11 @@ request handling, a blocked hook cancelled before target closure, and a hook
 exception reported with its phase. Superseded hooks cannot send late commands.
 
 Implementation and automated results are recorded independently from browser
-and hardware acceptance. The full Node 24 suite passes; exact-commit hosted integration is still
-required before promotion. No complete capture,
-performance comparison, Windows soak or final-candidate pass is claimed.
+and hardware acceptance. The full local Node 24 suite passes. Hosted Node 24/26
+then found a timing assertion error; its repair requires fresh integration
+before promotion. The separate hosted capture failed at its outer process
+deadline after four samples. No complete capture, performance comparison,
+Windows soak or final-candidate pass is claimed.
 
 ## Invalid-input startup repair
 
@@ -60,3 +62,65 @@ preserved separately; the earlier failed run is not reclassified.
 
 Full logs use gzip with verified byte-identical decompression; the manifest records
 both compressed and original byte counts and SHA-256 hashes.
+
+## Hosted timing assertion repair
+
+[Standard CI 38270548092](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38270548092)
+tests `73018ec58d578401789de49ecb29cfec41a8bf72`. Both Node versions fail the
+same assertion in `pairedRendererExperiment.test.mjs`: a late document-cleanup
+acknowledgement was required to take at least the entire five-millisecond
+cleanup budget. That budget starts before the page-evaluation stage, while
+`lateHostReceiptElapsedMs` starts at the stage. Comparing these different
+origins is invalid; the Linux timer callback can run before the stage itself
+has accumulated five milliseconds.
+
+The test now compares the late receipt with `document.elapsedMs`, recorded at
+timeout from the same stage origin. It rejects missing, zero and earlier
+receipt values. Late success still leaves the cleanup failed and its timeout
+unchanged. No production deadline, cleanup behavior or acceptance gate changes.
+Windows onboarding and Windows/macOS/Linux recovery all pass in the original
+run; the Node failures remain failures.
+Root's independent focused rerun passes 36/36 across the renderer experiment,
+actual capture-CLI retirement integration and failure-report suites.
+
+## Current-dev capture result
+
+[Diagnostic 38270552137](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38270552137)
+also tests exact application and harness revision `73018ec5`. It observes
+2,500 aircraft, 4,362 datacenters and 716 dams, Manual/Dense at 75%, a 1440 by
+900 drawing buffer, and Chrome 152 on Linux/SwiftShader. It is supplemental
+software-renderer evidence, not physical Windows validation.
+
+Four samples finish: two idle and two scripted-motion. The bounded failure
+report retains the last two samples, while all three requested CPU profiles
+are saved separately and complete. The 180-second outer child deadline then
+initiates owned-process shutdown during the first tracking warmup. That inner
+boundary reports `Target closed` after 1,889.585 ms, before its six-second
+deadline. This is not independent evidence of a tracking or GPU fault. All
+six earlier fixture releases and renderer cleanups are confirmed; final
+document cleanup cannot be confirmed after the connection closes. The overall
+capture remains failed, and post-capture served-byte verification is absent.
+
+The [independent replay](hosted-38270552137/review.mjs) verifies report/profile
+hashes against their producer records and recomputes statistical leaf weights
+from raw sample IDs and deltas. A changed-report-byte negative control is
+rejected. [Raw evidence and recomputed totals](hosted-38270552137/review.json)
+preserve the failed outcome and exact revision.
+
+| Profile | Sampled deltas | `getProgramParameter` | `readPixels` | `bufferData` |
+| --- | ---: | ---: | ---: | ---: |
+| Idle 1 | 20,539.144 ms | 6,914.735 ms | 3,779.038 ms | 1,751.790 ms |
+| Idle 2 | 18,667.380 ms | 6,974.395 ms | 4,173.585 ms | 481.672 ms |
+| Motion 1 | 24,085.783 ms | 7,475.291 ms | 11,214.592 ms | 483.655 ms |
+
+These are sampled main-thread weights, including native waits, not measured
+GPU durations or precise CPU execution times. The profiles include warmup;
+they cannot distinguish steady-state from initial shader work by their totals.
+Caller observations show orientation and prewarm picks at different completed
+render revisions. They do not justify a cross-frame pick cache without
+proving equivalent scene inputs and preserving picking accuracy.
+
+Next work must isolate the remaining workload and distinguish initial
+shader/geometry work from repeated work, with existing visual settings intact.
+No unchanged diagnostic retry or timeout increase is scheduled. S47, S48 and
+hardware/performance acceptance remain partial.

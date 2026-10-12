@@ -1211,6 +1211,13 @@ test('late page cleanup retains bounded page timing without converting the host 
   assert.equal(cleanup.document.errorKind, 'operation-timeout');
   assert.equal(cleanup.document.lateCompletion, 'pending');
   assert.equal(typeof releaseAcknowledgement, 'function');
+  // Timeout and late receipt are both measured from the page-evaluation stage
+  // start, so compare them directly instead of comparing the receipt to the
+  // overall cleanup timeout (which starts slightly earlier).
+  assert.match(
+    cleanup.document.lateHostReceiptScope,
+    /stage start to acknowledgement receipt/,
+  );
   releaseAcknowledgement();
   await new Promise((resolve) => setImmediate(resolve));
 
@@ -1227,7 +1234,34 @@ test('late page cleanup retains bounded page timing without converting the host 
     cleanup.document.lateOutcome.pageExecutionElapsedMs,
     pageOutcome.pageExecutionElapsedMs,
   );
-  assert.equal(cleanup.document.lateHostReceiptElapsedMs >= 5, true);
+  const hasLateReceiptAfterTimeout = (stage) =>
+    stage?.status === 'timeout' &&
+    Number.isFinite(stage.elapsedMs) &&
+    stage.elapsedMs >= 0 &&
+    Number.isFinite(stage.lateHostReceiptElapsedMs) &&
+    stage.lateHostReceiptElapsedMs >= stage.elapsedMs;
+  assert.equal(hasLateReceiptAfterTimeout(cleanup.document), true);
+  assert.equal(
+    hasLateReceiptAfterTimeout({
+      ...cleanup.document,
+      lateHostReceiptElapsedMs: null,
+    }),
+    false,
+  );
+  assert.equal(
+    hasLateReceiptAfterTimeout({
+      ...cleanup.document,
+      lateHostReceiptElapsedMs: 0,
+    }),
+    false,
+  );
+  assert.equal(
+    hasLateReceiptAfterTimeout({
+      ...cleanup.document,
+      lateHostReceiptElapsedMs: Math.max(0, cleanup.document.elapsedMs - 0.001),
+    }),
+    false,
+  );
   assert.equal(cleanup.document.lateOutcome.listenerCount, 2);
   assert.equal(cleanup.document.lateOutcome.listenerRemovalAttemptedCount, 2);
   assert.equal(cleanup.document.lateOutcome.listenerRemovalConfirmedCount, 2);
