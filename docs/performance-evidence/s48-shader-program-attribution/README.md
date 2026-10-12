@@ -1,6 +1,6 @@
 # S48 shader-program lifecycle attribution
 
-Code is implemented on an isolated QA branch based on integrated `dev` at `5bbcd0de`. Root independent focused validation and all seven standard CI jobs pass at `3384b8bd`. The retention repair at `e54eaded` passes 159 independent local checks and preserves hash-bound per-parameter data in a fresh failed hosted capture. Six complete contexts show 143 first-use link checks and no repeated same-parameter query; the seventh reached context has unavailable data. Standard CI for this repair is still running. This packet does not change production rendering defaults or establish a performance improvement.
+Code is implemented on an isolated QA branch based on integrated `dev` at `5bbcd0de`. Root independent focused validation and all seven standard CI jobs pass at `3384b8bd`. The retention repair at `e54eaded` passes 159 independent local checks and preserves hash-bound per-parameter data in a fresh failed hosted capture. Six complete contexts show 143 first-use link checks and no repeated same-parameter query; the seventh reached context has unavailable data. All seven standard CI jobs pass at exact `e54eaded`. This packet does not change production rendering defaults or establish a performance improvement.
 
 ## Evidence motivating the diagnostic
 
@@ -86,3 +86,7 @@ Every observed program is created and linked once, with one query of each parame
 Preserve the evidence and investigate program initialization/compilation and document activation costs before changing runtime behavior. Any future scheduling or program-reuse experiment must preserve shader correctness, populations, visuals and actual warmup/measurement boundaries. Do not skip link validation or widen deadlines to turn this failed capture into acceptance.
 
 [Raw artifacts and independent replay](hosted-38293251113/review.json) retain the failed report and partial checkpoint. Run `node docs/performance-evidence/s48-shader-program-attribution/hosted-38293251113/review.mjs` to verify identities and recompute counts/timings without importing the implementation under test. The uploaded canonical reference differs in filename from the producer reference; replay labels and verifies its reconstruction separately rather than claiming it is an uploaded original.
+
+## Standard integration of the retention repair
+
+[Standard CI 38293247484](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38293247484) passes all seven required jobs at exact `e54eaded`: Node 24/26, Windows onboarding, installation/recovery on Windows, Linux and macOS, and the browser journey gate. [Preserved metadata](standard-38293247484.json) records the tested revision and each job. Subsequent changes in this packet are documentation and preserved evidence only; the tested runtime and harness are unchanged. This validates integration of the optional diagnostic and bounded retention repair. It does not turn failed capture 38293251113 into a pass or satisfy S48/S60 hardware acceptance.
