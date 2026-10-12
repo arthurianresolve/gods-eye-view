@@ -606,6 +606,7 @@ export function createObservedAustinOperatingComparisonContract({
     assert.ok(
       typeof sample.documentId === 'string' && sample.documentId.length > 0,
     );
+    const sampleLabel = `${sample.scenario} run ${sample.run}: Austin`;
     const clock = sample.austinOperatingClock;
     assert.equal(clock?.schema, 'gev-austin-operating-capture-clock/v1');
     assert.equal(clock.fixedHarnessTime, fixture.fixedTime);
@@ -799,6 +800,7 @@ export function createObservedAustinOperatingComparisonContract({
     assert.equal(
       sampleDelivery.alprTileCoverage.fullRouteCoverageComplete,
       true,
+      `${sampleLabel} required ALPR route coverage is incomplete`,
     );
     for (const id of AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS) {
       const asset = fixture.assets.find((row) => row.id === id);
@@ -866,14 +868,14 @@ export function createObservedAustinOperatingComparisonContract({
     ];
     for (const [boundaryIndex, layers] of layerSnapshots.entries()) {
       const boundaryName = boundaryIndex === 0 ? 'before' : 'after';
-      const sampleLabel = `Austin ${sample.scenario} run ${sample.run} ${boundaryName}`;
+      const boundaryLabel = `${sampleLabel} ${boundaryName}`;
       assert.deepEqual(
         layers?.map((row) => row.id),
         Object.keys(AUSTIN_OPERATING_LAYER_COUNTS),
-        `${sampleLabel} required layer identities differ`,
+        `${boundaryLabel} required layer identities differ`,
       );
       for (const layer of layers) {
-        const layerLabel = `${sampleLabel} required layer ${layer.id}`;
+        const layerLabel = `${boundaryLabel} required layer ${layer.id}`;
         assert.equal(layer.enabled, true, `${layerLabel} must be enabled`);
         assert.equal(
           layer.expectedSourceCatalogCount,
@@ -1018,7 +1020,7 @@ export function createObservedAustinOperatingComparisonContract({
       ['before', visualBefore],
       ['after', visualAfter],
     ]) {
-      const settingLabel = `Austin ${sample.scenario} run ${sample.run} ${boundaryName} visual property`;
+      const settingLabel = `${sampleLabel} ${boundaryName} visual property`;
       assert.equal(
         observedSettings?.qualityMode,
         AUSTIN_OPERATING_VISUAL_STATE.qualityMode,
@@ -1046,50 +1048,54 @@ export function createObservedAustinOperatingComparisonContract({
     assert.deepEqual(
       sample.settings?.before,
       visualBefore,
-      `Austin ${sample.scenario} run ${sample.run} capture settings before differ from the native before observation`,
+      `${sampleLabel} capture settings before differ from the native before observation`,
     );
     assert.deepEqual(
       sample.settings?.after,
       visualAfter,
-      `Austin ${sample.scenario} run ${sample.run} capture settings after differ from the native after observation`,
+      `${sampleLabel} capture settings after differ from the native after observation`,
     );
     assert.deepEqual(
       visualBefore,
       visualAfter,
-      `Austin ${sample.scenario} run ${sample.run} visual settings changed between boundaries`,
+      `${sampleLabel} visual settings changed between boundaries`,
     );
     assert.deepEqual(
       sample.settings?.before,
       sample.settings?.after,
-      `Austin ${sample.scenario} run ${sample.run} capture settings changed between boundaries`,
+      `${sampleLabel} capture settings changed between boundaries`,
     );
     assert.equal(
       sample.settings?.before?.qualityMode,
       AUSTIN_OPERATING_VISUAL_STATE.qualityMode,
-      `Austin ${sample.scenario} run ${sample.run} capture settings before qualityMode differs`,
+      `${sampleLabel} capture settings before qualityMode differs`,
     );
     assert.equal(
       sample.settings?.before?.densityPct,
       AUSTIN_OPERATING_VISUAL_STATE.densityPct,
-      `Austin ${sample.scenario} run ${sample.run} capture settings before densityPct differs`,
+      `${sampleLabel} capture settings before densityPct differs`,
     );
     assert.equal(
       sample.settings?.before?.detectionMode,
       AUSTIN_OPERATING_VISUAL_STATE.detectionMode,
-      `Austin ${sample.scenario} run ${sample.run} capture settings before detectionMode differs`,
+      `${sampleLabel} capture settings before detectionMode differs`,
     );
     assert.deepEqual(
       sample.conditions?.before?.settings,
       sample.settings?.before,
-      `Austin ${sample.scenario} run ${sample.run} before condition settings differ from capture settings`,
+      `${sampleLabel} before condition settings differ from capture settings`,
     );
     assert.deepEqual(
       sample.conditions?.after?.settings,
       sample.settings?.after,
-      `Austin ${sample.scenario} run ${sample.run} after condition settings differ from capture settings`,
+      `${sampleLabel} after condition settings differ from capture settings`,
     );
     if (referenceSettings)
-      assert.deepEqual(sample.settings.before, referenceSettings);
+      assert.deepEqual(
+        sample.settings.before,
+        referenceSettings,
+        `${sampleLabel} visual settings differ from the first capture`,
+      );
     else referenceSettings = structuredClone(sample.settings.before);
   }
   assert.deepEqual(
@@ -1123,10 +1129,12 @@ export function createObservedAustinOperatingComparisonContract({
   assert.equal(
     fixtureDelivery.sourceProvenance.radio.includes('synthetic'),
     true,
+    'Austin radio fixture provenance must be labeled synthetic',
   );
   assert.equal(
     fixtureDelivery.sourceProvenance.installations.includes('synthetic'),
     true,
+    'Austin installation fixture provenance must be labeled synthetic',
   );
   assert.ok(
     Number.isInteger(environment.viewport?.width) &&
