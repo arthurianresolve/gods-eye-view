@@ -140,6 +140,8 @@ const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
 let austinOperatingModule = null;
 let austinOperatingWorkload = null;
+let austinSatelliteEpochModule = null;
+let austinSatelliteEpochReference = null;
 const providerFixtureTime = option(
   '--provider-fixture-time',
   '2026-10-08T12:00:00.000Z',
@@ -1102,6 +1104,12 @@ if (austinOperatingWorkloadSelected) {
     austinOperatingModule.createAustinOperatingWorkloadFixture(
       providerFixtureTime,
     );
+  austinSatelliteEpochModule =
+    await import('./performance/austinSatelliteSampledEpoch.mjs');
+  austinSatelliteEpochReference =
+    austinSatelliteEpochModule.loadAustinSatelliteEpochReference(
+      austinOperatingWorkload,
+    );
   failureProgress.fixture = austinOperatingWorkload;
 }
 
@@ -1375,6 +1383,7 @@ function observeWeatherEffectsRuntimeState() {
 async function observeAustinOperatingRuntimeState(
   selectedLayerIds,
   expectedSourceCounts,
+  includeSatellitePositionRecords = false,
 ) {
   const app = window.__godsEyeView;
   const manager = app?.dataManager;
@@ -1414,6 +1423,12 @@ async function observeAustinOperatingRuntimeState(
       truncated: rows.length > 1000,
     };
   };
+  const satelliteModule = layers.get('satellites')?.module;
+  const satellitePositionRecords =
+    satelliteModule?.getAllPositions?.(1000) ?? null;
+  const satelliteRecord = Array.isArray(satellitePositionRecords)
+    ? (satellitePositionRecords.find((record) => record.id === 25544) ?? null)
+    : null;
   const selectedLayers = await Promise.all(
     selectedLayerIds.map(async (id) => {
       const entry = layers.get(id);
@@ -1423,7 +1438,7 @@ async function observeAustinOperatingRuntimeState(
       let identityProjection = null;
       let positionProjection = null;
       if (id === 'satellites') {
-        sourceRows = module?.getAllPositions?.(1000) ?? null;
+        sourceRows = satellitePositionRecords;
         identityProjection = (row) => String(row.id);
         positionProjection = (row) =>
           `${row.id}|${row.latitude}|${row.longitude}|${row.altitudeM}`;
@@ -1496,10 +1511,6 @@ async function observeAustinOperatingRuntimeState(
       };
     }),
   );
-  const satellite = layers.get('satellites')?.module;
-  const satelliteRecord =
-    satellite?.getAllPositions?.(300)?.find((record) => record.id === 25544) ??
-    null;
   const clock = viewer.clock?.currentTime;
   return {
     wallClockMs: Date.now(),
@@ -1522,6 +1533,18 @@ async function observeAustinOperatingRuntimeState(
           altitudeM: satelliteRecord.altitudeM,
         }
       : null,
+    ...(includeSatellitePositionRecords
+      ? {
+          satellitePositionRecords: Array.isArray(satellitePositionRecords)
+            ? satellitePositionRecords.slice(0, 1000).map((record) => ({
+                id: record.id,
+                longitude: record.longitude,
+                latitude: record.latitude,
+                altitudeM: record.altitudeM,
+              }))
+            : null,
+        }
+      : {}),
   };
 }
 
@@ -4007,6 +4030,7 @@ try {
             observeAustinOperatingRuntimeState,
             austinOperatingWorkload.selectedLayerIds,
             austinOperatingWorkload.expectedLayerCounts,
+            true,
           )
         : null;
       if (austinOperatingWorkload)
@@ -4500,6 +4524,7 @@ try {
             observeAustinOperatingRuntimeState,
             austinOperatingWorkload.selectedLayerIds,
             austinOperatingWorkload.expectedLayerCounts,
+            true,
           )
         : null;
       if (austinOperatingWorkload) {
@@ -4529,6 +4554,28 @@ try {
           ),
         });
         sample.fixtureDelivery = fixtureDelivery;
+        const satelliteSampledEpochs = {
+          warmupHeld:
+            austinSatelliteEpochModule.deriveAustinSatelliteSampledEpoch({
+              reference: austinSatelliteEpochReference,
+              records: austinStateBefore?.satellitePositionRecords,
+              boundaryEpochMs: austinStateBefore?.phasedClock?.epochMs,
+              boundary: 'warmup-held',
+              documentRole: activeDocumentRole,
+              documentId: activeDocumentId,
+              runOrdinal: phaseRunOrdinal,
+            }),
+          measurementComplete:
+            austinSatelliteEpochModule.deriveAustinSatelliteSampledEpoch({
+              reference: austinSatelliteEpochReference,
+              records: austinStateAfter?.satellitePositionRecords,
+              boundaryEpochMs: austinStateAfter?.phasedClock?.epochMs,
+              boundary: 'measurement-complete',
+              documentRole: activeDocumentRole,
+              documentId: activeDocumentId,
+              runOrdinal: phaseRunOrdinal,
+            }),
+        };
         sample.austinOperatingClock = {
           schema: 'gev-austin-operating-capture-clock/v1',
           fixedHarnessTime: austinOperatingWorkload.fixedTime,
@@ -4555,7 +4602,7 @@ try {
           windSourceAgeBeforeMs: austinStateBefore?.windSourceAgeMs ?? null,
           windSourceAgeAfterMs: austinStateAfter?.windSourceAgeMs ?? null,
           satelliteWitnessBefore: normalizeAustinSatelliteWitness(
-            fixtureMeasurementStart.satelliteWitness,
+            austinStateBefore?.satelliteWitness,
           ),
           satelliteWitnessAfter: austinStateAfter?.satelliteWitness ?? null,
           selectedLayersBefore: austinStateBefore?.selectedLayers ?? null,
@@ -4564,9 +4611,10 @@ try {
           visualSettingsAfter: sceneAfter.settings,
           cameraStart: sceneBefore.camera,
           cameraEnd: sceneAfter.camera,
+          satelliteSampledEpochs,
           fixtureDelivery,
         };
-        const beforeWitness = fixtureMeasurementStart.satelliteWitness;
+        const beforeWitness = austinStateBefore?.satelliteWitness;
         const afterWitness = austinStateAfter?.satelliteWitness;
         const windBefore = austinStateBefore?.selectedLayers?.find(
           (layer) => layer.id === 'wind',

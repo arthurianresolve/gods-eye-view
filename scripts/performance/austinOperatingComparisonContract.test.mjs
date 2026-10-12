@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { twoline2satrec } from 'satellite.js';
+import { createOrbits } from '../../src/layers/satellites/orbits.js';
 import {
   AUSTIN_OPERATING_FIXED_TIME,
   AUSTIN_OPERATING_LAYER_COUNTS,
@@ -21,6 +23,10 @@ import {
 } from './austinOperatingPopulationEvidence.mjs';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import {
+  deriveAustinSatelliteSampledEpoch,
+  loadAustinSatelliteEpochReference,
+} from './austinSatelliteSampledEpoch.mjs';
+import {
   baselineCommit,
   candidateCommit,
   makeReport,
@@ -28,6 +34,7 @@ import {
 
 const APP = 'https://fixture.example';
 const FIXED_MS = Date.parse(AUSTIN_OPERATING_FIXED_TIME);
+const ORBITS = createOrbits({ state: {}, services: {}, parts: {}, source: {} });
 const hashIds = (ids) =>
   createHash('sha256')
     .update(ids.slice().sort().join('\n'), 'utf8')
@@ -162,6 +169,7 @@ function cameraPose() {
 
 async function makeObservedPairInput({ responseVariant = true } = {}) {
   const fixture = createAustinOperatingWorkloadFixture();
+  const satelliteReference = loadAustinSatelliteEpochReference(fixture);
   const captures = [];
   const scenarios = ['idle', 'scripted-motion'];
   const runsPerScenario = 5;
@@ -204,12 +212,55 @@ async function makeObservedPairInput({ responseVariant = true } = {}) {
     });
     const before = FIXED_MS + warmupMs;
     const after = before + durationPerSampleMs;
-    const position = (version) => ({
-      noradId: 25544,
-      latitude: 30 + version / 1000,
-      longitude: -97.7 + version / 1000,
-      altitudeM: 400_000,
-    });
+    const positionRowsAt = (epochMs) =>
+      [...satelliteReference.catalog.values()].map((entry) => {
+        const position = ORBITS.propagatePosition(
+          twoline2satrec(entry.line1, entry.line2),
+          new Date(epochMs),
+        );
+        return {
+          id: entry.id,
+          longitude: position.longitude,
+          latitude: position.latitude,
+          altitudeM: position.altitude,
+        };
+      });
+    const rawSatelliteRowsBefore = positionRowsAt(before - 500 - ordinal);
+    const rawSatelliteRowsAfter = positionRowsAt(after - 300 - ordinal);
+    const sampledEpochOptions = {
+      reference: satelliteReference,
+      documentRole: `provider-sample-${ordinal}`,
+      documentId: `provider-document-${ordinal}`,
+      runOrdinal: 1,
+    };
+    const satelliteSampledEpochs = {
+      warmupHeld: deriveAustinSatelliteSampledEpoch({
+        ...sampledEpochOptions,
+        records: rawSatelliteRowsBefore,
+        boundaryEpochMs: before,
+        boundary: 'warmup-held',
+      }),
+      measurementComplete: deriveAustinSatelliteSampledEpoch({
+        ...sampledEpochOptions,
+        records: rawSatelliteRowsAfter,
+        boundaryEpochMs: after,
+        boundary: 'measurement-complete',
+      }),
+    };
+    const satelliteLayerBefore = beforeLayers.find(
+      (layer) => layer.id === 'satellites',
+    );
+    const satelliteLayerAfter = afterLayers.find(
+      (layer) => layer.id === 'satellites',
+    );
+    satelliteLayerBefore.sourcePopulation.sha256 =
+      satelliteSampledEpochs.warmupHeld.identitySha256;
+    satelliteLayerBefore.sourcePopulation.positionSha256 =
+      satelliteSampledEpochs.warmupHeld.positionSha256;
+    satelliteLayerAfter.sourcePopulation.sha256 =
+      satelliteSampledEpochs.measurementComplete.identitySha256;
+    satelliteLayerAfter.sourcePopulation.positionSha256 =
+      satelliteSampledEpochs.measurementComplete.positionSha256;
     const pose = cameraPose();
     const cameraPath = {
       id: scenario === 'idle' ? 'parked-v1' : 'elapsed-move-right-v1',
@@ -258,10 +309,12 @@ async function makeObservedPairInput({ responseVariant = true } = {}) {
       windSourceAgeBeforeMs: before - Date.parse(fixture.windSourceTime),
       windSourceAgeAfterMs: after - Date.parse(fixture.windSourceTime),
       satelliteWitnessBefore: normalizeAustinSatelliteWitness({
-        id: 25544,
-        ...position(ordinal),
+        ...rawSatelliteRowsBefore.find((row) => row.id === 25544),
       }),
-      satelliteWitnessAfter: position(ordinal + 1),
+      satelliteWitnessAfter: normalizeAustinSatelliteWitness({
+        ...rawSatelliteRowsAfter.find((row) => row.id === 25544),
+      }),
+      satelliteSampledEpochs,
       selectedLayersBefore: beforeLayers,
       selectedLayersAfter: afterLayers,
       visualSettingsBefore: settings,
@@ -440,6 +493,10 @@ function asPairedReport(input, commit, p95Offset = 0) {
 
 test('Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence', async () => {
   const input = await makeObservedPairInput();
+  assert.ok(
+    Buffer.byteLength(JSON.stringify(input.captures), 'utf8') < 8 * 1024 * 1024,
+    'raw sample rows fit the existing bounded capture artifact limit',
+  );
   assert.equal(input.contract.objectiveScenarios.length, 0);
   assert.equal(input.contract.fixtureDelivery.sampleDocuments.length, 10);
   assert.notDeepEqual(
@@ -588,5 +645,80 @@ test('Austin paired report accepts actual fixture delivery with variable counter
         },
       }),
     /not acknowledged by its delivered response variants/,
+  );
+});
+
+test('paired Austin validation recomputes raw satellite rows against the pinned TLEs', async () => {
+  const baselineInput = await makeObservedPairInput();
+  const candidateInput = await makeObservedPairInput();
+  const baseline = asPairedReport(baselineInput, baselineCommit);
+  const candidate = asPairedReport(candidateInput, candidateCommit);
+  const row =
+    candidate.captures[0].austinOperatingClock.satelliteSampledEpochs.warmupHeld
+      .records[0];
+  row.latitude += 0.001;
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+      }),
+    /does not match|unique epoch/i,
+  );
+});
+
+test('paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged', async () => {
+  const baselineInput = await makeObservedPairInput();
+  const candidateInput = await makeObservedPairInput();
+  const baseline = asPairedReport(baselineInput, baselineCommit);
+  const candidate = asPairedReport(candidateInput, candidateCommit);
+  const sample = candidate.captures[0];
+  const evidence =
+    sample.austinOperatingClock.satelliteSampledEpochs.warmupHeld;
+  const reference = loadAustinSatelliteEpochReference(
+    candidate.workload.fixture,
+  );
+  const olderEpoch = evidence.boundaryEpochMs - 1000;
+  const records = [...reference.catalog.values()].map((entry) => {
+    const position = ORBITS.propagatePosition(
+      twoline2satrec(entry.line1, entry.line2),
+      new Date(olderEpoch),
+    );
+    return {
+      id: entry.id,
+      longitude: position.longitude,
+      latitude: position.latitude,
+      altitudeM: position.altitude,
+    };
+  });
+  sample.austinOperatingClock.satelliteSampledEpochs.warmupHeld =
+    deriveAustinSatelliteSampledEpoch({
+      reference,
+      records,
+      boundaryEpochMs: evidence.boundaryEpochMs,
+      boundary: evidence.boundary,
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+      runOrdinal: sample.austinOperatingClock.runOrdinal,
+    });
+  assert.equal(
+    sample.austinOperatingClock.satelliteSampledEpochs.warmupHeld.ageMs,
+    1000,
+  );
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+      }),
+    /warmup satellite records differ from the captured native position digest/,
   );
 });

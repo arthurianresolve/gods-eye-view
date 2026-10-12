@@ -1254,6 +1254,8 @@
   "scripts/performance/austinOperatingWorkloadFixture.mjs",
   "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
   "scripts/performance/austinOperatingComparisonContract.test.mjs",
+  "scripts/performance/austinSatelliteSampledEpoch.mjs",
+  "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
   "scripts/performance/receiptOnlyWorkerAudit.mjs",
   "scripts/performance/receiptOnlyWorkerAudit.test.mjs",
   "scripts/performance/weatherEffectsWorkloadFixture.mjs",
