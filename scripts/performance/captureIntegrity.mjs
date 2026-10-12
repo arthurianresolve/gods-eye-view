@@ -11,9 +11,13 @@ const canonical = (value) => {
       .map((key) => [key, canonical(value[key])]),
   );
 };
-const comparable = (conditions, qualityMode) => {
+export const comparableCaptureConditions = (conditions, qualityMode) => {
   const copy = structuredClone(conditions);
   copy.environment.layers.sort((a, b) => a.id.localeCompare(b.id));
+  // This one-time diagnostic query is preserved in the report, but its cost
+  // varies by fresh document and is not an effective scene condition.
+  if (copy.environment.rendererEvidence)
+    delete copy.environment.rendererEvidence.queryDurationMs;
   if (qualityMode === 'auto') {
     delete copy.settings.densityPct;
     if (copy.settings.visualState?.detection)
@@ -130,14 +134,19 @@ export function assertCaptureIntegrity(
       sample.cameraPath,
       `${label}: malformed route descriptor`,
     );
-    const expectedRouteId = sample.scenario === 'scripted-motion'
-      ? 'elapsed-move-right-v1'
-      : sample.scenario === 'idle'
-        ? 'parked-v1'
-        : expectedFixture
-          ? 'entity-follow-v1'
-          : 'parked-v1';
-    assert.equal(sample.cameraPath?.id, expectedRouteId, `${label}: wrong route schema`);
+    const expectedRouteId =
+      sample.scenario === 'scripted-motion'
+        ? 'elapsed-move-right-v1'
+        : sample.scenario === 'idle'
+          ? 'parked-v1'
+          : expectedFixture
+            ? 'entity-follow-v1'
+            : 'parked-v1';
+    assert.equal(
+      sample.cameraPath?.id,
+      expectedRouteId,
+      `${label}: wrong route schema`,
+    );
     if (sample.scenario === 'selected-aircraft-tracking' && expectedFixture) {
       assertObservedTrackingRoute(sample.cameraPath, {
         fixtureId: expectedFixture.id,
@@ -148,8 +157,14 @@ export function assertCaptureIntegrity(
         measurementMs: expectedMeasurementMs,
       });
     }
-    const before = comparable(sample.conditions.before, qualityMode);
-    const after = comparable(sample.conditions.after, qualityMode);
+    const before = comparableCaptureConditions(
+      sample.conditions.before,
+      qualityMode,
+    );
+    const after = comparableCaptureConditions(
+      sample.conditions.after,
+      qualityMode,
+    );
     assert.deepEqual(
       after,
       before,

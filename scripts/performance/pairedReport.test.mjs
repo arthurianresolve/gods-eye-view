@@ -60,6 +60,64 @@ test('valid paired reports calculate scenario medians, objective and regressions
   assert.deepEqual(regressedResult.regressionsOver10Pct, ['scripted-motion']);
 });
 
+test('paired renderer evidence ignores only one-time query duration', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const [report, queryDurationMs] of [
+    [baseline, 0.4],
+    [candidate, 6.75],
+  ]) {
+    for (const sample of report.captures)
+      for (const point of [sample.conditions.before, sample.conditions.after])
+        point.environment.rendererEvidence = {
+          source: 'early-cesium-context-creation',
+          contextAttributes: { antialias: false, alpha: true },
+          parameterQueryCount: 2,
+          queryDurationMs,
+        };
+  }
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+  assert.equal(
+    candidate.captures[0].conditions.before.environment.rendererEvidence
+      .queryDurationMs,
+    6.75,
+    'the observed one-time cost stays available in the captured report',
+  );
+
+  const invalidEvidence = structuredClone(candidate);
+  for (const point of [
+    invalidEvidence.captures[0].conditions.before,
+    invalidEvidence.captures[0].conditions.after,
+  ])
+    point.environment.rendererEvidence.contextAttributes.antialias = true;
+  assert.throws(
+    () => validate(baseline, invalidEvidence),
+    /repeated workload changed/,
+  );
+
+  const invalidRenderer = structuredClone(candidate);
+  for (const point of [
+    invalidRenderer.captures[0].conditions.before,
+    invalidRenderer.captures[0].conditions.after,
+  ])
+    point.environment.renderer = 'Different GPU';
+  assert.throws(
+    () => validate(baseline, invalidRenderer),
+    /repeated workload changed/,
+  );
+
+  const invalidSettings = structuredClone(candidate);
+  for (const point of [
+    invalidSettings.captures[0].conditions.before,
+    invalidSettings.captures[0].conditions.after,
+  ])
+    point.settings.msaaSamples = 1;
+  assert.throws(
+    () => validate(baseline, invalidSettings),
+    /repeated workload changed/,
+  );
+});
+
 test('paired reports reject absent, mismatched or drifting build provenance', () => {
   const base = makeReport(baselineCommit);
   const candidate = makeReport(candidateCommit);

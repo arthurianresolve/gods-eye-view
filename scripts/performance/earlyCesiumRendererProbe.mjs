@@ -19,6 +19,9 @@ export async function installEarlyCesiumRendererProbe(page) {
       contextLost: false,
       contextRestored: false,
       renderer: null,
+      vendor: null,
+      contextAttributes: null,
+      parameterQueryCount: 0,
       queryDurationMs: null,
       error: null,
       canvas: null,
@@ -63,10 +66,33 @@ export async function installEarlyCesiumRendererProbe(page) {
           }
           try {
             const started = performance.now();
+            const attributes = context.getContextAttributes?.();
+            if (!attributes)
+              throw new Error('WebGL context attributes unavailable');
+            state.contextAttributes = Object.fromEntries(
+              [
+                'alpha',
+                'antialias',
+                'depth',
+                'failIfMajorPerformanceCaveat',
+                'powerPreference',
+                'premultipliedAlpha',
+                'preserveDrawingBuffer',
+                'stencil',
+                'desynchronized',
+              ]
+                .filter((key) => key in attributes)
+                .map((key) => [key, attributes[key]]),
+            );
             const extension = context.getExtension('WEBGL_debug_renderer_info');
             state.renderer = context.getParameter(
               extension?.UNMASKED_RENDERER_WEBGL || context.RENDERER,
             );
+            state.parameterQueryCount += 1;
+            state.vendor = context.getParameter(
+              extension?.UNMASKED_VENDOR_WEBGL || context.VENDOR,
+            );
+            state.parameterQueryCount += 1;
             state.queryDurationMs = performance.now() - started;
           } catch (error) {
             state.error = String(error?.message || error).slice(0, 240);
@@ -92,6 +118,8 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
         if (state.error) throw new Error('early renderer query failed: ' + state.error);
         if (state.contextLost || state.contextRestored)
           throw new Error('early renderer context was lost or restored');
+        if (state.context?.isContextLost?.() === true)
+          throw new Error('early renderer context is currently lost');
         if (state.canvas !== scene?.canvas)
           throw new Error('early renderer canvas does not match Cesium scene');
         const cesiumContext = scene?.context;
@@ -100,10 +128,28 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
           throw new Error('Cesium original WebGL context identity unavailable');
         if (state.context !== original)
           throw new Error('early renderer context does not match Cesium scene');
-        if (!Number.isFinite(state.queryDurationMs) || state.queryDurationMs < 0)
+        if (
+          !Number.isFinite(state.queryDurationMs) ||
+          state.queryDurationMs < 0
+        )
           throw new Error('early renderer query duration is invalid');
+        if (
+          !state.contextAttributes ||
+          typeof state.contextAttributes.antialias !== 'boolean' ||
+          typeof state.renderer !== 'string' ||
+          !state.renderer.trim() ||
+          !Number.isSafeInteger(state.parameterQueryCount) ||
+          state.parameterQueryCount !== 2
+        )
+          throw new Error('early renderer context evidence is incomplete');
         return {
           renderer: String(state.renderer || ''),
+          vendor:
+            typeof state.vendor === 'string' && state.vendor
+              ? state.vendor
+              : null,
+          contextAttributes: { ...state.contextAttributes },
+          parameterQueryCount: state.parameterQueryCount,
           queryDurationMs: state.queryDurationMs,
           canvasMatchesScene: true,
           contextMatchesScene: true,

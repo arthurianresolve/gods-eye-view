@@ -35,6 +35,10 @@ import {
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
 import {
+  cleanupEarlyCesiumRendererProbe,
+  installEarlyCesiumRendererProbe,
+} from './performance/earlyCesiumRendererProbe.mjs';
+import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installHeldMonotonicWallClock,
@@ -1869,6 +1873,7 @@ async function runRevision({
   }
   let context = null;
   let page = null;
+  let earlyRendererProbeScriptIdentifier = null;
   let provenance = null;
   let fixturePage = null;
   let workerBlobValidation = null;
@@ -1990,6 +1995,8 @@ async function runRevision({
       installHeldMonotonicWallClock,
       flightFixture.fixedTimeMs,
     );
+    earlyRendererProbeScriptIdentifier =
+      await installEarlyCesiumRendererProbe(page);
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
       waitUntil: 'domcontentloaded',
@@ -2209,6 +2216,19 @@ async function runRevision({
     let captureCliDiagnostic = null;
     if (label === 'candidate') {
       phase = 'capture-cli-preparation-cleanup';
+      const earlyRendererProbeCleaned = await withTimeout(
+        cleanupEarlyCesiumRendererProbe(
+          page,
+          earlyRendererProbeScriptIdentifier,
+        ),
+        3000,
+        'Early renderer probe cleanup before capture CLI',
+      );
+      if (earlyRendererProbeCleaned !== true)
+        throw new Error(
+          'Early renderer probe cleanup before capture CLI was not confirmed.',
+        );
+      earlyRendererProbeScriptIdentifier = null;
       await withTimeout(
         page.evaluate(restoreCesiumWorkerBlobAudit),
         3000,
@@ -2328,6 +2348,26 @@ async function runRevision({
     failure = error;
   } finally {
     if (page) {
+      if (earlyRendererProbeScriptIdentifier !== null) {
+        try {
+          const earlyRendererProbeCleaned = await withTimeout(
+            cleanupEarlyCesiumRendererProbe(
+              page,
+              earlyRendererProbeScriptIdentifier,
+            ),
+            3000,
+            'Early renderer probe cleanup',
+          );
+          if (earlyRendererProbeCleaned !== true)
+            cleanupErrors.push(
+              sanitizeError(
+                new Error('Early renderer probe cleanup was not confirmed.'),
+              ),
+            );
+        } catch (error) {
+          cleanupErrors.push(sanitizeError(error));
+        }
+      }
       try {
         await withTimeout(
           page.evaluate(restoreCesiumWorkerBlobAudit),

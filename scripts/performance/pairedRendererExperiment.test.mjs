@@ -40,7 +40,9 @@ function report(variant, { factor = 1, cpu = 'Test CPU' } = {}) {
       variant,
       queryTiming: config[1],
       sequenceOrder: 'ABC',
-      sequenceIndex: { 'driver-late': 0, 'webgl-late': 1, 'driver-early': 2 }[variant],
+      sequenceIndex: { 'driver-late': 0, 'webgl-late': 1, 'driver-early': 2 }[
+        variant
+      ],
       runId: 'test-run',
     },
     browserVersion: 'Chrome/140.0',
@@ -58,10 +60,12 @@ function report(variant, { factor = 1, cpu = 'Test CPU' } = {}) {
       workspaceBundleMatches: true,
       timing: {
         rendererQueryTiming: config[1],
-        rendererQueryMeasurement: config[1] === 'early' ? 'page-query' : 'host-round-trip',
+        rendererQueryMeasurement:
+          config[1] === 'early' ? 'page-query' : 'host-round-trip',
         bootElapsedMs: 1000 * factor,
         rendererQueryDurationMs: 100,
-        bootPlusQueryCriticalPathMs: (1200 + stageIds.indexOf(id) * 20) * factor,
+        bootPlusQueryCriticalPathMs:
+          (1200 + stageIds.indexOf(id) * 20) * factor,
       },
       pageOwnership: {
         initialPageCount: 1,
@@ -78,7 +82,10 @@ function report(variant, { factor = 1, cpu = 'Test CPU' } = {}) {
   };
 }
 
-function packet({ factors = { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early': 0.7 }, order = 'ABC' } = {}) {
+function packet({
+  factors = { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early': 0.7 },
+  order = 'ABC',
+} = {}) {
   const sequence = RENDERER_EXPERIMENT_ORDERS[order];
   return {
     reports: sequence.map((variant) => ({
@@ -95,7 +102,11 @@ function packet({ factors = { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early
     })),
     order,
     expectedCommit: commit,
-    processResults: sequence.map((variant) => ({ variant, status: 0, error: null })),
+    processResults: sequence.map((variant) => ({
+      variant,
+      status: 0,
+      error: null,
+    })),
   };
 }
 
@@ -110,9 +121,11 @@ test('same-runner packet validates invariants and reports objective separately',
 });
 
 test('a small valid change remains comparable but misses the target', () => {
-  const result = evaluatePairedRendererExperiment(packet({
-    factors: { 'driver-late': 1, 'webgl-late': 0.95, 'driver-early': 1.04 },
-  }));
+  const result = evaluatePairedRendererExperiment(
+    packet({
+      factors: { 'driver-late': 1, 'webgl-late': 0.95, 'driver-early': 1.04 },
+    }),
+  );
   assert.equal(result.status, 'comparable');
   assert.equal(result.comparisons['webgl-late'].objectiveMet, false);
   assert.equal(result.adoptionEligibleByVariant['webgl-late'], false);
@@ -120,9 +133,11 @@ test('a small valid change remains comparable but misses the target', () => {
 });
 
 test('eligibility is reported independently for each experimental candidate', () => {
-  const result = evaluatePairedRendererExperiment(packet({
-    factors: { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early': 1.03 },
-  }));
+  const result = evaluatePairedRendererExperiment(
+    packet({
+      factors: { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early': 1.03 },
+    }),
+  );
   assert.equal(result.adoptionEligibleByVariant['webgl-late'], true);
   assert.equal(result.adoptionEligibleByVariant['driver-early'], false);
 });
@@ -131,7 +146,9 @@ test('moving query time into a slower boot does not look like an end-to-end win'
   const input = packet({
     factors: { 'driver-late': 1, 'webgl-late': 0.7, 'driver-early': 1 },
   });
-  const early = input.reports.find((entry) => entry.variant === 'driver-early').report;
+  const early = input.reports.find(
+    (entry) => entry.variant === 'driver-early',
+  ).report;
   for (const check of early.checks) {
     check.timing.rendererQueryDurationMs = 1;
     check.timing.bootElapsedMs *= 1.4;
@@ -143,10 +160,19 @@ test('moving query time into a slower boot does not look like an end-to-end win'
 });
 
 test('CBA order and same-host comparisons are enforced', () => {
-  assert.equal(evaluatePairedRendererExperiment(packet({ order: 'CBA' })).order, 'CBA');
+  assert.equal(
+    evaluatePairedRendererExperiment(packet({ order: 'CBA' })).order,
+    'CBA',
+  );
   const reports = packet({ order: 'CBA' }).reports;
-  reports.find((entry) => entry.variant === 'webgl-late').report.hostEnvironment.cpuModel = 'Other CPU';
-  const result = evaluatePairedRendererExperiment({ reports, order: 'CBA', expectedCommit: commit });
+  reports.find(
+    (entry) => entry.variant === 'webgl-late',
+  ).report.hostEnvironment.cpuModel = 'Other CPU';
+  const result = evaluatePairedRendererExperiment({
+    reports,
+    order: 'CBA',
+    expectedCommit: commit,
+  });
   assert.equal(result.status, 'partially-comparable');
   assert.equal(result.comparisons['webgl-late'].status, 'incomparable');
 });
@@ -168,7 +194,9 @@ test('same-platform renderer comparisons support all recovery operating systems'
       const result = evaluatePairedRendererExperiment(input);
       assert.equal(result.status, 'comparable');
       assert.equal(result.platform, platform);
-      input.reports.find(({ variant }) => variant === 'webgl-late').report.platform = 'unsupported';
+      input.reports.find(
+        ({ variant }) => variant === 'webgl-late',
+      ).report.platform = 'unsupported';
       const invalid = evaluatePairedRendererExperiment(input);
       assert.equal(invalid.comparisons['webgl-late'].status, 'incomparable');
       assert.equal(invalid.adoptionEligibleByVariant['webgl-late'], false);
@@ -176,9 +204,15 @@ test('same-platform renderer comparisons support all recovery operating systems'
   }
   const mixed = packet({ order: 'AB' });
   mixed.reports[1].report.platform = 'darwin';
-  assert.equal(evaluatePairedRendererExperiment(mixed).comparisons['webgl-late'].status, 'incomparable');
+  assert.equal(
+    evaluatePairedRendererExperiment(mixed).comparisons['webgl-late'].status,
+    'incomparable',
+  );
   mixed.reports[0].report.platform = 'unsupported';
-  assert.throws(() => evaluatePairedRendererExperiment(mixed), /unsupported platform/);
+  assert.throws(
+    () => evaluatePairedRendererExperiment(mixed),
+    /unsupported platform/,
+  );
 });
 
 test('a failed early candidate does not invalidate a completed backend comparison', () => {
@@ -197,29 +231,60 @@ test('a sequence without the required driver control cannot compare a candidate'
   const input = packet({ order: 'CBA' });
   input.reports = input.reports.slice(0, 1);
   input.processResults = input.processResults.slice(0, 1);
-  assert.throws(() => evaluatePairedRendererExperiment(input), /control report is required/);
+  assert.throws(
+    () => evaluatePairedRendererExperiment(input),
+    /control report is required/,
+  );
 });
 
 test('dirty, wrong-build, missing, reordered, or invalid-ownership reports fail closed', () => {
   const cases = [
-    (reports) => { reports[0].report.candidateCommit = 'd'.repeat(40); },
-    (reports) => { reports[0].report.sourceDirtyAtStart = true; },
-    (reports) => { reports[0].report.checks.pop(); },
-    (reports) => { reports[0].report.checks[1].pageOwnership.openPagesBeforeBrowserClose = 1; },
-    (reports) => { reports[0].report.checks[2].timing.bootPlusQueryCriticalPathMs = NaN; },
-    (reports) => { reports[0].report.checks[3].assetSha256 = 'f'.repeat(64); },
-    (reports) => { reports[0].report.checks[4].settingsMatch = false; },
-    (reports) => { delete reports[0].report.hostEnvironment.cpuModel; },
-    (reports) => { reports[0].report.browserVersion = ''; },
-    (reports) => { delete reports[0].report.rendererExperiment.runId; },
-    (reports) => { delete reports[0].report.viewport.width; },
-    (reports) => { reports[0].report.checks[0].status = 'failed'; },
-    (reports) => { reports[0].report.checks[0].timing.bootPlusQueryCriticalPathMs = 100; },
+    (reports) => {
+      reports[0].report.candidateCommit = 'd'.repeat(40);
+    },
+    (reports) => {
+      reports[0].report.sourceDirtyAtStart = true;
+    },
+    (reports) => {
+      reports[0].report.checks.pop();
+    },
+    (reports) => {
+      reports[0].report.checks[1].pageOwnership.openPagesBeforeBrowserClose = 1;
+    },
+    (reports) => {
+      reports[0].report.checks[2].timing.bootPlusQueryCriticalPathMs = NaN;
+    },
+    (reports) => {
+      reports[0].report.checks[3].assetSha256 = 'f'.repeat(64);
+    },
+    (reports) => {
+      reports[0].report.checks[4].settingsMatch = false;
+    },
+    (reports) => {
+      delete reports[0].report.hostEnvironment.cpuModel;
+    },
+    (reports) => {
+      reports[0].report.browserVersion = '';
+    },
+    (reports) => {
+      delete reports[0].report.rendererExperiment.runId;
+    },
+    (reports) => {
+      delete reports[0].report.viewport.width;
+    },
+    (reports) => {
+      reports[0].report.checks[0].status = 'failed';
+    },
+    (reports) => {
+      reports[0].report.checks[0].timing.bootPlusQueryCriticalPathMs = 100;
+    },
   ];
   for (const mutate of cases) {
     const { reports, order, expectedCommit } = packet();
     mutate(reports);
-    assert.throws(() => evaluatePairedRendererExperiment({ reports, order, expectedCommit }));
+    assert.throws(() =>
+      evaluatePairedRendererExperiment({ reports, order, expectedCommit }),
+    );
   }
   const incomplete = packet();
   incomplete.reports.pop();
@@ -229,38 +294,84 @@ test('dirty, wrong-build, missing, reordered, or invalid-ownership reports fail 
   assert.equal(partial.comparisons['driver-early'].status, 'incomparable');
   const reordered = packet({ order: 'AB' });
   reordered.reports.reverse();
-  assert.throws(() => evaluatePairedRendererExperiment(reordered), /sequence prefix/);
+  assert.throws(
+    () => evaluatePairedRendererExperiment(reordered),
+    /sequence prefix/,
+  );
   const badProcessOrder = packet({ order: 'BA' });
   badProcessOrder.processResults.reverse();
-  assert.throws(() => evaluatePairedRendererExperiment(badProcessOrder), /process results.*prefix/);
+  assert.throws(
+    () => evaluatePairedRendererExperiment(badProcessOrder),
+    /process results.*prefix/,
+  );
   const browserMismatch = packet();
   browserMismatch.reports[1].report.browserVersion = 'Chrome/other';
-  assert.equal(evaluatePairedRendererExperiment(browserMismatch).comparisons['webgl-late'].status, 'incomparable');
+  assert.equal(
+    evaluatePairedRendererExperiment(browserMismatch).comparisons['webgl-late']
+      .status,
+    'incomparable',
+  );
   const viewportMismatch = packet();
   viewportMismatch.reports[2].report.viewport.width += 1;
-  assert.equal(evaluatePairedRendererExperiment(viewportMismatch).comparisons['driver-early'].status, 'incomparable');
+  assert.equal(
+    evaluatePairedRendererExperiment(viewportMismatch).comparisons[
+      'driver-early'
+    ].status,
+    'incomparable',
+  );
   const duplicateRun = packet();
   duplicateRun.reports[2].report.rendererExperiment.runId = 'another-run';
-  assert.equal(evaluatePairedRendererExperiment(duplicateRun).comparisons['driver-early'].status, 'incomparable');
+  assert.equal(
+    evaluatePairedRendererExperiment(duplicateRun).comparisons['driver-early']
+      .status,
+    'incomparable',
+  );
 });
 
 function earlyProbePage(performanceStep = 5) {
   let now = 0;
+  let parameterCalls = 0;
   class Canvas {
     constructor(widget = true) {
       this.widget = widget;
       this.listeners = new Map();
     }
-    closest(selector) { return selector === '.cesium-widget' && this.widget ? {} : null; }
-    addEventListener(type, fn) { this.listeners.set(type, fn); }
-    removeEventListener(type) { this.listeners.delete(type); }
+    closest(selector) {
+      return selector === '.cesium-widget' && this.widget ? {} : null;
+    }
+    addEventListener(type, fn) {
+      this.listeners.set(type, fn);
+    }
+    removeEventListener(type) {
+      this.listeners.delete(type);
+    }
   }
   const native = function (kind) {
     if (!/^webgl/.test(kind)) return null;
     return {
       RENDERER: 7937,
-      getExtension: () => ({ UNMASKED_RENDERER_WEBGL: 37446 }),
-      getParameter: () => 'Google SwiftShader',
+      VENDOR: 7936,
+      isContextLost: () => false,
+      getContextAttributes: () => ({
+        alpha: true,
+        antialias: false,
+        depth: true,
+        failIfMajorPerformanceCaveat: false,
+        powerPreference: 'default',
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: true,
+        stencil: false,
+      }),
+      getExtension: () => ({
+        UNMASKED_RENDERER_WEBGL: 37446,
+        UNMASKED_VENDOR_WEBGL: 37445,
+      }),
+      getParameter: (key) => {
+        parameterCalls += 1;
+        return key === 37445 || key === 7936
+          ? 'Google Inc.'
+          : 'Google SwiftShader';
+      },
     };
   };
   Object.defineProperty(Canvas.prototype, 'getContext', {
@@ -288,48 +399,105 @@ function earlyProbePage(performanceStep = 5) {
     evaluate: async (fn, ...args) => evaluate(fn, ...args),
     removeScriptToEvaluateOnNewDocument: async (id) => id,
   };
-  return { page, Canvas, native, window };
+  return {
+    page,
+    Canvas,
+    native,
+    window,
+    get parameterCalls() {
+      return parameterCalls;
+    },
+  };
 }
 
-test('early probe preserves native getContext semantics and verifies real scene identity', async () => {
-  const { page, Canvas, native, window } = earlyProbePage();
+test('early probe preserves native getContext and captures identity once before scene observation', async () => {
+  const probePage = earlyProbePage();
+  const { page, Canvas, native, window } = probePage;
   await installEarlyCesiumRendererProbe(page);
   const canvas = new Canvas();
   const gl = canvas.getContext('webgl2', { alpha: false });
+  assert.equal(probePage.parameterCalls, 2);
   assert.equal(gl.getParameter(7937), 'Google SwiftShader');
-  assert.equal(Canvas.prototype.getContext, native, 'wrapper restores after first real Cesium context');
+  assert.equal(
+    Canvas.prototype.getContext,
+    native,
+    'wrapper restores after first real Cesium context',
+  );
   window.__godsEyeView = {
     viewer: { scene: { canvas, context: { _originalGLContext: gl } } },
   };
   const result = await readEarlyCesiumRendererProbe(page);
+  assert.equal(
+    probePage.parameterCalls,
+    3,
+    'the later explicit test query is the only additional GL query',
+  );
   assert.equal(result.renderer, 'Google SwiftShader');
+  assert.equal(result.vendor, 'Google Inc.');
+  assert.equal(result.parameterQueryCount, 2);
+  assert.equal(result.contextAttributes.antialias, false);
   assert.equal(result.canvasMatchesScene, true);
   assert.equal(result.contextMatchesScene, true);
   assert.equal(await cleanupEarlyCesiumRendererProbe(page, 'early-hook'), true);
   assert.equal(window.__gevRecoveryEarlyRendererProbe, undefined);
 });
 
+test('early probe cleanup reports an unconfirmed timeout instead of success', async () => {
+  const page = {
+    isClosed: () => false,
+    evaluate: () => new Promise(() => {}),
+  };
+  assert.equal(await cleanupEarlyCesiumRendererProbe(page, null, 5), false);
+});
+
 test('early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts', async () => {
   const missing = earlyProbePage();
   await installEarlyCesiumRendererProbe(missing.page);
   new missing.Canvas(false).getContext('webgl2');
-  assert.equal(await missing.page.evaluate((key) => window[key]?.captured, '__gevRecoveryEarlyRendererProbe'), false);
-  await assert.rejects(readEarlyCesiumRendererProbe(missing.page), /not captured/);
+  assert.equal(
+    await missing.page.evaluate(
+      (key) => window[key]?.captured,
+      '__gevRecoveryEarlyRendererProbe',
+    ),
+    false,
+  );
+  await assert.rejects(
+    readEarlyCesiumRendererProbe(missing.page),
+    /not captured/,
+  );
 
   const replaced = earlyProbePage();
   await installEarlyCesiumRendererProbe(replaced.page);
   const canvas = new replaced.Canvas();
   const gl = canvas.getContext('webgl2');
-  replaced.window.__godsEyeView = { viewer: { scene: { canvas, context: { _originalGLContext: {} } } } };
-  await assert.rejects(readEarlyCesiumRendererProbe(replaced.page), /does not match Cesium/);
+  replaced.window.__godsEyeView = {
+    viewer: { scene: { canvas, context: { _originalGLContext: {} } } },
+  };
+  await assert.rejects(
+    readEarlyCesiumRendererProbe(replaced.page),
+    /does not match Cesium/,
+  );
 
   const lost = earlyProbePage();
   await installEarlyCesiumRendererProbe(lost.page);
   const lostCanvas = new lost.Canvas();
   lostCanvas.getContext('webgl2');
   lostCanvas.listeners.get('webglcontextlost')({ preventDefault() {} });
-  lost.window.__godsEyeView = { viewer: { scene: { canvas: lostCanvas, context: { _originalGLContext: lost.window.__gevRecoveryEarlyRendererProbe.context } } } };
-  await assert.rejects(readEarlyCesiumRendererProbe(lost.page), /lost or restored/);
+  lost.window.__godsEyeView = {
+    viewer: {
+      scene: {
+        canvas: lostCanvas,
+        context: {
+          _originalGLContext:
+            lost.window.__gevRecoveryEarlyRendererProbe.context,
+        },
+      },
+    },
+  };
+  await assert.rejects(
+    readEarlyCesiumRendererProbe(lost.page),
+    /lost or restored/,
+  );
 });
 
 test('early probe accepts a valid zero-duration clock sample', async () => {
@@ -337,7 +505,9 @@ test('early probe accepts a valid zero-duration clock sample', async () => {
   await installEarlyCesiumRendererProbe(page);
   const canvas = new Canvas();
   const gl = canvas.getContext('webgl2');
-  window.__godsEyeView = { viewer: { scene: { canvas, context: { _originalGLContext: gl } } } };
+  window.__godsEyeView = {
+    viewer: { scene: { canvas, context: { _originalGLContext: gl } } },
+  };
   const result = await readEarlyCesiumRendererProbe(page);
   assert.equal(result.queryDurationMs, 0);
 });

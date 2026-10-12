@@ -41,24 +41,36 @@ export function observeCommonScene({
     fail('detection settings readers');
   if (!manager?.getAll) fail('layer population reader');
 
-  const gl =
-    scene.context?._originalGLContext ||
-    scene.context?._gl ||
-    canvas.getContext('webgl2') ||
-    canvas.getContext('webgl');
-  if (!gl?.getParameter || !gl.getContextAttributes)
-    fail('Cesium WebGL context');
-  const attributes = gl.getContextAttributes();
-  if (!attributes) fail('WebGL context attributes');
-  const extension = gl.getExtension('WEBGL_debug_renderer_info');
-  const renderer = extension
-    ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
-    : gl.getParameter(gl.RENDERER);
-  const vendor = extension
-    ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL)
-    : gl.getParameter(gl.VENDOR);
-  if (typeof renderer !== 'string' || !renderer.trim())
-    fail('renderer identity');
+  const rendererProbe = windowObject.__gevRecoveryEarlyRendererProbe;
+  if (
+    !rendererProbe?.captured ||
+    !rendererProbe.canvas ||
+    !rendererProbe.context
+  )
+    fail('early Cesium renderer evidence');
+  if (rendererProbe.error) fail('early Cesium renderer query');
+  if (rendererProbe.contextLost || rendererProbe.contextRestored)
+    fail('unchanged Cesium WebGL context');
+  if (rendererProbe.context?.isContextLost?.() === true)
+    fail('live Cesium WebGL context');
+  if (rendererProbe.canvas !== canvas) fail('Cesium renderer canvas identity');
+  const originalContext = scene.context?._originalGLContext;
+  if (!originalContext || originalContext !== rendererProbe.context)
+    fail('Cesium renderer context identity');
+  if (
+    typeof rendererProbe.renderer !== 'string' ||
+    !rendererProbe.renderer.trim() ||
+    !rendererProbe.contextAttributes ||
+    typeof rendererProbe.contextAttributes.antialias !== 'boolean' ||
+    rendererProbe.parameterQueryCount !== 2 ||
+    !Number.isFinite(rendererProbe.queryDurationMs) ||
+    rendererProbe.queryDurationMs < 0
+  )
+    fail('complete early Cesium renderer evidence');
+  const renderer = rendererProbe.renderer;
+  const vendor =
+    typeof rendererProbe.vendor === 'string' ? rendererProbe.vendor : null;
+  const attributes = rendererProbe.contextAttributes;
 
   const layers = manager.getAll().map((layer) => {
     if (typeof layer?.id !== 'string' || !layer.id) fail('layer identity');
@@ -122,7 +134,17 @@ export function observeCommonScene({
       userAgent: windowObject.navigator?.userAgent || null,
       platform: windowObject.navigator?.platform || null,
       renderer,
-      vendor: typeof vendor === 'string' ? vendor : null,
+      vendor,
+      rendererEvidence: {
+        source: 'early-cesium-context-creation',
+        canvasMatchesScene: true,
+        contextMatchesScene: true,
+        contextLost: false,
+        contextRestored: false,
+        parameterQueryCount: rendererProbe.parameterQueryCount,
+        queryDurationMs: rendererProbe.queryDurationMs,
+        contextAttributes: { ...attributes },
+      },
       viewport: {
         width: windowObject.innerWidth,
         height: windowObject.innerHeight,

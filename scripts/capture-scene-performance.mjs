@@ -35,6 +35,11 @@ import {
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
 import {
+  cleanupEarlyCesiumRendererProbe,
+  installEarlyCesiumRendererProbe,
+  readEarlyCesiumRendererProbe,
+} from './performance/earlyCesiumRendererProbe.mjs';
+import {
   createEntityFollowRoute,
   observeTrackedEntityBoundary,
 } from './performance/trackingRoute.mjs';
@@ -352,6 +357,20 @@ const infrastructureAssetRoutes = infrastructureWorkload
   : null;
 let infrastructureFixtureDelivery = null;
 const infrastructureResponseListeners = new Map();
+const earlyRendererProbeScripts = new Map();
+async function cleanupEarlyRendererProbeForPage(page) {
+  if (!page || !earlyRendererProbeScripts.has(page)) return true;
+  if (page.isClosed()) {
+    earlyRendererProbeScripts.delete(page);
+    return true;
+  }
+  const scriptIdentifier = earlyRendererProbeScripts.get(page);
+  const cleaned = await cleanupEarlyCesiumRendererProbe(page, scriptIdentifier);
+  if (!cleaned)
+    throw new Error('Early Cesium renderer probe cleanup was not confirmed.');
+  earlyRendererProbeScripts.delete(page);
+  return true;
+}
 const providerSampleCpuProfileTargets = [
   { scenario: 'idle', run: 1 },
   { scenario: 'idle', run: 2 },
@@ -1334,6 +1353,10 @@ try {
         documentId,
       },
     );
+    earlyRendererProbeScripts.set(
+      auditPage,
+      await installEarlyCesiumRendererProbe(auditPage),
+    );
     if (captureProvenance)
       await auditPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     return {
@@ -1355,6 +1378,10 @@ try {
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
+    earlyRendererProbeScripts.set(
+      startupPage,
+      await installEarlyCesiumRendererProbe(startupPage),
+    );
     const { documentRole: startupDocumentRole, documentId: startupDocumentId } =
       startupDocumentTopology.diagnostics[run - 1];
     const startupFixtureSession = await configureFlightFixturePage(
@@ -1405,19 +1432,12 @@ try {
         'Verified startup page is controlled by a service worker.',
       );
     const initialSettleMs = Date.now() - startedAt;
+    const earlyRenderer = await readEarlyCesiumRendererProbe(startupPage);
     const details = await startupPage.evaluate(() => {
       const viewer = window.__godsEyeView.viewer;
-      const gl =
-        viewer.scene.context?._gl ||
-        viewer.scene.canvas.getContext('webgl2') ||
-        viewer.scene.canvas.getContext('webgl');
-      const extension = gl?.getExtension('WEBGL_debug_renderer_info');
       return {
         userAgent: navigator.userAgent,
         platform: navigator.platform,
-        renderer: extension
-          ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
-          : gl?.getParameter(gl.RENDERER) || null,
         viewport: {
           width: innerWidth,
           height: innerHeight,
@@ -1439,6 +1459,14 @@ try {
             },
       };
     });
+    details.renderer = earlyRenderer.renderer;
+    details.vendor = earlyRenderer.vendor;
+    details.rendererEvidence = {
+      source: 'early-cesium-context-creation',
+      contextAttributes: earlyRenderer.contextAttributes,
+      queryDurationMs: earlyRenderer.queryDurationMs,
+      parameterQueryCount: earlyRenderer.parameterQueryCount,
+    };
     startupSamples.push({
       run,
       cacheDisabled: true,
@@ -1451,6 +1479,7 @@ try {
       documentId: startupDocumentId,
       auditMode: 'diagnostic',
     });
+    await cleanupEarlyRendererProbeForPage(startupPage);
     await context.close();
     await releaseFlightFixtureSession(startupFixtureSession);
   }
@@ -1933,6 +1962,7 @@ try {
         'Render-boundary binding cleanup failed before document replacement.',
       );
     await releaseFlightFixtureSession(activeFixtureSession);
+    await cleanupEarlyRendererProbeForPage(page);
     if (providerContext) await providerContext.close();
     else await page.close();
     providerContext = await browser.createBrowserContext();
@@ -3165,6 +3195,14 @@ try {
   await disposeActiveRenderBoundaryProgressBinding('capture-finally');
   for (const session of [...fixtureInterceptionSessions])
     await releaseFlightFixtureSession(session);
+  for (const probePage of [...earlyRendererProbeScripts.keys()]) {
+    try {
+      await cleanupEarlyRendererProbeForPage(probePage);
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
   for (const [
     responsePage,
     responseListener,
