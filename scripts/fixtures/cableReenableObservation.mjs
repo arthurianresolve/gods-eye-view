@@ -71,6 +71,9 @@ function readPrimitiveSnapshot(viewer, Cesium) {
 export function startCableReenableObservation({
   viewer,
   Cesium,
+  rendererMode = null,
+  cycle = null,
+  phase = null,
   documentTarget = globalThis.document,
   now = () => performance.now(),
   setIntervalFn = globalThis.setInterval,
@@ -79,6 +82,15 @@ export function startCableReenableObservation({
 }) {
   if (!viewer?.scene || typeof now !== 'function')
     throw new TypeError('A viewer scene and monotonic clock are required.');
+  if (
+    rendererMode !== null &&
+    !['entities', 'collections'].includes(rendererMode)
+  )
+    throw new TypeError('Re-enable renderer identity is invalid.');
+  if (cycle !== null && ![0, 1].includes(cycle))
+    throw new RangeError('Re-enable cycle identity is invalid.');
+  if (phase !== null && phase !== 'reenable-population-and-scene-stability')
+    throw new TypeError('Re-enable observation phase is invalid.');
   if (!Number.isFinite(intervalMs) || intervalMs < 100 || intervalMs > 1000)
     throw new RangeError('Re-enable observation interval is out of bounds.');
 
@@ -362,6 +374,9 @@ export function startCableReenableObservation({
     const endedAtMs = readMonotonicNow();
     return {
       schema: 'gev-cable-reenable-observation/v1',
+      rendererMode,
+      cycle,
+      phase,
       status:
         cleanupErrors.length > 0
           ? 'cleanup-incomplete'
@@ -401,11 +416,73 @@ export function startCableReenableObservation({
   return { sample, finish };
 }
 
+/** Preserve each bounded lifecycle cycle, including a failed later cycle. */
+export function appendCableReenableObservation(lifetime, observation) {
+  if (!lifetime || !observation || typeof observation !== 'object') return;
+  const rows = Array.isArray(lifetime.reenableObservations)
+    ? lifetime.reenableObservations
+    : (lifetime.reenableObservations = []);
+  const row = {
+    ...observation,
+    rendererMode: observation.rendererMode ?? lifetime.mode ?? null,
+    cycle: observation.cycle ?? null,
+  };
+  if (rows.length < 2) rows.push(row);
+  else {
+    rows.splice(1, 1);
+    rows.push(row);
+    lifetime.reenableObservationsTruncated = true;
+  }
+  lifetime.reenableObservation ||= rows[0];
+}
+
+/** Project the bounded per-lifetime rows for hosted failure/success reports. */
+export function collectCableReenableObservations(lifetimes) {
+  if (!Array.isArray(lifetimes)) return [];
+  const observations = [];
+  for (const lifetime of lifetimes.slice(0, 2)) {
+    if (!lifetime || !Array.isArray(lifetime.reenableObservations)) continue;
+    for (const observation of lifetime.reenableObservations.slice(0, 2))
+      observations.push({
+        ...observation,
+        rendererMode: observation.rendererMode ?? lifetime.mode ?? null,
+      });
+  }
+  return observations;
+}
+
+/** Describe expected renderer/cycle coverage without treating missing rows as success. */
+export function summarizeCableReenableObservations(lifetimes) {
+  const observations = collectCableReenableObservations(lifetimes);
+  const expected = ['entities', 'collections'].flatMap((rendererMode) =>
+    [0, 1].map((cycle) => ({ rendererMode, cycle })),
+  );
+  const observedKeys = new Set(
+    observations.map((row) => `${row.rendererMode}:${row.cycle}`),
+  );
+  const missing = expected.filter(
+    ({ rendererMode, cycle }) => !observedKeys.has(`${rendererMode}:${cycle}`),
+  );
+  return {
+    expectedObservationCount: expected.length,
+    recordedObservationCount: observations.length,
+    identityCoverageComplete:
+      missing.length === 0 && observations.length === expected.length,
+    missing,
+    fixtureObservation:
+      observations.find(
+        (row) => row.rendererMode === 'entities' && row.cycle === 0,
+      ) || null,
+    observations,
+  };
+}
+
 /** Preserve the lifecycle error if optional diagnostic finalization fails. */
 export function finishCableReenableObservationSafely(
   observer,
   status,
   primaryError = null,
+  identity = {},
 ) {
   try {
     return observer?.finish(status) || null;
@@ -414,6 +491,9 @@ export function finishCableReenableObservationSafely(
       schema: 'gev-cable-reenable-observation/v1',
       status: 'finalization-failed',
       lifecycleStatus: status,
+      rendererMode: identity.rendererMode ?? null,
+      cycle: identity.cycle ?? null,
+      phase: identity.phase ?? null,
       primaryLifecycleFailurePreserved: primaryError !== null,
       finishError: sanitizeError(error),
     };

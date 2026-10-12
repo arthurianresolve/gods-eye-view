@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  appendCableReenableObservation,
+  collectCableReenableObservations,
   finishCableReenableObservationSafely,
   startCableReenableObservation,
+  summarizeCableReenableObservations,
 } from './cableReenableObservation.mjs';
 
 function eventChannel() {
@@ -232,6 +235,22 @@ test('safe finalization preserves the primary failure and finish is idempotent',
   assert.equal(finalization.status, 'finalization-failed');
   assert.equal(finalization.primaryLifecycleFailurePreserved, true);
   assert.equal(finalization.finishError.message, 'diagnostic failure');
+  const identifiedFallback = finishCableReenableObservationSafely(
+    {
+      finish() {
+        throw new Error('diagnostic failure');
+      },
+    },
+    'failed',
+    primary,
+    {
+      rendererMode: 'collections',
+      cycle: 1,
+      phase: 'reenable-population-and-scene-stability',
+    },
+  );
+  assert.equal(identifiedFallback.rendererMode, 'collections');
+  assert.equal(identifiedFallback.cycle, 1);
 
   const { viewer } = fakeViewer();
   let callback;
@@ -250,6 +269,97 @@ test('safe finalization preserves the primary failure and finish is idempotent',
   const finished = observer.finish('failed');
   assert.equal(finished.samples.at(-1).snapshotKind, 'finish');
   assert.equal(observer.finish('completed'), finished);
+});
+
+test('coverage retains every renderer cycle and reports missing cycles explicitly', () => {
+  const lifetimes = [{ mode: 'entities' }, { mode: 'collections' }];
+  const rows = [
+    ['entities', 0, 'completed'],
+    ['entities', 1, 'completed'],
+    ['collections', 0, 'completed'],
+    ['collections', 1, 'failed'],
+  ];
+  for (const [rendererMode, cycle, status] of rows) {
+    const lifetime = lifetimes.find((row) => row.mode === rendererMode);
+    appendCableReenableObservation(lifetime, {
+      schema: 'gev-cable-reenable-observation/v1',
+      rendererMode,
+      cycle,
+      phase: 'reenable-population-and-scene-stability',
+      status,
+    });
+  }
+  const summary = summarizeCableReenableObservations(lifetimes);
+  assert.equal(summary.expectedObservationCount, 4);
+  assert.equal(summary.recordedObservationCount, 4);
+  assert.equal(summary.identityCoverageComplete, true);
+  assert.deepEqual(summary.missing, []);
+  assert.equal(summary.observations[3].status, 'failed');
+  assert.equal(collectCableReenableObservations(lifetimes).length, 4);
+
+  const partial = summarizeCableReenableObservations(lifetimes.slice(0, 1));
+  assert.equal(partial.identityCoverageComplete, false);
+  assert.deepEqual(partial.missing, [
+    { rendererMode: 'collections', cycle: 0 },
+    { rendererMode: 'collections', cycle: 1 },
+  ]);
+});
+
+test('unavailable rows count as recorded identities, not successful observations', () => {
+  const lifetimes = [
+    {
+      mode: 'entities',
+      reenableObservations: [
+        { rendererMode: 'entities', cycle: 0, status: 'unavailable' },
+        { rendererMode: 'entities', cycle: 1, status: 'completed' },
+      ],
+    },
+    {
+      mode: 'collections',
+      reenableObservations: [
+        { rendererMode: 'collections', cycle: 0, status: 'completed' },
+        {
+          rendererMode: 'collections',
+          cycle: 1,
+          status: 'finalization-failed',
+        },
+      ],
+    },
+  ];
+  const summary = summarizeCableReenableObservations(lifetimes);
+  assert.equal(summary.recordedObservationCount, 4);
+  assert.equal(summary.identityCoverageComplete, true);
+  assert.equal(summary.observations[0].status, 'unavailable');
+  assert.equal(summary.observations[3].status, 'finalization-failed');
+});
+
+test('per-lifetime observation storage is bounded and preserves first plus latest', () => {
+  const lifetime = { mode: 'entities' };
+  appendCableReenableObservation(lifetime, {
+    rendererMode: 'entities',
+    cycle: 0,
+    status: 'failed',
+    sequence: 1,
+  });
+  appendCableReenableObservation(lifetime, {
+    rendererMode: 'entities',
+    cycle: 1,
+    status: 'completed',
+    sequence: 2,
+  });
+  appendCableReenableObservation(lifetime, {
+    rendererMode: 'entities',
+    cycle: 1,
+    status: 'completed',
+    sequence: 3,
+  });
+  assert.equal(lifetime.reenableObservations.length, 2);
+  assert.deepEqual(
+    lifetime.reenableObservations.map((row) => row.sequence),
+    [1, 3],
+  );
+  assert.equal(lifetime.reenableObservationsTruncated, true);
+  assert.equal(lifetime.reenableObservation.sequence, 1);
 });
 
 test('timer setup failure removes listeners already owned by the observer', () => {

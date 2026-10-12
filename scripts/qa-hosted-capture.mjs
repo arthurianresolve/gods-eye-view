@@ -20,6 +20,7 @@ import {
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
 import { validateCableReferenceCollectionsReport } from './performance/cableReferenceCollections.mjs';
+import { summarizeCableReenableObservations } from './fixtures/cableReenableObservation.mjs';
 import {
   assessHostedSourceFinish,
   assessHostedSourceStart,
@@ -534,13 +535,14 @@ try {
         if (result) {
           report.cableReferenceCollections = result;
           if (cableReenableAttribution) {
+            const observationCoverage = summarizeCableReenableObservations(
+              result.lifetimes,
+            );
             report.cableReenableAttribution = {
               schema: 'gev-cable-reenable-attribution/v1',
               enabled: true,
-              fixtureObservation:
-                result.lifetimes?.find((row) => row.mode === 'entities')
-                  ?.reenableObservation || null,
-              scope: 'entity-cycle-0-reenable-population-and-scene-stability',
+              ...observationCoverage,
+              scope: 'all-renderer-lifetimes-two-reenable-cycles',
               performanceAcceptanceEligible: false,
             };
           }
@@ -606,14 +608,14 @@ try {
       .catch(() => null);
   }
   if (cableReenableAttribution && !report.cableReenableAttribution) {
+    const observationCoverage = summarizeCableReenableObservations(
+      report.cableReferenceCollections?.lifetimes,
+    );
     report.cableReenableAttribution = {
       schema: 'gev-cable-reenable-attribution/v1',
       enabled: true,
-      fixtureObservation:
-        report.cableReferenceCollections?.lifetimes?.find(
-          (row) => row.mode === 'entities',
-        )?.reenableObservation || null,
-      scope: 'entity-cycle-0-reenable-population-and-scene-stability',
+      ...observationCoverage,
+      scope: 'all-renderer-lifetimes-two-reenable-cycles',
       performanceAcceptanceEligible: false,
     };
   }

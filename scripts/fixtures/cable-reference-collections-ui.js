@@ -11,6 +11,7 @@ import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
 import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
 import { recordCableReferenceGeometryAttribution } from './cableGeometryAttribution.mjs';
 import {
+  appendCableReenableObservation,
   finishCableReenableObservationSafely,
   startCableReenableObservation,
 } from './cableReenableObservation.mjs';
@@ -609,13 +610,23 @@ async function runLifetime({
       setLifecycleStage('reenable', cycle);
       let reenableObservation = null;
       let observer = null;
-      if (REENABLE_DIAGNOSTIC && mode === 'entities' && cycle === 0) {
+      const reenableObservationIdentity = {
+        rendererMode: mode,
+        cycle,
+        phase: 'reenable-population-and-scene-stability',
+      };
+      if (REENABLE_DIAGNOSTIC) {
         try {
-          observer = startCableReenableObservation({ viewer, Cesium });
+          observer = startCableReenableObservation({
+            viewer,
+            Cesium,
+            ...reenableObservationIdentity,
+          });
         } catch (error) {
           reenableObservation = {
             schema: 'gev-cable-reenable-observation/v1',
             status: 'unavailable',
+            ...reenableObservationIdentity,
             setupError: String(error?.message || error).slice(0, 300),
           };
         }
@@ -639,6 +650,8 @@ async function runLifetime({
           reenableObservation = finishCableReenableObservationSafely(
             observer,
             'completed',
+            null,
+            reenableObservationIdentity,
           );
       } catch (error) {
         if (observer)
@@ -646,11 +659,12 @@ async function runLifetime({
             observer,
             'failed',
             error,
+            reenableObservationIdentity,
           );
         throw error;
       } finally {
         if (reenableObservation)
-          lifetime.reenableObservation = reenableObservation;
+          appendCableReenableObservation(lifetime, reenableObservation);
       }
       setLifecycleStage('reenable-contract-checks', cycle);
       assert(
