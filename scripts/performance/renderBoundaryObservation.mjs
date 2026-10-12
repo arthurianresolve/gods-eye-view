@@ -52,15 +52,19 @@ function boundedProgressDetails(details) {
     'postRenderObserved',
     'pageTimerFired',
   ]) {
+    if (!Object.hasOwn(details, key)) continue;
     const value = details[key];
-    if (typeof value === 'boolean') bounded[key] = value;
-    else if (
-      key === 'pageElapsedMs' &&
-      Number.isFinite(value) &&
-      value >= 0 &&
-      value <= 30_000
-    )
-      bounded[key] = value;
+    if (key === 'pageElapsedMs') {
+      if (
+        typeof value === 'number' &&
+        Number.isFinite(value) &&
+        value >= 0 &&
+        value <= 30_000
+      )
+        bounded[key] = value;
+      else return null;
+    } else if (typeof value === 'boolean') bounded[key] = value;
+    else return null;
   }
   if (typeof details.errorName === 'string')
     bounded.errorName = details.errorName.slice(0, 80);
@@ -75,11 +79,12 @@ function publish(onProgress, observation) {
   }
 }
 
-async function disposeBinding(binding, observation, now, startedAt) {
+async function disposeBinding(binding, observation, now) {
   if (!binding || typeof binding.dispose !== 'function') {
     observation.cleanup.progressBindingRemoved = binding === null;
     return;
   }
+  const cleanupStartedAt = now();
   let timer;
   try {
     const outcome = await Promise.race([
@@ -112,7 +117,7 @@ async function disposeBinding(binding, observation, now, startedAt) {
     clearTimeout(timer);
     observation.cleanup.progressBindingCleanupElapsedMs = Math.max(
       0,
-      now() - startedAt,
+      now() - cleanupStartedAt,
     );
   }
 }
@@ -160,7 +165,7 @@ export async function observeRenderBoundary({
     pageEntryHostReceiptElapsedMs: null,
     progressEvents: [],
     ignoredProgressEvents: { wrongInvocation: 0, malformed: 0, overflow: 0 },
-    pageEvaluationRoundTripResidualMs: null,
+    hostEvaluationOverheadResidualMs: null,
     page: null,
     pageError: null,
     hostError: null,
@@ -279,18 +284,19 @@ export async function observeRenderBoundary({
             ? structuredClone(pageResult)
             : { status: 'malformed-page-result' };
         observation.hostElapsedMs = Math.max(0, now() - startedAt);
-        const pageEntryElapsedMs =
-          observation.page?.diagnostics?.pageEntryElapsedMs;
         const pageElapsedMs = observation.page?.diagnostics?.pageElapsedMs;
-        // The residual includes queue/transport/serialization; it is not a
-        // one-way page-entry latency measurement.
-        observation.pageEvaluationRoundTripResidualMs =
-          Number.isFinite(pageEntryElapsedMs) && Number.isFinite(pageElapsedMs)
-            ? Math.max(
-                0,
-                observation.hostElapsedMs - pageEntryElapsedMs - pageElapsedMs,
-              )
-            : null;
+        const bindingSetupElapsedMs =
+          observation.hostProgressBindingSetupElapsedMs ?? 0;
+        // This residual includes host dispatch plus queue/transport/serialization;
+        // it is not a one-way page-entry measurement.
+        observation.hostEvaluationOverheadResidualMs = Number.isFinite(
+          pageElapsedMs,
+        )
+          ? Math.max(
+              0,
+              observation.hostElapsedMs - bindingSetupElapsedMs - pageElapsedMs,
+            )
+          : null;
         if (pageResult?.status !== 'settled')
           observation.pageError = boundedError(pageResult?.error);
         observation.latePageResultObserved = hostTimedOut;
@@ -323,8 +329,8 @@ export async function observeRenderBoundary({
       if (bindingResult.kind === 'host-timeout') {
         preparePromise.then((late) => {
           if (late.kind === 'binding-ready')
-            void disposeBinding(late.binding, observation, now, startedAt).then(
-              () => publish(onProgress, observation),
+            void disposeBinding(late.binding, observation, now).then(() =>
+              publish(onProgress, observation),
             );
         });
         throw Object.assign(new Error(observation.hostError.message), {
@@ -340,12 +346,7 @@ export async function observeRenderBoundary({
         typeof bindingResult.binding.dispose !== 'function'
       ) {
         if (bindingResult.binding?.dispose)
-          await disposeBinding(
-            bindingResult.binding,
-            observation,
-            now,
-            startedAt,
-          );
+          await disposeBinding(bindingResult.binding, observation, now);
         throw new TypeError('Render boundary progress binding is malformed.');
       }
       observation.hostProgressBindingSetupElapsedMs = Math.max(
@@ -416,8 +417,7 @@ export async function observeRenderBoundary({
   } finally {
     clearTimer(timer);
     observation.cleanup.hostTimerCleared = true;
-    if (activeBinding)
-      await disposeBinding(activeBinding, observation, now, startedAt);
+    if (activeBinding) await disposeBinding(activeBinding, observation, now);
     publish(onProgress, observation);
   }
 }

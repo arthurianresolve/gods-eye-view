@@ -49,7 +49,7 @@ test('render boundary reports page entry, dispatch delay, render and listener cl
   assert.equal(result.page.diagnostics.renderRequestStarted, true);
   assert.equal(result.page.diagnostics.postRenderObserved, true);
   assert.equal(result.settleElapsedMs, 4);
-  assert.equal(Number.isFinite(result.pageEvaluationRoundTripResidualMs), true);
+  assert.equal(Number.isFinite(result.hostEvaluationOverheadResidualMs), true);
   assert.equal(result.pendingPageResultAtDeadline, false);
   assert.equal(result.cleanup.hostTimerCleared, true);
   assert.equal(progress.at(-1).status, 'settled');
@@ -100,7 +100,7 @@ test('host deadline retains page entry acknowledgement when page stalls', async 
         false,
       );
       assert.equal(
-        error.boundaryObservation.pageEvaluationRoundTripResidualMs,
+        error.boundaryObservation.hostEvaluationOverheadResidualMs,
         null,
       );
       assert.equal(error.boundaryObservation.cleanup.hostTimerCleared, true);
@@ -118,7 +118,7 @@ test('host deadline retains page entry acknowledgement when page stalls', async 
   assert.equal(late.status, 'host-observation-deadline');
   assert.equal(late.latePageResultObserved, true);
   assert.equal(late.page.status, 'settled');
-  assert.equal(Number.isFinite(late.pageEvaluationRoundTripResidualMs), true);
+  assert.equal(Number.isFinite(late.hostEvaluationOverheadResidualMs), true);
 });
 
 test('host deadline distinguishes no page entry and ignores malformed or foreign acknowledgements', async () => {
@@ -142,6 +142,7 @@ test('host deadline distinguishes no page entry and ignores malformed or foreign
       receiveProgress('wrong-invocation', 'page-entry', { pageElapsedMs: 0 });
       receiveProgress(invocationId, 'unknown-stage', {});
       receiveProgress(invocationId, 'page-entry', []);
+      receiveProgress(invocationId, 'page-entry', { pageElapsedMs: true });
       const validLate = receiveProgress(invocationId, 'page-entry', {
         pageElapsedMs: 0,
       });
@@ -154,7 +155,7 @@ test('host deadline distinguishes no page entry and ignores malformed or foreign
       assert.equal(error.boundaryObservation.progressEvents.length, 8);
       assert.deepEqual(error.boundaryObservation.ignoredProgressEvents, {
         wrongInvocation: 1,
-        malformed: 2,
+        malformed: 3,
         overflow: 1,
       });
       assert.equal(
@@ -254,6 +255,32 @@ test('binding cleanup failure is recorded without replacing a page timer failure
       return true;
     },
   );
+});
+
+test('binding cleanup duration measures only its own bounded teardown', async () => {
+  let clock = 10;
+  const result = await observeRenderBoundary({
+    label: 'cleanup duration',
+    timeoutMs: 100,
+    now: () => clock,
+    prepareProgress: async () => ({
+      functionName: '__fixture_progress',
+      dispose: () => {
+        clock += 7;
+      },
+    }),
+    evaluate: async () => {
+      clock += 5;
+      return {
+        status: 'settled',
+        settleElapsedMs: 3,
+        diagnostics: pageDiagnostics({ pageElapsedMs: 3 }),
+      };
+    },
+  });
+  assert.equal(result.cleanup.progressBindingCleanupElapsedMs, 7);
+  assert.equal(result.hostElapsedMs, 5);
+  assert.equal(result.hostEvaluationOverheadResidualMs, 2);
 });
 
 test('page timeout and render-request errors remain distinct from host timeout', async () => {
