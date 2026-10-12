@@ -4237,3 +4237,34 @@ at `26f383ed` both pass all seven standard jobs. They are now integrated on dev;
 the candidate/pending statements above describe the earlier failed gate only.
 [Current integration evidence](performance-evidence/main-weather-38152867100/README.md)
 preserves both successful runs and the earlier failures separately.
+
+## HUD ownership fix and S54 current-dev checks - 12 October 2026
+
+The revision-owned HUD summary coalescing fix at
+`bbca229f0077b8443db04395c106677684d2ef61` passes all seven standard jobs in
+[run 38185865148](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38185865148).
+Root fast-forwarded local and remote `dev` to that exact tested commit. The
+focused HUD/voice suite passes 120 checks; five targeted baseline negative
+controls fail for the expected ownership and duplicate-context assertions.
+These tests establish cleanup and context-call behavior, not individual GPU
+readback counts or a resolution of the Windows frame stall. The automatic
+push-triggered CI run is a separate run, not additional completed evidence.
+The [saved CI response](performance-evidence/s54-current-dev-20261012/hud-ci-bbca229f.json)
+preserves job and step outcomes; optional hardware/soak and PR-only published
+layer-token checks were skipped.
+
+S54 candidate `bc892f7cb491c823bb8d7503cd036e5320f5c690`, based on `acc471e4`,
+remains isolated from dev and retains Entity defaults. Fresh dam and datacenter
+correctness runs pass: root decoded 40 images and verified all 20 exact renderer
+pairs, bundled payload hashes, native picks and warmed-baseline teardown.
+The cable run fails in the existing Entity lifetime during the map-switch
+readiness witness, before any collection sample. No page/interception errors
+or external requests were observed. Its early readiness observations were not
+retained, so the cause remains unresolved; the failed result is not retried
+unchanged or converted to a pass.
+
+[Raw results and scoped review](performance-evidence/s54-current-dev-20261012/README.md)
+separate the successful component checks from the cable failure. Current-revision
+benefit measurements, full-application coverage, physical Windows validation and
+the final retained-memory soak remain pending. The user-supplied hardware GPU
+configuration export establishes the active renderer only.
