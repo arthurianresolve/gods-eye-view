@@ -151,6 +151,15 @@ independent browser HTTP observations before capturing checkpoints. All owned
 observers and the tileset are cleaned up, but no warmed tile pair completes.
 This component remains isolated and the failed artifact is preserved.
 
+The [cancellation/recovery correction at `ae477251`](performance-evidence/s57-tiles-cancellation-recovery-38235132582/README.md)
+records an actual browser abort, real delivery after reactivation, and all five
+warmed streamed-tile pairs with bounded cache ownership and cleanup. Final
+validation fails because generic flat-terrain readiness omits an owner field
+that the validator and synthetic test data assumed existed. The required owner
+must be observed and published at readiness; the gate is not removed. All 21
+focused tests passed but missed that producer contract. The failed raw report
+remains preserved and no S57 completion is claimed.
+
 A [fresh Windows Chrome tab](performance-evidence/windows-webgl-current-window-20261012/README.md)
 restores screenshot delivery at an observed 894 x 529 viewport, while the old
 fixture reported only 83 CSS pixels of document width. The standalone WebGL
