@@ -16,6 +16,265 @@ import {
   waitForTerrainFixtureCompletion,
 } from '../qa-terrain-picking-lifecycle.mjs';
 
+const STREAMED_FIXTURE_ID = 's57-local-http-3dtiles-v1';
+const STREAMED_STACK_ID = 'qa-streamed-tiles';
+const STREAMED_MANIFEST_PATH = '/qa/s57-streaming/tileset.json';
+const STREAMED_CONTENT_PATH = '/qa/s57-streaming/tile.glb';
+const STREAMED_ASSETS = {
+  fixtureId: STREAMED_FIXTURE_ID,
+  manifest: {
+    path: STREAMED_MANIFEST_PATH,
+    sha256: '9d09c0121b01956e83b8c24139d42def6c98aa1460f3b8a5cc92ffd3590f7c9a',
+    byteLength: 249,
+  },
+  content: {
+    path: STREAMED_CONTENT_PATH,
+    sha256: '81bded5feb11e86993e187d8b265d8e12fbdc57613a9ceb98b8c70e39bd7622c',
+    byteLength: 960,
+  },
+};
+
+function streamedTileSnapshot(active = false) {
+  return {
+    activeStackId: active ? STREAMED_STACK_ID : 'qa-terrain-flat',
+    factoryCalls: 1,
+    objectId: 1,
+    attachedToScene: active,
+    show: active,
+    tilesLoaded: active,
+    latestVisible: active
+      ? {
+          contentReady: true,
+          contentType: 'Model3DTileContent',
+          frameNumber: 11,
+        }
+      : null,
+    tileVisibleCount: active ? 1 : 1,
+    tileLoadCount: 1,
+    loadProgressCount: 2,
+    failureCount: 0,
+    totalMemoryUsageInBytes: 64,
+    totalMemoryUsageStatus: 'observed',
+    totalMemoryUsageUnavailableReason: null,
+    maximumScreenSpaceError: 16,
+    dynamicScreenSpaceError: false,
+  };
+}
+
+function streamedDiagnostics({ cacheReuses = 4 } = {}) {
+  return {
+    pendingJobs: 0,
+    primitives: 1,
+    cacheEntries: 1,
+    providerLoadsStarted: 1,
+    providerCacheReuses: cacheReuses,
+    providerLoadFailures: 0,
+  };
+}
+
+function streamedSwitch(fromStackId, toStackId) {
+  const active = toStackId === STREAMED_STACK_ID;
+  const final = {
+    activeStackId: toStackId,
+    globeShow: false,
+    tilesLoaded: true,
+    workerPending: 0,
+    workerCounters: { pending: 0 },
+    tileset: active ? streamedTileSnapshot(true) : null,
+  };
+  return {
+    status: 'ready',
+    fromStackId,
+    toStackId,
+    setStackElapsedMs: 2,
+    readinessElapsedMs: 1010,
+    switchToSettledElapsedMs: 1012,
+    providerLoadDelta: 0,
+    providerCacheReuseDelta: 1,
+    pendingJobsAfterReadiness: 0,
+    before: { diagnostics: streamedDiagnostics({ cacheReuses: 4 }) },
+    after: {
+      tile: streamedTileSnapshot(active),
+      diagnostics: streamedDiagnostics({ cacheReuses: 5 }),
+    },
+    readiness: {
+      status: 'ready',
+      stableWindowMs: 1000,
+      startFrame: 10,
+      samples: [{}, {}, {}],
+      final,
+    },
+  };
+}
+
+function streamedEvidence(cycles = 5) {
+  return {
+    status: 'passed',
+    fixtureId: STREAMED_FIXTURE_ID,
+    stackId: STREAMED_STACK_ID,
+    assetPaths: {
+      manifest: STREAMED_MANIFEST_PATH,
+      content: STREAMED_CONTENT_PATH,
+    },
+    supersededFactory: {
+      status: 'passed',
+      elapsedMs: 1,
+      staleGeneration: 1,
+      supersedingGeneration: 2,
+      factoryCalls: 1,
+      signalAborted: false,
+      factoryResolvedWhileFlatActive: true,
+      sceneAttachmentAfterLateResolution: false,
+      activeStackAfterLateResolution: 'qa-terrain-flat',
+      httpCheckpointBeforeTileActivation: {
+        browser: {
+          counts: {
+            manifest: { completed: 1 },
+            content: { requests: 0 },
+          },
+        },
+        server: {
+          counts: {
+            manifest: { successfulResponses: 1 },
+            content: { requests: 0 },
+          },
+        },
+      },
+    },
+    pendingContentActivation: {
+      status: 'activated-pending-content',
+      activeStackId: STREAMED_STACK_ID,
+      setStackElapsedMs: 1,
+    },
+    supersededContent: {
+      status: 'passed',
+      observedPausedContentPath: STREAMED_CONTENT_PATH,
+      activeStackAtPause: STREAMED_STACK_ID,
+      activeStackAfterSupersession: 'qa-terrain-flat',
+      tileSetHiddenAtDelivery: true,
+      browserAtPause: {
+        counts: {
+          content: { requests: 1, completed: 0 },
+        },
+      },
+      serverAtPause: {
+        counts: { content: { requests: 0 } },
+      },
+      delivery: {
+        browser: { completed: 1 },
+        server: { successfulResponses: 1 },
+      },
+    },
+    firstVisibleActivation: streamedSwitch(
+      'qa-terrain-flat',
+      STREAMED_STACK_ID,
+    ),
+    warmCacheState: {
+      tile: streamedTileSnapshot(true),
+      diagnostics: streamedDiagnostics({ cacheReuses: 5 }),
+    },
+    postWarmReturn: streamedSwitch(STREAMED_STACK_ID, 'qa-terrain-flat'),
+    cycles: Array.from({ length: cycles }, (_, index) => {
+      const tilesFirst = (index + 1) % 2 === 0;
+      const first = tilesFirst ? STREAMED_STACK_ID : 'qa-terrain-flat';
+      const second = tilesFirst ? 'qa-terrain-flat' : STREAMED_STACK_ID;
+      return {
+        cycle: index + 1,
+        status: 'passed',
+        order: tilesFirst ? 'tiles-flat-tiles' : 'flat-tiles-flat',
+        warmStart: null,
+        switches: [
+          streamedSwitch(first, second),
+          streamedSwitch(second, first),
+        ],
+      };
+    }),
+    final: {
+      tile: streamedTileSnapshot(),
+      activeStackId: 'qa-terrain-flat',
+      diagnostics: streamedDiagnostics({ cacheReuses: 5 }),
+    },
+    eventRows: [],
+    eventOverflowCount: 0,
+    cleanup: {
+      attemptedCount: 4,
+      removedCount: 4,
+      cleanupConfirmed: true,
+      errors: [],
+    },
+    controllerDestroyedTileset: true,
+  };
+}
+
+function streamedHttpEvidence(assets = STREAMED_ASSETS) {
+  const networkCounts = (requests, responses, completed) => ({
+    requests,
+    responses,
+    completed,
+    failed: 0,
+    servedFromCache: 0,
+  });
+  return {
+    assetIdentity: assets,
+    browser: {
+      origin: 'fixture-origin-only',
+      overflowCount: 0,
+      pendingCount: 0,
+      counts: {
+        manifest: networkCounts(1, 1, 1),
+        content: networkCounts(1, 1, 1),
+      },
+      requests: [
+        {
+          kind: 'manifest',
+          method: 'GET',
+          status: 200,
+          failure: false,
+          encodedDataLength: 249,
+        },
+        {
+          kind: 'content',
+          method: 'GET',
+          status: 200,
+          failure: false,
+          encodedDataLength: 960,
+        },
+      ],
+    },
+    server: {
+      source: 'local-http-server-request-events',
+      overflowCount: 0,
+      pendingCount: 0,
+      counts: {
+        manifest: {
+          requests: 1,
+          successfulResponses: 1,
+          bytesFromHeader: STREAMED_ASSETS.manifest.byteLength,
+        },
+        content: {
+          requests: 1,
+          successfulResponses: 1,
+          bytesFromHeader: STREAMED_ASSETS.content.byteLength,
+        },
+      },
+    },
+    contentInterception: {
+      status: 'passed',
+      pauseObservedBeforeContinue: true,
+      browserAtPause: {
+        counts: {
+          content: { requests: 1, completed: 0 },
+        },
+      },
+      serverAtPause: {
+        counts: { content: { requests: 0 } },
+      },
+    },
+    networkListenerCleanupConfirmed: true,
+    serverListenerCleanupConfirmed: true,
+  };
+}
+
 function snapshot({
   terrainKind = 'EllipsoidTerrainProvider',
   activeStackId = 'qa-terrain-flat',
@@ -36,7 +295,7 @@ function snapshot({
       providerLoadFailures: 0,
       streamedTileMemoryBytes: null,
       streamedTileMemoryUnavailableReason:
-        'local single-tile imagery and custom heightmap fixture; no streamed 3D tile memory source',
+        'legacy terrain-only observation; streamed tile ownership and memory are reported separately under streamedTiles',
     },
     cables: {
       listeners: 4,
@@ -174,7 +433,7 @@ function validReport() {
       estimatedTileBytesAfter: null,
     };
   };
-  return {
+  const report = {
     schema: 'gev-terrain-picking-lifecycle/v1',
     status: 'passed',
     applicationCommit: 'a'.repeat(40),
@@ -197,7 +456,7 @@ function validReport() {
         'active source, provider cache/load counters, local heightmap request count, worker counters, pending ownership, and controller tile-memory estimate',
       streamedTileMemoryBytes: null,
       streamedTileMemoryUnavailableReason:
-        'fixture uses local single-tile imagery and a custom heightmap provider, not streamed 3D tiles',
+        'legacy terrain-only comparison excludes streamed tile memory; separate streamedTiles observations report it',
       currentUpdateObserver: {
         available: true,
         installErrorName: null,
@@ -295,7 +554,12 @@ function validReport() {
       viewerDestroyed: true,
       final: {
         cables: { listeners: 0, dataSources: 0, cacheEntries: 0 },
-        map: { pendingJobs: 0, cacheEntries: 0, imageryLayers: 0 },
+        map: {
+          pendingJobs: 0,
+          cacheEntries: 0,
+          imageryLayers: 0,
+          primitives: 0,
+        },
       },
     },
     cleanup: {
@@ -304,6 +568,10 @@ function validReport() {
       serverClosed: true,
     },
   };
+  report.streamedTiles = streamedEvidence();
+  report.streamedTileAssets = STREAMED_ASSETS;
+  report.streamedTileHttpEvidence = streamedHttpEvidence();
+  return report;
 }
 
 test('real observer publication satisfies the report contract before and after later lifecycle work', () => {
@@ -399,6 +667,10 @@ test('real local terrain and selection lifecycle report validates as a complete 
     terrainTransitionWorkerSubmissions: 2,
     terrainTransitionWorkerCompletions: 2,
     selectionReenablePicks: 3,
+    streamedTileFactoryCalls: 1,
+    streamedTileHttpManifestResponses: 1,
+    streamedTileHttpContentResponses: 1,
+    streamedTileSwitches: 10,
     applicationCommit: 'a'.repeat(40),
   });
 });
@@ -449,6 +721,53 @@ test('validator fails closed on external requests and malformed terrain evidence
   assert.throws(() =>
     validateTerrainPickingLifecycleReport(fabricatedCompletion),
   );
+});
+
+test('streamed-tile validator rejects missing delivery, stale ownership and invalid cache evidence', () => {
+  const mutations = [
+    (report) => {
+      report.streamedTileHttpEvidence.server.counts.content.successfulResponses = 0;
+    },
+    (report) => {
+      report.streamedTileHttpEvidence.browser.counts.content.failed = 1;
+    },
+    (report) => {
+      report.streamedTileHttpEvidence.browser.requests[1].kind = 'manifest';
+    },
+    (report) => {
+      report.streamedTiles.supersededFactory.sceneAttachmentAfterLateResolution = true;
+    },
+    (report) => {
+      report.streamedTiles.supersededContent.serverAtPause.counts.content.requests = 1;
+    },
+    (report) => {
+      report.streamedTiles.firstVisibleActivation.readiness.final.tileset.latestVisible.frameNumber =
+        report.streamedTiles.firstVisibleActivation.readiness.startFrame;
+    },
+    (report) => {
+      report.streamedTiles.final.tile.totalMemoryUsageInBytes = -1;
+    },
+    (report) => {
+      report.streamedTiles.cleanup.cleanupConfirmed = false;
+    },
+    (report) => {
+      const row = report.streamedTiles.cycles[0].switches[0];
+      row.after.diagnostics.providerLoadsStarted++;
+      row.providerLoadDelta++;
+    },
+    (report) => {
+      report.streamedTiles.cycles[0].switches[0].after.diagnostics
+        .cacheEntries++;
+    },
+    (report) => {
+      report.streamedTiles.cycles[0].switches[0].after.diagnostics.primitives++;
+    },
+  ];
+  for (const mutate of mutations) {
+    const report = validReport();
+    mutate(report);
+    assert.throws(() => validateTerrainPickingLifecycleReport(report));
+  }
 });
 
 test('counterbalanced switch evidence separates activation, readiness and observed ownership', () => {
@@ -579,9 +898,13 @@ function runnerDependencies({
     closed: { page: 0, browser: 0, server: 0 },
     failedWriteReport: null,
     cdpSessionDetached: 0,
+    networkListenerCleanup: 0,
+    serverListenerCleanup: 0,
   };
   const cdpSession = new EventEmitter();
-  cdpSession.send = async () => {};
+  cdpSession.send = async (method) => {
+    if (method === 'Fetch.continueRequest') state.fetchContinued = true;
+  };
   cdpSession.detach = async () => {
     state.cdpSessionDetached++;
   };
@@ -591,8 +914,19 @@ function runnerDependencies({
     async createCDPSession() {
       return cdpSession;
     },
+    async exposeFunction() {},
     async goto() {
       if (navigationError) throw navigationError;
+      cdpSession.emit('Fetch.requestPaused', {
+        requestId: 'streamed-content',
+        request: {
+          url: `http://127.0.0.1:4174${STREAMED_CONTENT_PATH}`,
+          method: 'GET',
+          postData: null,
+        },
+      });
+      for (let attempt = 0; attempt < 20 && !state.fetchContinued; attempt++)
+        await new Promise((resolve) => setImmediate(resolve));
     },
     async waitForSelector() {},
     async evaluate(fn) {
@@ -609,6 +943,16 @@ function runnerDependencies({
         };
       if (source.includes('navigator.userAgent'))
         return 'Mozilla/5.0 Chrome/152.0.0.0';
+      if (source.includes('__s57SupersedeStreamedContentRequest'))
+        return {
+          status: 'passed',
+          activeStackAfterSupersession: 'qa-terrain-flat',
+          tileSetHiddenAtDelivery: true,
+          browserAtPause: {
+            counts: { content: { requests: 1, completed: 0 } },
+          },
+          serverAtPause: { counts: { content: { requests: 0 } } },
+        };
       if (source.includes('__terrainPickingBuildIdentity'))
         return { applicationCommit: servedCommit, harnessCommit: servedCommit };
       if (source.includes('__terrainPickingLifecycleResult')) return result;
@@ -632,6 +976,7 @@ function runnerDependencies({
     state,
     deps: {
       createServer: async () => ({
+        httpServer: new EventEmitter(),
         async listen() {},
         async close() {
           state.closed.server++;
@@ -659,6 +1004,40 @@ function runnerDependencies({
         classification: 'software',
         eligibleForHardwareClaims: false,
       }),
+      readStreamedTileFixtureAssets: async () => STREAMED_ASSETS,
+      createStreamedTileNetworkEvidence: () => ({
+        attach: () => () => {
+          state.networkListenerCleanup++;
+        },
+        snapshot: () => {
+          const evidence = streamedHttpEvidence().browser;
+          if (!state.fetchContinued) {
+            evidence.counts.content = {
+              ...evidence.counts.content,
+              completed: 0,
+            };
+            evidence.pendingCount = 1;
+          }
+          return evidence;
+        },
+      }),
+      installStreamedTileServerEvidence: () => ({
+        snapshot: () => {
+          const evidence = streamedHttpEvidence().server;
+          if (!state.fetchContinued) {
+            evidence.counts.content = {
+              requests: 0,
+              successfulResponses: 0,
+              bytesFromHeader: 0,
+            };
+          }
+          return evidence;
+        },
+        cleanup: () => {
+          state.serverListenerCleanup++;
+          return true;
+        },
+      }),
     },
   };
 }
@@ -675,6 +1054,8 @@ test('runner preserves fixture identity, partial evidence, and owned cleanup', a
   assert.equal(passed.cleanup.cdpSessionDetached, true);
   assert.deepEqual(success.state.closed, { page: 1, browser: 1, server: 1 });
   assert.equal(success.state.cdpSessionDetached, 1);
+  assert.equal(success.state.networkListenerCleanup, 1);
+  assert.equal(success.state.serverListenerCleanup, 1);
 
   const wrongBuild = runnerDependencies({
     servedCommit: 'b'.repeat(40),
@@ -718,6 +1099,13 @@ test('runner preserves fixture identity, partial evidence, and owned cleanup', a
     /fixture navigation failed/,
   );
   assert.equal(startup.state.written.at(-1).error, 'fixture navigation failed');
+  assert.equal(startup.state.networkListenerCleanup, 1);
+  assert.equal(startup.state.serverListenerCleanup, 1);
+  assert.equal(
+    startup.state.written.at(-1).streamedTileHttpEvidence
+      .networkListenerCleanupConfirmed,
+    true,
+  );
   assert.deepEqual(startup.state.closed, { page: 1, browser: 1, server: 1 });
 
   const closeFailure = runnerDependencies({
@@ -884,4 +1272,48 @@ test('raw CDP Fetch interception resolves worker requests without Network pairin
     },
   });
   assert.equal(externalRequests, 1);
+});
+
+test('fixture interception holds an owned same-origin content request until supersession callback completes', async () => {
+  const client = new EventEmitter();
+  const commands = [];
+  client.send = async (method, params) => {
+    commands.push({ method, params });
+  };
+  let entered = false;
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  await installTerrainFixtureRequestInterception(
+    { createCDPSession: async () => client },
+    {
+      origin: 'http://127.0.0.1:4174',
+      onBeforeContinue: async ({ url, method }) => {
+        assert.equal(url, 'http://127.0.0.1:4174/qa/s57-streaming/tile.glb');
+        assert.equal(method, 'GET');
+        entered = true;
+        await gate;
+      },
+    },
+  );
+  client.emit('Fetch.requestPaused', {
+    requestId: 'held-streamed-tile-content',
+    request: {
+      url: 'http://127.0.0.1:4174/qa/s57-streaming/tile.glb',
+      method: 'GET',
+      postData: null,
+    },
+  });
+  for (let attempt = 0; attempt < 10 && !entered; attempt++)
+    await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(entered, true);
+  assert.equal(commands.length, 1);
+  release();
+  for (let attempt = 0; attempt < 10 && commands.length < 2; attempt++)
+    await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(commands[1], {
+    method: 'Fetch.continueRequest',
+    params: { requestId: 'held-streamed-tile-content' },
+  });
 });

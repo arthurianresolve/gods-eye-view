@@ -23,6 +23,7 @@ const DRAIN_MS = 10_000;
 const READY_MS = 30_000;
 const CYCLES = 5;
 const CAMERA = Object.freeze({ longitude: 0, latitude: 0, height: 90_000 });
+const STREAMED_TILE_STACK = 'qa-streamed-tiles';
 let lifecycleCycles = CYCLES;
 let lifecycleDrainMs = DRAIN_MS;
 
@@ -148,7 +149,7 @@ function diagnosticSnapshot(viewer, controller, cableLayer) {
       ...controller.getPerformanceDiagnostics(),
       streamedTileMemoryBytes: null,
       streamedTileMemoryUnavailableReason:
-        'local single-tile imagery and custom heightmap fixture; no streamed 3D tile memory source',
+        'legacy terrain-only observation; streamed tile ownership and memory are reported separately under streamedTiles',
     },
     cables: cableLayer.getPerformanceDiagnostics(),
     scene: {
@@ -311,6 +312,73 @@ async function waitForStableScene(
   );
 }
 
+async function waitForStreamedTilesReady(
+  viewer,
+  controller,
+  streamedTiles,
+  label,
+  timeoutMs = READY_MS,
+) {
+  const started = performance.now();
+  const startFrame = viewer.scene.frameState.frameNumber;
+  const history = [];
+  let previous = null;
+  let stableSince = null;
+  while (performance.now() - started <= timeoutMs) {
+    const tile = streamedTiles.snapshot(viewer, controller);
+    const workers = snapshotWorkers();
+    const sample = {
+      elapsedMs: performance.now() - started,
+      frameNumber: Number.isSafeInteger(viewer.scene.frameState.frameNumber)
+        ? viewer.scene.frameState.frameNumber
+        : null,
+      postRenderCount,
+      activeStackId: controller.getActiveId(),
+      globeShow: viewer.scene.globe.show,
+      tileset: tile,
+      workerPending: workers.pending,
+      camera: cameraPose(viewer),
+    };
+    if (history.length < 64) history.push(sample);
+    const stable =
+      sample.activeStackId === STREAMED_TILE_STACK &&
+      sample.globeShow === false &&
+      tile.attachedToScene === true &&
+      tile.show === true &&
+      tile.tilesLoaded === true &&
+      tile.latestVisible?.contentReady === true &&
+      tile.latestVisible.frameNumber > startFrame &&
+      tile.failureCount === 0 &&
+      workers.pending === 0 &&
+      sample.camera &&
+      previous &&
+      sample.frameNumber > previous.frameNumber &&
+      sample.postRenderCount > previous.postRenderCount &&
+      JSON.stringify(sample.camera) === JSON.stringify(previous.camera);
+    if (stable) {
+      stableSince ??= sample.elapsedMs;
+      if (sample.elapsedMs - stableSince >= 1000 && history.length >= 3)
+        return {
+          status: 'ready',
+          label,
+          elapsedMs: performance.now() - started,
+          stableWindowMs: sample.elapsedMs - stableSince,
+          startFrame,
+          samples: history,
+          final: sample,
+        };
+    } else stableSince = null;
+    previous = sample;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw Object.assign(
+    new Error(`${label} did not reach streamed-tile readiness.`),
+    {
+      sceneHistory: history,
+    },
+  );
+}
+
 function cableFixture() {
   return {
     cables: {
@@ -371,70 +439,104 @@ function createLocalReliefProvider(requestCount) {
   });
 }
 
-function createMapController(viewer, mapEvents, terrainCalls, delayed) {
+function createMapController(
+  viewer,
+  mapEvents,
+  terrainCalls,
+  delayed,
+  streamedTiles = null,
+) {
   const imageryA = localImageryProvider('#406080');
   const imageryB = localImageryProvider('#806040');
+  const sources = [
+    {
+      descriptor: {
+        id: 'qa-terrain-flat',
+        label: 'Fixture flat',
+        kind: 'imagery',
+      },
+      imagery: async ({ signal }) => {
+        signal.throwIfAborted();
+        return imageryA;
+      },
+      terrain: {
+        id: 'qa-flat-provider',
+        create: async ({ signal }) => {
+          signal.throwIfAborted();
+          terrainCalls.flat++;
+          return { provider: new Cesium.EllipsoidTerrainProvider() };
+        },
+      },
+    },
+    {
+      descriptor: {
+        id: 'qa-terrain-relief',
+        label: 'Fixture relief',
+        kind: 'imagery',
+      },
+      imagery: async ({ signal }) => {
+        signal.throwIfAborted();
+        return imageryB;
+      },
+      terrain: {
+        id: 'qa-heightmap-provider',
+        create: async ({ signal }) => {
+          signal.throwIfAborted();
+          terrainCalls.relief++;
+          return { provider: createLocalReliefProvider(terrainCalls.tiles) };
+        },
+      },
+    },
+    {
+      descriptor: {
+        id: 'qa-terrain-delayed',
+        label: 'Fixture delayed',
+        kind: 'imagery',
+      },
+      imagery: async ({ signal }) => {
+        signal.throwIfAborted();
+        return imageryA;
+      },
+      terrain: {
+        id: 'qa-delayed-provider',
+        create: ({ signal }) => {
+          terrainCalls.delayedSignal = signal;
+          terrainCalls.delayed++;
+          return delayed.promise;
+        },
+      },
+    },
+  ];
+  if (streamedTiles) {
+    sources.push({
+      descriptor: {
+        id: STREAMED_TILE_STACK,
+        label: 'Fixture streamed 3D tiles',
+        kind: 'tileset',
+      },
+      async createTileset({ signal }) {
+        streamedTiles.factoryCalls++;
+        streamedTiles.factorySignal = signal;
+        if (streamedTiles.deferNextFactory) {
+          streamedTiles.deferNextFactory = false;
+          streamedTiles.factoryStarted = true;
+          await streamedTiles.factoryGate.promise;
+        }
+        signal.throwIfAborted();
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(
+          new URL('/qa/s57-streaming/tileset.json', window.location.origin)
+            .href,
+        );
+        streamedTiles.tileset = tileset;
+        streamedTiles.objectId = streamedTiles.nextObjectId++;
+        streamedTiles.attachListeners(tileset, viewer);
+        return tileset;
+      },
+    });
+  }
   const registry = {
     defaultId: 'qa-terrain-flat',
-    sources: [
-      {
-        descriptor: {
-          id: 'qa-terrain-flat',
-          label: 'Fixture flat',
-          kind: 'imagery',
-        },
-        imagery: async ({ signal }) => {
-          signal.throwIfAborted();
-          return imageryA;
-        },
-        terrain: {
-          id: 'qa-flat-provider',
-          create: async ({ signal }) => {
-            signal.throwIfAborted();
-            terrainCalls.flat++;
-            return { provider: new Cesium.EllipsoidTerrainProvider() };
-          },
-        },
-      },
-      {
-        descriptor: {
-          id: 'qa-terrain-relief',
-          label: 'Fixture relief',
-          kind: 'imagery',
-        },
-        imagery: async ({ signal }) => {
-          signal.throwIfAborted();
-          return imageryB;
-        },
-        terrain: {
-          id: 'qa-heightmap-provider',
-          create: async ({ signal }) => {
-            signal.throwIfAborted();
-            terrainCalls.relief++;
-            return { provider: createLocalReliefProvider(terrainCalls.tiles) };
-          },
-        },
-      },
-      {
-        descriptor: {
-          id: 'qa-terrain-delayed',
-          label: 'Fixture delayed',
-          kind: 'imagery',
-        },
-        imagery: async ({ signal }) => {
-          signal.throwIfAborted();
-          return imageryA;
-        },
-        terrain: {
-          id: 'qa-delayed-provider',
-          create: ({ signal }) => {
-            terrainCalls.delayedSignal = signal;
-            terrainCalls.delayed++;
-            return delayed.promise;
-          },
-        },
-      },
-    ],
+    sources,
   };
   return new MapSourceController(viewer, {
     registry,
@@ -446,6 +548,149 @@ function createMapController(viewer, mapEvents, terrainCalls, delayed) {
       mapEvents.dispatchEvent(event);
     },
   });
+}
+
+function createStreamedTileState() {
+  return {
+    factoryCalls: 0,
+    deferNextFactory: false,
+    factoryStarted: false,
+    factoryGate: deferred(),
+    tileset: null,
+    factorySignal: null,
+    objectId: null,
+    nextObjectId: 1,
+    tileVisibleCount: 0,
+    tileLoadCount: 0,
+    loadProgressCount: 0,
+    failureCount: 0,
+    latestVisible: null,
+    eventRows: [],
+    eventOverflowCount: 0,
+    removeListeners: [],
+    cleanupErrors: [],
+    attachListeners(tileset, viewer) {
+      const push = (row) => {
+        if (this.eventRows.length < 32) this.eventRows.push(row);
+        else this.eventOverflowCount++;
+      };
+      this.removeListeners.push(
+        tileset.tileVisible.addEventListener((tile) => {
+          const content = tile?.content;
+          const row = {
+            kind: 'visible',
+            frameNumber: Number.isSafeInteger(
+              viewer.scene.frameState?.frameNumber,
+            )
+              ? viewer.scene.frameState.frameNumber
+              : null,
+            contentType: String(content?.constructor?.name || '').slice(0, 80),
+            contentReady: content?.ready === true,
+          };
+          this.tileVisibleCount++;
+          this.latestVisible = row;
+          push(row);
+        }),
+      );
+      this.removeListeners.push(
+        tileset.tileLoad.addEventListener((tile) => {
+          this.tileLoadCount++;
+          push({
+            kind: 'load',
+            contentType: String(tile?.content?.constructor?.name || '').slice(
+              0,
+              80,
+            ),
+            contentReady: tile?.content?.ready === true,
+          });
+        }),
+      );
+      this.removeListeners.push(
+        tileset.loadProgress.addEventListener((pendingRequests, processing) => {
+          this.loadProgressCount++;
+          push({
+            kind: 'progress',
+            pendingRequests:
+              Number.isSafeInteger(pendingRequests) && pendingRequests >= 0
+                ? pendingRequests
+                : null,
+            processing:
+              Number.isSafeInteger(processing) && processing >= 0
+                ? processing
+                : null,
+          });
+        }),
+      );
+      this.removeListeners.push(
+        tileset.tileFailed.addEventListener((error) => {
+          this.failureCount++;
+          push({
+            kind: 'failed',
+            name: String(error?.name || 'TileLoadError').slice(0, 80),
+          });
+        }),
+      );
+    },
+    snapshot(viewer, controller) {
+      const tileset = this.tileset;
+      const memory = tileset?.totalMemoryUsageInBytes;
+      return {
+        factoryCalls: this.factoryCalls,
+        objectId: this.objectId,
+        activeStackId: controller.getActiveId(),
+        attachedToScene: Boolean(
+          tileset && viewer.scene.primitives.contains(tileset),
+        ),
+        show: typeof tileset?.show === 'boolean' ? tileset.show : null,
+        tilesLoaded:
+          typeof tileset?.tilesLoaded === 'boolean'
+            ? tileset.tilesLoaded
+            : null,
+        tileVisibleCount: this.tileVisibleCount,
+        tileLoadCount: this.tileLoadCount,
+        loadProgressCount: this.loadProgressCount,
+        failureCount: this.failureCount,
+        totalMemoryUsageInBytes:
+          Number.isFinite(memory) && memory >= 0 ? memory : null,
+        totalMemoryUsageStatus:
+          Number.isFinite(memory) && memory >= 0 ? 'observed' : 'unavailable',
+        totalMemoryUsageUnavailableReason:
+          Number.isFinite(memory) && memory >= 0
+            ? null
+            : 'Cesium3DTileset.totalMemoryUsageInBytes unavailable for this snapshot',
+        maximumScreenSpaceError: Number.isFinite(
+          tileset?.maximumScreenSpaceError,
+        )
+          ? tileset.maximumScreenSpaceError
+          : null,
+        dynamicScreenSpaceError:
+          typeof tileset?.dynamicScreenSpaceError === 'boolean'
+            ? tileset.dynamicScreenSpaceError
+            : null,
+        latestVisible: this.latestVisible,
+      };
+    },
+    cleanup() {
+      const errors = [];
+      const removers = this.removeListeners.splice(0);
+      for (const remove of removers) {
+        try {
+          remove();
+        } catch (error) {
+          errors.push(String(error?.name || 'Error').slice(0, 80));
+        }
+      }
+      this.cleanupErrors.push(...errors);
+      return {
+        attemptedCount: removers.length,
+        removedCount: removers.length - errors.length,
+        cleanupConfirmed:
+          errors.length === 0 &&
+          (this.tileset === null || removers.length === 4),
+        errors,
+      };
+    },
+  };
 }
 
 function boundsMatch(snapshot, baseline) {
@@ -484,6 +729,7 @@ async function runFixture() {
     ? options.drainMs
     : DRAIN_MS;
   const startedAt = new Date().toISOString();
+  const streamedTiles = createStreamedTileState();
   const report = {
     schema: 'gev-terrain-picking-lifecycle/v1',
     status: 'running',
@@ -517,7 +763,7 @@ async function runFixture() {
         'active source, provider cache/load counters, local heightmap request count, worker counters, pending ownership, and controller tile-memory estimate',
       streamedTileMemoryBytes: null,
       streamedTileMemoryUnavailableReason:
-        'fixture uses local single-tile imagery and a custom heightmap provider, not streamed 3D tiles',
+        'legacy terrain-only comparison excludes streamed tile memory; separate streamedTiles observations report it',
     },
     startedAt,
     initialReadiness: null,
@@ -525,6 +771,22 @@ async function runFixture() {
     cycles: [],
     staleTerrainReplacement: null,
     destroyLateTerrain: null,
+    streamedTiles: {
+      status: 'not-started',
+      fixtureId: 's57-local-http-3dtiles-v1',
+      stackId: STREAMED_TILE_STACK,
+      assetPaths: {
+        manifest: '/qa/s57-streaming/tileset.json',
+        content: '/qa/s57-streaming/tile.glb',
+      },
+      supersededFactory: null,
+      supersededContent: null,
+      warmup: null,
+      cycles: [],
+      eventRows: [],
+      eventOverflowCount: 0,
+      cleanup: null,
+    },
     cleanup: null,
     failedPhase: null,
     error: null,
@@ -565,6 +827,57 @@ async function runFixture() {
       sceneObserver(label),
       currentUpdateRequirement,
     );
+  const streamedMapSnapshot = () => ({
+    activeStackId: controller.getActiveId(),
+    switchOrigin: controller.getSwitchOrigin(),
+    diagnostics: controller.getPerformanceDiagnostics(),
+    tile: streamedTiles.snapshot(viewer, controller),
+    globeShow: viewer.scene.globe.show,
+    frameNumber: viewer.scene.frameState.frameNumber,
+  });
+  const switchStreamedTarget = async (targetStackId, label) => {
+    const before = streamedMapSnapshot();
+    const started = performance.now();
+    const state = await controller.setStack(targetStackId);
+    const setStackElapsedMs = performance.now() - started;
+    if (
+      state?.activeId !== targetStackId ||
+      state.status !== 'ready' ||
+      state.lastError
+    )
+      throw new Error(`${label} did not activate ${targetStackId}.`);
+    const readyStarted = performance.now();
+    const readiness =
+      targetStackId === STREAMED_TILE_STACK
+        ? await waitForStreamedTilesReady(
+            viewer,
+            controller,
+            streamedTiles,
+            label,
+            READY_MS,
+          )
+        : await waitForScene(label, READY_MS);
+    const after = streamedMapSnapshot();
+    return {
+      status: 'ready',
+      label,
+      fromStackId: before.activeStackId,
+      toStackId: targetStackId,
+      setStackElapsedMs,
+      readinessElapsedMs: performance.now() - readyStarted,
+      switchToSettledElapsedMs: performance.now() - started,
+      providerLoadDelta:
+        after.diagnostics.providerLoadsStarted -
+        before.diagnostics.providerLoadsStarted,
+      providerCacheReuseDelta:
+        after.diagnostics.providerCacheReuses -
+        before.diagnostics.providerCacheReuses,
+      pendingJobsAfterReadiness: after.diagnostics.pendingJobs,
+      readiness,
+      before,
+      after,
+    };
+  };
   const runStackSwitch = async (targetStackId, label, measured) => {
     const before = diagnosticSnapshot(viewer, controller, cableLayer);
     const tileRequestsBefore = terrainCalls.tiles.count;
@@ -721,7 +1034,13 @@ async function runFixture() {
     });
     cableLayer.init(viewer);
     cableLayer.enable(viewer);
-    controller = createMapController(viewer, mapEvents, terrainCalls, delayed);
+    controller = createMapController(
+      viewer,
+      mapEvents,
+      terrainCalls,
+      delayed,
+      streamedTiles,
+    );
 
     report.phase = 'initial-local-terrain-and-entity-warmup';
     publish();
@@ -1075,6 +1394,201 @@ async function runFixture() {
     };
     publish();
 
+    report.phase = 'streamed-tiles-lifecycle';
+    report.streamedTiles.status = 'running';
+    publish();
+    await switchStreamedTarget('qa-terrain-flat', 'streamed-tile-flat-warmup');
+    report.streamedTiles.warmup = streamedMapSnapshot();
+
+    // Hold the first factory completion behind a real superseding stack switch.
+    // The late factory returns the actual HTTP-backed Cesium tileset but its
+    // stale generation must not attach it to the scene.
+    streamedTiles.deferNextFactory = true;
+    const staleFactoryStartedAt = performance.now();
+    const staleFactorySwitch = controller.setStack(STREAMED_TILE_STACK);
+    await waitFor(
+      () => streamedTiles.factoryStarted,
+      lifecycleDrainMs,
+      'streamed tileset factory start',
+    );
+    const staleGeneration = controller.getSwitchGeneration();
+    const staleFactorySupersedingSwitch =
+      await controller.setStack('qa-terrain-flat');
+    if (staleFactorySupersedingSwitch.activeId !== 'qa-terrain-flat')
+      throw new Error(
+        'Streamed tileset factory supersession did not settle flat.',
+      );
+    await waitForScene('streamed-tile-factory-superseded-flat');
+    const supersedingGeneration = controller.getSwitchGeneration();
+    streamedTiles.factoryGate.resolve();
+    const staleFactoryResult = await staleFactorySwitch;
+    const afterLateFactory = streamedMapSnapshot();
+    if (
+      staleFactoryResult.activeId !== 'qa-terrain-flat' ||
+      afterLateFactory.activeStackId !== 'qa-terrain-flat' ||
+      afterLateFactory.tile.attachedToScene !== false
+    )
+      throw new Error(
+        'A superseded streamed tileset factory replaced the active flat stack.',
+      );
+    report.streamedTiles.supersededFactory = {
+      status: 'passed',
+      elapsedMs: performance.now() - staleFactoryStartedAt,
+      staleGeneration,
+      supersedingGeneration,
+      factoryCalls: streamedTiles.factoryCalls,
+      signalAborted: streamedTiles.factorySignal?.aborted === true,
+      factoryResolvedWhileFlatActive: true,
+      sceneAttachmentAfterLateResolution: false,
+      unattachedTilesetShowValue: afterLateFactory.tile.show,
+      activeStackAfterLateResolution: controller.getActiveId(),
+      httpCheckpointBeforeTileActivation:
+        typeof window.__s57CaptureTileRequestCheckpoint === 'function'
+          ? await window.__s57CaptureTileRequestCheckpoint()
+          : null,
+    };
+    publish();
+
+    // A real Cesium content request is paused at Fetch after Network has seen
+    // it. The harness supersedes the stack, then releases the same HTTP request
+    // so delivery and cache ownership are independently visible.
+    window.__s57SupersedeStreamedContentRequest = async () => {
+      const activeAtPause = controller.getActiveId();
+      if (activeAtPause !== STREAMED_TILE_STACK)
+        throw new Error('Tile content paused outside its active stack.');
+      const switched = await switchStreamedTarget(
+        'qa-terrain-flat',
+        'streamed-tile-content-superseded-flat',
+      );
+      const tileAtDelivery = streamedTiles.snapshot(viewer, controller);
+      const passed =
+        switched.status === 'ready' &&
+        tileAtDelivery.activeStackId === 'qa-terrain-flat' &&
+        tileAtDelivery.show === false;
+      report.streamedTiles.supersededContent = {
+        status: passed ? 'passed' : 'failed',
+        observedPausedContentPath: '/qa/s57-streaming/tile.glb',
+        activeStackAtPause: activeAtPause,
+        activeStackAfterSupersession: controller.getActiveId(),
+        tileSetHiddenAtDelivery: tileAtDelivery.show === false,
+        setStackElapsedMs: switched.setStackElapsedMs,
+        flatReadinessElapsedMs: switched.readinessElapsedMs,
+        tileObjectId: tileAtDelivery.objectId,
+        browserAtPause: window.__s57StreamedTilePauseEvidence?.browser || null,
+        serverAtPause: window.__s57StreamedTilePauseEvidence?.server || null,
+      };
+      publish();
+      return {
+        status: report.streamedTiles.supersededContent.status,
+        activeStackAfterSupersession: controller.getActiveId(),
+        tileSetHiddenAtDelivery: tileAtDelivery.show === false,
+        browserAtPause: window.__s57StreamedTilePauseEvidence?.browser || null,
+        serverAtPause: window.__s57StreamedTilePauseEvidence?.server || null,
+      };
+    };
+
+    const pendingContentActivationStartedAt = performance.now();
+    const pendingContentActivation =
+      await controller.setStack(STREAMED_TILE_STACK);
+    report.streamedTiles.pendingContentActivation = {
+      status:
+        pendingContentActivation?.activeId === STREAMED_TILE_STACK
+          ? 'activated-pending-content'
+          : 'failed',
+      setStackElapsedMs: performance.now() - pendingContentActivationStartedAt,
+      activeStackId: controller.getActiveId(),
+      tile: streamedTiles.snapshot(viewer, controller),
+    };
+    if (
+      report.streamedTiles.pendingContentActivation.status !==
+      'activated-pending-content'
+    )
+      throw new Error(
+        'Streamed tile content request did not activate its source.',
+      );
+    publish();
+    await waitFor(
+      () => report.streamedTiles.supersededContent?.status === 'passed',
+      lifecycleDrainMs,
+      'streamed tile content supersession',
+    );
+    if (typeof window.__s57WaitForStreamedTileContent !== 'function')
+      throw new Error('Streamed tile HTTP completion observer is unavailable.');
+    report.streamedTiles.supersededContent.delivery =
+      await window.__s57WaitForStreamedTileContent();
+    if (
+      controller.getActiveId() !== 'qa-terrain-flat' ||
+      streamedTiles.tileset?.show !== false
+    )
+      throw new Error(
+        'Late tile content delivery changed the current flat map owner.',
+      );
+    delete window.__s57SupersedeStreamedContentRequest;
+    publish();
+
+    // Re-activate the same cached object, then counterbalance five warmed
+    // flat/tiles pairs. Network observations remain separate from the
+    // controller's cache/object-reuse counters.
+    const firstTilesetActivation = await switchStreamedTarget(
+      STREAMED_TILE_STACK,
+      'streamed-tile-first-visible-activation',
+    );
+    report.streamedTiles.firstVisibleActivation = firstTilesetActivation;
+    report.streamedTiles.warmCacheState = streamedMapSnapshot();
+    report.streamedTiles.postWarmReturn = await switchStreamedTarget(
+      'qa-terrain-flat',
+      'streamed-tile-post-warm-flat',
+    );
+    for (let cycle = 1; cycle <= lifecycleCycles; cycle++) {
+      const tilesFirst = cycle % 2 === 0;
+      const firstTarget = tilesFirst ? STREAMED_TILE_STACK : 'qa-terrain-flat';
+      const secondTarget = tilesFirst ? 'qa-terrain-flat' : STREAMED_TILE_STACK;
+      const warmStart =
+        controller.getActiveId() === firstTarget
+          ? null
+          : await switchStreamedTarget(
+              firstTarget,
+              `streamed-tile-cycle-${cycle}-warm-start`,
+            );
+      const row = {
+        cycle,
+        order: tilesFirst ? 'tiles-flat-tiles' : 'flat-tiles-flat',
+        warmStart,
+        switches: [],
+        status: 'running',
+      };
+      report.streamedTiles.cycles.push(row);
+      row.switches.push(
+        await switchStreamedTarget(
+          secondTarget,
+          `streamed-tile-cycle-${cycle}-first`,
+        ),
+      );
+      row.switches.push(
+        await switchStreamedTarget(
+          firstTarget,
+          `streamed-tile-cycle-${cycle}-second`,
+        ),
+      );
+      row.status = 'passed';
+      publish();
+    }
+    const finalStreamed = streamedMapSnapshot();
+    if (
+      finalStreamed.activeStackId !== 'qa-terrain-flat' ||
+      finalStreamed.tile.factoryCalls !== 1 ||
+      finalStreamed.tile.objectId !== 1 ||
+      finalStreamed.tile.failureCount !== 0
+    )
+      throw new Error(
+        'Streamed tile cache or final owner evidence is invalid.',
+      );
+    report.streamedTiles.final = finalStreamed;
+    report.streamedTiles.eventRows = streamedTiles.eventRows.slice(0, 32);
+    report.streamedTiles.eventOverflowCount = streamedTiles.eventOverflowCount;
+    report.streamedTiles.status = 'passed';
+    publish();
+
     report.phase = 'destroy-late-terrain-provider';
     publish();
     // Exercise destruction while a local terrain factory is pending. The
@@ -1174,6 +1688,20 @@ async function runFixture() {
     };
   } finally {
     report.phase = report.phase || 'cleanup';
+    streamedTiles.factoryGate.resolve();
+    delete window.__s57SupersedeStreamedContentRequest;
+    delete window.__s57StreamedTilePauseEvidence;
+    const streamedTileListenerCleanup = streamedTiles.cleanup();
+    if (
+      report.streamedTiles.status === 'passed' &&
+      !streamedTileListenerCleanup.cleanupConfirmed
+    ) {
+      report.status = 'failed';
+      report.failedPhase ||= 'streamed-tile-listener-cleanup';
+      report.error ||= 'Streamed tile listener cleanup was not confirmed.';
+      report.streamedTiles.status = 'failed';
+    }
+    report.streamedTiles.cleanup = streamedTileListenerCleanup;
     if (currentUpdateObserver) {
       report.switchComparison.currentUpdateObserver =
         finalizeTerrainCurrentUpdateObservation(
@@ -1192,6 +1720,8 @@ async function runFixture() {
     try {
       controller?.destroy();
     } catch {}
+    report.streamedTiles.controllerDestroyedTileset =
+      streamedTiles.tileset?.isDestroyed?.() === true;
     try {
       postRenderRemove?.();
     } catch {}

@@ -1,4 +1,11 @@
 const SHA1 = /^[a-f0-9]{40}$/i;
+const SHA256 = /^[a-f0-9]{64}$/i;
+const STREAMED_TILE_ID = 's57-local-http-3dtiles-v1';
+const STREAMED_TILE_STACK = 'qa-streamed-tiles';
+const STREAMED_TILE_PATHS = Object.freeze({
+  manifest: '/qa/s57-streaming/tileset.json',
+  content: '/qa/s57-streaming/tile.glb',
+});
 
 export function parseTerrainPickingLifecycleArgs(argv = []) {
   const options = {
@@ -111,7 +118,7 @@ function validMapDiagnostics(map) {
         map.estimatedTileBytes >= 0)) &&
     map.streamedTileMemoryBytes === null &&
     map.streamedTileMemoryUnavailableReason ===
-      'local single-tile imagery and custom heightmap fixture; no streamed 3D tile memory source'
+      'legacy terrain-only observation; streamed tile ownership and memory are reported separately under streamedTiles'
   );
 }
 
@@ -317,6 +324,330 @@ function validSwitchObservation(
   );
 }
 
+function validTileSnapshot(snapshot, { active = false } = {}) {
+  return (
+    snapshot &&
+    snapshot.factoryCalls === 1 &&
+    snapshot.objectId === 1 &&
+    (active
+      ? snapshot.activeStackId === STREAMED_TILE_STACK &&
+        snapshot.attachedToScene === true &&
+        snapshot.show === true &&
+        snapshot.tilesLoaded === true &&
+        snapshot.latestVisible?.contentReady === true &&
+        snapshot.latestVisible?.contentType === 'Model3DTileContent'
+      : snapshot.activeStackId === 'qa-terrain-flat' &&
+        snapshot.show === false) &&
+    Number.isSafeInteger(snapshot.tileVisibleCount) &&
+    snapshot.tileVisibleCount >= 0 &&
+    Number.isSafeInteger(snapshot.tileLoadCount) &&
+    snapshot.tileLoadCount >= 0 &&
+    Number.isSafeInteger(snapshot.loadProgressCount) &&
+    snapshot.loadProgressCount >= 0 &&
+    snapshot.failureCount === 0 &&
+    Number.isFinite(snapshot.maximumScreenSpaceError) &&
+    snapshot.maximumScreenSpaceError > 0 &&
+    typeof snapshot.dynamicScreenSpaceError === 'boolean' &&
+    (snapshot.totalMemoryUsageInBytes === null ||
+      (Number.isFinite(snapshot.totalMemoryUsageInBytes) &&
+        snapshot.totalMemoryUsageInBytes >= 0)) &&
+    (snapshot.totalMemoryUsageInBytes === null
+      ? snapshot.totalMemoryUsageStatus === 'unavailable' &&
+        snapshot.totalMemoryUsageUnavailableReason ===
+          'Cesium3DTileset.totalMemoryUsageInBytes unavailable for this snapshot'
+      : snapshot.totalMemoryUsageStatus === 'observed' &&
+        snapshot.totalMemoryUsageUnavailableReason === null)
+  );
+}
+
+function validStreamedTileSwitch(row, from, to) {
+  if (
+    row?.status !== 'ready' ||
+    row.fromStackId !== from ||
+    row.toStackId !== to ||
+    !Number.isFinite(row.setStackElapsedMs) ||
+    row.setStackElapsedMs < 0 ||
+    !Number.isFinite(row.readinessElapsedMs) ||
+    row.readinessElapsedMs < 0 ||
+    !Number.isFinite(row.switchToSettledElapsedMs) ||
+    row.switchToSettledElapsedMs + 0.01 <
+      row.setStackElapsedMs + row.readinessElapsedMs ||
+    !Number.isSafeInteger(row.providerLoadDelta) ||
+    row.providerLoadDelta < 0 ||
+    !Number.isSafeInteger(row.providerCacheReuseDelta) ||
+    row.providerCacheReuseDelta < 0 ||
+    row.pendingJobsAfterReadiness !== 0 ||
+    row.readiness?.status !== 'ready' ||
+    !Array.isArray(row.readiness.samples) ||
+    row.readiness.samples.length < 3 ||
+    row.readiness.samples.length > 64 ||
+    !validStreamedControllerDiagnostics(row.before?.diagnostics) ||
+    !validStreamedControllerDiagnostics(row.after?.diagnostics) ||
+    row.providerLoadDelta !==
+      row.after.diagnostics.providerLoadsStarted -
+        row.before.diagnostics.providerLoadsStarted ||
+    row.providerLoadDelta !== 0 ||
+    row.providerCacheReuseDelta !==
+      row.after.diagnostics.providerCacheReuses -
+        row.before.diagnostics.providerCacheReuses ||
+    row.providerCacheReuseDelta < 1 ||
+    row.pendingJobsAfterReadiness !== row.after.diagnostics.pendingJobs ||
+    row.pendingJobsAfterReadiness !== 0 ||
+    row.after.diagnostics.providerLoadFailures !==
+      row.before.diagnostics.providerLoadFailures ||
+    row.after.diagnostics.providerLoadFailures !== 0
+  )
+    return false;
+  if (to === STREAMED_TILE_STACK)
+    return (
+      row.providerCacheReuseDelta >= 1 &&
+      row.readiness.final?.activeStackId === STREAMED_TILE_STACK &&
+      row.readiness.final?.globeShow === false &&
+      row.readiness.final?.tileset?.tilesLoaded === true &&
+      row.readiness.final?.tileset?.latestVisible?.contentReady === true &&
+      Number.isSafeInteger(row.readiness.startFrame) &&
+      Number.isSafeInteger(
+        row.readiness.final?.tileset?.latestVisible?.frameNumber,
+      ) &&
+      row.readiness.final.tileset.latestVisible.frameNumber >
+        row.readiness.startFrame &&
+      row.readiness.final?.workerPending === 0 &&
+      row.readiness.stableWindowMs >= 1000 &&
+      validTileSnapshot(row.after?.tile, { active: true })
+    );
+  return (
+    row.readiness.final?.activeStackId === 'qa-terrain-flat' &&
+    row.readiness.final?.tilesLoaded === true &&
+    row.readiness.final?.workerCounters?.pending === 0 &&
+    validTileSnapshot(row.after?.tile)
+  );
+}
+
+function validStreamedTileEvidence(report, expectedCycles) {
+  const evidence = report?.streamedTiles;
+  const assets = report?.streamedTileAssets;
+  const http = report?.streamedTileHttpEvidence;
+  if (
+    evidence?.status !== 'passed' ||
+    evidence.fixtureId !== STREAMED_TILE_ID ||
+    evidence.stackId !== STREAMED_TILE_STACK ||
+    evidence.assetPaths?.manifest !== STREAMED_TILE_PATHS.manifest ||
+    evidence.assetPaths?.content !== STREAMED_TILE_PATHS.content ||
+    assets?.fixtureId !== STREAMED_TILE_ID ||
+    assets.manifest?.path !== STREAMED_TILE_PATHS.manifest ||
+    assets.content?.path !== STREAMED_TILE_PATHS.content ||
+    !SHA256.test(assets.manifest?.sha256 || '') ||
+    !SHA256.test(assets.content?.sha256 || '') ||
+    !Number.isSafeInteger(assets.manifest?.byteLength) ||
+    assets.manifest.byteLength < 100 ||
+    !Number.isSafeInteger(assets.content?.byteLength) ||
+    assets.content.byteLength < 20 ||
+    evidence.supersededFactory?.status !== 'passed' ||
+    !Number.isFinite(evidence.supersededFactory.elapsedMs) ||
+    evidence.supersededFactory.elapsedMs < 0 ||
+    !Number.isSafeInteger(evidence.supersededFactory.staleGeneration) ||
+    evidence.supersededFactory.staleGeneration < 1 ||
+    !Number.isSafeInteger(evidence.supersededFactory.supersedingGeneration) ||
+    evidence.supersededFactory.supersedingGeneration <=
+      evidence.supersededFactory.staleGeneration ||
+    evidence.supersededFactory.factoryCalls !== 1 ||
+    evidence.supersededFactory.signalAborted !== false ||
+    evidence.supersededFactory.factoryResolvedWhileFlatActive !== true ||
+    evidence.supersededFactory.sceneAttachmentAfterLateResolution !== false ||
+    evidence.supersededFactory.activeStackAfterLateResolution !==
+      'qa-terrain-flat' ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.browser
+      ?.counts?.manifest?.completed !== 1 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.browser
+      ?.counts?.content?.requests !== 0 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.server
+      ?.counts?.manifest?.successfulResponses !== 1 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.server
+      ?.counts?.content?.requests !== 0 ||
+    evidence.pendingContentActivation?.status !== 'activated-pending-content' ||
+    evidence.pendingContentActivation.activeStackId !== STREAMED_TILE_STACK ||
+    !Number.isFinite(evidence.pendingContentActivation.setStackElapsedMs) ||
+    evidence.pendingContentActivation.setStackElapsedMs < 0 ||
+    evidence.supersededContent?.status !== 'passed' ||
+    evidence.supersededContent.observedPausedContentPath !==
+      STREAMED_TILE_PATHS.content ||
+    evidence.supersededContent.activeStackAtPause !== STREAMED_TILE_STACK ||
+    evidence.supersededContent.activeStackAfterSupersession !==
+      'qa-terrain-flat' ||
+    evidence.supersededContent.tileSetHiddenAtDelivery !== true ||
+    evidence.supersededContent.delivery?.browser?.completed !== 1 ||
+    evidence.supersededContent.delivery?.server?.successfulResponses !== 1 ||
+    evidence.supersededContent.browserAtPause?.counts?.content?.requests !==
+      1 ||
+    evidence.supersededContent.browserAtPause?.counts?.content?.completed !==
+      0 ||
+    evidence.supersededContent.serverAtPause?.counts?.content?.requests !== 0 ||
+    !validStreamedTileSwitch(
+      evidence.firstVisibleActivation,
+      'qa-terrain-flat',
+      STREAMED_TILE_STACK,
+    ) ||
+    !validStreamedTileSwitch(
+      evidence.postWarmReturn,
+      STREAMED_TILE_STACK,
+      'qa-terrain-flat',
+    ) ||
+    !validTileSnapshot(evidence.warmCacheState?.tile, { active: true }) ||
+    !Array.isArray(evidence.cycles) ||
+    evidence.cycles.length !== expectedCycles ||
+    evidence.cycles.some((row, index) => {
+      const tilesFirst = (index + 1) % 2 === 0;
+      const first = tilesFirst ? STREAMED_TILE_STACK : 'qa-terrain-flat';
+      const second = tilesFirst ? 'qa-terrain-flat' : STREAMED_TILE_STACK;
+      return (
+        row.status !== 'passed' ||
+        row.cycle !== index + 1 ||
+        row.order !== (tilesFirst ? 'tiles-flat-tiles' : 'flat-tiles-flat') ||
+        !Array.isArray(row.switches) ||
+        row.switches.length !== 2 ||
+        !validStreamedTileSwitch(row.switches[0], first, second) ||
+        !validStreamedTileSwitch(row.switches[1], second, first) ||
+        (row.warmStart !== null &&
+          !validStreamedTileSwitch(
+            row.warmStart,
+            tilesFirst ? 'qa-terrain-flat' : STREAMED_TILE_STACK,
+            first,
+          ))
+      );
+    }) ||
+    !validTileSnapshot(evidence.final?.tile) ||
+    evidence.final.activeStackId !== 'qa-terrain-flat' ||
+    !Number.isSafeInteger(evidence.eventOverflowCount) ||
+    evidence.eventOverflowCount < 0 ||
+    !Array.isArray(evidence.eventRows) ||
+    evidence.eventRows.length > 32 ||
+    evidence.cleanup?.attemptedCount !== 4 ||
+    evidence.cleanup?.removedCount !== 4 ||
+    evidence.cleanup?.cleanupConfirmed !== true ||
+    evidence.cleanup?.errors?.length !== 0 ||
+    evidence.controllerDestroyedTileset !== true ||
+    http?.assetIdentity?.manifest?.sha256 !== assets.manifest.sha256 ||
+    http?.assetIdentity?.content?.sha256 !== assets.content.sha256 ||
+    http?.browser?.origin !== 'fixture-origin-only' ||
+    http.browser.overflowCount !== 0 ||
+    http.browser.pendingCount !== 0 ||
+    http.browser.counts?.manifest?.requests !== 1 ||
+    http.browser.counts?.manifest?.responses !== 1 ||
+    http.browser.counts?.manifest?.completed !== 1 ||
+    http.browser.counts?.manifest?.failed !== 0 ||
+    http.browser.counts?.content?.requests !== 1 ||
+    http.browser.counts?.content?.responses !== 1 ||
+    http.browser.counts?.content?.completed !== 1 ||
+    http.browser.counts?.content?.failed !== 0 ||
+    !Array.isArray(http.browser.requests) ||
+    http.browser.requests.length !== 2 ||
+    http.browser.requests.filter((row) => row.kind === 'manifest').length !==
+      1 ||
+    http.browser.requests.filter((row) => row.kind === 'content').length !==
+      1 ||
+    http.browser.requests.some(
+      (row) =>
+        !['manifest', 'content'].includes(row.kind) ||
+        row.method !== 'GET' ||
+        row.status !== 200 ||
+        row.failure !== false ||
+        !Number.isFinite(row.encodedDataLength) ||
+        row.encodedDataLength <= 0,
+    ) ||
+    http?.server?.source !== 'local-http-server-request-events' ||
+    http.server.overflowCount !== 0 ||
+    http.server.pendingCount !== 0 ||
+    http.server.counts?.manifest?.requests !== 1 ||
+    http.server.counts?.manifest?.successfulResponses !== 1 ||
+    http.server.counts?.manifest?.bytesFromHeader !==
+      assets.manifest.byteLength ||
+    http.server.counts?.content?.requests !== 1 ||
+    http.server.counts?.content?.successfulResponses !== 1 ||
+    http.server.counts?.content?.bytesFromHeader !==
+      assets.content.byteLength ||
+    http.networkListenerCleanupConfirmed !== true ||
+    http.serverListenerCleanupConfirmed !== true ||
+    http.contentInterception?.status !== 'passed' ||
+    http.contentInterception.pauseObservedBeforeContinue !== true ||
+    http.contentInterception.browserAtPause?.counts?.content?.requests !== 1 ||
+    http.contentInterception.browserAtPause?.counts?.content?.completed !== 0 ||
+    http.contentInterception.serverAtPause?.counts?.content?.requests !== 0 ||
+    report.fixtureCleanup?.final?.map?.primitives !== 0 ||
+    report.fixtureCleanup?.final?.map?.cacheEntries !== 0
+  )
+    return false;
+  const warmedDiagnostics = evidence.warmCacheState.diagnostics;
+  const tileSnapshots = [
+    evidence.firstVisibleActivation.after.tile,
+    evidence.postWarmReturn.after.tile,
+    evidence.warmCacheState.tile,
+    evidence.final.tile,
+    ...evidence.cycles.flatMap((cycle) =>
+      cycle.switches.map((row) => row.after.tile),
+    ),
+  ];
+  const tileSettings = tileSnapshots[0];
+  const postWarmSwitches = [
+    evidence.postWarmReturn,
+    ...evidence.cycles.flatMap((cycle) => [
+      ...(cycle.warmStart ? [cycle.warmStart] : []),
+      ...cycle.switches,
+    ]),
+  ];
+  return (
+    tileSnapshots.every(
+      (tile) =>
+        tile &&
+        Number.isFinite(tile.maximumScreenSpaceError) &&
+        tile.maximumScreenSpaceError === tileSettings.maximumScreenSpaceError &&
+        typeof tile.dynamicScreenSpaceError === 'boolean' &&
+        tile.dynamicScreenSpaceError === tileSettings.dynamicScreenSpaceError,
+    ) &&
+    sameStreamedCacheOwnership(
+      evidence.firstVisibleActivation.after?.diagnostics,
+      warmedDiagnostics,
+    ) &&
+    sameStreamedCacheOwnership(
+      evidence.final?.diagnostics,
+      warmedDiagnostics,
+    ) &&
+    postWarmSwitches.every(
+      (row) =>
+        sameStreamedCacheOwnership(
+          row.before?.diagnostics,
+          warmedDiagnostics,
+        ) &&
+        sameStreamedCacheOwnership(row.after?.diagnostics, warmedDiagnostics),
+    )
+  );
+}
+
+function sameStreamedCacheOwnership(snapshot, warmed) {
+  return (
+    validStreamedControllerDiagnostics(snapshot) &&
+    validStreamedControllerDiagnostics(warmed) &&
+    snapshot.cacheEntries === warmed.cacheEntries &&
+    snapshot.primitives === warmed.primitives &&
+    snapshot.providerLoadsStarted === warmed.providerLoadsStarted &&
+    snapshot.providerLoadFailures === warmed.providerLoadFailures &&
+    snapshot.pendingJobs === 0
+  );
+}
+
+function validStreamedControllerDiagnostics(value) {
+  return (
+    value &&
+    [
+      'pendingJobs',
+      'primitives',
+      'cacheEntries',
+      'providerLoadsStarted',
+      'providerCacheReuses',
+      'providerLoadFailures',
+    ].every((field) => Number.isSafeInteger(value[field]) && value[field] >= 0)
+  );
+}
+
 export function validateTerrainPickingLifecycleReport(
   report,
   { expectedCycles = 5 } = {},
@@ -369,7 +700,7 @@ export function validateTerrainPickingLifecycleReport(
       'active source, provider cache/load counters, local heightmap request count, worker counters, pending ownership, and controller tile-memory estimate' ||
     report.switchComparison.streamedTileMemoryBytes !== null ||
     report.switchComparison.streamedTileMemoryUnavailableReason !==
-      'fixture uses local single-tile imagery and a custom heightmap provider, not streamed 3D tiles' ||
+      'legacy terrain-only comparison excludes streamed tile memory; separate streamedTiles observations report it' ||
     report.switchComparison.currentUpdateObserver?.available !== true ||
     report.switchComparison.currentUpdateObserver?.installErrorName !== null ||
     !Number.isSafeInteger(
@@ -569,6 +900,10 @@ export function validateTerrainPickingLifecycleReport(
     report.cleanup?.serverClosed !== true
   )
     throw new Error('Terrain/picking fixture cleanup was incomplete.');
+  if (!validStreamedTileEvidence(report, expectedCycles))
+    throw new Error(
+      'HTTP streamed-tile lifecycle evidence is incomplete or inconsistent.',
+    );
   return {
     status: 'passed',
     cycles: report.cycles.length,
@@ -579,6 +914,14 @@ export function validateTerrainPickingLifecycleReport(
     terrainTransitionWorkerCompletions:
       report.firstTerrainTransition.completedDelta,
     selectionReenablePicks: report.selectionLifecycle.completedReenablePicks,
+    streamedTileFactoryCalls:
+      report.streamedTiles.supersededFactory.factoryCalls,
+    streamedTileHttpManifestResponses:
+      report.streamedTileHttpEvidence.server.counts.manifest
+        .successfulResponses,
+    streamedTileHttpContentResponses:
+      report.streamedTileHttpEvidence.server.counts.content.successfulResponses,
+    streamedTileSwitches: report.streamedTiles.cycles.length * 2,
     applicationCommit: report.applicationCommit,
   };
 }

@@ -41,10 +41,16 @@ export async function interceptFixtureSession(
   base,
   respond,
   onError,
-  { onFulfilled } = {},
+  { onFulfilled, onBeforeContinue } = {},
 ) {
   client.on('Fetch.requestPaused', async (event) => {
     try {
+      if (onBeforeContinue)
+        await onBeforeContinue({
+          url: event.request.url,
+          method: event.request.method,
+          postData: event.request.postData ?? null,
+        });
       const [method, params] = await fixtureRequestCommand(
         event,
         base,

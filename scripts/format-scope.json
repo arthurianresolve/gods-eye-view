@@ -1032,6 +1032,8 @@
   "scripts/performance/infrastructureCollectionExperiment.test.mjs",
   "scripts/performance/terrainPickingLifecycle.mjs",
   "scripts/performance/terrainPickingLifecycle.test.mjs",
+  "scripts/performance/streamedTileNetworkEvidence.mjs",
+  "scripts/performance/streamedTileNetworkEvidence.test.mjs",
   "scripts/qa-hosted-capture.mjs",
   "scripts/performance/hostedSourceProvenance.mjs",
   "scripts/performance/hostedSourceProvenance.test.mjs",
