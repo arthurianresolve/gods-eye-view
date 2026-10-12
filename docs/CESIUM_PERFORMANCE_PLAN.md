@@ -1,5 +1,28 @@
 # Cesium performance plan
 
+## Current status - 12 October 2026
+
+Latest validated runtime checkpoint: `bbca229f0077b8443db04395c106677684d2ef61`
+on `dev`. Both the manual and automatic push CI runs pass all seven standard
+jobs. The HUD summary ownership fix is integrated; it does not establish a GPU
+readback speedup or resolve the Windows frame-delivery failure.
+
+S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
+defaults. Datacenter component comparisons show repeatable activation and JS
+heap benefits with identical captured pixels, while the cable map-switch
+readiness test remains failed. S47's additional infrastructure workloads are
+under implementation/review; Austin, weather/effects and map-streaming workload
+coverage remain open. Physical Windows performance acceptance and the final
+candidate's full matched captures/retention soak remain pending.
+
+[Current integration and S54 evidence](performance-evidence/s54-current-dev-20261012/README.md)
+records exact revisions and separates implementation, automatic checks and
+hardware coverage. The Windows GPU configuration export confirms hardware
+acceleration only. Historical checkpoints below retain their original failures
+and limitations; their old branch/promotion statements are not the current state.
+
+## Historical integration checkpoints
+
 Integration checkpoint (12 October 2026): the S50 map-source ownership repair,
 connection-scoped map-bridge cleanup and measured macOS recovery backend pass
 [all seven standard CI jobs at `501aa8d8`](performance-evidence/s50-macos-recovery-38174948494/standard-38177697638/ci-run.json).
