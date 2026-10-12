@@ -2,10 +2,10 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `694f1a8c3290f3db4da7a36ee8f7756514488ed0`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38194016606.json).
-Runtime is unchanged from `bbca229f`; intervening changes are evidence and
-documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
+Latest validated `dev` checkpoint: `c3c6c5a7e890d0b9985249892cc601a76c9835a3`.
+[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38196156481.json).
+Application runtime is unchanged from `bbca229f`; intervening changes are
+diagnostic tooling, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
@@ -49,6 +49,13 @@ delivers all 2,500 aircraft, but its long tasks and timeout need separate
 host/page/render attribution. The harness integration is held; existing
 deadlines and acceptance requirements remain unchanged. No timing acceptance
 is claimed from this short, instrumented SwiftShader smoke.
+The [bounded boundary diagnostic at `1b1fdb26`](performance-evidence/s47-boundary-observation-38196702994/README.md)
+fails earlier during warmup. Its per-boundary progress-binding setup consumes
+4,075 ms of the 6,000 ms host window; the subsequent page entry and render
+request are acknowledged, but no completed frame arrives before the deadline.
+This setup perturbs the boundary and does not explain the original failure.
+Moving diagnostic setup before warmup is the next correction; deadlines stay
+unchanged and the failed report remains separate evidence.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
@@ -70,6 +77,13 @@ The earlier failure is still unresolved; a passing instrumented run does not
 prove its cause or remediation. The existing timeout and focus requirement
 remain unchanged. Diagnostic tooling can be integrated independently of that
 open focus investigation and the minimal WebGL frame stall.
+That tooling is now integrated at `c3c6c5a7`, including a passing browser gate.
+The isolated focus fix at `311cc5ea` removes redundant focus restoration in the
+palette's queued close handler. Delayed-close and close/reopen unit regressions
+fail against the old code and pass after the fix; a deterministic native-dialog
+browser regression is included. Its standard CI remains pending. The historical
+failure has no focus trace, so this reproduction does not conclusively attribute
+that particular run. The fix is not yet merged into dev.
 
 ## Historical integration checkpoints
 
