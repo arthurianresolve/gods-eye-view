@@ -416,6 +416,7 @@ export async function observeRenderBoundary({
     hostGraceMs < 0 ||
     (prepareProgress !== undefined && typeof prepareProgress !== 'function') ||
     (progressBinding !== undefined &&
+      progressBinding !== null &&
       (!progressBinding ||
         typeof progressBinding.functionName !== 'string' ||
         !/^__[A-Za-z0-9_]{1,100}$/.test(progressBinding.functionName) ||
