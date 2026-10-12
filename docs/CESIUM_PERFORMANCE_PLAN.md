@@ -2,7 +2,7 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
+Recorded integration checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
 [All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38200576913.json),
 including the command-palette focus repair, Node 24/26, all three recovery jobs,
 Windows onboarding and the browser journeys.
