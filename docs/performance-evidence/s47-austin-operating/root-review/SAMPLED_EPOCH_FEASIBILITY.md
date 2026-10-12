@@ -116,3 +116,21 @@ at `61c72ea2411163c3d5906467b2bcfd32e275a987` now passes all seven standard
 jobs: Node 24/26, Windows onboarding, Linux/macOS/Windows recovery and the browser
 gate. This validates the merged checkpoint, not the subsequent cleanup-consumer
 correction or incomplete performance capture.
+
+# Receipt-only worker contract correction
+
+Run [38312888961](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38312888961)
+at commit 35a8348b7441952cd3a9c60d2385f828636d7f38 passes the baseline smoke but
+fails candidate startup worker verification. The real embedded-worker contract
+producer exposes allowedModuleIds but omitted allowedModuleCount; the new
+receipt-only consumer requires that count. Its original unit fixture supplied
+the missing field manually. A regression connecting the actual producer and
+consumer reproduces the hosted error before the fix. The producer now supplies
+the count directly from the same validated module set. All 29 worker audit and
+contract tests pass after the correction, including locked Cesium bundle checks.
+
+The [original failed capture](hosted-smoke-38312888961-cli-failed.json) is preserved unchanged: 17675 bytes,
+SHA-256 5cb3cdb3b5490c3e7005d923273c1128c25e7b84f14358b8a8ce6fb0abe9c2c4. The startup document now confirms real interception cleanup
+with the corrected drain consumer. This run has no completed measurements and
+does not diagnose the separate CCTV readiness timeout. No application runtime,
+worker interception or source readiness deadline changes in this correction.

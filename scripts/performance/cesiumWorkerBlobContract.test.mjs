@@ -154,6 +154,7 @@ test('installed locked Cesium bundle derives worker bytes and IDs from receipt a
   assert.ok(contract.workerSourceSha256.match(/^[a-f0-9]{64}$/));
   assert.ok(contract.allowedModuleIds.includes('createGeometry'));
   assert.ok(contract.allowedModuleIds.includes('transferTypedArrayTest'));
+  assert.equal(contract.allowedModuleCount, contract.allowedModuleIds.length);
 });
 
 test('embedded atob source hashing matches Latin-1 string to UTF-8 Blob conversion', () => {

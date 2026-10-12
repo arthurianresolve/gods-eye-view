@@ -196,6 +196,7 @@ export function deriveCesiumEmbeddedWorkerContract({
     workerSourceBytes: embeddedWorkerBytes.length,
     embeddedWorkerSource,
     allowedModuleIds: [...workerIds].sort(),
+    allowedModuleCount: workerIds.size,
     maxBlobRecords: MAX_WORKER_BLOB_RECORDS,
     maxWorkerTargets: MAX_WORKER_TARGETS,
     maxBlobBytes: MAX_WORKER_BLOB_BYTES,
