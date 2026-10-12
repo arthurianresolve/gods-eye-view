@@ -2,8 +2,8 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `416296730846ae3fb9022fedaad1fef4c9b6d86f`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38191969671.json).
+Latest validated `dev` checkpoint: `694f1a8c3290f3db4da7a36ee8f7756514488ed0`.
+[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38194016606.json).
 Runtime is unchanged from `bbca229f`; intervening changes are evidence and
 documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
