@@ -39,6 +39,7 @@ import {
 import {
   createInfrastructureCurrentUpdateReadinessEnvelope,
   createInfrastructureCurrentUpdateReadinessSample,
+  infrastructureCurrentUpdateGateReady,
   infrastructureCurrentUpdateReadinessRequested,
   installInfrastructureCurrentUpdateReadinessObserver,
   readInfrastructureCurrentUpdateWitness,
@@ -68,6 +69,8 @@ const fixtureLayer = infrastructureFixtureLayer(
 );
 if (fixtureLayer.layerId !== DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID)
   throw new Error('The runtime comparison fixture supports datacenters only.');
+const currentUpdateReadinessRequired =
+  fixtureLayer.layerId === DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID;
 const container = document.querySelector('#viewer');
 const status = document.querySelector('#status');
 const output = document.querySelector('#result');
@@ -1003,13 +1006,13 @@ async function runLayerLifetime(
       records.length === layer.surfaceCount,
       `Expected all ${layer.surfaceCount} ${layer.layerId} surface identities; received ${records.length}.`,
     );
+    currentUpdateReadinessObserver =
+      installInfrastructureCurrentUpdateReadinessObserver({
+        dataSourceDisplay: viewer.dataSourceDisplay,
+        scene: viewer.scene,
+        entityCollection: dataSource.entities,
+      });
     if (currentUpdateReadinessLifetime) {
-      currentUpdateReadinessObserver =
-        installInfrastructureCurrentUpdateReadinessObserver({
-          dataSourceDisplay: viewer.dataSourceDisplay,
-          scene: viewer.scene,
-          entityCollection: dataSource.entities,
-        });
       currentUpdateReadinessLifetime.available =
         currentUpdateReadinessObserver.available;
       currentUpdateReadinessLifetime.installErrorName =
@@ -1106,7 +1109,7 @@ async function runLayerLifetime(
       let lodDiagnostics = null;
       let cameraPosition = null;
       let sceneReadiness = null;
-      let currentUpdateReadyForGeneration = currentUpdateReadinessLifetime
+      let currentUpdateReadyForGeneration = currentUpdateReadinessRequired
         ? false
         : null;
       let currentUpdateLastObserverSnapshot = null;
@@ -1114,7 +1117,9 @@ async function runLayerLifetime(
         try {
           finalFrame = await captureFrame(
             viewer,
-            currentUpdateReadinessObserver?.available
+            !pickPathDiagnostic &&
+              !primitiveReadinessDiagnostic &&
+              currentUpdateReadinessObserver?.available
               ? () => currentUpdateReadinessObserver.read()
               : pickPathDiagnostic?.renderRevisionObserver.available
                 ? () => pickPathDiagnostic.renderRevisionObserver.read()
@@ -1156,14 +1161,20 @@ async function runLayerLifetime(
         }
         completedCaptures++;
         const captureFrameState = finalFrame.completedFrameState || null;
-        if (currentUpdateReadinessLifetime) {
+        if (currentUpdateReadinessRequired) {
           const witness = readInfrastructureCurrentUpdateWitness(
             currentUpdateReadinessObserver,
             currentUpdateGeneration,
           );
           currentUpdateLastObserverSnapshot = witness.snapshot;
           currentUpdateReadyForGeneration =
-            !finalFrame.completedFrameStateErrorName && witness.ready;
+            infrastructureCurrentUpdateGateReady({
+              required: currentUpdateReadinessRequired,
+              observerAvailable:
+                currentUpdateReadinessObserver?.available === true,
+              witnessReady:
+                !finalFrame.completedFrameStateErrorName && witness.ready,
+            });
         }
         if (pickRow) selectionRendered = true;
         rows = readRows();
@@ -1183,7 +1194,7 @@ async function runLayerLifetime(
           infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition) &&
           sceneReadiness.dataSourcesReady === true &&
           sceneReadiness.globeTilesLoaded === true &&
-          (currentUpdateReadinessLifetime
+          (currentUpdateReadinessRequired
             ? currentUpdateReadyForGeneration === true
             : true);
         stableFrames = readiness.observe(signature, {

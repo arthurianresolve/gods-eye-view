@@ -85,6 +85,16 @@ export function readInfrastructureCurrentUpdateWitness(observer, generation) {
   }
 }
 
+export function infrastructureCurrentUpdateGateReady({
+  required,
+  observerAvailable,
+  witnessReady,
+}) {
+  return (
+    required !== true || (observerAvailable === true && witnessReady === true)
+  );
+}
+
 const hasOnlyKeys = (value, keys) =>
   value &&
   typeof value === 'object' &&

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createInfrastructureCurrentUpdateReadinessEnvelope,
   createInfrastructureCurrentUpdateReadinessSample,
+  infrastructureCurrentUpdateGateReady,
   infrastructureCurrentUpdateReadinessOptionEnabled,
   installInfrastructureCurrentUpdateReadinessObserver,
   readInfrastructureCurrentUpdateWitness,
@@ -83,6 +84,58 @@ test('current update result rejects latched ready true until the current generat
     true,
   );
   assert.equal(fixture.display.calls.length, 3);
+  assert.equal(observer.dispose(), true);
+});
+
+test('standard datacenter gate fails closed and waits for current update recovery', () => {
+  const fixture = fixtureDisplay([true, false, true]);
+  const observer = installInfrastructureCurrentUpdateReadinessObserver({
+    dataSourceDisplay: fixture.display,
+    scene: fixture.scene,
+    entityCollection: fixture.entityCollection,
+  });
+  assert.equal(
+    infrastructureCurrentUpdateGateReady({
+      required: true,
+      observerAvailable: false,
+      witnessReady: true,
+    }),
+    false,
+  );
+  const generation = observer.beginGeneration().generation;
+  assert.equal(fixture.display.update('initial'), true);
+  fixture.frame();
+  assert.equal(fixture.display.ready, true);
+  assert.equal(
+    infrastructureCurrentUpdateGateReady({
+      required: true,
+      observerAvailable: observer.available,
+      witnessReady: observer.isCurrentFrameReady(observer.read(), generation),
+    }),
+    true,
+  );
+
+  assert.equal(fixture.display.update('pending'), false);
+  fixture.frame();
+  assert.equal(fixture.display.ready, true);
+  assert.equal(
+    infrastructureCurrentUpdateGateReady({
+      required: true,
+      observerAvailable: observer.available,
+      witnessReady: observer.isCurrentFrameReady(observer.read(), generation),
+    }),
+    false,
+  );
+  assert.equal(fixture.display.update('recovered'), true);
+  fixture.frame();
+  assert.equal(
+    infrastructureCurrentUpdateGateReady({
+      required: true,
+      observerAvailable: observer.available,
+      witnessReady: observer.isCurrentFrameReady(observer.read(), generation),
+    }),
+    true,
+  );
   assert.equal(observer.dispose(), true);
 });
 
