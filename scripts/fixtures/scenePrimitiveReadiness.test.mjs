@@ -12,6 +12,26 @@ function fixture() {
   };
 }
 
+function pendingGroundPolyline(inner = undefined) {
+  const primitive = Object.create(Cesium.GroundPolylinePrimitive.prototype);
+  primitive._primitiveOptions = { asynchronous: true };
+  primitive._ready = false;
+  primitive.show = false;
+  primitive._primitive = inner;
+  return primitive;
+}
+
+function innerPrimitive(state = 1) {
+  const primitive = new Cesium.Primitive({ geometryInstances: [] });
+  primitive._state = state;
+  primitive.show = false;
+  primitive._numberOfInstances = 3;
+  primitive._createGeometryResults = [];
+  primitive._geometries = [];
+  primitive._va = [];
+  return primitive;
+}
+
 test('hidden replacement work prevents readiness even with ready siblings', () => {
   const scene = fixture();
   const owner = scene.primitives.add(
@@ -87,4 +107,132 @@ test('unknown ordered-ground shape or Cesium version cannot be reported ready', 
   const result = readScenePrimitiveReadiness(scene, Cesium);
   assert.equal(result.ready, false);
   assert.equal(result.unsupportedOwners.length, 1);
+});
+
+test('pending ground-polyline observations report each pinned PrimitiveState phase', () => {
+  const names = [
+    'READY',
+    'CREATING',
+    'CREATED',
+    'COMBINING',
+    'COMBINED',
+    'COMPLETE',
+    'FAILED',
+  ];
+  for (const [value, name] of names.entries()) {
+    const scene = fixture();
+    const inner = innerPrimitive(value);
+    inner._createGeometryResults = value === 2 ? [{}, {}] : undefined;
+    inner._geometries = value >= 4 ? [{}, {}] : [];
+    inner._va = value === 5 ? [{}, {}] : [];
+    const ground = scene.groundPrimitives.add(pendingGroundPolyline(inner));
+    const result = readScenePrimitiveReadiness(scene, Cesium);
+    const observed = result.owners.find(
+      (owner) => owner.path === 'groundPrimitives/0',
+    );
+    assert.equal(result.ready, false);
+    assert.equal(observed.ready, false);
+    assert.deepEqual(observed.buildState.state, { value, name });
+    assert.equal(observed.buildState.primitivePresent, true);
+    assert.equal(observed.buildState.primitiveReady, false);
+    assert.equal(observed.buildState.primitiveShow, false);
+    assert.equal(observed.buildState.asynchronous, true);
+    assert.equal(observed.buildState.innerAsynchronous, true);
+    assert.equal(observed.buildState.instanceCount, 3);
+    assert.equal(
+      observed.buildState.createGeometryResultsCount,
+      value === 2 ? 2 : null,
+    );
+    assert.equal(observed.buildState.geometriesCount, value >= 4 ? 2 : 0);
+    assert.equal(observed.buildState.vertexArraysCount, value === 5 ? 2 : 0);
+  }
+});
+
+test('pending ground polyline distinguishes a valid not-yet-created inner primitive', () => {
+  const scene = fixture();
+  scene.groundPrimitives.add(pendingGroundPolyline());
+  const result = readScenePrimitiveReadiness(scene, Cesium);
+  const observed = result.owners.find(
+    (owner) => owner.path === 'groundPrimitives/0',
+  );
+  assert.equal(result.ready, false);
+  assert.deepEqual(observed.buildState, {
+    schema: 'gev-cesium-ground-polyline-build-state/v1',
+    status: 'observed',
+    cesiumVersion: '1.138.0',
+    primitivePresent: false,
+    primitiveReady: null,
+    primitiveShow: null,
+    asynchronous: true,
+    innerAsynchronous: null,
+    state: null,
+    instanceCount: null,
+    createGeometryResultsCount: null,
+    geometriesCount: null,
+    vertexArraysCount: null,
+    error: null,
+  });
+});
+
+test('unknown Cesium version or changed inner primitive shape is unavailable', () => {
+  const scene = fixture();
+  scene.groundPrimitives.add(pendingGroundPolyline(innerPrimitive()));
+  const wrongVersion = readScenePrimitiveReadiness(scene, {
+    ...Cesium,
+    VERSION: '1.139.0',
+  });
+  assert.equal(wrongVersion.ready, false);
+  assert.deepEqual(
+    wrongVersion.owners.find((owner) => owner.path === 'groundPrimitives/0')
+      .buildState,
+    {
+      status: 'unavailable',
+      reason: 'unsupported-cesium-version',
+      cesiumVersion: '1.139.0',
+    },
+  );
+
+  const changedShapeScene = fixture();
+  changedShapeScene.groundPrimitives.add(pendingGroundPolyline({}));
+  const changedShape = readScenePrimitiveReadiness(changedShapeScene, Cesium);
+  assert.equal(changedShape.ready, false);
+  const changedOwner = changedShape.owners.find(
+    (owner) => owner.path === 'groundPrimitives/0',
+  );
+  assert.equal(changedOwner.buildState.status, 'unavailable');
+  assert.equal(changedOwner.buildState.reason, 'inner-primitive-type-mismatch');
+  assert.equal(changedShape.unsupportedOwners.length, 1);
+});
+
+test('inner array counts are bounded and errors are sanitized', () => {
+  const scene = fixture();
+  const inner = innerPrimitive(6);
+  inner._va = new Array(100_001);
+  inner._error = new Error(
+    'worker failed https://private.example/asset C:\\Users\\secret\\file.js /home/private/file.js',
+  );
+  scene.groundPrimitives.add(pendingGroundPolyline(inner));
+  const result = readScenePrimitiveReadiness(scene, Cesium);
+  assert.equal(result.ready, false);
+  const oversizedOwner = result.owners.find(
+    (owner) => owner.path === 'groundPrimitives/0',
+  );
+  assert.equal(oversizedOwner.buildState.status, 'unavailable');
+  assert.equal(oversizedOwner.buildState.reason, 'out-of-bounds');
+
+  const errorScene = fixture();
+  const failedInner = innerPrimitive(6);
+  failedInner._error = new Error(
+    'worker failed https://private.example/asset C:\\Users\\secret\\file.js /home/private/file.js',
+  );
+  errorScene.groundPrimitives.add(pendingGroundPolyline(failedInner));
+  const error = readScenePrimitiveReadiness(errorScene, Cesium).owners.find(
+    (owner) => owner.path === 'groundPrimitives/0',
+  ).buildState.error;
+  assert.equal(error.name, 'Error');
+  assert.ok(error.message.length <= 160);
+  assert.doesNotMatch(
+    error.message,
+    /https?:|private\.example|C:\\Users|\/home\/private/,
+  );
 });

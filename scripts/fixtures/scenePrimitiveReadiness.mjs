@@ -1,4 +1,168 @@
 /** Bounded fixture observation of scene owners, including hidden replacements. */
+const CESIUM_GROUND_PRIMITIVE_VERSION = '1.138.0';
+const MAX_INTERNAL_COUNT = 100_000;
+// Private PrimitiveState.js values in the pinned Cesium 1.138.0 source.
+// Keep this map local and version-gated; do not depend on an engine export.
+const PRIMITIVE_STATES = Object.freeze([
+  'READY',
+  'CREATING',
+  'CREATED',
+  'COMBINING',
+  'COMBINED',
+  'COMPLETE',
+  'FAILED',
+]);
+
+function boundedArrayCount(value) {
+  if (value === undefined) return { count: null, status: 'absent' };
+  if (!Array.isArray(value)) return { count: null, status: 'unknown-shape' };
+  if (!Number.isSafeInteger(value.length) || value.length > MAX_INTERNAL_COUNT)
+    return { count: null, status: 'out-of-bounds' };
+  return { count: value.length, status: 'observed' };
+}
+
+function sanitizePrimitiveError(error) {
+  if (!error || typeof error !== 'object') return null;
+  const clean = (value, fallback) => {
+    if (typeof value !== 'string') return fallback;
+    return value
+      .replace(/https?:\/\/[^\s)]+/gi, '[url]')
+      .replace(/(?:[A-Z]:\\|\\\\)[^\s)]+/gi, '[path]')
+      .replace(/\/(?:Users|home|private|tmp|var|mnt)\/[^\s)]+/gi, '[path]')
+      .slice(0, 160);
+  };
+  return {
+    name: clean(error.name, 'Error'),
+    message: clean(error.message, 'Primitive error'),
+  };
+}
+
+function readGroundPolylineBuildState(primitive, Cesium, path) {
+  if (Cesium.VERSION !== CESIUM_GROUND_PRIMITIVE_VERSION)
+    return {
+      status: 'unavailable',
+      reason: 'unsupported-cesium-version',
+      cesiumVersion: typeof Cesium.VERSION === 'string' ? Cesium.VERSION : null,
+    };
+
+  if (typeof Cesium.GroundPolylinePrimitive !== 'function')
+    return { status: 'unavailable', reason: 'missing-ground-polyline-type' };
+  if (!(primitive instanceof Cesium.GroundPolylinePrimitive))
+    return { status: 'unavailable', reason: 'ground-polyline-type-mismatch' };
+  const outerAsynchronous = primitive.asynchronous;
+  if (typeof outerAsynchronous !== 'boolean')
+    return {
+      status: 'unavailable',
+      reason: 'outer-asynchronous-flag-shape',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+    };
+
+  const inner = primitive._primitive;
+  if (inner === undefined || inner === null)
+    return {
+      schema: 'gev-cesium-ground-polyline-build-state/v1',
+      status: 'observed',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+      primitivePresent: false,
+      primitiveReady: null,
+      primitiveShow: null,
+      asynchronous: outerAsynchronous,
+      innerAsynchronous: null,
+      state: null,
+      instanceCount: null,
+      createGeometryResultsCount: null,
+      geometriesCount: null,
+      vertexArraysCount: null,
+      error: null,
+    };
+  if (
+    typeof Cesium.Primitive !== 'function' ||
+    !(inner instanceof Cesium.Primitive)
+  )
+    return {
+      status: 'unavailable',
+      reason: 'inner-primitive-type-mismatch',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+    };
+
+  const stateValue = inner._state;
+  const innerAsynchronous = inner.asynchronous;
+  const primitiveReady = inner.ready;
+  const primitiveShow = inner.show;
+  if (
+    typeof innerAsynchronous !== 'boolean' ||
+    typeof primitiveReady !== 'boolean' ||
+    typeof primitiveShow !== 'boolean'
+  )
+    return {
+      status: 'unavailable',
+      reason: 'inner-primitive-state-shape',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+    };
+  const stateName =
+    Number.isInteger(stateValue) &&
+    stateValue >= 0 &&
+    stateValue < PRIMITIVE_STATES.length
+      ? PRIMITIVE_STATES[stateValue]
+      : null;
+  const countFields = {
+    createGeometryResultsCount: boundedArrayCount(inner._createGeometryResults),
+    geometriesCount: boundedArrayCount(inner._geometries),
+    vertexArraysCount: boundedArrayCount(inner._va),
+  };
+  const invalidCount = Object.values(countFields).find(
+    (field) => !['observed', 'absent'].includes(field.status),
+  );
+  if (invalidCount || !stateName) {
+    return {
+      status: 'unavailable',
+      reason: invalidCount?.status || 'unknown-primitive-state',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+      stateValue: Number.isInteger(stateValue) ? stateValue : null,
+    };
+  }
+  const instanceCount = inner._numberOfInstances;
+  if (
+    !Number.isSafeInteger(instanceCount) ||
+    instanceCount < 0 ||
+    instanceCount > MAX_INTERNAL_COUNT
+  )
+    return {
+      status: 'unavailable',
+      reason: 'instance-count-out-of-bounds',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+    };
+  if (
+    inner._error !== undefined &&
+    inner._error !== null &&
+    (typeof inner._error !== 'object' ||
+      typeof inner._error.message !== 'string')
+  )
+    return {
+      status: 'unavailable',
+      reason: 'inner-error-shape',
+      cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+    };
+
+  return {
+    schema: 'gev-cesium-ground-polyline-build-state/v1',
+    status: 'observed',
+    cesiumVersion: CESIUM_GROUND_PRIMITIVE_VERSION,
+    primitivePresent: true,
+    primitiveReady,
+    primitiveShow,
+    asynchronous: outerAsynchronous,
+    innerAsynchronous,
+    state: { value: stateValue, name: stateName },
+    instanceCount,
+    createGeometryResultsCount: countFields.createGeometryResultsCount.count,
+    geometriesCount: countFields.geometriesCount.count,
+    vertexArraysCount: countFields.vertexArraysCount.count,
+    error: sanitizePrimitiveError(inner._error),
+    ownerPath: path,
+  };
+}
+
 export function readScenePrimitiveReadiness(scene, Cesium) {
   const visited = new Set();
   const pending = [];
@@ -18,6 +182,18 @@ export function readScenePrimitiveReadiness(scene, Cesium) {
       ready: typeof primitive.ready === 'boolean' ? primitive.ready : null,
       show: typeof primitive.show === 'boolean' ? primitive.show : null,
     };
+    if (
+      owner.ready === false &&
+      typeof Cesium.GroundPolylinePrimitive === 'function' &&
+      primitive instanceof Cesium.GroundPolylinePrimitive
+    ) {
+      owner.buildState = readGroundPolylineBuildState(primitive, Cesium, path);
+      if (owner.buildState.status === 'unavailable')
+        unsupportedOwners.push({
+          path: `${path}/inner-primitive`,
+          type: owner.buildState.reason,
+        });
+    }
     owners.push(owner);
     if (owner.ready === false) pending.push({ path, type: owner.type });
     // A data source can report ready before its hidden static replacement is
