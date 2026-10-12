@@ -1,0 +1,68 @@
+{
+  "schema": "gev-capture-scope-gate-control/v1",
+  "toolVersion": "10.12.0",
+  "sourceCommit": "66d8c8c169f53a358f2e8ac9a3a65b25fe171fab",
+  "gateCommit": "21be98a45dae188be84d958987a88e050d88bae7",
+  "integrationCommit": "033579a1f0f417f1af5fbc264dc4206fa3e5af12",
+  "files": [
+    {
+      "file": "scripts/capture-scene-performance.mjs",
+      "sourceSha256": "e4e62c5e19e982d617a4091fd436ef7a1d1761965b8b1824e93aae308c1633fe",
+      "errors": [
+        {
+          "ruleId": "no-undef",
+          "message": "'measurementBoundarySettle' is not defined.",
+          "line": 4759,
+          "column": 13
+        },
+        {
+          "ruleId": "no-undef",
+          "message": "'clockEnd' is not defined.",
+          "line": 4761,
+          "column": 29
+        },
+        {
+          "ruleId": "no-undef",
+          "message": "'createObservedAustinOperatingComparisonContract' is not defined.",
+          "line": 5204,
+          "column": 11
+        }
+      ]
+    },
+    {
+      "file": "scripts/qa-performance-build-smoke.mjs",
+      "sourceSha256": "05c1b62d0335937aa3ebb24809ba21e2eba87119c022a67872a8a701e73f77d1",
+      "errors": [
+        {
+          "ruleId": "no-undef",
+          "message": "'austinOperatingCaptureFixture' is not defined.",
+          "line": 3396,
+          "column": 18
+        }
+      ]
+    }
+  ],
+  "currentFiles": [
+    {
+      "file": "scripts/capture-scene-performance.mjs",
+      "sourceSha256": "12b2353059a67cbdeb80d038bcaa5e522ac5299c282c2c07c06ddfe811e85992",
+      "errorCount": 0
+    },
+    {
+      "file": "scripts/qa-performance-build-smoke.mjs",
+      "sourceSha256": "6d28a575c6fb882cd3faaeb12270687826f816a7bf60287cfbdd12af63346941",
+      "errorCount": 0
+    }
+  ],
+  "cliControl": {
+    "historical": {
+      "exitCode": 1,
+      "stderr": "\nC:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s47-austin-receipt-only\\qa-artifacts\\capture-scope-cli-control\\scripts\\capture-scene-performance.mjs\n  4759:13  error  'measurementBoundarySettle' is not defined                        no-undef\n  4761:29  error  'clockEnd' is not defined                                         no-undef\n  5204:11  error  'createObservedAustinOperatingComparisonContract' is not defined  no-undef\n\nC:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s47-austin-receipt-only\\qa-artifacts\\capture-scope-cli-control\\scripts\\qa-performance-build-smoke.mjs\n  3396:18  error  'austinOperatingCaptureFixture' is not defined  no-undef\n\n✖ 4 problems (4 errors, 0 warnings)\n"
+    },
+    "corrected": {
+      "exitCode": 0,
+      "stdout": "Capture harness no-undef: 17 files passed.\n"
+    },
+    "trackedSourcesModified": false
+  }
+}

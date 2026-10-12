@@ -455,3 +455,22 @@ The next correction must preserve those rendering defaults and validate the
 complete visual contract with meaningful failure labels. Because candidate
 samples were truncated, this record does not identify the exact failed sample
 or prove that correcting FXAA alone will make the full capture pass.
+
+# Permanent harness scope gate
+
+The recurring undeclared-reference failures now have a dedicated standard-CI
+gate covering the same 17 capture/Austin files. It uses only `no-undef`, standard
+Node/browser globals, and no inline configuration. Luna implemented the gate
+in `94577d10`, disabled inline suppression in `86537883`, and updated the
+pinned tools to ESLint 10.12.0 / globals 17.13.0 in `21be98a4`. The earlier
+ESLint 9.39.1 audit remains historical; ESLint's [support policy](https://eslint.org/version-support/)
+identifies version 9 as end-of-life. The new dependency supports Node 24/26.
+No existing application dependency version changes in this packet.
+
+Root independently passes all three gate tests and the 17-file check. A stronger
+[actual CLI control](permanent-scope-gate-control.json) copies the checked files
+into an isolated directory, substitutes the two real broken entrypoints from
+`66d8c8c1`, and confirms exit 1 with all four historical undeclared references.
+Restoring the current entrypoints produces exit 0 with all 17 files passing.
+Tracked files are not modified by this control. This prevents that defect class
+in the audited scope; it does not prove successful capture or runtime performance.
