@@ -2,6 +2,7 @@ import {
   SUPPORT_KEYS,
   planeSupportPoints,
   poseHash,
+  sameFootprintPose,
 } from '../../data/cctvFootprint.js';
 
 /** Cooldown before a provisional (geoid-fallback / partial) footprint is retried. */
@@ -449,7 +450,9 @@ export function createGround({ state: layerState, services, parts, source }) {
     const pose = parts.geometry.footprintPose(record);
     const hash = poseHash(pose);
     const existing = record.footprintGround;
-    if (existing?.poseHash === hash) {
+    // Runtime DEM samples are owned by the exact pose snapshot. The compact
+    // rounded p1 hash is retained for diagnostics/sidecar compatibility only.
+    if (sameFootprintPose(existing?.pose, pose)) {
       // Complete real-DEM results are final; a geoid-fallback (proxy outage)
       // or partial result is retried after a cooldown.
       if (!existing.provisional || Date.now() < existing.retryAt) return;
@@ -471,7 +474,7 @@ export function createGround({ state: layerState, services, parts, source }) {
     if (!Array.isArray(results)) return;
     if (record.footprintRevision !== revision) return;
     if (layerState._recordById.get(record.camera.id) !== record) return;
-    if (poseHash(parts.geometry.footprintPose(record)) !== hash) return;
+    if (!sameFootprintPose(parts.geometry.footprintPose(record), pose)) return;
     const under = {};
     let real = 0;
     results.forEach((result, index) => {
@@ -483,6 +486,7 @@ export function createGround({ state: layerState, services, parts, source }) {
     const provisional = real < SUPPORT_KEYS.length;
     record.footprintGround = {
       poseHash: hash,
+      pose: { ...pose },
       supports: under,
       source: provisional ? 'dem-provisional' : 'dem',
       provisional,

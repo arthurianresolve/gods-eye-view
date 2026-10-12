@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGround } from './ground.js';
-import { SUPPORT_KEYS } from '../../data/cctvFootprint.js';
+import { createCalibration } from './calibration.js';
+import { createGeometry } from './geometry.js';
+import { createModel } from './model.js';
+import { DEFAULT_CAMERA_CALIBRATION } from './policy.js';
+import { poseHash, SUPPORT_KEYS } from '../../data/cctvFootprint.js';
 
 function deferred() {
   let resolve;
@@ -129,9 +133,55 @@ function setup() {
     calls,
     pending,
     state,
+    services,
+    parts,
     ground,
     setSource: (v) => (source = v),
     setTilesReady: (v) => (tilesReady = v),
+  };
+}
+
+function installActualCalibration(env, base = { lat: 40.7, lon: -73.9 }) {
+  env.parts.ground = env.ground;
+  env.parts.ground.groundAltFor = () => 100;
+  env.parts.presentation.notifyListenersThrottled = () => {};
+  Object.assign(env.services.ground, {
+    warmGroundFloor() {},
+    cachedGroundFloor() {
+      return Number.NaN;
+    },
+    cachedMeshFloor() {
+      return Number.NaN;
+    },
+  });
+  env.services.mesh.sampleMeshFloorCells = () => {};
+  const context = {
+    state: env.state,
+    services: { ...env.services, focus: {}, render: {} },
+    parts: env.parts,
+    source: {},
+  };
+  env.parts.model = createModel(context);
+  env.parts.calibration = createCalibration(context);
+  env.parts.ground = env.ground;
+  env.parts.projection = { updatePlanePlacement() {} };
+  const geometryWrites = [];
+  env.parts.geometry = createGeometry(context);
+  env.parts.geometry.applyFrustumGeometry = (record, ground) => {
+    geometryWrites.push({ record, ground });
+  };
+  env.active.camera.lat = base.lat;
+  env.active.camera.lon = base.lon;
+  env.active.camera.calibration = { ...DEFAULT_CAMERA_CALIBRATION };
+  env.parts.model.ensureCameraPose(env.active.camera);
+  return {
+    geometryWrites,
+    applyNorthOffset: (offsetNorthM) =>
+      env.parts.calibration.applyCalibrationPatch(
+        env.active,
+        { offsetNorthM },
+        { transient: true },
+      ),
   };
 }
 
@@ -277,6 +327,134 @@ test('new visible tileset invalidates only its mesh-ground owner and refreshes a
     'late result from old pose is dropped',
   );
   assert.equal(env.active.footprintGround.supports.bl, 22);
+});
+
+test('rounded-equal cached DEM pose does not suppress the latest calibration request', async () => {
+  const env = setup();
+  const { applyNorthOffset } = installActualCalibration(env);
+  assert.equal(applyNorthOffset(0.4), true);
+  const firstPose = env.parts.geometry.footprintPose(env.active);
+  const firstHash = poseHash(firstPose);
+  env.active.footprintGround = {
+    poseHash: firstHash,
+    pose: { ...firstPose },
+    supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 10])),
+    provisional: false,
+  };
+
+  assert.equal(applyNorthOffset(0.5), true);
+  const latestPose = env.parts.geometry.footprintPose(env.active);
+  assert.notDeepEqual(latestPose, firstPose);
+  assert.equal(poseHash(latestPose), firstHash);
+
+  const request = env.ground.resolveFootprintGround(env.active);
+  assert.equal(env.pending.length, 1, 'exact pose starts a fresh DEM lookup');
+  env.pending[0].resolve(
+    SUPPORT_KEYS.map(() => ({ ellipsoid: 22, source: 'reearth' })),
+  );
+  await request;
+  assert.deepEqual(env.active.footprintGround.pose, latestPose);
+  assert.equal(env.active.footprintGround.supports.bl, 22);
+});
+
+test('exact cached pose is reused while a legacy hash-only record refreshes safely', async () => {
+  const env = setup();
+  installActualCalibration(env);
+  const pose = env.parts.geometry.footprintPose(env.active);
+  env.active.footprintGround = {
+    poseHash: poseHash(pose),
+    pose: { ...pose },
+    supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 10])),
+    provisional: false,
+  };
+
+  await env.ground.resolveFootprintGround(env.active);
+  assert.equal(
+    env.pending.length,
+    0,
+    'an exact complete pose needs no new DEM request',
+  );
+
+  delete env.active.footprintGround.pose;
+  const refresh = env.ground.resolveFootprintGround(env.active);
+  assert.equal(
+    env.pending.length,
+    1,
+    'a legacy hash-only value is not trusted as exact',
+  );
+  env.pending[0].resolve(
+    SUPPORT_KEYS.map(() => ({ ellipsoid: 31, source: 'reearth' })),
+  );
+  await refresh;
+  assert.deepEqual(env.active.footprintGround.pose, pose);
+  assert.equal(env.active.footprintGround.supports.bl, 31);
+});
+
+test('near-equator east calibration collision refreshes the exact cached pose', async () => {
+  const env = setup();
+  installActualCalibration(env, { lat: 0, lon: 20 });
+  assert.equal(
+    env.parts.calibration.applyCalibrationPatch(
+      env.active,
+      { offsetEastM: 0.4 },
+      { transient: true },
+    ),
+    true,
+  );
+  const firstPose = env.parts.geometry.footprintPose(env.active);
+  const firstHash = poseHash(firstPose);
+  env.active.footprintGround = {
+    poseHash: firstHash,
+    pose: { ...firstPose },
+    supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 10])),
+    provisional: false,
+  };
+
+  assert.equal(
+    env.parts.calibration.applyCalibrationPatch(
+      env.active,
+      { offsetEastM: 0.5 },
+      { transient: true },
+    ),
+    true,
+  );
+  const latestPose = env.parts.geometry.footprintPose(env.active);
+  assert.notEqual(latestPose.lon, firstPose.lon);
+  assert.equal(poseHash(latestPose), firstHash);
+  const request = env.ground.resolveFootprintGround(env.active);
+  assert.equal(env.pending.length, 1);
+  env.pending[0].resolve(
+    SUPPORT_KEYS.map(() => ({ ellipsoid: 24, source: 'reearth' })),
+  );
+  await request;
+  assert.deepEqual(env.active.footprintGround.pose, latestPose);
+});
+
+test('late DEM response is rejected when a transient calibration changes pose within the same rounded key', async () => {
+  const env = setup();
+  const { applyNorthOffset, geometryWrites } = installActualCalibration(env);
+  assert.equal(applyNorthOffset(0.4), true);
+  const stalePose = env.parts.geometry.footprintPose(env.active);
+  const staleHash = poseHash(stalePose);
+  const request = env.ground.resolveFootprintGround(env.active);
+  assert.equal(env.pending.length, 1);
+
+  assert.equal(applyNorthOffset(0.5), true);
+  const currentPose = env.parts.geometry.footprintPose(env.active);
+  assert.notDeepEqual(currentPose, stalePose);
+  assert.equal(poseHash(currentPose), staleHash);
+  const geometryWritesBeforeStaleResult = geometryWrites.length;
+  assert.equal(geometryWritesBeforeStaleResult, 2);
+  env.pending[0].resolve(
+    SUPPORT_KEYS.map(() => ({ ellipsoid: 99, source: 'reearth' })),
+  );
+  await request;
+  assert.equal(env.active.footprintGround, null);
+  assert.equal(
+    geometryWrites.length,
+    geometryWritesBeforeStaleResult,
+    'stale support never rewrites geometry',
+  );
 });
 
 test('provider owner changes do not invalidate shipped footprint samples', () => {

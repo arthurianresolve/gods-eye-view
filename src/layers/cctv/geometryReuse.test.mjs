@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import { createGeometry } from './geometry.js';
 import { createModel } from './model.js';
+import { createCalibration } from './calibration.js';
+import { DEFAULT_CAMERA_CALIBRATION } from './policy.js';
 import { poseHash, SUPPORT_KEYS } from '../../data/cctvFootprint.js';
 
 function fixture() {
@@ -51,6 +53,7 @@ function fixture() {
     geometry,
     state,
     services,
+    parts,
     writes: () => writes,
     placements: () => placements,
   };
@@ -149,6 +152,7 @@ test('terrain, probe-clamp and footprint revisions invalidate only their changed
   const pose = env.geometry.footprintPose(env.record);
   env.record.footprintGround = {
     poseHash: poseHash(pose),
+    pose: { ...pose },
     supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 50])),
   };
   env.geometry.applyFrustumGeometry(env.record, 18);
@@ -156,6 +160,223 @@ test('terrain, probe-clamp and footprint revisions invalidate only their changed
   env.geometry.applyFrustumGeometry(env.record, 18);
   assert.equal(env.writes(), 20);
   assert.equal(env.record.frustumGeometry.footprintMeasured, true);
+});
+
+test('normalized calibration producer changes geometry once per real pose revision', () => {
+  const env = fixture();
+  const requests = [];
+  const groundResolutions = [];
+  env.services.render = {
+    governorRequestRender(reason) {
+      requests.push(reason);
+    },
+  };
+  env.parts.ground.groundAltFor = () => 12;
+  env.parts.geometry = env.geometry;
+  env.parts.ground.resolveFootprintGround = (record) => {
+    groundResolutions.push(record);
+    return Promise.resolve();
+  };
+  env.parts.presentation = {
+    notifyListenersThrottled() {},
+    notifyListeners() {},
+  };
+  env.parts.frames = { refreshProjectionImage() {} };
+  env.parts.rendering = { refreshCoverageStyles() {} };
+  const context = {
+    state: env.state,
+    services: env.services,
+    parts: env.parts,
+    source: {},
+  };
+  env.parts.calibration = createCalibration(context);
+  env.record.camera.calibration = { ...DEFAULT_CAMERA_CALIBRATION };
+  env.parts.model.ensureCameraPose(env.record.camera);
+  env.geometry.applyFrustumGeometry(env.record, 12);
+
+  const revisions = [
+    { headingDeg: 0.1 },
+    { pitchDeg: 0.1 },
+    { fovDeg: 0.1 },
+    { rangeScale: 1.01 },
+    { heightM: 0.1 },
+    { offsetNorthM: 0.4 },
+    { offsetNorthM: 0.5 },
+    { offsetEastM: 0.1 },
+  ];
+  let previousHash = poseHash(env.geometry.footprintPose(env.record));
+  let previousMountLat = env.record.camera.lat;
+  let expectedWrites = 5;
+  for (const [index, patch] of revisions.entries()) {
+    assert.equal(
+      env.parts.calibration.applyCalibrationPatch(env.record, patch, {
+        transient: true,
+      }),
+      true,
+    );
+    const nextHash = poseHash(env.geometry.footprintPose(env.record));
+    if (index === 6) {
+      assert.equal(
+        nextHash,
+        previousHash,
+        '0.4m and 0.5m north offsets expose the rounded-key collision',
+      );
+    } else {
+      assert.notEqual(nextHash, previousHash);
+    }
+    if (index === 6) {
+      assert.notEqual(
+        env.record.frustumGeometry.mount.lat,
+        previousMountLat,
+        'geometry follows the actual pose despite rounded-key collision',
+      );
+    }
+    previousMountLat = env.record.frustumGeometry.mount.lat;
+    previousHash = nextHash;
+    expectedWrites += 5;
+    assert.equal(env.writes(), expectedWrites);
+    const positions = env.record.frustumPositions;
+
+    assert.equal(
+      env.parts.calibration.applyCalibrationPatch(env.record, patch, {
+        transient: true,
+      }),
+      true,
+    );
+    assert.equal(
+      env.writes(),
+      expectedWrites,
+      'same normalized pose reuses geometry',
+    );
+    assert.equal(env.record.frustumPositions, positions);
+  }
+
+  assert.equal(
+    groundResolutions.length,
+    0,
+    'transient drag keeps its commit boundary',
+  );
+  assert.equal(requests.length, revisions.length * 2);
+  assert(requests.every((reason) => reason === 'cctv-calibration-drag'));
+});
+
+test('rounded shipped key cannot authorize footprint data for a calibrated pose', () => {
+  const env = fixture();
+  env.parts.ground.currentSurfaceRegime = () => 'google-3d';
+  env.parts.ground.groundAltFor = () => 12;
+  env.parts.geometry = env.geometry;
+  env.parts.presentation = {
+    notifyListenersThrottled() {},
+    notifyListeners() {},
+  };
+  env.parts.frames = { refreshProjectionImage() {} };
+  env.parts.rendering = { refreshCoverageStyles() {} };
+  const context = {
+    state: env.state,
+    services: { focus: {}, render: {} },
+    parts: env.parts,
+    source: {},
+  };
+  env.parts.calibration = createCalibration(context);
+  env.record.camera.lat = 40.7000006;
+  env.record.camera.calibration = { ...DEFAULT_CAMERA_CALIBRATION };
+  env.record.camera.basePose = {
+    lat: env.record.camera.lat,
+    lon: env.record.camera.lon,
+    headingDeg: env.record.camera.headingDeg,
+    pitchDeg: env.record.camera.pitchDeg,
+    fovDeg: env.record.camera.fovDeg,
+    rangeM: env.record.camera.rangeM,
+    mountHeightM: env.record.camera.mountHeightM,
+  };
+  env.record.camera.groundHeights = {
+    mountGroundM: 12,
+    poseHash: poseHash(env.record.camera.basePose),
+    supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 50])),
+  };
+  env.parts.model.ensureCameraPose(env.record.camera);
+
+  assert.equal(env.geometry.hasShippedFootprint(env.record), true);
+  assert.equal(
+    env.parts.calibration.applyCalibrationPatch(
+      env.record,
+      { offsetNorthM: 0.1 },
+      { transient: true },
+    ),
+    true,
+  );
+  assert.equal(
+    poseHash(env.geometry.footprintPose(env.record)),
+    env.record.camera.groundHeights.poseHash,
+    'the source-compatible rounded sidecar key collides at this base pose',
+  );
+  assert.equal(
+    env.geometry.hasShippedFootprint(env.record),
+    false,
+    'exact base-pose ownership rejects calibrated sidecar reuse',
+  );
+  assert.equal(
+    env.parts.calibration.applyCalibrationPatch(
+      env.record,
+      { offsetNorthM: 0 },
+      { transient: true },
+    ),
+    true,
+  );
+  assert.equal(
+    env.geometry.hasShippedFootprint(env.record),
+    true,
+    'returning to the exact base pose restores shipped precompute eligibility',
+  );
+});
+
+test('rounded-equal runtime DEM support is not applied to the newer pose', () => {
+  const env = fixture();
+  env.parts.ground.groundAltFor = () => 12;
+  env.parts.geometry = env.geometry;
+  env.parts.presentation = {
+    notifyListenersThrottled() {},
+    notifyListeners() {},
+  };
+  env.parts.frames = { refreshProjectionImage() {} };
+  env.parts.rendering = { refreshCoverageStyles() {} };
+  const context = {
+    state: env.state,
+    services: { focus: {}, render: {} },
+    parts: env.parts,
+    source: {},
+  };
+  env.parts.calibration = createCalibration(context);
+  env.record.camera.calibration = { ...DEFAULT_CAMERA_CALIBRATION };
+  env.parts.model.ensureCameraPose(env.record.camera);
+
+  env.parts.calibration.applyCalibrationPatch(
+    env.record,
+    { offsetNorthM: 0.4 },
+    { transient: true },
+  );
+  const sampledPose = env.geometry.footprintPose(env.record);
+  const sampledHash = poseHash(sampledPose);
+  env.record.footprintGround = {
+    poseHash: sampledHash,
+    pose: { ...sampledPose },
+    supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 900])),
+    provisional: false,
+  };
+  env.geometry.applyFrustumGeometry(env.record, 12);
+  assert.equal(env.record.frustumGeometry.footprintMeasured, true);
+
+  env.parts.calibration.applyCalibrationPatch(
+    env.record,
+    { offsetNorthM: 0.5 },
+    { transient: true },
+  );
+  assert.equal(poseHash(env.geometry.footprintPose(env.record)), sampledHash);
+  assert.equal(
+    env.record.frustumGeometry.footprintMeasured,
+    false,
+    'exact runtime pose ownership rejects support heights for the prior pose',
+  );
 });
 
 test('settled map source refresh selects the visible tileset over an older hidden owner', () => {

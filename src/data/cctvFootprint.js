@@ -196,3 +196,31 @@ export function poseHash(pose) {
   }
   return `p1-${h.toString(36)}`;
 }
+
+const FOOTPRINT_POSE_FIELDS = Object.freeze([
+  'lat',
+  'lon',
+  'headingDeg',
+  'pitchDeg',
+  'fovDeg',
+  'rangeM',
+  'mountHeightM',
+]);
+
+/**
+ * Compares runtime footprint inputs exactly. `poseHash` remains the compact,
+ * rounded compatibility key for shipped precomputes; live DEM results need
+ * exact ownership because a calibration step can be smaller than its bins.
+ * @param {Object|null|undefined} a
+ * @param {Object|null|undefined} b
+ * @returns {boolean}
+ */
+export function sameFootprintPose(a, b) {
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  return FOOTPRINT_POSE_FIELDS.every(
+    (field) =>
+      Number.isFinite(a[field]) &&
+      Number.isFinite(b[field]) &&
+      a[field] === b[field],
+  );
+}
