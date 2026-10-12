@@ -450,7 +450,7 @@ jobs:
         run: |
           evidence="$RUNNER_TEMP/performance-build-smoke.json"
           if [ -f "$evidence" ]; then
-            cat "$evidence"
+            jq -c '{schema, status, baselineSha, candidateSha, failure: (if .failure then {phase: .failure.phase, message: (.failure.message | tostring | .[0:400])} else null end), variants: [(.variants // [])[] | {label, status, revision, failure: (.failure | if . then tostring | .[0:400] else null end), captureCliReportArtifact, captureCliFailure: (if .failureDetails.captureCliFailure then {summary: .failureDetails.captureCliFailure.summary, rawReportTruncated: .failureDetails.captureCliFailure.rawReportTruncated, rawReportUnavailable: .failureDetails.captureCliFailure.rawReportUnavailable, captureCliReportArtifact: .failureDetails.captureCliFailure.captureCliReportArtifact} else null end)}]}' "$evidence"
           else
             echo 'Performance build smoke report was not created.'
           fi
@@ -463,6 +463,7 @@ jobs:
           path: |
             ${{ runner.temp }}/performance-build-smoke.json
             ${{ runner.temp }}/performance-build-smoke.json.cpu-profile/
+            ${{ runner.temp }}/performance-build-smoke.json.capture-cli-report-*.json
           if-no-files-found: warn
           retention-days: 3
 

@@ -6,11 +6,14 @@ import { createServer } from 'node:http';
 import { createReadStream, readFileSync } from 'node:fs';
 import {
   lstat,
+  mkdir,
   mkdtemp,
+  open,
   readFile,
   realpath,
   rm,
   stat,
+  rename,
   writeFile,
 } from 'node:fs/promises';
 import os from 'node:os';
@@ -66,6 +69,7 @@ import { observeTerminalViewerState } from './performance/terminalViewerObservat
 import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
+export const MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES = 8 * 1024 * 1024;
 const ROOT = await realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
 );
@@ -1551,6 +1555,141 @@ export function compactCaptureCliFailure(report) {
   };
 }
 
+export async function preserveCaptureCliReportArtifact(
+  sourcePath,
+  artifactPath,
+) {
+  let sourceHandle;
+  let sourceStat;
+  try {
+    sourceHandle = await open(sourcePath, 'r');
+    sourceStat = await sourceHandle.stat();
+  } catch {
+    await sourceHandle?.close().catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'missing',
+      fileName: path.basename(artifactPath),
+      byteLength: null,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+  if (!sourceStat.isFile()) {
+    await sourceHandle.close().catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'unavailable',
+      reason: 'source-not-file',
+      fileName: path.basename(artifactPath),
+      byteLength: null,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+  if (sourceStat.size > MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES) {
+    await sourceHandle.close().catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'oversize',
+      fileName: path.basename(artifactPath),
+      byteLength: sourceStat.size,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+
+  const temporaryPath = `${artifactPath}.pending-${process.pid}`;
+  try {
+    const boundedBuffer = Buffer.alloc(
+      MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES + 1,
+    );
+    let byteLength = 0;
+    while (byteLength < boundedBuffer.byteLength) {
+      const { bytesRead } = await sourceHandle.read(
+        boundedBuffer,
+        byteLength,
+        boundedBuffer.byteLength - byteLength,
+        byteLength,
+      );
+      if (bytesRead === 0) break;
+      byteLength += bytesRead;
+    }
+    if (byteLength > MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES) {
+      await sourceHandle.close().catch(() => {});
+      return {
+        schema: 'gev-smoke-capture-cli-report-artifact/v1',
+        status: 'oversize',
+        fileName: path.basename(artifactPath),
+        byteLength: sourceStat.size > byteLength ? sourceStat.size : byteLength,
+        sha256: null,
+        limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+      };
+    }
+    const bytes = boundedBuffer.subarray(0, byteLength);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(temporaryPath, bytes, { flag: 'wx' });
+    await sourceHandle.close();
+    await rename(temporaryPath, artifactPath);
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'preserved',
+      fileName: path.basename(artifactPath),
+      byteLength: bytes.byteLength,
+      sha256,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  } catch {
+    await sourceHandle.close().catch(() => {});
+    await rm(temporaryPath, { force: true }).catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'write-failed',
+      fileName: path.basename(artifactPath),
+      byteLength: sourceStat.size,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+}
+
+export async function executeCaptureCliWithReportArtifact({
+  runChild,
+  reportPath,
+  artifactPath,
+}) {
+  let childError = null;
+  try {
+    await runChild();
+  } catch (error) {
+    childError = error;
+  }
+  const artifact = await preserveCaptureCliReportArtifact(
+    reportPath,
+    artifactPath,
+  );
+  artifact.childStatus = childError ? 'failed' : 'completed';
+  let report = null;
+  if (artifact.status === 'preserved') {
+    try {
+      report = JSON.parse(await readFile(artifactPath, 'utf8'));
+    } catch (error) {
+      if (!childError) childError = error;
+    }
+  }
+  if (!childError && artifact.status === 'oversize')
+    childError = new Error('Capture CLI report exceeded its artifact limit.');
+  if (!childError && artifact.status !== 'preserved')
+    childError = new Error('Capture CLI report artifact was not preserved.');
+  if (childError) {
+    childError.captureCliReport = report;
+    childError.captureCliReportArtifact = artifact;
+    throw childError;
+  }
+  return { report, artifact };
+}
+
 function git(args) {
   return execFileSync('git', ['-C', ROOT, ...args], {
     encoding: 'utf8',
@@ -1754,6 +1893,7 @@ async function runCandidateCaptureCli({
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
+  captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   startedAt,
   budgetMs,
@@ -1835,13 +1975,20 @@ async function runCandidateCaptureCli({
     );
   }
   let captureReport = null;
+  let captureCliReportArtifact = null;
   try {
-    await runBoundedChild(process.execPath, args, {
-      timeoutMs: Math.min(CAPTURE_CLI_TIMEOUT_MS, remainingMs - 15_000),
-      maxOutputBytes: 64 * 1024,
-      ownedPidFile: browserPidPath,
+    const captureCliResult = await executeCaptureCliWithReportArtifact({
+      runChild: () =>
+        runBoundedChild(process.execPath, args, {
+          timeoutMs: Math.min(CAPTURE_CLI_TIMEOUT_MS, remainingMs - 15_000),
+          maxOutputBytes: 64 * 1024,
+          ownedPidFile: browserPidPath,
+        }),
+      reportPath,
+      artifactPath: captureCliReportArtifactPath,
     });
-    captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
+    captureReport = captureCliResult.report;
+    captureCliReportArtifact = captureCliResult.artifact;
     const validated = validateCaptureCliReport(captureReport, {
       appSha: commit,
       harnessSha: harnessCommit,
@@ -1890,15 +2037,10 @@ async function runCandidateCaptureCli({
         );
       }
     }
-    return validated;
+    return { ...validated, captureCliReportArtifact };
   } catch (error) {
-    if (!captureReport) {
-      try {
-        captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
-      } catch {
-        // Preserve the bounded process error when no report was written.
-      }
-    }
+    captureReport ||= error.captureCliReport || null;
+    captureCliReportArtifact ||= error.captureCliReportArtifact || null;
     const captureCliFailure = compactCaptureCliFailure(captureReport) || {
       diagnostics: error.childDiagnostics || null,
     };
@@ -1907,7 +2049,10 @@ async function runCandidateCaptureCli({
       captureCliFailure.cpuProfileArtifacts =
         await readProviderCpuProfileIndexSet(directory);
     }
+    if (captureCliReportArtifact)
+      captureCliFailure.captureCliReportArtifact = captureCliReportArtifact;
     error.captureCliFailure = captureCliFailure;
+    error.captureCliReportArtifact = captureCliReportArtifact;
     throw error;
   }
 }
@@ -1926,6 +2071,7 @@ async function runRevision({
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
   depthPickAttribution = false,
+  captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   infrastructureCaptureFixture,
 }) {
@@ -2400,6 +2546,7 @@ async function runRevision({
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
         depthPickAttribution,
+        captureCliReportArtifactPath,
         profileArtifactDirectory,
         startedAt,
         budgetMs,
@@ -2697,6 +2844,7 @@ async function main() {
           sceneFrameDiagnostics,
           firstMotionCpuProfile,
           depthPickAttribution,
+          captureCliReportArtifactPath: `${outputPath}.capture-cli-report-${label}.json`,
           profileArtifactDirectory: firstMotionCpuProfile
             ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
             : null,
@@ -2706,11 +2854,16 @@ async function main() {
         Object.assign(variant, result);
       } catch (error) {
         variant.status = 'failed';
+        if (error.captureCliReportArtifact)
+          variant.captureCliReportArtifact = error.captureCliReportArtifact;
         variant.failure = sanitizeError(error);
         variant.failureDetails = error.smokeDiagnostics || {
           phase: 'clean-build-or-server-start',
           pageErrors: [],
           interceptionErrors: [],
+          ...(error.captureCliFailure
+            ? { captureCliFailure: error.captureCliFailure }
+            : {}),
         };
         throw error;
       }

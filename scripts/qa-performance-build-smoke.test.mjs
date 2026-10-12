@@ -8,9 +8,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
   assertProviderFixtureCaptureClock,
   compactCaptureCliFailure,
+  executeCaptureCliWithReportArtifact,
   parseSmokeArguments,
+  preserveCaptureCliReportArtifact,
   readProviderCpuProfileIndexSet,
   runBoundedChild,
   validateCaptureCliReport,
@@ -1837,6 +1840,190 @@ test('bounded child failure keeps sanitized stderr and the latest capture progre
       ]);
       return true;
     },
+  );
+});
+
+test('capture CLI preserves hash-bound raw reports on success and failure', async (t) => {
+  const parent = await realpath(os.tmpdir());
+  const tempRoot = await mkdtemp(
+    path.join(parent, 'gev-build-smoke-capture-report-artifact-'),
+  );
+  t.after(async () => rm(tempRoot, { recursive: true, force: true }));
+
+  const reportPath = path.join(tempRoot, 'capture.json');
+  const artifactPath = path.join(tempRoot, 'smoke.capture-report.json');
+  const raw = Buffer.from(
+    JSON.stringify({
+      schema: 'gev-performance-capture/v1',
+      status: 'complete',
+    }),
+  );
+  const success = await executeCaptureCliWithReportArtifact({
+    runChild: async () => writeFile(reportPath, raw),
+    reportPath,
+    artifactPath,
+  });
+  assert.deepEqual(await readFile(artifactPath), raw);
+  assert.equal(success.artifact.status, 'preserved');
+  assert.equal(success.artifact.childStatus, 'completed');
+  assert.equal(success.artifact.byteLength, raw.byteLength);
+  assert.equal(
+    success.artifact.sha256,
+    createHash('sha256').update(raw).digest('hex'),
+  );
+
+  const failedReportPath = path.join(tempRoot, 'failed-capture.json');
+  const failedArtifactPath = path.join(tempRoot, 'smoke.failed-capture.json');
+  const failedRaw = Buffer.from(
+    JSON.stringify({
+      schema: 'gev-performance-capture/v1',
+      status: 'complete',
+      captures: [{ scenario: 'scripted-motion', run: 1 }],
+    }),
+  );
+  await assert.rejects(
+    executeCaptureCliWithReportArtifact({
+      runChild: async () => {
+        await writeFile(failedReportPath, failedRaw);
+        throw new Error('capture child failed');
+      },
+      reportPath: failedReportPath,
+      artifactPath: failedArtifactPath,
+    }),
+    (error) => {
+      assert.equal(error.message, 'capture child failed');
+      assert.equal(error.captureCliReport.status, 'complete');
+      assert.equal(error.captureCliReportArtifact.status, 'preserved');
+      assert.equal(error.captureCliReportArtifact.childStatus, 'failed');
+      return true;
+    },
+  );
+  assert.deepEqual(await readFile(failedArtifactPath), failedRaw);
+});
+
+test('capture CLI report sidecar marks missing, malformed, and oversized reports', async (t) => {
+  const parent = await realpath(os.tmpdir());
+  const tempRoot = await mkdtemp(
+    path.join(parent, 'gev-build-smoke-capture-report-bounds-'),
+  );
+  t.after(async () => rm(tempRoot, { recursive: true, force: true }));
+
+  const missing = await preserveCaptureCliReportArtifact(
+    path.join(tempRoot, 'missing.json'),
+    path.join(tempRoot, 'missing-sidecar.json'),
+  );
+  assert.equal(missing.status, 'missing');
+  assert.equal(missing.sha256, null);
+
+  const malformedPath = path.join(tempRoot, 'malformed.json');
+  const malformedArtifact = path.join(tempRoot, 'malformed-sidecar.json');
+  const malformedBytes = Buffer.from('{ invalid JSON');
+  await writeFile(malformedPath, malformedBytes);
+  await assert.rejects(
+    executeCaptureCliWithReportArtifact({
+      runChild: async () => {},
+      reportPath: malformedPath,
+      artifactPath: malformedArtifact,
+    }),
+    (error) => {
+      assert.equal(error.captureCliReportArtifact.status, 'preserved');
+      assert.equal(error.captureCliReportArtifact.childStatus, 'completed');
+      return error instanceof SyntaxError;
+    },
+  );
+  assert.deepEqual(await readFile(malformedArtifact), malformedBytes);
+
+  const oversizedPath = path.join(tempRoot, 'oversized.json');
+  const oversizedArtifact = path.join(tempRoot, 'oversized-sidecar.json');
+  await writeFile(
+    oversizedPath,
+    Buffer.alloc(MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES + 1, 0x61),
+  );
+  const oversized = await preserveCaptureCliReportArtifact(
+    oversizedPath,
+    oversizedArtifact,
+  );
+  assert.equal(oversized.status, 'oversize');
+  assert.equal(oversized.byteLength, MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES + 1);
+  await assert.rejects(readFile(oversizedArtifact), { code: 'ENOENT' });
+});
+
+test('capture CLI closes the browser after page creation fails inside its lifecycle', async (t) => {
+  const parent = await realpath(os.tmpdir());
+  const tempRoot = await mkdtemp(
+    path.join(parent, 'gev-capture-cli-lifecycle-test-'),
+  );
+  t.after(async () => rm(tempRoot, { recursive: true, force: true }));
+  const witnessPath = path.join(tempRoot, 'browser-lifecycle.txt');
+  const mockPuppeteerPath = path.join(tempRoot, 'mock-puppeteer.mjs');
+  const preloadPath = path.join(tempRoot, 'mock-loader.mjs');
+  const reportPath = path.join(tempRoot, 'capture-failure.json');
+  await writeFile(
+    mockPuppeteerPath,
+    `import { appendFileSync } from 'node:fs';
+const witness = process.env.GEV_CAPTURE_BROWSER_WITNESS;
+const record = (value) => appendFileSync(witness, value + '\\n');
+const puppeteer = {
+  executablePath: async () => 'mock-chrome',
+  launch: async () => ({
+    createBrowserContext: async () => ({
+      newPage: async () => { record('new-page'); throw new Error('sentinel-new-page-failure'); },
+    }),
+    close: async () => record('browser-close'),
+  }),
+};
+export default puppeteer;
+`,
+  );
+  await writeFile(
+    preloadPath,
+    `import { pathToFileURL } from 'node:url';
+import { registerHooks } from 'node:module';
+registerHooks({ resolve(specifier, context, nextResolve) {
+  if (specifier === 'puppeteer') return { url: pathToFileURL(${JSON.stringify(mockPuppeteerPath)}).href, shortCircuit: true };
+  return nextResolve(specifier, context);
+} });
+`,
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--import',
+      pathToFileURL(preloadPath).href,
+      path.join(ROOT, 'scripts', 'capture-scene-performance.mjs'),
+      '--url',
+      'http://127.0.0.1:4173',
+      '--runs',
+      '1',
+      '--startup-runs',
+      '1',
+      '--warmup-ms',
+      '0',
+      '--seconds',
+      '1',
+      '--headless',
+      '--out',
+      reportPath,
+    ],
+    {
+      encoding: 'utf8',
+      timeout: 10_000,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        GEV_CAPTURE_BROWSER_WITNESS: witnessPath,
+      },
+    },
+  );
+  assert.equal(result.status, 1, result.stderr);
+  assert.match(result.stderr, /sentinel-new-page-failure/);
+  assert.doesNotMatch(result.stderr, /page is not defined|ReferenceError/);
+  const report = JSON.parse(await readFile(reportPath, 'utf8'));
+  assert.equal(report.schema, 'gev-performance-capture-failure/v1');
+  assert.match(report.failure.message, /sentinel-new-page-failure/);
+  assert.deepEqual(
+    (await readFile(witnessPath, 'utf8')).trim().split(/\r?\n/),
+    ['new-page', 'browser-close'],
   );
 });
 

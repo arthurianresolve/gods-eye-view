@@ -516,6 +516,9 @@ function recordRendererLoopRetirement(record) {
 }
 let captureFailure = null;
 let failureReportWritten = false;
+let activePage = null;
+let activeDocumentRole = mainCaptureDocumentIdentity.documentRole;
+let activeDocumentId = mainCaptureDocumentIdentity.documentId;
 let activeRenderBoundaryProgressBinding = null;
 let activeRenderBoundaryProgressBindingRecord = null;
 const SCENE_FRAME_DIAGNOSTICS_KEY = '__gevS47SceneFrameTimingV1';
@@ -1622,9 +1625,8 @@ try {
   failureProgress.phase = 'main-navigation';
   failureProgress.scenario = null;
   failureProgress.run = null;
-  let page = await browser.newPage();
-  let activeDocumentRole = mainCaptureDocumentIdentity.documentRole;
-  let activeDocumentId = mainCaptureDocumentIdentity.documentId;
+  activePage = await browser.newPage();
+  let page = activePage;
   let providerContext = null;
   let flightFixtureDelivery = productionFlightFixture
     ? createFlightFixtureDeliveryObserver(
@@ -2171,6 +2173,7 @@ try {
     });
     providerContext = await browser.createBrowserContext();
     page = await providerContext.newPage();
+    activePage = page;
     ({ documentRole: activeDocumentRole, documentId: activeDocumentId } =
       captureDocumentTopology.samples[providerSampleDocumentIndex - 1]);
     flightFixtureDelivery = createFlightFixtureDeliveryObserver(
@@ -3578,10 +3581,10 @@ try {
     failureProgress.current?.measurement ?? null,
   );
   await disposeActiveRenderBoundaryProgressBinding('capture-finally');
-  if (page && activeDepthPickAttribution) {
+  if (activePage && activeDepthPickAttribution) {
     try {
       await disposeDepthPickAttributionForPage(
-        page,
+        activePage,
         activeDepthPickAttribution,
       );
     } catch (error) {
@@ -3597,8 +3600,8 @@ try {
         retireViewerRenderLoop: true,
         phase: 'capture-final-document-close',
         documentRole:
-          probePage === page ? activeDocumentRole : 'retired-document',
-        documentId: probePage === page ? activeDocumentId : null,
+          probePage === activePage ? activeDocumentRole : 'retired-document',
+        documentId: probePage === activePage ? activeDocumentId : null,
       });
     } catch (error) {
       captureFailure ||= error;
