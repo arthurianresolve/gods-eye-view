@@ -2,8 +2,10 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `c3c6c5a7e890d0b9985249892cc601a76c9835a3`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38196156481.json).
+Latest validated `dev` checkpoint: `1acda9eb379592e74bd0fd22d71231c36bc336db`.
+[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38198032300.json),
+including the command-palette focus repair, Node 24/26, all three recovery jobs,
+Windows onboarding and the browser journeys.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
 diagnostic tooling, a command-palette focus repair, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
@@ -29,6 +31,14 @@ readiness. The [geometry attribution run at `9752656c`](performance-evidence/s54
 captures the complete Entity witness, then times out in its later lifecycle
 checks before the collection comparison. That partial result preserves the
 failure; collection defaults stay off.
+The [isolated lifetime run at `dc1f416c`](performance-evidence/s54-lifetime-isolation-38197633597/README.md)
+now reaches both renderers. Independent decoding confirms all ten image pairs
+match, while the fixture reports matching coordinates and picking. It remains
+failed: Entity re-enable cycle 0 stops delivering completed frames and reaches
+the unchanged 12-second deadline. Its owned viewer is destroyed; collections
+then complete both lifecycle cycles and cleanup. The earlier visual mismatch
+is not explained by this run. Bounded CPU/worker attribution and cross-run
+visual diagnosis remain required before acceptance.
 S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
@@ -54,8 +64,14 @@ fails earlier during warmup. Its per-boundary progress-binding setup consumes
 4,075 ms of the 6,000 ms host window; the subsequent page entry and render
 request are acknowledged, but no completed frame arrives before the deadline.
 This setup perturbs the boundary and does not explain the original failure.
-Moving diagnostic setup before warmup is the next correction; deadlines stay
-unchanged and the failed report remains separate evidence.
+The [pre-warmup binding correction at `bbf4e88f`](performance-evidence/s47-prewarm-binding-38198470641/README.md)
+now completes two idle samples, with setup outside the boundary and all owned
+bindings removed. It still fails the first motion sample's measurement boundary:
+page-entry acknowledgement reaches the host at 5,987.5 ms of its 6,000 ms
+window. The measured interval and long tasks remain large. These host receipt
+times do not establish GPU time or one-way dispatch delay. The harness stays
+unmerged pending attribution; deadlines remain unchanged and failed reports
+remain separate evidence.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
@@ -454,7 +470,7 @@ the earlier release requirements and historical results.
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |
-| S54 infrastructure batching | Partial: identity separation, opt-in datacenter/dam collections and cable reference collections; Entity defaults retained | Current-dev component checks preserve identities, picks and teardown. At `d05e5415`, datacenters improve activation and retained JS heap with 20 exact image pairs; dams regress source-ready time 15.02% and fail benefit acceptance. At `eea44e57`, cable camera-change geometry and all five image pairs differ; convergence repair is under review | Hosted Apple paravirtual Metal only. Earlier cable readiness failures remain unresolved; physical Windows acceptance and the final candidate soak remain pending |
+| S54 infrastructure batching | Partial: identity separation, opt-in datacenter/dam collections and cable reference collections; Entity defaults retained | Datacenters at `d05e5415` improve activation and retained JS heap with 20 exact image pairs; dams regress source-ready time 15.02% and fail benefit acceptance. Cable lifetime isolation at `dc1f416c` produces 10 independently verified exact image pairs and passing collection cleanup, but fails Entity re-enable cycle 0. Prior mismatches remain unexplained | Hosted Apple paravirtual Metal only. Cable lifecycle and repeatability gates remain unresolved; physical Windows acceptance and the final candidate soak remain pending |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
 | S57 map-resource lifetime | Audited generation guards, cached provider ownership and comparison leases; added numeric cache/pending/memory diagnostics; existing detail/cache targets retained | 37 focused tests pass, including 30 equivalent map-switch cycles and failed/retried/late loads | Pending matched streaming/activation measurements |
