@@ -344,6 +344,33 @@ test('invalid observers fail before scheduling a timer', async () => {
   assert.equal(timers, 0);
 });
 
+test('a null optional progress binding is treated as absent while malformed bindings still fail', async () => {
+  const result = await observeRenderBoundary({
+    label: 'Austin warmup boundary without progress binding',
+    progressBinding: null,
+    timeoutMs: 100,
+    evaluate: async () => ({
+      status: 'settled',
+      settleElapsedMs: 4,
+      diagnostics: pageDiagnostics(),
+    }),
+  });
+
+  assert.equal(result.status, 'settled');
+  assert.equal(result.progressBindingOwnerId, null);
+  assert.equal(result.cleanup.progressBindingRemoved, true);
+  assert.equal(result.cleanup.progressInvocationReleased, true);
+
+  await assert.rejects(
+    observeRenderBoundary({
+      label: 'malformed progress binding',
+      progressBinding: {},
+      evaluate: () => {},
+    }),
+    /arguments are invalid/,
+  );
+});
+
 test('host deadline is scheduled from the original boundary start after slow dispatch', async () => {
   let clock = 0;
   let scheduledDelay = null;
