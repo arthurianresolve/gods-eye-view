@@ -1028,6 +1028,7 @@
   "scripts/fixtures/terrain-picking-lifecycle.js",
   "scripts/fixtures/terrainCurrentUpdateReadiness.mjs",
   "scripts/fixtures/terrainCurrentUpdateReadiness.test.mjs",
+  "scripts/fixtures/terrainSceneReadiness.mjs",
   "scripts/performance/infrastructureCollectionExperiment.mjs",
   "scripts/performance/infrastructureCollectionExperiment.test.mjs",
   "scripts/performance/terrainPickingLifecycle.mjs",
