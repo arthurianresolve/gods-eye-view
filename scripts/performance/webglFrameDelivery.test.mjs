@@ -6,6 +6,10 @@ import {
   createStartDelay,
   readPreparationState,
 } from '../fixtures/webglStartDelay.mjs';
+import {
+  pixelUniformValue,
+  webglReportFilename,
+} from '../fixtures/webglPixelMode.mjs';
 
 const fixturePath = new URL(
   '../fixtures/webgl-frame-delivery.js',
@@ -14,11 +18,14 @@ const fixturePath = new URL(
 
 async function runFixture({
   preserveDrawingBuffer = 'true',
+  pixelMode = 'static',
+  modeName = 'webgl2',
   startDelayMs = '0',
   cancelPreparation = false,
+  frameOffsetsMs = [16],
 } = {}) {
   const source = (await readFile(fixturePath, 'utf8')).replace(
-    /^import \{[\s\S]*?\} from '\.\/webglStartDelay\.mjs';\r?\n/m,
+    /^import \{[\s\S]*?\} from '\.\/webgl(?:StartDelay|PixelMode)\.mjs';\r?\n/gm,
     '',
   );
   let now = 0;
@@ -33,6 +40,10 @@ async function runFixture({
   let rectReads = 0;
   let requestedAttributes = null;
   let contextCreatedAt = null;
+  const shaderSources = [];
+  const uniformValues = [];
+  let drawCalls = 0;
+  let downloadedFilename = null;
   const listeners = new Map();
   const element = () => ({
     disabled: false,
@@ -46,7 +57,9 @@ async function runFixture({
   const run = element();
   const download = element();
   const mode = element();
-  mode.value = 'webgl2';
+  mode.value = modeName;
+  const pixels = element();
+  pixels.value = pixelMode;
   const preserve = element();
   preserve.value = preserveDrawingBuffer;
   const delay = element();
@@ -62,7 +75,9 @@ async function runFixture({
     COLOR_BUFFER_BIT: 5,
     RENDERER: 6,
     createShader: () => ({}),
-    shaderSource() {},
+    shaderSource(_shader, sourceText) {
+      shaderSources.push(sourceText);
+    },
     compileShader() {},
     getShaderParameter: () => true,
     getShaderInfoLog: () => '',
@@ -77,7 +92,15 @@ async function runFixture({
     clearColor() {},
     clear() {},
     useProgram() {},
-    drawArrays() {},
+    getUniformLocation(_program, name) {
+      return { name };
+    },
+    uniform1f(location, value) {
+      uniformValues.push({ name: location.name, value });
+    },
+    drawArrays() {
+      drawCalls++;
+    },
     getContextAttributes() {
       return {
         alpha: requestedAttributes.alpha,
@@ -124,11 +147,19 @@ async function runFixture({
       };
     },
   });
+  const makeAnchor = () => ({
+    href: '',
+    download: '',
+    click() {
+      downloadedFilename = this.download;
+    },
+  });
   currentCanvas = makeCanvas();
   const selectors = new Map([
     ['#run', run],
     ['#download', download],
     ['#mode', mode],
+    ['#pixel-mode', pixels],
     ['#preserve-drawing-buffer', preserve],
     ['#start-delay', delay],
     ['#cancel', cancel],
@@ -140,7 +171,7 @@ async function runFixture({
     visibilityState: 'visible',
     hasFocus: () => true,
     querySelector: (selector) => selectors.get(selector),
-    createElement: () => makeCanvas(),
+    createElement: (tag) => (tag === 'a' ? makeAnchor() : makeCanvas()),
     addEventListener(type, callback) {
       listeners.set(`document:${type}`, callback);
     },
@@ -190,7 +221,10 @@ async function runFixture({
       return nextTimeoutId++;
     },
     clearInterval() {},
-    URL,
+    URL: {
+      createObjectURL: () => 'blob:fixture',
+      revokeObjectURL() {},
+    },
     Blob,
     JSON,
     Math,
@@ -203,6 +237,8 @@ async function runFixture({
         clearTimer: clearScheduledTimeout,
       }),
     readPreparationState,
+    pixelUniformValue,
+    webglReportFilename,
     setTimeout: scheduleTimeout,
   });
   selectors.set('#surface', currentCanvas);
@@ -230,8 +266,12 @@ async function runFixture({
     delayCallback();
     await new Promise((resolve) => setImmediate(resolve));
   }
-  now = Number(startDelayMs) + 16;
-  rafCallback();
+  for (const offsetMs of frameOffsetsMs) {
+    now = Number(startDelayMs) + offsetMs;
+    const callback = rafCallback;
+    assert.equal(typeof callback, 'function');
+    callback();
+  }
   now = Number(startDelayMs) + 5001;
   endCallback();
   assert.ok(result.textContent);
@@ -242,11 +282,18 @@ async function runFixture({
     cancel,
     run,
     scheduledTimeouts,
+    uniformValues,
+    drawCalls,
+    shaderSources,
+    downloadReport() {
+      download.click();
+      return downloadedFilename;
+    },
   };
 }
 
 test('WebGL frame fixture preserves true by default and reports actual context/layout at both ends', async () => {
-  const { report, requestedAttributes } = await runFixture();
+  const { report, requestedAttributes, downloadReport } = await runFixture();
   assert.equal(requestedAttributes.preserveDrawingBuffer, true);
   assert.equal(requestedAttributes.antialias, true);
   assert.equal(report.preserveDrawingBufferRequested, true);
@@ -259,6 +306,11 @@ test('WebGL frame fixture preserves true by default and reports actual context/l
   assert.equal(report.canvasBoundsAtEnd.canvas.rect.left, 20);
   assert.equal(report.canvasBoundsAtStart.viewport.width, 894);
   assert.equal(report.canvasBoundsAtEnd.viewport.height, 585);
+  assert.match(
+    downloadReport(),
+    /webgl2-pixels-static-preserve-true-delay-0\.json$/,
+  );
+  assert.equal(downloadReport(), webglReportFilename(report));
 });
 
 test('WebGL frame fixture can request false without changing other context settings', async () => {
@@ -274,6 +326,75 @@ test('WebGL frame fixture can request false without changing other context setti
   assert.equal(report.contextAttributesAtStart.preserveDrawingBuffer, false);
   assert.equal(report.contextAttributesAtEnd.preserveDrawingBuffer, false);
   assert.equal(report.pointCount, 5000);
+});
+
+test('static and animated pixels share the shader, uniform, and draw path', async () => {
+  const frameOffsetsMs = [16, 266, 766];
+  const staticRun = await runFixture({ pixelMode: 'static', frameOffsetsMs });
+  const animatedRun = await runFixture({
+    pixelMode: 'animated',
+    frameOffsetsMs,
+  });
+
+  assert.deepEqual(staticRun.shaderSources, animatedRun.shaderSources);
+  assert.equal(staticRun.drawCalls, 3);
+  assert.equal(animatedRun.drawCalls, 3);
+  assert.deepEqual(
+    staticRun.uniformValues.map(({ name }) => name),
+    ['cyanLevel', 'cyanLevel', 'cyanLevel'],
+  );
+  assert.deepEqual(
+    animatedRun.uniformValues.map(({ name }) => name),
+    ['cyanLevel', 'cyanLevel', 'cyanLevel'],
+  );
+  assert.ok(staticRun.uniformValues.every(({ value }) => value === 1));
+  assert.ok(
+    animatedRun.uniformValues.every(({ value }) => value >= 0 && value <= 1),
+  );
+  assert.notEqual(
+    animatedRun.uniformValues[0].value,
+    animatedRun.uniformValues.at(-1).value,
+  );
+  assert.equal(staticRun.report.pixelMode, 'static');
+  assert.equal(animatedRun.report.pixelMode, 'animated');
+  assert.deepEqual(staticRun.report.pixelUniform, {
+    name: 'cyanLevel',
+    first: { elapsedMs: 16, value: 1 },
+    last: { elapsedMs: 766, value: 1 },
+  });
+  assert.deepEqual(animatedRun.report.pixelUniform.first, {
+    elapsedMs: 16,
+    value: animatedRun.uniformValues[0].value,
+  });
+  assert.deepEqual(animatedRun.report.pixelUniform.last, {
+    elapsedMs: 766,
+    value: animatedRun.uniformValues.at(-1).value,
+  });
+});
+
+test('pixel uniform helper rejects unsupported modes and invalid time', () => {
+  assert.equal(pixelUniformValue('static', 123), 1);
+  assert.ok(pixelUniformValue('animated', 0) >= 0);
+  assert.ok(pixelUniformValue('animated', 0) <= 1);
+  assert.throws(() => pixelUniformValue('unknown', 0), RangeError);
+  assert.throws(() => pixelUniformValue('animated', Number.NaN), RangeError);
+  assert.throws(() => pixelUniformValue('animated', -1), RangeError);
+});
+
+test('plain RAF reports pixel mode as unavailable and creates no WebGL context', async () => {
+  const run = await runFixture({
+    modeName: 'plain-raf',
+    pixelMode: 'animated',
+  });
+  assert.equal(run.report.mode, 'plain-raf');
+  assert.equal(run.report.pixelMode, 'not-applicable');
+  assert.equal(run.report.pixelUniform, null);
+  assert.equal(run.report.pointCount, null);
+  assert.equal(run.requestedAttributes, null);
+  assert.equal(run.contextCreatedAt, null);
+  assert.deepEqual(run.uniformValues, []);
+  assert.equal(run.drawCalls, 0);
+  assert.match(run.downloadReport(), /plain-raf-pixels-not-applicable/);
 });
 
 test('delayed start precedes context setup and records delay separately from the window', async () => {

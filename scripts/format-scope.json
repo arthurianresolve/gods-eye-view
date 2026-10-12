@@ -1199,6 +1199,7 @@
   "scripts/fixtures/traffic-render-demand.vite.mjs",
   "scripts/fixtures/webgl-frame-delivery.html",
   "scripts/fixtures/webgl-frame-delivery.js",
+  "scripts/fixtures/webglPixelMode.mjs",
   "scripts/fixtures/webglStartDelay.mjs",
   "scripts/performance/webglStartDelay.test.mjs",
   "docs/performance-evidence/webgl-delayed-start/README.md",

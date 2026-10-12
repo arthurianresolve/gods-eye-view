@@ -54,8 +54,8 @@
   <body>
     <h1>WebGL frame-delivery diagnostic</h1>
     <p>
-      Five-second browser scheduling diagnostic only. It does not measure GPU
-      speed or qualify a performance result.
+      Five-second scheduling diagnostic only (not GPU performance acceptance).
+      Pixel mode uses one shader/uniform path; animation changes cyan only.
     </p>
     <p>
       Keep Chrome foreground and uncovered during a run. Page focus and
@@ -75,6 +75,13 @@
         <select id="preserve-drawing-buffer">
           <option value="true" selected>true (default)</option>
           <option value="false">false</option>
+        </select>
+      </label>
+      <label>
+        Pixels
+        <select id="pixel-mode">
+          <option value="static" selected>static cyan</option>
+          <option value="animated">animated cyan</option>
         </select>
       </label>
       <label>

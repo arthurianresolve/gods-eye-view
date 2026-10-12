@@ -1,4 +1,5 @@
 import { createStartDelay, readPreparationState } from './webglStartDelay.mjs';
+import { pixelUniformValue, webglReportFilename } from './webglPixelMode.mjs';
 
 const DURATION_MS = 5000;
 const POINT_COUNT = 5000;
@@ -12,6 +13,7 @@ const preserveDrawingBufferSelect = document.querySelector(
   '#preserve-drawing-buffer',
 );
 const startDelaySelect = document.querySelector('#start-delay');
+const pixelModeSelect = document.querySelector('#pixel-mode');
 const status = document.querySelector('#status');
 const result = document.querySelector('#result');
 const cancelButton = document.querySelector('#cancel');
@@ -60,8 +62,9 @@ function createPointProgram(gl) {
       gl.FRAGMENT_SHADER,
       `#version 300 es
      precision highp float;
+     uniform float cyanLevel;
      out vec4 color;
-     void main() { color = vec4(0.0, 1.0, 1.0, 1.0); }`,
+     void main() { color = vec4(0.0, cyanLevel, 1.0, 1.0); }`,
     );
     program = gl.createProgram();
     if (!program) throw new Error('Could not allocate a WebGL program.');
@@ -164,6 +167,7 @@ runButton.addEventListener('click', async () => {
     downloadButton.disabled =
     modeSelect.disabled =
     preserveDrawingBufferSelect.disabled =
+    pixelModeSelect.disabled =
     startDelaySelect.disabled =
       true;
   cancelButton.disabled = requestedStartDelayMs === 0;
@@ -172,6 +176,7 @@ runButton.addEventListener('click', async () => {
     ? 'Preparing diagnostic start delay'
     : 'Preparing diagnostic';
   const mode = modeSelect.value;
+  const pixelModeRequested = pixelModeSelect.value;
   const preserveDrawingBufferRequested =
     preserveDrawingBufferSelect.value === 'true';
   let gl = null;
@@ -195,6 +200,9 @@ runButton.addEventListener('click', async () => {
   let contextAttributesAtStart = null;
   let preparation = null;
   let contextSetupElapsedMs = null;
+  let firstPixelUniform = null;
+  let lastPixelUniform = null;
+  let cyanLevelLocation = null;
   let active = false;
   const buckets = Array.from({ length: 5 }, (_, index) => ({
     startMs: index * BUCKET_MS,
@@ -278,6 +286,15 @@ runButton.addEventListener('click', async () => {
         visibilityAtStart,
       },
       pointCount: mode === 'webgl2' ? POINT_COUNT : null,
+      pixelMode: mode === 'webgl2' ? pixelModeRequested : 'not-applicable',
+      pixelUniform:
+        mode === 'webgl2'
+          ? {
+              name: 'cyanLevel',
+              first: firstPixelUniform,
+              last: lastPixelUniform,
+            }
+          : null,
       preserveDrawingBufferRequested:
         mode === 'webgl2' ? preserveDrawingBufferRequested : null,
       canvasBoundsAtStart,
@@ -315,6 +332,7 @@ runButton.addEventListener('click', async () => {
     runButton.disabled =
       modeSelect.disabled =
       preserveDrawingBufferSelect.disabled =
+      pixelModeSelect.disabled =
       startDelaySelect.disabled =
         false;
     cancelButton.disabled = true;
@@ -387,6 +405,9 @@ runButton.addEventListener('click', async () => {
       if (!gl) throw new Error('WebGL2 context creation failed.');
       contextAttributesAtStart = contextAttributesSnapshot(gl);
       program = createPointProgram(gl);
+      cyanLevelLocation = gl.getUniformLocation(program, 'cyanLevel');
+      if (cyanLevelLocation === null)
+        throw new Error('Could not find the cyanLevel shader uniform.');
     }
     contextSetupElapsedMs = performance.now() - contextSetupStartedAt;
   } catch (error) {
@@ -447,6 +468,11 @@ runButton.addEventListener('click', async () => {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(program);
+        const cyanLevel = pixelUniformValue(pixelModeRequested, elapsed);
+        gl.uniform1f(cyanLevelLocation, cyanLevel);
+        const uniformSample = { elapsedMs: elapsed, value: cyanLevel };
+        if (firstPixelUniform === null) firstPixelUniform = uniformSample;
+        lastPixelUniform = uniformSample;
         gl.drawArrays(gl.POINTS, 0, POINT_COUNT);
       }
       rafId = requestAnimationFrame(frame);
@@ -470,11 +496,7 @@ downloadButton.addEventListener('click', () => {
   );
   const anchor = document.createElement('a');
   anchor.href = url;
-  const preservation =
-    lastReport.preserveDrawingBufferRequested === null
-      ? 'na'
-      : String(lastReport.preserveDrawingBufferRequested);
-  anchor.download = `webgl-frame-delivery-${lastReport.appCommit?.slice(0, 7) || 'local'}-${lastReport.mode}-preserve-${preservation}-delay-${lastReport.preparation?.requestedDelayMs ?? 0}.json`;
+  anchor.download = webglReportFilename(lastReport);
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
