@@ -106,6 +106,29 @@ test('diagnostic worker auditing stays outside the prewarm timing contract', asy
   assert.equal(auditCalls, 0);
 });
 
+test('receipt-only mode holds and settles the declared boundary without reading worker bodies', async () => {
+  const events = [];
+  const result = await runWorkerAuditAtWarmupBoundary({
+    auditMode: 'receipt-only',
+    warmupMs: 1000,
+    readWarmupBoundary: async () => {
+      events.push('warmup');
+      return { ...warmupBoundary, runOrdinal: 1 };
+    },
+    settleCompletedRender: async () => {
+      events.push('render');
+      return completedRender;
+    },
+    audit: async () => {
+      events.push('forbidden-worker-body-audit');
+      return validAudit;
+    },
+  });
+  assert.deepEqual(events, ['warmup', 'render']);
+  assert.equal(result.receiptOnly, true);
+  assert.equal(result.timingBoundary, null);
+});
+
 test('a worker audit validation failure remains a failure at the warmup boundary', async () => {
   await assert.rejects(
     runWorkerAuditAtWarmupBoundary({
@@ -229,6 +252,7 @@ test('prewarm audit follows an atomic serialized provider clock/render boundary'
       },
     });
     assert.equal(result.warmupBoundary.phase, 'warmup-held');
+    assert.equal(result.warmupBoundary.runOrdinal, 1);
     assert.deepEqual(trace, [
       'listener-registered',
       'request-warmup-held',

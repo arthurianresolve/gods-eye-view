@@ -63,6 +63,7 @@ import {
 } from './performance/captureComparisonContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloadContract.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './performance/austinOperatingWorkloadContract.mjs';
+import { validateReceiptOnlyWorkerAuditEnvelope } from './performance/receiptOnlyWorkerAudit.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 import { boundedShaderProgramAttribution } from './performance/earlyCesiumRendererProbe.mjs';
@@ -308,9 +309,9 @@ export function parseSmokeArguments(argv) {
       throw new TypeError(`Missing value for ${flag}`);
     if (
       flag === '--capture-worker-audit-mode' &&
-      !['diagnostic', 'prewarm'].includes(value)
+      !['diagnostic', 'prewarm', 'receipt-only'].includes(value)
     )
-      throw new TypeError('Worker audit mode must be diagnostic or prewarm.');
+      throw new TypeError('Worker audit mode is invalid.');
     if (
       flag === '--provider-fixture' &&
       value !== 'dense-investigation' &&
@@ -351,10 +352,18 @@ export function parseSmokeArguments(argv) {
   }
   if (
     output.providerFixture?.startsWith('infrastructure') &&
-    output.captureWorkerAuditMode === 'prewarm'
+    output.captureWorkerAuditMode &&
+    output.captureWorkerAuditMode !== 'diagnostic'
   )
     throw new TypeError(
       'Infrastructure provider fixtures support diagnostic worker auditing only.',
+    );
+  if (
+    output.captureWorkerAuditMode === 'receipt-only' &&
+    output.providerFixture !== AUSTIN_OPERATING_WORKLOAD_ID
+  )
+    throw new TypeError(
+      'Receipt-only worker auditing requires the Austin operating fixture.',
     );
   if (
     output.sceneFrameDiagnostics === 'enabled' &&
@@ -1369,6 +1378,41 @@ function validateAustinOperatingCaptureCliReport(report, expected) {
       report.comparisonReadiness.reasons.length > 0,
     'short Austin hosted smoke must remain comparison-ineligible',
   );
+  if (expected.workerAuditMode === 'receipt-only') {
+    const topology = createCaptureDocumentTopology({
+      startupRuns: report.workload.startupRuns,
+      captureCount: report.captures.length,
+    });
+    const pageAssetAudit = report.source?.buildProvenance?.pageAssetAudit;
+    assert.equal(
+      validateReceiptOnlyWorkerAuditEnvelope({
+        pageAssetAudit,
+        appCommit: expected.appSha,
+        harnessCommit: expected.harnessSha,
+        receiptSha256: expected.receiptSha256,
+        expectedDocuments: topology.workerAudits,
+        expectedAssetPaths: expected.receiptOnlyWorkerContract?.assetPaths,
+        bundleSha256: expected.receiptOnlyWorkerContract?.bundleSha256,
+        workerSourceSha256:
+          expected.receiptOnlyWorkerContract?.workerSourceSha256,
+        allowedModuleCount:
+          expected.receiptOnlyWorkerContract?.allowedModuleCount,
+      }),
+      true,
+      'receipt-only mode must provide verified, non-instrumented path evidence',
+    );
+    assert.ok(
+      report.comparisonReadiness.reasons.includes(
+        'austin-satellite-boundary-sampling-remains-frame-cadence-dependent',
+      ),
+      'receipt-only mode does not clear the independent satellite cadence blocker',
+    );
+  } else {
+    assert.notEqual(
+      report.source?.buildProvenance?.pageAssetAudit?.workerAuditMode,
+      'receipt-only',
+    );
+  }
   assert.equal(report.captures?.length, 4);
   createObservedAustinOperatingComparisonContract({
     fixture,
@@ -2955,6 +2999,7 @@ export function buildCaptureCliValidationExpectations({
   depthPickAttribution,
   shaderProgramAttribution,
   austinOperatingFixture,
+  receiptOnlyWorkerContract,
 }) {
   return {
     appSha: commit,
@@ -2971,6 +3016,7 @@ export function buildCaptureCliValidationExpectations({
           ? { austinOperatingFixture: fixture }
           : {}),
     workerAuditMode,
+    ...(receiptOnlyWorkerContract ? { receiptOnlyWorkerContract } : {}),
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
     depthPickAttribution,
@@ -3013,6 +3059,19 @@ async function runCandidateCaptureCli({
     : null;
   const browserPidPath = path.join(tempRoot, 'capture-cli-browser.pid');
   await writeFile(receiptPath, `${JSON.stringify(build.receipt)}\n`, 'utf8');
+  const expectedReceiptOnlyWorkerContract =
+    workerAuditMode === 'receipt-only'
+      ? {
+          ...deriveCesiumEmbeddedWorkerContract({
+            bundlePath: 'cesium/Cesium.js',
+            bundleBytes: await readFile(
+              path.join(build.buildRoot, 'cesium', 'Cesium.js'),
+            ),
+            assets: build.receipt.assets,
+          }),
+          assetPaths: build.receipt.assets.map((asset) => asset.path),
+        }
+      : null;
   const scriptPath = path.join(
     ROOT,
     'scripts',
@@ -3125,6 +3184,7 @@ async function runCandidateCaptureCli({
         firstMotionCpuProfile,
         depthPickAttribution,
         shaderProgramAttribution,
+        receiptOnlyWorkerContract: expectedReceiptOnlyWorkerContract,
       }),
     );
     if (firstMotionCpuProfile) {

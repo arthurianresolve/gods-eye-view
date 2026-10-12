@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { compactCaptureCliFailure } from '../qa-performance-build-smoke.mjs';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
 import {
   createCaptureFailureReport,
@@ -85,6 +86,77 @@ test('failure artifact preserves bounded current and completed sample evidence w
         },
       }),
     /unsupported capture report schema/,
+  );
+});
+
+test('failure projection retains the bounded Austin source-readiness layer snapshot', () => {
+  const report = createCaptureFailureReport({
+    source,
+    fixture: { id: 'austin-operating-composed-v1', sha256: 'd'.repeat(64) },
+    workload: { austinOperatingReadinessFailures: [] },
+    phase: 'configure-austin-operating-sample-document',
+    current: {
+      austinReadinessFailure: {
+        phase: 'source-readiness-wait',
+        documentRole: 'provider-sample-1',
+        documentId: 'sample-document-1',
+        status: 'completed',
+        snapshot: {
+          schema: 'gev-austin-readiness-failure/v1',
+          selectedLayerCount: 2,
+          layers: [
+            {
+              id: 'satellites',
+              enabled: true,
+              count: 828,
+              loading: false,
+              status: null,
+              error: null,
+            },
+            {
+              id: 'wind',
+              enabled: true,
+              count: 65160,
+              loading: true,
+              status: 'loading',
+              error: 'Failed at [url]',
+            },
+          ],
+        },
+      },
+    },
+    error: new Error('existing source readiness timeout'),
+  });
+  const layers = report.progress.current.austinReadinessFailure.snapshot.layers;
+  assert.deepEqual(layers, [
+    {
+      id: 'satellites',
+      enabled: true,
+      count: 828,
+      loading: false,
+      status: null,
+      error: null,
+    },
+    {
+      id: 'wind',
+      enabled: true,
+      count: 65160,
+      loading: true,
+      status: 'loading',
+      error: 'Failed at [url]',
+    },
+  ]);
+  assert.equal(report.failure.message, 'existing source readiness timeout');
+  assert.equal(report.comparisonEligible, false);
+
+  const outer = compactCaptureCliFailure(report);
+  assert.deepEqual(
+    outer.rawReport.progress.current.austinReadinessFailure.snapshot.layers,
+    layers,
+  );
+  assert.equal(
+    outer.rawReport.failure.message,
+    'existing source readiness timeout',
   );
 });
 

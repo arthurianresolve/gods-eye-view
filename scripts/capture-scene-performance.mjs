@@ -110,6 +110,10 @@ import {
 } from './performance/austinOperatingWorkloadContract.mjs';
 import { createAustinOperatingDocumentEvidence } from './performance/austinOperatingDocumentEvidence.mjs';
 import {
+  createReceiptOnlyWorkerAuditCollector,
+  validateReceiptOnlyWorkerAuditEnvelope,
+} from './performance/receiptOnlyWorkerAudit.mjs';
+import {
   assertAustinPopulationEvidence,
   assertAustinStableCatalogs,
   normalizeAustinSatelliteWitness,
@@ -173,8 +177,10 @@ if (providerFixtureMode === WEATHER_EFFECTS_WORKLOAD_ID) {
       providerFixtureTime,
     );
 }
-if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
-  throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
+if (!['diagnostic', 'prewarm', 'receipt-only'].includes(workerAuditMode))
+  throw new Error(
+    '--worker-audit-mode must be diagnostic, prewarm or receipt-only.',
+  );
 if (
   providerFixtureMode &&
   providerFixtureMode !== 'dense-investigation' &&
@@ -290,6 +296,10 @@ if (
 if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   throw new Error(
     'Prewarm worker auditing requires the verified dense production fixture.',
+  );
+if (workerAuditMode === 'receipt-only' && !austinOperatingWorkloadSelected)
+  throw new Error(
+    'Receipt-only worker auditing requires the verified Austin operating fixture.',
   );
 if (sceneFrameDiagnosticsEnabled && !productionFlightFixture)
   throw new Error(
@@ -615,6 +625,7 @@ function recordRendererLoopRetirement(record) {
 let captureFailure = null;
 let failureReportWritten = false;
 let activePage = null;
+let finalizeReceiptOnlyDocumentAudit = null;
 let activeDocumentRole = mainCaptureDocumentIdentity.documentRole;
 let activeDocumentId = mainCaptureDocumentIdentity.documentId;
 let activeRenderBoundaryProgressBinding = null;
@@ -1739,17 +1750,36 @@ try {
   const unexpectedScriptAssets = new Set();
   const workerBlobObservations = [];
   const workerAuditDocuments = [];
+  const receiptOnlyWorkerAuditDocuments = [];
   let providerSampleWorkerAuditComplete = false;
   let activePrewarmedWorkerInventory = null;
   let activePrewarmedWorkerDocument = null;
   let scriptRequestCount = 0;
   const auditPageCodeRequests = (auditPage) => {
     if (!captureProvenance)
-      return { workerUrls: new Set(), blobUrls: new Set() };
+      return {
+        workerUrls: new Set(),
+        blobUrls: new Set(),
+        requestedAssetPaths: new Set(),
+        getReceiptOnlyState: () => ({ unreceiptedExecutableCount: 0 }),
+      };
     const workerUrls = new Set();
     const blobUrls = new Set();
     let workerUrlOverflow = 0;
     let blobUrlOverflow = 0;
+    let requestedPathOverflow = 0;
+    let unreceiptedExecutableCount = 0;
+    const requestedAssetPaths = new Set();
+    const receiptOnlyCollector =
+      workerAuditMode === 'receipt-only'
+        ? createReceiptOnlyWorkerAuditCollector({
+            baseUrl: buildProvenanceOptions.baseUrl,
+            expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
+          })
+        : null;
+    const disposeReceiptOnlyObserver = receiptOnlyCollector
+      ? receiptOnlyCollector.attach(auditPage)
+      : null;
     const rememberWorker = (workerUrl) => {
       if (workerUrls.has(workerUrl)) return;
       if (workerUrls.size >= MAX_WORKER_TARGETS) workerUrlOverflow += 1;
@@ -1774,13 +1804,17 @@ try {
       try {
         requested = new URL(request.url());
       } catch {
+        unreceiptedExecutableCount += 1;
         return;
       }
       if (requested.protocol === 'blob:') {
         rememberBlob(request.url());
         return;
       }
-      if (requested.origin !== base.origin) return;
+      if (requested.origin !== base.origin) {
+        unreceiptedExecutableCount += 1;
+        return;
+      }
       let relative = '';
       if (requested.pathname.startsWith(prefix)) {
         try {
@@ -1794,7 +1828,13 @@ try {
       if (relative && expected.has(relative)) {
         scriptRequestCount += 1;
         loadedScriptAssets.add(relative);
-      } else unexpectedScriptAssets.add(requested.pathname);
+        if (requestedAssetPaths.has(relative)) return;
+        if (requestedAssetPaths.size >= 2048) requestedPathOverflow += 1;
+        else requestedAssetPaths.add(relative);
+      } else {
+        unreceiptedExecutableCount += 1;
+        unexpectedScriptAssets.add(requested.pathname);
+      }
     });
     auditPage.on('workercreated', (worker) => {
       rememberWorker(worker.url());
@@ -1803,7 +1843,14 @@ try {
     return {
       workerUrls,
       blobUrls,
+      requestedAssetPaths,
+      receiptOnlyCollector,
+      disposeReceiptOnlyObserver,
       getOverflow: () => ({ workerUrlOverflow, blobUrlOverflow }),
+      getReceiptOnlyState: () => ({
+        unreceiptedExecutableCount,
+        requestedPathOverflow,
+      }),
     };
   };
   const auditPageWorkerBlobs = async (
@@ -2059,6 +2106,95 @@ try {
     documentAudit.lateUseCheck = lateUseCheck;
     return lateUseCheck;
   };
+  const auditReceiptOnlyWorkerDocument = (
+    auditPage,
+    auditState,
+    { documentRole, documentId, includeLiveWorkers = true },
+  ) => {
+    let document;
+    try {
+      if (!auditState.receiptOnlyCollector)
+        throw new Error(
+          'Receipt-only observer was not installed for this document.',
+        );
+      document = auditState.receiptOnlyCollector.createDocument({
+        documentRole,
+        documentId,
+        appCommit: captureProvenance.source.appCommit,
+        harnessCommit: captureProvenance.source.harnessCommit,
+        receiptSha256: captureProvenance.source.receiptSha256,
+        embeddedWorkerContract: captureWorkerContract,
+        liveWorkers: includeLiveWorkers ? auditPage.workers() : [],
+      });
+    } catch (error) {
+      const observed = auditState.receiptOnlyCollector?.snapshot() || {};
+      failureProgress.workload.receiptOnlyWorkerAudit = {
+        status: 'incomplete',
+        errorKind: 'unreceipted-path-or-observation-overflow',
+        documentRole: String(documentRole || '').slice(0, 80),
+        documentId: String(documentId || '').slice(0, 160),
+        requestedPathCount: observed.requestedAssetPaths?.length || 0,
+        workerTargetCount: observed.workerTargetCount || 0,
+        blobRequestCount: observed.blobRequestCount || 0,
+        unreceiptedExecutableCount: observed.unreceiptedExecutableCount,
+        overflowCount: observed.overflowCount,
+      };
+      throw error;
+    }
+    const key = `${documentRole}\u0000${documentId}`;
+    const index = receiptOnlyWorkerAuditDocuments.findIndex(
+      (entry) => `${entry.documentRole}\u0000${entry.documentId}` === key,
+    );
+    if (index < 0) receiptOnlyWorkerAuditDocuments.push(document);
+    else receiptOnlyWorkerAuditDocuments[index] = document;
+    failureProgress.workload.receiptOnlyWorkerAudit = {
+      status: 'partial',
+      documents: receiptOnlyWorkerAuditDocuments.map((entry) => ({
+        documentRole: entry.documentRole,
+        documentId: entry.documentId,
+        requestedPathCount: entry.requestedAssetPaths.length,
+        workerTargetCount: entry.workerTargets.count,
+        blobRequestCount: entry.blobRequestCount,
+      })),
+    };
+    return document;
+  };
+  const auditPageWorkerEvidence = async (
+    auditPage,
+    auditState,
+    identity,
+    options = {},
+  ) =>
+    workerAuditMode === 'receipt-only'
+      ? auditReceiptOnlyWorkerDocument(auditPage, auditState, identity)
+      : auditPageWorkerBlobs(auditPage, auditState, {
+          ...identity,
+          ...options,
+        });
+  const finalizeReceiptOnlyAuditAfterClose = (
+    auditPage,
+    auditState,
+    identity,
+  ) => {
+    let auditError = null;
+    try {
+      auditReceiptOnlyWorkerDocument(auditPage, auditState, {
+        ...identity,
+        includeLiveWorkers: false,
+      });
+    } catch (error) {
+      auditError = error;
+    }
+    let cleanupConfirmed = false;
+    try {
+      cleanupConfirmed = auditState.disposeReceiptOnlyObserver?.() === true;
+    } catch (error) {
+      auditError ||= error;
+    }
+    if (auditError) throw auditError;
+    if (!cleanupConfirmed)
+      throw new Error('Receipt-only observer cleanup was not confirmed.');
+  };
   async function attachMeasuredPage(
     auditPage,
     deliveryObserver = null,
@@ -2121,7 +2257,7 @@ try {
         shaderProgramAttribution: shaderProgramAttributionEnabled,
       }),
     );
-    if (captureProvenance)
+    if (captureProvenance && workerAuditMode !== 'receipt-only')
       await auditPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     return {
       fixtureSession,
@@ -2164,7 +2300,7 @@ try {
       startupPage,
       { documentRole: startupDocumentRole, documentId: startupDocumentId },
     );
-    if (captureProvenance)
+    if (captureProvenance && workerAuditMode !== 'receipt-only')
       await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     const startupAuditState = auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
@@ -2238,10 +2374,9 @@ try {
       initialSettleMs,
       ...details,
     });
-    await auditPageWorkerBlobs(startupPage, startupAuditState, {
+    await auditPageWorkerEvidence(startupPage, startupAuditState, {
       documentRole: startupDocumentRole,
       documentId: startupDocumentId,
-      auditMode: 'diagnostic',
     });
     for (const ownedSession of [
       startupFixtureSession,
@@ -2262,6 +2397,12 @@ try {
       documentId: startupDocumentId,
     });
     await context.close();
+    if (workerAuditMode === 'receipt-only') {
+      finalizeReceiptOnlyAuditAfterClose(startupPage, startupAuditState, {
+        documentRole: startupDocumentRole,
+        documentId: startupDocumentId,
+      });
+    }
     for (const ownedSession of [
       startupFixtureSession,
       startupAustinFixture?.session,
@@ -2305,6 +2446,18 @@ try {
     initialPageAttachment.austinFixture?.owner || null;
   let activeFixtureSession = initialPageAttachment.fixtureSession;
   let captureAuditState = initialPageAttachment.auditState;
+  const setReceiptOnlyDocumentFinalizer = () => {
+    finalizeReceiptOnlyDocumentAudit =
+      workerAuditMode === 'receipt-only'
+        ? () => {
+            finalizeReceiptOnlyAuditAfterClose(page, captureAuditState, {
+              documentRole: activeDocumentRole,
+              documentId: activeDocumentId,
+            });
+          }
+        : null;
+  };
+  setReceiptOnlyDocumentFinalizer();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   if (captureProvenance) {
     const servedBase = new URL(buildProvenanceOptions.baseUrl);
@@ -2631,11 +2784,42 @@ try {
       throw new Error(
         `Austin operating setup did not match its fixed route/clock/settings: ${JSON.stringify(before)}`,
       );
-    await targetPage.waitForFunction(
-      austinOperatingSourcesReady,
-      { timeout: fixtureTimeoutMs, polling: 100 },
-      austinOperatingWorkload.selectedLayerIds,
-    );
+    try {
+      await targetPage.waitForFunction(
+        austinOperatingSourcesReady,
+        { timeout: fixtureTimeoutMs, polling: 100 },
+        austinOperatingWorkload.selectedLayerIds,
+      );
+    } catch (error) {
+      const observed = await withSceneFrameDiagnosticTimeout(
+        targetPage.evaluate(
+          austinOperatingModule.observeAustinOperatingReadinessFailure,
+          austinOperatingWorkload.selectedLayerIds,
+        ),
+        'Austin source readiness failure snapshot',
+      );
+      const failureEvidence = {
+        phase: 'source-readiness-wait',
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
+        status: observed.status,
+        snapshot:
+          observed.status === 'completed'
+            ? observed.value
+            : { status: observed.status },
+      };
+      if (failureProgress.current)
+        failureProgress.current.austinReadinessFailure = failureEvidence;
+      const records =
+        failureProgress.workload.austinOperatingReadinessFailures || [];
+      if (records.length < 64) records.push(failureEvidence);
+      else
+        failureProgress.workload.austinOperatingReadinessFailureOmittedCount =
+          (failureProgress.workload
+            .austinOperatingReadinessFailureOmittedCount || 0) + 1;
+      failureProgress.workload.austinOperatingReadinessFailures = records;
+      throw error;
+    }
     const observed = await targetPage.evaluate(observeCommonScene, {
       appCommit: source.appCommit,
     });
@@ -3203,11 +3387,14 @@ try {
         );
       },
       auditWorkers: async () => {
-        if (providerSampleWorkerAuditComplete) return;
-        await auditPageWorkerBlobs(page, captureAuditState, {
+        if (
+          providerSampleWorkerAuditComplete &&
+          workerAuditMode !== 'receipt-only'
+        )
+          return;
+        await auditPageWorkerEvidence(page, captureAuditState, {
           documentRole: activeDocumentRole,
           documentId: activeDocumentId,
-          auditMode: 'diagnostic',
         });
         providerSampleWorkerAuditComplete = true;
       },
@@ -3234,6 +3421,10 @@ try {
       closeDocument: async () => {
         if (providerContext) await providerContext.close();
         else await page.close();
+        if (workerAuditMode === 'receipt-only') {
+          finalizeReceiptOnlyDocumentAudit?.();
+          finalizeReceiptOnlyDocumentAudit = null;
+        }
       },
       releaseInterception: async () => {
         for (const session of [
@@ -3273,6 +3464,7 @@ try {
     activeAustinFixtureSession = pageAttachment.austinFixture?.session || null;
     activeAustinFixtureOwner = pageAttachment.austinFixture?.owner || null;
     captureAuditState = pageAttachment.auditState;
+    setReceiptOnlyDocumentFinalizer();
     captureAuditState.workerUrls.clear();
     captureAuditState.blobUrls.clear();
     providerSampleWorkerAuditComplete = false;
@@ -4293,10 +4485,9 @@ try {
           activePrewarmedWorkerInventory = null;
           activePrewarmedWorkerDocument = null;
         } else {
-          await auditPageWorkerBlobs(page, captureAuditState, {
+          await auditPageWorkerEvidence(page, captureAuditState, {
             documentRole: activeDocumentRole,
             documentId: activeDocumentId,
-            auditMode: 'diagnostic',
           });
         }
         providerSampleWorkerAuditComplete = true;
@@ -4580,26 +4771,65 @@ try {
       throw new Error(
         'Capture did not request any receipted same-origin code assets.',
       );
-    if (!providerSampleWorkerAuditComplete) {
-      await auditPageWorkerBlobs(page, captureAuditState, {
+    if (
+      workerAuditMode === 'receipt-only' ||
+      !providerSampleWorkerAuditComplete
+    ) {
+      await auditPageWorkerEvidence(page, captureAuditState, {
         documentRole: activeDocumentRole,
         documentId: activeDocumentId,
-        auditMode: 'diagnostic',
       });
       providerSampleWorkerAuditComplete = true;
     }
-    source.buildProvenance.pageAssetAudit = {
-      scope:
-        workerAuditMode === 'prewarm'
-          ? 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs validated after configured warmup and a completed boundary render, before measurement; native URL.createObjectURL restored and retained blob bodies cleared before measurement; late observed executable paths checked against bounded prewarm inventory; unused late blob creation is not observable'
-          : 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
-      workerAuditMode,
-      scriptRequestCount,
-      loadedAssetPaths: [...loadedScriptAssets].sort(),
-      cesiumWorkerBlobAudits: workerBlobObservations,
-      workerAuditDocuments,
-      unexpectedAssetPaths: [],
-    };
+    if (workerAuditMode === 'receipt-only') {
+      source.buildProvenance.pageAssetAudit = {
+        schema: 'gev-receipt-only-worker-audit/v1',
+        status: 'all-document-receipt-paths-validated',
+        workerAuditMode,
+        appCommit: captureProvenance.source.appCommit,
+        harnessCommit: captureProvenance.source.harnessCommit,
+        receiptSha256: captureProvenance.source.receiptSha256,
+        liveBlobBodyAttestation: 'unavailable-by-design',
+        pageInstrumentation: {
+          createObjectUrlWrapped: false,
+          workerApiWrapped: false,
+          blobBodyRegistryInstalled: false,
+          debuggerAttached: false,
+          profilerEnabled: false,
+          observation:
+            'external-puppeteer-request-and-worker-target-events-only',
+        },
+        workerSource: receiptOnlyWorkerAuditDocuments[0]?.workerSource || null,
+        loadedAssetPaths: [...loadedScriptAssets].sort(),
+        unexpectedAssetPaths: [...unexpectedScriptAssets].sort(),
+        workerAuditDocuments: receiptOnlyWorkerAuditDocuments,
+      };
+      const receiptOnlyValid = validateReceiptOnlyWorkerAuditEnvelope({
+        pageAssetAudit: source.buildProvenance.pageAssetAudit,
+        appCommit: captureProvenance.source.appCommit,
+        harnessCommit: captureProvenance.source.harnessCommit,
+        receiptSha256: captureProvenance.source.receiptSha256,
+        expectedDocuments: captureDocumentTopology.workerAudits,
+        expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
+        bundleSha256: captureWorkerContract.bundleSha256,
+        workerSourceSha256: captureWorkerContract.workerSourceSha256,
+        allowedModuleCount: captureWorkerContract.allowedModuleCount,
+      });
+      if (!receiptOnlyValid)
+        throw new Error('Receipt-only worker audit envelope is incomplete.');
+    } else
+      source.buildProvenance.pageAssetAudit = {
+        scope:
+          workerAuditMode === 'prewarm'
+            ? 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs validated after configured warmup and a completed boundary render, before measurement; native URL.createObjectURL restored and retained blob bodies cleared before measurement; late observed executable paths checked against bounded prewarm inventory; unused late blob creation is not observable'
+            : 'receipt-backed page paths plus receipt-derived Cesium embedded-worker blobs; blob observer ran during capture and is diagnostic instrumentation, not timing evidence',
+        workerAuditMode,
+        scriptRequestCount,
+        loadedAssetPaths: [...loadedScriptAssets].sort(),
+        cesiumWorkerBlobAudits: workerBlobObservations,
+        workerAuditDocuments,
+        unexpectedAssetPaths: [],
+      };
     delete source.buildProvenance.expectedAssetPaths;
     delete source.buildProvenance.entryPaths;
     source.provenanceStatus = source.buildProvenance.status;
@@ -4793,6 +5023,12 @@ try {
     };
     failureProgress.fixtureDelivery = fixtureDelivery;
   }
+  if (workerAuditMode === 'receipt-only' && finalizeReceiptOnlyDocumentAudit) {
+    if (providerContext) await providerContext.close();
+    else await page.close();
+    finalizeReceiptOnlyDocumentAudit();
+    finalizeReceiptOnlyDocumentAudit = null;
+  }
   const workload = {
     warmupMs,
     durationPerSampleMs: seconds * 1000,
@@ -4947,7 +5183,19 @@ try {
     workload,
     captures,
     diagnosticsDocuments: performanceDiagnosticsDocuments,
-    workerBlobAuditInstrumented: Boolean(captureProvenance),
+    workerBlobAuditInstrumented:
+      Boolean(captureProvenance) && workerAuditMode !== 'receipt-only',
+    receiptOnlyWorkerAuditEvidence:
+      workerAuditMode === 'receipt-only'
+        ? {
+            pageAssetAudit: source.buildProvenance.pageAssetAudit,
+            expectedDocuments: captureDocumentTopology.workerAudits,
+            expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
+            bundleSha256: captureWorkerContract.bundleSha256,
+            workerSourceSha256: captureWorkerContract.workerSourceSha256,
+            allowedModuleCount: captureWorkerContract.allowedModuleCount,
+          }
+        : null,
     workerAuditMode,
     hardwareRequired,
   });
@@ -4982,7 +5230,9 @@ try {
     workerAuditTimingBoundary:
       workerAuditMode === 'prewarm'
         ? PREWARM_WORKER_AUDIT_BOUNDARY
-        : 'during-capture-diagnostic-instrumentation',
+        : workerAuditMode === 'receipt-only'
+          ? 'external-receipt-path-observation-no-page-worker-instrumentation'
+          : 'during-capture-diagnostic-instrumentation',
     ...(firstMotionCpuProfileEnabled
       ? {
           providerSampleCpuProfiles: {
@@ -5027,7 +5277,9 @@ try {
       workerAuditTimingBoundary:
         workerAuditMode === 'prewarm'
           ? PREWARM_WORKER_AUDIT_BOUNDARY
-          : 'during-capture-diagnostic-instrumentation',
+          : workerAuditMode === 'receipt-only'
+            ? 'external-receipt-path-observation-no-page-worker-instrumentation'
+            : 'during-capture-diagnostic-instrumentation',
       reasons: comparisonReadinessReasons,
       reason: comparisonReadinessReasons.join('; ') || null,
     },
@@ -5158,6 +5410,14 @@ try {
     captureFailure ||= error;
     process.exitCode = 1;
   } finally {
+    if (workerAuditMode === 'receipt-only') {
+      try {
+        finalizeReceiptOnlyDocumentAudit?.();
+      } catch (error) {
+        captureFailure ||= error;
+        process.exitCode = 1;
+      }
+    }
     if (ownedBrowserPidFile)
       await fs.rm(ownedBrowserPidFile, { force: true }).catch(() => {});
   }

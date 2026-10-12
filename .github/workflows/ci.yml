@@ -56,7 +56,7 @@ on:
       capture_worker_audit_mode:
         description: Keep worker auditing diagnostic, or restore it before capture warmup
         type: choice
-        options: [diagnostic, prewarm]
+        options: [diagnostic, prewarm, receipt-only]
         default: diagnostic
       capture_provider_fixture:
         description: Candidate capture workload inside the build smoke (short provider captures are diagnostic only)

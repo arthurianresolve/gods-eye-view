@@ -11,6 +11,7 @@ import {
   AUSTIN_OPERATING_WIND_VALID_TIME,
 } from './austinOperatingWorkloadContract.mjs';
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
+import { validateReceiptOnlyWorkerAuditEnvelope } from './receiptOnlyWorkerAudit.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const hashCanonicalIds = (ids) =>
@@ -999,6 +1000,7 @@ export function getCaptureComparisonIneligibilityReasons({
   diagnosticsDocuments = [],
   workerBlobAuditInstrumented = false,
   workerBlobAuditMode = 'diagnostic',
+  receiptOnlyWorkerAuditEvidence = null,
   hardwareRequired = false,
 } = {}) {
   const reasons = [];
@@ -1115,7 +1117,21 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push(
       'prewarm-worker-audit-does-not-observe-unused-late-blob-creations',
     );
-  else if (workerBlobAuditInstrumented)
+  else if (workerBlobAuditMode === 'receipt-only') {
+    const receiptOnlyValid = validateReceiptOnlyWorkerAuditEnvelope({
+      pageAssetAudit: receiptOnlyWorkerAuditEvidence?.pageAssetAudit,
+      appCommit: source?.buildProvenance?.appCommit,
+      harnessCommit: source?.buildProvenance?.harnessCommit,
+      receiptSha256: source?.buildProvenance?.receiptSha256,
+      expectedDocuments: receiptOnlyWorkerAuditEvidence?.expectedDocuments,
+      expectedAssetPaths: receiptOnlyWorkerAuditEvidence?.expectedAssetPaths,
+      bundleSha256: receiptOnlyWorkerAuditEvidence?.bundleSha256,
+      workerSourceSha256: receiptOnlyWorkerAuditEvidence?.workerSourceSha256,
+      allowedModuleCount: receiptOnlyWorkerAuditEvidence?.allowedModuleCount,
+    });
+    if (!receiptOnlyValid)
+      reasons.push('receipt-only-worker-audit-evidence-is-incomplete');
+  } else if (workerBlobAuditInstrumented)
     reasons.push(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
@@ -1139,6 +1155,9 @@ export function getCaptureComparisonIneligibilityReasons({
           : 'required-weather-effects-objective-workloads-are-incomplete',
       );
   } else if (austinOperatingFixture) {
+    reasons.push(
+      'austin-satellite-boundary-sampling-remains-frame-cadence-dependent',
+    );
     if (
       !workload?.scenarios?.includes('idle') ||
       !workload?.scenarios?.includes('scripted-motion')

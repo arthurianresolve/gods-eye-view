@@ -5,6 +5,7 @@ import * as Cesium from 'cesium';
 import {
   createAustinOperatingWorkloadFixture,
   createAustinOperatingFixtureDelivery,
+  observeAustinOperatingReadinessFailure,
 } from './austinOperatingWorkloadFixture.mjs';
 import { fixtureRequestCommand } from './fixtureInterception.mjs';
 import {
@@ -528,5 +529,73 @@ test('installation delivery has a hard 32-variant bound', async () => {
         /response-variant bound exceeded/,
       );
     }
+  }
+});
+
+test('Austin readiness failure snapshot reports bounded native layer status without URLs', () => {
+  const prior = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      __godsEyeView: {
+        dataManager: {
+          layers: new Map([
+            [
+              'satellites',
+              {
+                module: {
+                  getStats: () => ({ count: 828, loading: false }),
+                },
+              },
+            ],
+            [
+              'wind',
+              {
+                module: {
+                  getStats: () => ({
+                    count: 65160,
+                    loading: true,
+                    status: 'loading',
+                    error:
+                      'Failed at https://fixture.invalid/wind?token=secret',
+                  }),
+                },
+              },
+            ],
+          ]),
+          isEnabled: (id) => id === 'satellites' || id === 'wind',
+        },
+      },
+    },
+  });
+  try {
+    const snapshot = observeAustinOperatingReadinessFailure([
+      'satellites',
+      'wind',
+    ]);
+    assert.equal(snapshot.schema, 'gev-austin-readiness-failure/v1');
+    assert.deepEqual(snapshot.layers, [
+      {
+        id: 'satellites',
+        enabled: true,
+        count: 828,
+        loading: false,
+        status: null,
+        error: null,
+      },
+      {
+        id: 'wind',
+        enabled: true,
+        count: 65160,
+        loading: true,
+        status: 'loading',
+        error: 'Failed at [url]',
+      },
+    ]);
+    assert.equal(JSON.stringify(snapshot).includes('fixture.invalid'), false);
+    assert.equal(JSON.stringify(snapshot).includes('secret'), false);
+  } finally {
+    if (prior) Object.defineProperty(globalThis, 'window', prior);
+    else delete globalThis.window;
   }
 });

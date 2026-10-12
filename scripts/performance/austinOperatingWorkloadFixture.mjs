@@ -20,6 +20,56 @@ import {
 
 export * from './austinOperatingWorkloadContract.mjs';
 
+/** Bounded native layer state for an already-failed Austin readiness wait. */
+export function observeAustinOperatingReadinessFailure(selectedLayerIds) {
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
+  const ids = Array.isArray(selectedLayerIds)
+    ? selectedLayerIds.slice(0, 8)
+    : [];
+  const safeError = (value) =>
+    String(value?.message ?? value)
+      .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')
+      .replace(
+        /\b(authorization|bearer|token|api[_-]?key)\b\s*[:=]?\s*[^\s,;]+/gi,
+        '$1=[redacted]',
+      )
+      .slice(0, 160);
+  return {
+    schema: 'gev-austin-readiness-failure/v1',
+    selectedLayerCount: ids.length,
+    layers: ids.map((id) => {
+      let layer = {
+        id: String(id).slice(0, 80),
+        enabled: false,
+        count: null,
+        loading: null,
+        status: null,
+        error: null,
+      };
+      try {
+        const entry = manager?.layers?.get?.(id);
+        const stats = entry?.module?.getStats?.() ?? entry?.stats ?? null;
+        const error = stats?.error ?? entry?.error ?? null;
+        layer = {
+          id: String(id).slice(0, 80),
+          enabled: manager?.isEnabled?.(id) === true,
+          count: Number.isSafeInteger(stats?.count) ? stats.count : null,
+          loading: typeof stats?.loading === 'boolean' ? stats.loading : null,
+          status:
+            typeof stats?.status === 'string'
+              ? stats.status.slice(0, 80)
+              : null,
+          error: error == null ? null : safeError(error),
+        };
+      } catch (error) {
+        layer.error = safeError(error);
+      }
+      return layer;
+    }),
+  };
+}
+
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '../..',
