@@ -1,0 +1,43 @@
+{
+  "decoder": "sharp",
+  "images": [
+    {
+      "file": "last-frame.png",
+      "pngSha256": "a05287e737fa74c54a679e47c7d58d1c246b8701865439535943814227bdd65c",
+      "rawRgbaSha256": "7c7ffce8bc403e9e8ce239dc0cfcb0e34fd9ab6e5555a7313c9f825604aae5a9",
+      "width": 960,
+      "height": 640,
+      "channels": 4,
+      "pixelAtStemProbe": [
+        0,
+        0,
+        127,
+        255
+      ]
+    },
+    {
+      "file": "../s54-datacenter-layer-id-38205435137/last-frame.png",
+      "pngSha256": "e31d35fbf75c92d1739420ca587343aec8bae7c4ba4d07efb0672dd95f7c91bf",
+      "rawRgbaSha256": "a62c412b818c2375bdfae66dfefe6ab17398f0aec94f33a4b0fa4314e617db70",
+      "width": 960,
+      "height": 640,
+      "channels": 4,
+      "pixelAtStemProbe": [
+        0,
+        255,
+        255,
+        255
+      ]
+    }
+  ],
+  "difference": {
+    "pixels": 236,
+    "bounds": [
+      478,
+      278,
+      482,
+      325
+    ]
+  },
+  "scope": "independent pixel comparison; not a matched performance or visual acceptance pair"
+}

@@ -2,8 +2,8 @@
 
 ## Current status - 12 October 2026
 
-Recorded integration checkpoint: `e33717eacee90e6d7e597e327ab7c749c8f098b9`.
-[All seven standard jobs pass](performance-evidence/windows-shutdown-diagnostic-38205914812/standard-ci-dev-38205998805.json),
+Recorded integration checkpoint: `98a403f28442fcc485435facf7d9980eb01a58ce`.
+[All seven standard jobs pass](performance-evidence/s54-pick-path-38208241120/standard-ci-dev-38207294034.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -43,6 +43,12 @@ accepts the point identities, but both stem picks return no object. It delivers
 21 completed captures with ready geometry, then fails without a paired sample.
 The remaining pick failure needs attribution; the independent benefit fixture
 cannot override it.
+The [bounded selection-order diagnostic](performance-evidence/s54-pick-path-38208241120/README.md)
+at `8ae0a4dd` still fails: ten same-frame calls produce four point hits and
+six stem misses, with selection restored. Its last image contains only the
+point, despite declared geometry/data-source readiness. The prior failed run
+eventually captured visible stems. No later-frame control completed before
+the existing deadline, leaving actual stem materialization/readiness unresolved.
 The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit-38205683313/README.md)
 completes twenty runs with verified native owners and twenty byte-identical
 image pairs. Whole-activation median improves 22.12% and enabled JS heap
