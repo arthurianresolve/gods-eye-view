@@ -8,6 +8,7 @@ export async function retireProviderDocument({
   retireRenderer,
   auditWorkers,
   disposeProgressBinding,
+  stopInterception,
   releaseInterception,
   closeDocument,
 }) {
@@ -15,8 +16,9 @@ export async function retireProviderDocument({
     ['renderer retirement', retireRenderer],
     ['worker audit', auditWorkers],
     ['progress binding disposal', disposeProgressBinding],
-    ['fixture interception release', releaseInterception],
+    ['fixture interception stop', stopInterception],
     ['document close', closeDocument],
+    ['fixture interception release', releaseInterception],
   ]) {
     if (typeof operation !== 'function')
       throw new TypeError(`Provider document ${name} callback is required.`);

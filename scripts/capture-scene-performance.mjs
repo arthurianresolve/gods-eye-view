@@ -10,6 +10,7 @@ import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
 import {
+  closeTargetBeforeFixtureInterceptionRelease,
   createFixtureInterceptionErrorRecorder,
   interceptFixtureSession,
 } from './performance/fixtureInterception.mjs';
@@ -448,6 +449,7 @@ const failureProgress = {
     rendererProbeCleanupOmittedCount: 0,
     rendererLoopRetirements: [],
     rendererLoopRetirementsOmittedCount: 0,
+    fixtureInterceptionReleases: [],
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
@@ -1039,10 +1041,11 @@ async function configureFlightFixturePage(
     sessionOrdinal: ++fixtureInterceptionSessionOrdinal,
     documentRole,
     documentId,
+    page,
     lifecycleStage: 'active',
   };
   fixtureInterceptionSessionContexts.set(session, sessionContext);
-  await interceptFixtureSession(
+  sessionContext.interception = await interceptFixtureSession(
     session,
     new URL(url).origin + '/',
     (requestUrl, request) =>
@@ -1093,18 +1096,75 @@ async function settleProviderRenderAtBoundary(
   });
 }
 
+async function stopFlightFixtureSession(session) {
+  if (!session) return null;
+  const sessionContext = fixtureInterceptionSessionContexts.get(session);
+  if (!sessionContext?.interception) return null;
+  if (sessionContext.stopEvidence) return sessionContext.stopEvidence;
+  sessionContext.lifecycleStage = 'releasing';
+  sessionContext.stopEvidence =
+    await sessionContext.interception.stopAndDrain();
+  return sessionContext.stopEvidence;
+}
+
 async function releaseFlightFixtureSession(session) {
   if (!session) return;
   const sessionContext = fixtureInterceptionSessionContexts.get(session);
   if (sessionContext) sessionContext.lifecycleStage = 'releasing';
   const index = fixtureInterceptionSessions.indexOf(session);
   if (index >= 0) fixtureInterceptionSessions.splice(index, 1);
+  const release = {
+    schema: 'gev-flight-fixture-session-release/v1',
+    sessionOrdinal: sessionContext?.sessionOrdinal ?? null,
+    documentRole: sessionContext?.documentRole ?? null,
+    documentId: sessionContext?.documentId ?? null,
+    interception: null,
+    stop: sessionContext?.stopEvidence || null,
+    fetchDisable: 'not-attempted',
+    detach: 'not-attempted',
+    confirmed: false,
+  };
+  let primaryError = null;
   try {
-    await session.send('Fetch.disable').catch(() => {});
-    await session.detach().catch(() => {});
-  } finally {
-    if (sessionContext) sessionContext.lifecycleStage = 'released';
+    if (!sessionContext?.stopEvidence)
+      release.stop = await stopFlightFixtureSession(session);
+  } catch (error) {
+    primaryError = error;
   }
+  const targetRelease = await closeTargetBeforeFixtureInterceptionRelease(
+    sessionContext?.page,
+    sessionContext?.interception,
+  );
+  primaryError ||= targetRelease.error;
+  release.targetClosed = targetRelease.targetClosed;
+  if (targetRelease.release) {
+    release.interception = targetRelease.release;
+    release.fetchDisable = targetRelease.release.fetchDisable;
+    release.detach = targetRelease.release.detach;
+  } else if (targetRelease.targetClosed) {
+    release.interception = {
+      schema: 'gev-fixture-interception-release/v1',
+      interception: null,
+      fetchDisable: 'not-attempted',
+      detach: 'not-attempted',
+      confirmed: false,
+    };
+  }
+  if (primaryError) {
+    fixtureInterceptionErrorRecorder.onError(primaryError, {
+      ...(sessionContext || {}),
+      phase: 'command-send',
+    });
+    release.errorKind =
+      primaryError?.name === 'Error' ? 'cleanup-error' : 'cleanup-failed';
+  }
+  release.confirmed = targetRelease.confirmed && !primaryError;
+  if (sessionContext) sessionContext.lifecycleStage = 'released';
+  const releaseRecords = failureProgress.workload.fixtureInterceptionReleases;
+  if (releaseRecords.length < 64) releaseRecords.push(release);
+  if (primaryError) throw primaryError;
+  if (!release.confirmed)
+    throw new Error('Fixture interception session release was not confirmed.');
 }
 
 try {
@@ -1594,6 +1654,15 @@ try {
       documentId: startupDocumentId,
       auditMode: 'diagnostic',
     });
+    if (startupFixtureSession) {
+      const startupInterceptionStopped = await stopFlightFixtureSession(
+        startupFixtureSession,
+      );
+      if (!startupInterceptionStopped?.confirmed)
+        throw new Error(
+          'Startup fixture interception stop and command drain were not confirmed.',
+        );
+    }
     await cleanupEarlyRendererProbeForPage(startupPage, {
       retireViewerRenderLoop: true,
       phase: 'startup-document-retirement',
@@ -2142,12 +2211,19 @@ try {
             'Render-boundary binding cleanup failed before document replacement.',
           );
       },
-      releaseInterception: () =>
-        releaseFlightFixtureSession(activeFixtureSession),
+      stopInterception: async () => {
+        const stopped = await stopFlightFixtureSession(activeFixtureSession);
+        if (!stopped?.confirmed)
+          throw new Error(
+            'Fixture interception stop and command drain were not confirmed.',
+          );
+      },
       closeDocument: async () => {
         if (providerContext) await providerContext.close();
         else await page.close();
       },
+      releaseInterception: () =>
+        releaseFlightFixtureSession(activeFixtureSession),
     });
     providerContext = await browser.createBrowserContext();
     page = await providerContext.newPage();
@@ -3310,6 +3386,8 @@ try {
       documentRole: activeDocumentRole,
       documentId: activeDocumentId,
     });
+  for (const session of [...fixtureInterceptionSessions])
+    await releaseFlightFixtureSession(session);
   const workload = {
     warmupMs,
     durationPerSampleMs: seconds * 1000,
@@ -3326,6 +3404,9 @@ try {
     ],
     rendererLoopRetirementsOmittedCount:
       failureProgress.workload.rendererLoopRetirementsOmittedCount || 0,
+    fixtureInterceptionReleases: [
+      ...(failureProgress.workload.fixtureInterceptionReleases || []),
+    ],
     ...(depthPickAttributionEnabled
       ? {
           depthPickAttribution: depthPickAttributionEnvelope(),
@@ -3565,8 +3646,6 @@ try {
       process.exitCode = 1;
     }
   }
-  for (const session of [...fixtureInterceptionSessions])
-    await releaseFlightFixtureSession(session);
   for (const probePage of [...earlyRendererProbeScripts.keys()]) {
     try {
       await cleanupEarlyRendererProbeForPage(probePage, {
@@ -3576,6 +3655,14 @@ try {
           probePage === activePage ? activeDocumentRole : 'retired-document',
         documentId: probePage === activePage ? activeDocumentId : null,
       });
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
+  for (const session of [...fixtureInterceptionSessions]) {
+    try {
+      await releaseFlightFixtureSession(session);
     } catch (error) {
       captureFailure ||= error;
       process.exitCode = 1;
@@ -3613,7 +3700,9 @@ if (captureFailure && !failureReportWritten) {
   }
 } else if (
   captureFailure &&
-  (sceneFrameDiagnosticsEnabled || depthPickAttributionEnabled)
+  (sceneFrameDiagnosticsEnabled ||
+    depthPickAttributionEnabled ||
+    failureProgress.workload.fixtureInterceptionReleases.length > 0)
 ) {
   try {
     await writeCaptureFailure(captureFailure, { refresh: true });

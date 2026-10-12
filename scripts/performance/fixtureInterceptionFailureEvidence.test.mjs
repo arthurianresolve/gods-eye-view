@@ -2,17 +2,44 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
 import {
+  closeTargetBeforeFixtureInterceptionRelease,
   createFixtureInterceptionErrorRecorder,
   interceptFixtureSession,
 } from './fixtureInterception.mjs';
 import { compactCaptureCliFailure } from '../qa-performance-build-smoke.mjs';
 
 class FakeClient {
-  listeners = new Map();
+  eventListeners = new Map();
   commands = [];
 
   on(name, listener) {
-    this.listeners.set(name, listener);
+    const listeners = this.eventListeners.get(name) || [];
+    listeners.push(listener);
+    this.eventListeners.set(name, listeners);
+  }
+
+  off(name, listener) {
+    const listeners = this.eventListeners.get(name) || [];
+    this.eventListeners.set(
+      name,
+      listeners.filter((entry) => entry !== listener),
+    );
+    return this;
+  }
+
+  listeners(name) {
+    return [...(this.eventListeners.get(name) || [])];
+  }
+
+  listenerCount(name, listener) {
+    const listeners = this.listeners(name);
+    return listener
+      ? listeners.filter((entry) => entry === listener).length
+      : listeners.length;
+  }
+
+  async detach() {
+    this.commands.push({ method: 'detach', params: {} });
   }
 
   async send(method, params) {
@@ -25,7 +52,9 @@ class FakeClient {
   }
 
   async request(event) {
-    return this.listeners.get('Fetch.requestPaused')(event);
+    await Promise.all(
+      this.listeners('Fetch.requestPaused').map((listener) => listener(event)),
+    );
   }
 }
 
@@ -114,6 +143,180 @@ test('fulfillment callback and command errors retain their bounded phase', async
   assert.equal(commandRecorder.records[0].phase, 'command-send');
 });
 
+test('release drains issued commands before target closure and preserves unrelated listeners', async () => {
+  const client = new FakeClient();
+  const unrelatedListener = () => {};
+  client.on('Fetch.requestPaused', unrelatedListener);
+  let completeContinue;
+  client.send = async (method, params) => {
+    client.commands.push({ method, params });
+    if (method === 'Fetch.enable' || method === 'Fetch.failRequest') return {};
+    if (method === 'Fetch.continueRequest')
+      return new Promise((resolve) => {
+        completeContinue = resolve;
+      });
+    throw new Error(`Unexpected command ${method}`);
+  };
+  const recorder = createFixtureInterceptionErrorRecorder();
+  const controller = await interceptFixtureSession(
+    client,
+    'http://127.0.0.1:4173/',
+    async () => null,
+    recorder.onError,
+  );
+
+  const request = client.request(event('http://127.0.0.1:4173/data.json'));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(completeContinue);
+  let pageClosed = false;
+  const release = (async () => {
+    const stopped = await controller.stopAndDrain();
+    assert.equal(stopped.confirmed, true);
+    assert.equal(pageClosed, false);
+    client.commands.push({ method: 'page.close', params: {} });
+    pageClosed = true;
+    return controller.releaseSession({ targetClosed: pageClosed });
+  })();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(client.listenerCount('Fetch.requestPaused'), 1);
+  assert.equal(
+    client.listeners('Fetch.requestPaused').includes(unrelatedListener),
+    true,
+  );
+  assert.equal(
+    client.commands.some(({ method }) => method === 'Fetch.disable'),
+    false,
+  );
+
+  completeContinue({});
+  await request;
+  const result = await release;
+  assert.equal(result.confirmed, true);
+  assert.equal(result.interception.pendingAtStop, 1);
+  assert.equal(result.interception.pendingPreparationAtStop, 0);
+  assert.equal(result.interception.pendingCommandsAfterDrain, 0);
+  assert.deepEqual(
+    client.commands.map(({ method }) => method),
+    ['Fetch.enable', 'Fetch.continueRequest', 'page.close'],
+  );
+  assert.equal(recorder.records.length, 0);
+});
+
+test('a copied stale listener records late work without sending after target closure', async () => {
+  const client = new FakeClient();
+  const recorder = createFixtureInterceptionErrorRecorder();
+  const controller = await interceptFixtureSession(
+    client,
+    'http://127.0.0.1:4173/',
+    async () => null,
+    recorder.onError,
+    { getErrorContext: contextFor({ lifecycleStage: 'releasing' }) },
+  );
+  const listener = client.listeners('Fetch.requestPaused')[0];
+  const stopped = await controller.stopAndDrain();
+  assert.equal(stopped.confirmed, true);
+
+  client.commands.push({ method: 'page.close', params: {} });
+  listener(event('http://127.0.0.1:4173/late.json'));
+  await new Promise((resolve) => setImmediate(resolve));
+  const release = await controller.releaseSession({ targetClosed: true });
+  assert.equal(release.confirmed, false);
+  assert.equal(release.interception.unexpectedLateRequestCount, 1);
+  assert.deepEqual(
+    client.commands.map(({ method }) => method),
+    ['Fetch.enable', 'page.close'],
+  );
+  assert.equal(recorder.records.length, 1);
+  assert.equal(recorder.records[0].lifecycleStage, 'releasing');
+  assert.equal(recorder.records[0].phase, 'command-send');
+});
+
+test('stop cancels pending response preparation before the caller closes its target', async () => {
+  const client = new FakeClient();
+  let resolveResponse;
+  const controller = await interceptFixtureSession(
+    client,
+    'http://127.0.0.1:4173/',
+    () =>
+      new Promise((resolve) => {
+        resolveResponse = resolve;
+      }),
+    () => {},
+  );
+  const request = client.request(event('http://127.0.0.1:4173/data.json'));
+  await Promise.resolve();
+  assert.ok(resolveResponse);
+
+  const stopped = await controller.stopAndDrain();
+  assert.equal(stopped.confirmed, true);
+  client.commands.push({ method: 'page.close', params: {} });
+  const release = await controller.releaseSession({ targetClosed: true });
+  assert.equal(release.confirmed, true);
+  assert.equal(release.interception.pendingPreparationAtStop, 1);
+  assert.equal(release.interception.pendingPreparationsAfterDrain, 0);
+  assert.equal(release.interception.cancelledPreparationCount, 1);
+  assert.equal(release.interception.pendingAbortSubscriptionsAfterDrain, 0);
+  assert.deepEqual(
+    client.commands.map(({ method }) => method),
+    ['Fetch.enable', 'page.close'],
+  );
+
+  resolveResponse(null);
+  await request;
+  assert.deepEqual(
+    client.commands.map(({ method }) => method),
+    ['Fetch.enable', 'page.close'],
+  );
+});
+
+test('completed request preparations detach their per-request abort subscriptions', async () => {
+  const client = new FakeClient();
+  const controller = await interceptFixtureSession(
+    client,
+    'http://127.0.0.1:4173/',
+    async () => null,
+    () => {},
+  );
+  for (let index = 0; index < 20; index++)
+    await client.request(event(`http://127.0.0.1:4173/data-${index}.json`));
+  const stopped = await controller.stopAndDrain();
+  assert.equal(stopped.pendingAbortSubscriptionsAtStop, 0);
+  assert.equal(stopped.pendingAbortSubscriptionsAfterDrain, 0);
+  assert.equal(stopped.pendingAtStop, 0);
+  assert.equal(stopped.confirmed, true);
+});
+
+test('stop settles every issued command when one command rejects and preserves its failure', async () => {
+  const client = new FakeClient();
+  const recorder = createFixtureInterceptionErrorRecorder();
+  client.send = async (method, params) => {
+    client.commands.push({ method, params });
+    if (method === 'Fetch.enable') return {};
+    if (method === 'Fetch.continueRequest')
+      throw new Error('issued command rejected during retirement');
+    if (method === 'Fetch.failRequest') return {};
+    throw new Error(`Unexpected command ${method}`);
+  };
+  const controller = await interceptFixtureSession(
+    client,
+    'http://127.0.0.1:4173/',
+    async () => null,
+    recorder.onError,
+    { getErrorContext: contextFor({ lifecycleStage: 'active' }) },
+  );
+  await client.request(event('http://127.0.0.1:4173/reject.json'));
+  const stopped = await controller.stopAndDrain();
+  assert.equal(stopped.confirmed, false);
+  assert.equal(stopped.drainCommandFailures, 1);
+  assert.ok(
+    recorder.records.some((record) =>
+      record.message.includes('issued command rejected during retirement'),
+    ),
+  );
+  assert.equal(stopped.pendingCommandsAfterDrain, 0);
+  assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+});
+
 test('late callback records released owner and error evidence stays capped at eight', async () => {
   const client = new FakeClient();
   const state = { lifecycleStage: 'active' };
@@ -183,4 +386,35 @@ test('recorder rejects unsafe context values and limits above the global bound',
     'C:/Users/private',
   ])
     assert.equal(serialized.includes(value), false);
+});
+
+test('a rejected close acknowledgement stays failed even if the target is closed', async () => {
+  let closed = false;
+  let releaseCalled = false;
+  const closeError = new Error('page.close acknowledgement was rejected');
+  const outcome = await closeTargetBeforeFixtureInterceptionRelease(
+    {
+      isClosed: () => closed,
+      async close() {
+        closed = true;
+        throw closeError;
+      },
+    },
+    {
+      async releaseSession({ targetClosed }) {
+        assert.equal(targetClosed, true);
+        releaseCalled = true;
+        return {
+          fetchDisable: 'target-closed',
+          detach: 'target-closed',
+          confirmed: true,
+        };
+      },
+    },
+  );
+  assert.equal(releaseCalled, true);
+  assert.equal(outcome.targetClosed, true);
+  assert.equal(outcome.error, closeError);
+  assert.equal(outcome.confirmed, false);
+  assert.equal(outcome.release.confirmed, true);
 });
