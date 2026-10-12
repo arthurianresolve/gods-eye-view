@@ -38,6 +38,7 @@ export function createBoundaryProgressRecorder(record, field) {
           schema: 'gev-phased-monotonic-wall-clock/v1',
           phase: details.fixtureClockPhase,
           epochMs: details.fixtureClockEpochMs,
+          runOrdinal: details.fixtureClockRunOrdinal,
           elapsedMs: details.fixtureClockElapsedMs,
           warmupMs: details.fixtureClockWarmupMs,
           measurementMs: details.fixtureClockMeasurementMs,
@@ -256,6 +257,7 @@ function boundedProgressDetails(details) {
     'fixtureClockPhase',
     'fixtureClockElapsedMs',
     'fixtureClockEpochMs',
+    'fixtureClockRunOrdinal',
     'fixtureClockWarmupMs',
     'fixtureClockMeasurementMs',
     'fixtureClockWarmupNativeElapsedMs',
@@ -297,6 +299,10 @@ function boundedProgressDetails(details) {
         value >= 0 &&
         value <= 8_640_000_000_000_000
       )
+        bounded[key] = value;
+      else return null;
+    } else if (key === 'fixtureClockRunOrdinal') {
+      if (Number.isSafeInteger(value) && value > 0 && value <= 10)
         bounded[key] = value;
       else return null;
     } else if (key === 'fixtureClockPhase') {

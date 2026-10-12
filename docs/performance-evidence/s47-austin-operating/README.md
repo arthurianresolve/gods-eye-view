@@ -240,3 +240,56 @@ The fix marks only these immutable `.tle` payloads as binary for Git checkout;
 the original bytes and acquisition hashes are restored rather than rewriting
 their provenance. The failed run remains preserved and is not treated as an
 application or browser result.
+
+The [original hosted failure report](root-review/hosted-smoke-38307249499-failed.json)
+is retained byte-for-byte (335 bytes, SHA-256
+`5ea05a0e129c5e1d8dafa3c68bff7f5392c2a1dbcd0c2757be8de9a7afd4325e`).
+Root independently verified a [fresh detached checkout](root-review/git-fixture-byte-integrity-corrected.json)
+of `d768aaa0`: all six files match their Git objects and unchanged acquisition
+metadata. The actual fixture factory loads all 27 assets and retains fixture hash
+`841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94`.
+The corrected [short hosted smoke](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38307834699)
+and [standard CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38307846404)
+were dispatched against that exact commit; their results are not yet acceptance
+evidence at this checkpoint.
+
+## Austin browser setup failure and CORS control
+
+The [original corrected-byte smoke report](root-review/hosted-smoke-38307834699-failed.json)
+from run `38307834699` is retained byte-for-byte (73,714 bytes, SHA-256
+`3aae408b21dad25bc6620e4b96183252b17d089b408cedbe24586365850a4d18`).
+The baseline smoke passed; the candidate at `d768aaa0` timed out after 60 seconds
+in `configure-austin-operating-fixture`, before measurement. Cleanup was confirmed.
+The main document acknowledged the ALPR TileJSON response but no ALPR tile
+responses. The fixture response omitted a CORS header for this external origin;
+the Node response adapter does not enforce browser CORS.
+
+Root's [Chrome control](root-review/alpr-cors-browser-control.json) uses the
+native ALPR adapter bundled from the immutable `d768aaa0` checkout, unchanged
+pinned fixture bodies, and the native Austin viewport/snap calculation. It
+remaps requests to a second loopback origin without contacting the live provider.
+On Windows Chrome 154, both original-header cases reject the metadata fetch;
+both exact-page-origin-header cases load all 12 tiles and 952 records at zoom 10,
+without saturation. The TileJSON bytes have the same SHA-256 in all four cases.
+This isolates the browser CORS defect; it does not establish that all other
+full-scene readiness conditions pass or provide hardware performance evidence.
+
+The [reproduction server](root-review/alpr-cors-browser-audit.mjs) serves a visible
+four-case control. Run it with an immutable checkout containing dependencies and
+a fresh output directory, then open its printed loopback URL in Chrome:
+
+```sh
+node docs/performance-evidence/s47-austin-operating/root-review/alpr-cors-browser-audit.mjs <checkout> <new-output-directory>
+```
+
+An [initial control](root-review/alpr-cors-browser-control-initial-box.json) used
+a manually selected box outside the exact pinned tile request contract. Its
+header-enabled case proceeded past metadata but failed on tile fetches. That
+incomplete control is preserved; the final reproduction computes the native box
+instead of guessing it. Neither report replaces a full hosted smoke rerun.
+
+Separately, Node 24/26 CI exposed the missing `runOrdinal` field in serialized
+warmup acknowledgements. Root reproduced both failures in a fresh `d768aaa0`
+checkout (10/12 boundary tests pass). Preserving the field through the page
+projection and host recorder makes all 12 pass, including success and timeout
+paths. The full integration suite must still be rerun against the correction.

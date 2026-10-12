@@ -259,6 +259,7 @@ export function settleCompletedRenderDiagnostic(
               fixtureClockPhase: fixtureClock.phase,
               fixtureClockElapsedMs: fixtureClock.elapsedMs,
               fixtureClockEpochMs: fixtureClock.epochMs,
+              fixtureClockRunOrdinal: fixtureClock.runOrdinal,
               fixtureClockWarmupMs: fixtureClock.warmupMs,
               fixtureClockMeasurementMs: fixtureClock.measurementMs,
               fixtureClockWarmupNativeElapsedMs:

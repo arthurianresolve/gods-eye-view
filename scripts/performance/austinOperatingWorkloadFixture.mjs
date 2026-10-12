@@ -884,7 +884,21 @@ export function createAustinOperatingFixtureDelivery(fixture, baseUrl) {
       const asset = fixture.assets.find((item) => item.id === id);
       if (!Buffer.isBuffer(body) || body.length > MAX_ASSET_BYTES || !asset)
         fail(url, method, 'Austin workload asset is missing or oversized.');
-      return { status: 200, contentType: asset.contentType, body };
+      const crossOriginAlprAsset =
+        id === 'alpr-tilejson' || id.startsWith('alpr-');
+      return {
+        status: 200,
+        contentType: asset.contentType,
+        body,
+        ...(crossOriginAlprAsset
+          ? {
+              headers: {
+                'access-control-allow-origin': origin,
+                vary: 'Origin',
+              },
+            }
+          : {}),
+      };
     },
     onFulfilled({ url: href, method, status, bodyBase64 }) {
       if (disposed) throw new Error('Austin fixture delivery is disposed.');

@@ -484,6 +484,7 @@ test('provider warmup clock hold and listener registration share one serialized 
     assert.equal(clockAck.details.fixtureClockPhase, 'warmup-held');
     assert.equal(clockAck.details.fixtureClockElapsedMs, 1000);
     assert.equal(clockAck.details.fixtureClockEpochMs, fixedTime + 1000);
+    assert.equal(clockAck.details.fixtureClockRunOrdinal, 1);
     assert.deepEqual(
       warmupRecord.warmupBoundary,
       result.page.diagnostics.beforeRenderRequestObservation,
@@ -624,6 +625,7 @@ test('host progress preserves an atomic warmup snapshot when its page render tim
       failureRecord.warmupBoundary,
       target.__gevPhasedMonotonicWallClockV1.snapshot(),
     );
+    assert.equal(failureRecord.warmupBoundary.runOrdinal, 1);
     assert.equal(observation.cleanup.progressBindingRemoved, true);
     assert.equal(subject.scene.postRender.handlers.size, 0);
   } finally {

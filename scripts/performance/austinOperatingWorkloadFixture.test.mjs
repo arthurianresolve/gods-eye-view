@@ -6,6 +6,7 @@ import {
   createAustinOperatingWorkloadFixture,
   createAustinOperatingFixtureDelivery,
 } from './austinOperatingWorkloadFixture.mjs';
+import { fixtureRequestCommand } from './fixtureInterception.mjs';
 import {
   AUSTIN_OPERATING_FIXED_TIME,
   AUSTIN_OPERATING_LAYER_COUNTS,
@@ -386,6 +387,57 @@ test('document delivery does not require the entire route tile inventory', async
         requiredAlprTiles: fullRoute,
       }),
     /did not deliver required route tiles/,
+  );
+});
+
+test('cross-origin ALPR fixture fulfillment adds only the configured CORS origin and preserves bytes', async () => {
+  const fixture = createAustinOperatingWorkloadFixture();
+  const delivery = createAustinOperatingFixtureDelivery(fixture, baseUrl);
+  const urls = [
+    'https://tiles.dontgetflocked.com/cameras-us-hourly.json',
+    'https://tiles.dontgetflocked.com/cameras-us-hourly/10/232/420.mvt',
+  ];
+  for (const href of urls) {
+    const [method, params] = await fixtureRequestCommand(
+      {
+        requestId: `request-${urls.indexOf(href)}`,
+        request: { url: href, method: 'GET', resourceType: 'XHR' },
+      },
+      baseUrl,
+      (requestUrl, request) => delivery.respond(requestUrl.href, request),
+    );
+    assert.equal(method, 'Fetch.fulfillRequest');
+    const headerMap = new Map(
+      params.responseHeaders.map(({ name, value }) => [
+        name.toLowerCase(),
+        value,
+      ]),
+    );
+    assert.equal(
+      headerMap.get('access-control-allow-origin'),
+      baseUrl.slice(0, -1),
+    );
+    assert.equal(headerMap.get('vary'), 'Origin');
+    const assetId = href.endsWith('.json')
+      ? 'alpr-tilejson'
+      : 'alpr-10-232-420';
+    const asset = fixture.assets.find((candidate) => candidate.id === assetId);
+    const bytes = Buffer.from(params.body, 'base64');
+    assert.equal(bytes.length, asset.byteLength);
+    assert.equal(hash(bytes), asset.sha256);
+    delivery.onFulfilled({
+      url: href,
+      method: 'GET',
+      status: params.responseCode,
+      bodyBase64: params.body,
+    });
+  }
+  assert.equal(
+    delivery
+      .summarize({ requiredAssetIds: [] })
+      .deliveredAssets.find((asset) => asset.id === 'alpr-tilejson')
+      .responseCount,
+    1,
   );
 });
 

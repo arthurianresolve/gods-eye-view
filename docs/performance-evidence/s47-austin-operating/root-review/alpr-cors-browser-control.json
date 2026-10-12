@@ -1,0 +1,276 @@
+{
+  "schema": "gev-alpr-cors-browser-control/v1",
+  "scope": "Native adapter with unchanged pinned fixture responses; loopback origin remapping; not CDP delivery or full application validation",
+  "capturedAt": "2026-10-12T21:11:48.378Z",
+  "applicationCommit": "d768aaa0ca7639b54ca6d4c9512b52df380702b6",
+  "fixtureSha256": "841c2fbbae9d290505367fb980dc4db7022b37e49d6d683b714606cd6b27ee94",
+  "bundleSha256": "b9bb3e219d293c48f9c8294511ce0b64cf5e8fe592d8bf0adb915d16fbf920c5",
+  "queryBox": {
+    "south": 30.05,
+    "west": -98.10000000000001,
+    "north": 30.700000000000003,
+    "east": -97.30000000000001
+  },
+  "inputHashes": {
+    "src/layers/alpr/source.js": "c481aab3d5663e9571b318de03a32c71c351f88fe7008232c0e6c3632c539231",
+    "src/sources/vectorTiles.js": "3225c6e1e48ae3a8242639d3eb09c7c0d946767790782bc6142312c238b97b81",
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "eea5d1d1805318e4e1e9978c9b504012f9b25082855022500abceed88b8f5e15"
+  },
+  "browserResult": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "cases": [
+      {
+        "mode": "original",
+        "status": "rejected",
+        "error": "Vector tile metadata unavailable",
+        "cause": "Failed to fetch"
+      },
+      {
+        "mode": "corrected",
+        "status": "fulfilled",
+        "count": 952,
+        "zoom": 10,
+        "saturated": false
+      },
+      {
+        "mode": "original",
+        "status": "rejected",
+        "error": "Vector tile metadata unavailable",
+        "cause": "Failed to fetch"
+      },
+      {
+        "mode": "corrected",
+        "status": "fulfilled",
+        "count": 952,
+        "zoom": 10,
+        "saturated": false
+      }
+    ]
+  },
+  "requests": [
+    {
+      "mode": "original",
+      "pathname": "/cameras-us-hourly.json",
+      "status": 200,
+      "byteLength": 33871,
+      "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6",
+      "corsHeader": null
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly.json",
+      "status": 200,
+      "byteLength": 33871,
+      "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/233/421.mvt",
+      "status": 200,
+      "byteLength": 15960,
+      "sha256": "8cdaced8e1c263721707a8ffe788b503c2b2db5226a5f658137ad0d855831a88",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/234/421.mvt",
+      "status": 200,
+      "byteLength": 13749,
+      "sha256": "14fa7945f94f6c82fa5050c3930a9d480ab7e4719dc03a054df5fdc2851fef33",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/233/420.mvt",
+      "status": 200,
+      "byteLength": 7223,
+      "sha256": "6de753d863d19f5ce42ab6c5609f946b503187eb0fdeaaaf04c28090f92f3574",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/234/420.mvt",
+      "status": 200,
+      "byteLength": 11805,
+      "sha256": "f1a8320e4d524fd144a9dab1c02cc6b07a593581d80de85ceee0d6002d565ee8",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/233/422.mvt",
+      "status": 200,
+      "byteLength": 7004,
+      "sha256": "5d3a4d03c035e3b034c0342a1d8ec8628f6f69a902b9b4df7be678310139045c",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/234/422.mvt",
+      "status": 200,
+      "byteLength": 1679,
+      "sha256": "50ebf9364b3d8c56d13e360ca1dfc28c159e38f14415ff24d0fa0ffb06589ed4",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/232/421.mvt",
+      "status": 200,
+      "byteLength": 651,
+      "sha256": "1af059098980540fe5d5fa14ed4b9a4ab08c521e30b30ec359beb2a7d6faf5b3",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/235/421.mvt",
+      "status": 200,
+      "byteLength": 853,
+      "sha256": "188fde858b15099378f76bc676e7463d5665220f930fd3c621fba033a5e5fb3b",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/232/420.mvt",
+      "status": 200,
+      "byteLength": 1474,
+      "sha256": "5756233d184a98270bbd7a6d33beb18a5e5ec312806d6ac7da2fed86c5c38777",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/235/420.mvt",
+      "status": 200,
+      "byteLength": 526,
+      "sha256": "f34b0032b9c3296fbc1a841458ca2183562a3ae403ca9721407100c96ce67f1f",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/232/422.mvt",
+      "status": 200,
+      "byteLength": 198,
+      "sha256": "7f53dbcd2563680857a00cea0a7250b3c258b8974ed86bb24019279bd30bee91",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/235/422.mvt",
+      "status": 200,
+      "byteLength": 2100,
+      "sha256": "7da9834a2242a6251e55bc3ccbd9dc5608735b21b13f8aeef6e603b2bc160105",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "original",
+      "pathname": "/cameras-us-hourly.json",
+      "status": 200,
+      "byteLength": 33871,
+      "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6",
+      "corsHeader": null
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly.json",
+      "status": 200,
+      "byteLength": 33871,
+      "sha256": "6d1c795e6085aded84b94336f2d0f074621223e185bc8b80527b0ffa5cfe92a6",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/233/421.mvt",
+      "status": 200,
+      "byteLength": 15960,
+      "sha256": "8cdaced8e1c263721707a8ffe788b503c2b2db5226a5f658137ad0d855831a88",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/234/421.mvt",
+      "status": 200,
+      "byteLength": 13749,
+      "sha256": "14fa7945f94f6c82fa5050c3930a9d480ab7e4719dc03a054df5fdc2851fef33",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/233/420.mvt",
+      "status": 200,
+      "byteLength": 7223,
+      "sha256": "6de753d863d19f5ce42ab6c5609f946b503187eb0fdeaaaf04c28090f92f3574",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/234/420.mvt",
+      "status": 200,
+      "byteLength": 11805,
+      "sha256": "f1a8320e4d524fd144a9dab1c02cc6b07a593581d80de85ceee0d6002d565ee8",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/233/422.mvt",
+      "status": 200,
+      "byteLength": 7004,
+      "sha256": "5d3a4d03c035e3b034c0342a1d8ec8628f6f69a902b9b4df7be678310139045c",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/234/422.mvt",
+      "status": 200,
+      "byteLength": 1679,
+      "sha256": "50ebf9364b3d8c56d13e360ca1dfc28c159e38f14415ff24d0fa0ffb06589ed4",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/232/421.mvt",
+      "status": 200,
+      "byteLength": 651,
+      "sha256": "1af059098980540fe5d5fa14ed4b9a4ab08c521e30b30ec359beb2a7d6faf5b3",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/235/421.mvt",
+      "status": 200,
+      "byteLength": 853,
+      "sha256": "188fde858b15099378f76bc676e7463d5665220f930fd3c621fba033a5e5fb3b",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/232/420.mvt",
+      "status": 200,
+      "byteLength": 1474,
+      "sha256": "5756233d184a98270bbd7a6d33beb18a5e5ec312806d6ac7da2fed86c5c38777",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/235/420.mvt",
+      "status": 200,
+      "byteLength": 526,
+      "sha256": "f34b0032b9c3296fbc1a841458ca2183562a3ae403ca9721407100c96ce67f1f",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/232/422.mvt",
+      "status": 200,
+      "byteLength": 198,
+      "sha256": "7f53dbcd2563680857a00cea0a7250b3c258b8974ed86bb24019279bd30bee91",
+      "corsHeader": "http://127.0.0.1:60361"
+    },
+    {
+      "mode": "corrected",
+      "pathname": "/cameras-us-hourly/10/235/422.mvt",
+      "status": 200,
+      "byteLength": 2100,
+      "sha256": "7da9834a2242a6251e55bc3ccbd9dc5608735b21b13f8aeef6e603b2bc160105",
+      "corsHeader": "http://127.0.0.1:60361"
+    }
+  ]
+}
