@@ -572,7 +572,7 @@ jobs:
         run: node scripts/qa-terrain-picking-lifecycle.mjs --out qa-artifacts/terrain-picking-lifecycle.json
       - name: Print diagnostic evidence
         if: always()
-        run: node scripts/print-qa-evidence.mjs qa-artifacts/terrain-picking-lifecycle.json
+        run: node scripts/print-qa-evidence.mjs --artifact-only qa-artifacts/terrain-picking-lifecycle.json
       - name: Preserve diagnostic evidence including failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
