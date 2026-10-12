@@ -7,6 +7,7 @@ import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
+  removeEarlyCesiumRendererProbeRegistrationWithEvidence,
 } from './earlyCesiumRendererProbe.mjs';
 import { PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256 } from './profileRecoveryFixtureContract.mjs';
 import {
@@ -411,6 +412,165 @@ function earlyProbePage(performanceStep = 5) {
     },
   };
 }
+
+test('future-document registration removal leaves the current probe live and is not repeated', async () => {
+  const probePage = earlyProbePage();
+  const { page, Canvas, native, window } = probePage;
+  const identifier = await installEarlyCesiumRendererProbe(page);
+  let removals = 0;
+  page.removeScriptToEvaluateOnNewDocument = async (id) => {
+    assert.equal(id, identifier);
+    removals += 1;
+  };
+  const currentDocumentHook = Canvas.prototype.getContext;
+  assert.notEqual(currentDocumentHook, native);
+
+  const registration =
+    await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+      page,
+      identifier,
+    );
+  assert.equal(registration.confirmed, true);
+  assert.equal(registration.currentDocumentUntouched, true);
+  assert.equal(registration.scriptRegistration.status, 'confirmed');
+  assert.equal(Canvas.prototype.getContext, currentDocumentHook);
+
+  const canvas = new Canvas();
+  const gl = canvas.getContext('webgl2');
+  assert.equal(Canvas.prototype.getContext, native);
+  assert.equal(canvas.listeners.size, 2);
+  window.__godsEyeView = {
+    viewer: { scene: { canvas, context: { _originalGLContext: gl } } },
+  };
+  const contextLost = canvas.listeners.get('webglcontextlost');
+  contextLost();
+  await assert.rejects(readEarlyCesiumRendererProbe(page), /lost or restored/);
+
+  const finalCleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    identifier,
+  );
+  assert.equal(finalCleanup.confirmed, true);
+  assert.equal(finalCleanup.scriptRegistration.status, 'already-confirmed');
+  assert.equal(removals, 1, 'the future-document registration is removed once');
+  assert.equal(canvas.listeners.size, 0);
+});
+
+test('failed early registration removal is recorded and never retried at final cleanup', async () => {
+  const probePage = earlyProbePage();
+  const { page } = probePage;
+  const identifier = await installEarlyCesiumRendererProbe(page);
+  let removals = 0;
+  page.removeScriptToEvaluateOnNewDocument = async () => {
+    removals += 1;
+    throw new Error('registration removal failed');
+  };
+  const registration =
+    await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+      page,
+      identifier,
+    );
+  assert.equal(registration.confirmed, false);
+  assert.equal(registration.scriptRegistration.status, 'error');
+  assert.equal(
+    registration.scriptRegistration.errorKind,
+    'registration-removal-error',
+  );
+  const failureReport = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    workload: { rendererProbeCleanup: [registration] },
+    phase: 'main-navigation',
+    error: new Error('future-document cleanup failed'),
+  });
+  assert.equal(
+    failureReport.workload.rendererProbeCleanup[0].scriptRegistration.status,
+    'error',
+  );
+  const finalCleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    identifier,
+  );
+  assert.equal(finalCleanup.confirmed, false);
+  assert.equal(finalCleanup.scriptRegistration.status, 'error');
+  assert.equal(removals, 1);
+});
+
+test('late early-registration acknowledgement is reused without a duplicate removal', async () => {
+  let finishRemoval;
+  let removals = 0;
+  const page = {
+    isClosed: () => false,
+    evaluate: async () => ({
+      status: 'confirmed',
+      statePresent: true,
+      hookRestoreAttempted: true,
+      hookRestored: true,
+      listenerCount: 0,
+      listenerRemovalAttemptedCount: 0,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalFailedCount: 0,
+      stateDeleted: true,
+    }),
+    removeScriptToEvaluateOnNewDocument: () => {
+      removals += 1;
+      return new Promise((resolve) => {
+        finishRemoval = resolve;
+      });
+    },
+  };
+  const early = await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+    page,
+    'late-early-registration',
+    5,
+  );
+  assert.equal(early.confirmed, false);
+  assert.equal(early.scriptRegistration.status, 'timeout');
+
+  const finalCleanupPromise = cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    'late-early-registration',
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  finishRemoval();
+  const finalCleanup = await finalCleanupPromise;
+  assert.equal(finalCleanup.confirmed, true);
+  assert.equal(finalCleanup.scriptRegistration.status, 'already-confirmed');
+  assert.equal(early.scriptRegistration.lateCompletion, 'confirmed');
+  assert.equal(removals, 1);
+});
+
+test('reinstalling in one Page invalidates prior registration acknowledgement', async () => {
+  const probePage = earlyProbePage();
+  const { page, Canvas, native } = probePage;
+  let removals = 0;
+  page.removeScriptToEvaluateOnNewDocument = async () => {
+    removals += 1;
+  };
+
+  const firstIdentifier = await installEarlyCesiumRendererProbe(page);
+  new Canvas().getContext('webgl2');
+  const firstRemoval =
+    await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+      page,
+      firstIdentifier,
+    );
+  assert.equal(firstRemoval.confirmed, true);
+  assert.equal(removals, 1);
+
+  const secondIdentifier = await installEarlyCesiumRendererProbe(page);
+  assert.equal(secondIdentifier, firstIdentifier);
+  const secondHook = Canvas.prototype.getContext;
+  assert.notEqual(secondHook, native);
+  const secondRemoval =
+    await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+      page,
+      secondIdentifier,
+    );
+  assert.equal(secondRemoval.confirmed, true);
+  assert.equal(secondRemoval.scriptRegistration.status, 'confirmed');
+  assert.equal(Canvas.prototype.getContext, secondHook);
+  assert.equal(removals, 2);
+});
 
 test('early probe preserves native getContext and captures identity once before scene observation', async () => {
   const probePage = earlyProbePage();

@@ -37,6 +37,7 @@ import {
 import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
+  removeEarlyCesiumRendererProbeRegistrationWithEvidence,
 } from './performance/earlyCesiumRendererProbe.mjs';
 import {
   createFlightFixtureDeliveryObserver,
@@ -2012,6 +2013,17 @@ async function runRevision({
       waitUntil: 'domcontentloaded',
       timeout: 45_000,
     });
+    const registrationRemoval =
+      await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+        page,
+        earlyRendererProbeScriptIdentifier,
+      );
+    registrationRemoval.phase = 'application-navigation';
+    recordRendererProbeCleanup(registrationRemoval);
+    if (!registrationRemoval.confirmed)
+      throw new Error(
+        'Early Cesium renderer future-document registration removal was not confirmed.',
+      );
     if (response && response.status() >= 400)
       throw new Error(
         `Application entry returned status ${response.status()}.`,

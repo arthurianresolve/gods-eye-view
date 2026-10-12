@@ -105,7 +105,9 @@ export async function installEarlyCesiumRendererProbe(page) {
       },
     });
   }, CLEANUP_PROOF_KEY);
-  return handle?.identifier || null;
+  const identifier = handle?.identifier || null;
+  if (identifier) scriptRemovalEntries(page).delete(identifier);
+  return identifier;
 }
 
 /** Verify early evidence against Cesium's live scene without querying GL again. */
@@ -173,7 +175,7 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
   }
 }
 
-const CONFIRMED_SCRIPT_REMOVALS = new WeakMap();
+const SCRIPT_REMOVALS = new WeakMap();
 
 function cleanupStage(status = 'pending') {
   return {
@@ -185,6 +187,130 @@ function cleanupStage(status = 'pending') {
     lateErrorKind: null,
     lateErrorDetail: null,
   };
+}
+
+function scriptRemovalEntries(page) {
+  let entries = SCRIPT_REMOVALS.get(page);
+  if (!entries) {
+    entries = new Map();
+    SCRIPT_REMOVALS.set(page, entries);
+  }
+  return entries;
+}
+
+/** Remove only the future-document hook, leaving this document's observer live. */
+export async function removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+  page,
+  scriptIdentifier,
+  timeoutMs = 1_000,
+) {
+  const startedAt = performance.now();
+  const evidence = {
+    schema: 'gev-early-renderer-registration-removal/v1',
+    confirmed: false,
+    timeoutMs: Number.isFinite(timeoutMs) ? Math.max(0, timeoutMs) : null,
+    elapsedMs: 0,
+    currentDocumentUntouched: true,
+    scriptRegistration: {
+      ...cleanupStage(scriptIdentifier ? 'pending' : 'not-registered'),
+      verification: scriptIdentifier
+        ? 'puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable'
+        : null,
+    },
+  };
+  const stage = evidence.scriptRegistration;
+  if (!scriptIdentifier) {
+    evidence.confirmed = true;
+    return evidence;
+  }
+  if (!page || (typeof page !== 'object' && typeof page !== 'function')) {
+    stage.status = 'unavailable';
+    stage.errorKind = 'page-api-unavailable';
+    evidence.elapsedMs = Math.max(0, performance.now() - startedAt);
+    return evidence;
+  }
+
+  const entries = scriptRemovalEntries(page);
+  let entry = entries.get(scriptIdentifier);
+  let newAttempt = false;
+  if (!entry) {
+    if (typeof page.removeScriptToEvaluateOnNewDocument !== 'function') {
+      stage.status = 'unavailable';
+      stage.errorKind = 'page-api-unavailable';
+      evidence.elapsedMs = Math.max(0, performance.now() - startedAt);
+      return evidence;
+    }
+    newAttempt = true;
+    entry = { status: 'pending', errorKind: null, errorDetail: null };
+    entries.set(scriptIdentifier, entry);
+    entry.promise = Promise.resolve()
+      .then(() => page.removeScriptToEvaluateOnNewDocument(scriptIdentifier))
+      .then(
+        () => {
+          entry.status = 'confirmed';
+          return { status: 'confirmed' };
+        },
+        (error) => {
+          entry.status = 'error';
+          entry.errorKind = safeCleanupErrorKind(error, true);
+          entry.errorDetail = safeCleanupErrorDetail(error);
+          return {
+            status: 'error',
+            errorKind: entry.errorKind,
+            errorDetail: entry.errorDetail,
+          };
+        },
+      );
+  }
+
+  if (entry.status === 'confirmed') {
+    stage.status = newAttempt ? 'confirmed' : 'already-confirmed';
+    evidence.confirmed = true;
+  } else if (entry.status === 'error') {
+    stage.status = 'error';
+    stage.errorKind = entry.errorKind;
+    stage.errorDetail = entry.errorDetail;
+  } else {
+    const boundedMs =
+      Number.isFinite(timeoutMs) && timeoutMs >= 0 ? timeoutMs : 0;
+    let timer;
+    let timedOut = false;
+    const completion = entry.promise.then((result) => {
+      if (timedOut) {
+        stage.lateCompletion = result.status;
+        if (result.status !== 'confirmed') {
+          stage.lateErrorKind =
+            result.errorKind || 'registration-removal-error';
+          stage.lateErrorDetail = result.errorDetail || null;
+        }
+      }
+      return result;
+    });
+    const result = await Promise.race([
+      completion,
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve({ status: 'timeout' }), boundedMs);
+      }),
+    ]);
+    clearTimeout(timer);
+    if (result.status === 'timeout') {
+      timedOut = true;
+      stage.status = 'timeout';
+      stage.errorKind = 'operation-timeout';
+      stage.lateCompletion = 'pending';
+    } else {
+      stage.status =
+        result.status === 'confirmed' && !newAttempt
+          ? 'already-confirmed'
+          : result.status;
+      stage.errorKind = result.errorKind || null;
+      stage.errorDetail = result.errorDetail || null;
+      evidence.confirmed = result.status === 'confirmed';
+    }
+  }
+  stage.elapsedMs = Math.max(0, performance.now() - startedAt);
+  evidence.elapsedMs = stage.elapsedMs;
+  return evidence;
 }
 
 /**
@@ -226,14 +352,6 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
     Number.isFinite(timeoutMs) && timeoutMs >= 0 ? timeoutMs : 0;
   const remaining = () =>
     Math.max(0, boundedMs - (performance.now() - startedAt));
-  const scriptSet = () => {
-    let values = CONFIRMED_SCRIPT_REMOVALS.get(page);
-    if (!values) {
-      values = new Set();
-      CONFIRMED_SCRIPT_REMOVALS.set(page, values);
-    }
-    return values;
-  };
   const runStage = async (stage, operation, onConfirmed = () => {}) => {
     const operationStartedAt = performance.now();
     let timedOut = false;
@@ -425,24 +543,13 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
   }
 
   if (scriptIdentifier && documentOperationSettled) {
-    if (scriptSet().has(scriptIdentifier)) {
-      evidence.scriptRegistration.status = 'already-confirmed';
-    } else if (
-      typeof page?.removeScriptToEvaluateOnNewDocument === 'function'
-    ) {
-      evidence.scriptRegistration.status = 'pending';
-      await runStage(
-        evidence.scriptRegistration,
-        async () => {
-          await page.removeScriptToEvaluateOnNewDocument(scriptIdentifier);
-          return { status: 'confirmed' };
-        },
-        () => scriptSet().add(scriptIdentifier),
+    const registrationEvidence =
+      await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+        page,
+        scriptIdentifier,
+        remaining(),
       );
-    } else {
-      evidence.scriptRegistration.status = 'unavailable';
-      evidence.scriptRegistration.errorKind = 'page-api-unavailable';
-    }
+    evidence.scriptRegistration = registrationEvidence.scriptRegistration;
   } else if (
     scriptIdentifier &&
     evidence.scriptRegistration.status === 'not-attempted'

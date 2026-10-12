@@ -37,6 +37,7 @@ import {
 import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
+  removeEarlyCesiumRendererProbeRegistrationWithEvidence,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
 import {
@@ -358,13 +359,7 @@ const infrastructureAssetRoutes = infrastructureWorkload
 let infrastructureFixtureDelivery = null;
 const infrastructureResponseListeners = new Map();
 const earlyRendererProbeScripts = new Map();
-async function cleanupEarlyRendererProbeForPage(page) {
-  if (!page || !earlyRendererProbeScripts.has(page)) return true;
-  const scriptIdentifier = earlyRendererProbeScripts.get(page);
-  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
-    page,
-    scriptIdentifier,
-  );
+function recordRendererProbeCleanupEvidence(evidence) {
   const records = failureProgress.workload.rendererProbeCleanup || [];
   if (records.length >= 16) {
     records.shift();
@@ -373,6 +368,35 @@ async function cleanupEarlyRendererProbeForPage(page) {
   }
   records.push(evidence);
   failureProgress.workload.rendererProbeCleanup = records;
+}
+async function removeEarlyRendererRegistrationForPage(
+  page,
+  { phase, documentRole, documentId },
+) {
+  if (!page || !earlyRendererProbeScripts.has(page)) return true;
+  const evidence = await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+    page,
+    earlyRendererProbeScripts.get(page),
+  );
+  evidence.phase = phase;
+  evidence.documentRole = documentRole;
+  evidence.documentId = documentId;
+  recordRendererProbeCleanupEvidence(evidence);
+  if (!evidence.confirmed)
+    throw new Error(
+      'Early Cesium renderer future-document registration removal was not confirmed.',
+    );
+  return true;
+}
+async function cleanupEarlyRendererProbeForPage(page) {
+  if (!page || !earlyRendererProbeScripts.has(page)) return true;
+  const scriptIdentifier = earlyRendererProbeScripts.get(page);
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    scriptIdentifier,
+  );
+  evidence.phase = 'document-cleanup';
+  recordRendererProbeCleanupEvidence(evidence);
   if (!evidence.confirmed)
     throw new Error('Early Cesium renderer probe cleanup was not confirmed.');
   earlyRendererProbeScripts.delete(page);
@@ -1406,6 +1430,11 @@ try {
     const startupAuditState = auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
+    await removeEarlyRendererRegistrationForPage(startupPage, {
+      phase: 'startup-navigation',
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
+    });
     if (captureProvenance) {
       const servedBase = new URL(buildProvenanceOptions.baseUrl);
       const actualPage = new URL(startupPage.url());
@@ -1520,6 +1549,11 @@ try {
   let activeFixtureSession = initialPageAttachment.fixtureSession;
   let captureAuditState = initialPageAttachment.auditState;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await removeEarlyRendererRegistrationForPage(page, {
+    phase: 'main-navigation',
+    documentRole: activeDocumentRole,
+    documentId: activeDocumentId,
+  });
   if (captureProvenance) {
     const servedBase = new URL(buildProvenanceOptions.baseUrl);
     const actualPage = new URL(page.url());
@@ -1996,6 +2030,11 @@ try {
     captureAuditState.blobUrls.clear();
     providerSampleWorkerAuditComplete = false;
     await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await removeEarlyRendererRegistrationForPage(page, {
+      phase: 'provider-sample-navigation',
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+    });
     if (captureProvenance) {
       const servedBase = new URL(buildProvenanceOptions.baseUrl);
       const actualPage = new URL(page.url());
