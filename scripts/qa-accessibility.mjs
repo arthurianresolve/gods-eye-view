@@ -112,6 +112,45 @@ try {
   await markPhase('focus-evidence-close-control', '#evidence-panel-close');
   await page.waitForSelector('#evidence-panel-close', { visible: true });
   await page.focus('#evidence-panel-close');
+  await markPhase(
+    'verify-delayed-native-palette-close',
+    'palette close then inspector focus before queued close event',
+  );
+  const delayedCloseKeptInspectorFocus = await page.evaluate(async () => {
+    const palette = document.querySelector('.gev-command-palette');
+    const trigger = document.querySelector('.gev-command-trigger');
+    const inspectorClose = document.querySelector('#evidence-panel-close');
+    if (!palette || !trigger || !inspectorClose || palette.open)
+      throw new Error('Delayed-close focus fixture was not ready');
+    let closeTimer;
+    let onClose;
+    const closed = new Promise((resolve, reject) => {
+      closeTimer = setTimeout(
+        () => reject(new Error('Native command-palette close event timed out')),
+        1000,
+      );
+      onClose = () => resolve();
+      palette.addEventListener('close', onClose, { once: true });
+    });
+    try {
+      trigger.focus();
+      trigger.click();
+      if (!palette.open)
+        throw new Error('Command-palette trigger did not open the dialog');
+      palette.close();
+      inspectorClose.focus();
+      await closed;
+      return document.activeElement === inspectorClose;
+    } finally {
+      clearTimeout(closeTimer);
+      palette.removeEventListener('close', onClose);
+    }
+  });
+  assert.equal(
+    delayedCloseKeptInspectorFocus,
+    true,
+    'A delayed command-palette close event stole inspector focus',
+  );
   await page.keyboard.press('Enter');
   await markPhase('wait-evidence-focus-restoration');
   await page.waitForFunction(() =>
