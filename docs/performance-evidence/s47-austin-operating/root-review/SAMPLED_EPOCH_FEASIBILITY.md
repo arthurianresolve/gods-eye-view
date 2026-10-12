@@ -427,3 +427,31 @@ resolve to `8b8ccc9a81379e8b40d4be67610570ee5b159512`. Local and remote
 `dev` remain `726e404b50a6586f9eb9085ca2478f605dfc698c`, 608 commits ahead
 and zero behind main. This QA branch contains dev and main already. No additional
 main merge, rebase, or discarded diff is required.
+
+# Four native samples reach the final integrity gate
+
+Run [38322832429](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322832429)
+at `f204837e224e8a7d5ae98a7ebe051365db24b0e0` completes four short Austin
+samples before failing final integrity with an unlabeled `false !== true`
+assertion. The preceding scope failures are no longer reached. This remains a
+failed run; no timing or comparison acceptance follows from the completed count.
+The bounded failure serializer drops every complete sample, leaving four sample
+delivery summaries but no candidate before/after visual settings for replay.
+
+Root independently confirms Apple paravirtual Metal and recomputes all six
+fixture-document cleanup records from their actual releases. Every cleanup is
+confirmed and all four retained ALPR route-coverage summaries are complete.
+The [review](native-38322832429-review.json) binds exact source hashes and
+unchanged [outer](hosted-native-38322832429-smoke-failed.json) and
+[raw capture](hosted-native-38322832429-cli-failed.json) reports.
+
+A concrete incorrect harness expectation is visible independently of the
+unlabeled assertion: the Austin comparison requires FXAA enabled, and its
+mock fixture supplies that invented value. The real frozen baseline observer
+reports antialias enabled, four MSAA samples and FXAA disabled before and after
+inspection. Candidate viewer configuration likewise sets four MSAA samples and
+does not enable FXAA; pinned Cesium 1.138.0 initializes the FXAA stage disabled.
+The next correction must preserve those rendering defaults and validate the
+complete visual contract with meaningful failure labels. Because candidate
+samples were truncated, this record does not identify the exact failed sample
+or prove that correcting FXAA alone will make the full capture pass.
