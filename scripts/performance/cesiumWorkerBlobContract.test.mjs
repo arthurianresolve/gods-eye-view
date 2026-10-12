@@ -11,11 +11,42 @@ import {
   MAX_WORKER_BLOB_TOTAL_BYTES,
   readAndRestoreCesiumWorkerBodies,
   summarizeCesiumWorkerBlobEvidence,
+  summarizeWorkerAuditBoundary,
   validateCesiumWorkerBlobs,
 } from './cesiumWorkerBlobContract.mjs';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const BASE = 'http://127.0.0.1:4173/';
+
+test('frozen audit boundary reports late worker targets without retaining URLs', () => {
+  const result = summarizeWorkerAuditBoundary({
+    workerTargetsAtBoundary: ['blob:worker-a'],
+    blobRequestsAtBoundary: ['blob:worker-a', 'blob:payload-a'],
+    workerTargetsAfter: ['blob:worker-a', 'blob:worker-b'],
+    blobRequestsAfter: [
+      'blob:worker-a',
+      'blob:payload-a',
+      'blob:late-request',
+    ],
+  });
+  assert.deepEqual(result, {
+    workerTargetCountAtBoundary: 1,
+    blobRequestCountAtBoundary: 2,
+    lateWorkerTargetCount: 1,
+    lateBlobRequestCount: 1,
+  });
+  assert.equal(JSON.stringify(result).includes('blob:'), false);
+  assert.throws(
+    () =>
+      summarizeWorkerAuditBoundary({
+        workerTargetsAtBoundary: ['blob:x'],
+        blobRequestsAtBoundary: [],
+        workerTargetsAfter: [null],
+        blobRequestsAfter: [],
+      }),
+    /exceed their bounds/,
+  );
+});
 
 function makeContract(workerSource = 'self.postMessage("ready");') {
   const encoded = Buffer.from(workerSource, 'utf8').toString('base64');
@@ -635,6 +666,48 @@ function makeAtomicWorkerAuditPage(BlobClass) {
   };
   return { context, page, nativeCreateObjectURL, TestURL };
 }
+
+test('legacy diagnostic metadata-read-body-read-restore sequence exposes mixed-time counts', async () => {
+  let createdDuringRead = false;
+  let createLateBlob = () => {};
+  class TestBlob {
+    constructor(text, type = 'application/javascript') {
+      this.value = text;
+      this.type = type;
+      this.size = text.length;
+    }
+    async text() {
+      if (!createdDuringRead) {
+        createdDuringRead = true;
+        createLateBlob();
+      }
+      return this.value;
+    }
+  }
+  const { context, page, TestURL } = makeAtomicWorkerAuditPage(TestBlob);
+  createLateBlob = () => TestURL.createObjectURL(new TestBlob('late worker'));
+  const originalUrl = vm.runInContext(
+    'URL.createObjectURL(new Blob("initial worker"))',
+    context,
+  );
+  const metadata = await page.evaluate(
+    () => window.__gevCesiumWorkerBlobAuditV1.metadata(),
+  );
+  const bodies = await page.evaluate(
+    (urls) => window.__gevCesiumWorkerBlobAuditV1.readWorkerBodies(urls),
+    [originalUrl],
+  );
+  const restoration = await page.evaluate(
+    () => window.__gevCesiumWorkerBlobAuditV1.restore(),
+  );
+
+  assert.equal(metadata.createdBlobCount, 1);
+  assert.equal(bodies.createdBlobCount, 2);
+  assert.equal(bodies.records.length, 2);
+  assert.equal(restoration.createdScriptBlobCountAtRestore, 2);
+  assert.equal(restoration.nativeCreateObjectURLRestored, true);
+  assert.equal(restoration.registryEmpty, true);
+});
 
 test('prewarm body read atomically restores first and rejects a late executable blob use', async () => {
   let lateUrl = null;

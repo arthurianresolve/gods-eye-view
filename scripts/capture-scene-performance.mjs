@@ -42,6 +42,7 @@ import {
   MAX_WORKER_TARGETS,
   readAndRestoreCesiumWorkerBodies,
   restoreCesiumWorkerBlobAudit,
+  summarizeWorkerAuditBoundary,
   validatePrewarmedWorkerUse,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
@@ -914,7 +915,9 @@ try {
       throw new Error(
         'Capture worker target audit exceeded its bounded capacity.',
       );
-    const workerUrls = [...auditState.workerUrls].filter((value) =>
+    const workerTargetsAtBoundary = [...auditState.workerUrls];
+    const blobRequestsAtBoundary = [...auditState.blobUrls];
+    const workerUrls = workerTargetsAtBoundary.filter((value) =>
       value.startsWith('blob:'),
     );
     let validation = null;
@@ -922,58 +925,77 @@ try {
     let restoreAttestation = null;
     let restorationSummary = null;
     let blobAudit = null;
+    let lateWorkerTargetCount = null;
+    let lateBlobRequestCount = null;
+    let overflowAtCompletion = null;
+    let workerTargetsAfterAudit = null;
+    let blobRequestsAfterAudit = null;
     try {
-      if (auditMode === 'prewarm') {
-        blobAudit = await readAndRestoreCesiumWorkerBodies(
-          auditPage,
-          workerUrls,
-        );
-        if (!blobAudit)
-          throw new Error(
-            'Receipt-verified page worker blob audit is missing.',
-          );
-        restoreAttestation = blobAudit.restoration;
-        metadata = {
-          createdBlobCount: blobAudit.createdBlobCount,
-          overflowCount: blobAudit.overflowCount,
-          maxRetainedBytes: blobAudit.maxRetainedBytes,
-          records: blobAudit.records.map(({ url, type, byteLength }) => ({
-            url,
-            type,
-            byteLength,
-          })),
-        };
-        if (blobAudit.readError)
-          throw new Error('Prewarm worker blob body read failed.');
-      } else {
-        metadata = await auditPage.evaluate(
-          () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
-        );
-      }
+      // Freeze page-owned blob metadata/bodies and restore URL.createObjectURL
+      // in the same page task. Reading metadata, awaiting body text(), then
+      // restoring allowed diagnostic mode to observe a mixed-time inventory.
+      blobAudit = await readAndRestoreCesiumWorkerBodies(auditPage, workerUrls);
+      if (!blobAudit)
+        throw new Error('Receipt-verified page worker blob audit is missing.');
+      restoreAttestation = blobAudit.restoration;
+      metadata = {
+        createdBlobCount: blobAudit.createdBlobCount,
+        overflowCount: blobAudit.overflowCount,
+        maxRetainedBytes: blobAudit.maxRetainedBytes,
+        records: blobAudit.records.map(({ url, type, byteLength }) => ({
+          url,
+          type,
+          byteLength,
+        })),
+      };
       if (!metadata)
         throw new Error('Receipt-verified page worker blob audit is missing.');
+
+      workerTargetsAfterAudit = [
+        ...auditState.workerUrls,
+        ...auditPage.workers().map((worker) => worker.url()),
+      ];
+      blobRequestsAfterAudit = [...auditState.blobUrls];
+      const boundarySummary = summarizeWorkerAuditBoundary({
+        workerTargetsAtBoundary,
+        blobRequestsAtBoundary,
+        workerTargetsAfter: workerTargetsAfterAudit,
+        blobRequestsAfter: blobRequestsAfterAudit,
+      });
+      overflowAtCompletion = auditState.getOverflow();
+      lateWorkerTargetCount = boundarySummary.lateWorkerTargetCount;
+      lateBlobRequestCount = boundarySummary.lateBlobRequestCount;
+      if (
+        overflowAtCompletion.workerUrlOverflow ||
+        overflowAtCompletion.blobUrlOverflow
+      )
+        throw new Error(
+          'Worker target audit exceeded its bound during the frozen read.',
+        );
+      if (lateWorkerTargetCount || lateBlobRequestCount)
+        throw new Error(
+          'Worker targets or blob requests arrived after the frozen audit boundary.',
+        );
+      if (blobAudit.readError)
+        throw new Error(
+          auditMode === 'prewarm'
+            ? 'Prewarm worker blob body read failed.'
+            : 'Diagnostic worker blob body read failed.',
+        );
+
       const hasEvidence = !(
         metadata.createdBlobCount === 0 &&
         workerUrls.length === 0 &&
-        auditState.blobUrls.size === 0
+        blobRequestsAtBoundary.length === 0
       );
       if (requireEvidence && !hasEvidence)
         throw new Error('Prewarm worker audit observed no executable blobs.');
       if (hasEvidence) {
-        if (auditMode !== 'prewarm')
-          blobAudit = await auditPage.evaluate(async (urls) => {
-            const audit = window.__gevCesiumWorkerBlobAuditV1;
-            if (!audit)
-              throw new Error(
-                'Receipt-verified page worker audit disappeared.',
-              );
-            return audit.readWorkerBodies(urls);
-          }, workerUrls);
         validation = validateCesiumWorkerBlobs({
           contract: captureWorkerContract,
           baseUrl: buildProvenanceOptions.baseUrl,
           workerUrls,
-          observedBlobUrls: [...auditState.blobUrls],
+          observedBlobUrls: blobRequestsAtBoundary,
           blobAudit,
           auditMode,
         });
@@ -983,6 +1005,19 @@ try {
         restoreAttestation = await auditPage.evaluate(
           restoreCesiumWorkerBlobAudit,
         );
+      if (lateWorkerTargetCount === null) {
+        workerTargetsAfterAudit = [...auditState.workerUrls];
+        blobRequestsAfterAudit = [...auditState.blobUrls];
+        const boundarySummary = summarizeWorkerAuditBoundary({
+          workerTargetsAtBoundary,
+          blobRequestsAtBoundary,
+          workerTargetsAfter: workerTargetsAfterAudit,
+          blobRequestsAfter: blobRequestsAfterAudit,
+        });
+        lateWorkerTargetCount = boundarySummary.lateWorkerTargetCount;
+        lateBlobRequestCount = boundarySummary.lateBlobRequestCount;
+        overflowAtCompletion = auditState.getOverflow();
+      }
       restorationSummary = {
         nativeCreateObjectURLRestored:
           restoreAttestation?.nativeCreateObjectURLRestored === true,
@@ -995,8 +1030,14 @@ try {
         auditedOverflowCount: metadata?.overflowCount ?? null,
         validatedCreatedScriptBlobCount:
           validation?.observation.createdScriptBlobCount ?? null,
-        observedWorkerTargetCount: auditState.workerUrls.size,
-        observedBlobRequestCount: auditState.blobUrls.size,
+        observedWorkerTargetCount: workerTargetsAtBoundary.length,
+        observedBlobRequestCount: blobRequestsAtBoundary.length,
+        lateWorkerTargetCount,
+        lateBlobRequestCount,
+        workerUrlOverflowAtCompletion:
+          overflowAtCompletion?.workerUrlOverflow ?? null,
+        blobUrlOverflowAtCompletion:
+          overflowAtCompletion?.blobUrlOverflow ?? null,
       };
       if (failureProgress.current)
         failureProgress.current.workerAuditRestoration = restorationSummary;

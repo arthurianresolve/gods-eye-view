@@ -13,6 +13,44 @@ export const MAX_WORKER_TARGETS = 64;
 export const MAX_WORKER_BLOB_BYTES = 2 * 1024 * 1024;
 export const MAX_WORKER_BLOB_TOTAL_BYTES = 32 * 1024 * 1024;
 
+/** Compare bounded host-observed targets around a frozen page-side audit. */
+export function summarizeWorkerAuditBoundary({
+  workerTargetsAtBoundary,
+  blobRequestsAtBoundary,
+  workerTargetsAfter,
+  blobRequestsAfter,
+} = {}) {
+  const arrays = [
+    workerTargetsAtBoundary,
+    blobRequestsAtBoundary,
+    workerTargetsAfter,
+    blobRequestsAfter,
+  ];
+  if (
+    arrays.some(
+      (values) =>
+        !Array.isArray(values) ||
+        values.length > 256 ||
+        values.some((value) => typeof value !== 'string' || value.length > 4096),
+    )
+  )
+    throw new TypeError('Worker audit boundary inputs exceed their bounds.');
+  const workersAtBoundary = new Set(workerTargetsAtBoundary);
+  const blobsAtBoundary = new Set(blobRequestsAtBoundary);
+  const workersAfter = new Set(workerTargetsAfter);
+  const blobsAfter = new Set(blobRequestsAfter);
+  return {
+    workerTargetCountAtBoundary: workersAtBoundary.size,
+    blobRequestCountAtBoundary: blobsAtBoundary.size,
+    lateWorkerTargetCount: [...workersAfter].filter(
+      (value) => !workersAtBoundary.has(value),
+    ).length,
+    lateBlobRequestCount: [...blobsAfter].filter(
+      (value) => !blobsAtBoundary.has(value),
+    ).length,
+  };
+}
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 function validateRelativePath(value) {
