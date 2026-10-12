@@ -156,3 +156,36 @@ each boundary. This is not a fresh rendered capture or performance acceptance.
 The current hosted receipt-only check for the preceding worker-count correction
 is [38313496758](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38313496758)
 at f2ef271d4aae0639fd08a8ac26e971d7993210d1; it does not include sampled-epoch code.
+
+# Paired cleanup revalidation and remaining failures
+
+Commit 12d0adf3f269782cda0e58bcd1bab93e50799775 makes paired-report ingestion
+recompute Austin cleanup from the complete release records, using the corrected
+producer consumer. Stored confirmed flags alone are insufficient. Tests reject
+missing and nonzero drain/error counters, mismatched document or session identity,
+uncompleted disposal and contradictory summaries. Root merged this checkpoint at
+f26a4e93f54604805fdf8bdf71291025d845bcc9 and independently passed all 74 focused
+capture, paired-report, fixture and cleanup checks.
+
+Receipt-only smoke [38313496758](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38313496758)
+at f2ef271d4aae0639fd08a8ac26e971d7993210d1 now passes startup worker identity
+verification. The candidate still fails the original 60-second Austin initial
+readiness gate. Its subsequent bounded state observation also times out, so this
+run does not identify loading progress or establish the cause. Both document
+interception cleanups are confirmed. There are no completed measurements.
+
+Standard [38312885340](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38312885340)
+at 35a8348b7441952cd3a9c60d2385f828636d7f38 finishes with six successful jobs
+and failed Windows recovery. In the final upgraded-application cycle, settings,
+workspace bundle and rendered imported asset checks match, but graceful Chrome
+process shutdown exceeds five seconds. The close request is acknowledged after
+35.4 ms and the browser disconnects after 52.1 ms; forced process termination is
+subsequently required. Three earlier recovery cycles close normally. This is a
+failed gate, and the underlying process-shutdown cause remains unresolved.
+The recovery JSON below is extracted from the job's QA_EVIDENCE markers; it is
+not a separately downloaded artifact.
+
+Preserved raw evidence:
+
+- [hosted-smoke-38313496758-cli-failed.json](hosted-smoke-38313496758-cli-failed.json): 34434 bytes; SHA-256 1f104f60ca5839de302b40bb485b21b02ea91f788a4e44d317ae15a7f30fea29.
+- [hosted-windows-recovery-38312885340.json](hosted-windows-recovery-38312885340.json): 8648 bytes; SHA-256 ee6c52dcbedd2c5cee84c2650e9f118c2810903627d86c97cb1555efc1fd965e.
