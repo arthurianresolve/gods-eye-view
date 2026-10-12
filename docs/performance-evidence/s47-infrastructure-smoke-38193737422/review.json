@@ -1,0 +1,114 @@
+{
+  "rawSha256": "9964bf00c83ec7bf0c643fecdea14a5543f2c8498b3fcd57c783c3b5f46284f1",
+  "rawBytes": 206126,
+  "appCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "harnessCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "independentReview": "Exact c21b3f21 validateCaptureCliReport passed against the complete retained raw report with infrastructure-dams expectations.",
+  "fixture": {
+    "schema": "gev-infrastructure-fixture-manifest/v1",
+    "id": "bundled-dams-static-v1",
+    "workloadId": "infrastructure-dams",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "assets": [
+      {
+        "id": "dams.geojsonl",
+        "path": "src/data/local_data/dams/dams.geojsonl",
+        "sha256": "f2b6f3166bee6dba4f0b569553a14c84faeb0048eb522bacd4d9c78e93d30d30",
+        "byteLength": 730280,
+        "sourceFeatureCount": 704
+      }
+    ],
+    "expectedLayerCounts": {
+      "local-dams": 716
+    },
+    "camera": {
+      "id": "world-infrastructure-overview-v1",
+      "longitudeDeg": 0,
+      "latitudeDeg": 0,
+      "altitudeM": 15000000,
+      "headingDeg": 0,
+      "pitchDeg": -90
+    },
+    "sha256": "bccfa5195affabf2a146e0c03fe2f42c9990710eeb8198edc958b7fd05d042a4",
+    "fixedTimeMs": 1791460800000,
+    "clock": {
+      "dayNumber": 2461322,
+      "secondsOfDay": 37
+    },
+    "selectedLayerIds": [
+      "local-dams"
+    ]
+  },
+  "observedPopulations": [
+    {
+      "id": "local-dams",
+      "enabled": true,
+      "count": 716
+    }
+  ],
+  "diagnosticDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    }
+  ],
+  "workerDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "validatedWorkerCount": 4,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    },
+    {
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "validatedWorkerCount": 8,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    }
+  ],
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "renderedFrameCount": 2,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "renderedFrameCount": 2,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "renderedFrameCount": 3,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "renderedFrameCount": 3,
+      "documentId": "main-measured-document"
+    }
+  ],
+  "comparisonEligible": false,
+  "readinessReasons": [
+    "warmup-is-not-30-seconds",
+    "measurement-is-not-60-seconds",
+    "capture-does-not-have-five-runs-per-scenario",
+    "hardware-performance-acceptance-was-not-requested-or-verified",
+    "receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented",
+    "latency-comparison-remains-disabled-pending-uninstrumented-capture"
+  ]
+}

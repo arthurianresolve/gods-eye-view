@@ -1,0 +1,35 @@
+Street Level browser gate	Keyboard, accessible names and reflow	﻿2026-10-12T01:54:17.2371784Z ##[group]Run npm run qa:accessibility -- --url http://localhost:4174
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.2372115Z ^[[36;1mnpm run qa:accessibility -- --url http://localhost:4174^[[0m
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.2425453Z shell: /usr/bin/bash -e {0}
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.2425610Z env:
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.2425735Z   GEV_REQUIRE_ALLOCATION_GATE: 0
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.2425882Z   QA_FAIL_ON_RETRY: 1
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.2426010Z ##[endgroup]
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.3114655Z 
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.3115355Z > gods-eye-view@0.2.1 qa:accessibility
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.3115741Z > node scripts/qa-accessibility.mjs --url http://localhost:4174
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:17.3115909Z 
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2789928Z {
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2805582Z   "scope": "automated-keyboard-ax-reflow",
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2806020Z   "status": "failed",
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2806272Z   "browser": "Chrome/152.0.7977.75",
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2806558Z   "timestamp": "2026-10-12T01:54:54.275Z",
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2806907Z   "failure": "Waiting failed: 30000ms exceeded",
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2807241Z   "surface": null,
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2807450Z   "lastControl": null,
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2807695Z   "humanReviewValidated": false
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.2807928Z }
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4059620Z file:///home/runner/work/gods-eye-view/gods-eye-view/node_modules/puppeteer-core/lib/puppeteer/common/WaitTask.js:46
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4060338Z             this.#timeoutError = new TimeoutError(`Waiting failed: ${options.timeout}ms exceeded`);
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4060730Z                                  ^
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4060882Z 
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4061053Z TimeoutError: Waiting failed: 30000ms exceeded
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4061679Z     at new WaitTask (file:///home/runner/work/gods-eye-view/gods-eye-view/node_modules/puppeteer-core/lib/puppeteer/common/WaitTask.js:46:34)
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4062262Z     at IsolatedWorld.waitForFunction (file:///home/runner/work/gods-eye-view/gods-eye-view/node_modules/puppeteer-core/lib/puppeteer/api/Realm.js:49:26)
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4062866Z     at CdpFrame.waitForFunction (file:///home/runner/work/gods-eye-view/gods-eye-view/node_modules/puppeteer-core/lib/puppeteer/api/Frame.js:585:43)
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4063458Z     at CdpFrame.<anonymous> (file:///home/runner/work/gods-eye-view/gods-eye-view/node_modules/puppeteer-core/lib/puppeteer/util/decorators.js:101:27)
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4064031Z     at CdpPage.waitForFunction (file:///home/runner/work/gods-eye-view/gods-eye-view/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:1537:37)
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4064487Z     at file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/qa-accessibility.mjs:61:14
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4064680Z 
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4064734Z Node.js v24.14.0
+Street Level browser gate	Keyboard, accessible names and reflow	2026-10-12T01:54:54.4205841Z ##[error]Process completed with exit code 1.

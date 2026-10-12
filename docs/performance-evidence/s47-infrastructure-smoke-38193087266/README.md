@@ -8,6 +8,11 @@ provider-interception and dense-population integration checks. The candidate's
 actual capture CLI additionally completes two idle and two scripted-motion
 samples of the datacenter workload.
 
+[Standard CI 38193089190](standard-ci.json) also passes all seven normal jobs
+at this exact revision: Node 24/26 tests and builds, Windows onboarding,
+Windows/macOS/Linux recovery and browser journeys. Optional jobs and the
+PR-only layer-token checks were skipped rather than passed.
+
 The repair supplies one consistent workload envelope to the report and its
 readiness validator. It binds all four infrastructure samples to
 `main-measured-document`, with separate startup and measured-document worker
@@ -33,8 +38,9 @@ The [CI job record](ci-run.json) preserves the tested revision and step results.
 The prior failed reports remain unchanged as historical evidence.
 
 This closes the demonstrated infrastructure producer/validator mismatch for
-the datacenter CLI smoke. Dams, cables and combined infrastructure still need
-their own executable workload checks. It does not complete S47 or qualify
+the datacenter CLI smoke. The [dam workload also passes](../s47-infrastructure-smoke-38193737422/README.md);
+cables and combined infrastructure still need their own executable checks.
+It does not complete S47 or qualify
 performance acceptance: the runner uses SwiftShader, one-second warmup and
 measurement windows, two repeats and worker instrumentation. The report keeps
 comparisonEligible=false and explicitly lists all six remaining readiness

@@ -1,0 +1,121 @@
+{
+  "rawSha256": "2a2dd039434dffbbfe4e79650aa37c83db51299e53dd58aa354e77ca0e491a98",
+  "rawBytes": 209150,
+  "appCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "harnessCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "independentReview": "Exact c21b3f21 validateCaptureCliReport passed against the complete retained raw report with infrastructure-cables expectations.",
+  "fixture": {
+    "schema": "gev-infrastructure-fixture-manifest/v1",
+    "id": "bundled-submarine-cables-static-v1",
+    "workloadId": "infrastructure-cables",
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "assets": [
+      {
+        "id": "cable-geo.json",
+        "path": "src/data/local_data/telegeography_submarine_cables/cable-geo.json",
+        "sha256": "3d28db104e57982e7ae67fabe66f2ff8dc01e137458454e0de0032a8878c6bad",
+        "byteLength": 728308,
+        "sourceFeatureCount": 712
+      },
+      {
+        "id": "landing-point-geo.json",
+        "path": "src/data/local_data/telegeography_submarine_cables/landing-point-geo.json",
+        "sha256": "11fc154189db51237099ffe1da2183984d666a906e5ed0e89b86421192eb622b",
+        "byteLength": 359269,
+        "sourceFeatureCount": 1917
+      }
+    ],
+    "expectedLayerCounts": {
+      "telegeography-submarine-cables": 2629
+    },
+    "camera": {
+      "id": "world-infrastructure-overview-v1",
+      "longitudeDeg": 0,
+      "latitudeDeg": 0,
+      "altitudeM": 15000000,
+      "headingDeg": 0,
+      "pitchDeg": -90
+    },
+    "sha256": "2d6bb7fe71135eff86592237046b0047aeb4ea0ded39647635f4a472b166abef",
+    "fixedTimeMs": 1791460800000,
+    "clock": {
+      "dayNumber": 2461322,
+      "secondsOfDay": 37
+    },
+    "selectedLayerIds": [
+      "telegeography-submarine-cables"
+    ]
+  },
+  "observedPopulations": [
+    {
+      "id": "telegeography-submarine-cables",
+      "enabled": true,
+      "count": 2629
+    }
+  ],
+  "diagnosticDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    }
+  ],
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "renderedFrameCount": 2,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "renderedFrameCount": 2,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "renderedFrameCount": 3,
+      "documentId": "main-measured-document"
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "renderedFrameCount": 4,
+      "documentId": "main-measured-document"
+    }
+  ],
+  "comparisonEligible": false,
+  "readinessReasons": [
+    "warmup-is-not-30-seconds",
+    "measurement-is-not-60-seconds",
+    "capture-does-not-have-five-runs-per-scenario",
+    "hardware-performance-acceptance-was-not-requested-or-verified",
+    "receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented",
+    "latency-comparison-remains-disabled-pending-uninstrumented-capture"
+  ],
+  "workerDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "validatedWorkerCount": 4,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    },
+    {
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "validatedWorkerCount": 8,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    }
+  ]
+}
