@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { infrastructureFixtureLayer } from '../fixtures/infrastructureFixtureLayer.mjs';
 import { runInfrastructurePickPathControls } from '../fixtures/infrastructurePickPathDiagnostic.mjs';
+import { createInfrastructureCurrentUpdateReadinessEnvelope } from '../fixtures/infrastructureCurrentUpdateReadiness.mjs';
 import {
   countInfrastructureGraphics,
   createInfrastructureSampleReadiness,
@@ -396,6 +397,110 @@ test('primitive-readiness instrumentation is never eligible for runtime acceptan
         expectedLayerId: 'local-datacenters',
       }),
     /not acceptance eligible/,
+  );
+});
+
+function currentUpdateReadinessReport() {
+  const report = validReport('local-datacenters');
+  const envelope = createInfrastructureCurrentUpdateReadinessEnvelope();
+  envelope.status = 'complete';
+  for (const [index, diagnosticLifetime] of envelope.lifetimes.entries()) {
+    const runtimeLifetime = report.lifetimes[index];
+    diagnosticLifetime.available = true;
+    diagnosticLifetime.cleanupConfirmed = true;
+    const allIdentities = [
+      'default-style',
+      'camera-lod-update-baseline',
+      'camera-lod-update',
+    ].flatMap((caseId) =>
+      Array.from({ length: INFRASTRUCTURE_RUNTIME_PAIRS }, (_, pair) => ({
+        caseId,
+        pair,
+      })),
+    );
+    diagnosticLifetime.finalObserverState = {
+      schema: 'gev-infrastructure-current-update-readiness/v1',
+      available: true,
+      cleanupConfirmed: true,
+      updateRestoreStatus: 'restored',
+      generationCount: allIdentities.length,
+      updateCallCount: allIdentities.length,
+      collectionRevision: 2,
+      completedRenderRevision: allIdentities.length,
+      installErrorName: null,
+    };
+    const captureByIdentity = new Map();
+    for (const [sampleIndex, identity] of allIdentities.entries()) {
+      const generation = sampleIndex + 1;
+      const capture = {
+        completedRenderRevision: generation,
+        updateSequenceAtPreRender: generation,
+        updateSequenceAtPostRender: generation,
+        updateGeneration: generation,
+        generationAtPreRender: generation,
+        generationAtPostRender: generation,
+        updateReturnedBoolean: true,
+        updateErrorName: null,
+        collectionRevisionAtUpdateEntry: 2,
+        collectionRevisionAtUpdateReturn: 2,
+        collectionRevisionAtPreRender: 2,
+        collectionRevisionAtPostRender: 2,
+        updateOccurredForFrame: true,
+      };
+      diagnosticLifetime.samples.push({
+        ...identity,
+        status: 'settled',
+        generation,
+        capture,
+        captureFrameErrorName: null,
+        lastObserverSnapshot: null,
+        currentUpdateReadyForGeneration: true,
+        latchedDataSourceDisplayReady: true,
+      });
+      captureByIdentity.set(`${identity.caseId}\u0000${identity.pair}`, {
+        generation,
+        capture,
+        currentUpdateReadyForGeneration: true,
+        latchedDataSourceDisplayReady: true,
+      });
+    }
+    for (const runtimeSample of runtimeLifetime.samples)
+      runtimeSample.currentUpdateReadiness = captureByIdentity.get(
+        `${runtimeSample.caseId}\u0000${runtimeSample.pair}`,
+      );
+  }
+  report.instrumentation = { currentUpdateReadiness: envelope };
+  return report;
+}
+
+test('current-update instrumentation remains diagnostic-only and is bound to sample frames', () => {
+  const report = currentUpdateReadinessReport();
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(report, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+      }),
+    /not acceptance eligible/,
+  );
+  assert.equal(
+    validateInfrastructureRuntimeReport(report, {
+      expectedCommit: commit,
+      expectedLayerId: 'local-datacenters',
+      allowCurrentUpdateReadinessDiagnostic: true,
+    }),
+    true,
+  );
+  const forged = structuredClone(report);
+  forged.instrumentation.currentUpdateReadiness.lifetimes[0].samples[0].capture.updateReturnedBoolean = false;
+  assert.throws(
+    () =>
+      validateInfrastructureRuntimeReport(forged, {
+        expectedCommit: commit,
+        expectedLayerId: 'local-datacenters',
+        allowCurrentUpdateReadinessDiagnostic: true,
+      }),
+    /readiness does not match|not bound to a current/,
   );
 });
 

@@ -37,6 +37,13 @@ import {
   selectPrimitiveReadinessTargets,
 } from './infrastructurePrimitiveReadinessDiagnostic.mjs';
 import {
+  createInfrastructureCurrentUpdateReadinessEnvelope,
+  createInfrastructureCurrentUpdateReadinessSample,
+  infrastructureCurrentUpdateReadinessRequested,
+  installInfrastructureCurrentUpdateReadinessObserver,
+  readInfrastructureCurrentUpdateWitness,
+} from './infrastructureCurrentUpdateReadiness.mjs';
+import {
   countInfrastructureGraphics,
   compareInfrastructureRuntimeLifetimes,
   createInfrastructureSampleReadiness,
@@ -47,11 +54,14 @@ import {
 } from '../performance/infrastructureRuntimeComparison.mjs';
 
 const FRAME_TIMEOUT_MS = 400;
+const CURRENT_UPDATE_SAMPLE_LIMIT = 64;
 const fixtureSearchParams = new URLSearchParams(location.search);
 const pickPathDiagnosticEnabled =
   pickPathDiagnosticRequested(fixtureSearchParams);
 const primitiveReadinessDiagnosticEnabled =
   infrastructurePrimitiveReadinessDiagnosticRequested(fixtureSearchParams);
+const currentUpdateReadinessDiagnosticEnabled =
+  infrastructureCurrentUpdateReadinessRequested(fixtureSearchParams);
 const fixtureLayer = infrastructureFixtureLayer(
   fixtureSearchParams.get('layerId') ||
     DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
@@ -930,6 +940,11 @@ async function runLayerLifetime(
     report,
     mode,
   );
+  let currentUpdateReadinessObserver = null;
+  const currentUpdateReadinessLifetime =
+    report.instrumentation?.currentUpdateReadiness?.lifetimes.find(
+      (item) => item.mode === mode,
+    );
   const ownersBefore = scanOwners(viewer, layer.layerId);
   lifetime.sceneBaseline = {
     dataSources: viewer.dataSources.length,
@@ -988,6 +1003,18 @@ async function runLayerLifetime(
       records.length === layer.surfaceCount,
       `Expected all ${layer.surfaceCount} ${layer.layerId} surface identities; received ${records.length}.`,
     );
+    if (currentUpdateReadinessLifetime) {
+      currentUpdateReadinessObserver =
+        installInfrastructureCurrentUpdateReadinessObserver({
+          dataSourceDisplay: viewer.dataSourceDisplay,
+          scene: viewer.scene,
+          entityCollection: dataSource.entities,
+        });
+      currentUpdateReadinessLifetime.available =
+        currentUpdateReadinessObserver.available;
+      currentUpdateReadinessLifetime.installErrorName =
+        currentUpdateReadinessObserver.installErrorName;
+    }
     let collections =
       mode === 'primitive-collections'
         ? findProductionCollection(viewer, layer.layerId)
@@ -1062,6 +1089,8 @@ async function runLayerLifetime(
       recordSample = true,
     ) => {
       const deadline = performance.now() + 8000;
+      const currentUpdateGeneration =
+        currentUpdateReadinessObserver?.beginGeneration().generation ?? null;
       const readiness = createInfrastructureSampleReadiness();
       let completedCaptures = 0;
       let pickSearches = 0;
@@ -1077,15 +1106,65 @@ async function runLayerLifetime(
       let lodDiagnostics = null;
       let cameraPosition = null;
       let sceneReadiness = null;
+      let currentUpdateReadyForGeneration = currentUpdateReadinessLifetime
+        ? false
+        : null;
+      let currentUpdateLastObserverSnapshot = null;
       while (performance.now() < deadline) {
-        finalFrame = await captureFrame(
-          viewer,
-          pickPathDiagnostic?.renderRevisionObserver.available
-            ? () => pickPathDiagnostic.renderRevisionObserver.read()
-            : null,
-        );
+        try {
+          finalFrame = await captureFrame(
+            viewer,
+            currentUpdateReadinessObserver?.available
+              ? () => currentUpdateReadinessObserver.read()
+              : pickPathDiagnostic?.renderRevisionObserver.available
+                ? () => pickPathDiagnostic.renderRevisionObserver.read()
+                : null,
+          );
+        } catch (error) {
+          if (
+            currentUpdateReadinessLifetime &&
+            currentUpdateReadinessLifetime.samples.length <
+              CURRENT_UPDATE_SAMPLE_LIMIT
+          ) {
+            const witness = readInfrastructureCurrentUpdateWitness(
+              currentUpdateReadinessObserver,
+              currentUpdateGeneration,
+            );
+            currentUpdateLastObserverSnapshot = witness.snapshot;
+            currentUpdateReadinessLifetime.samples.push(
+              createInfrastructureCurrentUpdateReadinessSample({
+                caseId,
+                pair,
+                status: 'failed',
+                generation: currentUpdateGeneration,
+                capture: null,
+                lastObserverSnapshot: witness.snapshot,
+                captureFrameErrorName: [
+                  'TypeError',
+                  'DeveloperError',
+                  'RangeError',
+                ].includes(error?.name)
+                  ? error.name
+                  : 'Error',
+                currentUpdateReadyForGeneration: false,
+                latchedDataSourceDisplayReady:
+                  viewer.dataSourceDisplay.ready === true,
+              }),
+            );
+          }
+          throw error;
+        }
         completedCaptures++;
         const captureFrameState = finalFrame.completedFrameState || null;
+        if (currentUpdateReadinessLifetime) {
+          const witness = readInfrastructureCurrentUpdateWitness(
+            currentUpdateReadinessObserver,
+            currentUpdateGeneration,
+          );
+          currentUpdateLastObserverSnapshot = witness.snapshot;
+          currentUpdateReadyForGeneration =
+            !finalFrame.completedFrameStateErrorName && witness.ready;
+        }
         if (pickRow) selectionRendered = true;
         rows = readRows();
         const hash = await sha256(
@@ -1103,7 +1182,10 @@ async function runLayerLifetime(
           (!changedGeometryFrom || hash !== changedGeometryFrom) &&
           infrastructureCameraRevisionReady(lodDiagnostics, cameraPosition) &&
           sceneReadiness.dataSourcesReady === true &&
-          sceneReadiness.globeTilesLoaded === true;
+          sceneReadiness.globeTilesLoaded === true &&
+          (currentUpdateReadinessLifetime
+            ? currentUpdateReadyForGeneration === true
+            : true);
         stableFrames = readiness.observe(signature, {
           inputsReady: geometryReady,
         });
@@ -1206,6 +1288,20 @@ async function runLayerLifetime(
           lodDiagnostics,
           cameraPosition,
           sceneReadiness,
+          captureFrameStateErrorName:
+            finalFrame?.completedFrameStateErrorName ?? null,
+          ...(currentUpdateReadinessLifetime
+            ? {
+                currentUpdateReadiness: {
+                  generation: currentUpdateGeneration,
+                  capture: finalFrame?.completedFrameState ?? null,
+                  currentUpdateReadyForGeneration:
+                    currentUpdateReadyForGeneration === true,
+                  latchedDataSourceDisplayReady:
+                    sceneReadiness?.dataSourcesReady === true,
+                },
+              }
+            : {}),
           pointPick: pointPick || null,
           stemPick: stemPick || null,
           surfaceCount: rows.length,
@@ -1224,6 +1320,27 @@ async function runLayerLifetime(
               }
             : null,
         };
+        if (
+          currentUpdateReadinessLifetime &&
+          currentUpdateReadinessLifetime.samples.length <
+            CURRENT_UPDATE_SAMPLE_LIMIT
+        )
+          currentUpdateReadinessLifetime.samples.push(
+            createInfrastructureCurrentUpdateReadinessSample({
+              caseId,
+              pair,
+              status: 'failed',
+              generation: currentUpdateGeneration,
+              capture: finalFrame?.completedFrameState ?? null,
+              lastObserverSnapshot: currentUpdateLastObserverSnapshot,
+              captureFrameErrorName:
+                finalFrame?.completedFrameStateErrorName ?? null,
+              currentUpdateReadyForGeneration:
+                currentUpdateReadyForGeneration === true,
+              latchedDataSourceDisplayReady:
+                sceneReadiness?.dataSourcesReady === true,
+            }),
+          );
         if (primitiveReadinessDiagnostic) Object.freeze(lifetime.failedSample);
         if (primitiveReadinessDiagnostic) {
           const targets = selectPrimitiveReadinessTargets(rows);
@@ -1385,6 +1502,18 @@ async function runLayerLifetime(
         lodDiagnostics,
         cameraPosition,
         sceneReadiness,
+        ...(currentUpdateReadinessLifetime
+          ? {
+              currentUpdateReadiness: {
+                generation: currentUpdateGeneration,
+                capture: finalFrame?.completedFrameState ?? null,
+                currentUpdateReadyForGeneration:
+                  currentUpdateReadyForGeneration === true,
+                latchedDataSourceDisplayReady:
+                  sceneReadiness?.dataSourcesReady === true,
+              },
+            }
+          : {}),
         pixelSha256: finalFrame.pixelSha256,
         pngBase64: finalFrame.pngBase64,
         pixelDifferenceCount: finalFrame.pixelsDifferentFromCorner,
@@ -1409,6 +1538,22 @@ async function runLayerLifetime(
         layerResourceDiagnostics: targetLayer.getPerformanceDiagnostics(),
         entitySelectionIdentity: String(viewer.selectedEntity?.id || ''),
       };
+      if (
+        currentUpdateReadinessLifetime &&
+        currentUpdateReadinessLifetime.samples.length <
+          CURRENT_UPDATE_SAMPLE_LIMIT
+      )
+        currentUpdateReadinessLifetime.samples.push(
+          createInfrastructureCurrentUpdateReadinessSample({
+            caseId,
+            pair,
+            status: 'settled',
+            captureFrameErrorName:
+              finalFrame?.completedFrameStateErrorName ?? null,
+            lastObserverSnapshot: currentUpdateLastObserverSnapshot,
+            ...row.currentUpdateReadiness,
+          }),
+        );
       check(
         row.entitySelectionIdentity === pickRow.entityId,
         'Native Entity selection identity differs from the pick.',
@@ -1449,6 +1594,15 @@ async function runLayerLifetime(
     };
     throw error;
   } finally {
+    if (currentUpdateReadinessObserver) {
+      const cleanupConfirmed = currentUpdateReadinessObserver.dispose();
+      restored &&= cleanupConfirmed;
+      if (currentUpdateReadinessLifetime) {
+        currentUpdateReadinessLifetime.cleanupConfirmed = cleanupConfirmed;
+        currentUpdateReadinessLifetime.finalObserverState =
+          currentUpdateReadinessObserver.snapshot();
+      }
+    }
     for (const layer of layers) {
       try {
         layer.destroy(viewer);
@@ -1533,8 +1687,12 @@ async function runLayerLifetime(
 
 async function runDiagnostic() {
   check(
-    !(pickPathDiagnosticEnabled && primitiveReadinessDiagnosticEnabled),
-    'Primitive-readiness and pick-path diagnostics must run separately.',
+    [
+      pickPathDiagnosticEnabled,
+      primitiveReadinessDiagnosticEnabled,
+      currentUpdateReadinessDiagnosticEnabled,
+    ].filter(Boolean).length <= 1,
+    'Infrastructure diagnostics must run separately.',
   );
   const report = {
     schema: fixtureLayer.schema,
@@ -1554,7 +1712,9 @@ async function runDiagnostic() {
     comparisons: [],
     cleanup: { viewerDestroyed: false },
     error: null,
-    ...(pickPathDiagnosticEnabled || primitiveReadinessDiagnosticEnabled
+    ...(pickPathDiagnosticEnabled ||
+    primitiveReadinessDiagnosticEnabled ||
+    currentUpdateReadinessDiagnosticEnabled
       ? {
           instrumentation: {
             ...(pickPathDiagnosticEnabled
@@ -1587,6 +1747,12 @@ async function runDiagnostic() {
               ? {
                   primitiveReadinessDiagnostic:
                     createInfrastructurePrimitiveReadinessEnvelope(),
+                }
+              : {}),
+            ...(currentUpdateReadinessDiagnosticEnabled
+              ? {
+                  currentUpdateReadiness:
+                    createInfrastructureCurrentUpdateReadinessEnvelope(),
                 }
               : {}),
           },
@@ -1692,11 +1858,48 @@ async function runDiagnostic() {
         ? 'partial-or-diagnostic-error'
         : 'not-triggered';
   }
+  const currentUpdateReadinessEnvelope =
+    report.instrumentation?.currentUpdateReadiness;
+  if (currentUpdateReadinessEnvelope) {
+    const expectedSamples = [
+      'default-style',
+      'camera-lod-update-baseline',
+      'camera-lod-update',
+    ].flatMap((caseId) =>
+      Array.from(
+        { length: INFRASTRUCTURE_RUNTIME_PAIRS },
+        (_, pair) => `${caseId}\u0000${pair}`,
+      ),
+    );
+    currentUpdateReadinessEnvelope.status =
+      currentUpdateReadinessEnvelope.lifetimes.length === 2 &&
+      currentUpdateReadinessEnvelope.lifetimes.every(
+        (item) =>
+          item.available === true &&
+          item.cleanupConfirmed === true &&
+          item.samples.length === expectedSamples.length &&
+          expectedSamples.every((identity) =>
+            item.samples.some(
+              (sample) => `${sample.caseId}\u0000${sample.pair}` === identity,
+            ),
+          ) &&
+          item.samples.every(
+            (sample) =>
+              sample.status === 'settled' &&
+              sample.captureFrameErrorName === null &&
+              sample.currentUpdateReadyForGeneration === true,
+          ),
+      )
+        ? 'complete'
+        : 'partial-or-diagnostic-error';
+  }
   if (report.status === 'passed') {
     try {
       validateInfrastructureRuntimeReport(report, {
         expectedCommit: report.applicationCommit,
         allowPickPathDiagnostic: pickPathDiagnosticEnabled,
+        allowCurrentUpdateReadinessDiagnostic:
+          currentUpdateReadinessDiagnosticEnabled,
       });
     } catch (error) {
       report.status = 'failed';

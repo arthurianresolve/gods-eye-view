@@ -5,6 +5,7 @@ import {
   infrastructureFixtureLayer,
 } from '../fixtures/infrastructureFixtureLayer.mjs';
 import { validateInfrastructurePickPathEnvelope } from '../fixtures/infrastructurePickPathDiagnostic.mjs';
+import { validateInfrastructureCurrentUpdateReadinessEnvelope } from '../fixtures/infrastructureCurrentUpdateReadiness.mjs';
 
 export const INFRASTRUCTURE_RUNTIME_SCHEMA =
   'gev-infrastructure-runtime-renderers/v4';
@@ -257,10 +258,20 @@ function validateLifetime(lifetime, report, layer) {
 
 export function validateInfrastructureRuntimeReport(
   report,
-  { expectedCommit, expectedLayerId, allowPickPathDiagnostic = false } = {},
+  {
+    expectedCommit,
+    expectedLayerId,
+    allowPickPathDiagnostic = false,
+    allowCurrentUpdateReadinessDiagnostic = false,
+  } = {},
 ) {
   if (!/^[a-f0-9]{40}$/.test(expectedCommit || ''))
     fail('An exact application commit is required.');
+  if (
+    allowPickPathDiagnostic === true &&
+    allowCurrentUpdateReadinessDiagnostic === true
+  )
+    fail('Infrastructure diagnostics must run separately.');
   if (
     report.applicationCommit !== expectedCommit ||
     report.harnessCommit !== expectedCommit
@@ -298,24 +309,78 @@ export function validateInfrastructureRuntimeReport(
   if (report.status !== 'passed' || report.error || report.failedPhase)
     fail('Infrastructure runtime comparison did not pass.');
   if (report.instrumentation !== undefined) {
+    const pickPath = Object.hasOwn(
+      report.instrumentation || {},
+      'pickPathDiagnostic',
+    );
+    const currentUpdate = Object.hasOwn(
+      report.instrumentation || {},
+      'currentUpdateReadiness',
+    );
     if (
-      allowPickPathDiagnostic !== true ||
       !report.instrumentation ||
       Object.keys(report.instrumentation).length !== 1 ||
-      !Object.hasOwn(report.instrumentation, 'pickPathDiagnostic')
+      (pickPath && allowPickPathDiagnostic !== true) ||
+      (currentUpdate && allowCurrentUpdateReadinessDiagnostic !== true) ||
+      (!pickPath && !currentUpdate)
     )
       fail('Instrumented infrastructure reports are not acceptance eligible.');
-    try {
-      validateInfrastructurePickPathEnvelope(
-        report.instrumentation.pickPathDiagnostic,
-      );
-      if (report.instrumentation.pickPathDiagnostic.status !== 'complete')
-        fail('Requested infrastructure pick-path diagnostic is incomplete.');
-    } catch (error) {
-      fail(error?.message || 'Infrastructure pick-path diagnostic is invalid.');
+    if (pickPath) {
+      try {
+        validateInfrastructurePickPathEnvelope(
+          report.instrumentation.pickPathDiagnostic,
+        );
+        if (report.instrumentation.pickPathDiagnostic.status !== 'complete')
+          fail('Requested infrastructure pick-path diagnostic is incomplete.');
+      } catch (error) {
+        fail(
+          error?.message || 'Infrastructure pick-path diagnostic is invalid.',
+        );
+      }
+    } else {
+      try {
+        const envelope = validateInfrastructureCurrentUpdateReadinessEnvelope(
+          report.instrumentation.currentUpdateReadiness,
+        );
+        if (envelope.status !== 'complete')
+          fail('Requested current-update readiness diagnostic is incomplete.');
+        for (const lifetime of report.lifetimes || []) {
+          const diagnosticLifetime = envelope.lifetimes.find(
+            (item) => item.mode === lifetime.mode,
+          );
+          for (const sample of lifetime.samples || []) {
+            const observed = diagnosticLifetime?.samples.find(
+              (item) =>
+                item.caseId === sample.caseId && item.pair === sample.pair,
+            );
+            if (
+              sample.currentUpdateReadiness?.currentUpdateReadyForGeneration !==
+                true ||
+              !observed ||
+              observed.generation !==
+                sample.currentUpdateReadiness.generation ||
+              observed.latchedDataSourceDisplayReady !==
+                sample.currentUpdateReadiness.latchedDataSourceDisplayReady ||
+              observed.captureFrameErrorName !== null ||
+              observed.currentUpdateReadyForGeneration !== true ||
+              JSON.stringify(observed.capture) !==
+                JSON.stringify(sample.currentUpdateReadiness.capture)
+            )
+              fail('Sample is not bound to a current update-ready frame.');
+          }
+        }
+      } catch (error) {
+        fail(
+          error?.message ||
+            'Infrastructure current-update readiness diagnostic is invalid.',
+        );
+      }
     }
-  } else if (allowPickPathDiagnostic === true) {
-    fail('Requested pick-path diagnostic evidence is missing.');
+  } else if (
+    allowPickPathDiagnostic === true ||
+    allowCurrentUpdateReadinessDiagnostic === true
+  ) {
+    fail('Requested infrastructure diagnostic evidence is missing.');
   }
   if (
     !Number.isSafeInteger(report.source?.payloadBytes) ||

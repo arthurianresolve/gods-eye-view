@@ -1024,6 +1024,8 @@
   "scripts/fixtures/infrastructure-collections-ui.js",
   "scripts/fixtures/infrastructure-runtime-collections.html",
   "scripts/fixtures/infrastructure-runtime-collections.mjs",
+  "scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs",
+  "scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs",
   "scripts/fixtures/infrastructurePickPathDiagnostic.mjs",
   "scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs",
   "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs",

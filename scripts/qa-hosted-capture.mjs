@@ -17,6 +17,10 @@ import {
   infrastructurePrimitiveReadinessDiagnosticOptionEnabled,
   validateInfrastructurePrimitiveReadinessReport,
 } from './fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs';
+import {
+  infrastructureCurrentUpdateReadinessOptionEnabled,
+  validateInfrastructureCurrentUpdateReadinessEnvelope,
+} from './fixtures/infrastructureCurrentUpdateReadiness.mjs';
 import { validateVesselRenderDemandReport } from './performance/vesselRenderDemand.mjs';
 import { validateCctvCalibrationDemandReport } from './performance/cctvCalibrationDemand.mjs';
 import { driveNativePointerFixture } from './performance/nativePointerFixture.mjs';
@@ -39,6 +43,8 @@ const infrastructurePickPathDiagnostic =
   infrastructurePickPathDiagnosticOptionEnabled(process.argv);
 const infrastructurePrimitiveReadinessDiagnostic =
   infrastructurePrimitiveReadinessDiagnosticOptionEnabled(process.argv);
+const infrastructureCurrentUpdateReadinessDiagnostic =
+  infrastructureCurrentUpdateReadinessOptionEnabled(process.argv);
 const commit = process.env.GITHUB_SHA;
 let server;
 let serverError = null;
@@ -319,6 +325,11 @@ try {
           'primitive-readiness-diagnostic',
           '1',
         );
+      if (infrastructureCurrentUpdateReadinessDiagnostic)
+        infrastructureUrl.searchParams.set(
+          'current-update-readiness-diagnostic',
+          '1',
+        );
       await page.goto(infrastructureUrl.href, { waitUntil: 'networkidle0' });
       await page.waitForFunction(
         () => document.querySelector('#result')?.textContent,
@@ -328,6 +339,16 @@ try {
         '#result',
         (element) => JSON.parse(element.textContent),
       );
+      if (infrastructureCurrentUpdateReadinessDiagnostic)
+        validateInfrastructureCurrentUpdateReadinessEnvelope(
+          report.infrastructureDatacenters.instrumentation
+            ?.currentUpdateReadiness,
+          {
+            allowPartial:
+              report.infrastructureDatacenters.instrumentation
+                ?.currentUpdateReadiness?.status !== 'complete',
+          },
+        );
       if (infrastructurePrimitiveReadinessDiagnostic)
         validateInfrastructurePrimitiveReadinessReport(
           report.infrastructureDatacenters,
@@ -348,6 +369,8 @@ try {
         expectedCommit: commit,
         expectedLayerId: DATACENTER_INFRASTRUCTURE_FIXTURE_LAYER_ID,
         allowPickPathDiagnostic: infrastructurePickPathDiagnostic,
+        allowCurrentUpdateReadinessDiagnostic:
+          infrastructureCurrentUpdateReadinessDiagnostic,
       });
     }
     if (process.argv.includes('--wind') && report.hardwareRenderingAvailable) {
