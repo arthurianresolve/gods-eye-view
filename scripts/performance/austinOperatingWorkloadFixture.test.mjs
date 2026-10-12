@@ -580,6 +580,9 @@ test('Austin readiness failure snapshot reports bounded native layer status with
         enabled: true,
         count: 828,
         loading: false,
+        loadingLoaded: null,
+        loadingTotal: null,
+        ownership: null,
         status: null,
         error: null,
       },
@@ -588,12 +591,78 @@ test('Austin readiness failure snapshot reports bounded native layer status with
         enabled: true,
         count: 65160,
         loading: true,
+        loadingLoaded: null,
+        loadingTotal: null,
+        ownership: null,
         status: 'loading',
         error: 'Failed at [url]',
       },
     ]);
     assert.equal(JSON.stringify(snapshot).includes('fixture.invalid'), false);
     assert.equal(JSON.stringify(snapshot).includes('secret'), false);
+  } finally {
+    if (prior) Object.defineProperty(globalThis, 'window', prior);
+    else delete globalThis.window;
+  }
+});
+
+test('failed CCTV readiness preserves native geometry progress and bounded ownership', () => {
+  const prior = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  let throwOwnership = false;
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      __godsEyeView: {
+        dataManager: {
+          isEnabled: () => true,
+          layers: new Map([
+            [
+              'cctv',
+              {
+                module: {
+                  getStats: () => ({
+                    count: 250,
+                    loading: true,
+                    loadingLoaded: 123,
+                    loadingTotal: 250,
+                  }),
+                  getPerformanceDiagnostics: () => {
+                    if (throwOwnership)
+                      throw new Error('Unavailable optional metrics');
+                    return {
+                      timers: 2,
+                      pendingJobs: 127,
+                      primitives: Infinity,
+                      dataSources: -1,
+                      secret: 'omitted',
+                    };
+                  },
+                },
+              },
+            ],
+          ]),
+        },
+      },
+    },
+  });
+  try {
+    const snapshot = observeAustinOperatingReadinessFailure(['cctv']);
+    assert.equal(snapshot.layers[0].loadingLoaded, 123);
+    assert.equal(snapshot.layers[0].loadingTotal, 250);
+    assert.deepEqual(snapshot.layers[0].ownership, {
+      timers: 2,
+      pendingJobs: 127,
+      primitives: null,
+      dataSources: null,
+    });
+    assert.equal(JSON.stringify(snapshot).includes('secret'), false);
+    throwOwnership = true;
+    const unavailable = observeAustinOperatingReadinessFailure(['cctv'])
+      .layers[0];
+    assert.equal(unavailable.loadingLoaded, 123);
+    assert.equal(unavailable.loadingTotal, 250);
+    assert.equal(unavailable.ownership, null);
+    assert.equal(unavailable.error, null);
   } finally {
     if (prior) Object.defineProperty(globalThis, 'window', prior);
     else delete globalThis.window;

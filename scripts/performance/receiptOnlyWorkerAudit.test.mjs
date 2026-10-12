@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import test from 'node:test';
 import {
@@ -7,6 +8,7 @@ import {
   validateReceiptOnlyWorkerAuditEnvelope,
 } from './receiptOnlyWorkerAudit.mjs';
 import { getCaptureReadinessReasons } from './captureComparisonContract.mjs';
+import { deriveCesiumEmbeddedWorkerContract } from './cesiumWorkerBlobContract.mjs';
 
 const identity = {
   documentRole: 'provider-sample-1',
@@ -89,6 +91,46 @@ test('receipt-only audit records receipt-derived worker identity without page ho
   for (const value of Object.values(document.pageInstrumentation))
     if (typeof value === 'boolean') assert.equal(value, false);
   assert.equal(validate(makeEnvelope()), true);
+});
+
+test('receipt-only audit consumes the actual receipt-derived Cesium worker contract', () => {
+  const workerSource = 'self.postMessage("ready");';
+  const bundleBytes = Buffer.from(
+    `globalThis.CESIUM_WORKERS=atob("${Buffer.from(workerSource).toString('base64')}");`,
+  );
+  const embeddedWorkerContract = deriveCesiumEmbeddedWorkerContract({
+    bundlePath: 'cesium/Cesium.js',
+    bundleBytes,
+    assets: [
+      {
+        path: 'cesium/Cesium.js',
+        bytes: bundleBytes.length,
+        sha256: createHash('sha256').update(bundleBytes).digest('hex'),
+      },
+      ...['createGeometry', 'transferTypedArrayTest'].map((id) => ({
+        path: `cesium/Workers/${id}.js`,
+        bytes: 1,
+        sha256: '0'.repeat(64),
+      })),
+    ],
+  });
+  const document = createReceiptOnlyWorkerAuditDocument({
+    ...identity,
+    embeddedWorkerContract,
+  });
+  assert.equal(document.workerSource.allowedModuleCount, 2);
+  assert.equal(
+    document.workerSource.allowedModuleCount,
+    embeddedWorkerContract.allowedModuleIds.length,
+  );
+  assert.equal(
+    document.workerSource.workerSourceSha256,
+    createHash('sha256').update(workerSource).digest('hex'),
+  );
+  assert.equal(
+    document.workerSource.liveBlobBodyAttestation,
+    'unavailable-by-design',
+  );
 });
 
 test('capture event collector validates live receipt paths and rejects late executable requests', () => {

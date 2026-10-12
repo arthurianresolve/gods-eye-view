@@ -44,18 +44,42 @@ export function observeAustinOperatingReadinessFailure(selectedLayerIds) {
         enabled: false,
         count: null,
         loading: null,
+        loadingLoaded: null,
+        loadingTotal: null,
+        ownership: null,
         status: null,
         error: null,
       };
       try {
         const entry = manager?.layers?.get?.(id);
         const stats = entry?.module?.getStats?.() ?? entry?.stats ?? null;
+        let counts = null;
+        try {
+          if (id === 'cctv')
+            counts = entry?.module?.getPerformanceDiagnostics?.() ?? null;
+        } catch {
+          // Optional ownership diagnostics must not erase native loading state.
+        }
+        const boundedCount = (value) =>
+          Number.isSafeInteger(value) && value >= 0 && value <= 1000000
+            ? value
+            : null;
         const error = stats?.error ?? entry?.error ?? null;
         layer = {
           id: String(id).slice(0, 80),
           enabled: manager?.isEnabled?.(id) === true,
           count: Number.isSafeInteger(stats?.count) ? stats.count : null,
           loading: typeof stats?.loading === 'boolean' ? stats.loading : null,
+          loadingLoaded: boundedCount(stats?.loadingLoaded),
+          loadingTotal: boundedCount(stats?.loadingTotal),
+          ownership: counts
+            ? {
+                timers: boundedCount(counts.timers),
+                pendingJobs: boundedCount(counts.pendingJobs),
+                primitives: boundedCount(counts.primitives),
+                dataSources: boundedCount(counts.dataSources),
+              }
+            : null,
           status:
             typeof stats?.status === 'string'
               ? stats.status.slice(0, 80)
