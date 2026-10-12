@@ -1,11 +1,13 @@
-import { withHostTimeout } from './startupDiagnostics.mjs';
+import { createFixtureInterceptionErrorRecorder } from './fixtureInterception.mjs';
 
 const STATE_KEY = '__gevRecoveryEarlyRendererProbe';
+const CLEANUP_PROOF_KEY = '__gevRecoveryEarlyRendererProbeCleanupProof';
 
 /** Install an opt-in, one-shot hook on Cesium's real widget canvas only. */
 export async function installEarlyCesiumRendererProbe(page) {
-  const handle = await page.evaluateOnNewDocument(() => {
+  const handle = await page.evaluateOnNewDocument((proofKey) => {
     const key = '__gevRecoveryEarlyRendererProbe';
+    delete window[proofKey];
     const prototype = HTMLCanvasElement.prototype;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'getContext');
     const nativeGetContext = descriptor?.value;
@@ -24,6 +26,7 @@ export async function installEarlyCesiumRendererProbe(page) {
       parameterQueryCount: 0,
       queryDurationMs: null,
       error: null,
+      nativeGetContext,
       canvas: null,
       context: null,
       listeners: [],
@@ -101,7 +104,7 @@ export async function installEarlyCesiumRendererProbe(page) {
         return context;
       },
     });
-  });
+  }, CLEANUP_PROOF_KEY);
   return handle?.identifier || null;
 }
 
@@ -115,7 +118,8 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
         const scene = window.__godsEyeView?.viewer?.scene;
         if (!state?.captured || !state.canvas || !state.context)
           throw new Error('early renderer context was not captured');
-        if (state.error) throw new Error('early renderer query failed: ' + state.error);
+        if (state.error)
+          throw new Error('early renderer query failed: ' + state.error);
         if (state.contextLost || state.contextRestored)
           throw new Error('early renderer context was lost or restored');
         if (state.context?.isContextLost?.() === true)
@@ -169,25 +173,324 @@ export async function readEarlyCesiumRendererProbe(page, timeoutMs = 5_000) {
   }
 }
 
-/** Remove the document hook and listeners with host-side bounds. */
+const CONFIRMED_SCRIPT_REMOVALS = new WeakMap();
+
+function cleanupStage(status = 'pending') {
+  return {
+    status,
+    elapsedMs: null,
+    errorKind: null,
+    errorDetail: null,
+    lateCompletion: null,
+    lateErrorKind: null,
+    lateErrorDetail: null,
+  };
+}
+
+/**
+ * Remove the document hook/listeners and target registration as separately
+ * bounded operations. It preserves the original document-then-registration
+ * order and total timeout. Returned records contain no target URLs or raw
+ * protocol error strings.
+ */
+export async function cleanupEarlyCesiumRendererProbeWithEvidence(
+  page,
+  scriptIdentifier,
+  timeoutMs = 1_000,
+) {
+  const startedAt = performance.now();
+  const evidence = {
+    schema: 'gev-early-renderer-probe-cleanup/v1',
+    confirmed: false,
+    timeoutMs: Number.isFinite(timeoutMs) ? Math.max(0, timeoutMs) : null,
+    elapsedMs: 0,
+    document: {
+      ...cleanupStage('not-attempted'),
+      statePresent: null,
+      hookRestoreAttempted: false,
+      hookRestored: null,
+      listenerCount: null,
+      listenerRemovalAttemptedCount: 0,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalFailedCount: 0,
+      stateDeleted: null,
+    },
+    scriptRegistration: {
+      ...cleanupStage(scriptIdentifier ? 'not-attempted' : 'not-registered'),
+      verification: scriptIdentifier
+        ? 'puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable'
+        : null,
+    },
+  };
+  const boundedMs =
+    Number.isFinite(timeoutMs) && timeoutMs >= 0 ? timeoutMs : 0;
+  const remaining = () =>
+    Math.max(0, boundedMs - (performance.now() - startedAt));
+  const scriptSet = () => {
+    let values = CONFIRMED_SCRIPT_REMOVALS.get(page);
+    if (!values) {
+      values = new Set();
+      CONFIRMED_SCRIPT_REMOVALS.set(page, values);
+    }
+    return values;
+  };
+  const runStage = async (stage, operation, onConfirmed = () => {}) => {
+    const operationStartedAt = performance.now();
+    let timedOut = false;
+    let operationRejected = false;
+    let timer;
+    const task = Promise.resolve()
+      .then(operation)
+      .then((result) => {
+        const status = result?.status || 'confirmed';
+        if (status === 'confirmed' || status === 'already-confirmed')
+          onConfirmed(result);
+        if (timedOut) {
+          stage.lateCompletion = status;
+          if (!['confirmed', 'already-confirmed'].includes(status)) {
+            stage.lateErrorKind = result?.errorKind || 'cleanup-incomplete';
+            stage.lateErrorDetail = result?.errorDetail || null;
+          }
+          return result;
+        }
+        stage.status = status;
+        for (const [key, value] of Object.entries(result || {}))
+          if (key !== 'status' && key in stage) stage[key] = value;
+        stage.elapsedMs = Math.max(0, performance.now() - operationStartedAt);
+        return result;
+      })
+      .catch((error) => {
+        operationRejected = true;
+        if (timedOut) {
+          stage.lateCompletion = 'error';
+          stage.lateErrorKind = safeCleanupErrorKind(
+            error,
+            stage === evidence.scriptRegistration,
+          );
+          stage.lateErrorDetail = safeCleanupErrorDetail(error);
+          return null;
+        }
+        stage.status = 'error';
+        stage.errorKind = safeCleanupErrorKind(
+          error,
+          stage === evidence.scriptRegistration,
+        );
+        stage.errorDetail = safeCleanupErrorDetail(error);
+        stage.elapsedMs = Math.max(0, performance.now() - operationStartedAt);
+        return null;
+      });
+    const outcome = await Promise.race([
+      task.then((value) => ({ kind: 'settled', value })),
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve({ kind: 'timeout' }), remaining());
+      }),
+    ]);
+    clearTimeout(timer);
+    if (outcome.kind === 'timeout') {
+      timedOut = true;
+      stage.status = 'timeout';
+      stage.errorKind = 'operation-timeout';
+      stage.lateCompletion = 'pending';
+      stage.elapsedMs = Math.max(0, performance.now() - operationStartedAt);
+      return { settled: false, result: null };
+    }
+    return {
+      settled: !operationRejected,
+      result: outcome.value,
+    };
+  };
+
+  let pageClosed = false;
+  let documentOperationSettled = true;
+  try {
+    pageClosed = page?.isClosed?.() === true;
+  } catch (error) {
+    evidence.document.status = 'error';
+    evidence.document.errorKind = 'page-state-error';
+    evidence.document.errorDetail = safeCleanupErrorDetail(error);
+  }
+  if (pageClosed) {
+    evidence.document.status = 'page-closed';
+    evidence.document.hookRestored = null;
+    evidence.document.stateDeleted = null;
+  } else if (page && typeof page.evaluate === 'function') {
+    evidence.document.status = 'pending';
+    const documentResult = await runStage(evidence.document, () =>
+      page.evaluate(
+        (key, proofKey) => {
+          const state = window[key];
+          const proof = window[proofKey];
+          const prototype = HTMLCanvasElement.prototype;
+          const record = {
+            status: 'error',
+            statePresent: Boolean(state),
+            hookRestoreAttempted: false,
+            hookRestored: false,
+            listenerCount: Array.isArray(state?.listeners)
+              ? state.listeners.length
+              : 0,
+            listenerRemovalAttemptedCount: 0,
+            listenerRemovalConfirmedCount: 0,
+            listenerRemovalFailedCount: 0,
+            stateDeleted: false,
+          };
+          if (!state) {
+            const proofMatches =
+              proof &&
+              Number.isFinite(proof.documentTimeOrigin) &&
+              proof.documentTimeOrigin === performance.timeOrigin &&
+              typeof proof.nativeGetContext === 'function' &&
+              Object.getOwnPropertyDescriptor(prototype, 'getContext')
+                ?.value === proof.nativeGetContext;
+            record.status = proofMatches ? 'already-confirmed' : 'unavailable';
+            record.errorKind = proofMatches ? null : 'cleanup-state-not-found';
+            record.hookRestored = Boolean(proofMatches);
+            record.stateDeleted = true;
+            return record;
+          }
+          delete window[proofKey];
+          record.hookRestoreAttempted = true;
+          try {
+            state.restore?.();
+          } catch {
+            // Keep attempting listener removal and verify the hook separately.
+          }
+          record.hookRestored =
+            typeof state.nativeGetContext === 'function' &&
+            Object.getOwnPropertyDescriptor(prototype, 'getContext')?.value ===
+              state.nativeGetContext;
+
+          const remainingListeners = [];
+          for (const entry of Array.isArray(state.listeners)
+            ? state.listeners
+            : []) {
+            const [event, listener] = Array.isArray(entry) ? entry : [];
+            record.listenerRemovalAttemptedCount += 1;
+            try {
+              if (
+                typeof event !== 'string' ||
+                typeof listener !== 'function' ||
+                !state.canvas ||
+                typeof state.canvas.removeEventListener !== 'function'
+              )
+                throw new Error('listener removal unavailable');
+              state.canvas.removeEventListener(event, listener);
+              record.listenerRemovalConfirmedCount += 1;
+            } catch {
+              record.listenerRemovalFailedCount += 1;
+              remainingListeners.push(entry);
+            }
+          }
+          state.listeners = remainingListeners;
+          const complete =
+            record.hookRestored &&
+            record.listenerRemovalFailedCount === 0 &&
+            remainingListeners.length === 0;
+          if (!complete)
+            record.errorKind = !record.hookRestored
+              ? 'hook-restore-unconfirmed'
+              : 'listener-removal-unconfirmed';
+          if (complete) {
+            record.status = 'confirmed';
+            delete window[key];
+            record.stateDeleted = !(key in window);
+            if (!record.stateDeleted) {
+              record.status = 'error';
+              record.errorKind = 'cleanup-state-delete-unconfirmed';
+            } else
+              window[proofKey] = {
+                nativeGetContext: state.nativeGetContext,
+                documentTimeOrigin: performance.timeOrigin,
+              };
+          }
+          return record;
+        },
+        STATE_KEY,
+        CLEANUP_PROOF_KEY,
+      ),
+    );
+    documentOperationSettled = documentResult.settled;
+    if (!documentResult.settled) {
+      evidence.scriptRegistration.status = scriptIdentifier
+        ? 'not-attempted'
+        : 'not-registered';
+      evidence.scriptRegistration.errorKind = scriptIdentifier
+        ? 'document-stage-did-not-settle'
+        : null;
+    }
+  } else {
+    evidence.document.status = 'unavailable';
+    evidence.document.errorKind = 'page-api-unavailable';
+    documentOperationSettled = false;
+  }
+
+  if (scriptIdentifier && documentOperationSettled) {
+    if (scriptSet().has(scriptIdentifier)) {
+      evidence.scriptRegistration.status = 'already-confirmed';
+    } else if (
+      typeof page?.removeScriptToEvaluateOnNewDocument === 'function'
+    ) {
+      evidence.scriptRegistration.status = 'pending';
+      await runStage(
+        evidence.scriptRegistration,
+        async () => {
+          await page.removeScriptToEvaluateOnNewDocument(scriptIdentifier);
+          return { status: 'confirmed' };
+        },
+        () => scriptSet().add(scriptIdentifier),
+      );
+    } else {
+      evidence.scriptRegistration.status = 'unavailable';
+      evidence.scriptRegistration.errorKind = 'page-api-unavailable';
+    }
+  } else if (
+    scriptIdentifier &&
+    evidence.scriptRegistration.status === 'not-attempted'
+  ) {
+    // Preserve document-stage failure attribution; registration removal was
+    // not reached under the original sequential cleanup order.
+  } else if (!scriptIdentifier) {
+    evidence.scriptRegistration.status = 'not-registered';
+  }
+  evidence.elapsedMs = Math.max(0, performance.now() - startedAt);
+  evidence.confirmed =
+    ['confirmed', 'page-closed', 'already-confirmed'].includes(
+      evidence.document.status,
+    ) &&
+    ['confirmed', 'not-registered', 'already-confirmed'].includes(
+      evidence.scriptRegistration.status,
+    );
+  return evidence;
+}
+
+function safeCleanupErrorKind(error, isScriptRegistration = false) {
+  if (error?.name === 'TimeoutError') return 'operation-timeout';
+  if (error?.name === 'TargetClosedError' || error?.name === 'PageClosedError')
+    return 'target-closed';
+  const message = String(error?.message || error || '');
+  if (isScriptRegistration && /unknown|not found|identifier/i.test(message))
+    return 'unknown-script-registration';
+  return isScriptRegistration
+    ? 'registration-removal-error'
+    : 'page-evaluation-error';
+}
+
+function safeCleanupErrorDetail(error) {
+  const recorder = createFixtureInterceptionErrorRecorder({ limit: 1 });
+  recorder.onError(error);
+  return recorder.records[0]?.message || 'Cleanup operation failed.';
+}
+
+/** Legacy boolean API retained for recovery callers. */
 export async function cleanupEarlyCesiumRendererProbe(
   page,
   scriptIdentifier,
   timeoutMs = 1_000,
 ) {
-  const removed = await withHostTimeout(async () => {
-    if (!page.isClosed())
-      await page.evaluate((key) => {
-        const state = window[key];
-        state?.restore?.();
-        for (const [event, listener] of state?.listeners || [])
-          state.canvas?.removeEventListener(event, listener);
-        if (state) state.listeners = [];
-        delete window[key];
-      }, STATE_KEY);
-    if (scriptIdentifier)
-      await page.removeScriptToEvaluateOnNewDocument(scriptIdentifier);
-    return true;
-  }, timeoutMs);
-  return removed === true;
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    scriptIdentifier,
+    timeoutMs,
+  );
+  return evidence.confirmed;
 }

@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { createCaptureFailureReport } from './captureFailureReport.mjs';
 import {
   cleanupEarlyCesiumRendererProbe,
+  cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './earlyCesiumRendererProbe.mjs';
@@ -392,8 +394,8 @@ function earlyProbePage(performanceStep = 5) {
     vm.runInContext(`(${fn.toString()})(...${JSON.stringify(args)})`, context);
   const page = {
     isClosed: () => false,
-    evaluateOnNewDocument: async (fn) => {
-      evaluate(fn);
+    evaluateOnNewDocument: async (fn, ...args) => {
+      evaluate(fn, ...args);
       return { identifier: 'early-hook' };
     },
     evaluate: async (fn, ...args) => evaluate(fn, ...args),
@@ -448,6 +450,320 @@ test('early probe cleanup reports an unconfirmed timeout instead of success', as
     evaluate: () => new Promise(() => {}),
   };
   assert.equal(await cleanupEarlyCesiumRendererProbe(page, null, 5), false);
+});
+
+test('cleanup evidence verifies the live hook and listeners plus registration acknowledgement', async () => {
+  const probePage = earlyProbePage();
+  const { page, Canvas, native, window } = probePage;
+  await installEarlyCesiumRendererProbe(page);
+  const canvas = new Canvas();
+  canvas.getContext('webgl2');
+  assert.equal(canvas.listeners.size, 2);
+  let removedIdentifier = null;
+  const order = [];
+  const nativeEvaluate = page.evaluate;
+  page.evaluate = async (...args) => {
+    order.push('document');
+    return nativeEvaluate(...args);
+  };
+  page.removeScriptToEvaluateOnNewDocument = async (identifier) => {
+    order.push('registration');
+    removedIdentifier = identifier;
+  };
+
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    'early-hook',
+  );
+  assert.equal(evidence.confirmed, true);
+  assert.equal(evidence.document.status, 'confirmed');
+  assert.equal(evidence.document.hookRestored, true);
+  assert.equal(evidence.document.listenerCount, 2);
+  assert.equal(evidence.document.listenerRemovalAttemptedCount, 2);
+  assert.equal(evidence.document.listenerRemovalConfirmedCount, 2);
+  assert.equal(evidence.document.listenerRemovalFailedCount, 0);
+  assert.equal(evidence.document.stateDeleted, true);
+  assert.equal(evidence.scriptRegistration.status, 'confirmed');
+  assert.match(evidence.scriptRegistration.verification, /acknowledged/);
+  assert.equal(removedIdentifier, 'early-hook');
+  assert.deepEqual(order, ['document', 'registration']);
+  assert.equal(Canvas.prototype.getContext, native);
+  assert.equal(canvas.listeners.size, 0);
+  assert.equal(window.__gevRecoveryEarlyRendererProbe, undefined);
+});
+
+test('document and future-registration cleanup failures remain separately attributed', async () => {
+  const documentFailure = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    {
+      isClosed: () => false,
+      evaluate: async () => {
+        throw new Error(
+          'Evaluation failed at /Users/example/app token=topsecret Authorization: Basic Zm9vOmJhcg==',
+        );
+      },
+      removeScriptToEvaluateOnNewDocument: async () => {},
+    },
+    'script-id',
+  );
+  assert.equal(documentFailure.confirmed, false);
+  assert.equal(documentFailure.document.status, 'error');
+  assert.equal(documentFailure.document.errorKind, 'page-evaluation-error');
+  assert.equal(documentFailure.scriptRegistration.status, 'not-attempted');
+  assert.match(documentFailure.document.errorDetail, /Evaluation failed/);
+  assert.equal(
+    JSON.stringify(documentFailure).includes('/Users/example'),
+    false,
+  );
+  assert.equal(JSON.stringify(documentFailure).includes('topsecret'), false);
+  assert.equal(JSON.stringify(documentFailure).includes('Zm9vOmJhcg'), false);
+
+  const registrationFailure = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    {
+      isClosed: () => false,
+      evaluate: async () => ({
+        status: 'confirmed',
+        statePresent: true,
+        hookRestoreAttempted: true,
+        hookRestored: true,
+        listenerCount: 0,
+        listenerRemovalAttemptedCount: 0,
+        listenerRemovalConfirmedCount: 0,
+        listenerRemovalFailedCount: 0,
+        stateDeleted: true,
+      }),
+      removeScriptToEvaluateOnNewDocument: async () => {
+        throw Object.assign(new Error('protocol internals'), {
+          name: 'TargetClosedError',
+        });
+      },
+    },
+    'script-id',
+  );
+  assert.equal(registrationFailure.confirmed, false);
+  assert.equal(registrationFailure.document.status, 'confirmed');
+  assert.equal(registrationFailure.scriptRegistration.status, 'error');
+  assert.equal(
+    registrationFailure.scriptRegistration.errorKind,
+    'target-closed',
+  );
+  assert.equal(
+    registrationFailure.scriptRegistration.errorDetail,
+    'protocol internals',
+  );
+  const missingRegistration = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    {
+      isClosed: () => true,
+      removeScriptToEvaluateOnNewDocument: async () => {
+        throw new Error('Script with given identifier 17 not found');
+      },
+    },
+    'missing-id',
+  );
+  assert.equal(missingRegistration.document.status, 'page-closed');
+  assert.equal(missingRegistration.scriptRegistration.status, 'error');
+  assert.equal(
+    missingRegistration.scriptRegistration.errorKind,
+    'unknown-script-registration',
+  );
+  assert.match(
+    missingRegistration.scriptRegistration.errorDetail,
+    /identifier/,
+  );
+});
+
+test('a fresh installation in the same Page is cleaned instead of reusing prior-document proof', async () => {
+  const probePage = earlyProbePage();
+  await installEarlyCesiumRendererProbe(probePage.page);
+  const firstCanvas = new probePage.Canvas();
+  firstCanvas.getContext('webgl2');
+  const first = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probePage.page,
+    'first-script',
+  );
+  assert.equal(first.confirmed, true);
+
+  await installEarlyCesiumRendererProbe(probePage.page);
+  const secondCanvas = new probePage.Canvas();
+  secondCanvas.getContext('webgl2');
+  const second = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probePage.page,
+    'second-script',
+  );
+  assert.equal(second.confirmed, true);
+  assert.equal(second.document.status, 'confirmed');
+  assert.equal(second.document.statePresent, true);
+  assert.equal(second.document.listenerRemovalAttemptedCount, 2);
+  assert.equal(secondCanvas.listeners.size, 0);
+});
+
+test('cleanup timeout preserves separate stages and records late completion', async () => {
+  let finishDocument;
+  let documentCleaned = false;
+  const page = {
+    isClosed: () => false,
+    evaluate: () => {
+      if (documentCleaned)
+        return Promise.resolve({
+          status: 'already-confirmed',
+          statePresent: false,
+          hookRestored: true,
+          stateDeleted: true,
+        });
+      return new Promise((resolve) => {
+        finishDocument = (result) => {
+          documentCleaned = true;
+          resolve(result);
+        };
+      });
+    },
+    removeScriptToEvaluateOnNewDocument: async () => {},
+  };
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    null,
+    5,
+  );
+  assert.equal(evidence.confirmed, false);
+  assert.equal(evidence.document.status, 'timeout');
+  assert.equal(evidence.scriptRegistration.status, 'not-registered');
+  assert.equal(evidence.document.errorKind, 'operation-timeout');
+  assert.equal(evidence.document.lateCompletion, 'pending');
+  finishDocument({
+    status: 'confirmed',
+    statePresent: true,
+    hookRestoreAttempted: true,
+    hookRestored: true,
+    listenerCount: 0,
+    listenerRemovalAttemptedCount: 0,
+    listenerRemovalConfirmedCount: 0,
+    listenerRemovalFailedCount: 0,
+    stateDeleted: true,
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(evidence.document.status, 'timeout');
+  assert.equal(evidence.document.lateCompletion, 'confirmed');
+  const retry = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    'script-id',
+  );
+  assert.equal(retry.confirmed, true);
+  assert.equal(retry.document.status, 'already-confirmed');
+  assert.equal(retry.scriptRegistration.status, 'confirmed');
+
+  let finishRegistration;
+  const registrationPage = {
+    isClosed: () => false,
+    evaluate: async () => ({
+      status: 'confirmed',
+      statePresent: true,
+      hookRestoreAttempted: true,
+      hookRestored: true,
+      listenerCount: 0,
+      listenerRemovalAttemptedCount: 0,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalFailedCount: 0,
+      stateDeleted: true,
+    }),
+    removeScriptToEvaluateOnNewDocument: () =>
+      new Promise((resolve) => {
+        finishRegistration = resolve;
+      }),
+  };
+  const registrationEvidence =
+    await cleanupEarlyCesiumRendererProbeWithEvidence(
+      registrationPage,
+      'registration-id',
+      5,
+    );
+  assert.equal(registrationEvidence.document.status, 'confirmed');
+  assert.equal(registrationEvidence.scriptRegistration.status, 'timeout');
+  assert.equal(
+    registrationEvidence.scriptRegistration.lateCompletion,
+    'pending',
+  );
+  finishRegistration();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(registrationEvidence.scriptRegistration.status, 'timeout');
+  assert.equal(
+    registrationEvidence.scriptRegistration.lateCompletion,
+    'confirmed',
+  );
+  const registrationRetry = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    registrationPage,
+    'registration-id',
+  );
+  assert.equal(registrationRetry.confirmed, true);
+  assert.equal(
+    registrationRetry.scriptRegistration.status,
+    'already-confirmed',
+  );
+
+  let rejectLateRemoval;
+  const lateErrorPage = {
+    isClosed: () => false,
+    evaluate: async () => ({
+      status: 'confirmed',
+      statePresent: true,
+      hookRestoreAttempted: true,
+      hookRestored: true,
+      listenerCount: 0,
+      listenerRemovalAttemptedCount: 0,
+      listenerRemovalConfirmedCount: 0,
+      listenerRemovalFailedCount: 0,
+      stateDeleted: true,
+    }),
+    removeScriptToEvaluateOnNewDocument: () =>
+      new Promise((_, reject) => {
+        rejectLateRemoval = reject;
+      }),
+  };
+  const lateError = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    lateErrorPage,
+    'late-error-id',
+    5,
+  );
+  rejectLateRemoval(new Error('Script identifier was not found'));
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(lateError.scriptRegistration.status, 'timeout');
+  assert.equal(lateError.scriptRegistration.lateCompletion, 'error');
+  assert.equal(
+    lateError.scriptRegistration.lateErrorKind,
+    'unknown-script-registration',
+  );
+});
+
+test('cleanup attempts every owned listener and bounded failure reports retain stage evidence', async () => {
+  const probePage = earlyProbePage();
+  await installEarlyCesiumRendererProbe(probePage.page);
+  const canvas = new probePage.Canvas();
+  canvas.getContext('webgl2');
+  const nativeRemove = canvas.removeEventListener.bind(canvas);
+  canvas.removeEventListener = (event, listener) => {
+    if (event === 'webglcontextlost') throw new Error('remove failed');
+    nativeRemove(event, listener);
+  };
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probePage.page,
+    'early-hook',
+  );
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.hookRestored, true);
+  assert.equal(cleanup.document.listenerRemovalAttemptedCount, 2);
+  assert.equal(cleanup.document.listenerRemovalConfirmedCount, 1);
+  assert.equal(cleanup.document.listenerRemovalFailedCount, 1);
+  assert.equal(cleanup.document.errorKind, 'listener-removal-unconfirmed');
+  assert.equal(cleanup.document.stateDeleted, false);
+
+  const report = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    workload: { rendererProbeCleanup: [cleanup] },
+    phase: 'cleanup',
+    error: new Error('renderer cleanup failed'),
+  });
+  const evidence = report.workload.rendererProbeCleanup[0];
+  assert.equal(evidence.document.listenerRemovalFailedCount, 1);
+  assert.equal(evidence.scriptRegistration.status, 'confirmed');
+  assert.equal(JSON.stringify(report).includes('remove failed'), false);
 });
 
 test('early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts', async () => {

@@ -35,7 +35,7 @@ import {
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
 import {
-  cleanupEarlyCesiumRendererProbe,
+  cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
 import {
@@ -1883,6 +1883,16 @@ async function runRevision({
   let phase = 'browser-page-setup';
   const pageErrors = [];
   const cleanupErrors = [];
+  const rendererProbeCleanup = [];
+  let rendererProbeCleanupOmittedCount = 0;
+  const recordRendererProbeCleanup = (evidence) => {
+    if (rendererProbeCleanup.length >= 4) {
+      rendererProbeCleanup.shift();
+      rendererProbeCleanupOmittedCount += 1;
+    }
+    rendererProbeCleanup.push(evidence);
+    return evidence;
+  };
   let failure = null;
   let result = null;
   try {
@@ -2216,15 +2226,13 @@ async function runRevision({
     let captureCliDiagnostic = null;
     if (label === 'candidate') {
       phase = 'capture-cli-preparation-cleanup';
-      const earlyRendererProbeCleaned = await withTimeout(
-        cleanupEarlyCesiumRendererProbe(
+      const earlyRendererProbeCleanup = recordRendererProbeCleanup(
+        await cleanupEarlyCesiumRendererProbeWithEvidence(
           page,
           earlyRendererProbeScriptIdentifier,
         ),
-        3000,
-        'Early renderer probe cleanup before capture CLI',
       );
-      if (earlyRendererProbeCleaned !== true)
+      if (earlyRendererProbeCleanup.confirmed !== true)
         throw new Error(
           'Early renderer probe cleanup before capture CLI was not confirmed.',
         );
@@ -2313,6 +2321,8 @@ async function runRevision({
           'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
       },
       ...(captureCliDiagnostic ? { captureCliDiagnostic } : {}),
+      rendererProbeCleanup,
+      rendererProbeCleanupOmittedCount,
       serviceWorker: serviceWorkerState,
       browser: {
         softwareRenderingRequested: true,
@@ -2343,6 +2353,8 @@ async function runRevision({
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
+      rendererProbeCleanup,
+      rendererProbeCleanupOmittedCount,
       densePopulationObservations,
     };
     failure = error;
@@ -2350,15 +2362,13 @@ async function runRevision({
     if (page) {
       if (earlyRendererProbeScriptIdentifier !== null) {
         try {
-          const earlyRendererProbeCleaned = await withTimeout(
-            cleanupEarlyCesiumRendererProbe(
+          const earlyRendererProbeCleanup = recordRendererProbeCleanup(
+            await cleanupEarlyCesiumRendererProbeWithEvidence(
               page,
               earlyRendererProbeScriptIdentifier,
             ),
-            3000,
-            'Early renderer probe cleanup',
           );
-          if (earlyRendererProbeCleaned !== true)
+          if (earlyRendererProbeCleanup.confirmed !== true)
             cleanupErrors.push(
               sanitizeError(
                 new Error('Early renderer probe cleanup was not confirmed.'),
@@ -2414,6 +2424,9 @@ async function runRevision({
       };
     }
     failure.smokeDiagnostics.cleanupErrors = cleanupErrors.slice(0, 3);
+    failure.smokeDiagnostics.rendererProbeCleanup = rendererProbeCleanup;
+    failure.smokeDiagnostics.rendererProbeCleanupOmittedCount =
+      rendererProbeCleanupOmittedCount;
   }
   if (failure) throw failure;
   return result;

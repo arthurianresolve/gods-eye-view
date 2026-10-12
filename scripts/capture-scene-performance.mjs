@@ -35,7 +35,7 @@ import {
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
 import {
-  cleanupEarlyCesiumRendererProbe,
+  cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
@@ -360,13 +360,20 @@ const infrastructureResponseListeners = new Map();
 const earlyRendererProbeScripts = new Map();
 async function cleanupEarlyRendererProbeForPage(page) {
   if (!page || !earlyRendererProbeScripts.has(page)) return true;
-  if (page.isClosed()) {
-    earlyRendererProbeScripts.delete(page);
-    return true;
-  }
   const scriptIdentifier = earlyRendererProbeScripts.get(page);
-  const cleaned = await cleanupEarlyCesiumRendererProbe(page, scriptIdentifier);
-  if (!cleaned)
+  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    scriptIdentifier,
+  );
+  const records = failureProgress.workload.rendererProbeCleanup || [];
+  if (records.length >= 16) {
+    records.shift();
+    failureProgress.workload.rendererProbeCleanupOmittedCount =
+      (failureProgress.workload.rendererProbeCleanupOmittedCount || 0) + 1;
+  }
+  records.push(evidence);
+  failureProgress.workload.rendererProbeCleanup = records;
+  if (!evidence.confirmed)
     throw new Error('Early Cesium renderer probe cleanup was not confirmed.');
   earlyRendererProbeScripts.delete(page);
   return true;
@@ -389,6 +396,8 @@ const failureProgress = {
   fixtureDelivery: null,
   fixtureInterceptionErrors: [],
   workload: {
+    rendererProbeCleanup: [],
+    rendererProbeCleanupOmittedCount: 0,
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,

@@ -1012,6 +1012,8 @@
   "scripts/capture-scene-performance.test.mjs",
   "scripts/qa-performance-build-smoke.mjs",
   "scripts/qa-performance-build-smoke.test.mjs",
+  "scripts/performance/earlyCesiumRendererProbe.mjs",
+  "scripts/performance/pairedRendererExperiment.test.mjs",
   "scripts/performance/boundedCpuProfile.mjs",
   "scripts/performance/boundedCpuProfile.test.mjs",
   "scripts/performance/providerSampleCpuProfileWindow.mjs",
