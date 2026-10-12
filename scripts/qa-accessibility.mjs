@@ -134,7 +134,9 @@ try {
     });
     try {
       trigger.focus();
-      palette.showModal();
+      trigger.click();
+      if (!palette.open)
+        throw new Error('Command-palette trigger did not open the dialog');
       palette.close();
       inspectorClose.focus();
       await closed;
