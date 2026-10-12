@@ -64,6 +64,49 @@ test('ground owners participate without enumerating graphics buffers', () => {
   assert.equal(readScenePrimitiveReadiness(scene, Cesium).ready, true);
 });
 
+test('fixture owner identities distinguish retained and replaced ground primitives', () => {
+  const scene = fixture();
+  const ids = new WeakMap();
+  let nextId = 0;
+  const ownerIdentityFor = (primitive) => {
+    if (!(primitive instanceof Cesium.GroundPolylinePrimitive)) return null;
+    let id = ids.get(primitive);
+    if (!id) {
+      id = `fixture-ground-${++nextId}`;
+      ids.set(primitive, id);
+    }
+    return id;
+  };
+  const first = pendingGroundPolyline();
+  first._ready = true;
+  scene.groundPrimitives.add(first);
+  const firstSnapshot = readScenePrimitiveReadiness(scene, Cesium, {
+    ownerIdentityFor,
+  });
+  const retainedSnapshot = readScenePrimitiveReadiness(scene, Cesium, {
+    ownerIdentityFor,
+  });
+  assert.equal(firstSnapshot.owners[2].fixtureOwnerId, 'fixture-ground-1');
+  assert.equal(retainedSnapshot.owners[2].fixtureOwnerId, 'fixture-ground-1');
+
+  scene.groundPrimitives.remove(first);
+  const replacement = pendingGroundPolyline();
+  replacement._ready = true;
+  scene.groundPrimitives.add(replacement);
+  const replacedSnapshot = readScenePrimitiveReadiness(scene, Cesium, {
+    ownerIdentityFor,
+  });
+  assert.equal(replacedSnapshot.owners[2].fixtureOwnerId, 'fixture-ground-2');
+  assert.notEqual(
+    retainedSnapshot.owners[2].fixtureOwnerId,
+    replacedSnapshot.owners[2].fixtureOwnerId,
+  );
+  assert.equal(
+    readScenePrimitiveReadiness(scene, Cesium).owners[2].fixtureOwnerId,
+    undefined,
+  );
+});
+
 test('bounded or cyclic owner graphs cannot produce an incomplete pass', () => {
   const scene = fixture();
   scene.primitives.add(scene.primitives);

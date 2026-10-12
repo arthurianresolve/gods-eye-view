@@ -100,6 +100,7 @@ async function runLifetime({
     geometrySha256: null,
     styleSha256: null,
     overlaySha256: null,
+    mapClassificationAttribution: null,
     ownership: null,
     teardown: null,
     samples: [],
@@ -217,6 +218,7 @@ async function runLifetime({
     // Warm the lazy EntityCluster collections and exercise both real map-stack
     // classifications before capturing the common terrain-visible state.
     const mapClassification = await mapStackWitness(viewer, mapEvents, layer);
+    lifetime.mapClassificationAttribution = mapClassification.attribution;
     await waitForStableScene(viewer, layer, mode, sourceRecords);
 
     const hashes = await sourceGeometryHash();
@@ -423,7 +425,9 @@ async function runLifetime({
           `${caseId} collection native picks resolved different owners.`,
         );
       }
-      const classification = await mapStackWitness(viewer, mapEvents, layer);
+      const classification = await mapStackWitness(viewer, mapEvents, layer, {
+        includeAttribution: false,
+      });
       for (
         let sample = 0;
         sample < CABLE_REFERENCE_RENDER_SAMPLES;
@@ -586,6 +590,9 @@ async function runLifetime({
     lifetime.status = 'failed';
     if (error?.cableReadinessFailure)
       lifetime.readinessFailure = error.cableReadinessFailure;
+    if (error?.cableClassificationAttribution)
+      lifetime.mapClassificationAttribution =
+        error.cableClassificationAttribution;
     lifetime.error = String(error?.stack || error?.message || error).slice(
       0,
       4000,

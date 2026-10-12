@@ -17,6 +17,11 @@ import {
 } from './cableFailureDiagnostics.mjs';
 import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
 import {
+  compareCableClassificationRows,
+  summarizeCableClassificationTrace,
+  summarizeCablePrimitiveReadiness,
+} from './cableClassificationAttribution.mjs';
+import {
   CABLE_REFERENCE_RENDER_CASES,
   CABLE_REFERENCE_RENDER_POPULATION,
   CABLE_REFERENCE_RENDER_SAMPLES,
@@ -1071,17 +1076,99 @@ export function createFixtureViewer(
   return viewer;
 }
 
-export async function mapStackWitness(viewer, mapEvents, layer) {
+function cableClassificationRows(cableSource, time) {
+  return cableSource.entities.values
+    .filter((entity) => entity.polyline)
+    .map((entity) => ({
+      id: String(entity.id),
+      classification: enumName(
+        Cesium.ClassificationType,
+        propertyValue(entity.polyline.classificationType, time),
+      ),
+    }));
+}
+
+function dispatchMapStackEvent(mapEvents, activeId) {
+  mapEvents.dispatchEvent(
+    new CustomEvent('gev:map-stack-changed', { detail: { activeId } }),
+  );
+}
+
+export async function mapStackWitness(
+  viewer,
+  mapEvents,
+  layer,
+  { includeAttribution = true } = {},
+) {
   const cableSource = dataSource(viewer, 'TeleGeography Submarine Cables');
-  const waitForMapStage = async (activeId, stage) => {
-    const trace = createCableReadinessTrace(stage);
+  const transitions = [];
+  const groundPrimitiveIds = new WeakMap();
+  let nextGroundPrimitiveId = 0;
+  const ownerIdentityFor = (primitive) => {
+    if (!(primitive instanceof Cesium.GroundPolylinePrimitive)) return null;
+    let id = groundPrimitiveIds.get(primitive);
+    if (!id) {
+      id = `ground-polyline-${++nextGroundPrimitiveId}`;
+      groundPrimitiveIds.set(primitive, id);
+    }
+    return id;
+  };
+  const captureState = async (startedAt) => {
+    let primitiveReadiness;
     try {
-      setMapStack(viewer, mapEvents, activeId);
+      primitiveReadiness = summarizeCablePrimitiveReadiness(
+        readScenePrimitiveReadiness(viewer.scene, Cesium, {
+          ownerIdentityFor,
+        }),
+      );
+    } catch (error) {
+      primitiveReadiness = {
+        available: false,
+        error: String(error?.message || error).slice(0, 160),
+      };
+    }
+    let rows = null;
+    let classificationError = null;
+    try {
+      rows = cableClassificationRows(cableSource, viewer.clock.currentTime);
+    } catch (error) {
+      classificationError = String(error?.message || error).slice(0, 160);
+    }
+    return {
+      elapsedMs: Math.max(0, performance.now() - startedAt),
+      globeVisible: viewer.scene.globe.show === true,
+      rows,
+      classificationError,
+      primitiveReadiness,
+    };
+  };
+  const groundPrimitiveOwners = (state) =>
+    state?.primitiveReadiness?.groundPolylines?.map((owner) => ({
+      fixtureOwnerId: owner.fixtureOwnerId,
+      path: owner.path,
+      ready: owner.ready,
+      show: owner.show,
+    })) ?? null;
+  const waitForMapStage = async (
+    activeId,
+    stage,
+    { notificationOnly = false } = {},
+  ) => {
+    const trace = createCableReadinessTrace(stage);
+    const startedAt = performance.now();
+    const before = includeAttribution ? await captureState(startedAt) : null;
+    let afterDispatch = null;
+    try {
+      if (notificationOnly) dispatchMapStackEvent(mapEvents, activeId);
+      else setMapStack(viewer, mapEvents, activeId);
+      afterDispatch = includeAttribution ? await captureState(startedAt) : null;
       await waitForPostRender(viewer);
       const diagnostics = cableFailureDiagnostics(viewer, layer);
       let primitiveReadiness;
       try {
-        primitiveReadiness = readScenePrimitiveReadiness(viewer.scene, Cesium);
+        primitiveReadiness = readScenePrimitiveReadiness(viewer.scene, Cesium, {
+          ownerIdentityFor,
+        });
       } catch (error) {
         trace.record({
           phase: 'first-post-render',
@@ -1110,14 +1197,150 @@ export async function mapStackWitness(viewer, mapEvents, layer) {
         undefined,
         { stage, trace },
       );
+      if (includeAttribution) {
+        const settled = await captureState(startedAt);
+        const rowTransitions = {
+          immediate:
+            before?.rows && afterDispatch?.rows
+              ? compareCableClassificationRows(before.rows, afterDispatch.rows)
+              : null,
+          settled:
+            before?.rows && settled.rows
+              ? compareCableClassificationRows(before.rows, settled.rows)
+              : null,
+        };
+        transitions.push({
+          stage,
+          activeId,
+          control: notificationOnly
+            ? 'no-op-same-classification-notification'
+            : 'stack-transition',
+          ...(notificationOnly
+            ? {
+                controlDescription:
+                  'notification-only; does not replace a provider',
+              }
+            : {}),
+          elapsedMs: Math.max(0, performance.now() - startedAt),
+          classification: {
+            before: before?.rows ? await shaJson(before.rows) : null,
+            beforeError: before?.classificationError ?? null,
+            afterDispatch: afterDispatch?.rows
+              ? await shaJson(afterDispatch.rows)
+              : null,
+            afterDispatchError: afterDispatch?.classificationError ?? null,
+            settled: settled.rows ? await shaJson(settled.rows) : null,
+            settledError: settled.classificationError ?? null,
+            rowTransitions,
+          },
+          globeVisibility: {
+            before: before?.globeVisible ?? null,
+            afterDispatch: afterDispatch?.globeVisible ?? null,
+            settled: settled.globeVisible,
+          },
+          primitiveReadiness: {
+            before: before?.primitiveReadiness ?? null,
+            afterDispatch: afterDispatch?.primitiveReadiness ?? null,
+            settled: settled.primitiveReadiness,
+          },
+          groundPrimitiveOwners: {
+            before: groundPrimitiveOwners(before),
+            afterDispatch: groundPrimitiveOwners(afterDispatch),
+            settled: groundPrimitiveOwners(settled),
+          },
+          readinessTrace: summarizeCableClassificationTrace(trace.snapshot()),
+        });
+      }
     } catch (error) {
       attachCableReadinessFailure(error, trace, viewer, layer, {
         stage,
         activeId,
       });
+      if (includeAttribution) {
+        try {
+          const latest = await captureState(startedAt);
+          transitions.push({
+            stage,
+            activeId,
+            control: notificationOnly
+              ? 'no-op-same-classification-notification'
+              : 'stack-transition',
+            ...(notificationOnly
+              ? {
+                  controlDescription:
+                    'notification-only; does not replace a provider',
+                }
+              : {}),
+            elapsedMs: Math.max(0, performance.now() - startedAt),
+            failure: String(error?.message || error).slice(0, 160),
+            classification: {
+              before: before?.rows ? await shaJson(before.rows) : null,
+              beforeError: before?.classificationError ?? null,
+              afterDispatch: afterDispatch?.rows
+                ? await shaJson(afterDispatch.rows)
+                : null,
+              afterDispatchError: afterDispatch?.classificationError ?? null,
+              latest: latest.rows ? await shaJson(latest.rows) : null,
+              latestError: latest.classificationError ?? null,
+              rowTransitions: {
+                immediate:
+                  before?.rows && afterDispatch?.rows
+                    ? compareCableClassificationRows(
+                        before.rows,
+                        afterDispatch.rows,
+                      )
+                    : null,
+                latest:
+                  before?.rows && latest.rows
+                    ? compareCableClassificationRows(before.rows, latest.rows)
+                    : null,
+              },
+            },
+            globeVisibility: {
+              before: before?.globeVisible ?? null,
+              afterDispatch: afterDispatch?.globeVisible ?? null,
+              latest: latest.globeVisible,
+            },
+            primitiveReadiness: {
+              before: before?.primitiveReadiness ?? null,
+              afterDispatch: afterDispatch?.primitiveReadiness ?? null,
+              latest: latest.primitiveReadiness,
+            },
+            groundPrimitiveOwners: {
+              before: groundPrimitiveOwners(before),
+              afterDispatch: groundPrimitiveOwners(afterDispatch),
+              latest: groundPrimitiveOwners(latest),
+            },
+            readinessTrace: summarizeCableClassificationTrace(trace.snapshot()),
+            primaryFailurePreserved: true,
+          });
+          const attribution = {
+            schema: 'gev-cable-classification-attribution/v1',
+            control: 'no-op-same-classification-notification',
+            controlDescription:
+              'notification-only; does not replace a provider',
+            maxTransitionStages: 3,
+            transitions: transitions.slice(0, 3),
+          };
+          if (error && typeof error === 'object')
+            Object.assign(error, {
+              cableClassificationAttribution: attribution,
+            });
+        } catch {
+          // Optional attribution never replaces the primary map-stage error.
+        }
+      }
       throw error;
     }
   };
+  if (includeAttribution)
+    await waitForMapStage(
+      'bing-aerial',
+      'map-stack-same-classification-control',
+      {
+        notificationOnly: true,
+      },
+    );
   await waitForMapStage('photoreal', 'map-stack-photoreal');
   const photoreal = sourceClassification(cableSource, viewer.clock.currentTime);
   await waitForMapStage('osm', 'map-stack-terrain-restore');
@@ -1130,5 +1353,20 @@ export async function mapStackWitness(viewer, mapEvents, layer) {
     terrain.length === 1 && terrain[0] === 'TERRAIN',
     'Globe map-stack classification was not restored.',
   );
-  return { photoreal: photoreal[0], afterRestore: terrain[0] };
+  return {
+    photoreal: photoreal[0],
+    afterRestore: terrain[0],
+    ...(includeAttribution
+      ? {
+          attribution: {
+            schema: 'gev-cable-classification-attribution/v1',
+            control: 'no-op-same-classification-notification',
+            controlDescription:
+              'notification-only; does not replace a provider',
+            maxTransitionStages: 3,
+            transitions: transitions.slice(0, 3),
+          },
+        }
+      : {}),
+  };
 }

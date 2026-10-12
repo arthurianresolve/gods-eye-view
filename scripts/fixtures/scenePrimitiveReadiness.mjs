@@ -163,7 +163,11 @@ function readGroundPolylineBuildState(primitive, Cesium, path) {
   };
 }
 
-export function readScenePrimitiveReadiness(scene, Cesium) {
+export function readScenePrimitiveReadiness(
+  scene,
+  Cesium,
+  { ownerIdentityFor = null } = {},
+) {
   const visited = new Set();
   const pending = [];
   const owners = [];
@@ -176,11 +180,18 @@ export function readScenePrimitiveReadiness(scene, Cesium) {
       return;
     }
     visited.add(primitive);
+    const fixtureOwnerId =
+      typeof ownerIdentityFor === 'function'
+        ? ownerIdentityFor(primitive)
+        : null;
     const owner = {
       path,
       type: primitive.constructor?.name || null,
       ready: typeof primitive.ready === 'boolean' ? primitive.ready : null,
       show: typeof primitive.show === 'boolean' ? primitive.show : null,
+      ...(typeof fixtureOwnerId === 'string'
+        ? { fixtureOwnerId: fixtureOwnerId.slice(0, 64) }
+        : {}),
     };
     if (
       owner.ready === false &&

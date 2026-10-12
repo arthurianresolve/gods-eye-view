@@ -1219,6 +1219,8 @@
   "scripts/fixtures/cable-reference-collections-contract.mjs",
   "scripts/fixtures/cableFailureDiagnostics.mjs",
   "scripts/fixtures/cableFailureDiagnostics.test.mjs",
+  "scripts/fixtures/cableClassificationAttribution.mjs",
+  "scripts/fixtures/cableClassificationAttribution.test.mjs",
   "scripts/fixtures/cableCameraSweep.mjs",
   "scripts/fixtures/cableCameraSweep.test.mjs",
   "scripts/performance/cableReferenceCollections.mjs",
