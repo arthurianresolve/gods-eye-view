@@ -195,3 +195,19 @@ shader preparation; they do not prove redundant work or justify eliminating
 queries. The intervals are not mapped to warmup or measurement because those
 clock domains have not been independently aligned. Sampling weights include
 native waits and remain distinct from GPU execution time.
+
+## Tracking integration
+
+[Run 38275839280](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38275839280)
+passes **111 checks, zero failures and zero skips** at clean exact `0d2324e6`.
+It exercises the application camera/tracking paths with bundled imagery;
+console and HTTP error checks also pass. Browser shutdown completes naturally
+in 783 ms within the unchanged five-second bound, with process exit code zero
+and no forced termination. This one exit does not resolve the historical
+intermittent shutdown cause.
+
+The [terminal job record](tracking-38275839280-run.json),
+[hash-bound review](tracking-38275839280-review.json) and
+[original compressed log](tracking-38275839280.log.gz) preserve the result.
+The later documentation-only revisions do not change the tested application or
+harness. This is functional validation, not a hardware latency or retention pass.

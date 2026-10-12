@@ -1,9 +1,11 @@
 # Cesium performance plan
 
-Integrated diagnostic checkpoint: `dev` is at `0d2324e6`, with application,
+Integrated diagnostic checkpoint: tooling reached `dev` at `0d2324e6`, with application,
 harness and test code matching the seven passing standard jobs at `f7e0709c`.
 The failed performance captures remain failed; this does not complete a slice
 or establish a performance gain.
+The subsequent [tracking integration](performance-evidence/s48-current-dev-capture/README.md#tracking-integration)
+passes all 111 checks at exact `0d2324e6`, with natural browser/process cleanup.
 
 The [current-dev S48 diagnostic port](performance-evidence/s48-current-dev-capture/README.md)
 preserves the newer camera/prewarm and streamed-map ownership fixes. Root full
