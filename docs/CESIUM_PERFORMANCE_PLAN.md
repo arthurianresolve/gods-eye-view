@@ -3281,6 +3281,21 @@ bounded owners, no duplicate active providers, unchanged detail/SSE/textures/
 collision/attribution and no repeatable >10% activation/loading regression. Keep
 live checks separately labeled; do not reduce Google cache limits as a shortcut.
 
+The isolated S57.1 fixture candidate extends the existing terrain/picking lifecycle
+route with five counterbalanced, warmed flat/relief switch pairs. It records
+`setStack` completion separately from the unchanged stable-scene readiness wait,
+and adds a witness from the existing `DataSourceDisplay.update` call bound to an
+unchanged public `EntityCollection` revision and completed frame. It captures
+active stack, provider load/cache/failure counters, local heightmap request
+counts, worker counters, pending ownership and cache checkpoints before, at
+activation completion and after readiness. Total switch-to-settled wall time
+also includes the post-activation snapshot calls; stage times are not summed.
+Streamed 3D tile memory remains
+`null`: this deterministic fixture uses local single-tile imagery and a custom
+heightmap provider. Run the existing `terrain-picking-lifecycle` hosted workflow
+mode for rendered validation; do not interpret this component fixture as true
+network/3D-tile streaming or hardware memory evidence.
+
 **S58.1 - weather frame and effect ownership.** Preserve the accepted wind-image
 reuse and extend `src/layers/weather/`, wind and `src/ui/effects.js` only where
 measurements find duplicate texture/geometry/pass work. Reuse equivalent resources,
