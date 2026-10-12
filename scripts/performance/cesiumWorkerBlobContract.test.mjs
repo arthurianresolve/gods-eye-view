@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  classifyLateWorkerAuditObservations,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_TOTAL_BYTES,
   readAndRestoreCesiumWorkerBodies,
@@ -209,6 +210,132 @@ test('a valid created wrapper remains validated when worker target publication i
     'transferTypedArrayTest',
   ]);
   assert.ok(result.acceptedBlobUrls.includes(url));
+  const publication = classifyLateWorkerAuditObservations({
+    workerTargetsAtBoundary: [],
+    blobRequestsAtBoundary: [],
+    workerTargetsAfter: [url],
+    blobRequestsAfter: [url, embeddedUrl],
+    validatedWorkerTargetUrls: result.validatedWorkerTargetUrls,
+    acceptedBlobUrls: result.acceptedBlobUrls,
+  });
+  assert.equal(publication.lateWorkerTargetCount, 1);
+  assert.equal(publication.delayedValidatedWorkerTargetCount, 1);
+  assert.equal(publication.lateBlobRequestCount, 2);
+  assert.equal(publication.delayedValidatedBlobRequestCount, 2);
+  assert.equal(publication.unvalidatedLateWorkerTargetCount, 0);
+  assert.equal(publication.unvalidatedLateBlobRequestCount, 0);
+});
+
+test('late publication is accepted only for exact wrappers and blobs from the frozen validated inventory', () => {
+  const validation = validateCesiumWorkerBlobs(workerAudit(makeContract()));
+  const wrapper = validation.validatedWorkerTargetUrls[0];
+  const unknown = 'blob:http://127.0.0.1:4173/not-in-frozen-snapshot';
+  const publication = classifyLateWorkerAuditObservations({
+    workerTargetsAtBoundary: [],
+    blobRequestsAtBoundary: [],
+    workerTargetsAfter: [wrapper, unknown],
+    blobRequestsAfter: [validation.acceptedBlobUrls[0], unknown],
+    validatedWorkerTargetUrls: validation.validatedWorkerTargetUrls,
+    acceptedBlobUrls: validation.acceptedBlobUrls,
+  });
+  assert.equal(publication.delayedValidatedWorkerTargetCount, 1);
+  assert.equal(publication.delayedValidatedBlobRequestCount, 1);
+  assert.equal(publication.unvalidatedLateWorkerTargetCount, 1);
+  assert.equal(publication.unvalidatedLateBlobRequestCount, 1);
+});
+
+test('atomic page snapshot classifies host publication during frozen Blob.text reads', async () => {
+  const contract = makeContract();
+  let wrapperUrl = null;
+  let published = false;
+  const workerTargetsAfter = [];
+  const blobRequestsAfter = [];
+  class PublishingBlob {
+    constructor(value, type = 'application/javascript') {
+      this.value = value;
+      this.type = type;
+      this.size = Buffer.byteLength(value);
+    }
+    async text() {
+      if (!published) {
+        published = true;
+        assert.equal(TestURL.createObjectURL, nativeCreateObjectURL);
+        workerTargetsAfter.push(wrapperUrl);
+        blobRequestsAfter.push(wrapperUrl);
+      }
+      return this.value;
+    }
+  }
+  const { context, page, TestURL, nativeCreateObjectURL } =
+    makeAtomicWorkerAuditPage(PublishingBlob);
+  const embeddedUrl = vm.runInContext(
+    `URL.createObjectURL(new Blob(${JSON.stringify(contract.embeddedWorkerSource)}))`,
+    context,
+  );
+  const wrapperBody = `importScripts("${embeddedUrl}"); CesiumWorkers["createGeometry"]();`;
+  wrapperUrl = vm.runInContext(
+    `URL.createObjectURL(new Blob(${JSON.stringify(wrapperBody)}))`,
+    context,
+  );
+  const frozenAudit = await readAndRestoreCesiumWorkerBodies(page, []);
+  const validated = validateCesiumWorkerBlobs({
+    contract,
+    baseUrl: BASE,
+    workerUrls: [],
+    observedBlobUrls: [],
+    blobAudit: frozenAudit,
+  });
+  const publication = classifyLateWorkerAuditObservations({
+    workerTargetsAtBoundary: [],
+    blobRequestsAtBoundary: [],
+    workerTargetsAfter,
+    blobRequestsAfter,
+    validatedWorkerTargetUrls: validated.validatedWorkerTargetUrls,
+    acceptedBlobUrls: validated.acceptedBlobUrls,
+  });
+  assert.equal(publication.delayedValidatedWorkerTargetCount, 1);
+  assert.equal(publication.delayedValidatedBlobRequestCount, 1);
+  assert.equal(publication.unvalidatedLateWorkerTargetCount, 0);
+  assert.equal(publication.unvalidatedLateBlobRequestCount, 0);
+
+  let lateTarget = null;
+  let secondTestURL = null;
+  class PostFreezeBlob extends PublishingBlob {
+    async text() {
+      if (!lateTarget)
+        lateTarget = secondTestURL.createObjectURL(
+          new PostFreezeBlob('unseen code'),
+        );
+      return this.value;
+    }
+  }
+  const second = makeAtomicWorkerAuditPage(PostFreezeBlob);
+  secondTestURL = second.TestURL;
+  vm.runInContext(
+    `URL.createObjectURL(new Blob(${JSON.stringify(contract.embeddedWorkerSource)}))`,
+    second.context,
+  );
+  const secondFrozenAudit = await readAndRestoreCesiumWorkerBodies(
+    second.page,
+    [],
+  );
+  const secondValidated = validateCesiumWorkerBlobs({
+    contract,
+    baseUrl: BASE,
+    workerUrls: [],
+    observedBlobUrls: [],
+    blobAudit: secondFrozenAudit,
+  });
+  const postFreezePublication = classifyLateWorkerAuditObservations({
+    workerTargetsAtBoundary: [],
+    blobRequestsAtBoundary: [],
+    workerTargetsAfter: [lateTarget],
+    blobRequestsAfter: [lateTarget],
+    validatedWorkerTargetUrls: secondValidated.validatedWorkerTargetUrls,
+    acceptedBlobUrls: secondValidated.acceptedBlobUrls,
+  });
+  assert.equal(postFreezePublication.unvalidatedLateWorkerTargetCount, 1);
+  assert.equal(postFreezePublication.unvalidatedLateBlobRequestCount, 1);
 });
 
 test('created source validation does not invent worker-target evidence', () => {

@@ -51,6 +51,62 @@ export function summarizeWorkerAuditBoundary({
   };
 }
 
+/** Classify host observations that arrived after the page-side frozen snapshot. */
+export function classifyLateWorkerAuditObservations({
+  workerTargetsAtBoundary,
+  blobRequestsAtBoundary,
+  workerTargetsAfter,
+  blobRequestsAfter,
+  validatedWorkerTargetUrls = [],
+  acceptedBlobUrls = [],
+} = {}) {
+  const boundary = summarizeWorkerAuditBoundary({
+    workerTargetsAtBoundary,
+    blobRequestsAtBoundary,
+    workerTargetsAfter,
+    blobRequestsAfter,
+  });
+  if (
+    !Array.isArray(validatedWorkerTargetUrls) ||
+    validatedWorkerTargetUrls.length > MAX_WORKER_TARGETS ||
+    validatedWorkerTargetUrls.some(
+      (value) => typeof value !== 'string' || value.length > 4096,
+    ) ||
+    !Array.isArray(acceptedBlobUrls) ||
+    acceptedBlobUrls.length > MAX_WORKER_BLOB_RECORDS ||
+    acceptedBlobUrls.some(
+      (value) => typeof value !== 'string' || value.length > 4096,
+    )
+  )
+    throw new TypeError('Validated worker audit inventory exceeds its bounds.');
+
+  const workersAtBoundary = new Set(workerTargetsAtBoundary);
+  const blobsAtBoundary = new Set(blobRequestsAtBoundary);
+  const validatedTargets = new Set(validatedWorkerTargetUrls);
+  const acceptedBlobs = new Set(acceptedBlobUrls);
+  const lateWorkers = new Set(
+    workerTargetsAfter.filter((value) => !workersAtBoundary.has(value)),
+  );
+  const lateBlobs = new Set(
+    blobRequestsAfter.filter((value) => !blobsAtBoundary.has(value)),
+  );
+  const delayedValidatedWorkerTargetCount = [...lateWorkers].filter((value) =>
+    validatedTargets.has(value),
+  ).length;
+  const delayedValidatedBlobRequestCount = [...lateBlobs].filter((value) =>
+    acceptedBlobs.has(value),
+  ).length;
+  return {
+    ...boundary,
+    delayedValidatedWorkerTargetCount,
+    delayedValidatedBlobRequestCount,
+    unvalidatedLateWorkerTargetCount:
+      lateWorkers.size - delayedValidatedWorkerTargetCount,
+    unvalidatedLateBlobRequestCount:
+      lateBlobs.size - delayedValidatedBlobRequestCount,
+  };
+}
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 function validateRelativePath(value) {

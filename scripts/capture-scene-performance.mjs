@@ -37,6 +37,7 @@ import {
 } from './performance/trackingRoute.mjs';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  classifyLateWorkerAuditObservations,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_RECORDS,
   MAX_WORKER_TARGETS,
@@ -927,6 +928,10 @@ try {
     let blobAudit = null;
     let lateWorkerTargetCount = null;
     let lateBlobRequestCount = null;
+    let delayedValidatedWorkerTargetCount = null;
+    let delayedValidatedBlobRequestCount = null;
+    let unvalidatedLateWorkerTargetCount = null;
+    let unvalidatedLateBlobRequestCount = null;
     let overflowAtCompletion = null;
     let workerTargetsAfterAudit = null;
     let blobRequestsAfterAudit = null;
@@ -972,10 +977,6 @@ try {
         throw new Error(
           'Worker target audit exceeded its bound during the frozen read.',
         );
-      if (lateWorkerTargetCount || lateBlobRequestCount)
-        throw new Error(
-          'Worker targets or blob requests arrived after the frozen audit boundary.',
-        );
       if (blobAudit.readError)
         throw new Error(
           auditMode === 'prewarm'
@@ -1000,6 +1001,26 @@ try {
           auditMode,
         });
       }
+      const publication = classifyLateWorkerAuditObservations({
+        workerTargetsAtBoundary,
+        blobRequestsAtBoundary,
+        workerTargetsAfter: workerTargetsAfterAudit,
+        blobRequestsAfter: blobRequestsAfterAudit,
+        validatedWorkerTargetUrls: validation?.validatedWorkerTargetUrls || [],
+        acceptedBlobUrls: validation?.acceptedBlobUrls || [],
+      });
+      delayedValidatedWorkerTargetCount =
+        publication.delayedValidatedWorkerTargetCount;
+      delayedValidatedBlobRequestCount =
+        publication.delayedValidatedBlobRequestCount;
+      unvalidatedLateWorkerTargetCount =
+        publication.unvalidatedLateWorkerTargetCount;
+      unvalidatedLateBlobRequestCount =
+        publication.unvalidatedLateBlobRequestCount;
+      if (unvalidatedLateWorkerTargetCount || unvalidatedLateBlobRequestCount)
+        throw new Error(
+          'Worker targets or blob requests arrived after the frozen audit boundary without validated frozen bytes.',
+        );
     } finally {
       if (!restoreAttestation)
         restoreAttestation = await auditPage.evaluate(
@@ -1034,6 +1055,10 @@ try {
         observedBlobRequestCount: blobRequestsAtBoundary.length,
         lateWorkerTargetCount,
         lateBlobRequestCount,
+        delayedValidatedWorkerTargetCount,
+        delayedValidatedBlobRequestCount,
+        unvalidatedLateWorkerTargetCount,
+        unvalidatedLateBlobRequestCount,
         workerUrlOverflowAtCompletion:
           overflowAtCompletion?.workerUrlOverflow ?? null,
         blobUrlOverflowAtCompletion:
@@ -1069,9 +1094,23 @@ try {
         overflowCountAtRestore: restoreAttestation.overflowCountAtRestore,
         auditedCreatedScriptBlobCount: metadata.createdBlobCount,
         auditedOverflowCount: metadata.overflowCount,
+        publicationBoundary: {
+          workerTargetCountAtBoundary: workerTargetsAtBoundary.length,
+          blobRequestCountAtBoundary: blobRequestsAtBoundary.length,
+          lateWorkerTargetCount,
+          lateBlobRequestCount,
+          delayedValidatedWorkerTargetCount,
+          delayedValidatedBlobRequestCount,
+          unvalidatedLateWorkerTargetCount,
+          unvalidatedLateBlobRequestCount,
+        },
       },
-      observedWorkerTargetCount: auditState.workerUrls.size,
-      observedBlobRequestCount: auditState.blobUrls.size,
+      observedWorkerTargetCount: new Set(
+        workerTargetsAfterAudit || workerTargetsAtBoundary,
+      ).size,
+      observedBlobRequestCount: new Set(
+        blobRequestsAfterAudit || blobRequestsAtBoundary,
+      ).size,
     };
     workerAuditDocuments.push(documentAudit);
     if (validation) workerBlobObservations.push(validation.observation);
