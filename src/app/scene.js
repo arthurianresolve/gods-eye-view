@@ -10,11 +10,9 @@ import { MapStackController } from '../mapStackController.js';
 import { createMapStackEventBridge } from './mapStackEvents.js';
 import { loadPhotorealisticTileset } from '../mapStartup.js';
 import { initLogoGaze } from '../logoGaze.js';
-import {
-  uninstallRenderGovernor,
-  governorRequestRender,
-} from '../renderGovernor.js';
+import { governorRequestRender } from '../renderGovernor.js';
 import { describeError } from './errors.js';
+import { destroyApplicationSceneViewer } from './sceneViewerLifecycle.js';
 
 /** Construct the application globe using the caller's local configuration. */
 export async function createApplicationScene({
@@ -53,10 +51,7 @@ export async function createApplicationScene({
     container: 'cesiumContainer',
     creditContainer,
   });
-  defer(() => {
-    uninstallRenderGovernor(viewer);
-    if (!viewer.isDestroyed()) viewer.destroy();
-  });
+  defer(() => destroyApplicationSceneViewer(viewer));
   defer(installTrackpadPinchZoom(viewer));
   registerDataCredits(viewer, credits);
   configureCreditKeyboardAccess(document);

@@ -953,6 +953,8 @@ let _getTarget = null;
 let _active = null; // { kind, motion, direction, speed, mode, motionId, ...state }
 let _tickRemover = null;
 let _inputRemovers = [];
+let _registrationToken = null;
+let _registrationSequence = 0;
 /** Monotonic id for the motion currently running; 0 means "no motion". */
 let _motionSeq = 0;
 
@@ -1219,27 +1221,82 @@ function onTick() {
  * new one.
  */
 export function initCameraVerbs(viewer, getViewTargetCartesian = null) {
+  if (
+    !viewer ||
+    (typeof viewer.isDestroyed === 'function' && viewer.isDestroyed())
+  ) {
+    return false;
+  }
   const nextTarget =
     typeof getViewTargetCartesian === 'function'
       ? getViewTargetCartesian
       : null;
   if (_viewer === viewer) {
     if (nextTarget) _getTarget = nextTarget;
-    return;
+    return true;
   }
+  if (_viewer) disposeCameraVerbs(_viewer);
   _getTarget = nextTarget;
   _viewer = viewer;
-  if (_tickRemover) _tickRemover();
-  _tickRemover = viewer.clock.onTick.addEventListener(onTick);
-  for (const rm of _inputRemovers) rm();
+  const registrationToken = { viewer, sequence: ++_registrationSequence };
+  _registrationToken = registrationToken;
+  const ownedTick = () => {
+    if (_viewer === viewer && _registrationToken === registrationToken)
+      onTick();
+  };
+  _tickRemover = viewer.clock.onTick.addEventListener(ownedTick);
   _inputRemovers = [];
   const canvas = viewer.scene.canvas;
   // ANY manual camera input reclaims control — the cancelFlight reflex.
   for (const evt of ['pointerdown', 'wheel']) {
-    const h = () => interruptCameraMotion('manual-input');
+    const h = () => {
+      if (_viewer === viewer && _registrationToken === registrationToken) {
+        interruptCameraMotion('manual-input');
+      }
+    };
     canvas.addEventListener(evt, h, { passive: true });
     _inputRemovers.push(() => canvas.removeEventListener(evt, h));
   }
+  return true;
+}
+
+/**
+ * Release the camera-verb registration owned by one application viewer.
+ * Consumer modules share this registration; only the viewer owner disposes it.
+ * A stale owner cannot detach a replacement viewer's listeners.
+ * @param {object} viewer Expected owner.
+ * @returns {boolean} Whether this viewer owned and released the registration.
+ */
+export function disposeCameraVerbs(viewer) {
+  if (!viewer || _viewer !== viewer) return false;
+
+  // Stop motion while its camera is still available, then make late event
+  // delivery inert before removing the exact callbacks from their owners.
+  const errors = [];
+  try {
+    interruptCameraMotion('viewer-disposed');
+  } catch (error) {
+    errors.push(error);
+  }
+  _viewer = null;
+  _getTarget = null;
+  _registrationToken = null;
+  const tickRemover = _tickRemover;
+  const inputRemovers = _inputRemovers;
+  _tickRemover = null;
+  _inputRemovers = [];
+
+  for (const remove of [tickRemover, ...inputRemovers]) {
+    try {
+      remove?.();
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  if (errors.length) {
+    throw new AggregateError(errors, 'Camera verb listener cleanup failed');
+  }
+  return true;
 }
 
 /**
@@ -1258,8 +1315,17 @@ export function moveCamera(args = {}, runNavigation = null) {
     : 'normal';
   const mode = args.mode === 'continuous' ? 'continuous' : 'once';
   if (motion === 'stop') {
+    const ownerRegistration = _registrationToken;
     const wasActiveBeforeHandoff = Boolean(_active);
     const stop = () => {
+      if (_registrationToken !== ownerRegistration) {
+        return {
+          ok: true,
+          action: 'move_camera',
+          motion: 'stop',
+          stopped: false,
+        };
+      }
       const { wasActive } = interruptCameraMotion('voice-stop');
       return {
         ok: true,
@@ -1270,6 +1336,16 @@ export function moveCamera(args = {}, runNavigation = null) {
     };
     return typeof runNavigation === 'function' ? runNavigation(stop) : stop();
   }
+  if (!_viewer) {
+    return {
+      ok: false,
+      action: 'move_camera',
+      error:
+        'Camera controls are unavailable because their viewer has been disposed.',
+    };
+  }
+  const ownerViewer = _viewer;
+  const ownerRegistration = _registrationToken;
   if (!['orbit', 'pan', 'tilt', 'rotate'].includes(motion)) {
     return {
       ok: false,
@@ -1336,6 +1412,14 @@ export function moveCamera(args = {}, runNavigation = null) {
     };
   }
   const start = () => {
+    if (_viewer !== ownerViewer || _registrationToken !== ownerRegistration) {
+      return {
+        ok: false,
+        action: 'move_camera',
+        error:
+          'Camera controls are unavailable because their viewer has been disposed.',
+      };
+    }
     interruptCameraMotion('replaced');
     const state = {
       kind: motion,
@@ -1469,6 +1553,16 @@ export function flyRoute(
         'No route is drawn — draw a route first (e.g. "route from A to B"), then fly it.',
     };
   }
+  if (!_viewer) {
+    return {
+      ok: false,
+      action: 'fly_route',
+      error:
+        'Camera controls are unavailable because their viewer has been disposed.',
+    };
+  }
+  const ownerViewer = _viewer;
+  const ownerRegistration = _registrationToken;
   let route = routes[routes.length - 1];
   if (args.label) {
     const wanted = String(args.label).toLowerCase();
@@ -1519,6 +1613,14 @@ export function flyRoute(
     };
   }
   const start = () => {
+    if (_viewer !== ownerViewer || _registrationToken !== ownerRegistration) {
+      return {
+        ok: false,
+        action: 'fly_route',
+        error:
+          'Camera controls are unavailable because their viewer has been disposed.',
+      };
+    }
     interruptCameraMotion('replaced');
     setActiveMotion(
       createRouteFlight({
