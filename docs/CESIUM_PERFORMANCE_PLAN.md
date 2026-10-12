@@ -2,8 +2,10 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `c3c6c5a7e890d0b9985249892cc601a76c9835a3`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38196156481.json).
+Latest validated `dev` checkpoint: `1acda9eb379592e74bd0fd22d71231c36bc336db`.
+[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38198032300.json),
+including the command-palette focus repair, Node 24/26, all three recovery jobs,
+Windows onboarding and the browser journeys.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
 diagnostic tooling, a command-palette focus repair, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
