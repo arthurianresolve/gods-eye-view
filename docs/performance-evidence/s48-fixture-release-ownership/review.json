@@ -1,0 +1,148 @@
+{
+  "schema": "gev-fixture-release-review/v1",
+  "candidateCommit": "947f1e121096436e6f8058f5c0f91b37b3a66902",
+  "scope": "controlled node and actual CLI tests with browser/provenance stubs; not browser or hardware acceptance",
+  "source": {
+    "scripts/capture-scene-performance.mjs": "3580804fef381a1eddfb8ba221995101492ed9ac883449e8d17200e86893ff5c",
+    "scripts/performance/fixtureInterception.mjs": "7789260fe89df9b420549d4689b56c809a808635784ef15a57719d3ab1f26a96",
+    "scripts/performance/providerDocumentRetirement.mjs": "aa33cd5b15b563141cb222c8032ace4d68544ef1ce8a088b68e419aa2d9077a3"
+  },
+  "artifacts": {
+    "root-review.mjs": {
+      "sha256": "f9850f9ff54ca61d8241e839649aefe528680776991bfd07cdd92d9decc6ed08",
+      "bytes": 6402
+    },
+    "root-candidate.json": {
+      "sha256": "fe53314ecc77bdb0c378af91902077fb96343363240829a51936c70c01663417",
+      "bytes": 7688
+    },
+    "cli-review.mjs": {
+      "sha256": "2c5a4c59fca5897cca13de62730f0f61cdfac9009623787fbe2dbca038fab624",
+      "bytes": 6887
+    },
+    "cli-original.json": {
+      "sha256": "a0ae5392be09c7fbf63573ee3c19786809306d4f368f1f70f930092465caddd4",
+      "bytes": 11940
+    },
+    "cli-candidate.json": {
+      "sha256": "4a12273c965575317a06308ade13e04b1b8ae2f4473ac02b38a971e58564b0f5",
+      "bytes": 16644
+    },
+    "focused-tests.txt": {
+      "sha256": "452332cf7e151bbc04032179cea26b0ef65ab61248b22f79ddca3ef51d32741d",
+      "bytes": 26410
+    },
+    "performance-build-smoke.json": {
+      "sha256": "4aed4678694fc222bf5697fe45bb192e77a61bf9e063a7f0fc5a8fd3e9c145c7",
+      "bytes": 114153
+    },
+    "performance-build-smoke.json.capture-cli-report-candidate.json": {
+      "sha256": "80b53a4936a5a63e26542ddfa9d2e7c6e86f57d154ab8e7a3d1db731a382862e",
+      "bytes": 61283
+    },
+    "provider-idle-1-cpu-profile.json": {
+      "sha256": "a5de0fcad49deb512f05ea447b4c5b88b227f949bfcc194d08e8321d49bbd263",
+      "bytes": 185574
+    },
+    "provider-idle-1-cpu-profile-ref.json": {
+      "sha256": "3ce097e82ac39026c693aae6e13da9a95a68f469f8bc9aabfce7119c81b6296f",
+      "bytes": 841
+    },
+    "run.json": {
+      "sha256": "7af66269b43fd98ef354c75d1fdef47531f6cde3fc100b38ce387ea330bf3d24",
+      "bytes": 9131
+    }
+  },
+  "focusedTests": {
+    "passed": 117,
+    "failed": 0,
+    "skipped": 0
+  },
+  "hostedRun": {
+    "id": 38265309601,
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38265309601",
+    "status": "completed",
+    "conclusion": "failure",
+    "head": "947f1e121096436e6f8058f5c0f91b37b3a66902",
+    "completedSamples": 0,
+    "fixtureInterceptionReleases": [
+      {
+        "role": "startup-1",
+        "confirmed": true,
+        "targetClosed": true,
+        "pendingCommands": 0,
+        "pendingPreparations": 0
+      },
+      {
+        "role": "main-setup",
+        "confirmed": true,
+        "targetClosed": true,
+        "pendingCommands": 0,
+        "pendingPreparations": 0
+      },
+      {
+        "role": "provider-sample-1",
+        "confirmed": true,
+        "targetClosed": true,
+        "pendingCommands": 0,
+        "pendingPreparations": 0
+      }
+    ],
+    "rendererCleanup": [
+      {
+        "role": "startup-1",
+        "confirmed": true,
+        "hostElapsedMs": 18.907877999999982,
+        "pageExecutionElapsedMs": 0.1999999999825377
+      },
+      {
+        "role": "main-setup",
+        "confirmed": true,
+        "hostElapsedMs": 3.50738299999648,
+        "pageExecutionElapsedMs": 0.10000000000582077
+      },
+      {
+        "role": "provider-sample-1",
+        "confirmed": true,
+        "hostElapsedMs": 134.87167000000773,
+        "pageExecutionElapsedMs": 0.10000000000582077
+      }
+    ],
+    "failure": {
+      "phase": "warmup",
+      "scenario": "idle",
+      "run": 1,
+      "message": "Warmup boundary: host observation deadline elapsed.",
+      "operator": null
+    },
+    "boundary": {
+      "hostTimeoutMs": 6000,
+      "hostElapsedMs": 6268.0082360000015,
+      "pageEntryHostReceiptElapsedMs": 2612.4190180000005,
+      "pageSettleElapsedMs": 3650.6999999999825,
+      "latePageResultObserved": true
+    },
+    "profile": {
+      "status": "incomplete",
+      "errors": [
+        "Profiler.disable exceeded 2000 ms."
+      ],
+      "samples": 6556,
+      "timeDeltas": 6556,
+      "sampledMs": 8407.555,
+      "windowMs": 8408.268,
+      "topLeafSampledMs": {
+        "bufferData": 2336.8699999999903,
+        "readPixels": 2199.614999999989,
+        "(idle)": 1093.2599999999993,
+        "getProgramParameter": 1086.0229999999979,
+        "(program)": 854.45,
+        "(garbage collector)": 82.27900000000001,
+        "_i.cartesianToCartographic": 48.292000000000016,
+        "mR.raiseEvent": 27.096,
+        "": 24.354999999999997,
+        "Sx.remove": 15.262
+      }
+    }
+  }
+}

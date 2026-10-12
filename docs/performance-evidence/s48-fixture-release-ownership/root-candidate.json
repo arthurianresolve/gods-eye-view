@@ -1,0 +1,209 @@
+{
+  "schema": "gev-fixture-release-root-review/v1",
+  "scope": "actual interception module; controlled responder and protocol session, no browser/network",
+  "sourceSha256": "7789260fe89df9b420549d4689b56c809a808635784ef15a57719d3ab1f26a96",
+  "results": [
+    {
+      "name": "cancel delayed external and API preparation before target closure",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "external",
+          "commands": [
+            "Fetch.enable",
+            "target-close"
+          ],
+          "stopped": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "event-listener-snapshot",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 1,
+            "pendingPreparationAtStop": 1,
+            "pendingAbortSubscriptionsAtStop": 1,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 1,
+            "unexpectedLateRequestCount": 0
+          },
+          "release": {
+            "schema": "gev-fixture-interception-release/v1",
+            "interception": {
+              "schema": "gev-fixture-interception-drain/v1",
+              "confirmed": true,
+              "listenerRemovalConfirmed": true,
+              "listenerRemovalVerification": "event-listener-snapshot",
+              "listenerRemovalErrorKind": null,
+              "pendingAtStop": 1,
+              "pendingPreparationAtStop": 1,
+              "pendingAbortSubscriptionsAtStop": 1,
+              "pendingCommandsAtStop": 0,
+              "pendingCommandsAfterDrain": 0,
+              "pendingPreparationsAfterDrain": 0,
+              "pendingAbortSubscriptionsAfterDrain": 0,
+              "rejectedDrainOperations": 0,
+              "drainCommandFailures": 0,
+              "cancelledPreparationCount": 1,
+              "unexpectedLateRequestCount": 0
+            },
+            "fetchDisable": "target-closed",
+            "detach": "target-closed",
+            "confirmed": true
+          }
+        },
+        {
+          "kind": "same-origin-api",
+          "commands": [
+            "Fetch.enable",
+            "target-close"
+          ],
+          "stopped": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "event-listener-snapshot",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 1,
+            "pendingPreparationAtStop": 1,
+            "pendingAbortSubscriptionsAtStop": 1,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 1,
+            "unexpectedLateRequestCount": 0
+          },
+          "release": {
+            "schema": "gev-fixture-interception-release/v1",
+            "interception": {
+              "schema": "gev-fixture-interception-drain/v1",
+              "confirmed": true,
+              "listenerRemovalConfirmed": true,
+              "listenerRemovalVerification": "event-listener-snapshot",
+              "listenerRemovalErrorKind": null,
+              "pendingAtStop": 1,
+              "pendingPreparationAtStop": 1,
+              "pendingAbortSubscriptionsAtStop": 1,
+              "pendingCommandsAtStop": 0,
+              "pendingCommandsAfterDrain": 0,
+              "pendingPreparationsAfterDrain": 0,
+              "pendingAbortSubscriptionsAfterDrain": 0,
+              "rejectedDrainOperations": 0,
+              "drainCommandFailures": 0,
+              "cancelledPreparationCount": 1,
+              "unexpectedLateRequestCount": 0
+            },
+            "fetchDisable": "target-closed",
+            "detach": "target-closed",
+            "confirmed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "completed requests release abort subscriptions while session stays active",
+      "status": "passed",
+      "evidence": {
+        "requests": 50,
+        "abortListenerCountAfterRequests": 0,
+        "errorCount": 0,
+        "stopped": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "event-listener-snapshot",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        }
+      }
+    },
+    {
+      "name": "issued command failure is drained and retained in evidence",
+      "status": "passed",
+      "evidence": {
+        "commands": [
+          "Fetch.enable",
+          "Fetch.fulfillRequest",
+          "target-close"
+        ],
+        "errors": [
+          "sentinel-issued-command-failure",
+          "sentinel-issued-command-failure"
+        ],
+        "stopped": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": false,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "event-listener-snapshot",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 1,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 1,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 1,
+          "drainCommandFailures": 1,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "release": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": false,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "event-listener-snapshot",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 1,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 1,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 1,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": false
+        }
+      }
+    },
+    {
+      "name": "copied late listener cannot command a closed target",
+      "status": "passed",
+      "evidence": {
+        "commands": [
+          "Fetch.enable",
+          "target-close"
+        ],
+        "errors": [
+          "Paused fixture request arrived after interception stopped."
+        ]
+      }
+    }
+  ],
+  "passed": true
+}

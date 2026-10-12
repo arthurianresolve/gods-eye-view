@@ -1,5 +1,17 @@
 # Cesium performance plan
 
+Latest isolated S48 fixture-release ownership repair at `947f1e12` passes
+117 focused tests and independent original/candidate actual-CLI checks.
+It cancels prepared responses, drains issued commands, and closes the owned
+target without disabling interception on a live page. Command and close errors
+remain failures. [Exact hosted evidence](performance-evidence/s48-fixture-release-ownership/README.md)
+confirms all three fixture releases and reached renderer cleanups, but run
+`38265309601` fails idle sample 1 warmup before measurement. The raw report
+preserves expensive initial-pose and prewarm picks, a zero-ms same-revision
+repeat, and sampled upload/shader-query costs; the profile remains incomplete
+after a profiler-disable timeout. The candidate is outside production `dev`;
+S48 and hardware/performance acceptance remain partial.
+
 Latest isolated S48 experiment at `7f4f5e07` confirms every reached renderer
 cleanup at the unchanged one-second deadline, but fails before sampling on a
 fixture command sent while its interception session is releasing. The raw
