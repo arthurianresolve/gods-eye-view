@@ -18,6 +18,7 @@ import {
 } from './austinOperatingWorkloadContract.mjs';
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 import { validateAustinSatelliteEpochCaptureReport } from './austinSatelliteSampledEpoch.mjs';
+import { createAustinOperatingDocumentEvidence } from './austinOperatingDocumentEvidence.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -368,6 +369,8 @@ function validateFixtureDelivery(report, contract, label) {
     });
     const owners = report.workload?.austinOperatingFixtureDocuments;
     assert.ok(Array.isArray(owners));
+    const releaseRecords = report.workload?.fixtureInterceptionReleases;
+    assert.ok(Array.isArray(releaseRecords));
     assert.deepEqual(
       owners
         .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
@@ -378,9 +381,32 @@ function validateFixtureDelivery(report, contract, label) {
       `${label}: Austin document owner set differs from capture topology`,
     );
     for (const owner of owners) {
-      assert.equal(owner.cleanup?.confirmed, true);
-      assert.equal(owner.interceptionRelease?.confirmed, true);
-      assert.equal(owner.interceptionRelease?.targetClosed, true);
+      const recomputed = createAustinOperatingDocumentEvidence({
+        documentRole: owner.documentRole,
+        documentId: owner.documentId,
+        sessionOrdinal: owner.sessionOrdinal,
+        delivery: owner.delivery,
+        releaseRecords,
+        disposed: owner.disposed,
+        disposeReason: owner.disposeReason,
+        error: owner.error,
+      });
+      assert.equal(
+        recomputed.cleanup.confirmed,
+        true,
+        `${label}: Austin fixture interception release is incomplete`,
+      );
+      assert.deepEqual(
+        owner.cleanup,
+        recomputed.cleanup,
+        `${label}: Austin cleanup summary differs from producer evidence`,
+      );
+      assert.deepEqual(
+        owner.interceptionRelease,
+        recomputed.interceptionRelease,
+        `${label}: Austin release differs from matching session evidence`,
+      );
+      assert.equal(owner.disposed, true);
     }
     for (const document of delivery.sampleDocuments) {
       const owner = owners.find(
