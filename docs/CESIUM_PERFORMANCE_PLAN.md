@@ -62,8 +62,14 @@ fails earlier during warmup. Its per-boundary progress-binding setup consumes
 4,075 ms of the 6,000 ms host window; the subsequent page entry and render
 request are acknowledged, but no completed frame arrives before the deadline.
 This setup perturbs the boundary and does not explain the original failure.
-Moving diagnostic setup before warmup is the next correction; deadlines stay
-unchanged and the failed report remains separate evidence.
+The [pre-warmup binding correction at `bbf4e88f`](performance-evidence/s47-prewarm-binding-38198470641/README.md)
+now completes two idle samples, with setup outside the boundary and all owned
+bindings removed. It still fails the first motion sample's measurement boundary:
+page-entry acknowledgement reaches the host at 5,987.5 ms of its 6,000 ms
+window. The measured interval and long tasks remain large. These host receipt
+times do not establish GPU time or one-way dispatch delay. The harness stays
+unmerged pending attribution; deadlines remain unchanged and failed reports
+remain separate evidence.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
