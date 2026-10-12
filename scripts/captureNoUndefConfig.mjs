@@ -22,6 +22,9 @@ export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
 
 export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({
   files: [...CAPTURE_NO_UNDEF_FILES],
+  linterOptions: {
+    noInlineConfig: true,
+  },
   languageOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',

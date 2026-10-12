@@ -27,3 +27,22 @@ test('capture no-undef config rejects an undeclared project identifier', () => {
   assert.equal(messages[0].messageId, 'undef');
   assert.match(messages[0].message, /austinOpertingFixture/);
 });
+
+test('capture no-undef config does not allow inline suppression', () => {
+  const linter = new Linter({ configType: 'flat' });
+  const messages = linter.verify(
+    '/* eslint-disable no-undef */ const fixture = austinOpertingFixture;',
+    [CAPTURE_NO_UNDEF_CONFIG],
+    { filename: 'scripts/capture-scene-performance.mjs' },
+  );
+
+  const undefinedIdentifier = messages.find(
+    (message) => message.ruleId === 'no-undef',
+  );
+  assert.ok(undefinedIdentifier);
+  assert.equal(undefinedIdentifier.messageId, 'undef');
+  assert.match(undefinedIdentifier.message, /austinOpertingFixture/);
+  assert.ok(
+    messages.some((message) => message.message.includes('noInlineConfig')),
+  );
+});
