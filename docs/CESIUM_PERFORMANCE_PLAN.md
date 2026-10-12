@@ -8,7 +8,8 @@ but hits the unchanged child deadline before tracking run 2. Seven reached
 observers restore their wrappers; generic failure serialization drops the
 per-parameter detail, so complete attribution remains unavailable. Preserve
 the failed report and fix bounded evidence retention before another run.
-Standard integration CI remains pending.
+All seven standard integration jobs pass at exact `3384b8bd`; this does not
+validate the failed attribution run or the subsequent retention repair.
 [Implementation, source/profile audit and limits](performance-evidence/s48-shader-program-attribution/README.md)
 keep whole-document synchronous GL-call time separate from GPU timing and
 matched performance. Production rendering defaults are unchanged; S48 remains partial.
