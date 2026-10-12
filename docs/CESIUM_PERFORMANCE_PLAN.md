@@ -2,8 +2,8 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `1acda9eb379592e74bd0fd22d71231c36bc336db`.
-[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38198032300.json),
+Latest validated `dev` checkpoint: `cf70aac90bce2178a53f1b71ae8d973544744d58`.
+[All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38200576913.json),
 including the command-palette focus repair, Node 24/26, all three recovery jobs,
 Windows onboarding and the browser journeys.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes
@@ -46,6 +46,15 @@ re-enable cycle 0 outside that observer's coverage. Independent decoding finds
 confirm 287 changed hidden references and no changed visible references.
 Their causal relationship remains unknown. Observation must cover both
 renderer lifetimes before another lifecycle conclusion is drawn.
+The [expanded coverage run at `01521081`](performance-evidence/s54-reenable-coverage-38201597528/README.md)
+fails earlier, before any re-enable cycle: Entity photoreal classification and
+the collection initial control finish ground-line preparation after 12,243 ms
+and 13,332.5 ms respectively, beyond the unchanged 12-second deadline. Frames
+continue during the recorded build phases. Zero re-enable observations and zero
+matched image pairs are available; all four missing observation identities are
+explicit. Late geometry readiness is a separate symptom from the earlier frame
+delivery loss. The candidate remains isolated and no performance acceptance is
+claimed.
 S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
@@ -79,6 +88,13 @@ window. The measured interval and long tasks remain large. These host receipt
 times do not establish GPU time or one-way dispatch delay. The harness stays
 unmerged pending attribution; deadlines remain unchanged and failed reports
 remain separate evidence.
+The [frame-attribution attempt at `827223f5`](performance-evidence/s47-frame-attribution-38200958796/README.md)
+fails before installing its new observer: the diagnostic worker audit validates
+12 blobs but counts 14 at restoration. Native-wrapper restoration and registry
+cleanup succeed. The diagnostic path still separates its asynchronous reads
+from restoration, while prewarm already uses an atomic snapshot. This harness
+race must be reproduced and fixed before another motion diagnostic; the run
+does not explain the remaining rendering delay or provide a timed sample.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
