@@ -38,8 +38,11 @@ All completed samples release their render-boundary progress bindings.
 
 These are event-span observations on hosted SwiftShader, including stalls,
 not GPU timings or function-level CPU attribution. The embedded bounded failure
-report is explicitly **truncated**: long-animation-frame script records are
-null, so they cannot identify a responsible function. It also lacks the
+report is explicitly **truncated**: long-animation-frame script timing records
+are null. Even without this truncation, that observer intentionally retains
+only invocation kind and timing, not function names or URLs; it cannot identify
+a responsible function. A separate CPU profile is needed for that purpose.
+The bounded report also lacks the
 completed documents' detailed worker-publication counts; getting beyond audit
 does not establish that this run exercised the same delayed target as the prior
 failure. No page or fixture-interception errors are recorded.

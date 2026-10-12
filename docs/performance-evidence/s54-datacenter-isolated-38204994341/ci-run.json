@@ -1,0 +1,14 @@
+{
+  "conclusion": "failure",
+  "headSha": "9a0b6a0805594945aa8975783a515aa5a23bce57",
+  "jobs": [
+    {
+      "name": "Free hosted Mac rendering diagnostic",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38204994341/job/114666405380"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38204994341"
+}
