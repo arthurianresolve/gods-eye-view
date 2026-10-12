@@ -505,6 +505,8 @@ async function reopen(label, { seed = false } = {}) {
         browserClose = await closeRecoveryBrowser(browser, {
           forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
           closeTrace: browserCloseTrace,
+          shutdownDiagnostics:
+            process.env.GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS === '1',
         });
     } finally {
       browserProcess?.stderr?.off('data', stderrListener);

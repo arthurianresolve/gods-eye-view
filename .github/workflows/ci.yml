@@ -72,6 +72,10 @@ on:
         type: choice
         options: [recovery-default, swiftshader-webgl-only]
         default: recovery-default
+      shutdown_diagnostics:
+        description: Collect bounded target and owned-process snapshots on profile-recovery close failures
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -295,6 +299,7 @@ jobs:
       # Windows and macOS recovery use the measured WebGL-only SwiftShader path.
       # Linux retains its existing full-driver software renderer.
       GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (matrix.os == 'windows-latest' || matrix.os == 'macos-latest' || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_renderer == 'swiftshader-webgl-only')) && '1' || '0' }}
+      GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: ${{ (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_diagnostics) && '1' || '0' }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
