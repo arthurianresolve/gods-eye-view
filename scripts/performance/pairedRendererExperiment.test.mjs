@@ -456,6 +456,104 @@ test('future-document registration removal leaves the current probe live and is 
   assert.equal(canvas.listeners.size, 0);
 });
 
+test('an explicitly retired document stops its public Cesium render loop in the existing cleanup evaluation', async () => {
+  const probePage = earlyProbePage();
+  const { page, window } = probePage;
+  window.__godsEyeView = { viewer: { useDefaultRenderLoop: true } };
+  await installEarlyCesiumRendererProbe(page);
+  let evaluations = 0;
+  const evaluate = page.evaluate;
+  page.evaluate = (...args) => {
+    evaluations += 1;
+    return evaluate(...args);
+  };
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    null,
+    1_000,
+    { retireViewerRenderLoop: true },
+  );
+
+  assert.equal(cleanup.confirmed, true);
+  assert.equal(window.__godsEyeView.viewer.useDefaultRenderLoop, false);
+  assert.equal(cleanup.document.renderLoopRetirement.requested, true);
+  assert.equal(cleanup.document.renderLoopRetirement.status, 'confirmed');
+  assert.equal(cleanup.document.renderLoopRetirement.before, true);
+  assert.equal(cleanup.document.renderLoopRetirement.after, false);
+  assert.equal(cleanup.document.renderLoopRetirement.confirmed, true);
+  assert.equal(
+    Number.isFinite(
+      cleanup.document.renderLoopRetirement.pageExecutionElapsedMs,
+    ),
+    true,
+  );
+  assert.equal(evaluations, 1, 'retirement adds no page-evaluation round trip');
+});
+
+test('ordinary cleanup leaves render scheduling unchanged unless retirement is requested', async () => {
+  const probePage = earlyProbePage();
+  probePage.window.__godsEyeView = {
+    viewer: { useDefaultRenderLoop: true },
+  };
+  await installEarlyCesiumRendererProbe(probePage.page);
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probePage.page,
+    null,
+  );
+
+  assert.equal(cleanup.confirmed, true);
+  assert.equal(
+    probePage.window.__godsEyeView.viewer.useDefaultRenderLoop,
+    true,
+  );
+  assert.equal(cleanup.document.renderLoopRetirement, null);
+});
+
+test('retirement rejection fails cleanup with bounded explicit state', async () => {
+  const probePage = earlyProbePage();
+  let loopValue = true;
+  probePage.window.__godsEyeView = {
+    viewer: {
+      get useDefaultRenderLoop() {
+        return loopValue;
+      },
+      set useDefaultRenderLoop(_value) {
+        throw new Error('private browser detail');
+      },
+    },
+  };
+  await installEarlyCesiumRendererProbe(probePage.page);
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probePage.page,
+    null,
+    1_000,
+    { retireViewerRenderLoop: true },
+  );
+
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.renderLoopRetirement.requested, true);
+  assert.equal(
+    cleanup.document.renderLoopRetirement.status,
+    'viewer-render-loop-set-failed',
+  );
+  assert.equal(cleanup.document.renderLoopRetirement.before, true);
+  assert.equal(cleanup.document.renderLoopRetirement.after, null);
+  assert.equal(cleanup.document.renderLoopRetirement.confirmed, false);
+  assert.equal(
+    Number.isFinite(
+      cleanup.document.renderLoopRetirement.pageExecutionElapsedMs,
+    ),
+    true,
+  );
+  assert.equal(
+    JSON.stringify(cleanup).includes('private browser detail'),
+    false,
+  );
+});
+
 test('failed early registration removal is recorded and never retried at final cleanup', async () => {
   const probePage = earlyProbePage();
   const { page } = probePage;
@@ -821,6 +919,7 @@ test('cleanup timeout preserves separate stages and records late completion', as
     listenerRemovalConfirmedCount: 0,
     listenerRemovalFailedCount: 0,
     stateDeleted: true,
+    renderLoopRetirement: null,
     errorKind: null,
   });
   assert.equal(JSON.stringify(evidence).length < 2_000, true);
@@ -1013,8 +1112,43 @@ test('late page cleanup retains bounded page timing without converting the host 
   assert.equal(cleanup.document.lateOutcome.listenerRemovalAttemptedCount, 2);
   assert.equal(cleanup.document.lateOutcome.listenerRemovalConfirmedCount, 2);
   assert.equal(cleanup.document.lateOutcome.stateDeleted, true);
-  assert.equal(Object.keys(cleanup.document.lateOutcome).length, 11);
+  assert.equal(Object.keys(cleanup.document.lateOutcome).length, 12);
   assert.equal(JSON.stringify(cleanup).length < 2_000, true);
+});
+
+test('late retirement acknowledgement remains a timeout but retains its bounded state', async () => {
+  const probe = earlyProbePage(1);
+  probe.window.__godsEyeView = { viewer: { useDefaultRenderLoop: true } };
+  await installEarlyCesiumRendererProbe(probe.page);
+  const evaluate = probe.page.evaluate;
+  let releaseAcknowledgement;
+  let pageOutcome;
+  probe.page.evaluate = (...args) =>
+    new Promise((resolve, reject) => {
+      evaluate(...args).then((result) => {
+        pageOutcome = result;
+        releaseAcknowledgement = () => resolve(result);
+      }, reject);
+    });
+
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    probe.page,
+    null,
+    5,
+    { retireViewerRenderLoop: true },
+  );
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.status, 'timeout');
+  releaseAcknowledgement();
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(pageOutcome.renderLoopRetirement.confirmed, true);
+  assert.equal(cleanup.confirmed, false);
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(
+    cleanup.document.lateOutcome.renderLoopRetirement.confirmed,
+    true,
+  );
 });
 
 test('late document errors discard untrusted status and error fields after timeout', async () => {

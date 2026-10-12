@@ -2242,6 +2242,8 @@ async function runRevision({
         await cleanupEarlyCesiumRendererProbeWithEvidence(
           page,
           earlyRendererProbeScriptIdentifier,
+          1_000,
+          { retireViewerRenderLoop: true },
         ),
       );
       if (earlyRendererProbeCleanup.confirmed !== true)
@@ -2372,23 +2374,25 @@ async function runRevision({
     failure = error;
   } finally {
     if (page) {
-      if (earlyRendererProbeScriptIdentifier !== null) {
-        try {
-          const earlyRendererProbeCleanup = recordRendererProbeCleanup(
-            await cleanupEarlyCesiumRendererProbeWithEvidence(
-              page,
-              earlyRendererProbeScriptIdentifier,
+      try {
+        const earlyRendererProbeCleanup = recordRendererProbeCleanup(
+          await cleanupEarlyCesiumRendererProbeWithEvidence(
+            page,
+            earlyRendererProbeScriptIdentifier,
+            1_000,
+            { retireViewerRenderLoop: true },
+          ),
+        );
+        if (earlyRendererProbeCleanup.confirmed !== true)
+          cleanupErrors.push(
+            sanitizeError(
+              new Error(
+                'Retired smoke document render-loop and probe cleanup was not confirmed.',
+              ),
             ),
           );
-          if (earlyRendererProbeCleanup.confirmed !== true)
-            cleanupErrors.push(
-              sanitizeError(
-                new Error('Early renderer probe cleanup was not confirmed.'),
-              ),
-            );
-        } catch (error) {
-          cleanupErrors.push(sanitizeError(error));
-        }
+      } catch (error) {
+        cleanupErrors.push(sanitizeError(error));
       }
       try {
         await withTimeout(

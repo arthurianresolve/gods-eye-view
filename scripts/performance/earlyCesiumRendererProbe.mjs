@@ -206,6 +206,16 @@ const LATE_DOCUMENT_ERROR_KINDS = new Set([
   'listener-removal-unconfirmed',
   'cleanup-state-delete-unconfirmed',
 ]);
+const RENDER_LOOP_RETIREMENT_STATUSES = new Set([
+  'confirmed',
+  'already-disabled',
+  'not-applicable-no-viewer',
+  'not-applicable-page-closed',
+  'viewer-render-loop-unavailable',
+  'viewer-render-loop-not-disabled',
+  'viewer-render-loop-set-failed',
+  'not-attempted',
+]);
 
 function boundedLateDocumentOutcome(value) {
   if (
@@ -225,6 +235,35 @@ function boundedLateDocumentOutcome(value) {
       : null;
   const elapsed = value.pageExecutionElapsedMs;
   if (!Number.isFinite(elapsed) || elapsed < 0 || elapsed > 60_000) return null;
+  let renderLoopRetirement = null;
+  if (
+    typeof value.renderLoopRetirement !== 'undefined' &&
+    value.renderLoopRetirement !== null
+  ) {
+    const retirement = value.renderLoopRetirement;
+    if (
+      !retirement ||
+      typeof retirement !== 'object' ||
+      Array.isArray(retirement) ||
+      retirement.requested !== true ||
+      !RENDER_LOOP_RETIREMENT_STATUSES.has(retirement.status) ||
+      ![null, true, false].includes(retirement.before) ||
+      ![null, true, false].includes(retirement.after) ||
+      typeof retirement.confirmed !== 'boolean' ||
+      !Number.isFinite(retirement.pageExecutionElapsedMs) ||
+      retirement.pageExecutionElapsedMs < 0 ||
+      retirement.pageExecutionElapsedMs > 60_000
+    )
+      return null;
+    renderLoopRetirement = {
+      requested: true,
+      status: retirement.status,
+      before: retirement.before,
+      after: retirement.after,
+      confirmed: retirement.confirmed,
+      pageExecutionElapsedMs: retirement.pageExecutionElapsedMs,
+    };
+  }
   return {
     status: value.status,
     pageExecutionElapsedMs: elapsed,
@@ -240,6 +279,7 @@ function boundedLateDocumentOutcome(value) {
     ),
     listenerRemovalFailedCount: boundedCount('listenerRemovalFailedCount'),
     stateDeleted: booleanOrNull('stateDeleted'),
+    renderLoopRetirement,
     errorKind: LATE_DOCUMENT_ERROR_KINDS.has(value.errorKind)
       ? value.errorKind
       : null,
@@ -380,6 +420,7 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
   page,
   scriptIdentifier,
   timeoutMs = 1_000,
+  { retireViewerRenderLoop = false } = {},
 ) {
   const startedAt = performance.now();
   const evidence = {
@@ -397,6 +438,16 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
       listenerRemovalConfirmedCount: 0,
       listenerRemovalFailedCount: 0,
       stateDeleted: null,
+      renderLoopRetirement: retireViewerRenderLoop
+        ? {
+            requested: true,
+            status: 'not-attempted',
+            before: null,
+            after: null,
+            confirmed: false,
+            pageExecutionElapsedMs: null,
+          }
+        : null,
     },
     scriptRegistration: {
       ...cleanupStage(scriptIdentifier ? 'not-attempted' : 'not-registered'),
@@ -516,12 +567,61 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
     evidence.document.status = 'page-closed';
     evidence.document.hookRestored = null;
     evidence.document.stateDeleted = null;
+    if (retireViewerRenderLoop)
+      evidence.document.renderLoopRetirement = {
+        requested: true,
+        status: 'not-applicable-page-closed',
+        before: null,
+        after: null,
+        confirmed: true,
+        pageExecutionElapsedMs: 0,
+      };
   } else if (page && typeof page.evaluate === 'function') {
     evidence.document.status = 'pending';
     const documentResult = await runStage(evidence.document, () =>
       page.evaluate(
-        (key, proofKey) => {
+        (key, proofKey, shouldRetireViewerRenderLoop) => {
           const pageExecutionStartedAt = performance.now();
+          const renderLoopRetirement = shouldRetireViewerRenderLoop
+            ? {
+                requested: true,
+                status: 'not-attempted',
+                before: null,
+                after: null,
+                confirmed: false,
+                pageExecutionElapsedMs: null,
+              }
+            : null;
+          if (renderLoopRetirement) {
+            const retirementStartedAt = performance.now();
+            try {
+              const viewer = window.__godsEyeView?.viewer;
+              if (!viewer) {
+                renderLoopRetirement.status = 'not-applicable-no-viewer';
+                renderLoopRetirement.confirmed = true;
+              } else if (typeof viewer.useDefaultRenderLoop !== 'boolean') {
+                renderLoopRetirement.status = 'viewer-render-loop-unavailable';
+              } else {
+                renderLoopRetirement.before = viewer.useDefaultRenderLoop;
+                if (renderLoopRetirement.before)
+                  viewer.useDefaultRenderLoop = false;
+                renderLoopRetirement.after = viewer.useDefaultRenderLoop;
+                renderLoopRetirement.confirmed =
+                  renderLoopRetirement.after === false;
+                renderLoopRetirement.status = renderLoopRetirement.confirmed
+                  ? renderLoopRetirement.before
+                    ? 'confirmed'
+                    : 'already-disabled'
+                  : 'viewer-render-loop-not-disabled';
+              }
+            } catch {
+              renderLoopRetirement.status = 'viewer-render-loop-set-failed';
+            }
+            renderLoopRetirement.pageExecutionElapsedMs = Math.max(
+              0,
+              performance.now() - retirementStartedAt,
+            );
+          }
           const finish = (record) => {
             record.pageExecutionElapsedMs = Math.max(
               0,
@@ -544,6 +644,7 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
             listenerRemovalConfirmedCount: 0,
             listenerRemovalFailedCount: 0,
             stateDeleted: false,
+            renderLoopRetirement,
           };
           if (!state) {
             const proofMatches =
@@ -618,6 +719,7 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
         },
         STATE_KEY,
         CLEANUP_PROOF_KEY,
+        retireViewerRenderLoop,
       ),
     );
     documentOperationSettled = documentResult.settled;
@@ -659,7 +761,9 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
     ) &&
     ['confirmed', 'not-registered', 'already-confirmed'].includes(
       evidence.scriptRegistration.status,
-    );
+    ) &&
+    (!retireViewerRenderLoop ||
+      evidence.document.renderLoopRetirement?.confirmed === true);
   return evidence;
 }
 

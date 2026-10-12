@@ -388,18 +388,37 @@ async function removeEarlyRendererRegistrationForPage(
     );
   return true;
 }
-async function cleanupEarlyRendererProbeForPage(page) {
-  if (!page || !earlyRendererProbeScripts.has(page)) return true;
-  const scriptIdentifier = earlyRendererProbeScripts.get(page);
+async function cleanupEarlyRendererProbeForPage(
+  page,
+  {
+    retireViewerRenderLoop = false,
+    phase = 'document-cleanup',
+    documentRole = null,
+    documentId = null,
+  } = {},
+) {
+  const hasRegistration = Boolean(page && earlyRendererProbeScripts.has(page));
+  if (!page || (!hasRegistration && !retireViewerRenderLoop)) return true;
+  const scriptIdentifier = hasRegistration
+    ? earlyRendererProbeScripts.get(page)
+    : null;
   const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
     page,
     scriptIdentifier,
+    1_000,
+    { retireViewerRenderLoop },
   );
-  evidence.phase = 'document-cleanup';
+  evidence.phase = phase;
+  evidence.documentRole = documentRole;
+  evidence.documentId = documentId;
   recordRendererProbeCleanupEvidence(evidence);
   if (!evidence.confirmed)
-    throw new Error('Early Cesium renderer probe cleanup was not confirmed.');
-  earlyRendererProbeScripts.delete(page);
+    throw new Error(
+      retireViewerRenderLoop
+        ? 'Retired-document render loop and renderer probe cleanup were not confirmed.'
+        : 'Early Cesium renderer probe cleanup was not confirmed.',
+    );
+  if (hasRegistration) earlyRendererProbeScripts.delete(page);
   return true;
 }
 const providerSampleCpuProfileTargets = [
@@ -1517,7 +1536,12 @@ try {
       documentId: startupDocumentId,
       auditMode: 'diagnostic',
     });
-    await cleanupEarlyRendererProbeForPage(startupPage);
+    await cleanupEarlyRendererProbeForPage(startupPage, {
+      retireViewerRenderLoop: true,
+      phase: 'startup-document-close',
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
+    });
     await context.close();
     await releaseFlightFixtureSession(startupFixtureSession);
   }
@@ -2005,7 +2029,12 @@ try {
         'Render-boundary binding cleanup failed before document replacement.',
       );
     await releaseFlightFixtureSession(activeFixtureSession);
-    await cleanupEarlyRendererProbeForPage(page);
+    await cleanupEarlyRendererProbeForPage(page, {
+      retireViewerRenderLoop: true,
+      phase: 'provider-document-close',
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+    });
     if (providerContext) await providerContext.close();
     else await page.close();
     providerContext = await browser.createBrowserContext();
@@ -3017,12 +3046,24 @@ try {
           scenarios,
         })
       : null;
+  if (page)
+    await cleanupEarlyRendererProbeForPage(page, {
+      retireViewerRenderLoop: true,
+      phase: 'capture-document-finalization',
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+    });
   const workload = {
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
     startupRuns: startupSamples.length,
     scenarios,
+    rendererProbeCleanup: [
+      ...(failureProgress.workload.rendererProbeCleanup || []),
+    ],
+    rendererProbeCleanupOmittedCount:
+      failureProgress.workload.rendererProbeCleanupOmittedCount || 0,
     fixture: infrastructureWorkload || fixture,
     providerFixture: infrastructureWorkload
       ? infrastructureWorkload.workloadId
@@ -3245,7 +3286,13 @@ try {
     await releaseFlightFixtureSession(session);
   for (const probePage of [...earlyRendererProbeScripts.keys()]) {
     try {
-      await cleanupEarlyRendererProbeForPage(probePage);
+      await cleanupEarlyRendererProbeForPage(probePage, {
+        retireViewerRenderLoop: true,
+        phase: 'capture-final-document-close',
+        documentRole:
+          probePage === page ? activeDocumentRole : 'retired-document',
+        documentId: probePage === page ? activeDocumentId : null,
+      });
     } catch (error) {
       captureFailure ||= error;
       process.exitCode = 1;
