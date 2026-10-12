@@ -9,8 +9,9 @@ readback speedup or resolve the Windows frame-delivery failure.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. Datacenter component comparisons show repeatable activation and JS
-heap benefits with identical captured pixels, while the cable map-switch
-readiness test remains failed. S47's additional infrastructure workloads are
+heap benefits with identical captured pixels. The fresh dam comparison regresses
+source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
+the cable map-switch readiness test also remains failed. S47's additional infrastructure workloads are
 under implementation/review; Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
@@ -4305,3 +4306,13 @@ they do not establish motion p95, physical Windows performance or a retained-hea
 plateau. Dam/cable benefit acceptance, full-application coverage and the final
 soak remain pending. Entity defaults remain unchanged. The user-supplied Windows
 GPU export establishes hardware acceleration only.
+
+The [dam comparison 38188217630](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38188217630)
+at `d05e5415` completes successfully as a measurement but fails benefit acceptance.
+Median source-ready time increases 15.02% (four of five pairs slower), above the
+10% regression limit; first usable time after source-ready increases 2.93%, with
+one pair at +19.42%. Enabled post-GC JS heap increase falls 11.05%. Root verifies
+all 27 recorded source hashes and 40 decoded images (20 exact renderer pairs).
+The full artifact and failed acceptance are preserved alongside the datacenter
+result. Dam adoption remains blocked on source-ready attribution and resolution
+of the measured regression; lower heap does not convert it to a pass.
