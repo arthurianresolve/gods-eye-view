@@ -20,7 +20,12 @@ the [candidate passes all 102](candidate-tests.txt). The independent
 [integrated-code reproduction](candidate.json) reports zero listeners, timers,
 idle callbacks and picks after disposal and draining in both cases.
 Formatting, import directions and package boundaries pass on the candidate.
-Full integrated CI is pending at this documentation checkpoint.
+[Full integrated CI 38255379818](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38255379818)
+passes all seven jobs at `c39c52c8301282973716102c380f369c9036cb59`: Node 24/26,
+production builds, Windows onboarding, three-OS real install/update recovery,
+and the browser journeys. The [terminal job evidence](integration-ci.json)
+records that exact revision; subsequent documentation commits do not change
+the tested runtime source.
 
 [Review metadata](review.json) records exact commits, source/test hashes,
 artifact hashes and the Windows Node 24.16.0 environment. Reproduce with:

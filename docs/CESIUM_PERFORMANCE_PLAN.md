@@ -2,6 +2,13 @@
 
 ## Current status - 12 October 2026
 
+Latest S48 follow-up at `5441b038` fixes the demonstrated cleanup scope error
+and passes 175 focused tests. Its [hosted failure artifact is preserved and independently hash-verified](performance-evidence/s48-capture-ownership-38257168750/README.md),
+but startup registration removal exceeds the unchanged one-second deadline
+before any sample. Reached observer cleanup is confirmed; this remains a
+failed diagnostic, with removal scheduling requiring investigation. No
+performance or physical Windows acceptance is established.
+
 Latest isolated S48 diagnostic at `d1da56e4` completes six short samples but
 fails its final cleanup with an out-of-scope `page` reference. Its enlarged
 completed report exceeds the inline failure budget, so caller/frame rows were
@@ -16,7 +23,7 @@ work after final runner disposal. Seven lifecycle regressions fail against
 the unchanged parent; all 102 action-runner checks pass with the fix. The
 independent reproduction drains to zero owned listeners/callbacks and performs
 no late pick. [Exact evidence and limits](performance-evidence/s49-view-target-prewarm-ownership/README.md)
-are preserved. Integrated CI is pending at this checkpoint. This is a specific
+are preserved. All seven integrated CI jobs pass at `c39c52c8`. This is a specific
 ownership repair; S49, physical Windows retention and S60 remain incomplete.
 
 Latest S48 attribution: [independent CPU-profile replay and source mapping](performance-evidence/s48-depth-pick-attribution/README.md)

@@ -3,12 +3,18 @@
 This review attributes the principal failures investigated during the performance
 work. It is a source/history review, not a complete upstream benchmark. Live
 `git ls-remote` checks found both upstream `origin/main` and our `fork/main` at
-`591f299d11f38a612629a274463196d57ae3862e`. The integrated dev checkpoint is
+`591f299d11f38a612629a274463196d57ae3862e`. The initial integrated dev checkpoint was
 `2f7de280e41f23fa2036b07c74d9bf21cfb01c32`. Local branch `main` is older and is
 not the comparison used here.
 
+Later follow-up: the prewarm ownership repair below is integrated and all seven
+standard CI jobs pass at `c39c52c8`. The new depth-pick diagnostic failures are
+isolated harness failures; their QA code is not integrated into `dev`.
+
 | Issue | Attribution and evidence | Disposition |
 | --- | --- | --- |
+| Camera-target prewarm survives action-runner disposal | Inherited code: the original prewarm function is byte-identical to remote main at the recorded revision. A real action runner/Cesium.Event reproduction retains its listener and queued callback and performs a pick after disposal. | Fixed by `3907df04`, integrated as `92e449ae`. Seven new regressions fail against the parent; all 102 action-runner checks and all seven integrated CI jobs pass. [Evidence](../s49-view-target-prewarm-ownership/README.md). This does not identify the cause of the historical whole-application growth or Windows frame stall. |
+| Depth-pick diagnostic finalizer scope error and discarded oversized report | Our isolated harness defects at `d1da56e4`: six samples finish, then cleanup refers to a block-scoped `page`; the completed report also exceeds the inline failure limit. | `5441b038` fixes ownership scope and preserves a separately bounded hashed raw artifact. Its actual failure path is verified, but the run stops earlier on the unchanged startup registration-removal deadline. [Original failure](../s48-depth-pick-38254885790/README.md), [follow-up](../s48-capture-ownership-38257168750/README.md). No upstream application failure is established. |
 | Duplicate HUD summary context work; stale completions after revision changes or destruction | Inherited code. The complete `_updateSummary` method in remote main is identical to the method immediately before fix `bbca229f`. The independently reviewed regressions fail against that pre-fix method. | Fixed in dev. This does not prove that HUD work caused the Windows GPU stall. |
 | Regional-weather decoded bitmap ownership | Inherited code. Remote main processes the decoded bitmap into a separate canvas without explicitly closing the displaced source bitmap. Fix `f90e24f3` closes that source after the copy, including exceptions, while preserving Cesium ownership of pass-through images. | Fixed in dev; focused and repeated-transfer evidence is separate from whole-application heap acceptance. |
 | CCTV rounded pose key reusing stale terrain support | Inherited ownership checks. Main checkpoint `591f299d` contains the same six-decimal key and hash-only cached, pending and geometry-consumer guards. Supported 0.4 m and 0.5 m calibration offsets can collide. Candidate tests against the unchanged integrated `48329a9f` runtime reproduce six failures. | Fixed by `61c050ca` (integrated as `0bae0fdb`), using exact runtime pose snapshots while preserving shipped key compatibility. All 83 focused checks, five lifecycle cycles and five hosted native calibration pairs pass. [Evidence and scope](../s50-exact-pose/README.md); this does not attribute Windows frame stalls or establish a full upstream browser comparison. |
