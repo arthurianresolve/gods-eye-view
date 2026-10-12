@@ -50,6 +50,16 @@ function boundedValue(value, depth = 0, seen = new WeakSet(), state = null) {
   return output;
 }
 
+/** Return the same redacted, depth- and collection-bounded projection used by
+ * failure artifacts. Callers still enforce their serialized byte cap. */
+export function boundCaptureReportEvidence(value) {
+  const state = { truncated: false };
+  return {
+    value: boundedValue(value, 0, new WeakSet(), state),
+    truncated: state.truncated,
+  };
+}
+
 function sourceIdentity(source) {
   const provenance = source?.buildProvenance;
   const sha1 = (value) => (/^[a-f0-9]{40}$/.test(value || '') ? value : null);

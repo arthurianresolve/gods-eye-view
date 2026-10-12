@@ -47,7 +47,10 @@ import {
   summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
-import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
+import {
+  boundCaptureReportEvidence,
+  MAX_CAPTURE_FAILURE_REPORT_BYTES,
+} from './performance/captureFailureReport.mjs';
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
@@ -483,9 +486,8 @@ export function validateCaptureCliReport(report, expected) {
     expectedRoles,
   );
   for (const entry of workerAuditDocuments) {
-    const measuredProviderDocument = entry.documentRole.startsWith(
-      'provider-sample-',
-    );
+    const measuredProviderDocument =
+      entry.documentRole.startsWith('provider-sample-');
     assert.equal(
       entry.mode,
       workerAuditMode === 'prewarm' && measuredProviderDocument
@@ -663,8 +665,9 @@ function validateInfrastructureCaptureCliReport(report, expected) {
   );
   assert.ok(pageAudit.loadedAssetPaths?.length > 0);
   assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
-  assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6);
-  for (const audit of pageAudit.cesiumWorkerBlobAudits)
+  const blobAudits = pageAudit.cesiumWorkerBlobAudits;
+  assert.ok(Array.isArray(blobAudits));
+  for (const audit of blobAudits)
     assert.equal(audit.status, 'receipt-derived-worker-blobs-validated');
 
   const fixture = createInfrastructureWorkloadFixture(
@@ -722,6 +725,55 @@ function validateInfrastructureCaptureCliReport(report, expected) {
       entry.restoration?.createdScriptBlobCountAtRestore,
       entry.restoration?.auditedCreatedScriptBlobCount,
     );
+    if (entry.validation === null) {
+      assert.equal(entry.observedWorkerTargetCount, 0);
+      assert.equal(entry.observedBlobRequestCount, 0);
+      assert.equal(entry.restoration?.createdScriptBlobCountAtRestore, 0);
+    } else {
+      assert.equal(entry.validation?.schema, 'gev-cesium-worker-blob-audit/v1');
+      assert.equal(
+        entry.validation?.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+      assert.equal(entry.validation?.auditMode, 'diagnostic');
+      assert.match(
+        entry.validation?.embeddedWorkerSourceSha256 || '',
+        /^[a-f0-9]{64}$/,
+      );
+    }
+  }
+  const requiredWorkerRoles = [
+    'main-setup',
+    ...report.captures.map((_, index) => `provider-sample-${index + 1}`),
+  ];
+  const auditsByRole = new Map(
+    workerDocuments.map((entry) => [entry.documentRole, entry]),
+  );
+  for (const role of requiredWorkerRoles)
+    assert.equal(
+      auditsByRole.get(role)?.validation?.status,
+      'receipt-derived-worker-blobs-validated',
+      `Missing receipt-derived worker audit for ${role}`,
+    );
+  const validatedDocumentCount = workerDocuments.filter(
+    (entry) =>
+      entry.validation?.status === 'receipt-derived-worker-blobs-validated',
+  ).length;
+  assert.equal(
+    blobAudits.length,
+    validatedDocumentCount,
+    'Worker blob observations must correspond one-to-one with validated document audits',
+  );
+  const workerSourceHashes = new Set(
+    workerDocuments
+      .filter((entry) => entry.validation)
+      .map((entry) => entry.validation.embeddedWorkerSourceSha256),
+  );
+  assert.equal(workerSourceHashes.size, 1);
+  for (const audit of blobAudits) {
+    assert.equal(audit?.schema, 'gev-cesium-worker-blob-audit/v1');
+    assert.equal(audit?.auditMode, 'diagnostic');
+    assert.ok(workerSourceHashes.has(audit?.embeddedWorkerSourceSha256));
   }
   const readinessReasons = getCaptureComparisonIneligibilityReasons({
     contract: observedContract,
@@ -747,7 +799,9 @@ function validateInfrastructureCaptureCliReport(report, expected) {
   assert.equal(report.environment?.hardwareEligible, false);
   assert.equal(report.captures?.length, 4);
   for (const scenario of report.workload.scenarios) {
-    const samples = report.captures.filter((sample) => sample.scenario === scenario);
+    const samples = report.captures.filter(
+      (sample) => sample.scenario === scenario,
+    );
     assert.equal(samples.length, 2);
     assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
     for (const sample of samples) {
@@ -790,11 +844,42 @@ function validateInfrastructureCaptureCliReport(report, expected) {
 
 export function compactCaptureCliFailure(report) {
   if (!report || typeof report !== 'object') return null;
-  const serialized = `${JSON.stringify(report, null, 2)}\n`;
-  const preservesBoundedFailureReport =
-    report.schema === 'gev-performance-capture-failure/v1' &&
-    report.status === 'failed' &&
-    Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES;
+  let preservedRawReport;
+  let rawReportTruncated = false;
+  let rawReportUnavailable = 'CLI report was not a recognized capture schema.';
+  try {
+    if (
+      report.schema === 'gev-performance-capture-failure/v1' &&
+      report.status === 'failed'
+    ) {
+      const serialized = `${JSON.stringify(report, null, 2)}\n`;
+      if (
+        Buffer.byteLength(serialized, 'utf8') <=
+        MAX_CAPTURE_FAILURE_REPORT_BYTES
+      )
+        preservedRawReport = report;
+      else
+        rawReportUnavailable =
+          'Failure report exceeded the bounded artifact limit.';
+    } else if (report.schema === 'gev-performance-capture/v1') {
+      const bounded = boundCaptureReportEvidence(report);
+      const serialized = `${JSON.stringify(bounded.value, null, 2)}\n`;
+      if (
+        bounded.value?.schema === 'gev-performance-capture/v1' &&
+        Buffer.byteLength(serialized, 'utf8') <=
+          MAX_CAPTURE_FAILURE_REPORT_BYTES
+      ) {
+        preservedRawReport = bounded.value;
+        rawReportTruncated = bounded.truncated;
+      } else
+        rawReportUnavailable =
+          'Completed report exceeded the bounded artifact limit.';
+    } else if (report.schema === 'gev-performance-capture-failure/v1') {
+      rawReportUnavailable = 'Failure report was not marked failed.';
+    }
+  } catch {
+    rawReportUnavailable = 'CLI report could not be safely bounded.';
+  }
   return {
     schema: 'gev-smoke-capture-cli-failure/v1',
     summary: {
@@ -836,12 +921,9 @@ export function compactCaptureCliFailure(report) {
         0,
       evidenceTruncated: report.evidenceTruncated ?? null,
     },
-    ...(preservesBoundedFailureReport
-      ? { rawReport: report }
-      : {
-          rawReportUnavailable:
-            'CLI report was not the recognized bounded failure schema.',
-        }),
+    ...(preservedRawReport
+      ? { rawReport: preservedRawReport, rawReportTruncated }
+      : { rawReportUnavailable }),
   };
 }
 

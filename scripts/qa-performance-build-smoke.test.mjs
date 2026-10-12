@@ -217,11 +217,9 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
   ];
   source.buildProvenance.pageAssetAudit.workerAuditDocuments =
     workerAuditRoles.map((documentRole) => {
-      const measuredProviderDocument = documentRole.startsWith(
-        'provider-sample-',
-      );
-      const prewarm =
-        workerAuditMode === 'prewarm' && measuredProviderDocument;
+      const measuredProviderDocument =
+        documentRole.startsWith('provider-sample-');
+      const prewarm = workerAuditMode === 'prewarm' && measuredProviderDocument;
       return {
         documentRole,
         mode: prewarm ? 'prewarm' : 'diagnostic',
@@ -344,9 +342,14 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
   };
 }
 
-function validInfrastructureCaptureCliReport(providerFixture = 'infrastructure-datacenters') {
+function validInfrastructureCaptureCliReport(
+  providerFixture = 'infrastructure-datacenters',
+) {
   const fixedTime = '2026-10-08T12:00:00.000Z';
-  const fixture = createInfrastructureWorkloadFixture(providerFixture, fixedTime);
+  const fixture = createInfrastructureWorkloadFixture(
+    providerFixture,
+    fixedTime,
+  );
   const layers = Object.entries(fixture.expectedLayerCounts)
     .map(([id, count]) => ({ id, enabled: true, count }))
     .sort((left, right) => left.id.localeCompare(right.id));
@@ -416,7 +419,8 @@ function validInfrastructureCaptureCliReport(providerFixture = 'infrastructure-d
     drawingBuffer: { width: 1280, height: 900 },
     startup: {
       runCount: 1,
-      measurement: 'one measured app document; cache disabled before navigation',
+      measurement:
+        'one measured app document; cache disabled before navigation',
     },
   };
   const workload = {
@@ -440,17 +444,32 @@ function validInfrastructureCaptureCliReport(providerFixture = 'infrastructure-d
     hookAvailable: true,
     disabled: true,
   }));
-  const workerAuditDocuments = diagnosticRoles.map((documentRole) => ({
-    documentRole,
-    mode: 'diagnostic',
-    restoration: {
-      nativeCreateObjectURLRestored: true,
-      registryEmpty: true,
-      overflowCountAtRestore: 0,
-      createdScriptBlobCountAtRestore: 0,
-      auditedCreatedScriptBlobCount: 0,
-    },
-  }));
+  const workerSourceSha256 = 'e'.repeat(64);
+  const workerAuditDocuments = diagnosticRoles.map((documentRole) => {
+    const hasRequiredAudit = documentRole !== 'startup-1';
+    const validation = hasRequiredAudit
+      ? {
+          schema: 'gev-cesium-worker-blob-audit/v1',
+          status: 'receipt-derived-worker-blobs-validated',
+          auditMode: 'diagnostic',
+          embeddedWorkerSourceSha256: workerSourceSha256,
+        }
+      : null;
+    return {
+      documentRole,
+      mode: 'diagnostic',
+      validation,
+      restoration: {
+        nativeCreateObjectURLRestored: true,
+        registryEmpty: true,
+        overflowCountAtRestore: 0,
+        createdScriptBlobCountAtRestore: hasRequiredAudit ? 1 : 0,
+        auditedCreatedScriptBlobCount: hasRequiredAudit ? 1 : 0,
+      },
+      observedWorkerTargetCount: hasRequiredAudit ? 1 : 0,
+      observedBlobRequestCount: hasRequiredAudit ? 1 : 0,
+    };
+  });
   const source = {
     appCommit: 'b'.repeat(40),
     harnessCommit: 'c'.repeat(40),
@@ -463,9 +482,9 @@ function validInfrastructureCaptureCliReport(providerFixture = 'infrastructure-d
         scriptRequestCount: 10,
         loadedAssetPaths: ['assets/app.js'],
         unexpectedAssetPaths: [],
-        cesiumWorkerBlobAudits: Array.from({ length: 6 }, () => ({
-          status: 'receipt-derived-worker-blobs-validated',
-        })),
+        cesiumWorkerBlobAudits: workerAuditDocuments
+          .filter((entry) => entry.validation)
+          .map((entry) => entry.validation),
         workerAuditDocuments,
       },
     },
@@ -572,11 +591,81 @@ test('capture CLI validates the selected infrastructure workload and rejects den
   assert.equal(result.providerFixture, expected.providerFixture);
   assert.equal(result.captureCount, 4);
 
+  const missingSampleAudit = validInfrastructureCaptureCliReport();
+  const missingSampleDocument =
+    missingSampleAudit.source.buildProvenance.pageAssetAudit.workerAuditDocuments.find(
+      (entry) => entry.documentRole === 'provider-sample-3',
+    );
+  missingSampleDocument.validation = null;
+  missingSampleDocument.observedWorkerTargetCount = 0;
+  missingSampleDocument.observedBlobRequestCount = 0;
+  missingSampleDocument.restoration.createdScriptBlobCountAtRestore = 0;
+  missingSampleDocument.restoration.auditedCreatedScriptBlobCount = 0;
+  missingSampleAudit.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.pop();
+  assert.throws(
+    () => validateCaptureCliReport(missingSampleAudit, expected),
+    /Missing receipt-derived worker audit for provider-sample-3/,
+  );
+
+  const missingSetupAudit = validInfrastructureCaptureCliReport();
+  const missingSetupDocument =
+    missingSetupAudit.source.buildProvenance.pageAssetAudit.workerAuditDocuments.find(
+      (entry) => entry.documentRole === 'main-setup',
+    );
+  missingSetupDocument.validation = null;
+  missingSetupDocument.observedWorkerTargetCount = 0;
+  missingSetupDocument.observedBlobRequestCount = 0;
+  missingSetupDocument.restoration.createdScriptBlobCountAtRestore = 0;
+  missingSetupDocument.restoration.auditedCreatedScriptBlobCount = 0;
+  missingSetupAudit.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.shift();
+  assert.throws(
+    () => validateCaptureCliReport(missingSetupAudit, expected),
+    /Missing receipt-derived worker audit for main-setup/,
+  );
+
+  const unownedObservation = validInfrastructureCaptureCliReport();
+  unownedObservation.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.push(
+    { status: 'receipt-derived-worker-blobs-validated' },
+  );
+  assert.throws(
+    () => validateCaptureCliReport(unownedObservation, expected),
+    /one-to-one with validated document audits/,
+  );
+
+  const malformedObservation = validInfrastructureCaptureCliReport();
+  malformedObservation.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits[0].schema =
+    'unknown-worker-audit/v9';
+  assert.throws(() => validateCaptureCliReport(malformedObservation, expected));
+
+  const emptyObservations = validInfrastructureCaptureCliReport();
+  emptyObservations.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits =
+    [];
+  assert.throws(
+    () => validateCaptureCliReport(emptyObservations, expected),
+    /0 !== 5/,
+  );
+
+  const inconsistentWorkerSource = validInfrastructureCaptureCliReport();
+  inconsistentWorkerSource.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].validation.embeddedWorkerSourceSha256 =
+    'f'.repeat(64);
+  inconsistentWorkerSource.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits[1].embeddedWorkerSourceSha256 =
+    'f'.repeat(64);
+  assert.throws(
+    () => validateCaptureCliReport(inconsistentWorkerSource, expected),
+    /2 !== 1/,
+  );
+
+  const wrongCommitEvidence = validInfrastructureCaptureCliReport();
+  wrongCommitEvidence.source.harnessCommit = 'a'.repeat(40);
+  assert.throws(() => validateCaptureCliReport(wrongCommitEvidence, expected));
+
   const wrongCount = validInfrastructureCaptureCliReport();
   wrongCount.captures[0].layers[0].count += 1;
   assert.throws(() => validateCaptureCliReport(wrongCount, expected));
 
-  const wrongWorkload = validInfrastructureCaptureCliReport('infrastructure-dams');
+  const wrongWorkload = validInfrastructureCaptureCliReport(
+    'infrastructure-dams',
+  );
   assert.throws(() =>
     validateCaptureCliReport(wrongWorkload, {
       ...expected,
@@ -670,7 +759,8 @@ test('infrastructure capture requires rendered motion, consistent frame evidence
   }
   refreshDerivedComparison(wrongDetection);
   assert.throws(
-    () => validateCaptureCliReport(wrongDetection, makeExpected(wrongDetection)),
+    () =>
+      validateCaptureCliReport(wrongDetection, makeExpected(wrongDetection)),
     /'SPARSE' !== 'DENSE'/,
   );
 
@@ -682,7 +772,10 @@ test('infrastructure capture requires rendered motion, consistent frame evidence
   idle.renderedFrameCount = 0;
   idle.frameIntervalMs = { p50: null, p95: null, max: null, samples: 0 };
   assert.doesNotThrow(() =>
-    validateCaptureCliReport(idleWithoutFrames, makeExpected(idleWithoutFrames)),
+    validateCaptureCliReport(
+      idleWithoutFrames,
+      makeExpected(idleWithoutFrames),
+    ),
   );
 });
 
@@ -743,17 +836,22 @@ test('capture CLI validator requires the selected worker audit mode and per-samp
   const report = validCaptureCliReport('prewarm');
   const result = validateCaptureCliReport(report, expected);
   assert.equal(result.comparisonEligible, false);
-  assert.throws(
-    () => validateCaptureCliReport(report, { ...expected, workerAuditMode: 'diagnostic' }),
+  assert.throws(() =>
+    validateCaptureCliReport(report, {
+      ...expected,
+      workerAuditMode: 'diagnostic',
+    }),
   );
   const missingLateCheck = validCaptureCliReport('prewarm');
-  delete missingLateCheck.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].lateUseCheck;
+  delete missingLateCheck.source.buildProvenance.pageAssetAudit
+    .workerAuditDocuments[2].lateUseCheck;
   assert.throws(() => validateCaptureCliReport(missingLateCheck, expected));
   const missingRestore = validCaptureCliReport('prewarm');
   missingRestore.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].restoration.registryEmpty = false;
   assert.throws(() => validateCaptureCliReport(missingRestore, expected));
   const wrongPerDocumentMode = validCaptureCliReport('prewarm');
-  wrongPerDocumentMode.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].mode = 'diagnostic';
+  wrongPerDocumentMode.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].mode =
+    'diagnostic';
   assert.throws(() => validateCaptureCliReport(wrongPerDocumentMode, expected));
 });
 
@@ -892,6 +990,54 @@ test('smoke compaction preserves the complete bounded capture failure report and
   assert.equal(compacted.summary.completedSampleCount, 2);
   assert.equal(compacted.summary.completedSamplesRetained, 2);
   assert.equal(compacted.summary.evidenceTruncated, false);
+  assert.equal(compacted.rawReportTruncated, false);
+});
+
+test('smoke compaction preserves a bounded completed capture report after outer validation failure', () => {
+  const completedReport = {
+    schema: 'gev-performance-capture/v1',
+    comparisonEligible: false,
+    source: { appCommit: 'b'.repeat(40), harnessCommit: 'c'.repeat(40) },
+    captures: [{ scenario: 'idle', run: 1, frames: 0 }],
+    page: {
+      pageUrl: 'http://127.0.0.1:4173/@fs/C:/Users/Private/source.mjs',
+      responseUrl: 'https://example.invalid/assets/app.js?token=secret',
+      body: 'large or private response data',
+    },
+  };
+  const compacted = compactCaptureCliFailure(completedReport);
+  assert.equal(compacted.summary.reportSchema, 'gev-performance-capture/v1');
+  assert.equal(compacted.rawReport.schema, 'gev-performance-capture/v1');
+  assert.equal(compacted.rawReport.page.pageUrl, '[url]');
+  assert.equal(compacted.rawReport.page.responseUrl, '[url]');
+  assert.equal(compacted.rawReport.page.body, undefined);
+  assert.equal(compacted.rawReportTruncated, false);
+  assert.ok(
+    Buffer.byteLength(JSON.stringify(compacted.rawReport), 'utf8') <=
+      MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  );
+});
+
+test('smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap', () => {
+  const truncated = compactCaptureCliFailure({
+    schema: 'gev-performance-capture/v1',
+    samples: Array.from({ length: 300 }, (_, index) => ({ index })),
+  });
+  assert.equal(truncated.rawReport.schema, 'gev-performance-capture/v1');
+  assert.equal(truncated.rawReport.samples.length, 256);
+  assert.equal(truncated.rawReportTruncated, true);
+
+  const oversized = compactCaptureCliFailure({
+    schema: 'gev-performance-capture/v1',
+    details: Object.fromEntries(
+      Array.from({ length: 64 }, (_, index) => [
+        `field${index}`,
+        Array.from({ length: 5 }, () => 'x'.repeat(1100)),
+      ]),
+    ),
+  });
+  assert.equal(oversized.rawReport, undefined);
+  assert.match(oversized.rawReportUnavailable, /bounded artifact limit/);
 });
 
 test('smoke compaction does not label an unbounded or unrecognized report as raw failure evidence', () => {
@@ -902,7 +1048,7 @@ test('smoke compaction does not label an unbounded or unrecognized report as raw
     progress: { completedSampleCount: 1, completedSamples: [{ run: 1 }] },
   });
   assert.equal(compacted.rawReport, undefined);
-  assert.match(compacted.rawReportUnavailable, /bounded failure schema/);
+  assert.match(compacted.rawReportUnavailable, /recognized capture schema/);
   assert.equal(compacted.summary.completedSampleCount, 1);
 });
 
