@@ -10,6 +10,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
   assertProviderFixtureCaptureClock,
+  buildCaptureCliValidationExpectations,
   compactCaptureCliFailure,
   executeCaptureCliWithReportArtifact,
   parseSmokeArguments,
@@ -30,6 +31,12 @@ import {
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
 import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
+import {
+  createWeatherEffectsFixtureDelivery,
+  createWeatherEffectsFixtureLifecycle,
+  createWeatherEffectsWorkloadFixture,
+  WEATHER_EFFECTS_WORKLOAD_ID,
+} from './performance/weatherEffectsWorkloadFixture.mjs';
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -217,6 +224,7 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     'infrastructure-dams',
     'infrastructure-cables',
     'infrastructure',
+    WEATHER_EFFECTS_WORKLOAD_ID,
   ])
     assert.deepEqual(
       parseSmokeArguments(['--provider-fixture', providerFixture]),
@@ -549,7 +557,7 @@ function validInfrastructureCaptureCliReport(
     populationsAfter: layers,
   };
   const cesiumClock = {
-    currentTime: fixture.clock,
+    currentTime: { ...fixture.clock },
     shouldAnimate: false,
     multiplier: 0,
   };
@@ -704,6 +712,204 @@ function validInfrastructureCaptureCliReport(
     },
     performanceDiagnostics: { documents: diagnostics },
   };
+}
+
+async function validWeatherEffectsCaptureCliReport() {
+  const report = validInfrastructureCaptureCliReport();
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: 1,
+    captureCount: 4,
+  });
+  const layers = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const delivery = createWeatherEffectsFixtureDelivery(
+    fixture,
+    'http://127.0.0.1:4173/',
+  );
+  const fulfill = async (url) => {
+    const response = await delivery.respond(
+      new URL(url, 'http://127.0.0.1:4173/'),
+      { method: 'GET' },
+    );
+    assert.ok(response);
+    delivery.onFulfilled({
+      url: new URL(url, 'http://127.0.0.1:4173/').href,
+      method: 'GET',
+      status: response.status,
+      bodyBase64: Buffer.from(response.body).toString('base64'),
+    });
+  };
+  for (const product of ['radar', 'clouds-regional', 'lightning']) {
+    await fulfill(`/api/weather/manifest?product=${product}`);
+    for (const time of fixture.manifests[product].times)
+      await fulfill(
+        `/api/weather/tile?product=${product}&time=${encodeURIComponent(time)}&z=2&x=3&y=1`,
+      );
+  }
+  await fulfill('/api/wind/manifest?model=gfs');
+  await fulfill(fixture.windManifest.gridUrl);
+  const rawDelivery = delivery.summarize(layers, layers);
+  const timeline = [
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-2),
+    fixture.timeline.at(0),
+    fixture.timeline.at(-1),
+  ].map((time) => [time, time, time]);
+  const visualState = {
+    satelliteProduct: 'clouds-regional',
+    satelliteInfrared: 'filtered',
+    radarOpacity: 'strong',
+    lightningOpacity: 'strong',
+    windModel: 'gfs',
+    windOverlay: 'speed',
+    windPaused: false,
+  };
+  const playback = {
+    mode: 'history',
+    playing: true,
+    intervalMs: 2000,
+    displayedAtStart: [fixture.fixedTime, fixture.fixedTime, fixture.fixedTime],
+    visualState,
+  };
+  const timelinePreflight = {
+    selectedTimes: timeline,
+    sourceObservationTimes: [
+      fixture.fixedTime,
+      fixture.fixedTime,
+      fixture.fixedTime,
+    ],
+    playback,
+  };
+  const fixtureDelivery = {
+    ...rawDelivery,
+    assets: rawDelivery.assets.map((asset) => ({
+      ...asset,
+      responseCount: asset.responseCount + report.captures.length - 1,
+    })),
+    cameraObservation: {
+      longitudeDeg: fixture.camera.longitudeDeg,
+      latitudeDeg: fixture.camera.latitudeDeg,
+      altitudeM: fixture.camera.altitudeM,
+      headingDeg: fixture.camera.headingDeg,
+      pitchDeg: fixture.camera.pitchDeg,
+    },
+    timelinePreflight,
+  };
+  const cesiumClock = {
+    currentTime: { ...fixture.clock },
+    shouldAnimate: false,
+    multiplier: 0,
+  };
+  report.integrity.sampleCount = 4;
+  report.workload.providerFixture = WEATHER_EFFECTS_WORKLOAD_ID;
+  report.workload.fixture = fixture;
+  report.workload.fixtureId = fixture.id;
+  report.workload.performanceAcceptanceEligible = false;
+  delete report.workload.infrastructureFixtureLifecycle;
+  report.workload.weatherEffectsFixtureLifecycle =
+    createWeatherEffectsFixtureLifecycle({
+      fixture,
+      cameraObservation: fixtureDelivery.cameraObservation,
+      timelinePreflight: {
+        selectedTimes: timeline,
+        sourceObservationTimes: [
+          fixture.fixedTime,
+          fixture.fixedTime,
+          fixture.fixedTime,
+        ],
+        playback,
+      },
+    });
+  report.environment.layers = layers;
+  report.fixtureDelivery = fixtureDelivery;
+  report.comparisonContract = null;
+  report.comparisonReadiness = {
+    status: 'not-ready',
+    reasons: [
+      'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
+    ],
+  };
+  report.performanceDiagnostics.documents = topology.diagnostics.map(
+    ({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+      requested: true,
+      hookAvailable: true,
+      disabled: true,
+    }),
+  );
+  report.source.buildProvenance.pageAssetAudit.workerAuditDocuments =
+    topology.workerAudits.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+      mode: 'diagnostic',
+      validation: {
+        schema: 'gev-cesium-worker-blob-audit/v1',
+        status: 'receipt-derived-worker-blobs-validated',
+        auditMode: 'diagnostic',
+        embeddedWorkerSourceSha256: 'e'.repeat(64),
+      },
+      restoration: {
+        nativeCreateObjectURLRestored: true,
+        registryEmpty: true,
+        overflowCountAtRestore: 0,
+        createdScriptBlobCountAtRestore: 1,
+        auditedCreatedScriptBlobCount: 1,
+      },
+      observedWorkerTargetCount: 1,
+      observedBlobRequestCount: 1,
+    }));
+  report.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits =
+    report.source.buildProvenance.pageAssetAudit.workerAuditDocuments.map(
+      (entry) => entry.validation,
+    );
+  for (let index = 0; index < report.captures.length; index += 1) {
+    const sample = report.captures[index];
+    const sourceTimes = fixture.timeline.at(-1);
+    sample.documentRole = 'main-measured';
+    sample.documentId = topology.samples[0].documentId;
+    sample.layers = layers;
+    sample.settings.before = {
+      ...sample.settings.before,
+      qualityMode: 'manual',
+      densityPct: 75,
+      detectionMode: 'DENSE',
+    };
+    sample.settings.after = { ...sample.settings.before };
+    sample.fixtureDelivery = {
+      ...fixtureDelivery,
+      assets: fixtureDelivery.assets.map((asset) => ({
+        ...asset,
+        responseCount: asset.responseCount - report.captures.length + 1 + index,
+      })),
+    };
+    sample.weatherEffectsClock = {
+      fixedHarnessTime: fixture.fixedTime,
+      wallClockBeforeMs: Date.parse(fixture.fixedTime),
+      wallClockAfterMs: Date.parse(fixture.fixedTime),
+      cesiumBefore: cesiumClock,
+      cesiumAfter: cesiumClock,
+      weatherPlayback: playback,
+      selectedTimesPreflight: timeline,
+      weatherStateBefore: {
+        clock: { mode: 'history', playing: true },
+        sourceObservationTimes: [sourceTimes, sourceTimes, sourceTimes],
+        visualState,
+        wind: { model: 'gfs', overlay: 'speed', paused: false },
+      },
+      weatherStateAfter: {
+        clock: { mode: 'history', playing: true },
+        sourceObservationTimes: [sourceTimes, sourceTimes, sourceTimes],
+        visualState,
+        wind: { model: 'gfs', overlay: 'speed', paused: false },
+      },
+    };
+    sample.cameraPath = { id: `${sample.scenario}-v1` };
+  }
+  return { report, fixture };
 }
 
 test('provider CPU profile set binds first two idle and first motion windows to exact documents', () => {
@@ -1360,6 +1566,140 @@ test('capture CLI validates the selected infrastructure workload and rejects den
       ...expected,
       providerFixture: 'infrastructure-datacenters',
     }),
+  );
+});
+
+test('capture CLI validates the actual weather fixture manifest, timeline, states and worker topology', async () => {
+  const { report, fixture } = await validWeatherEffectsCaptureCliReport();
+  const expected = {
+    appSha: report.source.appCommit,
+    harnessSha: report.source.harnessCommit,
+    receiptSha256: report.source.buildProvenance.receiptSha256,
+    fixtureSha256: fixture.sha256,
+    providerFixture: WEATHER_EFFECTS_WORKLOAD_ID,
+    fixedTime: fixture.fixedTime,
+    weatherEffectsFixture: fixture,
+    workerAuditMode: 'diagnostic',
+    sceneFrameDiagnostics: false,
+    firstMotionCpuProfile: false,
+    depthPickAttribution: false,
+  };
+  assert.deepEqual(
+    buildCaptureCliValidationExpectations({
+      build: {
+        receipt: { receiptSha256: expected.receiptSha256 },
+      },
+      commit: expected.appSha,
+      harnessCommit: expected.harnessSha,
+      fixture,
+      providerFixture: WEATHER_EFFECTS_WORKLOAD_ID,
+      workerAuditMode: 'diagnostic',
+      sceneFrameDiagnostics: false,
+      firstMotionCpuProfile: false,
+      depthPickAttribution: false,
+    }),
+    expected,
+  );
+  const result = validateCaptureCliReport(report, expected);
+  assert.equal(result.status, 'passed');
+  assert.equal(result.captureCount, 4);
+  assert.equal(result.comparisonEligible, false);
+
+  const missingFixture = { ...expected };
+  delete missingFixture.weatherEffectsFixture;
+  assert.throws(() => validateCaptureCliReport(report, missingFixture));
+
+  const repeatedFrames = structuredClone(report);
+  repeatedFrames.workload.weatherEffectsFixtureLifecycle.timeline[1] =
+    repeatedFrames.workload.weatherEffectsFixtureLifecycle.timeline[0];
+  repeatedFrames.fixtureDelivery.timelinePreflight.selectedTimes[1] =
+    repeatedFrames.fixtureDelivery.timelinePreflight.selectedTimes[0];
+  assert.throws(() => validateCaptureCliReport(repeatedFrames, expected));
+
+  const wrongSourceTime = structuredClone(report);
+  wrongSourceTime.captures[0].weatherEffectsClock.weatherStateBefore.sourceObservationTimes[0] =
+    fixture.fixedTime;
+  wrongSourceTime.captures[0].weatherEffectsClock.weatherStateBefore.sourceObservationTimes[1] =
+    '2026-10-08T11:40:00.000Z';
+  assert.throws(() => validateCaptureCliReport(wrongSourceTime, expected));
+
+  const missingWorkerCoverage = structuredClone(report);
+  missingWorkerCoverage.source.buildProvenance.pageAssetAudit.workerAuditDocuments.pop();
+  assert.throws(() =>
+    validateCaptureCliReport(missingWorkerCoverage, expected),
+  );
+
+  const unpausedWind = structuredClone(report);
+  unpausedWind.captures[0].weatherEffectsClock.weatherStateAfter.wind.paused = true;
+  assert.throws(() => validateCaptureCliReport(unpausedWind, expected));
+
+  const decreasingResponseCount = structuredClone(report);
+  decreasingResponseCount.captures[2].fixtureDelivery.assets[0].responseCount =
+    decreasingResponseCount.captures[1].fixtureDelivery.assets[0]
+      .responseCount - 1;
+  assert.throws(
+    () => validateCaptureCliReport(decreasingResponseCount, expected),
+    /decreased in capture order/,
+  );
+
+  const responseCountAboveAggregate = structuredClone(report);
+  responseCountAboveAggregate.captures[0].fixtureDelivery.assets[0].responseCount =
+    responseCountAboveAggregate.fixtureDelivery.assets[0].responseCount + 1;
+  assert.throws(
+    () => validateCaptureCliReport(responseCountAboveAggregate, expected),
+    /exceeds the final aggregate/,
+  );
+
+  const wrongSampleAssetHash = structuredClone(report);
+  wrongSampleAssetHash.captures[0].fixtureDelivery.assets[0].sha256 =
+    'f'.repeat(64);
+  assert.throws(
+    () => validateCaptureCliReport(wrongSampleAssetHash, expected),
+    /deep-equal|deepStrictEqual/,
+  );
+
+  const repeatedSampleTuple = structuredClone(report);
+  repeatedSampleTuple.captures[1].run = 1;
+  assert.throws(
+    () => validateCaptureCliReport(repeatedSampleTuple, expected),
+    /deep-equal|deepStrictEqual/,
+  );
+
+  const missingSourceObservation = structuredClone(report);
+  missingSourceObservation.captures[0].weatherEffectsClock.weatherStateBefore.sourceObservationTimes =
+    [];
+  assert.throws(
+    () => validateCaptureCliReport(missingSourceObservation, expected),
+    /0 !== 3|false == true/,
+  );
+
+  const sameButWrongCesiumClock = structuredClone(report);
+  for (const key of ['cesiumBefore', 'cesiumAfter'])
+    sameButWrongCesiumClock.captures[0].weatherEffectsClock[
+      key
+    ].currentTime.secondsOfDay += 10;
+  assert.throws(
+    () => validateCaptureCliReport(sameButWrongCesiumClock, expected),
+    /assert\.ok/,
+  );
+
+  const extraEnabledLayer = structuredClone(report);
+  extraEnabledLayer.fixtureDelivery.populationsBefore.push({
+    id: 'local-datacenters',
+    enabled: true,
+    count: 4362,
+  });
+  assert.throws(
+    () => validateCaptureCliReport(extraEnabledLayer, expected),
+    /populations|deep-equal|deepStrictEqual/,
+  );
+
+  const movedCamera = structuredClone(report);
+  movedCamera.fixtureDelivery.cameraObservation.longitudeDeg += 0.01;
+  movedCamera.workload.weatherEffectsFixtureLifecycle.observedCamera.longitudeDeg += 0.01;
+  assert.throws(
+    () => validateCaptureCliReport(movedCamera, expected),
+    /camera longitudeDeg/,
   );
 });
 

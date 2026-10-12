@@ -59,7 +59,7 @@ on:
         options: [diagnostic, prewarm]
         default: diagnostic
       capture_provider_fixture:
-        description: Candidate capture workload inside the build smoke (infrastructure modes remain diagnostic only)
+        description: Candidate capture workload inside the build smoke (infrastructure and weather modes are diagnostic only)
         type: choice
         options:
           [
@@ -68,6 +68,7 @@ on:
             infrastructure-dams,
             infrastructure-cables,
             infrastructure,
+            austin-weather-effects-v1,
           ]
         default: dense-investigation
       capture_scene_frame_diagnostics:

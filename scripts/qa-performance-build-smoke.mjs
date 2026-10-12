@@ -119,6 +119,7 @@ const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
   { scenario: 'idle', run: 2 },
   { scenario: 'scripted-motion', run: 1 },
 ]);
+const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
 
 function providerCpuProfileKey(target) {
   return target.scenario === 'idle'
@@ -302,7 +303,8 @@ export function parseSmokeArguments(argv) {
     if (
       flag === '--provider-fixture' &&
       value !== 'dense-investigation' &&
-      !INFRASTRUCTURE_WORKLOAD_IDS.includes(value)
+      !INFRASTRUCTURE_WORKLOAD_IDS.includes(value) &&
+      value !== WEATHER_EFFECTS_WORKLOAD_ID
     )
       throw new TypeError('Provider fixture must be a registered workload.');
     if (
@@ -717,6 +719,8 @@ export function assertProviderFixtureCaptureClock(
 }
 
 export function validateCaptureCliReport(report, expected) {
+  if (expected.providerFixture === WEATHER_EFFECTS_WORKLOAD_ID)
+    return validateWeatherEffectsCaptureCliReport(report, expected);
   if (expected.providerFixture?.startsWith('infrastructure'))
     return validateInfrastructureCaptureCliReport(report, expected);
   assert.equal(report?.schema, 'gev-performance-capture/v1');
@@ -1213,6 +1217,380 @@ export function validateCaptureCliReport(report, expected) {
       'The static production flight fixture verifies source delivery and populations, not a complete moving trajectory contract.',
     ],
   };
+}
+
+function validateWeatherEffectsCaptureCliReport(report, expected) {
+  const fixture = expected.weatherEffectsFixture;
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
+  assert.equal(report.workerAuditMode, 'diagnostic');
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v1');
+  assert.equal(fixture?.workloadId, WEATHER_EFFECTS_WORKLOAD_ID);
+  assert.equal(fixture?.fixedTime, expected.fixedTime);
+  assert.equal(report.workload?.providerFixture, WEATHER_EFFECTS_WORKLOAD_ID);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.deepEqual(report.workload?.fixture, fixture);
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.equal(report.workload?.performanceAcceptanceEligible, false);
+  const lifecycle = report.workload?.weatherEffectsFixtureLifecycle;
+  assert.equal(lifecycle?.freshBrowserContextPerSample, false);
+  assert.equal(lifecycle?.performanceAcceptanceEligible, false);
+  assert.equal(lifecycle?.playback?.mode, 'history');
+  assert.equal(lifecycle?.playback?.playing, true);
+  assert.deepEqual(
+    lifecycle?.observedCamera,
+    report.fixtureDelivery?.cameraObservation,
+  );
+  for (const key of [
+    'longitudeDeg',
+    'latitudeDeg',
+    'altitudeM',
+    'headingDeg',
+    'pitchDeg',
+  ]) {
+    const observed = lifecycle?.observedCamera?.[key];
+    const expectedValue = fixture.camera[key];
+    assert.ok(Number.isFinite(observed), `Observed camera ${key} is required.`);
+    assert.ok(
+      Math.abs(observed - expectedValue) <= (key.endsWith('Deg') ? 1e-4 : 1),
+      `Observed camera ${key} differs from the pinned Austin route.`,
+    );
+  }
+  assert.equal(lifecycle?.playback?.visualState?.windPaused, false);
+  assert.deepEqual(lifecycle?.playback?.visualState, {
+    satelliteProduct: 'clouds-regional',
+    satelliteInfrared: 'filtered',
+    radarOpacity: 'strong',
+    lightningOpacity: 'strong',
+    windModel: 'gfs',
+    windOverlay: 'speed',
+    windPaused: false,
+  });
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.ok(
+    report.comparisonReadiness?.reasons?.includes(
+      'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
+    ),
+  );
+  const expectedTimes = [
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-2),
+    fixture.timeline.at(0),
+    fixture.timeline.at(-1),
+  ];
+  assert.deepEqual(
+    lifecycle?.timeline?.map((row) => row[0]),
+    expectedTimes,
+  );
+  for (const row of lifecycle?.timeline || [])
+    assert.deepEqual(row, [row[0], row[0], row[0]]);
+  assert.deepEqual(lifecycle?.sourceObservationTimes, [
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-1),
+  ]);
+  assert.deepEqual(
+    report.fixtureDelivery?.cameraObservation,
+    lifecycle?.observedCamera,
+  );
+  assert.ok(
+    lifecycle?.timeline?.some((row) => row[0] !== fixture.fixedTime),
+    'Historical weather observations must differ from the held harness time.',
+  );
+  assert.deepEqual(report.fixtureDelivery, {
+    ...report.fixtureDelivery,
+    schema: 'gev-weather-effects-fixture-delivery/v1',
+    status: 'observed',
+    workloadId: fixture.workloadId,
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+  });
+  assert.deepEqual(
+    report.fixtureDelivery.assets.map(
+      ({ id, sha256, byteLength, contentType, responseCount }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+        responseCount,
+      }),
+    ),
+    fixture.assets.map((asset) => ({
+      id: asset.id,
+      sha256: asset.sha256,
+      byteLength: asset.byteLength,
+      contentType: asset.contentType,
+      responseCount: assertPositiveCount(
+        report.fixtureDelivery.assets,
+        asset.id,
+      ),
+    })),
+  );
+  const finalAssetCounts = new Map(
+    report.fixtureDelivery.assets.map((asset) => [
+      asset.id,
+      asset.responseCount,
+    ]),
+  );
+  const previousSampleCounts = new Map();
+  assert.deepEqual(
+    report.fixtureDelivery.populationsBefore,
+    fixture.selectedLayerIds
+      .map((id) => ({
+        id,
+        enabled: true,
+        count: fixture.expectedLayerCounts[id],
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id)),
+  );
+  assert.deepEqual(
+    report.fixtureDelivery.populationsAfter,
+    report.fixtureDelivery.populationsBefore,
+  );
+  assert.equal(report.captures?.length, 4);
+  assert.deepEqual(
+    report.captures.map(({ scenario, run }) => [scenario, run]),
+    [
+      ['idle', 1],
+      ['idle', 2],
+      ['scripted-motion', 1],
+      ['scripted-motion', 2],
+    ],
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, 'diagnostic');
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  for (const audit of pageAudit.cesiumWorkerBlobAudits || [])
+    assert.equal(audit.status, 'receipt-derived-worker-blobs-validated');
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  const roles = report.performanceDiagnostics?.documents || [];
+  assert.deepEqual(
+    roles.map(({ documentRole, documentId }) => ({ documentRole, documentId })),
+    topology.diagnostics,
+  );
+  for (const entry of roles) {
+    assert.equal(entry.requested, true);
+    assert.equal(entry.disabled, true);
+  }
+  const workerDocuments = pageAudit.workerAuditDocuments;
+  assert.deepEqual(
+    workerDocuments.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.workerAudits,
+  );
+  for (const entry of workerDocuments) {
+    assert.equal(entry.mode, 'diagnostic');
+    assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+    assert.equal(entry.restoration?.registryEmpty, true);
+    assert.equal(entry.restoration?.overflowCountAtRestore, 0);
+    assert.equal(
+      entry.restoration?.createdScriptBlobCountAtRestore,
+      entry.restoration?.auditedCreatedScriptBlobCount,
+    );
+    if (entry.validation === null) {
+      assert.equal(entry.observedWorkerTargetCount, 0);
+      assert.equal(entry.observedBlobRequestCount, 0);
+      assert.equal(entry.restoration?.createdScriptBlobCountAtRestore, 0);
+    } else {
+      assert.equal(entry.validation?.schema, 'gev-cesium-worker-blob-audit/v1');
+      assert.equal(
+        entry.validation?.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+      assert.equal(entry.validation?.auditMode, 'diagnostic');
+      assert.match(
+        entry.validation?.embeddedWorkerSourceSha256 || '',
+        /^[a-f0-9]{64}$/,
+      );
+    }
+  }
+  const validatedWorkerDocuments = workerDocuments.filter(
+    (entry) =>
+      entry.validation?.status === 'receipt-derived-worker-blobs-validated',
+  );
+  assert.equal(
+    pageAudit.cesiumWorkerBlobAudits.length,
+    validatedWorkerDocuments.length,
+  );
+  assert.deepEqual(
+    pageAudit.cesiumWorkerBlobAudits,
+    validatedWorkerDocuments.map((entry) => entry.validation),
+  );
+  assert.equal(
+    workerDocuments.find((entry) => entry.documentRole === 'main-measured')
+      ?.validation?.status,
+    'receipt-derived-worker-blobs-validated',
+  );
+  const firstId = report.captures[0]?.documentId;
+  assert.ok(firstId);
+  for (const sample of report.captures) {
+    assert.equal(sample.documentRole, 'main-measured');
+    assert.equal(sample.documentId, firstId);
+    assert.ok(['idle', 'scripted-motion'].includes(sample.scenario));
+    assert.ok([1, 2].includes(sample.run));
+    assert.deepEqual(sample.settings?.before, sample.settings?.after);
+    assert.equal(sample.settings?.before?.qualityMode, 'manual');
+    assert.equal(sample.settings?.before?.densityPct, 75);
+    assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+    for (const clock of [
+      sample.weatherEffectsClock?.cesiumBefore,
+      sample.weatherEffectsClock?.cesiumAfter,
+    ]) {
+      assert.equal(clock?.currentTime?.dayNumber, fixture.clock.dayNumber);
+      assert.ok(
+        Math.abs(
+          (clock?.currentTime?.secondsOfDay ?? Number.NaN) -
+            fixture.clock.secondsOfDay,
+        ) < 1e-6,
+      );
+      assert.equal(clock?.shouldAnimate, false);
+      assert.equal(clock?.multiplier, 0);
+    }
+    assert.equal(
+      sample.weatherEffectsClock?.fixedHarnessTime,
+      fixture.fixedTime,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.wallClockBeforeMs,
+      Date.parse(fixture.fixedTime),
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.wallClockAfterMs,
+      Date.parse(fixture.fixedTime),
+    );
+    assert.deepEqual(
+      sample.weatherEffectsClock?.weatherPlayback,
+      lifecycle.playback,
+    );
+    assert.deepEqual(
+      sample.weatherEffectsClock?.weatherStateBefore?.visualState,
+      lifecycle.playback.visualState,
+    );
+    assert.deepEqual(
+      sample.weatherEffectsClock?.weatherStateAfter?.visualState,
+      lifecycle.playback.visualState,
+    );
+    for (const weatherState of [
+      sample.weatherEffectsClock?.weatherStateBefore,
+      sample.weatherEffectsClock?.weatherStateAfter,
+    ]) {
+      assert.equal(weatherState?.sourceObservationTimes?.length, 3);
+      assert.ok(
+        weatherState?.sourceObservationTimes?.every((time) =>
+          fixture.timeline.includes(time),
+        ),
+      );
+      assert.equal(weatherState?.clock?.mode, 'history');
+      assert.equal(weatherState?.clock?.playing, true);
+      assert.deepEqual(
+        weatherState?.visualState,
+        lifecycle.playback.visualState,
+      );
+      assert.equal(weatherState?.wind?.paused, false);
+      assert.equal(weatherState?.wind?.model, 'gfs');
+      assert.equal(weatherState?.wind?.overlay, 'speed');
+    }
+    const sampledAssets = sample.fixtureDelivery?.assets;
+    assert.equal(sample.fixtureDelivery?.schema, report.fixtureDelivery.schema);
+    assert.equal(sample.fixtureDelivery?.status, 'observed');
+    assert.equal(sample.fixtureDelivery?.workloadId, fixture.workloadId);
+    assert.equal(sample.fixtureDelivery?.fixtureSha256, fixture.sha256);
+    assert.equal(sample.fixtureDelivery?.fixedTime, fixture.fixedTime);
+    assert.deepEqual(
+      sample.fixtureDelivery?.cameraObservation,
+      report.fixtureDelivery.cameraObservation,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.timelinePreflight,
+      report.fixtureDelivery.timelinePreflight,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsBefore,
+      report.fixtureDelivery.populationsBefore,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsAfter,
+      report.fixtureDelivery.populationsAfter,
+    );
+    assert.deepEqual(
+      sampledAssets?.map(({ id, sha256, byteLength, contentType }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+      })),
+      fixture.assets.map(({ id, sha256, byteLength, contentType }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+      })),
+    );
+    for (const asset of sampledAssets || []) {
+      assert.ok(
+        Number.isSafeInteger(asset.responseCount) && asset.responseCount > 0,
+        `Sample ${sample.scenario}/${sample.run} did not observe ${asset.id}.`,
+      );
+      assert.ok(
+        asset.responseCount <= finalAssetCounts.get(asset.id),
+        `Sample response count for ${asset.id} exceeds the final aggregate.`,
+      );
+      assert.ok(
+        asset.responseCount >= (previousSampleCounts.get(asset.id) || 0),
+        `Sample response count for ${asset.id} decreased in capture order.`,
+      );
+      previousSampleCounts.set(asset.id, asset.responseCount);
+    }
+    assertCaptureFrameAndSettingsEvidence(sample, sample.scenario);
+  }
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    providerFixture: expected.providerFixture,
+    fixtureSha256: fixture.sha256,
+    renderer: report.environment?.renderer,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    rawReport: report,
+    limitations: [
+      'Hosted short software-rendering weather/effects fixture diagnostic only; not hardware or paired performance evidence.',
+      'The preflight exercises the three fixed weather frames and starts the weather clock playback; it does not complete the full 90-second performance acceptance workload.',
+    ],
+  };
+}
+
+function assertPositiveCount(assets, id) {
+  const row = assets.find((asset) => asset.id === id);
+  assert.ok(Number.isInteger(row?.responseCount) && row.responseCount > 0);
+  return row.responseCount;
 }
 
 function validateInfrastructureCaptureCliReport(report, expected) {
@@ -1876,6 +2254,36 @@ function simplifyObservation(observed) {
   };
 }
 
+export function buildCaptureCliValidationExpectations({
+  build,
+  commit,
+  harnessCommit,
+  fixture,
+  providerFixture,
+  workerAuditMode,
+  sceneFrameDiagnostics,
+  firstMotionCpuProfile,
+  depthPickAttribution,
+}) {
+  return {
+    appSha: commit,
+    harnessSha: harnessCommit,
+    receiptSha256: build.receipt.receiptSha256,
+    fixtureSha256: fixture.sha256,
+    providerFixture,
+    fixedTime: fixture.fixedTime,
+    ...(providerFixture.startsWith('infrastructure')
+      ? { infrastructureFixture: fixture }
+      : providerFixture === WEATHER_EFFECTS_WORKLOAD_ID
+        ? { weatherEffectsFixture: fixture }
+        : {}),
+    workerAuditMode,
+    sceneFrameDiagnostics,
+    firstMotionCpuProfile,
+    depthPickAttribution,
+  };
+}
+
 async function runCandidateCaptureCli({
   build,
   checkout,
@@ -1985,19 +2393,20 @@ async function runCandidateCaptureCli({
     });
     captureReport = captureCliResult.report;
     captureCliReportArtifact = captureCliResult.artifact;
-    const validated = validateCaptureCliReport(captureReport, {
-      appSha: commit,
-      harnessSha: harnessCommit,
-      receiptSha256: build.receipt.receiptSha256,
-      fixtureSha256: fixture.sha256,
-      providerFixture,
-      fixedTime: fixture.fixedTime,
-      infrastructureFixture: fixture,
-      workerAuditMode,
-      sceneFrameDiagnostics,
-      firstMotionCpuProfile,
-      depthPickAttribution,
-    });
+    const validated = validateCaptureCliReport(
+      captureReport,
+      buildCaptureCliValidationExpectations({
+        build,
+        commit,
+        harnessCommit,
+        fixture,
+        providerFixture,
+        workerAuditMode,
+        sceneFrameDiagnostics,
+        firstMotionCpuProfile,
+        depthPickAttribution,
+      }),
+    );
     if (firstMotionCpuProfile) {
       const evidence = captureReport.providerSampleCpuProfiles;
       for (
@@ -2071,6 +2480,7 @@ async function runRevision({
   captureCliReportArtifactPath,
   profileArtifactDirectory = null,
   infrastructureCaptureFixture,
+  weatherEffectsCaptureFixture,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -2528,7 +2938,7 @@ async function runRevision({
         fixture:
           providerFixture === 'dense-investigation'
             ? flightFixture
-            : infrastructureCaptureFixture,
+            : infrastructureCaptureFixture || weatherEffectsCaptureFixture,
         providerFixture,
         workerAuditMode,
         sceneFrameDiagnostics,
@@ -2722,11 +3132,16 @@ async function main() {
     'Candidate must differ from baseline.',
   );
   let infrastructureCaptureFixture = null;
-  if (providerFixture !== 'dense-investigation') {
+  let weatherEffectsCaptureFixture = null;
+  if (providerFixture.startsWith('infrastructure')) {
     const { createInfrastructureWorkloadFixture } =
       await import('./performance/infrastructureWorkloadFixture.mjs');
     infrastructureCaptureFixture =
       createInfrastructureWorkloadFixture(providerFixture);
+  } else if (providerFixture === WEATHER_EFFECTS_WORKLOAD_ID) {
+    const { createWeatherEffectsWorkloadFixture } =
+      await import('./performance/weatherEffectsWorkloadFixture.mjs');
+    weatherEffectsCaptureFixture = createWeatherEffectsWorkloadFixture();
   }
   const outputPath = path.resolve(
     out ||
@@ -2846,6 +3261,7 @@ async function main() {
             : null,
           providerFixture,
           infrastructureCaptureFixture,
+          weatherEffectsCaptureFixture,
         });
         Object.assign(variant, result);
       } catch (error) {

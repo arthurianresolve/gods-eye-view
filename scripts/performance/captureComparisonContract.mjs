@@ -576,6 +576,9 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push('application-diagnostics-were-not-disabled-in-every-document');
   const infrastructureFixture =
     fixture?.schema === 'gev-infrastructure-fixture-manifest/v1';
+  const weatherEffectsFixture =
+    fixture?.schema === 'gev-weather-effects-fixture/v1';
+  const sharedDocumentFixture = infrastructureFixture || weatherEffectsFixture;
   if (fixture && diagnosticsDocuments.length > 0) {
     const expectedRoles = [
       ...Array.from(
@@ -583,7 +586,7 @@ export function getCaptureComparisonIneligibilityReasons({
         (_, index) => `startup-${index + 1}`,
       ),
       'main-setup',
-      ...(infrastructureFixture
+      ...(sharedDocumentFixture
         ? []
         : Array.from(
             { length: captures.length },
@@ -595,7 +598,7 @@ export function getCaptureComparisonIneligibilityReasons({
       .sort();
     if (JSON.stringify(observedRoles) !== JSON.stringify(expectedRoles))
       reasons.push('application-diagnostics-document-coverage-is-incomplete');
-    if (infrastructureFixture) {
+    if (sharedDocumentFixture) {
       const mainSetup = diagnosticsDocuments.find(
         (row) => row.documentRole === 'main-setup',
       );
@@ -610,7 +613,11 @@ export function getCaptureComparisonIneligibilityReasons({
         ) ||
         mainSetup.documentId !== measuredIds[0]
       )
-        reasons.push('infrastructure-samples-do-not-share-measured-document');
+        reasons.push(
+          infrastructureFixture
+            ? 'infrastructure-samples-do-not-share-measured-document'
+            : 'weather-effects-samples-do-not-share-measured-document',
+        );
     } else if (fixture) {
       const sampleDocumentsMatch = captures.every(
         (sample, index) =>
@@ -630,7 +637,7 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
-  if (fixture && !infrastructureFixture)
+  if (fixture && !sharedDocumentFixture)
     reasons.push(
       'provider-fixture-is-static-count-only-not-trajectory-equivalent',
     );
@@ -639,13 +646,15 @@ export function getCaptureComparisonIneligibilityReasons({
     captures.some((sample) => sample?.foregroundThroughout !== true)
   )
     reasons.push('foreground-continuity-is-incomplete');
-  if (infrastructureFixture) {
+  if (sharedDocumentFixture) {
     if (
       !workload?.scenarios?.includes('idle') ||
       !workload?.scenarios?.includes('scripted-motion')
     )
       reasons.push(
-        'required-infrastructure-objective-workloads-are-incomplete',
+        infrastructureFixture
+          ? 'required-infrastructure-objective-workloads-are-incomplete'
+          : 'required-weather-effects-objective-workloads-are-incomplete',
       );
   } else if (
     !workload?.scenarios?.includes('scripted-motion') ||

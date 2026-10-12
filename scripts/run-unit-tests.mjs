@@ -70,6 +70,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'server/providers/evidenceArchive.test.mjs',
   'scripts/performance/depthPickAttribution.test.mjs',
   'scripts/performance/infrastructureWorkloadFixture.test.mjs',
+  'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
   'scripts/capture-scene-performance.test.mjs',
   'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
   'scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs',
