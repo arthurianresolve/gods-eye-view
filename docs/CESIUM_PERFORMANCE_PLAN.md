@@ -13,7 +13,10 @@ Chrome acknowledges shutdown but does not exit naturally within five seconds.
 Forced cleanup remains a failure. Earlier green checks remain historical;
 current recovery acceptance requires diagnosis and fresh evidence.
 The bounded shutdown diagnostic at `eac89bb8` passes 30 independent tests and
-is under hosted validation. A separate Windows control at `9a0b6a08` passes
+[all five hosted recovery stages](performance-evidence/windows-shutdown-diagnostic-38205914812/README.md)
+with natural exits. No timeout recurs, so the process snapshot path is not
+exercised by that run and the earlier shutdown cause remains unresolved.
+A separate Windows control at `9a0b6a08` passes
 all five recovery stages without forced exits, confirming intermittency; it
 does not establish a fix for the failed shutdown.
 Rendering runtime is unchanged from `bbca229f`; subsequent work includes

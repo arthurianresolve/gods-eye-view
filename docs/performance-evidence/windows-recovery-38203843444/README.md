@@ -60,4 +60,7 @@ An absent root skips the command-line query. Disconnected or failed observations
 remain unavailable, and force-kill remains failed shutdown. Thirty focused
 tests pass independently, including executable PowerShell scope checks and
 explicit timing origins. The [diagnostic run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38205914812)
-is pending; instrumentation is not a root-cause fix or acceptance result.
+passes all five stages with natural exits ([reviewed evidence](../windows-shutdown-diagnostic-38205914812/README.md)).
+No timeout recurs, so its process-snapshot failure path is not exercised by
+this hosted run. Instrumentation and a successful control are not a root-cause
+fix for the earlier intermittent failure.
