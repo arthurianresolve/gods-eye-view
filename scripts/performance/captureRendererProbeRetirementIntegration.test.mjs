@@ -58,6 +58,9 @@ const puppeteer = {
     close: async () => record('browser-close'),
   }),
 };
+export const CDPSessionEvent = {
+  Disconnected: Symbol('CDPSessionEvent.Disconnected'),
+};
 export default puppeteer;
 `,
   );
