@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installTerrainCurrentUpdateReadinessObserver } from './terrainCurrentUpdateReadiness.mjs';
+import {
+  installTerrainCurrentUpdateReadinessObserver,
+  finalizeTerrainCurrentUpdateObservation,
+} from './terrainCurrentUpdateReadiness.mjs';
 
 class FakeEvent {
   listeners = new Set();
@@ -199,4 +202,61 @@ test('data-source collection replacement or collection-change event invalidates 
   );
   assert.equal(observer.snapshot().ownershipChanged, true);
   assert.equal(observer.dispose(), true);
+});
+
+test('retired comparison evidence survives subsequent intentional collection replacement', () => {
+  const fixture = makeScene([true]);
+  let currentCollections = fixture.collections;
+  const observer = installTerrainCurrentUpdateReadinessObserver({
+    dataSourceDisplay: fixture.display,
+    scene: fixture.scene,
+    entityCollections: fixture.collections,
+    ownershipCollection: fixture.ownershipCollection,
+    getCurrentEntityCollections: () => currentCollections,
+  });
+  fixture.frame(true, observer.beginGeneration().generation);
+  const comparison = finalizeTerrainCurrentUpdateObservation(observer, {
+    available: observer.available,
+    entityCollectionCount: fixture.collections.length,
+  });
+  assert.equal(comparison.cleanupConfirmed, true);
+  assert.equal(comparison.ownershipChanged, false);
+  assert.equal(comparison.entityCollectionsMatch, true);
+  assert.equal(comparison.finalState.entityCollectionsMatch, true);
+  currentCollections = [{ collectionChanged: new FakeEvent() }];
+  fixture.ownershipCollection.dataSourceRemoved.raiseEvent();
+  fixture.collections[0].collectionChanged.raiseEvent();
+  fixture.frame(true, 99);
+  const finallyReport = finalizeTerrainCurrentUpdateObservation(
+    observer,
+    comparison,
+  );
+  assert.deepEqual(finallyReport, comparison);
+  const mutableCopy = observer.snapshot();
+  mutableCopy.entityCollectionsMatch = false;
+  assert.equal(observer.snapshot().entityCollectionsMatch, true);
+  assert.equal(observer.isCurrentFrameReady(comparison.finalState, 1), false);
+});
+
+test('retirement preserves an ownership failure occurring before the comparison ends', () => {
+  const fixture = makeScene([true]);
+  let currentCollections = fixture.collections;
+  const observer = installTerrainCurrentUpdateReadinessObserver({
+    dataSourceDisplay: fixture.display,
+    scene: fixture.scene,
+    entityCollections: fixture.collections,
+    ownershipCollection: fixture.ownershipCollection,
+    getCurrentEntityCollections: () => currentCollections,
+  });
+  fixture.frame(true, observer.beginGeneration().generation);
+  currentCollections = [];
+  fixture.ownershipCollection.dataSourceRemoved.raiseEvent();
+  const comparison = finalizeTerrainCurrentUpdateObservation(observer);
+  assert.equal(comparison.ownershipChanged, true);
+  assert.equal(comparison.entityCollectionsMatch, false);
+  currentCollections = fixture.collections;
+  assert.deepEqual(
+    finalizeTerrainCurrentUpdateObservation(observer),
+    comparison,
+  );
 });

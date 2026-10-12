@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import * as Cesium from 'cesium';
 import {
+  installTerrainCurrentUpdateReadinessObserver,
+  finalizeTerrainCurrentUpdateObservation,
+} from '../fixtures/terrainCurrentUpdateReadiness.mjs';
+import {
   parseTerrainPickingLifecycleArgs,
   validateTerrainPickingLifecycleReport,
 } from './terrainPickingLifecycle.mjs';
@@ -301,6 +305,47 @@ function validReport() {
     },
   };
 }
+
+test('real observer publication satisfies the report contract before and after later lifecycle work', () => {
+  const report = validReport();
+  const collections = [new Cesium.EntityCollection()];
+  let currentCollections = collections;
+  const scene = {
+    preRender: new Cesium.Event(),
+    postRender: new Cesium.Event(),
+  };
+  const display = { update: () => true };
+  const observer = installTerrainCurrentUpdateReadinessObserver({
+    dataSourceDisplay: display,
+    scene,
+    entityCollections: collections,
+    getCurrentEntityCollections: () => currentCollections,
+  });
+  for (let generation = 0; generation < 14; generation++) {
+    observer.beginGeneration();
+    display.update();
+    scene.preRender.raiseEvent();
+    scene.postRender.raiseEvent();
+  }
+  const metadata = {
+    available: observer.available,
+    installErrorName: observer.installErrorName,
+    entityCollectionCount: collections.length,
+    requirement: report.switchComparison.currentUpdateObserver.requirement,
+  };
+  report.switchComparison.currentUpdateObserver =
+    finalizeTerrainCurrentUpdateObservation(observer, metadata);
+  assert.equal(validateTerrainPickingLifecycleReport(report).status, 'passed');
+  currentCollections = [];
+  report.switchComparison.currentUpdateObserver =
+    finalizeTerrainCurrentUpdateObservation(observer, metadata);
+  assert.equal(validateTerrainPickingLifecycleReport(report).status, 'passed');
+  delete report.switchComparison.currentUpdateObserver.entityCollectionsMatch;
+  assert.throws(
+    () => validateTerrainPickingLifecycleReport(report),
+    /map-switch evidence/,
+  );
+});
 
 test('terrain lifecycle CLI accepts only bounded local fixture inputs', () => {
   assert.deepEqual(
