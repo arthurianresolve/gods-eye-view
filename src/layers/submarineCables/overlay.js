@@ -250,13 +250,16 @@ export function createCableReferenceSweepGate({
 /**
  * Recompute one staticized stem on the sweep cadence. Replaces the former
  * per-frame `CallbackProperty` pair: constant properties are redefined only
- * when the camera-scaled tip moved beyond the settle epsilon, and the two
- * preallocated position buffers alternate so each real change raises exactly
- * one geometry notification (the localGeojson double-buffer pattern).
+ * during motion when the camera-scaled tip moved beyond the settle epsilon.
+ * The terminal moveEnd sweep bypasses that epsilon to converge on the exact
+ * final camera pose. The two preallocated position buffers alternate so each
+ * real change raises exactly one geometry notification (the localGeojson
+ * double-buffer pattern).
  * @param {object} record Reference record with entity/base/tip/nextTip/buffers.
  * @param {Cesium.Cartesian3} cameraPositionWC
  * @param {number} canvasHeight CSS-pixel canvas height.
  * @param {number} fov Camera frustum field of view (radians).
+ * @param {boolean} [force] Bypass the settle epsilon for a terminal camera sweep.
  * @returns {boolean} True when the stem geometry was redefined.
  */
 
@@ -265,6 +268,7 @@ export function updateCableReferenceStem(
   cameraPositionWC,
   canvasHeight,
   fov,
+  force = false,
 ) {
   const distance = Cesium.Cartesian3.distance(cameraPositionWC, record.base);
   const effectiveDistance = Math.max(distance, 5000);
@@ -282,9 +286,13 @@ export function updateCableReferenceStem(
     Cesium.Ellipsoid.WGS84,
     record.nextTip,
   );
+  const tipDifferenceSq = Cesium.Cartesian3.distanceSquared(
+    record.tip,
+    record.nextTip,
+  );
   if (
-    Cesium.Cartesian3.distanceSquared(record.tip, record.nextTip) <=
-    CABLE_STEM_TIP_EPSILON_SQ
+    tipDifferenceSq === 0 ||
+    (!force && tipDifferenceSq <= CABLE_STEM_TIP_EPSILON_SQ)
   ) {
     return false;
   }

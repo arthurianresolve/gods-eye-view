@@ -7,6 +7,11 @@ import { createIngestion } from './ingestion.js';
 import { createInteraction } from './interaction.js';
 import { createRendering } from './rendering.js';
 import { createState } from './state.js';
+import { createLifecycle } from './lifecycle.js';
+import {
+  createCableOverlayEntry,
+  updateCableReferenceStem,
+} from './overlay.js';
 
 function overlayHost() {
   return {
@@ -45,6 +50,135 @@ test('reference collection rendering is explicit and the default remains entitie
       }),
     /referenceRenderer/,
   );
+});
+
+test('camera moveEnd forces cable stems to the exact final pose after epsilon suppression', () => {
+  const finalDistance = 10_000;
+  const canvasHeight = 640;
+  const fov = Math.PI / 3;
+  const expectedTipHeight =
+    finalDistance * ((2 * Math.tan(fov / 2)) / canvasHeight) * 66;
+  const expectedTip = Cesium.Cartesian3.fromDegrees(0, 0, expectedTipHeight);
+
+  function runPath(previousDistance) {
+    const base = Cesium.Cartesian3.fromDegrees(0, 0, 0);
+    const initialTip = Cesium.Cartesian3.fromDegrees(0, 0, 700);
+    const firstBuffer = [base, initialTip];
+    const secondBuffer = [base, initialTip];
+    const record = {
+      id: `reference-${previousDistance}`,
+      entity: {
+        id: `reference-${previousDistance}`,
+        show: false,
+        position: new Cesium.ConstantPositionProperty(initialTip),
+        polyline: { positions: new Cesium.ConstantProperty(firstBuffer) },
+      },
+      base,
+      tip: initialTip,
+      nextTip: Cesium.Cartesian3.clone(initialTip),
+      stemPositionBuffers: [firstBuffer, secondBuffer],
+      stemPositionBufferIndex: 0,
+      pointPrimitive: null,
+      polylinePrimitive: null,
+      reference: { lon: 0, lat: 0 },
+      kind: 'cable',
+      label: 'Final pose fixture',
+      visible: false,
+      distanceM: Infinity,
+    };
+    record.entry = createCableOverlayEntry(record);
+
+    // Pin the root cause: ordinary moving sweeps retain prior geometry when
+    // the final delta is inside the sub-metre settle epsilon.
+    const unforced = {
+      ...record,
+      tip: Cesium.Cartesian3.clone(initialTip),
+      nextTip: Cesium.Cartesian3.clone(initialTip),
+      stemPositionBuffers: [
+        [base, initialTip],
+        [base, initialTip],
+      ],
+      entity: {
+        position: new Cesium.ConstantPositionProperty(initialTip),
+        polyline: {
+          positions: new Cesium.ConstantProperty([base, initialTip]),
+        },
+      },
+      stemPositionBufferIndex: 0,
+    };
+    updateCableReferenceStem(
+      unforced,
+      Cesium.Cartesian3.fromDegrees(0, 0, previousDistance),
+      canvasHeight,
+      fov,
+    );
+    const ordinaryFinalUpdate = updateCableReferenceStem(
+      unforced,
+      Cesium.Cartesian3.fromDegrees(0, 0, finalDistance),
+      canvasHeight,
+      fov,
+    );
+    const ordinaryFinalError = Cesium.Cartesian3.distance(
+      unforced.tip,
+      expectedTip,
+    );
+
+    const scene = {
+      preRender: new Cesium.Event(),
+      globe: { show: true },
+      canvas: { clientHeight: canvasHeight },
+      requestRender() {},
+    };
+    const camera = {
+      positionWC: Cesium.Cartesian3.fromDegrees(0, 0, previousDistance),
+      frustum: { fov },
+      moveEnd: new Cesium.Event(),
+    };
+    const viewer = {
+      scene,
+      camera,
+      dataSources: {
+        remove() {
+          return true;
+        },
+      },
+    };
+    const state = createState({ overlayHost: overlayHost() });
+    state._enabled = true;
+    state._loaded = true;
+    state._markerBlendDone = true;
+    state._referenceRecords = [record];
+    const parts = {
+      rendering: createRendering({ state }),
+      interaction: { beginInteraction() {} },
+      ingestion: { load() {} },
+    };
+    const layer = createLifecycle({
+      state,
+      parts,
+      source: { label: 'fixture' },
+    });
+    layer.init(viewer);
+
+    scene.preRender.raiseEvent();
+    camera.positionWC = Cesium.Cartesian3.fromDegrees(0, 0, finalDistance);
+    camera.moveEnd.raiseEvent();
+    scene.preRender.raiseEvent();
+
+    const finalTip = Cesium.Cartesian3.clone(record.tip);
+    layer.destroy(viewer);
+    return { finalTip, ordinaryFinalUpdate, ordinaryFinalError };
+  }
+
+  const nearPath = runPath(finalDistance + 3);
+  const coarsePath = runPath(finalDistance + 20);
+  assert.equal(nearPath.ordinaryFinalUpdate, false);
+  assert.ok(nearPath.ordinaryFinalError > 0);
+  assert.ok(nearPath.ordinaryFinalError <= 0.5);
+  assert.equal(coarsePath.ordinaryFinalUpdate, true);
+  assert.equal(coarsePath.ordinaryFinalError, 0);
+  assert.deepEqual(nearPath.finalTip, expectedTip);
+  assert.deepEqual(coarsePath.finalTip, expectedTip);
 });
 
 test('owned reference collections preserve metadata IDs, style, sweep, picks, and teardown', (t) => {

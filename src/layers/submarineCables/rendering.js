@@ -48,6 +48,7 @@ export function createRendering({ state }) {
     // sources need their own pass.
     state._markerBlendDone = false;
     state._loaded = false;
+    state._forceReferenceStemUpdate = false;
     releaseReferenceCollections();
     state._referenceSweepGate.reset();
     for (const source of sources) {
@@ -302,7 +303,7 @@ export function createRendering({ state }) {
     state._referenceRecords.push(record);
   }
 
-  function updateReferenceVisibility() {
+  function updateReferenceVisibility({ forceStemUpdate = false } = {}) {
     if (!state._enabled || !state._viewer?.camera) return;
     const cameraPos = state._viewer.camera.positionWC;
     if (!cameraPos) return;
@@ -325,7 +326,13 @@ export function createRendering({ state }) {
       // Hidden stems keep their last geometry; this same sweep refreshes them
       // in the pass where they turn visible again.
       if (visible)
-        updateCableReferenceStem(record, cameraPos, canvasHeight, fov);
+        updateCableReferenceStem(
+          record,
+          cameraPos,
+          canvasHeight,
+          fov,
+          forceStemUpdate,
+        );
     }
     for (const record of state._surfaceRecords) {
       const visible = occluder.isPointVisible(record.base);

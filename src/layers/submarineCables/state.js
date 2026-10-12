@@ -86,6 +86,8 @@ export function createState({ sweepClock, overlayHost, referenceRenderer }) {
     now: sweepClock,
   });
 
+  state._forceReferenceStemUpdate = false;
+
   state._overlayPublisher = createCableOverlayPublisher({ host: overlayHost });
 
   /** Reused winner→entry scratch so a 2 Hz sweep allocates no arrays. */

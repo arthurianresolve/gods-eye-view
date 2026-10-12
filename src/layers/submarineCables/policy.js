@@ -20,7 +20,7 @@ export const CABLE_OVERLAY_SOURCE_ID = 'telegeography-submarine-cables';
 
 export const CABLE_OVERLAY_COLLISION_CAPACITY = 96;
 
-/** Ignore sub-metre camera-derived stem-tip noise at camera settle. */
+/** Ignore sub-metre stem-tip noise during motion; moveEnd forces exact settle. */
 
 export const CABLE_STEM_TIP_EPSILON_M = 0.5;
 

@@ -38,19 +38,18 @@ export function createLifecycle({ state, parts, source, mapStackEventTarget }) {
             // never emit moveEnd — reach the motion fallback. No render is
             // requested for a fallback sweep: it only fires while the camera is
             // already moving, so frames are flowing by construction.
-            if (
-              !state._enabled ||
-              !state._loaded ||
-              !state._referenceSweepGate.shouldRun(viewer.camera)
-            )
-              return;
-            parts.rendering.updateReferenceVisibility();
+            if (!state._enabled || !state._loaded) return;
+            if (!state._referenceSweepGate.shouldRun(viewer.camera)) return;
+            const forceStemUpdate = state._forceReferenceStemUpdate;
+            parts.rendering.updateReferenceVisibility({ forceStemUpdate });
+            state._forceReferenceStemUpdate = false;
           },
         );
       }
       if (!state._moveEndRemover) {
         state._moveEndRemover = viewer.camera.moveEnd.addEventListener(() => {
           if (!state._enabled) return;
+          state._forceReferenceStemUpdate = true;
           state._referenceSweepGate.markDirty();
           viewer.scene.requestRender?.();
         });
