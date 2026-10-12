@@ -1026,6 +1026,8 @@
   "scripts/performance/commonSceneObserver.test.mjs",
   "scripts/performance/infrastructureWorkloadFixture.mjs",
   "scripts/performance/infrastructureWorkloadFixture.test.mjs",
+  "scripts/performance/fixtureInterception.mjs",
+  "scripts/performance/fixtureInterceptionFailureEvidence.test.mjs",
   "scripts/qa-evidence-panel.mjs",
   "scripts/qa-evidence-references.mjs",
   "scripts/qa-mission-render-demand.mjs",

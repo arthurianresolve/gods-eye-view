@@ -9,7 +9,10 @@ import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
-import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import {
+  createFixtureInterceptionErrorRecorder,
+  interceptFixtureSession,
+} from './performance/fixtureInterception.mjs';
 import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
@@ -365,6 +368,7 @@ const failureProgress = {
   completedSamples: [],
   fixture: productionFlightFixture || infrastructureWorkload,
   fixtureDelivery: null,
+  fixtureInterceptionErrors: [],
   workload: {
     warmupMs,
     durationPerSampleMs: seconds * 1000,
@@ -787,6 +791,7 @@ async function writeCaptureFailure(error, { refresh = false } = {}) {
     startupSamples: failureProgress.startupSamples,
     completedSamples: failureProgress.completedSamples,
     fixtureDelivery: failureProgress.fixtureDelivery,
+    fixtureInterceptionErrors: failureProgress.fixtureInterceptionErrors,
   });
   const json = `${JSON.stringify(report, null, 2)}\n`;
   if (out) {
@@ -855,7 +860,12 @@ if (ownedBrowserPidFile) {
 }
 
 const fixtureInterceptionSessions = [];
-const fixtureInterceptionErrors = [];
+const fixtureInterceptionErrorRecorder =
+  createFixtureInterceptionErrorRecorder();
+const fixtureInterceptionErrors = fixtureInterceptionErrorRecorder.records;
+failureProgress.fixtureInterceptionErrors = fixtureInterceptionErrors;
+const fixtureInterceptionSessionContexts = new WeakMap();
+let fixtureInterceptionSessionOrdinal = 0;
 const performanceDiagnosticsDocuments = [];
 async function disableCaptureDiagnostics(
   targetPage,
@@ -875,7 +885,12 @@ async function disableCaptureDiagnostics(
 async function configureFlightFixturePage(
   page,
   deliveryObserver = null,
-  { holdClockUntilCapture = false, phasedClock = false } = {},
+  {
+    holdClockUntilCapture = false,
+    phasedClock = false,
+    documentRole = 'unclassified',
+    documentId = null,
+  } = {},
 ) {
   if (!productionFlightFixture) return;
   await installFixtureWallClockOnPage(
@@ -886,6 +901,13 @@ async function configureFlightFixturePage(
   );
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);
+  const sessionContext = {
+    sessionOrdinal: ++fixtureInterceptionSessionOrdinal,
+    documentRole,
+    documentId,
+    lifecycleStage: 'active',
+  };
+  fixtureInterceptionSessionContexts.set(session, sessionContext);
   await interceptFixtureSession(
     session,
     new URL(url).origin + '/',
@@ -896,15 +918,13 @@ async function configureFlightFixturePage(
         productionFlightFixture,
         new URL(url).origin + '/',
       ),
-    (error) => {
-      if (fixtureInterceptionErrors.length < 8)
-        fixtureInterceptionErrors.push(
-          String(error?.message || 'Fixture interception failed').slice(0, 240),
-        );
+    fixtureInterceptionErrorRecorder.onError,
+    {
+      ...(deliveryObserver
+        ? { onFulfilled: deliveryObserver.onFulfilled }
+        : {}),
+      getErrorContext: () => ({ ...sessionContext }),
     },
-    deliveryObserver
-      ? { onFulfilled: deliveryObserver.onFulfilled }
-      : undefined,
   );
   return session;
 }
@@ -933,10 +953,16 @@ async function settleProviderRenderAtBoundary(
 
 async function releaseFlightFixtureSession(session) {
   if (!session) return;
+  const sessionContext = fixtureInterceptionSessionContexts.get(session);
+  if (sessionContext) sessionContext.lifecycleStage = 'releasing';
   const index = fixtureInterceptionSessions.indexOf(session);
   if (index >= 0) fixtureInterceptionSessions.splice(index, 1);
-  await session.send('Fetch.disable').catch(() => {});
-  await session.detach().catch(() => {});
+  try {
+    await session.send('Fetch.disable').catch(() => {});
+    await session.detach().catch(() => {});
+  } finally {
+    if (sessionContext) sessionContext.lifecycleStage = 'released';
+  }
 }
 
 try {
@@ -1269,7 +1295,11 @@ try {
     documentAudit.lateUseCheck = lateUseCheck;
     return lateUseCheck;
   };
-  async function attachMeasuredPage(auditPage, deliveryObserver = null) {
+  async function attachMeasuredPage(
+    auditPage,
+    deliveryObserver = null,
+    { documentRole = 'unclassified', documentId = null } = {},
+  ) {
     await auditPage.setViewport({
       width: 1440,
       height: 900,
@@ -1300,6 +1330,8 @@ try {
       {
         phasedClock: Boolean(productionFlightFixture),
         holdClockUntilCapture: Boolean(productionFlightFixture),
+        documentRole,
+        documentId,
       },
     );
     if (captureProvenance)
@@ -1323,7 +1355,16 @@ try {
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
-    const startupFixtureSession = await configureFlightFixturePage(startupPage);
+    const { documentRole: startupDocumentRole, documentId: startupDocumentId } =
+      startupDocumentTopology.diagnostics[run - 1];
+    const startupFixtureSession = await configureFlightFixturePage(
+      startupPage,
+      null,
+      {
+        documentRole: startupDocumentRole,
+        documentId: startupDocumentId,
+      },
+    );
     if (captureProvenance)
       await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     const startupAuditState = auditPageCodeRequests(startupPage);
@@ -1343,8 +1384,6 @@ try {
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
-    const { documentRole: startupDocumentRole, documentId: startupDocumentId } =
-      startupDocumentTopology.diagnostics[run - 1];
     await disableCaptureDiagnostics(
       startupPage,
       startupDocumentRole,
@@ -1433,6 +1472,10 @@ try {
   const initialPageAttachment = await attachMeasuredPage(
     page,
     flightFixtureDelivery,
+    {
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+    },
   );
   infrastructureFixtureDelivery =
     initialPageAttachment.infrastructureFixtureDelivery;
@@ -1903,6 +1946,10 @@ try {
     const pageAttachment = await attachMeasuredPage(
       page,
       flightFixtureDelivery,
+      {
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
+      },
     );
     activeFixtureSession = pageAttachment.fixtureSession;
     captureAuditState = pageAttachment.auditState;
@@ -3116,10 +3163,8 @@ try {
     failureProgress.current?.measurement ?? null,
   );
   await disposeActiveRenderBoundaryProgressBinding('capture-finally');
-  for (const session of fixtureInterceptionSessions) {
-    await session.send('Fetch.disable').catch(() => {});
-    await session.detach().catch(() => {});
-  }
+  for (const session of [...fixtureInterceptionSessions])
+    await releaseFlightFixtureSession(session);
   for (const [
     responsePage,
     responseListener,

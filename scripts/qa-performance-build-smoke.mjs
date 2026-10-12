@@ -1421,6 +1421,18 @@ export function compactCaptureCliFailure(report) {
               report.fixtureDelivery.fulfilledResponseCount,
           }
         : null,
+      fixtureInterceptionErrors: Array.isArray(report.fixtureInterceptionErrors)
+        ? report.fixtureInterceptionErrors.slice(0, 8).map((entry) => ({
+            message: sanitizeError(entry?.message || 'Interception failed.'),
+            phase: entry?.phase || null,
+            documentRole: entry?.documentRole || null,
+            documentId: entry?.documentId || null,
+            sessionOrdinal: Number.isSafeInteger(entry?.sessionOrdinal)
+              ? entry.sessionOrdinal
+              : null,
+            lifecycleStage: entry?.lifecycleStage || null,
+          }))
+        : [],
       completedSampleCount:
         report.progress?.completedSampleCount ?? report.captures?.length ?? 0,
       completedSamplesRetained:

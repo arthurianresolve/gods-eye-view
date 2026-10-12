@@ -4,6 +4,7 @@ import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export const MAX_CAPTURE_FAILURE_REPORT_BYTES = 256 * 1024;
+export const MAX_CAPTURE_FIXTURE_INTERCEPTION_ERRORS = 8;
 
 /** Write a bounded failure artifact, optionally refreshing it atomically. */
 export async function writeCaptureFailureReportFile(
@@ -146,8 +147,14 @@ export function createCaptureFailureReport({
   startupSamples = [],
   completedSamples = [],
   fixtureDelivery = null,
+  fixtureInterceptionErrors = [],
 } = {}) {
   const boundedState = { truncated: false };
+  if (
+    Array.isArray(fixtureInterceptionErrors) &&
+    fixtureInterceptionErrors.length > MAX_CAPTURE_FIXTURE_INTERCEPTION_ERRORS
+  )
+    boundedState.truncated = true;
   const fullCompleted = completedSamples
     .slice(-30)
     .map((sample) => boundedValue(sample, 0, new WeakSet(), boundedState));
@@ -194,6 +201,20 @@ export function createCaptureFailureReport({
       new WeakSet(),
       boundedState,
     ),
+    ...(Array.isArray(fixtureInterceptionErrors) &&
+    fixtureInterceptionErrors.length
+      ? {
+          fixtureInterceptionErrors: boundedValue(
+            fixtureInterceptionErrors.slice(
+              0,
+              MAX_CAPTURE_FIXTURE_INTERCEPTION_ERRORS,
+            ),
+            0,
+            new WeakSet(),
+            boundedState,
+          ),
+        }
+      : {}),
     progress: {
       startupSampleCount: startupSamples.length,
       startupSamples: fullStartup,

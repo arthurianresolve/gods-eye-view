@@ -1,4 +1,55 @@
 /** Resolve paused requests directly, without pairing Fetch and Network events. */
+export const MAX_FIXTURE_INTERCEPTION_ERRORS = 8;
+const ERROR_PHASES = new Set([
+  'request-command',
+  'command-send',
+  'fulfillment-callback',
+]);
+const LIFECYCLE_STAGES = new Set(['active', 'releasing', 'released']);
+
+export function createFixtureInterceptionErrorRecorder({ limit = 8 } = {}) {
+  if (!Number.isSafeInteger(limit) || limit < 0 || limit > 8)
+    throw new RangeError('Fixture interception error limit must be 0–8.');
+  const records = [];
+  const onError = (error, context = {}) => {
+    if (records.length >= limit) return;
+    const phase = ERROR_PHASES.has(context.phase) ? context.phase : 'unknown';
+    const lifecycleStage = LIFECYCLE_STAGES.has(context.lifecycleStage)
+      ? context.lifecycleStage
+      : 'unknown';
+    const documentRole = /^[a-z0-9-]{1,48}$/i.test(context.documentRole || '')
+      ? context.documentRole
+      : null;
+    const documentId = /^[a-z0-9._:-]{1,96}$/i.test(context.documentId || '')
+      ? context.documentId
+      : null;
+    const message = String(error?.message || 'Fixture interception failed')
+      .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')
+      .replace(/\b[A-Za-z]:[\\/][^\s"'<>]+/g, '[path]')
+      .replace(/(?<![\w.])\/(?:[^\s"'<>]+\/)*[^\s"'<>]*/g, '[path]')
+      .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [redacted]')
+      .replace(/\bBasic\s+[A-Za-z0-9+/]+=*/gi, 'Basic [redacted]')
+      .replace(
+        /\b(token|password|secret|authorization)\b["']?\s*[:=]\s*["']?[^"'&\s,;}\]]+/gi,
+        '$1=[redacted]',
+      )
+      .slice(0, 240);
+    records.push({
+      message,
+      phase,
+      documentRole,
+      documentId,
+      sessionOrdinal:
+        Number.isSafeInteger(context.sessionOrdinal) &&
+        context.sessionOrdinal > 0
+          ? context.sessionOrdinal
+          : null,
+      lifecycleStage,
+    });
+  };
+  return { records, onError };
+}
+
 export async function fixtureRequestCommand(event, base, respond) {
   const { requestId, request } = event;
   const url = new URL(request.url);
@@ -41,18 +92,31 @@ export async function interceptFixtureSession(
   base,
   respond,
   onError,
-  { onFulfilled } = {},
+  { onFulfilled, getErrorContext } = {},
 ) {
+  const reportError = (error, phase) => {
+    try {
+      onError?.(error, {
+        ...(typeof getErrorContext === 'function' ? getErrorContext() : {}),
+        phase,
+      });
+    } catch {
+      // Evidence callbacks must not strand or reclassify the intercepted request.
+    }
+  };
   client.on('Fetch.requestPaused', async (event) => {
+    let phase = 'request-command';
     try {
       const [method, params] = await fixtureRequestCommand(
         event,
         base,
         respond,
       );
+      phase = 'command-send';
       await client.send(method, params);
       if (method === 'Fetch.fulfillRequest') {
         try {
+          phase = 'fulfillment-callback';
           onFulfilled?.({
             url: event.request.url,
             method: event.request.method,
@@ -60,7 +124,7 @@ export async function interceptFixtureSession(
             bodyBase64: params.body,
           });
         } catch (error) {
-          onError?.(error);
+          reportError(error, phase);
         }
       }
     } catch (error) {
@@ -76,7 +140,7 @@ export async function interceptFixtureSession(
           error.message,
         )
       )
-        onError(error);
+        reportError(error, phase);
     }
   });
   await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
