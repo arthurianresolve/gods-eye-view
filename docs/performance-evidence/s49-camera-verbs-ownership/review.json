@@ -19,7 +19,35 @@
   "candidateReplacementControl": "passed",
   "formatting": "passed",
   "packageBoundaries": "passed",
-  "integrationCi": "pending",
+  "integrationCi": {
+    "runId": 38259509629,
+    "testedCommit": "68aff52b3d39eeee1f1e18378a5ba973e662ee31",
+    "status": "passed",
+    "jobsPassed": 7
+  },
   "hardwareValidated": false,
-  "limitations": "Real Cesium events and camera/canvas stubs verify ownership only. No browser frame-delivery, full tracking latency, post-GC retention plateau or S49/S55 completion claim."
+  "limitations": "Real Cesium events and camera/canvas stubs verify ownership only. No browser frame-delivery, full tracking latency, post-GC retention plateau or S49/S55 completion claim.",
+  "tracking": {
+    "runId": 38259574499,
+    "testedCommit": "68aff52b3d39eeee1f1e18378a5ba973e662ee31",
+    "status": "passed",
+    "passed": 111,
+    "failed": 0,
+    "skipped": 0,
+    "naturalBrowserExit": true,
+    "artifacts": {
+      "tracking-regression.log": {
+        "sha256": "73a7003bdf18f09bf4aafb2b44666e7a8cc6d6bbb2539c72a0474f91e5e9b6aa",
+        "bytes": 25393
+      },
+      "tracking-source.txt": {
+        "sha256": "e1185edff4208877a6ecb30c71ca71a7a494e21cf8cb032ff70ed82484b14492",
+        "bytes": 41
+      },
+      "tracking-source-status.txt": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    }
+  }
 }

@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: capture CLI removes the future-document registration only after document retirement
+not ok 1 - capture CLI removes the future-document registration only after document retirement
+  ---
+  duration_ms: 2699.9668
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s48-smoke-cli-startup\\scripts\\performance\\captureRendererProbeRetirementIntegration.test.mjs:15:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        'goto-domcontentloaded',
+    +   'registration-remove:owned-registration',
+        'wait-for-viewer',
+        'document-cleanup',
+    -   'registration-remove:owned-registration',
+        'browser-close'
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'goto-domcontentloaded'
+    1: 'wait-for-viewer'
+    2: 'document-cleanup'
+    3: 'registration-remove:owned-registration'
+    4: 'browser-close'
+  actual:
+    0: 'goto-domcontentloaded'
+    1: 'registration-remove:owned-registration'
+    2: 'wait-for-viewer'
+    3: 'document-cleanup'
+    4: 'browser-close'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s48-smoke-cli-startup/scripts/performance/captureRendererProbeRetirementIntegration.test.mjs:106:10)
+    async Test.run (node:internal/test_runner/test:1313:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2812.7591

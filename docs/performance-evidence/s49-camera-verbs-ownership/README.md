@@ -34,8 +34,16 @@ All [180 focused checks](focused-tests.txt) pass, covering shared consumers,
 replacement, same-viewer reinitialization, late callbacks, deferred starts/stops,
 render-hold release, production scene cleanup ordering and continued teardown
 after a listener-removal failure, plus existing route, handoff and action tests.
-Formatting, syntax, import directions and package boundaries pass. Standard
-integration CI is pending for this revision.
+Formatting, syntax, import directions and package boundaries pass. At exact
+integrated revision `68aff52b3d39eeee1f1e18378a5ba973e662ee31`,
+[standard CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38259509629)
+passes all seven jobs: Node 24/26 suites and builds, Windows onboarding, three-OS
+installation/update recovery and all browser journeys.
+[Tracking regression](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38259574499)
+passes 111 checks with zero failures/skips and normal browser/process exit.
+[Raw tracking log](tracking-regression.log), exact clean source witness,
+[CI metadata](integration-ci.json) and [tracking metadata](tracking-ci.json)
+are preserved; artifact byte hashes are in the review record.
 
 Code is implemented and focused automatic validation passes. Hardware validation
 and full S49/S55/S60 acceptance remain pending. This proves a specific ownership

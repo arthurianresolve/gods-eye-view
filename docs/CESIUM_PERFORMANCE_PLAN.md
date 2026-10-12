@@ -1,11 +1,18 @@
 # Cesium performance plan
 
+Latest isolated S48 experiment at `7f4f5e07` confirms every reached renderer
+cleanup at the unchanged one-second deadline, but fails before sampling on a
+fixture command sent while its interception session is releasing. The raw
+report and actual-CLI negative control are preserved in
+[run38261098402 evidence](performance-evidence/s48-registration-retirement-38261098402/README.md).
+The next fix targets fixture-release ownership; this is not a performance pass.
+
 Latest S49 shared camera-verb ownership repair at `4d077c7f`
 passes the independent old/candidate replacement reproduction and all 180
 focused checks. Viewer replacement no longer carries old motion; retired
 callbacks cannot control a replacement or reinitialized viewer. Production scene
-cleanup releases shared camera ownership before viewer destruction. Standard
-integration CI is pending; whole-application retention and S49/S55/S60 remain
+cleanup releases shared camera ownership before viewer destruction. All seven standard integration jobs and 111 hosted tracking checks pass at
+`68aff52b`; whole-application retention and S49/S55/S60 remain
 partial. See [exact evidence](performance-evidence/s49-camera-verbs-ownership/README.md).
 
 ## Current status - 12 October 2026
