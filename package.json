@@ -67,6 +67,7 @@
     "qa:street-level": "node scripts/qa-street-level.mjs",
     "qa:street-level:fixtures": "node scripts/qa-street-level.mjs --fixtures",
     "check:boundaries": "node scripts/check-import-directions.mjs && node scripts/check-package-boundaries.mjs",
+    "check:capture-no-undef": "node scripts/check-capture-no-undef.mjs",
     "qa:transit": "node scripts/qa-transit.mjs",
     "mcp": "node server/mcp/stdio.js",
     "qa:timeline": "node scripts/qa-investigation-timeline.mjs",
@@ -89,6 +90,8 @@
     "satellite.js": "^6.0.2"
   },
   "devDependencies": {
+    "eslint": "9.39.1",
+    "globals": "16.5.0",
     "prettier": "3.9.6",
     "puppeteer": "^25.10.0",
     "sharp": "^0.35.4",

@@ -90,6 +90,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/boundedCpuProfile.test.mjs',
   'scripts/performance/providerSampleCpuProfileWindow.test.mjs',
   'scripts/performance/providerDocumentRetirement.test.mjs',
+  'scripts/captureNoUndefConfig.test.mjs',
 ]);
 
 /** Whether this runtime matches the one the allocation budgets were calibrated on. */

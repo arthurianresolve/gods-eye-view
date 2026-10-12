@@ -158,6 +158,9 @@ jobs:
       - name: Check package boundaries
         run: npm run check:boundaries
 
+      - name: Check capture harness undefined identifiers
+        run: npm run check:capture-no-undef
+
       - name: Check published layer-token allocations
         if: github.event_name == 'pull_request'
         env:
