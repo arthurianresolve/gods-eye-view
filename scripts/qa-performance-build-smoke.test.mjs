@@ -14,6 +14,7 @@ import {
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 import { createProductionFlightFixture } from './performance/productionFlightFixture.mjs';
 import {
+  createCaptureDocumentTopology,
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
   getCaptureComparisonIneligibilityReasons,
@@ -350,6 +351,11 @@ function validInfrastructureCaptureCliReport(
     providerFixture,
     fixedTime,
   );
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: 1,
+    captureCount: 4,
+  });
   const layers = Object.entries(fixture.expectedLayerCounts)
     .map(([id, count]) => ({ id, enabled: true, count }))
     .sort((left, right) => left.id.localeCompare(right.id));
@@ -385,6 +391,7 @@ function validInfrastructureCaptureCliReport(
     shouldAnimate: false,
     multiplier: 0,
   };
+  let sampleDocumentIndex = 0;
   const captures = ['idle', 'scripted-motion'].flatMap((scenario) =>
     [1, 2].map((run) => ({
       scenario,
@@ -399,6 +406,7 @@ function validInfrastructureCaptureCliReport(
         cesiumBefore: cesiumClock,
         cesiumAfter: cesiumClock,
       },
+      ...topology.samples[sampleDocumentIndex++],
       conditions: {
         before: { visible: true, focused: true, environment: { layers } },
         after: { visible: true, focused: true, environment: { layers } },
@@ -425,6 +433,7 @@ function validInfrastructureCaptureCliReport(
   };
   const workload = {
     providerFixture,
+    fixtureId: fixture.id,
     fixture,
     warmupMs: 1000,
     durationPerSampleMs: 1000,
@@ -432,48 +441,49 @@ function validInfrastructureCaptureCliReport(
     startupRuns: 1,
     scenarios: ['idle', 'scripted-motion'],
     injectedDelayMs: 0,
+    infrastructureFixtureLifecycle: {
+      freshBrowserContextPerSample: false,
+    },
   };
-  const diagnosticRoles = [
-    'startup-1',
-    'main-setup',
-    ...captures.map((_, index) => `provider-sample-${index + 1}`),
-  ];
-  const diagnostics = diagnosticRoles.map((documentRole) => ({
-    documentRole,
-    requested: true,
-    hookAvailable: true,
-    disabled: true,
-  }));
-  const workerSourceSha256 = 'e'.repeat(64);
-  const workerAuditDocuments = diagnosticRoles.map((documentRole) => {
-    const hasRequiredAudit = documentRole !== 'startup-1';
-    const validation = hasRequiredAudit
-      ? {
-          schema: 'gev-cesium-worker-blob-audit/v1',
-          status: 'receipt-derived-worker-blobs-validated',
-          auditMode: 'diagnostic',
-          embeddedWorkerSourceSha256: workerSourceSha256,
-          validatedWorkerCount:
-            documentRole === 'main-setup'
-              ? 100
-              : Number(documentRole.at(-1)) + 1,
-        }
-      : null;
-    return {
+  const diagnostics = topology.diagnostics.map(
+    ({ documentRole, documentId }) => ({
       documentRole,
-      mode: 'diagnostic',
-      validation,
-      restoration: {
-        nativeCreateObjectURLRestored: true,
-        registryEmpty: true,
-        overflowCountAtRestore: 0,
-        createdScriptBlobCountAtRestore: hasRequiredAudit ? 1 : 0,
-        auditedCreatedScriptBlobCount: hasRequiredAudit ? 1 : 0,
-      },
-      observedWorkerTargetCount: hasRequiredAudit ? 1 : 0,
-      observedBlobRequestCount: hasRequiredAudit ? 1 : 0,
-    };
-  });
+      documentId,
+      requested: true,
+      hookAvailable: true,
+      disabled: true,
+    }),
+  );
+  const workerSourceSha256 = 'e'.repeat(64);
+  const workerAuditDocuments = topology.workerAudits.map(
+    ({ documentRole, documentId }) => {
+      const hasRequiredAudit = true;
+      const validation = hasRequiredAudit
+        ? {
+            schema: 'gev-cesium-worker-blob-audit/v1',
+            status: 'receipt-derived-worker-blobs-validated',
+            auditMode: 'diagnostic',
+            embeddedWorkerSourceSha256: workerSourceSha256,
+            validatedWorkerCount: documentRole === 'main-measured' ? 100 : 20,
+          }
+        : null;
+      return {
+        documentRole,
+        documentId,
+        mode: 'diagnostic',
+        validation,
+        restoration: {
+          nativeCreateObjectURLRestored: true,
+          registryEmpty: true,
+          overflowCountAtRestore: 0,
+          createdScriptBlobCountAtRestore: hasRequiredAudit ? 1 : 0,
+          auditedCreatedScriptBlobCount: hasRequiredAudit ? 1 : 0,
+        },
+        observedWorkerTargetCount: hasRequiredAudit ? 1 : 0,
+        observedBlobRequestCount: hasRequiredAudit ? 1 : 0,
+      };
+    },
+  );
   const source = {
     appCommit: 'b'.repeat(40),
     harnessCommit: 'c'.repeat(40),
@@ -486,9 +496,11 @@ function validInfrastructureCaptureCliReport(
         scriptRequestCount: 10,
         loadedAssetPaths: ['assets/app.js'],
         unexpectedAssetPaths: [],
-        cesiumWorkerBlobAudits: workerAuditDocuments
-          .filter((entry) => entry.validation)
-          .map((entry) => entry.validation),
+        cesiumWorkerBlobAudits: structuredClone(
+          workerAuditDocuments
+            .filter((entry) => entry.validation)
+            .map((entry) => entry.validation),
+        ),
         workerAuditDocuments,
       },
     },
@@ -595,36 +607,45 @@ test('capture CLI validates the selected infrastructure workload and rejects den
   assert.equal(result.providerFixture, expected.providerFixture);
   assert.equal(result.captureCount, 4);
 
-  const missingSampleAudit = validInfrastructureCaptureCliReport();
-  const missingSampleDocument =
-    missingSampleAudit.source.buildProvenance.pageAssetAudit.workerAuditDocuments.find(
-      (entry) => entry.documentRole === 'provider-sample-3',
+  const missingMeasuredAudit = validInfrastructureCaptureCliReport();
+  const missingMeasuredDocument =
+    missingMeasuredAudit.source.buildProvenance.pageAssetAudit.workerAuditDocuments.find(
+      (entry) => entry.documentRole === 'main-measured',
     );
-  missingSampleDocument.validation = null;
-  missingSampleDocument.observedWorkerTargetCount = 0;
-  missingSampleDocument.observedBlobRequestCount = 0;
-  missingSampleDocument.restoration.createdScriptBlobCountAtRestore = 0;
-  missingSampleDocument.restoration.auditedCreatedScriptBlobCount = 0;
-  missingSampleAudit.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.pop();
+  missingMeasuredDocument.validation = null;
+  missingMeasuredDocument.observedWorkerTargetCount = 0;
+  missingMeasuredDocument.observedBlobRequestCount = 0;
+  missingMeasuredDocument.restoration.createdScriptBlobCountAtRestore = 0;
+  missingMeasuredDocument.restoration.auditedCreatedScriptBlobCount = 0;
+  missingMeasuredAudit.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.pop();
   assert.throws(
-    () => validateCaptureCliReport(missingSampleAudit, expected),
-    /Missing receipt-derived worker audit for provider-sample-3/,
+    () => validateCaptureCliReport(missingMeasuredAudit, expected),
+    /Missing receipt-derived worker audit for main-measured/,
   );
 
   const missingSetupAudit = validInfrastructureCaptureCliReport();
   const missingSetupDocument =
     missingSetupAudit.source.buildProvenance.pageAssetAudit.workerAuditDocuments.find(
-      (entry) => entry.documentRole === 'main-setup',
+      (entry) => entry.documentRole === 'startup-1',
     );
   missingSetupDocument.validation = null;
-  missingSetupDocument.observedWorkerTargetCount = 0;
-  missingSetupDocument.observedBlobRequestCount = 0;
-  missingSetupDocument.restoration.createdScriptBlobCountAtRestore = 0;
-  missingSetupDocument.restoration.auditedCreatedScriptBlobCount = 0;
-  missingSetupAudit.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.shift();
   assert.throws(
     () => validateCaptureCliReport(missingSetupAudit, expected),
-    /Missing receipt-derived worker audit for main-setup/,
+    /1 !== 0|observedWorkerTargetCount|worker target|worker audit|validated document audits/,
+  );
+
+  const emptyStartupAudit = validInfrastructureCaptureCliReport();
+  const emptyStartupDocument =
+    emptyStartupAudit.source.buildProvenance.pageAssetAudit
+      .workerAuditDocuments[0];
+  emptyStartupDocument.validation = null;
+  emptyStartupDocument.observedWorkerTargetCount = 0;
+  emptyStartupDocument.observedBlobRequestCount = 0;
+  emptyStartupDocument.restoration.createdScriptBlobCountAtRestore = 0;
+  emptyStartupDocument.restoration.auditedCreatedScriptBlobCount = 0;
+  emptyStartupAudit.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits.shift();
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(emptyStartupAudit, expected),
   );
 
   const unownedObservation = validInfrastructureCaptureCliReport();
@@ -643,7 +664,7 @@ test('capture CLI validates the selected infrastructure workload and rejects den
   duplicateAudits[1] = structuredClone(duplicateAudits[0]);
   assert.throws(
     () => validateCaptureCliReport(duplicatedObservation, expected),
-    /preserve each document validation in order/,
+    /one-to-one with validated document audits|preserve each document validation in order/,
   );
 
   const malformedObservation = validInfrastructureCaptureCliReport();
@@ -656,17 +677,84 @@ test('capture CLI validates the selected infrastructure workload and rejects den
     [];
   assert.throws(
     () => validateCaptureCliReport(emptyObservations, expected),
-    /0 !== 5/,
+    /0 !== 2/,
   );
 
   const inconsistentWorkerSource = validInfrastructureCaptureCliReport();
-  inconsistentWorkerSource.source.buildProvenance.pageAssetAudit.workerAuditDocuments[2].validation.embeddedWorkerSourceSha256 =
-    'f'.repeat(64);
-  inconsistentWorkerSource.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits[1].embeddedWorkerSourceSha256 =
+  inconsistentWorkerSource.source.buildProvenance.pageAssetAudit.workerAuditDocuments[1].validation.embeddedWorkerSourceSha256 =
     'f'.repeat(64);
   assert.throws(
     () => validateCaptureCliReport(inconsistentWorkerSource, expected),
+    /preserve each document validation in order/,
+  );
+
+  const crossDocumentWorkerSource = validInfrastructureCaptureCliReport();
+  crossDocumentWorkerSource.source.buildProvenance.pageAssetAudit.workerAuditDocuments[0].validation.embeddedWorkerSourceSha256 =
+    'f'.repeat(64);
+  crossDocumentWorkerSource.source.buildProvenance.pageAssetAudit.cesiumWorkerBlobAudits[0].embeddedWorkerSourceSha256 =
+    'f'.repeat(64);
+  assert.throws(
+    () => validateCaptureCliReport(crossDocumentWorkerSource, expected),
     /2 !== 1/,
+  );
+
+  const splitMeasuredDocument = validInfrastructureCaptureCliReport();
+  splitMeasuredDocument.captures[2].documentId = 'other-measured-document';
+  assert.throws(
+    () => validateCaptureCliReport(splitMeasuredDocument, expected),
+    /main-measured-document/,
+  );
+
+  const wrongDocumentRole = validInfrastructureCaptureCliReport();
+  wrongDocumentRole.captures[0].documentRole = 'provider-sample-1';
+  assert.throws(
+    () => validateCaptureCliReport(wrongDocumentRole, expected),
+    /main-measured/,
+  );
+
+  const missingSampleDocumentId = validInfrastructureCaptureCliReport();
+  delete missingSampleDocumentId.captures[1].documentId;
+  assert.throws(
+    () => validateCaptureCliReport(missingSampleDocumentId, expected),
+    /main-measured-document/,
+  );
+
+  const wrongWorkerDocumentId = validInfrastructureCaptureCliReport();
+  wrongWorkerDocumentId.source.buildProvenance.pageAssetAudit.workerAuditDocuments[1].documentId =
+    'wrong-main-document';
+  assert.throws(
+    () => validateCaptureCliReport(wrongWorkerDocumentId, expected),
+    /main-measured-document/,
+  );
+
+  const duplicateDiagnosticDocumentId = validInfrastructureCaptureCliReport();
+  duplicateDiagnosticDocumentId.performanceDiagnostics.documents[0].documentId =
+    'main-measured-document';
+  assert.throws(
+    () => validateCaptureCliReport(duplicateDiagnosticDocumentId, expected),
+    /startup-document-1/,
+  );
+
+  const duplicateWorkerRole = validInfrastructureCaptureCliReport();
+  duplicateWorkerRole.source.buildProvenance.pageAssetAudit.workerAuditDocuments[1].documentRole =
+    'startup-1';
+  assert.throws(
+    () => validateCaptureCliReport(duplicateWorkerRole, expected),
+    /deep-equal|deepStrictEqual|startup-1/,
+  );
+
+  const missingProviderFixture = validInfrastructureCaptureCliReport();
+  delete missingProviderFixture.workload.providerFixture;
+  assert.throws(
+    () => validateCaptureCliReport(missingProviderFixture, expected),
+    /Expected values to be strictly equal/,
+  );
+
+  const missingFixtureId = validInfrastructureCaptureCliReport();
+  delete missingFixtureId.workload.fixtureId;
+  assert.throws(
+    () => validateCaptureCliReport(missingFixtureId, expected),
+    /Expected values to be strictly equal/,
   );
 
   const wrongCommitEvidence = validInfrastructureCaptureCliReport();

@@ -49,6 +49,8 @@ import { disableOptionalPerformanceDiagnostics } from './performance/captureDiag
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
+  createCaptureDocumentTopology,
+  getMainCaptureDocumentIdentity,
   getCaptureReadinessReasons,
 } from './performance/captureComparisonContract.mjs';
 import {
@@ -132,6 +134,14 @@ const startupRuns = Math.max(
   1,
   Math.min(5, Number(option('--startup-runs', String(runs))) || runs),
 );
+const startupDocumentTopology = createCaptureDocumentTopology({
+  infrastructure: Boolean(infrastructureWorkload),
+  startupRuns,
+});
+const mainCaptureDocumentIdentity = getMainCaptureDocumentIdentity({
+  infrastructure: Boolean(infrastructureWorkload),
+  startupRuns,
+});
 const protocolTimeoutMs = Math.max(
   10_000,
   Math.min(
@@ -413,11 +423,15 @@ if (ownedBrowserPidFile) {
 const fixtureInterceptionSessions = [];
 const fixtureInterceptionErrors = [];
 const performanceDiagnosticsDocuments = [];
-async function disableCaptureDiagnostics(targetPage, documentRole) {
+async function disableCaptureDiagnostics(
+  targetPage,
+  documentRole,
+  documentId = null,
+) {
   const status = await targetPage.evaluate(
     disableOptionalPerformanceDiagnostics,
   );
-  performanceDiagnosticsDocuments.push({ documentRole, ...status });
+  performanceDiagnosticsDocuments.push({ documentRole, documentId, ...status });
   failureProgress.performanceDiagnosticsDocuments = [
     ...performanceDiagnosticsDocuments,
   ];
@@ -575,7 +589,12 @@ try {
   const auditPageWorkerBlobs = async (
     auditPage,
     auditState,
-    { documentRole, auditMode = 'diagnostic', requireEvidence = false } = {},
+    {
+      documentRole,
+      documentId = null,
+      auditMode = 'diagnostic',
+      requireEvidence = false,
+    } = {},
   ) => {
     if (!captureProvenance) return null;
     for (const worker of auditPage.workers()) {
@@ -691,6 +710,7 @@ try {
       throw new Error('Worker blob audit did not fully restore and clear.');
     const documentAudit = {
       documentRole: documentRole || 'unclassified',
+      documentId,
       mode: auditMode,
       validation: validation?.observation || null,
       restoration: {
@@ -815,7 +835,13 @@ try {
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
-    await disableCaptureDiagnostics(startupPage, `startup-${run}`);
+    const { documentRole: startupDocumentRole, documentId: startupDocumentId } =
+      startupDocumentTopology.diagnostics[run - 1];
+    await disableCaptureDiagnostics(
+      startupPage,
+      startupDocumentRole,
+      startupDocumentId,
+    );
     const appReadyMs = Date.now() - startedAt;
     await startupPage.waitForFunction(
       () =>
@@ -874,7 +900,8 @@ try {
       ...details,
     });
     await auditPageWorkerBlobs(startupPage, startupAuditState, {
-      documentRole: `startup-${run}`,
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
       auditMode: 'diagnostic',
     });
     await context.close();
@@ -886,6 +913,8 @@ try {
   failureProgress.scenario = null;
   failureProgress.run = null;
   let page = await browser.newPage();
+  let activeDocumentRole = mainCaptureDocumentIdentity.documentRole;
+  let activeDocumentId = mainCaptureDocumentIdentity.documentId;
   let providerContext = null;
   let flightFixtureDelivery = productionFlightFixture
     ? createFlightFixtureDeliveryObserver(
@@ -916,7 +945,7 @@ try {
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
-  await disableCaptureDiagnostics(page, 'main-setup');
+  await disableCaptureDiagnostics(page, 'main-setup', activeDocumentId);
   const readyMs = Date.now();
   await page.waitForFunction(
     () =>
@@ -1303,6 +1332,11 @@ try {
 
   const scenarios = ['idle', 'scripted-motion'];
   if (fixture) scenarios.push('selected-aircraft-tracking');
+  const captureDocumentTopology = createCaptureDocumentTopology({
+    infrastructure: Boolean(infrastructureWorkload),
+    startupRuns,
+    captureCount: scenarios.length * runs,
+  });
   failureProgress.scenarios = scenarios;
   const captures = [];
   failureProgress.completedSamples = captures;
@@ -1336,6 +1370,7 @@ try {
     if (!providerSampleWorkerAuditComplete) {
       await auditPageWorkerBlobs(page, captureAuditState, {
         documentRole: 'main-setup',
+        documentId: activeDocumentId,
         auditMode: 'diagnostic',
       });
       providerSampleWorkerAuditComplete = true;
@@ -1345,6 +1380,8 @@ try {
     else await page.close();
     providerContext = await browser.createBrowserContext();
     page = await providerContext.newPage();
+    ({ documentRole: activeDocumentRole, documentId: activeDocumentId } =
+      captureDocumentTopology.samples[providerSampleDocumentIndex - 1]);
     flightFixtureDelivery = createFlightFixtureDeliveryObserver(
       productionFlightFixture,
       new URL(url).origin + '/',
@@ -1373,10 +1410,7 @@ try {
     await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
-    await disableCaptureDiagnostics(
-      page,
-      `provider-sample-${providerSampleDocumentIndex}`,
-    );
+    await disableCaptureDiagnostics(page, activeDocumentRole, activeDocumentId);
     await page.waitForFunction(
       () =>
         document.getElementById('loading-screen')?.classList.contains('hidden'),
@@ -1577,7 +1611,8 @@ try {
         },
         audit: () =>
           auditPageWorkerBlobs(page, captureAuditState, {
-            documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+            documentRole: activeDocumentRole,
+            documentId: activeDocumentId,
             auditMode: 'prewarm',
             requireEvidence: true,
           }),
@@ -1957,7 +1992,8 @@ try {
           activePrewarmedWorkerDocument = null;
         } else {
           await auditPageWorkerBlobs(page, captureAuditState, {
-            documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+            documentRole: activeDocumentRole,
+            documentId: activeDocumentId,
             auditMode: 'diagnostic',
           });
         }
@@ -2042,6 +2078,8 @@ try {
         throw new Error(
           `Selected-aircraft workload lost camera tracking: ${JSON.stringify({ trackingSetup, trackedAircraftId: sample.trackedAircraftId })}`,
         );
+      sample.documentRole = activeDocumentRole;
+      sample.documentId = activeDocumentId;
       captures.push({ scenario, run, ...sample });
       failureProgress.current = null;
     }
@@ -2083,7 +2121,8 @@ try {
       );
     if (!providerSampleWorkerAuditComplete) {
       await auditPageWorkerBlobs(page, captureAuditState, {
-        documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
         auditMode: 'diagnostic',
       });
       providerSampleWorkerAuditComplete = true;
@@ -2200,26 +2239,76 @@ try {
           scenarios,
         })
       : null;
+  const workload = {
+    warmupMs,
+    durationPerSampleMs: seconds * 1000,
+    runsPerScenario: runs,
+    startupRuns: startupSamples.length,
+    scenarios,
+    fixture: infrastructureWorkload || fixture,
+    providerFixture: infrastructureWorkload
+      ? infrastructureWorkload.workloadId
+      : productionFlightFixture
+        ? 'dense-investigation'
+        : null,
+    fixtureId:
+      infrastructureWorkload?.id || productionFlightFixture?.id || null,
+    injectedDelayMs: delayMs,
+    hardwareRequired,
+    ...(productionFlightFixture
+      ? {
+          providerFixtureLifecycle: {
+            scope:
+              'each measured scenario/repetition uses a newly created browser context; the earlier setup page contributes environment metadata only, not a capture sample',
+            clock:
+              'fixture wall time is held during setup, advances monotonically within configured warmup/measurement phases, then stays capped at each declared boundary; native timers, RAF and performance.now are unchanged',
+            boundarySettling:
+              'one completed Cesium postRender is observed at each capped boundary outside the measured interval, with host and page timeout bounds',
+            workerAuditTimingBoundary:
+              workerAuditMode === 'prewarm'
+                ? PREWARM_WORKER_AUDIT_BOUNDARY
+                : 'during-capture-diagnostic-instrumentation',
+            trackingRoute:
+              'entity-follow-v1 observes the public trackedEntity position, camera pose and Cesium clock state at both fixture epochs',
+            fixtureTimeAlignment:
+              'whole-second UTC; OpenSky source and position epochs agree exactly',
+            sourceFreshnessWindowMs: 120_000,
+          },
+        }
+      : {}),
+    ...(infrastructureWorkload
+      ? {
+          infrastructureFixtureLifecycle: {
+            scope:
+              'one measured app document per capture process; each asset response is matched to its verified build-receipt URL and SHA-256, with populations observed before and after every sample',
+            clock:
+              'Date.now remains at the declared whole-millisecond epoch; Cesium currentTime is set from Cesium.JulianDate.fromDate with shouldAnimate=false and multiplier=0',
+            camera: structuredClone(infrastructureWorkload.camera),
+            routeScope:
+              'idle and elapsed-time scripted camera motion, reset from the same captured home pose before every run',
+            freshBrowserContextPerSample: false,
+          },
+        }
+      : {}),
+    mixedLayers: mixedLayerFixture,
+    qualityMode,
+    expectedDensityPct: Number.isFinite(expectedDensityPct)
+      ? expectedDensityPct
+      : null,
+    cameraPath:
+      'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
+    detectionMode: fixture || infrastructureWorkload ? detectionMode : null,
+    populationStableAcrossSamples,
+    cameraPathStableAcrossSamples,
+    note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
+  };
   const comparisonReadinessReasons = getCaptureReadinessReasons({
     contract: comparisonContract,
     fixture: comparisonFixture,
     fixtureDelivery,
     source,
     environment,
-    workload: {
-      providerFixture: infrastructureWorkload
-        ? infrastructureWorkload.workloadId
-        : productionFlightFixture
-          ? 'dense-investigation'
-          : null,
-      warmupMs,
-      durationPerSampleMs: seconds * 1000,
-      runsPerScenario: runs,
-      startupRuns: startupSamples.length,
-      injectedDelayMs: delayMs,
-      scenarios,
-      hardwareRequired,
-    },
+    workload,
     captures,
     diagnosticsDocuments: performanceDiagnosticsDocuments,
     workerBlobAuditInstrumented: Boolean(captureProvenance),
@@ -2266,61 +2355,7 @@ try {
     hostEnvironment,
     graphics,
     integrity,
-    workload: {
-      warmupMs,
-      durationPerSampleMs: seconds * 1000,
-      runsPerScenario: runs,
-      startupRuns: startupSamples.length,
-      scenarios,
-      fixture: infrastructureWorkload || fixture,
-      ...(productionFlightFixture
-        ? {
-            providerFixtureLifecycle: {
-              scope:
-                'each measured scenario/repetition uses a newly created browser context; the earlier setup page contributes environment metadata only, not a capture sample',
-              clock:
-                'fixture wall time is held during setup, advances monotonically within configured warmup/measurement phases, then stays capped at each declared boundary; native timers, RAF and performance.now are unchanged',
-              boundarySettling:
-                'one completed Cesium postRender is observed at each capped boundary outside the measured interval, with host and page timeout bounds',
-              workerAuditTimingBoundary:
-                workerAuditMode === 'prewarm'
-                  ? PREWARM_WORKER_AUDIT_BOUNDARY
-                  : 'during-capture-diagnostic-instrumentation',
-              trackingRoute:
-                'entity-follow-v1 observes the public trackedEntity position, camera pose and Cesium clock state at both fixture epochs',
-              fixtureTimeAlignment:
-                'whole-second UTC; OpenSky source and position epochs agree exactly',
-              sourceFreshnessWindowMs: 120_000,
-            },
-          }
-        : {}),
-      ...(infrastructureWorkload
-        ? {
-            infrastructureFixtureLifecycle: {
-              scope:
-                'one measured app document per capture process; each asset response is matched to its verified build-receipt URL and SHA-256, with populations observed before and after every sample',
-              clock:
-                'Date.now remains at the declared whole-millisecond epoch; Cesium currentTime is set from Cesium.JulianDate.fromDate with shouldAnimate=false and multiplier=0',
-              camera: structuredClone(infrastructureWorkload.camera),
-              routeScope:
-                'idle and elapsed-time scripted camera motion, reset from the same captured home pose before every run',
-              freshBrowserContextPerSample: false,
-            },
-          }
-        : {}),
-      mixedLayers: mixedLayerFixture,
-      qualityMode,
-      expectedDensityPct: Number.isFinite(expectedDensityPct)
-        ? expectedDensityPct
-        : null,
-      cameraPath:
-        'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
-      detectionMode: fixture || infrastructureWorkload ? detectionMode : null,
-      injectedDelayMs: delayMs,
-      populationStableAcrossSamples,
-      cameraPathStableAcrossSamples,
-      note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
-    },
+    workload,
     motionBudget: {
       ...motionBudget,
       note: 'Idle rendering is intentionally sparse and is excluded from motion frame budgets.',

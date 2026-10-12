@@ -54,6 +54,7 @@ import {
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
+  createCaptureDocumentTopology,
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
 import {
@@ -675,6 +676,12 @@ function validateInfrastructureCaptureCliReport(report, expected) {
     expected.fixedTime,
   );
   assert.equal(report.workload?.providerFixture, expected.providerFixture);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.equal(
+    report.workload?.infrastructureFixtureLifecycle
+      ?.freshBrowserContextPerSample,
+    false,
+  );
   assert.equal(report.workload?.warmupMs, 1000);
   assert.equal(report.workload?.durationPerSampleMs, 1000);
   assert.equal(report.workload?.runsPerScenario, 2);
@@ -696,15 +703,18 @@ function validateInfrastructureCaptureCliReport(report, expected) {
   assert.deepEqual(report.comparisonContract, observedContract);
   const diagnostics = report.performanceDiagnostics?.documents;
   assert.ok(Array.isArray(diagnostics));
-  assert.equal(diagnostics.length, 1 + 1 + report.captures.length);
-  const expectedRoles = [
-    'startup-1',
-    'main-setup',
-    ...report.captures.map((_, index) => `provider-sample-${index + 1}`),
-  ].sort();
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  assert.equal(diagnostics.length, topology.diagnostics.length);
   assert.deepEqual(
-    diagnostics.map((entry) => entry.documentRole).sort(),
-    expectedRoles,
+    diagnostics.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.diagnostics,
   );
   for (const entry of diagnostics) {
     assert.equal(entry.requested, true);
@@ -713,8 +723,11 @@ function validateInfrastructureCaptureCliReport(report, expected) {
   const workerDocuments = pageAudit.workerAuditDocuments;
   assert.ok(Array.isArray(workerDocuments));
   assert.deepEqual(
-    workerDocuments.map((entry) => entry.documentRole).sort(),
-    expectedRoles,
+    workerDocuments.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.workerAudits,
   );
   for (const entry of workerDocuments) {
     assert.equal(entry.mode, 'diagnostic');
@@ -742,19 +755,35 @@ function validateInfrastructureCaptureCliReport(report, expected) {
       );
     }
   }
-  const requiredWorkerRoles = [
-    'main-setup',
-    ...report.captures.map((_, index) => `provider-sample-${index + 1}`),
-  ];
   const auditsByRole = new Map(
     workerDocuments.map((entry) => [entry.documentRole, entry]),
   );
-  for (const role of requiredWorkerRoles)
-    assert.equal(
-      auditsByRole.get(role)?.validation?.status,
-      'receipt-derived-worker-blobs-validated',
-      `Missing receipt-derived worker audit for ${role}`,
-    );
+  assert.equal(
+    auditsByRole.get('main-measured')?.validation?.status,
+    'receipt-derived-worker-blobs-validated',
+    'Missing receipt-derived worker audit for main-measured',
+  );
+  const startupDiagnostic = diagnostics.find(
+    (entry) => entry.documentRole === 'startup-1',
+  );
+  const mainDiagnostic = diagnostics.find(
+    (entry) => entry.documentRole === 'main-setup',
+  );
+  const startupAudit = auditsByRole.get('startup-1');
+  const mainAudit = auditsByRole.get('main-measured');
+  assert.ok(startupDiagnostic?.documentId);
+  assert.ok(mainDiagnostic?.documentId);
+  assert.notEqual(startupDiagnostic.documentId, mainDiagnostic.documentId);
+  assert.equal(startupAudit.documentId, startupDiagnostic.documentId);
+  assert.equal(mainAudit.documentId, mainDiagnostic.documentId);
+  assert.deepEqual(
+    report.captures.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.samples,
+  );
+  assert.equal(mainDiagnostic.documentId, topology.samples[0]?.documentId);
   const validatedDocumentCount = workerDocuments.filter(
     (entry) =>
       entry.validation?.status === 'receipt-derived-worker-blobs-validated',

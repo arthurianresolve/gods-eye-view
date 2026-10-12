@@ -13,6 +13,68 @@ const OBJECTIVE_SCENARIOS = Object.freeze([
   'selected-aircraft-tracking',
 ]);
 
+export function createCaptureDocumentTopology({
+  infrastructure = false,
+  startupRuns = 1,
+  captureCount = 0,
+} = {}) {
+  if (!Number.isInteger(startupRuns) || startupRuns < 0 || startupRuns > 5)
+    throw new Error(
+      'Capture document topology startupRuns must be between 0 and 5.',
+    );
+  if (!Number.isInteger(captureCount) || captureCount < 0 || captureCount > 30)
+    throw new Error(
+      'Capture document topology captureCount must be between 0 and 30.',
+    );
+  const startup = Array.from({ length: startupRuns }, (_, index) => ({
+    documentRole: `startup-${index + 1}`,
+    documentId: `startup-document-${index + 1}`,
+  }));
+  const mainDocumentId = 'main-measured-document';
+  const main = {
+    documentRole: infrastructure ? 'main-measured' : 'main-setup',
+    documentId: mainDocumentId,
+  };
+  const samples = infrastructure
+    ? Array.from({ length: captureCount }, () => ({ ...main }))
+    : Array.from({ length: captureCount }, (_, index) => ({
+        documentRole: `provider-sample-${index + 1}`,
+        documentId: `provider-document-${index + 1}`,
+      }));
+  return {
+    diagnostics: [
+      ...startup,
+      { documentRole: 'main-setup', documentId: mainDocumentId },
+      ...(!infrastructure ? samples : []),
+    ],
+    workerAudits: [...startup, main, ...(!infrastructure ? samples : [])],
+    samples,
+  };
+}
+
+export function getMainCaptureDocumentIdentity({
+  infrastructure = false,
+  startupRuns = 1,
+} = {}) {
+  const topology = createCaptureDocumentTopology({
+    infrastructure,
+    startupRuns,
+    captureCount: 0,
+  });
+  const mainDiagnostic = topology.diagnostics[startupRuns];
+  const mainWorkerAudit = topology.workerAudits.find((entry) =>
+    infrastructure
+      ? entry.documentRole === 'main-measured'
+      : entry.documentRole === 'main-setup',
+  );
+  if (!mainDiagnostic || !mainWorkerAudit)
+    throw new Error('Capture document topology has no measured main page.');
+  return {
+    documentRole: mainWorkerAudit.documentRole,
+    documentId: mainDiagnostic.documentId,
+  };
+}
+
 function enabledPopulations(layers, label) {
   assert.ok(Array.isArray(layers), `${label} layer observations are required`);
   return layers
@@ -512,6 +574,8 @@ export function getCaptureComparisonIneligibilityReasons({
     )
   )
     reasons.push('application-diagnostics-were-not-disabled-in-every-document');
+  const infrastructureFixture =
+    fixture?.schema === 'gev-infrastructure-fixture-manifest/v1';
   if (fixture && diagnosticsDocuments.length > 0) {
     const expectedRoles = [
       ...Array.from(
@@ -519,16 +583,44 @@ export function getCaptureComparisonIneligibilityReasons({
         (_, index) => `startup-${index + 1}`,
       ),
       'main-setup',
-      ...Array.from(
-        { length: captures.length },
-        (_, index) => `provider-sample-${index + 1}`,
-      ),
+      ...(infrastructureFixture
+        ? []
+        : Array.from(
+            { length: captures.length },
+            (_, index) => `provider-sample-${index + 1}`,
+          )),
     ].sort();
     const observedRoles = diagnosticsDocuments
       .map((row) => row.documentRole)
       .sort();
     if (JSON.stringify(observedRoles) !== JSON.stringify(expectedRoles))
       reasons.push('application-diagnostics-document-coverage-is-incomplete');
+    if (infrastructureFixture) {
+      const mainSetup = diagnosticsDocuments.find(
+        (row) => row.documentRole === 'main-setup',
+      );
+      const measuredIds = captures.map((sample) => sample.documentId);
+      if (
+        !mainSetup?.documentId ||
+        captures.length === 0 ||
+        captures.some((sample) => sample.documentRole !== 'main-measured') ||
+        measuredIds.some(
+          (id) =>
+            typeof id !== 'string' || id.length === 0 || id !== measuredIds[0],
+        ) ||
+        mainSetup.documentId !== measuredIds[0]
+      )
+        reasons.push('infrastructure-samples-do-not-share-measured-document');
+    } else if (fixture) {
+      const sampleDocumentsMatch = captures.every(
+        (sample, index) =>
+          sample.documentRole === `provider-sample-${index + 1}` &&
+          typeof sample.documentId === 'string' &&
+          sample.documentId.length > 0,
+      );
+      if (!sampleDocumentsMatch)
+        reasons.push('provider-sample-document-identity-is-incomplete');
+    }
   }
   if (workerBlobAuditMode === 'prewarm')
     reasons.push(
@@ -538,8 +630,6 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
-  const infrastructureFixture =
-    fixture?.schema === 'gev-infrastructure-fixture-manifest/v1';
   if (fixture && !infrastructureFixture)
     reasons.push(
       'provider-fixture-is-static-count-only-not-trajectory-equivalent',
