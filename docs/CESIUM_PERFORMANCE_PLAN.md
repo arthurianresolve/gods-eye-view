@@ -1,14 +1,59 @@
 # Cesium performance plan
 
+## Current status - 12 October 2026
+
+Latest validated runtime checkpoint: `bbca229f0077b8443db04395c106677684d2ef61`
+on `dev`. Both the manual and automatic push CI runs pass all seven standard
+jobs. The HUD summary ownership fix is integrated; it does not establish a GPU
+readback speedup or resolve the Windows frame-delivery failure.
+
+S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
+defaults. Datacenter component comparisons show repeatable activation and JS
+heap benefits with identical captured pixels, while the cable map-switch
+readiness test remains failed. S47's additional infrastructure workloads are
+under implementation/review; Austin, weather/effects and map-streaming workload
+coverage remain open. Physical Windows performance acceptance and the final
+candidate's full matched captures/retention soak remain pending.
+
+[Current integration and S54 evidence](performance-evidence/s54-current-dev-20261012/README.md)
+records exact revisions and separates implementation, automatic checks and
+hardware coverage. The Windows GPU configuration export confirms hardware
+acceleration only. Historical checkpoints below retain their original failures
+and limitations; their old branch/promotion statements are not the current state.
+
+## Historical integration checkpoints
+
 Integration checkpoint (12 October 2026): the S50 map-source ownership repair,
 connection-scoped map-bridge cleanup and measured macOS recovery backend pass
 [all seven standard CI jobs at `501aa8d8`](performance-evidence/s50-macos-recovery-38174948494/standard-38177697638/ci-run.json).
 Independent inspection of the three raw recovery reports confirms all 15
 stages preserve settings, workspace bundles and asset digests, with natural
-browser exits within five seconds. The integration is ready for dev promotion;
-subsequent evidence commits change documentation only. This closes the
+browser exits within five seconds. The integration is pushed to dev at
+`acc471e4afb4ff629244ec37caf2836b6aef89ef`; its difference from tested `501aa8d8`
+is documentation only. This closes the
 integration blocker, not full S50 or physical Windows/performance acceptance.
 The rejected S59 scalar experiment remains on its separate opt-in QA branch.
+
+Windows retry (12 October 2026): the user-exported Chrome GPU configuration
+confirms hardware-accelerated WebGL on Intel UHD 620 / ANGLE D3D11 with zero
+GPU-process crashes reported. A minimal WebGL retry still has a 1,016 ms RAF
+gap while 20 ms timers continue. Its build identity is missing and the canvas
+is only 90% in the viewport; it is retained as diagnostic evidence, not accepted
+performance or soak evidence. Identified controls at `acc471e4` subsequently
+reproduce an 850 ms WebGL RAF gap with the whole canvas visible (60 frames in
+five seconds); the matched plain-RAF control receives 286 frames with a 200 ms
+maximum gap. The minimal page contains no Cesium. Desktop occlusion is still
+unavailable; the cause and full hardware acceptance remain unresolved.
+[Configuration and raw results](performance-evidence/windows-gpu-20261012/README.md).
+The exact `acc471e4` revision also passed all seven standard jobs in
+[CI run 38183006552](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38183006552).
+Its optional soak and push-inapplicable layer-token checks were skipped, not
+passed; the Windows hardware frame stall remains a separate unresolved gate.
+The subsequent fixture-only A/B/B/A preservation control at `b48c2e30` keeps
+dimensions, context settings and visibility matched. Both true and false retain
+783-1,000 ms maximum RAF gaps; disabling preservation does not eliminate the
+stall. Production defaults remain unchanged. Raw controls and limited wind
+observations are retained in the same evidence packet.
 
 Previous dev checkpoint (11 October 2026): point integration is pushed at
 `ba7c8738b8505244be06d0f0e3bd873e02d6b2ca`. [All seven standard CI jobs](performance-evidence/import-point-current-dev/validation-38171991819-ci.json)
@@ -40,6 +85,15 @@ completes three samples, then fails the page render deadline on the fourth:
 entry takes 4.86 ms, but the next update opportunity arrives over five seconds
 later. This preserves the late-frame failure and requires further attribution.
 The workflow's optional candidate now defaults to its dispatched immutable commit.
+
+[Bounded CPU profiling at `94ab2536`](performance-evidence/s47-boundary-cpu-38184189829/README.md)
+preserves a failed first-idle measurement boundary and a validated profile
+sidecar. Its leading sampled cost is `readPixels`, reached through HUD summary
+context and Cesium depth picking; shader-program queries also contribute.
+Warmup profiling times out and remains unavailable. Statistical sample weights
+are not exact CPU/GPU time, and this hosted software-rendering result does not
+explain the separate Windows no-Cesium scheduling stall. Runtime remediation
+and a successful controlled comparison remain outstanding.
 
 S59 attribution: the [CPU/GC diagnostic at `d91e0873`](performance-evidence/s59-load-profile-38172396175/README.md)
 passes independent recomputation; coordinate conversion takes 14.6 ms of the
@@ -4206,3 +4260,48 @@ at `26f383ed` both pass all seven standard jobs. They are now integrated on dev;
 the candidate/pending statements above describe the earlier failed gate only.
 [Current integration evidence](performance-evidence/main-weather-38152867100/README.md)
 preserves both successful runs and the earlier failures separately.
+
+## HUD ownership fix and S54 current-dev checks - 12 October 2026
+
+The revision-owned HUD summary coalescing fix at
+`bbca229f0077b8443db04395c106677684d2ef61` passes all seven standard jobs in
+[run 38185865148](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38185865148).
+Root fast-forwarded local and remote `dev` to that exact tested commit. The
+focused HUD/voice suite passes 120 checks; five targeted baseline negative
+controls fail for the expected ownership and duplicate-context assertions.
+These tests establish cleanup and context-call behavior, not individual GPU
+readback counts or a resolution of the Windows frame stall. The separate
+automatic [push-triggered CI run 38187169259](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187169259)
+now also passes all seven standard jobs at the same revision.
+The [saved CI response](performance-evidence/s54-current-dev-20261012/hud-ci-bbca229f.json)
+preserves job and step outcomes; optional hardware/soak and PR-only published
+layer-token checks were skipped.
+
+S54 candidate `bc892f7cb491c823bb8d7503cd036e5320f5c690`, based on `acc471e4`,
+remains isolated from dev and retains Entity defaults. Fresh dam and datacenter
+correctness runs pass: root decoded 40 images and verified all 20 exact renderer
+pairs, bundled payload hashes, native picks and warmed-baseline teardown.
+The cable run fails in the existing Entity lifetime during the map-switch
+readiness witness, before any collection sample. No page/interception errors
+or external requests were observed. Its early readiness observations were not
+retained, so the cause remains unresolved; the failed result is not retried
+unchanged or converted to a pass.
+
+[Raw results and scoped review](performance-evidence/s54-current-dev-20261012/README.md)
+separate the successful component checks from the cable failure. A subsequent
+diagnostic at `d05e5415` retains the failed readiness predicate: one hidden
+GroundPolylinePrimitive stays unready while frames continue and data-source/globe
+readiness remain true. The build/worker cause remains unresolved; no readiness
+condition or deadline was relaxed.
+
+The fresh [datacenter benefit run 38187703722](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187703722)
+passes at `d05e5415`. Five alternating latency pairs show a 28.63% reduction in
+median time from source-ready to first usable frame, with all five pairs improving.
+Five separate forced-GC pairs show 16.06% lower enabled JavaScript heap increase.
+Root independently verified the report, 27 recorded Git source hashes and 40
+decoded PNG/RGBA hashes (20 identical renderer pairs). Full raw evidence is linked
+above. These hosted Apple paravirtual Metal measurements cover one component;
+they do not establish motion p95, physical Windows performance or a retained-heap
+plateau. Dam/cable benefit acceptance, full-application coverage and the final
+soak remain pending. Entity defaults remain unchanged. The user-supplied Windows
+GPU export establishes hardware acceleration only.
