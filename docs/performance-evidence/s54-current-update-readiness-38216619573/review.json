@@ -1,0 +1,233 @@
+{
+  "applicationCommit": "d94bfa16e807f9ba7fb1cff7e4d2f2b40a87488d",
+  "harnessCommit": "d94bfa16e807f9ba7fb1cff7e4d2f2b40a87488d",
+  "rawBytes": 619671,
+  "rawSha256": "38491a58dbde43c472d9152c2bddf5ecb7952336c1ae165208448cc47f0e1bca",
+  "comparisonMethod": "Independent Python standard-library PNG decode, CRC validation, full pixel comparison",
+  "pairs": [
+    {
+      "caseId": "default-style",
+      "pair": 0,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 1,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 2,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 3,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "default-style",
+      "pair": 4,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 0,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 1,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 2,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 3,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    },
+    {
+      "caseId": "camera-lod-update",
+      "pair": 4,
+      "differentPixels": 0,
+      "geometryEqual": true,
+      "styleEqual": true,
+      "identitiesEqual": true,
+      "cameraEqual": true,
+      "clockEqual": true,
+      "nativeOwnersVerified": true
+    }
+  ],
+  "readinessStatus": "complete",
+  "readinessLifetimes": [
+    {
+      "mode": "entities",
+      "sampleCount": 15,
+      "allCurrentReady": true,
+      "cleanupConfirmed": true,
+      "finalObserverState": {
+        "schema": "gev-infrastructure-current-update-readiness/v1",
+        "available": true,
+        "cleanupConfirmed": true,
+        "updateRestoreStatus": "restored",
+        "generationCount": 15,
+        "updateCallCount": 154,
+        "collectionRevision": 8760,
+        "completedRenderRevision": 154,
+        "installErrorName": null
+      }
+    },
+    {
+      "mode": "primitive-collections",
+      "sampleCount": 15,
+      "allCurrentReady": true,
+      "cleanupConfirmed": true,
+      "finalObserverState": {
+        "schema": "gev-infrastructure-current-update-readiness/v1",
+        "available": true,
+        "cleanupConfirmed": true,
+        "updateRestoreStatus": "restored",
+        "generationCount": 15,
+        "updateCallCount": 143,
+        "collectionRevision": 8740,
+        "completedRenderRevision": 143,
+        "installErrorName": null
+      }
+    }
+  ],
+  "lifetimeCleanup": [
+    {
+      "mode": "entities",
+      "cleanup": null,
+      "teardown": {
+        "layerDestroyed": true,
+        "dataSourceRemoved": true,
+        "rendererOwnersRemoved": true,
+        "viewerKeptForNextLifetime": true,
+        "instrumentationRestored": true,
+        "ownerCountAfterDestroy": 0,
+        "dataSourceCountAfterDestroy": 0,
+        "scenePrimitiveCountAfterDestroy": 1,
+        "groundPrimitiveCountAfterDestroy": 1
+      }
+    },
+    {
+      "mode": "primitive-collections",
+      "cleanup": null,
+      "teardown": {
+        "layerDestroyed": true,
+        "dataSourceRemoved": true,
+        "rendererOwnersRemoved": true,
+        "viewerKeptForNextLifetime": true,
+        "instrumentationRestored": true,
+        "ownerCountAfterDestroy": 0,
+        "dataSourceCountAfterDestroy": 0,
+        "scenePrimitiveCountAfterDestroy": 1,
+        "groundPrimitiveCountAfterDestroy": 1
+      }
+    }
+  ],
+  "viewerCleanup": {
+    "viewerDestroyed": true
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 66313.291417,
+      "closeSettledHostMs": 67017.558292,
+      "closeElapsedMs": 704.2668750000012,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 656.0910830000066
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "environment": {
+    "appCommit": "d94bfa16e807f9ba7fb1cff7e4d2f2b40a87488d",
+    "harnessCommit": "d94bfa16e807f9ba7fb1cff7e4d2f2b40a87488d",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "viewport": {
+      "width": 1200,
+      "height": 960,
+      "dpr": 1
+    },
+    "drawingBuffer": {
+      "width": 960,
+      "height": 640
+    },
+    "layers": []
+  },
+  "performanceAcceptance": false,
+  "physicalWindowsAcceptance": false
+}

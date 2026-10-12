@@ -8,8 +8,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `72df25ee8c8ea7f0fb94a7d4f00525fd00167290`.
-[All seven standard jobs pass](performance-evidence/s47-early-document-cpu-profile-38214581314/standard-ci-dev-38213470541.json),
+Recorded integration checkpoint: `63b2d8527d3d4be3816d55d69e9ac57c2376f7b0`.
+[All seven standard jobs pass](performance-evidence/s54-current-update-readiness-38216619573/standard-ci-dev-38215303033.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -38,6 +38,13 @@ fixture interception errors before any profile starts. Error details are omitted
 from the failure artifact despite being collected internally. That reporting gap
 must be repaired before another run; no rendering root cause, performance pass or
 unchanged retry follows. Production defaults and capture deadlines remain intact.
+
+The reporting gap is repaired on the isolated branch at `9ec1172c`: up to eight
+sanitized errors preserve their document/session owner, callback phase and
+active/releasing/released lifecycle. Failure-artifact creation and outer smoke
+compaction retain this evidence. Thirty independent focused tests pass; the
+[exact-commit hosted check](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38217259994)
+is in progress. No failure filters or render deadlines were relaxed.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
 defaults. The dam and cable collection experiments are now
@@ -74,6 +81,16 @@ all twenty PNGs finds nine identical pairs and a 16-pixel difference in the firs
 camera-change pair. Replaying the raw report with the repaired comparator still
 rejects that image difference. The visual cause remains unresolved; no unchanged
 rerun, performance acceptance or production promotion follows.
+The [current-update readiness check at `d94bfa16`](performance-evidence/s54-current-update-readiness-38216619573/README.md)
+now passes both renderer lifetimes. It requires a successful current
+`DataSourceDisplay.update()` and unchanged collection revision at the captured
+frame, rather than relying only on latched `ready`. Root passes 69 focused tests
+and independently decodes all twenty PNGs: all ten paired images are identical,
+including all camera-change pairs. All thirty readiness observations qualify,
+observer ownership is restored, and Chrome exits naturally. This closes that
+instrumented hosted correctness check; it does not establish physical Windows,
+latency, mixed-layer or final-soak acceptance. The earlier 16-pixel failure remains
+preserved, and production Entity defaults remain unchanged.
 The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit-38205683313/README.md)
 completes twenty runs with verified native owners and twenty byte-identical
 image pairs. Whole-activation median improves 22.12% and enabled JS heap
