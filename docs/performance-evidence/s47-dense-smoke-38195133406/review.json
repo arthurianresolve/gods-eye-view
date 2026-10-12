@@ -1,0 +1,32 @@
+{
+  "rawSha256": "65ddb722e246d61bac729dfa5d40f35f3efec8872e91403c28d3d5112182fdc3",
+  "rawBytes": 50892,
+  "appCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "harnessCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "status": "failed",
+  "failure": {
+    "phase": "validate-provider-fixture-clock",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Measurement boundary: host did not observe a completed render within 5000ms.",
+    "operator": null
+  },
+  "completedSampleCount": 0,
+  "observedFlightCount": 2500,
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "warmupBoundarySettleMs": 5618.700000000012,
+  "incompleteMeasurement": {
+    "durationMs": 5693.899999999994,
+    "renderedFrameCount": 2,
+    "longTasks": {
+      "count": 2,
+      "maxMs": 2620
+    }
+  },
+  "limitations": [
+    "Five-second page boundary and six-second host watchdog remained unchanged.",
+    "No causal attribution distinguishes page entry/CPU/render progress at timeout.",
+    "No timing or comparison acceptance."
+  ]
+}

@@ -25,7 +25,9 @@ completes all twenty captures at `12b2b6c9`, but all five camera-change pairs
 still differ (114 pixels, different geometry, identical final camera). Map
 classification changes replace the ground-line owner in both modes. The
 notification control retains its owner; its timing includes initial geometry
-readiness. Geometry-level attribution is next; collection defaults stay off.
+readiness. Geometry-level attribution at `9752656c` is now in its
+[hosted run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38195525961);
+collection defaults stay off.
 S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
@@ -40,8 +42,11 @@ and all seven standard jobs pass at this revision. The
 [cable workload](performance-evidence/s47-infrastructure-smoke-38194088714/README.md)
 and [combined workload](performance-evidence/s47-infrastructure-smoke-38194757027/README.md)
 also pass their actual capture CLI and independent complete-report validation.
-The dense workload's per-sample document path is now being checked on this same
-producer revision before integration. No timing acceptance
+The [dense workload check](performance-evidence/s47-dense-smoke-38195133406/README.md)
+fails after its first idle measurement at the completed-render boundary. It
+delivers all 2,500 aircraft, but its long tasks and timeout need separate
+host/page/render attribution. The harness integration is held; existing
+deadlines and acceptance requirements remain unchanged. No timing acceptance
 is claimed from this short, instrumented SwiftShader smoke.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
