@@ -35,7 +35,6 @@ import {
 import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
-  removeEarlyCesiumRendererProbeRegistrationWithEvidence,
 } from './performance/earlyCesiumRendererProbe.mjs';
 import {
   createFlightFixtureDeliveryObserver,
@@ -2262,17 +2261,6 @@ async function runRevision({
       waitUntil: 'domcontentloaded',
       timeout: 45_000,
     });
-    const registrationRemoval =
-      await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
-        page,
-        earlyRendererProbeScriptIdentifier,
-      );
-    registrationRemoval.phase = 'application-navigation';
-    recordRendererProbeCleanup(registrationRemoval);
-    if (!registrationRemoval.confirmed)
-      throw new Error(
-        'Early Cesium renderer future-document registration removal was not confirmed.',
-      );
     if (response && response.status() >= 400)
       throw new Error(
         `Application entry returned status ${response.status()}.`,
@@ -2498,14 +2486,16 @@ async function runRevision({
     let captureCliDiagnostic = null;
     if (label === 'candidate') {
       phase = 'capture-cli-preparation-cleanup';
-      const earlyRendererProbeCleanup = recordRendererProbeCleanup(
-        await cleanupEarlyCesiumRendererProbeWithEvidence(
-          page,
-          earlyRendererProbeScriptIdentifier,
-          1_000,
-          { retireViewerRenderLoop: true },
-        ),
+      const cleanupEvidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+        page,
+        earlyRendererProbeScriptIdentifier,
+        1_000,
+        { retireViewerRenderLoop: true },
       );
+      cleanupEvidence.phase = 'candidate-document-retirement';
+      cleanupEvidence.registrationRemovalBoundary = 'owned-document-retirement';
+      const earlyRendererProbeCleanup =
+        recordRendererProbeCleanup(cleanupEvidence);
       if (earlyRendererProbeCleanup.confirmed !== true)
         throw new Error(
           'Early renderer probe cleanup before capture CLI was not confirmed.',
@@ -2639,14 +2629,19 @@ async function runRevision({
   } finally {
     if (page) {
       try {
-        const earlyRendererProbeCleanup = recordRendererProbeCleanup(
+        const cleanupEvidence =
           await cleanupEarlyCesiumRendererProbeWithEvidence(
             page,
             earlyRendererProbeScriptIdentifier,
             1_000,
             { retireViewerRenderLoop: true },
-          ),
-        );
+          );
+        cleanupEvidence.phase = 'smoke-document-retirement';
+        if (earlyRendererProbeScriptIdentifier)
+          cleanupEvidence.registrationRemovalBoundary =
+            'owned-document-retirement';
+        const earlyRendererProbeCleanup =
+          recordRendererProbeCleanup(cleanupEvidence);
         if (earlyRendererProbeCleanup.confirmed !== true)
           cleanupErrors.push(
             sanitizeError(

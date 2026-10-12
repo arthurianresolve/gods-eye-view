@@ -7,6 +7,7 @@ import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
   readEarlyCesiumRendererProbe,
+  retireEarlyCesiumRendererProbeForCapturePage,
   removeEarlyCesiumRendererProbeRegistrationWithEvidence,
 } from './earlyCesiumRendererProbe.mjs';
 import { PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256 } from './profileRecoveryFixtureContract.mjs';
@@ -331,7 +332,7 @@ test('dirty, wrong-build, missing, reordered, or invalid-ownership reports fail 
   );
 });
 
-function earlyProbePage(performanceStep = 5) {
+function earlyProbePage(performanceStep = 5, topLevel = true) {
   let now = 0;
   let parameterCalls = 0;
   class Canvas {
@@ -383,6 +384,7 @@ function earlyProbePage(performanceStep = 5) {
     value: native,
   });
   const window = {};
+  window.top = topLevel ? window : {};
   const context = vm.createContext({
     window,
     HTMLCanvasElement: Canvas,
@@ -393,20 +395,25 @@ function earlyProbePage(performanceStep = 5) {
   });
   const evaluate = (fn, ...args) =>
     vm.runInContext(`(${fn.toString()})(...${JSON.stringify(args)})`, context);
+  const registeredScripts = new Set();
   const page = {
     isClosed: () => false,
     evaluateOnNewDocument: async (fn, ...args) => {
       evaluate(fn, ...args);
+      registeredScripts.add('early-hook');
       return { identifier: 'early-hook' };
     },
     evaluate: async (fn, ...args) => evaluate(fn, ...args),
-    removeScriptToEvaluateOnNewDocument: async (id) => id,
+    removeScriptToEvaluateOnNewDocument: async (id) => {
+      registeredScripts.delete(id);
+    },
   };
   return {
     page,
     Canvas,
     native,
     window,
+    registeredScripts,
     get parameterCalls() {
       return parameterCalls;
     },
@@ -454,6 +461,56 @@ test('future-document registration removal leaves the current probe live and is 
   assert.equal(finalCleanup.scriptRegistration.status, 'already-confirmed');
   assert.equal(removals, 1, 'the future-document registration is removed once');
   assert.equal(canvas.listeners.size, 0);
+});
+
+test('capture retirement keeps the registration through its single document lifetime', async () => {
+  const probePage = earlyProbePage();
+  const { page, Canvas, native, window } = probePage;
+  window.__godsEyeView = { viewer: { useDefaultRenderLoop: true } };
+  const identifier = await installEarlyCesiumRendererProbe(page);
+  let removals = 0;
+  const removeRegistration = page.removeScriptToEvaluateOnNewDocument;
+  page.goto = async () => ({ status: 'domcontentloaded' });
+  page.removeScriptToEvaluateOnNewDocument = async (removedIdentifier) => {
+    assert.equal(removedIdentifier, identifier);
+    assert.equal(window.__godsEyeView.viewer.useDefaultRenderLoop, false);
+    assert.equal(Canvas.prototype.getContext, native);
+    await removeRegistration(removedIdentifier);
+    removals += 1;
+  };
+
+  await page.goto('https://fixture.invalid/');
+  assert.equal(removals, 0, 'navigation completion does not remove the hook');
+  assert.equal(probePage.registeredScripts.has(identifier), true);
+  assert.notEqual(Canvas.prototype.getContext, native);
+
+  const finalObservation = await page.evaluate(() => ({
+    completed: true,
+    renderLoopActive: window.__godsEyeView.viewer.useDefaultRenderLoop,
+  }));
+  assert.equal(finalObservation.completed, true);
+  assert.equal(finalObservation.renderLoopActive, true);
+  const retirement = await retireEarlyCesiumRendererProbeForCapturePage(
+    page,
+    identifier,
+    1_000,
+  );
+
+  assert.equal(retirement.confirmed, true);
+  assert.equal(retirement.document.renderLoopRetirement.confirmed, true);
+  assert.equal(retirement.scriptRegistration.status, 'confirmed');
+  assert.equal(removals, 1);
+  assert.equal(probePage.registeredScripts.has(identifier), false);
+});
+
+test('early probe does not install in a subframe document', async () => {
+  const probePage = earlyProbePage(5, false);
+  const { page, Canvas, native, window } = probePage;
+  const identifier = await installEarlyCesiumRendererProbe(page);
+
+  assert.equal(identifier, 'early-hook');
+  assert.equal(Canvas.prototype.getContext, native);
+  assert.equal('__gevRecoveryEarlyRendererProbe' in window, false);
 });
 
 test('an explicitly retired document stops its public Cesium render loop in the existing cleanup evaluation', async () => {
@@ -624,17 +681,80 @@ test('late early-registration acknowledgement is reused without a duplicate remo
   assert.equal(early.confirmed, false);
   assert.equal(early.scriptRegistration.status, 'timeout');
 
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const reusedWaiter =
+    await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+      page,
+      'late-early-registration',
+      5,
+    );
+  assert.equal(reusedWaiter.confirmed, false);
+  assert.equal(reusedWaiter.scriptRegistration.status, 'timeout');
+
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  finishRemoval();
+  await new Promise((resolve) => setImmediate(resolve));
+
   const finalCleanupPromise = cleanupEarlyCesiumRendererProbeWithEvidence(
     page,
     'late-early-registration',
   );
-  await new Promise((resolve) => setImmediate(resolve));
-  finishRemoval();
   const finalCleanup = await finalCleanupPromise;
   assert.equal(finalCleanup.confirmed, true);
   assert.equal(finalCleanup.scriptRegistration.status, 'already-confirmed');
   assert.equal(early.scriptRegistration.lateCompletion, 'confirmed');
+  assert.equal(reusedWaiter.scriptRegistration.lateCompletion, 'confirmed');
+  assert.equal(
+    Number.isFinite(early.scriptRegistration.lateHostReceiptElapsedMs),
+    true,
+  );
+  assert.equal(
+    Number.isFinite(reusedWaiter.scriptRegistration.lateHostReceiptElapsedMs),
+    true,
+  );
+  assert.ok(early.scriptRegistration.lateHostReceiptElapsedMs >= 5);
+  assert.ok(reusedWaiter.scriptRegistration.lateHostReceiptElapsedMs >= 5);
+  assert.ok(
+    early.scriptRegistration.lateHostReceiptElapsedMs -
+      reusedWaiter.scriptRegistration.lateHostReceiptElapsedMs >=
+      10,
+  );
   assert.equal(removals, 1);
+});
+
+test('late registration-removal errors retain host receipt elapsed time and original timeout', async () => {
+  const page = {
+    removeScriptToEvaluateOnNewDocument: () =>
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('registration removal failed')), 20);
+      }),
+  };
+  const evidence = await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
+    page,
+    'late-error-registration',
+    5,
+  );
+
+  assert.equal(evidence.confirmed, false);
+  assert.equal(evidence.scriptRegistration.status, 'timeout');
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(evidence.scriptRegistration.lateCompletion, 'error');
+  assert.equal(
+    evidence.scriptRegistration.lateErrorKind,
+    'registration-removal-error',
+  );
+  assert.ok(evidence.scriptRegistration.lateHostReceiptElapsedMs >= 15);
+  const failureReport = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    workload: { rendererProbeCleanup: [evidence] },
+    phase: 'cleanup',
+    error: new Error('registration removal timed out'),
+  });
+  assert.equal(
+    failureReport.workload.rendererProbeCleanup[0].scriptRegistration
+      .lateHostReceiptElapsedMs,
+    evidence.scriptRegistration.lateHostReceiptElapsedMs,
+  );
 });
 
 test('reinstalling in one Page invalidates prior registration acknowledgement', async () => {

@@ -38,7 +38,7 @@ import {
 import {
   cleanupEarlyCesiumRendererProbeWithEvidence,
   installEarlyCesiumRendererProbe,
-  removeEarlyCesiumRendererProbeRegistrationWithEvidence,
+  retireEarlyCesiumRendererProbeForCapturePage,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
 import {
@@ -386,25 +386,6 @@ function recordRendererProbeCleanupEvidence(evidence) {
   records.push(evidence);
   failureProgress.workload.rendererProbeCleanup = records;
 }
-async function removeEarlyRendererRegistrationForPage(
-  page,
-  { phase, documentRole, documentId },
-) {
-  if (!page || !earlyRendererProbeScripts.has(page)) return true;
-  const evidence = await removeEarlyCesiumRendererProbeRegistrationWithEvidence(
-    page,
-    earlyRendererProbeScripts.get(page),
-  );
-  evidence.phase = phase;
-  evidence.documentRole = documentRole;
-  evidence.documentId = documentId;
-  recordRendererProbeCleanupEvidence(evidence);
-  if (!evidence.confirmed)
-    throw new Error(
-      'Early Cesium renderer future-document registration removal was not confirmed.',
-    );
-  return true;
-}
 async function cleanupEarlyRendererProbeForPage(
   page,
   {
@@ -419,12 +400,19 @@ async function cleanupEarlyRendererProbeForPage(
   const scriptIdentifier = hasRegistration
     ? earlyRendererProbeScripts.get(page)
     : null;
-  const evidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
-    page,
-    scriptIdentifier,
-    1_000,
-    { retireViewerRenderLoop },
-  );
+  const evidence = retireViewerRenderLoop
+    ? await retireEarlyCesiumRendererProbeForCapturePage(
+        page,
+        scriptIdentifier,
+        1_000,
+      )
+    : await cleanupEarlyCesiumRendererProbeWithEvidence(
+        page,
+        scriptIdentifier,
+        1_000,
+      );
+  if (hasRegistration && retireViewerRenderLoop)
+    evidence.registrationRemovalBoundary = 'owned-document-retirement';
   evidence.phase = phase;
   evidence.documentRole = documentRole;
   evidence.documentId = documentId;
@@ -1532,11 +1520,6 @@ try {
     const startupAuditState = auditPageCodeRequests(startupPage);
     const startedAt = Date.now();
     await startupPage.goto(startupUrl.href, { waitUntil: 'domcontentloaded' });
-    await removeEarlyRendererRegistrationForPage(startupPage, {
-      phase: 'startup-navigation',
-      documentRole: startupDocumentRole,
-      documentId: startupDocumentId,
-    });
     if (captureProvenance) {
       const servedBase = new URL(buildProvenanceOptions.baseUrl);
       const actualPage = new URL(startupPage.url());
@@ -1613,7 +1596,7 @@ try {
     });
     await cleanupEarlyRendererProbeForPage(startupPage, {
       retireViewerRenderLoop: true,
-      phase: 'startup-document-close',
+      phase: 'startup-document-retirement',
       documentRole: startupDocumentRole,
       documentId: startupDocumentId,
     });
@@ -1647,11 +1630,6 @@ try {
   let activeFixtureSession = initialPageAttachment.fixtureSession;
   let captureAuditState = initialPageAttachment.auditState;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await removeEarlyRendererRegistrationForPage(page, {
-    phase: 'main-navigation',
-    documentRole: activeDocumentRole,
-    documentId: activeDocumentId,
-  });
   if (captureProvenance) {
     const servedBase = new URL(buildProvenanceOptions.baseUrl);
     const actualPage = new URL(page.url());
@@ -2134,7 +2112,7 @@ try {
         );
         const rendererCleanup = await cleanupEarlyRendererProbeForPage(page, {
           retireViewerRenderLoop: true,
-          phase: 'provider-document-close',
+          phase: 'provider-document-retirement',
           documentRole: activeDocumentRole,
           documentId: activeDocumentId,
         });
@@ -2194,11 +2172,6 @@ try {
     captureAuditState.blobUrls.clear();
     providerSampleWorkerAuditComplete = false;
     await page.goto(url, { waitUntil: 'domcontentloaded' });
-    await removeEarlyRendererRegistrationForPage(page, {
-      phase: 'provider-sample-navigation',
-      documentRole: activeDocumentRole,
-      documentId: activeDocumentId,
-    });
     if (captureProvenance) {
       const servedBase = new URL(buildProvenanceOptions.baseUrl);
       const actualPage = new URL(page.url());
@@ -3333,7 +3306,7 @@ try {
   if (page)
     await cleanupEarlyRendererProbeForPage(page, {
       retireViewerRenderLoop: true,
-      phase: 'capture-document-finalization',
+      phase: 'capture-document-retirement',
       documentRole: activeDocumentRole,
       documentId: activeDocumentId,
     });
@@ -3598,7 +3571,7 @@ try {
     try {
       await cleanupEarlyRendererProbeForPage(probePage, {
         retireViewerRenderLoop: true,
-        phase: 'capture-final-document-close',
+        phase: 'capture-final-document-retirement',
         documentRole:
           probePage === activePage ? activeDocumentRole : 'retired-document',
         documentId: probePage === activePage ? activeDocumentId : null,

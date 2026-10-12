@@ -1010,6 +1010,7 @@
   "src/costEndpointThrottle.test.mjs",
   "scripts/capture-scene-performance.mjs",
   "scripts/capture-scene-performance.test.mjs",
+  "scripts/performance/captureRendererProbeRetirementIntegration.test.mjs",
   "scripts/qa-performance-build-smoke.mjs",
   "scripts/qa-performance-build-smoke.test.mjs",
   "scripts/performance/earlyCesiumRendererProbe.mjs",

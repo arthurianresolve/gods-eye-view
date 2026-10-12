@@ -6,6 +6,9 @@ const CLEANUP_PROOF_KEY = '__gevRecoveryEarlyRendererProbeCleanupProof';
 /** Install an opt-in, one-shot hook on Cesium's real widget canvas only. */
 export async function installEarlyCesiumRendererProbe(page) {
   const handle = await page.evaluateOnNewDocument((proofKey) => {
+    // Puppeteer runs evaluateOnNewDocument in subframes too. The probe belongs
+    // to the top-level Cesium viewer document only.
+    if (window !== window.top) return;
     const key = '__gevRecoveryEarlyRendererProbe';
     delete window[proofKey];
     const prototype = HTMLCanvasElement.prototype;
@@ -375,6 +378,10 @@ export async function removeEarlyCesiumRendererProbeRegistrationWithEvidence(
     const completion = entry.promise.then((result) => {
       if (timedOut) {
         stage.lateCompletion = result.status;
+        stage.lateHostReceiptElapsedMs = Math.max(
+          0,
+          performance.now() - startedAt,
+        );
         if (result.status !== 'confirmed') {
           stage.lateErrorKind =
             result.errorKind || 'registration-removal-error';
@@ -765,6 +772,20 @@ export async function cleanupEarlyCesiumRendererProbeWithEvidence(
     (!retireViewerRenderLoop ||
       evidence.document.renderLoopRetirement?.confirmed === true);
   return evidence;
+}
+
+/** The capture CLI uses this when retiring its single-use owned page. */
+export function retireEarlyCesiumRendererProbeForCapturePage(
+  page,
+  scriptIdentifier,
+  timeoutMs = 1_000,
+) {
+  return cleanupEarlyCesiumRendererProbeWithEvidence(
+    page,
+    scriptIdentifier,
+    timeoutMs,
+    { retireViewerRenderLoop: true },
+  );
 }
 
 function safeCleanupErrorKind(error, isScriptRegistration = false) {
