@@ -1,6 +1,6 @@
 # S48 shader-program lifecycle attribution
 
-Code is implemented on an isolated QA branch based on integrated `dev` at `5bbcd0de`. Root independent focused validation and all seven standard CI jobs pass at `3384b8bd`. The retention repair at `e54eaded` passes 159 independent local checks and preserves hash-bound per-parameter data in a fresh failed hosted capture. Six complete contexts show 143 first-use link checks and no repeated same-parameter query; the seventh reached context has unavailable data. All seven standard CI jobs pass at exact `e54eaded`. This packet does not change production rendering defaults or establish a performance improvement.
+The diagnostic and retention repair are integrated into `dev`; development began on an isolated QA branch based on `5bbcd0de`. Root independent focused validation and all seven standard CI jobs pass at `3384b8bd`. The retention repair at `e54eaded` passes 159 independent local checks and preserves hash-bound per-parameter data in a fresh failed hosted capture. Six complete contexts show 143 first-use link checks and no repeated same-parameter query; the seventh reached context has unavailable data. All seven standard CI jobs pass at exact `e54eaded`. This packet does not change production rendering defaults or establish a performance improvement.
 
 ## Evidence motivating the diagnostic
 
