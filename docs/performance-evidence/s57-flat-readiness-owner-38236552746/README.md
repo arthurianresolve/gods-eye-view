@@ -42,3 +42,9 @@ This closes the local HTTP streamed-tile lifecycle component. It does not establ
 physical Windows performance, a matched route-time improvement, whole-application
 retention, or full S57/S60 acceptance. The source and dependency defaults are
 unchanged; this packet adds validation infrastructure and fixes its reporting.
+
+Integrated on `dev` at `48329a9f33ce0e2d8586da90540f7e2331434b8f`. All seven
+[standard CI jobs](standard-ci-dev-38237151400.json) pass, including Node 24/26
+suites/builds, Windows onboarding, all three real-profile recovery jobs and the
+complete browser journey gate. The integration retains the exact tested scripts,
+fixture assets and source of the isolated S57 packet; only documentation differs.
