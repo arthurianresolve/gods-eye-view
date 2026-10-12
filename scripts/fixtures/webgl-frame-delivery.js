@@ -1,3 +1,6 @@
+import { createStartDelay, readPreparationState } from './webglStartDelay.mjs';
+import { pixelUniformValue, webglReportFilename } from './webglPixelMode.mjs';
+
 const DURATION_MS = 5000;
 const POINT_COUNT = 5000;
 const BUCKET_MS = 1000;
@@ -6,10 +9,18 @@ const MAX_EVENTS = 32;
 const runButton = document.querySelector('#run');
 const downloadButton = document.querySelector('#download');
 const modeSelect = document.querySelector('#mode');
+const preserveDrawingBufferSelect = document.querySelector(
+  '#preserve-drawing-buffer',
+);
+const startDelaySelect = document.querySelector('#start-delay');
+const pixelModeSelect = document.querySelector('#pixel-mode');
 const status = document.querySelector('#status');
 const result = document.querySelector('#result');
+const cancelButton = document.querySelector('#cancel');
 let canvas = document.querySelector('#surface');
 let lastReport = null;
+let startDelayControl = null;
+let runInProgress = false;
 const appCommit =
   typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null;
 
@@ -51,8 +62,9 @@ function createPointProgram(gl) {
       gl.FRAGMENT_SHADER,
       `#version 300 es
      precision highp float;
+     uniform float cyanLevel;
      out vec4 color;
-     void main() { color = vec4(0.0, 1.0, 1.0, 1.0); }`,
+     void main() { color = vec4(0.0, cyanLevel, 1.0, 1.0); }`,
     );
     program = gl.createProgram();
     if (!program) throw new Error('Could not allocate a WebGL program.');
@@ -85,6 +97,50 @@ function replaceSurface() {
   canvas = next;
 }
 
+function canvasBoundsSnapshot(targetCanvas) {
+  const rect = targetCanvas.getBoundingClientRect();
+  const visibleWidth = Math.max(
+    0,
+    Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0),
+  );
+  const visibleHeight = Math.max(
+    0,
+    Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0),
+  );
+  return {
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    canvas: {
+      width: targetCanvas.width,
+      height: targetCanvas.height,
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      },
+      viewportIntersection: {
+        width: visibleWidth,
+        height: visibleHeight,
+        fraction:
+          rect.width > 0 && rect.height > 0
+            ? (visibleWidth * visibleHeight) / (rect.width * rect.height)
+            : 0,
+      },
+    },
+  };
+}
+
+function contextAttributesSnapshot(targetGl) {
+  try {
+    const attributes = targetGl?.getContextAttributes();
+    return attributes ? { ...attributes } : null;
+  } catch {
+    return null;
+  }
+}
+
 function readRenderer(gl) {
   const started = performance.now();
   try {
@@ -103,13 +159,26 @@ function readRenderer(gl) {
   }
 }
 
-runButton.addEventListener('click', () => {
-  runButton.disabled = downloadButton.disabled = modeSelect.disabled = true;
+runButton.addEventListener('click', async () => {
+  if (runInProgress) return;
+  runInProgress = true;
+  const requestedStartDelayMs = Number(startDelaySelect.value);
+  runButton.disabled =
+    downloadButton.disabled =
+    modeSelect.disabled =
+    preserveDrawingBufferSelect.disabled =
+    pixelModeSelect.disabled =
+    startDelaySelect.disabled =
+      true;
+  cancelButton.disabled = requestedStartDelayMs === 0;
   result.textContent = '';
-  status.textContent = 'Preparing diagnostic';
-  replaceSurface();
-
+  status.textContent = requestedStartDelayMs
+    ? 'Preparing diagnostic start delay'
+    : 'Preparing diagnostic';
   const mode = modeSelect.value;
+  const pixelModeRequested = pixelModeSelect.value;
+  const preserveDrawingBufferRequested =
+    preserveDrawingBufferSelect.value === 'true';
   let gl = null;
   let program = null;
   let rafId = null;
@@ -127,6 +196,13 @@ runButton.addEventListener('click', () => {
   let wallStartedAt = null;
   let focusedAtStart = null;
   let visibilityAtStart = null;
+  let canvasBoundsAtStart = null;
+  let contextAttributesAtStart = null;
+  let preparation = null;
+  let contextSetupElapsedMs = null;
+  let firstPixelUniform = null;
+  let lastPixelUniform = null;
+  let cyanLevelLocation = null;
   let active = false;
   const buckets = Array.from({ length: 5 }, (_, index) => ({
     startMs: index * BUCKET_MS,
@@ -154,6 +230,8 @@ runButton.addEventListener('click', () => {
     if (rafId !== null) cancelAnimationFrame(rafId);
     if (endTimer !== null) clearTimeout(endTimer);
     if (heartbeatTimer !== null) clearInterval(heartbeatTimer);
+    startDelayControl?.dispose();
+    startDelayControl = null;
     window.removeEventListener('focus', onFocus);
     window.removeEventListener('blur', onBlur);
     window.removeEventListener('pagehide', onPageHide);
@@ -182,15 +260,8 @@ runButton.addEventListener('click', () => {
     const rafGap = previousFrame === null ? null : endedAt - previousFrame;
     const timerGap =
       previousHeartbeat === null ? null : endedAt - previousHeartbeat;
-    const rect = canvas.getBoundingClientRect();
-    const visibleWidth = Math.max(
-      0,
-      Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0),
-    );
-    const visibleHeight = Math.max(
-      0,
-      Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0),
-    );
+    const canvasBoundsAtEnd = canvasBoundsSnapshot(canvas);
+    const contextAttributesAtEnd = contextAttributesSnapshot(gl);
     maximumHeartbeatGapMs = Math.max(maximumHeartbeatGapMs, timerGap || 0);
     const report = {
       schema: 'gev-webgl-frame-delivery/v1',
@@ -206,6 +277,8 @@ runButton.addEventListener('click', () => {
       startedAt: wallStartedAt,
       elapsedMs: endedAt - start,
       requestedDurationMs: DURATION_MS,
+      preparation,
+      contextSetupElapsedMs,
       desktopForegroundVerification: 'unavailable',
       browser: {
         userAgent: navigator.userAgent.slice(0, 300),
@@ -213,28 +286,24 @@ runButton.addEventListener('click', () => {
         visibilityAtStart,
       },
       pointCount: mode === 'webgl2' ? POINT_COUNT : null,
-      viewport: { width: window.innerWidth, height: window.innerHeight },
-      canvas: {
-        width: canvas.width,
-        height: canvas.height,
-        rect: {
-          left: rect.left,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-        },
-        viewportIntersection: {
-          width: visibleWidth,
-          height: visibleHeight,
-          fraction:
-            rect.width > 0 && rect.height > 0
-              ? (visibleWidth * visibleHeight) / (rect.width * rect.height)
-              : 0,
-        },
-      },
-      contextAttributes: gl?.getContextAttributes() ?? null,
+      pixelMode: mode === 'webgl2' ? pixelModeRequested : 'not-applicable',
+      pixelUniform:
+        mode === 'webgl2'
+          ? {
+              name: 'cyanLevel',
+              first: firstPixelUniform,
+              last: lastPixelUniform,
+            }
+          : null,
+      preserveDrawingBufferRequested:
+        mode === 'webgl2' ? preserveDrawingBufferRequested : null,
+      canvasBoundsAtStart,
+      canvasBoundsAtEnd,
+      viewport: canvasBoundsAtEnd.viewport,
+      canvas: canvasBoundsAtEnd.canvas,
+      contextAttributesAtStart,
+      contextAttributesAtEnd,
+      contextAttributes: contextAttributesAtEnd,
       renderer: gl ? readRenderer(gl) : null,
       rendererMetadataReadAfterWindow: true,
       frames,
@@ -260,26 +329,94 @@ runButton.addEventListener('click', () => {
     result.textContent = JSON.stringify(report, null, 2);
     status.textContent = `Diagnostic ${outcome}`;
     downloadButton.disabled = false;
-    runButton.disabled = modeSelect.disabled = false;
+    runButton.disabled =
+      modeSelect.disabled =
+      preserveDrawingBufferSelect.disabled =
+      pixelModeSelect.disabled =
+      startDelaySelect.disabled =
+        false;
+    cancelButton.disabled = true;
+    runInProgress = false;
   };
 
+  if (requestedStartDelayMs > 0) {
+    status.textContent = 'Waiting before the five-second observation';
+    cancelButton.disabled = false;
+    try {
+      startDelayControl = createStartDelay({
+        delayMs: requestedStartDelayMs,
+        now: () => performance.now(),
+        windowTarget: window,
+        documentTarget: document,
+      });
+      preparation = await startDelayControl.promise;
+      startDelayControl = null;
+    } catch (error) {
+      const state = readPreparationState(window, document);
+      preparation = {
+        requestedDelayMs: requestedStartDelayMs,
+        actualDelayMs: 0,
+        started: state,
+        completed: state,
+        changes: { focus: false, visibility: false, viewport: false },
+        changeEvents: [],
+        outcome: 'setup-failed',
+        cancelReason: null,
+      };
+      start = performance.now();
+      wallStartedAt = new Date().toISOString();
+      active = true;
+      finish('setup-failed', error);
+      return;
+    }
+    cancelButton.disabled = true;
+    if (preparation.outcome === 'cancelled') {
+      start = performance.now();
+      wallStartedAt = new Date().toISOString();
+      active = true;
+      finish('cancelled-before-start');
+      return;
+    }
+  } else {
+    const state = readPreparationState(window, document);
+    preparation = {
+      requestedDelayMs: 0,
+      actualDelayMs: 0,
+      started: state,
+      completed: state,
+      changes: { focus: false, visibility: false, viewport: false },
+      changeEvents: [],
+      outcome: 'immediate',
+      cancelReason: null,
+    };
+  }
+
+  const contextSetupStartedAt = performance.now();
   try {
+    replaceSurface();
     if (mode === 'webgl2') {
       gl = canvas.getContext('webgl2', {
         alpha: false,
         antialias: true,
-        preserveDrawingBuffer: true,
+        preserveDrawingBuffer: preserveDrawingBufferRequested,
         powerPreference: 'high-performance',
         stencil: true,
       });
       if (!gl) throw new Error('WebGL2 context creation failed.');
+      contextAttributesAtStart = contextAttributesSnapshot(gl);
       program = createPointProgram(gl);
+      cyanLevelLocation = gl.getUniformLocation(program, 'cyanLevel');
+      if (cyanLevelLocation === null)
+        throw new Error('Could not find the cyanLevel shader uniform.');
     }
+    contextSetupElapsedMs = performance.now() - contextSetupStartedAt;
   } catch (error) {
+    contextSetupElapsedMs = performance.now() - contextSetupStartedAt;
     start = performance.now();
     wallStartedAt = new Date().toISOString();
     focusedAtStart = document.hasFocus();
     visibilityAtStart = document.visibilityState;
+    canvasBoundsAtStart = canvasBoundsSnapshot(canvas);
     active = true;
     finish('setup-failed', error);
     return;
@@ -289,6 +426,7 @@ runButton.addEventListener('click', () => {
   wallStartedAt = new Date().toISOString();
   focusedAtStart = document.hasFocus();
   visibilityAtStart = document.visibilityState;
+  canvasBoundsAtStart = canvasBoundsSnapshot(canvas);
   active = true;
   previousHeartbeat = start;
   window.addEventListener('focus', onFocus);
@@ -330,6 +468,11 @@ runButton.addEventListener('click', () => {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(program);
+        const cyanLevel = pixelUniformValue(pixelModeRequested, elapsed);
+        gl.uniform1f(cyanLevelLocation, cyanLevel);
+        const uniformSample = { elapsedMs: elapsed, value: cyanLevel };
+        if (firstPixelUniform === null) firstPixelUniform = uniformSample;
+        lastPixelUniform = uniformSample;
         gl.drawArrays(gl.POINTS, 0, POINT_COUNT);
       }
       rafId = requestAnimationFrame(frame);
@@ -338,6 +481,10 @@ runButton.addEventListener('click', () => {
     }
   };
   rafId = requestAnimationFrame(frame);
+});
+
+cancelButton.addEventListener('click', () => {
+  startDelayControl?.cancel('user-cancelled');
 });
 
 downloadButton.addEventListener('click', () => {
@@ -349,7 +496,7 @@ downloadButton.addEventListener('click', () => {
   );
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `webgl-frame-delivery-${lastReport.appCommit?.slice(0, 7) || 'local'}-${lastReport.mode}.json`;
+  anchor.download = webglReportFilename(lastReport);
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });

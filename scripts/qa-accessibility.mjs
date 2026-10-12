@@ -8,6 +8,7 @@ import {
   prepareFixturePage,
   bootFixturePage,
 } from './qa-application-fixtures.mjs';
+import { createAccessibilityFocusProbe } from './accessibilityFocusDiagnostics.mjs';
 const option = (name, fallback) => {
   const index = process.argv.indexOf(name);
   return index < 0 ? fallback : process.argv[index + 1];
@@ -17,14 +18,65 @@ const out = option('--out', 'qa-artifacts/accessibility.json');
 const browser = await launchFixtureBrowser();
 let lastControl = null;
 let surface = null;
+let activePhase = 'launch-browser';
+let page = null;
+let client = null;
+let pageErrors = [];
+let focusProbeInstalled = false;
+const markPhase = async (phase, control = null) => {
+  activePhase = phase;
+  if (control) lastControl = control;
+  if (!page) return;
+  await page
+    .evaluate(
+      ({ nextPhase, nextControl }) => {
+        const probe = window.__qaAccessibilityFocus;
+        probe?.markPhase(nextPhase);
+        if (nextControl) probe?.markControl(nextControl);
+      },
+      { nextPhase: phase, nextControl: control },
+    )
+    .catch(() => {});
+};
+const readFocusDiagnostics = async () => {
+  if (!page) return { unavailable: true, reason: 'page-not-created' };
+  let timer;
+  try {
+    return await Promise.race([
+      page.evaluate(() => window.__qaAccessibilityFocus?.snapshot() || null),
+      new Promise((resolve) => {
+        timer = setTimeout(
+          () => resolve({ unavailable: true, reason: 'snapshot-timeout' }),
+          1200,
+        );
+      }),
+    ]);
+  } catch {
+    return { unavailable: true, reason: 'snapshot-failed' };
+  } finally {
+    clearTimeout(timer);
+  }
+};
 try {
-  const { page, errors } = await prepareFixturePage(browser, base);
+  const prepared = await prepareFixturePage(browser, base);
+  page = prepared.page;
+  pageErrors = prepared.errors;
+  try {
+    await page.evaluateOnNewDocument(createAccessibilityFocusProbe);
+    focusProbeInstalled = true;
+  } catch {
+    // The probe is diagnostic-only; it must not change the accessibility gate.
+  }
+  await markPhase('boot-fixture');
   await bootFixturePage(page, base);
+  await markPhase('open-command-palette', '.gev-command-trigger + Enter');
   await page.focus('.gev-command-trigger');
   await page.keyboard.press('Enter');
+  await markPhase('wait-command-search-focus');
   await page.waitForFunction(
     () => document.activeElement?.id === 'gev-command-search',
   );
+  await markPhase('navigate-command-options', 'type + ArrowDown');
   await page.type('#gev-command-search', 'save workspace');
   await page.keyboard.press('ArrowDown');
   assert.equal(
@@ -33,10 +85,12 @@ try {
     ),
     true,
   );
+  await markPhase('restore-command-trigger-focus', 'Escape command palette');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() =>
     document.activeElement?.matches('.gev-command-trigger'),
   );
+  await markPhase('open-evidence-inspector', 'dispatch entity-selected');
   await page.evaluate(() => {
     window.dispatchEvent(
       new CustomEvent('gev:entity-selected', {
@@ -55,9 +109,11 @@ try {
     );
     document.querySelector('.evidence-panel-technical').open = true;
   });
+  await markPhase('focus-evidence-close-control', '#evidence-panel-close');
   await page.waitForSelector('#evidence-panel-close', { visible: true });
   await page.focus('#evidence-panel-close');
   await page.keyboard.press('Enter');
+  await markPhase('wait-evidence-focus-restoration');
   await page.waitForFunction(() =>
     document.activeElement?.matches('.gev-command-trigger'),
   );
@@ -81,7 +137,7 @@ try {
     );
     document.querySelector('.evidence-panel-technical').open = true;
   });
-  const client = await page.createCDPSession();
+  client = await page.createCDPSession();
   const names = [];
   let announcements = 0;
   const inspectSurface = async (selector) => {
@@ -169,16 +225,22 @@ try {
       panelId,
     );
   };
+  await markPhase('inspect-evidence-controls');
   await inspectSurface('#evidence-panel');
+  await markPhase('open-scene-panel');
   await openPanel('scene-panel');
   await page.evaluate(() => {
     const library = document.querySelector('.workspace-library');
     if (!library.open) library.querySelector('summary').click();
   });
+  await markPhase('inspect-workspace-library-controls');
   await inspectSurface('.workspace-library');
+  await markPhase('open-data-panel');
   await openPanel('data-panel');
+  await markPhase('inspect-timeline-controls');
   await inspectSurface('.investigation-timeline');
   await client.detach();
+  client = null;
   assert.ok(
     names.length >= 12,
     'Accessibility fixture did not expose enough controls',
@@ -188,6 +250,10 @@ try {
     'Async operations need scoped status announcements',
   );
   await page.setViewport({ width: 720, height: 500, deviceScaleFactor: 2 });
+  await markPhase(
+    'open-command-palette-for-reflow',
+    '.gev-command-trigger + Enter',
+  );
   await page.focus('.gev-command-trigger');
   await page.keyboard.press('Enter');
   await page.waitForFunction(
@@ -215,7 +281,8 @@ try {
   await mkdir(path.dirname(out), { recursive: true });
   await page.screenshot({ path: out + '.reflow.png' });
   await page.keyboard.press('Escape');
-  assert.deepEqual(errors, []);
+  assert.deepEqual(pageErrors, []);
+  activePhase = 'write-success-report';
   const report = {
     scope: 'automated-keyboard-ax-reflow',
     browser: await browser.version(),
@@ -228,6 +295,7 @@ try {
       'scoped-status-announcements',
       '720-css-pixel-reflow',
     ],
+    accessibilityFocusProbeInstalled: focusProbeInstalled,
     accessibleControls: names,
     announcements,
     reflow,
@@ -245,13 +313,33 @@ try {
     browser: await browser.version(),
     timestamp: new Date().toISOString(),
     failure: String(error?.message || error),
+    phase: activePhase,
     surface,
     lastControl,
+    focusDiagnostics: await readFocusDiagnostics(),
+    accessibilityFocusProbeInstalled: focusProbeInstalled,
     humanReviewValidated: false,
+    pageErrorCount: pageErrors.length,
   };
   await writeFile(out, JSON.stringify(report, null, 2) + '\n');
   console.error(JSON.stringify(report, null, 2));
   throw error;
 } finally {
+  if (client) await client.detach().catch(() => {});
+  if (page) {
+    let timer;
+    try {
+      await Promise.race([
+        page.evaluate(() => window.__qaAccessibilityFocus?.dispose()),
+        new Promise((resolve) => {
+          timer = setTimeout(resolve, 1000);
+        }),
+      ]);
+    } catch {
+      // Closing the owned browser below also drops any page-local listeners.
+    } finally {
+      clearTimeout(timer);
+    }
+  }
   await browser.close();
 }
