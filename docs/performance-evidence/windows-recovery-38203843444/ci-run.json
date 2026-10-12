@@ -1,8 +1,8 @@
 {
   "runId": 38203843444,
   "headSha": "2d18433cfd333691105ab5af2f1af48bddf54906",
-  "statusAtReview": "in_progress",
-  "conclusionAtReview": "",
+  "statusAtReview": "completed",
+  "conclusionAtReview": "failure",
   "jobs": [
     {
       "name": "Node 24.14.0",
@@ -36,8 +36,8 @@
     },
     {
       "name": "Street Level browser gate",
-      "status": "in_progress",
-      "conclusion": "",
+      "status": "completed",
+      "conclusion": "success",
       "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858133"
     },
     {

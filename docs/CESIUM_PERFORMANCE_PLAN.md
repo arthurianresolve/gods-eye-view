@@ -23,6 +23,13 @@ their source and failed evidence remain on the isolated QA branch. This is an
 experiment disposition, not completion of S54. The datacenter candidate remains
 isolated for physical Windows and mixed-layer acceptance. See the
 [disposition and remaining work](performance-evidence/s54-current-dev-20261012/README.md#experiment-disposition---12-october-2026).
+The narrower datacenter candidate at `9a0b6a08` passes 92 independent focused
+tests. Its [first rendered integration check](performance-evidence/s54-datacenter-isolated-38204994341/README.md)
+fails in the Entity control: the fixture passes a nonexistent `layerId`
+property instead of the layer API's `id`, rejecting native picks despite
+settled geometry and completed frames. Correcting that caller and rerunning
+the exact-commit check precede new benefit acceptance; the failed report is
+preserved and production defaults remain unchanged.
 Datacenter component comparisons show repeatable activation and JS
 heap benefits with identical captured pixels. The fresh dam comparison regresses
 source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
