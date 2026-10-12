@@ -1,5 +1,13 @@
 # Cesium performance plan
 
+Latest S49 shared camera-verb ownership repair at `4d077c7f`
+passes the independent old/candidate replacement reproduction and all 180
+focused checks. Viewer replacement no longer carries old motion; retired
+callbacks cannot control a replacement or reinitialized viewer. Production scene
+cleanup releases shared camera ownership before viewer destruction. Standard
+integration CI is pending; whole-application retention and S49/S55/S60 remain
+partial. See [exact evidence](performance-evidence/s49-camera-verbs-ownership/README.md).
+
 ## Current status - 12 October 2026
 
 Latest S48 follow-up at `5441b038` fixes the demonstrated cleanup scope error
