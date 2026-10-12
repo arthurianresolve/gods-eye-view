@@ -3187,6 +3187,16 @@ async function runCandidateCaptureCli({
         receiptOnlyWorkerContract: expectedReceiptOnlyWorkerContract,
       }),
     );
+    if (providerFixture === AUSTIN_OPERATING_WORKLOAD_ID) {
+      const { validateAustinSatelliteEpochCaptureReport } =
+        await import('./performance/austinSatelliteSampledEpoch.mjs');
+      validateAustinSatelliteEpochCaptureReport({
+        fixture: austinOperatingCaptureFixture,
+        warmupMs: captureReport.workload?.warmupMs,
+        durationPerSampleMs: captureReport.workload?.durationPerSampleMs,
+        captures: captureReport.captures,
+      });
+    }
     if (firstMotionCpuProfile) {
       const evidence = captureReport.providerSampleCpuProfiles;
       for (

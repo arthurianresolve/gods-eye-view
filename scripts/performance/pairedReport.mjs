@@ -17,6 +17,7 @@ import {
   AUSTIN_OPERATING_WORKLOAD_ID,
 } from './austinOperatingWorkloadContract.mjs';
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
+import { validateAustinSatelliteEpochCaptureReport } from './austinSatelliteSampledEpoch.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
@@ -248,14 +249,22 @@ function validateAustinSamplePopulationBindings(report, contract, label) {
       `${label}: Austin report population snapshots differ from the captured clock witness`,
     );
     assert.deepEqual(
-      [document.scenario, document.run, document.documentRole, document.documentId],
+      [
+        document.scenario,
+        document.run,
+        document.documentRole,
+        document.documentId,
+      ],
       [sample.scenario, sample.run, sample.documentRole, sample.documentId],
       `${label}: Austin population evidence is bound to another sample document`,
     );
     for (const boundary of ['before', 'after']) {
       const populations = document.populations?.[boundary];
       const point = sample.conditions?.[boundary];
-      assert.ok(Array.isArray(populations), `${label}: missing Austin ${boundary} populations`);
+      assert.ok(
+        Array.isArray(populations),
+        `${label}: missing Austin ${boundary} populations`,
+      );
       const enabledLayers = point?.environment?.layers
         ?.filter((row) => row?.enabled === true)
         .map((row) => row.id)
@@ -271,7 +280,9 @@ function validateAustinSamplePopulationBindings(report, contract, label) {
         `${label}: ${sample.scenario} run ${sample.run} ${boundary} population inventory differs`,
       );
       for (const row of populations) {
-        const layer = point.environment.layers.find((entry) => entry.id === row.id);
+        const layer = point.environment.layers.find(
+          (entry) => entry.id === row.id,
+        );
         assert.equal(row.enabled, true);
         assert.equal(
           row.count,
@@ -299,11 +310,17 @@ function validateAustinSamplePopulationBindings(report, contract, label) {
             row.sourcePopulation?.count,
             AUSTIN_OPERATING_LAYER_COUNTS[row.id],
           );
-          if (row.id === 'wind') assert.equal(row.sourcePopulation.sha256, null);
-          else assert.equal(row.sourcePopulation.sha256, expectedHashes[row.id]);
+          if (row.id === 'wind')
+            assert.equal(row.sourcePopulation.sha256, null);
+          else
+            assert.equal(row.sourcePopulation.sha256, expectedHashes[row.id]);
         }
-        if (['alpr-cameras', 'military-installations', 'radio'].includes(row.id))
-          assert.ok(Number.isSafeInteger(row.viewportCount) && row.viewportCount >= 0);
+        if (
+          ['alpr-cameras', 'military-installations', 'radio'].includes(row.id)
+        )
+          assert.ok(
+            Number.isSafeInteger(row.viewportCount) && row.viewportCount >= 0,
+          );
         else assert.equal(row.viewportCount, null);
       }
     }
@@ -340,7 +357,10 @@ function validateFixtureDelivery(report, contract, label) {
       contract.fixtureDelivery.sampleDocuments,
       `${label}: report and contract Austin document evidence differ`,
     );
-    const expectedAssets = [...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS, 'installations'].sort();
+    const expectedAssets = [
+      ...AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+      'installations',
+    ].sort();
     assert.deepEqual([...delivery.requiredAssetIds].sort(), expectedAssets);
     const topology = createCaptureDocumentTopology({
       startupRuns: report.workload?.startupRuns,
@@ -737,6 +757,12 @@ function validateReport(report, side, expectedAppCommit) {
       contract,
       `${side}: report comparison contract is not derived from its Austin producer evidence`,
     );
+    validateAustinSatelliteEpochCaptureReport({
+      fixture: workload.fixture,
+      warmupMs: workload.warmupMs,
+      durationPerSampleMs: workload.durationPerSampleMs,
+      captures,
+    });
   }
   assert.equal(
     workload?.warmupMs,
@@ -894,7 +920,9 @@ function validateReport(report, side, expectedAppCommit) {
 
   const counts = austin
     ? {}
-    : Object.fromEntries(contract.populations.map((row) => [row.id, row.count]));
+    : Object.fromEntries(
+        contract.populations.map((row) => [row.id, row.count]),
+      );
   assertCaptureIntegrity(captures, {
     expectedCommit: expectedAppCommit,
     qualityMode: 'manual',
@@ -904,7 +932,13 @@ function validateReport(report, side, expectedAppCommit) {
     expectedWarmupMs: workload.warmupMs,
     expectedMeasurementMs: workload.durationPerSampleMs,
     ...(austin
-      ? { dynamicPopulationIds: ['alpr-cameras', 'military-installations', 'radio'] }
+      ? {
+          dynamicPopulationIds: [
+            'alpr-cameras',
+            'military-installations',
+            'radio',
+          ],
+        }
       : {}),
   });
 

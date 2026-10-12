@@ -637,6 +637,99 @@ export function createObservedAustinOperatingComparisonContract({
       clock.measurementEnd?.elapsedMs,
       workload.warmupMs + workload.durationPerSampleMs,
     );
+    const sampledEpochs = clock.satelliteSampledEpochs;
+    assert.equal(
+      sampledEpochs?.warmupHeld?.schema,
+      'gev-austin-satellite-sampled-epoch/v1',
+    );
+    assert.equal(sampledEpochs?.warmupHeld?.boundary, 'warmup-held');
+    assert.equal(
+      sampledEpochs?.warmupHeld?.boundaryEpochMs,
+      fixture.fixedTimeMs + workload.warmupMs,
+    );
+    assert.equal(
+      sampledEpochs?.measurementComplete?.schema,
+      'gev-austin-satellite-sampled-epoch/v1',
+    );
+    assert.equal(
+      sampledEpochs?.measurementComplete?.boundary,
+      'measurement-complete',
+    );
+    assert.equal(
+      sampledEpochs?.measurementComplete?.boundaryEpochMs,
+      fixture.fixedTimeMs + workload.warmupMs + workload.durationPerSampleMs,
+    );
+    for (const boundary of [
+      sampledEpochs.warmupHeld,
+      sampledEpochs.measurementComplete,
+    ]) {
+      assert.equal(
+        boundary.recordCount,
+        AUSTIN_OPERATING_LAYER_COUNTS.satellites,
+      );
+      assert.ok(
+        Array.isArray(boundary.records) &&
+          boundary.records.length === AUSTIN_OPERATING_LAYER_COUNTS.satellites,
+        'cached satellite source rows are required at both boundaries',
+      );
+      assert.match(boundary.identitySha256 || '', SHA256);
+      assert.match(boundary.positionSha256 || '', SHA256);
+      assert.equal(boundary.epochKind, 'derived-from-cached-public-positions');
+      assert.equal(
+        boundary.numericalBoundStatus,
+        'provisional-not-cross-engine-validated',
+      );
+      assert.equal(boundary.performanceAcceptanceEligible, false);
+      assert.ok(Number.isSafeInteger(boundary.derivedEpochMs));
+      assert.ok(
+        Number.isSafeInteger(boundary.ageMs) &&
+          boundary.ageMs >= 0 &&
+          boundary.ageMs <= 1000,
+      );
+    }
+    const satelliteBefore = clock.selectedLayersBefore?.find(
+      (row) => row.id === 'satellites',
+    )?.sourcePopulation;
+    const satelliteAfter = clock.selectedLayersAfter?.find(
+      (row) => row.id === 'satellites',
+    )?.sourcePopulation;
+    assert.equal(
+      sampledEpochs.warmupHeld.identitySha256,
+      satelliteBefore?.sha256,
+      'warmup satellite records differ from the captured native identity digest',
+    );
+    assert.equal(
+      sampledEpochs.warmupHeld.positionSha256,
+      satelliteBefore?.positionSha256,
+      'warmup satellite records differ from the captured native position digest',
+    );
+    assert.equal(
+      sampledEpochs.measurementComplete.identitySha256,
+      satelliteAfter?.sha256,
+      'completed satellite records differ from the captured native identity digest',
+    );
+    assert.equal(
+      sampledEpochs.measurementComplete.positionSha256,
+      satelliteAfter?.positionSha256,
+      'completed satellite records differ from the captured native position digest',
+    );
+    const witnessFor = (boundary) =>
+      boundary.records.find((row) => row.id === 25544);
+    for (const [evidence, witness] of [
+      [sampledEpochs.warmupHeld, clock.satelliteWitnessBefore],
+      [sampledEpochs.measurementComplete, clock.satelliteWitnessAfter],
+    ]) {
+      assert.deepEqual(
+        witness,
+        {
+          noradId: witnessFor(evidence)?.id,
+          latitude: witnessFor(evidence)?.latitude,
+          longitude: witnessFor(evidence)?.longitude,
+          altitudeM: witnessFor(evidence)?.altitudeM,
+        },
+        'ISS witness must come from the same cached-position boundary',
+      );
+    }
     assert.ok(
       Number.isFinite(clock.measurementBoundarySettleNativeMs) &&
         clock.measurementBoundarySettleNativeMs >= 0,
