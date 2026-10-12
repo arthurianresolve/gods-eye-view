@@ -101,8 +101,13 @@ formatting and package boundaries. Its [rendered fixture and unchanged validator
 but the workflow fails afterward because its log printer rejects the 3.2 MB raw
 report. The full artifact survives. Correction `14f903cb` logs artifact identity
 instead of its payload, preserving both the full upload and the existing log
-limit; its workflow check is pending. Failed artifacts are preserved. Actual
-streamed 3D Tiles coverage remains a separate gap.
+limit. Its [exact-commit workflow passes](performance-evidence/s57-artifact-log-38226672796/README.md):
+root independently validates ten measured transitions, four setup transitions,
+stable four-entry provider caches, no new factory loads during measured switches,
+zero pending work at ready boundaries and all native selection/recovery cases.
+The fixture is integrated through `68ccdb92`; a new standard integration run is
+separate. Failed artifacts are preserved. Actual streamed 3D Tiles coverage,
+physical Windows and full S57 acceptance remain gaps.
 
 A [fresh Windows Chrome tab](performance-evidence/windows-webgl-current-window-20261012/README.md)
 restores screenshot delivery at an observed 894 x 529 viewport, while the old

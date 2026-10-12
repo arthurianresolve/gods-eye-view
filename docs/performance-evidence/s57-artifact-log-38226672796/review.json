@@ -1,0 +1,85 @@
+{
+  "scope": "independent local recomputation of hosted imagery/heightmap component report; no hardware or paired optimization acceptance",
+  "artifact": {
+    "bytes": 3344990,
+    "sha256": "59d4c47e061fbb26e560448275e0915b3add3fa075ab7ed69316ce72e5665676"
+  },
+  "validation": {
+    "status": "passed",
+    "cycles": 5,
+    "switchTransitions": 10,
+    "terrainTileRequests": 162,
+    "terrainTransitionWorkerSubmissions": 173,
+    "terrainTransitionWorkerCompletions": 173,
+    "selectionReenablePicks": 3,
+    "applicationCommit": "14f903cb640fca11d30ba87da9210f33a7a0ba9e"
+  },
+  "renderer": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "comparisons": {
+    "measuredTransitions": 10,
+    "setupTransitions": 4,
+    "flatMedianSwitchToSettledMs": 1850.3999999999942,
+    "reliefMedianSwitchToSettledMs": 3223.5,
+    "observedFactoryLoadsUnchanged": true,
+    "cacheEntriesAtReady": 4,
+    "pendingAtReady": 0
+  },
+  "observer": {
+    "available": true,
+    "installErrorName": null,
+    "entityCollectionCount": 4,
+    "requirement": "each switch waits for the existing DataSourceDisplay.update result true, bound to unchanged public EntityCollection contents, data-source ownership revision, exact collection identities, and that completed frame; no extra update calls",
+    "cleanupConfirmed": true,
+    "ownershipChanged": false,
+    "entityCollectionsMatch": true,
+    "finalState": {
+      "available": true,
+      "cleanupConfirmed": true,
+      "updateRestoreStatus": "restored",
+      "generationCount": 14,
+      "updateCallCount": 854,
+      "collectionRevision": 0,
+      "collectionOwnerRevision": 0,
+      "ownershipChanged": false,
+      "entityCollectionsMatch": true,
+      "completedRenderRevision": 854,
+      "installErrorName": null
+    }
+  },
+  "cleanup": {
+    "pageClosed": true,
+    "cdpSessionDetached": true,
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 80137.471209,
+        "closeSettledHostMs": 80979.022042,
+        "closeElapsedMs": 841.5508330000011,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 609.2164170000033
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "serverClosed": true
+  }
+}
