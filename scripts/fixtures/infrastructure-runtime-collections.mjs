@@ -38,6 +38,7 @@ import {
 } from './infrastructurePrimitiveReadinessDiagnostic.mjs';
 import {
   countInfrastructureGraphics,
+  compareInfrastructureRuntimeLifetimes,
   createInfrastructureSampleReadiness,
   infrastructureCameraRevisionReady,
   INFRASTRUCTURE_RUNTIME_CASES,
@@ -1709,43 +1710,7 @@ async function runDiagnostic() {
 }
 
 function compareSamples(baseline, candidate) {
-  const result = [];
-  for (const caseId of INFRASTRUCTURE_RUNTIME_CASES) {
-    const leftRows = baseline.samples.filter((row) => row.caseId === caseId);
-    const rightRows = candidate.samples.filter((row) => row.caseId === caseId);
-    for (let pair = 0; pair < INFRASTRUCTURE_RUNTIME_PAIRS; pair++) {
-      const left = leftRows.find((row) => row.pair === pair);
-      const right = rightRows.find((row) => row.pair === pair);
-      check(
-        left && right,
-        `${caseId} pair ${pair + 1} is missing a renderer sample.`,
-      );
-      const exact =
-        left.pixelSha256 === right.pixelSha256 &&
-        left.identitySha256 === right.identitySha256 &&
-        left.geometrySha256 === right.geometrySha256 &&
-        left.styleSha256 === right.styleSha256 &&
-        JSON.stringify(left.pointPick) === JSON.stringify(right.pointPick) &&
-        JSON.stringify(left.stemPick) === JSON.stringify(right.stemPick);
-      check(
-        exact,
-        `${caseId} pair ${pair + 1} baseline/candidate evidence differs.`,
-      );
-      result.push({
-        caseId,
-        pair,
-        pixelSha256Equal: true,
-        identityEqual: true,
-        geometryEqual: true,
-        styleEqual: true,
-        picksEqual: true,
-        framebufferEqual:
-          left.frame.width === right.frame.width &&
-          left.frame.height === right.frame.height,
-      });
-    }
-  }
-  return result;
+  return compareInfrastructureRuntimeLifetimes(baseline, candidate);
 }
 
 async function main() {

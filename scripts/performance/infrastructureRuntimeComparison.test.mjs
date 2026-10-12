@@ -564,6 +564,25 @@ test('runtime pair comparison requires exact pixels, geometry, style and native 
   );
 });
 
+test('datacenter pair comparison ignores renderer-specific pick implementation fields but keeps pixel equality exact', () => {
+  const layer = infrastructureFixtureLayer('local-datacenters');
+  const baseline = lifetime('entities', layer);
+  const candidate = lifetime('primitive-collections', layer);
+  assert.equal(baseline.samples[0].stemPick.primitiveType, 'Primitive');
+  assert.equal(candidate.samples[0].stemPick.primitiveType, 'Polyline');
+  assert.equal(
+    compareInfrastructureRuntimeLifetimes(baseline, candidate).length,
+    10,
+  );
+  candidate.samples.find(
+    (row) => row.caseId === 'camera-lod-update' && row.pair === 0,
+  ).pixelSha256 = 'c'.repeat(64);
+  assert.throws(
+    () => compareInfrastructureRuntimeLifetimes(baseline, candidate),
+    /camera-lod-update pair 1 differs between production renderers/,
+  );
+});
+
 test('runtime report recomputes comparisons and requires populated ownership baselines', () => {
   const staleFlags = validReport();
   staleFlags.lifetimes[1].samples[0].pixelSha256 = 'c'.repeat(64);
