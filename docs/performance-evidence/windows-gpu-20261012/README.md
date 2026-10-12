@@ -225,3 +225,14 @@ a compositor, driver or application root cause. These short controls are not
 GPU execution-time measurements, image-equivalence checks, or hardware-soak
 acceptance. Desktop occlusion remains unverified; the user has been asked
 whether the physical Chrome window was fully visible and uncovered.
+
+The [standard CI run at `a92c6921`](standard-ci-animated-38193369019.json)
+subsequently fails the accessibility journey. Node 24/26, Windows onboarding
+and all three recovery jobs pass. The
+[failed step log](accessibility-failure-38193369019.log) records a 30-second
+wait at `qa-accessibility.mjs:61`: focus did not satisfy the expected command
+trigger check after Enter on the evidence inspector's close button. The
+failure report has no phase or focus-state trace (`surface` and `lastControl`
+are null), so it cannot distinguish an application race from harness timing.
+This failure is retained and blocks promotion of the diagnostic branch until
+investigated. The timeout and strict focus expectation remain unchanged.

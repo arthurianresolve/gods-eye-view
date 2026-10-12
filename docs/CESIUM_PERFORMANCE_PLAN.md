@@ -29,8 +29,9 @@ mismatch: infrastructure uses one measured document, while validation assumed
 the dense workload's per-sample documents. The
 [contract repair at `c21b3f21`](performance-evidence/s47-infrastructure-smoke-38193087266/README.md)
 now passes the actual datacenter capture CLI and independent validation of
-its complete raw report. Dams, cables and combined infrastructure still need
-their own executable checks; the dam run is underway. No timing acceptance
+its complete raw report. The [dam workload also passes](performance-evidence/s47-infrastructure-smoke-38193737422/README.md),
+and all seven standard jobs pass at this revision. Cables and combined
+infrastructure still need executable checks; the cable run is underway. No timing acceptance
 is claimed from this short, instrumented SwiftShader smoke.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
@@ -44,6 +45,12 @@ retain 533-550 ms frame gaps while plain RAF reaches 301 frames in five seconds
 with an 18.5 ms maximum gap. Changing pixels does not eliminate the stall;
 the physical window's occlusion state is unverified. Historical checkpoints below retain their original failures
 and limitations; their old branch/promotion statements are not the current state.
+
+The animated diagnostic branch's standard CI fails the inspector focus-return
+check at `qa-accessibility.mjs:61`; six other jobs pass. Its failure lacks
+phase/focus-state attribution, so the branch is not promoted. The existing
+timeout and focus requirement remain unchanged while bounded diagnostics are
+prepared. This is separate from the minimal WebGL frame stall.
 
 ## Historical integration checkpoints
 
