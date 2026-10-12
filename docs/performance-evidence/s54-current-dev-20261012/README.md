@@ -46,4 +46,9 @@ Twenty-three focused diagnostic/camera/deadline/report checks and package
 boundaries pass for this diagnostic change; this is not a cable acceptance pass.
 
 The [standard integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38186604801)
-is still running. Its pending status is not a pass.
+passes all seven jobs at `bc892f7c`: Node 24/26 suites and production builds,
+Windows onboarding, install/update recovery on Windows/macOS/Linux, and the
+browser journeys. The saved `s54-ci-bc892f7c.json` retains step outcomes.
+Optional diagnostics/soak and PR-only published layer-token checks were skipped.
+This success does not override the separately failed cable probe, and does not
+claim full integration validation of the later diagnostics-only `d05e5415`.
