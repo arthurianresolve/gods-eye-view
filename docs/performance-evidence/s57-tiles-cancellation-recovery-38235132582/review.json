@@ -1,0 +1,175 @@
+{
+  "schema": "gev-streamed-tiles-failed-artifact-review/v1",
+  "candidateCommit": "ae477251bede61945992030cd9d43bf7a6e70a0c",
+  "status": "failed",
+  "error": "HTTP streamed-tile lifecycle evidence is incomplete or inconsistent.",
+  "artifact": {
+    "file": "report.json",
+    "byteLength": 4122886,
+    "sha256": "9f2e7d78a64b31c4a9afcee61a31f2c906b2feb7fcdf3174372c54e38cd6d69c"
+  },
+  "scope": "hosted Apple paravirtual Metal component; no physical Windows or matched timing acceptance",
+  "terrainCycles": 5,
+  "streamedCycles": 5,
+  "streamedSwitches": 10,
+  "reportedComponentStatus": "passed",
+  "flatReadinessMissingOwner": [
+    {
+      "label": "streamed-tile-post-warm-flat",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-1-second",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-2-first",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-3-warm-start",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-3-second",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-4-first",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-5-warm-start",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    },
+    {
+      "label": "streamed-tile-cycle-5-second",
+      "finalHasActiveStackId": false,
+      "afterObservedOwner": "qa-terrain-flat",
+      "tilesLoaded": true,
+      "workerPending": 0
+    }
+  ],
+  "browserCounts": {
+    "manifest": {
+      "requests": 1,
+      "responses": 1,
+      "completed": 1,
+      "failed": 0,
+      "servedFromCache": 0
+    },
+    "content": {
+      "requests": 2,
+      "responses": 1,
+      "completed": 1,
+      "failed": 1,
+      "servedFromCache": 0
+    }
+  },
+  "serverCounts": {
+    "manifest": {
+      "requests": 1,
+      "responses": 1,
+      "successfulResponses": 1,
+      "bytesFromHeader": 249
+    },
+    "content": {
+      "requests": 1,
+      "responses": 1,
+      "successfulResponses": 1,
+      "bytesFromHeader": 960
+    }
+  },
+  "cancellation": {
+    "kind": "content",
+    "method": "GET",
+    "status": null,
+    "fromDiskCache": null,
+    "fromServiceWorker": null,
+    "fromPrefetchCache": null,
+    "servedFromCache": false,
+    "encodedDataLength": null,
+    "failure": true,
+    "failureClass": "cancellation",
+    "failureCode": "ERR_ABORTED",
+    "canceled": true
+  },
+  "warmedOwnership": {
+    "listeners": 0,
+    "pendingJobs": 0,
+    "primitives": 1,
+    "imageryLayers": 0,
+    "cacheEntries": 7,
+    "estimatedTileBytes": 108,
+    "providerLoadsStarted": 7,
+    "providerCacheReuses": 38,
+    "providerLoadFailures": 0
+  },
+  "finalOwnership": {
+    "listeners": 0,
+    "pendingJobs": 0,
+    "primitives": 1,
+    "imageryLayers": 1,
+    "cacheEntries": 7,
+    "estimatedTileBytes": 108,
+    "providerLoadsStarted": 7,
+    "providerCacheReuses": 53,
+    "providerLoadFailures": 0
+  },
+  "tileMemory": 108,
+  "tileMemoryStatus": "observed",
+  "cleanup": {
+    "pageClosed": true,
+    "cdpSessionDetached": true,
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 98576.398209,
+        "closeSettledHostMs": 98995.120667,
+        "closeElapsedMs": 418.7224579999893,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 351.32283299999835
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "serverClosed": true
+  },
+  "fixtureViewerDestroyed": true
+}
