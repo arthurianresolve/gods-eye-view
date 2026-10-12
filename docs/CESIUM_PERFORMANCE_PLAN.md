@@ -39,6 +39,13 @@ the unchanged 12-second deadline. Its owned viewer is destroyed; collections
 then complete both lifecycle cycles and cleanup. The earlier visual mismatch
 is not explained by this run. Bounded CPU/worker attribution and cross-run
 visual diagnosis remain required before acceptance.
+The [opt-in re-enable observation at `161b8896`](performance-evidence/s54-reenable-attribution-38199540554/README.md)
+captures a successful Entity cycle, while the collection renderer now fails
+re-enable cycle 0 outside that observer's coverage. Independent decoding finds
+162 different pixels in every camera-change pair; full coordinate witnesses
+confirm 287 changed hidden references and no changed visible references.
+Their causal relationship remains unknown. Observation must cover both
+renderer lifetimes before another lifecycle conclusion is drawn.
 S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).

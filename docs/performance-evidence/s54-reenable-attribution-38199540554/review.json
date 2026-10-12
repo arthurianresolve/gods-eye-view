@@ -1,0 +1,633 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38199540554",
+  "rawBytes": 5433424,
+  "rawSha256": "82846ec74b48ba61b6fbc3b5f12834f8eaa3a365ea6535e39f407e94dc65e37e",
+  "commit": "161b8896c830942ae1da948cffc3da97399ec02e",
+  "harnessCommit": "161b8896c830942ae1da948cffc3da97399ec02e",
+  "status": "failed",
+  "failedPhase": "collections-reenable-scene-stability",
+  "failures": [
+    {
+      "mode": "collections",
+      "activationOrder": 1,
+      "stage": "reenable-scene-stability",
+      "cycle": 0,
+      "message": "Error: Timed out waiting for a completed cable scene frame.\n    at http://127.0.0.1:4184/scripts/fixtures/cableReferenceFixture.mjs:407:11"
+    },
+    {
+      "mode": "comparison",
+      "activationOrder": null,
+      "stage": "geometry-and-rendered-parity",
+      "message": "camera-change sample 1 differs across renderers."
+    }
+  ],
+  "images": [
+    {
+      "name": "entities-default-style-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "entities-default-style-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "entities-default-style-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "entities-default-style-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "entities-default-style-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "entities-camera-change-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d3c95d78ab055d7d3b7e3afd645c9e31ce5a07a90bdae9ee1b7f50a932ea910b",
+      "pixelSha256": "fedd3ececcc157d39cb809ad5b71d15d2b62f7a89aa3406382db459e38521217"
+    },
+    {
+      "name": "entities-camera-change-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d3c95d78ab055d7d3b7e3afd645c9e31ce5a07a90bdae9ee1b7f50a932ea910b",
+      "pixelSha256": "fedd3ececcc157d39cb809ad5b71d15d2b62f7a89aa3406382db459e38521217"
+    },
+    {
+      "name": "entities-camera-change-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d3c95d78ab055d7d3b7e3afd645c9e31ce5a07a90bdae9ee1b7f50a932ea910b",
+      "pixelSha256": "fedd3ececcc157d39cb809ad5b71d15d2b62f7a89aa3406382db459e38521217"
+    },
+    {
+      "name": "entities-camera-change-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d3c95d78ab055d7d3b7e3afd645c9e31ce5a07a90bdae9ee1b7f50a932ea910b",
+      "pixelSha256": "fedd3ececcc157d39cb809ad5b71d15d2b62f7a89aa3406382db459e38521217"
+    },
+    {
+      "name": "entities-camera-change-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d3c95d78ab055d7d3b7e3afd645c9e31ce5a07a90bdae9ee1b7f50a932ea910b",
+      "pixelSha256": "fedd3ececcc157d39cb809ad5b71d15d2b62f7a89aa3406382db459e38521217"
+    },
+    {
+      "name": "collections-default-style-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "collections-default-style-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "collections-default-style-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "collections-default-style-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "collections-default-style-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060"
+    },
+    {
+      "name": "collections-camera-change-0.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "c8e6aa8d0cf8d3befaa825d4b6b6941ade8ef2f0eb3bae9bbe3932ed3f8660d5",
+      "pixelSha256": "cfa1b223ef9f55d2be35c26ceae2ae856df7f147fb6ed2896cdacf9e506a85d1"
+    },
+    {
+      "name": "collections-camera-change-1.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "c8e6aa8d0cf8d3befaa825d4b6b6941ade8ef2f0eb3bae9bbe3932ed3f8660d5",
+      "pixelSha256": "cfa1b223ef9f55d2be35c26ceae2ae856df7f147fb6ed2896cdacf9e506a85d1"
+    },
+    {
+      "name": "collections-camera-change-2.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "c8e6aa8d0cf8d3befaa825d4b6b6941ade8ef2f0eb3bae9bbe3932ed3f8660d5",
+      "pixelSha256": "cfa1b223ef9f55d2be35c26ceae2ae856df7f147fb6ed2896cdacf9e506a85d1"
+    },
+    {
+      "name": "collections-camera-change-3.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "c8e6aa8d0cf8d3befaa825d4b6b6941ade8ef2f0eb3bae9bbe3932ed3f8660d5",
+      "pixelSha256": "cfa1b223ef9f55d2be35c26ceae2ae856df7f147fb6ed2896cdacf9e506a85d1"
+    },
+    {
+      "name": "collections-camera-change-4.png",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "c8e6aa8d0cf8d3befaa825d4b6b6941ade8ef2f0eb3bae9bbe3932ed3f8660d5",
+      "pixelSha256": "cfa1b223ef9f55d2be35c26ceae2ae856df7f147fb6ed2896cdacf9e506a85d1"
+    }
+  ],
+  "pairs": [
+    {
+      "caseId": "default-style",
+      "sample": 0,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 1,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 2,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 3,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 4,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 0,
+      "pixelDifferenceCount": 162,
+      "sameGeometry": false,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 1,
+      "pixelDifferenceCount": 162,
+      "sameGeometry": false,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 2,
+      "pixelDifferenceCount": 162,
+      "sameGeometry": false,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 3,
+      "pixelDifferenceCount": 162,
+      "sameGeometry": false,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 4,
+      "pixelDifferenceCount": 162,
+      "sameGeometry": false,
+      "sameStyle": true,
+      "sameSourceIdentities": true,
+      "samePointPick": true,
+      "sameStemPick": true
+    }
+  ],
+  "coordinateWitness": {
+    "independentlyCompared": true,
+    "baselineRows": 2629,
+    "candidateRows": 2629,
+    "baselineRowsBytes": 1001642,
+    "candidateRowsBytes": 1001574,
+    "baselineRowsSha256": "013e49293ca1bd42cab4097d8113e0de026737beb91dce0358d35a1b01c348af",
+    "candidateRowsSha256": "d880c93b758ba3b4149ce5e890df0f367df04b93f9fbc86cc12429385cfe6558",
+    "counts": {
+      "pointChanged": 287,
+      "stemChanged": 287,
+      "visibleChanged": 0,
+      "hiddenChanged": 287,
+      "visibilityChanged": 0,
+      "identityChanged": 0
+    },
+    "examples": [
+      {
+        "before": {
+          "sourceOrdinal": 22,
+          "sourceKind": "cable",
+          "sourceRecordId": "fastnet",
+          "entityId": "cable-reference-22-fastnet",
+          "pointPosition": [
+            3297267.3959635915,
+            -2982551.2880932796,
+            4561226.319130662
+          ],
+          "stemPositions": [
+            [
+              3295977.725231742,
+              -2981384.7132782666,
+              4559430.253262051
+            ],
+            [
+              3297267.3959635915,
+              -2982551.2880932796,
+              4561226.319130662
+            ]
+          ],
+          "effectiveVisible": false
+        },
+        "after": {
+          "sourceOrdinal": 22,
+          "sourceKind": "cable",
+          "sourceRecordId": "fastnet",
+          "entityId": "cable-reference-22-fastnet",
+          "pointPosition": [
+            3339826.5301146302,
+            -3021048.256988706,
+            4620496.492794812
+          ],
+          "stemPositions": [
+            [
+              3295977.725231742,
+              -2981384.7132782666,
+              4559430.253262051
+            ],
+            [
+              3339826.5301146302,
+              -3021048.256988706,
+              4620496.492794812
+            ]
+          ],
+          "effectiveVisible": false
+        }
+      },
+      {
+        "before": {
+          "sourceOrdinal": 30,
+          "sourceKind": "cable",
+          "sourceRecordId": "tmx5",
+          "entityId": "cable-reference-30-tmx5",
+          "pointPosition": [
+            -1843600.5485230542,
+            -5653295.734077432,
+            2524114.534492908
+          ],
+          "stemPositions": [
+            [
+              -1819366.78955904,
+              -5578984.296992172,
+              2490714.905081828
+            ],
+            [
+              -1843600.5485230542,
+              -5653295.734077432,
+              2524114.534492908
+            ]
+          ],
+          "effectiveVisible": false
+        },
+        "after": {
+          "sourceOrdinal": 30,
+          "sourceKind": "cable",
+          "sourceRecordId": "tmx5",
+          "entityId": "cable-reference-30-tmx5",
+          "pointPosition": [
+            -1820079.5471756286,
+            -5581169.92749468,
+            2491697.2471233304
+          ],
+          "stemPositions": [
+            [
+              -1819366.78955904,
+              -5578984.296992172,
+              2490714.905081828
+            ],
+            [
+              -1820079.5471756286,
+              -5581169.92749468,
+              2491697.2471233304
+            ]
+          ],
+          "effectiveVisible": false
+        }
+      },
+      {
+        "before": {
+          "sourceOrdinal": 33,
+          "sourceKind": "cable",
+          "sourceRecordId": "challenger-one-bermuda",
+          "entityId": "cable-reference-33-challenger-one-bermuda",
+          "pointPosition": [
+            2309991.49710315,
+            -4882617.386715982,
+            3385161.1028278023
+          ],
+          "stemPositions": [
+            [
+              2309087.2810440096,
+              -4880706.1497883815,
+              3383827.098807954
+            ],
+            [
+              2309991.49710315,
+              -4882617.386715982,
+              3385161.1028278023
+            ]
+          ],
+          "effectiveVisible": false
+        },
+        "after": {
+          "sourceOrdinal": 33,
+          "sourceKind": "cable",
+          "sourceRecordId": "challenger-one-bermuda",
+          "entityId": "cable-reference-33-challenger-one-bermuda",
+          "pointPosition": [
+            2339830.627054777,
+            -4945688.205326786,
+            3429183.2354827854
+          ],
+          "stemPositions": [
+            [
+              2309087.2810440096,
+              -4880706.1497883815,
+              3383827.098807954
+            ],
+            [
+              2339830.627054777,
+              -4945688.205326786,
+              3429183.2354827854
+            ]
+          ],
+          "effectiveVisible": false
+        }
+      }
+    ],
+    "baselineGeometry": "3449eab14843bb5054bed54ce385bd1d4605c77ce162468327b2c6266e2c79de",
+    "candidateGeometry": "2c92c16db332c224b7db2a8fbbdb40a98e49e7751f5c266e24def674db1e541d",
+    "sourceGeometryEqual": true,
+    "cameraEqual": true
+  },
+  "observer": {
+    "scope": "entity-cycle-0-reenable-population-and-scene-stability",
+    "status": "completed",
+    "durationMs": 7879.399999999994,
+    "sampleCount": 26,
+    "maximumReceiptGapMs": 2127.6999999999825,
+    "lastPostRenderAtMs": 7844.899999999994,
+    "renderErrors": [],
+    "setupComplete": true,
+    "cleanupComplete": true,
+    "first": {
+      "sequence": 1,
+      "snapshotKind": "start",
+      "receivedAtMonotonicMs": 69137.9,
+      "receivedAtMs": 0.29999999998835847,
+      "receiptGapMs": null,
+      "lastPostRenderAtMs": null,
+      "lastPostRenderMonotonicMs": null,
+      "postRenderAgeMs": null,
+      "page": {
+        "visibilityState": {
+          "available": true,
+          "value": "visible"
+        },
+        "hasFocus": {
+          "available": true,
+          "value": true
+        }
+      },
+      "renderLoop": {
+        "useDefaultRenderLoop": {
+          "available": true,
+          "value": true
+        },
+        "requestRenderMode": {
+          "available": true,
+          "value": false
+        },
+        "frameNumber": {
+          "available": true,
+          "value": 1250
+        }
+      },
+      "context": {
+        "isLost": null,
+        "lossState": "not-observed",
+        "lostEvents": 0,
+        "restoredEvents": 0
+      },
+      "primitiveReadiness": {
+        "available": true,
+        "ready": true,
+        "observedOwners": 7,
+        "truncated": false,
+        "pendingCount": 0,
+        "pending": [],
+        "pendingTruncated": false,
+        "unsupportedOwnerCount": 0,
+        "unsupportedOwners": []
+      }
+    },
+    "last": {
+      "sequence": 26,
+      "snapshotKind": "finish",
+      "receivedAtMonotonicMs": 77015.69999999998,
+      "receivedAtMs": 7878.099999999977,
+      "receiptGapMs": 76.69999999998254,
+      "lastPostRenderAtMs": 7844.899999999994,
+      "lastPostRenderMonotonicMs": 76982.5,
+      "postRenderAgeMs": 33.19999999998254,
+      "page": {
+        "visibilityState": {
+          "available": true,
+          "value": "visible"
+        },
+        "hasFocus": {
+          "available": true,
+          "value": true
+        }
+      },
+      "renderLoop": {
+        "useDefaultRenderLoop": {
+          "available": true,
+          "value": true
+        },
+        "requestRenderMode": {
+          "available": true,
+          "value": false
+        },
+        "frameNumber": {
+          "available": true,
+          "value": 1361
+        }
+      },
+      "context": {
+        "isLost": null,
+        "lossState": "not-observed",
+        "lostEvents": 0,
+        "restoredEvents": 0
+      },
+      "primitiveReadiness": {
+        "available": true,
+        "ready": true,
+        "observedOwners": 19,
+        "truncated": false,
+        "pendingCount": 0,
+        "pending": [],
+        "pendingTruncated": false,
+        "unsupportedOwnerCount": 0,
+        "unsupportedOwners": []
+      }
+    }
+  },
+  "lifetimes": [
+    {
+      "mode": "entities",
+      "status": "passed",
+      "stage": null,
+      "cycle": null,
+      "captures": 10,
+      "teardown": {
+        "disabled": true,
+        "reEnabled": true,
+        "dataSourcesRemoved": 3,
+        "collectionsRemoved": 0,
+        "overlayHidden": true,
+        "destroyed": true,
+        "listenersAfterDestroy": 0,
+        "remainingDataSources": 0,
+        "remainingCollections": 0
+      },
+      "viewerDestruction": {
+        "attempted": true,
+        "confirmed": true
+      }
+    },
+    {
+      "mode": "collections",
+      "status": "failed",
+      "stage": "reenable-scene-stability",
+      "cycle": 0,
+      "captures": 10,
+      "teardown": null,
+      "viewerDestruction": {
+        "attempted": true,
+        "confirmed": true
+      }
+    }
+  ],
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "externalRequests": 0,
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 175717.980333,
+      "closeSettledHostMs": 176879.95,
+      "closeElapsedMs": 1161.9696669999976,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1094.047208999982
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "acceptance": "Failed exact-image and lifecycle gates. The Entity-only observer captured a successful cycle, not the failing collection cycle. Hidden-coordinate drift and image differences coexist; this report does not prove that one causes the other. No performance or physical Windows acceptance."
+}
