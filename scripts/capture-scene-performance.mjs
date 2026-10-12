@@ -14,10 +14,14 @@ import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installFixtureWallClockOnPage,
-  settleCompletedRender,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
+import {
+  createBoundaryProgressRecorder,
+  observeRenderBoundary,
+} from './performance/renderBoundaryObservation.mjs';
+import { settleCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -479,26 +483,29 @@ async function settleProviderRenderAtBoundary(
   targetPage,
   label,
   timeoutMs = 5000,
+  onProgress,
 ) {
-  let timer;
-  try {
-    return await Promise.race([
-      targetPage.evaluate(settleCompletedRender, timeoutMs),
-      new Promise((_, reject) => {
-        timer = setTimeout(
-          () =>
-            reject(
-              new Error(
-                `${label}: host did not observe a completed render within ${timeoutMs}ms.`,
-              ),
-            ),
-          timeoutMs + 1000,
-        );
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
+  return observeRenderBoundary({
+    label,
+    timeoutMs,
+    hostGraceMs: 1000,
+    prepareProgress: async (receiveProgress, invocationId) => {
+      const functionName = `__gevRenderBoundary_${invocationId.replaceAll('-', '')}`;
+      await targetPage.exposeFunction(functionName, receiveProgress);
+      return {
+        functionName,
+        dispose: () => targetPage.removeExposedFunction(functionName),
+      };
+    },
+    evaluate: (pageTimeoutMs, { progressFunctionName, invocationId }) =>
+      targetPage.evaluate(
+        settleCompletedRenderDiagnostic,
+        pageTimeoutMs,
+        progressFunctionName,
+        invocationId,
+      ),
+    onProgress,
+  });
 }
 
 async function releaseFlightFixtureSession(session) {
@@ -1593,11 +1600,18 @@ try {
           return fixtureBoundaryStart;
         },
         settleCompletedRender: async () => {
+          const warmupProgressRecord = failureProgress.current;
           warmupBoundarySettle = productionFlightFixture
             ? await settleProviderRenderAtBoundary(
                 page,
                 'Warmup boundary',
                 5000,
+                warmupProgressRecord
+                  ? createBoundaryProgressRecorder(
+                      warmupProgressRecord,
+                      'warmupBoundaryObservation',
+                    )
+                  : undefined,
               )
             : null;
           failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
@@ -1894,10 +1908,19 @@ try {
           throw new Error(
             `Provider-fixture capture clock/freshness/foreground contract failed: ${JSON.stringify({ clock: clockEnd.clock, fixtureAgeMs, flightStats: clockEnd.flightStats, documentVisible: clockEnd.documentVisible, documentFocused: clockEnd.documentFocused })}`,
           );
+        failureProgress.phase = 'measurement-boundary-render-wait';
+        failureProgress.current.phase = failureProgress.phase;
+        const measurementProgressRecord = failureProgress.current;
         const measurementBoundarySettle = await settleProviderRenderAtBoundary(
           page,
           'Measurement boundary',
           5000,
+          measurementProgressRecord
+            ? createBoundaryProgressRecorder(
+                measurementProgressRecord,
+                'measurementBoundaryObservation',
+              )
+            : undefined,
         );
         const trackingEnd =
           scenario === 'selected-aircraft-tracking'
