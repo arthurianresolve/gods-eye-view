@@ -197,9 +197,35 @@ Node integrity check, not browser or hardware evidence. Run it with a new output
 filename to retain the original failures:
 
 ```sh
-node docs/performance-evidence/s47-austin-operating/root-review/paired-delivery-integrity-audit.mjs paired-delivery-integrity-corrected.json
+node docs/performance-evidence/s47-austin-operating/root-review/paired-delivery-integrity-audit.mjs paired-delivery-integrity-rerun.json
 ```
 
-The repair and permanent rejection tests are required before the Austin integration
-can be accepted. The diagnostic capture also remains ineligible for latency
+The [corrected replay](root-review/paired-delivery-integrity-corrected.json)
+rejects all three original corruptions. Its verbose assertion differences were
+reduced to bounded first-line messages; the original output hash and byte length
+are recorded. The [stronger replay](root-review/paired-delivery-integrity-synchronized.json)
+also changes every matching raw delivery copy. All three cases then fail on
+the actual asset, tile, or acknowledged installation identity requirement,
+rather than only on disagreement between copies. The unchanged control remains
+comparable. Root independently ran all 58 focused integration tests successfully.
+These checks concern report validation, not a real capture or hardware result.
+
+## Native satellite sampling at held boundaries
+
+The [native cadence reproduction](root-review/satellite-boundary-cadence.json)
+runs fresh native satellite renderer state with the production phased fixture
+clock, 30 seconds of warmup, and 60 seconds of measurement. Rendering callbacks
+are simulated at 16, 33, and 120 ms intervals. The one propagation result is
+controlled, so this does not test orbital accuracy or GPU rendering.
+
+All three runs reach identical wall-clock boundaries, but cached position ages
+at the warmup boundary are 768, 333, and 840 ms; final ages are 288, 996, and
+360 ms. A completed boundary render does not override the native one-second
+propagation interval. Consequently, exact position hashes cannot be assumed
+equal across different rendering speeds simply because the wall clock is held.
+
+The [reproduction source](root-review/satellite-boundary-cadence-audit.mjs)
+preserves this finding and its source hashes. Deterministic source sampling or
+explicit validation of the sampled source times remains required for matched
+acceptance. The diagnostic capture also remains ineligible for latency
 acceptance until a mode without profiling instrumentation is validated.

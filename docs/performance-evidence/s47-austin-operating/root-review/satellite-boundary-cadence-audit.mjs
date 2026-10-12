@@ -12,9 +12,15 @@ const sources = [
   'src/layers/satellites/rendering.js',
   'scripts/performance/productionFlightFixture.mjs',
 ];
-const hashes = () => Object.fromEntries(sources.map((name) => [name,
-  createHash('sha256').update(readFileSync(new URL(name, root))).digest('hex'),
-]));
+const hashes = () =>
+  Object.fromEntries(
+    sources.map((name) => [
+      name,
+      createHash('sha256')
+        .update(readFileSync(new URL(name, root)))
+        .digest('hex'),
+    ]),
+  );
 const sourceSha256 = hashes();
 const results = [];
 for (const frameStepMs of [16, 33, 120]) {
@@ -38,19 +44,26 @@ for (const frameStepMs of [16, 33, 120]) {
   };
   const rendering = createRendering({
     state,
-    services: { focus: {
-      focusNowMs: (now) => now,
-      getFocusTarget: () => null,
-      focusPassIsNeeded: () => false,
-    } },
+    services: {
+      focus: {
+        focusNowMs: (now) => now,
+        getFocusTarget: () => null,
+        focusPassIsNeeded: () => false,
+      },
+    },
     parts: {
       catalog: { _propagateDenseChunk() {} },
-      orbits: { propagatePosition(_satrec, when) {
-        lastPositionTime = when.getTime();
-        propagationCount++;
-        return { longitude: -97 + (lastPositionTime - fixed) / 1000000,
-          latitude: 30, altitude: 400000 };
-      } },
+      orbits: {
+        propagatePosition(_satrec, when) {
+          lastPositionTime = when.getTime();
+          propagationCount++;
+          return {
+            longitude: -97 + (lastPositionTime - fixed) / 1000000,
+            latitude: 30,
+            altitude: 400000,
+          };
+        },
+      },
     },
   });
   const advance = (duration) => {
@@ -66,7 +79,11 @@ for (const frameStepMs of [16, 33, 120]) {
     wallEpochMs: target.Date.now(),
     lastPositionEpochMs: lastPositionTime,
     positionAgeMs: target.Date.now() - lastPositionTime,
-    cartesian: { x: point.position.x, y: point.position.y, z: point.position.z },
+    cartesian: {
+      x: point.position.x,
+      y: point.position.y,
+      z: point.position.z,
+    },
   });
   try {
     globalThis.Date = target.Date;
@@ -86,19 +103,34 @@ for (const frameStepMs of [16, 33, 120]) {
 }
 assert.deepEqual(hashes(), sourceSha256);
 for (const boundary of ['before', 'after']) {
-  assert.equal(new Set(results.map((row) => row[boundary].wallEpochMs)).size, 1);
-  assert.equal(new Set(results.map((row) => row[boundary].lastPositionEpochMs)).size, 3);
-  assert.equal(new Set(results.map((row) => JSON.stringify(row[boundary].cartesian))).size, 3);
+  assert.equal(
+    new Set(results.map((row) => row[boundary].wallEpochMs)).size,
+    1,
+  );
+  assert.equal(
+    new Set(results.map((row) => row[boundary].lastPositionEpochMs)).size,
+    3,
+  );
+  assert.equal(
+    new Set(results.map((row) => JSON.stringify(row[boundary].cartesian))).size,
+    3,
+  );
 }
 const report = {
   schema: 'gev-native-satellite-boundary-cadence-audit/v1',
   recordedAt: new NativeDate().toISOString(),
-  scope: 'Fresh native renderer state and production fixture clock with one controlled propagation result; simulated render cadence, no WebGL, hardware or orbital-accuracy claim',
+  scope:
+    'Fresh native renderer state and production fixture clock with one controlled propagation result; simulated render cadence, no WebGL, hardware or orbital-accuracy claim',
   sourceSha256,
   sourceStable: true,
   results,
   reproduced: true,
-  conclusion: 'Equal held fixture-clock epochs do not imply identical cached satellite positions. Exact position hashes cannot be assumed comparable across different native rendering cadences. The capture must establish deterministic source sampling or explicitly validate sampled source times before matched acceptance.',
+  conclusion:
+    'Equal held fixture-clock epochs do not imply identical cached satellite positions. Exact position hashes cannot be assumed comparable across different native rendering cadences. The capture must establish deterministic source sampling or explicitly validate sampled source times before matched acceptance.',
 };
-writeFileSync(new URL('satellite-boundary-cadence.json', import.meta.url), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+writeFileSync(
+  new URL('satellite-boundary-cadence.json', import.meta.url),
+  `${JSON.stringify(report, null, 2)}\n`,
+  { flag: 'wx' },
+);
 console.log(JSON.stringify({ reproduced: true, sourceStable: true, results }));

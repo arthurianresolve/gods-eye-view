@@ -96,7 +96,8 @@ const controls = mutations.map(([id, mutate]) => {
     const delivery = changed.fixtureDelivery.sampleDocuments[index].delivery;
     changed.captures[index].fixtureDelivery = structuredClone(delivery);
     if (changed.captures[index].austinOperatingClock.fixtureDelivery)
-      changed.captures[index].austinOperatingClock.fixtureDelivery = structuredClone(delivery);
+      changed.captures[index].austinOperatingClock.fixtureDelivery =
+        structuredClone(delivery);
   }
   try {
     return {
@@ -132,7 +133,8 @@ const result = {
     'working-tree integration under development; exact file hashes recorded',
   sourceSha256: beforeHashes,
   sourceStable,
-  mutationScope: 'top-level delivery and every matching captured delivery copy; copied identities remain mutually consistent',
+  mutationScope:
+    'top-level delivery and every matching captured delivery copy; copied identities remain mutually consistent',
   positiveControl: {
     status: control.status,
     workloadObjective: control.workloadObjective,
