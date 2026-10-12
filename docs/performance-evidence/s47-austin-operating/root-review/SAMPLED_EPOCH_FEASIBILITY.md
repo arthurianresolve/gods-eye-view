@@ -214,3 +214,30 @@ Chrome process-shutdown timeout. No timeout process-tree snapshot was triggered.
 The earlier failed report remains failed. Austin source readiness also remains
 unresolved; these integration and recovery passes provide no completed Austin
 performance samples or physical-GPU acceptance.
+
+# Bounded setup-readiness history
+
+Commit `f4c3859847596fe8ea3e0c241a06c350b4671148` adds an opt-in host-retained
+history under the existing scene-frame diagnostics flag for the Austin fixture.
+It samples the existing read-only native readiness observer through one owned
+CDP session at no more than 1 Hz, retaining the latest 16 observations and an
+omitted count. Each compact snapshot preserves layer identity, loading progress
+and ownership counts within 1 KiB; oversized observations are explicitly marked
+unavailable. Commands never overlap, stalled requests stop further sampling,
+and late results are discarded. The sampler removes its own disconnect listener
+using Puppeteer's actual event symbol and bounds session attachment, commands
+and detachment separately. Unconfirmed cleanup remains explicit.
+
+The original source-readiness predicate, 60-second deadline and 100 ms polling
+remain unchanged. Sampling ends before measurement and installs no browser
+globals or Worker/Blob wrappers. Its reports remain comparison-ineligible;
+host command elapsed time is not CPU or GPU execution time. This is diagnostic
+instrumentation, not a fix for the source-readiness failure.
+
+Root integrated the packet at `29c26f4f9c438493956383661c71dc142af76f54` and
+independently passed 98 focused readiness, failure-projection, capture, fixture,
+sampled-epoch, cleanup and paired-report checks. The implementation commit also
+passes formatting for all 1,616 scoped files and import/package boundaries.
+Root's integrated import/package boundary checks also pass.
+A hosted run with this new diagnostic is required before drawing conclusions
+about the original Austin loading timeout.
