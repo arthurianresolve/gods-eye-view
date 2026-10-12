@@ -77,6 +77,14 @@ import {
 import { retireProviderDocument } from './performance/providerDocumentRetirement.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import {
+  createDepthPickAttributionIdentity,
+  depthPickRetirementConfirmed,
+  disposeDepthPickAttributionForPage as disposeDepthPickPageOwner,
+  installDepthPickAttribution,
+  observeDepthPickAttributionBoundary,
+  retainDepthPickBoundaryFailure,
+} from './performance/depthPickAttribution.mjs';
+import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
   createCaptureDocumentTopology,
@@ -114,6 +122,7 @@ const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
 const firstMotionCpuProfileEnabled = args.includes(
   '--first-motion-cpu-profile',
 );
+const depthPickAttributionEnabled = args.includes('--depth-pick-attribution');
 const cpuProfileArtifactDirectory = option(
   '--cpu-profile-artifact-directory',
   null,
@@ -239,6 +248,10 @@ if (sceneFrameDiagnosticsEnabled && !productionFlightFixture)
 if (firstMotionCpuProfileEnabled && !productionFlightFixture)
   throw new Error(
     '--first-motion-cpu-profile requires --provider-fixture dense-investigation.',
+  );
+if (depthPickAttributionEnabled && !productionFlightFixture)
+  throw new Error(
+    '--depth-pick-attribution requires --provider-fixture dense-investigation.',
   );
 if (firstMotionCpuProfileEnabled && !cpuProfileArtifactDirectory)
   throw new Error(
@@ -479,6 +492,19 @@ const failureProgress = {
           },
         }
       : {}),
+    ...(depthPickAttributionEnabled
+      ? {
+          depthPickAttribution: {
+            enabled: true,
+            schema: 'gev-depth-pick-attribution/v1',
+            performanceAcceptanceEligible: false,
+            scope:
+              'opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration',
+            status: 'pending',
+            samples: [],
+          },
+        }
+      : {}),
   },
 };
 // At most 5 startup + 1 setup + (3 scenarios × 10 repetitions) = 36.
@@ -497,6 +523,24 @@ const SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS = 750;
 let activeSceneFrameAttribution = null;
 let activeProviderSampleCpuProfile = null;
 const providerSampleCpuProfiles = [];
+const depthPickAttributionSamples = [];
+let activeDepthPickAttribution = null;
+
+function depthPickAttributionEnvelope() {
+  return {
+    enabled: true,
+    schema: 'gev-depth-pick-attribution/v1',
+    performanceAcceptanceEligible: false,
+    scope:
+      'opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration',
+    status:
+      depthPickAttributionSamples.length > 0 &&
+      depthPickAttributionSamples.every((sample) => sample.cleanupConfirmed)
+        ? 'complete'
+        : 'incomplete',
+    samples: depthPickAttributionSamples,
+  };
+}
 
 function providerSampleCpuProfileEnvelope() {
   return {
@@ -518,6 +562,21 @@ function shouldProfileProviderSample(scenario, run) {
     firstMotionCpuProfileEnabled &&
     isProviderSampleCpuProfileTarget(scenario, run)
   );
+}
+
+async function disposeDepthPickAttributionForPage(
+  targetPage,
+  identity = activeDepthPickAttribution,
+) {
+  if (!depthPickAttributionEnabled || !identity) return null;
+  const result = await disposeDepthPickPageOwner(targetPage, identity);
+  failureProgress.workload.depthPickAttribution =
+    depthPickAttributionEnvelope();
+  if (result?.confirmed === true && activeDepthPickAttribution === identity)
+    activeDepthPickAttribution = null;
+  if (failureProgress.current)
+    failureProgress.current.depthPickAttribution = identity.sample;
+  return result;
 }
 
 async function startProviderSampleCpuProfile(
@@ -2065,13 +2124,27 @@ try {
   async function prepareFreshProviderDocument() {
     providerSampleDocumentIndex += 1;
     await retireProviderDocument({
-      retireRenderer: () =>
-        cleanupEarlyRendererProbeForPage(page, {
+      retireRenderer: async () => {
+        const expectedAttributionOwner = activeDepthPickAttribution;
+        const attributionCleanup = await disposeDepthPickAttributionForPage(
+          page,
+          expectedAttributionOwner,
+        );
+        const rendererCleanup = await cleanupEarlyRendererProbeForPage(page, {
           retireViewerRenderLoop: true,
           phase: 'provider-document-close',
           documentRole: activeDocumentRole,
           documentId: activeDocumentId,
-        }),
+        });
+        return (
+          rendererCleanup === true &&
+          depthPickRetirementConfirmed(
+            depthPickAttributionEnabled,
+            expectedAttributionOwner,
+            attributionCleanup,
+          )
+        );
+      },
       auditWorkers: async () => {
         if (providerSampleWorkerAuditComplete) return;
         await auditPageWorkerBlobs(page, captureAuditState, {
@@ -2137,6 +2210,39 @@ try {
     await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
+    if (depthPickAttributionEnabled) {
+      const identity = createDepthPickAttributionIdentity(captures, {
+        scenario: failureProgress.scenario,
+        run: failureProgress.run,
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
+      });
+      const installed = await page.evaluate(installDepthPickAttribution, {
+        ...identity,
+        maxRows: 128,
+      });
+      if (
+        installed?.installed !== true ||
+        typeof installed.ownerToken !== 'string' ||
+        installed.ownerToken.length > 160
+      )
+        throw new Error('Depth-pick attribution observer installation failed.');
+      const sample = {
+        ...identity,
+        schema: 'gev-depth-pick-attribution-sample/v1',
+        ownerToken: installed.ownerToken,
+        install: installed,
+        warmupBoundary: null,
+        measurementBoundary: null,
+        cleanupConfirmed: false,
+      };
+      depthPickAttributionSamples.push(sample);
+      activeDepthPickAttribution = { ownerToken: installed.ownerToken, sample };
+      failureProgress.workload.depthPickAttribution =
+        depthPickAttributionEnvelope();
+      if (failureProgress.current)
+        failureProgress.current.depthPickAttribution = sample;
+    }
     await disableCaptureDiagnostics(page, activeDocumentRole, activeDocumentId);
     await page.waitForFunction(
       () =>
@@ -2378,25 +2484,60 @@ try {
         readWarmupBoundary: async () => {
           if (productionFlightFixture) {
             const warmupProgressRecord = failureProgress.current;
-            warmupBoundarySettle = await settleProviderRenderAtBoundary(
-              page,
-              'Warmup boundary',
-              5000,
-              warmupProgressRecord
-                ? createBoundaryProgressRecorder(
-                    warmupProgressRecord,
-                    'warmupBoundaryObservation',
-                  )
-                : undefined,
-              activeRenderBoundaryProgressBinding,
-              false,
-              null,
-              [],
-              holdProviderWarmupBoundary,
-              [warmupMs],
-            );
+            try {
+              warmupBoundarySettle = await settleProviderRenderAtBoundary(
+                page,
+                'Warmup boundary',
+                5000,
+                warmupProgressRecord
+                  ? createBoundaryProgressRecorder(
+                      warmupProgressRecord,
+                      'warmupBoundaryObservation',
+                    )
+                  : undefined,
+                activeRenderBoundaryProgressBinding,
+                false,
+                depthPickAttributionEnabled
+                  ? observeDepthPickAttributionBoundary
+                  : null,
+                depthPickAttributionEnabled
+                  ? [
+                      {
+                        label: 'warmup-boundary',
+                        ownerToken: activeDepthPickAttribution?.ownerToken,
+                      },
+                    ]
+                  : [],
+                holdProviderWarmupBoundary,
+                [warmupMs],
+              );
+            } catch (error) {
+              if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+                retainDepthPickBoundaryFailure(
+                  activeDepthPickAttribution.sample,
+                  'warmupBoundary',
+                  error,
+                );
+                failureProgress.current.depthPickAttribution =
+                  activeDepthPickAttribution.sample;
+                failureProgress.workload.depthPickAttribution =
+                  depthPickAttributionEnvelope();
+              }
+              throw error;
+            }
             fixtureBoundaryStart =
               readProviderWarmupBoundarySnapshot(warmupBoundarySettle);
+            if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+              const observation =
+                warmupBoundarySettle?.page?.diagnostics?.finalObservation ??
+                null;
+              activeDepthPickAttribution.sample.warmupBoundary = observation;
+              if (failureProgress.current)
+                failureProgress.current.depthPickAttribution =
+                  activeDepthPickAttribution.sample;
+              failureProgress.workload.depthPickAttribution =
+                depthPickAttributionEnvelope();
+            }
             failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
             failureProgress.current.warmupBoundary = fixtureBoundaryStart;
             if (warmupBoundarySettle?.status !== 'settled')
@@ -2744,8 +2885,25 @@ try {
             true,
             scenario === 'selected-aircraft-tracking'
               ? observeTrackedEntityBoundary
-              : null,
-            scenario === 'selected-aircraft-tracking' ? ['flights:000001'] : [],
+              : depthPickAttributionEnabled
+                ? observeDepthPickAttributionBoundary
+                : null,
+            scenario === 'selected-aircraft-tracking'
+              ? depthPickAttributionEnabled
+                ? [
+                    'flights:000001',
+                    activeDepthPickAttribution?.ownerToken,
+                    'measurement-boundary',
+                  ]
+                : ['flights:000001']
+              : depthPickAttributionEnabled
+                ? [
+                    {
+                      label: 'measurement-boundary',
+                      ownerToken: activeDepthPickAttribution?.ownerToken,
+                    },
+                  ]
+                : [],
           );
         } catch (error) {
           const retirement =
@@ -2760,6 +2918,16 @@ try {
               documentId: activeDocumentId,
               ...retirement,
             });
+          if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+            activeDepthPickAttribution.sample.measurementBoundary =
+              error?.boundaryObservation?.page?.diagnostics?.finalObservation ??
+              null;
+            if (failureProgress.current)
+              failureProgress.current.depthPickAttribution =
+                activeDepthPickAttribution.sample;
+            failureProgress.workload.depthPickAttribution =
+              depthPickAttributionEnvelope();
+          }
           throw error;
         } finally {
           if (collectProviderSampleCpuProfile)
@@ -2778,6 +2946,17 @@ try {
         const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
           'both-boundaries-complete',
         );
+        if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+          const finalObservation =
+            measurementBoundarySettle?.page?.diagnostics?.finalObservation ??
+            null;
+          activeDepthPickAttribution.sample.measurementBoundary =
+            finalObservation?.depthPickAttribution ?? finalObservation;
+          failureProgress.current.depthPickAttribution =
+            activeDepthPickAttribution.sample;
+          failureProgress.workload.depthPickAttribution =
+            depthPickAttributionEnvelope();
+        }
         if (bindingCleanup && !bindingCleanup.removed)
           throw new Error(
             'Render-boundary binding cleanup failed after sample boundaries.',
@@ -2981,6 +3160,12 @@ try {
           providerSampleCpuProfiles.find(
             (record) => record.captureOrdinal === captures.length,
           ) || null;
+      if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+        sample.captureOrdinal = captures.length;
+        sample.depthPickAttribution = activeDepthPickAttribution.sample;
+        failureProgress.workload.depthPickAttribution =
+          depthPickAttributionEnvelope();
+      }
       captures.push({ scenario, run, ...sample });
       failureProgress.current = null;
     }
@@ -3140,6 +3325,8 @@ try {
           scenarios,
         })
       : null;
+  if (page && activeDepthPickAttribution)
+    await disposeDepthPickAttributionForPage(page, activeDepthPickAttribution);
   if (page)
     await cleanupEarlyRendererProbeForPage(page, {
       retireViewerRenderLoop: true,
@@ -3163,6 +3350,12 @@ try {
     ],
     rendererLoopRetirementsOmittedCount:
       failureProgress.workload.rendererLoopRetirementsOmittedCount || 0,
+    ...(depthPickAttributionEnabled
+      ? {
+          depthPickAttribution: depthPickAttributionEnvelope(),
+          performanceAcceptanceEligible: false,
+        }
+      : {}),
     fixture: infrastructureWorkload || fixture,
     providerFixture: infrastructureWorkload
       ? infrastructureWorkload.workloadId
@@ -3259,6 +3452,10 @@ try {
   if (firstMotionCpuProfileEnabled)
     comparisonReadinessReasons.push(
       'provider-sample-cpu-profile-instrumentation-is-enabled',
+    );
+  if (depthPickAttributionEnabled)
+    comparisonReadinessReasons.push(
+      'depth-pick-attribution-instrumentation-is-enabled',
     );
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
@@ -3381,6 +3578,17 @@ try {
     failureProgress.current?.measurement ?? null,
   );
   await disposeActiveRenderBoundaryProgressBinding('capture-finally');
+  if (page && activeDepthPickAttribution) {
+    try {
+      await disposeDepthPickAttributionForPage(
+        page,
+        activeDepthPickAttribution,
+      );
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
   for (const session of [...fixtureInterceptionSessions])
     await releaseFlightFixtureSession(session);
   for (const probePage of [...earlyRendererProbeScripts.keys()]) {
@@ -3427,7 +3635,10 @@ if (captureFailure && !failureReportWritten) {
   } catch {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
-} else if (captureFailure && sceneFrameDiagnosticsEnabled) {
+} else if (
+  captureFailure &&
+  (sceneFrameDiagnosticsEnabled || depthPickAttributionEnabled)
+) {
   try {
     await writeCaptureFailure(captureFailure, { refresh: true });
   } catch {

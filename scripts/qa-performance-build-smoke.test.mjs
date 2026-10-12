@@ -152,6 +152,15 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
     ]),
     { firstMotionCpuProfile: true, providerFixture: 'dense-investigation' },
   );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-depth-pick-attribution',
+      'enabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    { depthPickAttribution: true, providerFixture: 'dense-investigation' },
+  );
   assert.throws(
     () =>
       parseSmokeArguments([
@@ -161,6 +170,20 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
         'infrastructure-datacenters',
       ]),
     /dense investigation fixture/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-depth-pick-attribution',
+        'enabled',
+        '--provider-fixture',
+        'infrastructure-datacenters',
+      ]),
+    /dense investigation fixture/,
+  );
+  assert.throws(
+    () => parseSmokeArguments(['--capture-depth-pick-attribution', 'maybe']),
+    /enabled or disabled/,
   );
   assert.throws(
     () =>

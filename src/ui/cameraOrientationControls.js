@@ -1,5 +1,8 @@
 import * as Cesium from 'cesium';
-import { isPickedWorldPosition } from '../data/scenePick.js';
+import {
+  isPickedWorldPosition,
+  pickPositionWithAttribution,
+} from '../data/scenePick.js';
 
 function trackedTarget(viewer) {
   const entity = viewer.trackedEntity;
@@ -25,7 +28,7 @@ function normalizedHeading(heading) {
 }
 
 /** Return the world position under the center of the canvas, when available. */
-export function pickViewTarget(viewer) {
+export function pickViewTarget(viewer, caller = 'camera-orientation-public') {
   const scene = viewer?.scene;
   const camera = viewer?.camera;
   const canvas = scene?.canvas;
@@ -38,7 +41,7 @@ export function pickViewTarget(viewer) {
 
   if (scene.pickPositionSupported && typeof scene.pickPosition === 'function') {
     try {
-      target = scene.pickPosition(center);
+      target = pickPositionWithAttribution(viewer, caller, center);
     } catch {
       target = null;
     }
@@ -71,11 +74,14 @@ export function pickViewTarget(viewer) {
 }
 
 /** Describe the camera as an orbit around the current viewport center. */
-export function readCameraTargetFrame(viewer) {
+export function readCameraTargetFrame(
+  viewer,
+  caller = 'camera-orientation-public',
+) {
   const camera = viewer?.camera;
   const target = viewer?.trackedEntity
     ? trackedTarget(viewer)
-    : pickViewTarget(viewer);
+    : pickViewTarget(viewer, caller);
   if (!camera || !target || !isPickedWorldPosition(camera.positionWC))
     return null;
 
@@ -257,9 +263,9 @@ export function bindCameraOrientationControls({
   const animator = createCameraOrientationAnimator(viewer);
 
   /** Recompute the tilt state exactly, paying for one pick. */
-  const refreshTilt = () => {
+  const refreshTilt = (caller = 'camera-orientation-refresh') => {
     if (destroyed) return;
-    tilted = frameIsTilted(readCameraTargetFrame(viewer));
+    tilted = frameIsTilted(readCameraTargetFrame(viewer, caller));
     sync();
   };
 
@@ -311,7 +317,7 @@ export function bindCameraOrientationControls({
   listen(tiltButton, () => {
     const pending = animator.destination;
     const result = runNavigation('camera', () => {
-      const frame = readCameraTargetFrame(viewer);
+      const frame = readCameraTargetFrame(viewer, 'camera-orientation-action');
       if (!frame) return false;
       const nextTilted = !frameIsTilted(pending || frame);
       const pitch = nextTilted ? OBLIQUE_PITCH : STRAIGHT_DOWN_PITCH;
@@ -333,7 +339,7 @@ export function bindCameraOrientationControls({
   listen(northButton, () => {
     const pending = animator.destination;
     const result = runNavigation('camera', () => {
-      const frame = readCameraTargetFrame(viewer);
+      const frame = readCameraTargetFrame(viewer, 'camera-orientation-action');
       return (
         frame &&
         animator.animate(frame, {
@@ -356,7 +362,9 @@ export function bindCameraOrientationControls({
   subscribe(viewer?.scene?.preRender, sync);
   // The exact tilt state is refreshed once per gesture, not once per frame —
   // moveEnd fires when the camera stops, which is where the pick is affordable.
-  subscribe(viewer?.camera?.moveEnd, refreshTilt);
+  subscribe(viewer?.camera?.moveEnd, () =>
+    refreshTilt('camera-orientation-move-end'),
+  );
   subscribe(viewer?.trackedEntityChanged, animator.cancel);
   for (const type of ['pointerdown', 'wheel']) {
     const canvas = viewer?.scene?.canvas;

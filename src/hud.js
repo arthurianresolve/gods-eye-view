@@ -797,11 +797,10 @@ export class IntelHUD {
   }
 
   async _summaryContext() {
-    const labels = await getBasemapLabelContext(
-      this.viewer,
-      this.placeSearch,
-      this.basemapContext,
-    );
+    const labels = await getBasemapLabelContext(this.viewer, this.placeSearch, {
+      ...this.basemapContext,
+      caller: 'hud-summary-context',
+    });
     const enabledLayers =
       this._dataManager
         ?.getAll?.()

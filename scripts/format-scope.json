@@ -1223,5 +1223,12 @@
   "scripts/fixtures/traffic-render-demand.vite.mjs",
   "build/cesium-dependencies.js",
   "src/tooling/cesiumDependencies.test.mjs",
-  "src/hudSummaryContext.test.mjs"
+  "src/hudSummaryContext.test.mjs",
+  "src/data/scenePick.js",
+  "src/data/scenePick.test.mjs",
+  "src/hud.js",
+  "src/voice/gevActions.js",
+  "scripts/performance/trackingRoute.mjs",
+  "scripts/performance/depthPickAttribution.mjs",
+  "scripts/performance/depthPickAttribution.test.mjs"
 ]

@@ -68,6 +68,7 @@ import {
   INFRASTRUCTURE_WORKLOAD_IDS,
 } from './performance/infrastructureWorkloadFixture.mjs';
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
+import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 const ROOT = await realpath(
@@ -100,6 +101,7 @@ const OPTION_KEYS = new Map([
   ['--provider-fixture', 'providerFixture'],
   ['--capture-scene-frame-diagnostics', 'sceneFrameDiagnostics'],
   ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
+  ['--capture-depth-pick-attribution', 'depthPickAttribution'],
 ]);
 
 const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
@@ -307,6 +309,13 @@ export function parseSmokeArguments(argv) {
       throw new TypeError(
         'First-motion CPU profile must be enabled or disabled.',
       );
+    if (
+      flag === '--capture-depth-pick-attribution' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'Depth-pick attribution must be enabled or disabled.',
+      );
     output[key] = value;
   }
   if (
@@ -324,10 +333,20 @@ export function parseSmokeArguments(argv) {
     throw new TypeError(
       'Scene frame diagnostics require the dense investigation fixture.',
     );
+  if (
+    output.depthPickAttribution === 'enabled' &&
+    output.providerFixture &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'Depth-pick attribution requires the dense investigation fixture.',
+    );
   if (output.sceneFrameDiagnostics)
     output.sceneFrameDiagnostics = output.sceneFrameDiagnostics === 'enabled';
   if (output.firstMotionCpuProfile)
     output.firstMotionCpuProfile = output.firstMotionCpuProfile === 'enabled';
+  if (output.depthPickAttribution)
+    output.depthPickAttribution = output.depthPickAttribution === 'enabled';
   if (
     output.firstMotionCpuProfile &&
     output.providerFixture &&
@@ -738,6 +757,16 @@ export function validateCaptureCliReport(report, expected) {
       true,
     );
   } else assert.equal(report.providerSampleCpuProfiles, undefined);
+  if (expected.depthPickAttribution) {
+    assert.equal(report.workload?.performanceAcceptanceEligible, false);
+    assert.equal(
+      validateDepthPickAttributionEnvelope(
+        report.workload?.depthPickAttribution,
+        report.captures,
+      ),
+      true,
+    );
+  } else assert.equal(report.workload?.depthPickAttribution, undefined);
   if (expected.sceneFrameDiagnostics) {
     assert.deepEqual(report.sceneFrameDiagnostics, {
       status: 'completed',
@@ -1086,6 +1115,10 @@ export function validateCaptureCliReport(report, expected) {
   if (expected.firstMotionCpuProfile)
     observedReadinessReasons.push(
       'provider-sample-cpu-profile-instrumentation-is-enabled',
+    );
+  if (expected.depthPickAttribution)
+    observedReadinessReasons.push(
+      'depth-pick-attribution-instrumentation-is-enabled',
     );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
@@ -1710,6 +1743,7 @@ async function runCandidateCaptureCli({
   workerAuditMode,
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
+  depthPickAttribution = false,
   profileArtifactDirectory = null,
   startedAt,
   budgetMs,
@@ -1780,6 +1814,7 @@ async function runCandidateCaptureCli({
   ];
   if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
   if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
+  if (depthPickAttribution) args.push('--depth-pick-attribution');
   if (firstMotionCpuProfile) {
     if (typeof profileArtifactDirectory !== 'string')
       throw new TypeError('CPU profile artifact directory is required.');
@@ -1807,6 +1842,7 @@ async function runCandidateCaptureCli({
       workerAuditMode,
       sceneFrameDiagnostics,
       firstMotionCpuProfile,
+      depthPickAttribution,
     });
     if (firstMotionCpuProfile) {
       const evidence = captureReport.providerSampleCpuProfiles;
@@ -1879,6 +1915,7 @@ async function runRevision({
   providerFixture,
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
+  depthPickAttribution = false,
   profileArtifactDirectory = null,
   infrastructureCaptureFixture,
 }) {
@@ -2352,6 +2389,7 @@ async function runRevision({
         workerAuditMode,
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
+        depthPickAttribution,
         profileArtifactDirectory,
         startedAt,
         budgetMs,
@@ -2525,6 +2563,7 @@ async function main() {
     providerFixture = 'dense-investigation',
     sceneFrameDiagnostics = false,
     firstMotionCpuProfile = false,
+    depthPickAttribution = false,
   } = parseSmokeArguments(process.argv.slice(2));
   const infrastructureCaptureFixture =
     providerFixture === 'dense-investigation'
@@ -2564,6 +2603,7 @@ async function main() {
     captureWorkerAuditMode,
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
+    depthPickAttribution,
     ...(firstMotionCpuProfile
       ? {
           cpuProfileArtifactDirectory: path.basename(
@@ -2645,6 +2685,7 @@ async function main() {
           workerAuditMode: captureWorkerAuditMode,
           sceneFrameDiagnostics,
           firstMotionCpuProfile,
+          depthPickAttribution,
           profileArtifactDirectory: firstMotionCpuProfile
             ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
             : null,
