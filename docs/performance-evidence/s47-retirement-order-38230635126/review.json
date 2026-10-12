@@ -1,0 +1,69 @@
+{
+  "schema": "gev-preserved-failed-artifact-review/v1",
+  "runId": "38230635126",
+  "candidateCommit": "29dc9f515d194029f39cb0cc926586e9e0d1adf1",
+  "conclusion": "failure",
+  "performanceAcceptanceEligible": false,
+  "files": [
+    {
+      "file": "report.json",
+      "byteLength": 171974,
+      "sha256": "c8f881a00da56227a1dab2025c86b0022b727657eae70a436e628316056a1454"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile-ref.json",
+      "byteLength": 804,
+      "sha256": "6dfb04f33b4565c40d8e96baa864cb738449f6eb6bef926f024e76df44ddd773"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile.json",
+      "byteLength": 318910,
+      "sha256": "3fd6f8c5500d41c5ced26e150cee6bc9c83527544f6a25f13b4e91f5dcb8bab3"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile-ref.json",
+      "byteLength": 804,
+      "sha256": "d0092cc7e647aa6e4f4e93d784db8973dafcf5172b1af0c6d4c52f5876cedeb4"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-2-cpu-profile.json",
+      "byteLength": 369063,
+      "sha256": "d153b81c4217f01779ce97d73c0cb349a03b98662ac2a7a1913925aceefbbcf7"
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile-ref.json",
+      "byteLength": 886,
+      "sha256": "7887c146339d436332deffe6bd48d6ba8df0b20332e35a7989a0f4824bb8ec76"
+    },
+    {
+      "file": "cpu-profiles/provider-scripted-motion-1-cpu-profile.json",
+      "byteLength": 375451,
+      "sha256": "c5cbd6ecce353c891850fad46f51e5d572c9b8008ac9e52311df3ca68babefa9"
+    }
+  ],
+  "profileChecks": [
+    {
+      "file": "provider-idle-1-cpu-profile.json",
+      "status": "complete",
+      "byteLength": 318910,
+      "sha256": "3fd6f8c5500d41c5ced26e150cee6bc9c83527544f6a25f13b4e91f5dcb8bab3",
+      "profilerErrors": []
+    },
+    {
+      "file": "provider-idle-2-cpu-profile.json",
+      "status": "complete",
+      "byteLength": 369063,
+      "sha256": "d153b81c4217f01779ce97d73c0cb349a03b98662ac2a7a1913925aceefbbcf7",
+      "profilerErrors": []
+    },
+    {
+      "file": "provider-scripted-motion-1-cpu-profile.json",
+      "status": "incomplete",
+      "byteLength": 375451,
+      "sha256": "c5cbd6ecce353c891850fad46f51e5d572c9b8008ac9e52311df3ca68babefa9",
+      "profilerErrors": [
+        "Profiler.disable exceeded 2000 ms."
+      ]
+    }
+  ]
+}

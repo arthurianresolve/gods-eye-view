@@ -111,8 +111,17 @@ The retirement-order correction at `29dc9f51` now runs the existing bounded
 document retirement before worker audit, progress-binding disposal and fixture
 interception teardown. A failed retirement prevents those later steps, leaving
 outer cleanup responsible for the document. Root passes 64 focused tests; adopted
-formatting and package boundaries pass. The exact-commit hosted run is separate;
-this isolated change does not establish that the recurring timeout is resolved.
+formatting and package boundaries pass. Its
+[exact-commit run](performance-evidence/s47-retirement-order-38230635126/README.md)
+passes setup retirement and two idle samples, then fails first-motion profiler,
+scene-diagnostic and progress-binding cleanup after delivering both boundary
+frames. Two profiles are complete; the third remains incomplete. The user's
+[same-commit retry](performance-evidence/s47-retirement-order-retry-38231901628/README.md)
+fails during baseline cleanup before candidate execution: a 0.200-ms page
+callback acknowledges retirement after 1,208.135 ms, exceeding the unchanged
+one-second gate. Neither failure is performance acceptance. The next ownership
+review must move retirement to the end of observations before teardown, without
+shortening measurements or relaxing deadlines.
 
 The [S57 map-switch comparison at `3453fab5`](performance-evidence/s57-stream-comparison-38225231367/README.md)
 executes five switch pairs and the native selection/recovery cases, then fails
