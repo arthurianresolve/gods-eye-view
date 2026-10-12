@@ -33,5 +33,17 @@ does not retain its readiness observations, so the exact unsatisfied condition
 remains unresolved. This is not evidence of a collection-renderer regression
 or an accepted cable result.
 
+The changed [readiness diagnostic run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187344922)
+at `d05e5415c3fc9d299a16349ba66355ddbcdb92cf` also fails. It retains 239
+observations (a bounded eight-record first/latest trace) during
+`map-stack-photoreal`. Frames progress from 27 to 265; DataSourceDisplay and
+globe readiness remain true. One hidden `GroundPolylinePrimitive` remains
+unready at every retained checkpoint through 11,997 ms. The original 12-second
+deadline and the requirement to finish hidden replacement geometry are intact.
+The underlying build/worker cause remains unresolved. Raw evidence and the
+independently checked predicate summary are in `cables-readiness-failed/`.
+Twenty-three focused diagnostic/camera/deadline/report checks and package
+boundaries pass for this diagnostic change; this is not a cable acceptance pass.
+
 The [standard integration run](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38186604801)
 is still running. Its pending status is not a pass.
