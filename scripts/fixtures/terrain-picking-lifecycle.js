@@ -1450,8 +1450,8 @@ async function runFixture() {
     publish();
 
     // A real Cesium content request is paused at Fetch after Network has seen
-    // it. The harness supersedes the stack, then releases the same HTTP request
-    // so delivery and cache ownership are independently visible.
+    // it. The harness supersedes the stack, observes browser cancellation, then
+    // reactivates the tileset to witness retry delivery and cache ownership.
     window.__s57SupersedeStreamedContentRequest = async () => {
       const activeAtPause = controller.getActiveId();
       if (activeAtPause !== STREAMED_TILE_STACK)
@@ -1470,7 +1470,7 @@ async function runFixture() {
         observedPausedContentPath: '/qa/s57-streaming/tile.glb',
         activeStackAtPause: activeAtPause,
         activeStackAfterSupersession: controller.getActiveId(),
-        tileSetHiddenAtDelivery: tileAtDelivery.show === false,
+        tileSetHiddenAtCancellation: tileAtDelivery.show === false,
         setStackElapsedMs: switched.setStackElapsedMs,
         flatReadinessElapsedMs: switched.readinessElapsedMs,
         tileObjectId: tileAtDelivery.objectId,
@@ -1481,7 +1481,7 @@ async function runFixture() {
       return {
         status: report.streamedTiles.supersededContent.status,
         activeStackAfterSupersession: controller.getActiveId(),
-        tileSetHiddenAtDelivery: tileAtDelivery.show === false,
+        tileSetHiddenAtCancellation: tileAtDelivery.show === false,
         browserAtPause: window.__s57StreamedTilePauseEvidence?.browser || null,
         serverAtPause: window.__s57StreamedTilePauseEvidence?.server || null,
       };
@@ -1512,28 +1512,57 @@ async function runFixture() {
       lifecycleDrainMs,
       'streamed tile content supersession',
     );
-    if (typeof window.__s57WaitForStreamedTileContent !== 'function')
-      throw new Error('Streamed tile HTTP completion observer is unavailable.');
-    report.streamedTiles.supersededContent.delivery =
-      await window.__s57WaitForStreamedTileContent();
+    if (typeof window.__s57WaitForSupersededTileCancellation !== 'function')
+      throw new Error(
+        'Streamed tile supersession cancellation observer is unavailable.',
+      );
+    const cancellation = await window.__s57WaitForSupersededTileCancellation();
+    const cancellationOwner = controller.getActiveId();
+    const cancellationTileShow = streamedTiles.tileset?.show ?? null;
+    report.streamedTiles.supersededContent.cancellation = {
+      ...cancellation,
+      activeStackId: cancellationOwner,
+      tileSetShow: cancellationTileShow,
+    };
+    const canceledRequest = cancellation?.request;
     if (
-      controller.getActiveId() !== 'qa-terrain-flat' ||
-      streamedTiles.tileset?.show !== false
+      cancellation?.status !== 'cancellation-observed' ||
+      canceledRequest?.failure !== true ||
+      canceledRequest.failureClass !== 'cancellation' ||
+      !['ERR_ABORTED', 'ERR_CANCELED'].includes(canceledRequest.failureCode) ||
+      cancellationOwner !== 'qa-terrain-flat' ||
+      cancellationTileShow !== false ||
+      cancellation.server?.counts?.content?.requests !== 0
     )
       throw new Error(
-        'Late tile content delivery changed the current flat map owner.',
+        'Superseded streamed tile request did not cancel while flat remained the owner.',
       );
     delete window.__s57SupersedeStreamedContentRequest;
     publish();
 
-    // Re-activate the same cached object, then counterbalance five warmed
-    // flat/tiles pairs. Network observations remain separate from the
-    // controller's cache/object-reuse counters.
+    // The canceled first request must be replaced by an actual network
+    // delivery when the cached tileset is activated again.
     const firstTilesetActivation = await switchStreamedTarget(
       STREAMED_TILE_STACK,
       'streamed-tile-first-visible-activation',
     );
     report.streamedTiles.firstVisibleActivation = firstTilesetActivation;
+    if (typeof window.__s57WaitForStreamedTileContent !== 'function')
+      throw new Error('Streamed tile HTTP completion observer is unavailable.');
+    report.streamedTiles.supersededContent.delivery =
+      await window.__s57WaitForStreamedTileContent();
+    if (
+      controller.getActiveId() !== STREAMED_TILE_STACK ||
+      streamedTiles.tileset?.show !== true
+    )
+      throw new Error(
+        'Reactivated tile content did not remain owned by the streamed tile stack.',
+      );
+    publish();
+
+    // Re-activate the same cached object, then counterbalance five warmed
+    // flat/tiles pairs. Network observations remain separate from the
+    // controller's cache/object-reuse counters.
     report.streamedTiles.warmCacheState = streamedMapSnapshot();
     report.streamedTiles.postWarmReturn = await switchStreamedTarget(
       'qa-terrain-flat',

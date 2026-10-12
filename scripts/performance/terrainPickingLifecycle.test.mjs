@@ -15,6 +15,7 @@ import {
   runTerrainPickingLifecycle,
   waitForTerrainFixtureCompletion,
 } from '../qa-terrain-picking-lifecycle.mjs';
+import { createStreamedTileNetworkEvidence } from './streamedTileNetworkEvidence.mjs';
 
 const STREAMED_FIXTURE_ID = 's57-local-http-3dtiles-v1';
 const STREAMED_STACK_ID = 'qa-streamed-tiles';
@@ -69,6 +70,40 @@ function streamedDiagnostics({ cacheReuses = 4 } = {}) {
     providerLoadsStarted: 1,
     providerCacheReuses: cacheReuses,
     providerLoadFailures: 0,
+  };
+}
+
+function contentCancelledRequest() {
+  return {
+    kind: 'content',
+    method: 'GET',
+    status: null,
+    fromDiskCache: null,
+    fromServiceWorker: null,
+    fromPrefetchCache: null,
+    servedFromCache: false,
+    failure: true,
+    failureClass: 'cancellation',
+    failureCode: 'ERR_ABORTED',
+    canceled: true,
+    encodedDataLength: null,
+  };
+}
+
+function contentDeliveredRequest() {
+  return {
+    kind: 'content',
+    method: 'GET',
+    status: 200,
+    fromDiskCache: null,
+    fromServiceWorker: null,
+    fromPrefetchCache: null,
+    servedFromCache: false,
+    failure: false,
+    failureClass: null,
+    failureCode: null,
+    canceled: null,
+    encodedDataLength: 960,
   };
 }
 
@@ -127,15 +162,16 @@ function streamedEvidence(cycles = 5) {
       sceneAttachmentAfterLateResolution: false,
       activeStackAfterLateResolution: 'qa-terrain-flat',
       httpCheckpointBeforeTileActivation: {
+        observedAfterMs: 0.4,
         browser: {
           counts: {
-            manifest: { completed: 1 },
+            manifest: { requests: 1, responses: 1, completed: 1 },
             content: { requests: 0 },
           },
         },
         server: {
           counts: {
-            manifest: { successfulResponses: 1 },
+            manifest: { requests: 1, successfulResponses: 1 },
             content: { requests: 0 },
           },
         },
@@ -151,7 +187,7 @@ function streamedEvidence(cycles = 5) {
       observedPausedContentPath: STREAMED_CONTENT_PATH,
       activeStackAtPause: STREAMED_STACK_ID,
       activeStackAfterSupersession: 'qa-terrain-flat',
-      tileSetHiddenAtDelivery: true,
+      tileSetHiddenAtCancellation: true,
       browserAtPause: {
         counts: {
           content: { requests: 1, completed: 0 },
@@ -160,9 +196,21 @@ function streamedEvidence(cycles = 5) {
       serverAtPause: {
         counts: { content: { requests: 0 } },
       },
+      cancellation: {
+        status: 'cancellation-observed',
+        request: contentCancelledRequest(),
+        elapsedMs: 2,
+        activeStackId: 'qa-terrain-flat',
+        tileSetShow: false,
+        browser: {
+          counts: { content: { requests: 1, completed: 0, failed: 1 } },
+          pendingCount: 0,
+        },
+        server: { counts: { content: { requests: 0 } } },
+      },
       delivery: {
-        browser: { completed: 1 },
-        server: { successfulResponses: 1 },
+        browser: streamedHttpEvidence().browser,
+        server: streamedHttpEvidence().server,
       },
     },
     firstVisibleActivation: streamedSwitch(
@@ -222,23 +270,25 @@ function streamedHttpEvidence(assets = STREAMED_ASSETS) {
       pendingCount: 0,
       counts: {
         manifest: networkCounts(1, 1, 1),
-        content: networkCounts(1, 1, 1),
+        content: { ...networkCounts(2, 1, 1), failed: 1 },
       },
       requests: [
         {
           kind: 'manifest',
           method: 'GET',
           status: 200,
+          fromDiskCache: null,
+          fromServiceWorker: null,
+          fromPrefetchCache: null,
+          servedFromCache: false,
           failure: false,
+          failureClass: null,
+          failureCode: null,
+          canceled: null,
           encodedDataLength: 249,
         },
-        {
-          kind: 'content',
-          method: 'GET',
-          status: 200,
-          failure: false,
-          encodedDataLength: 960,
-        },
+        contentCancelledRequest(),
+        contentDeliveredRequest(),
       ],
     },
     server: {
@@ -261,6 +311,16 @@ function streamedHttpEvidence(assets = STREAMED_ASSETS) {
     contentInterception: {
       status: 'passed',
       pauseObservedBeforeContinue: true,
+      supersededRequestTerminal: {
+        status: 'cancellation-observed',
+        request: contentCancelledRequest(),
+        browser: { pendingCount: 0 },
+        server: { counts: { content: { requests: 0 } } },
+      },
+      reactivationDelivery: {
+        browserCounts: { requests: 2, responses: 1, completed: 1, failed: 1 },
+        serverCounts: { requests: 1, successfulResponses: 1 },
+      },
       browserAtPause: {
         counts: {
           content: { requests: 1, completed: 0 },
@@ -729,7 +789,7 @@ test('streamed-tile validator rejects missing delivery, stale ownership and inva
       report.streamedTileHttpEvidence.server.counts.content.successfulResponses = 0;
     },
     (report) => {
-      report.streamedTileHttpEvidence.browser.counts.content.failed = 1;
+      report.streamedTileHttpEvidence.browser.counts.content.failed = 2;
     },
     (report) => {
       report.streamedTileHttpEvidence.browser.requests[1].kind = 'manifest';
@@ -739,6 +799,38 @@ test('streamed-tile validator rejects missing delivery, stale ownership and inva
     },
     (report) => {
       report.streamedTiles.supersededContent.serverAtPause.counts.content.requests = 1;
+    },
+    (report) => {
+      report.streamedTiles.supersededContent.cancellation.request.failureClass =
+        'error';
+    },
+    (report) => {
+      report.streamedTiles.supersededContent.cancellation.request.failureCode =
+        'ERR_CONNECTION_RESET';
+      report.streamedTileHttpEvidence.browser.requests[1].failureCode =
+        'ERR_CONNECTION_RESET';
+      report.streamedTileHttpEvidence.browser.requests[1].failureClass =
+        'error';
+      report.streamedTiles.supersededContent.delivery.browser.requests[0].failureCode =
+        'ERR_CONNECTION_RESET';
+      report.streamedTiles.supersededContent.delivery.browser.requests[0].failureClass =
+        'error';
+    },
+    (report) => {
+      report.streamedTiles.supersededContent.cancellation.activeStackId =
+        STREAMED_STACK_ID;
+    },
+    (report) => {
+      report.streamedTiles.supersededContent.cancellation.tileSetShow = true;
+    },
+    (report) => {
+      report.streamedTileHttpEvidence.browser.requests.pop();
+      report.streamedTileHttpEvidence.browser.counts.content.completed = 0;
+      report.streamedTiles.supersededContent.delivery.browser.requests.pop();
+      report.streamedTiles.supersededContent.delivery.browser.counts.content.completed = 0;
+    },
+    (report) => {
+      report.streamedTiles.supersededFactory.httpCheckpointBeforeTileActivation.observedAfterMs = 1001;
     },
     (report) => {
       report.streamedTiles.firstVisibleActivation.readiness.final.tileset.latestVisible.frameNumber =
@@ -900,10 +992,20 @@ function runnerDependencies({
     cdpSessionDetached: 0,
     networkListenerCleanup: 0,
     serverListenerCleanup: 0,
+    contentPhase: 'paused',
   };
+  const exposedFunctions = new Map();
+  const networkEvidence = createStreamedTileNetworkEvidence();
   const cdpSession = new EventEmitter();
   cdpSession.send = async (method) => {
-    if (method === 'Fetch.continueRequest') state.fetchContinued = true;
+    if (method === 'Fetch.continueRequest') {
+      state.fetchContinued = true;
+      cdpSession.emit('Network.loadingFailed', {
+        requestId: 'streamed-content-paused',
+        errorText: 'net::ERR_ABORTED',
+        canceled: true,
+      });
+    }
   };
   cdpSession.detach = async () => {
     state.cdpSessionDetached++;
@@ -914,11 +1016,35 @@ function runnerDependencies({
     async createCDPSession() {
       return cdpSession;
     },
-    async exposeFunction() {},
+    async exposeFunction(name, callback) {
+      exposedFunctions.set(name, callback);
+    },
     async goto() {
       if (navigationError) throw navigationError;
+      cdpSession.emit('Network.requestWillBeSent', {
+        requestId: 'streamed-manifest',
+        request: {
+          url: `http://127.0.0.1:4174${STREAMED_MANIFEST_PATH}`,
+          method: 'GET',
+        },
+      });
+      cdpSession.emit('Network.responseReceived', {
+        requestId: 'streamed-manifest',
+        response: { status: 200 },
+      });
+      cdpSession.emit('Network.loadingFinished', {
+        requestId: 'streamed-manifest',
+        encodedDataLength: STREAMED_ASSETS.manifest.byteLength,
+      });
+      cdpSession.emit('Network.requestWillBeSent', {
+        requestId: 'streamed-content-paused',
+        request: {
+          url: `http://127.0.0.1:4174${STREAMED_CONTENT_PATH}`,
+          method: 'GET',
+        },
+      });
       cdpSession.emit('Fetch.requestPaused', {
-        requestId: 'streamed-content',
+        requestId: 'streamed-content-paused',
         request: {
           url: `http://127.0.0.1:4174${STREAMED_CONTENT_PATH}`,
           method: 'GET',
@@ -947,7 +1073,7 @@ function runnerDependencies({
         return {
           status: 'passed',
           activeStackAfterSupersession: 'qa-terrain-flat',
-          tileSetHiddenAtDelivery: true,
+          tileSetHiddenAtCancellation: true,
           browserAtPause: {
             counts: { content: { requests: 1, completed: 0 } },
           },
@@ -955,7 +1081,36 @@ function runnerDependencies({
         };
       if (source.includes('__terrainPickingBuildIdentity'))
         return { applicationCommit: servedCommit, harnessCommit: servedCommit };
-      if (source.includes('__terrainPickingLifecycleResult')) return result;
+      if (source.includes('__terrainPickingLifecycleResult')) {
+        state.contentPhase = 'cancelled';
+        const cancellation = await exposedFunctions.get(
+          '__s57WaitForSupersededTileCancellation',
+        )?.();
+        result.streamedTiles.supersededContent.cancellation = {
+          ...cancellation,
+          activeStackId: 'qa-terrain-flat',
+          tileSetShow: false,
+        };
+        state.contentPhase = 'delivered';
+        cdpSession.emit('Network.requestWillBeSent', {
+          requestId: 'streamed-content-retry',
+          request: {
+            url: `http://127.0.0.1:4174${STREAMED_CONTENT_PATH}`,
+            method: 'GET',
+          },
+        });
+        cdpSession.emit('Network.responseReceived', {
+          requestId: 'streamed-content-retry',
+          response: { status: 200 },
+        });
+        cdpSession.emit('Network.loadingFinished', {
+          requestId: 'streamed-content-retry',
+          encodedDataLength: STREAMED_ASSETS.content.byteLength,
+        });
+        result.streamedTiles.supersededContent.delivery =
+          await exposedFunctions.get('__s57WaitForStreamedTileContent')?.();
+        return result;
+      }
       return undefined;
     },
     async click() {},
@@ -1006,25 +1161,19 @@ function runnerDependencies({
       }),
       readStreamedTileFixtureAssets: async () => STREAMED_ASSETS,
       createStreamedTileNetworkEvidence: () => ({
-        attach: () => () => {
-          state.networkListenerCleanup++;
+        attach: (client) => {
+          const detach = networkEvidence.attach(client);
+          return () => {
+            detach();
+            state.networkListenerCleanup++;
+          };
         },
-        snapshot: () => {
-          const evidence = streamedHttpEvidence().browser;
-          if (!state.fetchContinued) {
-            evidence.counts.content = {
-              ...evidence.counts.content,
-              completed: 0,
-            };
-            evidence.pendingCount = 1;
-          }
-          return evidence;
-        },
+        snapshot: networkEvidence.snapshot,
       }),
       installStreamedTileServerEvidence: () => ({
         snapshot: () => {
           const evidence = streamedHttpEvidence().server;
-          if (!state.fetchContinued) {
+          if (state.contentPhase !== 'delivered') {
             evidence.counts.content = {
               requests: 0,
               successfulResponses: 0,
@@ -1049,6 +1198,14 @@ test('runner preserves fixture identity, partial evidence, and owned cleanup', a
     deps: success.deps,
   });
   assert.equal(passed.status, 'passed');
+  assert.equal(
+    passed.streamedTiles.supersededContent.delivery.browser.requests.length,
+    3,
+  );
+  assert.deepEqual(
+    passed.streamedTiles.supersededContent.delivery.browser.requests,
+    passed.streamedTileHttpEvidence.browser.requests,
+  );
   assert.equal(passed.fixtureCleanup.viewerDestroyed, true);
   assert.equal(passed.cleanup.browserClose.closeCompleted, true);
   assert.equal(passed.cleanup.cdpSessionDetached, true);
