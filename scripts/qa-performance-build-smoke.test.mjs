@@ -8,6 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  assertProviderFixtureCaptureClock,
   compactCaptureCliFailure,
   parseSmokeArguments,
   readProviderCpuProfileIndexSet,
@@ -15,7 +16,10 @@ import {
   validateCaptureCliReport,
 } from './qa-performance-build-smoke.mjs';
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
-import { createProductionFlightFixture } from './performance/productionFlightFixture.mjs';
+import {
+  createProductionFlightFixture,
+  installPhasedMonotonicWallClock,
+} from './performance/productionFlightFixture.mjs';
 import {
   createCaptureDocumentTopology,
   createObservedDenseComparisonContract,
@@ -26,6 +30,90 @@ import { createInfrastructureWorkloadFixture } from './performance/infrastructur
 import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+function producerFixtureClock(fixedTime) {
+  let time = 0;
+  const target = { Date, performance: { now: () => time } };
+  installPhasedMonotonicWallClock(Date.parse(fixedTime), 1000, 1000, target);
+  const clock = target.__gevPhasedMonotonicWallClockV1;
+  clock.startWarmup();
+  time = 1200;
+  const measurementStart = clock.holdWarmupBoundary();
+  clock.startMeasurement();
+  time = 2300;
+  const end = clock.finishMeasurement();
+  return {
+    schema: 'gev-provider-fixture-capture-clock/v1',
+    fixedTime,
+    freshBrowserContext: true,
+    appDocumentReinitialized: true,
+    measurementStart,
+    warmupBoundary: { ...measurementStart },
+    end,
+    sourceFreshness: 'current',
+    freshnessWindowMs: 120_000,
+    actualWarmupElapsedMs: measurementStart.warmupNativeElapsedMs,
+    measuredWindowElapsedMs: end.measurementNativeElapsedMs,
+    measurementPhaseNativeElapsedMs: end.measurementNativeElapsedMs,
+    ageAtMeasurementStartMs: 1000,
+    ageAtEndMs: 2000,
+    configuredMeasurementMs: 1000,
+    measurementClockElapsedMs: 1000,
+  };
+}
+
+test('capture clock validation consumes the actual phased producer and rejects phase/time drift', () => {
+  const fixedTime = '2026-10-08T12:00:00.000Z';
+  const expected = { fixedTime, warmupMs: 1000, measurementMs: 1000 };
+  assert.doesNotThrow(() =>
+    assertProviderFixtureCaptureClock(
+      producerFixtureClock(fixedTime),
+      expected,
+    ),
+  );
+  for (const mutate of [
+    (c) => {
+      delete c.measurementStart;
+      c.start = { startCount: 1 };
+    },
+    (c) => {
+      c.measurementStart.phase = 'measurement';
+    },
+    (c) => {
+      c.measurementStart.measurementStartCount = 1;
+    },
+    (c) => {
+      c.end.measurementStartCount = 2;
+    },
+    (c) => {
+      c.end.phase = 'measurement';
+    },
+    (c) => {
+      c.end.epochMs += 1;
+    },
+    (c) => {
+      c.warmupBoundary.epochMs += 1;
+    },
+    (c) => {
+      c.measurementClockElapsedMs = 999;
+    },
+    (c) => {
+      c.end.measurementMs = 2000;
+    },
+    (c) => {
+      c.measuredWindowElapsedMs = 1;
+    },
+    (c) => {
+      c.freshBrowserContext = false;
+    },
+    (c) => {
+      c.ageAtEndMs = 1;
+    },
+  ]) {
+    const clock = producerFixtureClock(fixedTime);
+    mutate(clock);
+    assert.throws(() => assertProviderFixtureCaptureClock(clock, expected));
+  }
+});
 const EXPECTED_FIXTURE_SHA256 = createProductionFlightFixture({
   count: 2500,
   fixedTime: '2026-10-08T12:00:00.000Z',
@@ -195,15 +283,7 @@ function validCaptureCliReport(workerAuditMode = 'diagnostic') {
     [1, 2].map((run) => ({
       scenario,
       run,
-      fixtureClock: {
-        freshBrowserContext: true,
-        start: { startCount: 1 },
-        sourceFreshness: 'current',
-        actualWarmupElapsedMs: 1000,
-        measuredWindowElapsedMs: 1000,
-        ageAtMeasurementStartMs: 1000,
-        ageAtEndMs: 2000,
-      },
+      fixtureClock: producerFixtureClock(fixture.fixedTime),
       fixtureDelivery: {
         ...fixtureDelivery,
         fulfilledResponseCount: 1,

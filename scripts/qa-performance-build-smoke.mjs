@@ -630,6 +630,62 @@ function assertCaptureFrameAndSettingsEvidence(sample, scenario) {
   assert.equal(sample.settings?.after?.detectionMode, 'DENSE');
 }
 
+export function assertProviderFixtureCaptureClock(
+  clock,
+  { fixedTime, warmupMs, measurementMs },
+) {
+  assert.equal(clock?.schema, 'gev-provider-fixture-capture-clock/v1');
+  assert.equal(clock.fixedTime, fixedTime);
+  const epoch = Date.parse(fixedTime);
+  assert.ok(Number.isFinite(epoch), 'Fixture clock epoch is unavailable.');
+  assert.equal(clock.freshBrowserContext, true);
+  assert.equal(clock.appDocumentReinitialized, true);
+  // The producer records a held warmup boundary, then starts measurement.
+  // It no longer emits the old single-phase `start` observation.
+  const start = clock.measurementStart;
+  const end = clock.end;
+  assert.equal(start?.schema, 'gev-phased-monotonic-wall-clock/v1');
+  assert.equal(end?.schema, 'gev-phased-monotonic-wall-clock/v1');
+  assert.equal(start.phase, 'warmup-held');
+  assert.equal(end.phase, 'complete');
+  assert.equal(start.startCount, 1);
+  assert.equal(end.startCount, 1);
+  assert.equal(start.measurementStartCount, 0);
+  assert.equal(end.measurementStartCount, 1);
+  assert.deepEqual(clock.warmupBoundary, start);
+  for (const observation of [start, end]) {
+    assert.equal(observation.warmupMs, warmupMs);
+    assert.equal(observation.measurementMs, measurementMs);
+  }
+  assert.equal(start.elapsedMs, warmupMs);
+  assert.equal(start.epochMs, epoch + warmupMs);
+  assert.equal(end.elapsedMs, warmupMs + measurementMs);
+  assert.equal(end.epochMs, epoch + warmupMs + measurementMs);
+  assert.equal(clock.ageAtMeasurementStartMs, warmupMs);
+  assert.equal(clock.ageAtEndMs, warmupMs + measurementMs);
+  assert.equal(clock.configuredMeasurementMs, measurementMs);
+  assert.equal(clock.measurementClockElapsedMs, measurementMs);
+  assert.equal(clock.actualWarmupElapsedMs, start.warmupNativeElapsedMs);
+  assert.equal(end.warmupNativeElapsedMs, start.warmupNativeElapsedMs);
+  assert.equal(start.measurementNativeElapsedMs, null);
+  assert.equal(clock.measuredWindowElapsedMs, end.measurementNativeElapsedMs);
+  assert.equal(
+    clock.measurementPhaseNativeElapsedMs,
+    end.measurementNativeElapsedMs,
+  );
+  assert.ok(
+    Number.isFinite(clock.actualWarmupElapsedMs) &&
+      clock.actualWarmupElapsedMs >= warmupMs,
+  );
+  assert.ok(
+    Number.isFinite(clock.measuredWindowElapsedMs) &&
+      clock.measuredWindowElapsedMs >= measurementMs,
+  );
+  assert.equal(clock.sourceFreshness, 'current');
+  assert.equal(clock.freshnessWindowMs, 120_000);
+  assert.ok(clock.ageAtEndMs <= clock.freshnessWindowMs);
+}
+
 export function validateCaptureCliReport(report, expected) {
   if (expected.providerFixture?.startsWith('infrastructure'))
     return validateInfrastructureCaptureCliReport(report, expected);
@@ -1054,13 +1110,11 @@ export function validateCaptureCliReport(report, expected) {
     assert.equal(samples.length, 2, `Expected two ${scenario} captures.`);
     assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
     for (const sample of samples) {
-      assert.equal(sample.fixtureClock?.freshBrowserContext, true);
-      assert.equal(sample.fixtureClock?.start?.startCount, 1);
-      assert.equal(sample.fixtureClock?.sourceFreshness, 'current');
-      assert.ok(sample.fixtureClock?.actualWarmupElapsedMs >= 1000);
-      assert.ok(sample.fixtureClock?.measuredWindowElapsedMs >= 1000);
-      assert.ok(sample.fixtureClock?.ageAtMeasurementStartMs >= 0);
-      assert.ok(sample.fixtureClock?.ageAtEndMs <= 120_000);
+      assertProviderFixtureCaptureClock(sample.fixtureClock, {
+        fixedTime: expected.fixedTime || report.fixtureDelivery.fixedTime,
+        warmupMs: report.workload.warmupMs,
+        measurementMs: report.workload.durationPerSampleMs,
+      });
       assert.equal(sample.fixtureDelivery?.status, 'observed');
       assert.equal(
         sample.fixtureDelivery?.fixtureSha256,
