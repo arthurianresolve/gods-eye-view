@@ -2,6 +2,15 @@
 
 ## Current status - 12 October 2026
 
+Latest S47 diagnostic: [terminal-observation retirement at `fda1cb88`](performance-evidence/s47-observation-retirement-38237890055/README.md)
+passes baseline smoke, three candidate samples, all five reached document
+cleanup gates and all three CPU-profile teardowns. The complete run still fails
+at motion run 2 warmup: page-entry acknowledgement takes 2,990.139 ms and the
+page subsequently settles in 3,121.3 ms, arriving after the unchanged six-second
+host deadline. The late result is retained without turning failure into success.
+Tracking is not reached; this candidate remains isolated. Inspect the warmup
+clock/observer dispatch boundary next, while independent S50 revision work proceeds.
+
 Latest S57 component: the [actual HTTP streamed-tile gate](performance-evidence/s57-flat-readiness-owner-38236552746/README.md)
 passes at `e1a6f5e4`, including superseded-request cancellation, reactivation
 delivery, ten measured switches and complete owned cleanup. The readiness
@@ -9,7 +18,7 @@ publisher now records its observed owner; the strict validator is unchanged.
 Root independently replays the raw report and verifies identities and ownership
 counts. This is hosted Apple paravirtual Metal component evidence; physical
 Windows, matched route timing and full S57/S60 acceptance remain outstanding.
-Integrated into `dev` through `8dae161d`; fresh standard integration CI is pending.
+Integrated into `dev` at `48329a9f`; all seven standard integration jobs pass.
 Prior failed reports remain unchanged.
 
 The [failure origin review](performance-evidence/failure-origin-20261012/README.md)
@@ -18,8 +27,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `4562e8ecf952708260fb5496f5d9dba5f74e3648`.
-[All seven standard jobs pass](performance-evidence/s47-fixture-clock-contract-38228543716/standard-ci-dev-38227328030.json),
+Recorded integration checkpoint: `48329a9f33ce0e2d8586da90540f7e2331434b8f`.
+[All seven standard jobs pass](performance-evidence/s57-flat-readiness-owner-38236552746/standard-ci-dev-38237151400.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -751,7 +760,7 @@ the earlier release requirements and historical results.
 | S54 infrastructure batching | Partial: identity separation implemented; dam/cable prototypes rejected for promotion, datacenter candidate isolated; Entity defaults retained | Datacenters at `d05e5415` improve activation and retained JS heap with 20 exact image pairs. Dams regress source-ready time 15.02%; cable camera-change mismatches recur and lifecycle runs fail. Failed experiments are preserved, without unchanged retries or relaxed gates | Hosted Apple paravirtual Metal only. Datacenter physical Windows and mixed-layer acceptance remain pending; no full S54 or final-soak acceptance |
 | S55 tracking updates | Partial: civil and military tracked poses and trails share owned display-time samples; cache-only reads and fresh fleet queries remain separate | Civil: 49 focused checks and 109 hosted tracking checks at `47dbee4`; military: 34 focused checks at `afe83bc`; each five-repeat exact-source comparison preserves outputs and eliminates one time sample per frame | Pending tracking p95 and full camera-ownership comparison |
 | S56 fresh-frame capture | Shared completed-frame operation, abort/visibility/timeout/destruction cleanup; preservation default restored pending evidence | 168 focused tests pass including failure paths, concurrent teardown and resized capture | `47dbee4`: fresh 12-check isolated viewer matrix passes on Windows UHD 620/Chrome 154; full application matrix, earlier stall cause and measured benefit still pending |
-| S57 map-resource lifetime | Partial: generation guards, cached provider ownership, comparison leases and bounded map/HTTP diagnostics; detail/cache defaults retained | Focused ownership tests and nonstreamed comparison pass; actual HTTP streamed-tile gate at `e1a6f5e4` passes cancellation, recovery delivery, ten measured switches, observed readiness owners and complete cleanup; integrated through `8dae161d`, fresh standard CI pending | Hosted Apple paravirtual Metal component evidence; physical Windows and matched streaming/activation measurements remain pending |
+| S57 map-resource lifetime | Partial: generation guards, cached provider ownership, comparison leases and bounded map/HTTP diagnostics; detail/cache defaults retained | Focused ownership tests and nonstreamed comparison pass; actual HTTP streamed-tile gate at `e1a6f5e4` passes cancellation, recovery delivery, ten measured switches, observed readiness owners and complete cleanup; all seven standard integration jobs pass at `48329a9f` | Hosted Apple paravirtual Metal component evidence; physical Windows and matched streaming/activation measurements remain pending |
 | S58 weather/effects | Partial: retain the current wind scalar image across equal decoded forecasts; broader weather/effect work remains | 223 wind/weather tests pass; three five-pair CPU comparisons preserve raster bytes, reducing repeated image builds to zero | Hosted Metal speed/temperature/pressure pixels match at `d905f30`, with 1,200 paths and 152,736 vertices preserved; full effect matrix and Windows checks remain |
 | S59 cooperative ingestion | Partial: shared incremental GeoJSON coordinate validation and preview summaries, owned deferred normalization, bounded render cohort, workspace/import ownership guards and header-only CSV setup; full document decoding and wider UI maintenance remain | All seven integration jobs pass at `9a665b2`; CSV header setup also passes 24 focused checks and an exact-source 5-pair CPU comparison. Earlier rendered comparisons belong to `ee38af4` | Hosted Metal ten-capture comparison passes at `ee38af4`; two normal Windows UHD 620 ten-capture runs pass at `0edfb8e` after foreground check; earlier stall cause and full interaction acceptance pending |
 | S60 final candidate | Partial: S60.1 hash-bound raw comparison/retention ingestion; remaining slices and final candidate pending | Version-2 manifest recomputation and negative evidence checks implemented; exact-commit integration results recorded below | Primary Windows comparisons and full retention remain pending; hosted/software results are supplemental |
