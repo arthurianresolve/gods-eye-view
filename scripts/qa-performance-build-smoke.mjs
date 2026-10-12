@@ -362,6 +362,57 @@ export function runBoundedChild(
   });
 }
 
+function assertCaptureFrameAndSettingsEvidence(sample, scenario) {
+  assert.ok(
+    Number.isInteger(sample.frameCount) && sample.frameCount >= 0,
+    `${scenario} run ${sample.run}: frame count is missing or invalid.`,
+  );
+  assert.ok(
+    Number.isInteger(sample.renderedFrameCount) &&
+      sample.renderedFrameCount >= 0,
+    `${scenario} run ${sample.run}: rendered-frame count is missing or invalid.`,
+  );
+  assert.equal(
+    sample.frameCount,
+    Math.max(0, sample.renderedFrameCount - 1),
+    `${scenario} run ${sample.run}: rendered-frame and interval counts disagree.`,
+  );
+  const frameIntervals = sample.frameIntervalMs;
+  assert.ok(
+    Number.isInteger(frameIntervals?.samples) &&
+      frameIntervals.samples === sample.frameCount,
+    `${scenario} run ${sample.run}: frame interval samples do not match rendered-frame intervals.`,
+  );
+  if (scenario === 'idle') {
+    if (sample.frameCount === 0)
+      assert.equal(
+        frameIntervals.p95,
+        null,
+        `idle run ${sample.run}: zero-frame timing must remain unavailable.`,
+      );
+    else
+      assert.ok(
+        Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
+        `idle run ${sample.run}: frame interval p95 is missing or invalid.`,
+      );
+  } else {
+    assert.ok(
+      sample.renderedFrameCount >= 2,
+      `${scenario} run ${sample.run}: expected at least two rendered frames.`,
+    );
+    assert.ok(
+      Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
+      `${scenario} run ${sample.run}: frame interval p95 is missing or invalid.`,
+    );
+  }
+  assert.equal(sample.settings?.before?.qualityMode, 'manual');
+  assert.equal(sample.settings?.before?.densityPct, 75);
+  assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+  assert.equal(sample.settings?.after?.qualityMode, 'manual');
+  assert.equal(sample.settings?.after?.densityPct, 75);
+  assert.equal(sample.settings?.after?.detectionMode, 'DENSE');
+}
+
 export function validateCaptureCliReport(report, expected) {
   if (expected.providerFixture?.startsWith('infrastructure'))
     return validateInfrastructureCaptureCliReport(report, expected);
@@ -559,54 +610,7 @@ export function validateCaptureCliReport(report, expected) {
       assert.equal(sample.conditions?.after?.visible, true);
       assert.equal(sample.conditions?.after?.focused, true);
       assert.equal(sample.foregroundThroughout, true);
-      assert.ok(
-        Number.isInteger(sample.frameCount) && sample.frameCount >= 0,
-        `${scenario} run ${sample.run}: frame count is missing or invalid.`,
-      );
-      assert.ok(
-        Number.isInteger(sample.renderedFrameCount) &&
-          sample.renderedFrameCount >= 0,
-        `${scenario} run ${sample.run}: rendered-frame count is missing or invalid.`,
-      );
-      assert.equal(
-        sample.frameCount,
-        Math.max(0, sample.renderedFrameCount - 1),
-        `${scenario} run ${sample.run}: rendered-frame and interval counts disagree.`,
-      );
-      const frameIntervals = sample.frameIntervalMs;
-      assert.ok(
-        Number.isInteger(frameIntervals?.samples) &&
-          frameIntervals.samples === sample.frameCount,
-        `${scenario} run ${sample.run}: frame interval samples do not match rendered-frame intervals.`,
-      );
-      if (scenario === 'idle') {
-        if (sample.frameCount === 0)
-          assert.equal(
-            frameIntervals.p95,
-            null,
-            `idle run ${sample.run}: zero-frame timing must remain unavailable.`,
-          );
-        else
-          assert.ok(
-            Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
-            `idle run ${sample.run}: frame interval p95 is missing or invalid.`,
-          );
-      } else {
-        assert.ok(
-          sample.renderedFrameCount >= 2,
-          `${scenario} run ${sample.run}: expected at least two rendered frames.`,
-        );
-        assert.ok(
-          Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
-          `${scenario} run ${sample.run}: frame interval p95 is missing or invalid.`,
-        );
-      }
-      assert.equal(sample.settings?.before?.qualityMode, 'manual');
-      assert.equal(sample.settings?.before?.densityPct, 75);
-      assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
-      assert.equal(sample.settings?.after?.qualityMode, 'manual');
-      assert.equal(sample.settings?.after?.densityPct, 75);
-      assert.equal(sample.settings?.after?.detectionMode, 'DENSE');
+      assertCaptureFrameAndSettingsEvidence(sample, scenario);
       if (scenario === 'selected-aircraft-tracking')
         assert.equal(sample.trackedAircraftId, 'flights:000001');
     }
@@ -764,6 +768,7 @@ function validateInfrastructureCaptureCliReport(report, expected) {
       assert.equal(sample.conditions?.after?.focused, true);
       assert.equal(sample.foregroundThroughout, true);
       assert.ok(sample.cameraPath?.id);
+      assertCaptureFrameAndSettingsEvidence(sample, scenario);
     }
   }
   return {

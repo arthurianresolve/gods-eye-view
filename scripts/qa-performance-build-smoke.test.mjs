@@ -402,6 +402,9 @@ function validInfrastructureCaptureCliReport(providerFixture = 'infrastructure-d
       },
       foregroundThroughout: true,
       cameraPath: { id: `${scenario}-v1` },
+      frameCount: 60,
+      renderedFrameCount: 61,
+      frameIntervalMs: { p50: 16, p95: 18, max: 20, samples: 60 },
     })),
   );
   const environment = {
@@ -579,6 +582,107 @@ test('capture CLI validates the selected infrastructure workload and rejects den
       ...expected,
       providerFixture: 'infrastructure-datacenters',
     }),
+  );
+});
+
+test('infrastructure capture requires rendered motion, consistent frame evidence, and requested settings', () => {
+  const makeExpected = (report) => ({
+    appSha: 'b'.repeat(40),
+    harnessSha: 'c'.repeat(40),
+    receiptSha256: 'd'.repeat(64),
+    fixtureSha256: report.workload.fixture.sha256,
+    providerFixture: 'infrastructure-datacenters',
+    fixedTime: report.workload.fixture.fixedTime,
+  });
+  const refreshDerivedComparison = (report) => {
+    report.comparisonContract = createObservedInfrastructureComparisonContract({
+      fixture: report.workload.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment: report.environment,
+      captures: report.captures,
+      scenarios: report.workload.scenarios,
+    });
+    report.comparisonReadiness = {
+      status: 'not-ready',
+      reasons: getCaptureComparisonIneligibilityReasons({
+        contract: report.comparisonContract,
+        fixture: report.workload.fixture,
+        fixtureDelivery: report.fixtureDelivery,
+        source: report.source,
+        environment: report.environment,
+        workload: report.workload,
+        captures: report.captures,
+        diagnosticsDocuments: report.performanceDiagnostics.documents,
+        workerBlobAuditInstrumented: true,
+        workerBlobAuditMode: 'diagnostic',
+        hardwareRequired: false,
+      }),
+    };
+  };
+
+  const valid = validInfrastructureCaptureCliReport();
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(valid, makeExpected(valid)),
+  );
+
+  const zeroMotion = validInfrastructureCaptureCliReport();
+  const motion = zeroMotion.captures.find(
+    (sample) => sample.scenario === 'scripted-motion',
+  );
+  motion.frameCount = 0;
+  motion.renderedFrameCount = 0;
+  motion.frameIntervalMs = { p50: null, p95: null, max: null, samples: 0 };
+  assert.throws(
+    () => validateCaptureCliReport(zeroMotion, makeExpected(zeroMotion)),
+    /at least two rendered frames/,
+  );
+
+  const missingEvidence = validInfrastructureCaptureCliReport();
+  delete missingEvidence.captures[0].frameCount;
+  assert.throws(
+    () =>
+      validateCaptureCliReport(missingEvidence, makeExpected(missingEvidence)),
+    /frame count is missing or invalid/,
+  );
+
+  const inconsistent = validInfrastructureCaptureCliReport();
+  inconsistent.captures[0].frameIntervalMs.samples -= 1;
+  assert.throws(
+    () => validateCaptureCliReport(inconsistent, makeExpected(inconsistent)),
+    /frame interval samples do not match/,
+  );
+
+  const wrongDensity = validInfrastructureCaptureCliReport();
+  for (const sample of wrongDensity.captures) {
+    sample.settings.before.densityPct = 50;
+    sample.settings.after.densityPct = 50;
+  }
+  refreshDerivedComparison(wrongDensity);
+  assert.throws(
+    () => validateCaptureCliReport(wrongDensity, makeExpected(wrongDensity)),
+    /50 !== 75/,
+  );
+
+  const wrongDetection = validInfrastructureCaptureCliReport();
+  for (const sample of wrongDetection.captures) {
+    sample.settings.before.detectionMode = 'SPARSE';
+    sample.settings.after.detectionMode = 'SPARSE';
+  }
+  refreshDerivedComparison(wrongDetection);
+  assert.throws(
+    () => validateCaptureCliReport(wrongDetection, makeExpected(wrongDetection)),
+    /'SPARSE' !== 'DENSE'/,
+  );
+
+  const idleWithoutFrames = validInfrastructureCaptureCliReport();
+  const idle = idleWithoutFrames.captures.find(
+    (sample) => sample.scenario === 'idle',
+  );
+  idle.frameCount = 0;
+  idle.renderedFrameCount = 0;
+  idle.frameIntervalMs = { p50: null, p95: null, max: null, samples: 0 };
+  assert.doesNotThrow(() =>
+    validateCaptureCliReport(idleWithoutFrames, makeExpected(idleWithoutFrames)),
   );
 });
 
