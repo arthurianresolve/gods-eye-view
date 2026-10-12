@@ -139,7 +139,6 @@ export function createCommandPalette({
   trigger.title = 'Search commands (Ctrl+K)';
   trigger.textContent = '⌕';
   triggerHost?.prepend(trigger);
-  let returnFocus = null;
   let currentEntries = [];
   function render() {
     currentEntries = filterCommands(commands, search.value, context);
@@ -173,7 +172,6 @@ export function createCommandPalette({
   }
   function open() {
     if (dialog.open) return;
-    returnFocus = documentRef.activeElement;
     search.value = '';
     render();
     dialog.showModal();
@@ -190,10 +188,6 @@ export function createCommandPalette({
       event.preventDefault();
       open();
     }
-  };
-  const onClose = () => {
-    if (returnFocus?.isConnected) returnFocus.focus();
-    returnFocus = null;
   };
   const onDialogKeyDown = (event) => {
     if (event.key !== 'Escape' || !dialog.open) return;
@@ -214,7 +208,6 @@ export function createCommandPalette({
     ].focus();
   });
   trigger.addEventListener('click', open);
-  dialog.addEventListener('close', onClose);
   documentRef.addEventListener('keydown', onKey);
   render();
   return Object.freeze({
@@ -226,7 +219,6 @@ export function createCommandPalette({
       documentRef.removeEventListener('keydown', onKey);
       trigger.removeEventListener('click', open);
       dialog.removeEventListener('keydown', onDialogKeyDown);
-      dialog.removeEventListener('close', onClose);
       trigger.remove();
       dialog.remove();
     },
