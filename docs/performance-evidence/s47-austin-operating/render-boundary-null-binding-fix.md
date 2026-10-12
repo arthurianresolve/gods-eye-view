@@ -27,3 +27,23 @@ node --test scripts/performance/renderBoundaryObservation.test.mjs scripts/perfo
 
 This fixes a harness argument-contract failure only. The native run completed no
 performance samples and provides no renderer or hardware acceptance evidence.
+
+## Follow-up: sample boundary scope
+
+The corrected native run `38321326898` then settled warmup but exposed four
+previously unreachable successful-sample references: the measurement boundary
+result and phased-clock end snapshot were declared inside the provider branch
+but consumed by Austin report assembly after that branch; the Austin comparison
+validator was used without an import; and the outer smoke capture path
+referenced the fixture under the `runRevision` local name rather than the
+`fixture` parameter passed to `runCandidateCaptureCli`. The per-run boundary
+values now live at sample scope, the validator is imported explicitly, and the
+child report validator uses the fixture actually passed by its caller. No
+measurement, timeout, population, or acceptance rule changed. The preserved
+run still completed zero samples and remains a failure.
+
+The regression uses the real `observeRenderBoundary` host-envelope producer and
+passes its settled result through the elapsed-time projection and fixture-backed
+Austin comparison contract. Root's source-level no-undefined audit also checked
+the capture and outer-smoke call sites; the next hosted rerun is still needed to
+exercise the complete browser capture path.

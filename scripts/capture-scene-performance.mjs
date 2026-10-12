@@ -101,10 +101,12 @@ import {
 } from './performance/depthPickAttribution.mjs';
 import {
   createObservedDenseComparisonContract,
+  createObservedAustinOperatingComparisonContract,
   createObservedInfrastructureComparisonContract,
   createCaptureDocumentTopology,
   getMainCaptureDocumentIdentity,
   getCaptureReadinessReasons,
+  readSettledRenderBoundaryElapsedMs,
 } from './performance/captureComparisonContract.mjs';
 import {
   assertInfrastructureClockObservation,
@@ -3988,6 +3990,8 @@ try {
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
       let fixtureBoundaryStart = null;
       let warmupBoundarySettle = null;
+      let measurementBoundarySettle = null;
+      let clockEnd = null;
       let prewarmWorkerAuditTimingBoundary = null;
       if (workerAuditMode === 'prewarm') {
         failureProgress.phase = 'prewarm-worker-audit-after-warmup';
@@ -4428,7 +4432,7 @@ try {
       if (productionFlightFixture || austinOperatingWorkload) {
         failureProgress.phase = 'validate-provider-fixture-clock';
         failureProgress.current.phase = failureProgress.phase;
-        const clockEnd = await page.evaluate(() => ({
+        clockEnd = await page.evaluate(() => ({
           clock: window.__gevPhasedMonotonicWallClockV1?.snapshot?.() ?? null,
           wallTimeMs: Date.now(),
           documentVisible: !document.hidden,
@@ -4478,7 +4482,6 @@ try {
         failureProgress.phase = 'measurement-boundary-render-wait';
         failureProgress.current.phase = failureProgress.phase;
         const measurementProgressRecord = failureProgress.current;
-        let measurementBoundarySettle;
         try {
           measurementBoundarySettle = await settleProviderRenderAtBoundary(
             page,
@@ -4755,8 +4758,10 @@ try {
           measurementStart: fixtureMeasurementStart.clock,
           warmupBoundary: fixtureBoundaryStart,
           measurementEnd: sample.phasedClockEnd,
-          measurementBoundarySettleNativeMs:
-            measurementBoundarySettle.settleElapsedMs,
+          measurementBoundarySettleNativeMs: readSettledRenderBoundaryElapsedMs(
+            measurementBoundarySettle,
+            'Austin measurement',
+          ),
           wallClockBeforeMs: fixtureMeasurementStart.wallTimeMs,
           wallClockAfterMs: clockEnd.wallTimeMs,
           windSourceTime: austinOperatingWorkload.windSourceTime,

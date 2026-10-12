@@ -28,6 +28,20 @@ const OBJECTIVE_SCENARIOS = Object.freeze([
   'selected-aircraft-tracking',
 ]);
 
+/** Read the page-reported wait duration from a settled render boundary. */
+export function readSettledRenderBoundaryElapsedMs(boundary, label) {
+  assert.equal(
+    boundary?.status,
+    'settled',
+    `${label} completed-render boundary did not settle`,
+  );
+  assert.ok(
+    Number.isFinite(boundary.settleElapsedMs) && boundary.settleElapsedMs >= 0,
+    `${label} completed-render boundary elapsed time is invalid`,
+  );
+  return boundary.settleElapsedMs;
+}
+
 export function createCaptureDocumentTopology({
   infrastructure = false,
   startupRuns = 1,
