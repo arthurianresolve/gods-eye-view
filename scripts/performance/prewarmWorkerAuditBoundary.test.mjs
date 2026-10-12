@@ -2,8 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   runWorkerAuditAtWarmupBoundary,
+  readProviderWarmupBoundarySnapshot,
   PREWARM_WORKER_AUDIT_BOUNDARY,
 } from './prewarmWorkerAuditBoundary.mjs';
+import { evaluateCompletedRenderDiagnostic } from './settleCompletedRenderDiagnostic.mjs';
+import { observeRenderBoundary } from './renderBoundaryObservation.mjs';
+import {
+  holdProviderWarmupBoundary,
+  installPhasedMonotonicWallClock,
+} from './productionFlightFixture.mjs';
 
 const warmupBoundary = { phase: 'warmup-held', elapsedMs: 1000 };
 const completedRender = { settleElapsedMs: 2.5 };
@@ -133,4 +140,108 @@ test('an incomplete render rejects without reading worker bodies', async () => {
     /render boundary timed out/,
   );
   assert.equal(auditCalls, 0);
+});
+
+test('prewarm audit follows an atomic serialized provider clock/render boundary', async () => {
+  let monotonicNow = 10;
+  const trace = [];
+  const target = {
+    Date,
+    performance: { now: () => monotonicNow },
+    window: null,
+  };
+  target.window = target;
+  installPhasedMonotonicWallClock(
+    Date.parse('2026-10-08T12:00:00.000Z'),
+    1000,
+    1000,
+    target,
+  );
+  target.__gevPhasedMonotonicWallClockV1.startWarmup();
+  monotonicNow += 1100;
+
+  const handlers = new Set();
+  const viewer = {
+    scene: {
+      postRender: {
+        addEventListener(handler) {
+          trace.push('listener-registered');
+          handlers.add(handler);
+          return () => handlers.delete(handler);
+        },
+      },
+      requestRender() {
+        trace.push(
+          `request-${target.__gevPhasedMonotonicWallClockV1.snapshot().phase}`,
+        );
+        queueMicrotask(() => {
+          trace.push('post-render');
+          for (const handler of [...handlers]) handler();
+        });
+      },
+    },
+  };
+  target.__godsEyeView = { viewer };
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: target,
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: target.__godsEyeView,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const pageFunction = new Function(`return (${fn.toString()});`)();
+        return pageFunction(...JSON.parse(JSON.stringify(args)));
+      },
+    };
+    let boundaryResult;
+    const result = await runWorkerAuditAtWarmupBoundary({
+      auditMode: 'prewarm',
+      warmupMs: 1000,
+      readWarmupBoundary: async () => {
+        // The clock hold, listener install, and render request occur inside the
+        // same page callback. The next orchestration step only consumes it.
+        boundaryResult = await observeRenderBoundary({
+          label: 'atomic prewarm boundary',
+          timeoutMs: 100,
+          evaluate: (pageTimeoutMs, binding) =>
+            evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+              ...binding,
+              beforeRenderRequestFunction: holdProviderWarmupBoundary,
+              beforeRenderRequestArgs: [1000],
+            }),
+        });
+        assert.equal(boundaryResult.status, 'settled');
+        return readProviderWarmupBoundarySnapshot(boundaryResult);
+      },
+      settleCompletedRender: async () => boundaryResult,
+      audit: async () => {
+        trace.push('worker-audit');
+        return validAudit;
+      },
+    });
+    assert.equal(result.warmupBoundary.phase, 'warmup-held');
+    assert.deepEqual(trace, [
+      'listener-registered',
+      'request-warmup-held',
+      'post-render',
+      'worker-audit',
+    ]);
+    assert.equal(handlers.size, 0);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
 });

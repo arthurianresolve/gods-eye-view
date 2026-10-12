@@ -3,36 +3,75 @@ export const IMPORT_FAILURE_RAF_OBSERVATION_MS = 1000;
 
 /** Failure-only CPU event spans; these are not GPU execution timings. */
 export function createSceneFrameTimingDiagnostics(
-  scene,
+  scene = globalThis.__godsEyeView?.viewer?.scene ?? null,
   {
     now = () => globalThis.performance.now(),
     PerformanceObserverClass = globalThis.PerformanceObserver,
+    maxEntries = 32,
+    storeAs = null,
   } = {},
 ) {
+  if (
+    !Number.isInteger(maxEntries) ||
+    maxEntries < 1 ||
+    maxEntries > 32 ||
+    (storeAs !== null &&
+      (typeof storeAs !== 'string' ||
+        !/^__gev[A-Za-z0-9_]{1,80}$/.test(storeAs)))
+  )
+    throw new TypeError('Scene frame diagnostic bounds are invalid.');
+  if (!scene)
+    throw new TypeError('Scene frame diagnostic scene is unavailable.');
+  if (storeAs && Object.hasOwn(globalThis, storeAs))
+    throw new Error('Scene frame diagnostic owner key is already occupied.');
   const startedAt = now();
   const spans = { update: [], render: [] };
-  const counts = { update: 0, render: 0 };
+  const sceneEventAvailability = {
+    update:
+      typeof scene?.preUpdate?.addEventListener === 'function' &&
+      typeof scene?.postUpdate?.addEventListener === 'function',
+    render:
+      typeof scene?.preRender?.addEventListener === 'function' &&
+      typeof scene?.postRender?.addEventListener === 'function',
+  };
+  const counts = {
+    update: sceneEventAvailability.update ? 0 : null,
+    render: sceneEventAvailability.render ? 0 : null,
+  };
   const starts = { update: null, render: null };
   const removers = [];
   const observers = [];
   const entries = { longtask: null, 'long-animation-frame': null };
   const overflow = { update: false, render: false };
   const observerErrors = [];
+  const cleanupErrors = [];
   let result = null;
   let active = true;
 
   function append(target, value) {
     target.push(value);
-    if (target.length > IMPORT_FRAME_EVENT_LIMIT) target.shift();
+    if (target.length > maxEntries) target.shift();
   }
-  function add(event, listener) {
+  function add(name, event, listener) {
     if (!event?.addEventListener) return;
     const remove = event.addEventListener(listener);
-    removers.push(
-      typeof remove === 'function'
-        ? remove
-        : () => event.removeEventListener?.(listener),
-    );
+    removers.push({
+      name,
+      remove:
+        typeof remove === 'function'
+          ? remove
+          : () => event.removeEventListener?.(listener),
+    });
+  }
+  function releaseListeners() {
+    for (const { name, remove } of removers) {
+      try {
+        remove();
+      } catch {
+        cleanupErrors.push(`listener:${name}`);
+      }
+    }
+    removers.length = 0;
   }
   function consume(type, records) {
     if (!active) return;
@@ -85,13 +124,13 @@ export function createSceneFrameTimingDiagnostics(
       ['update', 'preUpdate', 'postUpdate'],
       ['render', 'preRender', 'postRender'],
     ]) {
-      add(scene?.[before], () => {
+      add(before, scene?.[before], () => {
         if (active) starts[name] = now();
       });
-      add(scene?.[after], () => {
+      add(after, scene?.[after], () => {
         if (!active || starts[name] === null) return;
         counts[name]++;
-        overflow[name] ||= counts[name] > IMPORT_FRAME_EVENT_LIMIT;
+        overflow[name] ||= counts[name] > maxEntries;
         append(spans[name], {
           startMs: starts[name] - startedAt,
           durationMs: Math.max(0, now() - starts[name]),
@@ -111,19 +150,32 @@ export function createSceneFrameTimingDiagnostics(
         observer.observe({ type, buffered: false });
         observers.push({ type, observer });
       } catch {
-        observer?.disconnect();
+        try {
+          observer?.disconnect();
+        } catch {
+          cleanupErrors.push(`observer:${type}`);
+        }
         entries[type] = null;
         observerErrors.push(type);
       }
     }
-  } catch {
-    for (const remove of removers) remove();
+  } catch (error) {
+    active = false;
+    for (const { type, observer } of observers) {
+      try {
+        observer.disconnect();
+      } catch {
+        cleanupErrors.push(`observer:${type}`);
+      }
+    }
+    releaseListeners();
     throw new Error(
       'Could not install bounded scene frame timing diagnostics.',
+      { cause: error },
     );
   }
 
-  return {
+  const controller = {
     stop() {
       if (result) return result;
       for (const { type, observer } of observers) {
@@ -132,24 +184,40 @@ export function createSceneFrameTimingDiagnostics(
         } catch {
           observerErrors.push(type);
         } finally {
-          observer.disconnect();
+          try {
+            observer.disconnect();
+          } catch {
+            cleanupErrors.push(`observer:${type}`);
+          }
         }
       }
       active = false;
-      for (const remove of removers) remove();
+      releaseListeners();
       result = {
         scope:
           'Failure follow-up only; wall-clock CPU event spans include stalls, not GPU execution timing',
+        originPerformanceNowMs: Number.isFinite(startedAt) ? startedAt : null,
         elapsedMs: Math.max(0, now() - startedAt),
+        sceneEventAvailability,
         counts,
         spans,
         overflow,
         entries,
         observerErrors,
+        cleanupErrors,
+        cleanupComplete: cleanupErrors.length === 0,
       };
       return result;
     },
   };
+  if (storeAs) {
+    globalThis[storeAs] = controller;
+    return {
+      status: 'installed',
+      originPerformanceNowMs: Number.isFinite(startedAt) ? startedAt : null,
+    };
+  }
+  return controller;
 }
 
 const LIFECYCLE_EVENTS = [

@@ -41,7 +41,11 @@ import {
   adjustOrbitRange,
 } from '../cameraVerbs.js';
 import * as defaultFloorServices from '../data/groundFloor.js';
-import { isPickedWorldPosition } from '../data/scenePick.js';
+import {
+  isPickedWorldPosition,
+  pickPositionWithAttribution,
+  recordViewTargetCacheAttribution,
+} from '../data/scenePick.js';
 import { unavailablePlaceSearch } from '../search/placeSearch.js';
 import * as defaultAnnotationResolver from '../annotations/annotationResolver.js';
 import { normalizeRadioCountryInput } from '../data/radioCountry.js';
@@ -2456,7 +2460,9 @@ async function frameOverhead(viewer, dataManager, styleManager, args = {}) {
       ? 120
       : 150;
   const radiusKm = clampNumber(args.radiusKm, 10, 20000, defaultRadiusKm);
-  const center = getViewTargetCartesian(viewer) || viewer.camera.positionWC;
+  const center =
+    getViewTargetCartesian(viewer, 'voice-frame-overhead') ||
+    viewer.camera.positionWC;
 
   let entries = [];
   if (typeof module.getNearby === 'function') {
@@ -2581,12 +2587,12 @@ function collectTrackedEntities(dataManager) {
 export async function getBasemapLabelContext(
   viewer,
   service = defaultGeospatial,
-  { cachedOnly = false } = {},
+  { cachedOnly = false, caller = 'voice-basemap-label-context' } = {},
 ) {
   const { reverseGeocodeCache, nearbyPlacesCache } = cachesFor(service);
   const samples = sampleViewportCartographics(viewer);
   const cameraHeightM = viewer.camera.positionCartographic.height;
-  const target = getViewTargetCartographic(viewer);
+  const target = getViewTargetCartographic(viewer, caller);
   if (!target) {
     return {
       placeLabels: [],
@@ -2706,7 +2712,7 @@ function installViewTargetPrewarm(viewer) {
           if (!owner.active || generation !== owner.idleGeneration) return;
           owner.idle = null;
           try {
-            getViewTargetCartographic(viewer);
+            getViewTargetCartographic(viewer, 'voice-move-end-prewarm');
           } catch (error) {
             if (owner.reportedPrewarmFailure) return;
             owner.reportedPrewarmFailure = true;
@@ -2772,7 +2778,7 @@ function adjustCameraZoom(viewer, args) {
   const camera = viewer.camera;
   const beforePosition = Cesium.Cartesian3.clone(camera.positionWC);
   const beforeHeightM = camera.positionCartographic.height;
-  const target = getViewTargetCartesian(viewer);
+  const target = getViewTargetCartesian(viewer, 'voice-adjust-camera-zoom');
   const targetDistanceM = target
     ? Cesium.Cartesian3.distance(beforePosition, target)
     : Math.max(100, beforeHeightM);
@@ -3346,7 +3352,7 @@ async function getEntityContext(
   const limit = Math.round(clampNumber(args.limit, 1, 12, 5));
   const selected = selectedEntityContext(dataManager);
   const cameraHeightM = viewer.camera.positionCartographic.height;
-  const viewTarget = getViewTargetCartographic(viewer);
+  const viewTarget = getViewTargetCartographic(viewer, 'voice-entity-context');
   const scenePromise = getSceneContext(
     viewer,
     styleManager,
@@ -3516,7 +3522,7 @@ async function getTargetContext(
   const hasPosition = Number.isFinite(lat) && Number.isFinite(lon);
   const viewTarget = hasPosition
     ? Cesium.Cartographic.fromDegrees(lon, lat)
-    : getViewTargetCartographic(viewer);
+    : getViewTargetCartographic(viewer, 'voice-entity-context-pointer');
   const selected = describeTargetEntity(dataManager, target);
   const scene = await getSceneContext(
     viewer,
@@ -4156,16 +4162,19 @@ function coarseBasemapPlace(
   };
 }
 
-function getViewTargetCartographic(viewer) {
+function getViewTargetCartographic(viewer, caller = 'voice-view-target') {
   const signature = cameraViewSignature(viewer);
   const cached = viewTargetCache.get(viewer);
-  if (
-    cached?.signature === signature &&
-    performance.now() - cached.cachedAt < 2500
-  ) {
+  let cacheAgeMs = null;
+  if (cached?.signature === signature) {
+    cacheAgeMs = performance.now() - cached.cachedAt;
+  }
+  if (cached?.signature === signature && cacheAgeMs < 2500) {
+    recordViewTargetCacheAttribution(viewer, caller, true, cacheAgeMs);
     return cached.target;
   }
-  const position = getViewTargetCartesian(viewer);
+  recordViewTargetCacheAttribution(viewer, caller, false, cacheAgeMs);
+  const position = getViewTargetCartesian(viewer, caller);
   // `fromCartesian` still returns undefined for a point too near the ellipsoid
   // center to project; normalize that to the same "no target" null the callers
   // already handle for a missed pick.
@@ -4200,7 +4209,7 @@ function cameraViewSignature(viewer) {
  * MISSED pick, so it falls through to the next stage rather than poisoning
  * every caller downstream.
  */
-function getViewTargetCartesian(viewer) {
+function getViewTargetCartesian(viewer, caller = 'voice-view-target') {
   const scene = viewer.scene;
   const canvas = scene.canvas;
   const width = canvas.clientWidth || canvas.width || 0;
@@ -4210,7 +4219,7 @@ function getViewTargetCartesian(viewer) {
 
   if (scene.pickPositionSupported && typeof scene.pickPosition === 'function') {
     try {
-      position = scene.pickPosition(center);
+      position = pickPositionWithAttribution(viewer, caller, center);
     } catch {
       position = null;
     }

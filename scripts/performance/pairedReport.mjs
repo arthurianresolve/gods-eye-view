@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { assertCaptureIntegrity } from './captureIntegrity.mjs';
+import {
+  assertCaptureIntegrity,
+  comparableCaptureConditions,
+} from './captureIntegrity.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
 
@@ -969,8 +972,14 @@ export function validatePairedPerformanceReports({
       const candidateRun = candidateRuns.find((run) => run.run === baseRun.run);
       const pairedConditions = (sample) => {
         const conditions = structuredClone(sample.conditions);
-        for (const point of [conditions.before, conditions.after])
+        for (const key of ['before', 'after']) {
+          conditions[key] = comparableCaptureConditions(
+            conditions[key],
+            'manual',
+          );
+          const point = conditions[key];
           delete point.environment.appCommit;
+        }
         return conditions;
       };
       equal(

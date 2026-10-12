@@ -165,6 +165,65 @@ export function installFixedWallClock(fixedTimeMs, target = globalThis) {
   return now();
 }
 
+/** Install a wall clock that remains at one fixture epoch for the document lifetime. */
+export function installFrozenWallClock(fixedTimeMs, target = globalThis) {
+  if (!Number.isSafeInteger(fixedTimeMs) || fixedTimeMs < 1)
+    throw new TypeError('Frozen wall clock epoch must be a positive integer.');
+  const NativeDate = target.Date;
+  const FixedDate = new Proxy(NativeDate, {
+    apply(dateConstructor) {
+      return new dateConstructor(fixedTimeMs).toString();
+    },
+    construct(dateConstructor, args, newTarget) {
+      return Reflect.construct(
+        dateConstructor,
+        args.length ? args : [fixedTimeMs],
+        newTarget,
+      );
+    },
+    get(dateConstructor, property) {
+      if (property === 'now') return () => fixedTimeMs;
+      return Reflect.get(dateConstructor, property, dateConstructor);
+    },
+  });
+  Object.defineProperty(target, 'Date', {
+    configurable: true,
+    writable: true,
+    value: FixedDate,
+  });
+  return fixedTimeMs;
+}
+
+/** Select the wall-clock contract used by each fixture path. */
+export function selectFixtureWallClockInstaller({
+  infrastructure = false,
+  phasedClock = false,
+  holdClockUntilCapture = false,
+} = {}) {
+  if (infrastructure) return installFrozenWallClock;
+  if (phasedClock) return installPhasedMonotonicWallClock;
+  if (holdClockUntilCapture) return installHeldMonotonicWallClock;
+  return installFixedWallClock;
+}
+
+/** Pass the selected serializable clock installer to a new browser document. */
+export function installFixtureWallClockOnPage(
+  page,
+  fixedTimeMs,
+  options = {},
+  installerArgs = [],
+) {
+  if (typeof page?.evaluateOnNewDocument !== 'function')
+    throw new TypeError('A page with evaluateOnNewDocument is required.');
+  if (!Array.isArray(installerArgs))
+    throw new TypeError('Fixture clock installer arguments must be an array.');
+  return page.evaluateOnNewDocument(
+    selectFixtureWallClockInstaller(options),
+    fixedTimeMs,
+    ...installerArgs,
+  );
+}
+
 /** Install a capture-only wall clock held at one epoch until a one-shot start. */
 export function installHeldMonotonicWallClock(
   fixedTimeMs,
@@ -333,6 +392,28 @@ export function installPhasedMonotonicWallClock(
     configurable: false, enumerable: false, value: clock,
   });
   return snapshot();
+}
+
+/** Hold the provider fixture clock at warmup completion inside the render probe. */
+export function holdProviderWarmupBoundary(warmupMs) {
+  const clock = globalThis.window?.__gevPhasedMonotonicWallClockV1;
+  const held = clock?.holdWarmupBoundary?.();
+  if (
+    !held ||
+    held.phase !== 'warmup-held' ||
+    held.elapsedMs !== warmupMs
+  )
+    throw new Error(
+      'Provider fixture warmup did not reach its declared boundary.',
+    );
+  const snapshot = clock.snapshot?.();
+  if (
+    !snapshot ||
+    snapshot.phase !== 'warmup-held' ||
+    snapshot.elapsedMs !== warmupMs
+  )
+    throw new Error('Provider fixture warmup boundary snapshot is invalid.');
+  return snapshot;
 }
 
 /** Wait for one completed Cesium render after a held clock boundary. */

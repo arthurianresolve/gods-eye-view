@@ -1,25 +1,24 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createReadStream, readFileSync } from 'node:fs';
 import {
   lstat,
+  mkdir,
   mkdtemp,
+  open,
   readFile,
   realpath,
   rm,
   stat,
+  rename,
   writeFile,
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import puppeteer from 'puppeteer';
-import {
-  cleanupFixturePageDiagnostics,
-  prepareFixturePage,
-} from './qa-application-fixtures.mjs';
 import { createLocalBuildReceipt } from './performance/buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
 import {
@@ -34,6 +33,10 @@ import {
   observeCommonScene,
 } from './performance/commonSceneObserver.mjs';
 import {
+  cleanupEarlyCesiumRendererProbeWithEvidence,
+  installEarlyCesiumRendererProbe,
+} from './performance/earlyCesiumRendererProbe.mjs';
+import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   installHeldMonotonicWallClock,
@@ -47,13 +50,22 @@ import {
   summarizeCesiumWorkerBlobEvidence,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
-import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
+import {
+  boundCaptureReportEvidence,
+  MAX_CAPTURE_FAILURE_REPORT_BYTES,
+} from './performance/captureFailureReport.mjs';
 import {
   createObservedDenseComparisonContract,
+  createObservedInfrastructureComparisonContract,
+  createCaptureDocumentTopology,
   getCaptureComparisonIneligibilityReasons,
 } from './performance/captureComparisonContract.mjs';
+import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloadContract.mjs';
+import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
+import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
+export const MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES = 8 * 1024 * 1024;
 const ROOT = await realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
 );
@@ -77,11 +89,201 @@ const MIME_TYPES = {
   '.webp': 'image/webp',
 };
 
+let puppeteer = null;
+let cleanupFixturePageDiagnostics = null;
+let prepareFixturePage = null;
+
+async function loadBrowserDependencies() {
+  if (puppeteer && cleanupFixturePageDiagnostics && prepareFixturePage) return;
+  const [puppeteerModule, fixtureModule] = await Promise.all([
+    import('puppeteer'),
+    import('./qa-application-fixtures.mjs'),
+  ]);
+  puppeteer = puppeteerModule.default;
+  cleanupFixturePageDiagnostics = fixtureModule.cleanupFixturePageDiagnostics;
+  prepareFixturePage = fixtureModule.prepareFixturePage;
+}
+
 const OPTION_KEYS = new Map([
   ['--candidate-sha', 'candidateSha'],
   ['--out', 'out'],
   ['--capture-worker-audit-mode', 'captureWorkerAuditMode'],
+  ['--provider-fixture', 'providerFixture'],
+  ['--capture-scene-frame-diagnostics', 'sceneFrameDiagnostics'],
+  ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
+  ['--capture-depth-pick-attribution', 'depthPickAttribution'],
 ]);
+
+const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
+  { scenario: 'idle', run: 1 },
+  { scenario: 'idle', run: 2 },
+  { scenario: 'scripted-motion', run: 1 },
+]);
+
+function providerCpuProfileKey(target) {
+  return target.scenario === 'idle'
+    ? `provider-idle-${target.run}`
+    : `provider-scripted-motion-${target.run}`;
+}
+
+function sameProviderCpuProfileTarget(left, right) {
+  const fields = [
+    'scenario',
+    'run',
+    'captureOrdinal',
+    'documentRole',
+    'documentId',
+  ];
+  return (
+    left !== null &&
+    typeof left === 'object' &&
+    !Array.isArray(left) &&
+    right !== null &&
+    typeof right === 'object' &&
+    !Array.isArray(right) &&
+    Object.keys(left).sort().join(',') === fields.slice().sort().join(',') &&
+    Object.keys(right).sort().join(',') === fields.slice().sort().join(',') &&
+    fields.every((field) => left[field] === right[field])
+  );
+}
+
+function validateProviderCpuProfileWindow(window, target, sample) {
+  assert.equal(window?.schema, 'gev-provider-sample-cpu-profile-window/v1');
+  assert.equal(window?.targetScenario, target.scenario);
+  assert.equal(window?.targetRun, target.run);
+  assert.ok(Number.isSafeInteger(sample?.captureOrdinal));
+  assert.ok(sample.captureOrdinal >= 0);
+  assert.equal(window?.captureOrdinal, sample.captureOrdinal);
+  assert.equal(window?.documentRole, sample.documentRole);
+  assert.equal(window?.documentId, sample.documentId);
+  assert.equal(window?.profilerStarted, true);
+  assert.equal(window?.performanceAcceptanceEligible, false);
+  assert.ok(['complete', 'incomplete'].includes(window?.status));
+  const ref = window.profile;
+  const key = providerCpuProfileKey(target);
+  assert.equal(ref?.schema, 'gev-render-boundary-cpu-profile-ref/v1');
+  assert.equal(ref?.performanceAcceptanceEligible, false);
+  assert.equal(
+    sameProviderCpuProfileTarget(ref?.target, {
+      scenario: target.scenario,
+      run: target.run,
+      captureOrdinal: sample.captureOrdinal,
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+    }),
+    true,
+  );
+  assert.equal(ref?.fileName, `${key}-cpu-profile.json`);
+  assert.equal(ref?.performanceAcceptanceEligible, false);
+  assert.ok(Array.isArray(ref?.profilerErrors));
+  assert.equal(ref.profilerErrors.length, 0);
+  assert.ok(Number.isFinite(ref?.profileWindowMs) && ref.profileWindowMs >= 0);
+  assert.ok(Number.isFinite(ref?.stopOverrunMs) && ref.stopOverrunMs >= 0);
+  assert.ok(ref.profileWindowMs <= 62_000);
+  assert.ok(ref.stopOverrunMs <= 2_000);
+  assert.equal(ref.stopOverrunMs, Math.max(0, ref.profileWindowMs - 60_000));
+  assert.ok(
+    (ref.status === 'complete' &&
+      ref.windowCapReached === false &&
+      ref.windowCapMs === null &&
+      ref.stopOverrunMs === 0) ||
+      (ref.status === 'incomplete' &&
+        ((ref.windowCapReached === true && ref.windowCapMs === 60_000) ||
+          (ref.windowCapReached === false &&
+            ref.windowCapMs === null &&
+            ref.stopOverrunMs > 0))),
+  );
+  assert.equal(window.status, ref.status);
+  assert.equal(window.windowCapReached, ref.windowCapReached);
+  assert.equal(window.windowCapMs, ref.windowCapMs);
+  assert.equal(window.profileWindowMs, ref.profileWindowMs);
+  assert.equal(window.stopOverrunMs, ref.stopOverrunMs);
+  assert.match(ref.sha256 || '', /^[a-f0-9]{64}$/);
+  assert.ok(
+    Number.isInteger(ref.byteLength) &&
+      ref.byteLength > 0 &&
+      ref.byteLength <= 8 * 1024 * 1024,
+  );
+}
+
+export async function readProviderCpuProfileIndexSet(directory) {
+  const profiles = [];
+  let invalidIndexCount = 0;
+  for (const target of PROVIDER_CPU_PROFILE_TARGETS) {
+    const key = providerCpuProfileKey(target);
+    const indexPath = path.join(directory, `${key}-cpu-profile-ref.json`);
+    let bytes;
+    try {
+      bytes = await readFile(indexPath);
+    } catch (error) {
+      if (error?.code === 'ENOENT') continue;
+      invalidIndexCount += 1;
+      continue;
+    }
+    try {
+      if (bytes.byteLength > 16 * 1024) {
+        invalidIndexCount += 1;
+        continue;
+      }
+      const index = JSON.parse(bytes.toString('utf8'));
+      if (
+        index?.schema !== 'gev-provider-sample-cpu-profile-index/v1' ||
+        index?.performanceAcceptanceEligible !== false ||
+        index.target?.scenario !== target.scenario ||
+        index.target?.run !== target.run ||
+        !Number.isSafeInteger(index.target?.captureOrdinal) ||
+        index.target.captureOrdinal < 0 ||
+        typeof index.target?.documentRole !== 'string' ||
+        index.target.documentRole.length < 1 ||
+        index.target.documentRole.length > 80 ||
+        typeof index.target?.documentId !== 'string' ||
+        index.target.documentId.length < 1 ||
+        index.target.documentId.length > 160 ||
+        index.profile?.schema !== 'gev-render-boundary-cpu-profile-ref/v1' ||
+        index.profile?.performanceAcceptanceEligible !== false ||
+        !['complete', 'incomplete'].includes(index.profile?.status) ||
+        !Array.isArray(index.profile?.profilerErrors) ||
+        index.profile.profilerErrors.length !== 0 ||
+        !sameProviderCpuProfileTarget(index.profile?.target, index.target) ||
+        index.profile?.fileName !== `${key}-cpu-profile.json` ||
+        !/^[a-f0-9]{64}$/.test(index.profile?.sha256 || '') ||
+        !Number.isSafeInteger(index.profile?.byteLength) ||
+        index.profile.byteLength < 1 ||
+        index.profile.byteLength > 8 * 1024 * 1024
+      ) {
+        invalidIndexCount += 1;
+        continue;
+      }
+      const profileBytes = await readFile(
+        path.join(directory, index.profile.fileName),
+      );
+      if (
+        profileBytes.byteLength !== index.profile.byteLength ||
+        profileBytes.byteLength > 8 * 1024 * 1024 ||
+        createHash('sha256').update(profileBytes).digest('hex') !==
+          index.profile.sha256
+      ) {
+        invalidIndexCount += 1;
+        continue;
+      }
+      profiles.push({ ...index, artifactVerified: true });
+    } catch {
+      invalidIndexCount += 1;
+    }
+  }
+  return {
+    schema: 'gev-provider-sample-cpu-profile-index-set/v1',
+    performanceAcceptanceEligible: false,
+    expectedTargets: PROVIDER_CPU_PROFILE_TARGETS,
+    status:
+      profiles.length === PROVIDER_CPU_PROFILE_TARGETS.length &&
+      invalidIndexCount === 0
+        ? 'all-targets-recorded'
+        : 'partial',
+    invalidIndexCount,
+    profiles,
+  };
+}
 
 export function parseSmokeArguments(argv) {
   const output = {};
@@ -97,8 +299,72 @@ export function parseSmokeArguments(argv) {
       !['diagnostic', 'prewarm'].includes(value)
     )
       throw new TypeError('Worker audit mode must be diagnostic or prewarm.');
+    if (
+      flag === '--provider-fixture' &&
+      value !== 'dense-investigation' &&
+      !INFRASTRUCTURE_WORKLOAD_IDS.includes(value)
+    )
+      throw new TypeError('Provider fixture must be a registered workload.');
+    if (
+      flag === '--capture-scene-frame-diagnostics' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'Scene frame diagnostics must be enabled or disabled.',
+      );
+    if (
+      flag === '--capture-first-motion-cpu-profile' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'First-motion CPU profile must be enabled or disabled.',
+      );
+    if (
+      flag === '--capture-depth-pick-attribution' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError(
+        'Depth-pick attribution must be enabled or disabled.',
+      );
     output[key] = value;
   }
+  if (
+    output.providerFixture?.startsWith('infrastructure') &&
+    output.captureWorkerAuditMode === 'prewarm'
+  )
+    throw new TypeError(
+      'Infrastructure provider fixtures support diagnostic worker auditing only.',
+    );
+  if (
+    output.sceneFrameDiagnostics === 'enabled' &&
+    output.providerFixture &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'Scene frame diagnostics require the dense investigation fixture.',
+    );
+  if (
+    output.depthPickAttribution === 'enabled' &&
+    output.providerFixture &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'Depth-pick attribution requires the dense investigation fixture.',
+    );
+  if (output.sceneFrameDiagnostics)
+    output.sceneFrameDiagnostics = output.sceneFrameDiagnostics === 'enabled';
+  if (output.firstMotionCpuProfile)
+    output.firstMotionCpuProfile = output.firstMotionCpuProfile === 'enabled';
+  if (output.depthPickAttribution)
+    output.depthPickAttribution = output.depthPickAttribution === 'enabled';
+  if (
+    output.firstMotionCpuProfile &&
+    output.providerFixture &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'First-motion CPU profiling requires the dense investigation fixture.',
+    );
   return output;
 }
 
@@ -343,11 +609,384 @@ export function runBoundedChild(
   });
 }
 
+function assertCaptureFrameAndSettingsEvidence(sample, scenario) {
+  assert.ok(
+    Number.isInteger(sample.frameCount) && sample.frameCount >= 0,
+    `${scenario} run ${sample.run}: frame count is missing or invalid.`,
+  );
+  assert.ok(
+    Number.isInteger(sample.renderedFrameCount) &&
+      sample.renderedFrameCount >= 0,
+    `${scenario} run ${sample.run}: rendered-frame count is missing or invalid.`,
+  );
+  assert.equal(
+    sample.frameCount,
+    Math.max(0, sample.renderedFrameCount - 1),
+    `${scenario} run ${sample.run}: rendered-frame and interval counts disagree.`,
+  );
+  const frameIntervals = sample.frameIntervalMs;
+  assert.ok(
+    Number.isInteger(frameIntervals?.samples) &&
+      frameIntervals.samples === sample.frameCount,
+    `${scenario} run ${sample.run}: frame interval samples do not match rendered-frame intervals.`,
+  );
+  if (scenario === 'idle') {
+    if (sample.frameCount === 0)
+      assert.equal(
+        frameIntervals.p95,
+        null,
+        `idle run ${sample.run}: zero-frame timing must remain unavailable.`,
+      );
+    else
+      assert.ok(
+        Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
+        `idle run ${sample.run}: frame interval p95 is missing or invalid.`,
+      );
+  } else {
+    assert.ok(
+      sample.renderedFrameCount >= 2,
+      `${scenario} run ${sample.run}: expected at least two rendered frames.`,
+    );
+    assert.ok(
+      Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
+      `${scenario} run ${sample.run}: frame interval p95 is missing or invalid.`,
+    );
+  }
+  assert.equal(sample.settings?.before?.qualityMode, 'manual');
+  assert.equal(sample.settings?.before?.densityPct, 75);
+  assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+  assert.equal(sample.settings?.after?.qualityMode, 'manual');
+  assert.equal(sample.settings?.after?.densityPct, 75);
+  assert.equal(sample.settings?.after?.detectionMode, 'DENSE');
+}
+
+export function assertProviderFixtureCaptureClock(
+  clock,
+  { fixedTime, warmupMs, measurementMs },
+) {
+  assert.equal(clock?.schema, 'gev-provider-fixture-capture-clock/v1');
+  assert.equal(clock.fixedTime, fixedTime);
+  const epoch = Date.parse(fixedTime);
+  assert.ok(Number.isFinite(epoch), 'Fixture clock epoch is unavailable.');
+  assert.equal(clock.freshBrowserContext, true);
+  assert.equal(clock.appDocumentReinitialized, true);
+  // The producer records a held warmup boundary, then starts measurement.
+  // It no longer emits the old single-phase `start` observation.
+  const start = clock.measurementStart;
+  const end = clock.end;
+  assert.equal(start?.schema, 'gev-phased-monotonic-wall-clock/v1');
+  assert.equal(end?.schema, 'gev-phased-monotonic-wall-clock/v1');
+  assert.equal(start.phase, 'warmup-held');
+  assert.equal(end.phase, 'complete');
+  assert.equal(start.startCount, 1);
+  assert.equal(end.startCount, 1);
+  assert.equal(start.measurementStartCount, 0);
+  assert.equal(end.measurementStartCount, 1);
+  assert.deepEqual(clock.warmupBoundary, start);
+  for (const observation of [start, end]) {
+    assert.equal(observation.warmupMs, warmupMs);
+    assert.equal(observation.measurementMs, measurementMs);
+  }
+  assert.equal(start.elapsedMs, warmupMs);
+  assert.equal(start.epochMs, epoch + warmupMs);
+  assert.equal(end.elapsedMs, warmupMs + measurementMs);
+  assert.equal(end.epochMs, epoch + warmupMs + measurementMs);
+  assert.equal(clock.ageAtMeasurementStartMs, warmupMs);
+  assert.equal(clock.ageAtEndMs, warmupMs + measurementMs);
+  assert.equal(clock.configuredMeasurementMs, measurementMs);
+  assert.equal(clock.measurementClockElapsedMs, measurementMs);
+  assert.equal(clock.actualWarmupElapsedMs, start.warmupNativeElapsedMs);
+  assert.equal(end.warmupNativeElapsedMs, start.warmupNativeElapsedMs);
+  assert.equal(start.measurementNativeElapsedMs, null);
+  assert.equal(clock.measuredWindowElapsedMs, end.measurementNativeElapsedMs);
+  assert.equal(
+    clock.measurementPhaseNativeElapsedMs,
+    end.measurementNativeElapsedMs,
+  );
+  assert.ok(
+    Number.isFinite(clock.actualWarmupElapsedMs) &&
+      clock.actualWarmupElapsedMs >= warmupMs,
+  );
+  assert.ok(
+    Number.isFinite(clock.measuredWindowElapsedMs) &&
+      clock.measuredWindowElapsedMs >= measurementMs,
+  );
+  assert.equal(clock.sourceFreshness, 'current');
+  assert.equal(clock.freshnessWindowMs, 120_000);
+  assert.ok(clock.ageAtEndMs <= clock.freshnessWindowMs);
+}
+
 export function validateCaptureCliReport(report, expected) {
+  if (expected.providerFixture?.startsWith('infrastructure'))
+    return validateInfrastructureCaptureCliReport(report, expected);
   assert.equal(report?.schema, 'gev-performance-capture/v1');
   const workerAuditMode = expected.workerAuditMode || 'diagnostic';
   assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
+  if (expected.firstMotionCpuProfile) {
+    const profileEvidence = report.providerSampleCpuProfiles;
+    const targets = PROVIDER_CPU_PROFILE_TARGETS;
+    assert.equal(profileEvidence?.enabled, true);
+    assert.deepEqual(profileEvidence?.targets, targets);
+    assert.equal(profileEvidence?.performanceAcceptanceEligible, false);
+    assert.equal(
+      profileEvidence?.scope,
+      'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+    );
+    assert.ok(['complete', 'incomplete'].includes(profileEvidence?.status));
+    assert.equal(profileEvidence?.profiles?.length, targets.length);
+    const samples = new Map(
+      (report.captures || []).map((sample) => [
+        `${sample.scenario}:${sample.run}`,
+        sample,
+      ]),
+    );
+    for (let index = 0; index < targets.length; index += 1) {
+      const target = targets[index];
+      const window = profileEvidence.profiles[index];
+      const sample = samples.get(`${target.scenario}:${target.run}`);
+      assert.ok(sample, 'profile target capture sample is missing');
+      assert.equal(
+        sample.captureOrdinal,
+        report.captures.indexOf(sample),
+        'sample capture ordinal must match its position in the actual capture sequence',
+      );
+      validateProviderCpuProfileWindow(window, target, sample);
+      assert.deepEqual(sample.providerSampleCpuProfile, window);
+    }
+    assert.equal(
+      profileEvidence.status,
+      profileEvidence.profiles.every((window) => window.status === 'complete')
+        ? 'complete'
+        : 'incomplete',
+    );
+    assert.equal(
+      report.comparisonReadiness?.reasons?.includes(
+        'provider-sample-cpu-profile-instrumentation-is-enabled',
+      ),
+      true,
+    );
+  } else assert.equal(report.providerSampleCpuProfiles, undefined);
+  if (expected.depthPickAttribution) {
+    assert.equal(report.workload?.performanceAcceptanceEligible, false);
+    assert.equal(
+      validateDepthPickAttributionEnvelope(
+        report.workload?.depthPickAttribution,
+        report.captures,
+      ),
+      true,
+    );
+  } else assert.equal(report.workload?.depthPickAttribution, undefined);
+  if (expected.sceneFrameDiagnostics) {
+    assert.deepEqual(report.sceneFrameDiagnostics, {
+      status: 'completed',
+      targetScenario: 'scripted-motion',
+      targetRun: 1,
+      eligibleForComparison: false,
+    });
+    assert.equal(report.sceneFrameDiagnostics?.status, 'completed');
+    assert.equal(report.sceneFrameDiagnostics?.eligibleForComparison, false);
+    assert.equal(
+      report.comparisonReadiness?.reasons?.includes(
+        'scene-frame-attribution-instrumentation-is-enabled',
+      ),
+      true,
+    );
+    const targets = report.captures?.filter(
+      (sample) => sample.scenario === 'scripted-motion' && sample.run === 1,
+    );
+    assert.equal(targets?.length, 1);
+    const target = targets[0];
+    const evidence = target?.sceneFrameAttribution;
+    assert.ok(
+      evidence && typeof evidence === 'object' && !Array.isArray(evidence),
+    );
+    assert.ok(
+      Object.keys(evidence).every((key) =>
+        [
+          'schema',
+          'status',
+          'scope',
+          'eligibleForComparison',
+          'observerOriginPerformanceNowMs',
+          'measurementWindowRelativeMs',
+          'observation',
+          'cleanup',
+          'stopReason',
+          'error',
+        ].includes(key),
+      ),
+    );
+    assert.equal(evidence.schema, 'gev-scene-frame-attribution/v1');
+    assert.equal(evidence?.status, 'completed');
+    assert.equal(evidence?.cleanup, 'confirmed');
+    assert.equal(evidence?.eligibleForComparison, false);
+    assert.ok(Number.isFinite(evidence?.observerOriginPerformanceNowMs));
+    assert.ok(
+      Number.isFinite(evidence?.measurementWindowRelativeMs?.startMs) &&
+        Number.isFinite(evidence?.measurementWindowRelativeMs?.timerFiredMs) &&
+        evidence.measurementWindowRelativeMs.timerFiredMs >=
+          evidence.measurementWindowRelativeMs.startMs &&
+        evidence.measurementWindowRelativeMs.timerFiredMs <=
+          evidence.observation?.elapsedMs,
+    );
+    assert.deepEqual(Object.keys(evidence.measurementWindowRelativeMs).sort(), [
+      'startMs',
+      'timerFiredMs',
+    ]);
+    const observation = evidence.observation;
+    assert.ok(
+      observation &&
+        Number.isFinite(observation.elapsedMs) &&
+        observation.elapsedMs >= 0 &&
+        observation.elapsedMs <= 120_000,
+    );
+    assert.deepEqual(Object.keys(observation.spans || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation).sort(), [
+      'cleanupComplete',
+      'cleanupErrors',
+      'counts',
+      'elapsedMs',
+      'entries',
+      'observerErrors',
+      'originPerformanceNowMs',
+      'overflow',
+      'sceneEventAvailability',
+      'scope',
+      'spans',
+    ]);
+    assert.ok(
+      Number.isFinite(observation.originPerformanceNowMs) &&
+        observation.originPerformanceNowMs ===
+          evidence.observerOriginPerformanceNowMs,
+    );
+    assert.equal(observation.sceneEventAvailability?.update, true);
+    assert.equal(observation.sceneEventAvailability?.render, true);
+    assert.ok(
+      Array.isArray(observation.cleanupErrors) &&
+        observation.cleanupErrors.length === 0,
+    );
+    assert.equal(observation.cleanupComplete, true);
+    assert.deepEqual(Object.keys(observation.counts || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation.overflow || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation.entries || {}).sort(), [
+      'long-animation-frame',
+      'longtask',
+    ]);
+    for (const kind of ['update', 'render']) {
+      assert.ok(Array.isArray(observation.spans[kind]));
+      assert.ok(observation.spans[kind].length <= 32);
+      for (const span of observation.spans[kind]) {
+        assert.deepEqual(Object.keys(span).sort(), ['durationMs', 'startMs']);
+        assert.ok(Number.isFinite(span.startMs) && span.startMs >= 0);
+        assert.ok(
+          Number.isFinite(span.durationMs) &&
+            span.durationMs >= 0 &&
+            span.durationMs <= observation.elapsedMs,
+        );
+        assert.ok(span.startMs <= observation.elapsedMs);
+      }
+    }
+    for (const kind of ['update', 'render']) {
+      assert.ok(
+        Number.isInteger(observation.counts?.[kind]) &&
+          observation.counts[kind] >= observation.spans[kind].length &&
+          observation.counts[kind] <= 1_000_000,
+      );
+      assert.equal(typeof observation.overflow?.[kind], 'boolean');
+      if (observation.counts[kind] > 32)
+        assert.equal(observation.overflow[kind], true);
+    }
+    assert.ok(Array.isArray(observation.observerErrors));
+    assert.ok(observation.observerErrors.length <= 3);
+    assert.ok(
+      observation.observerErrors.every((type) =>
+        ['longtask', 'long-animation-frame'].includes(type),
+      ),
+    );
+    for (const key of ['longtask', 'long-animation-frame']) {
+      const entries = observation.entries?.[key];
+      assert.ok(
+        entries === null || (Array.isArray(entries) && entries.length <= 32),
+      );
+      if (entries === null) continue;
+      for (const entry of entries) {
+        assert.deepEqual(
+          Object.keys(entry).sort(),
+          key === 'longtask'
+            ? ['durationMs', 'startMs']
+            : [
+                'blockingDuration',
+                'durationMs',
+                'renderStart',
+                'scripts',
+                'startMs',
+                'styleAndLayoutStart',
+              ],
+        );
+        assert.ok(Number.isFinite(entry.startMs) && entry.startMs >= 0);
+        assert.ok(
+          Number.isFinite(entry.durationMs) &&
+            entry.durationMs >= 0 &&
+            entry.startMs + entry.durationMs <= observation.elapsedMs + 1,
+        );
+        if (key === 'long-animation-frame') {
+          for (const metric of [
+            'blockingDuration',
+            'renderStart',
+            'styleAndLayoutStart',
+          ])
+            assert.ok(
+              entry[metric] === null ||
+                (Number.isFinite(entry[metric]) && entry[metric] >= 0),
+            );
+          assert.ok(Array.isArray(entry.scripts) && entry.scripts.length <= 8);
+          for (const script of entry.scripts) {
+            assert.deepEqual(Object.keys(script).sort(), [
+              'durationMs',
+              'forcedStyleAndLayoutDurationMs',
+              'invokerType',
+            ]);
+            assert.ok(
+              script.durationMs === null ||
+                (Number.isFinite(script.durationMs) &&
+                  script.durationMs >= 0 &&
+                  script.durationMs <= entry.durationMs),
+            );
+            assert.ok(
+              [
+                'classic-script',
+                'module-script',
+                'event-listener',
+                'user-callback',
+                'resolve-promise',
+                'reject-promise',
+                'unknown',
+              ].includes(script.invokerType),
+            );
+            assert.ok(
+              script.forcedStyleAndLayoutDurationMs === null ||
+                (Number.isFinite(script.forcedStyleAndLayoutDurationMs) &&
+                  script.forcedStyleAndLayoutDurationMs >= 0 &&
+                  script.forcedStyleAndLayoutDurationMs <= entry.durationMs),
+            );
+          }
+        }
+      }
+    }
+    assert.equal(JSON.stringify(evidence).includes('sourceURL'), false);
+  } else {
+    assert.equal(report.sceneFrameDiagnostics, undefined);
+  }
   assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 6 });
   assert.equal(report.source?.appCommit, expected.appSha);
   assert.equal(report.source?.harnessCommit, expected.harnessSha);
@@ -411,9 +1050,8 @@ export function validateCaptureCliReport(report, expected) {
     expectedRoles,
   );
   for (const entry of workerAuditDocuments) {
-    const measuredProviderDocument = entry.documentRole.startsWith(
-      'provider-sample-',
-    );
+    const measuredProviderDocument =
+      entry.documentRole.startsWith('provider-sample-');
     assert.equal(
       entry.mode,
       workerAuditMode === 'prewarm' && measuredProviderDocument
@@ -480,6 +1118,18 @@ export function validateCaptureCliReport(report, expected) {
     workerBlobAuditMode: workerAuditMode,
     hardwareRequired: false,
   });
+  if (expected.sceneFrameDiagnostics)
+    observedReadinessReasons.push(
+      'scene-frame-attribution-instrumentation-is-enabled',
+    );
+  if (expected.firstMotionCpuProfile)
+    observedReadinessReasons.push(
+      'provider-sample-cpu-profile-instrumentation-is-enabled',
+    );
+  if (expected.depthPickAttribution)
+    observedReadinessReasons.push(
+      'depth-pick-attribution-instrumentation-is-enabled',
+    );
   assert.equal(report.comparisonReadiness?.status, 'not-ready');
   assert.deepEqual(
     report.comparisonReadiness?.reasons,
@@ -504,13 +1154,11 @@ export function validateCaptureCliReport(report, expected) {
     assert.equal(samples.length, 2, `Expected two ${scenario} captures.`);
     assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
     for (const sample of samples) {
-      assert.equal(sample.fixtureClock?.freshBrowserContext, true);
-      assert.equal(sample.fixtureClock?.start?.startCount, 1);
-      assert.equal(sample.fixtureClock?.sourceFreshness, 'current');
-      assert.ok(sample.fixtureClock?.actualWarmupElapsedMs >= 1000);
-      assert.ok(sample.fixtureClock?.measuredWindowElapsedMs >= 1000);
-      assert.ok(sample.fixtureClock?.ageAtMeasurementStartMs >= 0);
-      assert.ok(sample.fixtureClock?.ageAtEndMs <= 120_000);
+      assertProviderFixtureCaptureClock(sample.fixtureClock, {
+        fixedTime: expected.fixedTime || report.fixtureDelivery.fixedTime,
+        warmupMs: report.workload.warmupMs,
+        measurementMs: report.workload.durationPerSampleMs,
+      });
       assert.equal(sample.fixtureDelivery?.status, 'observed');
       assert.equal(
         sample.fixtureDelivery?.fixtureSha256,
@@ -538,54 +1186,7 @@ export function validateCaptureCliReport(report, expected) {
       assert.equal(sample.conditions?.after?.visible, true);
       assert.equal(sample.conditions?.after?.focused, true);
       assert.equal(sample.foregroundThroughout, true);
-      assert.ok(
-        Number.isInteger(sample.frameCount) && sample.frameCount >= 0,
-        `${scenario} run ${sample.run}: frame count is missing or invalid.`,
-      );
-      assert.ok(
-        Number.isInteger(sample.renderedFrameCount) &&
-          sample.renderedFrameCount >= 0,
-        `${scenario} run ${sample.run}: rendered-frame count is missing or invalid.`,
-      );
-      assert.equal(
-        sample.frameCount,
-        Math.max(0, sample.renderedFrameCount - 1),
-        `${scenario} run ${sample.run}: rendered-frame and interval counts disagree.`,
-      );
-      const frameIntervals = sample.frameIntervalMs;
-      assert.ok(
-        Number.isInteger(frameIntervals?.samples) &&
-          frameIntervals.samples === sample.frameCount,
-        `${scenario} run ${sample.run}: frame interval samples do not match rendered-frame intervals.`,
-      );
-      if (scenario === 'idle') {
-        if (sample.frameCount === 0)
-          assert.equal(
-            frameIntervals.p95,
-            null,
-            `idle run ${sample.run}: zero-frame timing must remain unavailable.`,
-          );
-        else
-          assert.ok(
-            Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
-            `idle run ${sample.run}: frame interval p95 is missing or invalid.`,
-          );
-      } else {
-        assert.ok(
-          sample.renderedFrameCount >= 2,
-          `${scenario} run ${sample.run}: expected at least two rendered frames.`,
-        );
-        assert.ok(
-          Number.isFinite(frameIntervals.p95) && frameIntervals.p95 > 0,
-          `${scenario} run ${sample.run}: frame interval p95 is missing or invalid.`,
-        );
-      }
-      assert.equal(sample.settings?.before?.qualityMode, 'manual');
-      assert.equal(sample.settings?.before?.densityPct, 75);
-      assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
-      assert.equal(sample.settings?.after?.qualityMode, 'manual');
-      assert.equal(sample.settings?.after?.densityPct, 75);
-      assert.equal(sample.settings?.after?.detectionMode, 'DENSE');
+      assertCaptureFrameAndSettingsEvidence(sample, scenario);
       if (scenario === 'selected-aircraft-tracking')
         assert.equal(sample.trackedAircraftId, 'flights:000001');
     }
@@ -614,13 +1215,283 @@ export function validateCaptureCliReport(report, expected) {
   };
 }
 
+function validateInfrastructureCaptureCliReport(report, expected) {
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
+  assert.equal(report.workerAuditMode, 'diagnostic');
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, 'diagnostic');
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  const blobAudits = pageAudit.cesiumWorkerBlobAudits;
+  assert.ok(Array.isArray(blobAudits));
+  for (const audit of blobAudits)
+    assert.equal(audit.status, 'receipt-derived-worker-blobs-validated');
+
+  const fixture = expected.infrastructureFixture;
+  assert.equal(fixture?.schema, 'gev-infrastructure-fixture-manifest/v1');
+  assert.equal(fixture?.workloadId, expected.providerFixture);
+  assert.equal(fixture?.fixedTime, expected.fixedTime);
+  assert.equal(report.workload?.providerFixture, expected.providerFixture);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.equal(
+    report.workload?.infrastructureFixtureLifecycle
+      ?.freshBrowserContextPerSample,
+    false,
+  );
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.equal(report.environment?.startup?.runCount, 1);
+  assert.equal(
+    report.environment?.startup?.measurement,
+    'one measured app document; cache disabled before navigation',
+  );
+  const observedContract = createObservedInfrastructureComparisonContract({
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+  });
+  assert.deepEqual(report.workload.fixture, fixture);
+  assert.deepEqual(report.comparisonContract, observedContract);
+  const diagnostics = report.performanceDiagnostics?.documents;
+  assert.ok(Array.isArray(diagnostics));
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  assert.equal(diagnostics.length, topology.diagnostics.length);
+  assert.deepEqual(
+    diagnostics.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.diagnostics,
+  );
+  for (const entry of diagnostics) {
+    assert.equal(entry.requested, true);
+    assert.equal(entry.disabled, true);
+  }
+  const workerDocuments = pageAudit.workerAuditDocuments;
+  assert.ok(Array.isArray(workerDocuments));
+  assert.deepEqual(
+    workerDocuments.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.workerAudits,
+  );
+  for (const entry of workerDocuments) {
+    assert.equal(entry.mode, 'diagnostic');
+    assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+    assert.equal(entry.restoration?.registryEmpty, true);
+    assert.equal(entry.restoration?.overflowCountAtRestore, 0);
+    assert.equal(
+      entry.restoration?.createdScriptBlobCountAtRestore,
+      entry.restoration?.auditedCreatedScriptBlobCount,
+    );
+    if (entry.validation === null) {
+      assert.equal(entry.observedWorkerTargetCount, 0);
+      assert.equal(entry.observedBlobRequestCount, 0);
+      assert.equal(entry.restoration?.createdScriptBlobCountAtRestore, 0);
+    } else {
+      assert.equal(entry.validation?.schema, 'gev-cesium-worker-blob-audit/v1');
+      assert.equal(
+        entry.validation?.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+      assert.equal(entry.validation?.auditMode, 'diagnostic');
+      assert.match(
+        entry.validation?.embeddedWorkerSourceSha256 || '',
+        /^[a-f0-9]{64}$/,
+      );
+    }
+  }
+  const auditsByRole = new Map(
+    workerDocuments.map((entry) => [entry.documentRole, entry]),
+  );
+  assert.equal(
+    auditsByRole.get('main-measured')?.validation?.status,
+    'receipt-derived-worker-blobs-validated',
+    'Missing receipt-derived worker audit for main-measured',
+  );
+  const startupDiagnostic = diagnostics.find(
+    (entry) => entry.documentRole === 'startup-1',
+  );
+  const mainDiagnostic = diagnostics.find(
+    (entry) => entry.documentRole === 'main-setup',
+  );
+  const startupAudit = auditsByRole.get('startup-1');
+  const mainAudit = auditsByRole.get('main-measured');
+  assert.ok(startupDiagnostic?.documentId);
+  assert.ok(mainDiagnostic?.documentId);
+  assert.notEqual(startupDiagnostic.documentId, mainDiagnostic.documentId);
+  assert.equal(startupAudit.documentId, startupDiagnostic.documentId);
+  assert.equal(mainAudit.documentId, mainDiagnostic.documentId);
+  assert.deepEqual(
+    report.captures.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.samples,
+  );
+  assert.equal(mainDiagnostic.documentId, topology.samples[0]?.documentId);
+  const validatedDocumentCount = workerDocuments.filter(
+    (entry) =>
+      entry.validation?.status === 'receipt-derived-worker-blobs-validated',
+  ).length;
+  assert.equal(
+    blobAudits.length,
+    validatedDocumentCount,
+    'Worker blob observations must correspond one-to-one with validated document audits',
+  );
+  assert.deepEqual(
+    blobAudits,
+    workerDocuments
+      .filter(
+        (entry) =>
+          entry.validation?.status === 'receipt-derived-worker-blobs-validated',
+      )
+      .map((entry) => entry.validation),
+    'Worker blob observations must preserve each document validation in order',
+  );
+  const workerSourceHashes = new Set(
+    workerDocuments
+      .filter((entry) => entry.validation)
+      .map((entry) => entry.validation.embeddedWorkerSourceSha256),
+  );
+  assert.equal(workerSourceHashes.size, 1);
+  for (const audit of blobAudits) {
+    assert.equal(audit?.schema, 'gev-cesium-worker-blob-audit/v1');
+    assert.equal(audit?.auditMode, 'diagnostic');
+    assert.ok(workerSourceHashes.has(audit?.embeddedWorkerSourceSha256));
+  }
+  const readinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: observedContract,
+    fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    source: report.source,
+    environment: report.environment,
+    workload: report.workload,
+    captures: report.captures,
+    diagnosticsDocuments: diagnostics,
+    workerBlobAuditInstrumented: true,
+    workerBlobAuditMode: 'diagnostic',
+    hardwareRequired: false,
+  });
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.deepEqual(report.comparisonReadiness?.reasons, readinessReasons);
+  assert.ok(
+    readinessReasons.includes(
+      'latency-comparison-remains-disabled-pending-uninstrumented-capture',
+    ),
+  );
+  assert.match(report.environment?.renderer || '', /swiftshader/i);
+  assert.equal(report.environment?.hardwareEligible, false);
+  assert.equal(report.captures?.length, 4);
+  for (const scenario of report.workload.scenarios) {
+    const samples = report.captures.filter(
+      (sample) => sample.scenario === scenario,
+    );
+    assert.equal(samples.length, 2);
+    assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
+    for (const sample of samples) {
+      const expectedLayers = Object.entries(fixture.expectedLayerCounts)
+        .map(([id, count]) => ({ id, enabled: true, count }))
+        .sort((left, right) => left.id.localeCompare(right.id));
+      const observedLayers = (sample.layers || [])
+        .filter((layer) => Object.hasOwn(fixture.expectedLayerCounts, layer.id))
+        .map(({ id, enabled, count }) => ({ id, enabled, count }))
+        .sort((left, right) => left.id.localeCompare(right.id));
+      assert.deepEqual(observedLayers, expectedLayers);
+      assert.equal(sample.fixtureDelivery?.fixtureSha256, fixture.sha256);
+      assert.equal(sample.settings?.before?.qualityMode, 'manual');
+      assert.deepEqual(sample.settings?.before, sample.settings?.after);
+      assert.equal(sample.conditions?.before?.visible, true);
+      assert.equal(sample.conditions?.after?.visible, true);
+      assert.equal(sample.conditions?.before?.focused, true);
+      assert.equal(sample.conditions?.after?.focused, true);
+      assert.equal(sample.foregroundThroughout, true);
+      assert.ok(sample.cameraPath?.id);
+      assertCaptureFrameAndSettingsEvidence(sample, scenario);
+    }
+  }
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    providerFixture: expected.providerFixture,
+    fixtureSha256: fixture.sha256,
+    renderer: report.environment.renderer,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    rawReport: report,
+    limitations: [
+      'Hosted software-rendering infrastructure capture only; not hardware or paired performance evidence.',
+      'Infrastructure capture is diagnostic and does not establish baseline/candidate visual parity.',
+    ],
+  };
+}
+
 export function compactCaptureCliFailure(report) {
   if (!report || typeof report !== 'object') return null;
-  const serialized = `${JSON.stringify(report, null, 2)}\n`;
-  const preservesBoundedFailureReport =
-    report.schema === 'gev-performance-capture-failure/v1' &&
-    report.status === 'failed' &&
-    Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES;
+  let preservedRawReport;
+  let rawReportTruncated = false;
+  let rawReportUnavailable = 'CLI report was not a recognized capture schema.';
+  try {
+    if (
+      report.schema === 'gev-performance-capture-failure/v1' &&
+      report.status === 'failed'
+    ) {
+      const serialized = `${JSON.stringify(report, null, 2)}\n`;
+      if (
+        Buffer.byteLength(serialized, 'utf8') <=
+        MAX_CAPTURE_FAILURE_REPORT_BYTES
+      )
+        preservedRawReport = report;
+      else
+        rawReportUnavailable =
+          'Failure report exceeded the bounded artifact limit.';
+    } else if (report.schema === 'gev-performance-capture/v1') {
+      const bounded = boundCaptureReportEvidence(report);
+      const serialized = `${JSON.stringify(bounded.value, null, 2)}\n`;
+      if (
+        bounded.value?.schema === 'gev-performance-capture/v1' &&
+        Buffer.byteLength(serialized, 'utf8') <=
+          MAX_CAPTURE_FAILURE_REPORT_BYTES
+      ) {
+        preservedRawReport = bounded.value;
+        rawReportTruncated = bounded.truncated;
+      } else
+        rawReportUnavailable =
+          'Completed report exceeded the bounded artifact limit.';
+    } else if (report.schema === 'gev-performance-capture-failure/v1') {
+      rawReportUnavailable = 'Failure report was not marked failed.';
+    }
+  } catch {
+    rawReportUnavailable = 'CLI report could not be safely bounded.';
+  }
   return {
     schema: 'gev-smoke-capture-cli-failure/v1',
     summary: {
@@ -653,6 +1524,18 @@ export function compactCaptureCliFailure(report) {
               report.fixtureDelivery.fulfilledResponseCount,
           }
         : null,
+      fixtureInterceptionErrors: Array.isArray(report.fixtureInterceptionErrors)
+        ? report.fixtureInterceptionErrors.slice(0, 8).map((entry) => ({
+            message: sanitizeError(entry?.message || 'Interception failed.'),
+            phase: entry?.phase || null,
+            documentRole: entry?.documentRole || null,
+            documentId: entry?.documentId || null,
+            sessionOrdinal: Number.isSafeInteger(entry?.sessionOrdinal)
+              ? entry.sessionOrdinal
+              : null,
+            lifecycleStage: entry?.lifecycleStage || null,
+          }))
+        : [],
       completedSampleCount:
         report.progress?.completedSampleCount ?? report.captures?.length ?? 0,
       completedSamplesRetained:
@@ -662,13 +1545,145 @@ export function compactCaptureCliFailure(report) {
         0,
       evidenceTruncated: report.evidenceTruncated ?? null,
     },
-    ...(preservesBoundedFailureReport
-      ? { rawReport: report }
-      : {
-          rawReportUnavailable:
-            'CLI report was not the recognized bounded failure schema.',
-        }),
+    ...(preservedRawReport
+      ? { rawReport: preservedRawReport, rawReportTruncated }
+      : { rawReportUnavailable }),
   };
+}
+
+export async function preserveCaptureCliReportArtifact(
+  sourcePath,
+  artifactPath,
+) {
+  let sourceHandle;
+  let sourceStat;
+  try {
+    sourceHandle = await open(sourcePath, 'r');
+    sourceStat = await sourceHandle.stat();
+  } catch {
+    await sourceHandle?.close().catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'missing',
+      fileName: path.basename(artifactPath),
+      byteLength: null,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+  if (!sourceStat.isFile()) {
+    await sourceHandle.close().catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'unavailable',
+      reason: 'source-not-file',
+      fileName: path.basename(artifactPath),
+      byteLength: null,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+  if (sourceStat.size > MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES) {
+    await sourceHandle.close().catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'oversize',
+      fileName: path.basename(artifactPath),
+      byteLength: sourceStat.size,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+
+  const temporaryPath = `${artifactPath}.pending-${process.pid}`;
+  try {
+    const boundedBuffer = Buffer.alloc(
+      MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES + 1,
+    );
+    let byteLength = 0;
+    while (byteLength < boundedBuffer.byteLength) {
+      const { bytesRead } = await sourceHandle.read(
+        boundedBuffer,
+        byteLength,
+        boundedBuffer.byteLength - byteLength,
+        byteLength,
+      );
+      if (bytesRead === 0) break;
+      byteLength += bytesRead;
+    }
+    if (byteLength > MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES) {
+      await sourceHandle.close().catch(() => {});
+      return {
+        schema: 'gev-smoke-capture-cli-report-artifact/v1',
+        status: 'oversize',
+        fileName: path.basename(artifactPath),
+        byteLength: sourceStat.size > byteLength ? sourceStat.size : byteLength,
+        sha256: null,
+        limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+      };
+    }
+    const bytes = boundedBuffer.subarray(0, byteLength);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(temporaryPath, bytes, { flag: 'wx' });
+    await sourceHandle.close();
+    await rename(temporaryPath, artifactPath);
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'preserved',
+      fileName: path.basename(artifactPath),
+      byteLength: bytes.byteLength,
+      sha256,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  } catch {
+    await sourceHandle.close().catch(() => {});
+    await rm(temporaryPath, { force: true }).catch(() => {});
+    return {
+      schema: 'gev-smoke-capture-cli-report-artifact/v1',
+      status: 'write-failed',
+      fileName: path.basename(artifactPath),
+      byteLength: sourceStat.size,
+      sha256: null,
+      limitBytes: MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
+    };
+  }
+}
+
+export async function executeCaptureCliWithReportArtifact({
+  runChild,
+  reportPath,
+  artifactPath,
+}) {
+  let childError = null;
+  try {
+    await runChild();
+  } catch (error) {
+    childError = error;
+  }
+  const artifact = await preserveCaptureCliReportArtifact(
+    reportPath,
+    artifactPath,
+  );
+  artifact.childStatus = childError ? 'failed' : 'completed';
+  let report = null;
+  if (artifact.status === 'preserved') {
+    try {
+      report = JSON.parse(await readFile(artifactPath, 'utf8'));
+    } catch (error) {
+      if (!childError) childError = error;
+    }
+  }
+  if (!childError && artifact.status === 'oversize')
+    childError = new Error('Capture CLI report exceeded its artifact limit.');
+  if (!childError && artifact.status !== 'preserved')
+    childError = new Error('Capture CLI report artifact was not preserved.');
+  if (childError) {
+    childError.captureCliReport = report;
+    childError.captureCliReportArtifact = artifact;
+    throw childError;
+  }
+  return { report, artifact };
 }
 
 function git(args) {
@@ -869,7 +1884,13 @@ async function runCandidateCaptureCli({
   served,
   tempRoot,
   fixture,
+  providerFixture,
   workerAuditMode,
+  sceneFrameDiagnostics = false,
+  firstMotionCpuProfile = false,
+  depthPickAttribution = false,
+  captureCliReportArtifactPath,
+  profileArtifactDirectory = null,
   startedAt,
   budgetMs,
 }) {
@@ -892,12 +1913,11 @@ async function runCandidateCaptureCli({
     '--url',
     served.baseUrl,
     '--provider-fixture',
-    'dense-investigation',
+    providerFixture,
     '--provider-fixture-time',
     fixture.fixedTime,
     '--worker-audit-mode',
     workerAuditMode,
-    '--mixed-layers',
     '--quality-mode',
     'manual',
     '--detection-mode',
@@ -938,32 +1958,98 @@ async function runCandidateCaptureCli({
     '--out',
     reportPath,
   ];
+  if (providerFixture === 'dense-investigation') args.push('--mixed-layers');
+  if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
+  if (depthPickAttribution) args.push('--depth-pick-attribution');
+  if (firstMotionCpuProfile) {
+    if (typeof profileArtifactDirectory !== 'string')
+      throw new TypeError('CPU profile artifact directory is required.');
+    args.push(
+      '--first-motion-cpu-profile',
+      '--cpu-profile-artifact-directory',
+      profileArtifactDirectory,
+    );
+  }
   let captureReport = null;
+  let captureCliReportArtifact = null;
   try {
-    await runBoundedChild(process.execPath, args, {
-      timeoutMs: Math.min(CAPTURE_CLI_TIMEOUT_MS, remainingMs - 15_000),
-      maxOutputBytes: 64 * 1024,
-      ownedPidFile: browserPidPath,
+    const captureCliResult = await executeCaptureCliWithReportArtifact({
+      runChild: () =>
+        runBoundedChild(process.execPath, args, {
+          timeoutMs: Math.min(CAPTURE_CLI_TIMEOUT_MS, remainingMs - 15_000),
+          maxOutputBytes: 64 * 1024,
+          ownedPidFile: browserPidPath,
+        }),
+      reportPath,
+      artifactPath: captureCliReportArtifactPath,
     });
-    captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
-    return validateCaptureCliReport(captureReport, {
+    captureReport = captureCliResult.report;
+    captureCliReportArtifact = captureCliResult.artifact;
+    const validated = validateCaptureCliReport(captureReport, {
       appSha: commit,
       harnessSha: harnessCommit,
       receiptSha256: build.receipt.receiptSha256,
       fixtureSha256: fixture.sha256,
+      providerFixture,
+      fixedTime: fixture.fixedTime,
+      infrastructureFixture: fixture,
       workerAuditMode,
+      sceneFrameDiagnostics,
+      firstMotionCpuProfile,
+      depthPickAttribution,
     });
-  } catch (error) {
-    if (!captureReport) {
-      try {
-        captureReport = JSON.parse(await readFile(reportPath, 'utf8'));
-      } catch {
-        // Preserve the bounded process error when no report was written.
+    if (firstMotionCpuProfile) {
+      const evidence = captureReport.providerSampleCpuProfiles;
+      for (
+        let indexPosition = 0;
+        indexPosition < evidence.profiles.length;
+        indexPosition += 1
+      ) {
+        const window = evidence.profiles[indexPosition];
+        const target = PROVIDER_CPU_PROFILE_TARGETS[indexPosition];
+        const key = providerCpuProfileKey(target);
+        const indexPath = path.join(
+          profileArtifactDirectory,
+          `${key}-cpu-profile-ref.json`,
+        );
+        const index = JSON.parse(await readFile(indexPath, 'utf8'));
+        assert.equal(index?.schema, 'gev-provider-sample-cpu-profile-index/v1');
+        assert.equal(index?.performanceAcceptanceEligible, false);
+        assert.deepEqual(index.target, {
+          scenario: target.scenario,
+          run: target.run,
+          captureOrdinal: window.captureOrdinal,
+          documentRole: window.documentRole,
+          documentId: window.documentId,
+        });
+        assert.deepEqual(index.profile, window.profile);
+        const profileBytes = await readFile(
+          path.join(profileArtifactDirectory, index.profile.fileName),
+        );
+        assert.ok(profileBytes.byteLength <= 8 * 1024 * 1024);
+        assert.equal(profileBytes.byteLength, index.profile.byteLength);
+        assert.equal(
+          createHash('sha256').update(profileBytes).digest('hex'),
+          index.profile.sha256,
+        );
       }
     }
-    error.captureCliFailure = compactCaptureCliFailure(captureReport) || {
+    return { ...validated, captureCliReportArtifact };
+  } catch (error) {
+    captureReport ||= error.captureCliReport || null;
+    captureCliReportArtifact ||= error.captureCliReportArtifact || null;
+    const captureCliFailure = compactCaptureCliFailure(captureReport) || {
       diagnostics: error.childDiagnostics || null,
     };
+    if (firstMotionCpuProfile) {
+      const directory = profileArtifactDirectory || `${reportPath}.cpu-profile`;
+      captureCliFailure.cpuProfileArtifacts =
+        await readProviderCpuProfileIndexSet(directory);
+    }
+    if (captureCliReportArtifact)
+      captureCliFailure.captureCliReportArtifact = captureCliReportArtifact;
+    error.captureCliFailure = captureCliFailure;
+    error.captureCliReportArtifact = captureCliReportArtifact;
     throw error;
   }
 }
@@ -978,6 +2064,13 @@ async function runRevision({
   startedAt,
   budgetMs,
   workerAuditMode,
+  providerFixture,
+  sceneFrameDiagnostics = false,
+  firstMotionCpuProfile = false,
+  depthPickAttribution = false,
+  captureCliReportArtifactPath,
+  profileArtifactDirectory = null,
+  infrastructureCaptureFixture,
 }) {
   const buildRootPath = path.join(tempRoot, `build-${label}`);
   let build;
@@ -1026,15 +2119,27 @@ async function runRevision({
   }
   let context = null;
   let page = null;
+  let earlyRendererProbeScriptIdentifier = null;
   let provenance = null;
   let fixturePage = null;
   let workerBlobValidation = null;
   let workerBlobDiagnostics = null;
   let densePopulationObservations = [];
   let finalDenseLayerPopulation = null;
+  let terminalRenderLoopRetirement = null;
   let phase = 'browser-page-setup';
   const pageErrors = [];
   const cleanupErrors = [];
+  const rendererProbeCleanup = [];
+  let rendererProbeCleanupOmittedCount = 0;
+  const recordRendererProbeCleanup = (evidence) => {
+    if (rendererProbeCleanup.length >= 4) {
+      rendererProbeCleanup.shift();
+      rendererProbeCleanupOmittedCount += 1;
+    }
+    rendererProbeCleanup.push(evidence);
+    return evidence;
+  };
   let failure = null;
   let result = null;
   try {
@@ -1147,6 +2252,8 @@ async function runRevision({
       installHeldMonotonicWallClock,
       flightFixture.fixedTimeMs,
     );
+    earlyRendererProbeScriptIdentifier =
+      await installEarlyCesiumRendererProbe(page);
     phase = 'application-navigation';
     const response = await page.goto(captureUrl, {
       waitUntil: 'domcontentloaded',
@@ -1294,10 +2401,21 @@ async function runRevision({
       throw new Error(
         'Application code request audit exceeded its bounded event capacity.',
       );
-    finalDenseLayerPopulation = await readDenseLayerPopulation();
+    const terminalPopulation = await page.evaluate(
+      observeTerminalViewerState,
+      'layer-population',
+      Object.keys(expectedLayerCounts),
+    );
+    finalDenseLayerPopulation = terminalPopulation.observation;
+    terminalRenderLoopRetirement = terminalPopulation.renderLoopRetirement;
+    if (terminalRenderLoopRetirement.confirmed !== true)
+      throw new Error(
+        'Smoke viewer render loop retirement at final population observation was not confirmed.',
+      );
     densePopulationObservations.push({
       checkpoint: 'final-before-code-validation',
       layers: finalDenseLayerPopulation,
+      renderLoopRetirement: terminalRenderLoopRetirement,
     });
     const blobCodeRequests = finalAuditSnapshot.requests
       .filter((request) => request.url.startsWith('blob:'))
@@ -1366,6 +2484,21 @@ async function runRevision({
     let captureCliDiagnostic = null;
     if (label === 'candidate') {
       phase = 'capture-cli-preparation-cleanup';
+      const cleanupEvidence = await cleanupEarlyCesiumRendererProbeWithEvidence(
+        page,
+        earlyRendererProbeScriptIdentifier,
+        1_000,
+        { retireViewerRenderLoop: true },
+      );
+      cleanupEvidence.phase = 'candidate-document-retirement';
+      cleanupEvidence.registrationRemovalBoundary = 'owned-document-retirement';
+      const earlyRendererProbeCleanup =
+        recordRendererProbeCleanup(cleanupEvidence);
+      if (earlyRendererProbeCleanup.confirmed !== true)
+        throw new Error(
+          'Early renderer probe cleanup before capture CLI was not confirmed.',
+        );
+      earlyRendererProbeScriptIdentifier = null;
       await withTimeout(
         page.evaluate(restoreCesiumWorkerBlobAudit),
         3000,
@@ -1392,8 +2525,17 @@ async function runRevision({
         harnessCommit,
         served,
         tempRoot,
-        fixture: flightFixture,
+        fixture:
+          providerFixture === 'dense-investigation'
+            ? flightFixture
+            : infrastructureCaptureFixture,
+        providerFixture,
         workerAuditMode,
+        sceneFrameDiagnostics,
+        firstMotionCpuProfile,
+        depthPickAttribution,
+        captureCliReportArtifactPath,
+        profileArtifactDirectory,
         startedAt,
         budgetMs,
       });
@@ -1443,6 +2585,9 @@ async function runRevision({
           'This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract.',
       },
       ...(captureCliDiagnostic ? { captureCliDiagnostic } : {}),
+      terminalRenderLoopRetirement,
+      rendererProbeCleanup,
+      rendererProbeCleanupOmittedCount,
       serviceWorker: serviceWorkerState,
       browser: {
         softwareRenderingRequested: true,
@@ -1473,11 +2618,39 @@ async function runRevision({
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
+      terminalRenderLoopRetirement,
+      rendererProbeCleanup,
+      rendererProbeCleanupOmittedCount,
       densePopulationObservations,
     };
     failure = error;
   } finally {
     if (page) {
+      try {
+        const cleanupEvidence =
+          await cleanupEarlyCesiumRendererProbeWithEvidence(
+            page,
+            earlyRendererProbeScriptIdentifier,
+            1_000,
+            { retireViewerRenderLoop: true },
+          );
+        cleanupEvidence.phase = 'smoke-document-retirement';
+        if (earlyRendererProbeScriptIdentifier)
+          cleanupEvidence.registrationRemovalBoundary =
+            'owned-document-retirement';
+        const earlyRendererProbeCleanup =
+          recordRendererProbeCleanup(cleanupEvidence);
+        if (earlyRendererProbeCleanup.confirmed !== true)
+          cleanupErrors.push(
+            sanitizeError(
+              new Error(
+                'Retired smoke document render-loop and probe cleanup was not confirmed.',
+              ),
+            ),
+          );
+      } catch (error) {
+        cleanupErrors.push(sanitizeError(error));
+      }
       try {
         await withTimeout(
           page.evaluate(restoreCesiumWorkerBlobAudit),
@@ -1524,6 +2697,9 @@ async function runRevision({
       };
     }
     failure.smokeDiagnostics.cleanupErrors = cleanupErrors.slice(0, 3);
+    failure.smokeDiagnostics.rendererProbeCleanup = rendererProbeCleanup;
+    failure.smokeDiagnostics.rendererProbeCleanupOmittedCount =
+      rendererProbeCleanupOmittedCount;
   }
   if (failure) throw failure;
   return result;
@@ -1534,7 +2710,24 @@ async function main() {
     candidateSha,
     out,
     captureWorkerAuditMode = 'diagnostic',
+    providerFixture = 'dense-investigation',
+    sceneFrameDiagnostics = false,
+    firstMotionCpuProfile = false,
+    depthPickAttribution = false,
   } = parseSmokeArguments(process.argv.slice(2));
+  assertSha(candidateSha, 'Candidate SHA');
+  assert.notEqual(
+    candidateSha,
+    BASELINE_SHA,
+    'Candidate must differ from baseline.',
+  );
+  let infrastructureCaptureFixture = null;
+  if (providerFixture !== 'dense-investigation') {
+    const { createInfrastructureWorkloadFixture } =
+      await import('./performance/infrastructureWorkloadFixture.mjs');
+    infrastructureCaptureFixture =
+      createInfrastructureWorkloadFixture(providerFixture);
+  }
   const outputPath = path.resolve(
     out ||
       path.join(
@@ -1546,12 +2739,6 @@ async function main() {
     throw new Error(
       'Smoke report must be written outside the harness checkout.',
     );
-  assertSha(candidateSha, 'Candidate SHA');
-  assert.notEqual(
-    candidateSha,
-    BASELINE_SHA,
-    'Candidate must differ from baseline.',
-  );
   assert.equal(git(['status', '--porcelain', '--untracked-files=all']), '');
   const harnessCommit = git(['rev-parse', 'HEAD']);
   assertSha(harnessCommit, 'Harness SHA');
@@ -1567,12 +2754,24 @@ async function main() {
     candidateSha,
     harnessSha: harnessCommit,
     captureWorkerAuditMode,
+    sceneFrameDiagnostics,
+    firstMotionCpuProfile,
+    depthPickAttribution,
+    ...(firstMotionCpuProfile
+      ? {
+          cpuProfileArtifactDirectory: path.basename(
+            `${outputPath}.cpu-profile`,
+          ),
+        }
+      : {}),
+    candidateCaptureProviderFixture: providerFixture,
     startedAt: null,
     variants: [],
     limitations: [
       'Local build receipts are unsigned and do not attest hardware or release provenance.',
       'The browser request audit records code paths; it does not independently attest response bytes.',
       'The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.',
+      'The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.',
       'Software rendering is explicit SwiftShader and cannot support hardware performance claims.',
     ],
     failure: null,
@@ -1602,6 +2801,7 @@ async function main() {
         throw new Error('Smoke time budget expired before source checkout.');
       worktrees.push(await addWorktree(temporary.root, label, commit));
     }
+    await loadBrowserDependencies();
     browser = await puppeteer.launch({
       headless: true,
       protocolTimeout: 15_000,
@@ -1637,15 +2837,29 @@ async function main() {
           startedAt,
           budgetMs,
           workerAuditMode: captureWorkerAuditMode,
+          sceneFrameDiagnostics,
+          firstMotionCpuProfile,
+          depthPickAttribution,
+          captureCliReportArtifactPath: `${outputPath}.capture-cli-report-${label}.json`,
+          profileArtifactDirectory: firstMotionCpuProfile
+            ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
+            : null,
+          providerFixture,
+          infrastructureCaptureFixture,
         });
         Object.assign(variant, result);
       } catch (error) {
         variant.status = 'failed';
+        if (error.captureCliReportArtifact)
+          variant.captureCliReportArtifact = error.captureCliReportArtifact;
         variant.failure = sanitizeError(error);
         variant.failureDetails = error.smokeDiagnostics || {
           phase: 'clean-build-or-server-start',
           pageErrors: [],
           interceptionErrors: [],
+          ...(error.captureCliFailure
+            ? { captureCliFailure: error.captureCliFailure }
+            : {}),
         };
         throw error;
       }

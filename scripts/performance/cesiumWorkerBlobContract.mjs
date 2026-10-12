@@ -13,6 +13,100 @@ export const MAX_WORKER_TARGETS = 64;
 export const MAX_WORKER_BLOB_BYTES = 2 * 1024 * 1024;
 export const MAX_WORKER_BLOB_TOTAL_BYTES = 32 * 1024 * 1024;
 
+/** Compare bounded host-observed targets around a frozen page-side audit. */
+export function summarizeWorkerAuditBoundary({
+  workerTargetsAtBoundary,
+  blobRequestsAtBoundary,
+  workerTargetsAfter,
+  blobRequestsAfter,
+} = {}) {
+  const arrays = [
+    workerTargetsAtBoundary,
+    blobRequestsAtBoundary,
+    workerTargetsAfter,
+    blobRequestsAfter,
+  ];
+  if (
+    arrays.some(
+      (values) =>
+        !Array.isArray(values) ||
+        values.length > 256 ||
+        values.some((value) => typeof value !== 'string' || value.length > 4096),
+    )
+  )
+    throw new TypeError('Worker audit boundary inputs exceed their bounds.');
+  const workersAtBoundary = new Set(workerTargetsAtBoundary);
+  const blobsAtBoundary = new Set(blobRequestsAtBoundary);
+  const workersAfter = new Set(workerTargetsAfter);
+  const blobsAfter = new Set(blobRequestsAfter);
+  return {
+    workerTargetCountAtBoundary: workersAtBoundary.size,
+    blobRequestCountAtBoundary: blobsAtBoundary.size,
+    lateWorkerTargetCount: [...workersAfter].filter(
+      (value) => !workersAtBoundary.has(value),
+    ).length,
+    lateBlobRequestCount: [...blobsAfter].filter(
+      (value) => !blobsAtBoundary.has(value),
+    ).length,
+  };
+}
+
+/** Classify host observations that arrived after the page-side frozen snapshot. */
+export function classifyLateWorkerAuditObservations({
+  workerTargetsAtBoundary,
+  blobRequestsAtBoundary,
+  workerTargetsAfter,
+  blobRequestsAfter,
+  validatedWorkerTargetUrls = [],
+  acceptedBlobUrls = [],
+} = {}) {
+  const boundary = summarizeWorkerAuditBoundary({
+    workerTargetsAtBoundary,
+    blobRequestsAtBoundary,
+    workerTargetsAfter,
+    blobRequestsAfter,
+  });
+  if (
+    !Array.isArray(validatedWorkerTargetUrls) ||
+    validatedWorkerTargetUrls.length > MAX_WORKER_TARGETS ||
+    validatedWorkerTargetUrls.some(
+      (value) => typeof value !== 'string' || value.length > 4096,
+    ) ||
+    !Array.isArray(acceptedBlobUrls) ||
+    acceptedBlobUrls.length > MAX_WORKER_BLOB_RECORDS ||
+    acceptedBlobUrls.some(
+      (value) => typeof value !== 'string' || value.length > 4096,
+    )
+  )
+    throw new TypeError('Validated worker audit inventory exceeds its bounds.');
+
+  const workersAtBoundary = new Set(workerTargetsAtBoundary);
+  const blobsAtBoundary = new Set(blobRequestsAtBoundary);
+  const validatedTargets = new Set(validatedWorkerTargetUrls);
+  const acceptedBlobs = new Set(acceptedBlobUrls);
+  const lateWorkers = new Set(
+    workerTargetsAfter.filter((value) => !workersAtBoundary.has(value)),
+  );
+  const lateBlobs = new Set(
+    blobRequestsAfter.filter((value) => !blobsAtBoundary.has(value)),
+  );
+  const delayedValidatedWorkerTargetCount = [...lateWorkers].filter((value) =>
+    validatedTargets.has(value),
+  ).length;
+  const delayedValidatedBlobRequestCount = [...lateBlobs].filter((value) =>
+    acceptedBlobs.has(value),
+  ).length;
+  return {
+    ...boundary,
+    delayedValidatedWorkerTargetCount,
+    delayedValidatedBlobRequestCount,
+    unvalidatedLateWorkerTargetCount:
+      lateWorkers.size - delayedValidatedWorkerTargetCount,
+    unvalidatedLateBlobRequestCount:
+      lateBlobs.size - delayedValidatedBlobRequestCount,
+  };
+}
+
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 function validateRelativePath(value) {

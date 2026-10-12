@@ -1,6 +1,36 @@
 import { Buffer } from 'node:buffer';
+import { randomUUID } from 'node:crypto';
+import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 
 export const MAX_CAPTURE_FAILURE_REPORT_BYTES = 256 * 1024;
+export const MAX_CAPTURE_FIXTURE_INTERCEPTION_ERRORS = 8;
+
+/** Write a bounded failure artifact, optionally refreshing it atomically. */
+export async function writeCaptureFailureReportFile(
+  filePath,
+  json,
+  { refresh = false } = {},
+) {
+  if (typeof filePath !== 'string' || !filePath || typeof json !== 'string')
+    throw new TypeError('Capture failure report path and JSON are required.');
+  if (Buffer.byteLength(json, 'utf8') > MAX_CAPTURE_FAILURE_REPORT_BYTES)
+    throw new Error('Bounded capture failure report exceeded its hard limit.');
+  const resolvedPath = path.resolve(filePath);
+  await mkdir(path.dirname(resolvedPath), { recursive: true });
+  if (!refresh) {
+    await writeFile(resolvedPath, json, 'utf8');
+    return;
+  }
+  const temporaryPath = `${resolvedPath}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporaryPath, json, { encoding: 'utf8', flag: 'wx' });
+    await rename(temporaryPath, resolvedPath);
+  } catch (error) {
+    await rm(temporaryPath, { force: true }).catch(() => {});
+    throw error;
+  }
+}
 
 const SENSITIVE_KEY =
   /^(?:url|body|bodybase64|payload|headers|authorization|token|password|secret|states|commandline)$/i;
@@ -48,6 +78,16 @@ function boundedValue(value, depth = 0, seen = new WeakSet(), state = null) {
     if (bounded !== undefined) output[key] = bounded;
   }
   return output;
+}
+
+/** Return the same redacted, depth- and collection-bounded projection used by
+ * failure artifacts. Callers still enforce their serialized byte cap. */
+export function boundCaptureReportEvidence(value) {
+  const state = { truncated: false };
+  return {
+    value: boundedValue(value, 0, new WeakSet(), state),
+    truncated: state.truncated,
+  };
 }
 
 function sourceIdentity(source) {
@@ -107,8 +147,14 @@ export function createCaptureFailureReport({
   startupSamples = [],
   completedSamples = [],
   fixtureDelivery = null,
+  fixtureInterceptionErrors = [],
 } = {}) {
   const boundedState = { truncated: false };
+  if (
+    Array.isArray(fixtureInterceptionErrors) &&
+    fixtureInterceptionErrors.length > MAX_CAPTURE_FIXTURE_INTERCEPTION_ERRORS
+  )
+    boundedState.truncated = true;
   const fullCompleted = completedSamples
     .slice(-30)
     .map((sample) => boundedValue(sample, 0, new WeakSet(), boundedState));
@@ -155,6 +201,20 @@ export function createCaptureFailureReport({
       new WeakSet(),
       boundedState,
     ),
+    ...(Array.isArray(fixtureInterceptionErrors) &&
+    fixtureInterceptionErrors.length
+      ? {
+          fixtureInterceptionErrors: boundedValue(
+            fixtureInterceptionErrors.slice(
+              0,
+              MAX_CAPTURE_FIXTURE_INTERCEPTION_ERRORS,
+            ),
+            0,
+            new WeakSet(),
+            boundedState,
+          ),
+        }
+      : {}),
     progress: {
       startupSampleCount: startupSamples.length,
       startupSamples: fullStartup,

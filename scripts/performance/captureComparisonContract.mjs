@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { DENSE_FLIGHT_FIXTURE_ID } from './productionFlightFixture.mjs';
+import { assertInfrastructureClockObservation } from './infrastructureWorkloadContract.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const REQUIRED_POPULATIONS = Object.freeze({
@@ -11,6 +12,68 @@ const OBJECTIVE_SCENARIOS = Object.freeze([
   'scripted-motion',
   'selected-aircraft-tracking',
 ]);
+
+export function createCaptureDocumentTopology({
+  infrastructure = false,
+  startupRuns = 1,
+  captureCount = 0,
+} = {}) {
+  if (!Number.isInteger(startupRuns) || startupRuns < 0 || startupRuns > 5)
+    throw new Error(
+      'Capture document topology startupRuns must be between 0 and 5.',
+    );
+  if (!Number.isInteger(captureCount) || captureCount < 0 || captureCount > 30)
+    throw new Error(
+      'Capture document topology captureCount must be between 0 and 30.',
+    );
+  const startup = Array.from({ length: startupRuns }, (_, index) => ({
+    documentRole: `startup-${index + 1}`,
+    documentId: `startup-document-${index + 1}`,
+  }));
+  const mainDocumentId = 'main-measured-document';
+  const main = {
+    documentRole: infrastructure ? 'main-measured' : 'main-setup',
+    documentId: mainDocumentId,
+  };
+  const samples = infrastructure
+    ? Array.from({ length: captureCount }, () => ({ ...main }))
+    : Array.from({ length: captureCount }, (_, index) => ({
+        documentRole: `provider-sample-${index + 1}`,
+        documentId: `provider-document-${index + 1}`,
+      }));
+  return {
+    diagnostics: [
+      ...startup,
+      { documentRole: 'main-setup', documentId: mainDocumentId },
+      ...(!infrastructure ? samples : []),
+    ],
+    workerAudits: [...startup, main, ...(!infrastructure ? samples : [])],
+    samples,
+  };
+}
+
+export function getMainCaptureDocumentIdentity({
+  infrastructure = false,
+  startupRuns = 1,
+} = {}) {
+  const topology = createCaptureDocumentTopology({
+    infrastructure,
+    startupRuns,
+    captureCount: 0,
+  });
+  const mainDiagnostic = topology.diagnostics[startupRuns];
+  const mainWorkerAudit = topology.workerAudits.find((entry) =>
+    infrastructure
+      ? entry.documentRole === 'main-measured'
+      : entry.documentRole === 'main-setup',
+  );
+  if (!mainDiagnostic || !mainWorkerAudit)
+    throw new Error('Capture document topology has no measured main page.');
+  return {
+    documentRole: mainWorkerAudit.documentRole,
+    documentId: mainDiagnostic.documentId,
+  };
+}
 
 function enabledPopulations(layers, label) {
   assert.ok(Array.isArray(layers), `${label} layer observations are required`);
@@ -238,6 +301,212 @@ export function createObservedDenseComparisonContract({
   };
 }
 
+/** Build an S47 contract from actual bundled infrastructure responses and layer observations. */
+export function createObservedInfrastructureComparisonContract({
+  fixture,
+  fixtureDelivery,
+  environment,
+  captures,
+  scenarios,
+} = {}) {
+  assert.equal(fixture?.schema, 'gev-infrastructure-fixture-manifest/v1');
+  assert.ok(
+    typeof fixture.id === 'string' && fixture.id,
+    'infrastructure fixture identity is required',
+  );
+  assert.match(
+    fixture.sha256 || '',
+    SHA256,
+    'fixture manifest SHA-256 is required',
+  );
+  assert.ok(
+    Number.isFinite(Date.parse(fixture.fixedTime)),
+    'fixture fixed time is invalid',
+  );
+  assert.equal(
+    fixtureDelivery?.schema,
+    'gev-infrastructure-fixture-delivery-observation/v1',
+  );
+  assert.equal(fixtureDelivery?.status, 'observed');
+  assert.equal(fixtureDelivery.fixtureId, fixture.id);
+  assert.equal(fixtureDelivery.fixtureSha256, fixture.sha256);
+  assert.equal(fixtureDelivery.fixedTime, fixture.fixedTime);
+  assert.deepEqual(
+    fixtureDelivery.assets,
+    fixture.assets.map(({ id, sha256, byteLength }) => {
+      const observed = fixtureDelivery.assets?.find((row) => row.id === id);
+      assert.ok(observed, `served infrastructure asset ${id} is required`);
+      assert.equal(
+        observed.sha256,
+        sha256,
+        `served infrastructure asset ${id} SHA differs`,
+      );
+      assert.equal(
+        observed.byteLength,
+        byteLength,
+        `served infrastructure asset ${id} size differs`,
+      );
+      assert.equal(
+        observed.status,
+        200,
+        `served infrastructure asset ${id} status differs`,
+      );
+      assert.ok(
+        Number.isInteger(observed.responseCount) && observed.responseCount > 0,
+      );
+      return observed;
+    }),
+    'delivered asset observations differ from the fixture manifest',
+  );
+  assert.ok(environment && typeof environment.userAgent === 'string');
+  const browserMatch = environment.userAgent.match(
+    /(HeadlessChrome|Chrome|Chromium)\/([\d.]+)/,
+  );
+  assert.ok(browserMatch, 'browser identity was not observed');
+  assert.ok(Array.isArray(captures) && captures.length > 0);
+  assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
+
+  const expectedPopulations = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const enabled = (rows, label) => enabledPopulations(rows, label);
+  assert.deepEqual(
+    enabled(environment.layers, 'environment'),
+    expectedPopulations,
+  );
+  assert.deepEqual(fixtureDelivery.populationsBefore, expectedPopulations);
+  assert.deepEqual(fixtureDelivery.populationsAfter, expectedPopulations);
+  for (const [index, sample] of captures.entries()) {
+    const before = sample.conditions?.before;
+    const after = sample.conditions?.after;
+    assert.deepEqual(
+      enabled(before?.environment?.layers, `capture ${index + 1} before`),
+      expectedPopulations,
+    );
+    assert.deepEqual(
+      enabled(after?.environment?.layers, `capture ${index + 1} after`),
+      expectedPopulations,
+    );
+    assert.deepEqual(sample.layers, after.environment.layers);
+    assert.deepEqual(sample.fixtureDelivery?.assets, fixtureDelivery.assets);
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsBefore,
+      expectedPopulations,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsAfter,
+      expectedPopulations,
+    );
+    assert.deepEqual(sample.settings?.before, sample.settings?.after);
+    assert.deepEqual(sample.settings?.before, captures[0]?.settings?.before);
+    assert.equal(
+      sample.infrastructureFixtureClock?.fixedTime,
+      fixture.fixedTime,
+    );
+    assert.equal(
+      sample.infrastructureFixtureClock?.wallClockBeforeMs,
+      fixture.fixedTimeMs,
+    );
+    assert.equal(
+      sample.infrastructureFixtureClock?.wallClockAfterMs,
+      fixture.fixedTimeMs,
+    );
+    assertInfrastructureClockObservation(
+      sample.infrastructureFixtureClock?.cesiumBefore,
+      fixture,
+      `capture ${index + 1} before`,
+    );
+    assertInfrastructureClockObservation(
+      sample.infrastructureFixtureClock?.cesiumAfter,
+      fixture,
+      `capture ${index + 1} after`,
+    );
+    assert.ok(
+      sample.cameraPath?.id,
+      `capture ${index + 1} observed route is required`,
+    );
+  }
+  const settings = captures[0].settings?.before;
+  for (const field of [
+    'qualityMode',
+    'densityPct',
+    'detectionMode',
+    'resolutionScale',
+    'msaaSamples',
+    'antialias',
+    'fxaa',
+  ])
+    assert.notEqual(
+      settings?.[field],
+      undefined,
+      `effective visual setting ${field} is required`,
+    );
+  for (const [name, dimensions] of Object.entries({
+    viewport: environment.viewport,
+    drawingBuffer: environment.drawingBuffer,
+  })) {
+    assert.ok(
+      Number.isInteger(dimensions?.width) && dimensions.width > 0,
+      `${name} width is invalid`,
+    );
+    assert.ok(
+      Number.isInteger(dimensions?.height) && dimensions.height > 0,
+      `${name} height is invalid`,
+    );
+  }
+  assert.ok(
+    Number.isFinite(environment.viewport.dpr) && environment.viewport.dpr > 0,
+  );
+  const routes = {};
+  for (const scenario of scenarios) {
+    const sample = captures.find((entry) => entry.scenario === scenario);
+    assert.ok(sample?.cameraPath?.id, `observed ${scenario} route is required`);
+    routes[scenario] = structuredClone(sample.cameraPath);
+  }
+  for (const sample of captures)
+    assert.deepEqual(sample.cameraPath, routes[sample.scenario]);
+
+  return {
+    schema: 'gev-performance-comparison-contract/v1',
+    workloadId: fixture.workloadId,
+    fixture: {
+      id: fixture.id,
+      sha256: fixture.sha256,
+      fixedTime: fixture.fixedTime,
+      assets: fixture.assets.map(
+        ({ id, sha256, byteLength, sourceFeatureCount }) => ({
+          id,
+          sha256,
+          byteLength,
+          sourceFeatureCount,
+        }),
+      ),
+    },
+    fixtureDelivery: {
+      schema: fixtureDelivery.schema,
+      status: fixtureDelivery.status,
+      method: fixtureDelivery.method,
+      fixtureId: fixtureDelivery.fixtureId,
+      fixtureSha256: fixtureDelivery.fixtureSha256,
+      fixedTime: fixtureDelivery.fixedTime,
+      assets: structuredClone(fixtureDelivery.assets),
+      populationsBefore: structuredClone(fixtureDelivery.populationsBefore),
+      populationsAfter: structuredClone(fixtureDelivery.populationsAfter),
+    },
+    routes,
+    browser: { name: browserMatch[1], version: browserMatch[2] },
+    rendering: {
+      viewport: structuredClone(environment.viewport),
+      drawingBuffer: structuredClone(environment.drawingBuffer),
+    },
+    populations: expectedPopulations,
+    visual: structuredClone(settings),
+    // Static infrastructure supports workload comparisons, but does not inherit
+    // the dense-flight 20% objective contract for moving/tracking scenarios.
+    objectiveScenarios: [],
+  };
+}
+
 /** Return concrete reasons a capture is diagnostic-only or incomplete. */
 export function getCaptureComparisonIneligibilityReasons({
   contract = null,
@@ -305,6 +574,8 @@ export function getCaptureComparisonIneligibilityReasons({
     )
   )
     reasons.push('application-diagnostics-were-not-disabled-in-every-document');
+  const infrastructureFixture =
+    fixture?.schema === 'gev-infrastructure-fixture-manifest/v1';
   if (fixture && diagnosticsDocuments.length > 0) {
     const expectedRoles = [
       ...Array.from(
@@ -312,16 +583,44 @@ export function getCaptureComparisonIneligibilityReasons({
         (_, index) => `startup-${index + 1}`,
       ),
       'main-setup',
-      ...Array.from(
-        { length: captures.length },
-        (_, index) => `provider-sample-${index + 1}`,
-      ),
+      ...(infrastructureFixture
+        ? []
+        : Array.from(
+            { length: captures.length },
+            (_, index) => `provider-sample-${index + 1}`,
+          )),
     ].sort();
     const observedRoles = diagnosticsDocuments
       .map((row) => row.documentRole)
       .sort();
     if (JSON.stringify(observedRoles) !== JSON.stringify(expectedRoles))
       reasons.push('application-diagnostics-document-coverage-is-incomplete');
+    if (infrastructureFixture) {
+      const mainSetup = diagnosticsDocuments.find(
+        (row) => row.documentRole === 'main-setup',
+      );
+      const measuredIds = captures.map((sample) => sample.documentId);
+      if (
+        !mainSetup?.documentId ||
+        captures.length === 0 ||
+        captures.some((sample) => sample.documentRole !== 'main-measured') ||
+        measuredIds.some(
+          (id) =>
+            typeof id !== 'string' || id.length === 0 || id !== measuredIds[0],
+        ) ||
+        mainSetup.documentId !== measuredIds[0]
+      )
+        reasons.push('infrastructure-samples-do-not-share-measured-document');
+    } else if (fixture) {
+      const sampleDocumentsMatch = captures.every(
+        (sample, index) =>
+          sample.documentRole === `provider-sample-${index + 1}` &&
+          typeof sample.documentId === 'string' &&
+          sample.documentId.length > 0,
+      );
+      if (!sampleDocumentsMatch)
+        reasons.push('provider-sample-document-identity-is-incomplete');
+    }
   }
   if (workerBlobAuditMode === 'prewarm')
     reasons.push(
@@ -331,7 +630,7 @@ export function getCaptureComparisonIneligibilityReasons({
     reasons.push(
       'receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented',
     );
-  if (fixture)
+  if (fixture && !infrastructureFixture)
     reasons.push(
       'provider-fixture-is-static-count-only-not-trajectory-equivalent',
     );
@@ -340,7 +639,15 @@ export function getCaptureComparisonIneligibilityReasons({
     captures.some((sample) => sample?.foregroundThroughout !== true)
   )
     reasons.push('foreground-continuity-is-incomplete');
-  if (
+  if (infrastructureFixture) {
+    if (
+      !workload?.scenarios?.includes('idle') ||
+      !workload?.scenarios?.includes('scripted-motion')
+    )
+      reasons.push(
+        'required-infrastructure-objective-workloads-are-incomplete',
+      );
+  } else if (
     !workload?.scenarios?.includes('scripted-motion') ||
     !workload?.scenarios?.includes('selected-aircraft-tracking')
   )
@@ -352,7 +659,10 @@ export function getCaptureComparisonIneligibilityReasons({
 }
 
 /** Capture CLI adapter keeps its workerAuditMode name at the report boundary. */
-export function getCaptureReadinessReasons({ workerAuditMode, ...options } = {}) {
+export function getCaptureReadinessReasons({
+  workerAuditMode,
+  ...options
+} = {}) {
   return getCaptureComparisonIneligibilityReasons({
     ...options,
     workerBlobAuditMode: workerAuditMode,

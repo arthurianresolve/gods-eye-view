@@ -6,12 +6,25 @@ import {
 } from './commonSceneObserver.mjs';
 
 function fakeWindow() {
+  let parameterQueries = 0;
   const gl = {
     RENDERER: 1,
     VENDOR: 2,
-    getContextAttributes: () => ({ antialias: false }),
-    getExtension: () => null,
-    getParameter: (key) => (key === 1 ? 'test renderer' : 'test vendor'),
+    isContextLost: () => false,
+    getParameter: (key) => {
+      parameterQueries += 1;
+      return key === 1 ? 'test renderer' : 'test vendor';
+    },
+  };
+  const contextAttributes = {
+    alpha: true,
+    antialias: false,
+    depth: true,
+    failIfMajorPerformanceCaveat: false,
+    powerPreference: 'default',
+    premultipliedAlpha: true,
+    preserveDrawingBuffer: true,
+    stencil: false,
   };
   const visualState = { style: 'normal', styleParams: {} };
   const style = {
@@ -32,7 +45,7 @@ function fakeWindow() {
   const transform = Array(16).fill(0);
   transform[0] = transform[5] = transform[10] = transform[15] = 1;
   const layer = { id: 'flights', enabled: true, stats: { count: 2500 } };
-  return {
+  const windowObject = {
     __godsEyeView: {
       viewer: {
         scene: {
@@ -40,7 +53,9 @@ function fakeWindow() {
           canvas: {
             width: 640,
             height: 360,
-            getContext: () => gl,
+            getContext: () => {
+              throw new Error('Common observer must not query canvas context');
+            },
           },
           context: { _originalGLContext: gl },
           msaaSamples: 4,
@@ -53,24 +68,63 @@ function fakeWindow() {
           transform,
         },
         resolutionScale: 1,
+        clock: {
+          currentTime: { dayNumber: 2_461_000, secondsOfDay: 43_200 },
+          shouldAnimate: false,
+          multiplier: 0,
+        },
       },
       styleManager: style,
       dataManager: { getAll: () => [layer] },
     },
     navigator: { userAgent: 'test browser', platform: 'test' },
+    __gevRecoveryEarlyRendererProbe: {
+      captured: true,
+      contextLost: false,
+      contextRestored: false,
+      renderer: 'test renderer',
+      vendor: 'test vendor',
+      contextAttributes,
+      parameterQueryCount: 2,
+      queryDurationMs: 0.25,
+      canvas: null,
+      context: gl,
+    },
     innerWidth: 640,
     innerHeight: 360,
     devicePixelRatio: 1,
     document: { hasFocus: () => true, hidden: false },
+    Date: { now: () => 1_797_840_000_000 },
+    get parameterQueries() {
+      return parameterQueries;
+    },
   };
+  windowObject.__gevRecoveryEarlyRendererProbe.canvas =
+    windowObject.__godsEyeView.viewer.scene.canvas;
+  return windowObject;
 }
 
 test('common observer emits shared Cesium scene and effective workload inputs', () => {
+  const windowObject = fakeWindow();
+  const queriesBefore = windowObject.parameterQueries;
   const observed = observeCommonScene({
-    windowObject: fakeWindow(),
+    windowObject,
     appCommit: 'a'.repeat(40),
   });
+  assert.equal(windowObject.parameterQueries, queriesBefore);
   assert.equal(observed.environment.renderer, 'test renderer');
+  assert.equal(observed.environment.vendor, 'test vendor');
+  assert.equal(observed.environment.rendererEvidence.parameterQueryCount, 2);
+  assert.deepEqual(observed.environment.rendererEvidence.contextAttributes, {
+    alpha: true,
+    antialias: false,
+    depth: true,
+    failIfMajorPerformanceCaveat: false,
+    powerPreference: 'default',
+    premultipliedAlpha: true,
+    preserveDrawingBuffer: true,
+    stencil: false,
+  });
   assert.deepEqual(observed.environment.drawingBuffer, {
     width: 640,
     height: 360,
@@ -81,16 +135,23 @@ test('common observer emits shared Cesium scene and effective workload inputs', 
   assert.equal(observed.environment.appCommit, 'a'.repeat(40));
   assert.equal(observed.settings.densityPct, 75);
   assert.equal(observed.settings.qualityMode, 'manual');
+  assert.deepEqual(observed.cesiumClock, {
+    currentTime: { dayNumber: 2_461_000, secondsOfDay: 43_200 },
+    shouldAnimate: false,
+    multiplier: 0,
+  });
+  assert.equal(observed.wallClockEpochMs, 1_797_840_000_000);
   assert.equal(observed.camera.transform.length, 16);
 });
 
 test('common observer refuses to invent missing renderer, counts or visual settings', () => {
   const noRenderer = fakeWindow();
-  noRenderer.__godsEyeView.viewer.scene.context._originalGLContext.getParameter =
-    () => null;
+  noRenderer.__gevRecoveryEarlyRendererProbe.renderer = null;
+  noRenderer.__gevRecoveryEarlyRendererProbe.canvas =
+    noRenderer.__godsEyeView.viewer.scene.canvas;
   assert.throws(
     () => observeCommonScene({ windowObject: noRenderer }),
-    /renderer identity/,
+    /complete early Cesium renderer evidence/,
   );
 
   const noCount = fakeWindow();
@@ -107,6 +168,57 @@ test('common observer refuses to invent missing renderer, counts or visual setti
   assert.throws(
     () => observeCommonScene({ windowObject: noVisualState }),
     /visual-state reader/,
+  );
+});
+
+test('common observer rejects missing, replaced, lost, and restored early contexts', () => {
+  const missing = fakeWindow();
+  delete missing.__gevRecoveryEarlyRendererProbe;
+  assert.throws(
+    () => observeCommonScene({ windowObject: missing }),
+    /early Cesium renderer evidence/,
+  );
+
+  const replaced = fakeWindow();
+  replaced.__gevRecoveryEarlyRendererProbe.canvas =
+    replaced.__godsEyeView.viewer.scene.canvas;
+  replaced.__godsEyeView.viewer.scene.context._originalGLContext = {};
+  assert.throws(
+    () => observeCommonScene({ windowObject: replaced }),
+    /Cesium renderer context identity/,
+  );
+
+  for (const field of ['contextLost', 'contextRestored']) {
+    const changed = fakeWindow();
+    changed.__gevRecoveryEarlyRendererProbe.canvas =
+      changed.__godsEyeView.viewer.scene.canvas;
+    changed.__gevRecoveryEarlyRendererProbe[field] = true;
+    assert.throws(
+      () => observeCommonScene({ windowObject: changed }),
+      /unchanged Cesium WebGL context/,
+    );
+  }
+});
+
+test('baseline and candidate observations consume their own cached page renderer evidence', () => {
+  const appCommits = ['a'.repeat(40), 'b'.repeat(40)];
+  const observations = appCommits.map((appCommit) => {
+    const windowObject = fakeWindow();
+    const queriesBefore = windowObject.parameterQueries;
+    const observed = observeCommonScene({ windowObject, appCommit });
+    assert.equal(windowObject.parameterQueries, queriesBefore);
+    return observed;
+  });
+  assert.deepEqual(
+    observations.map((item) => item.environment.appCommit),
+    appCommits,
+  );
+  assert.ok(
+    observations.every(
+      (item) =>
+        item.environment.rendererEvidence.source ===
+        'early-cesium-context-creation',
+    ),
   );
 });
 

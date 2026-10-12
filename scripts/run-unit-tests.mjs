@@ -68,6 +68,18 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/review-soak-evidence.test.mjs',
   'scripts/stage-release.test.mjs',
   'server/providers/evidenceArchive.test.mjs',
+  'scripts/performance/depthPickAttribution.test.mjs',
+  'scripts/performance/infrastructureWorkloadFixture.test.mjs',
+  'scripts/capture-scene-performance.test.mjs',
+  'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
+  'scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs',
+  'scripts/performance/fixtureInterceptionFailureEvidence.test.mjs',
+  'scripts/performance/renderBoundaryObservation.test.mjs',
+  'scripts/performance/settleCompletedRenderDiagnostic.test.mjs',
+  'scripts/performance/terminalViewerObservation.test.mjs',
+  'scripts/performance/boundedCpuProfile.test.mjs',
+  'scripts/performance/providerSampleCpuProfileWindow.test.mjs',
+  'scripts/performance/providerDocumentRetirement.test.mjs',
 ]);
 
 /** Whether this runtime matches the one the allocation budgets were calibrated on. */

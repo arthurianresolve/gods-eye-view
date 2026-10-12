@@ -9,17 +9,25 @@ import { evaluateMotionFrameBudget } from './performance/motionBudget.mjs';
 import { assertCaptureIntegrity } from './performance/captureIntegrity.mjs';
 import { routeDescriptorsEquivalent } from './performance/routeEquivalence.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
-import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
+import {
+  closeTargetBeforeFixtureInterceptionRelease,
+  createFixtureInterceptionErrorRecorder,
+  interceptFixtureSession,
+} from './performance/fixtureInterception.mjs';
 import {
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
-  installFixedWallClock,
-  installHeldMonotonicWallClock,
-  installPhasedMonotonicWallClock,
-  settleCompletedRender,
+  installFixtureWallClockOnPage,
+  holdProviderWarmupBoundary,
   assertObservedTrackingRoute,
   respondToProductionFlightFixture,
 } from './performance/productionFlightFixture.mjs';
+import {
+  createBoundaryProgressRecorder,
+  observeRenderBoundary,
+  prepareRenderBoundaryProgressBinding,
+} from './performance/renderBoundaryObservation.mjs';
+import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
   describeObservedRoute,
   observeCommonScene,
@@ -29,29 +37,67 @@ import {
   readHostEnvironment,
 } from './performance/rendererEvidence.mjs';
 import {
+  cleanupEarlyCesiumRendererProbeWithEvidence,
+  installEarlyCesiumRendererProbe,
+  retireEarlyCesiumRendererProbeForCapturePage,
+  readEarlyCesiumRendererProbe,
+} from './performance/earlyCesiumRendererProbe.mjs';
+import {
   createEntityFollowRoute,
   observeTrackedEntityBoundary,
 } from './performance/trackingRoute.mjs';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  classifyLateWorkerAuditObservations,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_BLOB_RECORDS,
   MAX_WORKER_TARGETS,
   readAndRestoreCesiumWorkerBodies,
   restoreCesiumWorkerBlobAudit,
+  summarizeWorkerAuditBoundary,
   validatePrewarmedWorkerUse,
   validateCesiumWorkerBlobs,
 } from './performance/cesiumWorkerBlobContract.mjs';
 import {
   runWorkerAuditAtWarmupBoundary,
+  readProviderWarmupBoundarySnapshot,
   PREWARM_WORKER_AUDIT_BOUNDARY,
 } from './performance/prewarmWorkerAuditBoundary.mjs';
-import { createCaptureFailureReport } from './performance/captureFailureReport.mjs';
+import {
+  createCaptureFailureReport,
+  writeCaptureFailureReportFile,
+} from './performance/captureFailureReport.mjs';
 import { disableOptionalPerformanceDiagnostics } from './performance/captureDiagnosticsControl.mjs';
+import { createSceneFrameTimingDiagnostics } from './performance/importFrameDiagnostics.mjs';
+import { runBoundedBoundaryProfile } from './performance/boundedCpuProfile.mjs';
+import {
+  createProviderSampleCpuProfileWindow,
+  isProviderSampleCpuProfileTarget,
+  upsertProviderSampleCpuProfile,
+} from './performance/providerSampleCpuProfileWindow.mjs';
+import { retireProviderDocument } from './performance/providerDocumentRetirement.mjs';
+import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
+import {
+  createDepthPickAttributionIdentity,
+  depthPickRetirementConfirmed,
+  disposeDepthPickAttributionForPage as disposeDepthPickPageOwner,
+  installDepthPickAttribution,
+  observeDepthPickAttributionBoundary,
+  retainDepthPickBoundaryFailure,
+} from './performance/depthPickAttribution.mjs';
 import {
   createObservedDenseComparisonContract,
+  createObservedInfrastructureComparisonContract,
+  createCaptureDocumentTopology,
+  getMainCaptureDocumentIdentity,
   getCaptureReadinessReasons,
 } from './performance/captureComparisonContract.mjs';
+import {
+  assertInfrastructureClockObservation,
+  createInfrastructureFixtureDeliveryObserver,
+  createInfrastructureWorkloadFixture,
+  resolveInfrastructureFixtureAssetRoutes,
+} from './performance/infrastructureWorkloadFixture.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => {
@@ -73,23 +119,53 @@ const providerFixtureTime = option(
   '2026-10-08T12:00:00.000Z',
 );
 const workerAuditMode = option('--worker-audit-mode', 'diagnostic');
+const sceneFrameDiagnosticsEnabled = args.includes('--scene-frame-diagnostics');
+const firstMotionCpuProfileEnabled = args.includes(
+  '--first-motion-cpu-profile',
+);
+const depthPickAttributionEnabled = args.includes('--depth-pick-attribution');
+const cpuProfileArtifactDirectory = option(
+  '--cpu-profile-artifact-directory',
+  null,
+);
+const infrastructureWorkload = providerFixtureMode?.startsWith('infrastructure')
+  ? createInfrastructureWorkloadFixture(
+      providerFixtureMode,
+      providerFixtureTime,
+    )
+  : null;
 if (!['diagnostic', 'prewarm'].includes(workerAuditMode))
   throw new Error('--worker-audit-mode must be diagnostic or prewarm.');
-if (providerFixtureMode && providerFixtureMode !== 'dense-investigation')
-  throw new Error('--provider-fixture supports only dense-investigation');
 if (
   providerFixtureMode &&
-  (fixtureAircraftCount !== 0 || !args.includes('--mixed-layers'))
+  providerFixtureMode !== 'dense-investigation' &&
+  !infrastructureWorkload
+)
+  throw new Error(
+    '--provider-fixture must be dense-investigation or a registered infrastructure workload.',
+  );
+if (
+  providerFixtureMode &&
+  (fixtureAircraftCount !== 0 || !args.includes('--mixed-layers')) &&
+  providerFixtureMode === 'dense-investigation'
 )
   throw new Error(
     'The dense provider fixture requires --mixed-layers and must not use --fixture-aircraft.',
   );
-const productionFlightFixture = providerFixtureMode
-  ? createProductionFlightFixture({
-      count: 2500,
-      fixedTime: providerFixtureTime,
-    })
-  : null;
+if (
+  infrastructureWorkload &&
+  (fixtureAircraftCount !== 0 || args.includes('--mixed-layers'))
+)
+  throw new Error(
+    'Infrastructure workloads select their exact layer population and cannot use aircraft or --mixed-layers.',
+  );
+const productionFlightFixture =
+  providerFixtureMode === 'dense-investigation'
+    ? createProductionFlightFixture({
+        count: 2500,
+        fixedTime: providerFixtureTime,
+      })
+    : null;
 const qualityMode = option('--quality-mode', 'manual');
 const detectionMode = String(option('--detection-mode', 'DENSE')).toUpperCase();
 const mixedLayers = args.includes('--mixed-layers');
@@ -106,6 +182,14 @@ const startupRuns = Math.max(
   1,
   Math.min(5, Number(option('--startup-runs', String(runs))) || runs),
 );
+const startupDocumentTopology = createCaptureDocumentTopology({
+  infrastructure: Boolean(infrastructureWorkload),
+  startupRuns,
+});
+const mainCaptureDocumentIdentity = getMainCaptureDocumentIdentity({
+  infrastructure: Boolean(infrastructureWorkload),
+  startupRuns,
+});
 const protocolTimeoutMs = Math.max(
   10_000,
   Math.min(
@@ -147,20 +231,45 @@ if (
   throw new Error(
     'Verified capture requires --build-receipt, --app-checkout, --harness-checkout, --build-root, --expected-app-sha, --expected-harness-sha and --served-base-url together.',
   );
-if (productionFlightFixture && !buildProvenanceEnabled)
+if (
+  (productionFlightFixture || infrastructureWorkload) &&
+  !buildProvenanceEnabled
+)
   throw new Error(
-    'The production flight fixture requires verified build provenance options.',
+    'Comparison fixtures require verified build provenance options.',
   );
 if (workerAuditMode === 'prewarm' && !productionFlightFixture)
   throw new Error(
     'Prewarm worker auditing requires the verified dense production fixture.',
   );
+if (sceneFrameDiagnosticsEnabled && !productionFlightFixture)
+  throw new Error(
+    '--scene-frame-diagnostics requires --provider-fixture dense-investigation.',
+  );
+if (firstMotionCpuProfileEnabled && !productionFlightFixture)
+  throw new Error(
+    '--first-motion-cpu-profile requires --provider-fixture dense-investigation.',
+  );
+if (depthPickAttributionEnabled && !productionFlightFixture)
+  throw new Error(
+    '--depth-pick-attribution requires --provider-fixture dense-investigation.',
+  );
+if (firstMotionCpuProfileEnabled && !cpuProfileArtifactDirectory)
+  throw new Error(
+    '--first-motion-cpu-profile requires --cpu-profile-artifact-directory.',
+  );
+if (!firstMotionCpuProfileEnabled && cpuProfileArtifactDirectory)
+  throw new Error(
+    '--cpu-profile-artifact-directory requires --first-motion-cpu-profile.',
+  );
 if (
   hostedFixture &&
-  (!productionFlightFixture || !softwareRendering || !buildProvenanceEnabled)
+  (!(productionFlightFixture || infrastructureWorkload) ||
+    !softwareRendering ||
+    !buildProvenanceEnabled)
 )
   throw new Error(
-    '--hosted-fixture requires the verified production fixture and explicit software rendering.',
+    '--hosted-fixture requires a registered verified fixture and explicit software rendering.',
   );
 const actualHarnessRoot = await fs.realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
@@ -188,8 +297,9 @@ function harnessSourceRevision(root) {
 const harnessSource = harnessSourceRevision(actualHarnessRoot);
 let captureProvenance = null;
 let captureWorkerContract = null;
+let buildReceipt = null;
 if (buildProvenanceEnabled) {
-  const receipt = JSON.parse(
+  buildReceipt = JSON.parse(
     await fs.readFile(buildProvenanceOptions.receipt, 'utf8'),
   );
   const requestedHarnessRoot = await fs.realpath(
@@ -214,20 +324,20 @@ if (buildProvenanceEnabled) {
     );
   captureProvenance = await beginCaptureBuildProvenance({
     ...buildProvenanceOptions,
-    receipt,
+    receipt: buildReceipt,
     harnessRoot: requestedHarnessRoot,
     actualHarnessRoot,
     captureUrl: url,
   });
   const bundlePath = 'cesium/Cesium.js';
-  if (!receipt.assets.some((asset) => asset.path === bundlePath))
+  if (!buildReceipt.assets.some((asset) => asset.path === bundlePath))
     throw new Error('Verified build receipt is missing the Cesium bundle.');
   captureWorkerContract = deriveCesiumEmbeddedWorkerContract({
     bundlePath,
     bundleBytes: await fs.readFile(
       path.join(buildProvenanceOptions.buildRoot, ...bundlePath.split('/')),
     ),
-    assets: receipt.assets,
+    assets: buildReceipt.assets,
   });
   if (effectiveFixtureAircraftCount && !productionFlightFixture)
     throw new Error(
@@ -257,6 +367,73 @@ const source = {
     : 'unverified-exploratory-capture',
   reason: harnessSource.reason,
 };
+const infrastructureAssetRoutes = infrastructureWorkload
+  ? resolveInfrastructureFixtureAssetRoutes(
+      infrastructureWorkload,
+      buildReceipt?.assets,
+      buildProvenanceOptions.baseUrl,
+    )
+  : null;
+let infrastructureFixtureDelivery = null;
+const infrastructureResponseListeners = new Map();
+const earlyRendererProbeScripts = new Map();
+function recordRendererProbeCleanupEvidence(evidence) {
+  const records = failureProgress.workload.rendererProbeCleanup || [];
+  if (records.length >= 16) {
+    records.shift();
+    failureProgress.workload.rendererProbeCleanupOmittedCount =
+      (failureProgress.workload.rendererProbeCleanupOmittedCount || 0) + 1;
+  }
+  records.push(evidence);
+  failureProgress.workload.rendererProbeCleanup = records;
+}
+async function cleanupEarlyRendererProbeForPage(
+  page,
+  {
+    retireViewerRenderLoop = false,
+    phase = 'document-cleanup',
+    documentRole = null,
+    documentId = null,
+  } = {},
+) {
+  const hasRegistration = Boolean(page && earlyRendererProbeScripts.has(page));
+  if (!page || (!hasRegistration && !retireViewerRenderLoop)) return true;
+  const scriptIdentifier = hasRegistration
+    ? earlyRendererProbeScripts.get(page)
+    : null;
+  const evidence = retireViewerRenderLoop
+    ? await retireEarlyCesiumRendererProbeForCapturePage(
+        page,
+        scriptIdentifier,
+        1_000,
+      )
+    : await cleanupEarlyCesiumRendererProbeWithEvidence(
+        page,
+        scriptIdentifier,
+        1_000,
+      );
+  if (hasRegistration && retireViewerRenderLoop)
+    evidence.registrationRemovalBoundary = 'owned-document-retirement';
+  evidence.phase = phase;
+  evidence.documentRole = documentRole;
+  evidence.documentId = documentId;
+  recordRendererProbeCleanupEvidence(evidence);
+  if (!evidence.confirmed)
+    throw new Error(
+      retireViewerRenderLoop
+        ? 'Retired-document render loop and renderer probe cleanup were not confirmed.'
+        : 'Early Cesium renderer probe cleanup was not confirmed.',
+    );
+  if (hasRegistration) earlyRendererProbeScripts.delete(page);
+  return true;
+}
+const providerSampleCpuProfileTargets = [
+  { scenario: 'idle', run: 1 },
+  { scenario: 'idle', run: 2 },
+  { scenario: 'scripted-motion', run: 1 },
+];
+const providerSampleCpuProfileScope =
+  'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing';
 const failureProgress = {
   phase: 'browser-startup',
   scenario: null,
@@ -264,9 +441,15 @@ const failureProgress = {
   current: null,
   startupSamples: [],
   completedSamples: [],
-  fixture: productionFlightFixture,
+  fixture: productionFlightFixture || infrastructureWorkload,
   fixtureDelivery: null,
+  fixtureInterceptionErrors: [],
   workload: {
+    rendererProbeCleanup: [],
+    rendererProbeCleanupOmittedCount: 0,
+    rendererLoopRetirements: [],
+    rendererLoopRetirementsOmittedCount: 0,
+    fixtureInterceptionReleases: [],
     warmupMs,
     durationPerSampleMs: seconds * 1000,
     runsPerScenario: runs,
@@ -277,11 +460,450 @@ const failureProgress = {
       : null,
     detectionMode,
     mixedLayers,
+    ...(sceneFrameDiagnosticsEnabled
+      ? {
+          sceneFrameDiagnostics: {
+            enabled: true,
+            scope:
+              'first scripted-motion run; installed before warmup and stopped after its measurement boundary',
+            eligibleForComparison: false,
+          },
+        }
+      : {}),
+    ...(firstMotionCpuProfileEnabled
+      ? {
+          providerSampleCpuProfiles: {
+            enabled: true,
+            targets: providerSampleCpuProfileTargets,
+            scope: providerSampleCpuProfileScope,
+            performanceAcceptanceEligible: false,
+            status: 'pending',
+            profiles: [],
+          },
+        }
+      : {}),
+    ...(depthPickAttributionEnabled
+      ? {
+          depthPickAttribution: {
+            enabled: true,
+            schema: 'gev-depth-pick-attribution/v1',
+            performanceAcceptanceEligible: false,
+            scope:
+              'opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration',
+            status: 'pending',
+            samples: [],
+          },
+        }
+      : {}),
   },
 };
+// At most 5 startup + 1 setup + (3 scenarios × 10 repetitions) = 36.
+const MAX_RENDER_LOOP_RETIREMENT_RECORDS = 40;
+function recordRendererLoopRetirement(record) {
+  const rows = failureProgress.workload.rendererLoopRetirements;
+  if (rows.length < MAX_RENDER_LOOP_RETIREMENT_RECORDS) rows.push(record);
+  else failureProgress.workload.rendererLoopRetirementsOmittedCount += 1;
+}
 let captureFailure = null;
 let failureReportWritten = false;
-async function writeCaptureFailure(error) {
+let activePage = null;
+let activeDocumentRole = mainCaptureDocumentIdentity.documentRole;
+let activeDocumentId = mainCaptureDocumentIdentity.documentId;
+let activeRenderBoundaryProgressBinding = null;
+let activeRenderBoundaryProgressBindingRecord = null;
+const SCENE_FRAME_DIAGNOSTICS_KEY = '__gevS47SceneFrameTimingV1';
+const SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS = 750;
+let activeSceneFrameAttribution = null;
+let activeProviderSampleCpuProfile = null;
+const providerSampleCpuProfiles = [];
+const depthPickAttributionSamples = [];
+let activeDepthPickAttribution = null;
+
+function depthPickAttributionEnvelope() {
+  return {
+    enabled: true,
+    schema: 'gev-depth-pick-attribution/v1',
+    performanceAcceptanceEligible: false,
+    scope:
+      'opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration',
+    status:
+      depthPickAttributionSamples.length > 0 &&
+      depthPickAttributionSamples.every((sample) => sample.cleanupConfirmed)
+        ? 'complete'
+        : 'incomplete',
+    samples: depthPickAttributionSamples,
+  };
+}
+
+function providerSampleCpuProfileEnvelope() {
+  return {
+    enabled: true,
+    targets: providerSampleCpuProfileTargets,
+    scope: providerSampleCpuProfileScope,
+    performanceAcceptanceEligible: false,
+    status:
+      providerSampleCpuProfiles.length === 3 &&
+      providerSampleCpuProfiles.every((record) => record.status === 'complete')
+        ? 'complete'
+        : 'incomplete',
+    profiles: providerSampleCpuProfiles,
+  };
+}
+
+function shouldProfileProviderSample(scenario, run) {
+  return (
+    firstMotionCpuProfileEnabled &&
+    isProviderSampleCpuProfileTarget(scenario, run)
+  );
+}
+
+async function disposeDepthPickAttributionForPage(
+  targetPage,
+  identity = activeDepthPickAttribution,
+) {
+  if (!depthPickAttributionEnabled || !identity) return null;
+  const result = await disposeDepthPickPageOwner(targetPage, identity);
+  failureProgress.workload.depthPickAttribution =
+    depthPickAttributionEnvelope();
+  if (result?.confirmed === true && activeDepthPickAttribution === identity)
+    activeDepthPickAttribution = null;
+  if (failureProgress.current)
+    failureProgress.current.depthPickAttribution = identity.sample;
+  return result;
+}
+
+async function startProviderSampleCpuProfile(
+  targetPage,
+  progressRecord,
+  { scenario, run, captureOrdinal, documentRole, documentId },
+) {
+  if (!isProviderSampleCpuProfileTarget(scenario, run)) return null;
+  if (activeProviderSampleCpuProfile)
+    throw new Error('A provider sample CPU profile is already active.');
+  const window = createProviderSampleCpuProfileWindow({
+    enabled: firstMotionCpuProfileEnabled,
+    profileRunner: runBoundedBoundaryProfile,
+    page: targetPage,
+    artifactDirectory: cpuProfileArtifactDirectory,
+    targetScenario: scenario,
+    targetRun: run,
+    captureOrdinal,
+    documentRole,
+    documentId,
+    onRecord(record) {
+      if (record.profilerStarted !== null && !record.startedHostElapsedMs)
+        record.startedHostElapsedMs = performance.now();
+      if (record.profile && !record.completedHostElapsedMs)
+        record.completedHostElapsedMs = performance.now();
+      upsertProviderSampleCpuProfile(providerSampleCpuProfiles, record);
+      failureProgress.workload.providerSampleCpuProfiles =
+        providerSampleCpuProfileEnvelope();
+      if (failureProgress.current)
+        failureProgress.current.providerSampleCpuProfile = record;
+    },
+  });
+  const record = window.record;
+  if (!record) return null;
+  upsertProviderSampleCpuProfile(providerSampleCpuProfiles, record);
+  progressRecord.providerSampleCpuProfile = record;
+  await window.started;
+  record.windowStartRequestedHostElapsedMs = performance.now();
+  activeProviderSampleCpuProfile = window;
+  return record;
+}
+
+async function stopProviderSampleCpuProfile(reason) {
+  const active = activeProviderSampleCpuProfile;
+  if (!active) return providerSampleCpuProfiles.at(-1) || null;
+  activeProviderSampleCpuProfile = null;
+  active.record.windowEndRequestedHostElapsedMs = performance.now();
+  try {
+    await active.stop(reason);
+  } catch (error) {
+    active.record.status = 'failed';
+    active.record.error = boundedDiagnosticError(error);
+  }
+  return active.record;
+}
+
+function boundedDiagnosticError(error) {
+  return {
+    name: String(error?.name || 'Error').slice(0, 80),
+    message: String(error?.message || error).slice(0, 240),
+  };
+}
+
+async function withSceneFrameDiagnosticTimeout(promise, label) {
+  let timer;
+  const outcome = await Promise.race([
+    Promise.resolve(promise).then(
+      (value) => ({ status: 'completed', value }),
+      (error) => ({ status: 'failed', error }),
+    ),
+    new Promise((resolve) => {
+      timer = setTimeout(
+        () =>
+          resolve({
+            status: 'timeout',
+            error: Object.assign(new Error(`${label} timed out.`), {
+              name: 'TimeoutError',
+            }),
+          }),
+        SCENE_FRAME_DIAGNOSTIC_COMMAND_TIMEOUT_MS,
+      );
+    }),
+  ]);
+  clearTimeout(timer);
+  return outcome;
+}
+
+async function startSceneFrameAttribution(targetPage, progressRecord) {
+  const record = {
+    schema: 'gev-scene-frame-attribution/v1',
+    status: 'installing',
+    scope:
+      'first scripted-motion run; installed before warmup and stopped after measurement-boundary settlement; bounded CPU/event timing, not GPU duration',
+    eligibleForComparison: false,
+    observerOriginPerformanceNowMs: null,
+    measurementWindowRelativeMs: null,
+    observation: null,
+    cleanup: 'pending',
+  };
+  progressRecord.sceneFrameAttribution = record;
+  const installPromise = Promise.resolve().then(() =>
+    targetPage.evaluate(createSceneFrameTimingDiagnostics, undefined, {
+      storeAs: SCENE_FRAME_DIAGNOSTICS_KEY,
+      maxEntries: 32,
+    }),
+  );
+  const installed = await withSceneFrameDiagnosticTimeout(
+    installPromise,
+    'Scene frame diagnostic setup',
+  );
+  if (installed.status !== 'completed') {
+    record.status =
+      installed.status === 'timeout' ? 'setup-timeout' : 'setup-failed';
+    record.error = boundedDiagnosticError(installed.error);
+    if (installed.status === 'timeout') {
+      // If the page recovers after the host setup bound, release a late observer
+      // from its owning page. This never changes the capture result.
+      record.lateCleanup = { status: 'pending' };
+      installPromise
+        .then(async (result) => {
+          if (result?.status !== 'installed') {
+            record.lateCleanup = { status: 'not-installed' };
+            return;
+          }
+          const cleanup = await releaseLateSceneFrameAttribution(targetPage);
+          record.lateCleanup = {
+            status:
+              cleanup.status === 'completed' &&
+              cleanup.value?.result?.cleanupComplete === true
+                ? 'confirmed'
+                : cleanup.status === 'timeout'
+                  ? 'timeout'
+                  : 'unconfirmed',
+          };
+          if (record.lateCleanup.status === 'confirmed')
+            record.cleanup = 'confirmed-after-timeout';
+          progressRecord.sceneFrameAttribution = record;
+        })
+        .catch((error) => {
+          record.lateCleanup = {
+            status: 'failed',
+            error: boundedDiagnosticError(error),
+          };
+          progressRecord.sceneFrameAttribution = record;
+        });
+    }
+    throw installed.error;
+  }
+  if (
+    installed.value?.status !== 'installed' ||
+    !Number.isFinite(installed.value.originPerformanceNowMs)
+  ) {
+    record.status = 'setup-invalid';
+    record.cleanup = 'unconfirmed';
+    try {
+      const cleanup = await releaseLateSceneFrameAttribution(targetPage);
+      if (
+        cleanup.status === 'completed' &&
+        cleanup.value?.result?.cleanupComplete === true
+      )
+        record.cleanup = 'confirmed';
+    } catch {
+      // The malformed setup result remains the primary diagnostic failure.
+    }
+    throw new Error('Scene frame diagnostic install result is malformed.');
+  }
+  record.status = 'recording';
+  record.observerOriginPerformanceNowMs =
+    installed.value.originPerformanceNowMs;
+  activeSceneFrameAttribution = {
+    page: targetPage,
+    record,
+    progressRecord,
+    stopPromise: null,
+  };
+  return record;
+}
+
+async function releaseLateSceneFrameAttribution(targetPage) {
+  return withSceneFrameDiagnosticTimeout(
+    targetPage.evaluate((key) => {
+      const controller = globalThis[key];
+      try {
+        return {
+          status: controller?.stop ? 'released' : 'missing',
+          result: controller?.stop?.() ?? null,
+        };
+      } finally {
+        delete globalThis[key];
+      }
+    }, SCENE_FRAME_DIAGNOSTICS_KEY),
+    'Late scene frame diagnostic cleanup',
+  );
+}
+
+async function stopSceneFrameAttribution(reason, sample = null) {
+  const active = activeSceneFrameAttribution;
+  if (!active) return null;
+  if (!active.stopPromise) {
+    active.stopPromise = (async () => {
+      active.record.status = 'stopping';
+      active.record.stopReason = reason;
+      let stopping;
+      let stopOperation;
+      try {
+        stopOperation = Promise.resolve().then(() =>
+          active.page.evaluate((key) => {
+            const controller = globalThis[key];
+            if (!controller || typeof controller.stop !== 'function')
+              return { status: 'missing' };
+            try {
+              return { status: 'stopped', observation: controller.stop() };
+            } finally {
+              delete globalThis[key];
+            }
+          }, SCENE_FRAME_DIAGNOSTICS_KEY),
+        );
+        stopping = await withSceneFrameDiagnosticTimeout(
+          stopOperation,
+          'Scene frame diagnostic cleanup',
+        );
+      } catch (error) {
+        stopping = { status: 'failed', error };
+      }
+      const outcome = stopping;
+      if (outcome.status === 'completed') {
+        const observation = outcome.value?.observation ?? null;
+        const eventsAvailable =
+          observation?.sceneEventAvailability?.update === true &&
+          observation?.sceneEventAvailability?.render === true;
+        const cleanupComplete =
+          outcome.value?.status === 'stopped' &&
+          observation?.cleanupComplete === true;
+        active.record.status =
+          outcome.value?.status === 'stopped' &&
+          cleanupComplete &&
+          eventsAvailable
+            ? 'completed'
+            : outcome.value?.status === 'stopped'
+              ? 'incomplete'
+              : outcome.value?.status || 'incomplete';
+        active.record.cleanup = cleanupComplete ? 'confirmed' : 'unconfirmed';
+        active.record.observation = observation;
+        const origin = active.record.observerOriginPerformanceNowMs;
+        const window = sample?.sceneFrameDiagnosticWindow;
+        if (
+          Number.isFinite(origin) &&
+          Number.isFinite(window?.startPerformanceNowMs) &&
+          Number.isFinite(window?.timerFiredPerformanceNowMs)
+        )
+          active.record.measurementWindowRelativeMs = {
+            startMs: Math.max(0, window.startPerformanceNowMs - origin),
+            timerFiredMs: Math.max(
+              0,
+              window.timerFiredPerformanceNowMs - origin,
+            ),
+          };
+      } else {
+        active.record.status =
+          outcome.status === 'timeout' ? 'stop-timeout' : 'stop-failed';
+        active.record.cleanup = 'unconfirmed';
+        active.record.error = boundedDiagnosticError(outcome.error);
+        if (outcome.status === 'timeout' && stopOperation) {
+          active.record.lateCleanup = { status: 'pending' };
+          stopOperation
+            .then((value) => {
+              const observation = value?.observation ?? null;
+              const confirmed =
+                value?.status === 'stopped' &&
+                observation?.cleanupComplete === true;
+              active.record.lateCleanup = {
+                status: confirmed ? 'confirmed' : 'unconfirmed',
+              };
+              if (confirmed) active.record.cleanup = 'confirmed-after-timeout';
+              if (observation) active.record.observation = observation;
+              active.progressRecord.sceneFrameAttribution = active.record;
+              if (sample) sample.sceneFrameAttribution = active.record;
+            })
+            .catch((error) => {
+              active.record.lateCleanup = {
+                status: 'failed',
+                error: boundedDiagnosticError(error),
+              };
+              active.progressRecord.sceneFrameAttribution = active.record;
+            });
+        }
+      }
+      if (sample) {
+        delete sample.sceneFrameDiagnosticWindow;
+        sample.sceneFrameAttribution = active.record;
+      }
+      active.progressRecord.sceneFrameAttribution = active.record;
+      return active.record;
+    })().catch((error) => {
+      active.record.status = 'stop-failed';
+      active.record.cleanup = 'unconfirmed';
+      active.record.error = boundedDiagnosticError(error);
+      active.progressRecord.sceneFrameAttribution = active.record;
+      return active.record;
+    });
+  }
+  const stopped = await active.stopPromise;
+  if (activeSceneFrameAttribution === active)
+    activeSceneFrameAttribution = null;
+  return stopped;
+}
+
+async function disposeActiveRenderBoundaryProgressBinding(reason) {
+  const binding = activeRenderBoundaryProgressBinding;
+  const record = activeRenderBoundaryProgressBindingRecord;
+  if (!binding || !record) return null;
+  activeRenderBoundaryProgressBinding = null;
+  activeRenderBoundaryProgressBindingRecord = null;
+  record.status = 'disposing';
+  record.disposeReason = reason;
+  try {
+    const cleanup = await binding.dispose();
+    record.cleanup = cleanup;
+    record.ignoredCallbacks = { ...binding.ignoredCallbacks };
+    record.status = cleanup.removed ? 'disposed' : 'cleanup-failed';
+    return cleanup;
+  } catch (error) {
+    record.status = 'cleanup-failed';
+    record.cleanup = {
+      removed: false,
+      error: {
+        name: String(error?.name || 'Error').slice(0, 80),
+        message: String(error?.message || error).slice(0, 240),
+      },
+    };
+    return record.cleanup;
+  }
+}
+async function writeCaptureFailure(error, { refresh = false } = {}) {
   const report = createCaptureFailureReport({
     source,
     fixture: failureProgress.fixture,
@@ -305,12 +927,16 @@ async function writeCaptureFailure(error) {
     startupSamples: failureProgress.startupSamples,
     completedSamples: failureProgress.completedSamples,
     fixtureDelivery: failureProgress.fixtureDelivery,
+    fixtureInterceptionErrors: failureProgress.fixtureInterceptionErrors,
   });
   const json = `${JSON.stringify(report, null, 2)}\n`;
   if (out) {
-    await fs.mkdir(path.dirname(path.resolve(out)), { recursive: true });
-    await fs.writeFile(out, json, 'utf8');
-    process.stderr.write('Wrote bounded failed-capture evidence.\n');
+    await writeCaptureFailureReportFile(out, json, { refresh });
+    process.stderr.write(
+      refresh
+        ? 'Refreshed bounded failed-capture evidence after cleanup.\n'
+        : 'Wrote bounded failed-capture evidence.\n',
+    );
   } else process.stdout.write(json);
   process.stderr.write(
     `Capture failed during ${report.failure.phase}: ${report.failure.message}\n`,
@@ -370,13 +996,22 @@ if (ownedBrowserPidFile) {
 }
 
 const fixtureInterceptionSessions = [];
-const fixtureInterceptionErrors = [];
+const fixtureInterceptionErrorRecorder =
+  createFixtureInterceptionErrorRecorder();
+const fixtureInterceptionErrors = fixtureInterceptionErrorRecorder.records;
+failureProgress.fixtureInterceptionErrors = fixtureInterceptionErrors;
+const fixtureInterceptionSessionContexts = new WeakMap();
+let fixtureInterceptionSessionOrdinal = 0;
 const performanceDiagnosticsDocuments = [];
-async function disableCaptureDiagnostics(targetPage, documentRole) {
+async function disableCaptureDiagnostics(
+  targetPage,
+  documentRole,
+  documentId = null,
+) {
   const status = await targetPage.evaluate(
     disableOptionalPerformanceDiagnostics,
   );
-  performanceDiagnosticsDocuments.push({ documentRole, ...status });
+  performanceDiagnosticsDocuments.push({ documentRole, documentId, ...status });
   failureProgress.performanceDiagnosticsDocuments = [
     ...performanceDiagnosticsDocuments,
   ];
@@ -386,21 +1021,31 @@ async function disableCaptureDiagnostics(targetPage, documentRole) {
 async function configureFlightFixturePage(
   page,
   deliveryObserver = null,
-  { holdClockUntilCapture = false, phasedClock = false } = {},
+  {
+    holdClockUntilCapture = false,
+    phasedClock = false,
+    documentRole = 'unclassified',
+    documentId = null,
+  } = {},
 ) {
   if (!productionFlightFixture) return;
-  await page.evaluateOnNewDocument(
-    phasedClock
-      ? installPhasedMonotonicWallClock
-      : holdClockUntilCapture
-        ? installHeldMonotonicWallClock
-        : installFixedWallClock,
+  await installFixtureWallClockOnPage(
+    page,
     productionFlightFixture.fixedTimeMs,
-    ...(phasedClock ? [warmupMs, seconds * 1000] : []),
+    { phasedClock, holdClockUntilCapture },
+    phasedClock ? [warmupMs, seconds * 1000] : [],
   );
   const session = await page.createCDPSession();
   fixtureInterceptionSessions.push(session);
-  await interceptFixtureSession(
+  const sessionContext = {
+    sessionOrdinal: ++fixtureInterceptionSessionOrdinal,
+    documentRole,
+    documentId,
+    page,
+    lifecycleStage: 'active',
+  };
+  fixtureInterceptionSessionContexts.set(session, sessionContext);
+  sessionContext.interception = await interceptFixtureSession(
     session,
     new URL(url).origin + '/',
     (requestUrl, request) =>
@@ -410,15 +1055,13 @@ async function configureFlightFixturePage(
         productionFlightFixture,
         new URL(url).origin + '/',
       ),
-    (error) => {
-      if (fixtureInterceptionErrors.length < 8)
-        fixtureInterceptionErrors.push(
-          String(error?.message || 'Fixture interception failed').slice(0, 240),
-        );
+    fixtureInterceptionErrorRecorder.onError,
+    {
+      ...(deliveryObserver
+        ? { onFulfilled: deliveryObserver.onFulfilled }
+        : {}),
+      getErrorContext: () => ({ ...sessionContext }),
     },
-    deliveryObserver
-      ? { onFulfilled: deliveryObserver.onFulfilled }
-      : undefined,
   );
   return session;
 }
@@ -427,34 +1070,101 @@ async function settleProviderRenderAtBoundary(
   targetPage,
   label,
   timeoutMs = 5000,
+  onProgress,
+  progressBinding,
+  retireViewerRenderLoop = false,
+  finalObservationFunction = null,
+  finalObservationArgs = [],
+  beforeRenderRequestFunction = null,
+  beforeRenderRequestArgs = [],
 ) {
-  let timer;
-  try {
-    return await Promise.race([
-      targetPage.evaluate(settleCompletedRender, timeoutMs),
-      new Promise((_, reject) => {
-        timer = setTimeout(
-          () =>
-            reject(
-              new Error(
-                `${label}: host did not observe a completed render within ${timeoutMs}ms.`,
-              ),
-            ),
-          timeoutMs + 1000,
-        );
+  return observeRenderBoundary({
+    label,
+    timeoutMs,
+    hostGraceMs: 1000,
+    progressBinding,
+    evaluate: (pageTimeoutMs, progressBinding) =>
+      evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+        ...progressBinding,
+        retireViewerRenderLoop,
+        finalObservationFunction,
+        finalObservationArgs,
+        beforeRenderRequestFunction,
+        beforeRenderRequestArgs,
       }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
+    onProgress,
+  });
+}
+
+async function stopFlightFixtureSession(session) {
+  if (!session) return null;
+  const sessionContext = fixtureInterceptionSessionContexts.get(session);
+  if (!sessionContext?.interception) return null;
+  if (sessionContext.stopEvidence) return sessionContext.stopEvidence;
+  sessionContext.lifecycleStage = 'releasing';
+  sessionContext.stopEvidence =
+    await sessionContext.interception.stopAndDrain();
+  return sessionContext.stopEvidence;
 }
 
 async function releaseFlightFixtureSession(session) {
   if (!session) return;
+  const sessionContext = fixtureInterceptionSessionContexts.get(session);
+  if (sessionContext) sessionContext.lifecycleStage = 'releasing';
   const index = fixtureInterceptionSessions.indexOf(session);
   if (index >= 0) fixtureInterceptionSessions.splice(index, 1);
-  await session.send('Fetch.disable').catch(() => {});
-  await session.detach().catch(() => {});
+  const release = {
+    schema: 'gev-flight-fixture-session-release/v1',
+    sessionOrdinal: sessionContext?.sessionOrdinal ?? null,
+    documentRole: sessionContext?.documentRole ?? null,
+    documentId: sessionContext?.documentId ?? null,
+    interception: null,
+    stop: sessionContext?.stopEvidence || null,
+    fetchDisable: 'not-attempted',
+    detach: 'not-attempted',
+    confirmed: false,
+  };
+  let primaryError = null;
+  try {
+    if (!sessionContext?.stopEvidence)
+      release.stop = await stopFlightFixtureSession(session);
+  } catch (error) {
+    primaryError = error;
+  }
+  const targetRelease = await closeTargetBeforeFixtureInterceptionRelease(
+    sessionContext?.page,
+    sessionContext?.interception,
+  );
+  primaryError ||= targetRelease.error;
+  release.targetClosed = targetRelease.targetClosed;
+  if (targetRelease.release) {
+    release.interception = targetRelease.release;
+    release.fetchDisable = targetRelease.release.fetchDisable;
+    release.detach = targetRelease.release.detach;
+  } else if (targetRelease.targetClosed) {
+    release.interception = {
+      schema: 'gev-fixture-interception-release/v1',
+      interception: null,
+      fetchDisable: 'not-attempted',
+      detach: 'not-attempted',
+      confirmed: false,
+    };
+  }
+  if (primaryError) {
+    fixtureInterceptionErrorRecorder.onError(primaryError, {
+      ...(sessionContext || {}),
+      phase: 'command-send',
+    });
+    release.errorKind =
+      primaryError?.name === 'Error' ? 'cleanup-error' : 'cleanup-failed';
+  }
+  release.confirmed = targetRelease.confirmed && !primaryError;
+  if (sessionContext) sessionContext.lifecycleStage = 'released';
+  const releaseRecords = failureProgress.workload.fixtureInterceptionReleases;
+  if (releaseRecords.length < 64) releaseRecords.push(release);
+  if (primaryError) throw primaryError;
+  if (!release.confirmed)
+    throw new Error('Fixture interception session release was not confirmed.');
 }
 
 try {
@@ -537,7 +1247,12 @@ try {
   const auditPageWorkerBlobs = async (
     auditPage,
     auditState,
-    { documentRole, auditMode = 'diagnostic', requireEvidence = false } = {},
+    {
+      documentRole,
+      documentId = null,
+      auditMode = 'diagnostic',
+      requireEvidence = false,
+    } = {},
   ) => {
     if (!captureProvenance) return null;
     for (const worker of auditPage.workers()) {
@@ -551,7 +1266,9 @@ try {
       throw new Error(
         'Capture worker target audit exceeded its bounded capacity.',
       );
-    const workerUrls = [...auditState.workerUrls].filter((value) =>
+    const workerTargetsAtBoundary = [...auditState.workerUrls];
+    const blobRequestsAtBoundary = [...auditState.blobUrls];
+    const workerUrls = workerTargetsAtBoundary.filter((value) =>
       value.startsWith('blob:'),
     );
     let validation = null;
@@ -559,67 +1276,119 @@ try {
     let restoreAttestation = null;
     let restorationSummary = null;
     let blobAudit = null;
+    let lateWorkerTargetCount = null;
+    let lateBlobRequestCount = null;
+    let delayedValidatedWorkerTargetCount = null;
+    let delayedValidatedBlobRequestCount = null;
+    let unvalidatedLateWorkerTargetCount = null;
+    let unvalidatedLateBlobRequestCount = null;
+    let overflowAtCompletion = null;
+    let workerTargetsAfterAudit = null;
+    let blobRequestsAfterAudit = null;
     try {
-      if (auditMode === 'prewarm') {
-        blobAudit = await readAndRestoreCesiumWorkerBodies(
-          auditPage,
-          workerUrls,
-        );
-        if (!blobAudit)
-          throw new Error(
-            'Receipt-verified page worker blob audit is missing.',
-          );
-        restoreAttestation = blobAudit.restoration;
-        metadata = {
-          createdBlobCount: blobAudit.createdBlobCount,
-          overflowCount: blobAudit.overflowCount,
-          maxRetainedBytes: blobAudit.maxRetainedBytes,
-          records: blobAudit.records.map(({ url, type, byteLength }) => ({
-            url,
-            type,
-            byteLength,
-          })),
-        };
-        if (blobAudit.readError)
-          throw new Error('Prewarm worker blob body read failed.');
-      } else {
-        metadata = await auditPage.evaluate(
-          () => window.__gevCesiumWorkerBlobAuditV1?.metadata() || null,
-        );
-      }
+      // Freeze page-owned blob metadata/bodies and restore URL.createObjectURL
+      // in the same page task. Reading metadata, awaiting body text(), then
+      // restoring allowed diagnostic mode to observe a mixed-time inventory.
+      blobAudit = await readAndRestoreCesiumWorkerBodies(auditPage, workerUrls);
+      if (!blobAudit)
+        throw new Error('Receipt-verified page worker blob audit is missing.');
+      restoreAttestation = blobAudit.restoration;
+      metadata = {
+        createdBlobCount: blobAudit.createdBlobCount,
+        overflowCount: blobAudit.overflowCount,
+        maxRetainedBytes: blobAudit.maxRetainedBytes,
+        records: blobAudit.records.map(({ url, type, byteLength }) => ({
+          url,
+          type,
+          byteLength,
+        })),
+      };
       if (!metadata)
         throw new Error('Receipt-verified page worker blob audit is missing.');
+
+      workerTargetsAfterAudit = [
+        ...auditState.workerUrls,
+        ...auditPage.workers().map((worker) => worker.url()),
+      ];
+      blobRequestsAfterAudit = [...auditState.blobUrls];
+      const boundarySummary = summarizeWorkerAuditBoundary({
+        workerTargetsAtBoundary,
+        blobRequestsAtBoundary,
+        workerTargetsAfter: workerTargetsAfterAudit,
+        blobRequestsAfter: blobRequestsAfterAudit,
+      });
+      overflowAtCompletion = auditState.getOverflow();
+      lateWorkerTargetCount = boundarySummary.lateWorkerTargetCount;
+      lateBlobRequestCount = boundarySummary.lateBlobRequestCount;
+      if (
+        overflowAtCompletion.workerUrlOverflow ||
+        overflowAtCompletion.blobUrlOverflow
+      )
+        throw new Error(
+          'Worker target audit exceeded its bound during the frozen read.',
+        );
+      if (blobAudit.readError)
+        throw new Error(
+          auditMode === 'prewarm'
+            ? 'Prewarm worker blob body read failed.'
+            : 'Diagnostic worker blob body read failed.',
+        );
+
       const hasEvidence = !(
         metadata.createdBlobCount === 0 &&
         workerUrls.length === 0 &&
-        auditState.blobUrls.size === 0
+        blobRequestsAtBoundary.length === 0
       );
       if (requireEvidence && !hasEvidence)
         throw new Error('Prewarm worker audit observed no executable blobs.');
       if (hasEvidence) {
-        if (auditMode !== 'prewarm')
-          blobAudit = await auditPage.evaluate(async (urls) => {
-            const audit = window.__gevCesiumWorkerBlobAuditV1;
-            if (!audit)
-              throw new Error(
-                'Receipt-verified page worker audit disappeared.',
-              );
-            return audit.readWorkerBodies(urls);
-          }, workerUrls);
         validation = validateCesiumWorkerBlobs({
           contract: captureWorkerContract,
           baseUrl: buildProvenanceOptions.baseUrl,
           workerUrls,
-          observedBlobUrls: [...auditState.blobUrls],
+          observedBlobUrls: blobRequestsAtBoundary,
           blobAudit,
           auditMode,
         });
       }
+      const publication = classifyLateWorkerAuditObservations({
+        workerTargetsAtBoundary,
+        blobRequestsAtBoundary,
+        workerTargetsAfter: workerTargetsAfterAudit,
+        blobRequestsAfter: blobRequestsAfterAudit,
+        validatedWorkerTargetUrls: validation?.validatedWorkerTargetUrls || [],
+        acceptedBlobUrls: validation?.acceptedBlobUrls || [],
+      });
+      delayedValidatedWorkerTargetCount =
+        publication.delayedValidatedWorkerTargetCount;
+      delayedValidatedBlobRequestCount =
+        publication.delayedValidatedBlobRequestCount;
+      unvalidatedLateWorkerTargetCount =
+        publication.unvalidatedLateWorkerTargetCount;
+      unvalidatedLateBlobRequestCount =
+        publication.unvalidatedLateBlobRequestCount;
+      if (unvalidatedLateWorkerTargetCount || unvalidatedLateBlobRequestCount)
+        throw new Error(
+          'Worker targets or blob requests arrived after the frozen audit boundary without validated frozen bytes.',
+        );
     } finally {
       if (!restoreAttestation)
         restoreAttestation = await auditPage.evaluate(
           restoreCesiumWorkerBlobAudit,
         );
+      if (lateWorkerTargetCount === null) {
+        workerTargetsAfterAudit = [...auditState.workerUrls];
+        blobRequestsAfterAudit = [...auditState.blobUrls];
+        const boundarySummary = summarizeWorkerAuditBoundary({
+          workerTargetsAtBoundary,
+          blobRequestsAtBoundary,
+          workerTargetsAfter: workerTargetsAfterAudit,
+          blobRequestsAfter: blobRequestsAfterAudit,
+        });
+        lateWorkerTargetCount = boundarySummary.lateWorkerTargetCount;
+        lateBlobRequestCount = boundarySummary.lateBlobRequestCount;
+        overflowAtCompletion = auditState.getOverflow();
+      }
       restorationSummary = {
         nativeCreateObjectURLRestored:
           restoreAttestation?.nativeCreateObjectURLRestored === true,
@@ -632,8 +1401,18 @@ try {
         auditedOverflowCount: metadata?.overflowCount ?? null,
         validatedCreatedScriptBlobCount:
           validation?.observation.createdScriptBlobCount ?? null,
-        observedWorkerTargetCount: auditState.workerUrls.size,
-        observedBlobRequestCount: auditState.blobUrls.size,
+        observedWorkerTargetCount: workerTargetsAtBoundary.length,
+        observedBlobRequestCount: blobRequestsAtBoundary.length,
+        lateWorkerTargetCount,
+        lateBlobRequestCount,
+        delayedValidatedWorkerTargetCount,
+        delayedValidatedBlobRequestCount,
+        unvalidatedLateWorkerTargetCount,
+        unvalidatedLateBlobRequestCount,
+        workerUrlOverflowAtCompletion:
+          overflowAtCompletion?.workerUrlOverflow ?? null,
+        blobUrlOverflowAtCompletion:
+          overflowAtCompletion?.blobUrlOverflow ?? null,
       };
       if (failureProgress.current)
         failureProgress.current.workerAuditRestoration = restorationSummary;
@@ -653,6 +1432,7 @@ try {
       throw new Error('Worker blob audit did not fully restore and clear.');
     const documentAudit = {
       documentRole: documentRole || 'unclassified',
+      documentId,
       mode: auditMode,
       validation: validation?.observation || null,
       restoration: {
@@ -664,9 +1444,23 @@ try {
         overflowCountAtRestore: restoreAttestation.overflowCountAtRestore,
         auditedCreatedScriptBlobCount: metadata.createdBlobCount,
         auditedOverflowCount: metadata.overflowCount,
+        publicationBoundary: {
+          workerTargetCountAtBoundary: workerTargetsAtBoundary.length,
+          blobRequestCountAtBoundary: blobRequestsAtBoundary.length,
+          lateWorkerTargetCount,
+          lateBlobRequestCount,
+          delayedValidatedWorkerTargetCount,
+          delayedValidatedBlobRequestCount,
+          unvalidatedLateWorkerTargetCount,
+          unvalidatedLateBlobRequestCount,
+        },
       },
-      observedWorkerTargetCount: auditState.workerUrls.size,
-      observedBlobRequestCount: auditState.blobUrls.size,
+      observedWorkerTargetCount: new Set(
+        workerTargetsAfterAudit || workerTargetsAtBoundary,
+      ).size,
+      observedBlobRequestCount: new Set(
+        blobRequestsAfterAudit || blobRequestsAtBoundary,
+      ).size,
     };
     workerAuditDocuments.push(documentAudit);
     if (validation) workerBlobObservations.push(validation.observation);
@@ -703,7 +1497,11 @@ try {
     documentAudit.lateUseCheck = lateUseCheck;
     return lateUseCheck;
   };
-  async function attachMeasuredPage(auditPage, deliveryObserver = null) {
+  async function attachMeasuredPage(
+    auditPage,
+    deliveryObserver = null,
+    { documentRole = 'unclassified', documentId = null } = {},
+  ) {
     await auditPage.setViewport({
       width: 1440,
       height: 900,
@@ -711,19 +1509,43 @@ try {
     });
     await auditPage.setCacheEnabled(false);
     await auditPage.setBypassServiceWorker(true);
+    const documentInfrastructureDelivery = infrastructureWorkload
+      ? createInfrastructureFixtureDeliveryObserver(infrastructureWorkload, {
+          assetRoutes: infrastructureAssetRoutes,
+          baseUrl: buildProvenanceOptions.baseUrl,
+        })
+      : null;
+    if (documentInfrastructureDelivery) {
+      await installFixtureWallClockOnPage(
+        auditPage,
+        infrastructureWorkload.fixedTimeMs,
+        { infrastructure: true },
+      );
+      const responseListener = (response) =>
+        documentInfrastructureDelivery.onResponse(response);
+      auditPage.on('response', responseListener);
+      infrastructureResponseListeners.set(auditPage, responseListener);
+    }
     const fixtureSession = await configureFlightFixturePage(
       auditPage,
       deliveryObserver,
       {
         phasedClock: Boolean(productionFlightFixture),
         holdClockUntilCapture: Boolean(productionFlightFixture),
+        documentRole,
+        documentId,
       },
+    );
+    earlyRendererProbeScripts.set(
+      auditPage,
+      await installEarlyCesiumRendererProbe(auditPage),
     );
     if (captureProvenance)
       await auditPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     return {
       fixtureSession,
       auditState: auditPageCodeRequests(auditPage),
+      infrastructureFixtureDelivery: documentInfrastructureDelivery,
     };
   }
   for (let run = 1; run <= startupRuns; run += 1) {
@@ -739,7 +1561,20 @@ try {
     });
     await startupPage.setCacheEnabled(false);
     await startupPage.setBypassServiceWorker(true);
-    const startupFixtureSession = await configureFlightFixturePage(startupPage);
+    earlyRendererProbeScripts.set(
+      startupPage,
+      await installEarlyCesiumRendererProbe(startupPage),
+    );
+    const { documentRole: startupDocumentRole, documentId: startupDocumentId } =
+      startupDocumentTopology.diagnostics[run - 1];
+    const startupFixtureSession = await configureFlightFixturePage(
+      startupPage,
+      null,
+      {
+        documentRole: startupDocumentRole,
+        documentId: startupDocumentId,
+      },
+    );
     if (captureProvenance)
       await startupPage.evaluateOnNewDocument(installCesiumWorkerBlobAudit);
     const startupAuditState = auditPageCodeRequests(startupPage);
@@ -759,7 +1594,11 @@ try {
     await startupPage.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
-    await disableCaptureDiagnostics(startupPage, `startup-${run}`);
+    await disableCaptureDiagnostics(
+      startupPage,
+      startupDocumentRole,
+      startupDocumentId,
+    );
     const appReadyMs = Date.now() - startedAt;
     await startupPage.waitForFunction(
       () =>
@@ -776,40 +1615,33 @@ try {
         'Verified startup page is controlled by a service worker.',
       );
     const initialSettleMs = Date.now() - startedAt;
-    const details = await startupPage.evaluate(() => {
-      const viewer = window.__godsEyeView.viewer;
-      const gl =
-        viewer.scene.context?._gl ||
-        viewer.scene.canvas.getContext('webgl2') ||
-        viewer.scene.canvas.getContext('webgl');
-      const extension = gl?.getExtension('WEBGL_debug_renderer_info');
-      return {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        renderer: extension
-          ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)
-          : gl?.getParameter(gl.RENDERER) || null,
-        viewport: {
-          width: innerWidth,
-          height: innerHeight,
-          dpr: devicePixelRatio,
-        },
-        drawingBuffer: {
-          width: viewer.scene.canvas.width,
-          height: viewer.scene.canvas.height,
-        },
-        focused: document.hasFocus(),
-        visible: !document.hidden,
-        navigationMs:
-          performance.getEntriesByType('navigation')[0]?.duration ?? null,
-        memory: performance.memory
-          ? { usedJsHeapBytes: performance.memory.usedJSHeapSize, reason: null }
-          : {
-              usedJsHeapBytes: null,
-              reason: 'performance.memory is unavailable in this browser',
-            },
-      };
+    const earlyRenderer = await readEarlyCesiumRendererProbe(startupPage);
+    const terminalStartupObservation = await startupPage.evaluate(
+      observeTerminalViewerState,
+      'startup-details',
+    );
+    const details = {
+      ...terminalStartupObservation.observation,
+      renderLoopRetirement: terminalStartupObservation.renderLoopRetirement,
+    };
+    recordRendererLoopRetirement({
+      phase: 'startup-final-details',
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
+      ...terminalStartupObservation.renderLoopRetirement,
     });
+    if (terminalStartupObservation.renderLoopRetirement.confirmed !== true)
+      throw new Error(
+        'Startup document render loop retirement at its final details observation was not confirmed.',
+      );
+    details.renderer = earlyRenderer.renderer;
+    details.vendor = earlyRenderer.vendor;
+    details.rendererEvidence = {
+      source: 'early-cesium-context-creation',
+      contextAttributes: earlyRenderer.contextAttributes,
+      queryDurationMs: earlyRenderer.queryDurationMs,
+      parameterQueryCount: earlyRenderer.parameterQueryCount,
+    };
     startupSamples.push({
       run,
       cacheDisabled: true,
@@ -818,8 +1650,24 @@ try {
       ...details,
     });
     await auditPageWorkerBlobs(startupPage, startupAuditState, {
-      documentRole: `startup-${run}`,
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
       auditMode: 'diagnostic',
+    });
+    if (startupFixtureSession) {
+      const startupInterceptionStopped = await stopFlightFixtureSession(
+        startupFixtureSession,
+      );
+      if (!startupInterceptionStopped?.confirmed)
+        throw new Error(
+          'Startup fixture interception stop and command drain were not confirmed.',
+        );
+    }
+    await cleanupEarlyRendererProbeForPage(startupPage, {
+      retireViewerRenderLoop: true,
+      phase: 'startup-document-retirement',
+      documentRole: startupDocumentRole,
+      documentId: startupDocumentId,
     });
     await context.close();
     await releaseFlightFixtureSession(startupFixtureSession);
@@ -829,7 +1677,8 @@ try {
   failureProgress.phase = 'main-navigation';
   failureProgress.scenario = null;
   failureProgress.run = null;
-  let page = await browser.newPage();
+  activePage = await browser.newPage();
+  let page = activePage;
   let providerContext = null;
   let flightFixtureDelivery = productionFlightFixture
     ? createFlightFixtureDeliveryObserver(
@@ -840,7 +1689,13 @@ try {
   const initialPageAttachment = await attachMeasuredPage(
     page,
     flightFixtureDelivery,
+    {
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+    },
   );
+  infrastructureFixtureDelivery =
+    initialPageAttachment.infrastructureFixtureDelivery;
   let activeFixtureSession = initialPageAttachment.fixtureSession;
   let captureAuditState = initialPageAttachment.auditState;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -858,7 +1713,7 @@ try {
   await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
     timeout: 90_000,
   });
-  await disableCaptureDiagnostics(page, 'main-setup');
+  await disableCaptureDiagnostics(page, 'main-setup', activeDocumentId);
   const readyMs = Date.now();
   await page.waitForFunction(
     () =>
@@ -982,20 +1837,22 @@ try {
         },
       )
     : null;
-  failureProgress.fixture = productionFlightFixture || fixture;
+  failureProgress.fixture =
+    productionFlightFixture || infrastructureWorkload || fixture;
 
-  const summarizeFlightFixtureDelivery = async () => {
+  const summarizeFlightFixtureDelivery = async (observedCount = undefined) => {
     if (!productionFlightFixture) return null;
     if (fixtureInterceptionErrors.length)
       throw new Error(
         `Provider fixture interception reported ${fixtureInterceptionErrors.length} bounded errors.`,
       );
-    const observedCount = await page.evaluate(
-      () =>
-        window.__godsEyeView?.dataManager
-          ?.getAll?.()
-          ?.find((entry) => entry.id === 'flights')?.stats?.count ?? null,
-    );
+    if (observedCount === undefined)
+      observedCount = await page.evaluate(
+        () =>
+          window.__godsEyeView?.dataManager
+            ?.getAll?.()
+            ?.find((entry) => entry.id === 'flights')?.stats?.count ?? null,
+      );
     return flightFixtureDelivery.summarize(observedCount);
   };
   let fixtureDelivery = null;
@@ -1014,6 +1871,121 @@ try {
       productionFlightFixture.count,
     );
     fixtureDelivery = await summarizeFlightFixtureDelivery();
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
+
+  if (infrastructureWorkload) {
+    failureProgress.phase = 'configure-infrastructure-fixture';
+    const before = await page.evaluate(
+      async ({
+        selectedLayerIds,
+        clock,
+        qualityMode: mode,
+        detectionMode: requestedDetectionMode,
+        camera,
+      }) => {
+        const app = window.__godsEyeView;
+        const manager = app?.dataManager;
+        const viewer = app?.viewer;
+        if (!manager || !viewer)
+          throw new Error(
+            'Infrastructure fixture needs the application viewer.',
+          );
+        const selected = new Set(selectedLayerIds);
+        for (const layer of manager.getAll()) {
+          if (layer.enabled && !selected.has(layer.id))
+            await manager.setEnabled(layer.id, false);
+        }
+        for (const id of selectedLayerIds) {
+          if (!manager.layers?.has(id))
+            throw new Error(`Missing infrastructure layer ${id}.`);
+          if (!manager.isEnabled(id)) await manager.setEnabled(id, true);
+        }
+        const controller = app.styleManager?._adaptiveQuality;
+        if (!controller?.setMode?.(mode))
+          throw new Error('Presentation quality controller is unavailable.');
+        const services = app.styleManager?.services;
+        if (typeof services?.setDetectionModeByLabel !== 'function')
+          throw new Error('Detection workload controls are unavailable.');
+        services.setDetectionModeByLabel(requestedDetectionMode);
+        if (services.getDetectionMode() !== requestedDetectionMode)
+          throw new Error('Detection workload mode did not match the request.');
+        const cesiumClock = viewer.clock;
+        if (
+          !cesiumClock?.currentTime ||
+          !Number.isFinite(cesiumClock.currentTime.dayNumber) ||
+          !Number.isFinite(cesiumClock.currentTime.secondsOfDay)
+        )
+          throw new Error('Cesium Julian clock is unavailable.');
+        cesiumClock.shouldAnimate = false;
+        cesiumClock.multiplier = 0;
+        cesiumClock.currentTime.dayNumber = clock.dayNumber;
+        cesiumClock.currentTime.secondsOfDay = clock.secondsOfDay;
+        const destination =
+          viewer.scene.globe.ellipsoid.cartographicToCartesian({
+            longitude: (camera.longitudeDeg * Math.PI) / 180,
+            latitude: (camera.latitudeDeg * Math.PI) / 180,
+            height: camera.altitudeM,
+          });
+        viewer.camera.cancelFlight?.();
+        viewer.camera.setView({
+          destination,
+          orientation: {
+            heading: (camera.headingDeg * Math.PI) / 180,
+            pitch: (camera.pitchDeg * Math.PI) / 180,
+            roll: 0,
+          },
+        });
+        viewer.scene.requestRender();
+        return manager.getAll().map((layer) => ({
+          id: layer.id,
+          enabled: Boolean(layer.enabled),
+          count: Number.isInteger(layer.stats?.count)
+            ? layer.stats.count
+            : null,
+        }));
+      },
+      {
+        selectedLayerIds: infrastructureWorkload.selectedLayerIds,
+        clock: infrastructureWorkload.clock,
+        qualityMode,
+        detectionMode,
+        camera: infrastructureWorkload.camera,
+      },
+    );
+    failureProgress.current = {
+      phase: failureProgress.phase,
+      populationsBeforeLoad: before,
+      fixtureId: infrastructureWorkload.id,
+      fixtureSha256: infrastructureWorkload.sha256,
+    };
+    await page.waitForFunction(
+      (expected) => {
+        const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
+        return Object.entries(expected).every(([id, count]) => {
+          const layer = layers.find((row) => row.id === id);
+          return layer?.enabled === true && layer?.stats?.count === count;
+        });
+      },
+      { timeout: fixtureTimeoutMs, polling: 100 },
+      infrastructureWorkload.expectedLayerCounts,
+    );
+    const observed = await page.evaluate(observeCommonScene, {
+      appCommit: source.appCommit,
+    });
+    assertInfrastructureClockObservation(
+      observed.cesiumClock,
+      infrastructureWorkload,
+      'setup',
+    );
+    if (observed.wallClockEpochMs !== infrastructureWorkload.fixedTimeMs)
+      throw new Error(
+        'Infrastructure document wall clock did not remain at the fixture epoch.',
+      );
+    fixtureDelivery = await infrastructureFixtureDelivery.summarize(
+      observed.environment.layers,
+      observed.environment.layers,
+    );
     failureProgress.fixtureDelivery = fixtureDelivery;
   }
 
@@ -1115,7 +2087,9 @@ try {
   environment.startup = {
     runs: startupSamples,
     runCount: startupSamples.length,
-    measurement: 'cache-disabled fresh browser contexts',
+    measurement: infrastructureWorkload
+      ? 'one measured app document; cache disabled before navigation'
+      : 'cache-disabled fresh browser contexts',
     performancePageInitialSettleMs: mainStartupElapsedMs,
   };
   const softwareRenderer =
@@ -1127,10 +2101,17 @@ try {
 
   const scenarios = ['idle', 'scripted-motion'];
   if (fixture) scenarios.push('selected-aircraft-tracking');
+  const captureDocumentTopology = createCaptureDocumentTopology({
+    infrastructure: Boolean(infrastructureWorkload),
+    startupRuns,
+    captureCount: scenarios.length * runs,
+  });
   failureProgress.scenarios = scenarios;
   const captures = [];
   failureProgress.completedSamples = captures;
-  failureProgress.phase = 'verify-dense-populations';
+  failureProgress.phase = infrastructureWorkload
+    ? 'verify-infrastructure-populations'
+    : 'verify-dense-populations';
   const mixedLayerCounts = productionFlightFixture
     ? await page.evaluate(() => {
         const layers = window.__godsEyeView?.dataManager?.getAll?.() || [];
@@ -1152,21 +2133,103 @@ try {
       `Provider-fixture mixed populations are incomplete: ${JSON.stringify(mixedLayerCounts)}`,
     );
 
+  if (productionFlightFixture) {
+    const terminalSetupObservation = await page.evaluate(
+      observeTerminalViewerState,
+      'layer-population',
+      ['flights', 'local-datacenters', 'local-dams'],
+    );
+    recordRendererLoopRetirement({
+      phase: 'main-setup-final-population',
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+      population: terminalSetupObservation.observation,
+      ...terminalSetupObservation.renderLoopRetirement,
+    });
+    if (terminalSetupObservation.renderLoopRetirement.confirmed !== true)
+      throw new Error(
+        'Main setup render loop retirement at its final population observation was not confirmed.',
+      );
+    const expectedSetupPopulation = {
+      flights: productionFlightFixture.count,
+      'local-datacenters': 4362,
+      'local-dams': 716,
+    };
+    if (
+      Object.entries(expectedSetupPopulation).some(
+        ([id, count]) =>
+          terminalSetupObservation.observation[id]?.enabled !== true ||
+          terminalSetupObservation.observation[id]?.count !== count,
+      )
+    )
+      throw new Error('Provider setup terminal population changed.');
+    fixtureDelivery = await summarizeFlightFixtureDelivery(
+      terminalSetupObservation.observation.flights.count,
+    );
+    failureProgress.fixtureDelivery = fixtureDelivery;
+  }
+
   let providerSampleDocumentIndex = 0;
   async function prepareFreshProviderDocument() {
     providerSampleDocumentIndex += 1;
-    if (!providerSampleWorkerAuditComplete) {
-      await auditPageWorkerBlobs(page, captureAuditState, {
-        documentRole: 'main-setup',
-        auditMode: 'diagnostic',
-      });
-      providerSampleWorkerAuditComplete = true;
-    }
-    await releaseFlightFixtureSession(activeFixtureSession);
-    if (providerContext) await providerContext.close();
-    else await page.close();
+    await retireProviderDocument({
+      retireRenderer: async () => {
+        const expectedAttributionOwner = activeDepthPickAttribution;
+        const attributionCleanup = await disposeDepthPickAttributionForPage(
+          page,
+          expectedAttributionOwner,
+        );
+        const rendererCleanup = await cleanupEarlyRendererProbeForPage(page, {
+          retireViewerRenderLoop: true,
+          phase: 'provider-document-retirement',
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+        });
+        return (
+          rendererCleanup === true &&
+          depthPickRetirementConfirmed(
+            depthPickAttributionEnabled,
+            expectedAttributionOwner,
+            attributionCleanup,
+          )
+        );
+      },
+      auditWorkers: async () => {
+        if (providerSampleWorkerAuditComplete) return;
+        await auditPageWorkerBlobs(page, captureAuditState, {
+          documentRole: 'main-setup',
+          documentId: activeDocumentId,
+          auditMode: 'diagnostic',
+        });
+        providerSampleWorkerAuditComplete = true;
+      },
+      disposeProgressBinding: async () => {
+        const bindingCleanup =
+          await disposeActiveRenderBoundaryProgressBinding('document-replaced');
+        if (bindingCleanup && !bindingCleanup.removed)
+          throw new Error(
+            'Render-boundary binding cleanup failed before document replacement.',
+          );
+      },
+      stopInterception: async () => {
+        const stopped = await stopFlightFixtureSession(activeFixtureSession);
+        if (!stopped?.confirmed)
+          throw new Error(
+            'Fixture interception stop and command drain were not confirmed.',
+          );
+      },
+      closeDocument: async () => {
+        if (providerContext) await providerContext.close();
+        else await page.close();
+      },
+      releaseInterception: () =>
+        releaseFlightFixtureSession(activeFixtureSession),
+    });
     providerContext = await browser.createBrowserContext();
     page = await providerContext.newPage();
+    activePage = page;
+    ({ documentRole: activeDocumentRole, documentId: activeDocumentId } =
+      captureDocumentTopology.samples[providerSampleDocumentIndex - 1]);
     flightFixtureDelivery = createFlightFixtureDeliveryObserver(
       productionFlightFixture,
       new URL(url).origin + '/',
@@ -1174,6 +2237,10 @@ try {
     const pageAttachment = await attachMeasuredPage(
       page,
       flightFixtureDelivery,
+      {
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
+      },
     );
     activeFixtureSession = pageAttachment.fixtureSession;
     captureAuditState = pageAttachment.auditState;
@@ -1195,10 +2262,40 @@ try {
     await page.waitForFunction(() => !!window.__godsEyeView?.viewer, {
       timeout: 90_000,
     });
-    await disableCaptureDiagnostics(
-      page,
-      `provider-sample-${providerSampleDocumentIndex}`,
-    );
+    if (depthPickAttributionEnabled) {
+      const identity = createDepthPickAttributionIdentity(captures, {
+        scenario: failureProgress.scenario,
+        run: failureProgress.run,
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
+      });
+      const installed = await page.evaluate(installDepthPickAttribution, {
+        ...identity,
+        maxRows: 128,
+      });
+      if (
+        installed?.installed !== true ||
+        typeof installed.ownerToken !== 'string' ||
+        installed.ownerToken.length > 160
+      )
+        throw new Error('Depth-pick attribution observer installation failed.');
+      const sample = {
+        ...identity,
+        schema: 'gev-depth-pick-attribution-sample/v1',
+        ownerToken: installed.ownerToken,
+        install: installed,
+        warmupBoundary: null,
+        measurementBoundary: null,
+        cleanupConfirmed: false,
+      };
+      depthPickAttributionSamples.push(sample);
+      activeDepthPickAttribution = { ownerToken: installed.ownerToken, sample };
+      failureProgress.workload.depthPickAttribution =
+        depthPickAttributionEnvelope();
+      if (failureProgress.current)
+        failureProgress.current.depthPickAttribution = sample;
+    }
+    await disableCaptureDiagnostics(page, activeDocumentRole, activeDocumentId);
     await page.waitForFunction(
       () =>
         document.getElementById('loading-screen')?.classList.contains('hidden'),
@@ -1306,7 +2403,6 @@ try {
       failureProgress.current.phase = failureProgress.phase;
       const trackingResult = await page.evaluate(
         async ({ scenarioName, hasFixture }) => {
-          const fixtureClock = window.__gevPhasedMonotonicWallClockV1;
           const app = window.__godsEyeView;
           const viewer = app.viewer;
           const flights = app.dataManager.layers.get('flights')?.module;
@@ -1337,17 +2433,89 @@ try {
             });
             viewer.scene.requestRender();
           }
-          // Release wall time only after fixture/tracking/camera setup has
-          // settled. Warmup and capture then share one monotonic epoch.
-          const clockStart = fixtureClock?.startWarmup?.() ?? null;
-          return { trackedAircraftId, clockStart };
+          return { trackedAircraftId };
         },
         { scenarioName: scenario, hasFixture: Boolean(fixture) },
       );
       const trackingSetup = trackingResult?.trackedAircraftId ?? null;
       failureProgress.current.trackingSetup = trackingSetup;
-      failureProgress.current.clockStart = trackingResult?.clockStart ?? null;
+      let boundaryProgressBindingRecord = null;
+      if (productionFlightFixture) {
+        failureProgress.phase = 'prepare-render-boundary-binding';
+        failureProgress.current.phase = failureProgress.phase;
+        boundaryProgressBindingRecord = {
+          ownerId: `${activeDocumentRole}:${activeDocumentId}`.slice(0, 160),
+          status: 'setup-pending',
+          setupTimeoutMs: 5000,
+          setupElapsedMs: null,
+          cleanup: null,
+        };
+        failureProgress.current.renderBoundaryProgressBinding =
+          boundaryProgressBindingRecord;
+        const setupStartedAt = performance.now();
+        try {
+          activeRenderBoundaryProgressBinding =
+            await prepareRenderBoundaryProgressBinding({
+              page,
+              ownerId: boundaryProgressBindingRecord.ownerId,
+              timeoutMs: boundaryProgressBindingRecord.setupTimeoutMs,
+            });
+          activeRenderBoundaryProgressBindingRecord =
+            boundaryProgressBindingRecord;
+          boundaryProgressBindingRecord.setupElapsedMs =
+            activeRenderBoundaryProgressBinding.setupElapsedMs;
+          boundaryProgressBindingRecord.status = 'ready';
+        } catch (error) {
+          boundaryProgressBindingRecord.setupElapsedMs = Math.max(
+            0,
+            performance.now() - setupStartedAt,
+          );
+          boundaryProgressBindingRecord.status =
+            error?.name === 'TimeoutError' ? 'setup-timeout' : 'setup-failed';
+          boundaryProgressBindingRecord.error = {
+            name: String(error?.name || 'Error').slice(0, 80),
+            message: String(error?.message || error).slice(0, 240),
+          };
+          boundaryProgressBindingRecord.lateRemovalScheduled =
+            error?.lateRemovalScheduled === true;
+          if (error?.cleanupError)
+            boundaryProgressBindingRecord.cleanup = {
+              removed: false,
+              error: error.cleanupError,
+            };
+          throw error;
+        }
+      }
+      const collectSceneFrameAttribution =
+        sceneFrameDiagnosticsEnabled &&
+        scenario === 'scripted-motion' &&
+        run === 1;
+      if (collectSceneFrameAttribution)
+        await startSceneFrameAttribution(page, failureProgress.current);
+      const collectProviderSampleCpuProfile = shouldProfileProviderSample(
+        scenario,
+        run,
+      );
+      if (collectProviderSampleCpuProfile)
+        await startProviderSampleCpuProfile(page, failureProgress.current, {
+          scenario,
+          run,
+          captureOrdinal: captures.length,
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+        });
+      // Start the fixture epoch only after observer setup so its host cost is
+      // outside both warmup and measurement render-boundary deadlines.
+      const clockStart = productionFlightFixture
+        ? await page.evaluate(
+            () =>
+              window.__gevPhasedMonotonicWallClockV1?.startWarmup?.() ?? null,
+          )
+        : null;
+      failureProgress.current.clockStart = clockStart;
       // Each workload/run receives the declared warmup, including tracking.
+      failureProgress.phase = 'warmup';
+      failureProgress.current.phase = failureProgress.phase;
       if (warmupMs)
         await new Promise((resolve) => setTimeout(resolve, warmupMs));
       let fixtureBoundaryStart = null;
@@ -1366,28 +2534,75 @@ try {
         auditMode: workerAuditMode,
         warmupMs,
         readWarmupBoundary: async () => {
-          fixtureBoundaryStart = productionFlightFixture
-            ? await page.evaluate(async () => {
-                const clock = window.__gevPhasedMonotonicWallClockV1;
-                const held = clock?.holdWarmupBoundary?.();
-                if (!held || held.phase !== 'warmup-held')
-                  throw new Error(
-                    'Provider fixture warmup did not reach its declared boundary.',
-                  );
-                return window.__gevPhasedMonotonicWallClockV1.snapshot();
-              })
-            : null;
+          if (productionFlightFixture) {
+            const warmupProgressRecord = failureProgress.current;
+            try {
+              warmupBoundarySettle = await settleProviderRenderAtBoundary(
+                page,
+                'Warmup boundary',
+                5000,
+                warmupProgressRecord
+                  ? createBoundaryProgressRecorder(
+                      warmupProgressRecord,
+                      'warmupBoundaryObservation',
+                    )
+                  : undefined,
+                activeRenderBoundaryProgressBinding,
+                false,
+                depthPickAttributionEnabled
+                  ? observeDepthPickAttributionBoundary
+                  : null,
+                depthPickAttributionEnabled
+                  ? [
+                      {
+                        label: 'warmup-boundary',
+                        ownerToken: activeDepthPickAttribution?.ownerToken,
+                      },
+                    ]
+                  : [],
+                holdProviderWarmupBoundary,
+                [warmupMs],
+              );
+            } catch (error) {
+              if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+                retainDepthPickBoundaryFailure(
+                  activeDepthPickAttribution.sample,
+                  'warmupBoundary',
+                  error,
+                );
+                failureProgress.current.depthPickAttribution =
+                  activeDepthPickAttribution.sample;
+                failureProgress.workload.depthPickAttribution =
+                  depthPickAttributionEnvelope();
+              }
+              throw error;
+            }
+            fixtureBoundaryStart =
+              readProviderWarmupBoundarySnapshot(warmupBoundarySettle);
+            if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+              const observation =
+                warmupBoundarySettle?.page?.diagnostics?.finalObservation ??
+                null;
+              activeDepthPickAttribution.sample.warmupBoundary = observation;
+              if (failureProgress.current)
+                failureProgress.current.depthPickAttribution =
+                  activeDepthPickAttribution.sample;
+              failureProgress.workload.depthPickAttribution =
+                depthPickAttributionEnvelope();
+            }
+            failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
+            failureProgress.current.warmupBoundary = fixtureBoundaryStart;
+            if (warmupBoundarySettle?.status !== 'settled')
+              throw new Error(
+                warmupBoundarySettle?.error?.message ||
+                  'Provider fixture warmup completed-render boundary failed.',
+              );
+          }
           failureProgress.current.warmupBoundary = fixtureBoundaryStart;
           return fixtureBoundaryStart;
         },
         settleCompletedRender: async () => {
-          warmupBoundarySettle = productionFlightFixture
-            ? await settleProviderRenderAtBoundary(
-                page,
-                'Warmup boundary',
-                5000,
-              )
-            : null;
+          if (!productionFlightFixture) warmupBoundarySettle = null;
           failureProgress.current.warmupBoundarySettle = warmupBoundarySettle;
           if (failureProgress.current.prewarmWorkerAudit) {
             failureProgress.current.prewarmWorkerAudit.fixtureClockElapsedMs =
@@ -1399,7 +2614,8 @@ try {
         },
         audit: () =>
           auditPageWorkerBlobs(page, captureAuditState, {
-            documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+            documentRole: activeDocumentRole,
+            documentId: activeDocumentId,
             auditMode: 'prewarm',
             requireEvidence: true,
           }),
@@ -1468,7 +2684,7 @@ try {
       failureProgress.current.phase = failureProgress.phase;
       failureProgress.current.before = sceneBefore;
       const sample = await page.evaluate(
-        async ({ durationMs, scenarioName, delay }) => {
+        async ({ durationMs, scenarioName, delay, recordFrameWindow }) => {
           const viewer = window.__godsEyeView.viewer;
           const scene = viewer.scene;
           const stagedClock = window.__gevPhasedMonotonicWallClockV1;
@@ -1508,6 +2724,7 @@ try {
           let motionStartedAt = null;
           let motionDistance = 0;
           let measurementTimer = null;
+          let measurementTimerFiredPerformanceNowMs = null;
           let delayTimer = null;
           let motionFinished = Promise.resolve();
           let finishMotion = () => {};
@@ -1515,7 +2732,11 @@ try {
             if (stagedClock) stagedClock.startMeasurement();
             const startedAt = performance.now();
             const measurementWait = new Promise((resolve) => {
-              measurementTimer = setTimeout(resolve, durationMs);
+              measurementTimer = setTimeout(() => {
+                if (recordFrameWindow)
+                  measurementTimerFiredPerformanceNowMs = performance.now();
+                resolve();
+              }, durationMs);
             });
             if (scenarioName === 'scripted-motion') {
               // Rebuild the pose from one elapsed-time sample on every frame.
@@ -1635,6 +2856,15 @@ try {
                 motionDistanceM: motionDistance,
               },
               phasedClockEnd: clockEnd,
+              ...(recordFrameWindow
+                ? {
+                    sceneFrameDiagnosticWindow: {
+                      startPerformanceNowMs: startedAt,
+                      timerFiredPerformanceNowMs:
+                        measurementTimerFiredPerformanceNowMs,
+                    },
+                  }
+                : {}),
             };
           } finally {
             active = false;
@@ -1646,9 +2876,16 @@ try {
             document.removeEventListener('visibilitychange', onVisibility);
           }
         },
-        { durationMs: seconds * 1000, scenarioName: scenario, delay: delayMs },
+        {
+          durationMs: seconds * 1000,
+          scenarioName: scenario,
+          delay: delayMs,
+          recordFrameWindow: collectSceneFrameAttribution,
+        },
       );
       failureProgress.current.measurement = sample;
+      if (boundaryProgressBindingRecord)
+        sample.renderBoundaryProgressBinding = boundaryProgressBindingRecord;
       if (productionFlightFixture) {
         failureProgress.phase = 'validate-provider-fixture-clock';
         failureProgress.current.phase = failureProgress.phase;
@@ -1681,17 +2918,104 @@ try {
           throw new Error(
             `Provider-fixture capture clock/freshness/foreground contract failed: ${JSON.stringify({ clock: clockEnd.clock, fixtureAgeMs, flightStats: clockEnd.flightStats, documentVisible: clockEnd.documentVisible, documentFocused: clockEnd.documentFocused })}`,
           );
-        const measurementBoundarySettle = await settleProviderRenderAtBoundary(
-          page,
-          'Measurement boundary',
-          5000,
+        failureProgress.phase = 'measurement-boundary-render-wait';
+        failureProgress.current.phase = failureProgress.phase;
+        const measurementProgressRecord = failureProgress.current;
+        let measurementBoundarySettle;
+        try {
+          measurementBoundarySettle = await settleProviderRenderAtBoundary(
+            page,
+            'Measurement boundary',
+            5000,
+            measurementProgressRecord
+              ? createBoundaryProgressRecorder(
+                  measurementProgressRecord,
+                  'measurementBoundaryObservation',
+                )
+              : undefined,
+            activeRenderBoundaryProgressBinding,
+            true,
+            scenario === 'selected-aircraft-tracking'
+              ? observeTrackedEntityBoundary
+              : depthPickAttributionEnabled
+                ? observeDepthPickAttributionBoundary
+                : null,
+            scenario === 'selected-aircraft-tracking'
+              ? depthPickAttributionEnabled
+                ? [
+                    'flights:000001',
+                    activeDepthPickAttribution?.ownerToken,
+                    'measurement-boundary',
+                  ]
+                : ['flights:000001']
+              : depthPickAttributionEnabled
+                ? [
+                    {
+                      label: 'measurement-boundary',
+                      ownerToken: activeDepthPickAttribution?.ownerToken,
+                    },
+                  ]
+                : [],
+          );
+        } catch (error) {
+          const retirement =
+            error.boundaryObservation?.page?.diagnostics
+              ?.renderLoopRetirement ?? null;
+          if (retirement)
+            recordRendererLoopRetirement({
+              phase: 'provider-sample-measurement-post-render',
+              scenario,
+              run,
+              documentRole: activeDocumentRole,
+              documentId: activeDocumentId,
+              ...retirement,
+            });
+          if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+            activeDepthPickAttribution.sample.measurementBoundary =
+              error?.boundaryObservation?.page?.diagnostics?.finalObservation ??
+              null;
+            if (failureProgress.current)
+              failureProgress.current.depthPickAttribution =
+                activeDepthPickAttribution.sample;
+            failureProgress.workload.depthPickAttribution =
+              depthPickAttributionEnvelope();
+          }
+          throw error;
+        } finally {
+          if (collectProviderSampleCpuProfile)
+            await stopProviderSampleCpuProfile(
+              'measurement-boundary-settled-or-failed',
+            );
+          if (
+            activeSceneFrameAttribution?.progressRecord ===
+            measurementProgressRecord
+          )
+            await stopSceneFrameAttribution(
+              'measurement-boundary-settled-or-failed',
+              measurementProgressRecord.measurement,
+            );
+        }
+        const bindingCleanup = await disposeActiveRenderBoundaryProgressBinding(
+          'both-boundaries-complete',
         );
+        if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+          const finalObservation =
+            measurementBoundarySettle?.page?.diagnostics?.finalObservation ??
+            null;
+          activeDepthPickAttribution.sample.measurementBoundary =
+            finalObservation?.depthPickAttribution ?? finalObservation;
+          failureProgress.current.depthPickAttribution =
+            activeDepthPickAttribution.sample;
+          failureProgress.workload.depthPickAttribution =
+            depthPickAttributionEnvelope();
+        }
+        if (bindingCleanup && !bindingCleanup.removed)
+          throw new Error(
+            'Render-boundary binding cleanup failed after sample boundaries.',
+          );
         const trackingEnd =
           scenario === 'selected-aircraft-tracking'
-            ? await page.evaluate(
-                observeTrackedEntityBoundary,
-                'flights:000001',
-              )
+            ? measurementBoundarySettle.page?.diagnostics?.finalObservation
             : null;
         if (trackingEnd) {
           sample.trackingObservation = {
@@ -1699,6 +3023,10 @@ try {
             end: trackingEnd,
           };
           failureProgress.current.trackingEnd = trackingEnd;
+        } else if (scenario === 'selected-aircraft-tracking') {
+          throw new Error(
+            'Tracked entity endpoint was unavailable at the terminal postRender observation.',
+          );
         }
         sample.fixtureClock = {
           schema: 'gev-provider-fixture-capture-clock/v1',
@@ -1726,6 +3054,17 @@ try {
           appDocumentReinitialized: true,
           freshBrowserContext: true,
         };
+        sample.renderLoopRetirement =
+          measurementBoundarySettle.page?.diagnostics?.renderLoopRetirement ??
+          null;
+        recordRendererLoopRetirement({
+          phase: 'provider-sample-measurement-post-render',
+          scenario,
+          run,
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+          ...sample.renderLoopRetirement,
+        });
         if (scenario === 'selected-aircraft-tracking') {
           const cameraPose = (boundary) => ({
             dateEpochMs: boundary.dateEpochMs,
@@ -1779,7 +3118,8 @@ try {
           activePrewarmedWorkerDocument = null;
         } else {
           await auditPageWorkerBlobs(page, captureAuditState, {
-            documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+            documentRole: activeDocumentRole,
+            documentId: activeDocumentId,
             auditMode: 'diagnostic',
           });
         }
@@ -1816,6 +3156,38 @@ try {
           visible: sceneAfter.environment.visible,
         },
       };
+      if (infrastructureWorkload) {
+        assertInfrastructureClockObservation(
+          sceneBefore.cesiumClock,
+          infrastructureWorkload,
+          `${scenario} run ${run} before`,
+        );
+        assertInfrastructureClockObservation(
+          sceneAfter.cesiumClock,
+          infrastructureWorkload,
+          `${scenario} run ${run} after`,
+        );
+        if (
+          sceneBefore.wallClockEpochMs !== infrastructureWorkload.fixedTimeMs ||
+          sceneAfter.wallClockEpochMs !== infrastructureWorkload.fixedTimeMs
+        )
+          throw new Error(
+            `Infrastructure fixture wall clock drifted during ${scenario} run ${run}.`,
+          );
+        sample.infrastructureFixtureClock = {
+          fixedTime: infrastructureWorkload.fixedTime,
+          wallClockBeforeMs: sceneBefore.wallClockEpochMs,
+          wallClockAfterMs: sceneAfter.wallClockEpochMs,
+          cesiumBefore: sceneBefore.cesiumClock,
+          cesiumAfter: sceneAfter.cesiumClock,
+        };
+        fixtureDelivery = await infrastructureFixtureDelivery.summarize(
+          sceneBefore.environment.layers,
+          sceneAfter.environment.layers,
+        );
+        sample.fixtureDelivery = fixtureDelivery;
+        failureProgress.fixtureDelivery = fixtureDelivery;
+      }
       if (scenario !== 'selected-aircraft-tracking' || !productionFlightFixture)
         sample.cameraPath = describeObservedRoute({
           scenario,
@@ -1832,6 +3204,20 @@ try {
         throw new Error(
           `Selected-aircraft workload lost camera tracking: ${JSON.stringify({ trackingSetup, trackedAircraftId: sample.trackedAircraftId })}`,
         );
+      sample.documentRole = activeDocumentRole;
+      sample.documentId = activeDocumentId;
+      sample.captureOrdinal = captures.length;
+      if (collectProviderSampleCpuProfile)
+        sample.providerSampleCpuProfile =
+          providerSampleCpuProfiles.find(
+            (record) => record.captureOrdinal === captures.length,
+          ) || null;
+      if (depthPickAttributionEnabled && activeDepthPickAttribution) {
+        sample.captureOrdinal = captures.length;
+        sample.depthPickAttribution = activeDepthPickAttribution.sample;
+        failureProgress.workload.depthPickAttribution =
+          depthPickAttributionEnvelope();
+      }
       captures.push({ scenario, run, ...sample });
       failureProgress.current = null;
     }
@@ -1873,7 +3259,8 @@ try {
       );
     if (!providerSampleWorkerAuditComplete) {
       await auditPageWorkerBlobs(page, captureAuditState, {
-        documentRole: `provider-sample-${providerSampleDocumentIndex}`,
+        documentRole: activeDocumentRole,
+        documentId: activeDocumentId,
         auditMode: 'diagnostic',
       });
       providerSampleWorkerAuditComplete = true;
@@ -1926,7 +3313,14 @@ try {
   failureProgress.scenario = null;
   failureProgress.run = null;
   failureProgress.current = null;
-  fixtureDelivery = await summarizeFlightFixtureDelivery();
+  fixtureDelivery = productionFlightFixture
+    ? await summarizeFlightFixtureDelivery()
+    : infrastructureWorkload
+      ? await infrastructureFixtureDelivery.summarize(
+          environment.layers,
+          captures.at(-1)?.layers || environment.layers,
+        )
+      : null;
   failureProgress.fixtureDelivery = fixtureDelivery;
   if (productionFlightFixture) {
     const perSampleResponseCounts = captures.map((sample) => ({
@@ -1953,6 +3347,9 @@ try {
     expectedCounts: {
       ...(fixture ? { flights: effectiveFixtureAircraftCount } : {}),
       ...(mixedLayers ? { 'local-datacenters': 4362, 'local-dams': 716 } : {}),
+      ...(infrastructureWorkload
+        ? infrastructureWorkload.expectedLayerCounts
+        : {}),
     },
     ...(productionFlightFixture
       ? {
@@ -1962,6 +3359,7 @@ try {
         }
       : {}),
   });
+  const comparisonFixture = productionFlightFixture || infrastructureWorkload;
   const comparisonContract = productionFlightFixture
     ? createObservedDenseComparisonContract({
         fixture: productionFlightFixture,
@@ -1970,28 +3368,152 @@ try {
         captures,
         scenarios,
       })
-    : null;
+    : infrastructureWorkload
+      ? createObservedInfrastructureComparisonContract({
+          fixture: infrastructureWorkload,
+          fixtureDelivery,
+          environment,
+          captures,
+          scenarios,
+        })
+      : null;
+  if (page && activeDepthPickAttribution)
+    await disposeDepthPickAttributionForPage(page, activeDepthPickAttribution);
+  if (page)
+    await cleanupEarlyRendererProbeForPage(page, {
+      retireViewerRenderLoop: true,
+      phase: 'capture-document-retirement',
+      documentRole: activeDocumentRole,
+      documentId: activeDocumentId,
+    });
+  for (const session of [...fixtureInterceptionSessions])
+    await releaseFlightFixtureSession(session);
+  const workload = {
+    warmupMs,
+    durationPerSampleMs: seconds * 1000,
+    runsPerScenario: runs,
+    startupRuns: startupSamples.length,
+    scenarios,
+    rendererProbeCleanup: [
+      ...(failureProgress.workload.rendererProbeCleanup || []),
+    ],
+    rendererProbeCleanupOmittedCount:
+      failureProgress.workload.rendererProbeCleanupOmittedCount || 0,
+    rendererLoopRetirements: [
+      ...(failureProgress.workload.rendererLoopRetirements || []),
+    ],
+    rendererLoopRetirementsOmittedCount:
+      failureProgress.workload.rendererLoopRetirementsOmittedCount || 0,
+    fixtureInterceptionReleases: [
+      ...(failureProgress.workload.fixtureInterceptionReleases || []),
+    ],
+    ...(depthPickAttributionEnabled
+      ? {
+          depthPickAttribution: depthPickAttributionEnvelope(),
+          performanceAcceptanceEligible: false,
+        }
+      : {}),
+    fixture: infrastructureWorkload || fixture,
+    providerFixture: infrastructureWorkload
+      ? infrastructureWorkload.workloadId
+      : productionFlightFixture
+        ? 'dense-investigation'
+        : null,
+    fixtureId:
+      infrastructureWorkload?.id || productionFlightFixture?.id || null,
+    injectedDelayMs: delayMs,
+    hardwareRequired,
+    ...(productionFlightFixture
+      ? {
+          providerFixtureLifecycle: {
+            scope:
+              'each measured scenario/repetition uses a newly created browser context; the earlier setup page contributes environment metadata only, not a capture sample',
+            clock:
+              'fixture wall time is held during setup, advances monotonically within configured warmup/measurement phases, then stays capped at each declared boundary; native timers, RAF and performance.now are unchanged',
+            boundarySettling:
+              'one completed Cesium postRender is observed at each capped boundary outside the measured interval, with host and page timeout bounds',
+            workerAuditTimingBoundary:
+              workerAuditMode === 'prewarm'
+                ? PREWARM_WORKER_AUDIT_BOUNDARY
+                : 'during-capture-diagnostic-instrumentation',
+            trackingRoute:
+              'entity-follow-v1 observes the public trackedEntity position, camera pose and Cesium clock state at both fixture epochs',
+            fixtureTimeAlignment:
+              'whole-second UTC; OpenSky source and position epochs agree exactly',
+            sourceFreshnessWindowMs: 120_000,
+          },
+        }
+      : {}),
+    ...(infrastructureWorkload
+      ? {
+          infrastructureFixtureLifecycle: {
+            scope:
+              'one measured app document per capture process; each asset response is matched to its verified build-receipt URL and SHA-256, with populations observed before and after every sample',
+            clock:
+              'Date.now remains at the declared whole-millisecond epoch; Cesium currentTime is set from Cesium.JulianDate.fromDate with shouldAnimate=false and multiplier=0',
+            camera: structuredClone(infrastructureWorkload.camera),
+            routeScope:
+              'idle and elapsed-time scripted camera motion, reset from the same captured home pose before every run',
+            freshBrowserContextPerSample: false,
+          },
+        }
+      : {}),
+    mixedLayers: mixedLayerFixture,
+    qualityMode,
+    expectedDensityPct: Number.isFinite(expectedDensityPct)
+      ? expectedDensityPct
+      : null,
+    cameraPath:
+      'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
+    detectionMode: fixture || infrastructureWorkload ? detectionMode : null,
+    populationStableAcrossSamples,
+    cameraPathStableAcrossSamples,
+    ...(sceneFrameDiagnosticsEnabled
+      ? {
+          sceneFrameDiagnostics: {
+            enabled: true,
+            targetScenario: 'scripted-motion',
+            targetRun: 1,
+            scope:
+              'installed before warmup, stopped after measurement-boundary settlement; bounded CPU/event timing, not GPU duration',
+            eligibleForComparison: false,
+          },
+        }
+      : {}),
+    ...(firstMotionCpuProfileEnabled
+      ? {
+          providerSampleCpuProfiles: {
+            ...providerSampleCpuProfileEnvelope(),
+          },
+        }
+      : {}),
+    note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
+  };
   const comparisonReadinessReasons = getCaptureReadinessReasons({
     contract: comparisonContract,
-    fixture: productionFlightFixture,
+    fixture: comparisonFixture,
     fixtureDelivery,
     source,
     environment,
-    workload: {
-      warmupMs,
-      durationPerSampleMs: seconds * 1000,
-      runsPerScenario: runs,
-      startupRuns: startupSamples.length,
-      injectedDelayMs: delayMs,
-      scenarios,
-      hardwareRequired,
-    },
+    workload,
     captures,
     diagnosticsDocuments: performanceDiagnosticsDocuments,
     workerBlobAuditInstrumented: Boolean(captureProvenance),
     workerAuditMode,
     hardwareRequired,
   });
+  if (sceneFrameDiagnosticsEnabled)
+    comparisonReadinessReasons.push(
+      'scene-frame-attribution-instrumentation-is-enabled',
+    );
+  if (firstMotionCpuProfileEnabled)
+    comparisonReadinessReasons.push(
+      'provider-sample-cpu-profile-instrumentation-is-enabled',
+    );
+  if (depthPickAttributionEnabled)
+    comparisonReadinessReasons.push(
+      'depth-pick-attribution-instrumentation-is-enabled',
+    );
   // These host/browser identity reads happen after all timed samples. Keep
   // browser-reported platform separate from the machine that launched Chrome.
   const hostEnvironment = readHostEnvironment();
@@ -2003,6 +3525,35 @@ try {
       workerAuditMode === 'prewarm'
         ? PREWARM_WORKER_AUDIT_BOUNDARY
         : 'during-capture-diagnostic-instrumentation',
+    ...(firstMotionCpuProfileEnabled
+      ? {
+          providerSampleCpuProfiles: {
+            ...providerSampleCpuProfileEnvelope(),
+          },
+        }
+      : {}),
+    ...(sceneFrameDiagnosticsEnabled
+      ? {
+          sceneFrameDiagnostics: {
+            status: captures.some(
+              (sample) =>
+                sample.scenario === 'scripted-motion' &&
+                sample.run === 1 &&
+                sample.sceneFrameAttribution?.status === 'completed' &&
+                sample.sceneFrameAttribution?.cleanup === 'confirmed' &&
+                sample.sceneFrameAttribution?.observation
+                  ?.sceneEventAvailability?.update === true &&
+                sample.sceneFrameAttribution?.observation
+                  ?.sceneEventAvailability?.render === true,
+            )
+              ? 'completed'
+              : 'incomplete',
+            targetScenario: 'scripted-motion',
+            targetRun: 1,
+            eligibleForComparison: false,
+          },
+        }
+      : {}),
     performanceDiagnostics: {
       requested:
         'disabled-after-app-ready-before-warmup-when-supported-per-document',
@@ -2032,47 +3583,7 @@ try {
     hostEnvironment,
     graphics,
     integrity,
-    workload: {
-      warmupMs,
-      durationPerSampleMs: seconds * 1000,
-      runsPerScenario: runs,
-      startupRuns: startupSamples.length,
-      scenarios,
-      fixture,
-      ...(productionFlightFixture
-        ? {
-            providerFixtureLifecycle: {
-              scope:
-                'each measured scenario/repetition uses a newly created browser context; the earlier setup page contributes environment metadata only, not a capture sample',
-              clock:
-                'fixture wall time is held during setup, advances monotonically within configured warmup/measurement phases, then stays capped at each declared boundary; native timers, RAF and performance.now are unchanged',
-              boundarySettling:
-                'one completed Cesium postRender is observed at each capped boundary outside the measured interval, with host and page timeout bounds',
-              workerAuditTimingBoundary:
-                workerAuditMode === 'prewarm'
-                  ? PREWARM_WORKER_AUDIT_BOUNDARY
-                  : 'during-capture-diagnostic-instrumentation',
-              trackingRoute:
-                'entity-follow-v1 observes the public trackedEntity position, camera pose and Cesium clock state at both fixture epochs',
-              fixtureTimeAlignment:
-                'whole-second UTC; OpenSky source and position epochs agree exactly',
-              sourceFreshnessWindowMs: 120_000,
-            },
-          }
-        : {}),
-      mixedLayers: mixedLayerFixture,
-      qualityMode,
-      expectedDensityPct: Number.isFinite(expectedDensityPct)
-        ? expectedDensityPct
-        : null,
-      cameraPath:
-        'elapsed-move-right-v1 for scripted motion; parked-v1 for idle; entity-follow-v1 for provider-backed tracking',
-      detectionMode: fixture ? detectionMode : null,
-      injectedDelayMs: delayMs,
-      populationStableAcrossSamples,
-      cameraPathStableAcrossSamples,
-      note: 'Repeat base and candidate with the same browser, renderer, source population, camera path, viewport, warmup and foreground state.',
-    },
+    workload,
     motionBudget: {
       ...motionBudget,
       note: 'Idle rendering is intentionally sparse and is excluded from motion frame budgets.',
@@ -2095,6 +3606,12 @@ try {
     process.exitCode = 1;
 } catch (error) {
   captureFailure = error;
+  await stopProviderSampleCpuProfile('capture-failed');
+  await stopSceneFrameAttribution(
+    'capture-failed',
+    failureProgress.current?.measurement ?? null,
+  );
+  await disposeActiveRenderBoundaryProgressBinding('capture-failed');
   if (failureProgress.phase === 'final-integrity-check') {
     const failedSample = String(error?.message || '').match(
       /^(idle|scripted-motion|selected-aircraft-tracking) run (\d+):/,
@@ -2112,10 +3629,59 @@ try {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
   }
 } finally {
-  for (const session of fixtureInterceptionSessions) {
-    await session.send('Fetch.disable').catch(() => {});
-    await session.detach().catch(() => {});
+  await stopProviderSampleCpuProfile('capture-finally');
+  await stopSceneFrameAttribution(
+    'capture-finally',
+    failureProgress.current?.measurement ?? null,
+  );
+  await disposeActiveRenderBoundaryProgressBinding('capture-finally');
+  if (activePage && activeDepthPickAttribution) {
+    try {
+      await disposeDepthPickAttributionForPage(
+        activePage,
+        activeDepthPickAttribution,
+      );
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
   }
+  for (const probePage of [...earlyRendererProbeScripts.keys()]) {
+    try {
+      await cleanupEarlyRendererProbeForPage(probePage, {
+        retireViewerRenderLoop: true,
+        phase: 'capture-final-document-retirement',
+        documentRole:
+          probePage === activePage ? activeDocumentRole : 'retired-document',
+        documentId: probePage === activePage ? activeDocumentId : null,
+      });
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
+  for (const session of [...fixtureInterceptionSessions]) {
+    try {
+      await releaseFlightFixtureSession(session);
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
+  for (const [
+    responsePage,
+    responseListener,
+  ] of infrastructureResponseListeners) {
+    try {
+      if (typeof responsePage.off === 'function')
+        responsePage.off('response', responseListener);
+      else responsePage.removeListener('response', responseListener);
+    } catch (error) {
+      captureFailure ||= error;
+      process.exitCode = 1;
+    }
+  }
+  infrastructureResponseListeners.clear();
   try {
     await browser.close();
   } catch (error) {
@@ -2131,5 +3697,18 @@ if (captureFailure && !failureReportWritten) {
     await writeCaptureFailure(captureFailure);
   } catch {
     process.stderr.write('Could not write bounded failed-capture evidence.\n');
+  }
+} else if (
+  captureFailure &&
+  (sceneFrameDiagnosticsEnabled ||
+    depthPickAttributionEnabled ||
+    failureProgress.workload.fixtureInterceptionReleases.length > 0)
+) {
+  try {
+    await writeCaptureFailure(captureFailure, { refresh: true });
+  } catch {
+    process.stderr.write(
+      'Could not refresh bounded failed-capture evidence after cleanup; preserving the initial report.\n',
+    );
   }
 }

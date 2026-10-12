@@ -1,5 +1,14 @@
 # Cesium performance plan
 
+The [current-dev S48 diagnostic port](performance-evidence/s48-current-dev-capture/README.md)
+preserves the newer camera/prewarm and streamed-map ownership fixes. Root full
+Node 24 validation passes 7,413 checks with zero failures and ten existing skips,
+including all fourteen allocation gates. That integration exposed and repaired
+an eager Cesium import before invalid CLI argument rejection; the five-second
+limit and fixture timestamp semantics are unchanged. Exact-commit hosted
+validation remains pending on the isolated QA branch. S48 and hardware
+acceptance remain partial.
+
 Latest isolated S48 fixture-release ownership repair at `947f1e12` passes
 117 focused tests and independent original/candidate actual-CLI checks.
 It cancels prepared responses, drains issued commands, and closes the owned
@@ -3781,6 +3790,8 @@ partial packet remains partial and cannot close the parent slice.
   to test. The strict audit remains failed; no CLI browser pass is claimed.
   Validate all created bootstrap recipes independently from observed execution,
   keeping unstarted constructions distinct from worker-target evidence.
+- **S47 infrastructure capture selection implemented by GPT-6 Luna; rendered validation pending:** the build-smoke CLI and manual workflow now accept four explicit candidate capture workloads: bundled datacenters, dams, submarine cables, or all three together. The capture uses registered source hashes and actual build-receipt asset routes, acknowledges same-origin served bytes, fixes both wall and Cesium clocks, and records selected populations/settings before and after observation. Dense remains the default; unsupported modes and infrastructure/prewarm combinations fail before browser launch. The additional capture remains `comparisonEligible: false`; the ordinary baseline/candidate smoke pages still run their dense integration checks. Thirty-nine focused tests, full formatting, package-boundary/import-direction checks, and a local production build passed. The built hashed asset paths were resolved against their actual bytes and hashes without launching a browser. No hosted rendered comparison or hardware result exists for this extension. Austin operating workload, weather/effects, and map-streaming workload selection remain unimplemented and are still required for the broader S47 workload scope.
+- **S47 infrastructure worker-audit coverage and outer-failure preservation implemented by GPT-6 Luna:** `5128691` and `d7f4840` originally encoded the dense fresh-document topology for infrastructure. This follow-up corrects that contract from the producer: infrastructure uses one measured app document for all four captures, while startup is separate; diagnostics are `startup-*` plus `main-setup`, worker audits are `startup-*` plus `main-measured`, and each sample carries the measured document role and ID. The canonical workload metadata now exports the selected fixture/workload identity to both the report and readiness check. The dense fresh `provider-sample-*` topology remains unchanged. The validator binds sample, diagnostic, worker-audit, and aggregate observation identities and rejects missing, split, or substituted documents; a startup document with no workers remains representable only when its observed worker counts are zero. If outer smoke validation rejects a completed `gev-performance-capture/v1` report, its redacted, depth/collection-bounded projection is retained only when it fits the existing 256 KiB artifact cap; oversized or unrecognized input remains unavailable with an explicit reason. Run `38190043475` remains failed; its retained diagnostic projection was depth-truncated and is not a complete raw report. The corrected producer/validator has not yet had a hosted rerun, so infrastructure rendered validation remains pending.
 - **Worker construction and execution evidence separated by GPT-6 Luna:**
   `49a220756359ec815aaaf6a042c31f0608cc39c3` validates every bounded creation record as
   either the exact receipt-derived embedded source or an exact allowed bootstrap

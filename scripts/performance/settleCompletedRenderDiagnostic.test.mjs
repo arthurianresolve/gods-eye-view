@@ -1,0 +1,637 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  createBoundaryProgressRecorder,
+  observeRenderBoundary,
+} from './renderBoundaryObservation.mjs';
+import {
+  evaluateCompletedRenderDiagnostic,
+  settleCompletedRenderDiagnostic,
+} from './settleCompletedRenderDiagnostic.mjs';
+import { observeTrackedEntityBoundary } from './trackingRoute.mjs';
+import {
+  holdProviderWarmupBoundary,
+  installPhasedMonotonicWallClock,
+} from './productionFlightFixture.mjs';
+
+class Event {
+  handlers = new Set();
+  addEventListener(handler) {
+    this.handlers.add(handler);
+    return () => this.handlers.delete(handler);
+  }
+  removeEventListener(handler) {
+    this.handlers.delete(handler);
+  }
+  fire() {
+    for (const handler of [...this.handlers]) handler();
+  }
+}
+
+function viewer({
+  render = false,
+  requestRender = true,
+  renderLoop = undefined,
+  refuseRetirement = false,
+  throwOnRetirement = false,
+  onRetirement = () => {},
+} = {}) {
+  const postRender = new Event();
+  const scene = { postRender };
+  if (requestRender) {
+    scene.requestRender = () => {
+      if (render) queueMicrotask(() => postRender.fire());
+    };
+  }
+  const subject = { scene };
+  if (renderLoop !== undefined) {
+    let current = renderLoop;
+    Object.defineProperty(subject, 'useDefaultRenderLoop', {
+      get: () => current,
+      set: (value) => {
+        if (value === false) onRetirement();
+        if (throwOnRetirement && value === false)
+          throw new Error('render loop setter failed');
+        if (!(refuseRetirement && value === false)) current = value;
+      },
+    });
+  }
+  return subject;
+}
+
+test('diagnostic render probe records request, postRender and owned cleanup', async () => {
+  const subject = viewer({ render: true });
+  const result = await settleCompletedRenderDiagnostic(subject, 100);
+  assert.equal(result.status, 'settled');
+  assert.equal(result.diagnostics.renderRequestAvailable, true);
+  assert.equal(result.diagnostics.renderRequestStarted, true);
+  assert.equal(result.diagnostics.renderRequestCompleted, true);
+  assert.equal(result.diagnostics.postRenderObserved, true);
+  assert.equal(result.diagnostics.cleanup.timerCleared, true);
+  assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('page timer and missing render request stay explicit without relaxing settle', async () => {
+  const subject = viewer({ requestRender: false });
+  const result = await settleCompletedRenderDiagnostic(subject, 5);
+  assert.equal(result.status, 'page-error');
+  assert.equal(result.diagnostics.pageTimerFired, true);
+  assert.equal(result.diagnostics.renderRequestAvailable, false);
+  assert.equal(result.diagnostics.renderRequestStarted, false);
+  assert.equal(result.diagnostics.renderRequestCompleted, false);
+  assert.equal(result.diagnostics.postRenderObserved, false);
+  assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('render request exception is retained and listener is removed', async () => {
+  const subject = viewer();
+  subject.scene.requestRender = () => {
+    throw new Error('requestRender failed');
+  };
+  const result = await settleCompletedRenderDiagnostic(subject, 100);
+  assert.equal(result.status, 'page-error');
+  assert.equal(result.error.message, 'requestRender failed');
+  assert.equal(result.diagnostics.renderRequestStarted, true);
+  assert.equal(result.diagnostics.renderRequestCompleted, false);
+  assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('warmup boundary leaves viewer loop active and final boundary retires after postRender', async () => {
+  const order = [];
+  const subject = viewer({
+    render: true,
+    renderLoop: true,
+    onRetirement: () => order.push('retired'),
+  });
+  const warmup = await settleCompletedRenderDiagnostic(subject, 100);
+  assert.equal(warmup.status, 'settled');
+  assert.equal(subject.useDefaultRenderLoop, true);
+  assert.equal(warmup.diagnostics.renderLoopRetirement, null);
+
+  const final = await settleCompletedRenderDiagnostic(
+    subject,
+    100,
+    null,
+    null,
+    true,
+    (label) => {
+      order.push('observed');
+      return { label };
+    },
+    ['tracking-end'],
+  );
+  assert.equal(final.status, 'settled');
+  assert.equal(final.diagnostics.postRenderObserved, true);
+  assert.deepEqual(final.diagnostics.finalObservation, {
+    label: 'tracking-end',
+  });
+  assert.deepEqual(order, ['observed', 'retired']);
+  assert.deepEqual(final.diagnostics.renderLoopRetirement, {
+    requested: true,
+    status: 'retired-at-final-post-render',
+    before: true,
+    after: false,
+    confirmed: true,
+    elapsedMs: final.diagnostics.renderLoopRetirement.elapsedMs,
+  });
+  assert.equal(subject.useDefaultRenderLoop, false);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('final boundary timeout does not claim retirement or settle successfully', async () => {
+  const subject = viewer({ requestRender: false, renderLoop: true });
+  const result = await settleCompletedRenderDiagnostic(
+    subject,
+    5,
+    null,
+    null,
+    true,
+  );
+  assert.equal(result.status, 'page-error');
+  assert.equal(result.diagnostics.pageTimerFired, true);
+  assert.equal(result.diagnostics.renderLoopRetirement.confirmed, false);
+  assert.equal(result.diagnostics.renderLoopRetirement.status, 'not-attempted');
+  assert.equal(subject.useDefaultRenderLoop, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('final boundary fails closed when loop state is unavailable or retirement is refused', async () => {
+  const missing = viewer({ render: true });
+  const missingResult = await settleCompletedRenderDiagnostic(
+    missing,
+    100,
+    null,
+    null,
+    true,
+  );
+  assert.equal(missingResult.status, 'page-error');
+  assert.equal(
+    missingResult.diagnostics.renderLoopRetirement.status,
+    'viewer-render-loop-unavailable',
+  );
+  assert.equal(missing.scene.postRender.handlers.size, 0);
+
+  const refused = viewer({
+    render: true,
+    renderLoop: true,
+    refuseRetirement: true,
+  });
+  const refusedResult = await settleCompletedRenderDiagnostic(
+    refused,
+    100,
+    null,
+    null,
+    true,
+  );
+  assert.equal(refusedResult.status, 'page-error');
+  assert.equal(
+    refusedResult.diagnostics.renderLoopRetirement.status,
+    'viewer-render-loop-not-disabled',
+  );
+  assert.equal(refusedResult.diagnostics.renderLoopRetirement.confirmed, false);
+  assert.equal(refused.useDefaultRenderLoop, true);
+  assert.equal(refused.scene.postRender.handlers.size, 0);
+
+  const alreadyDisabled = viewer({ render: true, renderLoop: false });
+  const alreadyDisabledResult = await settleCompletedRenderDiagnostic(
+    alreadyDisabled,
+    100,
+    null,
+    null,
+    true,
+  );
+  assert.equal(alreadyDisabledResult.status, 'page-error');
+  assert.equal(
+    alreadyDisabledResult.diagnostics.renderLoopRetirement.status,
+    'already-disabled-before-final-post-render',
+  );
+  assert.equal(alreadyDisabled.scene.postRender.handlers.size, 0);
+
+  const throws = viewer({
+    render: true,
+    renderLoop: true,
+    throwOnRetirement: true,
+  });
+  const throwsResult = await settleCompletedRenderDiagnostic(
+    throws,
+    100,
+    null,
+    null,
+    true,
+  );
+  assert.equal(throwsResult.status, 'page-error');
+  assert.equal(
+    throwsResult.diagnostics.renderLoopRetirement.status,
+    'viewer-render-loop-set-failed',
+  );
+  assert.equal(throwsResult.diagnostics.renderLoopRetirement.confirmed, false);
+  assert.equal(throws.scene.postRender.handlers.size, 0);
+});
+
+test('host binding receives owned page phase acknowledgements and is removed', async () => {
+  const subject = viewer({ render: true });
+  const hostSnapshots = [];
+  const result = await observeRenderBoundary({
+    label: 'integrated page probe',
+    timeoutMs: 100,
+    prepareProgress: async (receive, invocationId) => {
+      const functionName = `__test_${invocationId.replaceAll('-', '')}`;
+      globalThis[functionName] = (id, stage, details) =>
+        receive(id, stage, details);
+      return {
+        functionName,
+        dispose: () => {
+          delete globalThis[functionName];
+        },
+      };
+    },
+    evaluate: (timeoutMs, { invocationId, progressFunctionName }) =>
+      settleCompletedRenderDiagnostic(
+        subject,
+        timeoutMs,
+        progressFunctionName,
+        invocationId,
+      ),
+    onProgress: (snapshot) => hostSnapshots.push(snapshot),
+  });
+  assert.equal(result.status, 'settled');
+  assert.equal(result.pageEntryObserved, true);
+  assert.deepEqual(
+    result.progressEvents.map(({ stage }) => stage),
+    [
+      'page-entry',
+      'listener-registered',
+      'render-request-started',
+      'render-request-completed',
+      'post-render',
+      'terminal',
+      'cleanup',
+    ],
+  );
+  assert.ok(
+    result.progressEvents.every(({ hostReceiptElapsedMs }) =>
+      Number.isFinite(hostReceiptElapsedMs),
+    ),
+  );
+  assert.equal(result.cleanup.progressBindingRemoved, true);
+  assert.equal(hostSnapshots.at(-1).cleanup.progressBindingRemoved, true);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('page evaluate argument order delivers the invocation and host observes page entry', async () => {
+  const subject = viewer({ render: true, renderLoop: true });
+  const invocationId = 'render-boundary-owned-id';
+  const progressFunctionName = '__test_render_boundary_ack';
+  const hostSnapshots = [];
+  const previousView = globalThis.__godsEyeView;
+  const previousBinding = globalThis[progressFunctionName];
+  globalThis.__godsEyeView = { viewer: subject };
+  globalThis[progressFunctionName] = (receivedId, stage, details) => {
+    hostSnapshots.push({ receivedId, stage, details });
+  };
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => fn(...args),
+    };
+    const result = await evaluateCompletedRenderDiagnostic(targetPage, 100, {
+      progressFunctionName,
+      invocationId,
+      retireViewerRenderLoop: true,
+      finalObservationFunction: (value) => ({ value }),
+      finalObservationArgs: ['serialized-final-read'],
+    });
+
+    assert.equal(result.status, 'settled');
+    assert.equal(result.diagnostics.renderLoopRetirement.confirmed, true);
+    assert.deepEqual(result.diagnostics.finalObservation, {
+      value: 'serialized-final-read',
+    });
+    assert.equal(subject.useDefaultRenderLoop, false);
+    assert.equal(hostSnapshots[0].receivedId, invocationId);
+    assert.equal(hostSnapshots[0].stage, 'page-entry');
+  } finally {
+    if (previousView === undefined) delete globalThis.__godsEyeView;
+    else globalThis.__godsEyeView = previousView;
+    if (previousBinding === undefined) delete globalThis[progressFunctionName];
+    else globalThis[progressFunctionName] = previousBinding;
+  }
+});
+
+test('tracked endpoint helper is composed into the page function with JSON-only evaluate arguments', async () => {
+  const order = [];
+  const subject = viewer({
+    render: true,
+    renderLoop: true,
+    onRetirement: () => order.push('retired'),
+  });
+  subject.trackedEntity = { gevTrackedId: 'flights:000001' };
+  subject.camera = { positionWC: {}, directionWC: {}, upWC: {}, transform: [] };
+  subject.clock = { currentTime: null, shouldAnimate: false, clockStep: 0 };
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  const app = { viewer: subject, dataManager: { layers: new Map() } };
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: { __godsEyeView: app },
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: app,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const serializedFunction = new Function(`return (${fn.toString()});`)();
+        const serializedArgs = JSON.parse(JSON.stringify(args));
+        return serializedFunction(...serializedArgs);
+      },
+    };
+    const result = await evaluateCompletedRenderDiagnostic(targetPage, 100, {
+      retireViewerRenderLoop: true,
+      finalObservationFunction: observeTrackedEntityBoundary,
+      finalObservationArgs: ['flights:000001'],
+    });
+    assert.equal(result.status, 'settled');
+    assert.equal(
+      result.diagnostics.finalObservation.expectedIdentity,
+      'flights:000001',
+    );
+    assert.equal(
+      result.diagnostics.finalObservation.selectedIdentity,
+      'flights:000001',
+    );
+    assert.equal(result.diagnostics.renderLoopRetirement.confirmed, true);
+    assert.deepEqual(order, ['retired']);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('provider warmup clock hold and listener registration share one serialized page callback', async () => {
+  let monotonicNow = 10;
+  const trace = [];
+  const target = {
+    Date,
+    performance: { now: () => monotonicNow },
+    trace,
+  };
+  const fixedTime = Date.parse('2026-10-08T12:00:00.000Z');
+  installPhasedMonotonicWallClock(fixedTime, 1000, 1000, target);
+  target.__godsEyeView = null;
+  target.window = target;
+  target.__gevPhasedMonotonicWallClockV1.startWarmup();
+  monotonicNow += 1200;
+
+  const subject = viewer({ renderLoop: true });
+  target.__godsEyeView = { viewer: subject };
+  subject.scene.postRender.addEventListener = (handler) => {
+    trace.push('listener-registered');
+    subject.scene.postRender.handlers.add(handler);
+    return () => subject.scene.postRender.handlers.delete(handler);
+  };
+  subject.scene.requestRender = () => {
+    trace.push(
+      `render-requested-${target.__gevPhasedMonotonicWallClockV1.snapshot().phase}`,
+    );
+    queueMicrotask(() => subject.scene.postRender.fire());
+  };
+
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  const warmupRecord = {};
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: target,
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: target.__godsEyeView,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const pageFunction = new Function(`return (${fn.toString()});`)();
+        const jsonArgs = JSON.parse(JSON.stringify(args));
+        return pageFunction(...jsonArgs);
+      },
+    };
+    const result = await observeRenderBoundary({
+      label: 'atomic provider warmup boundary',
+      timeoutMs: 100,
+      prepareProgress: async (receive, invocationId) => {
+        const functionName = `__test_warmup_${invocationId.replaceAll('-', '')}`;
+        Object.defineProperty(globalThis, functionName, {
+          configurable: true,
+          value: (receivedId, stage, details) =>
+            receive(receivedId, stage, details),
+        });
+        return {
+          functionName,
+          dispose: () => delete globalThis[functionName],
+        };
+      },
+      evaluate: (pageTimeoutMs, binding) =>
+        evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+          ...binding,
+          beforeRenderRequestFunction: holdProviderWarmupBoundary,
+          beforeRenderRequestArgs: [1000],
+        }),
+      onProgress: createBoundaryProgressRecorder(
+        warmupRecord,
+        'warmupBoundaryObservation',
+      ),
+    });
+
+    assert.equal(result.status, 'settled');
+    assert.deepEqual(trace, [
+      'listener-registered',
+      'render-requested-warmup-held',
+    ]);
+    assert.deepEqual(
+      result.page.diagnostics.beforeRenderRequestObservation,
+      target.__gevPhasedMonotonicWallClockV1.snapshot(),
+    );
+    assert.equal(
+      result.page.diagnostics.beforeRenderRequestObservation.phase,
+      'warmup-held',
+    );
+    assert.equal(result.page.diagnostics.listenerRegistered, true);
+    assert.equal(result.page.diagnostics.cleanup.listenerRemoved, true);
+    const clockAck = result.progressEvents.find(
+      (event) => event.stage === 'fixture-clock-held',
+    );
+    assert.ok(
+      clockAck,
+      JSON.stringify({
+        ignored: result.ignoredProgressEvents,
+        events: result.progressEvents,
+      }),
+    );
+    assert.equal(clockAck.details.fixtureClockPhase, 'warmup-held');
+    assert.equal(clockAck.details.fixtureClockElapsedMs, 1000);
+    assert.equal(clockAck.details.fixtureClockEpochMs, fixedTime + 1000);
+    assert.deepEqual(
+      warmupRecord.warmupBoundary,
+      result.page.diagnostics.beforeRenderRequestObservation,
+    );
+    assert.equal(result.cleanup.progressBindingRemoved, true);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});
+
+test('atomic provider clock callback error removes the listener without requesting a render', async () => {
+  const subject = viewer({ renderLoop: true });
+  let renderRequests = 0;
+  subject.scene.requestRender = () => renderRequests++;
+  const result = await settleCompletedRenderDiagnostic(
+    subject,
+    100,
+    null,
+    null,
+    false,
+    null,
+    [],
+    () => {
+      throw new Error('fixture clock was not at warmup boundary');
+    },
+    [],
+  );
+  assert.equal(result.status, 'page-error');
+  assert.equal(
+    result.error.message,
+    'fixture clock was not at warmup boundary',
+  );
+  assert.equal(result.diagnostics.listenerRegistered, true);
+  assert.equal(result.diagnostics.cleanup.listenerRemoved, true);
+  assert.equal(renderRequests, 0);
+  assert.equal(subject.scene.postRender.handlers.size, 0);
+});
+
+test('host progress preserves an atomic warmup snapshot when its page render times out', async () => {
+  let monotonicNow = 10;
+  const target = { Date, performance: { now: () => monotonicNow } };
+  target.window = target;
+  installPhasedMonotonicWallClock(
+    Date.parse('2026-10-08T12:00:00.000Z'),
+    1000,
+    1000,
+    target,
+  );
+  target.__gevPhasedMonotonicWallClockV1.startWarmup();
+  monotonicNow += 1100;
+  const subject = viewer({ requestRender: false });
+  subject.scene.requestRender = () => {};
+  target.__godsEyeView = { viewer: subject };
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousView = Object.getOwnPropertyDescriptor(
+    globalThis,
+    '__godsEyeView',
+  );
+  const failureRecord = {};
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: target,
+  });
+  Object.defineProperty(globalThis, '__godsEyeView', {
+    configurable: true,
+    value: target.__godsEyeView,
+  });
+  try {
+    const targetPage = {
+      evaluate: (fn, ...args) => {
+        const pageFunction = new Function(`return (${fn.toString()});`)();
+        const pendingPageResult = pageFunction(
+          ...JSON.parse(JSON.stringify(args)),
+        );
+        pendingPageResult.catch(() => {});
+        return new Promise(() => {});
+      },
+    };
+    let failure;
+    try {
+      await observeRenderBoundary({
+        label: 'atomic provider warmup host timeout',
+        timeoutMs: 10,
+        hostGraceMs: 10,
+        prepareProgress: async (receive, invocationId) => {
+          const functionName = `__test_warmup_timeout_${invocationId.replaceAll('-', '')}`;
+          Object.defineProperty(globalThis, functionName, {
+            configurable: true,
+            value: (receivedId, stage, details) =>
+              receive(receivedId, stage, details),
+          });
+          return {
+            functionName,
+            dispose: () => delete globalThis[functionName],
+          };
+        },
+        evaluate: (pageTimeoutMs, binding) =>
+          evaluateCompletedRenderDiagnostic(targetPage, pageTimeoutMs, {
+            ...binding,
+            beforeRenderRequestFunction: holdProviderWarmupBoundary,
+            beforeRenderRequestArgs: [1000],
+          }),
+        onProgress: createBoundaryProgressRecorder(
+          failureRecord,
+          'warmupBoundaryObservation',
+        ),
+      });
+    } catch (error) {
+      failure = error;
+    }
+    assert.ok(failure);
+    const observation = failure.boundaryObservation;
+    assert.equal(observation.status, 'host-observation-deadline');
+    assert.equal(observation.pendingPageResultAtDeadline, true);
+    assert.ok(
+      observation.progressEvents.some(
+        (event) =>
+          event.stage === 'fixture-clock-held' &&
+          event.details.fixtureClockPhase === 'warmup-held' &&
+          event.details.fixtureClockElapsedMs === 1000,
+      ),
+      JSON.stringify({
+        ignored: observation.ignoredProgressEvents,
+        events: observation.progressEvents,
+      }),
+    );
+    assert.ok(
+      observation.progressEvents.some(
+        (event) => event.stage === 'page-timer-fired',
+      ),
+    );
+    assert.deepEqual(
+      failureRecord.warmupBoundary,
+      target.__gevPhasedMonotonicWallClockV1.snapshot(),
+    );
+    assert.equal(observation.cleanup.progressBindingRemoved, true);
+    assert.equal(subject.scene.postRender.handlers.size, 0);
+  } finally {
+    if (previousWindow)
+      Object.defineProperty(globalThis, 'window', previousWindow);
+    else delete globalThis.window;
+    if (previousView)
+      Object.defineProperty(globalThis, '__godsEyeView', previousView);
+    else delete globalThis.__godsEyeView;
+  }
+});

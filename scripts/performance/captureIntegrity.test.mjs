@@ -28,6 +28,12 @@ function sample(scenario = 'scripted-motion', run = 1) {
     environment: {
       appCommit: commit,
       renderer: 'Intel UHD 620',
+      rendererEvidence: {
+        source: 'early-cesium-context-creation',
+        contextAttributes: { antialias: false, alpha: true },
+        parameterQueryCount: 2,
+        queryDurationMs: 0.4,
+      },
       viewport: { width: 1440, height: 900, dpr: 1 },
       drawingBuffer: { width: 1440, height: 900 },
       layers: [{ id: 'flights', enabled: true, count: 2500 }],
@@ -44,11 +50,12 @@ function sample(scenario = 'scripted-motion', run = 1) {
     },
     foregroundThroughout: true,
     cameraPath: {
-      id: scenario === 'scripted-motion'
-        ? 'elapsed-move-right-v1'
-        : scenario === 'idle'
-          ? 'parked-v1'
-          : 'entity-follow-v1',
+      id:
+        scenario === 'scripted-motion'
+          ? 'elapsed-move-right-v1'
+          : scenario === 'idle'
+            ? 'parked-v1'
+            : 'entity-follow-v1',
       start: {
         position: { x: 1, y: 2, z: 3 },
         direction: { x: 0, y: 1, z: 0 },
@@ -134,10 +141,53 @@ test('repeat runs tolerate only bounded camera pose roundoff', () => {
   assert.equal(second.cameraPath.start.position.x, 1 + 5e-7);
 });
 
+test('fresh documents may have different renderer query costs but retain strict scene identity', () => {
+  const first = sample('scripted-motion', 1);
+  const second = sample('scripted-motion', 2);
+  for (const point of [second.conditions.before, second.conditions.after])
+    point.environment.rendererEvidence.queryDurationMs = 7.25;
+  assert.equal(
+    assertCaptureIntegrity([first, second], options).status,
+    'passed',
+  );
+  assert.equal(
+    second.conditions.before.environment.rendererEvidence.queryDurationMs,
+    7.25,
+    'the diagnostic cost remains in the report data',
+  );
+
+  const mutations = [
+    (point) => {
+      point.environment.renderer = 'Different GPU';
+    },
+    (point) => {
+      point.environment.rendererEvidence.contextAttributes.antialias = true;
+    },
+    (point) => {
+      point.environment.rendererEvidence.parameterQueryCount = 1;
+    },
+    (point) => {
+      point.settings.msaaSamples = 1;
+    },
+  ];
+  for (const mutate of mutations) {
+    const baseline = sample('scripted-motion', 1);
+    const changed = sample('scripted-motion', 2);
+    for (const point of [changed.conditions.before, changed.conditions.after])
+      mutate(point);
+    assert.throws(() => assertCaptureIntegrity([baseline, changed], options));
+  }
+});
+
 test('single provider tracking sample must contain fresh observed entity-follow boundaries', () => {
   const fixedTime = '2026-10-08T12:00:00.000Z';
   const fixedMs = Date.parse(fixedTime);
-  const pose = { position: { x: 1, y: 2, z: 3 }, direction: { x: 0, y: 1, z: 0 }, up: { x: 0, y: 0, z: 1 }, transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] };
+  const pose = {
+    position: { x: 1, y: 2, z: 3 },
+    direction: { x: 0, y: 1, z: 0 },
+    up: { x: 0, y: 0, z: 1 },
+    transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  };
   const boundary = (offsetMs, longitude) => ({
     dateEpochMs: fixedMs + offsetMs,
     selectedIdentity: 'flights:000001',
@@ -149,7 +199,12 @@ test('single provider tracking sample must contain fresh observed entity-follow 
     camera: pose,
     source: { ageMs: offsetMs, lastUpdate: fixedMs, count: 2500, stale: false },
   });
-  const fixture = { id: 'fixture-v1', sha256: 'a'.repeat(64), fixedTime, count: 2500 };
+  const fixture = {
+    id: 'fixture-v1',
+    sha256: 'a'.repeat(64),
+    fixedTime,
+    count: 2500,
+  };
   const route = createEntityFollowRoute({
     fixtureId: fixture.id,
     fixtureSha256: fixture.sha256,
@@ -167,15 +222,26 @@ test('single provider tracking sample must contain fresh observed entity-follow 
     expectedWarmupMs: 30_000,
     expectedMeasurementMs: 60_000,
   };
-  assert.equal(assertCaptureIntegrity([captured], trackingOptions).status, 'passed');
+  assert.equal(
+    assertCaptureIntegrity([captured], trackingOptions).status,
+    'passed',
+  );
   const wrongIdentity = structuredClone(captured);
   wrongIdentity.cameraPath.selectedIdentityEnd = 'flights:000002';
-  assert.throws(() => assertCaptureIntegrity([wrongIdentity], trackingOptions), /tracked identity differs/);
+  assert.throws(
+    () => assertCaptureIntegrity([wrongIdentity], trackingOptions),
+    /tracked identity differs/,
+  );
   const stationary = structuredClone(captured);
-  stationary.cameraPath.targetEnd = structuredClone(stationary.cameraPath.targetStart);
+  stationary.cameraPath.targetEnd = structuredClone(
+    stationary.cameraPath.targetStart,
+  );
   stationary.cameraPath.motionDistanceM = 0;
   stationary.cameraPath.observedTargetDistanceM = 0;
-  assert.throws(() => assertCaptureIntegrity([stationary], trackingOptions), /did not move/);
+  assert.throws(
+    () => assertCaptureIntegrity([stationary], trackingOptions),
+    /did not move/,
+  );
 });
 
 test('repeat runs reject meaningful pose, duration, and route changes', () => {
