@@ -241,3 +241,41 @@ passes formatting for all 1,616 scoped files and import/package boundaries.
 Root's integrated import/package boundary checks also pass.
 A hosted run with this new diagnostic is required before drawing conclusions
 about the original Austin loading timeout.
+
+# Hosted readiness history and CLI-stub regression
+
+The new diagnostic run
+[38317263307](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38317263307)
+at `fe0f66c38c9f394d8282f157d63d81846ab9c4d9` passes baseline inspection and
+initial Austin setup, then fails the original 60-second readiness deadline in
+the first fresh provider-sample document. There are zero completed measurements.
+The [unchanged raw failure](hosted-smoke-38317263307-cli-failed.json) is 106,071
+bytes, SHA-256
+`9625bfc4fb00c3c8899abbf467ac5a092bb4277dfb3dc4672ede0caad437ff21`.
+
+The [independent history review](readiness-history-38317263307-review.json)
+shows CCTV advancing from 20 to 24 to 28 prepared geometries in the failing
+document before a diagnostic command exceeds its own 1.5-second bound. The
+sampler stops polling and confirms session detachment and owned-listener removal.
+A later post-failure native observation succeeds: 144 of 250 CCTV geometries
+are prepared and 106 remain queued. All other selected layers are ready at that
+observation. This establishes queue progress during the failed run; it does not
+identify the execution bottleneck or establish an engine deadlock. The observed
+renderer is SwiftShader. No deadline, population or acceptance gate is relaxed.
+
+Root also recomputed fixture-interception cleanup for all three documents from
+the actual release records. Each confirms drained commands/preparations/abort
+subscriptions, removed listeners and completed target closure. The sampler's
+bounded history contains 16 observations, with nine earlier entries explicitly
+omitted. These successful diagnostic cleanup checks do not make the capture pass.
+
+The accompanying standard run
+[38317266608](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38317266608)
+fails three CLI integration tests on both Node versions: their substituted
+Puppeteer modules omit the newly imported `CDPSessionEvent` named export. The
+actual installed package provides it. Two tests then mask the import error by
+attempting to read a lifecycle file that was never created. The failed job-log
+excerpts are preserved for [Node 24](node-ci-115036767698-failure-excerpt.txt) and
+[Node 26](node-ci-115036767729-failure-excerpt.txt). This is a test-double contract
+regression introduced by the diagnostic packet; the existing lifecycle assertions
+must continue to run after the stubs are corrected.
