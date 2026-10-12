@@ -80,5 +80,12 @@
       "independentValidation": "passed"
     }
   ],
-  "scope": "Runtime terrain ownership correction. No hardware performance, full S50 or final-candidate acceptance claim."
+  "scope": "Runtime terrain ownership correction. No hardware performance, full S50 or final-candidate acceptance claim.",
+  "standardIntegration": {
+    "status": "passed",
+    "commit": "40b9f5c91355ccc37f7c2ca664f92893be4ccdb2",
+    "runId": "38240973936",
+    "passedJobs": 7,
+    "artifact": "standard-ci-dev-38240973936.json"
+  }
 }

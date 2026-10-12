@@ -1,0 +1,227 @@
+{
+  "schema": "gev-preserved-failed-artifact-review/v1",
+  "runId": "38241920477",
+  "candidateCommit": "0602cbe267449ac1b5f89c5b17996c93cb5a306e",
+  "conclusion": "failure",
+  "performanceAcceptanceEligible": false,
+  "files": [
+    {
+      "file": "report.json",
+      "byteLength": 70106,
+      "sha256": "51860108b88a023f7f5a8961a8c534797bb3438f45498c4e04475ff5eb6cdff7"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile.json",
+      "byteLength": 187703,
+      "sha256": "f77160f008e683072b4ba72f9e6fd73e3bd3828edea7f92284dd41ca4987e51e"
+    },
+    {
+      "file": "cpu-profiles/provider-idle-1-cpu-profile-ref.json",
+      "byteLength": 803,
+      "sha256": "0beb6f9a546cbd9ff1b962adbfb0902531f9733b13b953b5f9575899eda7e472"
+    }
+  ],
+  "source": {
+    "harnessCommit": "0602cbe267449ac1b5f89c5b17996c93cb5a306e",
+    "harnessDirtyWorktree": false,
+    "appCommit": "0602cbe267449ac1b5f89c5b17996c93cb5a306e",
+    "appWorktreeState": "clean",
+    "provenanceStatus": "pre-capture-served-assets-verified",
+    "reason": null,
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "pre-capture-served-assets-verified",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "d5fa1ed2210222c04d8618adb3b7e6c50045c4ecbc5b0682ba93d7fc65703be3",
+      "appCommit": "0602cbe267449ac1b5f89c5b17996c93cb5a306e",
+      "harnessCommit": "0602cbe267449ac1b5f89c5b17996c93cb5a306e",
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "d5fa1ed2210222c04d8618adb3b7e6c50045c4ecbc5b0682ba93d7fc65703be3",
+        "assetCount": 434,
+        "totalAssetBytes": 43978606
+      },
+      "after": null
+    }
+  },
+  "baselineOuterSmoke": "passed",
+  "completedSamples": 0,
+  "failure": {
+    "phase": "warmup",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Warmup boundary: host observation deadline elapsed.",
+    "operator": null
+  },
+  "warmupBoundary": {
+    "schema": "gev-phased-monotonic-wall-clock/v1",
+    "phase": "warmup-held",
+    "epochMs": 1791460801000,
+    "elapsedMs": 1000,
+    "warmupMs": 1000,
+    "measurementMs": 1000,
+    "warmupNativeElapsedMs": 3714.399999999994,
+    "measurementNativeElapsedMs": null,
+    "startCount": 1,
+    "measurementStartCount": 0
+  },
+  "warmupBoundaryObservation": {
+    "schema": "gev-render-boundary-observation/v1",
+    "invocationId": "7b18011f-b956-46d2-a90b-1a8936da81e1",
+    "label": "Warmup boundary",
+    "status": "host-observation-deadline",
+    "hostTimeoutMs": 6000,
+    "hostElapsedMs": 6316.878960000002,
+    "hostDispatchElapsedMs": 1.455712000002677,
+    "hostProgressBindingSetupElapsedMs": null,
+    "progressBindingOwnerId": "provider-sample-1:provider-document-1",
+    "progressBindingSetupElapsedMs": 8.726681000000099,
+    "pageEntryObserved": true,
+    "pageEntryHostReceiptElapsedMs": 2712.3674669999964,
+    "progressEvents": [
+      {
+        "stage": "page-entry",
+        "hostReceiptElapsedMs": 2712.3674669999964,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0
+        }
+      },
+      {
+        "stage": "listener-registered",
+        "hostReceiptElapsedMs": 2713.3136939999968,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 1.8999999999941792,
+          "listenerRegistered": true
+        }
+      },
+      {
+        "stage": "fixture-clock-held",
+        "hostReceiptElapsedMs": 2713.646909000003,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 2.2000000000116415,
+          "fixtureClockPhase": "warmup-held",
+          "fixtureClockElapsedMs": 1000,
+          "fixtureClockEpochMs": 1791460801000,
+          "fixtureClockWarmupMs": 1000,
+          "fixtureClockMeasurementMs": 1000,
+          "fixtureClockWarmupNativeElapsedMs": 3714.399999999994,
+          "fixtureClockMeasurementNativeElapsedMs": null,
+          "fixtureClockStartCount": 1,
+          "fixtureClockMeasurementStartCount": 0
+        }
+      },
+      {
+        "stage": "render-request-started",
+        "hostReceiptElapsedMs": 2717.069924000003,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 2.2999999999883585,
+          "renderRequestAvailable": true,
+          "renderRequestStarted": true
+        }
+      },
+      {
+        "stage": "render-request-completed",
+        "hostReceiptElapsedMs": 2717.3465730000025,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 2.2999999999883585,
+          "renderRequestCompleted": true
+        }
+      }
+    ],
+    "ignoredProgressEvents": {
+      "wrongInvocation": 0,
+      "malformed": 0,
+      "overflow": 0
+    },
+    "hostEvaluationOverheadResidualMs": 2719.67895999999,
+    "page": {
+      "status": "settled",
+      "settleElapsedMs": 3597.2000000000116,
+      "error": null,
+      "diagnostics": {
+        "phase": "settled",
+        "pageEntryElapsedMs": 0,
+        "pageElapsedMs": 3597.2000000000116,
+        "listenerRegistered": true,
+        "listenerRegistrationElapsedMs": 1.8999999999941792,
+        "renderRequestAvailable": true,
+        "renderRequestStarted": true,
+        "renderRequestStartElapsedMs": 2.2999999999883585,
+        "renderRequestCompleted": true,
+        "renderRequestCompleteElapsedMs": 2.2999999999883585,
+        "postRenderObserved": true,
+        "postRenderElapsedMs": 3596.899999999994,
+        "renderLoopRetirement": null,
+        "finalObservation": null,
+        "finalObservationErrorName": null,
+        "beforeRenderRequestObservation": {
+          "schema": "gev-phased-monotonic-wall-clock/v1",
+          "phase": "warmup-held",
+          "epochMs": 1791460801000,
+          "elapsedMs": 1000,
+          "warmupMs": 1000,
+          "measurementMs": 1000,
+          "warmupNativeElapsedMs": 3714.399999999994,
+          "measurementNativeElapsedMs": null,
+          "startCount": 1,
+          "measurementStartCount": 0
+        },
+        "beforeRenderRequestErrorName": null,
+        "pageTimerFired": false,
+        "pageTimerElapsedMs": null,
+        "cleanup": {
+          "timerCleared": true,
+          "listenerRemoved": true
+        }
+      }
+    },
+    "pageError": null,
+    "hostError": {
+      "name": "TimeoutError",
+      "message": "Warmup boundary: host observation deadline elapsed."
+    },
+    "pendingPageResultAtDeadline": true,
+    "latePageResultObserved": true,
+    "cleanup": {
+      "hostTimerCleared": true,
+      "progressBindingRemoved": null,
+      "progressInvocationReleased": true,
+      "progressBindingCleanupElapsedMs": 0.1123410000000149,
+      "progressInvocationReleaseElapsedMs": 0.1123410000000149
+    }
+  },
+  "profileRef": {
+    "schema": "gev-render-boundary-cpu-profile-ref/v1",
+    "label": "provider-idle-1-warmup-through-measurement-boundary",
+    "status": "complete",
+    "performanceAcceptanceEligible": false,
+    "target": {
+      "scenario": "idle",
+      "run": 1,
+      "captureOrdinal": 0,
+      "documentRole": "provider-sample-1",
+      "documentId": "provider-document-1"
+    },
+    "fileName": "provider-idle-1-cpu-profile.json",
+    "sha256": "f77160f008e683072b4ba72f9e6fd73e3bd3828edea7f92284dd41ca4987e51e",
+    "byteLength": 187703,
+    "profilerErrors": [],
+    "lateSessionCleanup": null,
+    "windowCapReached": false,
+    "windowCapMs": null,
+    "profileWindowMs": 8423.294,
+    "stopOverrunMs": 0
+  },
+  "progressBindingCleanup": {
+    "removed": true,
+    "elapsedMs": 5.465097999993304,
+    "error": null
+  },
+  "scope": "Atomic warmup callback did not resolve the host/frame deadline. Failed-document CPU profile is complete; no achieved speedup or physical hardware claim."
+}
