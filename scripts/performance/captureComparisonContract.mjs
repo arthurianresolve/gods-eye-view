@@ -5,6 +5,7 @@ import { assertInfrastructureClockObservation } from './infrastructureWorkloadCo
 import {
   AUSTIN_OPERATING_FIXED_TIME,
   AUSTIN_OPERATING_LAYER_COUNTS,
+  AUSTIN_OPERATING_RENDERING_STATE,
   AUSTIN_OPERATING_REQUIRED_ALPR_TILES,
   AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
   AUSTIN_OPERATING_VISUAL_STATE,
@@ -864,126 +865,228 @@ export function createObservedAustinOperatingComparisonContract({
       clock.selectedLayersAfter,
     ];
     for (const [boundaryIndex, layers] of layerSnapshots.entries()) {
+      const boundaryName = boundaryIndex === 0 ? 'before' : 'after';
+      const sampleLabel = `Austin ${sample.scenario} run ${sample.run} ${boundaryName}`;
       assert.deepEqual(
         layers?.map((row) => row.id),
         Object.keys(AUSTIN_OPERATING_LAYER_COUNTS),
+        `${sampleLabel} required layer identities differ`,
       );
       for (const layer of layers) {
-        assert.equal(layer.enabled, true);
+        const layerLabel = `${sampleLabel} required layer ${layer.id}`;
+        assert.equal(layer.enabled, true, `${layerLabel} must be enabled`);
         assert.equal(
           layer.expectedSourceCatalogCount,
           AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+          `${layerLabel} source catalog count differs`,
         );
-        assert.ok(Number.isSafeInteger(layer.count) && layer.count >= 0);
+        assert.ok(
+          Number.isSafeInteger(layer.count) && layer.count >= 0,
+          `${layerLabel} observed count is invalid`,
+        );
         if (
           ['alpr-cameras', 'military-installations', 'radio'].includes(layer.id)
         )
           assert.ok(
             Number.isSafeInteger(layer.viewportCount) &&
               layer.viewportCount >= 0,
+            `${layerLabel} viewport count is invalid`,
           );
-        else assert.equal(layer.viewportCount, null);
-        assert.equal(layer.loading, layer.id === 'satellites' ? null : false);
-        assert.equal(layer.error, null);
+        else
+          assert.equal(
+            layer.viewportCount,
+            null,
+            `${layerLabel} must not claim an unsupported viewport count`,
+          );
+        assert.equal(
+          layer.loading,
+          layer.id === 'satellites' ? null : false,
+          `${layerLabel} loading state differs`,
+        );
+        assert.equal(layer.error, null, `${layerLabel} reports an error`);
         if (layer.id === 'military-installations') {
           const observedIds = layer.sourcePopulation?.identityIds;
-          assert.ok(Number.isSafeInteger(layer.sourcePopulation?.count));
-          assert.ok(layer.sourcePopulation.count >= 1);
+          assert.ok(
+            Number.isSafeInteger(layer.sourcePopulation?.count),
+            `${layerLabel} installation population count is invalid`,
+          );
+          assert.ok(
+            layer.sourcePopulation.count >= 1,
+            `${layerLabel} installation source population is empty`,
+          );
           assert.ok(
             layer.sourcePopulation.count <=
               AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+            `${layerLabel} installation population exceeds the pinned catalog`,
           );
-          assert.ok(Array.isArray(observedIds));
-          assert.equal(observedIds.length, layer.sourcePopulation.count);
-          assert.equal(new Set(observedIds).size, observedIds.length);
+          assert.ok(
+            Array.isArray(observedIds),
+            `${layerLabel} installation identity rows are missing`,
+          );
+          assert.equal(
+            observedIds.length,
+            layer.sourcePopulation.count,
+            `${layerLabel} installation identity count differs`,
+          );
+          assert.equal(
+            new Set(observedIds).size,
+            observedIds.length,
+            `${layerLabel} installation identities are duplicated`,
+          );
           assert.equal(
             layer.sourcePopulation.sha256,
             hashCanonicalIds(observedIds),
+            `${layerLabel} installation identity digest differs from its records`,
           );
         } else {
           assert.equal(
             layer.sourcePopulation?.count,
             AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+            `${layerLabel} source population count differs`,
           );
           if (layer.id === 'wind')
-            assert.equal(layer.sourcePopulation?.sha256, null);
+            assert.equal(
+              layer.sourcePopulation?.sha256,
+              null,
+              `${layerLabel} must not claim an unavailable source digest`,
+            );
           else {
-            assert.match(layer.sourcePopulation?.sha256 || '', SHA256);
+            assert.match(
+              layer.sourcePopulation?.sha256 || '',
+              SHA256,
+              `${layerLabel} source identity digest is invalid`,
+            );
             assert.equal(
               layer.sourcePopulation.sha256,
               fixture.sourcePopulationHashes?.[layer.id],
-              `capture ${index + 1} ${layer.id} identities differ from the pinned source catalog`,
+              `${layerLabel} identities differ from the pinned source catalog`,
             );
           }
         }
-        assert.equal(layer.sourcePopulation?.truncated, false);
+        assert.equal(
+          layer.sourcePopulation?.truncated,
+          false,
+          `${layerLabel} source population is truncated`,
+        );
         if (layer.id !== 'military-installations') {
           const previousHash = sourceHashes.get(layer.id);
           if (previousHash)
-            assert.equal(layer.sourcePopulation.sha256, previousHash);
+            assert.equal(
+              layer.sourcePopulation.sha256,
+              previousHash,
+              `${layerLabel} identity digest changed across capture boundaries`,
+            );
           else sourceHashes.set(layer.id, layer.sourcePopulation.sha256);
         }
         if (layer.id === 'satellites' && boundaryIndex === 1)
-          assert.match(layer.sourcePopulation.positionSha256 || '', SHA256);
+          assert.match(
+            layer.sourcePopulation.positionSha256 || '',
+            SHA256,
+            `${layerLabel} cached position digest is invalid`,
+          );
         if (layer.id === 'military-installations') {
-          assert.ok(layer.sourcePopulation.count >= 1);
+          assert.ok(
+            layer.sourcePopulation.count >= 1,
+            `${layerLabel} installation source population is empty`,
+          );
           assert.ok(
             layer.sourcePopulation.count <=
               AUSTIN_OPERATING_LAYER_COUNTS[layer.id],
+            `${layerLabel} installation source population exceeds the pinned catalog`,
           );
-          assert.ok(Array.isArray(layer.sourcePopulation.identityIds));
+          assert.ok(
+            Array.isArray(layer.sourcePopulation.identityIds),
+            `${layerLabel} installation identity rows are missing`,
+          );
           assert.equal(
             layer.sourcePopulation.identityIds.length,
             layer.sourcePopulation.count,
+            `${layerLabel} installation identity count differs`,
           );
           assert.ok(
             layer.sourcePopulation.identityIds.every((id) =>
               deliveredInstallationIds.has(id),
             ),
-            `capture ${index + 1} installation identity is not acknowledged by its delivered response variants`,
+            `${layerLabel} installation identity is not acknowledged by its delivered response variants`,
           );
         }
       }
     }
     const visualBefore = clock.visualSettingsBefore;
     const visualAfter = clock.visualSettingsAfter;
-    for (const observedSettings of [visualBefore, visualAfter]) {
+    for (const [boundaryName, observedSettings] of [
+      ['before', visualBefore],
+      ['after', visualAfter],
+    ]) {
+      const settingLabel = `Austin ${sample.scenario} run ${sample.run} ${boundaryName} visual property`;
       assert.equal(
         observedSettings?.qualityMode,
         AUSTIN_OPERATING_VISUAL_STATE.qualityMode,
+        `${settingLabel} qualityMode differs`,
       );
       assert.equal(
         observedSettings?.densityPct,
         AUSTIN_OPERATING_VISUAL_STATE.densityPct,
+        `${settingLabel} densityPct differs`,
       );
       assert.equal(
         observedSettings?.detectionMode,
         AUSTIN_OPERATING_VISUAL_STATE.detectionMode,
+        `${settingLabel} detectionMode differs`,
       );
-      assert.equal(observedSettings?.resolutionScale, 1);
-      assert.equal(observedSettings?.fxaa, true);
+      for (const [property, expectedValue] of Object.entries(
+        AUSTIN_OPERATING_RENDERING_STATE,
+      ))
+        assert.equal(
+          observedSettings?.[property],
+          expectedValue,
+          `${settingLabel} ${property} differs (expected ${expectedValue}, observed ${observedSettings?.[property]})`,
+        );
     }
-    assert.deepEqual(visualBefore, visualAfter);
-    assert.deepEqual(sample.settings?.before, sample.settings?.after);
+    assert.deepEqual(
+      sample.settings?.before,
+      visualBefore,
+      `Austin ${sample.scenario} run ${sample.run} capture settings before differ from the native before observation`,
+    );
+    assert.deepEqual(
+      sample.settings?.after,
+      visualAfter,
+      `Austin ${sample.scenario} run ${sample.run} capture settings after differ from the native after observation`,
+    );
+    assert.deepEqual(
+      visualBefore,
+      visualAfter,
+      `Austin ${sample.scenario} run ${sample.run} visual settings changed between boundaries`,
+    );
+    assert.deepEqual(
+      sample.settings?.before,
+      sample.settings?.after,
+      `Austin ${sample.scenario} run ${sample.run} capture settings changed between boundaries`,
+    );
     assert.equal(
       sample.settings?.before?.qualityMode,
       AUSTIN_OPERATING_VISUAL_STATE.qualityMode,
+      `Austin ${sample.scenario} run ${sample.run} capture settings before qualityMode differs`,
     );
     assert.equal(
       sample.settings?.before?.densityPct,
       AUSTIN_OPERATING_VISUAL_STATE.densityPct,
+      `Austin ${sample.scenario} run ${sample.run} capture settings before densityPct differs`,
     );
     assert.equal(
       sample.settings?.before?.detectionMode,
       AUSTIN_OPERATING_VISUAL_STATE.detectionMode,
+      `Austin ${sample.scenario} run ${sample.run} capture settings before detectionMode differs`,
     );
     assert.deepEqual(
       sample.conditions?.before?.settings,
       sample.settings?.before,
+      `Austin ${sample.scenario} run ${sample.run} before condition settings differ from capture settings`,
     );
     assert.deepEqual(
       sample.conditions?.after?.settings,
       sample.settings?.after,
+      `Austin ${sample.scenario} run ${sample.run} after condition settings differ from capture settings`,
     );
     if (referenceSettings)
       assert.deepEqual(sample.settings.before, referenceSettings);

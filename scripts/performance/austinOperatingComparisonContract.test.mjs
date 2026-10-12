@@ -8,6 +8,7 @@ import {
   AUSTIN_OPERATING_LAYER_COUNTS,
   AUSTIN_OPERATING_REQUIRED_ALPR_TILES,
   AUSTIN_OPERATING_REQUIRED_RESPONSE_IDS,
+  AUSTIN_OPERATING_RENDERING_STATE,
   AUSTIN_OPERATING_ROUTE,
   AUSTIN_OPERATING_VISUAL_STATE,
   AUSTIN_OPERATING_WIND_VALID_TIME,
@@ -184,10 +185,7 @@ async function makeObservedPairInput({ responseVariant = true } = {}) {
     qualityMode: 'manual',
     densityPct: 75,
     detectionMode: 'DENSE',
-    resolutionScale: 1,
-    msaaSamples: 4,
-    antialias: true,
-    fxaa: true,
+    ...AUSTIN_OPERATING_RENDERING_STATE,
     visualState: {
       style: 'normal',
       styleParams: {},
@@ -542,6 +540,67 @@ test('Austin comparison contract is built from real fixture delivery acknowledgm
     input.contract.fixtureDelivery.sampleDocuments.every(
       (row) => row.populations.before.length === 6,
     ),
+  );
+});
+
+test('Austin rendering contract matches observed viewer defaults and labels changed AA settings', async () => {
+  const input = await makeObservedPairInput();
+  assert.equal(input.captures[0].settings.before.fxaa, false);
+  assert.equal(input.captures[0].settings.before.msaaSamples, 4);
+  assert.equal(input.captures[0].settings.before.antialias, true);
+  assert.equal(input.captures[0].settings.before.resolutionScale, 1);
+
+  for (const [property, replacement] of [
+    ['fxaa', true],
+    ['msaaSamples', 8],
+    ['antialias', false],
+    ['resolutionScale', 0.75],
+  ]) {
+    const captures = structuredClone(input.captures);
+    for (const sample of captures) {
+      const observedSettings = [
+        sample.austinOperatingClock.visualSettingsBefore,
+        sample.austinOperatingClock.visualSettingsAfter,
+        sample.settings.before,
+        sample.settings.after,
+        sample.conditions.before.settings,
+        sample.conditions.after.settings,
+      ];
+      for (const settings of observedSettings) settings[property] = replacement;
+    }
+    const sample = captures[0];
+    assert.throws(
+      () =>
+        createObservedAustinOperatingComparisonContract({
+          ...input,
+          captures,
+        }),
+      new RegExp(
+        `Austin ${sample.scenario} run ${sample.run} before visual property ${property} differs`,
+      ),
+      `${property} mutation must fail with its sample/boundary/property label`,
+    );
+  }
+});
+
+test('Austin capture setting copies stay bound to the native visual observations', async () => {
+  const input = await makeObservedPairInput();
+  const captures = structuredClone(input.captures);
+  for (const sample of captures) {
+    sample.settings.before = {
+      ...sample.settings.before,
+      bloomIntensity: 0.25,
+    };
+    sample.conditions.before.settings = sample.settings.before;
+  }
+
+  assert.throws(
+    () =>
+      createObservedAustinOperatingComparisonContract({
+        ...input,
+        captures,
+      }),
+    /Austin idle run 1 capture settings before differ from the native before observation/,
   );
 });
 
