@@ -110,6 +110,55 @@ test('browser request observer has a global bounded record and pending inventory
   assert.equal(snapshot.counts.content.requests, 2);
 });
 
+test('browser observer records explicit cancellation separately from request errors', () => {
+  const client = new EventEmitter();
+  const observer = createStreamedTileNetworkEvidence();
+  observer.attach(client);
+  for (const [requestId, errorText, canceled] of [
+    ['content-cancel', 'net::ERR_ABORTED', true],
+    ['content-error', 'net::ERR_CONNECTION_RESET', false],
+    ['content-contradictory-error', 'net::ERR_CONNECTION_RESET', true],
+  ]) {
+    client.emit('Network.requestWillBeSent', {
+      requestId,
+      request: {
+        url: `http://127.0.0.1:4174${STREAMED_TILE_PATHS.content}`,
+        method: 'GET',
+      },
+    });
+    client.emit('Network.loadingFailed', {
+      requestId,
+      errorText,
+      canceled,
+    });
+  }
+  const requests = observer.snapshot().requests;
+  assert.deepEqual(
+    requests.map(({ failureClass, failureCode, canceled }) => ({
+      failureClass,
+      failureCode,
+      canceled,
+    })),
+    [
+      {
+        failureClass: 'cancellation',
+        failureCode: 'ERR_ABORTED',
+        canceled: true,
+      },
+      {
+        failureClass: 'error',
+        failureCode: 'ERR_CONNECTION_RESET',
+        canceled: false,
+      },
+      {
+        failureClass: 'error',
+        failureCode: 'ERR_CONNECTION_RESET',
+        canceled: true,
+      },
+    ],
+  );
+});
+
 test('server evidence only counts exact local streamed asset paths and confirms cleanup', () => {
   const server = new EventEmitter();
   const observer = installStreamedTileServerEvidence(server);

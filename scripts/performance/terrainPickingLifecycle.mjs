@@ -456,12 +456,26 @@ function validStreamedTileEvidence(report, expectedCycles) {
     evidence.supersededFactory.sceneAttachmentAfterLateResolution !== false ||
     evidence.supersededFactory.activeStackAfterLateResolution !==
       'qa-terrain-flat' ||
+    !Number.isFinite(
+      evidence.supersededFactory.httpCheckpointBeforeTileActivation
+        ?.observedAfterMs,
+    ) ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation
+      .observedAfterMs < 0 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation
+      .observedAfterMs > 1000 ||
     evidence.supersededFactory.httpCheckpointBeforeTileActivation?.browser
       ?.counts?.manifest?.completed !== 1 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.browser
+      ?.counts?.manifest?.requests !== 1 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.browser
+      ?.counts?.manifest?.responses !== 1 ||
     evidence.supersededFactory.httpCheckpointBeforeTileActivation?.browser
       ?.counts?.content?.requests !== 0 ||
     evidence.supersededFactory.httpCheckpointBeforeTileActivation?.server
       ?.counts?.manifest?.successfulResponses !== 1 ||
+    evidence.supersededFactory.httpCheckpointBeforeTileActivation?.server
+      ?.counts?.manifest?.requests !== 1 ||
     evidence.supersededFactory.httpCheckpointBeforeTileActivation?.server
       ?.counts?.content?.requests !== 0 ||
     evidence.pendingContentActivation?.status !== 'activated-pending-content' ||
@@ -474,9 +488,39 @@ function validStreamedTileEvidence(report, expectedCycles) {
     evidence.supersededContent.activeStackAtPause !== STREAMED_TILE_STACK ||
     evidence.supersededContent.activeStackAfterSupersession !==
       'qa-terrain-flat' ||
-    evidence.supersededContent.tileSetHiddenAtDelivery !== true ||
-    evidence.supersededContent.delivery?.browser?.completed !== 1 ||
-    evidence.supersededContent.delivery?.server?.successfulResponses !== 1 ||
+    evidence.supersededContent.tileSetHiddenAtCancellation !== true ||
+    evidence.supersededContent.cancellation?.status !==
+      'cancellation-observed' ||
+    evidence.supersededContent.cancellation?.request?.failure !== true ||
+    evidence.supersededContent.cancellation?.request?.failureClass !==
+      'cancellation' ||
+    !['ERR_ABORTED', 'ERR_CANCELED'].includes(
+      evidence.supersededContent.cancellation?.request?.failureCode,
+    ) ||
+    evidence.supersededContent.cancellation?.activeStackId !==
+      'qa-terrain-flat' ||
+    evidence.supersededContent.cancellation?.tileSetShow !== false ||
+    !Number.isFinite(evidence.supersededContent.cancellation?.elapsedMs) ||
+    evidence.supersededContent.cancellation.elapsedMs < 0 ||
+    evidence.supersededContent.cancellation.browser?.counts?.content
+      ?.requests !== 1 ||
+    evidence.supersededContent.cancellation.browser?.counts?.content?.failed !==
+      1 ||
+    evidence.supersededContent.cancellation.browser?.pendingCount !== 0 ||
+    evidence.supersededContent.cancellation?.server?.counts?.content
+      ?.requests !== 0 ||
+    !validStreamedBrowserEvidence(
+      evidence.supersededContent.delivery?.browser,
+      assets,
+    ) ||
+    !sameStreamedBrowserRequestRows(
+      evidence.supersededContent.delivery.browser.requests,
+      http?.browser?.requests,
+    ) ||
+    evidence.supersededContent.delivery?.server?.counts?.content?.requests !==
+      1 ||
+    evidence.supersededContent.delivery?.server?.counts?.content
+      ?.successfulResponses !== 1 ||
     evidence.supersededContent.browserAtPause?.counts?.content?.requests !==
       1 ||
     evidence.supersededContent.browserAtPause?.counts?.content?.completed !==
@@ -528,32 +572,7 @@ function validStreamedTileEvidence(report, expectedCycles) {
     evidence.controllerDestroyedTileset !== true ||
     http?.assetIdentity?.manifest?.sha256 !== assets.manifest.sha256 ||
     http?.assetIdentity?.content?.sha256 !== assets.content.sha256 ||
-    http?.browser?.origin !== 'fixture-origin-only' ||
-    http.browser.overflowCount !== 0 ||
-    http.browser.pendingCount !== 0 ||
-    http.browser.counts?.manifest?.requests !== 1 ||
-    http.browser.counts?.manifest?.responses !== 1 ||
-    http.browser.counts?.manifest?.completed !== 1 ||
-    http.browser.counts?.manifest?.failed !== 0 ||
-    http.browser.counts?.content?.requests !== 1 ||
-    http.browser.counts?.content?.responses !== 1 ||
-    http.browser.counts?.content?.completed !== 1 ||
-    http.browser.counts?.content?.failed !== 0 ||
-    !Array.isArray(http.browser.requests) ||
-    http.browser.requests.length !== 2 ||
-    http.browser.requests.filter((row) => row.kind === 'manifest').length !==
-      1 ||
-    http.browser.requests.filter((row) => row.kind === 'content').length !==
-      1 ||
-    http.browser.requests.some(
-      (row) =>
-        !['manifest', 'content'].includes(row.kind) ||
-        row.method !== 'GET' ||
-        row.status !== 200 ||
-        row.failure !== false ||
-        !Number.isFinite(row.encodedDataLength) ||
-        row.encodedDataLength <= 0,
-    ) ||
+    !validStreamedBrowserEvidence(http?.browser, assets) ||
     http?.server?.source !== 'local-http-server-request-events' ||
     http.server.overflowCount !== 0 ||
     http.server.pendingCount !== 0 ||
@@ -569,6 +588,28 @@ function validStreamedTileEvidence(report, expectedCycles) {
     http.serverListenerCleanupConfirmed !== true ||
     http.contentInterception?.status !== 'passed' ||
     http.contentInterception.pauseObservedBeforeContinue !== true ||
+    http.contentInterception.supersededRequestTerminal?.status !==
+      'cancellation-observed' ||
+    !validCancelledContentRequest(
+      http.contentInterception.supersededRequestTerminal?.request,
+    ) ||
+    http.contentInterception.supersededRequestTerminal.request.failureCode !==
+      http.browser.requests.filter((row) => row.kind === 'content')[0]
+        ?.failureCode ||
+    http.contentInterception.supersededRequestTerminal?.server?.counts?.content
+      ?.requests !== 0 ||
+    http.contentInterception.supersededRequestTerminal?.browser
+      ?.pendingCount !== 0 ||
+    http.contentInterception.reactivationDelivery?.browserCounts?.completed !==
+      1 ||
+    http.contentInterception.reactivationDelivery?.browserCounts?.failed !==
+      1 ||
+    http.contentInterception.reactivationDelivery?.browserCounts?.requests !==
+      2 ||
+    http.contentInterception.reactivationDelivery?.serverCounts?.requests !==
+      1 ||
+    http.contentInterception.reactivationDelivery?.serverCounts
+      ?.successfulResponses !== 1 ||
     http.contentInterception.browserAtPause?.counts?.content?.requests !== 1 ||
     http.contentInterception.browserAtPause?.counts?.content?.completed !== 0 ||
     http.contentInterception.serverAtPause?.counts?.content?.requests !== 0 ||
@@ -645,6 +686,91 @@ function validStreamedControllerDiagnostics(value) {
       'providerCacheReuses',
       'providerLoadFailures',
     ].every((field) => Number.isSafeInteger(value[field]) && value[field] >= 0)
+  );
+}
+
+function validCancelledContentRequest(row) {
+  // The recognized network error code is the explicit cancellation witness;
+  // retain the separate CDP canceled flag as context, but do not let it
+  // override a generic transport failure.
+  return (
+    row?.kind === 'content' &&
+    row.method === 'GET' &&
+    row.status === null &&
+    row.failure === true &&
+    row.failureClass === 'cancellation' &&
+    ['ERR_ABORTED', 'ERR_CANCELED'].includes(row.failureCode) &&
+    row.encodedDataLength === null
+  );
+}
+
+function validSuccessfulContentRequest(row) {
+  return (
+    row?.kind === 'content' &&
+    row.method === 'GET' &&
+    row.status === 200 &&
+    row.failure === false &&
+    row.failureClass === null &&
+    row.failureCode === null &&
+    row.canceled === null &&
+    Number.isFinite(row.encodedDataLength) &&
+    row.encodedDataLength > 0
+  );
+}
+
+function validStreamedBrowserEvidence(snapshot, assets) {
+  if (
+    snapshot?.origin !== 'fixture-origin-only' ||
+    snapshot.overflowCount !== 0 ||
+    snapshot.pendingCount !== 0 ||
+    snapshot.counts?.manifest?.requests !== 1 ||
+    snapshot.counts?.manifest?.responses !== 1 ||
+    snapshot.counts?.manifest?.completed !== 1 ||
+    snapshot.counts?.manifest?.failed !== 0 ||
+    snapshot.counts?.content?.requests !== 2 ||
+    snapshot.counts?.content?.responses !== 1 ||
+    snapshot.counts?.content?.completed !== 1 ||
+    snapshot.counts?.content?.failed !== 1 ||
+    !Array.isArray(snapshot.requests) ||
+    snapshot.requests.length !== 3
+  )
+    return false;
+  const [manifest, canceled, delivered] = snapshot.requests;
+  return (
+    manifest?.kind === 'manifest' &&
+    manifest.method === 'GET' &&
+    manifest.status === 200 &&
+    manifest.failure === false &&
+    Number.isFinite(manifest.encodedDataLength) &&
+    manifest.encodedDataLength > 0 &&
+    validCancelledContentRequest(canceled) &&
+    validSuccessfulContentRequest(delivered)
+  );
+}
+
+function sameStreamedBrowserRequestRows(first, second) {
+  if (
+    !Array.isArray(first) ||
+    !Array.isArray(second) ||
+    first.length !== second.length
+  )
+    return false;
+  const fields = [
+    'kind',
+    'method',
+    'status',
+    'fromDiskCache',
+    'fromServiceWorker',
+    'fromPrefetchCache',
+    'servedFromCache',
+    'encodedDataLength',
+    'failure',
+    'failureClass',
+    'failureCode',
+    'canceled',
+  ];
+  return first.every((row, index) =>
+    fields.every((field) => row[field] === second[index]?.[field]),
   );
 }
 

@@ -298,22 +298,94 @@ export async function runTerrainPickingLifecycle({
           const browserContent = tileNetworkEvidence?.snapshot().counts.content;
           const serverContent = serverTileEvidence?.snapshot().counts.content;
           return Boolean(
-            browserContent?.completed > 0 &&
-            serverContent?.successfulResponses > 0,
+            browserContent?.requests === 2 &&
+            browserContent?.completed === 1 &&
+            browserContent?.failed === 1 &&
+            serverContent?.requests === 1 &&
+            serverContent?.successfulResponses === 1,
           );
         },
         10_000,
         'streamed tile content HTTP delivery',
       );
+      const browser = tileNetworkEvidence.snapshot();
+      const server = serverTileEvidence.snapshot();
+      if (tileContentInterception)
+        tileContentInterception.reactivationDelivery = {
+          browserCounts: browser.counts.content,
+          serverCounts: server.counts.content,
+        };
+      return { browser, server };
+    });
+    await page.exposeFunction(
+      '__s57WaitForSupersededTileCancellation',
+      async () => {
+        const started = performance.now();
+        const firstContentRequest = () =>
+          tileNetworkEvidence
+            .snapshot()
+            .requests.find((row) => row.kind === 'content');
+        await waitForEvidence(
+          () => {
+            const request = firstContentRequest();
+            return request &&
+              (request.failure || request.encodedDataLength !== null)
+              ? request
+              : null;
+          },
+          10_000,
+          'superseded streamed tile request cancellation',
+        );
+        const browser = tileNetworkEvidence.snapshot();
+        const server = serverTileEvidence.snapshot();
+        const request = browser.requests.find((row) => row.kind === 'content');
+        const evidence = {
+          status:
+            request?.failureClass === 'cancellation'
+              ? 'cancellation-observed'
+              : 'unexpected-terminal',
+          request: request
+            ? {
+                kind: request.kind,
+                method: request.method,
+                status: request.status,
+                failure: request.failure,
+                failureClass: request.failureClass,
+                failureCode: request.failureCode,
+                canceled: request.canceled,
+                encodedDataLength: request.encodedDataLength,
+              }
+            : null,
+          elapsedMs: performance.now() - started,
+          browser,
+          server,
+        };
+        if (tileContentInterception)
+          tileContentInterception.supersededRequestTerminal = evidence;
+        return evidence;
+      },
+    );
+    await page.exposeFunction('__s57CaptureTileRequestCheckpoint', async () => {
+      const started = performance.now();
+      await waitForEvidence(
+        () => {
+          const browserManifest =
+            tileNetworkEvidence?.snapshot().counts.manifest;
+          const serverManifest = serverTileEvidence?.snapshot().counts.manifest;
+          return Boolean(
+            browserManifest?.completed === 1 &&
+            serverManifest?.successfulResponses === 1,
+          );
+        },
+        1_000,
+        'initial streamed tileset manifest observation',
+      );
       return {
-        browser: tileNetworkEvidence.snapshot().counts.content,
-        server: serverTileEvidence.snapshot().counts.content,
+        observedAfterMs: performance.now() - started,
+        browser: tileNetworkEvidence.snapshot(),
+        server: serverTileEvidence.snapshot(),
       };
     });
-    await page.exposeFunction('__s57CaptureTileRequestCheckpoint', () => ({
-      browser: tileNetworkEvidence.snapshot(),
-      server: serverTileEvidence.snapshot(),
-    }));
     page.on('pageerror', (error) => {
       if (errors.length < 12) errors.push(sanitize(error));
       report.pageErrors = [...errors];
@@ -359,16 +431,16 @@ export async function runTerrainPickingLifecycle({
         if (
           result?.status !== 'passed' ||
           result.activeStackAfterSupersession !== 'qa-terrain-flat' ||
-          result.tileSetHiddenAtDelivery !== true
+          result.tileSetHiddenAtCancellation !== true
         )
           throw new Error(
-            'Streamed content was not superseded before delivery.',
+            'Streamed content was not paused and superseded before cancellation.',
           );
         tileContentInterception = {
           status: 'passed',
           pauseObservedBeforeContinue: true,
           activeStackAfterSupersession: result.activeStackAfterSupersession,
-          tileSetHiddenAtDelivery: result.tileSetHiddenAtDelivery,
+          tileSetHiddenAtCancellation: result.tileSetHiddenAtCancellation,
           browserAtPause: browserBeforeSupersession,
           serverAtPause: serverBeforeSupersession,
         };

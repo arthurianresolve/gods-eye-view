@@ -103,6 +103,9 @@ export function createStreamedTileNetworkEvidence({
       servedFromCache: false,
       encodedDataLength: null,
       failure: false,
+      failureClass: null,
+      failureCode: null,
+      canceled: null,
     };
     if (records.length >= maxRequests || pending.size >= maxRequests) {
       overflowCount++;
@@ -151,11 +154,33 @@ export function createStreamedTileNetworkEvidence({
     pending.delete(requestId);
   }
 
-  function loadingFailed({ requestId }) {
+  function loadingFailed(event = {}) {
+    const { requestId } = event;
     const record = pending.get(requestId);
     if (!record) return;
     counts[record.kind].failed++;
     record.failure = true;
+    const errorText =
+      typeof event.errorText === 'string' ? event.errorText : '';
+    const failureCode =
+      errorText === 'net::ERR_ABORTED'
+        ? 'ERR_ABORTED'
+        : errorText === 'net::ERR_CANCELED'
+          ? 'ERR_CANCELED'
+          : errorText === 'net::ERR_FAILED'
+            ? 'ERR_FAILED'
+            : errorText === 'net::ERR_CONNECTION_RESET'
+              ? 'ERR_CONNECTION_RESET'
+              : errorText === 'net::ERR_TIMED_OUT'
+                ? 'ERR_TIMED_OUT'
+                : 'other';
+    record.canceled =
+      typeof event.canceled === 'boolean' ? event.canceled : null;
+    record.failureCode = failureCode;
+    record.failureClass =
+      failureCode === 'ERR_ABORTED' || failureCode === 'ERR_CANCELED'
+        ? 'cancellation'
+        : 'error';
     pending.delete(requestId);
   }
 
