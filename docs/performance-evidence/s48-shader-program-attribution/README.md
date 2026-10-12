@@ -1,6 +1,6 @@
 # S48 shader-program lifecycle attribution
 
-Code is implemented on an isolated QA branch based on integrated `dev` at `5bbcd0de`. Root independent focused validation passes; hosted integration and rendered evidence for the new observer are pending. This packet does not change production rendering defaults or establish a performance improvement.
+Code is implemented on an isolated QA branch based on integrated `dev` at `5bbcd0de`. Root independent focused validation and all seven standard CI jobs pass at `3384b8bd`. The separate rendered diagnostic fails after five of six samples and loses parameter detail in the bounded failure report. The retention repair passes 159 independent local checks; fresh hosted validation remains pending. This packet does not change production rendering defaults or establish a performance improvement.
 
 ## Evidence motivating the diagnostic
 
@@ -35,7 +35,7 @@ The observation window is the owned document's context acquisition through its e
 
 The capture CLI exposes `--shader-program-attribution` only for the dense-investigation fixture. The outer smoke runner accepts `--capture-shader-program-attribution enabled`; the manual CI input is `capture_shader_program_attribution`, defaulting to false. The observer wraps only the captured Cesium context and keeps at most 128 program rows and four distinct parameter rows per program. Overflow is recorded and cannot pass complete attribution validation. Counters describe calls; they do not count unique omitted programs.
 
-The report binds each observer summary to the exact diagnostic document identity and its method-restoration evidence. Only declared numeric fields and enums are retained. Borrowed calls on another context and calls through a retained wrapper after disposal forward without recording. Relinking clears the prior confirmed-link state. Instrumented captures remain comparison-ineligible, and the existing frame, cleanup and child-process deadlines remain unchanged. Hosted integration and rendered validation for this new packet are still pending.
+The report binds each observer summary to the exact diagnostic document identity and its method-restoration evidence. Only declared numeric fields and enums are retained. Borrowed calls on another context and calls through a retained wrapper after disposal forward without recording. Relinking clears the prior confirmed-link state. Instrumented captures remain comparison-ineligible, and the existing frame, cleanup and child-process deadlines remain unchanged. Standard integration passes at `3384b8bd`; the failed rendered diagnostic and pending evidence-retention repair are recorded separately below.
 
 S48 and the unresolved physical Windows frame/capture failure remain open. The failed historical capture retains its failed status.
 
@@ -46,6 +46,18 @@ Root independently ran fifteen Node 24.16.0 suites: **151 passed, zero failures,
 Review corrections preserve thrown GL values and borrowed receivers, prevent recording after disposal, restore other owned wrappers when a replacement method getter throws, strip undeclared nested fields, and bind observer identities to the diagnostic documents. The producer/validator checks reject omitted parameter rows and impossible first-query counts. Unavailable observer records preserve null metrics without crashing report construction. An enabled-observer timeout keeps its original timeout classification and deadline while retaining a bounded late acknowledgement; it is never converted into a pass.
 
 These local results validate tool behavior, not native driver timing or any production performance benefit.
+
+## Bounded evidence-retention repair
+
+The capture now writes a separate checkpoint after each owned document cleanup and refreshes it after browser teardown. The checkpoint permits at most 40 documents and 8 MiB, retaining the observer's existing 128-program/four-parameter bounds. The general failure report keeps its 256 KiB limit and depth restriction. No rendering or child-process deadline changes.
+
+Direct observations and late cleanup observations occupy separate fields. Invalid observations do not discard valid records from other documents or a valid late result. A late result cannot turn the original timeout or unsuccessful outer cleanup into a pass. Incomplete checkpoints remain partial and all shader attribution remains ineligible for performance acceptance.
+
+The outer runner verifies the application commit, harness commit, build receipt, payload and reference hashes and byte lengths. A complete capture must also match the checkpoint's document identities. Missing reports preserve diagnostic data with an explicit missing binding; they cannot establish complete capture validation. Saved JSON projects only declared fields before upload, including reference metadata. Source-byte hashes remain separate when canonicalization changes saved bytes.
+
+Root independently passes **159 tests, zero failures and zero skips**, across sixteen suites with unchanged source hashes. The [retention validation record](retention-validation.json) and [raw output](retention-validation.log.gz) bind that exact source state. The actual serialized observer, generic failure projection, owned checkpoint writer and outer ingestion are exercised together; malformed, oversized, missing and altered artifacts are rejected. This is local repair validation. Fresh hosted validation remains pending, and run 38288835512 remains failed.
+
+The real timeout-to-late-acknowledgement regression also exercises persistence before and after the delayed response. It exposed an omitted unavailable document before acknowledgement; the repair retains that document with null metrics and an invalid count, then records its late parameter rows separately. Root independently passes the two affected suites, **45 tests**, in [the targeted validation](retention-late-validation.json), then reruns all sixteen suites against the final implementation. The [earlier local record](retention-initial-validation.json) is retained with its original source hashes and does not validate this last semantic correction.
 
 ## First hosted result: incomplete capture and lost parameter detail
 

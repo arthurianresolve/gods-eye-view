@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
+import { preserveShaderProgramAttributionArtifact } from '../qa-performance-build-smoke.mjs';
 import {
   boundedShaderProgramAttribution,
   cleanupEarlyCesiumRendererProbe,
@@ -13,6 +17,11 @@ import {
   retireEarlyCesiumRendererProbeForCapturePage,
   removeEarlyCesiumRendererProbeRegistrationWithEvidence,
 } from './earlyCesiumRendererProbe.mjs';
+import {
+  createShaderProgramAttributionCheckpoint,
+  persistShaderProgramAttributionCheckpoint,
+  validateShaderProgramAttributionCheckpoint,
+} from './shaderProgramAttributionArtifact.mjs';
 import { PROFILE_RECOVERY_WORKSPACE_ASSET_SHA256 } from './profileRecoveryFixtureContract.mjs';
 import {
   evaluatePairedRendererExperiment,
@@ -1316,7 +1325,7 @@ test('late retirement acknowledgement remains a timeout but retains its bounded 
   );
 });
 
-test('shader attribution timeout keeps its original failure and late snapshot', async () => {
+test('shader attribution timeout keeps its original failure and late snapshot', async (t) => {
   const probe = earlyProbePage(1);
   await installEarlyCesiumRendererProbe(probe.page, {
     shaderProgramAttribution: true,
@@ -1344,6 +1353,42 @@ test('shader attribution timeout keeps its original failure and late snapshot', 
   assert.equal(cleanup.document.errorKind, 'operation-timeout');
   assert.equal(cleanup.confirmed, false);
   assert.equal(typeof releaseAcknowledgement, 'function');
+
+  const directory = await mkdtemp(
+    path.join(await realpath(os.tmpdir()), 'gev-shader-late-checkpoint-'),
+  );
+  t.after(async () => rm(directory, { recursive: true, force: true }));
+  const sourcePath = path.join(
+    directory,
+    'capture.shader-program-attribution.json',
+  );
+  const artifactPath = path.join(
+    directory,
+    'smoke.shader-program-attribution.json',
+  );
+  const row = {
+    phase: 'measurement-boundary-cleanup',
+    documentRole: 'provider-idle-1',
+    documentId: 'timeout-document-1',
+    confirmed: cleanup.confirmed,
+    document: cleanup.document,
+  };
+  const attributionProvenance = {
+    appSha: 'a'.repeat(40),
+    harnessSha: 'b'.repeat(40),
+    receiptSha256: 'c'.repeat(64),
+  };
+  const beforeLate = await persistShaderProgramAttributionCheckpoint({
+    checkpointPath: sourcePath,
+    cleanupRows: [row],
+    expectedDocumentCount: 1,
+    provenance: attributionProvenance,
+  });
+  assert.equal(beforeLate.checkpoint.status, 'partial');
+  assert.equal(beforeLate.checkpoint.documents[0].lateAttribution, null);
+  assert.equal(cleanup.document.status, 'timeout');
+  assert.equal(cleanup.confirmed, false);
+
   releaseAcknowledgement();
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(cleanup.document.status, 'timeout');
@@ -1356,6 +1401,49 @@ test('shader attribution timeout keeps its original failure and late snapshot', 
   assert.equal(
     cleanup.document.lateOutcome.shaderProgramAttribution.cleanup.confirmed,
     true,
+  );
+
+  const afterLate = await persistShaderProgramAttributionCheckpoint({
+    checkpointPath: sourcePath,
+    cleanupRows: [row],
+    expectedDocumentCount: 1,
+    provenance: attributionProvenance,
+  });
+  assert.equal(afterLate.checkpoint.status, 'partial');
+  assert.equal(
+    afterLate.checkpoint.documents[0].lateOutcomeStatus,
+    'confirmed',
+  );
+  const ingested = await preserveShaderProgramAttributionArtifact(
+    sourcePath,
+    `${sourcePath}.ref.json`,
+    artifactPath,
+    attributionProvenance,
+  );
+  assert.equal(ingested.artifact.status, 'preserved');
+  const document = ingested.checkpoint.documents[0];
+  assert.equal(document.status, 'unavailable');
+  assert.equal(document.outerCleanupConfirmed, false);
+  assert.equal(document.cleanupConfirmed, false);
+  assert.equal(document.lateOutcomeStatus, 'confirmed');
+  assert.equal(
+    document.lateAttribution.programs[0].parameterNames[0].name,
+    'LINK_STATUS',
+  );
+  const originalFailure = createCaptureFailureReport({
+    source: {
+      appCommit: attributionProvenance.appSha,
+      harnessCommit: attributionProvenance.harnessSha,
+    },
+    fixture: null,
+    workload: { rendererProbeCleanup: [row] },
+    phase: 'outer-timeout',
+    error: new Error('outer timeout'),
+  });
+  assert.equal(originalFailure.failure.phase, 'outer-timeout');
+  assert.equal(
+    originalFailure.workload.rendererProbeCleanup[0].document.status,
+    'timeout',
   );
 });
 
@@ -1910,4 +1998,118 @@ test('shader attribution records bounded overflow without confusing it with clea
     'truncated',
   );
   assert.equal(cleanup.confirmed, true);
+});
+
+test('shader checkpoint preserves actual pname rows across generic failure projection', async () => {
+  const fixture = earlyProbePage();
+  const identifier = await installEarlyCesiumRendererProbe(fixture.page, {
+    shaderProgramAttribution: true,
+  });
+  const context = new fixture.Canvas().getContext('webgl2');
+  const program = context.createProgram();
+  context.linkProgram(program);
+  context.getProgramParameter(program, context.LINK_STATUS);
+  context.getProgramParameter(program, context.ACTIVE_UNIFORMS);
+  context.getProgramParameter(program, context.ACTIVE_ATTRIBUTES);
+  const cleanup = await cleanupEarlyCesiumRendererProbeWithEvidence(
+    fixture.page,
+    identifier,
+    1000,
+    { requireShaderProgramAttribution: true },
+  );
+  const row = {
+    phase: 'provider-sample-cleanup',
+    documentRole: 'provider-sample-idle-1',
+    documentId: 'sample-document-1',
+    confirmed: cleanup.confirmed,
+    document: cleanup.document,
+  };
+  const checkpoint = createShaderProgramAttributionCheckpoint([row], 3, {
+    appSha: 'a'.repeat(40),
+    harnessSha: 'b'.repeat(40),
+    receiptSha256: 'c'.repeat(64),
+  });
+  assert.equal(checkpoint.status, 'partial');
+  assert.equal(
+    checkpoint.documents[0].attribution.programs[0].parameterNames.length,
+    3,
+  );
+  const parsedCheckpoint = validateShaderProgramAttributionCheckpoint(
+    JSON.parse(JSON.stringify(checkpoint)),
+    {
+      appSha: 'a'.repeat(40),
+      harnessSha: 'b'.repeat(40),
+      receiptSha256: 'c'.repeat(64),
+    },
+  );
+  assert.equal(
+    parsedCheckpoint.documents[0].attribution.programs[0].parameterNames.length,
+    3,
+  );
+
+  const failure = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    fixture: null,
+    workload: { rendererProbeCleanup: [row] },
+    phase: 'outer-timeout',
+    error: new Error('outer timeout'),
+  });
+  const projected =
+    failure.workload.rendererProbeCleanup[0].document.shaderProgramAttribution;
+  assert.equal(projected.programs[0].parameterNames, undefined);
+  assert.equal(failure.failure.phase, 'outer-timeout');
+
+  const directory = await mkdtemp(
+    path.join(await realpath(os.tmpdir()), 'gev-shader-observer-projection-'),
+  );
+  try {
+    const sourcePath = path.join(
+      directory,
+      'actual.shader-program-attribution.json',
+    );
+    const referencePath = `${sourcePath}.ref.json`;
+    const artifactPath = path.join(
+      directory,
+      'smoke.shader-program-attribution.json',
+    );
+    const persisted = await persistShaderProgramAttributionCheckpoint({
+      checkpointPath: sourcePath,
+      cleanupRows: [row],
+      expectedDocumentCount: 3,
+      provenance: {
+        appSha: 'a'.repeat(40),
+        harnessSha: 'b'.repeat(40),
+        receiptSha256: 'c'.repeat(64),
+      },
+    });
+    assert.equal(persisted.artifact.status, 'partial');
+    const checkpointBytes = await readFile(sourcePath);
+    assert.ok(await readFile(referencePath));
+    const storedFailure = path.join(directory, 'capture-failure.json');
+    await writeFile(storedFailure, `${JSON.stringify(failure)}\n`);
+    const reportOnDisk = JSON.parse(await readFile(storedFailure, 'utf8'));
+    assert.equal(
+      reportOnDisk.workload.rendererProbeCleanup[0].document
+        .shaderProgramAttribution.programs[0].parameterNames,
+      undefined,
+    );
+    const sidecar = await preserveShaderProgramAttributionArtifact(
+      sourcePath,
+      referencePath,
+      artifactPath,
+      {
+        appSha: 'a'.repeat(40),
+        harnessSha: 'b'.repeat(40),
+        receiptSha256: 'c'.repeat(64),
+      },
+    );
+    assert.equal(sidecar.artifact.status, 'preserved');
+    assert.equal(
+      sidecar.checkpoint.documents[0].attribution.programs[0].parameterNames
+        .length,
+      3,
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

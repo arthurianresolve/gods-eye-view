@@ -10,6 +10,12 @@ per-parameter detail, so complete attribution remains unavailable. Preserve
 the failed report and fix bounded evidence retention before another run.
 All seven standard integration jobs pass at exact `3384b8bd`; this does not
 validate the failed attribution run or the subsequent retention repair.
+The bounded retention repair now passes 159 independent focused checks with
+unchanged source hashes. Per-document checkpoints retain direct and late query
+rows separately, verify payload/reference hashes and commit/receipt provenance,
+and require matching document identities for complete captures. The general
+failure-report cap and all deadlines remain unchanged. Fresh hosted validation
+of this repair remains pending; the original failed run stays failed.
 [Implementation, source/profile audit and limits](performance-evidence/s48-shader-program-attribution/README.md)
 keep whole-document synchronous GL-call time separate from GPU timing and
 matched performance. Production rendering defaults are unchanged; S48 remains partial.

@@ -43,6 +43,7 @@ import {
   retireEarlyCesiumRendererProbeForCapturePage,
   readEarlyCesiumRendererProbe,
 } from './performance/earlyCesiumRendererProbe.mjs';
+import { persistShaderProgramAttributionCheckpoint } from './performance/shaderProgramAttributionArtifact.mjs';
 import {
   createEntityFollowRoute,
   observeTrackedEntityBoundary,
@@ -409,7 +410,23 @@ let weatherEffectsFixtureDelivery = null;
 let weatherEffectsFixtureAbortController = null;
 const infrastructureResponseListeners = new Map();
 const earlyRendererProbeScripts = new Map();
-function recordRendererProbeCleanupEvidence(evidence) {
+async function refreshShaderProgramAttributionCheckpoint() {
+  if (!shaderProgramAttributionEnabled || !out) return;
+  const checkpointPath = `${out}.shader-program-attribution.json`;
+  const persisted = await persistShaderProgramAttributionCheckpoint({
+    checkpointPath,
+    cleanupRows: failureProgress.workload.rendererProbeCleanup || [],
+    expectedDocumentCount: startupRuns + 1 + 3 * runs,
+    provenance: {
+      appSha: source.appCommit,
+      harnessSha: source.harnessCommit,
+      receiptSha256: captureProvenance?.source.receiptSha256,
+    },
+  });
+  failureProgress.workload.shaderProgramAttributionArtifact =
+    persisted.artifact;
+}
+async function recordRendererProbeCleanupEvidence(evidence) {
   const records = failureProgress.workload.rendererProbeCleanup || [];
   const maximumRecords = shaderProgramAttributionEnabled ? 40 : 16;
   if (records.length >= maximumRecords) {
@@ -422,6 +439,7 @@ function recordRendererProbeCleanupEvidence(evidence) {
   if (shaderProgramAttributionEnabled)
     failureProgress.workload.shaderProgramAttribution =
       shaderProgramAttributionEnvelope();
+  await refreshShaderProgramAttributionCheckpoint().catch(() => {});
 }
 async function cleanupEarlyRendererProbeForPage(
   page,
@@ -455,7 +473,7 @@ async function cleanupEarlyRendererProbeForPage(
   evidence.phase = phase;
   evidence.documentRole = documentRole;
   evidence.documentId = documentId;
-  recordRendererProbeCleanupEvidence(evidence);
+  await recordRendererProbeCleanupEvidence(evidence);
   if (!evidence.confirmed)
     throw new Error(
       retireViewerRenderLoop
@@ -3878,6 +3896,8 @@ try {
     ...(shaderProgramAttributionEnabled
       ? {
           shaderProgramAttribution: shaderProgramAttributionEnvelope(),
+          shaderProgramAttributionArtifact:
+            failureProgress.workload.shaderProgramAttributionArtifact || null,
           performanceAcceptanceEligible: false,
         }
       : {}),
@@ -4199,6 +4219,7 @@ try {
     if (ownedBrowserPidFile)
       await fs.rm(ownedBrowserPidFile, { force: true }).catch(() => {});
   }
+  await refreshShaderProgramAttributionCheckpoint().catch(() => {});
 }
 if (captureFailure && !failureReportWritten) {
   try {

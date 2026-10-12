@@ -64,6 +64,13 @@ import { INFRASTRUCTURE_WORKLOAD_IDS } from './performance/infrastructureWorkloa
 import { observeTerminalViewerState } from './performance/terminalViewerObservation.mjs';
 import { validateDepthPickAttributionEnvelope } from './performance/depthPickAttribution.mjs';
 import { boundedShaderProgramAttribution } from './performance/earlyCesiumRendererProbe.mjs';
+import {
+  MAX_SHADER_PROGRAM_ATTRIBUTION_ARTIFACT_BYTES,
+  createShaderProgramAttributionCheckpointReference,
+  validateShaderProgramAttributionCheckpoint,
+  validateShaderProgramAttributionCheckpointReference,
+  verifyShaderProgramAttributionArtifactBytes,
+} from './performance/shaderProgramAttributionArtifact.mjs';
 
 const BASELINE_SHA = 'eb8c6828d0d03e1c04bda94c8c4fb99915a577b7';
 export const MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES = 8 * 1024 * 1024;
@@ -2308,6 +2315,11 @@ export async function executeCaptureCliWithReportArtifact({
   runChild,
   reportPath,
   artifactPath,
+  shaderAttributionArtifactPath = null,
+  shaderAttributionArtifactSourcePath = null,
+  shaderAttributionReferenceSourcePath = null,
+  shaderAttributionExpectedComplete = false,
+  shaderAttributionExpectedProvenance = null,
 }) {
   let childError = null;
   try {
@@ -2320,6 +2332,36 @@ export async function executeCaptureCliWithReportArtifact({
     artifactPath,
   );
   artifact.childStatus = childError ? 'failed' : 'completed';
+  let shaderAttributionArtifact = null;
+  let shaderAttributionCheckpoint = null;
+  let shaderAttributionCheckpointSummary = null;
+  let shaderAttributionSourceReference = null;
+  if (
+    shaderAttributionArtifactPath &&
+    shaderAttributionArtifactSourcePath &&
+    shaderAttributionReferenceSourcePath
+  ) {
+    const preserved = await preserveShaderProgramAttributionArtifact(
+      shaderAttributionArtifactSourcePath,
+      shaderAttributionReferenceSourcePath,
+      shaderAttributionArtifactPath,
+      shaderAttributionExpectedProvenance,
+    );
+    shaderAttributionArtifact = preserved.artifact;
+    shaderAttributionCheckpoint = preserved.checkpoint;
+    shaderAttributionCheckpointSummary = preserved.checkpointSummary || null;
+    shaderAttributionSourceReference = preserved.sourceReference || null;
+    if (
+      !childError &&
+      (shaderAttributionArtifact.status !== 'preserved' ||
+        !shaderAttributionCheckpoint ||
+        (shaderAttributionExpectedComplete &&
+          shaderAttributionCheckpoint.status !== 'complete'))
+    )
+      childError = new Error(
+        'Shader-program attribution checkpoint was not complete and verified.',
+      );
+  }
   let report = null;
   if (artifact.status === 'preserved') {
     try {
@@ -2328,6 +2370,67 @@ export async function executeCaptureCliWithReportArtifact({
       if (!childError) childError = error;
     }
   }
+  if (shaderAttributionArtifact) {
+    const producerReference =
+      report?.workload?.shaderProgramAttributionArtifact || null;
+    if (!report) {
+      shaderAttributionArtifact.reportBindingStatus = 'report-unavailable';
+    } else if (!producerReference || !shaderAttributionSourceReference) {
+      shaderAttributionArtifact.reportBindingStatus = 'report-binding-missing';
+    } else {
+      const bindingMatches =
+        producerReference.schema ===
+          'gev-shader-program-attribution-artifact/v1' &&
+        producerReference.status === shaderAttributionCheckpoint?.status &&
+        producerReference.fileName ===
+          path.basename(shaderAttributionArtifactSourcePath || '') &&
+        producerReference.byteLength ===
+          shaderAttributionArtifact.sourceByteLength &&
+        producerReference.sha256 === shaderAttributionArtifact.sourceSha256 &&
+        producerReference.referenceFileName ===
+          path.basename(shaderAttributionReferenceSourcePath || '') &&
+        producerReference.referenceByteLength ===
+          shaderAttributionSourceReference.byteLength &&
+        producerReference.referenceSha256 ===
+          shaderAttributionSourceReference.sha256 &&
+        producerReference.limitBytes ===
+          MAX_SHADER_PROGRAM_ATTRIBUTION_ARTIFACT_BYTES;
+      const checkpointIdentities = (
+        shaderAttributionCheckpoint?.documents || []
+      )
+        .map(
+          (document) => `${document.documentRole}\u0000${document.documentId}`,
+        )
+        .sort();
+      const envelopeIdentities = (
+        report?.workload?.shaderProgramAttribution?.documents || []
+      )
+        .map(
+          (document) => `${document.documentRole}\u0000${document.documentId}`,
+        )
+        .sort();
+      const identityMatches =
+        !shaderAttributionExpectedComplete ||
+        (checkpointIdentities.length === envelopeIdentities.length &&
+          checkpointIdentities.every(
+            (identity, index) => identity === envelopeIdentities[index],
+          ));
+      shaderAttributionArtifact.reportBindingStatus =
+        bindingMatches && identityMatches ? 'bound' : 'report-binding-mismatch';
+      if ((!bindingMatches || !identityMatches) && !childError)
+        childError = new Error(
+          'Shader-program attribution sidecar did not match the capture report reference or document identities.',
+        );
+    }
+  }
+  if (
+    shaderAttributionArtifact &&
+    !childError &&
+    shaderAttributionArtifact.reportBindingStatus !== 'bound'
+  )
+    childError = new Error(
+      'Shader-program attribution checkpoint is missing its capture report binding.',
+    );
   if (!childError && artifact.status === 'oversize')
     childError = new Error('Capture CLI report exceeded its artifact limit.');
   if (!childError && artifact.status !== 'preserved')
@@ -2335,9 +2438,230 @@ export async function executeCaptureCliWithReportArtifact({
   if (childError) {
     childError.captureCliReport = report;
     childError.captureCliReportArtifact = artifact;
+    if (shaderAttributionArtifact) {
+      childError.shaderProgramAttributionArtifact = shaderAttributionArtifact;
+      childError.shaderProgramAttributionCheckpoint =
+        shaderAttributionCheckpoint;
+      childError.shaderProgramAttributionCheckpointSummary =
+        shaderAttributionCheckpointSummary;
+    }
     throw childError;
   }
-  return { report, artifact };
+  return {
+    report,
+    artifact,
+    shaderProgramAttributionArtifact: shaderAttributionArtifact,
+    shaderProgramAttributionCheckpoint: shaderAttributionCheckpoint,
+    shaderProgramAttributionCheckpointSummary:
+      shaderAttributionCheckpointSummary,
+  };
+}
+
+export async function preserveShaderProgramAttributionArtifact(
+  sourcePath,
+  referencePath,
+  artifactPath,
+  expectedProvenance = null,
+) {
+  const metadata = (status, details = {}) => ({
+    schema: 'gev-smoke-shader-program-attribution-artifact/v1',
+    status,
+    fileName: path.basename(artifactPath),
+    byteLength: null,
+    sha256: null,
+    sourceByteLength: null,
+    sourceSha256: null,
+    referenceFileName: `${path.basename(artifactPath)}.ref.json`,
+    referenceByteLength: null,
+    referenceSha256: null,
+    sourceReferenceFileName: path.basename(referencePath),
+    sourceReferenceByteLength: null,
+    sourceReferenceSha256: null,
+    limitBytes: MAX_SHADER_PROGRAM_ATTRIBUTION_ARTIFACT_BYTES,
+    ...details,
+  });
+  const summarizeCheckpoint = (checkpoint) => ({
+    status: checkpoint.status,
+    expectedDocumentCount: checkpoint.expectedDocumentCount,
+    recordedDocumentCount: checkpoint.recordedDocumentCount,
+    invalidDocumentCount: checkpoint.invalidDocumentCount,
+    documentIdentities: checkpoint.documents.map((document) => ({
+      role: document.documentRole,
+      id: document.documentId,
+    })),
+  });
+  const readBounded = async (filePath, limit) => {
+    let handle;
+    try {
+      handle = await open(filePath, 'r');
+      const statResult = await handle.stat();
+      if (!statResult.isFile()) return { status: 'unavailable' };
+      if (statResult.size > limit)
+        return { status: 'oversize', byteLength: statResult.size };
+      const buffer = Buffer.alloc(limit + 1);
+      let byteLength = 0;
+      while (byteLength < buffer.byteLength) {
+        const { bytesRead } = await handle.read(
+          buffer,
+          byteLength,
+          buffer.byteLength - byteLength,
+          byteLength,
+        );
+        if (bytesRead === 0) break;
+        byteLength += bytesRead;
+      }
+      if (byteLength > limit) return { status: 'oversize', byteLength };
+      return { status: 'read', bytes: buffer.subarray(0, byteLength) };
+    } catch (error) {
+      return { status: 'missing', code: error?.code || null };
+    } finally {
+      await handle?.close().catch(() => {});
+    }
+  };
+  const payload = await readBounded(
+    sourcePath,
+    MAX_SHADER_PROGRAM_ATTRIBUTION_ARTIFACT_BYTES,
+  );
+  if (payload.status !== 'read')
+    return {
+      artifact: metadata(
+        payload.status === 'oversize' ? 'oversize' : 'missing-or-unreadable',
+        { sourceByteLength: payload.byteLength ?? null },
+      ),
+      checkpoint: null,
+    };
+  const referenceRead = await readBounded(referencePath, 16 * 1024);
+  if (referenceRead.status !== 'read')
+    return {
+      artifact: metadata('reference-missing-or-invalid', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: createHash('sha256').update(payload.bytes).digest('hex'),
+      }),
+      checkpoint: null,
+    };
+  let parsed;
+  let reference;
+  try {
+    reference = JSON.parse(referenceRead.bytes.toString('utf8'));
+  } catch {
+    return {
+      artifact: metadata('malformed', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: createHash('sha256').update(payload.bytes).digest('hex'),
+      }),
+      checkpoint: null,
+    };
+  }
+  if (
+    !validateShaderProgramAttributionCheckpointReference(
+      reference,
+      payload.bytes,
+      expectedProvenance,
+      path.basename(sourcePath),
+    )
+  )
+    return {
+      artifact: metadata('hash-or-reference-mismatch', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: createHash('sha256').update(payload.bytes).digest('hex'),
+      }),
+      checkpoint: null,
+    };
+  try {
+    parsed = JSON.parse(payload.bytes.toString('utf8'));
+  } catch {
+    return {
+      artifact: metadata('malformed', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: reference.sha256,
+      }),
+      checkpoint: null,
+    };
+  }
+  const checkpoint = validateShaderProgramAttributionCheckpoint(
+    parsed,
+    expectedProvenance,
+  );
+  if (!checkpoint || checkpoint.status !== reference.status)
+    return {
+      artifact: metadata('malformed', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: reference.sha256,
+      }),
+      checkpoint: null,
+    };
+  const canonicalBytes = Buffer.from(`${JSON.stringify(checkpoint)}\n`);
+  if (canonicalBytes.byteLength > MAX_SHADER_PROGRAM_ATTRIBUTION_ARTIFACT_BYTES)
+    return {
+      artifact: metadata('oversize', {
+        sourceByteLength: payload.bytes.byteLength,
+      }),
+      checkpoint: null,
+    };
+  const outputReference = createShaderProgramAttributionCheckpointReference(
+    checkpoint,
+    canonicalBytes,
+    path.basename(artifactPath),
+  );
+  if (!outputReference)
+    return {
+      artifact: metadata('malformed', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: reference.sha256,
+      }),
+      checkpoint: null,
+    };
+  const referenceBytes = Buffer.from(`${JSON.stringify(outputReference)}\n`);
+  const temporaryPath = `${artifactPath}.pending-${process.pid}`;
+  const artifactReferencePath = `${artifactPath}.ref.json`;
+  const temporaryReferencePath = `${artifactReferencePath}.pending-${process.pid}`;
+  try {
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(temporaryPath, canonicalBytes, { flag: 'wx' });
+    await rename(temporaryPath, artifactPath);
+    await writeFile(temporaryReferencePath, referenceBytes, { flag: 'wx' });
+    await rename(temporaryReferencePath, artifactReferencePath);
+  } catch {
+    await rm(temporaryPath, { force: true }).catch(() => {});
+    await rm(temporaryReferencePath, { force: true }).catch(() => {});
+    return {
+      artifact: metadata('write-failed', {
+        sourceByteLength: payload.bytes.byteLength,
+        sourceSha256: reference.sha256,
+      }),
+      checkpoint: null,
+    };
+  }
+  const artifactMetadata = metadata('preserved', {
+    byteLength: canonicalBytes.byteLength,
+    sha256: createHash('sha256').update(canonicalBytes).digest('hex'),
+    sourceByteLength: payload.bytes.byteLength,
+    sourceSha256: reference.sha256,
+    sourceReferenceFileName: path.basename(referencePath),
+    sourceReferenceByteLength: referenceRead.bytes.byteLength,
+    sourceReferenceSha256: createHash('sha256')
+      .update(referenceRead.bytes)
+      .digest('hex'),
+    referenceByteLength: referenceBytes.byteLength,
+    referenceSha256: createHash('sha256').update(referenceBytes).digest('hex'),
+  });
+  if (
+    !verifyShaderProgramAttributionArtifactBytes(
+      artifactMetadata,
+      canonicalBytes,
+    )
+  )
+    return { artifact: metadata('hash-mismatch'), checkpoint: null };
+  return {
+    artifact: artifactMetadata,
+    checkpoint,
+    checkpointSummary: summarizeCheckpoint(checkpoint),
+    sourceReference: {
+      fileName: path.basename(referencePath),
+      byteLength: referenceRead.bytes.byteLength,
+      sha256: createHash('sha256').update(referenceRead.bytes).digest('hex'),
+    },
+  };
 }
 
 function git(args) {
@@ -2590,6 +2914,11 @@ async function runCandidateCaptureCli({
     );
   const receiptPath = path.join(tempRoot, 'capture-cli-build-receipt.json');
   const reportPath = path.join(tempRoot, 'capture-cli-report.json');
+  const shaderAttributionSourcePath = `${reportPath}.shader-program-attribution.json`;
+  const shaderAttributionReferenceSourcePath = `${shaderAttributionSourcePath}.ref.json`;
+  const shaderAttributionArtifactPath = shaderProgramAttribution
+    ? `${captureCliReportArtifactPath}.shader-program-attribution.json`
+    : null;
   const browserPidPath = path.join(tempRoot, 'capture-cli-browser.pid');
   await writeFile(receiptPath, `${JSON.stringify(build.receipt)}\n`, 'utf8');
   const scriptPath = path.join(
@@ -2662,6 +2991,7 @@ async function runCandidateCaptureCli({
   }
   let captureReport = null;
   let captureCliReportArtifact = null;
+  let shaderProgramAttributionArtifact = null;
   try {
     const captureCliResult = await executeCaptureCliWithReportArtifact({
       runChild: () =>
@@ -2672,9 +3002,24 @@ async function runCandidateCaptureCli({
         }),
       reportPath,
       artifactPath: captureCliReportArtifactPath,
+      shaderAttributionArtifactPath,
+      shaderAttributionArtifactSourcePath: shaderProgramAttribution
+        ? shaderAttributionSourcePath
+        : null,
+      shaderAttributionReferenceSourcePath: shaderProgramAttribution
+        ? shaderAttributionReferenceSourcePath
+        : null,
+      shaderAttributionExpectedComplete: shaderProgramAttribution,
+      shaderAttributionExpectedProvenance: {
+        appSha: commit,
+        harnessSha: harnessCommit,
+        receiptSha256: build.receipt.receiptSha256,
+      },
     });
     captureReport = captureCliResult.report;
     captureCliReportArtifact = captureCliResult.artifact;
+    shaderProgramAttributionArtifact =
+      captureCliResult.shaderProgramAttributionArtifact;
     const validated = validateCaptureCliReport(
       captureReport,
       buildCaptureCliValidationExpectations({
@@ -2726,10 +3071,18 @@ async function runCandidateCaptureCli({
         );
       }
     }
-    return { ...validated, captureCliReportArtifact };
+    return {
+      ...validated,
+      captureCliReportArtifact,
+      ...(shaderProgramAttributionArtifact
+        ? { shaderProgramAttributionArtifact }
+        : {}),
+    };
   } catch (error) {
     captureReport ||= error.captureCliReport || null;
     captureCliReportArtifact ||= error.captureCliReportArtifact || null;
+    shaderProgramAttributionArtifact ||=
+      error.shaderProgramAttributionArtifact || null;
     const captureCliFailure = compactCaptureCliFailure(captureReport) || {
       diagnostics: error.childDiagnostics || null,
     };
@@ -2740,8 +3093,15 @@ async function runCandidateCaptureCli({
     }
     if (captureCliReportArtifact)
       captureCliFailure.captureCliReportArtifact = captureCliReportArtifact;
+    if (shaderProgramAttributionArtifact)
+      captureCliFailure.shaderProgramAttributionArtifact =
+        shaderProgramAttributionArtifact;
+    if (error.shaderProgramAttributionCheckpointSummary)
+      captureCliFailure.shaderProgramAttributionCheckpoint =
+        error.shaderProgramAttributionCheckpointSummary;
     error.captureCliFailure = captureCliFailure;
     error.captureCliReportArtifact = captureCliReportArtifact;
+    error.shaderProgramAttributionArtifact = shaderProgramAttributionArtifact;
     throw error;
   }
 }
@@ -3556,6 +3916,9 @@ async function main() {
         variant.status = 'failed';
         if (error.captureCliReportArtifact)
           variant.captureCliReportArtifact = error.captureCliReportArtifact;
+        if (error.shaderProgramAttributionArtifact)
+          variant.shaderProgramAttributionArtifact =
+            error.shaderProgramAttributionArtifact;
         variant.failure = sanitizeError(error);
         variant.failureDetails = error.smokeDiagnostics || {
           phase: 'clean-build-or-server-start',
