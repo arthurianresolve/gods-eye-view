@@ -14,6 +14,11 @@ finishes four samples and three complete CPU profiles, then fails at the outer
 180-second child deadline before tracking warmup can finish. Final cleanup and
 post-capture byte verification are incomplete. No performance gain or hardware
 acceptance is claimed; S47/S48 remain partial and promotion awaits integration.
+The subsequent control at `f7e0709c` disables optional profiling with runtime,
+visual settings and deadlines unchanged. It still fails idle warmup before any
+sample; the completed-frame result and final cleanup acknowledgement arrive
+late. Optional profiling alone does not explain the failure. The original
+failure remains recorded and no deadline is relaxed.
 
 Latest isolated S48 fixture-release ownership repair at `947f1e12` passes
 117 focused tests and independent original/candidate actual-CLI checks.

@@ -124,3 +124,26 @@ Next work must isolate the remaining workload and distinguish initial
 shader/geometry work from repeated work, with existing visual settings intact.
 No unchanged diagnostic retry or timeout increase is scheduled. S47, S48 and
 hardware/performance acceptance remain partial.
+
+## Control with optional profiling disabled
+
+[Run 38272847654](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38272847654)
+tests `f7e0709c8536fb8ca63619fd5288ae3a4123602e`. Git comparison confirms its
+application and capture implementation match `73018ec5`; only the timing test
+and documentation changed. This control disables optional CPU profiling,
+scene-frame attribution and depth-pick attribution together, retaining the
+same dense fixture, visual settings, worker mode, sample counts and deadlines.
+
+It fails idle run 1 warmup with **zero completed samples**. Page entry is
+acknowledged after 2,399.284 ms; the page's completed-frame boundary settles
+after another 4,909.7 ms. The host records its six-second deadline as exceeded,
+with the late result retained. Progress-binding cleanup also times out at its
+250 ms bound. The first two renderer cleanups pass; final document cleanup
+exceeds its one-second budget. Those failures remain separate from confirmed
+fixture-session closure.
+
+The [hash-checked raw report and review](normal-control-38272847654/review.json)
+show that optional profiling is not required for this warmup failure. This
+single control cannot measure profiler overhead or identify a driver, engine,
+application or host-scheduling cause. No deadline is increased and neither
+failed report is accepted as a performance comparison.
