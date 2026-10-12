@@ -13,6 +13,7 @@ import {
 
 import {
   planeDimensions,
+  sameFootprintPose,
   poseHash,
   requiredPlaneLift,
 } from '../../data/cctvFootprint.js';
@@ -25,9 +26,10 @@ export function createGeometry({ state: layerState, services, parts, source }) {
   /**
    * Ground measured under the plane's support points for the record's
    * CURRENT pose, or null. Shipped precompute samples (`camera.groundHeights`)
-   * were taken for the nominal pose; they apply only while the pose hash still
-   * matches, so a calibrated (edited) camera falls back to the mount ground
-   * until its own footprint is resolved. Photoreal regime only: the values
+   * were taken for the nominal pose; they apply only while the effective pose
+   * exactly matches that base pose (with the legacy hash retained as a sidecar
+   * compatibility check). A calibrated camera falls back to mount ground until
+   * its own footprint is resolved. Photoreal regime only: the values
    * are aligned to the Google 3D Tiles surface and would be wrong against a
    * globe DEM.
    * @param {Object} record
@@ -40,7 +42,7 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     // DEM footprint resolved on demand (activation / calibration commit) —
     // valid in either regime, the DEM is what the globe stacks render anyway.
     const resolved = record?.footprintGround;
-    if (resolved && resolved.poseHash === poseHash(footprintPose(record))) {
+    if (resolved && sameFootprintPose(resolved.pose, footprintPose(record))) {
       return resolved.supports || null;
     }
     return null;
@@ -83,9 +85,12 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     const shipped = record?.camera?.groundHeights;
     if (!shipped || typeof shipped !== 'object') return false;
     if (parts.ground.currentSurfaceRegime() !== 'google-3d') return false;
-    // Samples describe the pose as served. Any calibration, client clamp or
-    // activation range clamp changes the rendered pose and its hash, and the
-    // camera then falls back to its own DEM footprint.
+    const basePose = record.camera.basePose;
+    if (!basePose || !sameFootprintPose(footprintPose(record), basePose))
+      return false;
+    // Samples describe the source's exact base pose. The rounded p1 hash keeps
+    // sidecar compatibility, while this exact check prevents a small
+    // calibration from colliding into the shipped sample's rounding bin.
     return (
       Number.isFinite(shipped.mountGroundM) &&
       shipped.poseHash === poseHash(footprintPose(record))
