@@ -2,8 +2,8 @@
 
 ## Current status - 12 October 2026
 
-Latest validated `dev` checkpoint: `16e426ee5685d3d45e6fe5d39f91d2e22b086741`.
-[All seven standard jobs pass](performance-evidence/s54-current-dev-20261012/dev-ci-16e426ee.json).
+Latest validated `dev` checkpoint: `32b8c74cfc132213d000294d058821645ee0dd96`.
+[All seven standard jobs pass](performance-evidence/s54-current-dev-20261012/dev-ci-32b8c74c.json).
 Runtime is unchanged from `bbca229f`; intervening changes are evidence and
 documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
@@ -15,10 +15,18 @@ source-ready time by 15.02% despite lower heap, and fails benefit acceptance;
 the earlier cable map-switch readiness failures remain unresolved. A subsequent
 [cable comparison](performance-evidence/s54-cable-camera-38188781699/README.md)
 passes readiness but fails all five camera-change image pairs with 50 different
-pixels and different final geometry. A reproduced final-settling threshold issue
-is under repair. S47's additional infrastructure workloads are under review:
+pixels and different final geometry. The final-settling threshold and follow-up
+render repair pass focused tests on the isolated candidate; its
+[rendered retry](performance-evidence/s54-cable-settle-38190313885/README.md)
+stops earlier because map-restoration geometry completes after the readiness
+deadline. The repair therefore has no accepted rendered comparison yet.
+S47's additional infrastructure workloads are under review:
 the frozen-clock correction completes four samples, but
 [outer worker-audit validation fails](performance-evidence/s47-infrastructure-smoke-38189117919/README.md).
+The [next run](performance-evidence/s47-infrastructure-smoke-38190043475/README.md)
+preserves a bounded capture projection and exposes a broader producer/validator
+mismatch: infrastructure uses one measured document, while validation assumed
+the dense workload's per-sample documents. Contract repair remains in progress.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.

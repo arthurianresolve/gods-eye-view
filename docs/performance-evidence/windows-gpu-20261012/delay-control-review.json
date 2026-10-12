@@ -1,0 +1,67 @@
+﻿[
+    {
+        "file":  "delay-fresh-a1-immediate.json",
+        "sha256":  "081afc3ca418b602d87a86e6f5581a2d580082de8e413796d7109c3c19ea645f",
+        "startedAt":  "2026-10-12T01:22:10.406Z",
+        "mode":  "webgl2",
+        "requestedDelayMs":  0,
+        "actualDelayMs":  0,
+        "setupMs":  11.799999998882413,
+        "frames":  68,
+        "maximumFrameGapMs":  600.5999999996275,
+        "timerTicks":  250,
+        "maximumTimerGapMs":  22.300000000745058
+    },
+    {
+        "file":  "delay-fresh-b1-ten-seconds.json",
+        "sha256":  "016c3ad13b5a7c7090122ef896f253bf5e9d874cc1337fbde68fbcb8b9d5d739",
+        "startedAt":  "2026-10-12T01:22:52.816Z",
+        "mode":  "webgl2",
+        "requestedDelayMs":  10000,
+        "actualDelayMs":  10015.200000001118,
+        "setupMs":  11,
+        "frames":  36,
+        "maximumFrameGapMs":  850,
+        "timerTicks":  250,
+        "maximumTimerGapMs":  21.5
+    },
+    {
+        "file":  "delay-fresh-b2-ten-seconds.json",
+        "sha256":  "b89c39cb70e605c26374755cff4474b4fbf46694379a06164654e3d973e2df00",
+        "startedAt":  "2026-10-12T01:23:24.688Z",
+        "mode":  "webgl2",
+        "requestedDelayMs":  10000,
+        "actualDelayMs":  10015.099999999627,
+        "setupMs":  9.800000000745058,
+        "frames":  45,
+        "maximumFrameGapMs":  849.6999999992549,
+        "timerTicks":  250,
+        "maximumTimerGapMs":  21.09999999962747
+    },
+    {
+        "file":  "delay-fresh-a2-immediate.json",
+        "sha256":  "6f71d14a0981147842fd6e933aa87e8646926b9658f9fe0e02b00487770c4625",
+        "startedAt":  "2026-10-12T01:23:49.822Z",
+        "mode":  "webgl2",
+        "requestedDelayMs":  0,
+        "actualDelayMs":  0,
+        "setupMs":  13.700000001117587,
+        "frames":  65,
+        "maximumFrameGapMs":  683.2999999988824,
+        "timerTicks":  250,
+        "maximumTimerGapMs":  23.5
+    },
+    {
+        "file":  "delay-fresh-plain-raf.json",
+        "sha256":  "6db3e1d814380ff85e40a494608a9a996d0915f6a13eeb19835c309caf4cf99d",
+        "startedAt":  "2026-10-12T01:24:17.772Z",
+        "mode":  "plain-raf",
+        "requestedDelayMs":  10000,
+        "actualDelayMs":  10003.700000001118,
+        "setupMs":  0.09999999962747097,
+        "frames":  301,
+        "maximumFrameGapMs":  23.899999998509884,
+        "timerTicks":  250,
+        "maximumTimerGapMs":  22.09999999962747
+    }
+]
