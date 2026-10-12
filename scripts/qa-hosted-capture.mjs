@@ -41,6 +41,9 @@ let calibrationPage;
 let calibrationSession;
 let cableReferencePage;
 let cableReferenceSession;
+const cableReenableAttribution = process.argv.includes(
+  '--cable-reenable-attribution',
+);
 const closeOwnedBrowser = (ownedBrowser) =>
   closeRecoveryBrowser(ownedBrowser, {
     timeoutMs: 5000,
@@ -481,7 +484,8 @@ try {
       });
     }
     if (
-      process.argv.includes('--cable-references') &&
+      (process.argv.includes('--cable-references') ||
+        cableReenableAttribution) &&
       report.hardwareRenderingAvailable
     ) {
       report.cableReferencePageErrors = [];
@@ -518,7 +522,7 @@ try {
         },
       );
       await cableReferencePage.goto(
-        url.replace('capture-matrix.html', 'cable-reference-collections.html'),
+        `${url.replace('capture-matrix.html', 'cable-reference-collections.html')}${cableReenableAttribution ? '?diagnostic=cable-reenable' : ''}`,
         { waitUntil: 'networkidle0' },
       );
       await cableReferencePage.click('#run');
@@ -529,6 +533,17 @@ try {
         );
         if (result) {
           report.cableReferenceCollections = result;
+          if (cableReenableAttribution) {
+            report.cableReenableAttribution = {
+              schema: 'gev-cable-reenable-attribution/v1',
+              enabled: true,
+              fixtureObservation:
+                result.lifetimes?.find((row) => row.mode === 'entities')
+                  ?.reenableObservation || null,
+              scope: 'entity-cycle-0-reenable-population-and-scene-stability',
+              performanceAcceptanceEligible: false,
+            };
+          }
           break;
         }
         if (Date.now() >= cableDeadline)
@@ -589,6 +604,18 @@ try {
     report.cableReferenceCollections = await cableReferencePage
       .evaluate(() => window.__cableReferenceCollectionsResult || null)
       .catch(() => null);
+  }
+  if (cableReenableAttribution && !report.cableReenableAttribution) {
+    report.cableReenableAttribution = {
+      schema: 'gev-cable-reenable-attribution/v1',
+      enabled: true,
+      fixtureObservation:
+        report.cableReferenceCollections?.lifetimes?.find(
+          (row) => row.mode === 'entities',
+        )?.reenableObservation || null,
+      scope: 'entity-cycle-0-reenable-population-and-scene-stability',
+      performanceAcceptanceEligible: false,
+    };
   }
   report.status = 'failed';
   report.reason = `Native renderer probe failed: ${error.message}`;
@@ -672,7 +699,8 @@ try {
     process.argv.includes('--import-point-collection') ||
     process.argv.includes('--import-point-benefit-diagnostics') ||
     process.argv.includes('--soak') ||
-    process.argv.includes('--cable-references')
+    process.argv.includes('--cable-references') ||
+    cableReenableAttribution
   ) {
     await mkdir('qa-artifacts', { recursive: true });
     await writeFile(

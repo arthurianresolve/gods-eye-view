@@ -1,6 +1,7 @@
 import { CABLE_REFERENCE_RENDER_POPULATION } from './cable-reference-collections-contract.mjs';
 
 const MAX_EXAMPLES_PER_VISIBILITY = 12;
+const MAX_REFERENCE_WITNESS_BYTES = 3_000_000;
 
 function fail(message) {
   throw new Error(`Cable geometry attribution ${message}.`);
@@ -142,7 +143,7 @@ export function compareCableReferenceGeometry(beforeRows, afterRows) {
 /** Record the camera-change snapshot only, pairing the real renderer modes. */
 export async function recordCableReferenceGeometryAttribution(
   report,
-  { caseId, mode, readSnapshot },
+  { caseId, mode, readSnapshot, retainRows = false },
 ) {
   if (caseId !== 'camera-change') return false;
   if (
@@ -152,6 +153,23 @@ export async function recordCableReferenceGeometryAttribution(
     fail('case orchestration is malformed');
 
   const snapshot = await readSnapshot();
+  if (retainRows) {
+    if (
+      !Array.isArray(snapshot?.referenceRows) ||
+      snapshot.referenceRows.length !==
+        CABLE_REFERENCE_RENDER_POPULATION.referenceRecords
+    )
+      fail('full reference-coordinate witness is incomplete');
+    const witnessBytes = new TextEncoder().encode(
+      JSON.stringify(snapshot.referenceRows),
+    ).byteLength;
+    if (
+      !Number.isSafeInteger(witnessBytes) ||
+      witnessBytes > MAX_REFERENCE_WITNESS_BYTES
+    )
+      fail('full reference-coordinate witness exceeds its size cap');
+    snapshot.referenceRowsBytes = witnessBytes;
+  }
   if (mode === 'entities') {
     report.geometryAttribution = {
       schema: 'gev-cable-reference-geometry-attribution/v1',
@@ -171,6 +189,8 @@ export async function recordCableReferenceGeometryAttribution(
     baseline.referenceRows,
     snapshot.referenceRows,
   );
-  delete baseline.referenceRows;
+  if (!retainRows) delete baseline.referenceRows;
+  else
+    report.geometryAttribution.candidate.referenceRows = snapshot.referenceRows;
   return true;
 }

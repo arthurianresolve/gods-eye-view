@@ -45,6 +45,7 @@ on:
           - traffic
           - import-point-benefit
           - cable-references
+          - cable-reenable-attribution
           - cable-benefit
         default: collections
       hosted_gpu_probe:
@@ -799,7 +800,7 @@ jobs:
     name: Free hosted Mac rendering diagnostic
     if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'hosted-collection-probe'
     runs-on: macos-latest
-    timeout-minutes: ${{ (inputs.renderer_diagnostic == 'import-point-benefit' || inputs.renderer_diagnostic == 'infrastructure-benefit' || inputs.renderer_diagnostic == 'infrastructure-benefit-datacenters') && 45 || inputs.renderer_diagnostic == 'cable-benefit' && 75 || (inputs.renderer_diagnostic == 'traffic' || inputs.renderer_diagnostic == 'cable-references' || inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'infrastructure-datacenters') && 20 || 10 }}
+    timeout-minutes: ${{ (inputs.renderer_diagnostic == 'import-point-benefit' || inputs.renderer_diagnostic == 'infrastructure-benefit' || inputs.renderer_diagnostic == 'infrastructure-benefit-datacenters') && 45 || inputs.renderer_diagnostic == 'cable-benefit' && 75 || (inputs.renderer_diagnostic == 'traffic' || inputs.renderer_diagnostic == 'cable-references' || inputs.renderer_diagnostic == 'cable-reenable-attribution' || inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'infrastructure-datacenters') && 20 || 10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -842,7 +843,7 @@ jobs:
           if-no-files-found: error
           retention-days: 3
       - name: Preserve renderer comparison evidence
-        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'infrastructure-datacenters' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'cable-references')
+        if: always() && (inputs.renderer_diagnostic == 'infrastructure' || inputs.renderer_diagnostic == 'infrastructure-datacenters' || inputs.renderer_diagnostic == 'vessels' || inputs.renderer_diagnostic == 'calibration' || inputs.renderer_diagnostic == 'cable-references' || inputs.renderer_diagnostic == 'cable-reenable-attribution')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ inputs.renderer_diagnostic }}-comparison-${{ github.run_id }}

@@ -1225,6 +1225,8 @@
   "scripts/fixtures/cableClassificationAttribution.test.mjs",
   "scripts/fixtures/cableGeometryAttribution.mjs",
   "scripts/fixtures/cableGeometryAttribution.test.mjs",
+  "scripts/fixtures/cableReenableObservation.mjs",
+  "scripts/fixtures/cableReenableObservation.test.mjs",
   "scripts/fixtures/cableCameraSweep.mjs",
   "scripts/fixtures/cableCameraSweep.test.mjs",
   "scripts/performance/cableReferenceCollections.mjs",

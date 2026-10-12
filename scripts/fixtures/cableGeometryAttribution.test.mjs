@@ -153,6 +153,83 @@ test('camera-change orchestration captures only that case and pairs both rendere
   );
 });
 
+test('opt-in camera-change witness retains bounded full reference rows by mode', async () => {
+  const report = {};
+  const baselineRows = rows();
+  const candidateRows = structuredClone(baselineRows);
+  candidateRows[34].pointPosition[2] += 0.125;
+  const snapshot = (mode, referenceRows) => ({
+    mode,
+    sourceGeometrySha256: `source-${mode}`,
+    referenceRows,
+  });
+
+  await recordCableReferenceGeometryAttribution(report, {
+    caseId: 'camera-change',
+    mode: 'entities',
+    retainRows: true,
+    readSnapshot: async () => snapshot('entities', baselineRows),
+  });
+  await recordCableReferenceGeometryAttribution(report, {
+    caseId: 'camera-change',
+    mode: 'collections',
+    retainRows: true,
+    readSnapshot: async () => snapshot('collections', candidateRows),
+  });
+
+  const attribution = report.geometryAttribution;
+  assert.equal(attribution.baseline.referenceRows.length, 2629);
+  assert.equal(attribution.candidate.referenceRows.length, 2629);
+  assert.equal(
+    attribution.baseline.referenceRowsBytes,
+    JSON.stringify(baselineRows).length,
+  );
+  assert.equal(
+    attribution.candidate.referenceRowsBytes,
+    JSON.stringify(candidateRows).length,
+  );
+  assert.equal(attribution.comparison.pointChangedCount, 1);
+  assert.equal(
+    attribution.comparison.examples.visible[0].entityId,
+    'reference-34',
+  );
+});
+
+test('opt-in full reference witness rejects missing or oversized rows', async () => {
+  await assert.rejects(
+    recordCableReferenceGeometryAttribution(
+      {},
+      {
+        caseId: 'camera-change',
+        mode: 'entities',
+        retainRows: true,
+        readSnapshot: async () => ({
+          mode: 'entities',
+          referenceRows: rows().slice(1),
+        }),
+      },
+    ),
+    /full reference-coordinate witness is incomplete/,
+  );
+  const oversized = rows();
+  for (const row of oversized) row.sourceRecordId = 'x'.repeat(1200);
+  await assert.rejects(
+    recordCableReferenceGeometryAttribution(
+      {},
+      {
+        caseId: 'camera-change',
+        mode: 'entities',
+        retainRows: true,
+        readSnapshot: async () => ({
+          mode: 'entities',
+          referenceRows: oversized,
+        }),
+      },
+    ),
+    /full reference-coordinate witness exceeds its size cap/,
+  );
+});
+
 test('reference geometry comparison rejects missing, duplicate, and malformed identities or coordinates', () => {
   const baseline = rows();
   assert.throws(

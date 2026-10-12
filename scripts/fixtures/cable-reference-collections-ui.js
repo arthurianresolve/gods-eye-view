@@ -11,6 +11,10 @@ import { appendCableFailureDiagnostics } from './cableFailureDiagnostics.mjs';
 import { readScenePrimitiveReadiness } from './scenePrimitiveReadiness.mjs';
 import { recordCableReferenceGeometryAttribution } from './cableGeometryAttribution.mjs';
 import {
+  finishCableReenableObservationSafely,
+  startCableReenableObservation,
+} from './cableReenableObservation.mjs';
+import {
   CABLE_REFERENCE_RENDER_CASES,
   CABLE_REFERENCE_RENDER_POPULATION,
   CABLE_REFERENCE_RENDER_SAMPLES,
@@ -27,6 +31,9 @@ const CASES = Object.freeze({
   'camera-change': { targetKind: 'cable', rangeMeters: 180_000 },
 });
 const FIXTURE_PIXEL_MARGIN = 10;
+const REENABLE_DIAGNOSTIC =
+  new URLSearchParams(window.location.search).get('diagnostic') ===
+  'cable-reenable';
 const runButton = document.querySelector('#run');
 const downloadButton = document.querySelector('#download');
 const statusNode = document.querySelector('#status');
@@ -523,6 +530,7 @@ async function runLifetime({
       await recordCableReferenceGeometryAttribution(report, {
         caseId,
         mode,
+        retainRows: REENABLE_DIAGNOSTIC,
         readSnapshot: async () => {
           const geometry = sourceGeometryEvidence(
             viewer,
@@ -599,19 +607,51 @@ async function runLifetime({
         'Disable left cable DataSources attached.',
       );
       setLifecycleStage('reenable', cycle);
-      layer.enable(viewer);
-      setLifecycleStage('reenable-population', cycle);
-      await waitForPopulation(viewer, layer, sourceRecords);
-      if (mode === 'collections') {
-        const source = dataSource(viewer, 'TeleGeography Cable References');
-        layer.__fixtureCollections = findReferenceCollections(
-          viewer,
-          source.entities.values.map((entity) => entity.id),
-        );
-        ownedCollectionLifetimes.push(layer.__fixtureCollections);
+      let reenableObservation = null;
+      let observer = null;
+      if (REENABLE_DIAGNOSTIC && mode === 'entities' && cycle === 0) {
+        try {
+          observer = startCableReenableObservation({ viewer, Cesium });
+        } catch (error) {
+          reenableObservation = {
+            schema: 'gev-cable-reenable-observation/v1',
+            status: 'unavailable',
+            setupError: String(error?.message || error).slice(0, 300),
+          };
+        }
       }
-      setLifecycleStage('reenable-scene-stability', cycle);
-      await waitForStableScene(viewer, layer, mode, sourceRecords);
+      try {
+        layer.enable(viewer);
+        setLifecycleStage('reenable-population', cycle);
+        await waitForPopulation(viewer, layer, sourceRecords);
+        if (mode === 'collections') {
+          const source = dataSource(viewer, 'TeleGeography Cable References');
+          layer.__fixtureCollections = findReferenceCollections(
+            viewer,
+            source.entities.values.map((entity) => entity.id),
+          );
+          ownedCollectionLifetimes.push(layer.__fixtureCollections);
+        }
+        setLifecycleStage('reenable-scene-stability', cycle);
+        await waitForStableScene(viewer, layer, mode, sourceRecords);
+        setLifecycleStage('reenable-scene-stable', cycle);
+        if (observer)
+          reenableObservation = finishCableReenableObservationSafely(
+            observer,
+            'completed',
+          );
+      } catch (error) {
+        if (observer)
+          reenableObservation = finishCableReenableObservationSafely(
+            observer,
+            'failed',
+            error,
+          );
+        throw error;
+      } finally {
+        if (reenableObservation)
+          lifetime.reenableObservation = reenableObservation;
+      }
       setLifecycleStage('reenable-contract-checks', cycle);
       assert(
         viewer.dataSources.length === priorSources,
