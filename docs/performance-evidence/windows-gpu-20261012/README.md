@@ -247,6 +247,7 @@ checks are skipped, not passed.
 A separate modeled-native regression reproduces queued palette-close focus
 theft after focus moves into the inspector, and after the palette is reopened.
 The isolated fix at `311cc5ea` removes the redundant queued-close restoration
-and keeps native dialog focus behavior. Five focused tests pass; standard CI
-with an actual native-dialog regression is pending. This does not conclusively
+and keeps native dialog focus behavior. Five focused tests and
+[all seven standard CI jobs](../command-palette-focus-311cc5ea/ci-run.json),
+including an actual native-dialog regression, pass. This does not conclusively
 attribute the earlier uninstrumented failure or close Windows hardware evidence.
