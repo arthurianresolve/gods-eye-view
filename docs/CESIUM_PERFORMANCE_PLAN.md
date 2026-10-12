@@ -108,6 +108,16 @@ late target, including potential delayed publication of already-frozen code.
 That distinction needs a deterministic test and exact URL/body validation;
 new or unaudited executable targets must remain failures. This result does not
 explain the remaining rendering delay or provide a timed sample.
+The [delayed-publication correction at `788b2bd8`](performance-evidence/s47-delayed-publication-38203199807/README.md)
+passes 58 independent focused tests and retains strict validation of frozen
+code. Its rendered run gets past audit, completes two idle samples and one
+motion sample, then reaches the unchanged 180-second capture-child deadline
+while preparing motion run 2. The motion observer cleans up and records
+multi-second update/render spans, but the bounded failure projection truncates
+script-level attribution. This is a failed short SwiftShader diagnostic, not
+an accepted benchmark or a cause for the separate physical Windows stall.
+No unchanged retry or deadline increase is justified; the harness remains
+isolated pending complete integration evidence.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
