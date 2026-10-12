@@ -4340,3 +4340,14 @@ The focused S54 fixture/runtime checks pass 140/140; the additional performance
 snapshot and ownership/lifecycle checks pass 19/19. Formatting and both package
 boundary checks pass, and the production build succeeds. These checks do not
 replace fresh rendered/benefit results for this integrated revision.
+
+Cable terminal-sweep follow-up `1c0e1a5` requests one additional scene frame
+only when the forced `moveEnd` sweep actually changes stem geometry. The sweep
+runs at `preRender`, after DataSourceDisplay has consumed the earlier
+`moveEnd` render request; the follow-up lets Cesium consume the changed
+ConstantProperty on the next frame. A real lifecycle-event/requestRender-spy
+test verifies exact final tips, one follow-up for changed geometry, none for an
+unchanged tip, no self-loop, and no late request when disabled or destroyed
+before the sweep. All 21 submarine-cable tests, formatting and package-boundary
+checks pass. This is a focused lifecycle regression check; a new rendered cable
+comparison remains pending.
