@@ -2,6 +2,15 @@
 
 ## Current status - 12 October 2026
 
+Latest S49 ownership follow-up: the action-runner prewarm fix at `3907df04`,
+integrated as `92e449ae`, removes the camera listener and queued debounce/idle
+work after final runner disposal. Seven lifecycle regressions fail against
+the unchanged parent; all 102 action-runner checks pass with the fix. The
+independent reproduction drains to zero owned listeners/callbacks and performs
+no late pick. [Exact evidence and limits](performance-evidence/s49-view-target-prewarm-ownership/README.md)
+are preserved. Integrated CI is pending at this checkpoint. This is a specific
+ownership repair; S49, physical Windows retention and S60 remain incomplete.
+
 Latest S48 attribution: [independent CPU-profile replay and source mapping](performance-evidence/s48-depth-pick-attribution/README.md)
 verify all four preserved profiles' sample totals. The failed `0602cbe2` idle
 warmup has 2,205.398 ms of sampled native depth readback under the camera-target

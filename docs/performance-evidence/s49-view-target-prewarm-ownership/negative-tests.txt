@@ -1,0 +1,776 @@
+TAP version 13
+# Subtest: every live basemap is reachable by its own id — no enum value without a voice alias
+ok 1 - every live basemap is reachable by its own id — no enum value without a voice alias
+  ---
+  duration_ms: 5.735
+  type: 'test'
+  ...
+# Subtest: track_entity narration names aircraft callsign → registration → icao24
+ok 2 - track_entity narration names aircraft callsign → registration → icao24
+  ---
+  duration_ms: 0.3658
+  type: 'test'
+  ...
+# Subtest: track_entity runner narrates a callsign-less aircraft by its registration
+ok 3 - track_entity runner narrates a callsign-less aircraft by its registration
+  ---
+  duration_ms: 4.3666
+  type: 'test'
+  ...
+# Subtest: zoom to globe adopts the shared visible reset route and returns its result
+ok 4 - zoom to globe adopts the shared visible reset route and returns its result
+  ---
+  duration_ms: 0.4703
+  type: 'test'
+  ...
+# Subtest: dependent voice navigation waits for the destination viewport to arrive
+ok 5 - dependent voice navigation waits for the destination viewport to arrive
+  ---
+  duration_ms: 2.1843
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action serializes layer enable, arrival, refresh, airborne query, and selection
+ok 6 - nearest-aircraft voice action serializes layer enable, arrival, refresh, airborne query, and selection
+  ---
+  duration_ms: 49.378
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action refreshes an already-enabled viewport layer after arrival
+ok 7 - nearest-aircraft voice action refreshes an already-enabled viewport layer after arrival
+  ---
+  duration_ms: 19.699
+  type: 'test'
+  ...
+# Subtest: fallback with zero airborne records reports enabled fallback without selecting a landed aircraft
+ok 8 - fallback with zero airborne records reports enabled fallback without selecting a landed aircraft
+  ---
+  duration_ms: 1.8176
+  type: 'test'
+  ...
+# Subtest: nearest-aircraft voice action rejects a missing destination without changing the map or layer
+ok 9 - nearest-aircraft voice action rejects a missing destination without changing the map or layer
+  ---
+  duration_ms: 0.5118
+  type: 'test'
+  ...
+# Subtest: successful voice tracking stamps and releases the old owner before layer takeover
+ok 10 - successful voice tracking stamps and releases the old owner before layer takeover
+  ---
+  duration_ms: 0.7015
+  type: 'test'
+  ...
+# Subtest: voice Stop Tracking clears all durable tracker IDs even without active trackers
+ok 11 - voice Stop Tracking clears all durable tracker IDs even without active trackers
+  ---
+  duration_ms: 0.6872
+  type: 'test'
+  ...
+# Subtest: voice Stop Tracking reports exact layers whose active or durable clear failed
+ok 12 - voice Stop Tracking reports exact layers whose active or durable clear failed
+  ---
+  duration_ms: 0.4085
+  type: 'test'
+  ...
+# Subtest: successful voice overhead framing stamps and releases the old owner before flight
+ok 13 - successful voice overhead framing stamps and releases the old owner before flight
+  ---
+  duration_ms: 1.4922
+  type: 'test'
+  ...
+# Subtest: tracked aircraft yields to strongest-fire and vessel voice flights before either flight begins
+ok 14 - tracked aircraft yields to strongest-fire and vessel voice flights before either flight begins
+  ---
+  duration_ms: 1.0184
+  type: 'test'
+  ...
+# Subtest: move_camera and fly_route validate first, then use the shared camera authority seam
+ok 15 - move_camera and fly_route validate first, then use the shared camera authority seam
+  ---
+  duration_ms: 92.1776
+  type: 'test'
+  ...
+# Subtest: a chained orbit preserves its current destination flight while still stamping authority
+ok 16 - a chained orbit preserves its current destination flight while still stamping authority
+  ---
+  duration_ms: 79.0756
+  type: 'test'
+  ...
+# Subtest: invalid named voice navigation never releases the current camera owner
+ok 17 - invalid named voice navigation never releases the current camera owner
+  ---
+  duration_ms: 1.3841
+  type: 'test'
+  ...
+# Subtest: Cockpit refuses every named voice camera route before camera or selection mutation
+ok 18 - Cockpit refuses every named voice camera route before camera or selection mutation
+  ---
+  duration_ms: 1.0093
+  type: 'test'
+  ...
+# Subtest: a newer voice action makes an older deferred navigation authority inert
+ok 19 - a newer voice action makes an older deferred navigation authority inert
+  ---
+  duration_ms: 0.3847
+  type: 'test'
+  ...
+# Subtest: Data Layers voice inventory hides the Context coordinator while current-view truth retains it
+ok 20 - Data Layers voice inventory hides the Context coordinator while current-view truth retains it
+  ---
+  duration_ms: 1.5163
+  type: 'test'
+  ...
+# Subtest: generic layer visibility forwards cancellation and reports semantic failure
+ok 21 - generic layer visibility forwards cancellation and reports semantic failure
+  ---
+  duration_ms: 0.7531
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves a manager resource-cancellation envelope
+ok 22 - generic voice visibility preserves a manager resource-cancellation envelope
+  ---
+  duration_ms: 0.4598
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves caller-abort phase before the stale-turn fallback
+ok 23 - generic voice visibility preserves caller-abort phase before the stale-turn fallback
+  ---
+  duration_ms: 0.4156
+  type: 'test'
+  ...
+# Subtest: generic voice visibility preserves an exact commit when a newer turn arrives during Context settlement
+ok 24 - generic voice visibility preserves an exact commit when a newer turn arrives during Context settlement
+  ---
+  duration_ms: 0.5124
+  type: 'test'
+  ...
+# Subtest: late voice abort cannot revoke a committed manager event and leaves the intent lane reusable
+ok 25 - late voice abort cannot revoke a committed manager event and leaves the intent lane reusable
+  ---
+  duration_ms: 3.5329
+  type: 'test'
+  ...
+# Subtest: generic layer visibility exposes lifecycle truth for every manager phase and thrown failure
+ok 26 - generic layer visibility exposes lifecycle truth for every manager phase and thrown failure
+  ---
+  duration_ms: 1.0078
+  type: 'test'
+  ...
+# Subtest: generic voice visibility maps Space Missions to the explicit mission layer
+ok 27 - generic voice visibility maps Space Missions to the explicit mission layer
+  ---
+  duration_ms: 0.4106
+  type: 'test'
+  ...
+# Subtest: voice CCTV focus reports tracking ownership separately from no active camera
+ok 28 - voice CCTV focus reports tracking ownership separately from no active camera
+  ---
+  duration_ms: 0.1989
+  type: 'test'
+  ...
+# Subtest: voice CCTV focus reports cockpit ownership
+ok 29 - voice CCTV focus reports cockpit ownership
+  ---
+  duration_ms: 0.1104
+  type: 'test'
+  ...
+# Subtest: control_cockpit forwards schema-valid navigation filters
+ok 30 - control_cockpit forwards schema-valid navigation filters
+  ---
+  duration_ms: 0.5983
+  type: 'test'
+  ...
+# Subtest: control_cockpit resolves spoken TR-3B spellings to the tr3b class id
+ok 31 - control_cockpit resolves spoken TR-3B spellings to the tr3b class id
+  ---
+  duration_ms: 0.483
+  type: 'test'
+  ...
+# Subtest: control_cockpit delegates selected-flight adoption to the canonical cockpit owner
+ok 32 - control_cockpit delegates selected-flight adoption to the canonical cockpit owner
+  ---
+  duration_ms: 0.6988
+  type: 'test'
+  ...
+# Subtest: control_cockpit does not mutate selection when Contacts entry fails
+ok 33 - control_cockpit does not mutate selection when Contacts entry fails
+  ---
+  duration_ms: 0.374
+  type: 'test'
+  ...
+# Subtest: control_cockpit cancellation is inert when Contacts is already active
+ok 34 - control_cockpit cancellation is inert when Contacts is already active
+  ---
+  duration_ms: 0.416
+  type: 'test'
+  ...
+# Subtest: control_cockpit rolls Contacts back when the turn becomes stale at commit
+ok 35 - control_cockpit rolls Contacts back when the turn becomes stale at commit
+  ---
+  duration_ms: 0.468
+  type: 'test'
+  ...
+# Subtest: control_cockpit adopts the newest selection after Contacts settles
+ok 36 - control_cockpit adopts the newest selection after Contacts settles
+  ---
+  duration_ms: 0.447
+  type: 'test'
+  ...
+# Subtest: control_cockpit restores the prior Context mode after Cockpit entry fails
+ok 37 - control_cockpit restores the prior Context mode after Cockpit entry fails
+  ---
+  duration_ms: 0.4176
+  type: 'test'
+  ...
+# Subtest: control_cockpit contains entry exceptions and still restores the prior Context mode
+ok 38 - control_cockpit contains entry exceptions and still restores the prior Context mode
+  ---
+  duration_ms: 0.6666
+  type: 'test'
+  ...
+# Subtest: set_context_mode forwards cancellation authority and reports a stale turn
+ok 39 - set_context_mode forwards cancellation authority and reports a stale turn
+  ---
+  duration_ms: 0.5249
+  type: 'test'
+  ...
+# Subtest: opening Contacts expands Context before activation and returns its settled aircraft window
+ok 40 - opening Contacts expands Context before activation and returns its settled aircraft window
+  ---
+  duration_ms: 0.3757
+  type: 'test'
+  ...
+# Subtest: set_context_mode pre-dispatch cancellation includes authoritative Context state
+ok 41 - set_context_mode pre-dispatch cancellation includes authoritative Context state
+  ---
+  duration_ms: 0.3354
+  type: 'test'
+  ...
+# Subtest: control_cockpit enter skips selected non-flight context
+ok 42 - control_cockpit enter skips selected non-flight context
+  ---
+  duration_ms: 0.405
+  type: 'test'
+  ...
+# Subtest: voice CCTV select, next, prev, and nearest report tracking-refused flights after selection
+ok 43 - voice CCTV select, next, prev, and nearest report tracking-refused flights after selection
+  ---
+  duration_ms: 0.8697
+  type: 'test'
+  ...
+# Subtest: voice CCTV coverage writes the canonical durable coverage mode
+ok 44 - voice CCTV coverage writes the canonical durable coverage mode
+  ---
+  duration_ms: 0.2882
+  type: 'test'
+  ...
+# Subtest: voice Radio resolves Austin and exposes semantic selection, volume, pause, and stop
+ok 45 - voice Radio resolves Austin and exposes semantic selection, volume, pause, and stop
+  ---
+  duration_ms: 2.5069
+  type: 'test'
+  ...
+# Subtest: community Radio names remain untrusted data and cannot redirect model-visible routing
+ok 46 - community Radio names remain untrusted data and cannot redirect model-visible routing
+  ---
+  duration_ms: 2.5237
+  type: 'test'
+  ...
+# Subtest: Radio country validation fails closed before enable or selection side effects
+ok 47 - Radio country validation fails closed before enable or selection side effects
+  ---
+  duration_ms: 0.4824
+  type: 'test'
+  ...
+# Subtest: voice Radio status exposes authoritative four-state lifecycle without side effects
+ok 48 - voice Radio status exposes authoritative four-state lifecycle without side effects
+  ---
+  duration_ms: 0.6017
+  type: 'test'
+  ...
+# Subtest: voice Radio reports a rejected Stop without claiming stopped state
+ok 49 - voice Radio reports a rejected Stop without claiming stopped state
+  ---
+  duration_ms: 0.2259
+  type: 'test'
+  ...
+# Subtest: voice Radio rejects a fulfilled-false Pause without claiming authority
+ok 50 - voice Radio rejects a fulfilled-false Pause without claiming authority
+  ---
+  duration_ms: 0.2065
+  type: 'test'
+  ...
+# Subtest: voice Radio Stop rechecks ownership after an awaited player boundary
+ok 51 - voice Radio Stop rechecks ownership after an awaited player boundary
+  ---
+  duration_ms: 0.3076
+  type: 'test'
+  ...
+# Subtest: interrupting delayed Radio geocoding causes no enable or selection side effects
+ok 52 - interrupting delayed Radio geocoding causes no enable or selection side effects
+  ---
+  duration_ms: 1.8206
+  type: 'test'
+  ...
+# Subtest: interrupting delayed Radio disable forwards cancellation and retains enabled state
+ok 53 - interrupting delayed Radio disable forwards cancellation and retains enabled state
+  ---
+  duration_ms: 0.3605
+  type: 'test'
+  ...
+# Subtest: voice Radio propagates fulfilled-false enable, disable, and auto-enable failures
+ok 54 - voice Radio propagates fulfilled-false enable, disable, and auto-enable failures
+  ---
+  duration_ms: 0.3617
+  type: 'test'
+  ...
+# Subtest: voice Radio reconciles uncertain lifecycle authority before direct selection
+ok 55 - voice Radio reconciles uncertain lifecycle authority before direct selection
+  ---
+  duration_ms: 0.3426
+  type: 'test'
+  ...
+# Subtest: voice Radio Volume waits for settled certain lifecycle authority
+ok 56 - voice Radio Volume waits for settled certain lifecycle authority
+  ---
+  duration_ms: 0.5113
+  type: 'test'
+  ...
+# Subtest: voice Radio settled OFF blocks Volume without enabling
+ok 57 - voice Radio settled OFF blocks Volume without enabling
+  ---
+  duration_ms: 0.2948
+  type: 'test'
+  ...
+# Subtest: voice Radio reconciliation failures leave gated player state unchanged
+ok 58 - voice Radio reconciliation failures leave gated player state unchanged
+  ---
+  duration_ms: 0.9428
+  type: 'test'
+  ...
+# Subtest: voice Radio cancellation during lifecycle reconciliation prevents Volume mutation
+ok 59 - voice Radio cancellation during lifecycle reconciliation prevents Volume mutation
+  ---
+  duration_ms: 0.3982
+  type: 'test'
+  ...
+# Subtest: voice Radio Pause while disabled is a truthful playback-only no-op
+ok 60 - voice Radio Pause while disabled is a truthful playback-only no-op
+  ---
+  duration_ms: 0.2554
+  type: 'test'
+  ...
+# Subtest: Cockpit entry establishes Contacts WITHOUT claiming the visual lane
+ok 61 - Cockpit entry establishes Contacts WITHOUT claiming the visual lane
+  ---
+  duration_ms: 0.545
+  type: 'test'
+  ...
+# Subtest: Cockpit entry rollback also stays inert on the visual lane
+ok 62 - Cockpit entry rollback also stays inert on the visual lane
+  ---
+  duration_ms: 0.2965
+  type: 'test'
+  ...
+# Subtest: a genuine set_context_mode request DOES claim the visual lane
+ok 63 - a genuine set_context_mode request DOES claim the visual lane
+  ---
+  duration_ms: 0.3369
+  type: 'test'
+  ...
+# Subtest: disposing a runner removes the moveEnd listener and cancels a pending debounce
+not ok 64 - disposing a runner removes the moveEnd listener and cancels a pending debounce
+  ---
+  duration_ms: 2.2193
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3587:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3597:12
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3588:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: a retired debounce delivery cannot replace newer moveEnd work
+not ok 65 - a retired debounce delivery cannot replace newer moveEnd work
+  ---
+  duration_ms: 0.6707
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3604:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3616:14
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3605:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: disposing cancels a queued idle prewarm and stale delivery cannot pick
+not ok 66 - disposing cancels a queued idle prewarm and stale delivery cannot pick
+  ---
+  duration_ms: 0.5343
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3628:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3639:14
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3629:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work
+not ok 67 - a non-cancellable idle callback is inert after disposal and new moveEnd cancels stale work
+  ---
+  duration_ms: 0.74
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3647:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    withOwnedPrewarmQueues.cancellableIdle (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3658:14)
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3648:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: shared runners keep one viewer lease until the final disposer releases it
+not ok 68 - shared runners keep one viewer lease until the final disposer releases it
+  ---
+  duration_ms: 0.518
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3669:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3683:12
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3670:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: prewarm leases are independent per viewer and can be reinitialized safely
+not ok 69 - prewarm leases are independent per viewer and can be reinitialized safely
+  ---
+  duration_ms: 0.5291
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3689:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3703:14
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3690:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: the no-requestIdleCallback fallback still runs after the 120 ms debounce
+not ok 70 - the no-requestIdleCallback fallback still runs after the 120 ms debounce
+  ---
+  duration_ms: 0.4154
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s49-negative-control\\src\\voice\\gevActions.test.mjs:3725:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    withOwnedPrewarmQueues.idle (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3734:14)
+    withOwnedPrewarmQueues (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3560:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s49-negative-control/src/voice/gevActions.test.mjs:3726:3)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1306:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+    Test.postRun (node:internal/test_runner/test:1447:19)
+    Test.run (node:internal/test_runner/test:1372:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:897:7)
+  ...
+# Subtest: a degenerate depth pick does not escape the view-target prewarm
+ok 71 - a degenerate depth pick does not escape the view-target prewarm
+  ---
+  duration_ms: 0.7944
+  type: 'test'
+  ...
+# Subtest: an unexpected prewarm failure is logged once at debug level, never thrown
+ok 72 - an unexpected prewarm failure is logged once at debug level, never thrown
+  ---
+  duration_ms: 0.4448
+  type: 'test'
+  ...
+# Subtest: a lost cross-mode switch reports every mode field in the shared vocabulary
+ok 73 - a lost cross-mode switch reports every mode field in the shared vocabulary
+  ---
+  duration_ms: 0.8043
+  type: 'test'
+  ...
+# Subtest: an absent secondary mode stays absent instead of claiming to be off
+ok 74 - an absent secondary mode stays absent instead of claiming to be off
+  ---
+  duration_ms: 0.4024
+  type: 'test'
+  ...
+# Subtest: a nested Cockpit rollback result is translated too
+ok 75 - a nested Cockpit rollback result is translated too
+  ---
+  duration_ms: 0.5121
+  type: 'test'
+  ...
+# Subtest: front5: a nearby ask centres on the Contacts SUBJECT, not the selected datacenter
+ok 76 - front5: a nearby ask centres on the Contacts SUBJECT, not the selected datacenter
+  ---
+  duration_ms: 1844.4511
+  type: 'test'
+  ...
+# Subtest: front5: the spoken count and the panel window are ONE number by construction
+ok 77 - front5: the spoken count and the panel window are ONE number by construction
+  ---
+  duration_ms: 2.279
+  type: 'test'
+  ...
+# Subtest: front5: Contacts active with NO subject falls back to the view, not an empty panel
+ok 78 - front5: Contacts active with NO subject falls back to the view, not an empty panel
+  ---
+  duration_ms: 1.015
+  type: 'test'
+  ...
+# Subtest: front5: an explicit region still uses the region engine while Contacts is active
+ok 79 - front5: an explicit region still uses the region engine while Contacts is active
+  ---
+  duration_ms: 241.9137
+  type: 'test'
+  ...
+# Subtest: front5: the box DIAGONAL is not the subject — 1.32 km away is somewhere else
+ok 80 - front5: the box DIAGONAL is not the subject — 1.32 km away is somewhere else
+  ---
+  duration_ms: 1.4114
+  type: 'test'
+  ...
+# Subtest: front5: 0.99 km due EAST is the subject, though a degree box rejects it
+ok 81 - front5: 0.99 km due EAST is the subject, though a degree box rejects it
+  ---
+  duration_ms: 1.2271
+  type: 'test'
+  ...
+# Subtest: voice Radio: a key that geocodes to nothing still places the station, keylessly
+ok 82 - voice Radio: a key that geocodes to nothing still places the station, keylessly
+  ---
+  duration_ms: 3.78
+  type: 'test'
+  ...
+# Subtest: voice Radio: the keyless path applies no country filter the keyed path would not
+ok 83 - voice Radio: the keyless path applies no country filter the keyed path would not
+  ---
+  duration_ms: 1.2776
+  type: 'test'
+  ...
+# Subtest: ALPR common names toggle only the registered camera layer through the normal voice action
+ok 84 - ALPR common names toggle only the registered camera layer through the normal voice action
+  ---
+  duration_ms: 0.8032
+  type: 'test'
+  ...
+# Subtest: Local ADS-B common names toggle only the receiver layer through the normal voice action
+ok 85 - Local ADS-B common names toggle only the receiver layer through the normal voice action
+  ---
+  duration_ms: 0.6803
+  type: 'test'
+  ...
+# Subtest: ISS voice lookup uses the registered satellite instance
+ok 86 - ISS voice lookup uses the registered satellite instance
+  ---
+  duration_ms: 0.5151
+  type: 'test'
+  ...
+# Subtest: analyst_query and get_current_view_state carry stale feed provenance
+ok 87 - analyst_query and get_current_view_state carry stale feed provenance
+  ---
+  duration_ms: 1.2101
+  type: 'test'
+  ...
+# Subtest: analyst age uses the selected investigation time
+ok 88 - analyst age uses the selected investigation time
+  ---
+  duration_ms: 0.7447
+  type: 'test'
+  ...
+# Subtest: general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics
+ok 89 - general satellite pass resolves once, refuses ambiguity, and preserves ISS call semantics
+  ---
+  duration_ms: 0.8023
+  type: 'test'
+  ...
+# Subtest: analyst_query counts the whole loaded set, not a 2,000-record slice
+ok 90 - analyst_query counts the whole loaded set, not a 2,000-record slice
+  ---
+  duration_ms: 6.1718
+  type: 'test'
+  ...
+# Subtest: analyst aircraft results carry pinned source evidence from the query snapshot
+ok 91 - analyst aircraft results carry pinned source evidence from the query snapshot
+  ---
+  duration_ms: 1.327
+  type: 'test'
+  ...
+# Subtest: analyst_query refusals carry their code and the allowed values
+ok 92 - analyst_query refusals carry their code and the allowed values
+  ---
+  duration_ms: 1.2106
+  type: 'test'
+  ...
+# Subtest: spoken layer names from the manifest reach the newer layers
+ok 93 - spoken layer names from the manifest reach the newer layers
+  ---
+  duration_ms: 1.0462
+  type: 'test'
+  ...
+# Subtest: the Contacts window ranks, filters and formats like any analyst answer
+ok 94 - the Contacts window ranks, filters and formats like any analyst answer
+  ---
+  duration_ms: 4.0082
+  type: 'test'
+  ...
+# Subtest: a cancelled Contacts scan returns cancellation and cannot seed follow-up memory
+ok 95 - a cancelled Contacts scan returns cancellation and cannot seed follow-up memory
+  ---
+  duration_ms: 6.8169
+  type: 'test'
+  ...
+# Subtest: overlapping analyst siblings from one response complete independently
+ok 96 - overlapping analyst siblings from one response complete independently
+  ---
+  duration_ms: 46.7674
+  type: 'test'
+  ...
+# Subtest: a capped Contacts snapshot is a lower bound from one immutable cohort
+ok 97 - a capped Contacts snapshot is a lower bound from one immutable cohort
+  ---
+  duration_ms: 73.3076
+  type: 'test'
+  ...
+# Subtest: Contacts follow-ups filter the cohort that was actually displayed
+ok 98 - Contacts follow-ups filter the cohort that was actually displayed
+  ---
+  duration_ms: 4.2268
+  type: 'test'
+  ...
+# Subtest: point-and-ask: the runner resolves pointer and referent targets
+ok 99 - point-and-ask: the runner resolves pointer and referent targets
+  ---
+  duration_ms: 1.7216
+  type: 'test'
+  ...
+# Subtest: point-and-ask: only accepted, current results become the referent list
+ok 100 - point-and-ask: only accepted, current results become the referent list
+  ---
+  duration_ms: 1.1726
+  type: 'test'
+  ...
+# Subtest: numbered analyst records navigate using the current layer accessor
+ok 101 - numbered analyst records navigate using the current layer accessor
+  ---
+  duration_ms: 2.0194
+  type: 'test'
+  ...
+# Subtest: analyst-only lookup distinguishes duplicate names and uses canonical aircraft IDs
+ok 102 - analyst-only lookup distinguishes duplicate names and uses canonical aircraft IDs
+  ---
+  duration_ms: 1.9066
+  type: 'test'
+  ...
+1..102
+# tests 102
+# suites 0
+# pass 95
+# fail 7
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9170.0868
