@@ -1,0 +1,197 @@
+[
+  {
+    "caseId": "default-style",
+    "pair": 0,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "default-style",
+    "pair": 1,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "default-style",
+    "pair": 2,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "default-style",
+    "pair": 3,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "default-style",
+    "pair": 4,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "camera-lod-update",
+    "pair": 0,
+    "diffPixels": 16,
+    "bbox": [
+      478,
+      277,
+      482,
+      280
+    ],
+    "encodedPngEqual": false,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "camera-lod-update",
+    "pair": 1,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "camera-lod-update",
+    "pair": 2,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "camera-lod-update",
+    "pair": 3,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  },
+  {
+    "caseId": "camera-lod-update",
+    "pair": 4,
+    "diffPixels": 0,
+    "bbox": null,
+    "encodedPngEqual": true,
+    "pixelHashValid": [
+      true,
+      true
+    ],
+    "geometryEqual": true,
+    "styleEqual": true,
+    "identityEqual": true,
+    "cameraEqual": true,
+    "clockEqual": true,
+    "pointSame": true,
+    "stemSame": true,
+    "selectionSame": true
+  }
+]

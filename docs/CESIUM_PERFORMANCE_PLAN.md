@@ -2,8 +2,14 @@
 
 ## Current status - 12 October 2026
 
-Recorded integration checkpoint: `98a403f28442fcc485435facf7d9980eb01a58ce`.
-[All seven standard jobs pass](performance-evidence/s54-pick-path-38208241120/standard-ci-dev-38207294034.json),
+The [failure origin review](performance-evidence/failure-origin-20261012/README.md)
+separates inherited runtime defects, defects introduced by our features or test
+tooling, rejected experiments, and unresolved environment/rendering failures.
+It compares the live upstream and fork main refs at `591f299d`; no blanket
+attribution of the remaining failures to upstream is supported.
+
+Recorded integration checkpoint: `2f7de280e41f23fa2036b07c74d9bf21cfb01c32`.
+[All seven standard jobs pass](performance-evidence/s47-first-motion-cpu-profile-38210121293/standard-ci-dev-38209437236.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -49,6 +55,16 @@ six stem misses, with selection restored. Its last image contains only the
 point, despite declared geometry/data-source readiness. The prior failed run
 eventually captured visible stems. No later-frame control completed before
 the existing deadline, leaving actual stem materialization/readiness unresolved.
+The [current-primitive diagnostic at `7a169618`](performance-evidence/s54-primitive-readiness-38212601518/README.md)
+passes 48 focused tests and completes both renderer lifetimes in its hosted run;
+the prior readiness failure does not recur, so its post-failure observer remains
+untriggered. The run instead exposes a duplicate fixture comparator that rejects
+expected renderer-specific pick metadata. Repair `24bebb1b` uses the existing
+shared identity comparator and passes 15 focused tests. Independent decoding of
+all twenty PNGs finds nine identical pairs and a 16-pixel difference in the first
+camera-change pair. Replaying the raw report with the repaired comparator still
+rejects that image difference. The visual cause remains unresolved; no unchanged
+rerun, performance acceptance or production promotion follows.
 The [same-commit benefit comparison](performance-evidence/s54-datacenter-benefit-38205683313/README.md)
 completes twenty runs with verified native owners and twenty byte-identical
 image pairs. Whole-activation median improves 22.12% and enabled JS heap
@@ -157,6 +173,14 @@ A separate CPU profile is needed for function attribution. This is a failed shor
 an accepted benchmark or a cause for the separate physical Windows stall.
 No unchanged retry or deadline increase is justified; the harness remains
 isolated pending complete integration evidence.
+The [first-motion CPU-profile packet at `73e6c72c`](performance-evidence/s47-first-motion-cpu-profile-38210121293/README.md)
+passes 40 independent focused tests and preserves bounded profiles outside the
+failure projection. Its hosted run fails earlier, at idle run 2's six-second
+measurement-boundary observation gate, before profiling starts. No sidecar is
+available. Progress-binding removal also times out; wrapper-confirmed child
+cleanup does not convert that cleanup failure into a pass. Earlier-document
+profiling is required to cover the demonstrated idle-stage stall; no runtime
+cause or physical Windows result has been established.
 Austin, weather/effects and map-streaming workload
 coverage remain open. Physical Windows performance acceptance and the final
 candidate's full matched captures/retention soak remain pending.
