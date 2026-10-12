@@ -1018,6 +1018,8 @@
   "scripts/performance/boundedCpuProfile.test.mjs",
   "scripts/performance/providerSampleCpuProfileWindow.mjs",
   "scripts/performance/providerSampleCpuProfileWindow.test.mjs",
+  "scripts/performance/providerDocumentRetirement.mjs",
+  "scripts/performance/providerDocumentRetirement.test.mjs",
   "scripts/performance/renderBoundaryObservation.mjs",
   "scripts/performance/renderBoundaryObservation.test.mjs",
   "scripts/performance/settleCompletedRenderDiagnostic.mjs",

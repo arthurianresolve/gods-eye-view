@@ -72,6 +72,7 @@ import {
   isProviderSampleCpuProfileTarget,
   upsertProviderSampleCpuProfile,
 } from './performance/providerSampleCpuProfileWindow.mjs';
+import { retireProviderDocument } from './performance/providerDocumentRetirement.mjs';
 import {
   createObservedDenseComparisonContract,
   createObservedInfrastructureComparisonContract,
@@ -2014,29 +2015,38 @@ try {
   let providerSampleDocumentIndex = 0;
   async function prepareFreshProviderDocument() {
     providerSampleDocumentIndex += 1;
-    if (!providerSampleWorkerAuditComplete) {
-      await auditPageWorkerBlobs(page, captureAuditState, {
-        documentRole: 'main-setup',
-        documentId: activeDocumentId,
-        auditMode: 'diagnostic',
-      });
-      providerSampleWorkerAuditComplete = true;
-    }
-    const bindingCleanup =
-      await disposeActiveRenderBoundaryProgressBinding('document-replaced');
-    if (bindingCleanup && !bindingCleanup.removed)
-      throw new Error(
-        'Render-boundary binding cleanup failed before document replacement.',
-      );
-    await releaseFlightFixtureSession(activeFixtureSession);
-    await cleanupEarlyRendererProbeForPage(page, {
-      retireViewerRenderLoop: true,
-      phase: 'provider-document-close',
-      documentRole: activeDocumentRole,
-      documentId: activeDocumentId,
+    await retireProviderDocument({
+      retireRenderer: () =>
+        cleanupEarlyRendererProbeForPage(page, {
+          retireViewerRenderLoop: true,
+          phase: 'provider-document-close',
+          documentRole: activeDocumentRole,
+          documentId: activeDocumentId,
+        }),
+      auditWorkers: async () => {
+        if (providerSampleWorkerAuditComplete) return;
+        await auditPageWorkerBlobs(page, captureAuditState, {
+          documentRole: 'main-setup',
+          documentId: activeDocumentId,
+          auditMode: 'diagnostic',
+        });
+        providerSampleWorkerAuditComplete = true;
+      },
+      disposeProgressBinding: async () => {
+        const bindingCleanup =
+          await disposeActiveRenderBoundaryProgressBinding('document-replaced');
+        if (bindingCleanup && !bindingCleanup.removed)
+          throw new Error(
+            'Render-boundary binding cleanup failed before document replacement.',
+          );
+      },
+      releaseInterception: () =>
+        releaseFlightFixtureSession(activeFixtureSession),
+      closeDocument: async () => {
+        if (providerContext) await providerContext.close();
+        else await page.close();
+      },
     });
-    if (providerContext) await providerContext.close();
-    else await page.close();
     providerContext = await browser.createBrowserContext();
     page = await providerContext.newPage();
     ({ documentRole: activeDocumentRole, documentId: activeDocumentId } =
