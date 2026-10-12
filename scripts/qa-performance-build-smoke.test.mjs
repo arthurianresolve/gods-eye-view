@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   assertProviderFixtureCaptureClock,
   compactCaptureCliFailure,
@@ -1852,16 +1852,38 @@ test('invalid smoke input writes a bounded failure artifact without launching a 
     await rm(canonical, { recursive: true, force: false });
   });
   const reportPath = path.join(tempRoot, 'smoke.json');
+  const dependencyWitnessPath = path.join(tempRoot, 'browser-dependencies.txt');
+  const preloadPath = path.join(tempRoot, 'watch-browser-dependencies.mjs');
+  await writeFile(
+    preloadPath,
+    `import { appendFileSync } from 'node:fs';
+import { registerHooks } from 'node:module';
+registerHooks({ resolve(specifier, context, nextResolve) {
+  if (specifier === 'puppeteer' || specifier.endsWith('/qa-application-fixtures.mjs'))
+    appendFileSync(process.env.GEV_SMOKE_IMPORT_WITNESS, specifier + '\\n');
+  return nextResolve(specifier, context);
+} });\n`,
+  );
   const result = spawnSync(
     process.execPath,
     [
+      '--import',
+      pathToFileURL(preloadPath).href,
       path.join(ROOT, 'scripts', 'qa-performance-build-smoke.mjs'),
       '--candidate-sha',
       'invalid',
       '--out',
       reportPath,
     ],
-    { encoding: 'utf8', timeout: 5000, windowsHide: true },
+    {
+      encoding: 'utf8',
+      timeout: 5000,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        GEV_SMOKE_IMPORT_WITNESS: dependencyWitnessPath,
+      },
+    },
   );
   assert.equal(result.status, 1);
   const report = JSON.parse(await readFile(reportPath, 'utf8'));
@@ -1869,4 +1891,5 @@ test('invalid smoke input writes a bounded failure artifact without launching a 
   assert.equal(report.status, 'failed');
   assert.equal(report.failure.phase, 'setup');
   assert.match(report.failure.message, /full lowercase Git SHA/);
+  await assert.rejects(readFile(dependencyWitnessPath), { code: 'ENOENT' });
 });

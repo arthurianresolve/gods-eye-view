@@ -16,11 +16,6 @@ import {
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import puppeteer from 'puppeteer';
-import {
-  cleanupFixturePageDiagnostics,
-  prepareFixturePage,
-} from './qa-application-fixtures.mjs';
 import { createLocalBuildReceipt } from './performance/buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
 import {
@@ -93,6 +88,21 @@ const MIME_TYPES = {
   '.wasm': 'application/wasm',
   '.webp': 'image/webp',
 };
+
+let puppeteer = null;
+let cleanupFixturePageDiagnostics = null;
+let prepareFixturePage = null;
+
+async function loadBrowserDependencies() {
+  if (puppeteer && cleanupFixturePageDiagnostics && prepareFixturePage) return;
+  const [puppeteerModule, fixtureModule] = await Promise.all([
+    import('puppeteer'),
+    import('./qa-application-fixtures.mjs'),
+  ]);
+  puppeteer = puppeteerModule.default;
+  cleanupFixturePageDiagnostics = fixtureModule.cleanupFixturePageDiagnostics;
+  prepareFixturePage = fixtureModule.prepareFixturePage;
+}
 
 const OPTION_KEYS = new Map([
   ['--candidate-sha', 'candidateSha'],
@@ -2565,6 +2575,12 @@ async function main() {
     firstMotionCpuProfile = false,
     depthPickAttribution = false,
   } = parseSmokeArguments(process.argv.slice(2));
+  assertSha(candidateSha, 'Candidate SHA');
+  assert.notEqual(
+    candidateSha,
+    BASELINE_SHA,
+    'Candidate must differ from baseline.',
+  );
   const infrastructureCaptureFixture =
     providerFixture === 'dense-investigation'
       ? null
@@ -2580,12 +2596,6 @@ async function main() {
     throw new Error(
       'Smoke report must be written outside the harness checkout.',
     );
-  assertSha(candidateSha, 'Candidate SHA');
-  assert.notEqual(
-    candidateSha,
-    BASELINE_SHA,
-    'Candidate must differ from baseline.',
-  );
   assert.equal(git(['status', '--porcelain', '--untracked-files=all']), '');
   const harnessCommit = git(['rev-parse', 'HEAD']);
   assertSha(harnessCommit, 'Harness SHA');
@@ -2648,6 +2658,7 @@ async function main() {
         throw new Error('Smoke time budget expired before source checkout.');
       worktrees.push(await addWorktree(temporary.root, label, commit));
     }
+    await loadBrowserDependencies();
     browser = await puppeteer.launch({
       headless: true,
       protocolTimeout: 15_000,
