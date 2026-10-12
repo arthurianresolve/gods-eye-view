@@ -1,0 +1,82 @@
+{
+  "schema": "gev-s47-early-profile-review/v1",
+  "status": "failed",
+  "applicationCommit": "626087cd6e9eeef1c53d91e63924f61f50bc9d82",
+  "harnessCommit": "626087cd6e9eeef1c53d91e63924f61f50bc9d82",
+  "raw": {
+    "file": "report.json",
+    "byteLength": 38722,
+    "sha256": "ffb250b6e5589fbca98e690c9748e757a4162b05731dc8d6b43b74c24c19064f"
+  },
+  "failure": {
+    "phase": "prepare-fresh-provider-document",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Provider fixture interception reported 2 bounded errors.",
+    "interceptionErrorDetailsAvailable": false
+  },
+  "baselineBuildSmokePassed": true,
+  "candidateBuildSmokePopulationCheckpoints": [
+    {
+      "checkpoint": "initial",
+      "layers": {
+        "flights": {
+          "enabled": true,
+          "count": 2500
+        },
+        "local-datacenters": {
+          "enabled": true,
+          "count": 4362
+        },
+        "local-dams": {
+          "enabled": true,
+          "count": 716
+        }
+      }
+    },
+    {
+      "checkpoint": "final-before-code-validation",
+      "layers": {
+        "flights": {
+          "enabled": true,
+          "count": 2500
+        },
+        "local-datacenters": {
+          "enabled": true,
+          "count": 4362
+        },
+        "local-dams": {
+          "enabled": true,
+          "count": 716
+        }
+      }
+    }
+  ],
+  "completedSamples": 0,
+  "profileArtifacts": 0,
+  "profilerReached": false,
+  "rawReportTruncated": false,
+  "outerChildCleanup": "confirmed in process error; not a comprehensive browser-ownership proof",
+  "workerAuditRestoration": {
+    "nativeCreateObjectURLRestored": true,
+    "registryEmpty": true,
+    "createdScriptBlobCountAtRestore": 14,
+    "overflowCountAtRestore": 0,
+    "auditedCreatedScriptBlobCount": 14,
+    "auditedOverflowCount": 0,
+    "validatedCreatedScriptBlobCount": 14,
+    "observedWorkerTargetCount": 6,
+    "observedBlobRequestCount": 6,
+    "lateWorkerTargetCount": 1,
+    "lateBlobRequestCount": 1,
+    "delayedValidatedWorkerTargetCount": 1,
+    "delayedValidatedBlobRequestCount": 1,
+    "unvalidatedLateWorkerTargetCount": 0,
+    "unvalidatedLateBlobRequestCount": 0,
+    "workerUrlOverflowAtCompletion": 0,
+    "blobUrlOverflowAtCompletion": 0
+  },
+  "hardwareAcceptance": false,
+  "performanceAcceptance": false,
+  "next": "Preserve bounded sanitized interception errors with owning document and lifecycle phase before another diagnostic run; do not attribute this failure to rendering or the inactive profiler."
+}
