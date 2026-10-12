@@ -7,18 +7,18 @@ prevents rounded `p1` key collisions from retaining stale DEM supports, acceptin
 late terrain responses, or admitting shipped supports for a calibrated pose.
 Six old-runtime regression failures are fixed; all 83 focused checks pass. The
 five-cycle CCTV lifecycle and five-pair native calibration checks pass at the
-exact clean candidate, with independent raw-report revalidation. Standard
-integration CI is pending. This is a specific revision-ownership repair; full
-S50 terrain/pose visual coverage and physical Windows acceptance remain open.
+exact clean candidate, with independent raw-report revalidation. Integrated into
+`dev` at `40b9f5c9`; all seven standard CI jobs pass. This is a specific
+revision-ownership repair; full S50 terrain/pose visual coverage and physical Windows acceptance remain open.
 
-Latest S47 diagnostic: [terminal-observation retirement at `fda1cb88`](performance-evidence/s47-observation-retirement-38237890055/README.md)
-passes baseline smoke, three candidate samples, all five reached document
-cleanup gates and all three CPU-profile teardowns. The complete run still fails
-at motion run 2 warmup: page-entry acknowledgement takes 2,990.139 ms and the
-page subsequently settles in 3,121.3 ms, arriving after the unchanged six-second
-host deadline. The late result is retained without turning failure into success.
-Tracking is not reached; this candidate remains isolated. Inspect the warmup
-clock/observer dispatch boundary next, while independent S50 revision work proceeds.
+Latest S47 diagnostic: [atomic warmup boundary at `0602cbe2`](performance-evidence/s47-atomic-warmup-38241920477/README.md)
+keeps clock holding and completed-render listener installation in one page
+callback, but its hosted run fails idle run 1 warmup with zero completed samples.
+Page entry takes 2,712.367 ms and the late page settles after another 3,597.2 ms,
+exceeding the unchanged six-second host deadline. The full held-clock snapshot
+and a complete CPU profile of this failed document are preserved. Co-location
+alone does not resolve the failure; the candidate stays isolated. Attribute the
+measured frame work before another change. Earlier failed reports remain intact.
 
 Latest S57 component: the [actual HTTP streamed-tile gate](performance-evidence/s57-flat-readiness-owner-38236552746/README.md)
 passes at `e1a6f5e4`, including superseded-request cancellation, reactivation
@@ -36,8 +36,8 @@ tooling, rejected experiments, and unresolved environment/rendering failures.
 It compares the live upstream and fork main refs at `591f299d`; no blanket
 attribution of the remaining failures to upstream is supported.
 
-Recorded integration checkpoint: `48329a9f33ce0e2d8586da90540f7e2331434b8f`.
-[All seven standard jobs pass](performance-evidence/s57-flat-readiness-owner-38236552746/standard-ci-dev-38237151400.json),
+Recorded integration checkpoint: `40b9f5c91355ccc37f7c2ca664f92893be4ccdb2`.
+[All seven standard jobs pass](performance-evidence/s50-exact-pose/standard-ci-dev-38240973936.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
 journeys. This integration includes the bounded Windows shutdown diagnostic,
 which is off by default. Older reports remain historical evidence.
@@ -762,7 +762,7 @@ the earlier release requirements and historical results.
 | S47 baseline and comparable capture | Partial: density synchronization, observed dense-production comparison export, staged fixture clock, actual tracking endpoints, build identity and before/after condition guards | Unit integrity gates and six-step share/slider/profile/workspace density journey pass at `d70dac9`; matched-run evidence remains pending | Pending matched captures and negative control |
 | S48 attribution and resource diagnostics | Partial: bounded opt-in synchronous CPU series for layer updates, CCTV preparation and overlay frames; frame idle classification; actual visual settings and per-owner resource counts | 120 manager/diagnostic tests and package boundaries pass; mock-canvas phase attribution and enabled/disabled overhead reports exist; browser attribution remains | Pending traces, allocation profiles and cost attribution |
 | S49 worker/lifecycle retention | Partial: stale GeoJSON/cable, traffic and CCTV lifecycle cleanup, corrected worker interception, isolated import/workspace, CCTV and terrain/picking lifecycle runners | Import/workspace/cancellation passes at `7b92db4`; five rendered CCTV toggles and disabled-module reinitialization pass at `db298d4`; five terrain cycles and three native selection/re-enable cycles pass at `d7f25ed` | Hosted paravirtual Metal retention run passes at `996a8d3`; current Windows UHD 620 plateau pending |
-| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, equal-style writes and equal gizmo-position writes suppressed | Queue/revision tests pass; 15 gizmo tests and 50 exact numerical snapshots pass at `996a8d3`; delayed CCTV response delivery, disabled recovery and five unchanged toggles pass at `4206611` | Twenty calibration endpoint captures match the pre-change build on hosted Metal at `996a8d3`; full pose/terrain appearance and Windows build-count comparisons remain |
+| S50 geometry coalescing | Partial: cursor drain, latest pending record coalescing, cancellation generation, four-ms preparation budget, unchanged geometry writes suppressed; exact runtime footprint poses prevent rounded-key collisions at `61c050ca` | Six old-runtime failures reproduced; 83 focused checks, five unchanged lifecycle cycles, late worker-result cases, five native calibration pairs and all seven integrated standard jobs pass at `40b9f5c9` | Hosted paravirtual Metal calibration hashes match; full terrain/pose visual matrix and physical Windows build-count comparisons remain |
 | S51 render demand scheduling | Partial: per-owner deadlines, satellite cadence, mission, vessels, CCTV calibration and traffic; fleet scheduler rejected, wider rollout remains | Traffic component `bda6146d`: all seven integration jobs and 111 tracking checks pass; five current-dev hosted pairs have zero enabled-empty frames and exact controlled pixels | Hosted Apple paravirtual Metal evidence is supplemental; full-application cadence, physical Windows and S60 remain pending |
 | S52 overlay invalidation | Partial: retain pure-projection reuse at `33d9856`, idle font wake fix at `0d431f2`, normalized-entry layout reuse at `f25154a`, and direct-filter placement reuse at `4686ea3`; conditional paint cache evaluated and rejected, production painting retained | Placement passes 87 focused checks, 13 allocation gates, five 24-case exact-pixel pairs, two native font failure-control pairs and all seven integration jobs. All 20 static/periodic CPU pairs improve; moving generic/infrastructure medians +3.34%/+2.36%, with no pair over +10%. Rejected paint candidate passes 72 behavior checks but only 12/13 allocation gates; failure preserved | Pending; component Canvas2D and software WebGL results do not establish GPU or full-scene performance |
 | S53 collection uploads | Partial: satellite Cartesian scratch reuse and unchanged-position-write suppression; current natural-bounds split rejected | Repeated controls are pixel-identical; split changes 24 pixels. At `c5889ef`, a capture-only original-bounds control removes the difference and restoring natural bounds restores it; four capture lifecycle controls pass | Hosted paravirtual Metal identifies command-bound/frustum dependency; no physical Windows acceptance or production upload benefit claimed |

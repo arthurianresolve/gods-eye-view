@@ -8,6 +8,12 @@ east offsets near the equator. The previous code could keep an earlier DEM
 footprint, accept a pending response for the earlier pose, or use shipped support
 heights after a calibrated pose moved within the same rounded bin.
 
+Source attribution: upstream/fork main checkpoint `591f299d` also contains the
+six-decimal hash and the four hash-only cache/consumer guards in
+`cctvFootprint.js`, `cctv/ground.js` and `cctv/geometry.js`. The defect is inherited
+at those ownership checks. The executed negative control is the integrated
+`48329a9f` runtime; no full upstream browser comparison is claimed.
+
 Runtime cache reuse, geometry consumption and late-result acceptance now compare
 all seven finite pose fields exactly. The snapshot includes the effective probe
 range. Existing record and request-revision guards remain in force. Shipped data
@@ -52,7 +58,10 @@ frustum construction and its support-height consumer.
   [independent replay](native-calibration-independent-review.json).
 
 Both hosted reports identify the exact clean candidate and were independently
-revalidated with its unchanged validators. Standard integration CI is pending.
+revalidated with its unchanged validators. Integrated source at
+`40b9f5c91355ccc37f7c2ca664f92893be4ccdb2` passes all seven standard CI jobs,
+including Node 24/26, three-OS recovery, Windows onboarding and browser journeys.
+[Exact integration run](standard-ci-dev-38240973936.json).
 
 [Review manifest](review.json) records commands, test identities and original
 artifact hashes. The saved PowerShell test outputs retain their original bytes.
