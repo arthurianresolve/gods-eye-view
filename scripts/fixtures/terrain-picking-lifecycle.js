@@ -6,6 +6,7 @@ import {
   installTerrainCurrentUpdateReadinessObserver,
   finalizeTerrainCurrentUpdateObservation,
 } from './terrainCurrentUpdateReadiness.mjs';
+import { createTerrainSceneReadinessSample } from './terrainSceneReadiness.mjs';
 
 installWorkerDiagnostics(window);
 window.__terrainPickingBuildIdentity = {
@@ -70,21 +71,6 @@ function snapshotWorkers() {
       ...worker,
     })),
   };
-}
-
-function workerSignature(snapshot) {
-  return JSON.stringify(
-    snapshot.workers.map((worker) => ({
-      kind: worker.kind,
-      submitted: worker.submitted,
-      completed: worker.completed,
-      cancelled: worker.cancelled,
-      pending: worker.pending,
-      taskErrors: worker.taskErrors,
-      workerErrors: worker.workerErrors,
-      postErrors: worker.postErrors,
-    })),
-  );
 }
 
 function workerTotals(snapshot) {
@@ -254,6 +240,7 @@ async function waitForStableScene(
   timeoutMs = lifecycleDrainMs,
   onSample = null,
   currentUpdateRequirement = null,
+  ownerController,
 ) {
   const started = performance.now();
   const history = [];
@@ -263,18 +250,17 @@ async function waitForStableScene(
     const workers = snapshotWorkers();
     const pose = cameraPose(viewer);
     const currentUpdateReadiness = currentUpdateRequirement?.() ?? null;
-    const sample = {
+    const sample = createTerrainSceneReadinessSample({
       elapsedMs: performance.now() - started,
       frameNumber: viewer.scene.frameState.frameNumber,
       postRenderCount,
       tilesLoaded: viewer.scene.globe.tilesLoaded,
       dataSourceDisplayReady: viewer.dataSourceDisplay.ready,
-      pending: workers.pending,
-      workerCounters: workers,
-      workerSignature: workerSignature(workers),
+      workers,
       camera: pose,
       currentUpdateReadiness,
-    };
+      controller: ownerController,
+    });
     if (history.length < 64) history.push(sample);
     onSample?.(sample);
     const stable =
@@ -826,6 +812,7 @@ async function runFixture() {
       timeoutMs,
       sceneObserver(label),
       currentUpdateRequirement,
+      controller,
     );
   const streamedMapSnapshot = () => ({
     activeStackId: controller.getActiveId(),
@@ -1068,12 +1055,7 @@ async function runFixture() {
         });
       },
     );
-    await waitForStableScene(
-      viewer,
-      report.phase,
-      READY_MS,
-      sceneObserver(report.phase),
-    );
+    await waitForScene(report.phase, READY_MS);
     report.initialReadiness = diagnosticSnapshot(
       viewer,
       controller,

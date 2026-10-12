@@ -6,6 +6,7 @@ import {
   installTerrainCurrentUpdateReadinessObserver,
   finalizeTerrainCurrentUpdateObservation,
 } from '../fixtures/terrainCurrentUpdateReadiness.mjs';
+import { createTerrainSceneReadinessSample } from '../fixtures/terrainSceneReadiness.mjs';
 import {
   parseTerrainPickingLifecycleArgs,
   validateTerrainPickingLifecycleReport,
@@ -110,9 +111,18 @@ function contentDeliveredRequest() {
 function streamedSwitch(fromStackId, toStackId) {
   const active = toStackId === STREAMED_STACK_ID;
   const final = {
-    activeStackId: toStackId,
+    ...createTerrainSceneReadinessSample({
+      elapsedMs: 1010,
+      frameNumber: 11,
+      postRenderCount: 11,
+      tilesLoaded: true,
+      dataSourceDisplayReady: true,
+      workers: { pending: 0, workers: [] },
+      camera: [[0, 0, 1]],
+      currentUpdateReadiness: { ready: true },
+      controller: { getActiveId: () => toStackId },
+    }),
     globeShow: false,
-    tilesLoaded: true,
     workerPending: 0,
     workerCounters: { pending: 0 },
     tileset: active ? streamedTileSnapshot(true) : null,
@@ -141,6 +151,46 @@ function streamedSwitch(fromStackId, toStackId) {
     },
   };
 }
+
+test('scene readiness sample publishes the owner read in that same sample', () => {
+  let activeStackId = 'qa-terrain-flat';
+  const controller = { getActiveId: () => activeStackId };
+  const workers = { pending: 0, workers: [] };
+  const snapshot = (elapsedMs) =>
+    createTerrainSceneReadinessSample({
+      elapsedMs,
+      frameNumber: elapsedMs,
+      postRenderCount: elapsedMs,
+      tilesLoaded: true,
+      dataSourceDisplayReady: true,
+      workers,
+      camera: [[0, 0, 1]],
+      currentUpdateReadiness: { ready: true },
+      controller,
+    });
+
+  const flat = snapshot(10);
+  activeStackId = STREAMED_STACK_ID;
+  const tiles = snapshot(20);
+  assert.equal(flat.activeStackId, 'qa-terrain-flat');
+  assert.equal(tiles.activeStackId, STREAMED_STACK_ID);
+  assert.equal(tiles.workerSignature, '[]');
+  assert.throws(
+    () =>
+      createTerrainSceneReadinessSample({
+        elapsedMs: 30,
+        frameNumber: 30,
+        postRenderCount: 30,
+        tilesLoaded: true,
+        dataSourceDisplayReady: true,
+        workers,
+        camera: [[0, 0, 1]],
+        currentUpdateReadiness: { ready: true },
+        controller: { getActiveId: () => null },
+      }),
+    /no current map owner/,
+  );
+});
 
 function streamedEvidence(cycles = 5) {
   return {
@@ -785,6 +835,13 @@ test('validator fails closed on external requests and malformed terrain evidence
 
 test('streamed-tile validator rejects missing delivery, stale ownership and invalid cache evidence', () => {
   const mutations = [
+    (report) => {
+      delete report.streamedTiles.postWarmReturn.readiness.final.activeStackId;
+    },
+    (report) => {
+      report.streamedTiles.postWarmReturn.readiness.final.activeStackId =
+        STREAMED_STACK_ID;
+    },
     (report) => {
       report.streamedTileHttpEvidence.server.counts.content.successfulResponses = 0;
     },
