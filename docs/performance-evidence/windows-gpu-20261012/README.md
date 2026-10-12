@@ -234,5 +234,19 @@ wait at `qa-accessibility.mjs:61`: focus did not satisfy the expected command
 trigger check after Enter on the evidence inspector's close button. The
 failure report has no phase or focus-state trace (`surface` and `lastControl`
 are null), so it cannot distinguish an application race from harness timing.
-This failure is retained and blocks promotion of the diagnostic branch until
-investigated. The timeout and strict focus expectation remain unchanged.
+This failure is retained. The timeout and strict focus expectation remain
+unchanged.
+
+Bounded focus diagnostics subsequently pass all seven jobs at `5d0e3391` and
+are integrated into dev at `c3c6c5a7e890d0b9985249892cc601a76c9835a3`.
+[The exact integration run](standard-ci-dev-38196156481.json) passes all seven
+standard jobs, including the browser gate. These changes leave application
+rendering unchanged. Optional diagnostics/soak jobs and PR-only layer-token
+checks are skipped, not passed.
+
+A separate modeled-native regression reproduces queued palette-close focus
+theft after focus moves into the inspector, and after the palette is reopened.
+The isolated fix at `311cc5ea` removes the redundant queued-close restoration
+and keeps native dialog focus behavior. Five focused tests pass; standard CI
+with an actual native-dialog regression is pending. This does not conclusively
+attribute the earlier uninstrumented failure or close Windows hardware evidence.
