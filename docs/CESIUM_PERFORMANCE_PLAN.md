@@ -4,8 +4,8 @@
 
 Latest validated `dev` checkpoint: `c3c6c5a7e890d0b9985249892cc601a76c9835a3`.
 [All seven standard jobs pass](performance-evidence/windows-gpu-20261012/standard-ci-dev-38196156481.json).
-Application runtime is unchanged from `bbca229f`; intervening changes are
-diagnostic tooling, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
+Rendering runtime is unchanged from `bbca229f`; subsequent work includes
+diagnostic tooling, a command-palette focus repair, evidence and documentation. The HUD summary ownership fix is integrated; it does not establish a GPU
 readback speedup or resolve the Windows frame-delivery failure.
 
 S47-S60 are still partially implemented. The isolated S54 candidate keeps Entity
@@ -78,12 +78,13 @@ prove its cause or remediation. The existing timeout and focus requirement
 remain unchanged. Diagnostic tooling can be integrated independently of that
 open focus investigation and the minimal WebGL frame stall.
 That tooling is now integrated at `c3c6c5a7`, including a passing browser gate.
-The isolated focus fix at `311cc5ea` removes redundant focus restoration in the
+The [focus fix at `311cc5ea`](performance-evidence/command-palette-focus-311cc5ea/README.md) removes redundant focus restoration in the
 palette's queued close handler. Delayed-close and close/reopen unit regressions
 fail against the old code and pass after the fix; a deterministic native-dialog
-browser regression is included. Its standard CI remains pending. The historical
+browser regression and all seven standard CI jobs now pass. The historical
 failure has no focus trace, so this reproduction does not conclusively attribute
-that particular run. The fix is not yet merged into dev.
+that particular run. The exact-commit evidence records this repair separately
+from the unresolved Windows rendering and performance gates.
 
 ## Historical integration checkpoints
 
