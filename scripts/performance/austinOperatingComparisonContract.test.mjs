@@ -22,6 +22,7 @@ import {
   summarizeAustinNativePopulations,
 } from './austinOperatingPopulationEvidence.mjs';
 import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import { createAustinOperatingDocumentEvidence } from './austinOperatingDocumentEvidence.mjs';
 import {
   deriveAustinSatelliteSampledEpoch,
   loadAustinSatelliteEpochReference,
@@ -426,6 +427,43 @@ function asPairedReport(input, commit, p95Offset = 0) {
     renderer: 'Test Renderer',
     vendor: 'Test Vendor',
   };
+  const documentOwners = [
+    { documentRole: 'startup-1', documentId: 'startup-document-1' },
+    { documentRole: 'main-setup', documentId: 'main-measured-document' },
+    ...input.captures.map((sample) => ({
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+      delivery: sample.fixtureDelivery,
+    })),
+  ].map((owner, index) => ({ ...owner, sessionOrdinal: index + 1 }));
+  const drained = () => ({
+    schema: 'gev-fixture-interception-drain/v1',
+    confirmed: true,
+    listenerRemovalConfirmed: true,
+    pendingAtStop: 1,
+    pendingCommandsAfterDrain: 0,
+    pendingPreparationsAfterDrain: 0,
+    pendingAbortSubscriptionsAfterDrain: 0,
+    rejectedDrainOperations: 0,
+    drainCommandFailures: 0,
+    unexpectedLateRequestCount: 0,
+  });
+  const fixtureInterceptionReleases = documentOwners.map((owner) => ({
+    schema: 'gev-flight-fixture-session-release/v1',
+    sessionOrdinal: owner.sessionOrdinal,
+    documentRole: owner.documentRole,
+    documentId: owner.documentId,
+    confirmed: true,
+    targetClosed: true,
+    stop: drained(),
+    interception: {
+      schema: 'gev-fixture-interception-release/v1',
+      confirmed: true,
+      interception: drained(),
+      fetchDisable: 'target-closed',
+      detach: 'target-closed',
+    },
+  }));
   report.workload = {
     ...report.workload,
     warmupMs: input.workload.warmupMs,
@@ -442,24 +480,16 @@ function asPairedReport(input, commit, p95Offset = 0) {
     populationStableAcrossSamples: true,
     cameraPathStableAcrossSamples: true,
     cameraPath: 'Austin fixed route: parked-v1 and elapsed-move-right-v1',
-    austinOperatingFixtureDocuments: [
-      { documentRole: 'startup-1', documentId: 'startup-document-1' },
-      { documentRole: 'main-setup', documentId: 'main-measured-document' },
-      ...input.captures.map((sample) => ({
-        documentRole: sample.documentRole,
-        documentId: sample.documentId,
-        cleanup: { confirmed: true },
-        interceptionRelease: { confirmed: true, targetClosed: true },
-        delivery: sample.fixtureDelivery,
-      })),
-    ],
+    fixtureInterceptionReleases,
+    austinOperatingFixtureDocuments: documentOwners.map((owner) =>
+      createAustinOperatingDocumentEvidence({
+        ...owner,
+        releaseRecords: fixtureInterceptionReleases,
+        disposed: true,
+        disposeReason: 'paired-report-test-target-closed',
+      }),
+    ),
   };
-  report.workload.austinOperatingFixtureDocuments =
-    report.workload.austinOperatingFixtureDocuments.map((owner) => ({
-      ...owner,
-      cleanup: { confirmed: true },
-      interceptionRelease: { confirmed: true, targetClosed: true },
-    }));
   report.fixtureDelivery = structuredClone(input.fixtureDelivery);
   report.fixtureDelivery.documentOwners = structuredClone(
     report.workload.austinOperatingFixtureDocuments,
@@ -646,6 +676,71 @@ test('Austin paired report accepts actual fixture delivery with variable counter
       }),
     /not acknowledged by its delivered response variants/,
   );
+});
+
+test('paired Austin ingestion recomputes cleanup from producer-shaped drain records', async () => {
+  const input = await makeObservedPairInput();
+  const baseline = asPairedReport(input, baselineCommit);
+  const validCandidate = asPairedReport(input, candidateCommit);
+  assert.equal(
+    validatePairedPerformanceReports({
+      baseline,
+      candidate: validCandidate,
+      expectedAppCommits: {
+        baseline: baselineCommit,
+        candidate: candidateCommit,
+      },
+    }).status,
+    'comparable',
+  );
+
+  const mutations = [
+    (report) => {
+      report.workload.fixtureInterceptionReleases[0].stop.pendingCommandsAfterDrain = 1;
+    },
+    (report) => {
+      report.workload.fixtureInterceptionReleases[0].stop.rejectedDrainOperations = 1;
+    },
+    (report) => {
+      report.workload.fixtureInterceptionReleases[0].interception.interception.drainCommandFailures = 1;
+    },
+    (report) => {
+      delete report.workload.fixtureInterceptionReleases[0].interception
+        .interception.pendingAbortSubscriptionsAfterDrain;
+    },
+    (report) => {
+      report.workload.fixtureInterceptionReleases[0].sessionOrdinal += 1;
+    },
+    (report) => {
+      report.workload.fixtureInterceptionReleases[0].documentId =
+        'other-document';
+    },
+    (report) => {
+      report.workload.austinOperatingFixtureDocuments[0].disposed = false;
+    },
+    (report) => {
+      report.workload.fixtureInterceptionReleases[0].confirmed = false;
+    },
+    (report) => {
+      report.workload.austinOperatingFixtureDocuments[0].cleanup.confirmed = false;
+    },
+  ];
+  for (const mutate of mutations) {
+    const candidate = structuredClone(validCandidate);
+    mutate(candidate);
+    assert.throws(
+      () =>
+        validatePairedPerformanceReports({
+          baseline,
+          candidate,
+          expectedAppCommits: {
+            baseline: baselineCommit,
+            candidate: candidateCommit,
+          },
+        }),
+      /Austin fixture interception release is incomplete|cleanup summary differs|release differs/,
+    );
+  }
 });
 
 test('paired Austin validation recomputes raw satellite rows against the pinned TLEs', async () => {
