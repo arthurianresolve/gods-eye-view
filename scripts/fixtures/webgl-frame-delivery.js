@@ -1,3 +1,5 @@
+import { createStartDelay, readPreparationState } from './webglStartDelay.mjs';
+
 const DURATION_MS = 5000;
 const POINT_COUNT = 5000;
 const BUCKET_MS = 1000;
@@ -9,10 +11,14 @@ const modeSelect = document.querySelector('#mode');
 const preserveDrawingBufferSelect = document.querySelector(
   '#preserve-drawing-buffer',
 );
+const startDelaySelect = document.querySelector('#start-delay');
 const status = document.querySelector('#status');
 const result = document.querySelector('#result');
+const cancelButton = document.querySelector('#cancel');
 let canvas = document.querySelector('#surface');
 let lastReport = null;
+let startDelayControl = null;
+let runInProgress = false;
 const appCommit =
   typeof __GEV_APP_COMMIT__ === 'string' ? __GEV_APP_COMMIT__ : null;
 
@@ -150,16 +156,21 @@ function readRenderer(gl) {
   }
 }
 
-runButton.addEventListener('click', () => {
+runButton.addEventListener('click', async () => {
+  if (runInProgress) return;
+  runInProgress = true;
+  const requestedStartDelayMs = Number(startDelaySelect.value);
   runButton.disabled =
     downloadButton.disabled =
     modeSelect.disabled =
     preserveDrawingBufferSelect.disabled =
+    startDelaySelect.disabled =
       true;
+  cancelButton.disabled = requestedStartDelayMs === 0;
   result.textContent = '';
-  status.textContent = 'Preparing diagnostic';
-  replaceSurface();
-
+  status.textContent = requestedStartDelayMs
+    ? 'Preparing diagnostic start delay'
+    : 'Preparing diagnostic';
   const mode = modeSelect.value;
   const preserveDrawingBufferRequested =
     preserveDrawingBufferSelect.value === 'true';
@@ -182,6 +193,8 @@ runButton.addEventListener('click', () => {
   let visibilityAtStart = null;
   let canvasBoundsAtStart = null;
   let contextAttributesAtStart = null;
+  let preparation = null;
+  let contextSetupElapsedMs = null;
   let active = false;
   const buckets = Array.from({ length: 5 }, (_, index) => ({
     startMs: index * BUCKET_MS,
@@ -209,6 +222,8 @@ runButton.addEventListener('click', () => {
     if (rafId !== null) cancelAnimationFrame(rafId);
     if (endTimer !== null) clearTimeout(endTimer);
     if (heartbeatTimer !== null) clearInterval(heartbeatTimer);
+    startDelayControl?.dispose();
+    startDelayControl = null;
     window.removeEventListener('focus', onFocus);
     window.removeEventListener('blur', onBlur);
     window.removeEventListener('pagehide', onPageHide);
@@ -254,6 +269,8 @@ runButton.addEventListener('click', () => {
       startedAt: wallStartedAt,
       elapsedMs: endedAt - start,
       requestedDurationMs: DURATION_MS,
+      preparation,
+      contextSetupElapsedMs,
       desktopForegroundVerification: 'unavailable',
       browser: {
         userAgent: navigator.userAgent.slice(0, 300),
@@ -298,10 +315,67 @@ runButton.addEventListener('click', () => {
     runButton.disabled =
       modeSelect.disabled =
       preserveDrawingBufferSelect.disabled =
+      startDelaySelect.disabled =
         false;
+    cancelButton.disabled = true;
+    runInProgress = false;
   };
 
+  if (requestedStartDelayMs > 0) {
+    status.textContent = 'Waiting before the five-second observation';
+    cancelButton.disabled = false;
+    try {
+      startDelayControl = createStartDelay({
+        delayMs: requestedStartDelayMs,
+        now: () => performance.now(),
+        windowTarget: window,
+        documentTarget: document,
+      });
+      preparation = await startDelayControl.promise;
+      startDelayControl = null;
+    } catch (error) {
+      const state = readPreparationState(window, document);
+      preparation = {
+        requestedDelayMs: requestedStartDelayMs,
+        actualDelayMs: 0,
+        started: state,
+        completed: state,
+        changes: { focus: false, visibility: false, viewport: false },
+        changeEvents: [],
+        outcome: 'setup-failed',
+        cancelReason: null,
+      };
+      start = performance.now();
+      wallStartedAt = new Date().toISOString();
+      active = true;
+      finish('setup-failed', error);
+      return;
+    }
+    cancelButton.disabled = true;
+    if (preparation.outcome === 'cancelled') {
+      start = performance.now();
+      wallStartedAt = new Date().toISOString();
+      active = true;
+      finish('cancelled-before-start');
+      return;
+    }
+  } else {
+    const state = readPreparationState(window, document);
+    preparation = {
+      requestedDelayMs: 0,
+      actualDelayMs: 0,
+      started: state,
+      completed: state,
+      changes: { focus: false, visibility: false, viewport: false },
+      changeEvents: [],
+      outcome: 'immediate',
+      cancelReason: null,
+    };
+  }
+
+  const contextSetupStartedAt = performance.now();
   try {
+    replaceSurface();
     if (mode === 'webgl2') {
       gl = canvas.getContext('webgl2', {
         alpha: false,
@@ -314,7 +388,9 @@ runButton.addEventListener('click', () => {
       contextAttributesAtStart = contextAttributesSnapshot(gl);
       program = createPointProgram(gl);
     }
+    contextSetupElapsedMs = performance.now() - contextSetupStartedAt;
   } catch (error) {
+    contextSetupElapsedMs = performance.now() - contextSetupStartedAt;
     start = performance.now();
     wallStartedAt = new Date().toISOString();
     focusedAtStart = document.hasFocus();
@@ -381,6 +457,10 @@ runButton.addEventListener('click', () => {
   rafId = requestAnimationFrame(frame);
 });
 
+cancelButton.addEventListener('click', () => {
+  startDelayControl?.cancel('user-cancelled');
+});
+
 downloadButton.addEventListener('click', () => {
   if (!lastReport) return;
   const url = URL.createObjectURL(
@@ -394,7 +474,7 @@ downloadButton.addEventListener('click', () => {
     lastReport.preserveDrawingBufferRequested === null
       ? 'na'
       : String(lastReport.preserveDrawingBufferRequested);
-  anchor.download = `webgl-frame-delivery-${lastReport.appCommit?.slice(0, 7) || 'local'}-${lastReport.mode}-preserve-${preservation}.json`;
+  anchor.download = `webgl-frame-delivery-${lastReport.appCommit?.slice(0, 7) || 'local'}-${lastReport.mode}-preserve-${preservation}-delay-${lastReport.preparation?.requestedDelayMs ?? 0}.json`;
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });

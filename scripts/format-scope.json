@@ -1197,6 +1197,11 @@
   "scripts/performance/trafficFixtureRandom.mjs",
   "scripts/performance/trafficFixtureRandomTransform.mjs",
   "scripts/fixtures/traffic-render-demand.vite.mjs",
+  "scripts/fixtures/webgl-frame-delivery.html",
+  "scripts/fixtures/webgl-frame-delivery.js",
+  "scripts/fixtures/webglStartDelay.mjs",
+  "scripts/performance/webglStartDelay.test.mjs",
+  "docs/performance-evidence/webgl-delayed-start/README.md",
   "build/cesium-dependencies.js",
   "src/tooling/cesiumDependencies.test.mjs"
 ]

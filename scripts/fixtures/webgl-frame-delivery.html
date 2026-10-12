@@ -77,7 +77,15 @@
           <option value="false">false</option>
         </select>
       </label>
+      <label>
+        Start
+        <select id="start-delay">
+          <option value="0" selected>immediate</option>
+          <option value="10000">after 10 seconds</option>
+        </select>
+      </label>
       <button id="run">Run for five seconds</button>
+      <button id="cancel" disabled>Cancel preparation</button>
       <button id="download" disabled>Download report</button>
     </div>
     <p id="status" role="status">Ready</p>

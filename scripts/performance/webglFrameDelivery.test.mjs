@@ -2,22 +2,37 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import {
+  createStartDelay,
+  readPreparationState,
+} from '../fixtures/webglStartDelay.mjs';
 
 const fixturePath = new URL(
   '../fixtures/webgl-frame-delivery.js',
   import.meta.url,
 );
 
-async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
-  const source = await readFile(fixturePath, 'utf8');
+async function runFixture({
+  preserveDrawingBuffer = 'true',
+  startDelayMs = '0',
+  cancelPreparation = false,
+} = {}) {
+  const source = (await readFile(fixturePath, 'utf8')).replace(
+    /^import \{[\s\S]*?\} from '\.\/webglStartDelay\.mjs';\r?\n/m,
+    '',
+  );
   let now = 0;
   let currentCanvas;
   let nextRafId = 1;
   let rafCallback;
   let endCallback;
+  let delayCallback;
   let nextTimeoutId = 1;
+  let scheduledTimeouts = 0;
+  const timeoutCallbacks = new Map();
   let rectReads = 0;
   let requestedAttributes = null;
+  let contextCreatedAt = null;
   const listeners = new Map();
   const element = () => ({
     disabled: false,
@@ -34,6 +49,9 @@ async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
   mode.value = 'webgl2';
   const preserve = element();
   preserve.value = preserveDrawingBuffer;
+  const delay = element();
+  delay.value = startDelayMs;
+  const cancel = element();
   const status = element();
   const result = element();
   const webgl = {
@@ -89,6 +107,7 @@ async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
     },
     getContext(type, attributes) {
       assert.equal(type, 'webgl2');
+      contextCreatedAt = now;
       requestedAttributes = { ...attributes };
       return webgl;
     },
@@ -111,6 +130,8 @@ async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
     ['#download', download],
     ['#mode', mode],
     ['#preserve-drawing-buffer', preserve],
+    ['#start-delay', delay],
+    ['#cancel', cancel],
     ['#status', status],
     ['#result', result],
     ['#surface', currentCanvas],
@@ -137,6 +158,20 @@ async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
       listeners.delete(`window:${type}`);
     },
   };
+  const scheduleTimeout = (callback, timeoutMs) => {
+    const id = nextTimeoutId++;
+    scheduledTimeouts++;
+    timeoutCallbacks.set(id, callback);
+    if (timeoutMs === 5000) endCallback = callback;
+    else if (timeoutMs === Number(startDelayMs)) delayCallback = callback;
+    return id;
+  };
+  const clearScheduledTimeout = (id) => {
+    const callback = timeoutCallbacks.get(id);
+    timeoutCallbacks.delete(id);
+    if (callback === delayCallback) delayCallback = null;
+    if (callback === endCallback) endCallback = null;
+  };
   const context = vm.createContext({
     __GEV_APP_COMMIT__: 'a'.repeat(40),
     document,
@@ -150,9 +185,7 @@ async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
     cancelAnimationFrame() {
       rafCallback = null;
     },
-    clearTimeout() {
-      endCallback = null;
-    },
+    clearTimeout: clearScheduledTimeout,
     setInterval() {
       return nextTimeoutId++;
     },
@@ -163,20 +196,53 @@ async function runFixture({ preserveDrawingBuffer = 'true' } = {}) {
     Math,
     String,
     Error,
-    setTimeout: (callback) => {
-      endCallback = callback;
-      return nextTimeoutId++;
-    },
+    createStartDelay: (options) =>
+      createStartDelay({
+        ...options,
+        setTimer: scheduleTimeout,
+        clearTimer: clearScheduledTimeout,
+      }),
+    readPreparationState,
+    setTimeout: scheduleTimeout,
   });
   selectors.set('#surface', currentCanvas);
   vm.runInContext(source, context, { filename: 'webgl-frame-delivery.js' });
   run.click();
-  now = 16;
+  if (Number(startDelayMs) > 0) {
+    assert.equal(
+      status.textContent,
+      'Waiting before the five-second observation',
+    );
+    run.click();
+    if (cancelPreparation) {
+      cancel.click();
+      await new Promise((resolve) => setImmediate(resolve));
+      return {
+        report: JSON.parse(result.textContent),
+        requestedAttributes,
+        contextCreatedAt,
+        cancel,
+        run,
+        scheduledTimeouts,
+      };
+    }
+    now = Number(startDelayMs);
+    delayCallback();
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  now = Number(startDelayMs) + 16;
   rafCallback();
-  now = 5001;
+  now = Number(startDelayMs) + 5001;
   endCallback();
   assert.ok(result.textContent);
-  return { report: JSON.parse(result.textContent), requestedAttributes };
+  return {
+    report: JSON.parse(result.textContent),
+    requestedAttributes,
+    contextCreatedAt,
+    cancel,
+    run,
+    scheduledTimeouts,
+  };
 }
 
 test('WebGL frame fixture preserves true by default and reports actual context/layout at both ends', async () => {
@@ -208,4 +274,40 @@ test('WebGL frame fixture can request false without changing other context setti
   assert.equal(report.contextAttributesAtStart.preserveDrawingBuffer, false);
   assert.equal(report.contextAttributesAtEnd.preserveDrawingBuffer, false);
   assert.equal(report.pointCount, 5000);
+});
+
+test('delayed start precedes context setup and records delay separately from the window', async () => {
+  const { report, contextCreatedAt, requestedAttributes } = await runFixture({
+    startDelayMs: '10000',
+  });
+  assert.equal(report.preparation.requestedDelayMs, 10000);
+  assert.equal(report.preparation.actualDelayMs, 10000);
+  assert.equal(report.preparation.outcome, 'elapsed');
+  assert.deepEqual(report.preparation.changes, {
+    focus: false,
+    visibility: false,
+    viewport: false,
+  });
+  assert.equal(report.elapsedMs, 5001);
+  assert.equal(contextCreatedAt, 10000);
+  assert.ok(report.contextSetupElapsedMs >= 0);
+  assert.equal(requestedAttributes.antialias, true);
+  assert.equal(requestedAttributes.preserveDrawingBuffer, true);
+  assert.equal(report.pointCount, 5000);
+});
+
+test('cancel during preparation records cancellation without starting measurement', async () => {
+  const { report, cancel, run, scheduledTimeouts, requestedAttributes } =
+    await runFixture({
+      startDelayMs: '10000',
+      cancelPreparation: true,
+    });
+  assert.equal(report.outcome, 'cancelled-before-start');
+  assert.equal(report.preparation.outcome, 'cancelled');
+  assert.equal(report.preparation.cancelReason, 'user-cancelled');
+  assert.equal(report.frames, 0);
+  assert.equal(cancel.disabled, true);
+  assert.equal(run.disabled, false);
+  assert.equal(scheduledTimeouts, 1);
+  assert.equal(requestedAttributes, null);
 });
