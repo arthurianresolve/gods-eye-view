@@ -2,6 +2,12 @@
 
 ## Current status - 12 October 2026
 
+The [failure origin review](performance-evidence/failure-origin-20261012/README.md)
+separates inherited runtime defects, defects introduced by our features or test
+tooling, rejected experiments, and unresolved environment/rendering failures.
+It compares the live upstream and fork main refs at `591f299d`; no blanket
+attribution of the remaining failures to upstream is supported.
+
 Recorded integration checkpoint: `2f7de280e41f23fa2036b07c74d9bf21cfb01c32`.
 [All seven standard jobs pass](performance-evidence/s47-first-motion-cpu-profile-38210121293/standard-ci-dev-38209437236.json),
 including Node 24/26, all three recovery jobs, Windows onboarding and the browser
