@@ -27,6 +27,7 @@ export async function runCableLifetimeOnOwnedViewer({
     activationOrder,
     status: 'running',
     stage: 'create-viewer',
+    failureStage: null,
     cycleIndex: null,
     stageHistory: [],
     viewerDestroyed: null,
@@ -51,6 +52,13 @@ export async function runCableLifetimeOnOwnedViewer({
     viewer = await createViewer({ setStage });
     setStage('renderer-lifetime');
     lifetime = await executeLifetime(viewer, { setStage });
+    if (lifetime?.status === 'failed') {
+      setStage('lifetime-reported-failure');
+      const details = [lifetime.error, lifetime.cleanupError]
+        .filter(Boolean)
+        .join(' | ');
+      throw new Error(details || 'Cable layer lifetime reported failure.');
+    }
     cycle.status = 'passed';
   } catch (error) {
     failure = {
@@ -61,6 +69,7 @@ export async function runCableLifetimeOnOwnedViewer({
       message: errorText(error),
     };
     cycle.status = 'failed';
+    cycle.failureStage = cycle.stage;
     cycle.error = failure.message;
     recordCableLifecycleFailure(report, failure);
     lifetime ||= report.lifetimes?.find(
@@ -73,7 +82,7 @@ export async function runCableLifetimeOnOwnedViewer({
         report.readinessFailure = lifetime.readinessFailure;
     }
   } finally {
-    cycle.stage = 'destroy-viewer';
+    setStage('destroy-viewer');
     if (viewer) {
       try {
         if (viewer.isDestroyed?.() === false) viewer.destroy();
@@ -94,6 +103,7 @@ export async function runCableLifetimeOnOwnedViewer({
       cycle.destroyCheckError
     ) {
       cycle.status = 'failed';
+      cycle.failureStage ||= 'destroy-viewer';
       const cleanupFailure = {
         mode,
         activationOrder,

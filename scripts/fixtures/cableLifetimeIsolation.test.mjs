@@ -63,6 +63,7 @@ test('a failed baseline can be followed by candidate after confirmed viewer dest
     { stage: 'fresh-viewer-ready', cycleIndex: null },
     { stage: 'renderer-lifetime', cycleIndex: null },
     { stage: 'reenable-scene-stability', cycleIndex: 1 },
+    { stage: 'destroy-viewer', cycleIndex: null },
   ]);
   assert.match(result.error, /baseline readiness failed/);
   assert.equal(result.status, 'failed');
@@ -133,6 +134,48 @@ test('candidate is skipped when baseline viewer destruction is unconfirmed', asy
   assert.equal(comparisons, 1);
   assert.match(result.error, /baseline lifecycle failed/);
   assert.equal(result.status, 'failed');
+});
+
+test('returned layer cleanup failure is retained while candidate runs after confirmed viewer destruction', async () => {
+  const result = report();
+  const executed = [];
+  await runCableRendererLifetimes({
+    modes: ['entities', 'collections'],
+    report: result,
+    createViewer: (_mode) => ({ ...viewer() }),
+    executeLifetime: async (_ownedViewer, mode, activationOrder) => {
+      executed.push(mode);
+      const lifetime = {
+        mode,
+        activationOrder,
+        status: mode === 'entities' ? 'failed' : 'passed',
+        samples: [{ geometrySha256: `${mode}-geometry` }],
+      };
+      if (mode === 'entities') {
+        lifetime.error = 'layer cleanup verification failed';
+        lifetime.cleanupError = 'collection owner remained attached';
+      }
+      result.lifetimes.push(lifetime);
+      return lifetime;
+    },
+    compareAvailable: () => {
+      result.comparisons.push({ captured: result.lifetimes.length });
+    },
+  });
+
+  assert.deepEqual(executed, ['entities', 'collections']);
+  assert.equal(result.lifecycleCycles[0].viewerDestroyed, true);
+  assert.equal(result.lifecycleCycles[1].viewerDestroyed, true);
+  assert.equal(result.lifecycleCycles[0].status, 'failed');
+  assert.equal(
+    result.lifecycleCycles[0].failureStage,
+    'lifetime-reported-failure',
+  );
+  assert.equal(result.lifecycleCycles[0].stage, 'destroy-viewer');
+  assert.match(result.error, /layer cleanup verification failed/);
+  assert.match(result.error, /collection owner remained attached/);
+  assert.equal(result.status, 'failed');
+  assert.deepEqual(result.comparisons, [{ captured: 2 }]);
 });
 
 test('a later candidate failure does not erase captured pair comparisons or first failure', async () => {
