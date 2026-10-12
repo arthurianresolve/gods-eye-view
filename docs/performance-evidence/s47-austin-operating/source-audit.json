@@ -1,0 +1,132 @@
+{
+  "schema": "gev-operating-workload-source-audit/v1",
+  "checkedAt": "2026-10-12T18:36:06.708Z",
+  "baseCommit": "5bbcd0de305759ab2671d4564a03ecfbc4cabb05",
+  "status": "audit-only-no-new-provider-payloads-acquired",
+  "performanceAcceptanceEligible": false,
+  "sources": [
+    {
+      "path": "src/layers/satellites/policy.js",
+      "byteLength": 6218,
+      "sha256": "918f3659ab7b396c6a6d944bc7f7162eb02f3590f22144cc6e571068baa970fa"
+    },
+    {
+      "path": "src/layers/satellites/source.js",
+      "byteLength": 905,
+      "sha256": "660719077bce7b26ed9da9f2d0d583249a66afe35c6687bb410d4c03a2269712"
+    },
+    {
+      "path": "src/layers/satellites/ingestion.js",
+      "byteLength": 8106,
+      "sha256": "4cb7451031a05172b48ea86a2c53f45ca2cab1099d521e811ae4b9a0409d7df4"
+    },
+    {
+      "path": "src/layers/cctv/source.js",
+      "byteLength": 2460,
+      "sha256": "95a4ca3e342e7ab824fed7a8d65cef1bb0f9d50b2b65f516baf7857f036313df"
+    },
+    {
+      "path": "server/providers/cctv/constants.js",
+      "byteLength": 14712,
+      "sha256": "a46182db9396002fdd3909d788ee603c2a83085cf4a3c4dd5873cf486e978714"
+    },
+    {
+      "path": "src/layers/radio/source.js",
+      "byteLength": 1104,
+      "sha256": "b25ba1ba91d4e820e5d318095e6f546c0a9bec6550593d6a8c5ecabff449617a"
+    },
+    {
+      "path": "server/providers/radio/catalog.js",
+      "byteLength": 12632,
+      "sha256": "c41785695e2e53cf4948941aa354deb6c5d99b448037fa07068befc65b977d69"
+    },
+    {
+      "path": "src/layers/alpr/source.js",
+      "byteLength": 9567,
+      "sha256": "c481aab3d5663e9571b318de03a32c71c351f88fe7008232c0e6c3632c539231"
+    },
+    {
+      "path": "src/layers/installations/source.js",
+      "byteLength": 9398,
+      "sha256": "9c74f8ac1e8b024153fae03f145d279891118f78cb15f776dd61b1b674274e7a"
+    },
+    {
+      "path": "config/cctv_sources.austin.json",
+      "byteLength": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "src/data/fixtures/osm-alpr-austin-11-467-843.pbf",
+      "byteLength": 4369,
+      "sha256": "1b93d8245edd3cce7f35bb65cd2a97227ab41a76a3e644ff6fdac50f344dfe2d"
+    },
+    {
+      "path": "src/data/fixtures/ofm-austin-12-935-1686.pbf",
+      "byteLength": 1084,
+      "sha256": "4808cd103b7fd934fe7b9095b3f4628e514860442e922bbc70b6196a3a0a776b"
+    },
+    {
+      "path": "src/data/fixtures/ofm-austin-14-3743-6745.pbf",
+      "byteLength": 3123,
+      "sha256": "99bcbbeb095ee68c8e6ae3fde54b93ab2947232802abcd9092241808f39a9f81"
+    },
+    {
+      "path": "src/data/fixtures/ofm-camp-mabry-12-935-1685.pbf",
+      "byteLength": 7493,
+      "sha256": "cf0c208e57ef448f7d09627fdb484e252d59253028858a4bffbb93f59f3bbe8b"
+    }
+  ],
+  "requiredLayers": [
+    "satellites",
+    "cctv",
+    "alpr",
+    "installations",
+    "radio",
+    "wind"
+  ],
+  "satelliteGroups": [
+    "stations",
+    "visual",
+    "gps-ops",
+    "glo-ops",
+    "galileo",
+    "geo"
+  ],
+  "sourceContracts": {
+    "satellites": "Six native group endpoints; preserve TLE bytes, NORAD identities, element epochs, group ordering and deduplication. Do not equate Dense overlay with the optional Starlink catalog.",
+    "cctv": "Native /api/cctv/sources and /api/cctv/health; source config is empty and live Austin fallback is capped at 250. Single-camera lifecycle fixture is not full operating-view population.",
+    "radio": "Native /api/radio/stations metadata; preserve station UUIDs and coordinates. No audio playback or synthetic click reporting needed for population benchmarking.",
+    "alpr": "Existing one-tile PBF is component coverage only; establish actual route tile coverage before claiming complete workload.",
+    "installations": "Existing three PBF files do not establish full route coverage; do not bulk collect OpenFreeMap public tiles.",
+    "wind": "Reuse the pinned wind fixture only with its original observation metadata and full native population."
+  },
+  "policies": [
+    {
+      "url": "https://celestrak.org/usage-policy.php",
+      "finding": "Fetch only needed groups when used, no more than once per update (GP: two hours); stop machine queries on a non-200 response.",
+      "application": "Acquire once for reusable local fixtures, with a persistent fetch record and no automated retries."
+    },
+    {
+      "url": "https://api.radio-browser.info/",
+      "finding": "Documentation permits mirroring data and describes DNS server discovery, randomization and descriptive user-agent strings.",
+      "application": "Use a discovered server for one bounded metadata snapshot; no stream bodies or click reports."
+    },
+    {
+      "url": "https://openfreemap.org/tos/",
+      "finding": "Terms prohibit automated data collection without permission.",
+      "application": "Use an appropriately licensed OSM extract or documented synthetic fixture through the native format; do not scrape the public tile endpoint."
+    },
+    {
+      "url": "https://data.austintexas.gov/stories/s/ranj-cccq",
+      "finding": "Portal datasets are offered free and without restriction, generally public domain unless dataset metadata says otherwise.",
+      "application": "Check camera dataset metadata before preserving a bounded catalog; use clearly synthetic camera frames instead of collecting live imagery."
+    }
+  ],
+  "pending": [
+    "Choose fixed Austin route and enumerate all native requests.",
+    "Acquire or generate complete pinned catalog/tile populations with explicit provenance.",
+    "Keep every source observation timestamp distinct from capture and fixture clock timestamps.",
+    "Prove native delivery acknowledgements, readiness, observed populations and cleanup for the composed workload.",
+    "Run matched baseline/candidate captures and physical Windows acceptance."
+  ]
+}
