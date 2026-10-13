@@ -12,7 +12,7 @@ that head and pass all seven standard jobs and published layer-token checks.
 All 30 recovery persistence records pass. Dev-targeted release verification
 passes; main-targeted artifact discovery fails even with the upload ID. The
 reviewed direct-REST correction at `6dc93009` passes twelve focused tests and
-has its own workflow check. This release handoff failure is not evidence of a
+passes [its own workflow check](../release-rest-6dc93009/README.md). The earlier handoff failure is not evidence of a
 source-tree conflict. Historical Windows failures remain disclosed.
 PR #4 remains validation-only; no stable release has been published.
 

@@ -14,7 +14,7 @@ fails artifact discovery after upload: the pinned downloader lists artifacts
 even in ID mode. A later direct REST diagnostic verifies the failed run's ZIP,
 inner checksum, manifest and signed attestation; it does not change that run's
 failure. Reviewed direct-REST corrections `8ba383ea`/`6dc93009` pass twelve root
-release tests and are under fresh workflow validation. Stable publication remains
+release tests and pass [fresh workflow validation](performance-evidence/release-rest-6dc93009/README.md). Stable publication remains
 disabled; the [older PR packet](performance-evidence/representative-pr-20261013/README.md)
 is retained unchanged.
 

@@ -57,8 +57,8 @@ checksum, signed attestation and release-manifest verification remain mandatory.
 Twelve focused root tests, adopted formatting and diff checks pass.
 
 [Fresh workflow verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38447239483)
-is running on immutable `6dc93009`; stable publication is disabled. Its result
-must be recorded separately from the d6a97e46 PR runs.
+passes on immutable `6dc93009`; stable publication was disabled. Its
+[retained result](../release-rest-6dc93009/README.md) is separate from the d6a97e46 PR runs.
 
 ## Evidence
 
