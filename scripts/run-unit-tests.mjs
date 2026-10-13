@@ -57,6 +57,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/terrainPickingLifecycle.test.mjs',
   'scripts/performance/mapStreamingFixture.test.mjs',
   'scripts/performance/mapStreamingFixtureDelivery.test.mjs',
+  'scripts/performance/mapStreamingCapture.test.mjs',
   'scripts/performance/streamedTileNetworkEvidence.test.mjs',
   'scripts/fixtures/terrainCurrentUpdateReadiness.test.mjs',
   'scripts/performance/trackedFrameTimeRepro.test.mjs',
