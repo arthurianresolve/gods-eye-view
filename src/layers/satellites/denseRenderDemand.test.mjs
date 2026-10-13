@@ -23,7 +23,7 @@ const TLE = [
   '2 25544  51.6416 247.4627 0006703 130.5360 325.0288 15.72125391563537',
 ].join('\n');
 
-function createHarness(t, source) {
+function createHarness(t, source, { advanceFocus = null } = {}) {
   const listeners = new Set();
   const primitives = new Set();
   const focusTargetListeners = new Set();
@@ -125,12 +125,14 @@ function createHarness(t, source) {
       focusPassIsNeeded: (target, activeCount) =>
         target !== null || activeCount > 0,
       nearFarScalarValueAtDistance: () => 1,
-      advanceSpriteFocus: () => ({
-        factor: 1,
-        active: focusFrameActive,
-        transitioning: focusFrameTransitioning,
-        endpointCompleted: !focusFrameTransitioning,
-      }),
+      advanceSpriteFocus:
+        advanceFocus ||
+        (() => ({
+          factor: 1,
+          active: focusFrameActive,
+          transitioning: focusFrameTransitioning,
+          endpointCompleted: !focusFrameTransitioning,
+        })),
       focusAlphaNeedsWrite: () => false,
     },
     render: {
@@ -535,14 +537,23 @@ test('a throttled focus pass retires when its points disappear before the target
   assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
 });
 
-test('a completed pass with a selected target and no occluded points retires its focus owner', (t) => {
+test('a completed pass for a hidden point under a selected target retires its focus owner', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   t.mock.method(performance, 'now', () => 1_000);
-  const harness = createHarness(t, {
-    readGroup: async () => ({ ok: true, text: TLE }),
-  });
-  const { parts, services, state } = harness;
-  services.focus.advanceSpriteFocus = advanceSpriteFocus;
+  let realAdvanceCalls = 0;
+  const harness = createHarness(
+    t,
+    {
+      readGroup: async () => ({ ok: true, text: TLE }),
+    },
+    {
+      advanceFocus(sprite, options) {
+        realAdvanceCalls += 1;
+        return advanceSpriteFocus(sprite, options);
+      },
+    },
+  );
+  const { parts, state } = harness;
   state._points.set(25544, {
     id: 25544,
     position: new Cesium.Cartesian3(1, 2, 3),
@@ -553,12 +564,17 @@ test('a completed pass with a selected target and no occluded points retires its
 
   harness.setFocusTarget({
     ownerLayer: 'flights',
-    id: 'non-overlapping-target',
+    id: 'selected-target',
     screenRect: { left: 100, right: 200, top: 100, bottom: 200 },
     cameraDistance: 1_000,
   });
   t.mock.timers.tick(0);
 
+  assert.equal(
+    realAdvanceCalls,
+    1,
+    'the renderer calls the real focus state machine',
+  );
   assert.equal(state._focusPassPending, false);
   assert.equal(state._activeFocusCount, 0);
   assert.equal(state._focusTransitioning, false);
