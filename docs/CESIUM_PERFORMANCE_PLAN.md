@@ -74,6 +74,13 @@ missing or pending fixture requests. This is hosted Metal integration evidence;
 physical Windows qualification and rendered fault/recovery controls remain
 pending. The original run remains failed.
 
+The [bounded fault-delivery adapter](performance-evidence/s47-map-streaming/fault-delivery-adapter/README.md)
+at `c05d973a` supplies declared missing/corrupt/held metadata responses with
+request-scoped acknowledgments and independent byte validation. Root's expanded
+run found one stale test producer; after correction all 63 affected checks pass,
+with the other eight suites unchanged. Production page wiring and rendered
+recovery evidence remain pending; fault reports are never performance evidence.
+
 An [S50 ownership audit](performance-evidence/s50-viewshed-retention-gap/README.md)
 finds unchanged viewshed volumes are still destroyed/reconstructed across hiding
 and re-enabling, despite wireframe reuse. Three production-factory CPU cycles
@@ -162,18 +169,18 @@ startup callback can overwrite the map driver's declared route pose. The source
 is identical in baseline and dev. The past Metal endpoint was not retained, so
 the reproduction establishes a defect without identifying that run's exact cause.
 
-Local and remote `dev` match `e8ccc268` and contain current fork/upstream
-`main` at `8b8ccc9a` (697 commits ahead, zero behind). The active
-`qa/s47-austin-receipt-only` branch also contains main. No reconciliation or
-diff discard is required. Later QA changes have not been promoted to dev or
-deployed to VM105.
+Local and remote `dev` match `e8ccc268`. Main has advanced to `9beadbda`,
+leaving dev fourteen commits behind; the active QA branch contains the reviewed
+merge and has no missing main commits. Promotion awaits merged-candidate checks;
+no rebase or diff discard is needed. Later QA changes have not been promoted to
+dev or deployed to VM105.
 
 | Work item | Implemented scope | Automatic evidence | Remaining acceptance |
 | --- | --- | --- | --- |
 | Austin operating workload | Current dev contains the reviewed canonical capture/projection contract | [Exact-dev capture review](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json) and its seven standard CI jobs pass | Matched physical-hardware runs and final retention |
-| Native map corpus and build profile (M1-M2) | Deterministic 578-asset v3 corpus, native provider adapter and receipt-bound inert fixture profile | V3 bytes, pixels and parsers pass on three operating systems; [v3 imagery review](performance-evidence/s47-map-streaming/imagery-coverage-v3/README.md), adapter and build-profile checks pass | Complete native imagery coverage and rendered delivery in both application revisions |
-| Native map capture (M3) | Driver/report core, candidate CLI/outer wiring and corrected map-specific setup/finalization are in QA | [58 focused checks and finalization review](performance-evidence/s47-map-streaming/native-smoke-correction-review-0960fef2.json); earlier standard CI passes, but the first native browser attempt fails | Validate the corrected native journeys on baseline and candidate, including rendered fault controls |
-| Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `495f0a71`](performance-evidence/windows-recovery-38353898669/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
+| Native map corpus and build profile (M1-M2) | Deterministic 599-asset v4 corpus, native provider adapter and receipt-bound inert fixture profile | Cross-platform parser checks and [both native revision journeys at `4b60f453`](performance-evidence/s47-map-streaming/native-v4-38420739560/README.md) pass with no missing assets | Reuse this pinned corpus in remaining fault controls and Windows comparisons |
+| Native map capture (M3) | Driver/report core, candidate CLI/outer wiring and corrected shared-document ownership are in QA; bounded fault-delivery adapter is implemented | Both production healthy routes and candidate CLI pass in the [hosted Metal diagnostic](performance-evidence/s47-map-streaming/native-v4-38420739560/README.md) | Wire and render candidate-only missing/corrupt/superseded-response recovery controls; do not require the frozen baseline to contain the retry fix |
+| Full standard validation | Main is merged into QA and production map capture fixes are integrated | [Merged `4b60f453` run](performance-evidence/integration-4b60f453/README.md): six selected jobs pass; Windows recovery fails its PowerShell readiness prerequisite | Resolve or obtain discriminating evidence for the prerequisite failure and complete current-candidate Windows recovery; later changes need affected checks |
 | Optional Windows Chrome-version diagnostic | Strict manual Windows selection, read-only executable metadata and runtime version binding; default unchanged | [Chrome 155 run `38350953804`](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md) passes all five recovery stages at `2336337c`, with natural exits inside the unchanged five-second gate | Earlier intermittent Chrome 152 shutdown cause remains unresolved |
 | Final performance acceptance (M4/S60) | Exact-commit evidence and rejection contracts exist | Component and hosted results retain their documented limited scope | Five matched runs per workload, visual parity, interaction targets and the corrected 60-minute retention soak on the primary Windows machine |
 
@@ -285,13 +292,14 @@ GPU cause or physical-hardware acceptance is established.
 
 Next actions, in dependency order:
 
-1. Exercise the corrected M3 map-workload setup and post-retirement evidence
-   on both exact revisions. Preserve native visual settings, terrain detail,
-   cache budgets and the fixture build profile; retain failures without
-   relaxing gates.
-2. Validate both production map journeys in a real browser, including missing
-   or corrupt assets, aborted/superseded switches and recovery. Failed
-   reports remain failed; a short hosted smoke cannot complete M4.
+1. Preserve the completed healthy M3 journeys at `4b60f453` and frozen baseline
+   `eb8c682`. Their hosted Metal pass includes post-retirement ownership and
+   delivery validation with unchanged visual settings, terrain detail, cache
+   budgets and build profile. It does not complete hardware acceptance.
+2. Finish candidate-only rendered missing/corrupt metadata, superseded switches
+   and recovery controls. The frozen baseline retains its known retry defect;
+   keep its reproduction separate from candidate recovery acceptance. Fault
+   reports are diagnostic and cannot supply performance measurements.
 3. Complete matched workload coverage, the measured remaining S48-S59 work
    and the S60 comparison/retention gates in the detailed ledger. Retain
    accepted optimizations only with their required visual and measured proof.
