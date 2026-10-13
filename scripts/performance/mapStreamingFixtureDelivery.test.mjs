@@ -10,6 +10,7 @@ import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mj
 import { validateMapStreamingSmokeDeliverySummary } from './mapStreamingCapture.mjs';
 import {
   createMapStreamingFixtureDelivery,
+  MAP_STREAMING_MAX_MISSING_ASSET_PATHS,
   MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
 } from './mapStreamingFixtureDelivery.mjs';
 
@@ -136,6 +137,128 @@ test('native map URLs resolve every manifest asset through real interception cal
   assert.ok(
     summary.assets.every((row) => row.fulfilledAckCount === row.requests),
   );
+  const legacySummary = structuredClone(summary);
+  delete legacySummary.missingAssetPathEvidence;
+  assert.equal(
+    validateMapStreamingSmokeDeliverySummary(legacySummary, pinned),
+    true,
+  );
+  const missingPathOnSuccess = structuredClone(summary);
+  missingPathOnSuccess.missingAssetPathEvidence.observationCount = 1;
+  assert.throws(() =>
+    validateMapStreamingSmokeDeliverySummary(missingPathOnSuccess, pinned),
+  );
+});
+
+test('missing native map assets retain bounded canonical paths without URLs', async () => {
+  const pinned = await fixture();
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  const missingUrls = Array.from(
+    { length: MAP_STREAMING_MAX_MISSING_ASSET_PATHS + 2 },
+    (_, index) => `https://tile.openstreetmap.org/99/${index}/42.png`,
+  );
+  for (const url of missingUrls)
+    await assert.rejects(
+      issueRequest(delivery, url),
+      /native-asset-not-in-manifest/,
+    );
+  await assert.rejects(
+    issueRequest(
+      delivery,
+      'https://tile.openstreetmap.org/99/0/42.png?token=secret-value',
+    ),
+    /osm-tile-query-invalid/,
+  );
+
+  const summary = delivery.dispose();
+  const evidence = summary.missingAssetPathEvidence;
+  assert.deepEqual(evidence, {
+    observationCount: missingUrls.length,
+    uniquePathCount: missingUrls.length,
+    omittedPathCount: 2,
+    paths: missingUrls
+      .slice(0, MAP_STREAMING_MAX_MISSING_ASSET_PATHS)
+      .map((_, index) => ({
+        path: `imagery/99/${index}/42.png`,
+        observationCount: 1,
+      })),
+  });
+  assert.equal(summary.errorObservationCount, missingUrls.length + 1);
+  const serialized = JSON.stringify(summary);
+  assert.equal(serialized.includes('tile.openstreetmap.org'), false);
+  assert.equal(serialized.includes('token'), false);
+  assert.equal(serialized.includes('secret-value'), false);
+  assert.equal(summary.cleanupConfirmed, false);
+});
+
+test('missing path evidence counts repeated callbacks and saturates safely', async () => {
+  const pinned = await fixture();
+  const repeated = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  const repeatedUrl = 'https://tile.openstreetmap.org/99/10/42.png';
+  const context = { url: () => repeatedUrl, method: () => 'GET' };
+  for (let index = 0; index < 2; index++) {
+    await assert.rejects(
+      repeated.respond(new URL(repeatedUrl), context),
+      /native-asset-not-in-manifest/,
+    );
+    assert.throws(
+      () =>
+        repeated.onFulfilled({
+          url: repeatedUrl,
+          method: 'GET',
+          status: 200,
+        }),
+      /native-asset-not-in-manifest/,
+    );
+  }
+  const repeatedSummary = repeated.dispose();
+  assert.equal(repeatedSummary.errorObservationCount, 4);
+  assert.equal(repeatedSummary.missingAssetPathEvidence.observationCount, 4);
+  assert.equal(repeatedSummary.missingAssetPathEvidence.uniquePathCount, 1);
+  assert.deepEqual(repeatedSummary.missingAssetPathEvidence.paths, [
+    { path: 'imagery/99/10/42.png', observationCount: 4 },
+  ]);
+  assert.equal(repeatedSummary.cleanupConfirmed, false);
+
+  const saturated = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  const saturationCount = 520;
+  for (let index = 0; index < saturationCount; index++) {
+    const url = `https://tile.openstreetmap.org/99/${index}/42.png`;
+    await assert.rejects(
+      saturated.respond(new URL(url), { url: () => url, method: () => 'GET' }),
+      /native-asset-not-in-manifest/,
+    );
+  }
+  const saturatedSummary = saturated.dispose();
+  assert.equal(saturatedSummary.errorObservationCount, 512);
+  assert.equal(saturatedSummary.omittedErrorObservationCount, 8);
+  assert.deepEqual(saturatedSummary.missingAssetPathEvidence, {
+    observationCount: 512,
+    uniquePathCount: 512,
+    omittedPathCount: 504,
+    paths: Array.from(
+      { length: MAP_STREAMING_MAX_MISSING_ASSET_PATHS },
+      (_, index) => ({
+        path: `imagery/99/${index}/42.png`,
+        observationCount: 1,
+      }),
+    ),
+  });
+  assert.equal(saturatedSummary.errors.length, 1);
+  assert.deepEqual(saturatedSummary.errors[0], {
+    code: 'native-asset-not-in-manifest',
+    count: 512,
+  });
+  assert.equal(saturatedSummary.cleanupConfirmed, false);
+  const serialized = JSON.stringify(saturatedSummary);
+  assert.ok(Buffer.byteLength(serialized, 'utf8') < 8_192);
+  assert.equal(serialized.includes('tile.openstreetmap.org'), false);
 });
 
 test('Cesium ArcGIS provider metadata URL with its native trailing slash is delivered and acknowledged', async () => {

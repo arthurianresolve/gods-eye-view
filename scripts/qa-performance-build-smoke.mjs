@@ -115,6 +115,17 @@ export async function respondToSmokeFixtureRequest(
   return respondToProductionFlightFixture(url, request, flightFixture, baseUrl);
 }
 
+function isCanonicalMapSmokeAssetPath(value) {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= 256 &&
+    /^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(value) &&
+    !value.includes('//') &&
+    value.split('/').every((segment) => segment !== '.' && segment !== '..')
+  );
+}
+
 export function smokeProviderPreparationMode(providerFixture) {
   return providerFixture === MAP_STREAMING_WORKLOAD_ID
     ? 'native-map-streaming'
@@ -213,10 +224,22 @@ export async function runNativeMapJourneyForSmoke({
     page,
     { durationMs: route.durationLimitMs, route },
   );
-  mapStreamingCaptureModule.validateMapStreamingJourneyEvidence(
-    journey,
-    fixture,
-  );
+  try {
+    mapStreamingCaptureModule.validateMapStreamingJourneyEvidence(
+      journey,
+      fixture,
+    );
+  } catch (error) {
+    try {
+      error.mapStreamingJourneyValidationFailure =
+        mapStreamingCaptureModule.createMapStreamingJourneyValidationFailureEvidence(
+          { journey, revision, fixture, buildProfile, route },
+        );
+    } catch {
+      // Keep the validator's original rejection if projection cannot be made.
+    }
+    throw error;
+  }
   return {
     schema: 'gev-map-streaming-native-smoke/v1',
     revision,
@@ -227,6 +250,40 @@ export async function runNativeMapJourneyForSmoke({
     performanceAcceptanceEligible: false,
     journey,
   };
+}
+
+export function projectMapStreamingJourneyValidationFailureForSmoke(
+  error,
+  mapStreamingCaptureModule,
+) {
+  const candidate =
+    error?.mapStreamingJourneyValidationFailure ||
+    error?.captureCliFailure?.rawReport?.workload
+      ?.mapStreamingJourneyValidationFailure ||
+    null;
+  if (!candidate) return null;
+  if (
+    typeof mapStreamingCaptureModule?.projectMapStreamingJourneyValidationFailureEvidence !==
+    'function'
+  )
+    return {
+      schema: 'gev-map-streaming-journey-validation-failure/v1',
+      status: 'invalid',
+      reasonCode: 'projector-unavailable',
+      performanceAcceptanceEligible: false,
+    };
+  try {
+    return mapStreamingCaptureModule.projectMapStreamingJourneyValidationFailureEvidence(
+      candidate,
+    );
+  } catch {
+    return {
+      schema: 'gev-map-streaming-journey-validation-failure/v1',
+      status: 'invalid',
+      reasonCode: 'invalid-envelope',
+      performanceAcceptanceEligible: false,
+    };
+  }
 }
 
 export function validateMapSmokeInterceptionRelease(evidence, identity) {
@@ -449,6 +506,50 @@ function projectMapStreamingFailureDeliveryEvidence(summary, fixture) {
     assert.ok(Number.isSafeInteger(entry.count) && entry.count > 0);
     return { code: entry.code, count: entry.count };
   });
+  let missingAssetPathEvidence = null;
+  const missing = summary.missingAssetPathEvidence;
+  if (missing !== undefined) {
+    assert.ok(
+      missing && typeof missing === 'object' && !Array.isArray(missing),
+    );
+    for (const name of [
+      'observationCount',
+      'uniquePathCount',
+      'omittedPathCount',
+    ])
+      assert.ok(
+        Number.isSafeInteger(missing[name]) &&
+          missing[name] >= 0 &&
+          missing[name] <= 512,
+      );
+    assert.ok(Array.isArray(missing.paths) && missing.paths.length <= 8);
+    assert.equal(
+      missing.uniquePathCount,
+      missing.paths.length + missing.omittedPathCount,
+    );
+    assert.ok(missing.uniquePathCount <= missing.observationCount);
+    assert.ok(missing.observationCount <= summary.errorObservationCount);
+    const pathSet = new Set();
+    let pathObservations = 0;
+    missingAssetPathEvidence = {
+      observationCount: missing.observationCount,
+      uniquePathCount: missing.uniquePathCount,
+      omittedPathCount: missing.omittedPathCount,
+      paths: missing.paths.map((row) => {
+        assert.ok(row && typeof row === 'object' && !Array.isArray(row));
+        assert.equal(isCanonicalMapSmokeAssetPath(row.path), true);
+        assert.equal(pathSet.has(row.path), false);
+        pathSet.add(row.path);
+        assert.ok(
+          Number.isSafeInteger(row.observationCount) &&
+            row.observationCount > 0,
+        );
+        pathObservations += row.observationCount;
+        return { path: row.path, observationCount: row.observationCount };
+      }),
+    };
+    assert.ok(pathObservations <= missing.observationCount);
+  }
   return {
     schema: summary.schema,
     fixtureId: summary.fixtureId,
@@ -464,6 +565,7 @@ function projectMapStreamingFailureDeliveryEvidence(summary, fixture) {
     omittedErrorKindCount: summary.omittedErrorKindCount,
     cleanupConfirmed: summary.cleanupConfirmed,
     errors: projectedErrors,
+    missingAssetPathEvidence,
     assets,
     browserDecodeObserved: false,
     renderedReadinessObserved: false,
@@ -3273,6 +3375,20 @@ export function compactCaptureCliFailure(report) {
               report.fixtureDelivery.fulfilledResponseCount,
           }
         : null,
+      mapStreamingJourneyValidationFailure: report.workload
+        ?.mapStreamingJourneyValidationFailure
+        ? {
+            schema:
+              report.workload.mapStreamingJourneyValidationFailure.schema ||
+              null,
+            status:
+              report.workload.mapStreamingJourneyValidationFailure.status ||
+              null,
+            performanceAcceptanceEligible:
+              report.workload.mapStreamingJourneyValidationFailure
+                .performanceAcceptanceEligible ?? null,
+          }
+        : null,
       fixtureInterceptionErrors: Array.isArray(report.fixtureInterceptionErrors)
         ? report.fixtureInterceptionErrors.slice(0, 8).map((entry) => ({
             message: sanitizeError(entry?.message || 'Interception failed.'),
@@ -5055,6 +5171,11 @@ async function runRevision({
         error,
         mapStreamingCaptureModule,
       );
+    const mapStreamingJourneyValidationFailure =
+      projectMapStreamingJourneyValidationFailureForSmoke(
+        error,
+        mapStreamingCaptureModule,
+      );
     error.smokeDiagnostics = {
       phase,
       pageErrors: pageErrors.slice(0, 4),
@@ -5069,6 +5190,9 @@ async function runRevision({
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
       ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
+      ...(mapStreamingJourneyValidationFailure
+        ? { mapStreamingJourneyValidationFailure }
+        : {}),
       terminalRenderLoopRetirement,
       rendererProbeCleanup,
       rendererProbeCleanupOmittedCount,

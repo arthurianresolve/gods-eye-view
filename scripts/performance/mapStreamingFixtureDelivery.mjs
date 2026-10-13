@@ -11,6 +11,7 @@ export const MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT = 512;
 export const MAP_STREAMING_MAX_ABORT_SIGNALS_PER_DOCUMENT = 8;
 export const MAP_STREAMING_MAX_ERROR_RECORDS = 8;
 export const MAP_STREAMING_MAX_ERROR_OBSERVATIONS_PER_DOCUMENT = 512;
+export const MAP_STREAMING_MAX_MISSING_ASSET_PATHS = 8;
 
 const ARCGIS_ORIGIN = 'https://services.arcgisonline.com';
 const ARCGIS_SERVICE_PATH = '/ArcGIS/rest/services/World_Imagery/MapServer';
@@ -28,6 +29,17 @@ const NATIVE_PROVIDER_ORIGINS = new Set([
   GOOGLE_CREDIT_ORIGIN,
 ]);
 const SHA256 = /^[a-f0-9]{64}$/;
+
+export function isCanonicalMapStreamingAssetPath(value) {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= 256 &&
+    /^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(value) &&
+    !value.includes('//') &&
+    value.split('/').every((segment) => segment !== '.' && segment !== '..')
+  );
+}
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -265,6 +277,8 @@ export function createMapStreamingFixtureDelivery(
   const pendingByUrl = new Map();
   const signals = new Map();
   const errorCounts = new Map();
+  const missingAssetPathCounts = new Map();
+  let missingAssetObservationCount = 0;
   let errorObservationCount = 0;
   let omittedErrorObservationCount = 0;
   let requestedCount = 0;
@@ -294,6 +308,19 @@ export function createMapStreamingFixtureDelivery(
             .replaceAll('_', '-')
         : 'callback-invalid';
     errorCounts.set(code, (errorCounts.get(code) || 0) + 1);
+  };
+  const recordMissingAssetPath = (assetPath) => {
+    if (
+      errorObservationCount >=
+        MAP_STREAMING_MAX_ERROR_OBSERVATIONS_PER_DOCUMENT ||
+      !isCanonicalMapStreamingAssetPath(assetPath)
+    )
+      return;
+    missingAssetObservationCount += 1;
+    missingAssetPathCounts.set(
+      assetPath,
+      (missingAssetPathCounts.get(assetPath) || 0) + 1,
+    );
   };
   const observeAbortSignal = (signal) => {
     if (signal == null) return;
@@ -340,7 +367,10 @@ export function createMapStreamingFixtureDelivery(
       requireGetAccessor(context);
       observeAbortSignal(context.signal);
       const asset = assetsByPath.get(assetPath);
-      if (!asset) throw deliveryError('native-asset-not-in-manifest');
+      if (!asset) {
+        recordMissingAssetPath(assetPath);
+        throw deliveryError('native-asset-not-in-manifest');
+      }
       if (requestedCount >= maxRequests)
         throw deliveryError('request-limit-exceeded');
       const bytes = fixture.assets.get(assetPath);
@@ -374,7 +404,10 @@ export function createMapStreamingFixtureDelivery(
       if (event.method !== 'GET' || event.status !== 200)
         throw deliveryError('fulfillment-status-invalid');
       const asset = assetsByPath.get(assetPath);
-      if (!asset) throw deliveryError('native-asset-not-in-manifest');
+      if (!asset) {
+        recordMissingAssetPath(assetPath);
+        throw deliveryError('native-asset-not-in-manifest');
+      }
       const expectedPending = pendingByPath.get(assetPath) || 0;
       const pendingUrlCount = pendingByUrl.get(event.url) || 0;
       if (expectedPending < 1 || pendingUrlCount < 1) {
@@ -440,6 +473,17 @@ export function createMapStreamingFixtureDelivery(
         0,
         errorCounts.size - MAP_STREAMING_MAX_ERROR_RECORDS,
       ),
+      missingAssetPathEvidence: {
+        observationCount: missingAssetObservationCount,
+        uniquePathCount: missingAssetPathCounts.size,
+        omittedPathCount: Math.max(
+          0,
+          missingAssetPathCounts.size - MAP_STREAMING_MAX_MISSING_ASSET_PATHS,
+        ),
+        paths: [...missingAssetPathCounts.entries()]
+          .slice(0, MAP_STREAMING_MAX_MISSING_ASSET_PATHS)
+          .map(([path, count]) => ({ path, observationCount: count })),
+      },
       errors: [...errorCounts.entries()]
         .slice(0, MAP_STREAMING_MAX_ERROR_RECORDS)
         .map(([code, count]) => ({ code, count })),
@@ -461,6 +505,7 @@ export function createMapStreamingFixtureDelivery(
         maxAssets: fixture.manifest.assets.length,
         maxErrorRecords: MAP_STREAMING_MAX_ERROR_RECORDS,
         maxErrorObservations: MAP_STREAMING_MAX_ERROR_OBSERVATIONS_PER_DOCUMENT,
+        maxMissingAssetPaths: MAP_STREAMING_MAX_MISSING_ASSET_PATHS,
         maxAbortSignals: MAP_STREAMING_MAX_ABORT_SIGNALS_PER_DOCUMENT,
       },
       cleanupConfirmed:

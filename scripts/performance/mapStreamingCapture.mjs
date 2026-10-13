@@ -56,6 +56,7 @@ const MAP_JOURNEY_HOST_DEADLINE_MS = 150_000;
 const MAP_GLOBE_QUEUE_SAMPLE_LIMIT = 8;
 const MAP_GLOBE_IMAGERY_SAMPLE_LIMIT = 32;
 export const MAP_GLOBE_TERRAIN_ANCESTRY_LIMIT = 24;
+export const MAP_STREAMING_VALIDATION_TRANSITION_LIMIT = 4;
 let nextMapJourneyOperationId = 0;
 
 const MAP_TERRAIN_ANCESTRY_FIELDS = Object.freeze([
@@ -1028,6 +1029,226 @@ export function projectMapStreamingJourneyFailureEvidence(value) {
       disposeErrorKind: retirement.disposeErrorKind,
     },
   };
+}
+
+function projectValidationCamera(value) {
+  const fields = [
+    'longitude',
+    'latitude',
+    'heightM',
+    'headingRadians',
+    'pitchRadians',
+  ];
+  const present = value && typeof value === 'object' && !Array.isArray(value);
+  const values = Object.fromEntries(
+    fields.map((field) => [
+      field,
+      present && Number.isFinite(value[field]) ? value[field] : null,
+    ]),
+  );
+  const valid = fields.every((field) => Number.isFinite(values[field]));
+  const unavailable =
+    present &&
+    value.status === 'unavailable' &&
+    fields.every((field) => values[field] === null);
+  return {
+    status:
+      !present || unavailable ? 'unavailable' : valid ? 'observed' : 'invalid',
+    ...values,
+  };
+}
+
+function projectValidationState(value) {
+  const state =
+    value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const stackIds = ['photoreal', 'esri-imagery', 'osm'];
+  const controllerStatuses = ['ready', 'loading', 'error', 'idle'];
+  const imageryClasses = [
+    'ArcGisMapServerImageryProvider',
+    'OpenStreetMapImageryProvider',
+  ];
+  const terrainClasses = ['CesiumTerrainProvider', 'EllipsoidTerrainProvider'];
+  const enumValue = (candidate, values) =>
+    values.includes(candidate) ? candidate : null;
+  const nullableCount = (candidate) =>
+    Number.isSafeInteger(candidate) && candidate >= 0 && candidate <= 1_000_000
+      ? candidate
+      : null;
+  return {
+    activeStack: enumValue(state.activeStack, stackIds),
+    controllerStatus: enumValue(state.controllerStatus, controllerStatuses),
+    stackAvailable:
+      typeof state.stackAvailable === 'boolean' ? state.stackAvailable : null,
+    globeShown: typeof state.globeShown === 'boolean' ? state.globeShown : null,
+    globeTilesLoaded:
+      typeof state.globeTilesLoaded === 'boolean'
+        ? state.globeTilesLoaded
+        : null,
+    terrainProviderClass: enumValue(state.terrainProviderClass, terrainClasses),
+    terrainSampleCount: nullableCount(
+      state.terrainSampleCount ?? state.terrainSamples?.length,
+    ),
+    imageryLayerCount: nullableCount(state.imageryLayerCount),
+    imageryProviderClass: enumValue(state.imageryProviderClass, imageryClasses),
+    imageryLayerShow:
+      typeof state.imageryLayerShow === 'boolean'
+        ? state.imageryLayerShow
+        : null,
+    photorealShown:
+      typeof state.photorealShown === 'boolean' ? state.photorealShown : null,
+    photorealTilesLoaded:
+      typeof state.photorealTilesLoaded === 'boolean'
+        ? state.photorealTilesLoaded
+        : null,
+    photorealReadyContentTiles: nullableCount(state.photorealReadyContentTiles),
+    photorealSelectedTiles: nullableCount(state.photorealSelectedTiles),
+    camera: projectValidationCamera(state.camera),
+  };
+}
+
+/** Project a strict journey-validation failure without retaining raw page data. */
+export function projectMapStreamingJourneyValidationFailureEvidence(value) {
+  assert.ok(value && typeof value === 'object' && !Array.isArray(value));
+  assert.equal(value.schema, 'gev-map-streaming-journey-validation-failure/v1');
+  assert.equal(value.status, 'failed');
+  assert.equal(value.performanceAcceptanceEligible, false);
+  assert.equal(value.failureCode, 'strict-journey-validation-rejected');
+  assert.match(value.revision || '', /^[a-f0-9]{40}$/);
+  assert.equal(value.fixtureId, MAP_STREAMING_FIXTURE_ID);
+  assert.match(value.manifestSha256 || '', SHA256);
+  assert.equal(value.buildProfileId, MAP_FIXTURE_BUILD_PROFILE_ID);
+  assert.match(value.buildConfigurationSha256 || '', SHA256);
+  assert.equal(value.routeId, MAP_STREAMING_ROUTE.id);
+  const journey = value.journey;
+  assert.ok(journey && typeof journey === 'object' && !Array.isArray(journey));
+  assert.ok(Array.isArray(journey.transitions));
+  assert.ok(
+    journey.transitions.length <= MAP_STREAMING_VALIDATION_TRANSITION_LIMIT,
+  );
+  assert.ok(
+    Number.isSafeInteger(journey.transitionCount) &&
+      journey.transitionCount >= journey.transitions.length &&
+      journey.transitionCount <= 128,
+  );
+  assert.equal(
+    journey.omittedTransitionCount,
+    journey.transitionCount - journey.transitions.length,
+  );
+  const nullableFinite = (candidate) =>
+    candidate === null ||
+    (Number.isFinite(candidate) && Math.abs(candidate) <= 1_000_000_000);
+  const route = journey.route;
+  assert.ok(route && typeof route === 'object' && !Array.isArray(route));
+  for (const name of [
+    'durationMs',
+    'elapsedMs',
+    'moveRightMetersPerSecond',
+    'headingRadians',
+    'pitchRadians',
+  ])
+    assert.ok(nullableFinite(route[name]));
+  const projectTransition = (entry) => {
+    assert.ok(entry && typeof entry === 'object' && !Array.isArray(entry));
+    const stackId = ['photoreal', 'esri-imagery', 'osm'].includes(entry.stackId)
+      ? entry.stackId
+      : null;
+    for (const name of ['scheduledAtMs', 'actualStartMs', 'settledAtMs'])
+      assert.ok(nullableFinite(entry[name]));
+    return {
+      stackId,
+      scheduledAtMs: entry.scheduledAtMs,
+      actualStartMs: entry.actualStartMs,
+      settledAtMs: entry.settledAtMs,
+      state: projectValidationState(entry.state),
+    };
+  };
+  const projectRouteCamera = (candidate) => {
+    return projectValidationCamera(candidate);
+  };
+  return {
+    schema: value.schema,
+    status: value.status,
+    performanceAcceptanceEligible: false,
+    failureCode: value.failureCode,
+    revision: value.revision,
+    fixtureId: value.fixtureId,
+    manifestSha256: value.manifestSha256,
+    buildProfileId: value.buildProfileId,
+    buildConfigurationSha256: value.buildConfigurationSha256,
+    routeId: value.routeId,
+    journey: {
+      route: {
+        id: value.routeId,
+        durationMs: route.durationMs,
+        elapsedMs: route.elapsedMs,
+        moveRightMetersPerSecond: route.moveRightMetersPerSecond,
+        headingRadians: route.headingRadians,
+        pitchRadians: route.pitchRadians,
+        start: projectRouteCamera(route.start),
+        end: projectRouteCamera(route.end),
+      },
+      initialState: projectValidationState(journey.initialState),
+      finalState: projectValidationState(journey.finalState),
+      transitions: journey.transitions.map(projectTransition),
+      transitionCount: journey.transitionCount,
+      omittedTransitionCount: journey.omittedTransitionCount,
+    },
+  };
+}
+
+/** Build a bounded diagnostic from an observed journey after strict rejection. */
+export function createMapStreamingJourneyValidationFailureEvidence({
+  journey,
+  revision,
+  fixture,
+  buildProfile,
+  route,
+}) {
+  return projectMapStreamingJourneyValidationFailureEvidence({
+    schema: 'gev-map-streaming-journey-validation-failure/v1',
+    status: 'failed',
+    performanceAcceptanceEligible: false,
+    failureCode: 'strict-journey-validation-rejected',
+    revision,
+    fixtureId: fixture?.id,
+    manifestSha256: fixture?.manifestSha256,
+    buildProfileId: buildProfile?.id,
+    buildConfigurationSha256: buildProfile?.configurationSha256,
+    routeId: route?.id,
+    journey: {
+      route: {
+        durationMs: journey?.route?.durationMs ?? null,
+        elapsedMs: journey?.route?.elapsedMs ?? null,
+        moveRightMetersPerSecond:
+          journey?.route?.moveRightMetersPerSecond ?? null,
+        headingRadians: journey?.route?.headingRadians ?? null,
+        pitchRadians: journey?.route?.pitchRadians ?? null,
+        start: journey?.route?.start,
+        end: journey?.route?.end,
+      },
+      initialState: journey?.initialState,
+      finalState: journey?.finalState,
+      transitions: Array.isArray(journey?.transitions)
+        ? journey.transitions
+            .slice(0, MAP_STREAMING_VALIDATION_TRANSITION_LIMIT)
+            .map((row) => ({
+              stackId: row?.stackId,
+              scheduledAtMs: row?.scheduledAtMs ?? null,
+              actualStartMs: row?.actualStartMs ?? null,
+              settledAtMs: row?.settledAtMs ?? null,
+              state: row?.state,
+            }))
+        : [],
+      transitionCount: Array.isArray(journey?.transitions)
+        ? journey.transitions.length
+        : 0,
+      omittedTransitionCount: Math.max(
+        0,
+        (Array.isArray(journey?.transitions) ? journey.transitions.length : 0) -
+          MAP_STREAMING_VALIDATION_TRANSITION_LIMIT,
+      ),
+    },
+  });
 }
 
 /** Browser-serialized driver. Keep all helpers inside this function. */
@@ -2710,6 +2931,13 @@ export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
   assert.equal(summary.errorObservationCount, 0);
   assert.equal(summary.omittedErrorObservationCount, 0);
   assert.equal(summary.omittedErrorKindCount, 0);
+  if (summary.missingAssetPathEvidence !== undefined)
+    assert.deepEqual(summary.missingAssetPathEvidence, {
+      observationCount: 0,
+      uniquePathCount: 0,
+      omittedPathCount: 0,
+      paths: [],
+    });
   assert.ok(Number.isSafeInteger(summary.requestedCount));
   assert.ok(summary.requestedCount > 0);
   assert.ok(Number.isSafeInteger(summary.fulfilledAckCount));
@@ -2815,6 +3043,12 @@ export function aggregateMapStreamingDocumentDeliveries(
     pendingCount,
     unexpectedFulfillmentCount,
     errorObservationCount,
+    missingAssetPathEvidence: {
+      observationCount: 0,
+      uniquePathCount: 0,
+      omittedPathCount: 0,
+      paths: [],
+    },
     assets: [...counts.values()].sort((left, right) =>
       left.path.localeCompare(right.path),
     ),
@@ -2895,6 +3129,13 @@ function validateAggregatedMapDelivery(report, fixture, documents) {
     );
   }
   for (const document of documents) {
+    if (document.delivery.missingAssetPathEvidence !== undefined)
+      assert.deepEqual(document.delivery.missingAssetPathEvidence, {
+        observationCount: 0,
+        uniquePathCount: 0,
+        omittedPathCount: 0,
+        paths: [],
+      });
     assert.equal(document.delivery.fixtureId, fixture.id);
     assert.equal(document.delivery.manifestSha256, fixture.manifestSha256);
     assert.equal(document.delivery.status, 'disposed');

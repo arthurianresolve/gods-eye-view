@@ -8,14 +8,19 @@ import {
   mapStreamingCaptureWorkloadFields,
   runNativeMapStreamingJourney,
   runNativeMapStreamingJourneyInPage,
+  validateMapStreamingJourneyEvidence,
   validateMapStreamingCaptureReport,
   projectMapStreamingJourneyFailureEvidence,
+  createMapStreamingJourneyValidationFailureEvidence,
+  projectMapStreamingJourneyValidationFailureEvidence,
 } from './mapStreamingCapture.mjs';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
 import {
   attachMapStreamingJourneyFailureEvidence,
   compactCaptureCliFailure,
   projectMapStreamingJourneyFailureForSmoke,
+  projectMapStreamingJourneyValidationFailureForSmoke,
+  runNativeMapJourneyForSmoke,
 } from '../qa-performance-build-smoke.mjs';
 import { createMapStreamingFixtureDelivery } from './mapStreamingFixtureDelivery.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
@@ -736,6 +741,167 @@ test('host operation failures report the transition checkpoint and dispose after
   assert.equal(harness.context.window.__gevMapStreamingJourneyV1, undefined);
   assert.equal(harness.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
+});
+
+test('strict smoke journey rejection retains bounded observed route and transition evidence through serializers', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const profile = resolveMapFixtureBuildProfile(MAP_FIXTURE_BUILD_PROFILE_ID);
+  const harness = createFakePage();
+  const observed = await runNativeMapStreamingJourney(harness.page, {
+    durationMs: 60_000,
+    route: MAP_STREAMING_ROUTE,
+  });
+  validateMapStreamingJourneyEvidence(observed, fixture);
+  const mapStreamingCaptureModule = {
+    MAP_STREAMING_ROUTE,
+    async runNativeMapStreamingJourney() {
+      return observed;
+    },
+    validateMapStreamingJourneyEvidence,
+    createMapStreamingJourneyValidationFailureEvidence,
+    projectMapStreamingJourneyValidationFailureEvidence,
+  };
+  const accepted = await runNativeMapJourneyForSmoke({
+    page: { revision: 'a'.repeat(40) },
+    revision: 'a'.repeat(40),
+    fixture,
+    buildProfile: profile,
+    mapStreamingCaptureModule,
+  });
+  assert.equal(accepted.performanceAcceptanceEligible, false);
+  assert.equal(accepted.journey, observed);
+  observed.route.start = {
+    ...observed.route.start,
+    longitude: observed.route.start.longitude + 0.01,
+  };
+  observed.privateDiagnostic =
+    'https://provider.invalid/tile?key=secret-provider-key';
+  observed.privatePayload = { body: 'provider response must not survive' };
+
+  let rejection;
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: { revision: 'a'.repeat(40) },
+      revision: 'a'.repeat(40),
+      fixture,
+      buildProfile: profile,
+      mapStreamingCaptureModule,
+    }),
+    (error) => {
+      rejection = error;
+      assert.match(
+        error.message,
+        /route starts at the declared native camera pose/,
+      );
+      return true;
+    },
+  );
+  const envelope = rejection.mapStreamingJourneyValidationFailure;
+  assert.equal(envelope.status, 'failed');
+  assert.equal(envelope.performanceAcceptanceEligible, false);
+  assert.equal(envelope.revision, 'a'.repeat(40));
+  assert.equal(envelope.fixtureId, fixture.id);
+  assert.equal(envelope.manifestSha256, fixture.manifestSha256);
+  assert.equal(envelope.buildProfileId, profile.id);
+  assert.equal(envelope.routeId, MAP_STREAMING_ROUTE.id);
+  assert.notEqual(
+    envelope.journey.route.start.longitude,
+    envelope.journey.initialState.camera.longitude,
+  );
+  assert.equal(envelope.journey.transitions.length, 4);
+  assert.equal(envelope.journey.transitionCount, 4);
+  assert.equal(envelope.journey.omittedTransitionCount, 0);
+  assert.equal(envelope.journey.transitions[1].state.globeTilesLoaded, true);
+  assert.equal(envelope.journey.finalState.photorealReadyContentTiles, 7);
+  const failureReport = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    phase: 'native-map-streaming-journey-validation',
+    error: rejection,
+    workload: { mapStreamingJourneyValidationFailure: envelope },
+  });
+  const compacted = compactCaptureCliFailure(failureReport);
+  const outerProjection = projectMapStreamingJourneyValidationFailureForSmoke(
+    { captureCliFailure: compacted },
+    mapStreamingCaptureModule,
+  );
+  assert.deepEqual(outerProjection, envelope);
+  const serialized = JSON.stringify({ smokeDiagnostics: { outerProjection } });
+  assert.ok(Buffer.byteLength(serialized, 'utf8') < 16_384);
+  assert.equal(serialized.includes('provider.invalid'), false);
+  assert.equal(serialized.includes('secret-provider-key'), false);
+  assert.equal(serialized.includes('provider response'), false);
+  assert.equal(
+    compacted.summary.mapStreamingJourneyValidationFailure.status,
+    'failed',
+  );
+  assert.deepEqual(
+    compacted.rawReport.workload.mapStreamingJourneyValidationFailure,
+    envelope,
+  );
+  const extendedEvidence = createMapStreamingJourneyValidationFailureEvidence({
+    journey: {
+      ...observed,
+      transitions: [
+        ...observed.transitions,
+        structuredClone(observed.transitions.at(-1)),
+      ],
+    },
+    revision: 'a'.repeat(40),
+    fixture,
+    buildProfile: profile,
+    route: MAP_STREAMING_ROUTE,
+  });
+  assert.equal(extendedEvidence.journey.transitionCount, 5);
+  assert.equal(extendedEvidence.journey.transitions.length, 4);
+  assert.equal(extendedEvidence.journey.omittedTransitionCount, 1);
+
+  const missingStartJourney = structuredClone(observed);
+  missingStartJourney.route.start = null;
+  const missingStartModule = {
+    ...mapStreamingCaptureModule,
+    async runNativeMapStreamingJourney() {
+      return missingStartJourney;
+    },
+  };
+  let missingStartError;
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: { revision: 'a'.repeat(40) },
+      revision: 'a'.repeat(40),
+      fixture,
+      buildProfile: profile,
+      mapStreamingCaptureModule: missingStartModule,
+    }),
+    (error) => {
+      missingStartError = error;
+      assert.match(error.message, /Observed route endpoints are present/);
+      return true;
+    },
+  );
+  const missingStartEnvelope =
+    missingStartError.mapStreamingJourneyValidationFailure;
+  assert.equal(missingStartEnvelope.journey.route.start.status, 'unavailable');
+  assert.equal(missingStartEnvelope.journey.route.start.longitude, null);
+  assert.equal(missingStartEnvelope.journey.route.end.status, 'observed');
+  assert.equal(
+    missingStartEnvelope.journey.initialState.camera.status,
+    'observed',
+  );
+  const reprojectedMissingStart =
+    projectMapStreamingJourneyValidationFailureEvidence(missingStartEnvelope);
+  assert.deepEqual(reprojectedMissingStart, missingStartEnvelope);
+  const missingStartReport = createCaptureFailureReport({
+    source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+    phase: 'native-map-streaming-missing-route-start',
+    error: missingStartError,
+    workload: { mapStreamingJourneyValidationFailure: missingStartEnvelope },
+  });
+  const missingStartCompacted = compactCaptureCliFailure(missingStartReport);
+  const missingStartOuter = projectMapStreamingJourneyValidationFailureForSmoke(
+    { captureCliFailure: missingStartCompacted },
+    missingStartModule,
+  );
+  assert.deepEqual(missingStartOuter, missingStartEnvelope);
 });
 
 test('host failure report retains terminal state when disposal is unconfirmed', async () => {
@@ -1897,6 +2063,7 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     pendingCount: summary.pendingCount,
     unexpectedFulfillmentCount: summary.unexpectedFulfillmentCount,
     errorObservationCount: summary.errorObservationCount,
+    missingAssetPathEvidence: summary.missingAssetPathEvidence,
     assets: summary.assets,
     cleanupConfirmed: true,
     browserDecodeObserved: false,

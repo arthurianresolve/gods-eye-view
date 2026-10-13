@@ -35,6 +35,7 @@ import {
   validateCaptureCliReport,
   validateRendererBackendEvidence,
   projectMapStreamingJourneyFailureForSmoke,
+  projectMapStreamingJourneyValidationFailureForSmoke,
 } from './qa-performance-build-smoke.mjs';
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
@@ -1451,6 +1452,16 @@ test('baseline and candidate map orchestration finalize delivery after target re
         },
       ),
     );
+    await assert.rejects(
+      erroredDelivery.respond(
+        new URL('https://tile.openstreetmap.org/99/0/42.png'),
+        {
+          url: () => 'https://tile.openstreetmap.org/99/0/42.png',
+          method: () => 'GET',
+        },
+      ),
+      /native-asset-not-in-manifest/,
+    );
     const erroredSummary = erroredDelivery.dispose();
     const erroredFailure = new Error('preserve original failure');
     erroredFailure.smokeDiagnostics = { message: erroredFailure.message };
@@ -1463,9 +1474,57 @@ test('baseline and candidate map orchestration finalize delivery after target re
       erroredFailure.smokeDiagnostics.mapStreamingFixtureSetup.delivery;
     assert.equal(erroredFailure.message, 'preserve original failure');
     assert.equal(erroredProjection.cleanupConfirmed, false);
-    assert.equal(erroredProjection.errorObservationCount, 1);
-    assert.equal(erroredProjection.errors.length, 1);
+    assert.equal(erroredProjection.errorObservationCount, 2);
+    assert.equal(erroredProjection.errors.length, 2);
     assert.equal(erroredProjection.errors[0].code, 'arcgis-route-invalid');
+    assert.deepEqual(erroredProjection.missingAssetPathEvidence, {
+      observationCount: 1,
+      uniquePathCount: 1,
+      omittedPathCount: 0,
+      paths: [{ path: 'imagery/99/0/42.png', observationCount: 1 }],
+    });
+    assert.equal(
+      JSON.stringify(erroredProjection).includes('tile.openstreetmap.org'),
+      false,
+    );
+    const legacySummary = { ...erroredSummary };
+    delete legacySummary.missingAssetPathEvidence;
+    const legacyFailure = new Error('legacy delivery evidence');
+    legacyFailure.smokeDiagnostics = {};
+    attachFinalizedMapStreamingFailureEvidence(legacyFailure, {
+      fixture,
+      deliveryEvidence: legacySummary,
+      interceptionRelease: finalized.interceptionRelease,
+    });
+    assert.equal(
+      legacyFailure.smokeDiagnostics.mapStreamingFixtureSetup.delivery
+        .missingAssetPathEvidence,
+      null,
+      'Legacy delivery snapshots retain unavailable path evidence explicitly.',
+    );
+    const malformedFailure = new Error('malformed diagnostic path');
+    malformedFailure.smokeDiagnostics = {};
+    attachFinalizedMapStreamingFailureEvidence(malformedFailure, {
+      fixture,
+      deliveryEvidence: {
+        ...erroredSummary,
+        missingAssetPathEvidence: {
+          observationCount: 1,
+          uniquePathCount: 1,
+          omittedPathCount: 0,
+          paths: [{ path: '../private?token=secret', observationCount: 1 }],
+        },
+      },
+      interceptionRelease: finalized.interceptionRelease,
+    });
+    assert.equal(
+      malformedFailure.smokeDiagnostics.mapStreamingFixtureSetupStatus,
+      'invalid-finalized-evidence',
+    );
+    assert.equal(
+      JSON.stringify(malformedFailure.smokeDiagnostics).includes('secret'),
+      false,
+    );
     if (injectLateRequest) {
       assert.equal(finalized.confirmed, false);
       assert.equal(
