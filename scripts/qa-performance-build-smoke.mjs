@@ -805,10 +805,18 @@ export async function runMapStreamingFaultControlDocument({
     };
   } catch (error) {
     primaryError = error;
-    control = error?.mapFaultControl ?? null;
+    control = error?.mapFaultControl ?? control;
     document.error = sanitizeError(error);
   } finally {
     if (page) {
+      if (blobRequestListener) {
+        try {
+          page.off('request', blobRequestListener);
+          blobRequestListener = null;
+        } catch (error) {
+          document.cleanupError ||= sanitizeError(error);
+        }
+      }
       if (operationTimedOut && context) {
         try {
           document.interceptionRelease = await withTimeout(
@@ -989,6 +997,12 @@ export function validateMapStreamingFaultControlDocument(
       document.buildEvidence.totalAssetBytes > 0,
   );
   assert.equal(document.documentId, expectedDocumentId);
+  assert.equal(document.control?.scenarioId, document.scenarioId);
+  assert.equal(document.buildEvidence?.fixtureId, fixture.id);
+  assert.equal(
+    document.buildEvidence?.fixtureManifestSha256,
+    fixture.manifestSha256,
+  );
   assert.equal(document.performanceAcceptanceEligible, false);
   assert.deepEqual(document.pageErrors, []);
   assert.equal(document.cleanupError, undefined);
@@ -1104,6 +1118,14 @@ export function projectMapStreamingFaultBuildEvidence({
     fixtureId: fixture.id,
     fixtureManifestSha256: fixture.manifestSha256,
   };
+}
+
+export function projectMapStreamingFaultBuildEvidenceForWorkload(
+  workloadId,
+  evidenceInput,
+) {
+  if (workloadId !== MAP_STREAMING_WORKLOAD_ID) return null;
+  return projectMapStreamingFaultBuildEvidence(evidenceInput);
 }
 
 export function validateMapStreamingFaultControlSet(
@@ -5280,15 +5302,17 @@ async function runRevision({
   let mapStreamingInterceptionRelease = null;
   let mapStreamingRendering = null;
   const mapStreamingFaultControls = [];
-  const mapStreamingFaultBuildEvidence = projectMapStreamingFaultBuildEvidence({
-    receipt: build.receipt,
-    appCommit: commit,
-    harnessCommit,
-    fixture: mapStreamingCaptureFixture,
-  });
+  let mapStreamingFaultBuildEvidence = null;
   let mapStreamingFaultEvidenceContext = null;
   let mapLayerPopulationBefore = null;
   try {
+    mapStreamingFaultBuildEvidence =
+      projectMapStreamingFaultBuildEvidenceForWorkload(providerFixture, {
+        receipt: build.receipt,
+        appCommit: commit,
+        harnessCommit,
+        fixture: mapStreamingCaptureFixture,
+      });
     const captureUrl = served.baseUrl;
     phase = 'verify-served-assets-before';
     provenance = await beginCaptureBuildProvenance({

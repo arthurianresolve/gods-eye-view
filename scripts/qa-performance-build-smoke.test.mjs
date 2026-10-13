@@ -24,6 +24,7 @@ import {
   finalizeMapSmokeFixtureDocument,
   runMapStreamingFaultControlDocument,
   projectMapStreamingFaultBuildEvidence,
+  projectMapStreamingFaultBuildEvidenceForWorkload,
   attachFinalizedMapStreamingFailureEvidence,
   attachMapStreamingJourneyFailureEvidence,
   observeSmokeLayerPopulationInPage,
@@ -1384,6 +1385,12 @@ test('outer map smoke requires the exact candidate fault-control document set', 
       copy[2].interceptionRelease.targetClosed = false;
     },
     (copy) => {
+      copy[1].control.scenarioId = 'esri-metadata-missing-v1';
+    },
+    (copy) => {
+      copy[1].buildEvidence.fixtureManifestSha256 = '0'.repeat(64);
+    },
+    (copy) => {
       copy[1].control.delivery.scenarioId = 'other-scenario';
     },
   ]) {
@@ -1482,6 +1489,16 @@ test('fault-control build projection uses the local build receipt asset and prof
         fixture,
       }),
     /strictly equal/,
+  );
+  assert.equal(
+    projectMapStreamingFaultBuildEvidenceForWorkload('dense-investigation', {
+      receipt: {},
+      appCommit,
+      harnessCommit,
+      fixture: null,
+    }),
+    null,
+    'non-map workloads bypass map-only profile and fixture projection',
   );
 });
 
