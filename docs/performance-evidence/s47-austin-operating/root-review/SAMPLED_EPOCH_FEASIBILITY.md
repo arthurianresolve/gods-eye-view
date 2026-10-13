@@ -612,3 +612,36 @@ The next correction waits for observed in-flight ingestion to complete and then
 for a completed render within the existing page/host boundary budgets. It must
 retain strict population validation, held fixture clocks, route endpoints and
 all rendering settings. Full capture and performance acceptance remain failed.
+
+# Installation readiness at the final render boundary
+
+Luna's correction `1ba3002995168034f84acea276e724f2ae72e47d` is integrated at
+`f73ec9be6d061cb674afc4c8a845e0af3b68baa0`. Only the Austin measurement
+boundary gains a source condition: the enabled installations layer must expose
+a valid, error-free, non-loading state, followed by another ready completed
+render. The viewer loop retires only at that later render. The same 5,000 ms
+page and 6,000 ms host budgets apply. Warmup behavior, fixture clock, camera
+route, visual settings and subsequent strict population checks are unchanged.
+
+Named callback options avoid positional wiring ambiguity. Serialization tests
+exercise the actual browser function composition: the ungated control retires
+while loading, whereas the candidate ignores loading frames and waits for a
+subsequent ready render. Missing/errored state and never-ready timeouts fail,
+with listener/timer cleanup; captured callbacks are inert after settlement.
+Readiness diagnostics use fixed scalar fields and bounded progress stages.
+
+Root's [109 focused tests](installation-boundary-focused-tests.tap) pass on
+the integrated revision, including render-boundary observation, population and
+comparison contracts, renderer pairing, and capture CLI retirement controls.
+The 17-file no-undef gate, package/import boundaries (1,010 modules and 80
+portable entries), changed-file formatting and whitespace checks also pass.
+This does not yet establish an end-to-end native capture pass or performance
+acceptance. Observed loading state does not prove that a pending viewport
+debounce or every asynchronous enrichment operation has drained.
+
+The [fresh main reconciliation check](main-reconciliation-20261013.json) finds
+fork and upstream main both at `8b8ccc9a81379e8b40d4be67610570ee5b159512`.
+Both dev and this QA integration contain all main commits. Local and fork dev
+remain identical at `726e404b50a6586f9eb9085ca2478f605dfc698c` (608 ahead,
+zero behind main). No merge, rebase or discard is needed. The separate local
+main checkout is clean but 51 commits behind; this check leaves it unchanged.
