@@ -8,6 +8,18 @@ requirement. The detailed slice ledger below remains the requirement inventory.
 No whole-plan code percentage or achieved performance target is inferred from
 partial components. Historical failed reports remain failed.
 
+Terrain readiness history is implemented on QA at `c0666072` (reviewed source
+commit `ca892212`). It reuses completed-render observations, retaining the first
+and seven recent samples per readiness transition, with at most 24 ancestry rows
+each. The final sample retains its actual render time. Missing observations stay
+unavailable; no worker state, rendering demand, deadline or acceptance gate changes.
+Root independently passes 85 focused map/delivery/failure-report checks, 25-file
+capture lint, formatting and package boundaries. The actual CLI and outer smoke
+adapters retain all 192 ancestry rows; malformed and conflicting histories are
+rejected. Hosted integration and fresh native execution of this change remain
+pending. The prior Metal camera-pose failure still needs completed-journey failure
+evidence and bounded missing-asset identities before another native attempt.
+
 Local and remote `dev` match `e8ccc268` and contain current fork/upstream
 `main` at `8b8ccc9a` (697 commits ahead, zero behind). The active
 `qa/s47-austin-receipt-only` branch also contains main. No reconciliation or
