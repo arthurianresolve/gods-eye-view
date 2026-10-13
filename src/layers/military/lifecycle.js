@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { JET_MODEL_URL } from './policy.js';
+import { syncFleetRenderDemand } from '../fleetRenderDemand.js';
 
 export function createLifecycle({
   flightState,
@@ -14,6 +15,16 @@ export function createLifecycle({
   const { ensureGeoidReady } = services.geoid;
   const { registerPickOwner, unregisterPickOwner } = services.picking;
   const { setMilitaryLayerActive } = services.militaryRegistry;
+  let renderDemandEnabled = false;
+
+  function syncRenderDemand() {
+    return syncFleetRenderDemand({
+      flightState,
+      render: { holdContinuousRender, releaseContinuousRender },
+      owner: 'military',
+      enabled: renderDemandEnabled,
+    });
+  }
 
   const methods = {
     /** Configure the source before initialization; an active layer keeps its owner. */
@@ -113,9 +124,10 @@ export function createLifecycle({
      * @param {Cesium.Viewer} viewer - The Cesium viewer instance
      */
     enable(viewer) {
+      renderDemandEnabled = true;
       if (flightState._billboardCollection)
         flightState._billboardCollection.show = true;
-      holdContinuousRender('military'); // per-frame animator (perf wave 2)
+      syncRenderDemand();
       if (flightState._modelCollection)
         flightState._modelCollection.show = true;
       parts.tracking._setCockpitContactMode(
@@ -175,11 +187,12 @@ export function createLifecycle({
      * @param {Cesium.Viewer} viewer - The Cesium viewer instance
      */
     disable(viewer) {
+      renderDemandEnabled = false;
       parts.controller._abortActiveUpdates();
       parts.tracking._cancelPendingTrackingRestore();
       if (flightState._billboardCollection)
         flightState._billboardCollection.show = false;
-      releaseContinuousRender('military');
+      syncRenderDemand();
       parts.rendering._releaseModels();
       if (flightState._modelCollection)
         flightState._modelCollection.show = false;
@@ -219,9 +232,10 @@ export function createLifecycle({
      * @param {Cesium.Viewer} viewer - The Cesium viewer instance
      */
     destroy(viewer) {
+      renderDemandEnabled = false;
       flightState.lifetime.abort();
       parts.controller._abortActiveUpdates();
-      releaseContinuousRender('military'); // direct-destroy path (perf wave 2 fix)
+      syncRenderDemand(); // direct-destroy path
       parts.tracking._clearTracking();
       parts.tracking._destroyTrail();
       parts.tracking._cancelPendingTrackingRestore();
@@ -300,5 +314,5 @@ export function createLifecycle({
     },
   };
 
-  return { methods };
+  return { methods, syncRenderDemand };
 }

@@ -53,6 +53,10 @@ export function createTracking({
   const { applyTrackedCameraFrame } = services.camera;
   const { resolvePickId, isOwnedByOtherLayer } = services.picking;
 
+  function _syncRenderDemand() {
+    parts.lifecycle?.syncRenderDemand?.();
+  }
+
   function _emitAwarenessEvent(type, detail) {
     if (
       typeof window === 'undefined' ||
@@ -879,6 +883,7 @@ export function createTracking({
     // the previous aircraft's cached position.
     parts.motion._resetTrackedDisplay();
     _clearTrail();
+    _syncRenderDemand();
   }
 
   function _applyPendingTrackingRestore() {
@@ -1076,6 +1081,7 @@ export function createTracking({
       icao24;
     _publishTrackedSelection(icao24, origin);
     console.log(`[Data:Military] Tracking ${callsign} (${icao24})`);
+    _syncRenderDemand();
   }
 
   /**

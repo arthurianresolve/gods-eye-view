@@ -5,6 +5,7 @@ export function createIngestion({
   feed,
   getQuery,
   applySnapshot,
+  syncRenderDemand = () => {},
   setSourceLabel,
   applyPendingTrackingRestore,
   onAcceptedSnapshot,
@@ -52,6 +53,9 @@ export function createIngestion({
         feed._lastCoverage = snapshot.coverage;
         setSourceLabel(feed._lastSource);
         const accepted = applySnapshot(snapshot, viewer);
+        // Collection membership is authoritative at this point. Reconcile
+        // before optional recording/tracking work can yield or fail.
+        syncRenderDemand();
         feed._count = accepted.count;
         // Freshness belongs to the source snapshot, not the moment this browser
         // received a cached 200 response.
@@ -95,6 +99,7 @@ export function createIngestion({
         }
       } finally {
         feed._activeUpdateControllers.delete(resourceController);
+        syncRenderDemand();
       }
     },
   };

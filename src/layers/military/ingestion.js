@@ -4,6 +4,7 @@ import { ERROR_BACKOFF_INTERVAL } from './recordPolicy.js';
 export function createIngestion({
   feed,
   applySnapshot,
+  syncRenderDemand = () => {},
   setSourceLabel,
   applyPendingTrackingRestore,
 }) {
@@ -45,6 +46,9 @@ export function createIngestion({
             ? 'Source snapshot time unavailable'
             : null);
         const accepted = applySnapshot(snapshot, viewer);
+        // Collection membership is authoritative at this point. Reconcile
+        // before optional tracking work can yield or fail.
+        syncRenderDemand();
         feed._count = accepted.count;
         feed._lastUpdate = snapshot.observedAtMs;
         feed._lastTrackingRefreshOutcome = {
@@ -72,6 +76,7 @@ export function createIngestion({
           e?.name === 'LiveSourceError' ? e.message : 'Live data unavailable';
       } finally {
         feed._activeUpdateControllers.delete(resourceController);
+        syncRenderDemand();
       }
     },
   };

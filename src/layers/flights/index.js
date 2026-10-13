@@ -48,6 +48,7 @@ export function createCivilFlightLayer({
     getQuery: (viewer) =>
       parts.controller._flightQuery(viewer || flightState._viewer),
     applySnapshot,
+    syncRenderDemand: parts.lifecycle.syncRenderDemand,
     setSourceLabel: (source) => {
       layer.source = source;
     },

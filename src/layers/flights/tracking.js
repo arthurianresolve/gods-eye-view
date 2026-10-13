@@ -52,6 +52,10 @@ export function createTracking({
   const { resolvePickId, isOwnedByOtherLayer } = services.picking;
   const flightsLayer = layer;
 
+  function _syncRenderDemand() {
+    parts.lifecycle?.syncRenderDemand?.();
+  }
+
   function _emitAwarenessEvent(type, detail) {
     if (
       typeof window === 'undefined' ||
@@ -745,6 +749,7 @@ export function createTracking({
     // cannot read the previous aircraft's cached/smoothed position.
     parts.motion._resetTrackedDisplay();
     _clearTrail();
+    _syncRenderDemand();
   }
 
   /**
@@ -1122,6 +1127,7 @@ export function createTracking({
     console.log(
       `[Data:Flights] Tracking ${parts.queries._contactLabel(icao24, info)} (${icao24})`,
     );
+    _syncRenderDemand();
   }
 
   /**
@@ -1160,6 +1166,7 @@ export function createTracking({
         flightState.records.missingPolls.delete(icao24);
       }
       flightState.feed._count = flightState._billboards.size;
+      _syncRenderDemand();
     } else if (flightState._billboardCollection.show) {
       // Fire-and-forget refresh; only while the layer is actually enabled.
       void flightsLayer.update(flightState._viewer);
