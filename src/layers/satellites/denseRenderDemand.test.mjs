@@ -478,3 +478,59 @@ test('shared focus fading wakes at 80ms and returns to the static cadence when s
     'a late shared focus notification cannot schedule after destroy',
   );
 });
+
+test('a throttled focus pass retires when its points disappear before the target clears', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let performanceNow = 1_000;
+  t.mock.method(performance, 'now', () => performanceNow);
+  const harness = createHarness(t, {
+    readGroup: async () => ({ ok: true, text: TLE }),
+  });
+  const { parts, state } = harness;
+  harness.setFocusNowMs(performanceNow);
+  state._points.set(25544, {
+    id: 25544,
+    position: new Cesium.Cartesian3(1, 2, 3),
+  });
+  state._catalog.set(25544, { group: 'visual' });
+  state._lastFocusUpdate = performanceNow - 50;
+
+  harness.setFocusTarget({ ownerLayer: 'flights', id: 'temporary-target' });
+  t.mock.timers.tick(0);
+  assert.equal(
+    state._focusPassPending,
+    true,
+    'the 80ms throttle keeps the requested pass pending',
+  );
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-focus',
+    'satellites-periodic',
+  ]);
+
+  state._points.clear();
+  state._catalog.clear();
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.equal(state._focusPassPending, false);
+  assert.equal(state._focusTransitioning, false);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-periodic',
+  ]);
+
+  harness.setFocusTarget(null);
+  state._points.set(25544, {
+    id: 25544,
+    position: new Cesium.Cartesian3(1, 2, 3),
+  });
+  state._catalog.set(25544, { group: 'visual' });
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.equal(state._focusPassPending, false);
+  assert.equal(state._focusTransitioning, false);
+  assert.deepEqual(
+    getRenderGovernorDiagnostics().scheduledUpdates,
+    ['satellites-periodic'],
+    'restored points do not inherit a stale 80ms retry',
+  );
+
+  parts.lifecycle.methods.disable(state._viewer);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+});

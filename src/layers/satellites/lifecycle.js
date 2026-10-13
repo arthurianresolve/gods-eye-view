@@ -82,10 +82,27 @@ export function createLifecycle({
   }
 
   function syncFocusRenderDemand() {
+    if (!canScheduleFocusRenderDemand()) {
+      layerState._focusPassPending = false;
+      if (layerState._points.size === 0) {
+        layerState._activeFocusCount = 0;
+        layerState._focusTransitioning = false;
+      }
+      stopFocusRenderDemand();
+      return;
+    }
     if (
-      !canScheduleFocusRenderDemand() ||
-      (!layerState._focusTransitioning && !layerState._focusPassPending)
+      services.focus?.getFocusTarget?.() &&
+      !layerState._focusPassPending &&
+      !layerState._focusTransitioning &&
+      layerState._activeFocusCount === 0
     ) {
+      // A target can remain selected while a catalog is empty. Requeue the
+      // pass when points return instead of retaining the stale empty-catalog
+      // request as a perpetual focus owner.
+      layerState._focusPassPending = true;
+    }
+    if (!layerState._focusTransitioning && !layerState._focusPassPending) {
       stopFocusRenderDemand();
       return;
     }
@@ -93,7 +110,11 @@ export function createLifecycle({
   }
 
   function focusTargetChanged(nextTarget) {
-    if (!canScheduleFocusRenderDemand()) return;
+    if (!canScheduleFocusRenderDemand()) {
+      layerState._focusPassPending = false;
+      stopFocusRenderDemand();
+      return;
+    }
     if (nextTarget || layerState._activeFocusCount > 0) {
       layerState._focusPassPending = true;
       scheduleFocusRenderDemand(0, true);

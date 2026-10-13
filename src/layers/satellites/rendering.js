@@ -234,11 +234,15 @@ export function createRendering({
 
   function _updatePointFocus(nowMs) {
     const target = getFocusTarget();
-    if (
-      !layerState._params.showPoints ||
-      !focusPassIsNeeded(target, layerState._activeFocusCount)
-    )
+    if (!layerState._params.showPoints) return;
+    if (!focusPassIsNeeded(target, layerState._activeFocusCount)) {
+      if (layerState._focusPassPending || layerState._focusTransitioning) {
+        layerState._focusPassPending = false;
+        layerState._focusTransitioning = false;
+        parts.lifecycle?.methods?.syncRenderDemand?.();
+      }
       return;
+    }
     if (nowMs - layerState._lastFocusUpdate < FOCUS_UPDATE_MS) return;
     layerState._lastFocusUpdate = nowMs;
     const scene = layerState._viewer.scene;
