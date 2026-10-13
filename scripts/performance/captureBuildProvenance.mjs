@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { verifyServedBuildAssets } from './buildProvenance.mjs';
+import {
+  resolveMapFixtureBuildProfile,
+  verifyServedBuildAssets,
+} from './buildProvenance.mjs';
 
 const SHA1 = /^[a-f0-9]{40}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -50,6 +53,7 @@ export async function beginCaptureBuildProvenance({
   buildRoot,
   expectedAppCommit,
   expectedHarnessCommit,
+  expectedBuildProfile = null,
   baseUrl,
   captureUrl,
   actualHarnessRoot,
@@ -86,6 +90,19 @@ export async function beginCaptureBuildProvenance({
     expectedHarnessCommit,
     'Receipt harness SHA mismatch',
   );
+  const expectedProfile = resolveMapFixtureBuildProfile(expectedBuildProfile);
+  if (expectedProfile)
+    assert.deepEqual(
+      receipt.buildRecipe?.mapFixtureProfile,
+      expectedProfile,
+      'Receipt map fixture profile mismatch',
+    );
+  else
+    assert.equal(
+      receipt.buildRecipe?.mapFixtureProfile,
+      undefined,
+      'Profiled receipts require an explicit expected build profile',
+    );
   assert.equal(
     path.resolve(harnessRoot || ''),
     path.resolve(actualHarnessRoot || ''),
@@ -127,6 +144,7 @@ export async function beginCaptureBuildProvenance({
       buildRoot,
       expectedAppCommit,
       expectedHarnessCommit,
+      expectedBuildProfile,
       baseUrl,
       fetchImpl,
     });

@@ -12,6 +12,7 @@ import {
   beginCaptureBuildProvenance,
   projectPublicCaptureBuildProvenance,
 } from './performance/captureBuildProvenance.mjs';
+import { resolveMapFixtureBuildProfile } from './performance/buildProvenance.mjs';
 import {
   closeTargetBeforeFixtureInterceptionRelease,
   createFixtureInterceptionErrorRecorder,
@@ -312,6 +313,8 @@ const buildProvenanceOptions = {
   expectedHarnessCommit: option('--expected-harness-sha', null),
   baseUrl: option('--served-base-url', null),
 };
+const expectedBuildProfile = option('--build-profile', null);
+resolveMapFixtureBuildProfile(expectedBuildProfile);
 const buildProvenanceEnabled = Object.values(buildProvenanceOptions).some(
   Boolean,
 );
@@ -322,6 +325,8 @@ if (
   throw new Error(
     'Verified capture requires --build-receipt, --app-checkout, --harness-checkout, --build-root, --expected-app-sha, --expected-harness-sha and --served-base-url together.',
   );
+if (expectedBuildProfile && !buildProvenanceEnabled)
+  throw new Error('--build-profile requires a verified build receipt.');
 if (
   (productionFlightFixture ||
     infrastructureWorkloadSelected ||
@@ -453,6 +458,7 @@ if (buildProvenanceEnabled) {
     harnessRoot: requestedHarnessRoot,
     actualHarnessRoot,
     captureUrl: url,
+    expectedBuildProfile,
   });
   const bundlePath = 'cesium/Cesium.js';
   if (!buildReceipt.assets.some((asset) => asset.path === bundlePath))

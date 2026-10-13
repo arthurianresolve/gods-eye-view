@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { beginCaptureBuildProvenance } from './captureBuildProvenance.mjs';
+import { resolveMapFixtureBuildProfile } from './buildProvenance.mjs';
 
 const appSha = 'a'.repeat(40);
 const harnessSha = 'b'.repeat(40);
@@ -131,5 +132,54 @@ test('capture provenance rejects a different served root or harness checkout', a
   await assert.rejects(
     beginCaptureBuildProvenance({ ...base, harnessRoot: 'different-checkout' }),
     /not the capture script checkout/,
+  );
+});
+
+test('capture provenance requires the named profile and carries it through both served checks', async () => {
+  const profileId = 'austin-map-streaming-v1';
+  const profiledReceipt = {
+    ...receipt,
+    buildRecipe: {
+      ...receipt.buildRecipe,
+      mapFixtureProfile: resolveMapFixtureBuildProfile(profileId),
+    },
+  };
+  const calls = [];
+  const capture = await beginCaptureBuildProvenance({
+    receipt: profiledReceipt,
+    expectedAppCommit: appSha,
+    expectedHarnessCommit: harnessSha,
+    checkoutRoot: 'app-checkout',
+    harnessRoot: 'harness-root',
+    actualHarnessRoot: 'harness-root',
+    buildRoot: 'build-root',
+    baseUrl: 'http://127.0.0.1:4173/',
+    captureUrl: 'http://127.0.0.1:4173/',
+    expectedBuildProfile: profileId,
+    verifyImpl: async (options) => {
+      calls.push(options.expectedBuildProfile);
+      return result;
+    },
+  });
+  assert.deepEqual(calls, [profileId]);
+  assert.deepEqual(
+    capture.source.buildRecipe.mapFixtureProfile,
+    profiledReceipt.buildRecipe.mapFixtureProfile,
+  );
+  await capture.verifyAfterCapture();
+  assert.deepEqual(calls, [profileId, profileId]);
+
+  await assert.rejects(
+    beginCaptureBuildProvenance({
+      receipt: profiledReceipt,
+      expectedAppCommit: appSha,
+      expectedHarnessCommit: harnessSha,
+      harnessRoot: 'harness-root',
+      actualHarnessRoot: 'harness-root',
+      baseUrl: 'http://127.0.0.1:4173/',
+      captureUrl: 'http://127.0.0.1:4173/',
+      verifyImpl: async () => result,
+    }),
+    /explicit expected build profile/,
   );
 });
