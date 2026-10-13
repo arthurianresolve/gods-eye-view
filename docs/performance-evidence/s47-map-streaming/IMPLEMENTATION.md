@@ -215,3 +215,12 @@ neither the candidate CLI nor the native journey. No page/interception errors
 are recorded, but probe and worker cleanup are unconfirmed. Retain the raw
 failure and investigate the map-specific setup path without changing deadlines
 or treating this incomplete report as an application/GPU diagnosis.
+
+The next map-specific setup packet `1058e811` is held for correction before
+integration. Root [review](native-smoke-review-1058e811.json) executes the actual
+fixture adapter with 72 acknowledged requests and one legitimate cancellation:
+all 73 requests balance, with zero pending/error observations, but the new
+single-owner validator incorrectly rejects it. Cancellation counts are outcomes,
+not a required zero. Source review also finds baseline delivery finalized before
+its browser context/interception owner retires. Both variants must publish
+post-retirement evidence, with pending and late-response controls retained.
