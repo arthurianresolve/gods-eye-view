@@ -6,6 +6,7 @@ import {
   createFinalizedMapStreamingCaptureEvidence,
   MAP_STREAMING_ROUTE,
   mapStreamingCaptureWorkloadFields,
+  runNativeMapStreamingJourney,
   runNativeMapStreamingJourneyInPage,
   validateMapStreamingCaptureReport,
 } from './mapStreamingCapture.mjs';
@@ -123,7 +124,12 @@ function cameraObservation(camera) {
   };
 }
 
-function createFakePage({ failStack = null, scheduleAtZero = true } = {}) {
+function createFakePage({
+  failStack = null,
+  scheduleAtZero = true,
+  failPollCount = 0,
+  failStartResponse = false,
+} = {}) {
   const listeners = new Set();
   const frames = new Map();
   let nextFrame = 0;
@@ -332,9 +338,38 @@ function createFakePage({ failStack = null, scheduleAtZero = true } = {}) {
     `(${runNativeMapStreamingJourneyInPage.toString()})`,
     context,
   );
+  const pageCalls = [];
+  let remainingPollFailures = failPollCount;
+  let startResponseFailed = false;
+  const page = {
+    async evaluate(fn, args) {
+      if (args?.command === 'poll' && remainingPollFailures > 0) {
+        remainingPollFailures -= 1;
+        throw new Error('simulated per-command protocol timeout');
+      }
+      const startedAt = Date.now();
+      const pageFunction = vm.runInContext(`(${fn.toString()})`, context);
+      const value = await pageFunction(args);
+      if (
+        args?.command === 'start' &&
+        failStartResponse &&
+        !startResponseFailed
+      ) {
+        startResponseFailed = true;
+        throw new Error('simulated start response timeout');
+      }
+      pageCalls.push({
+        command: args?.command,
+        elapsedMs: Date.now() - startedAt,
+      });
+      return value;
+    },
+  };
   return {
     context,
     serializedDriver,
+    page,
+    pageCalls,
     listeners,
     frames,
     CesiumTypes,
@@ -392,6 +427,99 @@ test('serialized native journey observes actual completed renders and returns me
   );
   assert.equal(result.route.finalPostRenderObserved, true);
   assert.deepEqual(result.settingsAfter, result.settingsBefore);
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+});
+
+test('host journey polls a full 60-second page operation through short protocol calls', async () => {
+  const harness = createFakePage({ scheduleAtZero: false });
+  const result = await runNativeMapStreamingJourney(harness.page, {
+    durationMs: 60_000,
+    route: harness.route,
+  });
+  assert.equal(result.route.durationMs, 60_000);
+  assert.equal(result.route.finalPostRenderObserved, true);
+  assert.equal(harness.pageCalls[0].command, 'start');
+  assert.ok(harness.pageCalls.some((call) => call.command === 'poll'));
+  assert.equal(harness.pageCalls.at(-1).command, 'dispose');
+  assert.ok(harness.pageCalls.every((call) => call.elapsedMs < 15_000));
+  assert.equal(
+    harness.context.window.__gevMapStreamingJourneyV1,
+    undefined,
+    'The terminal operation registry is removed after result transfer.',
+  );
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+});
+
+test('host protocol failure cancels and drains the page operation without losing its checkpoint', async () => {
+  const harness = createFakePage({ failPollCount: 1 });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      assert.match(error.message, /simulated per-command protocol timeout/);
+      assert.ok(
+        [
+          'initial-readiness',
+          'transition',
+          'transition-readiness',
+          'route',
+          'final-readiness',
+          'completed',
+        ].includes(error.actual?.phase),
+      );
+      assert.equal(typeof error.actual?.initialReadinessComplete, 'boolean');
+      assert.equal(typeof error.actual?.transitionCount, 'number');
+      return true;
+    },
+  );
+  assert.ok(harness.pageCalls.some((call) => call.command === 'cancel'));
+  assert.equal(harness.pageCalls.at(-1).command, 'dispose');
+  assert.equal(
+    harness.context.window.__gevMapStreamingJourneyV1,
+    undefined,
+    'Cancellation drains before the operation state is disposed.',
+  );
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+});
+
+test('host start response failure retires an operation that was accepted by the page', async () => {
+  const harness = createFakePage({ failStartResponse: true });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    /simulated start response timeout/,
+  );
+  assert.ok(harness.pageCalls.some((call) => call.command === 'cancel'));
+  assert.equal(harness.pageCalls.at(-1).command, 'dispose');
+  assert.equal(harness.context.window.__gevMapStreamingJourneyV1, undefined);
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+});
+
+test('host operation failures report the transition checkpoint and dispose after sibling cleanup', async () => {
+  const harness = createFakePage({ failStack: 'esri-imagery' });
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      assert.match(error.message, /controlled esri-imagery failure/);
+      assert.equal(error.actual?.phase, 'transition');
+      assert.equal(error.actual?.targetStack, 'esri-imagery');
+      assert.equal(error.expected?.status, 'completed');
+      return true;
+    },
+  );
+  assert.equal(harness.pageCalls.at(-1).command, 'dispose');
+  assert.equal(harness.context.window.__gevMapStreamingJourneyV1, undefined);
   assert.equal(harness.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
 });
