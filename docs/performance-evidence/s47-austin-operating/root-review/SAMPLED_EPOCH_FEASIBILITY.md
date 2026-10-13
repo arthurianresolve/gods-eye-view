@@ -862,3 +862,9 @@ the exact child report. Raw artifacts are retained byte-for-byte in compressed
 form with both raw and compressed hashes. Standard CI is still running at this
 checkpoint; hosted paravirtual Metal diagnostic success is not physical GPU or
 matched performance acceptance.
+
+[All seven standard jobs](ci-38334290706-final.json) now pass at e8ccc268,
+matching the passing native capture. Root [fast-forwarded local and remote
+dev](dev-promotion-e8ccc268.json) to that exact tested commit with a clean
+working tree and zero missing main commits. The new map fixture packet remains
+isolated after independent review found real URL/transform failures.

@@ -1,0 +1,25 @@
+{
+  "schema": "gev-map-fixture-root-review/v1",
+  "checkedAt": "2026-10-13T02:11:14.580Z",
+  "sourceCommit": "06f82b08c53a48d5b5b400aa904f1cab4b7ceef9",
+  "parser": "installed Cesium3DTileset.fromUrl and parsed computedTransform/contentResource",
+  "nodeCount": 21,
+  "missingContentAssets": 21,
+  "rootContentHttpStatus": 404,
+  "rootWorldOriginRadiusMeters": 6372737.276977502,
+  "firstChildWorldOriginRadiusMeters": 11050881.720808392,
+  "firstGrandchildWorldOriginRadiusMeters": 12810540.302807922,
+  "terrainMetadataIncluded": false,
+  "terrainLevels": [
+    8,
+    9,
+    10
+  ],
+  "imageryLevels": [
+    10,
+    11,
+    12
+  ],
+  "disposition": "reject M1 until real URL resolution, composed transforms, and required provider ancestors/metadata are corrected",
+  "scope": "Node component parsing and local HTTP only; no browser rendering or application workload acceptance"
+}

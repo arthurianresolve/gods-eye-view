@@ -7,14 +7,14 @@ recorded separately from full workload and physical hardware acceptance. The
 existing slice ledger below remains the requirement inventory; historical
 reports retain their original failures. No performance target is claimed.
 
-Local and remote dev are synchronized at 726e404b and already contain current
+Local and remote dev are synchronized at e8ccc268 and already contain current
 fork/upstream main at 8b8ccc9a. No new rebase, merge or diff discard is needed.
 The Austin QA candidate e8ccc268 has passed its complete hosted build/capture
 smoke, including four short samples and final outer validation. Root
 [recomputed the report and retained hash-bound artifacts](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json).
-All 84 focused checks pass; exact-candidate standard CI is still running.
-Promotion to dev waits for all seven standard jobs. The previous failed
-reports remain failed.
+All 84 focused checks and [all seven exact-candidate standard jobs](performance-evidence/s47-austin-operating/root-review/ci-38334290706-final.json) pass.
+Local and remote dev were fast-forwarded to this exact tested commit. The
+previous failed reports remain failed.
 
 The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
 M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,

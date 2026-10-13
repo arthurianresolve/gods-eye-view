@@ -7,7 +7,7 @@ The frozen comparison baseline remains eb8c682.
 
 | Packet | Deliverable | Current evidence and completion requirement |
 | --- | --- | --- |
-| M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | Implementation in progress. Require deterministic byte/hash regeneration and validation through installed Cesium parsers where supported; actual browser rendering remains a separate gate. |
+| M1 fixture corpus | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | Initial 06f82b08 packet rejected by independent review: all 21 tileset content URLs return 404, child transforms compound absolute Earth coordinates, and provider ancestors/metadata are incomplete. Corrections in progress. Require real URL/transform and ancestor traversal controls; browser rendering remains separate. |
 | M2 build identity | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification | Not implemented. Unknown profiles, arbitrary values and mismatched profile/receipt must fail. Handle ignored dotenv inputs before/after building and during verification; do not modify ordinary application configuration. |
 | M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup | Not implemented. Actual CLI and outer validator must both accept the same report. Include missing/corrupt assets, cancellation, supersession and late-response controls. |
 | M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental. |
@@ -50,3 +50,8 @@ cannot establish browser readiness, visual equivalence, GPU performance or
 resource stability. Disk capacity is currently constrained, so generation stays
 bounded and no expanded fixture tree, local dependency install or full local
 build is required for M1.
+
+[Independent initial-corpus reproduction](initial-fixture-review-06f82b08.json)
+uses the actual Cesium parsed content resources and computed transforms. The
+four passing original tests did not cover these requirements. Commit 06f82b08
+is not integrated or accepted; preserve this failure as the correction control.
