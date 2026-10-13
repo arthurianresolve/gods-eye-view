@@ -45,3 +45,42 @@ and imagery loading states. This is necessary before attributing the stall
 to fixture coverage, workers, the renderer or upstream application behavior.
 No readiness relaxation, deadline increase, forced rendering or detail change
 is justified by this report. Earlier failures remain preserved independently.
+
+## Reviewed diagnostic correction
+
+`8001cb34`, integrated at `bfe6d5fe`, retains a bounded read-only globe queue
+snapshot and the finalized delivery summary on failure. Queue evidence allows
+eight tile samples and 32 imagery entries per tile, reports unsupported fields
+as unavailable, and survives both CLI and outer failure serialization. Delivery
+projection preserves partial, cancelled and errored outcomes independently of
+the unchanged success validator. It runs after context-close/interception-release
+finalization. No application behavior, readiness gate or deadline changes.
+
+Root passes 80 focused map-capture, delivery, failure-report and outer-smoke
+checks, the 25-file capture no-undef gate and four-file formatting. These checks
+include controlled page/transport seams; they are not native rendered acceptance.
+
+## Independent terrain CPU probe
+
+The [reproduction](terrain-cpu-probe.mjs) invokes pinned Cesium 1.138 provider
+parsing, mesh creation and child upsampling against the same fixture bytes.
+It substitutes only resource delivery and TaskProcessor transport in its own
+Node process, invoking the actual installed CPU worker functions directly.
+Run from the repository root with:
+
+```text
+node docs/performance-evidence/s47-map-streaming/native-38358638098/terrain-cpu-probe.mjs
+```
+
+The [raw CPU result](terrain-cpu-probe.json) is 2,435 bytes, SHA-256
+`8ef5e5fc71ee35de21d04061ba065e9ab70a44585f7d2e5e2ae57cc3d61a9c43`.
+Both tested parents (levels zero and one) produce 289-vertex meshes. Their
+available children upsample successfully; all six unavailable siblings fail
+construction because the result lacks a horizon-occlusion point. The clipped
+parent mesh has no geometry in these child quadrants.
+
+This demonstrates a fixture/CPU upsampling problem, not yet the cause of the
+hosted readiness failure. The probe uses source assertions; optimized browser
+builds may omit those assertions. It does not exercise worker transport, GPU
+rendering or actual quadtree traversal. The next hosted queue observation must
+establish which stage and tiles remain pending before a runtime cause is claimed.

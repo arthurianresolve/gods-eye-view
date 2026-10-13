@@ -93,6 +93,12 @@ report lacks the finalized fixture delivery summary and individual queue
 states; the next diagnostic preserves those bounded observations before
 attributing a cause. No completed baseline/candidate journey, performance
 improvement or hardware acceptance is claimed.
+Diagnostic correction `8001cb34`, integrated at `bfe6d5fe`, passes 80 root
+focused checks, capture lint and changed-file formatting. It preserves bounded
+queue states and finalized partial/error delivery without changing acceptance
+rules. A separate pinned CPU probe reproduces failed child upsampling outside
+the clipped terrain patch; the hosted queue report must still determine whether
+this is the cause of the readiness stall. Neither result completes M3.
 
 Next actions, in dependency order:
 
