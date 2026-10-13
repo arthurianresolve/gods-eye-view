@@ -278,6 +278,11 @@ async function createPanel({ workspaceCount = 0 } = {}) {
         gate.started.resolve();
         await gate.promise;
       }
+      if (
+        options.navigationToken != null &&
+        options.navigationToken !== navigation._navigationGeneration
+      )
+        return { status: 'superseded' };
       view = nextView;
       return { status: 'applied' };
     },
@@ -469,6 +474,10 @@ test('superseded workspace rollback passes ownership and skips stale layer resto
   fixture.emitViewChange(newerView);
   rollbackGate.resolve();
   await opening;
+  await waitFor(
+    () => fixture.panel.restore.getState().status === 'superseded',
+    'stale workspace rollback to settle as superseded',
+  );
 
   assert.equal(fixture.workspaceViewRestores.length, 0);
   assert.equal(fixture.currentView(), newerView);
