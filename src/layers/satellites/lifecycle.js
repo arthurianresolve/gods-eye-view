@@ -18,57 +18,89 @@ export function createLifecycle({
     services.render?.releaseContinuousRender || (() => {});
   const scheduleRenderUpdate = services.render?.scheduleRenderUpdate;
   const { registerPickOwner, unregisterPickOwner } = services.picking;
+  const focusRenderOwner = Symbol('satellites-focus');
   let removeFocusTargetListener = null;
 
   function stopPeriodicRenderDemand() {
     layerState._periodicRenderDisposer?.();
     layerState._periodicRenderDisposer = null;
-    layerState._periodicRenderDelayMs = null;
   }
 
-  function schedulePeriodicRenderDemand(delayMs = POSITION_UPDATE_MS) {
+  function stopFocusRenderDemand() {
+    layerState._focusRenderDisposer?.();
+    layerState._focusRenderDisposer = null;
+  }
+
+  function schedulePeriodicRenderDemand() {
     if (
       !layerState._enabled ||
       layerState._trackedNorad !== null ||
       (!layerState._params.showPoints && !layerState._params.showOrbits) ||
       typeof scheduleRenderUpdate !== 'function' ||
-      (layerState._periodicRenderDisposer &&
-        layerState._periodicRenderDelayMs === delayMs)
+      layerState._periodicRenderDisposer
     )
       return;
-    stopPeriodicRenderDemand();
-    layerState._periodicRenderDelayMs = delayMs;
     layerState._periodicRenderDisposer = scheduleRenderUpdate(
       'satellites-periodic',
       () => {
         layerState._periodicRenderDisposer = null;
-        layerState._periodicRenderDelayMs = null;
-        schedulePeriodicRenderDemand(
-          layerState._params.showPoints &&
-            (layerState._activeFocusCount > 0 ||
-              (layerState._points.size > 0 &&
-                services.focus?.getFocusTarget?.()))
-            ? FOCUS_UPDATE_MS
-            : POSITION_UPDATE_MS,
-        );
+        schedulePeriodicRenderDemand();
+      },
+      POSITION_UPDATE_MS,
+    );
+  }
+
+  function canScheduleFocusRenderDemand() {
+    return (
+      layerState._enabled &&
+      layerState._params.showPoints &&
+      layerState._points.size > 0 &&
+      layerState._trackedNorad === null &&
+      layerState._denseIds.length === 0 &&
+      typeof scheduleRenderUpdate === 'function'
+    );
+  }
+
+  function scheduleFocusRenderDemand(
+    delayMs = FOCUS_UPDATE_MS,
+    replace = false,
+  ) {
+    if (!canScheduleFocusRenderDemand()) return;
+    if (layerState._focusRenderDisposer && !replace) return;
+    stopFocusRenderDemand();
+    layerState._focusRenderDisposer = scheduleRenderUpdate(
+      focusRenderOwner,
+      () => {
+        layerState._focusRenderDisposer = null;
+        // Keep one retry until the requested frame runs. A recent focus pass
+        // may still be inside the existing 80ms throttle and skip this frame;
+        // _updatePointFocus cancels the retry when no transition is active.
+        scheduleFocusRenderDemand(FOCUS_UPDATE_MS);
       },
       delayMs,
     );
   }
 
-  function focusTargetChanged(nextTarget) {
+  function syncFocusRenderDemand() {
     if (
-      !layerState._enabled ||
-      !layerState._params.showPoints ||
-      layerState._points.size === 0
-    )
-      return;
-    if (layerState._trackedNorad !== null || layerState._denseIds.length > 0) {
-      syncRenderDemand();
+      !canScheduleFocusRenderDemand() ||
+      (!layerState._focusTransitioning && !layerState._focusPassPending)
+    ) {
+      stopFocusRenderDemand();
       return;
     }
-    if (nextTarget) schedulePeriodicRenderDemand(0);
-    else syncRenderDemand();
+    scheduleFocusRenderDemand(FOCUS_UPDATE_MS);
+  }
+
+  function focusTargetChanged(nextTarget) {
+    if (!canScheduleFocusRenderDemand()) return;
+    if (nextTarget || layerState._activeFocusCount > 0) {
+      layerState._focusPassPending = true;
+      scheduleFocusRenderDemand(0, true);
+    } else {
+      layerState._focusPassPending = false;
+      syncFocusRenderDemand();
+    }
   }
 
   function startFocusTargetListener() {
@@ -84,30 +116,35 @@ export function createLifecycle({
 
   function syncRenderDemand() {
     if (!layerState._enabled) {
+      layerState._focusPassPending = false;
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       releaseContinuousRender('satellites');
       return;
     }
     if (layerState._trackedNorad !== null) {
+      layerState._focusPassPending = false;
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       holdContinuousRender('satellites');
       return;
     }
     if (layerState._params.showPoints && layerState._denseIds.length > 0) {
+      layerState._focusPassPending = false;
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       holdContinuousRender('satellites');
       return;
     }
     releaseContinuousRender('satellites');
     if (!layerState._params.showPoints && !layerState._params.showOrbits) {
+      layerState._focusPassPending = false;
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       return;
     }
-    if (layerState._params.showPoints && layerState._activeFocusCount > 0) {
-      schedulePeriodicRenderDemand(FOCUS_UPDATE_MS);
-      return;
-    }
-    schedulePeriodicRenderDemand(POSITION_UPDATE_MS);
+    schedulePeriodicRenderDemand();
+    syncFocusRenderDemand();
   }
 
   const methods = {
@@ -115,6 +152,7 @@ export function createLifecycle({
 
     async init(viewer) {
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       stopFocusTargetListener();
       releaseContinuousRender('satellites');
       parts.catalog._abortActiveUpdates();
@@ -135,6 +173,8 @@ export function createLifecycle({
       layerState._trackedFrameNowForTest = null;
       layerState._lastFocusUpdate = 0;
       layerState._activeFocusCount = 0;
+      layerState._focusTransitioning = false;
+      layerState._focusPassPending = false;
       layerState._enabled = false;
       layerState._overlayHost.clearSource(ISS_OVERLAY_SOURCE_ID);
       layerState._overlayHost.setVisible(ISS_OVERLAY_SOURCE_ID, false);
@@ -200,8 +240,10 @@ export function createLifecycle({
       parts.catalog._abortActiveUpdates();
       parts.tracking._cancelPendingTrackingRestore();
       layerState._enabled = false;
+      layerState._focusPassPending = false;
       stopFocusTargetListener();
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       releaseContinuousRender('satellites');
       if (layerState._pointCollection) layerState._pointCollection.show = false;
       for (const path of layerState._orbitPaths.values())
@@ -228,9 +270,11 @@ export function createLifecycle({
     destroy(viewer) {
       parts.catalog._abortActiveUpdates();
       stopPeriodicRenderDemand();
+      stopFocusRenderDemand();
       stopFocusTargetListener();
       releaseContinuousRender('satellites'); // direct-destroy path (perf wave 2 fix)
       layerState._enabled = false;
+      layerState._focusPassPending = false;
       parts.tracking._clearTracking();
       parts.tracking._cancelPendingTrackingRestore();
       if (layerState._clickHandler) {
@@ -273,6 +317,8 @@ export function createLifecycle({
       layerState._lastError = null;
       layerState._lastFocusUpdate = 0;
       layerState._activeFocusCount = 0;
+      layerState._focusTransitioning = false;
+      layerState._focusPassPending = false;
       layerState._trackingRefreshEpoch += 1;
       layerState._lastTrackingRefreshOutcome = {
         epoch: layerState._trackingRefreshEpoch,
@@ -291,7 +337,8 @@ export function createLifecycle({
         listeners:
           Number(Boolean(layerState._clickHandler)) +
           Number(Boolean(layerState._trackedEntityChangedRemove)) +
-          Number(Boolean(layerState._preRenderListener)),
+          Number(Boolean(layerState._preRenderListener)) +
+          Number(Boolean(removeFocusTargetListener)),
         pendingJobs:
           layerState._activeUpdateControllers?.size ||
           Number(Boolean(layerState._denseLoadPromise)),

@@ -48,11 +48,10 @@ export function createState({ services }) {
 
   state._preRenderListener = null;
 
-  // One-shot governor timer used for the one-second static cadence. Tracking
-  // and visible dense points use the continuous hold because their positions
-  // are evaluated by the scene preRender producer.
+  // Separate one-shot owners preserve the core cadence while the focus owner
+  // samples an active fade at its existing 80ms easing interval.
   state._periodicRenderDisposer = null;
-  state._periodicRenderDelayMs = null;
+  state._focusRenderDisposer = null;
 
   state._lastPropagation = 0;
 
@@ -68,6 +67,8 @@ export function createState({ services }) {
   /** Points whose animated emphasis remains outside the 1.0 deadband. */
 
   state._activeFocusCount = 0;
+  state._focusTransitioning = false;
+  state._focusPassPending = false;
 
   state._scratchFocusScreen = new Cesium.Cartesian2();
 

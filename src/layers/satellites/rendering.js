@@ -1,6 +1,11 @@
 import * as Cesium from 'cesium';
 import { gstime } from 'satellite.js';
-import { ISS_NORAD, POSITION_UPDATE_MS, RING_ROTATION_MS } from './policy.js';
+import {
+  FOCUS_UPDATE_MS,
+  ISS_NORAD,
+  POSITION_UPDATE_MS,
+  RING_ROTATION_MS,
+} from './policy.js';
 
 export function createRendering({
   state: layerState,
@@ -234,7 +239,7 @@ export function createRendering({
       !focusPassIsNeeded(target, layerState._activeFocusCount)
     )
       return;
-    if (nowMs - layerState._lastFocusUpdate < 80) return;
+    if (nowMs - layerState._lastFocusUpdate < FOCUS_UPDATE_MS) return;
     layerState._lastFocusUpdate = nowMs;
     const scene = layerState._viewer.scene;
     const camera = layerState._viewer.camera;
@@ -259,7 +264,11 @@ export function createRendering({
         ).color,
     });
     layerState._activeFocusCount = result.activeCount;
-    if (result.ran) parts.lifecycle?.methods?.syncRenderDemand?.();
+    layerState._focusTransitioning = result.transitioning;
+    if (result.ran) {
+      layerState._focusPassPending = false;
+      parts.lifecycle?.methods?.syncRenderDemand?.();
+    }
   }
 
   /**

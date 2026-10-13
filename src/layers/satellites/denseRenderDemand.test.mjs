@@ -14,7 +14,8 @@ import { createCatalog } from './catalog.js';
 import { createControls } from './controls.js';
 import { createLifecycle } from './lifecycle.js';
 import { createRendering } from './rendering.js';
-import { DENSE_REFRESH_FRAMES } from './policy.js';
+import { advanceSpriteFocus } from '../../data/focusDeemphasis.js';
+import { DENSE_REFRESH_FRAMES, FOCUS_UPDATE_MS } from './policy.js';
 
 const TLE = [
   'ISS (ZARYA)',
@@ -27,8 +28,10 @@ function createHarness(t, source) {
   const primitives = new Set();
   const focusTargetListeners = new Set();
   const scheduledDelays = [];
+  const executedScheduledOwners = [];
   let focusTarget = null;
   let focusFrameActive = false;
+  let focusFrameTransitioning = false;
   let focusNowMs = Date.now();
   const viewer = {
     scene: {
@@ -64,6 +67,7 @@ function createHarness(t, source) {
     _trackedEntity: null,
     _params: { catalog: 'core', showPoints: true, showOrbits: false },
     _periodicRenderDisposer: null,
+    _focusRenderDisposer: null,
     _pointCollection: {
       show: false,
       add(attributes) {
@@ -105,6 +109,8 @@ function createHarness(t, source) {
     _lastRingRotation: Date.now(),
     _lastFocusUpdate: 0,
     _activeFocusCount: 0,
+    _focusTransitioning: false,
+    _focusPassPending: false,
     _trackingRefreshEpoch: 0,
   };
   const services = {
@@ -122,8 +128,8 @@ function createHarness(t, source) {
       advanceSpriteFocus: () => ({
         factor: 1,
         active: focusFrameActive,
-        transitioning: focusFrameActive,
-        endpointCompleted: !focusFrameActive,
+        transitioning: focusFrameTransitioning,
+        endpointCompleted: !focusFrameTransitioning,
       }),
       focusAlphaNeedsWrite: () => false,
     },
@@ -131,8 +137,17 @@ function createHarness(t, source) {
       holdContinuousRender,
       releaseContinuousRender,
       scheduleRenderUpdate(owner, callback, delayMs) {
-        scheduledDelays.push(delayMs);
-        return scheduleRenderUpdate(owner, callback, delayMs);
+        const ownerLabel =
+          typeof owner === 'symbol' ? owner.description : owner;
+        scheduledDelays.push({ owner: ownerLabel, delayMs });
+        return scheduleRenderUpdate(
+          owner,
+          () => {
+            executedScheduledOwners.push(ownerLabel);
+            callback();
+          },
+          delayMs,
+        );
       },
     },
     picking: { registerPickOwner() {}, unregisterPickOwner() {} },
@@ -180,8 +195,12 @@ function createHarness(t, source) {
     services,
     parts,
     scheduledDelays,
+    executedScheduledOwners,
     setFocusFrameActive(value) {
       focusFrameActive = value;
+    },
+    setFocusFrameTransitioning(value) {
+      focusFrameTransitioning = value;
     },
     setFocusNowMs(value) {
       focusNowMs = value;
@@ -298,6 +317,15 @@ test('shared focus fading wakes at 80ms and returns to the static cadence when s
   const harness = createHarness(t, source);
   const { parts, state } = harness;
   harness.setFocusNowMs(performanceNow);
+  const advance = (milliseconds) => {
+    performanceNow += milliseconds;
+    harness.setFocusNowMs(performanceNow);
+    t.mock.timers.tick(milliseconds);
+  };
+  const lastDelayFor = (owner) =>
+    [...harness.scheduledDelays]
+      .reverse()
+      .find((scheduled) => scheduled.owner === owner)?.delayMs;
   state._points.set(25544, {
     id: 25544,
     position: new Cesium.Cartesian3(1, 2, 3),
@@ -305,39 +333,123 @@ test('shared focus fading wakes at 80ms and returns to the static cadence when s
     pixelSize: 5,
   });
   state._catalog.set(25544, { group: 'visual' });
+
+  const focusSprite = {};
+  const initialDim = advanceSpriteFocus(focusSprite, {
+    screenPosition: { x: 0, y: 0 },
+    cameraDistance: 2_000,
+    target: {
+      screenRect: { left: -10, right: 10, top: -10, bottom: 10 },
+      cameraDistance: 1_000,
+    },
+    nowMs: 1_000,
+    params: { nearerBehavior: 'dim', attackMs: 300 },
+  });
+  assert.equal(initialDim.active, true);
+  assert.equal(initialDim.transitioning, true);
+  const settledDim = advanceSpriteFocus(focusSprite, {
+    screenPosition: { x: 0, y: 0 },
+    cameraDistance: 2_000,
+    target: {
+      screenRect: { left: -10, right: 10, top: -10, bottom: 10 },
+      cameraDistance: 1_000,
+    },
+    nowMs: 1_300,
+    params: { nearerBehavior: 'dim', attackMs: 300 },
+  });
+  assert.equal(settledDim.active, true);
+  assert.equal(settledDim.transitioning, false);
+  state._activeFocusCount = 1;
+  state._focusTransitioning = false;
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-periodic',
+  ]);
+  state._activeFocusCount = 0;
+
+  advance(950);
   state._lastFocusUpdate = performanceNow - 50;
 
   harness.setFocusFrameActive(true);
+  harness.setFocusFrameTransitioning(true);
   harness.setFocusTarget({ ownerLayer: 'flights', id: 'fixture-aircraft' });
-  assert.equal(harness.scheduledDelays.at(-1), 0);
-  t.mock.timers.tick(0);
+  assert.equal(lastDelayFor('satellites-focus'), 0);
+  assert.equal(
+    parts.lifecycle.methods.getPerformanceDiagnostics().listeners,
+    2,
+  );
+  advance(0);
   assert.equal(
     state._activeFocusCount,
     0,
     'the existing 80ms focus gate can defer the immediate wake',
   );
-  assert.equal(harness.scheduledDelays.at(-1), 80);
-  performanceNow += 80;
-  harness.setFocusNowMs(performanceNow);
-  t.mock.timers.tick(80);
+  assert.equal(lastDelayFor('satellites-focus'), FOCUS_UPDATE_MS);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-focus',
+    'satellites-periodic',
+  ]);
+  for (let index = 0; index < 5; index += 1)
+    parts.lifecycle.methods.syncRenderDemand();
+  assert.deepEqual(
+    getRenderGovernorDiagnostics().scheduledUpdates,
+    ['satellites-focus', 'satellites-periodic'],
+    'repeated sync preserves both independent due times and the pending focus pass',
+  );
+  advance(50);
+  assert.ok(
+    harness.executedScheduledOwners.includes('satellites-periodic'),
+    'the original core deadline fires despite the earlier focus wake',
+  );
   assert.equal(state._activeFocusCount, 1);
-  assert.equal(harness.scheduledDelays.at(-1), 80);
+  assert.equal(lastDelayFor('satellites-focus'), FOCUS_UPDATE_MS);
   assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
 
+  state._denseIds = [100];
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.deepEqual(getRenderGovernorDiagnostics().holds, ['satellites']);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+  state._denseIds = [];
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-focus',
+    'satellites-periodic',
+  ]);
+
+  state._trackedNorad = 25544;
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.deepEqual(getRenderGovernorDiagnostics().holds, ['satellites']);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+  state._trackedNorad = null;
+  parts.lifecycle.methods.syncRenderDemand();
+  assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-focus',
+    'satellites-periodic',
+  ]);
+
+  advance(30);
   harness.setFocusTarget(null);
-  assert.equal(harness.scheduledDelays.at(-1), 80);
+  assert.equal(lastDelayFor('satellites-focus'), 0);
+  advance(0);
   assert.equal(state._activeFocusCount, 1, 'the fade tail remains owned');
 
   harness.setFocusFrameActive(false);
-  performanceNow += 80;
-  harness.setFocusNowMs(performanceNow);
-  t.mock.timers.tick(80);
+  harness.setFocusFrameTransitioning(false);
+  advance(FOCUS_UPDATE_MS);
   assert.equal(state._activeFocusCount, 0);
-  assert.equal(harness.scheduledDelays.at(-1), 1_000);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, [
+    'satellites-periodic',
+  ]);
   assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
 
   parts.lifecycle.methods.disable(state._viewer);
   assert.equal(harness.focusTargetListeners.size, 0);
+  assert.equal(
+    parts.lifecycle.methods.getPerformanceDiagnostics().listeners,
+    0,
+  );
   assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
   const schedulesAfterDisable = harness.scheduledDelays.length;
   harness.setFocusTarget({ ownerLayer: 'flights', id: 'late-target' });
@@ -350,9 +462,13 @@ test('shared focus fading wakes at 80ms and returns to the static cadence when s
   parts.lifecycle.methods.enable(state._viewer);
   assert.equal(harness.focusTargetListeners.size, 1);
   harness.setFocusTarget({ ownerLayer: 'flights', id: 'destroy-target' });
-  assert.equal(harness.scheduledDelays.at(-1), 0);
+  assert.equal(lastDelayFor('satellites-focus'), 0);
   parts.lifecycle.methods.destroy(state._viewer);
   assert.equal(harness.focusTargetListeners.size, 0);
+  assert.equal(
+    parts.lifecycle.methods.getPerformanceDiagnostics().listeners,
+    0,
+  );
   assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
   const schedulesAfterDestroy = harness.scheduledDelays.length;
   harness.setFocusTarget(null);
