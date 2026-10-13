@@ -12,6 +12,12 @@ Fresh main reconciliation finds fork/main and upstream/main at `8b8ccc9a`, fully
 contained in local and remote dev `e8ccc268` (697 ahead, zero behind). No upstream
 merge or rebase is required. Reviewed QA work is still separate from dev.
 
+[Standard integration at `af821c5c`](performance-evidence/integration-af821c5c/README.md)
+passes all seven selected jobs, including full Node 24/26 suites and builds,
+Windows onboarding, Windows/macOS/Linux persisted-profile recovery and browser
+journeys. The separately recorded native map failure remains failed; these passes
+do not establish matched performance, a hardware soak or complete slice acceptance.
+
 The [exact-commit Windows recovery run at `feb067d3`](performance-evidence/windows-recovery-38401057945/README.md)
 now passes all prerequisites and all five persisted-profile recovery checks.
 Settings, workspace contents and saved assets survive interruption, rollback,
@@ -29,8 +35,13 @@ at `2d7c59ad` (source `0e6b2de0`) waits through the source-owned delayed startup
 callback, then cancels the active flight before assigning the declared route
 pose. Preparation is reported separately from route time and cleaned up during
 cancellation. Root passes 90 focused checks including actual Cesium negative
-controls and historical failure-report compatibility. Native validation remains
-pending; strict settings, route, readiness and timeout gates are unchanged.
+controls and historical failure-report compatibility. Native
+[run 38404611321](performance-evidence/s47-map-streaming/native-38404611321/README.md)
+then passes the baseline's strict camera/journey validation but fails the later
+interception audit: 83 missing imagery assets, with all eight retained paths at
+level 15 while the corpus includes levels 0-12. The candidate does not run. Fixing
+that fixture coverage is separate from pinning cross-platform 3D Tiles bytes;
+strict settings, route, readiness and timeout gates remain unchanged.
 
 Terrain readiness history is implemented on QA at `c0666072` (reviewed source
 commit `ca892212`). It reuses completed-render observations, retaining the first

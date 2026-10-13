@@ -53,6 +53,11 @@ cancel and verify pending/active-flight cancellation. A serialized-driver contro
 verifies cancellation while preparation is pending, no late route write, no
 remaining timer/listener and complete operation disposal.
 
-A successful native application map journey is still required. The CPU controls
-do not retrospectively identify the historical Metal failure's camera endpoint,
-explain the missing assets or establish performance improvement.
+The subsequent [native run 38404611321](../s47-map-streaming/native-38404611321/README.md)
+passes strict camera and journey validation on the frozen baseline: the declared
+6,000 m starting pose is retained, all four map states reach readiness, and the
+full 60-second route completes with unchanged settings. The overall run still
+fails because 83 imagery requests do not exist in the fixture manifest. The
+candidate journey is not reached. This separates the corrected camera ownership
+component from remaining imagery coverage and does not establish performance
+improvement or retrospectively identify the historical failure's exact endpoint.
