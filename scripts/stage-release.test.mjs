@@ -9,6 +9,55 @@ import {
   parseReleaseArgs,
 } from './stage-release.mjs';
 
+test('release verification downloads the exact uploaded artifact ID', async () => {
+  const workflow = await readFile(
+    new URL('../.github/workflows/release.yml', import.meta.url),
+    'utf8',
+  );
+  const uploadStart = workflow.indexOf(
+    '      - name: Upload candidate artifact for verification',
+  );
+  const guardStart = workflow.indexOf(
+    '      - name: Require immutable candidate artifact ID',
+  );
+  const downloadStart = workflow.indexOf(
+    '      - name: Download candidate artifact for verification',
+  );
+  const verifyStart = workflow.indexOf(
+    '      - name: Verify downloaded archive and attestation before publication',
+  );
+
+  assert.ok(uploadStart >= 0 && guardStart > uploadStart);
+  assert.ok(downloadStart > guardStart && verifyStart > downloadStart);
+  const upload = workflow.slice(uploadStart, guardStart);
+  const guard = workflow.slice(guardStart, downloadStart);
+  const download = workflow.slice(downloadStart, verifyStart);
+
+  assert.match(upload, /id: upload_candidate/);
+  assert.match(
+    upload,
+    /uses: actions\/upload-artifact@[0-9a-f]{40} # v4\.6\.2/,
+  );
+  assert.match(
+    guard,
+    /ARTIFACT_ID: \$\{\{ steps\.upload_candidate\.outputs\.artifact-id \}\}/,
+  );
+  assert.match(guard, /test -n "\$ARTIFACT_ID"/);
+  assert.match(guard, /\[\[ "\$ARTIFACT_ID" =~ \^\[0-9\]\+\$ \]\]/);
+  assert.match(
+    download,
+    /uses: actions\/download-artifact@[0-9a-f]{40} # v4\.3\.0/,
+  );
+  assert.match(
+    download,
+    /artifact-ids: \$\{\{ steps\.upload_candidate\.outputs\.artifact-id \}\}/,
+  );
+  assert.doesNotMatch(download, /^\s+name:/m);
+  assert.match(workflow, /sha256sum -c "\$\{ARCHIVE_NAME\}\.sha256"/);
+  assert.match(workflow, /gh attestation verify "\$ARCHIVE_NAME"/);
+  assert.match(workflow, /test "\$\(jq -r \.commit .*\)" = "\$GITHUB_SHA"/);
+});
+
 async function fixture(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'gev-release-'));
   t.after(() => rm(root, { recursive: true, force: true }));
