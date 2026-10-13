@@ -8,7 +8,7 @@ The frozen comparison baseline remains eb8c682.
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M1 fixture corpus     | Versioned, seeded, bounded generation of native imagery, nonflat quantized-mesh terrain and a multilevel textured GLB tileset covering a declared Austin route | The 599-asset v4 corpus passes cross-platform parser checks. Native run 38420739560 at 4b60f453 completes both revision journeys with zero missing or pending assets. Earlier v3 failures remain recorded; fixture sufficiency is established for this declared route, not arbitrary global navigation. |
 | M2 build identity     | Fixed public inert fixture key selected only by an explicit named build profile, with configuration digest in the recipe/receipt and verification              | Both exact-revision profiled builds, native startup and receipt verification pass in run 38420739560. The inert profile stays explicit; this is unsigned local build identity, not release attestation or hardware performance evidence.                                                                |
-| M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup          | Both production healthy journeys and the full candidate capture CLI pass at 4b60f453 after the shared-document ownership correction. The bounded fault-delivery adapter is reviewed at c05d973a; page wiring and rendered missing/corrupt/superseded-switch recovery controls remain open.              |
+| M3 production capture | Native startup and map-stack controls, exact interception routes, common before/after settings, fixed elapsed-time route, readiness and owned cleanup          | Both production healthy journeys and the full candidate capture CLI pass at 4b60f453 after the shared-document ownership correction. The fault adapter is reviewed at c05d973a and page controls at b7dcd673; fresh-document orchestration and rendered missing/corrupt/superseded-switch recovery controls remain open.              |
 | M4 matched comparison | Both revisions use the same fixture/profile, five runs with 30-second warmup and 60-second measurement, with cold activation separate                          | Pending M1-M3. Preserve detail settings and observed coverage; use real primary Windows rendering for hardware acceptance. Hosted diagnostics are supplemental.                                                                                                                                         |
 
 V4 follow-up `ec71877a` supplies the finite native OSM skeleton/ancestor image
@@ -19,6 +19,10 @@ actual both-revision delivery pending. Those checks subsequently pass in standar
 CI at `f50565a0` and the [native run at `4b60f453`](native-v4-38420739560/README.md).
 Earlier v3 and v4 failures remain failed. This does not complete M3 fault controls
 or M4 Windows qualification.
+
+The [page-control implementation](fault-page-control/README.md) passes 94 focused
+checks at `b7dcd673`. Fresh-document orchestration, bounded cleanup after a hung
+evaluation and actual rendered fault/recovery validation remain pending.
 
 The [fault-delivery adapter](fault-delivery-adapter/README.md) declares exactly one
 targeted metadata fault per fresh candidate document. Missing/corrupt responses
