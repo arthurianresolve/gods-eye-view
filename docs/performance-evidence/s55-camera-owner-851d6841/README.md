@@ -23,7 +23,8 @@ five-repeat, 124-frame reports retain their original revisions and scope: equal
 output hashes and clock reads reduced from 372 to 248 per repetition. They do
 not establish current application motion p95, GPU performance or visual output.
 
-This packet closes a missing test in the camera-ownership audit. S55 remains
-partial pending its complete engineering disposition and current integrated
-tracking validation; physical Windows and final-candidate qualification remain
-pending. Future changes to the compared paths need their own affected validation.
+This packet closes a missing test in the camera-ownership audit. The subsequent
+[complete engineering disposition](../closure-audit-20261013/README.md#s55-tracked-frame-work-and-camera-ownership)
+closes S55 engineering. Current integrated tracking validation, physical Windows
+and final-candidate qualification remain pending. Future changes to the compared
+paths need their own affected validation.

@@ -1,8 +1,8 @@
 # Engineering closure audit under the amended criteria
 
-S50, S52, S56 and S57 are **engineering closed**, with scoped component checks passed and
+S50, S52, S55, S56 and S57 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **4/14 engineering closed (28.6%)**, **10/14 partial**
+their own audit. Counts are **5/14 engineering closed (35.7%)**, **9/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
 
@@ -132,3 +132,26 @@ This closes S56 engineering under the conditional default-change requirement.
 The full application idle/moving/portrait/resized/restored/hidden capture matrix,
 physical Windows qualification and any performance claim remain pending. The
 small application-viewer component matrix is not substituted for those checks.
+
+## S55 tracked-frame work and camera ownership
+
+The [current camera-ownership review](../s55-camera-owner-851d6841/README.md)
+closes the remaining engineering audit. Root passes all 83 current focused
+checks, verifies the civil and military accepted source/dependency hashes, and
+confirms the new safe-frame regression rejects a repeated-handoff mutation.
+The [owner disposition](../s51-render-demand/owner-audit.md) records justified
+continuous camera work separately from removable duplicate work.
+
+| Required engineering behavior | Disposition |
+| --- | --- |
+| One authoritative tracked time and shared displayed pose | The accepted civil and military implementations reuse the tracked-frame sample across pose and trail callbacks; invalid frame identities remain fresh and target replacement clears cached ownership. Current production-factory reproductions pass both callback orders and cache-only observation cases. |
+| Avoid redundant position/transform/camera writes | Tracked labels and camera consume the displayed-pose cache. The camera applies its ENU handoff once; safe later updates leave following to Cesium EntityView. The new behavior test and failing mutation control verify this boundary. |
+| Keep fleet maintenance outside tracked updates | Fleet rendering remains in the bounded preRender fleet tick; tracked-model synchronization occurs in its separate preUpdate path. Untracked queries retain fresh independent time rather than borrowing the tracked scratch record. |
+| Preserve authority and recoverability | Current handoff/cockpit/click tests preserve tracking transitions, stale navigation guards, rollback ownership and release. Camera tests check shared zoom settings, safety clamping, disposal and viewer retirement. Per-frame follow and safety work is retained because it changes the view. |
+| Evidence for the accepted reduction | Existing five-repeat 124-frame component comparisons have identical output hashes and 372 to 248 clock reads. Their original source revisions and diagnostic-only scope remain explicit; no new latency claim follows from the audit. |
+
+This closes S55 engineering under the amended criteria. Current integrated
+rendered follow/cockpit/CCTV/replay/manual transitions, physical Windows motion
+p95 and long-task measurements remain pending qualification. The 20% objective
+is still unassessed for the final candidate. This is not an added slice or a
+retroactive hardware pass.
