@@ -6,6 +6,41 @@ const SHA1 = /^[a-f0-9]{40}$/i;
 export const CCTV_VIEWSHED_RETENTION_FIXTURE_ID = 'cctv-viewshed-retention/v2';
 export const CCTV_VIEWSHED_RETENTION_CAMERA_COUNT = 16;
 export const CCTV_VIEWSHED_RETENTION_LIMIT = 14;
+export const CCTV_VIEWSHED_RETENTION_MAX_CONSTRUCTION_EVENTS = 64;
+export const CCTV_VIEWSHED_RETENTION_CONSTRUCTION_PHASES = Object.freeze([
+  'startup',
+  'pre-ready-tint',
+  'coverage-viewshed',
+  'coverage-on',
+  'coverage-off',
+  'disable-enable-retention',
+  'camera-handoff',
+  'hidden-pose-edit',
+  'rendered-visibility-check',
+  'full-layer-rebuild-control',
+  'complete',
+]);
+
+/**
+ * Bounded, non-cryptographic signature for correlating constructed geometry
+ * during the component diagnostic. Cesium viewshed primitives contain five
+ * Cartesian vertices (15 Float64 components).
+ */
+export function viewshedConstructionGeometrySignature(primitive) {
+  const values =
+    primitive?.geometryInstances?.geometry?.attributes?.position?.values;
+  if (!values || values.length !== 15) return null;
+  const bytes = new ArrayBuffer(8);
+  const view = new DataView(bytes);
+  let hash = 2_166_136_261;
+  for (const value of values) {
+    if (!Number.isFinite(value)) return null;
+    view.setFloat64(0, value, true);
+    for (let index = 0; index < 8; index++)
+      hash = Math.imul(hash ^ view.getUint8(index), 16_777_619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
 export const CCTV_VIEWSHED_RETENTION_FIXTURE_SHA256 =
   'b160b49c242372d38b4cc5731f9d58934d11ced45a0c4da815a84a161a2897e0';
 export const CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR = Object.freeze({
@@ -404,6 +439,42 @@ export function validateCctvViewshedRetentionReport(
   count(cleanup.destroyedVolumes, 'destroyed volume', {
     min: cleanup.createdVolumes,
     max: cleanup.createdVolumes,
+  });
+  const constructionEvents = cohort.constructionEvents;
+  if (
+    !Array.isArray(constructionEvents) ||
+    constructionEvents.length > CCTV_VIEWSHED_RETENTION_MAX_CONSTRUCTION_EVENTS
+  )
+    fail('construction event inventory is invalid');
+  count(cohort.constructionEventOmissionCount, 'omitted construction event', {
+    max: cleanup.createdVolumes,
+  });
+  if (
+    cohort.constructionEventOmissionCount !== 0 ||
+    constructionEvents.length !== cleanup.createdVolumes
+  )
+    fail('construction event inventory is incomplete');
+  constructionEvents.forEach((event, index) => {
+    if (
+      !event ||
+      Object.keys(event).sort().join('|') !==
+        'cameraId|geometrySignature|phase|positionComponentCount|sequence'
+    )
+      fail('construction event shape is invalid');
+    count(event.sequence, 'construction event sequence', {
+      min: index + 1,
+      max: index + 1,
+    });
+    if (!fixture.cameraIds.includes(event.cameraId))
+      fail('construction event camera identity is invalid');
+    if (!CCTV_VIEWSHED_RETENTION_CONSTRUCTION_PHASES.includes(event.phase))
+      fail('construction event phase is invalid');
+    count(event.positionComponentCount, 'construction position component', {
+      min: 15,
+      max: 15,
+    });
+    if (!/^[a-f0-9]{8}$/.test(event.geometrySignature || ''))
+      fail('construction event geometry signature is invalid');
   });
   count(cleanup.postRenderListenersBefore, 'post-render listeners before');
   count(cleanup.postRenderListenersAfter, 'post-render listeners after', {

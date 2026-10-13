@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import * as Cesium from 'cesium';
-import { cameraHue, viewshedColors } from '../../src/data/cctvViewshed.js';
+import {
+  cameraHue,
+  createFrustumVolumePrimitive,
+  viewshedColors,
+} from '../../src/data/cctvViewshed.js';
 import {
   CCTV_VIEWSHED_RETENTION_CAMERA_COUNT,
   CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR,
@@ -11,6 +15,7 @@ import {
   CCTV_VIEWSHED_RETENTION_LIMIT,
   CCTV_VIEWSHED_RETENTION_MODES,
   validateCctvViewshedRetentionReport,
+  viewshedConstructionGeometrySignature,
 } from './cctvViewshedRetention.mjs';
 
 const commit = 'a'.repeat(40);
@@ -92,6 +97,14 @@ function validReport() {
       modeSequence: [...CCTV_VIEWSHED_RETENTION_MODES],
       preReadyTintFlipObserved: true,
       duplicateCameraIdCount: 0,
+      constructionEvents: Array.from({ length: 28 }, (_, index) => ({
+        sequence: index + 1,
+        cameraId: ids[index % 14],
+        phase: index < 14 ? 'coverage-viewshed' : 'full-layer-rebuild-control',
+        positionComponentCount: 15,
+        geometrySignature: String(index % 14).padStart(8, '0'),
+      })),
+      constructionEventOmissionCount: 0,
     },
     hiddenPoseEdit: {
       coverageHidden: true,
@@ -160,6 +173,90 @@ test('accepts the bounded retained-versus-rebuild rendered control', () => {
   assert.equal(
     validateCctvViewshedRetentionReport(report, { expectedCommit: commit }),
     report,
+  );
+});
+
+test('construction signature reads actual Cesium primitive vertex buffers', () => {
+  const positions = {
+    mount: Cesium.Cartesian3.fromDegrees(-97.7431, 30.2672, 22),
+    tl: Cesium.Cartesian3.fromDegrees(-97.7432, 30.2673, 100),
+    tr: Cesium.Cartesian3.fromDegrees(-97.743, 30.2673, 100),
+    br: Cesium.Cartesian3.fromDegrees(-97.743, 30.2671, 100),
+    bl: Cesium.Cartesian3.fromDegrees(-97.7432, 30.2671, 100),
+  };
+  const primitive = createFrustumVolumePrimitive(
+    positions,
+    Cesium.Color.RED,
+    'gev-viewshed:qa-viewshed-camera-00',
+  );
+  const signature = viewshedConstructionGeometrySignature(primitive);
+  assert.match(signature, /^[a-f0-9]{8}$/);
+  assert.equal(viewshedConstructionGeometrySignature(primitive), signature);
+  const duplicateBuild = createFrustumVolumePrimitive(
+    positions,
+    Cesium.Color.RED,
+    'gev-viewshed:qa-viewshed-camera-00',
+  );
+  assert.equal(
+    viewshedConstructionGeometrySignature(duplicateBuild),
+    signature,
+    'A duplicate construction with the same vertices has the same signature.',
+  );
+
+  const changed = createFrustumVolumePrimitive(
+    {
+      ...positions,
+      bl: Cesium.Cartesian3.fromDegrees(-97.7432, 30.2671, 101),
+    },
+    Cesium.Color.RED,
+    'gev-viewshed:qa-viewshed-camera-00',
+  );
+  assert.notEqual(viewshedConstructionGeometrySignature(changed), signature);
+  assert.equal(
+    viewshedConstructionGeometrySignature({ geometryInstances: {} }),
+    null,
+  );
+});
+
+test('construction signatures bind each fixed camera and fail on overflow or malformed entries', () => {
+  const report = validReport();
+  report.cohort.constructionEventOmissionCount = 1;
+  assert.throws(
+    () => validateCctvViewshedRetentionReport(report),
+    /construction event inventory is incomplete/,
+  );
+
+  const unknownCamera = validReport();
+  unknownCamera.cohort.constructionEvents[0].cameraId = 'untrusted-camera';
+  assert.throws(
+    () => validateCctvViewshedRetentionReport(unknownCamera),
+    /construction event camera identity is invalid/,
+  );
+
+  const overCapacity = validReport();
+  overCapacity.cohort.constructionEvents = Array.from(
+    { length: 65 },
+    (_, index) => ({
+      sequence: index + 1,
+      cameraId: ids[index % ids.length],
+      phase: 'coverage-viewshed',
+      positionComponentCount: 15,
+      geometrySignature: '01234567',
+    }),
+  );
+  overCapacity.cleanup.createdVolumes = 65;
+  overCapacity.cleanup.removedVolumes = 65;
+  overCapacity.cleanup.destroyedVolumes = 65;
+  assert.throws(
+    () => validateCctvViewshedRetentionReport(overCapacity),
+    /construction event inventory is invalid/,
+  );
+
+  const alteredSignature = validReport();
+  alteredSignature.cohort.constructionEvents[0].geometrySignature = 'not-hash';
+  assert.throws(
+    () => validateCctvViewshedRetentionReport(alteredSignature),
+    /construction event geometry signature is invalid/,
   );
 });
 

@@ -27,12 +27,14 @@ import {
 } from '../performance/importFrameDiagnostics.mjs';
 import {
   CCTV_VIEWSHED_RETENTION_CAMERA_COUNT,
+  CCTV_VIEWSHED_RETENTION_MAX_CONSTRUCTION_EVENTS,
   CCTV_VIEWSHED_RETENTION_FIXTURE_DESCRIPTOR,
   CCTV_VIEWSHED_RETENTION_FIXTURE_ID,
   CCTV_VIEWSHED_RETENTION_FIXTURE_SHA256,
   CCTV_VIEWSHED_RETENTION_LIMIT,
   CCTV_VIEWSHED_RETENTION_MODES,
   validateCctvViewshedRetentionReport,
+  viewshedConstructionGeometrySignature,
 } from '../performance/cctvViewshedRetention.mjs';
 
 const FIXTURE_ID = 'cctv-calibration-native-drag/v1';
@@ -1056,7 +1058,7 @@ function createViewer() {
   return viewer;
 }
 
-function installViewshedPrimitiveObserver(viewer) {
+function installViewshedPrimitiveObserver(viewer, getPhase) {
   const collection = viewer.scene.primitives;
   const ownAdd = Object.getOwnPropertyDescriptor(collection, 'add');
   const ownRemove = Object.getOwnPropertyDescriptor(collection, 'remove');
@@ -1069,9 +1071,29 @@ function installViewshedPrimitiveObserver(viewer) {
   let destroyed = 0;
   let peakLive = 0;
   let duplicateCameraIds = 0;
+  let omittedConstructionEvents = 0;
+  const constructionEvents = [];
   function observedAdd(primitive) {
     const result = originalAdd.call(this, primitive);
     if (typeof primitive?._gevViewshed === 'string') {
+      if (
+        constructionEvents.length <
+        CCTV_VIEWSHED_RETENTION_MAX_CONSTRUCTION_EVENTS
+      ) {
+        const values =
+          primitive?.geometryInstances?.geometry?.attributes?.position?.values;
+        constructionEvents.push({
+          sequence: created + 1,
+          cameraId: primitive._gevViewshed,
+          phase: getPhase(),
+          positionComponentCount: Number.isSafeInteger(values?.length)
+            ? values.length
+            : 0,
+          geometrySignature: viewshedConstructionGeometrySignature(primitive),
+        });
+      } else {
+        omittedConstructionEvents++;
+      }
       if (live.has(primitive._gevViewshed)) duplicateCameraIds++;
       live.set(primitive._gevViewshed, primitive);
       livePrimitives.add(primitive);
@@ -1102,7 +1124,9 @@ function installViewshedPrimitiveObserver(viewer) {
       live: livePrimitives.size,
       peakLive,
       duplicateCameraIds,
+      omittedConstructionEvents,
     }),
+    constructionEvents,
     restore() {
       if (ownAdd) Object.defineProperty(collection, 'add', ownAdd);
       else delete collection.add;
@@ -1423,6 +1447,8 @@ async function runViewshedRetentionFixture() {
       modeSequence: [],
       preReadyTintFlipObserved: false,
       duplicateCameraIdCount: 0,
+      constructionEvents: [],
+      constructionEventOmissionCount: 0,
     },
     hiddenPoseEdit: null,
     activeTint: null,
@@ -1486,7 +1512,7 @@ async function runViewshedRetentionFixture() {
       'Fixture requires an application commit.',
     );
     viewer = createViewer();
-    observer = installViewshedPrimitiveObserver(viewer);
+    observer = installViewshedPrimitiveObserver(viewer, () => report.phase);
     Object.assign(report.environment, rendererName(viewer));
     report.cleanup.postRenderListenersBefore =
       viewer.scene.postRender.numberOfListeners;
@@ -1800,6 +1826,9 @@ async function runViewshedRetentionFixture() {
       report.cleanup.createdVolumes = counts.created;
       report.cleanup.removedVolumes = counts.removed;
       report.cleanup.destroyedVolumes = counts.destroyed;
+      report.cohort.constructionEvents = observer.constructionEvents;
+      report.cohort.constructionEventOmissionCount =
+        counts.omittedConstructionEvents;
       report.cleanup.liveVolumes = counts.live;
       report.cleanup.wrappersRestored = observer.restore();
     }
