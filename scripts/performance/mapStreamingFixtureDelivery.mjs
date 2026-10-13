@@ -123,7 +123,10 @@ function routeManifestAsset(url, assetsByPath, googleKey) {
     throw deliveryError('native-url-shape-invalid');
 
   if (url.origin === ARCGIS_ORIGIN) {
-    if (url.pathname === ARCGIS_SERVICE_PATH) {
+    if (
+      url.pathname === ARCGIS_SERVICE_PATH ||
+      url.pathname === `${ARCGIS_SERVICE_PATH}/`
+    ) {
       if (!exactQuery(url, [['f', 'json']]))
         throw deliveryError('arcgis-metadata-query-invalid');
       return 'arcgis/rest/services/World_Imagery/MapServer/metadata.json';
