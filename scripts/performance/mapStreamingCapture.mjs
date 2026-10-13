@@ -55,7 +55,153 @@ const MAP_JOURNEY_MAX_POLL_COUNT = 720;
 const MAP_JOURNEY_HOST_DEADLINE_MS = 150_000;
 const MAP_GLOBE_QUEUE_SAMPLE_LIMIT = 8;
 const MAP_GLOBE_IMAGERY_SAMPLE_LIMIT = 32;
+export const MAP_GLOBE_TERRAIN_ANCESTRY_LIMIT = 24;
 let nextMapJourneyOperationId = 0;
+
+const MAP_TERRAIN_ANCESTRY_FIELDS = Object.freeze([
+  'x',
+  'y',
+  'level',
+  'tileState',
+  'parent',
+  'data',
+  'terrainState',
+  'dataMesh',
+  'terrainData',
+  'terrainMesh',
+  'canUpsample',
+]);
+
+function projectMapTerrainQueueAncestry(value, firstSample) {
+  assert.ok(value && typeof value === 'object' && !Array.isArray(value));
+  assert.equal(typeof value.available, 'boolean');
+  assert.equal(typeof value.cycleDetected, 'boolean');
+  assert.equal(typeof value.truncated, 'boolean');
+  assert.ok(Array.isArray(value.unsupportedFields));
+  assert.ok(
+    value.unsupportedFields.length <= MAP_TERRAIN_ANCESTRY_FIELDS.length,
+  );
+  const unsupportedFields = [...value.unsupportedFields];
+  assert.equal(new Set(unsupportedFields).size, unsupportedFields.length);
+  for (const field of unsupportedFields)
+    assert.ok(MAP_TERRAIN_ANCESTRY_FIELDS.includes(field));
+
+  assert.ok(Array.isArray(value.rows));
+  assert.ok(value.rows.length <= MAP_GLOBE_TERRAIN_ANCESTRY_LIMIT);
+  if (!value.available) {
+    assert.ok(
+      ['no-queued-sample', 'sample-identity-unavailable'].includes(
+        value.unavailableReason,
+      ),
+    );
+    assert.equal(value.sample, null);
+    assert.equal(value.rows.length, 0);
+    assert.equal(value.truncated, false);
+    assert.equal(value.cycleDetected, false);
+    return {
+      available: false,
+      unavailableReason: value.unavailableReason,
+      sample: null,
+      rows: [],
+      truncated: false,
+      cycleDetected: false,
+      unsupportedFields,
+    };
+  }
+
+  assert.equal(value.unavailableReason, null);
+  assert.ok(firstSample && typeof firstSample === 'object');
+  assert.ok(value.sample && typeof value.sample === 'object');
+  assert.ok(['high', 'medium', 'low'].includes(value.sample.queue));
+  for (const name of ['queue', 'x', 'y', 'level'])
+    assert.equal(value.sample[name], firstSample[name]);
+  assert.ok(value.rows.length >= 1);
+  const rows = value.rows.map((row) => {
+    assert.ok(row && typeof row === 'object' && !Array.isArray(row));
+    for (const name of ['x', 'y', 'level'])
+      assert.ok(Number.isSafeInteger(row[name]) && row[name] >= 0);
+    assert.ok(
+      row.tileState === null ||
+        (Number.isSafeInteger(row.tileState) &&
+          row.tileState >= 0 &&
+          row.tileState <= 3),
+    );
+    assert.ok(
+      row.terrainState === null ||
+        (Number.isSafeInteger(row.terrainState) &&
+          row.terrainState >= 0 &&
+          row.terrainState <= 6),
+    );
+    for (const name of [
+      'parentPresent',
+      'dataPresent',
+      'dataMeshPresent',
+      'terrainDataPresent',
+      'terrainMeshPresent',
+      'canUpsample',
+    ])
+      assert.ok(row[name] === null || typeof row[name] === 'boolean');
+    return {
+      x: row.x,
+      y: row.y,
+      level: row.level,
+      tileState: row.tileState,
+      parentPresent: row.parentPresent,
+      dataPresent: row.dataPresent,
+      terrainState: row.terrainState,
+      dataMeshPresent: row.dataMeshPresent,
+      terrainDataPresent: row.terrainDataPresent,
+      terrainMeshPresent: row.terrainMeshPresent,
+      canUpsample: row.canUpsample,
+    };
+  });
+  assert.deepEqual(
+    { x: rows[0].x, y: rows[0].y, level: rows[0].level },
+    { x: firstSample.x, y: firstSample.y, level: firstSample.level },
+    'Ancestry root must match the first queued sample identity.',
+  );
+  for (let index = 0; index + 1 < rows.length; index += 1) {
+    const child = rows[index];
+    const parent = rows[index + 1];
+    assert.equal(child.parentPresent, true);
+    assert.equal(parent.level, child.level - 1);
+    assert.equal(parent.x, Math.floor(child.x / 2));
+    assert.equal(parent.y, Math.floor(child.y / 2));
+  }
+  const last = rows.at(-1);
+  assert.ok(
+    last.parentPresent === false ||
+      last.parentPresent === true ||
+      last.parentPresent === null,
+  );
+  if (value.truncated) {
+    assert.equal(rows.length, MAP_GLOBE_TERRAIN_ANCESTRY_LIMIT);
+    assert.equal(last.parentPresent, true);
+  } else if (last.parentPresent === true && !value.cycleDetected) {
+    assert.ok(unsupportedFields.length > 0);
+  }
+  if (value.cycleDetected) assert.equal(last.parentPresent, true);
+  if (last.parentPresent === false && last.level !== 0)
+    assert.ok(unsupportedFields.includes('parent'));
+  if (last.parentPresent === null && !unsupportedFields.includes('parent')) {
+    throw new Error('Ancestry ended before a root or declared truncation.');
+  }
+
+  return {
+    available: true,
+    unavailableReason: null,
+    sample: {
+      queue: value.sample.queue,
+      x: value.sample.x,
+      y: value.sample.y,
+      level: value.sample.level,
+    },
+    rows,
+    truncated: value.truncated,
+    cycleDetected: value.cycleDetected,
+    unsupportedFields,
+  };
+}
 
 const MAP_JOURNEY_PHASES = new Set([
   'starting',
@@ -437,11 +583,22 @@ export function projectMapStreamingJourneyFailureEvidence(value) {
       },
     };
   }
+  const sourceQueueDiagnostics =
+    sourceCheckpoint?.latestObservation?.globeQueueDiagnostics ?? null;
+  const checkpointTerrainAncestry =
+    sourceQueueDiagnostics?.terrainAncestry === undefined
+      ? null
+      : projectMapTerrainQueueAncestry(
+          sourceQueueDiagnostics.terrainAncestry,
+          sourceQueueDiagnostics.sampledTiles?.[0] ?? null,
+        );
   const checkpoint = projectMapJourneyCheckpoint(sourceCheckpoint);
   const checkpointGlobeQueueDiagnostics =
     checkpoint?.latestObservation?.globeQueueDiagnostics ?? null;
   if (checkpoint?.latestObservation)
     delete checkpoint.latestObservation.globeQueueDiagnostics;
+  if (checkpointGlobeQueueDiagnostics && checkpointTerrainAncestry)
+    checkpointGlobeQueueDiagnostics.terrainAncestry = checkpointTerrainAncestry;
   return {
     schema: value.schema,
     operationId: value.operationId,
@@ -472,6 +629,7 @@ export async function runNativeMapStreamingJourneyInPage({
   operationId = null,
 }) {
   const cancelDrainTimeoutMs = 5_000;
+  const terrainAncestryLimit = 24;
   const operationKey = '__gevMapStreamingJourneyV1';
   const operations = () => {
     const current = window[operationKey];
@@ -796,6 +954,15 @@ export async function runNativeMapStreamingJourneyInPage({
     const renderedTileCount = Array.isArray(surface?._tilesToRender)
       ? surface._tilesToRender.length
       : null;
+    const unavailableAncestry = (unavailableReason) => ({
+      available: false,
+      unavailableReason,
+      sample: null,
+      rows: [],
+      truncated: false,
+      cycleDetected: false,
+      unsupportedFields: [],
+    });
     if (!surface)
       return {
         available: false,
@@ -804,6 +971,7 @@ export async function runNativeMapStreamingJourneyInPage({
         renderedTileCount: null,
         sampledTiles: [],
         omittedSampledTileCount: null,
+        terrainAncestry: unavailableAncestry('no-queued-sample'),
       };
     const queues = [
       ['high', surface._tileLoadQueueHigh],
@@ -818,6 +986,7 @@ export async function runNativeMapStreamingJourneyInPage({
         renderedTileCount,
         sampledTiles: [],
         omittedSampledTileCount: null,
+        terrainAncestry: unavailableAncestry('no-queued-sample'),
       };
 
     const queueCounts = {
@@ -827,6 +996,8 @@ export async function runNativeMapStreamingJourneyInPage({
       total: queues[0][1].length + queues[1][1].length + queues[2][1].length,
     };
     const sampledTiles = [];
+    let firstSampleTile = null;
+    let firstSampleQueue = null;
     for (const [queueName, queue] of queues) {
       for (
         let index = 0;
@@ -861,6 +1032,10 @@ export async function runNativeMapStreamingJourneyInPage({
           Number.isSafeInteger(value) && value >= 0 && value <= max
             ? value
             : null;
+        if (sampledTiles.length === 0) {
+          firstSampleTile = tile;
+          firstSampleQueue = queueName;
+        }
         sampledTiles.push({
           queue: queueName,
           x: finiteIndex(tile?._x),
@@ -883,6 +1058,195 @@ export async function runNativeMapStreamingJourneyInPage({
         });
       }
     }
+    const readTerrainAncestry = () => {
+      if (!firstSampleTile) return unavailableAncestry('no-queued-sample');
+      const finiteIndex = (value) =>
+        Number.isSafeInteger(value) && value >= 0 ? value : null;
+      const sample = {
+        queue: firstSampleQueue,
+        x: finiteIndex(firstSampleTile?._x),
+        y: finiteIndex(firstSampleTile?._y),
+        level: finiteIndex(firstSampleTile?._level),
+      };
+      if (sample.x === null || sample.y === null || sample.level === null)
+        return {
+          ...unavailableAncestry('sample-identity-unavailable'),
+          unsupportedFields: [
+            ...(sample.x === null ? ['x'] : []),
+            ...(sample.y === null ? ['y'] : []),
+            ...(sample.level === null ? ['level'] : []),
+          ],
+        };
+
+      const unsupportedFields = new Set();
+      const seen = new Set();
+      const rows = [];
+      let current = firstSampleTile;
+      let cycleDetected = false;
+      let truncated = false;
+      const readProperty = (object, name, supportedField) => {
+        try {
+          if (
+            object === null ||
+            (typeof object !== 'object' && typeof object !== 'function') ||
+            !(name in object)
+          ) {
+            unsupportedFields.add(supportedField);
+            return { supported: false, value: undefined };
+          }
+          return { supported: true, value: object[name] };
+        } catch {
+          unsupportedFields.add(supportedField);
+          return { supported: false, value: undefined };
+        }
+      };
+
+      while (current && rows.length < terrainAncestryLimit) {
+        if (seen.has(current)) {
+          cycleDetected = true;
+          break;
+        }
+        seen.add(current);
+        const xRead = readProperty(current, '_x', 'x');
+        const yRead = readProperty(current, '_y', 'y');
+        const levelRead = readProperty(current, '_level', 'level');
+        const x = finiteIndex(xRead.value);
+        const y = finiteIndex(yRead.value);
+        const level = finiteIndex(levelRead.value);
+        if (!xRead.supported || x === null) unsupportedFields.add('x');
+        if (!yRead.supported || y === null) unsupportedFields.add('y');
+        if (!levelRead.supported || level === null)
+          unsupportedFields.add('level');
+        if (
+          !xRead.supported ||
+          !yRead.supported ||
+          !levelRead.supported ||
+          x === null ||
+          y === null ||
+          level === null
+        )
+          break;
+
+        const tileStateRead = readProperty(current, 'state', 'tileState');
+        const tileStateValue = tileStateRead.value;
+        const tileState =
+          tileStateRead.supported &&
+          Number.isSafeInteger(tileStateValue) &&
+          tileStateValue >= 0 &&
+          tileStateValue <= 3
+            ? tileStateValue
+            : null;
+        if (tileState === null) unsupportedFields.add('tileState');
+
+        const dataRead = readProperty(current, 'data', 'data');
+        const dataValue = dataRead.value;
+        const dataPresent = dataRead.supported
+          ? dataValue !== null && dataValue !== undefined
+          : null;
+        const data = dataPresent ? dataValue : null;
+        let terrainState = null;
+        let dataMeshPresent = null;
+        let terrainDataPresent = null;
+        let terrainMeshPresent = null;
+        let canUpsample = null;
+        if (dataPresent === true) {
+          const terrainStateRead = readProperty(
+            data,
+            'terrainState',
+            'terrainState',
+          );
+          const terrainStateValue = terrainStateRead.value;
+          terrainState =
+            terrainStateRead.supported &&
+            Number.isSafeInteger(terrainStateValue) &&
+            terrainStateValue >= 0 &&
+            terrainStateValue <= 6
+              ? terrainStateValue
+              : null;
+          if (terrainState === null) unsupportedFields.add('terrainState');
+
+          const dataMeshRead = readProperty(data, 'mesh', 'dataMesh');
+          dataMeshPresent = dataMeshRead.supported
+            ? dataMeshRead.value !== null && dataMeshRead.value !== undefined
+            : null;
+
+          const terrainDataRead = readProperty(
+            data,
+            'terrainData',
+            'terrainData',
+          );
+          terrainDataPresent = terrainDataRead.supported
+            ? terrainDataRead.value !== null &&
+              terrainDataRead.value !== undefined
+            : null;
+          if (terrainDataPresent === true) {
+            const terrainMeshRead = readProperty(
+              terrainDataRead.value,
+              '_mesh',
+              'terrainMesh',
+            );
+            terrainMeshPresent = terrainMeshRead.supported
+              ? terrainMeshRead.value !== null &&
+                terrainMeshRead.value !== undefined
+              : null;
+            const canUpsampleRead = readProperty(
+              terrainDataRead.value,
+              'canUpsample',
+              'canUpsample',
+            );
+            canUpsample = canUpsampleRead.supported
+              ? typeof canUpsampleRead.value === 'boolean'
+                ? canUpsampleRead.value
+                : null
+              : null;
+            if (canUpsampleRead.supported && canUpsample === null)
+              unsupportedFields.add('canUpsample');
+          }
+        }
+
+        const parentRead = readProperty(current, 'parent', 'parent');
+        const parentValue = parentRead.value;
+        const parentPresent = parentRead.supported
+          ? parentValue !== null && parentValue !== undefined
+          : null;
+        rows.push({
+          x,
+          y,
+          level,
+          tileState,
+          parentPresent,
+          dataPresent,
+          terrainState,
+          dataMeshPresent,
+          terrainDataPresent,
+          terrainMeshPresent,
+          canUpsample,
+        });
+        if (parentPresent === null) break;
+        if (!parentPresent) {
+          if (level !== 0) unsupportedFields.add('parent');
+          break;
+        }
+        if (rows.length === terrainAncestryLimit) {
+          truncated = true;
+          break;
+        }
+        if (seen.has(parentValue)) {
+          cycleDetected = true;
+          break;
+        }
+        current = parentValue;
+      }
+      return {
+        available: true,
+        unavailableReason: null,
+        sample,
+        rows,
+        truncated,
+        cycleDetected,
+        unsupportedFields: [...unsupportedFields].sort(),
+      };
+    };
     return {
       available: true,
       unavailableReason: null,
@@ -893,6 +1257,7 @@ export async function runNativeMapStreamingJourneyInPage({
         0,
         queueCounts.total - sampledTiles.length,
       ),
+      terrainAncestry: readTerrainAncestry(),
     };
   };
 

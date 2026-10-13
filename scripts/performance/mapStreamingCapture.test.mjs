@@ -742,6 +742,7 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
     data: {
       terrainState: queueIndex % 7,
       mesh: queueIndex % 2 ? null : {},
+      terrainData: { _mesh: {}, canUpsample: true },
       imagery: Array.from({ length: imageryCount }, (_, index) => ({
         loadingImagery: { state: index % 8 },
       })),
@@ -756,6 +757,26 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
   surface._tileLoadQueueLow = Array.from({ length: 5 }, (_, index) =>
     makeTile(index + 10, 0),
   );
+  let parent = null;
+  for (let level = 0; level <= 23; level += 1) {
+    parent = {
+      _x: 0,
+      _y: 0,
+      _level: level,
+      state: 1,
+      parent,
+      data: {
+        terrainState: 1,
+        mesh: {},
+        terrainData: { _mesh: {}, canUpsample: true },
+      },
+    };
+  }
+  const firstQueuedTile = makeTile(0, 40);
+  firstQueuedTile._y = 1;
+  firstQueuedTile._level = 24;
+  firstQueuedTile.parent = parent;
+  surface._tileLoadQueueHigh[0] = firstQueuedTile;
   surface._tilesToRender = Array.from({ length: 3 }, (_, index) =>
     makeTile(index + 20, 0),
   );
@@ -794,6 +815,21 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
         ),
         Array.from({ length: 8 }, () => 4),
       );
+      const ancestry = original.checkpointGlobeQueueDiagnostics.terrainAncestry;
+      assert.equal(ancestry.available, true);
+      assert.deepEqual(ancestry.sample, {
+        queue: 'high',
+        x: 0,
+        y: 1,
+        level: 24,
+      });
+      assert.equal(ancestry.rows.length, 24);
+      assert.equal(ancestry.rows[0].level, 24);
+      assert.equal(ancestry.rows.at(-1).level, 1);
+      assert.equal(ancestry.rows.at(-1).parentPresent, true);
+      assert.equal(ancestry.truncated, true);
+      assert.equal(ancestry.cycleDetected, false);
+      assert.deepEqual(ancestry.unsupportedFields, []);
 
       const report = createCaptureFailureReport({
         source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
@@ -817,6 +853,16 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
         Array.from({ length: 8 }, () => 4),
       );
       assert.equal(
+        replay.workload.mapStreamingJourneyFailure
+          .checkpointGlobeQueueDiagnostics.terrainAncestry.rows.length,
+        24,
+      );
+      assert.equal(
+        replay.workload.mapStreamingJourneyFailure
+          .checkpointGlobeQueueDiagnostics.terrainAncestry.truncated,
+        true,
+      );
+      assert.equal(
         replay.workload.mapStreamingJourneyFailure.checkpoint.latestObservation
           .globeQueueDiagnostics,
         undefined,
@@ -836,6 +882,11 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
         outerFailure.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
           .sampledTiles.length,
         8,
+      );
+      assert.equal(
+        outerFailure.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .terrainAncestry.rows.length,
+        24,
       );
 
       const oversized = structuredClone(original);
@@ -859,6 +910,195 @@ test('native map failure report retains bounded Cesium terrain queue diagnostics
       assert.throws(() =>
         projectMapStreamingJourneyFailureEvidence(inconsistentQueueCount),
       );
+      const missingAncestry = structuredClone(original);
+      delete missingAncestry.checkpointGlobeQueueDiagnostics.terrainAncestry;
+      assert.doesNotThrow(() =>
+        projectMapStreamingJourneyFailureEvidence(missingAncestry),
+      );
+      const badSample = structuredClone(original);
+      badSample.checkpointGlobeQueueDiagnostics.terrainAncestry.sample.x = 1;
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(badSample),
+        /equal/,
+      );
+      const badParentCoordinates = structuredClone(original);
+      badParentCoordinates.checkpointGlobeQueueDiagnostics.terrainAncestry.rows[1].y = 9;
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(badParentCoordinates),
+        /equal/,
+      );
+      const badUnsupportedField = structuredClone(original);
+      badUnsupportedField.checkpointGlobeQueueDiagnostics.terrainAncestry.unsupportedFields =
+        ['secret'];
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(badUnsupportedField),
+        /MAP_TERRAIN_ANCESTRY_FIELDS/,
+      );
+      const overLimitAncestry = structuredClone(original);
+      overLimitAncestry.checkpointGlobeQueueDiagnostics.terrainAncestry.rows.push(
+        structuredClone(ancestry.rows.at(-1)),
+      );
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(overLimitAncestry),
+        /length/,
+      );
+      const falseTruncation = structuredClone(original);
+      falseTruncation.checkpointGlobeQueueDiagnostics.terrainAncestry.truncated = false;
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(falseTruncation),
+        /unsupportedFields/,
+      );
+      return true;
+    },
+  );
+});
+
+test('native map queue ancestry reports cycles and throwing parent getters explicitly', async () => {
+  const harness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 5_000,
+  });
+  const surface =
+    harness.context.window.__godsEyeView.viewer.scene.globe._surface;
+  const sample = {
+    _x: 0,
+    _y: 1,
+    _level: 3,
+    state: 1,
+    data: {
+      terrainState: 0,
+      mesh: null,
+      terrainData: { _mesh: null, canUpsample: false },
+    },
+  };
+  const parent2 = {
+    _x: 0,
+    _y: 0,
+    _level: 2,
+    state: 1,
+    data: {
+      terrainState: 0,
+      mesh: null,
+      terrainData: { _mesh: null, canUpsample: false },
+    },
+  };
+  const parent1 = {
+    _x: 0,
+    _y: 0,
+    _level: 1,
+    state: 1,
+    data: {
+      terrainState: 0,
+      mesh: null,
+      terrainData: { _mesh: null, canUpsample: false },
+    },
+  };
+  const root = {
+    _x: 0,
+    _y: 0,
+    _level: 0,
+    state: 1,
+    data: {
+      terrainState: 0,
+      mesh: null,
+      terrainData: { _mesh: null, canUpsample: false },
+    },
+  };
+  sample.parent = parent2;
+  parent2.parent = parent1;
+  parent1.parent = root;
+  root.parent = sample;
+  surface._tileLoadQueueHigh = [sample];
+
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const ancestry =
+        error.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .terrainAncestry;
+      assert.equal(ancestry.available, true);
+      assert.equal(ancestry.cycleDetected, true);
+      assert.equal(ancestry.truncated, false);
+      assert.equal(ancestry.rows.length, 4);
+      assert.equal(ancestry.rows.at(-1).level, 0);
+      assert.equal(ancestry.rows.at(-1).parentPresent, true);
+      return true;
+    },
+  );
+
+  const throwingParentHarness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 5_000,
+  });
+  const throwingSurface =
+    throwingParentHarness.context.window.__godsEyeView.viewer.scene.globe
+      ._surface;
+  const tileWithoutData = {
+    _x: 7,
+    _y: 9,
+    _level: 4,
+    state: 1,
+    get parent() {
+      throw new Error('controlled private getter failure');
+    },
+  };
+  throwingSurface._tileLoadQueueHigh = [tileWithoutData];
+  await assert.rejects(
+    runNativeMapStreamingJourney(throwingParentHarness.page, {
+      durationMs: 60_000,
+      route: throwingParentHarness.route,
+    }),
+    (error) => {
+      const ancestry =
+        error.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .terrainAncestry;
+      assert.equal(ancestry.available, true);
+      assert.equal(ancestry.cycleDetected, false);
+      assert.equal(ancestry.truncated, false);
+      assert.deepEqual(ancestry.unsupportedFields, ['data', 'parent']);
+      assert.equal(ancestry.rows.length, 1);
+      assert.equal(ancestry.rows[0].dataPresent, null);
+      assert.equal(ancestry.rows[0].parentPresent, null);
+      return true;
+    },
+  );
+
+  const invalidAncestorHarness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 5_000,
+  });
+  const invalidAncestorSurface =
+    invalidAncestorHarness.context.window.__godsEyeView.viewer.scene.globe
+      ._surface;
+  const invalidIdentitySample = {
+    _x: 7,
+    _y: 9,
+    _level: 4,
+    state: 1,
+    parent: { _x: -1, _y: 4, _level: 3, state: 1 },
+    data: {
+      terrainState: 0,
+      mesh: null,
+      terrainData: { _mesh: null, canUpsample: false },
+    },
+  };
+  invalidAncestorSurface._tileLoadQueueHigh = [invalidIdentitySample];
+  await assert.rejects(
+    runNativeMapStreamingJourney(invalidAncestorHarness.page, {
+      durationMs: 60_000,
+      route: invalidAncestorHarness.route,
+    }),
+    (error) => {
+      const ancestry =
+        error.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .terrainAncestry;
+      assert.equal(ancestry.available, true);
+      assert.equal(ancestry.rows.length, 1);
+      assert.equal(ancestry.rows[0].parentPresent, true);
+      assert.deepEqual(ancestry.unsupportedFields, ['x']);
       return true;
     },
   );
@@ -884,6 +1124,15 @@ test('Cesium queue diagnostic is explicitly unavailable when Globe surface inter
         renderedTileCount: null,
         sampledTiles: [],
         omittedSampledTileCount: null,
+        terrainAncestry: {
+          available: false,
+          unavailableReason: 'no-queued-sample',
+          sample: null,
+          rows: [],
+          truncated: false,
+          cycleDetected: false,
+          unsupportedFields: [],
+        },
       });
       return true;
     },
