@@ -1694,6 +1694,7 @@ export function runBoundedChild(
     maxOutputBytes = 64 * 1024,
     ownedPidFile = null,
     spawnSyncImpl = spawnSync,
+    readOwnedPidFileImpl = readFileSync,
   } = {},
 ) {
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1)
@@ -1716,6 +1717,7 @@ export function runBoundedChild(
     let timeoutTimer = null;
     let settled = false;
     let ownedBrowserPid = null;
+    let windowsOwnedBrowserConfirmationPid = null;
     let windowsTreeTerminationConfirmed = false;
     let windowsOwnedBrowserTerminationConfirmed = false;
     let windowsOwnedBrowserExitConfirmed = false;
@@ -1723,8 +1725,15 @@ export function runBoundedChild(
     const rememberOwnedBrowserPid = () => {
       if (!ownedPidFile) return;
       try {
-        const value = Number(readFileSync(ownedPidFile, 'utf8').trim());
-        if (Number.isSafeInteger(value) && value > 0) ownedBrowserPid = value;
+        const value = Number(readOwnedPidFileImpl(ownedPidFile, 'utf8').trim());
+        if (Number.isSafeInteger(value) && value > 0) {
+          if (value !== ownedBrowserPid) {
+            ownedBrowserPid = value;
+            windowsOwnedBrowserConfirmationPid = null;
+            windowsOwnedBrowserTerminationConfirmed = false;
+            windowsOwnedBrowserExitConfirmed = false;
+          }
+        }
       } catch {
         // The CLI may not have launched Chromium yet, or may have cleaned up.
       }
@@ -1770,7 +1779,11 @@ export function runBoundedChild(
       }
       if (ownedBrowserPid && ownedBrowserPid !== child.pid) {
         if (process.platform === 'win32') {
-          if (!windowsOwnedBrowserTerminationConfirmed) {
+          if (
+            !windowsOwnedBrowserTerminationConfirmed ||
+            windowsOwnedBrowserConfirmationPid !== ownedBrowserPid
+          ) {
+            windowsOwnedBrowserConfirmationPid = ownedBrowserPid;
             windowsOwnedBrowserTerminationConfirmed = terminatePid(
               ownedBrowserPid,
               signal,
@@ -1910,10 +1923,15 @@ export function runBoundedChild(
             // same tree kill after close. A separately-owned browser PID is
             // killed only if its first bounded taskkill did not confirm exit;
             // its presence is still checked below.
-            if (ownedBrowserPid && !windowsOwnedBrowserTerminationConfirmed) {
+            if (
+              ownedBrowserPid &&
+              (!windowsOwnedBrowserTerminationConfirmed ||
+                windowsOwnedBrowserConfirmationPid !== ownedBrowserPid)
+            ) {
               windowsOwnedBrowserExitConfirmed =
                 isProcessPresent(ownedBrowserPid, false) === false;
               if (!windowsOwnedBrowserExitConfirmed) {
+                windowsOwnedBrowserConfirmationPid = ownedBrowserPid;
                 windowsOwnedBrowserTerminationConfirmed = terminatePid(
                   ownedBrowserPid,
                   'SIGKILL',

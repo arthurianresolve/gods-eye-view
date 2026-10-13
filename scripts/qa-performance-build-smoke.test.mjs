@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -1719,7 +1719,7 @@ test('outer fault document retains a real held delivery failure and closes its o
   );
 });
 
-test('outer fault document bounds a hung journey and closes ownership before page cleanup', async () => {
+test('outer fault document distinguishes hung journey from exhausted setup budget', async () => {
   const fixture = await createDeterministicMapStreamingFixture();
   const scenarioId = 'esri-metadata-superseded-v1';
   const revision = 'a'.repeat(40);
@@ -1743,6 +1743,8 @@ test('outer fault document bounds a hung journey and closes ownership before pag
   let closed = false;
   let cleanupPageCalls = 0;
   let pageEvaluateCalls = 0;
+  let exhaustSetupBudgetAfterReadiness = false;
+  let clockOffsetMs = 0;
   page.setDefaultTimeout = () => {};
   page.setDefaultNavigationTimeout = () => {};
   page.setViewport = async () => {};
@@ -1750,7 +1752,9 @@ test('outer fault document bounds a hung journey and closes ownership before pag
   page.setBypassServiceWorker = async () => {};
   page.evaluateOnNewDocument = async () => {};
   page.goto = async () => ({ status: () => 200 });
-  page.waitForFunction = async () => {};
+  page.waitForFunction = async () => {
+    if (exhaustSetupBudgetAfterReadiness) clockOffsetMs = 201;
+  };
   page.workers = () => [];
   page.evaluate = async () => {
     pageEvaluateCalls += 1;
@@ -1775,8 +1779,10 @@ test('outer fault document bounds a hung journey and closes ownership before pag
     targets: () => [],
   };
   let observedOperationTimeoutMs = null;
+  let journeyInvocationCount = 0;
   const captureModule = {
     async runNativeMapStreamingFaultControl(_page, options) {
+      journeyInvocationCount += 1;
       observedOperationTimeoutMs = options.operationTimeoutMs;
       return new Promise(() => {});
     },
@@ -1809,8 +1815,7 @@ test('outer fault document bounds a hung journey and closes ownership before pag
       };
     },
   };
-  let observedDocument;
-  await assert.rejects(
+  const runDocument = () =>
     runMapStreamingFaultControlDocument({
       browser,
       baseUrl: MAP_SMOKE_APP_ORIGIN,
@@ -1836,7 +1841,7 @@ test('outer fault document bounds a hung journey and closes ownership before pag
       },
       startedAt: 1_000_000,
       budgetMs: 15_200,
-      nowImpl: () => 1_000_000,
+      nowImpl: () => 1_000_000 + clockOffsetMs,
       documentId: `candidate-${revision.slice(0, 8)}-map-fault-${scenarioId}`,
       preparePageImpl: async (_browser, _baseUrl, options) => {
         page.fixtureRespond = options.respond;
@@ -1857,13 +1862,13 @@ test('outer fault document bounds a hung journey and closes ownership before pag
       },
       readRendererImpl: () => {},
       readWorkerBodiesImpl: async () => null,
-    }),
-    (error) => {
-      observedDocument = error.mapStreamingFaultDocument;
-      assert.match(error.message, /Map fault control journey timed out/);
-      return true;
-    },
-  );
+    });
+  let observedDocument;
+  await assert.rejects(runDocument(), (error) => {
+    observedDocument = error.mapStreamingFaultDocument;
+    assert.match(error.message, /Map fault control journey timed out/);
+    return true;
+  });
   assert.equal(closed, true);
   assert.deepEqual(lifecycle, ['context-close', 'interception-release']);
   assert.equal(cleanupPageCalls, 0);
@@ -1877,6 +1882,36 @@ test('outer fault document bounds a hung journey and closes ownership before pag
     200,
     'the controlled clock preserves the intended 200ms hung-journey budget after setup',
   );
+
+  closed = false;
+  lifecycle.length = 0;
+  cleanupPageCalls = 0;
+  pageEvaluateCalls = 0;
+  observedDocument = null;
+  observedOperationTimeoutMs = null;
+  exhaustSetupBudgetAfterReadiness = true;
+  clockOffsetMs = 0;
+  await assert.rejects(runDocument(), (error) => {
+    observedDocument = error.mapStreamingFaultDocument;
+    assert.match(
+      error.message,
+      /Outer smoke budget expired before map fault control/,
+    );
+    return true;
+  });
+  assert.equal(
+    journeyInvocationCount,
+    1,
+    'the exhausted-setup control never invokes the journey',
+  );
+  assert.equal(observedOperationTimeoutMs, null);
+  assert.equal(closed, true);
+  assert.deepEqual(lifecycle, ['context-close', 'interception-release']);
+  assert.equal(cleanupPageCalls, 0);
+  assert.equal(pageEvaluateCalls, 0);
+  assert.equal(observedDocument?.status, 'failed');
+  assert.equal(observedDocument?.interceptionRelease?.confirmed, true);
+  assert.equal(observedDocument?.delivery?.status, 'disposed');
 });
 
 test('map owner closes its target before draining pending interception and catches late callbacks', async () => {
@@ -5192,6 +5227,67 @@ test('bounded child runner stops a separately owned browser process', async (t) 
   if (process.platform !== 'win32')
     assert.throws(() => process.kill(ownedPid, 0), { code: 'ESRCH' });
 });
+
+test(
+  'bounded child runner resets Windows cleanup confirmation when the owned PID changes',
+  { skip: process.platform !== 'win32' },
+  async (t) => {
+    const ownedChildren = [];
+    const launchOwnedChild = async () => {
+      const child = spawn(
+        process.execPath,
+        ['-e', 'setInterval(() => {}, 1000)'],
+        {
+          stdio: 'ignore',
+          windowsHide: true,
+        },
+      );
+      ownedChildren.push(child);
+      if (child.pid) return child.pid;
+      await new Promise((resolve, reject) => {
+        child.once('spawn', resolve);
+        child.once('error', reject);
+      });
+      return child.pid;
+    };
+    t.after(() => {
+      for (const child of ownedChildren) {
+        if (!child.pid) continue;
+        try {
+          process.kill(child.pid, 'SIGKILL');
+        } catch {
+          // The owned process may already be gone.
+        }
+      }
+    });
+    const firstOwnedPid = await launchOwnedChild();
+    const replacementOwnedPid = await launchOwnedChild();
+    let pidReadCount = 0;
+    const terminatedPids = [];
+    await assert.rejects(
+      runBoundedChild(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+        timeoutMs: 200,
+        maxOutputBytes: 2048,
+        ownedPidFile: 'injected-owned-pid',
+        readOwnedPidFileImpl() {
+          pidReadCount += 1;
+          return `${pidReadCount === 1 ? firstOwnedPid : replacementOwnedPid}`;
+        },
+        spawnSyncImpl(command, args, options) {
+          if (path.basename(command).toLowerCase() === 'taskkill')
+            terminatedPids.push(Number(args[1]));
+          return spawnSync(command, args, options);
+        },
+      }),
+      /timed out; .*cleanup confirmed/,
+    );
+    assert.deepEqual(terminatedPids.slice(-2), [
+      firstOwnedPid,
+      replacementOwnedPid,
+    ]);
+    assert.ok(pidReadCount >= 2);
+  },
+);
 
 test('bounded child runner cleans the owned browser when the CLI exits with failure', async (t) => {
   const parent = await realpath(os.tmpdir());
