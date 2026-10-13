@@ -72,6 +72,14 @@ Root passes 82 focused checks; these use controlled page/transport seams and
 do not establish a real rendered journey or hardware acceptance. The next
 native browser run must validate this exact integrated correction.
 
+The [browser run at `4385f69b`](performance-evidence/s47-map-streaming/native-38357799656/README.md)
+passes initial photoreal readiness and retains a useful failure at the first
+Esri switch. Actual Cesium provider replay reproduces the cause: it requests
+`MapServer/?f=json`, while the fixture adapter accepts only the path without
+the trailing slash. Operation, probe and interception retirement are confirmed;
+native delivery remains failed. Correct the exact metadata route before
+retrying; this does not require application or upstream-main reconciliation.
+
 Next actions, in dependency order:
 
 1. Exercise the corrected M3 map-workload setup and post-retirement evidence
