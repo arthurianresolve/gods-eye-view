@@ -172,3 +172,12 @@ Successful response acknowledgement remains separate from browser decoding
 and rendered readiness, both still unobserved here. Production capture and
 outer validation are the next implementation packet; this does not complete
 M3 or provide a measured performance improvement.
+
+The first production-driver core at `48895dd2` remains unaccepted. Independent
+[API and mutation review](driver-review-48895dd2.json) finds an obsolete Cesium
+cache property that the test double incorrectly provides. It also reproduces
+five false report acceptances: unconfirmed owner release, undrained commands,
+changed mid-route resolution, an invented route start and inflated aggregate
+acknowledgements. The existing four tests pass despite these failures. Correct
+the actual API observation and report invariants before integrating this core;
+this review does not provide browser readiness or performance evidence.
