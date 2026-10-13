@@ -23,6 +23,11 @@ import {
 } from './qa-performance-build-smoke.mjs';
 import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
 import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
+import {
+  appendAustinOperatingReadinessHistory,
+  createAustinOperatingReadinessHistory,
+  createAustinOperatingReadinessHistoryEnvelope,
+} from './performance/austinOperatingReadinessHistory.mjs';
 import { MAX_CAPTURE_FAILURE_REPORT_BYTES } from './performance/captureFailureReport.mjs';
 import {
   createProductionFlightFixture,
@@ -525,6 +530,8 @@ test('Austin readiness-history smoke contract rejects unbounded or mismatched ho
         phase: 'source-readiness-wait',
         status: 'stalled',
         intervalMs: 1000,
+        attachTimeoutMs: 1000,
+        commandTimeoutMs: 1500,
         omittedCount: 0,
         session: { detachStatus: 'confirmed' },
       },
@@ -642,6 +649,140 @@ test('Austin readiness-history smoke contract rejects unbounded or mismatched ho
 
   assert.throws(() =>
     validateAustinOperatingReadinessHistoryEnvelope(makeHistory(), fixture, []),
+  );
+});
+
+test('Austin readiness history validates producer snapshots with document-local sequences', async () => {
+  const fixture = { selectedLayerIds: ['satellites', 'cctv'] };
+  const envelope = createAustinOperatingReadinessHistoryEnvelope();
+  const snapshot = {
+    schema: 'gev-austin-readiness-failure/v1',
+    selectedLayerCount: fixture.selectedLayerIds.length,
+    layers: fixture.selectedLayerIds.map((id) => ({
+      id,
+      enabled: true,
+      count: id === 'cctv' ? 250 : 828,
+      loading: false,
+      loadingLoaded: id === 'cctv' ? 250 : 828,
+      loadingTotal: id === 'cctv' ? 250 : 828,
+      ownership: { timers: 0, pendingJobs: 0, primitives: 1, dataSources: 0 },
+      status: 'ready',
+      error: null,
+    })),
+  };
+  const makeDocumentHistory = async (documentId, hostStart, repeatCount) => {
+    let hostNow = hostStart;
+    let intervalCallback = null;
+    const timers = {
+      setTimeout: () => 1,
+      clearTimeout() {},
+      setInterval(callback) {
+        intervalCallback = callback;
+        return 2;
+      },
+      clearInterval() {
+        intervalCallback = null;
+      },
+    };
+    const session = {
+      on() {},
+      off() {},
+      async send(method, params) {
+        assert.equal(method, 'Runtime.evaluate');
+        assert.equal(params.returnByValue, true);
+        return { result: { value: snapshot } };
+      },
+      async detach() {},
+    };
+    const sampler = createAustinOperatingReadinessHistory(
+      {
+        async createCDPSession() {
+          return session;
+        },
+      },
+      {
+        observerSource: 'function observeReadiness(ids) { return null; }',
+        selectedLayerIds: fixture.selectedLayerIds,
+        documentRole: 'provider-sample',
+        documentId,
+        now: () => hostNow++,
+        timers,
+      },
+    );
+    for (let index = 0; index < 12; index += 1) await Promise.resolve();
+    for (let index = 0; index < repeatCount; index += 1) {
+      intervalCallback();
+      for (let turn = 0; turn < 8; turn += 1) await Promise.resolve();
+    }
+    return sampler.stop('readiness-complete');
+  };
+
+  const firstDocument = await makeDocumentHistory('sample-1', 10, 10);
+  const secondDocument = await makeDocumentHistory('sample-2', 100, 7);
+  assert.equal(firstDocument.samples[0].sequence, 1);
+  assert.equal(firstDocument.samples.at(-1).sequence, 11);
+  assert.equal(secondDocument.samples[0].sequence, 1);
+  appendAustinOperatingReadinessHistory(envelope, firstDocument);
+  appendAustinOperatingReadinessHistory(envelope, secondDocument);
+
+  const malformedProducerHistory = structuredClone(secondDocument);
+  malformedProducerHistory.samples[0].documentId = 'wrong-document';
+  const untouchedEnvelope = createAustinOperatingReadinessHistoryEnvelope();
+  assert.throws(
+    () =>
+      appendAustinOperatingReadinessHistory(
+        untouchedEnvelope,
+        malformedProducerHistory,
+      ),
+    /sample identity does not match its document/,
+  );
+  assert.equal(untouchedEnvelope.documents.length, 0);
+  assert.equal(untouchedEnvelope.samples.length, 0);
+
+  assert.equal(envelope.attachTimeoutMs, 1000);
+  assert.equal(envelope.commandTimeoutMs, 1500);
+  assert.equal(envelope.documents.length, 2);
+  assert.equal(envelope.samples.length, 16);
+  assert.equal(envelope.omittedCount, 3);
+  assert.equal(
+    validateAustinOperatingReadinessHistoryEnvelope(envelope, fixture, [
+      'austin-setup-readiness-history-instrumentation-is-enabled',
+    ]),
+    true,
+  );
+
+  const mismatchedDocumentBound = structuredClone(envelope);
+  mismatchedDocumentBound.documents[1].attachTimeoutMs = 999;
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(
+      mismatchedDocumentBound,
+      fixture,
+      ['austin-setup-readiness-history-instrumentation-is-enabled'],
+    ),
+  );
+  const duplicateDocument = structuredClone(envelope);
+  duplicateDocument.documents[1].documentId = 'sample-1';
+  assert.throws(() =>
+    validateAustinOperatingReadinessHistoryEnvelope(
+      duplicateDocument,
+      fixture,
+      ['austin-setup-readiness-history-instrumentation-is-enabled'],
+    ),
+  );
+  const regressingDocumentSequence = structuredClone(envelope);
+  const firstDocumentSamples = regressingDocumentSequence.samples.filter(
+    (sample) => sample.documentId === 'sample-1',
+  );
+  assert.equal(firstDocumentSamples[0].sequence, 4);
+  firstDocumentSamples[1].sequence = firstDocumentSamples[0].sequence;
+  assert.throws(
+    () =>
+      validateAustinOperatingReadinessHistoryEnvelope(
+        regressingDocumentSequence,
+        fixture,
+        ['austin-setup-readiness-history-instrumentation-is-enabled'],
+      ),
+    /sample sequence must increase within its own document/,
   );
 });
 

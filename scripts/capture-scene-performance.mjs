@@ -30,8 +30,9 @@ import {
 } from './performance/renderBoundaryObservation.mjs';
 import { evaluateCompletedRenderDiagnostic } from './performance/settleCompletedRenderDiagnostic.mjs';
 import {
+  appendAustinOperatingReadinessHistory,
+  createAustinOperatingReadinessHistoryEnvelope,
   createAustinOperatingReadinessHistory,
-  encodeAustinOperatingReadinessSnapshot,
   observeAustinInstallationsReadyForRenderBoundary,
   waitForAustinOperatingReadiness,
 } from './performance/austinOperatingReadinessHistory.mjs';
@@ -648,19 +649,8 @@ const failureProgress = {
       : {}),
     ...(austinReadinessHistoryEnabled
       ? {
-          austinOperatingReadinessHistory: {
-            enabled: true,
-            schema: 'gev-austin-operating-readiness-history/v1',
-            scope:
-              'host-retained Runtime.evaluate snapshots at no more than 1 Hz during Austin setup readiness waits only; no measurement-window polling; host command elapsed time is diagnostic and not CPU/GPU time',
-            intervalMs: 1000,
-            entryLimit: 16,
-            omittedCount: 0,
-            documentOmittedCount: 0,
-            documents: [],
-            samples: [],
-            performanceAcceptanceEligible: false,
-          },
+          austinOperatingReadinessHistory:
+            createAustinOperatingReadinessHistoryEnvelope(),
         }
       : {}),
     ...(firstMotionCpuProfileEnabled
@@ -708,39 +698,7 @@ function recordAustinOperatingReadinessHistory(history) {
   if (!austinReadinessHistoryEnabled || !history) return;
   const evidence = failureProgress.workload.austinOperatingReadinessHistory;
   if (!evidence) return;
-  const documentRecord = {
-    documentRole: history.documentRole,
-    documentId: history.documentId,
-    phase: history.phase,
-    status: history.status,
-    stopReason: history.stopReason,
-    intervalMs: history.intervalMs,
-    omittedCount: history.omittedCount,
-    session: history.session,
-  };
-  if (evidence.documents.length < 40) evidence.documents.push(documentRecord);
-  else evidence.documentOmittedCount += 1;
-  for (const sample of history.samples || []) {
-    if (evidence.samples.length === evidence.entryLimit) {
-      evidence.samples.shift();
-      evidence.omittedCount += 1;
-    }
-    const { snapshot, ...sampleMetadata } = sample;
-    const snapshotJson = snapshot
-      ? encodeAustinOperatingReadinessSnapshot(snapshot)
-      : null;
-    const invalidSnapshot = Boolean(snapshot) && snapshotJson === null;
-    evidence.samples.push({
-      ...sampleMetadata,
-      status: invalidSnapshot ? 'invalid-snapshot' : sample.status,
-      errorKind: invalidSnapshot
-        ? 'snapshot-exceeds-bounded-report-size'
-        : sample.errorKind,
-      snapshotEncoding: snapshotJson ? 'austin-layer-tuples-v1' : null,
-      snapshotJson,
-    });
-  }
-  evidence.omittedCount += history.omittedCount || 0;
+  appendAustinOperatingReadinessHistory(evidence, history);
   if (failureProgress.current)
     failureProgress.current.austinOperatingReadinessHistory = history;
 }

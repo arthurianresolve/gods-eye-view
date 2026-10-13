@@ -1404,17 +1404,19 @@ export function validateAustinOperatingReadinessHistoryEnvelope(
 ) {
   assert.equal(history?.enabled, true);
   assert.equal(history?.schema, 'gev-austin-operating-readiness-history/v1');
-  assert.equal(history?.intervalMs, 1000);
-  assert.equal(history?.entryLimit, 16);
+  assert.equal(history?.intervalMs, 1000, 'sampler interval must remain 1 Hz');
+  assert.equal(history?.entryLimit, 16, 'history ring cap must remain 16');
   assert.ok(
     Number.isSafeInteger(history?.attachTimeoutMs) &&
       history.attachTimeoutMs >= 1 &&
       history.attachTimeoutMs <= 1000,
+    'session attach timeout must remain within the declared bound',
   );
   assert.ok(
     Number.isSafeInteger(history?.commandTimeoutMs) &&
       history.commandTimeoutMs >= 1 &&
       history.commandTimeoutMs <= 2000,
+    'snapshot command timeout must remain within the declared bound',
   );
   assert.equal(history?.performanceAcceptanceEligible, false);
   assert.equal(history?.scope.includes('not CPU/GPU time'), true);
@@ -1429,23 +1431,44 @@ export function validateAustinOperatingReadinessHistoryEnvelope(
     Number.isSafeInteger(history.documentOmittedCount) &&
       history.documentOmittedCount >= 0,
   );
+  const documentKeys = new Set();
   for (const document of history.documents) {
     assert.match(document.documentRole, /^[a-z0-9-]{1,48}$/i);
     assert.match(document.documentId, /^[a-z0-9._:-]{1,96}$/i);
     assert.equal(document.phase, 'source-readiness-wait');
     assert.equal(document.intervalMs, 1000);
+    assert.equal(
+      document.attachTimeoutMs,
+      history.attachTimeoutMs,
+      'document attach timeout must match the envelope configuration',
+    );
+    assert.equal(
+      document.commandTimeoutMs,
+      history.commandTimeoutMs,
+      'document command timeout must match the envelope configuration',
+    );
     assert.ok(Number.isSafeInteger(document.omittedCount));
     assert.ok(document.omittedCount >= 0);
     assert.ok(document.session && typeof document.session === 'object');
+    const key = `${document.documentRole}\0${document.documentId}\0${document.phase}`;
+    assert.equal(
+      documentKeys.has(key),
+      false,
+      'readiness document identity must be unique',
+    );
+    documentKeys.add(key);
   }
-  let previousSequence = 0;
+  const previousSequenceByDocument = new Map();
   let previousCompletion = null;
   for (const sample of history.samples) {
+    const documentKey = `${sample.documentRole}\0${sample.documentId}\0${sample.phase}`;
+    const previousSequence = previousSequenceByDocument.get(documentKey) || 0;
     assert.ok(
       Number.isSafeInteger(sample.sequence) &&
         sample.sequence > previousSequence,
+      'sample sequence must increase within its own document',
     );
-    previousSequence = sample.sequence;
+    previousSequenceByDocument.set(documentKey, sample.sequence);
     assert.ok(
       history.documents.some(
         (document) =>
@@ -1453,6 +1476,7 @@ export function validateAustinOperatingReadinessHistoryEnvelope(
           document.documentId === sample.documentId &&
           document.phase === sample.phase,
       ),
+      'sample identity must match a declared readiness document',
     );
     assert.ok(
       sample.hostStartedAtMs === null ||
