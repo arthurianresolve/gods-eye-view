@@ -694,3 +694,40 @@ later readiness validator. The next packet must separate public projection from
 private validation state, with the strict worker validator unchanged. Neither
 this reporting diagnosis nor the four short samples establishes physical
 hardware coverage, matched performance acceptance, or full S47 completion.
+
+# Repair the aggregation and provenance report contracts
+
+Luna's `d56a66bb` extracts the real history aggregation into a shared, tested
+producer. Envelope and document records retain the sampler's unchanged timeout
+configuration. Numbering must increase within each document identity; global
+host-time ordering still applies. Mismatched sample identities are rejected
+before mutating the envelope, duplicate documents fail, and the existing
+16-sample ring remains bounded. Integration is
+`2a1cff054645acf03fb619ac2c8c3b50b74b97e7`. Root's
+[old/new consumer control](readiness-history-consumer-control.json) uses real
+sampler snapshots and the actual aggregation path: the old consumer fails at
+the global-sequence check; the corrected consumer passes. The unchanged raw
+hosted report is still missing required fields and remains failed evidence.
+
+Luna's `7d3de2a5` separates the public provenance projection from its private
+receipt owner, both before capture and after served-asset verification. Receipt
+paths remain available to the strict worker/readiness validators while both
+private path fields remain absent from exports. Follow-up `9f03475f` exercises
+post-verification projection and a fresh read of private paths through the real
+readiness consumer, and reproduces the old alias/delete failure with a separate
+provenance owner. Integration is `22b1fb6dd64567eb2f073cc212dcf67ab6de4a3e`.
+
+All [seven standard CI jobs](ci-checkpoint-25d5d60e.json) pass at the preceding
+boundary candidate `25d5d60ef8fdb937a5585238b1e0ea83116cc324`, including
+Windows recovery and the complete browser job. This validates that revision,
+not these later reporting corrections. The new combined packet passes Root's
+[93 focused integration tests](report-contract-focused-tests.tap), including
+provenance, receipt validation, history aggregation, comparison contracts,
+render boundaries and failure-report limits. The 17-file no-undef gate passes
+in Root's complete dependency installation; Luna's separate dependency junction
+lacked ESLint and could not run that gate. New exact-revision hosted validation
+is still required before promotion.
+
+The combined packet also passes full formatting across 1,621 source files,
+import-direction checks (1,010 modules/80 portable entries), package boundaries
+and whitespace checks. No runtime rendering or source configuration changes.

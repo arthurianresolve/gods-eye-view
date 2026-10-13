@@ -1,0 +1,33 @@
+TAP version 13
+# Subtest: Austin readiness history validates producer snapshots with document-local sequences
+not ok 1 - Austin readiness history validates producer snapshots with document-local sequences
+  ---
+  duration_ms: 9.6251
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s47-austin-receipt-only\\scripts\\qa-performance-build-smoke.test.mjs:655:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    validateAustinOperatingReadinessHistoryEnvelope (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.mjs:1444:12)
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.test.mjs:748:5)
+    async Test.run (node:internal/test_runner/test:1313:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1925.8979

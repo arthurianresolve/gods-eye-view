@@ -1,0 +1,568 @@
+TAP version 13
+# Subtest: Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence
+ok 1 - Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence
+  ---
+  duration_ms: 1013.2114
+  type: 'test'
+  ...
+# Subtest: Austin rendering contract matches observed viewer defaults and labels changed AA settings
+ok 2 - Austin rendering contract matches observed viewer defaults and labels changed AA settings
+  ---
+  duration_ms: 871.4726
+  type: 'test'
+  ...
+# Subtest: Austin capture setting copies stay bound to the native visual observations
+ok 3 - Austin capture setting copies stay bound to the native visual observations
+  ---
+  duration_ms: 917.1109
+  type: 'test'
+  ...
+# Subtest: Austin measurement contract consumes the settled render-boundary producer result
+ok 4 - Austin measurement contract consumes the settled render-boundary producer result
+  ---
+  duration_ms: 882.9053
+  type: 'test'
+  ...
+# Subtest: Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity
+ok 5 - Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity
+  ---
+  duration_ms: 876.9081
+  type: 'test'
+  ...
+# Subtest: Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog
+ok 6 - Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog
+  ---
+  duration_ms: 3797.2719
+  type: 'test'
+  ...
+# Subtest: paired Austin ingestion recomputes cleanup from producer-shaped drain records
+ok 7 - paired Austin ingestion recomputes cleanup from producer-shaped drain records
+  ---
+  duration_ms: 4695.9851
+  type: 'test'
+  ...
+# Subtest: paired Austin validation recomputes raw satellite rows against the pinned TLEs
+ok 8 - paired Austin validation recomputes raw satellite rows against the pinned TLEs
+  ---
+  duration_ms: 1613.6219
+  type: 'test'
+  ...
+# Subtest: paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged
+ok 9 - paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged
+  ---
+  duration_ms: 1591.137
+  type: 'test'
+  ...
+# Subtest: compact readiness snapshot keeps full ownership counters within its byte cap
+ok 10 - compact readiness snapshot keeps full ownership counters within its byte cap
+  ---
+  duration_ms: 4.0399
+  type: 'test'
+  ...
+# Subtest: readiness history retains bounded native layer checkpoints and stops on success
+ok 11 - readiness history retains bounded native layer checkpoints and stops on success
+  ---
+  duration_ms: 5.1934
+  type: 'test'
+  ...
+# Subtest: stalled evaluation stops polling, never overlaps, and discards its late result
+ok 12 - stalled evaluation stops polling, never overlaps, and discards its late result
+  ---
+  duration_ms: 1.9113
+  type: 'test'
+  ...
+# Subtest: readiness cancellation detaches the owned session and ignores a late command
+ok 13 - readiness cancellation detaches the owned session and ignores a late command
+  ---
+  duration_ms: 1.0561
+  type: 'test'
+  ...
+# Subtest: entry history remains capped at sixteen while reporting omitted observations
+ok 14 - entry history remains capped at sixteen while reporting omitted observations
+  ---
+  duration_ms: 8.0382
+  type: 'test'
+  ...
+# Subtest: Puppeteer disconnect symbol invalidates an in-flight result and retires sampling
+ok 15 - Puppeteer disconnect symbol invalidates an in-flight result and retires sampling
+  ---
+  duration_ms: 0.8929
+  type: 'test'
+  ...
+# Subtest: late session creation is explicitly bounded and detached after timeout
+ok 16 - late session creation is explicitly bounded and detached after timeout
+  ---
+  duration_ms: 0.8779
+  type: 'test'
+  ...
+# Subtest: readiness failure identity is preserved while sampler cleanup is bounded
+ok 17 - readiness failure identity is preserved while sampler cleanup is bounded
+  ---
+  duration_ms: 0.817
+  type: 'test'
+  ...
+# Subtest: missing sampler session support does not change the supplied readiness wait
+ok 18 - missing sampler session support does not change the supplied readiness wait
+  ---
+  duration_ms: 0.856
+  type: 'test'
+  ...
+# Subtest: capture provenance binds full application and harness SHAs to the receipt
+ok 19 - capture provenance binds full application and harness SHAs to the receipt
+  ---
+  duration_ms: 6.581
+  type: 'test'
+  ...
+# Subtest: capture provenance rejects wrong SHAs and changes between the two served checks
+ok 20 - capture provenance rejects wrong SHAs and changes between the two served checks
+  ---
+  duration_ms: 6.5045
+  type: 'test'
+  ...
+# Subtest: capture provenance rejects a different served root or harness checkout
+ok 21 - capture provenance rejects a different served root or harness checkout
+  ---
+  duration_ms: 3.5294
+  type: 'test'
+  ...
+# Subtest: capture document topology models one infrastructure page and dense fresh sample pages
+ok 22 - capture document topology models one infrastructure page and dense fresh sample pages
+  ---
+  duration_ms: 3.7241
+  type: 'test'
+  ...
+# Subtest: contract adapter reads a realistic rawReport.captures export
+ok 23 - contract adapter reads a realistic rawReport.captures export
+  ---
+  duration_ms: 18.3564
+  type: 'test'
+  ...
+# Subtest: contract refuses mismatched population, missing route, and divergent settings copies
+ok 24 - contract refuses mismatched population, missing route, and divergent settings copies
+  ---
+  duration_ms: 4.4167
+  type: 'test'
+  ...
+# Subtest: contract refuses absent delivery acknowledgment or invalid viewport dimensions
+ok 25 - contract refuses absent delivery acknowledgment or invalid viewport dimensions
+  ---
+  duration_ms: 1.1702
+  type: 'test'
+  ...
+# Subtest: diagnostic-only captures retain explicit reasons and allow an unsupported baseline hook
+ok 26 - diagnostic-only captures retain explicit reasons and allow an unsupported baseline hook
+  ---
+  duration_ms: 1.1729
+  type: 'test'
+  ...
+# Subtest: prewarm audit readiness names the unobservable late-creation limitation
+ok 27 - prewarm audit readiness names the unobservable late-creation limitation
+  ---
+  duration_ms: 0.344
+  type: 'test'
+  ...
+# Subtest: capture readiness boundary maps workerAuditMode into the report reason
+ok 28 - capture readiness boundary maps workerAuditMode into the report reason
+  ---
+  duration_ms: 0.3238
+  type: 'test'
+  ...
+# Subtest: missing diagnostics document observations are explicitly ineligible
+ok 29 - missing diagnostics document observations are explicitly ineligible
+  ---
+  duration_ms: 0.1717
+  type: 'test'
+  ...
+# Subtest: infrastructure comparison exports observed workloads without dense objective claims
+ok 30 - infrastructure comparison exports observed workloads without dense objective claims
+  ---
+  duration_ms: 23.1908
+  type: 'test'
+  ...
+# Subtest: infrastructure readiness binds one measured document across captures and setup diagnostics
+ok 31 - infrastructure readiness binds one measured document across captures and setup diagnostics
+  ---
+  duration_ms: 22.7158
+  type: 'test'
+  ...
+# Subtest: infrastructure contract rejects altered source populations and clock
+ok 32 - infrastructure contract rejects altered source populations and clock
+  ---
+  duration_ms: 18.1219
+  type: 'test'
+  ...
+# Subtest: failure artifact preserves bounded current and completed sample evidence without eligibility
+ok 33 - failure artifact preserves bounded current and completed sample evidence without eligibility
+  ---
+  duration_ms: 6.0447
+  type: 'test'
+  ...
+# Subtest: failure projection retains the bounded Austin source-readiness layer snapshot
+ok 34 - failure projection retains the bounded Austin source-readiness layer snapshot
+  ---
+  duration_ms: 2.1387
+  type: 'test'
+  ...
+# Subtest: failure projection retains flattened Austin readiness history through outer smoke compaction
+ok 35 - failure projection retains flattened Austin readiness history through outer smoke compaction
+  ---
+  duration_ms: 0.7583
+  type: 'test'
+  ...
+# Subtest: post-cleanup failure refresh is atomic and preserves the initial artifact on rejection
+ok 36 - post-cleanup failure refresh is atomic and preserves the initial artifact on rejection
+  ---
+  duration_ms: 18.0719
+  type: 'test'
+  ...
+# Subtest: failure artifact redacts secrets and stays within its hard byte cap
+ok 37 - failure artifact redacts secrets and stays within its hard byte cap
+  ---
+  duration_ms: 3.5003
+  type: 'test'
+  ...
+# Subtest: receipt-only audit records receipt-derived worker identity without page hooks
+ok 38 - receipt-only audit records receipt-derived worker identity without page hooks
+  ---
+  duration_ms: 8.5697
+  type: 'test'
+  ...
+# Subtest: receipt-only audit consumes the actual receipt-derived Cesium worker contract
+ok 39 - receipt-only audit consumes the actual receipt-derived Cesium worker contract
+  ---
+  duration_ms: 3.0106
+  type: 'test'
+  ...
+# Subtest: capture event collector validates live receipt paths and rejects late executable requests
+ok 40 - capture event collector validates live receipt paths and rejects late executable requests
+  ---
+  duration_ms: 3.5271
+  type: 'test'
+  ...
+# Subtest: capture collector output is validated by the comparison readiness consumer
+ok 41 - capture collector output is validated by the comparison readiness consumer
+  ---
+  duration_ms: 2.3389
+  type: 'test'
+  ...
+# Subtest: receipt-only audit rejects unknown executable paths, origins, and overflow
+ok 42 - receipt-only audit rejects unknown executable paths, origins, and overflow
+  ---
+  duration_ms: 0.8675
+  type: 'test'
+  ...
+# Subtest: receipt-only envelope rejects forged identities, receipt, and page instrumentation
+ok 43 - receipt-only envelope rejects forged identities, receipt, and page instrumentation
+  ---
+  duration_ms: 1.7728
+  type: 'test'
+  ...
+# Subtest: comparison readiness validates the receipt-only record and preserves the Austin cadence blocker
+ok 44 - comparison readiness validates the receipt-only record and preserves the Austin cadence blocker
+  ---
+  duration_ms: 1.1109
+  type: 'test'
+  ...
+# Subtest: public provenance projection keeps receipt paths available through actual receipt-only readiness validation
+ok 45 - public provenance projection keeps receipt paths available through actual receipt-only readiness validation
+  ---
+  duration_ms: 3.2422
+  type: 'test'
+  ...
+# Subtest: diagnostic render probe records request, postRender and owned cleanup
+ok 46 - diagnostic render probe records request, postRender and owned cleanup
+  ---
+  duration_ms: 8.2626
+  type: 'test'
+  ...
+# Subtest: page timer and missing render request stay explicit without relaxing settle
+ok 47 - page timer and missing render request stay explicit without relaxing settle
+  ---
+  duration_ms: 7.9716
+  type: 'test'
+  ...
+# Subtest: render request exception is retained and listener is removed
+ok 48 - render request exception is retained and listener is removed
+  ---
+  duration_ms: 0.8086
+  type: 'test'
+  ...
+# Subtest: warmup boundary leaves viewer loop active and final boundary retires after postRender
+ok 49 - warmup boundary leaves viewer loop active and final boundary retires after postRender
+  ---
+  duration_ms: 2.7416
+  type: 'test'
+  ...
+# Subtest: final boundary timeout does not claim retirement or settle successfully
+ok 50 - final boundary timeout does not claim retirement or settle successfully
+  ---
+  duration_ms: 20.6441
+  type: 'test'
+  ...
+# Subtest: final boundary fails closed when loop state is unavailable or retirement is refused
+ok 51 - final boundary fails closed when loop state is unavailable or retirement is refused
+  ---
+  duration_ms: 2.1994
+  type: 'test'
+  ...
+# Subtest: host binding receives owned page phase acknowledgements and is removed
+ok 52 - host binding receives owned page phase acknowledgements and is removed
+  ---
+  duration_ms: 6.3231
+  type: 'test'
+  ...
+# Subtest: page evaluate argument order delivers the invocation and host observes page entry
+ok 53 - page evaluate argument order delivers the invocation and host observes page entry
+  ---
+  duration_ms: 3.3174
+  type: 'test'
+  ...
+# Subtest: tracked endpoint helper is composed into the page function with JSON-only evaluate arguments
+ok 54 - tracked endpoint helper is composed into the page function with JSON-only evaluate arguments
+  ---
+  duration_ms: 4.2026
+  type: 'test'
+  ...
+# Subtest: provider warmup clock hold and listener registration share one serialized page callback
+ok 55 - provider warmup clock hold and listener registration share one serialized page callback
+  ---
+  duration_ms: 9.1592
+  type: 'test'
+  ...
+# Subtest: atomic provider clock callback error removes the listener without requesting a render
+ok 56 - atomic provider clock callback error removes the listener without requesting a render
+  ---
+  duration_ms: 0.5978
+  type: 'test'
+  ...
+# Subtest: host progress preserves an atomic warmup snapshot when its page render times out
+ok 57 - host progress preserves an atomic warmup snapshot when its page render times out
+  ---
+  duration_ms: 24.908
+  type: 'test'
+  ...
+# Subtest: serialized Austin boundary waits for installation readiness and a later render before retirement
+ok 58 - serialized Austin boundary waits for installation readiness and a later render before retirement
+  ---
+  duration_ms: 7.9453
+  type: 'test'
+  ...
+# Subtest: Austin readiness boundary fails on missing or errored installation state without retiring
+ok 59 - Austin readiness boundary fails on missing or errored installation state without retiring
+  ---
+  duration_ms: 3.0709
+  type: 'test'
+  ...
+# Subtest: Austin readiness timeout stays within page boundary and removes its listener
+ok 60 - Austin readiness timeout stays within page boundary and removes its listener
+  ---
+  duration_ms: 16.8396
+  type: 'test'
+  ...
+# Subtest: capture clock validation consumes the actual phased producer and rejects phase/time drift
+ok 61 - capture clock validation consumes the actual phased producer and rejects phase/time drift
+  ---
+  duration_ms: 8.9113
+  type: 'test'
+  ...
+# Subtest: smoke CLI parser preserves the candidate SHA and output path
+ok 62 - smoke CLI parser preserves the candidate SHA and output path
+  ---
+  duration_ms: 1.9475
+  type: 'test'
+  ...
+# Subtest: capture report renderer validation binds verified evidence to the observed renderer
+ok 63 - capture report renderer validation binds verified evidence to the observed renderer
+  ---
+  duration_ms: 2.0719
+  type: 'test'
+  ...
+# Subtest: Austin readiness-history smoke contract rejects unbounded or mismatched host samples
+ok 64 - Austin readiness-history smoke contract rejects unbounded or mismatched host samples
+  ---
+  duration_ms: 10.0452
+  type: 'test'
+  ...
+# Subtest: Austin readiness history validates producer snapshots with document-local sequences
+ok 65 - Austin readiness history validates producer snapshots with document-local sequences
+  ---
+  duration_ms: 10.9955
+  type: 'test'
+  ...
+# Subtest: provider CPU profile set binds first two idle and first motion windows to exact documents
+ok 66 - provider CPU profile set binds first two idle and first motion windows to exact documents
+  ---
+  duration_ms: 45.3605
+  type: 'test'
+  ...
+# Subtest: failed later profile window preserves the earlier ordered sidecar indexes
+ok 67 - failed later profile window preserves the earlier ordered sidecar indexes
+  ---
+  duration_ms: 64.3261
+  type: 'test'
+  ...
+# Subtest: capture CLI validator accepts only the complete six-sample hosted smoke contract
+ok 68 - capture CLI validator accepts only the complete six-sample hosted smoke contract
+  ---
+  duration_ms: 27.3566
+  type: 'test'
+  ...
+# Subtest: capture CLI accepts verified hosted native reports only with the recomputed ineligibility reason
+ok 69 - capture CLI accepts verified hosted native reports only with the recomputed ineligibility reason
+  ---
+  duration_ms: 9.5023
+  type: 'test'
+  ...
+# Subtest: shader attribution smoke validation binds serialized producer records and remains ineligible
+ok 70 - shader attribution smoke validation binds serialized producer records and remains ineligible
+  ---
+  duration_ms: 38.5048
+  type: 'test'
+  ...
+# Subtest: scene frame attribution is bounded and permanently ineligible for comparison
+ok 71 - scene frame attribution is bounded and permanently ineligible for comparison
+  ---
+  duration_ms: 16.3045
+  type: 'test'
+  ...
+# Subtest: capture CLI validates the selected infrastructure workload and rejects dense substitution
+ok 72 - capture CLI validates the selected infrastructure workload and rejects dense substitution
+  ---
+  duration_ms: 380.9521
+  type: 'test'
+  ...
+# Subtest: capture CLI validates the actual weather fixture manifest, timeline, states and worker topology
+ok 73 - capture CLI validates the actual weather fixture manifest, timeline, states and worker topology
+  ---
+  duration_ms: 69.6669
+  type: 'test'
+  ...
+# Subtest: infrastructure capture requires rendered motion, consistent frame evidence, and requested settings
+ok 74 - infrastructure capture requires rendered motion, consistent frame evidence, and requested settings
+  ---
+  duration_ms: 190.0705
+  type: 'test'
+  ...
+# Subtest: capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence
+ok 75 - capture CLI checks diagnostic status for every document and accepts legacy baseline hook absence
+  ---
+  duration_ms: 22.9897
+  type: 'test'
+  ...
+# Subtest: capture CLI accepts empty startup worker audits only when no worker path was observed
+ok 76 - capture CLI accepts empty startup worker audits only when no worker path was observed
+  ---
+  duration_ms: 5.6609
+  type: 'test'
+  ...
+# Subtest: capture CLI validator requires the selected worker audit mode and per-sample prewarm proof
+ok 77 - capture CLI validator requires the selected worker audit mode and per-sample prewarm proof
+  ---
+  duration_ms: 21.3213
+  type: 'test'
+  ...
+# Subtest: capture CLI rejects missing, altered or unreported comparison contracts
+ok 78 - capture CLI rejects missing, altered or unreported comparison contracts
+  ---
+  duration_ms: 14.7997
+  type: 'test'
+  ...
+# Subtest: capture CLI requires usable frame-interval evidence for moving and tracking samples
+ok 79 - capture CLI requires usable frame-interval evidence for moving and tracking samples
+  ---
+  duration_ms: 56.1893
+  type: 'test'
+  ...
+# Subtest: capture CLI preserves legitimately unavailable zero-frame idle timing
+ok 80 - capture CLI preserves legitimately unavailable zero-frame idle timing
+  ---
+  duration_ms: 4.8713
+  type: 'test'
+  ...
+# Subtest: smoke compaction preserves the complete bounded capture failure report and mismatch evidence
+ok 81 - smoke compaction preserves the complete bounded capture failure report and mismatch evidence
+  ---
+  duration_ms: 0.6118
+  type: 'test'
+  ...
+# Subtest: smoke compaction preserves a bounded completed capture report after outer validation failure
+ok 82 - smoke compaction preserves a bounded completed capture report after outer validation failure
+  ---
+  duration_ms: 0.6044
+  type: 'test'
+  ...
+# Subtest: smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap
+ok 83 - smoke compaction marks bounded completed reports truncated and rejects projections over the artifact cap
+  ---
+  duration_ms: 2.4189
+  type: 'test'
+  ...
+# Subtest: smoke compaction does not label an unbounded or unrecognized report as raw failure evidence
+ok 84 - smoke compaction does not label an unbounded or unrecognized report as raw failure evidence
+  ---
+  duration_ms: 0.1519
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops an owned process on timeout
+ok 85 - bounded child runner stops an owned process on timeout
+  ---
+  duration_ms: 629.8861
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops an owned process when output exceeds its cap
+ok 86 - bounded child runner stops an owned process when output exceeds its cap
+  ---
+  duration_ms: 572.8614
+  type: 'test'
+  ...
+# Subtest: bounded child runner stops a separately owned browser process
+ok 87 - bounded child runner stops a separately owned browser process
+  ---
+  duration_ms: 1182.7725
+  type: 'test'
+  ...
+# Subtest: bounded child runner cleans the owned browser when the CLI exits with failure
+ok 88 - bounded child runner cleans the owned browser when the CLI exits with failure
+  ---
+  duration_ms: 809.5578
+  type: 'test'
+  ...
+# Subtest: bounded child failure keeps sanitized stderr and the latest capture progress
+ok 89 - bounded child failure keeps sanitized stderr and the latest capture progress
+  ---
+  duration_ms: 397.8018
+  type: 'test'
+  ...
+# Subtest: capture CLI preserves hash-bound raw reports on success and failure
+ok 90 - capture CLI preserves hash-bound raw reports on success and failure
+  ---
+  duration_ms: 29.3904
+  type: 'test'
+  ...
+# Subtest: capture CLI report sidecar marks missing, malformed, and oversized reports
+ok 91 - capture CLI report sidecar marks missing, malformed, and oversized reports
+  ---
+  duration_ms: 31.2498
+  type: 'test'
+  ...
+# Subtest: capture CLI closes the browser after page creation fails inside its lifecycle
+ok 92 - capture CLI closes the browser after page creation fails inside its lifecycle
+  ---
+  duration_ms: 302.0528
+  type: 'test'
+  ...
+# Subtest: invalid smoke input writes a bounded failure artifact without launching a browser
+ok 93 - invalid smoke input writes a bounded failure artifact without launching a browser
+  ---
+  duration_ms: 192.3426
+  type: 'test'
+  ...
+1..93
+# tests 93
+# suites 0
+# pass 93
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19891.2066
