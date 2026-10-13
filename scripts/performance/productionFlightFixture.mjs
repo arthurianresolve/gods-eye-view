@@ -25,7 +25,7 @@ export const RENDER_DEMAND_PROFILE = Object.freeze({
     detection: Object.freeze({
       mode: 'OFF',
       densityPct: 75,
-      allocation: 'elastic',
+      allocation: 'ELASTIC',
     }),
     enabledLayerIds: Object.freeze(['flights', 'military']),
     renderer: Object.freeze({

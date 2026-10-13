@@ -387,7 +387,7 @@ test('render-demand failure projection retains controlled start/end evidence and
       detectionMode: 'OFF',
       densityPct: 75,
       visualDensityPct: 75,
-      allocation: 'elastic',
+      allocation: 'ELASTIC',
       qualityMode: 'manual',
     },
     governor: {
