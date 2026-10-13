@@ -31,8 +31,12 @@ error lists do not establish a cause; probe and worker cleanup are unconfirmed.
 The proposed dedicated setup at `1058e811` is withheld after
 [independent cancellation and disposal-order review](performance-evidence/s47-map-streaming/native-smoke-review-1058e811.json).
 It rejects one legitimate cancellation despite balanced outcomes and finalizes
-baseline delivery before its owning context retires. Correct both defects
-without extending deadlines, weakening cleanup or changing normal dense tests.
+baseline delivery before its owning context retires. The follow-up `64d86946`
+balances cancellations but remains withheld after [root review](performance-evidence/s47-map-streaming/native-smoke-review-64d86946.json):
+baseline disposal is still early, cancelled-only required kinds can pass, and
+five actual no-undef errors would prevent final report writing. Correct these
+defects without extending deadlines, weakening cleanup or changing normal dense
+tests. Neither rejected packet has run in a browser or reached dev.
 
 Next actions, in dependency order:
 
