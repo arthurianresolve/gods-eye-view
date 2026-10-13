@@ -79,6 +79,10 @@ Esri switch. Actual Cesium provider replay reproduces the cause: it requests
 the trailing slash. Operation, probe and interception retirement are confirmed;
 native delivery remains failed. Correct the exact metadata route before
 retrying; this does not require application or upstream-main reconciliation.
+The exact-path correction `88e5266c`, integrated at `8c7f1204`, passes
+73 root focused tests, lint and changed-file formatting. Its regression uses
+the actual Cesium provider's metadata request and real delivery callbacks.
+Complete rendered journeys remain unproven until the next browser gate passes.
 
 Next actions, in dependency order:
 
