@@ -103,6 +103,140 @@ test('failed application rolls the captured state back and user navigation wins 
   assert.equal(applied, false);
 });
 
+test('late rollback rejection cannot overwrite a newer applied workspace', async (t) => {
+  let releaseRollback;
+  let announceStarted;
+  let rollbackIsCurrent;
+  const started = new Promise((resolve) => (announceStarted = resolve));
+  const restore = createWorkspaceRestoreCoordinator({
+    storage: { getWorkspace: async (id) => stored(id) },
+    captureCurrent: async () => ({ before: 'old view' }),
+    apply: async (document) => {
+      if (document.id === 'older') throw new Error('older apply failed');
+      return document.id;
+    },
+    rollback: async (_snapshot, context) => {
+      assert.equal(context.navigationToken, 'older-navigation');
+      assert.equal(context.isCurrent(), true);
+      rollbackIsCurrent = context.isCurrent;
+      announceStarted();
+      await new Promise((resolve) => {
+        releaseRollback = resolve;
+      });
+      throw new Error('late rollback failed');
+    },
+  });
+  t.after(() => restore.destroy());
+
+  const older = restore.restore('older', {
+    navigationToken: 'older-navigation',
+  });
+  await started;
+  const newer = await restore.restore('newer', {
+    navigationToken: 'newer-navigation',
+  });
+  assert.equal(newer.status, 'applied');
+  assert.equal(rollbackIsCurrent(), false);
+  releaseRollback();
+
+  assert.deepEqual(await older, { status: 'superseded' });
+  assert.deepEqual(restore.getState(), {
+    status: 'applied',
+    workspaceId: 'newer',
+    error: null,
+  });
+});
+
+for (const settlement of ['fulfilled', 'rejected']) {
+  for (const invalidation of [
+    'replacement',
+    'caller-abort',
+    'navigation',
+    'destroy',
+  ]) {
+    test(`pending ${settlement} rollback respects ${invalidation} ownership`, async (t) => {
+      let releaseRollback;
+      let announceStarted;
+      const rollbackStarted = new Promise((resolve) => {
+        announceStarted = resolve;
+      });
+      const abortListeners = new Set();
+      const signal = {
+        aborted: false,
+        reason: undefined,
+        addEventListener(type, listener) {
+          if (type === 'abort') abortListeners.add(listener);
+        },
+        removeEventListener(type, listener) {
+          if (type === 'abort') abortListeners.delete(listener);
+        },
+        abort(reason = 'caller-abort') {
+          this.aborted = true;
+          this.reason = reason;
+          for (const listener of [...abortListeners]) listener();
+        },
+      };
+      let navigationCurrent = true;
+      const restore = createWorkspaceRestoreCoordinator({
+        storage: { getWorkspace: async (id) => stored(id) },
+        captureCurrent: async () => ({ before: 'old view' }),
+        isCurrent: () => navigationCurrent,
+        apply: async (document) => {
+          if (document.id === 'older') throw new Error('older apply failed');
+          return document.id;
+        },
+        rollback: async (_snapshot, context) => {
+          assert.equal(context.isCurrent(), true);
+          announceStarted(context);
+          await new Promise((resolve, reject) => {
+            releaseRollback = () =>
+              settlement === 'fulfilled'
+                ? resolve()
+                : reject(new Error('late rollback failure'));
+          });
+        },
+      });
+      t.after(() => restore.destroy());
+
+      const older = restore.restore('older', {
+        signal,
+        navigationToken: 'older-navigation',
+      });
+      const rollbackContext = await rollbackStarted;
+      if (invalidation === 'replacement') {
+        const newer = await restore.restore('newer', {
+          navigationToken: 'newer-navigation',
+        });
+        assert.equal(newer.status, 'applied');
+      } else if (invalidation === 'caller-abort') {
+        signal.abort();
+      } else if (invalidation === 'navigation') {
+        navigationCurrent = false;
+      } else {
+        restore.destroy();
+      }
+      assert.equal(rollbackContext.isCurrent(), false);
+      releaseRollback();
+
+      assert.deepEqual(await older, { status: 'superseded' });
+      assert.equal(abortListeners.size, 0);
+      if (invalidation === 'replacement') {
+        assert.deepEqual(restore.getState(), {
+          status: 'applied',
+          workspaceId: 'newer',
+          error: null,
+        });
+      } else if (invalidation === 'caller-abort') {
+        assert.equal(restore.getState().status, 'cancelled');
+      } else if (invalidation === 'navigation') {
+        assert.equal(restore.getState().status, 'superseded');
+      } else {
+        assert.equal(restore.getState().status, 'cancelled');
+      }
+    });
+  }
+}
+
 test('missing workspaces and unknown future documents fail before mutation', async (t) => {
   let applyCount = 0;
   const restore = createWorkspaceRestoreCoordinator({

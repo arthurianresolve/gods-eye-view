@@ -169,8 +169,11 @@ export class LayerStateCoordinator {
   }
 
   /** Restore an explicitly opened workspace's durable layer selection. */
-  restoreWorkspaceState(state) {
+  restoreWorkspaceState(state, options = {}) {
     if (this._destroyed) return Promise.resolve([]);
+    const owns = () =>
+      !options.signal?.aborted && options.isCurrent?.() !== false;
+    if (!owns()) return Promise.resolve([]);
     for (const controller of this._restoreControllers.values())
       controller.abort('workspace-restore');
     this._restoreControllers.clear();
@@ -187,6 +190,7 @@ export class LayerStateCoordinator {
     this._notifyDurableState();
     this.restorePromise = this._restoreSelectedState(
       LAYER_RESTORE_ORIGINS.workspace,
+      options,
     );
     return this.restorePromise;
   }
@@ -346,26 +350,50 @@ export class LayerStateCoordinator {
       : this.restoreGate);
   }
 
-  async _restoreSelectedState(origin) {
+  async _restoreSelectedState(origin, options = {}) {
+    const ownedControllers = new Map();
     for (const entry of LAYER_STATE_REGISTRY) {
-      this._restoreControllers.set(entry.id, new AbortController());
+      const controller = new AbortController();
+      ownedControllers.set(entry.id, controller);
+      this._restoreControllers.set(entry.id, controller);
     }
+    const owns = () =>
+      !this._destroyed &&
+      !options.signal?.aborted &&
+      options.isCurrent?.() !== false &&
+      [...ownedControllers].every(
+        ([id, controller]) => this._restoreControllers.get(id) === controller,
+      );
+    const abortOwned = () => {
+      for (const controller of ownedControllers.values())
+        controller.abort('workspace-restore-superseded');
+    };
+    options.signal?.addEventListener('abort', abortOwned, { once: true });
     try {
       await this._waitForRestoreGate();
-      const enabled = new Set(this._durableState.enabledLayerIds);
+      if (!owns()) {
+        abortOwned();
+        return [];
+      }
+      // The controller identities were captured before the asynchronous gate.
+      // Once they still prove ownership, this call may snapshot the latest
+      // durable state so same-owner explicit visibility/parameter intents are
+      // preserved. A replaced workspace restore returned above.
+      const restoreState = cloneLayerState(this._durableState);
+      const enabled = new Set(restoreState.enabledLayerIds);
       const settled = await Promise.allSettled(
         LAYER_STATE_REGISTRY.map(async (entry) => {
-          const controller = this._restoreControllers.get(entry.id);
+          const controller = ownedControllers.get(entry.id);
           const targetEnabled = enabled.has(entry.id);
-          const options = layerOptionsForRestore(this._durableState, entry.id);
-          if (origin === LAYER_RESTORE_ORIGINS.share && options) {
+          const layerOptions = layerOptionsForRestore(restoreState, entry.id);
+          if (origin === LAYER_RESTORE_ORIGINS.share && layerOptions) {
             for (const trackingKey of Object.values(
               TRACKING_OPTION_KEY_BY_LAYER,
             )) {
-              delete options[trackingKey];
+              delete layerOptions[trackingKey];
             }
           }
-          if (this._destroyed || controller?.signal.aborted) {
+          if (!owns() || controller?.signal.aborted) {
             return {
               layerId: entry.id,
               targetEnabled,
@@ -383,11 +411,15 @@ export class LayerStateCoordinator {
           // A later explicit params intent then wins on its own lane without
           // cancelling or being overwritten by the visibility restore.
           const paramsSucceeded =
-            !options ||
-            Object.keys(options).length === 0 ||
+            !layerOptions ||
+            Object.keys(layerOptions).length === 0 ||
             (origin === LAYER_RESTORE_ORIGINS.workspace &&
-              layerParamsAlreadyApplied(this.dataManager, entry.id, options)) ||
-            this.dataManager.setLayerParams(entry.id, options, { origin });
+              layerParamsAlreadyApplied(
+                this.dataManager,
+                entry.id,
+                layerOptions,
+              )) ||
+            this.dataManager.setLayerParams(entry.id, layerOptions, { origin });
           return this.dataManager
             .restoreLayerState(
               entry.id,
@@ -399,7 +431,8 @@ export class LayerStateCoordinator {
             )
             .then((result) => ({
               ...result,
-              appliedOptions: paramsSucceeded && options ? options : {},
+              appliedOptions:
+                paramsSucceeded && layerOptions ? layerOptions : {},
               errorClass: paramsSucceeded
                 ? result.errorClass
                 : 'ParamsRejected',
@@ -407,7 +440,7 @@ export class LayerStateCoordinator {
             }));
         }),
       );
-      this.lastRestoreResults = settled.map((result, index) => {
+      const results = settled.map((result, index) => {
         if (result.status === 'fulfilled') return result.value;
         const entry = LAYER_STATE_REGISTRY[index];
         return {
@@ -424,10 +457,16 @@ export class LayerStateCoordinator {
           succeeded: false,
         };
       });
-      return this.lastRestoreResults.map((result) => ({ ...result }));
+      if (owns()) this.lastRestoreResults = results;
+      return results.map((result) => ({ ...result }));
     } finally {
-      this._restoreControllers.clear();
-      this._notifyDurableState();
+      options.signal?.removeEventListener('abort', abortOwned);
+      const notifyDurableState = owns();
+      for (const [id, controller] of ownedControllers) {
+        if (this._restoreControllers.get(id) === controller)
+          this._restoreControllers.delete(id);
+      }
+      if (notifyDurableState) this._notifyDurableState();
     }
   }
 

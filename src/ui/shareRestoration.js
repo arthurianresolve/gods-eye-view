@@ -189,10 +189,17 @@ export class ShareRestoration {
     );
   }
   async restoreWorkspaceView(view, options = {}) {
+    const owns = () =>
+      !options.signal?.aborted && options.isCurrent?.() !== false;
+    if (!owns()) return { layers: [], tracking: { status: 'superseded' } };
     const params = viewToParams(view);
     const layers = decodeLayerStateParams(params) || createDefaultLayerState();
-    const restored =
-      await this._layerStateCoordinator?.restoreWorkspaceState?.(layers);
+    const restored = await this._layerStateCoordinator?.restoreWorkspaceState?.(
+      layers,
+      options,
+    );
+    if (!owns())
+      return { layers: restored || [], tracking: { status: 'superseded' } };
     const tracking =
       await this._layerStateCoordinator?.restoreShareTrackingSelection?.(
         options,

@@ -254,11 +254,24 @@ async function createPanel({ workspaceCount = 0 } = {}) {
     confirm: () => true,
   };
   const container = new Element('container');
+  const navigation = {
+    _navigationGeneration: 0,
+    _beginDeferredNavigation() {
+      this._navigationGeneration += 1;
+      return this._navigationGeneration;
+    },
+  };
   let renderHandler = async () => {};
   let viewChangeListener = null;
+  const queuedApplyBehaviors = [];
+  const viewApplyCalls = [];
+  const workspaceViewRestores = [];
   const shareLinkManager = {
     getCurrentView: () => view,
-    applyView: async (nextView) => {
+    applyView: async (nextView, options = {}) => {
+      viewApplyCalls.push({ view: nextView, options });
+      const behavior = queuedApplyBehaviors.shift();
+      if (behavior) await behavior(nextView, options);
       const gate = applyViewGate;
       applyViewGate = null;
       if (gate) {
@@ -280,7 +293,13 @@ async function createPanel({ workspaceCount = 0 } = {}) {
     container,
     storage,
     shareLinkManager,
-    shareRestoration: { restoreWorkspaceView: async () => [] },
+    navigation,
+    shareRestoration: {
+      restoreWorkspaceView: async (restoredView, options) => {
+        workspaceViewRestores.push({ view: restoredView, options });
+        return [];
+      },
+    },
     onImportedData: (...args) => renderHandler(...args),
     now: () => 200,
   });
@@ -323,6 +342,7 @@ async function createPanel({ workspaceCount = 0 } = {}) {
       renderHandler = handler;
     },
     emitViewChange(nextView) {
+      navigation._navigationGeneration += 1;
       view = nextView;
       viewChangeListener?.(nextView);
     },
@@ -332,6 +352,11 @@ async function createPanel({ workspaceCount = 0 } = {}) {
       applyViewGate = { ...gate, started };
       return { started: started.promise, release: gate.resolve };
     },
+    queueViewApplyBehavior(behavior) {
+      queuedApplyBehaviors.push(behavior);
+    },
+    viewApplyCalls,
+    workspaceViewRestores,
     currentView: () => view,
     restoreGlobals() {
       panel.destroy();
@@ -411,6 +436,42 @@ test('file selection clears old preview synchronously and ignores a late stale r
     fixture.element('[data-import-status]').textContent,
     /Preview ready/,
   );
+});
+
+test('superseded workspace rollback passes ownership and skips stale layer restoration', async (t) => {
+  const fixture = await createPanel({ workspaceCount: 2 });
+  t.after(() => fixture.restoreGlobals());
+  await fixture.selectWorkspace('workspace-a');
+  assert.ok(
+    fixture.workspaceViewRestores[0].options.signal instanceof AbortSignal,
+  );
+  assert.ok(fixture.workspaceViewRestores[0].options.navigationToken != null);
+  fixture.workspaceViewRestores.length = 0;
+
+  const rollbackStarted = deferred();
+  const rollbackGate = deferred();
+  fixture.queueViewApplyBehavior(async () => {
+    throw new Error('workspace view apply failed');
+  });
+  fixture.queueViewApplyBehavior(async (_view, options) => {
+    rollbackStarted.resolve(options);
+    await rollbackGate.promise;
+  });
+
+  fixture.element('[data-workspace-select]').value = 'workspace-b';
+  await fixture.element('[data-workspace-select]').dispatch('change');
+  const opening = fixture.action('open', { wait: false });
+  const rollbackOptions = await rollbackStarted.promise;
+  assert.ok(rollbackOptions.navigationToken != null);
+  assert.equal(rollbackOptions.signal, undefined);
+
+  const newerView = createView({ camera: { lat: 45, lon: 90 } });
+  fixture.emitViewChange(newerView);
+  rollbackGate.resolve();
+  await opening;
+
+  assert.equal(fixture.workspaceViewRestores.length, 0);
+  assert.equal(fixture.currentView(), newerView);
 });
 
 test('completed CSV preview can be rerun after choosing a different workspace', async (t) => {

@@ -696,18 +696,32 @@ export function createWorkspaceLibraryPanel({
       const result = await shareLinkManager.applyView(document.view, {
         navigationToken,
       });
-      if (signal?.aborted) throw signal.reason;
+      if (signal?.aborted || !navTokenIsCurrent(navigationToken))
+        throw signal?.reason || new DOMException('Superseded', 'AbortError');
       const layers = await shareRestoration?.restoreWorkspaceView?.(
         document.view,
-        { signal },
+        {
+          signal,
+          navigationToken,
+          isCurrent: () =>
+            !signal?.aborted && navTokenIsCurrent(navigationToken),
+        },
       );
       return { result, layers, availability, stored };
     },
-    rollback: async (view) => {
-      if (view) {
-        await shareLinkManager.applyView(view);
-        await shareRestoration?.restoreWorkspaceView?.(view);
-      }
+    rollback: async (view, { signal, navigationToken, isCurrent } = {}) => {
+      const owns = () =>
+        !signal?.aborted &&
+        isCurrent?.() !== false &&
+        navTokenIsCurrent(navigationToken);
+      if (!view || !owns()) return;
+      await shareLinkManager.applyView(view, { navigationToken });
+      if (!owns()) return;
+      await shareRestoration?.restoreWorkspaceView?.(view, {
+        signal,
+        navigationToken,
+        isCurrent: owns,
+      });
     },
     isCurrent: (token) => navTokenIsCurrent(token),
   });

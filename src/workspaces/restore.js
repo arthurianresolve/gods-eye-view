@@ -127,12 +127,18 @@ export function createWorkspaceRestoreCoordinator({
       let rolledBack = false;
       if (beganApply && snapshot !== undefined && owns()) {
         try {
-          await rollback(snapshot, { error, signal: controller.signal });
+          await rollback(snapshot, {
+            error,
+            signal: controller.signal,
+            navigationToken,
+            isCurrent: owns,
+          });
           rolledBack = true;
         } catch {
           rolledBack = false;
         }
       }
+      if (!owns()) return finishSuperseded(token, controller);
       publish({
         status: 'failed',
         error: String(error?.message || error),

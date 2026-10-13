@@ -1154,6 +1154,106 @@ test('repeated workspace restores skip unchanged layer parameters', async () => 
   coordinator.destroy();
 });
 
+test('stale workspace restore gate cannot consume or clear a newer restore', async () => {
+  const oldGate = deferred();
+  const oldGateStarted = deferred();
+  let gateCalls = 0;
+  const manager = productionManager();
+  const coordinator = new LayerStateCoordinator(manager, shareSink(), {
+    storage: memoryStorage(),
+    restoreGate: () => {
+      gateCalls += 1;
+      if (gateCalls === 1) {
+        oldGateStarted.resolve();
+        return oldGate.promise;
+      }
+      return Promise.resolve();
+    },
+  });
+  const olderState = createDefaultLayerState();
+  olderState.enabledLayerIds = ['radio'];
+  const olderRestore = coordinator.restoreWorkspaceState(olderState);
+  await oldGateStarted.promise;
+
+  const newerState = createDefaultLayerState();
+  newerState.enabledLayerIds = ['earthquakes'];
+  await coordinator.restoreWorkspaceState(newerState);
+  const newerResults = coordinator.lastRestoreResults;
+  assert.equal(manager.isEnabled('earthquakes'), true);
+  assert.equal(manager.isEnabled('radio'), false);
+  oldGate.resolve();
+
+  assert.deepEqual(await olderRestore, []);
+  assert.equal(manager.isEnabled('earthquakes'), true);
+  assert.equal(manager.isEnabled('radio'), false);
+  assert.deepEqual(coordinator.lastRestoreResults, newerResults);
+  assert.deepEqual(coordinator.getDurableState().enabledLayerIds, [
+    'earthquakes',
+  ]);
+  coordinator.destroy();
+});
+
+test('explicit params during a workspace gate remain current for the owned restore', async () => {
+  const gate = deferred();
+  const gateStarted = deferred();
+  const manager = productionManager();
+  const coordinator = new LayerStateCoordinator(manager, shareSink(), {
+    storage: memoryStorage(),
+    restoreGate: () => {
+      gateStarted.resolve();
+      return gate.promise;
+    },
+  });
+  const state = createDefaultLayerState();
+  state.enabledLayerIds = ['radio'];
+  state.options.radio = { filter: 'genre:r&b', volume: 0.2 };
+  const restore = coordinator.restoreWorkspaceState(state);
+  await gateStarted.promise;
+
+  assert.equal(
+    manager.setLayerParams(
+      'radio',
+      { filter: 'genre:hip hop', volume: 0.42 },
+      { origin: 'user' },
+    ),
+    true,
+  );
+  gate.resolve();
+  const results = await restore;
+  assert.equal(manager.getLayerParams('radio').filter, 'genre:hip hop');
+  assert.deepEqual(
+    results.find((result) => result.layerId === 'radio').appliedOptions,
+    { filter: 'genre:hip hop', volume: 0.42 },
+  );
+  coordinator.destroy();
+});
+
+test('aborting a workspace owner while gated prevents its layers from restoring', async () => {
+  const gate = deferred();
+  const gateStarted = deferred();
+  const manager = productionManager();
+  const coordinator = new LayerStateCoordinator(manager, shareSink(), {
+    storage: memoryStorage(),
+    restoreGate: () => {
+      gateStarted.resolve();
+      return gate.promise;
+    },
+  });
+  const state = createDefaultLayerState();
+  state.enabledLayerIds = ['radio'];
+  const controller = new AbortController();
+  const restore = coordinator.restoreWorkspaceState(state, {
+    signal: controller.signal,
+  });
+  await gateStarted.promise;
+  controller.abort('workspace rollback superseded');
+  gate.resolve();
+
+  assert.deepEqual(await restore, []);
+  assert.equal(manager.isEnabled('radio'), false);
+  coordinator.destroy();
+});
+
 test('manager forwards passive restore origin into module parameter application', async () => {
   const seen = [];
   const manager = productionManager({
