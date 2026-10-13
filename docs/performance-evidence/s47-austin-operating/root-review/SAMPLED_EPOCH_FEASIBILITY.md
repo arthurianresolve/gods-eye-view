@@ -824,3 +824,9 @@ application provenance. This failed run is not promoted to a pass.
 [Fresh main reconciliation](main-reconciliation-e1542dfc.json) again confirms
 fork and upstream main at 8b8ccc9a, local/remote dev equal at 726e404b,
 and no main commits missing from dev or the QA branch.
+
+[Standard CI 38332487577](ci-38332487577-final.json) has now completed with
+all seven jobs passing at exact candidate 78e04172: Node 24/26, Windows
+onboarding, recovery on Windows/macOS/Linux, and browser journeys. The
+separate native capture run remains failed at its outer comparison-contract
+assertion. Fresh capture and standard validation will follow the correction.
