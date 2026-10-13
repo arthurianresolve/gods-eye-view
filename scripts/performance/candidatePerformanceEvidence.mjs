@@ -14,6 +14,9 @@ export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'map-streaming',
 ]);
 
+export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
+  'gev-cesium-acceptance/2026-10-13';
+
 const SHA1 = /^[a-f0-9]{40}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const MAX_ARTIFACT_BYTES = 64 * 1024 * 1024;
@@ -538,11 +541,42 @@ function comparisonOutcome(rows) {
   const denseRow = eligibleRows.find(
     (row) => row.workloadId === 'dense-investigation',
   );
-  if (
-    denseRow?.validation?.denseTrackingObjective?.status === 'assessed' &&
-    denseRow.validation.denseTrackingObjective.achieved === true
-  )
+  const hasCompleteScenarioMeasurement = (scenario) => {
+    const result = denseRow?.validation?.scenarios?.[scenario];
+    return (
+      result?.status === 'measured' &&
+      Number.isFinite(result.baselineMedianP95Ms) &&
+      result.baselineMedianP95Ms > 0 &&
+      Number.isFinite(result.candidateMedianP95Ms) &&
+      result.candidateMedianP95Ms > 0 &&
+      Number.isFinite(result.changePct) &&
+      result.regressionOver10Pct === result.changePct > 10
+    );
+  };
+  if (hasCompleteScenarioMeasurement('selected-aircraft-tracking'))
     workloadIds.add('selected-aircraft-tracking');
+  const performanceObjectives = [
+    ['dense-motion', 'scripted-motion'],
+    ['selected-aircraft-tracking', 'selected-aircraft-tracking'],
+  ].map(([id, scenario]) => {
+    const measured = hasCompleteScenarioMeasurement(scenario);
+    const changePct = measured
+      ? denseRow.validation.scenarios[scenario].changePct
+      : null;
+    const actualImprovementPct = changePct == null ? null : -changePct;
+    return {
+      id,
+      scenario,
+      targetImprovementPct: 20,
+      actualImprovementPct,
+      status:
+        actualImprovementPct == null
+          ? 'unassessed'
+          : actualImprovementPct >= 20
+            ? 'achieved'
+            : 'missed',
+    };
+  });
   const missingWorkloads = REQUIRED_PERFORMANCE_WORKLOADS.filter(
     (id) => !workloadIds.has(id),
   );
@@ -578,21 +612,12 @@ function comparisonOutcome(rows) {
       failures.push(
         `${row.environmentId}/${row.workloadId}: regression over 10% in ${validation.regressionsOver10Pct.join(', ')}.`,
       );
-    if (row.workloadId === 'dense-investigation') {
-      for (const objective of [
-        validation.workloadObjective,
-        validation.denseTrackingObjective,
-      ]) {
-        if (objective?.status !== 'assessed' || objective?.achieved == null)
-          pending.push(
-            'Dense motion/tracking 20% objective is not fully assessed.',
-          );
-        else if (objective.achieved !== true)
-          failures.push(
-            'Dense investigation and selected tracking must achieve the 20% objective.',
-          );
-      }
-    }
+  }
+  for (const objective of performanceObjectives) {
+    if (objective.status === 'unassessed')
+      pending.push(
+        `The ${objective.id} 20% performance objective is unassessed; its required measurement is missing.`,
+      );
   }
   if (missingWorkloads.length)
     pending.push(
@@ -601,9 +626,11 @@ function comparisonOutcome(rows) {
   if (!rows.length)
     pending.push('No raw paired comparison reports were supplied.');
   return {
+    acceptancePolicyId: PERFORMANCE_ACCEPTANCE_POLICY_ID,
     status: failures.length ? 'failed' : pending.length ? 'pending' : 'passed',
     failures: [...new Set(failures)],
     pending: [...new Set(pending)],
+    performanceObjectives,
     missingWorkloads,
     workloadIds: [...workloadIds].sort(),
     environments: rows.map((row) => ({

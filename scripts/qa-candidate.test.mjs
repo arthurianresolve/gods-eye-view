@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   evaluateCandidateReadiness,
+  formatPerformanceObjectiveNotes,
   requiresPerformanceEvidence,
   readValidationManifest,
 } from './qa-candidate.mjs';
@@ -225,6 +226,30 @@ test('v2 manifests automatically require computed performance gates; v1 remains 
   });
   assert.equal(parsed.schemaVersion, 2);
   assert.equal(parsed.performanceEvidence.comparison.status, 'pending');
+  assert.equal(
+    parsed.performanceEvidence.comparison.acceptancePolicyId,
+    'gev-cesium-acceptance/2026-10-13',
+  );
+  assert.deepEqual(
+    formatPerformanceObjectiveNotes([
+      {
+        id: 'dense-motion',
+        status: 'missed',
+        actualImprovementPct: 14.75,
+        targetImprovementPct: 20,
+      },
+      {
+        id: 'selected-aircraft-tracking',
+        status: 'unassessed',
+        actualImprovementPct: null,
+        targetImprovementPct: 20,
+      },
+    ]),
+    [
+      'dense-motion: missed (actual 14.8%; target 20%).',
+      'selected-aircraft-tracking: unassessed (actual unavailable; target 20%).',
+    ],
+  );
   assert.equal(parsed.performanceEvidence.retentionOutcome.status, 'pending');
   await writeFile(
     manifestPath,

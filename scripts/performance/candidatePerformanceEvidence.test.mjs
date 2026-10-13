@@ -7,6 +7,7 @@ import path from 'node:path';
 import {
   classifyRecordedRenderer,
   evaluateManifestPerformanceEvidence,
+  PERFORMANCE_ACCEPTANCE_POLICY_ID,
 } from './candidatePerformanceEvidence.mjs';
 import { readValidationManifest } from '../qa-candidate.mjs';
 import {
@@ -507,7 +508,7 @@ test('digest tampering, missing files, duplicate roles and wrong app commits fai
   );
 });
 
-test('dense objectives and regressions are assessed from paired raw reports', async () => {
+test('20% objective misses are reported without failing the regression gate', async () => {
   const setup = await setupManifest();
   setup.evidence.comparisons.push(
     await createComparison(setup, {
@@ -525,9 +526,150 @@ test('dense objectives and regressions are assessed from paired raw reports', as
     manifestPath: setup.manifestPath,
     candidateCommit,
   });
-  assert.equal(result.comparison.status, 'failed');
+  assert.equal(result.comparison.status, 'pending');
+  assert.deepEqual(result.comparison.failures, []);
+  assert.equal(
+    result.comparison.acceptancePolicyId,
+    PERFORMANCE_ACCEPTANCE_POLICY_ID,
+  );
+  assert.deepEqual(
+    result.comparison.performanceObjectives.map(
+      (objective) => objective.status,
+    ),
+    ['missed', 'missed'],
+  );
   assert.ok(
-    result.comparison.failures.some((message) => /20% objective/.test(message)),
+    result.comparison.performanceObjectives.every((objective) =>
+      Number.isFinite(objective.actualImprovementPct),
+    ),
+  );
+  assert.ok(
+    result.comparison.workloadIds.includes('selected-aircraft-tracking'),
+  );
+
+  const regression = await createComparison(setup, {
+    patch: (_baseline, candidate) => {
+      for (const capture of candidate.captures) {
+        if (capture.scenario === 'scripted-motion') {
+          capture.frameIntervalMs = {
+            p50: 50,
+            p95: 50,
+            max: 50,
+            samples: 100,
+          };
+        }
+      }
+    },
+  });
+  const regressed = evaluateManifestPerformanceEvidence(
+    { comparisons: [regression], retention: [] },
+    { manifestPath: setup.manifestPath, candidateCommit },
+  );
+  assert.equal(regressed.comparison.status, 'failed');
+  assert.ok(
+    regressed.comparison.failures.some((message) =>
+      /regression over 10%/.test(message),
+    ),
+  );
+});
+
+test('achieved objective percentages remain visible from validated measurements', async () => {
+  const setup = await setupManifest();
+  setup.evidence.comparisons.push(await createComparison(setup));
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.deepEqual(
+    result.comparison.performanceObjectives.map(
+      (objective) => objective.status,
+    ),
+    ['achieved', 'achieved'],
+  );
+  assert.ok(
+    result.comparison.performanceObjectives.every(
+      (objective) => objective.actualImprovementPct >= 20,
+    ),
+  );
+  assert.ok(
+    result.comparison.workloadIds.includes('selected-aircraft-tracking'),
+  );
+});
+
+test('missing dense and tracking measurements stay pending and do not imply coverage', async () => {
+  const setup = await setupManifest();
+  for (const workloadId of [
+    'operating-view',
+    'infrastructure-only',
+    'weather-effects',
+    'lifecycle-stress',
+    'map-streaming',
+  ])
+    setup.evidence.comparisons.push(
+      await createComparison(setup, { workloadId }),
+    );
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.equal(result.comparison.status, 'pending');
+  assert.deepEqual(
+    result.comparison.performanceObjectives.map(
+      (objective) => objective.status,
+    ),
+    ['unassessed', 'unassessed'],
+  );
+  assert.ok(result.comparison.missingWorkloads.includes('dense-investigation'));
+  assert.ok(
+    result.comparison.missingWorkloads.includes('selected-aircraft-tracking'),
+  );
+});
+
+test('software-only comparisons cannot satisfy primary objective coverage', async () => {
+  const setup = await setupManifest();
+  for (const workloadId of [
+    'dense-investigation',
+    'operating-view',
+    'infrastructure-only',
+    'weather-effects',
+    'lifecycle-stress',
+    'map-streaming',
+  ]) {
+    setup.evidence.comparisons.push(
+      await createComparison(setup, {
+        environmentId: 'hosted-swiftshader',
+        workloadId,
+        patch: (baseline, candidate) => {
+          for (const report of [baseline, candidate]) {
+            report.environment.renderer = 'SwiftShader Device (Subzero)';
+            report.hostEnvironment.hosted = true;
+            for (const capture of report.captures) {
+              capture.conditions.before.environment.renderer =
+                'SwiftShader Device (Subzero)';
+              capture.conditions.after.environment.renderer =
+                'SwiftShader Device (Subzero)';
+            }
+          }
+        },
+      }),
+    );
+  }
+  const result = evaluateManifestPerformanceEvidence(setup.evidence, {
+    manifestPath: setup.manifestPath,
+    candidateCommit,
+  });
+  assert.equal(result.comparison.status, 'pending');
+  assert.deepEqual(result.comparison.workloadIds, []);
+  assert.deepEqual(
+    result.comparison.performanceObjectives.map(
+      (objective) => objective.status,
+    ),
+    ['unassessed', 'unassessed'],
+  );
+  assert.ok(
+    result.comparison.pending.some((message) =>
+      /physical Windows/.test(message),
+    ),
   );
 });
 
@@ -596,7 +738,33 @@ test('complete primary Windows evidence passes with supplemental software rows',
     'map-streaming',
   ]) {
     setup.evidence.comparisons.push(
-      await createComparison(setup, { workloadId }),
+      await createComparison(setup, {
+        workloadId,
+        patch:
+          workloadId === 'dense-investigation'
+            ? (_baseline, candidate) => {
+                for (const capture of candidate.captures) {
+                  if (capture.scenario === 'scripted-motion') {
+                    capture.frameIntervalMs = {
+                      p50: 40,
+                      p95: 40,
+                      max: 40,
+                      samples: 100,
+                    };
+                  } else if (
+                    capture.scenario === 'selected-aircraft-tracking'
+                  ) {
+                    capture.frameIntervalMs = {
+                      p50: 45,
+                      p95: 45,
+                      max: 45,
+                      samples: 100,
+                    };
+                  }
+                }
+              }
+            : undefined,
+      }),
     );
   }
   setup.evidence.comparisons.push(
@@ -641,6 +809,16 @@ test('complete primary Windows evidence passes with supplemental software rows',
     result.comparison.status,
     'passed',
     JSON.stringify(result.comparison, null, 2),
+  );
+  assert.equal(
+    result.comparison.acceptancePolicyId,
+    PERFORMANCE_ACCEPTANCE_POLICY_ID,
+  );
+  assert.deepEqual(
+    result.comparison.performanceObjectives.map(
+      (objective) => objective.status,
+    ),
+    ['missed', 'missed'],
   );
   assert.equal(result.comparison.environments.at(-1).status, 'supplemental');
   assert.equal(result.retentionOutcome.status, 'passed');

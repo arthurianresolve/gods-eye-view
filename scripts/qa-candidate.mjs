@@ -24,6 +24,15 @@ export function evaluateCandidateReadiness(checks) {
   });
 }
 
+export function formatPerformanceObjectiveNotes(objectives = []) {
+  return objectives.map((objective) => {
+    const actual = Number.isFinite(objective.actualImprovementPct)
+      ? `actual ${objective.actualImprovementPct.toFixed(1)}%`
+      : 'actual unavailable';
+    return `${objective.id}: ${objective.status} (${actual}; target ${objective.targetImprovementPct}%).`;
+  });
+}
+
 const EXTERNAL_CHECK_IDS = new Set([
   'platform-installs',
   'mixed-use-soak',
@@ -321,6 +330,10 @@ export async function runCandidateMatrix({
         comparisonCheck.summary = [
           ...performanceEvidence.comparison.failures,
           ...performanceEvidence.comparison.pending,
+          `Acceptance policy: ${performanceEvidence.comparison.acceptancePolicyId}.`,
+          ...formatPerformanceObjectiveNotes(
+            performanceEvidence.comparison.performanceObjectives,
+          ),
           `Observed workloads: ${performanceEvidence.comparison.workloadIds.join(', ') || 'none'}.`,
         ].join(' ');
         comparisonCheck.result = performanceEvidence.comparison;
@@ -371,6 +384,9 @@ export async function runCandidateMatrix({
     commit,
     phase,
     performanceEvidenceRequired,
+    performanceAcceptancePolicyId:
+      validationManifest?.performanceEvidence?.comparison?.acceptancePolicyId ??
+      null,
     validationManifest,
     phases: {
       preRelease: preReleaseReadiness,
