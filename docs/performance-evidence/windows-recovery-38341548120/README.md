@@ -6,6 +6,10 @@ The [Windows recovery job](https://github.com/arthurianresolve/gods-eye-view/act
 fails during shutdown of the upgraded application. This is hosted Windows with
 SwiftShader, not physical GPU evidence.
 
+The [completed CI result](ci-final.json) has six passing jobs and this one
+failure. Node 24/26, both production builds, Windows onboarding, Linux/macOS
+recovery and the browser journey gate pass at the same candidate revision.
+
 All four attempted stages preserve settings, workspace contents and the saved
 asset. The first three browser processes exit normally in 346–483 ms. The fourth
 acknowledges `Browser.close` after 16.21 ms and disconnects after 25.66 ms, but

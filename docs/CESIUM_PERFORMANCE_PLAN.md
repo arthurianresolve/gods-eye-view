@@ -61,6 +61,9 @@ shutdown exceeds the unchanged five-second gate. Process roles are available
 before close; the parent PID is present at timeout and forced cleanup confirms
 exit code 1. This improves attribution without establishing the shutdown cause
 or a fix. The fifth recovery stage is not reached; QA is not promoted.
+The completed standard run has six passing jobs: Node 24/26, Windows onboarding,
+Linux/macOS recovery and browser journeys. Windows recovery remains the sole
+failed job at this exact revision.
 
 ## Earlier integration evidence
 
