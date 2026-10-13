@@ -50,9 +50,13 @@ current resolution, effects, feature populations and detail settings.
 The M3 journey/report core is now integrated through `c7b6332f` at QA `0a504d27`.
 Its [independent correction review](performance-evidence/s47-map-streaming/driver-correction-review-c7b6332f.json)
 records actual pinned-Cesium API/pose checks and 28 passing component tests.
-Earlier false acceptance controls remain recorded. Production capture CLI and
-outer-validator integration, native browser readiness and hardware comparisons
-remain pending; this component result does not complete S47 or S57.
+Earlier false acceptance controls remain recorded. CLI and outer-validator
+wiring through `98944a06` is now integrated at QA `17f47d05`, with 59 focused
+checks, 24 capture-harness lint targets, formatting and package boundaries
+passing. The [wiring correction review](performance-evidence/s47-map-streaming/wiring-correction-review-98944a06.json)
+keeps production build/browser validation pending. The short smoke adds the
+native journey only to the candidate; baseline native-journey proof, matched
+comparisons and hardware acceptance remain. This does not complete S47 or S57.
 
 After workload coverage, complete the remaining measured S48-S59 work and the
 S60 candidate comparisons and retention soak. Primary Windows UHD 620
