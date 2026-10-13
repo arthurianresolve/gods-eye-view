@@ -1037,6 +1037,8 @@
   "scripts/performance/terrainPickingLifecycle.test.mjs",
   "scripts/performance/mapStreamingFixture.mjs",
   "scripts/performance/mapStreamingFixture.test.mjs",
+  "scripts/performance/mapStreamingFixtureDelivery.mjs",
+  "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
   "scripts/performance/streamedTileNetworkEvidence.mjs",
   "scripts/performance/streamedTileNetworkEvidence.test.mjs",
   "scripts/qa-hosted-capture.mjs",

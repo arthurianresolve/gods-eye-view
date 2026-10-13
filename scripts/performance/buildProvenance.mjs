@@ -27,7 +27,7 @@ const MAX_ASSET_BYTES = 32 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 512 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 3_000;
 const SERVED_TIMEOUT_MS = 120_000;
-const MAP_FIXTURE_BUILD_PROFILE_ID = 'austin-map-streaming-v1';
+export const MAP_FIXTURE_BUILD_PROFILE_ID = 'austin-map-streaming-v1';
 const MAP_FIXTURE_BUILD_PROFILE_CONFIG = Object.freeze({
   schema: 'gev-map-fixture-build-profile/v1',
   id: MAP_FIXTURE_BUILD_PROFILE_ID,
@@ -58,6 +58,13 @@ export function resolveMapFixtureBuildProfile(profileId) {
   if (profileId !== MAP_FIXTURE_BUILD_PROFILE_ID)
     throw new TypeError(`Unsupported build profile: ${profileId}`);
   return { ...mapFixtureProfileSummary };
+}
+
+/** Resolve the profile-owned public fixture key without duplicating its value. */
+export function getMapFixtureBuildProfileGoogleApiKey(profileId) {
+  if (profileId !== MAP_FIXTURE_BUILD_PROFILE_ID)
+    throw new TypeError(`Unsupported build profile: ${profileId}`);
+  return MAP_FIXTURE_BUILD_PROFILE_CONFIG.googleMapsApiKey;
 }
 
 function profileEnvironment(profileId) {
