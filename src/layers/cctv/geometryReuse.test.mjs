@@ -163,6 +163,90 @@ test('terrain, probe-clamp and footprint revisions invalidate only their changed
   assert.equal(env.record.frustumGeometry.footprintMeasured, true);
 });
 
+test('footprint metadata refresh keeps identical rendered viewshed primitive', () => {
+  const env = fixture();
+  const primitives = [];
+  let adds = 0;
+  let removes = 0;
+  env.state._activeCameraId = env.record.camera.id;
+  env.state._viewer = {
+    scene: {
+      primitives: {
+        add(primitive) {
+          adds++;
+          primitives.push(primitive);
+          return primitive;
+        },
+        remove(primitive) {
+          removes++;
+          const index = primitives.indexOf(primitive);
+          if (index >= 0) primitives.splice(index, 1);
+          return index >= 0;
+        },
+      },
+    },
+  };
+  env.record.viewshedColors = viewshedColors(120);
+
+  env.geometry.applyFrustumGeometry(env.record, 0);
+  assert.equal(env.record.frustumGeometry.footprintMeasured, false);
+  env.geometry.rebuildViewshedVolume(env.record, true);
+  const initialPrimitive = env.record.viewshedPrimitive;
+  const initialGeometry = env.record.frustumGeometry;
+  const initialPositions = env.record.frustumPositions;
+  const initialVertices = Object.fromEntries(
+    Object.entries(initialPositions).map(([key, point]) => [
+      key,
+      Cesium.Cartesian3.clone(point),
+    ]),
+  );
+  const pose = env.geometry.footprintPose(env.record);
+
+  env.record.footprintGround = {
+    pose: { ...pose },
+    poseHash: poseHash(pose),
+    supports: Object.fromEntries(SUPPORT_KEYS.map((key) => [key, 0])),
+  };
+  env.geometry.applyFrustumGeometry(env.record, 0);
+
+  assert.notEqual(env.record.frustumGeometry, initialGeometry);
+  assert.equal(env.record.frustumGeometry.footprintMeasured, true);
+  assert.equal(env.record.frustumPositions, initialPositions);
+  assert.equal(env.record.viewshedPrimitive, initialPrimitive);
+  assert.equal(adds, 1);
+  assert.equal(removes, 0);
+  for (const [key, point] of Object.entries(initialVertices))
+    assert.ok(
+      Cesium.Cartesian3.equals(env.record.frustumPositions[key], point),
+    );
+
+  env.record.footprintGround.supports = Object.fromEntries(
+    SUPPORT_KEYS.map((key) => [key, 900]),
+  );
+  env.geometry.applyFrustumGeometry(env.record, 0);
+  assert.notEqual(env.record.frustumPositions, initialPositions);
+  assert.notEqual(env.record.viewshedPrimitive, initialPrimitive);
+  assert.equal(adds, 2, 'Changed rendered support geometry builds once.');
+  assert.equal(
+    removes,
+    1,
+    'Changed rendered support geometry retires prior volume.',
+  );
+
+  const hiddenSourceBoundPrimitive = env.record.viewshedPrimitive;
+  hiddenSourceBoundPrimitive.show = false;
+  env.parts.ground.currentSurfaceRegime = () => 'google-3d';
+  env.state._googleGroundSource = {};
+  env.geometry.applyFrustumGeometry(env.record, 0);
+  assert.equal(
+    env.record.viewshedPrimitive,
+    null,
+    'A hidden volume is invalidated when its geometry owner changes.',
+  );
+  assert.equal(primitives.includes(hiddenSourceBoundPrimitive), false);
+  assert.equal(removes, 2);
+});
+
 test('normalized calibration producer changes geometry once per real pose revision', () => {
   const env = fixture();
   const requests = [];

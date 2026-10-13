@@ -386,7 +386,7 @@ export function createGeometry({ state: layerState, services, parts, source }) {
     const previous = record.frustumGeometry;
     const samePoint = (a, b) =>
       a && b && a.lat === b.lat && a.lon === b.lon && a.alt === b.alt;
-    const sameGeometry =
+    const sameRenderedGeometry =
       previous &&
       record.frustumPositions &&
       previous.rangeM === geometry.rangeM &&
@@ -395,9 +395,6 @@ export function createGeometry({ state: layerState, services, parts, source }) {
       previous.halfH === geometry.halfH &&
       previous.groundAltM === geometry.groundAltM &&
       previous.liftM === geometry.liftM &&
-      previous.liftLimitedBy === geometry.liftLimitedBy &&
-      previous.liftCapped === geometry.liftCapped &&
-      previous.footprintMeasured === geometry.footprintMeasured &&
       samePoint(previous.mount, geometry.mount) &&
       samePoint(previous.capCenter, geometry.capCenter) &&
       samePoint(previous.topCenter, geometry.topCenter) &&
@@ -405,7 +402,16 @@ export function createGeometry({ state: layerState, services, parts, source }) {
       samePoint(previous.corners?.tr, geometry.corners?.tr) &&
       samePoint(previous.corners?.br, geometry.corners?.br) &&
       samePoint(previous.corners?.bl, geometry.corners?.bl);
-    if (sameGeometry) {
+    if (sameRenderedGeometry) {
+      // Footprint observation metadata can resolve after the visible vertices
+      // are already correct (for example, a zero-height fixture DEM). Keep the
+      // newest observation without resubmitting identical Cesium geometry.
+      if (
+        previous.liftLimitedBy !== geometry.liftLimitedBy ||
+        previous.liftCapped !== geometry.liftCapped ||
+        previous.footprintMeasured !== geometry.footprintMeasured
+      )
+        record.frustumGeometry = geometry;
       record.frustumGeometrySurfaceRegime = regime;
       record.frustumGeometrySurfaceOwnerId = surfaceOwnerId;
       if (sourceChanged && record.viewshedPrimitive?.show === false)
