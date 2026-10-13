@@ -189,25 +189,26 @@ test('concurrent malformed-file repairs return the same persisted key', async (t
     child: index,
     fallbackLogs: diagnostics.fallbackLogs,
   }));
-  assert.equal(
-    new Set(children.map(({ key }) => key)).size,
-    1,
-    `concurrent panel-key children disagreed; safe fallback diagnostics: ${JSON.stringify(childDiagnostics)}`,
-  );
-  assert.equal(
-    fs.readFileSync(file, 'utf8').trim(),
-    children[0].key,
-    `persisted panel key disagreed; safe fallback diagnostics: ${JSON.stringify(childDiagnostics)}`,
-  );
+  const safeDiagnostics = JSON.stringify(childDiagnostics);
   assert.equal(
     children.every(({ key }) => /^[A-Za-z0-9_-]{43}$/.test(key)),
     true,
-    `child output was not a panel key; safe fallback diagnostics: ${JSON.stringify(childDiagnostics)}`,
+    `child output was not a panel key; safe fallback diagnostics: ${safeDiagnostics}`,
   );
   assert.equal(
-    JSON.stringify(childDiagnostics).includes(children[0].key),
-    false,
-    'fallback diagnostics must not contain panel key values',
+    children.every(({ key }) => !safeDiagnostics.includes(key)),
+    true,
+    'fallback diagnostics must not contain any panel key values',
+  );
+  assert.equal(
+    new Set(children.map(({ key }) => key)).size,
+    1,
+    `concurrent panel-key children disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
+  );
+  assert.equal(
+    fs.readFileSync(file, 'utf8').trim() === children[0].key,
+    true,
+    `persisted panel key disagreed; safe fallback diagnostics: ${safeDiagnostics}`,
   );
   assert.equal(fs.existsSync(`${file}.repair-lock`), false);
   assert.equal(
