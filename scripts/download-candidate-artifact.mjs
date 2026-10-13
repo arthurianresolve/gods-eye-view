@@ -14,6 +14,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const SHA256 = /^sha256:([a-f0-9]{64})$/;
+const RAW_SHA256 = /^[a-f0-9]{64}$/;
 const SHA1 = /^[a-f0-9]{40}$/;
 const POSITIVE_INTEGER = /^[1-9][0-9]*$/;
 
@@ -28,6 +29,13 @@ function requireSha256(value, label) {
   const match = SHA256.exec(String(value ?? ''));
   if (!match) throw new TypeError(`${label} must be a sha256 digest.`);
   return match[1];
+}
+
+function requireRawSha256(value, label) {
+  const digest = String(value ?? '');
+  if (!RAW_SHA256.test(digest))
+    throw new TypeError(`${label} must be a raw SHA-256 digest.`);
+  return digest;
 }
 
 export function validateCandidateArtifactMetadata(metadata, expected) {
@@ -46,6 +54,8 @@ export function validateCandidateArtifactMetadata(metadata, expected) {
     throw new TypeError('Candidate commit must be a full SHA.');
   if (!/^gev-candidate-[a-f0-9]{40}$/.test(expected?.artifactName || ''))
     throw new TypeError('Expected artifact name is invalid.');
+  if (expected.artifactName !== `gev-candidate-${expected.candidateCommit}`)
+    throw new Error('Expected artifact name does not match this candidate.');
   if (metadata?.id !== artifactId)
     throw new Error('Artifact metadata ID does not match the uploaded ID.');
   if (metadata?.name !== expected.artifactName)
@@ -71,7 +81,7 @@ export function validateCandidateArtifactMetadata(metadata, expected) {
     metadata.digest,
     'Artifact metadata digest',
   );
-  const uploadDigest = requireSha256(expected.uploadDigest, 'Upload digest');
+  const uploadDigest = requireRawSha256(expected.uploadDigest, 'Upload digest');
   if (metadataDigest !== uploadDigest)
     throw new Error('Upload and REST artifact digests do not match.');
   return {
@@ -96,7 +106,7 @@ export function validateCandidateArtifactZip({
   if (zipBytes.length !== metadataSize)
     throw new Error('Downloaded ZIP size differs from artifact metadata.');
   const restDigest = requireSha256(metadataDigest, 'Artifact metadata digest');
-  const publishedDigest = requireSha256(uploadDigest, 'Upload digest');
+  const publishedDigest = requireRawSha256(uploadDigest, 'Upload digest');
   if (restDigest !== publishedDigest)
     throw new Error('Upload and REST artifact digests do not match.');
   const actualDigest = createHash('sha256').update(zipBytes).digest('hex');

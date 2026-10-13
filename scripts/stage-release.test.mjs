@@ -79,6 +79,9 @@ const sourceCommit = 'a'.repeat(40);
 const candidateCommit = 'b'.repeat(40);
 const zipBytes = Buffer.from('exact uploaded artifact ZIP bytes');
 const artifactDigest = `sha256:${createHash('sha256').update(zipBytes).digest('hex')}`;
+const uploadArtifactDigest = createHash('sha256')
+  .update(zipBytes)
+  .digest('hex');
 const expectedArtifact = {
   artifactId: '11837328637',
   runId: '38444888716',
@@ -86,7 +89,7 @@ const expectedArtifact = {
   sourceCommit,
   candidateCommit,
   artifactName: `gev-candidate-${candidateCommit}`,
-  uploadDigest: artifactDigest,
+  uploadDigest: uploadArtifactDigest,
 };
 
 function candidateMetadata(overrides = {}) {
@@ -156,9 +159,17 @@ test('candidate REST metadata binds artifact ID, run, repository, name, source a
     () =>
       validateCandidateArtifactMetadata(candidateMetadata(), {
         ...expectedArtifact,
-        uploadDigest: 'sha256:broken',
+        uploadDigest: 'sha256:' + uploadArtifactDigest,
       }),
-    /sha256 digest/,
+    /raw SHA-256/,
+  );
+  assert.throws(
+    () =>
+      validateCandidateArtifactMetadata(candidateMetadata(), {
+        ...expectedArtifact,
+        artifactName: `gev-candidate-${sourceCommit}`,
+      }),
+    /does not match this candidate/,
   );
 });
 
@@ -166,7 +177,7 @@ test('REST ZIP bytes must match upload and metadata digests and exact archive si
   const digest = validateCandidateArtifactZip({
     metadataSize: zipBytes.length,
     metadataDigest: artifactDigest,
-    uploadDigest: artifactDigest,
+    uploadDigest: uploadArtifactDigest,
     zipBytes,
   });
   assert.equal(digest, artifactDigest.slice('sha256:'.length));
@@ -175,7 +186,7 @@ test('REST ZIP bytes must match upload and metadata digests and exact archive si
       validateCandidateArtifactZip({
         metadataSize: zipBytes.length + 1,
         metadataDigest: artifactDigest,
-        uploadDigest: artifactDigest,
+        uploadDigest: uploadArtifactDigest,
         zipBytes,
       }),
     /size differs/,
@@ -185,7 +196,7 @@ test('REST ZIP bytes must match upload and metadata digests and exact archive si
       validateCandidateArtifactZip({
         metadataSize: zipBytes.length,
         metadataDigest: artifactDigest,
-        uploadDigest: 'sha256:' + 'd'.repeat(64),
+        uploadDigest: 'd'.repeat(64),
         zipBytes,
       }),
     /digests do not match/,
@@ -195,7 +206,7 @@ test('REST ZIP bytes must match upload and metadata digests and exact archive si
       validateCandidateArtifactZip({
         metadataSize: Buffer.byteLength('mutated archive'),
         metadataDigest: artifactDigest,
-        uploadDigest: artifactDigest,
+        uploadDigest: uploadArtifactDigest,
         zipBytes: Buffer.from('mutated archive'),
       }),
     /digest differs/,
@@ -205,7 +216,7 @@ test('REST ZIP bytes must match upload and metadata digests and exact archive si
       validateCandidateArtifactZip({
         metadataSize: zipBytes.length,
         metadataDigest: 'sha256:invalid',
-        uploadDigest: artifactDigest,
+        uploadDigest: uploadArtifactDigest,
         zipBytes,
       }),
     /sha256 digest/,
