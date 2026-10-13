@@ -645,3 +645,14 @@ Both dev and this QA integration contain all main commits. Local and fork dev
 remain identical at `726e404b50a6586f9eb9085ca2478f605dfc698c` (608 ahead,
 zero behind main). No merge, rebase or discard is needed. The separate local
 main checkout is clean but 51 commits behind; this check leaves it unchanged.
+
+The preceding diagnostic revision `f9413507bf66a1734e4abb59c6db756c30a232f3`
+now passes [all seven standard CI jobs](ci-checkpoint-f9413507.json), including
+Node 24/26, Windows onboarding, recovery on all three operating systems, and
+the complete browser job. Its native capture still fails as recorded above.
+
+The corrected boundary candidate is frozen at
+`25d5d60ef8fdb937a5585238b1e0ea83116cc324`. Both the new
+[native Austin capture](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38328456260)
+and [standard CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38328459005)
+have verified that exact head revision. They are newly dispatched, not passes.
