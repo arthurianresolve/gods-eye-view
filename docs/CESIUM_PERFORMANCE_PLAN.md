@@ -9,7 +9,8 @@ may receive a supported no-change disposition; unavailable physical Mac/discrete
 GPU coverage is explicitly unverified and does not block the primary milestone.
 Visual, integrity, interaction, regression and 60-minute retention gates remain.
 The candidate evaluator now separates target outcome at `6f635ecd`; root passes
-73 focused candidate/comparison/retention checks. Full integration is pending.
+73 focused candidate/comparison/retention checks. Standard integration now passes
+all seven selected jobs at containing revision `f50565a0`.
 
 The existing fourteen slice rows still report partial implementation. This
 amendment alone changes no slice to closed or passed. Reaudit engineering closure
@@ -19,16 +20,17 @@ remain failed.
 
 [Fresh main reconciliation](performance-evidence/main-reconciliation-20261013/README.md)
 finds both fork and upstream main at `9beadbda`. Local and remote dev still match
-`e8ccc268` (697 ahead of main, fourteen behind). A merge rehearsal finds one
-conflict in the picking tests; preserving both additions passes eight isolated
-tests. A reviewed merge is recommended; no branch was merged, rebased or discarded.
-Later QA work remains separate from dev. This supersedes the earlier zero-behind
-checkpoint.
+`e8ccc268` (697 ahead of main, fourteen behind). Reviewed QA merge `8b84a2e0`
+combines QA `f50565a0` with main `9beadbda`, preserving both picking-test additions.
+Root passes 485 focused integration checks and published layer-token checks
+against both bases. The merged candidate still requires its own full CI run.
+QA remains separate from dev and the deployed VM; no history was rebased or
+discarded. This supersedes the earlier zero-behind and unmerged checkpoints.
 
-[Standard integration at `88420e23`](performance-evidence/integration-88420e23/README.md)
+[Standard integration at `f50565a0`](performance-evidence/integration-f50565a0/README.md)
 passes all seven selected jobs, including full Node 24/26 suites and builds,
 Windows onboarding, Windows/macOS/Linux persisted-profile recovery and browser
-journeys. The canonical v3 map corpus also passes its fixed-hash/parser checks
+journeys. The canonical v4 map corpus also passes its fixed-hash/parser checks
 on all three operating systems. The separately recorded native map failure remains failed; these passes
 do not establish matched performance, a hardware soak or complete slice acceptance.
 
@@ -52,7 +54,13 @@ reproduces all eight retained missing paths. The complete dependency set for the
 fixture terrain tiles contains 21 absent OSM images. The reviewed
 [v4 correction](performance-evidence/s47-map-streaming/imagery-dependencies-v4/README.md)
 at `ec71877a` supplies them, preserves all 578 previous asset buffers and passes
-108 root focused checks; both-revision rendered validation is still pending.
+108 root focused checks. The
+[native v4 run](performance-evidence/s47-map-streaming/native-v4-38416400160/README.md)
+passes its baseline variant, with zero missing paths on either revision. Its
+candidate CLI completes four samples, but outer validation fails because the
+generic topology expects separate provider documents for samples that reuse
+the measured map document. Fix that ownership contract before a fresh run;
+the original report remains failed.
 The three omitted browser identities remain unknown. Do not repeat the failed
 run unchanged or relax delivery checks.
 
@@ -61,8 +69,9 @@ at `e5ff5303` (source `6cb55a5d`) removes a failed source's cached fallback alia
 so a later manual selection can retry it. Root reproduces the old failure and
 passes all 50 map tests after correction, including concurrent attempts and
 destruction during pending fallback. The defective function is identical in the
-frozen baseline, current main and dev. Integration and native recovery validation
-remain pending; healthy-provider reuse and shared fallback ownership are retained.
+frozen baseline, current main and dev. Standard integration passes at `f50565a0`;
+native recovery fault controls remain pending. Healthy-provider reuse and shared
+fallback ownership are retained.
 
 The [exact-commit Windows recovery run at `feb067d3`](performance-evidence/windows-recovery-38401057945/README.md)
 now passes all prerequisites and all five persisted-profile recovery checks.
