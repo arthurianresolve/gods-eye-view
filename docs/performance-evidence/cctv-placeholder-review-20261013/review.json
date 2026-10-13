@@ -1,0 +1,105 @@
+{
+  "schema": "gev-placeholder-provider-review/v1",
+  "reviewedAt": "2026-10-13T04:13:53.935Z",
+  "sourceCommit": "cfceb81acbd3863fc3189c311c7acc179757f6e9",
+  "scope": "Bounded manual inspection of current official-provider still responses; metadata only retained in the repository.",
+  "sources": [
+    "https://cwwp2.dot.ca.gov/data/d2/cctv/cctvStatusD02.json",
+    "https://api.tfl.gov.uk/Place/Type/JamCam"
+  ],
+  "samples": [
+    {
+      "provider": "Caltrans",
+      "url": "https://cwwp2.dot.ca.gov/data/d2/cctv/image/lakeblvd/lakeblvd.jpg",
+      "retrievedAt": "2026-10-13T03:57:12.235Z",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "lastModified": "Tue, 13 Oct 2026 03:55:02 GMT",
+      "bytes": 16341,
+      "sha256": "60ebda470b0874e12f761bd7359ee5b764ae1fdcaf7579fb8d88a0fbe521796b",
+      "width": 320,
+      "height": 260,
+      "format": "jpeg",
+      "observation": "Visually inspected provider artwork: Down for Construction, with a changing timestamp footer."
+    },
+    {
+      "provider": "Caltrans",
+      "url": "https://cwwp2.dot.ca.gov/data/d2/cctv/image/saltcreek/saltcreek.jpg",
+      "retrievedAt": "2026-10-13T03:57:12.585Z",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "lastModified": "Tue, 13 Oct 2026 03:56:02 GMT",
+      "bytes": 16349,
+      "sha256": "4fbf86b5906ca6396279fd63ce28f1590984652e0126a057ceb31f86b0b510bc",
+      "width": 320,
+      "height": 260,
+      "format": "jpeg",
+      "observation": "Visually inspected identical construction artwork, with a different timestamp footer."
+    },
+    {
+      "provider": "Transport for London",
+      "url": "https://s3-eu-west-1.amazonaws.com/jamcams.tfl.gov.uk/00001.03762.jpg",
+      "retrievedAt": "2026-10-13T04:12:00.432Z",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "lastModified": "Tue, 13 Oct 2026 04:10:47 GMT",
+      "bytes": 19386,
+      "sha256": "b53f09072e4a73a01780379a61401556b59bb85d2259b05ba81deabcc6c225ed",
+      "width": 352,
+      "height": 288,
+      "format": "jpeg",
+      "observation": "Visually inspected road image; catalog available=false is not proof of placeholder content."
+    },
+    {
+      "provider": "Transport for London",
+      "url": "https://s3-eu-west-1.amazonaws.com/jamcams.tfl.gov.uk/00001.04565.jpg",
+      "retrievedAt": "2026-10-13T04:12:00.505Z",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "lastModified": "Tue, 13 Oct 2026 04:08:56 GMT",
+      "bytes": 13791,
+      "sha256": "0605ba83f0793b69455a52ecf6ebf40911b8a4b633eeda13409243d18b283a9d",
+      "width": 352,
+      "height": 288,
+      "format": "jpeg",
+      "observation": "Visually inspected road image; catalog available=false is not proof of placeholder content."
+    },
+    {
+      "provider": "Transport for London",
+      "url": "https://s3-eu-west-1.amazonaws.com/jamcams.tfl.gov.uk/00001.06602.jpg",
+      "retrievedAt": "2026-10-13T04:12:29.863Z",
+      "status": 200,
+      "contentType": "image/jpeg",
+      "lastModified": "Tue, 13 Oct 2026 04:09:27 GMT",
+      "bytes": 16398,
+      "sha256": "4af3aaabab1898282dd32114cdd9e7c4080f06eee199326fcf7d80456ebd4a0b",
+      "width": 352,
+      "height": 288,
+      "format": "jpeg",
+      "observation": "Visually inspected road image; catalog available=false is not proof of placeholder content."
+    }
+  ],
+  "caltransDiagnostic": {
+    "providerCatalogInService": false,
+    "rawFileHashesMatch": false,
+    "decodedRegion": {
+      "decoder": "sharp (review only, not a runtime dependency)",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 240,
+      "channels": "RGB",
+      "bothSha256": "2b4cccfe9c31ea3acf4e61f3164ad66f3cf7e6b0c0e9ae1ea4728c1e34ea89ea"
+    },
+    "browserDecoderEquivalenceValidated": false
+  },
+  "decisions": [
+    "Do not add ephemeral whole-file hashes to the production registry.",
+    "Do not infer placeholder content from catalog availability or repeated frame bytes.",
+    "Current Caltrans and TfL source adapters already exclude catalog-inactive cameras; this inspection does not establish that those samples reach normal application selection.",
+    "Provider-scoped normalized-region matching requires its own bounded implementation, browser decode validation, positive and negative controls, and recovery tests before adoption."
+  ],
+  "runtimeChanged": false,
+  "productionFingerprintRegistryPopulated": false,
+  "providerImagesCommitted": false
+}

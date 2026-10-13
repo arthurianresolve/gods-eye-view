@@ -61,7 +61,7 @@ a new provider dependency.
 | S39 archive investigations | implemented | actual inspector/pin/IndexedDB/profile-transfer journey | pending |
 | S40 PeeringDB links | implemented | provenance tests passed | pending |
 | S41 camera health | implemented | focused tests passed | pending |
-| S42 camera selection | implemented | selection and provider fingerprint fixture tests | verified current production examples pending |
+| S42 camera selection | selection and exact-byte matcher implemented; production artwork recognition pending | selection and provider fingerprint fixture tests | [current examples reviewed](performance-evidence/cctv-placeholder-review-20261013/README.md); timestamped artwork needs a validated matching contract |
 | S43 camera evidence | implemented | focused tests passed | pending |
 | S44 soak/performance | corrected fixture worker interception and status observer | `3cdd5cb`: full 60-minute soak passes, 169 cycles, 632 listeners and zero pending workers at all checkpoints; retention-window heap growth 2.03% | matched Windows/macOS real-GPU evidence pending |
 | S45 release provenance | gates implemented | artifact/attestation verification passed for `91a6076`; later `9df13c5` archive locally checksum-verified; neither validates current candidate | final-candidate attestation/download checks and post-publication verification pending |
