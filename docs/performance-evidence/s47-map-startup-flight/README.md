@@ -31,8 +31,28 @@ This establishes an existing startup ownership defect and a harness exposure.
 It does **not** prove that this conflict caused the prior hosted Metal failure:
 that failed report lost the actual journey endpoints.
 
-Next correction must handle both pending and active startup ownership. A single
-`cancelFlight` call cannot handle the pending case. A minimal share URL is also
-insufficient: share restoration has its own delayed flight and applies visual
-defaults. Preserve current visual settings and layer populations, and verify
-baseline-compatible preparation independently before another native attempt.
+Reviewed correction `2d7c59ad` (source `0e6b2de0`) handles pending and active
+startup ownership in the capture harness. It waits an owned 500 ms preparation
+timer after the application tools expose the ready viewer/controller; controls
+have already scheduled the production startup timer at that point. It then
+cancels any active flight immediately before assigning the declared route pose.
+Preparation time is recorded separately from the measured route. No application
+rendering defaults, visual settings, populations, route tolerances or host,
+readiness and cancellation deadlines change.
+
+Cancellation during preparation waits for that pending interval before cancelling
+the flight and draining the operation. The owned timer and abort listener retire
+on completion. The success validator requires preparation and cancellation
+evidence; historical v1 failure envelopes remain readable with absent additive
+fields normalized to null. Supplied malformed values are rejected.
+
+Root independently passes all 90 combined map, fixture-delivery, failure-report
+and smoke checks, plus 25-file capture lint, formatting and diff checks. Actual
+pinned Cesium Camera/TweenCollection controls reproduce the insufficient early
+cancel and verify pending/active-flight cancellation. A serialized-driver control
+verifies cancellation while preparation is pending, no late route write, no
+remaining timer/listener and complete operation disposal.
+
+A successful native application map journey is still required. The CPU controls
+do not retrospectively identify the historical Metal failure's camera endpoint,
+explain the missing assets or establish performance improvement.

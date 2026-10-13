@@ -24,6 +24,14 @@ on the existing `a92c6921` diagnostic build reports UHD 620/D3D11, 301 frames ov
 five seconds and no context loss. It is short component evidence, not a current
 QA full-application capture, matched performance comparison or hardware soak.
 
+Reviewed [map startup preparation](performance-evidence/s47-map-startup-flight/README.md)
+at `2d7c59ad` (source `0e6b2de0`) waits through the source-owned delayed startup
+callback, then cancels the active flight before assigning the declared route
+pose. Preparation is reported separately from route time and cleaned up during
+cancellation. Root passes 90 focused checks including actual Cesium negative
+controls and historical failure-report compatibility. Native validation remains
+pending; strict settings, route, readiness and timeout gates are unchanged.
+
 Terrain readiness history is implemented on QA at `c0666072` (reviewed source
 commit `ca892212`). It reuses completed-render observations, retaining the first
 and seven recent samples per readiness transition, with at most 24 ancestry rows
