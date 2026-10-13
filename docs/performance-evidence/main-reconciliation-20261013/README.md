@@ -1,5 +1,17 @@
 # Current main reconciliation
 
+The 13 October 18:55 CEST recheck still finds fork/main and upstream/main at
+`9beadbda6333b83f79aa03047e2d851830f01f6b`, and remote dev at
+`e8ccc268608fbece8b6d87a0b6db86e1800ddf90`. Dev is 697 commits ahead and
+fourteen behind main. Reviewed QA `82da3163fe9499d9540e0e654e361455b338c6ec`
+already contains both refs (839 ahead of main, zero behind); ancestor checks
+pass. There is no additional main change to merge or rebase. Promotion to dev
+still awaits current validation: the [later standard run](../integration-dddef9eb/README.md)
+has another Windows prerequisite readiness failure. The independently corrected
+[map terrain-stage validator](../s47-map-streaming/native-fault-38432631061/README.md)
+is now on QA `e701e0ff`; a fresh native run is in progress. No dev history has
+been discarded or rewritten, and VM105 has not changed.
+
 [Fresh standard integration at `c7c47245`](../integration-c7c47245/README.md)
 now passes all seven selected jobs, including Windows recovery. This validates
 the reviewed main merge at that exact revision. The later map-navigation fix and
