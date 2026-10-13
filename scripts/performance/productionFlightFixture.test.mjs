@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import {
   DENSE_FLIGHT_FIXTURE_COUNT,
+  DEFAULT_FLIGHT_FIXTURE_TIME,
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   createProductionMilitaryFixture,
+  classifyRenderDemandRequest,
+  createRenderDemandFailureReport,
   installFixedWallClock,
   installFrozenWallClock,
   installHeldMonotonicWallClock,
@@ -24,6 +27,106 @@ import {
 } from '../../src/sources/live/standalone.js';
 
 const BASE = 'http://127.0.0.1:4173/';
+
+test('render-demand traffic classifier distinguishes known offline bootstrap/map requests from unexpected requests', () => {
+  const origin = 'http://127.0.0.1:4173';
+  const classify = (url, method = 'GET') =>
+    classifyRenderDemandRequest({ url, origin, method });
+  assert.equal(
+    classify(`${origin}/api/setup/status`),
+    'expected-bootstrap-api',
+  );
+  assert.equal(
+    classify(`${origin}/api/setup/status`, 'POST'),
+    'unexpected-api',
+  );
+  assert.equal(
+    classify(`${origin}/api/setup/status?token=hidden`),
+    'unexpected-api',
+  );
+  assert.equal(
+    classify('http://user:secret@127.0.0.1:4173/api/setup/status'),
+    'unexpected-api',
+  );
+  assert.equal(
+    classify(`${origin}/api/realtime/oauth-status`),
+    'unexpected-api',
+  );
+  assert.equal(
+    classify(
+      'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/1/0/0',
+    ),
+    'expected-blocked-map-provider',
+  );
+  assert.equal(
+    classify('https://terrain.reearth.land/cesium-mesh/ellipsoid/layer.json'),
+    'expected-blocked-map-provider',
+  );
+  assert.equal(
+    classify('https://tile.openstreetmap.org/3/2/1.png'),
+    'expected-blocked-map-provider',
+  );
+  assert.equal(
+    classify('https://tile.openstreetmap.org/3/2/1.png?key=hidden'),
+    'unexpected-external',
+  );
+  assert.equal(
+    classify('https://example.invalid/tiles/1'),
+    'unexpected-external',
+  );
+  assert.equal(classify('not a URL'), 'invalid-request');
+});
+
+test('render-demand failure report retains bounded stages without provider URLs, credentials or bodies', () => {
+  const report = createRenderDemandFailureReport({
+    stage: 'scene-settle',
+    error: new Error(
+      'failed https://user:secret@example.invalid/path?token=abc',
+    ),
+    observations: Array.from({ length: 20 }, (_, index) => ({
+      stage: 'fixture-delivery',
+      state: {
+        index,
+        note: 'https://provider.invalid/tile?key=secret',
+        body: 'fixture response body',
+      },
+    })),
+    delivery: {
+      routeAttempts: { flights: 2, military: 3 },
+      acknowledged: { flights: 1, military: 1 },
+      invalidFixtureRouteCount: 0,
+      body: 'must not appear',
+    },
+    traffic: {
+      expectedBootstrapApiCount: 4,
+      expectedBlockedMapProviderCount: 7,
+      unexpectedApiCount: 0,
+      unexpectedExternalCount: 0,
+      otherApiPaths: ['/api/unknown', 'https://bad.invalid/?token=secret'],
+    },
+    fixture: {
+      fixedTime: DEFAULT_FLIGHT_FIXTURE_TIME,
+      flightsId: 'empty-flight-fixture-v1',
+      flightsSha256: 'a'.repeat(64),
+      flightsBytes: 32,
+      militaryId: 'empty-military-fixture-v1',
+      militarySha256: 'b'.repeat(64),
+      militaryBytes: 16,
+    },
+  });
+  assert.equal(report.failedStage, 'scene-settle');
+  assert.equal(report.observations.length, 12);
+  const serialized = JSON.stringify(report);
+  assert.doesNotMatch(
+    serialized,
+    /provider\.invalid|example\.invalid|secret|fixture response body|must not appear/,
+  );
+  assert.deepEqual(report.delivery.routeAttempts, { flights: 2, military: 3 });
+  assert.equal(report.fixture.flightsId, 'empty-flight-fixture-v1');
+  assert.equal(report.fixture.militaryBytes, 16);
+  assert.equal(report.traffic.otherApiPaths[1], '[other-api-path]');
+  assert.ok(Buffer.byteLength(serialized) < 24_000);
+});
 
 test('production flight fixture is deterministic, bounded OpenSky payload data', () => {
   const options = { count: 2500, fixedTime: '2026-10-08T12:00:00.000Z' };
@@ -56,70 +159,61 @@ test('production fixture rejects subsecond epochs that OpenSky rows cannot repre
   );
 });
 
-test(
-  'production flight fixture accepts zero and still rejects negative populations',
-  () => {
-    assert.equal(createProductionFlightFixture({ count: 0 }).count, 0);
-    assert.throws(
-      () => createProductionFlightFixture({ count: -1 }),
-      /count is invalid/,
-    );
-  },
-);
+test('production flight fixture accepts zero and still rejects negative populations', () => {
+  assert.equal(createProductionFlightFixture({ count: 0 }).count, 0);
+  assert.throws(
+    () => createProductionFlightFixture({ count: -1 }),
+    /count is invalid/,
+  );
+});
 
-test(
-  'fixed-time empty flight and readsb fixtures preserve production payload contracts',
-  () => {
-    const fixedTime = '2026-10-08T12:00:00.000Z';
-    const flights = createProductionFlightFixture({ count: 0, fixedTime });
-    const military = createProductionMilitaryFixture({ fixedTime });
-    assert.deepEqual(JSON.parse(flights.body), {
-      time: flights.fixedTimeMs / 1000,
-      states: [],
-    });
-    assert.deepEqual(JSON.parse(military.body), {
-      now: flights.fixedTimeMs / 1000,
-      ac: [],
-    });
-    assert.equal(flights.fixedTime, military.fixedTime);
-    assert.match(flights.sha256, /^[a-f0-9]{64}$/);
-    assert.match(military.sha256, /^[a-f0-9]{64}$/);
-    assert.equal(flights.byteLength, Buffer.byteLength(flights.body));
-    assert.equal(military.byteLength, Buffer.byteLength(military.body));
-  },
-);
+test('fixed-time empty flight and readsb fixtures preserve production payload contracts', () => {
+  const fixedTime = '2026-10-08T12:00:00.000Z';
+  const flights = createProductionFlightFixture({ count: 0, fixedTime });
+  const military = createProductionMilitaryFixture({ fixedTime });
+  assert.deepEqual(JSON.parse(flights.body), {
+    time: flights.fixedTimeMs / 1000,
+    states: [],
+  });
+  assert.deepEqual(JSON.parse(military.body), {
+    now: flights.fixedTimeMs / 1000,
+    ac: [],
+  });
+  assert.equal(flights.fixedTime, military.fixedTime);
+  assert.match(flights.sha256, /^[a-f0-9]{64}$/);
+  assert.match(military.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(flights.byteLength, Buffer.byteLength(flights.body));
+  assert.equal(military.byteLength, Buffer.byteLength(military.body));
+});
 
-test(
-  'production source normalizers accept the fixed-time empty layer snapshots',
-  async () => {
-    const flights = createProductionFlightFixture({ count: 0 });
-    const military = createProductionMilitaryFixture({
-      fixedTime: flights.fixedTime,
-    });
-    const responseFor = (body) => ({
-      ok: true,
-      status: 200,
-      headers: { get: () => null },
-      json: async () => JSON.parse(body),
-    });
-    const flightSnapshot = await createFlightSource({
-      fetchImpl: async () => responseFor(flights.body),
-      now: () => flights.fixedTimeMs,
-    }).getSnapshot();
-    const militarySource = createMilitarySource({
-      fetchImpl: async () => responseFor(military.body),
-      now: () => flights.fixedTimeMs,
-    });
-    const militarySnapshot = await militarySource.getSnapshot();
-    assert.deepEqual(flightSnapshot.records, []);
-    assert.equal(flightSnapshot.complete, true);
-    assert.equal(flightSnapshot.freshness, 'current');
-    assert.deepEqual(militarySnapshot.records, []);
-    assert.equal(militarySnapshot.complete, true);
-    assert.equal(militarySnapshot.freshness, 'current');
-    assert.deepEqual(await militarySource.getIdentities(), []);
-  },
-);
+test('production source normalizers accept the fixed-time empty layer snapshots', async () => {
+  const flights = createProductionFlightFixture({ count: 0 });
+  const military = createProductionMilitaryFixture({
+    fixedTime: flights.fixedTime,
+  });
+  const responseFor = (body) => ({
+    ok: true,
+    status: 200,
+    headers: { get: () => null },
+    json: async () => JSON.parse(body),
+  });
+  const flightSnapshot = await createFlightSource({
+    fetchImpl: async () => responseFor(flights.body),
+    now: () => flights.fixedTimeMs,
+  }).getSnapshot();
+  const militarySource = createMilitarySource({
+    fetchImpl: async () => responseFor(military.body),
+    now: () => flights.fixedTimeMs,
+  });
+  const militarySnapshot = await militarySource.getSnapshot();
+  assert.deepEqual(flightSnapshot.records, []);
+  assert.equal(flightSnapshot.complete, true);
+  assert.equal(flightSnapshot.freshness, 'current');
+  assert.deepEqual(militarySnapshot.records, []);
+  assert.equal(militarySnapshot.complete, true);
+  assert.equal(militarySnapshot.freshness, 'current');
+  assert.deepEqual(await militarySource.getIdentities(), []);
+});
 
 test('empty military fixture is restricted to its exact same-origin GET route', () => {
   const fixture = createProductionMilitaryFixture();
@@ -390,10 +484,7 @@ test('fixture wall-clock selection preserves dense advancing and capture-held co
     selectFixtureWallClockInstaller({ holdClockUntilCapture: true }),
     installHeldMonotonicWallClock,
   );
-  assert.equal(
-    selectFixtureWallClockInstaller(),
-    installFixedWallClock,
-  );
+  assert.equal(selectFixtureWallClockInstaller(), installFixedWallClock);
 
   let performanceTime = 10;
   const target = { Date, performance: { now: () => performanceTime } };
@@ -524,25 +615,41 @@ test('phased clock rejects callbacks retained from a prior completed run', () =>
   performanceTime += 1000;
   const completedRun2 = clock.finishMeasurement(2);
   assert.equal(completedRun2.runOrdinal, 2);
-  assert.throws(() => clock.resetForNextRun(1), /belongs to run 1; current run is 2/);
+  assert.throws(
+    () => clock.resetForNextRun(1),
+    /belongs to run 1; current run is 2/,
+  );
   assert.equal(clock.snapshot().phase, 'complete');
 });
 
 test('phased fixture ordinals distinguish reused Austin from fresh provider documents', () => {
   assert.equal(
-    expectedFixtureRunOrdinal({ sharedDocument: true, completedSampleCount: 0 }),
+    expectedFixtureRunOrdinal({
+      sharedDocument: true,
+      completedSampleCount: 0,
+    }),
     1,
   );
   assert.equal(
-    expectedFixtureRunOrdinal({ sharedDocument: true, completedSampleCount: 9 }),
+    expectedFixtureRunOrdinal({
+      sharedDocument: true,
+      completedSampleCount: 9,
+    }),
     10,
   );
   assert.equal(
-    expectedFixtureRunOrdinal({ sharedDocument: false, completedSampleCount: 9 }),
+    expectedFixtureRunOrdinal({
+      sharedDocument: false,
+      completedSampleCount: 9,
+    }),
     1,
   );
   assert.throws(
-    () => expectedFixtureRunOrdinal({ sharedDocument: true, completedSampleCount: -1 }),
+    () =>
+      expectedFixtureRunOrdinal({
+        sharedDocument: true,
+        completedSampleCount: -1,
+      }),
     /nonnegative/,
   );
 });

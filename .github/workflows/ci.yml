@@ -118,6 +118,10 @@ on:
         type: string
         required: false
         default: ''
+      application_render_demand:
+        description: Run the opt-in full-application empty-layer render-demand diagnostic in mixed-use-smoke
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -786,6 +790,11 @@ jobs:
         run: |
           set -o pipefail
           npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json 2>&1 | tee qa-artifacts/mixed-use-smoke.log
+      - name: Run opt-in full-application empty-layer render-demand diagnostic
+        if: inputs.application_render_demand
+        run: |
+          set -o pipefail
+          npm run qa:application -- --url http://localhost:4174 --render-demand 2>&1 | tee qa-artifacts/mixed-use-render-demand.log
       - name: Run durable workspace library and cross-page conflict journey
         run: npm run qa:workspaces -- --url http://localhost:4174
       - name: Preserve the report including failure
