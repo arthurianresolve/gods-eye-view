@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 
 const EXACT_CHROME_VERSION = /^\d+\.\d+\.\d+\.\d+$/;
 
@@ -35,15 +36,52 @@ export function validateProfileRecoveryBrowserSelection({
   return version;
 }
 
-export function parseChromeVersionOutput(output) {
+export function parseWindowsFileVersionOutput(output) {
   assert.equal(typeof output, 'string');
-  const match = output
-    .trim()
-    .match(
-      /^(?:Google Chrome(?: for Testing)?|Chrome)\s+(\d+\.\d+\.\d+\.\d+)$/m,
-    );
-  assert.ok(match, 'Chrome --version output did not contain an exact version.');
-  return match[1];
+  const version = output.trim();
+  assert.match(
+    version,
+    EXACT_CHROME_VERSION,
+    'Windows executable metadata did not contain an exact four-part version.',
+  );
+  return version;
+}
+
+export function readWindowsExecutableFileVersion(
+  executablePath,
+  { platform = process.platform, runPowerShell = null } = {},
+) {
+  assert.equal(
+    platform,
+    'win32',
+    'Windows executable metadata requires Windows.',
+  );
+  assert.equal(typeof executablePath, 'string');
+  assert.ok(executablePath.length > 0 && executablePath.length <= 2048);
+  const execute =
+    runPowerShell ||
+    ((filePath) =>
+      execFileSync(
+        'powershell.exe',
+        [
+          '-NoLogo',
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          '$ErrorActionPreference = "Stop"; $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($env:GEV_PROFILE_RECOVERY_EXE); "{0}.{1}.{2}.{3}" -f $info.FileMajorPart, $info.FileMinorPart, $info.FileBuildPart, $info.FilePrivatePart',
+        ],
+        {
+          encoding: 'utf8',
+          timeout: 10_000,
+          windowsHide: true,
+          maxBuffer: 4096,
+          env: {
+            ...process.env,
+            GEV_PROFILE_RECOVERY_EXE: filePath,
+          },
+        },
+      ));
+  return parseWindowsFileVersionOutput(execute(executablePath));
 }
 
 export function assertSelectedChromeVersion(expectedVersion, observedVersion) {
@@ -86,8 +124,11 @@ export async function installSelectedProfileRecoveryBrowser({
   assert.equal(installed?.buildId, selection);
   assert.equal(typeof installed?.executablePath, 'string');
   const executablePath = installed.executablePath;
-  const actualVersion = parseChromeVersionOutput(
-    await probeVersion(executablePath),
+  const actualVersion = await probeVersion(executablePath);
+  assert.match(
+    actualVersion,
+    EXACT_CHROME_VERSION,
+    'Installed executable metadata did not contain an exact version.',
   );
   assert.equal(
     actualVersion,

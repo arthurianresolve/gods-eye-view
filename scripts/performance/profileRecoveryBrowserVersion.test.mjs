@@ -3,7 +3,8 @@ import test from 'node:test';
 import {
   assertSelectedChromeVersion,
   installSelectedProfileRecoveryBrowser,
-  parseChromeVersionOutput,
+  parseWindowsFileVersionOutput,
+  readWindowsExecutableFileVersion,
   validateProfileRecoveryBrowserSelection,
 } from './profileRecoveryBrowserVersion.mjs';
 
@@ -46,10 +47,42 @@ test('alternate browser selection is exact and limited to manual Windows profile
   }
 });
 
-test('exact Chrome version parser and recovery runtime guard reject mismatches', () => {
+test('Windows metadata version parser and recovery runtime guard reject mismatches', () => {
   assert.equal(
-    parseChromeVersionOutput('Google Chrome for Testing 155.0.8059.39\n'),
+    parseWindowsFileVersionOutput('155.0.8059.39\r\n'),
     '155.0.8059.39',
+  );
+  assert.throws(
+    () => parseWindowsFileVersionOutput('Google Chrome 155.0.8059.39'),
+    /exact four-part version/,
+  );
+  assert.throws(
+    () => parseWindowsFileVersionOutput(''),
+    /exact four-part version/,
+  );
+  let queriedPath = null;
+  assert.equal(
+    readWindowsExecutableFileVersion('C:\\hostedtoolcache\\chrome.exe', {
+      platform: 'win32',
+      runPowerShell: (path) => {
+        queriedPath = path;
+        return '155.0.8059.39\r\n';
+      },
+    }),
+    '155.0.8059.39',
+  );
+  assert.equal(queriedPath, 'C:\\hostedtoolcache\\chrome.exe');
+  assert.throws(
+    () =>
+      readWindowsExecutableFileVersion('C:\\chrome.exe', {
+        platform: 'win32',
+        runPowerShell: () => 'unknown',
+      }),
+    /exact four-part version/,
+  );
+  assert.throws(
+    () => readWindowsExecutableFileVersion('chrome.exe', { platform: 'linux' }),
+    /requires Windows/,
   );
   assert.equal(
     assertSelectedChromeVersion('155.0.8059.39', 'Chrome/155.0.8059.39'),
@@ -67,6 +100,21 @@ test('exact Chrome version parser and recovery runtime guard reject mismatches',
     /expected 155\.0\.8059\.39, observed 152\.0\.7977\.75/,
   );
 });
+
+test(
+  'Windows file-version probe reads an existing executable without launching it',
+  {
+    skip: process.platform !== 'win32',
+  },
+  () => {
+    const version = readWindowsExecutableFileVersion(process.execPath);
+    assert.match(version, /^\d+\.\d+\.\d+\.\d+$/);
+    assert.throws(
+      () => assertSelectedChromeVersion('0.0.0.0', `Chrome/${version}`),
+      /expected 0\.0\.0\.0, observed/,
+    );
+  },
+);
 
 test('version installer validates before install and publishes only an exact verified executable', async () => {
   let installCalls = 0;
@@ -107,7 +155,7 @@ test('version installer validates before install and publishes only an exact ver
     probeVersion: async (path) => {
       probeCalls += 1;
       assert.equal(path, 'C:\\hostedtoolcache\\chrome.exe');
-      return 'Google Chrome for Testing 155.0.8059.39';
+      return '155.0.8059.39';
     },
     publishEnvironment: async (values) => {
       environment = values;
@@ -136,7 +184,7 @@ test('version installer rejects a mismatched installed binary without publishing
         buildId,
         executablePath: 'C:\\hostedtoolcache\\chrome.exe',
       }),
-      probeVersion: async () => 'Google Chrome for Testing 152.0.7977.75',
+      probeVersion: async () => '152.0.7977.75',
       publishEnvironment: async () => {
         published = true;
       },

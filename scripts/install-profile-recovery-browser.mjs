@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { appendFile } from 'node:fs/promises';
 import os from 'node:os';
 import puppeteer from 'puppeteer';
 import { Browser, BrowserPlatform, install } from '@puppeteer/browsers';
 import {
   installSelectedProfileRecoveryBrowser,
+  readWindowsExecutableFileVersion,
   validateProfileRecoveryBrowserSelection,
 } from './performance/profileRecoveryBrowserVersion.mjs';
 
@@ -32,12 +32,7 @@ const installed = await installSelectedProfileRecoveryBrowser({
       platform: BrowserPlatform.WIN64,
     }),
   probeVersion: (executablePath) =>
-    execFileSync(executablePath, ['--version'], {
-      encoding: 'utf8',
-      timeout: 10_000,
-      windowsHide: true,
-      maxBuffer: 4096,
-    }),
+    readWindowsExecutableFileVersion(executablePath),
   publishEnvironment: async (values) => {
     const githubEnv = process.env.GITHUB_ENV;
     assert.ok(githubEnv, 'GitHub Actions environment file is unavailable.');
