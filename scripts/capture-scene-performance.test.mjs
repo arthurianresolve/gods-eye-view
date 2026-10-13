@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -42,7 +41,7 @@ async function withForbiddenCesiumLoader(run) {
     }\n`,
   );
   try {
-    return await run(loaderPath);
+    return await run(loaderPath, directory);
   } finally {
     const resolvedDirectory = path.resolve(directory);
     assert.ok(
@@ -106,7 +105,7 @@ test('capture CLI rejects unsupported infrastructure names and mixed populations
 });
 
 test('invalid infrastructure CLI requests reject before importing Cesium', async () => {
-  await withForbiddenCesiumLoader((loaderPath) => {
+  await withForbiddenCesiumLoader(async (loaderPath, directory) => {
     const unsupported = invoke(
       ['--provider-fixture', 'infrastructure-unknown'],
       { loaderPath },
@@ -151,17 +150,14 @@ test('invalid infrastructure CLI requests reject before importing Cesium', async
       /forbidden Cesium import witness/,
     );
 
-    const currentHarnessSha = execFileSync(
-      'git',
-      ['-C', ROOT, 'rev-parse', 'HEAD'],
-      { encoding: 'utf8' },
-    ).trim();
+    const malformedReceiptPath = path.join(directory, 'malformed-receipt.json');
+    await fs.writeFile(malformedReceiptPath, '{ malformed receipt json');
     const invalidReceipt = invoke(
       [
         '--provider-fixture',
         'infrastructure-datacenters',
         '--build-receipt',
-        path.join(ROOT, 'package.json'),
+        malformedReceiptPath,
         '--app-checkout',
         ROOT,
         '--harness-checkout',
@@ -171,14 +167,14 @@ test('invalid infrastructure CLI requests reject before importing Cesium', async
         '--expected-app-sha',
         'a'.repeat(40),
         '--expected-harness-sha',
-        currentHarnessSha,
+        'b'.repeat(40),
         '--served-base-url',
         'http://127.0.0.1:4173',
       ],
       { loaderPath },
     );
     assert.equal(invalidReceipt.status, 1, invalidReceipt.stderr);
-    assert.match(invalidReceipt.stderr, /AssertionError/);
+    assert.match(invalidReceipt.stderr, /SyntaxError/);
     assert.doesNotMatch(
       invalidReceipt.stderr,
       /forbidden Cesium import witness/,
