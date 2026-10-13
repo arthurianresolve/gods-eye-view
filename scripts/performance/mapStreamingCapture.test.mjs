@@ -100,7 +100,11 @@ function createFakePage({ failStack = null, scheduleAtZero = true } = {}) {
       height: 6_000,
     },
     positionWC: currentPosition,
-    rightWC: { x: 0, y: 1, z: 0 },
+    rightWC: {
+      x: -Math.sin(Cesium.Math.toRadians(-97.72)),
+      y: Math.cos(Cesium.Math.toRadians(-97.72)),
+      z: 0,
+    },
     directionWC: { x: 0, y: 0, z: -1 },
     upWC: { x: 1, y: 0, z: 0 },
     heading: 0,
@@ -200,7 +204,8 @@ function createFakePage({ failStack = null, scheduleAtZero = true } = {}) {
       tilesLoaded: true,
       statistics: { numberOfTilesWithContentReady: 7, selected: 4 },
       maximumScreenSpaceError: 16,
-      maximumMemoryUsage: 128,
+      cacheBytes: 1536 * 1024 * 1024,
+      maximumCacheOverflowBytes: 1024 * 1024 * 1024,
     },
     styleManager: {
       _adaptiveQuality: { getMode: () => 'manual' },
@@ -478,5 +483,59 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
         profile,
       }),
     /photorealSelectedTiles/,
+  );
+
+  const invalidOwnerRelease = structuredClone(report);
+  invalidOwnerRelease.documentDeliveries[0].release.confirmed = false;
+  invalidOwnerRelease.documentDeliveries[0].release.targetClosed = false;
+  assert.throws(
+    () =>
+      validateMapStreamingCaptureReport(invalidOwnerRelease, {
+        fixture,
+        profile,
+      }),
+    /requires confirmed cleanup for all owner documents/,
+  );
+
+  const undrainedOwner = structuredClone(report);
+  undrainedOwner.documentDeliveries[0].release.stop.pendingCommandsAfterDrain = 99;
+  assert.throws(
+    () =>
+      validateMapStreamingCaptureReport(undrainedOwner, { fixture, profile }),
+    /fixture commands drained/,
+  );
+
+  const modifiedTransitionSettings = structuredClone(report);
+  modifiedTransitionSettings.transitions[1].state.settings.resolutionScale = 0.1;
+  assert.throws(
+    () =>
+      validateMapStreamingCaptureReport(modifiedTransitionSettings, {
+        fixture,
+        profile,
+      }),
+    /Transition esri-imagery settings preserves/,
+  );
+
+  const alteredRouteStart = structuredClone(report);
+  alteredRouteStart.route.start.longitude = 0;
+  assert.throws(
+    () =>
+      validateMapStreamingCaptureReport(alteredRouteStart, {
+        fixture,
+        profile,
+      }),
+    /Observed route starts at the declared native camera pose/,
+  );
+
+  const alteredDeliveryAggregate = structuredClone(report);
+  alteredDeliveryAggregate.fixtureDelivery.requestedCount += 100;
+  alteredDeliveryAggregate.fixtureDelivery.fulfilledAckCount += 100;
+  assert.throws(
+    () =>
+      validateMapStreamingCaptureReport(alteredDeliveryAggregate, {
+        fixture,
+        profile,
+      }),
+    /Aggregate fixture delivery is recomputed/,
   );
 });

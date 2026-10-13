@@ -193,7 +193,9 @@ export async function runNativeMapStreamingJourneyInPage({
       visualState: visual,
       globeMaximumScreenSpaceError: globe.maximumScreenSpaceError ?? null,
       tilesetMaximumScreenSpaceError: tileset?.maximumScreenSpaceError ?? null,
-      tilesetMaximumMemoryUsage: tileset?.maximumMemoryUsage ?? null,
+      tilesetCacheBytes: tileset?.cacheBytes ?? null,
+      tilesetMaximumCacheOverflowBytes:
+        tileset?.maximumCacheOverflowBytes ?? null,
     };
   };
 
@@ -641,6 +643,9 @@ export async function runNativeMapStreamingJourneyInPage({
         id: route.id,
         durationMs,
         elapsedMs: routeElapsedMs,
+        moveRightMetersPerSecond: route.moveRightMetersPerSecond,
+        headingRadians: route.headingRadians,
+        pitchRadians: route.pitchRadians,
         start: initialState.camera,
         end: finalState.camera,
         declaredBounds: route.declaredBounds,
@@ -771,7 +776,11 @@ function validateAggregatedMapDelivery(report, fixture, documents) {
   assert.equal(report.fixtureId, fixture.id);
   assert.equal(report.manifestSha256, fixture.manifestSha256);
   assert.equal(report.status, 'observed');
-  assert.equal(report.cleanupConfirmed, true);
+  assert.equal(
+    report.cleanupConfirmed,
+    true,
+    'Aggregate map delivery requires confirmed cleanup for all owner documents.',
+  );
   assert.equal(report.pendingCount, 0);
   assert.equal(report.unexpectedFulfillmentCount, 0);
   assert.equal(report.errorObservationCount, 0);
@@ -833,14 +842,46 @@ function validateAggregatedMapDelivery(report, fixture, documents) {
     assert.equal(document.release.documentRole, document.documentRole);
     assert.equal(document.release.documentId, document.documentId);
     assert.equal(document.release.sessionOrdinal, document.sessionOrdinal);
-    assert.equal(document.release.confirmed, true);
-    assert.equal(document.release.targetClosed, true);
-    assert.equal(document.release.stop?.confirmed, true);
-    assert.equal(document.release.stop?.pendingCommandsAfterDrain, 0);
-    assert.equal(document.release.stop?.pendingPreparationsAfterDrain, 0);
-    assert.equal(document.release.stop?.pendingAbortSubscriptionsAfterDrain, 0);
-    assert.equal(document.release.stop?.unexpectedLateRequestCount, 0);
-    assert.equal(document.release.interception?.confirmed, true);
+    assert.equal(
+      document.release.confirmed,
+      true,
+      `Map document ${document.documentId} release is confirmed.`,
+    );
+    assert.equal(
+      document.release.targetClosed,
+      true,
+      `Map document ${document.documentId} target is closed.`,
+    );
+    assert.equal(
+      document.release.stop?.confirmed,
+      true,
+      `Map document ${document.documentId} fixture stop is confirmed.`,
+    );
+    assert.equal(
+      document.release.stop?.pendingCommandsAfterDrain,
+      0,
+      `Map document ${document.documentId} fixture commands drained.`,
+    );
+    assert.equal(
+      document.release.stop?.pendingPreparationsAfterDrain,
+      0,
+      `Map document ${document.documentId} fixture preparations drained.`,
+    );
+    assert.equal(
+      document.release.stop?.pendingAbortSubscriptionsAfterDrain,
+      0,
+      `Map document ${document.documentId} abort subscriptions drained.`,
+    );
+    assert.equal(
+      document.release.stop?.unexpectedLateRequestCount,
+      0,
+      `Map document ${document.documentId} had no late fixture request.`,
+    );
+    assert.equal(
+      document.release.interception?.confirmed,
+      true,
+      `Map document ${document.documentId} interception is released.`,
+    );
   }
 }
 
@@ -937,9 +978,14 @@ export function validateMapStreamingCaptureReport(
       `${label} photoreal detail is observed.`,
     );
     assert.ok(
-      Number.isFinite(settings.tilesetMaximumMemoryUsage) &&
-        settings.tilesetMaximumMemoryUsage > 0,
-      `${label} photoreal memory setting is observed.`,
+      Number.isFinite(settings.tilesetCacheBytes) &&
+        settings.tilesetCacheBytes >= 0,
+      `${label} photoreal cache byte setting is observed.`,
+    );
+    assert.ok(
+      Number.isFinite(settings.tilesetMaximumCacheOverflowBytes) &&
+        settings.tilesetMaximumCacheOverflowBytes >= 0,
+      `${label} photoreal cache overflow setting is observed.`,
     );
     const visual = settings.visualState;
     assert.ok(
@@ -994,6 +1040,27 @@ export function validateMapStreamingCaptureReport(
   };
   assertSettings(report.settingsBefore, 'Before route');
   assertSettings(report.settingsAfter, 'After route');
+  const withoutMapStack = (settings) => {
+    const projected = structuredClone(settings);
+    projected.visualState.mapStack = null;
+    return projected;
+  };
+  const assertUnchangedSettings = (settings, label) =>
+    assert.deepEqual(
+      withoutMapStack(settings),
+      withoutMapStack(report.settingsBefore),
+      `${label} preserves visual, density, rendering, terrain, and tileset settings.`,
+    );
+  assertUnchangedSettings(report.settingsAfter, 'Final route settings');
+  assertUnchangedSettings(
+    report.initialState?.settings,
+    'Initial render settings',
+  );
+  assert.equal(
+    report.initialState?.settings?.visualState?.mapStack,
+    'photoreal',
+    'Initial visual settings record the selected photoreal stack.',
+  );
   assert.equal(
     report.transitions?.length,
     MAP_STREAMING_ROUTE.stackSchedule.length,
@@ -1012,6 +1079,15 @@ export function validateMapStreamingCaptureReport(
     assert.equal(transition?.state?.lastError, null);
     assert.equal(transition?.state?.switchOrigin, 'manual');
     assert.equal(transition?.state?.stackAvailable, true);
+    assertUnchangedSettings(
+      transition?.state?.settings,
+      `Transition ${expected.stackId} settings`,
+    );
+    assert.equal(
+      transition?.state?.settings?.visualState?.mapStack,
+      expected.stackId,
+      `Transition ${expected.stackId} visual settings record the selected stack.`,
+    );
     assert.ok(Number.isFinite(transition?.state?.postRenderElapsedMs));
     if (expected.stackId === 'photoreal') {
       assert.equal(transition.state.photorealShown, true);
@@ -1038,22 +1114,76 @@ export function validateMapStreamingCaptureReport(
       );
     }
   }
-  assert.deepEqual(
-    report.settingsAfter,
-    report.settingsBefore,
-    'Map route preserves observed app visual settings.',
-  );
   assert.equal(report.finalState?.activeStack, 'photoreal');
+  assertUnchangedSettings(report.finalState?.settings, 'Final rendered state');
+  assert.equal(
+    report.finalState?.settings?.visualState?.mapStack,
+    'photoreal',
+    'Final visual settings record the restored photoreal stack.',
+  );
   assert.ok(report.finalState?.photorealSelectedTiles > 0);
   assert.equal(report.finalState?.photorealTilesLoaded, true);
   assert.equal(report.finalState?.lastError, null);
   assert.equal(report.route?.id, MAP_STREAMING_ROUTE.id);
+  assert.equal(
+    report.route?.moveRightMetersPerSecond,
+    MAP_STREAMING_ROUTE.moveRightMetersPerSecond,
+  );
+  assert.equal(
+    report.route?.headingRadians,
+    MAP_STREAMING_ROUTE.headingRadians,
+  );
+  assert.equal(report.route?.pitchRadians, MAP_STREAMING_ROUTE.pitchRadians);
   assert.ok(report.route?.elapsedMs >= report.route?.durationMs);
   assert.ok(
     report.route?.durationMs > 0 &&
       report.route.durationMs <= MAP_STREAMING_ROUTE.durationLimitMs,
   );
   assert.ok(report.route?.finalPostRenderObserved === true);
+  const routeStart = report.route?.start;
+  const routeEnd = report.route?.end;
+  assert.ok(routeStart && routeEnd, 'Observed route endpoints are present.');
+  assert.ok(
+    Math.abs(routeStart.longitude - MAP_STREAMING_ROUTE.start.longitude) <
+      0.0001 &&
+      Math.abs(routeStart.latitude - MAP_STREAMING_ROUTE.start.latitude) <
+        0.0001 &&
+      Math.abs(routeStart.heightM - MAP_STREAMING_ROUTE.start.heightM) < 1,
+    'Observed route starts at the declared native camera pose.',
+  );
+  assert.ok(
+    Math.abs(routeStart.headingRadians - MAP_STREAMING_ROUTE.headingRadians) <
+      0.0001 &&
+      Math.abs(routeStart.pitchRadians - MAP_STREAMING_ROUTE.pitchRadians) <
+        0.0001,
+    'Observed route starts with the declared native camera orientation.',
+  );
+  assert.ok(
+    routeEnd.longitude > routeStart.longitude,
+    'Observed route moves east along the declared rightward camera path.',
+  );
+  const radians = Math.PI / 180;
+  const latitudeMidpoint =
+    ((routeStart.latitude + routeEnd.latitude) / 2) * radians;
+  const longitudeDelta = (routeEnd.longitude - routeStart.longitude) * radians;
+  const latitudeDelta = (routeEnd.latitude - routeStart.latitude) * radians;
+  const routeSurfaceDistanceM =
+    6_371_008.8 *
+    2 *
+    Math.asin(
+      Math.sqrt(
+        Math.sin(latitudeDelta / 2) ** 2 +
+          Math.cos(latitudeMidpoint) ** 2 * Math.sin(longitudeDelta / 2) ** 2,
+      ),
+    );
+  const expectedSurfaceDistanceM =
+    (report.route.durationMs * MAP_STREAMING_ROUTE.moveRightMetersPerSecond) /
+    1000;
+  assert.ok(
+    Math.abs(routeSurfaceDistanceM - expectedSurfaceDistanceM) <=
+      Math.max(5, expectedSurfaceDistanceM * 0.01),
+    `Observed route displacement ${routeSurfaceDistanceM}m matches declared ${expectedSurfaceDistanceM}m elapsed-time movement.`,
+  );
   assert.ok(report.route?.observedFrustumSamples >= 2);
   assert.deepEqual(
     report.route?.declaredBounds,
@@ -1156,5 +1286,14 @@ export function validateMapStreamingCaptureReport(
     identities.add(identity);
     assert.equal(row.delivery?.cleanupConfirmed, true);
   }
+  const recomputedDelivery = aggregateMapStreamingDocumentDeliveries(
+    fixture,
+    report.documentDeliveries,
+  );
+  assert.deepEqual(
+    report.fixtureDelivery,
+    recomputedDelivery,
+    'Aggregate fixture delivery is recomputed from every acknowledged document owner.',
+  );
   return true;
 }
