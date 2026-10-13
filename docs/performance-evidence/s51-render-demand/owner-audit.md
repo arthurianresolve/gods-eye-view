@@ -166,14 +166,33 @@ completed frames over 10 seconds, 185 stable map requests, empty tile queues,
 and empty civil/military populations. Its simulated hide/resume control passed.
 The report failed at the endpoint comparison because the military receipt
 timestamp advanced with its normal 15-second poll; the run did not reach app
-teardown, so it provides no teardown result. The follow-up `da8ad3ef`
-preserves both endpoint timestamps and uses `isDeepStrictEqual` for stable
-stats after excluding only `military.lastUpdate`; civil receipt time remains
-fixed. The corrected diagnostic was frozen at `ed825bd3`; BEFORE run
-`38456481165` is the current run and must remain paired with that harness. It
-must reach teardown before the conditional hold change at `85020ccb` can be
-evaluated with the paired AFTER. The hide/resume result is simulated lifecycle
-evidence, not OS/browser tab-occlusion evidence. Periodic satellite wake
-remains a separate follow-up if the current deterministic fixture does not
-exercise its normal producer path; this audit does not claim that path was
-measured.
+teardown. The follow-up `da8ad3ef` preserves both endpoint timestamps and uses
+`isDeepStrictEqual` for stable stats after excluding only `military.lastUpdate`;
+civil receipt time remains fixed.
+
+The corrected BEFORE run, `38456481165` at `ed825bd3`, reached teardown and
+reported 27 completed frames in 10 seconds, empty source populations, and
+successful application/owner/listener teardown. It failed the unchanged
+two-frame gate and reported one remaining canvas. That report held only a total
+count, so it does not establish which element remained. The app's static
+[`layer-panels.html`](../../../src/ui/templates/layer-panels.html) contains
+a hidden `#cctv-video.cctv-frame` canvas; `scene-chrome.html` contains the
+world-overlay canvas that its owner removes. The follow-up diagnostic now
+records a bounded before/after inventory tagged by actual element identity,
+dimensions, connection state, and the exact CCTV host-markup selector. It
+accepts one remaining canvas only if it is the same hidden CCTV template
+element with unchanged dimensions, while the viewer and world-overlay canvases
+were present before and removed after. It retains the two-frame gate and does
+not delete host markup. Since the old report did not capture these identities,
+the retained canvas is still unclassified for `38456481165`.
+
+The projector also now reports `tileContentReady` only when the explicit
+readiness state is `content-ready` and globe loading is true. The fixture's
+`blocked-by-fixture` state remains not content-ready even if Cesium's
+`globe.tilesLoaded` happens to be true. Focused fixture/live-contract checks
+pass 43/43, and capture no-undef passes 32 files. A new matching BEFORE/AFTER
+pair must use the corrected inventory projector; the prior 27-frame result is
+still failed evidence. The hide/resume result is simulated lifecycle evidence,
+not OS/browser tab-occlusion evidence. Periodic satellite wake remains a
+separate follow-up if the current deterministic fixture does not exercise its
+normal producer path; this audit does not claim that path was measured.
