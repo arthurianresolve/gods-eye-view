@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
@@ -19,19 +20,28 @@ import {
   parseSmokeArguments,
   preserveCaptureCliReportArtifact,
   respondToSmokeFixtureRequest,
+  closeMapSmokeFixtureOwner,
+  finalizeMapSmokeFixtureDocument,
+  observeSmokeLayerPopulationInPage,
+  runNativeMapJourneyForSmoke,
+  smokeProviderPreparationMode,
+  validateMapSmokeInterceptionRelease,
+  validateMapSmokeLayerPopulation,
   readProviderCpuProfileIndexSet,
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
   validateCaptureCliReport,
   validateRendererBackendEvidence,
 } from './qa-performance-build-smoke.mjs';
-import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
-import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
-import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
+import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
+  getMapFixtureBuildProfileGoogleApiKey,
   MAP_FIXTURE_BUILD_PROFILE_ID,
   resolveMapFixtureBuildProfile,
 } from './performance/buildProvenance.mjs';
+import { NATIVE_MACOS_DIAGNOSTIC_BACKEND } from './performance/hostedRendererBackend.mjs';
+import { nativeRendererDiagnosticEvidence } from './performance/hostedRendererBackend.mjs';
+import { MAP_STREAMING_WORKLOAD_ID } from './performance/mapStreamingWorkloadContract.mjs';
 import {
   appendAustinOperatingReadinessHistory,
   createAustinOperatingReadinessHistory,
@@ -51,6 +61,7 @@ import {
 import { createInfrastructureWorkloadFixture } from './performance/infrastructureWorkloadFixture.mjs';
 import { createDeterministicMapStreamingFixture } from './performance/mapStreamingFixture.mjs';
 import { createMapStreamingFixtureDelivery } from './performance/mapStreamingFixtureDelivery.mjs';
+import { validateMapStreamingSmokeDeliverySummary } from './performance/mapStreamingCapture.mjs';
 import {
   createWeatherEffectsFixtureDelivery,
   createWeatherEffectsFixtureLifecycle,
@@ -65,6 +76,59 @@ import {
 } from './performance/earlyCesiumRendererProbe.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const MAP_SMOKE_APP_ORIGIN = 'http://127.0.0.1:4173';
+const MAP_SMOKE_ARCGIS =
+  'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer';
+const MAP_SMOKE_GOOGLE = 'https://tile.googleapis.com';
+const MAP_SMOKE_TERRAIN = 'https://terrain.reearth.land/cesium-mesh/ellipsoid';
+const MAP_SMOKE_CREDIT = 'https://assets.ion.cesium.com/google-credit.png';
+const MAP_SMOKE_GOOGLE_KEY = getMapFixtureBuildProfileGoogleApiKey(
+  MAP_FIXTURE_BUILD_PROFILE_ID,
+);
+
+function nativeMapSmokeAssetUrl(row) {
+  if (row.kind === 'arcgis-mapserver-metadata-json')
+    return `${MAP_SMOKE_ARCGIS}?f=json`;
+  if (row.kind === 'arcgis-missing-tile-probe-png')
+    return `${MAP_SMOKE_ARCGIS}/tile/${row.identity.level}/${row.identity.row}/${row.identity.column}`;
+  if (row.kind === 'webmercator-imagery-png') {
+    const [, level, column, tileRow] = row.path.match(
+      /^imagery\/(\d+)\/(\d+)\/(\d+)\.png$/,
+    );
+    return `${MAP_SMOKE_ARCGIS}/tile/${level}/${tileRow}/${column}`;
+  }
+  if (row.kind === 'quantized-mesh-layer-metadata')
+    return `${MAP_SMOKE_TERRAIN}/layer.json`;
+  if (row.kind === 'quantized-mesh-1.0')
+    return `${MAP_SMOKE_TERRAIN}/${row.path.slice('terrain/'.length)}`;
+  if (row.kind === '3d-tiles-1.1')
+    return `${MAP_SMOKE_GOOGLE}/v1/3dtiles/root.json?key=${MAP_SMOKE_GOOGLE_KEY}`;
+  if (row.kind === 'textured-glb')
+    return `${MAP_SMOKE_GOOGLE}/v1/tiles/${row.path.slice('tiles/'.length)}?key=${MAP_SMOKE_GOOGLE_KEY}`;
+  if (row.kind === 'synthetic-google-credit-placeholder-png')
+    return MAP_SMOKE_CREDIT;
+  throw new Error(`No native smoke URL for map asset kind ${row.kind}.`);
+}
+
+async function acknowledgeNativeMapSmokeFixture(delivery, fixture) {
+  for (const asset of fixture.manifest.assets) {
+    const url = nativeMapSmokeAssetUrl(asset);
+    const response = await delivery.respond(new URL(url), {
+      url: () => url,
+      method: () => 'GET',
+    });
+    assert.ok(response, `Native route resolves ${asset.path}.`);
+    assert.equal(
+      delivery.onFulfilled({
+        url,
+        method: 'GET',
+        status: response.status,
+        bodyBase64: response.body.toString('base64'),
+      }),
+      true,
+    );
+  }
+}
 function producerFixtureClock(fixedTime) {
   let time = 0;
   const target = { Date, performance: { now: () => time } };
@@ -850,6 +914,354 @@ test('smoke fixture responder awaits the native map classifier before flight fal
   assert.equal(response?.body, flightFixture.body);
   assert.equal(mapDelivery.summary().requestedCount, 0);
   mapDelivery.dispose();
+});
+
+test('map smoke uses native-only preparation for both exact revisions', async () => {
+  assert.equal(
+    smokeProviderPreparationMode(MAP_STREAMING_WORKLOAD_ID),
+    'native-map-streaming',
+  );
+  assert.equal(
+    smokeProviderPreparationMode('dense-investigation'),
+    'dense-provider-fixture',
+  );
+  assert.equal(
+    smokeProviderPreparationMode('weather-effects-v1'),
+    'dense-provider-fixture',
+  );
+
+  const fixture = {
+    id: 'austin-map-streaming-synthetic-v1',
+    manifestSha256: 'a'.repeat(64),
+  };
+  const buildProfile = {
+    id: MAP_FIXTURE_BUILD_PROFILE_ID,
+    configurationSha256: 'b'.repeat(64),
+  };
+  const route = { id: 'declared-route', durationLimitMs: 60_000 };
+  const calls = [];
+  const journey = { route: { id: route.id, elapsedMs: route.durationLimitMs } };
+  const mapStreamingCaptureModule = {
+    MAP_STREAMING_ROUTE: route,
+    async runNativeMapStreamingJourney(page, options) {
+      calls.push({ page, options });
+      return journey;
+    },
+    validateMapStreamingJourneyEvidence(actual, actualFixture) {
+      assert.equal(actual, journey);
+      assert.equal(actualFixture, fixture);
+    },
+  };
+  for (const revision of ['a'.repeat(40), 'c'.repeat(40)]) {
+    const page = { revision };
+    const report = await runNativeMapJourneyForSmoke({
+      page,
+      revision,
+      fixture,
+      buildProfile,
+      mapStreamingCaptureModule,
+    });
+    assert.equal(report.revision, revision);
+    assert.equal(report.fixtureId, fixture.id);
+    assert.equal(report.manifestSha256, fixture.manifestSha256);
+    assert.equal(report.routeId, route.id);
+    assert.deepEqual(report.buildProfile, buildProfile);
+    assert.equal(report.performanceAcceptanceEligible, false);
+  }
+  assert.deepEqual(
+    calls.map(({ page, options }) => ({
+      revision: page.revision,
+      durationMs: options.durationMs,
+      route: options.route,
+    })),
+    [
+      { revision: 'a'.repeat(40), durationMs: 60_000, route },
+      { revision: 'c'.repeat(40), durationMs: 60_000, route },
+    ],
+  );
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: {},
+      revision: 'invalid',
+      fixture,
+      buildProfile,
+      mapStreamingCaptureModule,
+    }),
+    /SHA/i,
+  );
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: {},
+      revision: 'a'.repeat(40),
+      fixture,
+      buildProfile: { ...buildProfile, id: 'unreceipted-profile' },
+      mapStreamingCaptureModule,
+    }),
+    /strictly equal/,
+  );
+});
+
+test('map smoke records real layer defaults and requires them to stay stable', () => {
+  const pageLayers = [
+    { id: 'imagery-control', enabled: true, stats: { count: 1 } },
+    { id: 'satellites', enabled: false, stats: { count: 0 } },
+  ];
+  const observed = vm.runInNewContext(
+    `(${observeSmokeLayerPopulationInPage.toString()})()`,
+    {
+      window: {
+        __godsEyeView: {
+          dataManager: {
+            getAll: () => pageLayers,
+            isEnabled: (id) =>
+              pageLayers.find((layer) => layer.id === id).enabled,
+          },
+        },
+      },
+    },
+  );
+  const normalized = JSON.parse(JSON.stringify(observed));
+  const evidence = validateMapSmokeLayerPopulation(normalized, normalized);
+  assert.deepEqual(evidence.enabledLayerIds, ['imagery-control']);
+  assert.match(
+    evidence.scope,
+    /does not assume all non-map layers are disabled/,
+  );
+  assert.throws(
+    () =>
+      validateMapSmokeLayerPopulation(normalized, [
+        { ...normalized[0], enabled: false },
+        normalized[1],
+      ]),
+    /preserve the application’s observed layer selection/,
+  );
+});
+
+test('map owner closes its target before draining pending interception and catches late callbacks', async () => {
+  for (const injectLateRequest of [false, true]) {
+    const client = new EventEmitter();
+    let resolveFulfill;
+    let signalFulfillStarted;
+    const fulfillStarted = new Promise((resolve) => {
+      signalFulfillStarted = resolve;
+    });
+    client.send = (method) => {
+      if (method === 'Fetch.enable') return Promise.resolve();
+      if (method === 'Fetch.fulfillRequest') {
+        signalFulfillStarted();
+        return new Promise((resolve) => {
+          resolveFulfill = resolve;
+        });
+      }
+      return Promise.resolve();
+    };
+    let targetClosed = false;
+    const interceptionOwner = await interceptFixtureSession(
+      client,
+      'http://127.0.0.1:4173',
+      async () => ({ status: 200, contentType: 'text/plain', body: 'ok' }),
+      () => {},
+    );
+    const interception = {
+      ...interceptionOwner,
+      async releaseSession(options) {
+        assert.equal(
+          targetClosed,
+          true,
+          'release follows actual target closure',
+        );
+        return interceptionOwner.releaseSession(options);
+      },
+    };
+    const fixturePage = { interception };
+    const page = { isClosed: () => targetClosed };
+    const context = {
+      async close() {
+        targetClosed = true;
+      },
+    };
+    const requestEvent = {
+      requestId: 'map-smoke-request',
+      request: {
+        url: 'http://127.0.0.1:4173/api/map-fixture-test',
+        method: 'GET',
+        postData: null,
+      },
+    };
+    client.emit('Fetch.requestPaused', requestEvent);
+    await fulfillStarted;
+    const staleListener = client.listeners('Fetch.requestPaused')[0];
+    const closePromise = closeMapSmokeFixtureOwner({
+      context,
+      page,
+      fixturePage,
+      documentRole: 'smoke-variant',
+      documentId: `candidate-${'a'.repeat(40)}`,
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(targetClosed, true);
+    assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+    if (injectLateRequest)
+      await staleListener({
+        ...requestEvent,
+        requestId: 'late-map-smoke-request',
+      });
+    let closeComplete = false;
+    closePromise.then(() => {
+      closeComplete = true;
+    });
+    await Promise.resolve();
+    assert.equal(closeComplete, false, 'release waits for the pending command');
+    resolveFulfill();
+    const evidence = await closePromise;
+    assert.equal(evidence.targetClosed, true);
+    if (injectLateRequest) {
+      assert.equal(evidence.confirmed, false);
+      assert.equal(evidence.release.interception.unexpectedLateRequestCount, 1);
+      assert.throws(
+        () =>
+          validateMapSmokeInterceptionRelease(evidence, {
+            documentRole: 'smoke-variant',
+            documentId: `candidate-${'a'.repeat(40)}`,
+          }),
+        /unexpectedLateRequestCount/,
+      );
+    } else {
+      assert.equal(evidence.confirmed, true);
+      assert.equal(evidence.release.interception.pendingCommandsAtStop, 1);
+      assert.equal(evidence.release.interception.pendingCommandsAfterDrain, 0);
+      assert.equal(
+        validateMapSmokeInterceptionRelease(evidence, {
+          documentRole: 'smoke-variant',
+          documentId: `candidate-${'a'.repeat(40)}`,
+        }),
+        true,
+      );
+    }
+  }
+});
+
+test('baseline and candidate map orchestration finalize delivery after target release', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const runFinalization = async ({ label, injectLateRequest }) => {
+    const events = [];
+    const delivery = createMapStreamingFixtureDelivery(fixture, {
+      appOrigin: MAP_SMOKE_APP_ORIGIN,
+    });
+    await acknowledgeNativeMapSmokeFixture(delivery, fixture);
+
+    const client = new EventEmitter();
+    let resolveFulfill;
+    let notifyFulfillStarted;
+    const fulfillStarted = new Promise((resolve) => {
+      notifyFulfillStarted = resolve;
+    });
+    client.send = (method) => {
+      if (method === 'Fetch.enable') return Promise.resolve();
+      if (method === 'Fetch.fulfillRequest') {
+        notifyFulfillStarted();
+        return new Promise((resolve) => {
+          resolveFulfill = resolve;
+        });
+      }
+      return Promise.resolve();
+    };
+    let targetClosed = false;
+    let releaseComplete = false;
+    const owner = await interceptFixtureSession(
+      client,
+      MAP_SMOKE_APP_ORIGIN,
+      async (url, request) =>
+        (await delivery.respond(url, request)) ?? {
+          status: 503,
+          contentType: 'application/json',
+          body: '{}',
+        },
+      () => {},
+      { onFulfilled: delivery.onFulfilled },
+    );
+    const fixturePage = {
+      interception: {
+        ...owner,
+        async releaseSession(options) {
+          const evidence = await owner.releaseSession(options);
+          events.push('interception-released');
+          releaseComplete = true;
+          return evidence;
+        },
+      },
+    };
+    const page = { isClosed: () => targetClosed };
+    const context = {
+      async close() {
+        events.push('target-closed');
+        targetClosed = true;
+      },
+    };
+    const requestEvent = {
+      requestId: `${label}-pending-request`,
+      request: {
+        url: `${MAP_SMOKE_APP_ORIGIN}/api/map-smoke-cleanup`,
+        method: 'GET',
+        postData: null,
+      },
+    };
+    client.emit('Fetch.requestPaused', requestEvent);
+    await fulfillStarted;
+    const staleListener = client.listeners('Fetch.requestPaused')[0];
+    const deliveryOwner = {
+      dispose() {
+        assert.equal(releaseComplete, true);
+        events.push('delivery-disposed');
+        return delivery.dispose();
+      },
+    };
+    const finalizationPromise = finalizeMapSmokeFixtureDocument({
+      context,
+      page,
+      fixturePage,
+      delivery: deliveryOwner,
+      fixture,
+      captureModule: { validateMapStreamingSmokeDeliverySummary },
+      documentRole: 'smoke-variant',
+      documentId: `${label}-${'a'.repeat(40)}`,
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(targetClosed, true);
+    assert.equal(client.listenerCount('Fetch.requestPaused'), 0);
+    if (injectLateRequest)
+      await staleListener({
+        ...requestEvent,
+        requestId: `${label}-late-request`,
+      });
+    resolveFulfill();
+    const finalized = await finalizationPromise;
+    assert.deepEqual(events, [
+      'target-closed',
+      'interception-released',
+      'delivery-disposed',
+    ]);
+    assert.equal(
+      finalized.deliveryEvidence.fulfilledAckCount,
+      fixture.manifest.assets.length,
+    );
+    assert.equal(finalized.deliveryEvidence.cleanupConfirmed, true);
+    if (injectLateRequest) {
+      assert.equal(finalized.confirmed, false);
+      assert.equal(
+        finalized.interceptionRelease.release.interception
+          .unexpectedLateRequestCount,
+        1,
+      );
+      assert.match(finalized.errors.join('; '), /unexpectedLateRequestCount/);
+    } else {
+      assert.equal(finalized.confirmed, true);
+    }
+  };
+
+  await runFinalization({ label: 'baseline', injectLateRequest: false });
+  await runFinalization({ label: 'candidate', injectLateRequest: false });
+  await runFinalization({ label: 'candidate', injectLateRequest: true });
 });
 
 test('Austin readiness-history smoke contract rejects unbounded or mismatched host samples', () => {

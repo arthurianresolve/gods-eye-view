@@ -739,6 +739,75 @@ export function mapStreamingCaptureWorkloadFields(evidence) {
   };
 }
 
+/** Validate the single-owner delivery summary emitted by the smoke adapter. */
+export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
+  validateDeterministicMapStreamingFixture(fixture);
+  assert.equal(summary?.schema, MAP_STREAMING_DELIVERY_SCHEMA);
+  assert.equal(summary.fixtureId, fixture.id);
+  assert.equal(summary.manifestSha256, fixture.manifestSha256);
+  assert.equal(summary.status, 'disposed');
+  assert.equal(summary.cleanupConfirmed, true);
+  assert.equal(summary.pendingCount, 0);
+  assert.equal(summary.unexpectedFulfillmentCount, 0);
+  assert.equal(summary.errorObservationCount, 0);
+  assert.equal(summary.omittedErrorObservationCount, 0);
+  assert.equal(summary.omittedErrorKindCount, 0);
+  assert.ok(Number.isSafeInteger(summary.requestedCount));
+  assert.ok(summary.requestedCount > 0);
+  assert.ok(Number.isSafeInteger(summary.fulfilledAckCount));
+  assert.ok(summary.fulfilledAckCount >= 0);
+  assert.ok(Number.isSafeInteger(summary.cancelledCount));
+  assert.ok(summary.cancelledCount >= 0);
+  assert.equal(
+    summary.fulfilledAckCount + summary.cancelledCount,
+    summary.requestedCount,
+  );
+  assert.ok(Array.isArray(summary.assets));
+  const expectedAssets = new Map(
+    fixture.manifest.assets.map((asset) => [asset.path, asset]),
+  );
+  const observedPaths = new Set();
+  const observedKinds = new Set();
+  let acknowledgedCount = 0;
+  let cancelledCount = 0;
+  for (const row of summary.assets) {
+    const expected = expectedAssets.get(row.path);
+    assert.ok(expected, `Smoke-delivered map asset ${row.path} is declared.`);
+    assert.equal(observedPaths.has(row.path), false);
+    observedPaths.add(row.path);
+    assert.equal(row.sha256, expected.sha256);
+    assert.equal(row.byteLength, expected.byteLength);
+    assert.ok(Number.isSafeInteger(row.requests) && row.requests > 0);
+    assert.ok(Number.isSafeInteger(row.fulfilledAckCount));
+    assert.ok(row.fulfilledAckCount >= 0);
+    assert.ok(Number.isSafeInteger(row.cancelledCount));
+    assert.ok(row.cancelledCount >= 0);
+    assert.equal(row.fulfilledAckCount + row.cancelledCount, row.requests);
+    acknowledgedCount += row.fulfilledAckCount;
+    cancelledCount += row.cancelledCount;
+    if (row.fulfilledAckCount > 0) observedKinds.add(expected.kind);
+  }
+  assert.equal(acknowledgedCount, summary.fulfilledAckCount);
+  assert.equal(cancelledCount, summary.cancelledCount);
+  for (const kind of [
+    '3d-tiles-1.1',
+    'textured-glb',
+    'synthetic-google-credit-placeholder-png',
+    'arcgis-mapserver-metadata-json',
+    'arcgis-missing-tile-probe-png',
+    'webmercator-imagery-png',
+    'quantized-mesh-layer-metadata',
+    'quantized-mesh-1.0',
+  ])
+    assert.ok(
+      observedKinds.has(kind),
+      `Smoke delivery acknowledged required map asset kind ${kind}.`,
+    );
+  assert.equal(summary.browserDecodeObserved, false);
+  assert.equal(summary.renderedReadinessObserved, false);
+  return true;
+}
+
 /** Aggregate only acknowledged native requests after every owner is retired. */
 export function aggregateMapStreamingDocumentDeliveries(
   fixture,
@@ -920,20 +989,9 @@ function validateAggregatedMapDelivery(report, fixture, documents) {
   }
 }
 
-export function validateMapStreamingCaptureReport(
-  report,
-  { fixture, profile },
-) {
+export function validateMapStreamingJourneyEvidence(journey, fixture) {
   validateDeterministicMapStreamingFixture(fixture);
-  assert.equal(report?.schema, MAP_STREAMING_CAPTURE_SCHEMA);
-  assert.equal(report.workloadId, MAP_STREAMING_WORKLOAD_ID);
-  assert.equal(report.status, 'observed');
-  assert.equal(report.performanceAcceptanceEligible, false);
-  assert.equal(report.fixtureId, MAP_STREAMING_FIXTURE_ID);
-  assert.equal(report.manifestSha256, fixture.manifestSha256);
-  assert.deepEqual(report.buildProfile, profile);
-  assert.equal(profile?.id, MAP_FIXTURE_BUILD_PROFILE_ID);
-  assert.match(profile?.configurationSha256 || '', SHA256);
+  const report = journey;
   assert.equal(report.initialState?.activeStack, 'photoreal');
   assert.equal(report.initialState?.photorealShown, true);
   assert.equal(report.initialState?.photorealTilesLoaded, true);
@@ -1277,6 +1335,24 @@ export function validateMapStreamingCaptureReport(
     report.terrainEvidence.maxHeightM > report.terrainEvidence.minHeightM,
     'Terrain samples prove nonflat rendered heights.',
   );
+  return true;
+}
+
+export function validateMapStreamingCaptureReport(
+  report,
+  { fixture, profile },
+) {
+  validateDeterministicMapStreamingFixture(fixture);
+  assert.equal(report?.schema, MAP_STREAMING_CAPTURE_SCHEMA);
+  assert.equal(report.workloadId, MAP_STREAMING_WORKLOAD_ID);
+  assert.equal(report.status, 'observed');
+  assert.equal(report.performanceAcceptanceEligible, false);
+  assert.equal(report.fixtureId, MAP_STREAMING_FIXTURE_ID);
+  assert.equal(report.manifestSha256, fixture.manifestSha256);
+  assert.deepEqual(report.buildProfile, profile);
+  assert.equal(profile?.id, MAP_FIXTURE_BUILD_PROFILE_ID);
+  assert.match(profile?.configurationSha256 || '', SHA256);
+  validateMapStreamingJourneyEvidence(report, fixture);
   const manifestAssets = new Map(
     fixture.manifest.assets.map((asset) => [asset.path, asset]),
   );

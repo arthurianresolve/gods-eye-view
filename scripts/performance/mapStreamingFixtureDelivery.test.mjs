@@ -7,6 +7,7 @@ import {
   MAP_FIXTURE_BUILD_PROFILE_ID,
 } from './buildProvenance.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
+import { validateMapStreamingSmokeDeliverySummary } from './mapStreamingCapture.mjs';
 import {
   createMapStreamingFixtureDelivery,
   MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
@@ -119,6 +120,13 @@ test('native map URLs resolve every manifest asset through real interception cal
     assert.equal(headers['content-type'], CONTENT_TYPES[row.kind]);
   }
   const summary = delivery.dispose();
+  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
+  const corruptedSummary = structuredClone(summary);
+  corruptedSummary.assets[0].sha256 = '0'.repeat(64);
+  assert.throws(
+    () => validateMapStreamingSmokeDeliverySummary(corruptedSummary, pinned),
+    /strictly equal/,
+  );
   assert.equal(summary.cleanupConfirmed, true);
   assert.equal(summary.requestedCount, pinned.manifest.assets.length);
   assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length);
@@ -127,6 +135,67 @@ test('native map URLs resolve every manifest asset through real interception cal
   assert.equal(summary.renderedReadinessObserved, false);
   assert.ok(
     summary.assets.every((row) => row.fulfilledAckCount === row.requests),
+  );
+});
+
+test('smoke summary accepts observed cancellations but rejects unbalanced counts', async () => {
+  const pinned = await fixture();
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  for (const row of pinned.manifest.assets) {
+    const result = await issueRequest(delivery, nativeUrl(row));
+    assert.equal(result.acknowledged, true);
+  }
+  const cancelledAsset = pinned.manifest.assets[0];
+  const cancelledUrl = nativeUrl(cancelledAsset);
+  const abort = new AbortController();
+  await delivery.respond(new URL(cancelledUrl), {
+    url: () => cancelledUrl,
+    method: () => 'GET',
+    signal: abort.signal,
+  });
+  abort.abort();
+  const summary = delivery.dispose();
+  assert.equal(summary.requestedCount, pinned.manifest.assets.length + 1);
+  assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length);
+  assert.equal(summary.cancelledCount, 1);
+  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
+
+  const unbalanced = structuredClone(summary);
+  unbalanced.cancelledCount -= 1;
+  assert.throws(
+    () => validateMapStreamingSmokeDeliverySummary(unbalanced, pinned),
+    /strictly equal/,
+  );
+});
+
+test('cancelled-only required map kinds do not count as delivered', async () => {
+  const pinned = await fixture();
+  const cancelledAsset = pinned.manifest.assets.find(
+    (row) => row.kind === 'arcgis-missing-tile-probe-png',
+  );
+  assert.ok(cancelledAsset);
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  for (const row of pinned.manifest.assets) {
+    if (row === cancelledAsset) continue;
+    const result = await issueRequest(delivery, nativeUrl(row));
+    assert.equal(result.acknowledged, true);
+  }
+  const cancelledUrl = nativeUrl(cancelledAsset);
+  const abort = new AbortController();
+  await delivery.respond(new URL(cancelledUrl), {
+    url: () => cancelledUrl,
+    method: () => 'GET',
+    signal: abort.signal,
+  });
+  abort.abort();
+  const summary = delivery.dispose();
+  assert.throws(
+    () => validateMapStreamingSmokeDeliverySummary(summary, pinned),
+    /acknowledged required map asset kind arcgis-missing-tile-probe-png/,
   );
 });
 
