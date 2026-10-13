@@ -2,9 +2,188 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   RealtimeViewport,
+  capturePointerCrop,
+  captureViewportImage,
   pointerCropRect,
   renderFreshPointerFrame,
 } from './realtimeViewport.js';
+
+function installCaptureSurface(
+  t,
+  {
+    source = { width: 1200, height: 900, clientWidth: 600, clientHeight: 450 },
+    nullContextAt = null,
+    samplePixels = [32, 64, 96, 255],
+    encoded = 'data:image/jpeg;base64,AA==',
+    encodeError = false,
+    drawErrorAt = null,
+    onEncode = null,
+    onRequestRender = null,
+  } = {},
+) {
+  const previous = new Map(
+    ['document', 'window'].map((name) => [
+      name,
+      Object.getOwnPropertyDescriptor(globalThis, name),
+    ]),
+  );
+  const doc = new EventTarget();
+  doc.hidden = false;
+  const listeners = new Set();
+  const canvases = [];
+  let drawCount = 0;
+  doc.createElement = (tagName) => {
+    assert.equal(tagName, 'canvas');
+    const canvasIndex = canvases.length;
+    const canvas = {
+      width: 0,
+      height: 0,
+      draws: [],
+      getContext(_kind, options) {
+        const isSample = options?.willReadFrequently === true;
+        if (!isSample && canvasIndex === nullContextAt) return null;
+        const context = {
+          canvas,
+          drawImage(...args) {
+            drawCount++;
+            if (drawErrorAt === drawCount) throw new Error('draw failed');
+            canvas.draws.push(args);
+          },
+          getImageData() {
+            const pixels = new Uint8ClampedArray(
+              canvas.width * canvas.height * 4,
+            );
+            for (let offset = 0; offset < pixels.length; offset += 4)
+              pixels.set(samplePixels, offset);
+            return { data: pixels };
+          },
+          beginPath() {},
+          arc(...args) {
+            canvas.arc = args;
+          },
+          stroke() {},
+        };
+        return context;
+      },
+      toDataURL() {
+        if (encodeError) throw new Error('encoder unavailable');
+        onEncode?.(canvas.width, canvas.height);
+        return encoded;
+      },
+    };
+    canvases.push(canvas);
+    return canvas;
+  };
+  const viewer = {
+    isDestroyed: () => false,
+    scene: {
+      canvas: source,
+      postRender: {
+        addEventListener(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      },
+      requestRender() {
+        if (onRequestRender) onRequestRender(source, listeners);
+        else for (const listener of [...listeners]) listener();
+      },
+    },
+  };
+  globalThis.document = doc;
+  globalThis.window = { __godsEyeView: { viewer } };
+  t.after(() => {
+    for (const [name, descriptor] of previous) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  });
+  return { viewer, doc, canvases, listeners, source };
+}
+
+const actualCaptureCallers = [
+  ['viewport', captureViewportImage],
+  ['pointer', () => capturePointerCrop({ x: 150, y: 100 })],
+];
+
+for (const [name, capture] of actualCaptureCallers) {
+  test(`${name} capture copies a real postRender frame, encodes it and releases its owned canvases`, async (t) => {
+    const env = installCaptureSurface(t);
+    const result = await capture();
+    assert.ok(
+      name === 'viewport'
+        ? typeof result === 'string'
+        : typeof result?.dataUrl === 'string',
+    );
+    assert.equal(env.listeners.size, 0);
+    assert.equal(
+      env.canvases.length,
+      3,
+      'fresh copy, encoded output and black-frame probe',
+    );
+    assert.equal(env.canvases[0].width * env.canvases[0].height, 0);
+    assert.equal(env.canvases[1].width * env.canvases[1].height, 0);
+  });
+
+  for (const [mode, options] of [
+    ['null output context', { nullContextAt: 1 }],
+    ['caller draw exception', { drawErrorAt: 2 }],
+    ['encoder exception', { encodeError: true }],
+    ['black frame', { samplePixels: [0, 0, 0, 255] }],
+    [
+      'oversized encoding',
+      { encoded: `data:image/jpeg;base64,${'A'.repeat(300 * 1024)}` },
+    ],
+  ]) {
+    test(`${name} capture rejects ${mode} and clears copied/output canvases`, async (t) => {
+      const env = installCaptureSurface(t, options);
+      assert.equal(await capture(), null);
+      assert.equal(env.listeners.size, 0);
+      assert.equal(env.canvases[0].width * env.canvases[0].height, 0);
+      if (env.canvases[1])
+        assert.equal(env.canvases[1].width * env.canvases[1].height, 0);
+    });
+  }
+}
+
+test('viewport capture uses resized completed-frame dimensions before applying its pixel cap', async (t) => {
+  let encodedDimensions = null;
+  const env = installCaptureSurface(t, {
+    source: { width: 600, height: 400, clientWidth: 600, clientHeight: 400 },
+    onRequestRender(source, listeners) {
+      source.width = 3200;
+      source.height = 2400;
+      for (const listener of [...listeners]) listener();
+    },
+    onEncode(width, height) {
+      encodedDimensions = { width, height };
+    },
+  });
+  assert.equal(typeof (await captureViewportImage()), 'string');
+  assert.ok(encodedDimensions.width * encodedDimensions.height <= 1200 * 900);
+  assert.ok(encodedDimensions.width > 600);
+  assert.equal(env.canvases[0].width * env.canvases[0].height, 0);
+  assert.equal(env.canvases[1].width * env.canvases[1].height, 0);
+});
+
+test('pointer capture scales its crop against resized postRender pixels', async (t) => {
+  const env = installCaptureSurface(t, {
+    source: { width: 600, height: 400, clientWidth: 600, clientHeight: 400 },
+    onRequestRender(source, listeners) {
+      source.width = 2400;
+      source.height = 1600;
+      for (const listener of [...listeners]) listener();
+    },
+  });
+  const result = await capturePointerCrop({ x: 150, y: 100 });
+  assert.equal(typeof result?.dataUrl, 'string');
+  assert.equal(result.rect.w, 400 / 600);
+  const cropDraw = env.canvases[1].draws[0];
+  assert.equal(cropDraw[3], 1600);
+  assert.equal(cropDraw[4], 1600);
+  assert.equal(env.canvases[0].width * env.canvases[0].height, 0);
+  assert.equal(env.canvases[1].width * env.canvases[1].height, 0);
+});
 
 test('crop: a square around the pointer, clamped inside the canvas, in buffer pixels', () => {
   assert.deepEqual(

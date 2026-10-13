@@ -7,8 +7,17 @@ import {
   renderFreshCesiumFrame,
 } from './freshFrame.js';
 
-function fixture(t, { requestError = false, drawError = false } = {}) {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
+function fixture(
+  t,
+  {
+    requestError = false,
+    drawError = false,
+    copyContext = true,
+    enableMockTimers = true,
+    source = { width: 6, height: 4 },
+  } = {},
+) {
+  if (enableMockTimers) t.mock.timers.enable({ apis: ['setTimeout'] });
   const original = globalThis.document;
   const listeners = new Set(),
     copies = [],
@@ -18,11 +27,12 @@ function fixture(t, { requestError = false, drawError = false } = {}) {
     const canvas = {
       width: 0,
       height: 0,
-      getContext: () => ({
-        drawImage() {
-          if (drawError) throw new Error('context lost');
+      getContext: () =>
+        copyContext && {
+          drawImage() {
+            if (drawError) throw new Error('context lost');
+          },
         },
-      }),
     };
     copies.push(canvas);
     return canvas;
@@ -35,7 +45,7 @@ function fixture(t, { requestError = false, drawError = false } = {}) {
   const viewer = {
     isDestroyed: () => destroyed,
     scene: {
-      canvas: { width: 6, height: 4 },
+      canvas: source,
       postRender: {
         addEventListener(fn) {
           listeners.add(fn);
@@ -128,6 +138,32 @@ test('viewer destruction settles concurrent copies and pixel-free waits together
   assert.deepEqual(await Promise.all([first, second]), [null, false]);
   env.assertClean();
   assert.equal(await captureFreshCesiumFrame(env.viewer), null);
+});
+
+test('missing or zero-sized source canvases cancel the completed-frame copy cleanly', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (const source of [
+    null,
+    { width: 0, height: 4 },
+    { width: 6, height: 0 },
+  ]) {
+    const env = fixture(t, { source, enableMockTimers: false });
+    const capture = captureFreshCesiumFrame(env.viewer);
+    env.fire();
+    assert.equal(await capture, null);
+    env.assertClean();
+    assert.equal(env.copies.length, 0);
+  }
+});
+
+test('a null copy context returns no pixels and releases the temporary surface', async (t) => {
+  const env = fixture(t, { copyContext: false });
+  const capture = captureFreshCesiumFrame(env.viewer);
+  env.fire();
+  assert.equal(await capture, null);
+  env.assertClean();
+  assert.equal(env.copies.length, 1);
+  assert.equal(env.copies[0].width * env.copies[0].height, 0);
 });
 
 test('a visibility change immediately after render invalidates and releases the copy', async (t) => {
