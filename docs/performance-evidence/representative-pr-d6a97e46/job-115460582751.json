@@ -1,0 +1,140 @@
+{
+  "id": 115460582751,
+  "run_id": 38444888569,
+  "workflow_name": "CI",
+  "head_branch": "qa/s47-austin-receipt-only",
+  "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOUTUTds8AAAAa4fytXw",
+  "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582751",
+  "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582751",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-13T18:12:42Z",
+  "started_at": "2026-10-13T18:12:45Z",
+  "completed_at": "2026-10-13T18:17:30Z",
+  "name": "Node 26.x",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-13T18:12:46Z",
+      "completed_at": "2026-10-13T18:12:47Z"
+    },
+    {
+      "name": "Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-13T18:12:47Z",
+      "completed_at": "2026-10-13T18:12:58Z"
+    },
+    {
+      "name": "Use Node.js",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-13T18:12:58Z",
+      "completed_at": "2026-10-13T18:13:06Z"
+    },
+    {
+      "name": "Install locked dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-13T18:13:06Z",
+      "completed_at": "2026-10-13T18:13:12Z"
+    },
+    {
+      "name": "Run setup policy checks",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-13T18:13:12Z",
+      "completed_at": "2026-10-13T18:13:13Z"
+    },
+    {
+      "name": "Check adopted formatting",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-13T18:13:13Z",
+      "completed_at": "2026-10-13T18:13:32Z"
+    },
+    {
+      "name": "Check package boundaries",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-13T18:13:32Z",
+      "completed_at": "2026-10-13T18:13:49Z"
+    },
+    {
+      "name": "Check capture harness undefined identifiers",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-10-13T18:13:49Z",
+      "completed_at": "2026-10-13T18:13:50Z"
+    },
+    {
+      "name": "Check published layer-token allocations",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-10-13T18:13:50Z",
+      "completed_at": "2026-10-13T18:13:51Z"
+    },
+    {
+      "name": "Run unit tests",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-10-13T18:13:51Z",
+      "completed_at": "2026-10-13T18:17:15Z"
+    },
+    {
+      "name": "Build production bundle",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-10-13T18:17:15Z",
+      "completed_at": "2026-10-13T18:17:26Z"
+    },
+    {
+      "name": "Post Use Node.js",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-10-13T18:17:26Z",
+      "completed_at": "2026-10-13T18:17:26Z"
+    },
+    {
+      "name": "Post Check out source",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-10-13T18:17:26Z",
+      "completed_at": "2026-10-13T18:17:27Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-10-13T18:17:27Z",
+      "completed_at": "2026-10-13T18:17:27Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582751",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000024323,
+  "runner_name": "GitHub Actions 1000024323",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

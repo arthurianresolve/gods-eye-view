@@ -2,15 +2,21 @@
 
 ## Current execution checkpoint - 13 October 2026
 
-The [representative PR matrix](performance-evidence/representative-pr-20261013/README.md)
-now tests QA head `44c6532d` against current dev and main. Both synthetic merge
-commits have the same source tree and pass the published layer-token checks.
-The main-targeted PR passes all seven standard jobs and release-artifact
-verification. The dev-targeted PR passes six jobs but fails the Windows
-PowerShell readiness prerequisite before browser setup; its release job fails
-artifact-name discovery immediately after a successful upload. Both outcomes
-remain recorded. The reviewed artifact-ID handoff correction passes nine local
-release tests and awaits fresh workflow validation.
+The [current representative PR matrix](performance-evidence/representative-pr-d6a97e46/README.md)
+tests frozen QA head `d6a97e46` against current dev and main. Both synthetic merge
+trees match that head, pass the published layer-token checks and pass all seven
+standard jobs, including three-OS recovery. All 30 persistence records preserve
+settings/workspaces and close cleanly. Earlier Windows readiness failures remain
+historical failures; their cause is not established by these later passes.
+
+The dev-targeted release verification passes. The main-targeted release still
+fails artifact discovery after upload: the pinned downloader lists artifacts
+even in ID mode. A later direct REST diagnostic verifies the failed run's ZIP,
+inner checksum, manifest and signed attestation; it does not change that run's
+failure. Reviewed direct-REST corrections `8ba383ea`/`6dc93009` pass twelve root
+release tests and are under fresh workflow validation. Stable publication remains
+disabled; the [older PR packet](performance-evidence/representative-pr-20261013/README.md)
+is retained unchanged.
 
 The [main reconciliation record](performance-evidence/main-reconciliation-20261013/README.md)
 confirms QA already contains both main `9beadbda` and dev `e8ccc268`. No further

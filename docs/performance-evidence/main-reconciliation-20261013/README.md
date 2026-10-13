@@ -6,15 +6,15 @@ The latest 13 October fetch confirms fork/main and upstream/main at
 QA already contains both through reviewed merge `8b84a2e0`. No additional merge,
 rebase or history discard is needed. Dev promotion and VM105 remain unchanged.
 
-The [new representative PR evidence](../representative-pr-20261013/README.md)
-tests frozen head `44c6532d` against both bases. Both synthetic merge trees are
-identical to that head and pass published layer-token checks. PR #4 to main
-passes all seven standard jobs and downloaded-artifact/attestation verification.
-PR #3 to dev passes six standard jobs but fails the pre-browser PowerShell
-readiness check; its release job also fails artifact discovery after upload.
-Both failures are retained. The reviewed artifact-ID handoff correction passes
-nine local release tests and needs fresh workflow validation. No stable release
-has been published; PR #4 is validation-only.
+The [current representative PR evidence](../representative-pr-d6a97e46/README.md)
+tests frozen head `d6a97e46` against both bases. Both synthetic merge trees match
+that head and pass all seven standard jobs and published layer-token checks.
+All 30 recovery persistence records pass. Dev-targeted release verification
+passes; main-targeted artifact discovery fails even with the upload ID. The
+reviewed direct-REST correction at `6dc93009` passes twelve focused tests and
+has its own workflow check. This release handoff failure is not evidence of a
+source-tree conflict. Historical Windows failures remain disclosed.
+PR #4 remains validation-only; no stable release has been published.
 
 ## Earlier checkpoints
 
