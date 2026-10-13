@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES,
@@ -2605,6 +2606,123 @@ test('full cleanup validator replays a raw Austin report and rejects release mut
     mutate(invalid);
     assert.throws(() => validate(invalid), undefined, label);
   }
+});
+
+test('full Austin CLI validator accepts the recorded producer projection and rejects contract mutations', async () => {
+  const compressedReportBytes = await readFile(
+    new URL(
+      './performance/fixtures/austin-cli-projection-replay-38332484324.json.gz',
+      import.meta.url,
+    ),
+  );
+  const reportBytes = gunzipSync(compressedReportBytes);
+  const report = JSON.parse(reportBytes.toString('utf8'));
+  assert.equal(reportBytes.length, 3_676_548, 'historical report byte length');
+  assert.equal(
+    createHash('sha256').update(reportBytes).digest('hex'),
+    'eddeff6538198e2854875effaed7d3e830cd9fc2488017377881d9ef498d371e',
+    'historical report bytes must stay fixed for this structural replay',
+  );
+  assert.equal(
+    createHash('sha256').update(compressedReportBytes).digest('hex'),
+    '550346cc6592621d175edd2affea93fc2760d08cde6ffc001c3e8570e10bb17d',
+    'compressed replay fixture bytes must stay fixed',
+  );
+  assert.equal(
+    report.source.appCommit,
+    '78e0417244856a2a3d2905ab618d32b909507eb6',
+  );
+  assert.equal(
+    report.source.harnessCommit,
+    '78e0417244856a2a3d2905ab618d32b909507eb6',
+  );
+  assert.equal(
+    report.source.buildProvenance.receiptSha256,
+    'ff605b9885dfdf20ae51983f4197949f11076d4096e363bc71b6c7c17aca88a3',
+  );
+  const pageAudit = report.source.buildProvenance.pageAssetAudit;
+  const expected = {
+    appSha: report.source.appCommit,
+    harnessSha: report.source.harnessCommit,
+    receiptSha256: report.source.buildProvenance.receiptSha256,
+    providerFixture: report.workload.providerFixture,
+    austinOperatingFixture: report.workload.fixture,
+    fixedTime: report.workload.fixture.fixedTime,
+    workerAuditMode: 'receipt-only',
+    captureRendererBackend: NATIVE_MACOS_DIAGNOSTIC_BACKEND,
+    sceneFrameDiagnostics: true,
+    firstMotionCpuProfile: false,
+    depthPickAttribution: false,
+    shaderProgramAttribution: false,
+    // This is a structural replay of a historical report. These receipt and
+    // asset identities bind the replay to its saved report; they are not a
+    // fresh served-asset provenance check.
+    receiptOnlyWorkerContract: {
+      assetPaths: [
+        'index.html',
+        'assets/egm96-universal.esm-D6y_VLZc.js',
+        'assets/index-D3_XUlb8.js',
+        'cesium/Cesium.js',
+      ],
+      bundleSha256: pageAudit.workerSource.bundleSha256,
+      workerSourceSha256: pageAudit.workerSource.workerSourceSha256,
+      allowedModuleCount: pageAudit.workerSource.allowedModuleCount,
+    },
+  };
+
+  // The pre-fix consumer compared a compact projection with raw delivery rows,
+  // so this actual producer report was rejected despite a canonical contract.
+  assert.throws(() =>
+    assert.deepEqual(
+      report.comparisonContract.fixtureDelivery.sampleDocuments,
+      report.fixtureDelivery.sampleDocuments,
+    ),
+  );
+  const validation = validateCaptureCliReport(report, expected);
+  assert.equal(validation.status, 'passed');
+  assert.equal(validation.captureCount, 4);
+
+  const canonicalContract = report.comparisonContract;
+  const rejectedContract = (mutate) => {
+    const alteredContract = structuredClone(canonicalContract);
+    mutate(alteredContract);
+    report.comparisonContract = alteredContract;
+    assert.throws(
+      () => validateCaptureCliReport(report, expected),
+      /Austin comparison contract must equal the canonical projection of observed producer data/,
+    );
+  };
+  report.comparisonContract = undefined;
+  assert.throws(
+    () => validateCaptureCliReport(report, expected),
+    /Austin comparison contract must equal the canonical projection of observed producer data/,
+  );
+  rejectedContract((contract) => {
+    contract.fixtureDelivery.sampleDocuments[0].populations.after[0].count += 1;
+  });
+  rejectedContract((contract) => {
+    contract.routes.idle.start.position.x += 1;
+  });
+  rejectedContract((contract) => {
+    contract.browser.version = 'forged-browser-version';
+  });
+  rejectedContract((contract) => {
+    contract.rendering.drawingBuffer.width += 1;
+  });
+  rejectedContract((contract) => {
+    contract.workload.durationPerSampleMs += 1;
+  });
+  rejectedContract((contract) => {
+    contract.fixtureDelivery.sampleDocuments.pop();
+  });
+  rejectedContract((contract) => {
+    contract.fixtureDelivery.sampleDocuments.push(
+      structuredClone(contract.fixtureDelivery.sampleDocuments.at(-1)),
+    );
+  });
+  rejectedContract((contract) => {
+    contract.fixtureDelivery.fixtureSha256 = 'f'.repeat(64);
+  });
 });
 
 test('capture CLI validates the actual weather fixture manifest, timeline, states and worker topology', async () => {

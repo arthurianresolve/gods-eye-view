@@ -18,6 +18,7 @@ import {
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createLocalBuildReceipt } from './performance/buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './performance/captureBuildProvenance.mjs';
@@ -1622,18 +1623,19 @@ function validateAustinOperatingCaptureCliReport(report, expected) {
     );
   }
   assert.equal(report.captures?.length, 4);
-  createObservedAustinOperatingComparisonContract({
-    fixture,
-    fixtureDelivery: report.fixtureDelivery,
-    environment: report.environment,
-    captures: report.captures,
-    scenarios: report.workload.scenarios,
-    workload: {
-      warmupMs: report.workload.warmupMs,
-      durationPerSampleMs: report.workload.durationPerSampleMs,
-      runsPerScenario: report.workload.runsPerScenario,
-    },
-  });
+  const observedComparisonContract =
+    createObservedAustinOperatingComparisonContract({
+      fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment: report.environment,
+      captures: report.captures,
+      scenarios: report.workload.scenarios,
+      workload: {
+        warmupMs: report.workload.warmupMs,
+        durationPerSampleMs: report.workload.durationPerSampleMs,
+        runsPerScenario: report.workload.runsPerScenario,
+      },
+    });
   const topology = createCaptureDocumentTopology({
     startupRuns: report.workload.startupRuns,
     captureCount: report.captures.length,
@@ -1647,9 +1649,9 @@ function validateAustinOperatingCaptureCliReport(report, expected) {
   );
   assert.equal(report.fixtureDelivery?.fixtureId, fixture.id);
   assert.equal(report.fixtureDelivery?.fixtureSha256, fixture.sha256);
-  assert.deepEqual(
-    report.comparisonContract?.fixtureDelivery?.sampleDocuments,
-    report.fixtureDelivery.sampleDocuments,
+  assert.ok(
+    isDeepStrictEqual(report.comparisonContract, observedComparisonContract),
+    'Austin comparison contract must equal the canonical projection of observed producer data',
   );
   return {
     schema: report.schema,
