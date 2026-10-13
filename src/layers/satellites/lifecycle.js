@@ -91,17 +91,6 @@ export function createLifecycle({
       stopFocusRenderDemand();
       return;
     }
-    if (
-      services.focus?.getFocusTarget?.() &&
-      !layerState._focusPassPending &&
-      !layerState._focusTransitioning &&
-      layerState._activeFocusCount === 0
-    ) {
-      // A target can remain selected while a catalog is empty. Requeue the
-      // pass when points return instead of retaining the stale empty-catalog
-      // request as a perpetual focus owner.
-      layerState._focusPassPending = true;
-    }
     if (!layerState._focusTransitioning && !layerState._focusPassPending) {
       stopFocusRenderDemand();
       return;

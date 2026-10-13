@@ -534,3 +534,39 @@ test('a throttled focus pass retires when its points disappear before the target
   parts.lifecycle.methods.disable(state._viewer);
   assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
 });
+
+test('a completed pass with a selected target and no occluded points retires its focus owner', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  t.mock.method(performance, 'now', () => 1_000);
+  const harness = createHarness(t, {
+    readGroup: async () => ({ ok: true, text: TLE }),
+  });
+  const { parts, services, state } = harness;
+  services.focus.advanceSpriteFocus = advanceSpriteFocus;
+  state._points.set(25544, {
+    id: 25544,
+    position: new Cesium.Cartesian3(1, 2, 3),
+    show: false,
+    color: Cesium.Color.WHITE,
+  });
+  state._catalog.set(25544, { group: 'visual' });
+
+  harness.setFocusTarget({
+    ownerLayer: 'flights',
+    id: 'non-overlapping-target',
+    screenRect: { left: 100, right: 200, top: 100, bottom: 200 },
+    cameraDistance: 1_000,
+  });
+  t.mock.timers.tick(0);
+
+  assert.equal(state._focusPassPending, false);
+  assert.equal(state._activeFocusCount, 0);
+  assert.equal(state._focusTransitioning, false);
+  assert.deepEqual(
+    getRenderGovernorDiagnostics().scheduledUpdates,
+    ['satellites-periodic'],
+    'a completed no-op focus pass does not recreate an 80ms retry',
+  );
+
+  parts.lifecycle.methods.disable(state._viewer);
+});
