@@ -1,0 +1,57 @@
+{
+  "schema": "gev-austin-cleanup-topology-review/v1",
+  "checkedAt": "2026-10-13T01:17:35.593Z",
+  "validatorCommit": "fd9ca2d42c8a330b121830cc0c73a257a8b4cf4e",
+  "rawCandidate": "5368d54aac2fe01c8fd472615af9bc8bd4c4612d",
+  "rawSha256": "b9762d40eb00428077677758269e06d37ebb2b7d2a61214698715eec012bcbc6",
+  "status": "failed",
+  "finding": "Corrected retirement subvalidator passes; complete cleanup validator rejects actual six document releases because weather-only expectation includes four measured documents.",
+  "failure": {
+    "message": "Each measured fixture document must release its owned interception session.\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n+     documentId: 'main-measured-document',\n+     documentRole: 'main-setup'\n+   },\n+   {\n      documentId: 'provider-document-1',\n      documentRole: 'provider-sample-1'\n    },\n    {\n      documentId: 'provider-document-2',\n...\n    },\n+   {\n+     documentId: 'startup-document-1',\n+     documentRole: 'startup-1'\n+   }\n  ]\n",
+    "actual": [
+      {
+        "documentRole": "main-setup",
+        "documentId": "main-measured-document"
+      },
+      {
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1"
+      },
+      {
+        "documentRole": "provider-sample-2",
+        "documentId": "provider-document-2"
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "documentId": "provider-document-3"
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "documentId": "provider-document-4"
+      },
+      {
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1"
+      }
+    ],
+    "expected": [
+      {
+        "documentRole": "provider-sample-1",
+        "documentId": "provider-document-1"
+      },
+      {
+        "documentRole": "provider-sample-2",
+        "documentId": "provider-document-2"
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "documentId": "provider-document-3"
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "documentId": "provider-document-4"
+      }
+    ],
+    "stackLocation": "    at assertCaptureCleanupEvidence (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.mjs:2130:10)"
+  }
+}

@@ -766,3 +766,35 @@ A [fresh main reconciliation](main-reconciliation-20261013-0111.json) confirms
 remote fork/main equals upstream/main at 8b8ccc9a and dev has zero missing main
 commits. Local and remote dev remain 726e404b; no rebase, merge or discard is
 needed. None of these diagnostic results changes a slice to fully accepted.
+
+## Correct exact Austin cleanup ownership
+
+GPT-6 Luna delivered separate corrections for first-render observation
+(fbe5f1f1), the provenance test double (62b19539), five Austin retirements
+(97b08a60), and all six Austin interception releases (74618871). Root
+integrated them at 05136650. Readiness gates, deadlines, fixture bytes, camera
+routes and application rendering defaults are unchanged.
+
+Root's first complete cleanup replay revealed an additional [release topology
+mismatch](cleanup-release-mismatch-fd9ca2d4.json) after the retirement fix.
+The corrected [full cleanup control](cleanup-control-74618871.json) accepts
+the historical raw ownership records and rejects 13 mutations, including
+missing startup/setup releases and undrained operations. Every leaf in the
+compact permanent fixture matches the hash-bound raw report. Weather retains
+its original measured-document release contract. These replays do not rewrite
+the failed hosted run or constitute a new browser measurement.
+
+The [independent local validation](cleanup-contract-correction-05136650.json)
+records 83 focused passes, all 17 capture scope checks and formatting for
+1,622 source files. Import/package boundary checks passed at fd9ca2d4.
+The full local Node 24 run at fd9ca2d4 reports 7,512 passes, one ENOSPC failure
+and ten skips; the serialized allocation phase was not reached. The failing
+Cesium distribution test passes when rerun alone at 05136650. The original
+[failure excerpt](full-node24-fd9ca2d4-failure-excerpt.txt) remains a failed run.
+
+Automatic approval review blocked removal of unused dependency directories.
+No directories were deleted; full validation will use the authorized free
+GitHub runners. [Previous standard CI](ci-38330063486-failed.json) finished
+with all three OS recovery jobs, Windows onboarding and the browser gate
+passing, while both Node jobs retained their two test-double failures. New
+exact-commit standard and capture runs are required before dev promotion.
