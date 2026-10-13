@@ -3655,6 +3655,7 @@ try {
   if (fixture) scenarios.push('selected-aircraft-tracking');
   const captureDocumentTopology = createCaptureDocumentTopology({
     infrastructure: Boolean(infrastructureWorkload || weatherEffectsWorkload),
+    reuseMainDocumentForSamples: mapStreamingWorkloadSelected,
     startupRuns,
     captureCount: scenarios.length * runs,
   });

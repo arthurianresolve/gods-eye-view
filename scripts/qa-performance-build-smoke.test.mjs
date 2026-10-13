@@ -645,6 +645,7 @@ function mapProducerShapedCleanup(topology) {
 
 function createMapCliProducerShape(fixture) {
   const topology = createCaptureDocumentTopology({
+    reuseMainDocumentForSamples: true,
     startupRuns: 1,
     captureCount: 4,
   });
@@ -706,17 +707,10 @@ function createMapCliProducerShape(fixture) {
   const captures = topology.samples.map((document, index) => {
     const scenario = index < 2 ? 'idle' : 'scripted-motion';
     const run = (index % 2) + 1;
-    const renderLoopRetirement = retire(
-      document,
-      'provider-sample-measurement-post-render',
-      scenario,
-      run,
-    );
     return {
       ...document,
       scenario,
       run,
-      renderLoopRetirement,
     };
   });
   const rendererProbeCleanup = topology.workerAudits.map((document) => ({
@@ -750,7 +744,6 @@ function createMapCliProducerShape(fixture) {
       .map((document) =>
         retire(document, 'startup-final-details', undefined, undefined),
       ),
-    ...captures.map((capture) => ({ ...capture.renderLoopRetirement })),
   ];
   return {
     topology,
@@ -789,6 +782,12 @@ test('map capture CLI validates the complete producer envelope and rejects outer
           scriptRequestCount: 5,
           loadedAssetPaths: ['index.html', 'assets/app.js'],
           unexpectedAssetPaths: [],
+          workerAuditDocuments: produced.topology.workerAudits.map(
+            (document) => ({
+              ...document,
+              mode: 'diagnostic',
+            }),
+          ),
         },
       },
     },
@@ -821,6 +820,12 @@ test('map capture CLI validates the complete producer envelope and rejects outer
       rendererLoopRetirements: produced.rendererLoopRetirements,
       rendererLoopRetirementsOmittedCount: 0,
       fixtureInterceptionReleases: produced.releases,
+    },
+    performanceDiagnostics: {
+      documents: produced.topology.diagnostics.map((document) => ({
+        ...document,
+        requested: true,
+      })),
     },
     captures: produced.captures,
   };
@@ -875,7 +880,13 @@ test('map capture CLI validates the complete producer envelope and rejects outer
     ],
     [
       (copy) => copy.workload.mapStreamingFixtureDocuments.pop(),
-      /exactly match the native map owners/,
+      /exactly cover the observed startup and reused main document owners|exactly match the native map owners/,
+    ],
+    [
+      (copy) =>
+        (copy.workload.mapStreamingCapture.documentDeliveries[1].documentId =
+          'provider-document-1'),
+      /Map fixture deliveries must exactly cover/,
     ],
     [
       (copy) => (copy.fixtureDelivery.fulfilledAckCount += 1),
@@ -892,6 +903,43 @@ test('map capture CLI validates the complete producer envelope and rejects outer
     [
       (copy) => copy.workload.fixtureInterceptionReleases.pop(),
       /exactly cover/,
+    ],
+    [
+      (copy) =>
+        copy.source.buildProvenance.pageAssetAudit.workerAuditDocuments.pop(),
+      /worker audits must exactly cover/,
+    ],
+    [
+      (copy) =>
+        copy.source.buildProvenance.pageAssetAudit.workerAuditDocuments.push(
+          structuredClone(
+            copy.source.buildProvenance.pageAssetAudit.workerAuditDocuments[1],
+          ),
+        ),
+      /worker audits must exactly cover/,
+    ],
+    [
+      (copy) =>
+        (copy.source.buildProvenance.pageAssetAudit.workerAuditDocuments[1].documentRole =
+          'provider-sample-1'),
+      /worker audits must exactly cover/,
+    ],
+    [
+      (copy) => copy.performanceDiagnostics.documents.pop(),
+      /diagnostics must exactly cover/,
+    ],
+    [
+      (copy) =>
+        copy.performanceDiagnostics.documents.push(
+          structuredClone(copy.performanceDiagnostics.documents[1]),
+        ),
+      /diagnostics must exactly cover/,
+    ],
+    [
+      (copy) =>
+        (copy.performanceDiagnostics.documents[1].documentId =
+          'provider-document-1'),
+      /diagnostics must exactly cover/,
     ],
     [
       (copy) =>

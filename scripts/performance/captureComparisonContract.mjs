@@ -45,6 +45,7 @@ export function readSettledRenderBoundaryElapsedMs(boundary, label) {
 
 export function createCaptureDocumentTopology({
   infrastructure = false,
+  reuseMainDocumentForSamples = false,
   startupRuns = 1,
   captureCount = 0,
 } = {}) {
@@ -65,19 +66,21 @@ export function createCaptureDocumentTopology({
     documentRole: infrastructure ? 'main-measured' : 'main-setup',
     documentId: mainDocumentId,
   };
-  const samples = infrastructure
-    ? Array.from({ length: captureCount }, () => ({ ...main }))
-    : Array.from({ length: captureCount }, (_, index) => ({
-        documentRole: `provider-sample-${index + 1}`,
-        documentId: `provider-document-${index + 1}`,
-      }));
+  const samples =
+    infrastructure || reuseMainDocumentForSamples
+      ? Array.from({ length: captureCount }, () => ({ ...main }))
+      : Array.from({ length: captureCount }, (_, index) => ({
+          documentRole: `provider-sample-${index + 1}`,
+          documentId: `provider-document-${index + 1}`,
+        }));
+  const freshSampleDocuments = !infrastructure && !reuseMainDocumentForSamples;
   return {
     diagnostics: [
       ...startup,
       { documentRole: 'main-setup', documentId: mainDocumentId },
-      ...(!infrastructure ? samples : []),
+      ...(freshSampleDocuments ? samples : []),
     ],
-    workerAudits: [...startup, main, ...(!infrastructure ? samples : [])],
+    workerAudits: [...startup, main, ...(freshSampleDocuments ? samples : [])],
     samples,
   };
 }

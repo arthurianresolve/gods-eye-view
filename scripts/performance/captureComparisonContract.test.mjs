@@ -84,6 +84,23 @@ test('capture document topology models one infrastructure page and dense fresh s
     getMainCaptureDocumentIdentity({ infrastructure: false, startupRuns: 1 }),
     { documentRole: 'main-setup', documentId: 'main-measured-document' },
   );
+  const reusedMain = createCaptureDocumentTopology({
+    reuseMainDocumentForSamples: true,
+    startupRuns: 1,
+    captureCount: 4,
+  });
+  assert.deepEqual(reusedMain.diagnostics, [
+    { documentRole: 'startup-1', documentId: 'startup-document-1' },
+    { documentRole: 'main-setup', documentId: 'main-measured-document' },
+  ]);
+  assert.deepEqual(reusedMain.workerAudits, reusedMain.diagnostics);
+  assert.deepEqual(
+    reusedMain.samples,
+    Array.from({ length: 4 }, () => ({
+      documentRole: 'main-setup',
+      documentId: 'main-measured-document',
+    })),
+  );
   assert.throws(
     () => createCaptureDocumentTopology({ startupRuns: 6 }),
     /between 0 and 5/,
