@@ -589,3 +589,26 @@ The exact next diagnostic candidate is
 and standard run
 [38326809262](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262).
 Both were dispatched for new validation; this entry does not record a pass.
+
+# The new diagnostic identifies in-flight ingestion
+
+Native [run 38326601285](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326601285)
+at `f9413507bf66a1734e4abb59c6db756c30a232f3` fails scripted-motion run 1's
+measurement-end installation check after two completed samples. Its sole
+input-derived reason is `still-loading`: the captured layer has no error,
+357 unique string identities, zero unknown/non-string identities, and matching
+observed/recomputed identity digests. Root rechecks those scalar relationships
+and independently recomputes all five reached document cleanups.
+
+The [review](native-38326601285-review.json) binds the original
+[capture report](hosted-native-38326601285-cli-failed.json) and
+[outer report](hosted-native-38326601285-smoke-failed.json). The completed-render
+boundary returned after 56.642 ms of host elapsed time while installation
+ingestion was still active. This demonstrates the missing source-readiness
+condition in that capture boundary; it does not establish an installation-data
+fault or reconstruct the missing after-state from the earlier run.
+
+The next correction waits for observed in-flight ingestion to complete and then
+for a completed render within the existing page/host boundary budgets. It must
+retain strict population validation, held fixture clocks, route endpoints and
+all rendering settings. Full capture and performance acceptance remain failed.
