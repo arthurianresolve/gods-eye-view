@@ -59,6 +59,7 @@ export async function fixtureRequestCommand(event, base, respond) {
     url: () => request.url,
     postData: () => request.postData,
     method: () => request.method,
+    resourceType: () => event.resourceType ?? null,
     signal: event.signal,
   });
   if (

@@ -12,6 +12,7 @@ import {
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
   classifyRenderDemandRequest,
+  respondToRenderDemandApiFixture,
   createRenderDemandFailureReport,
   createProductionFlightFixture,
   createProductionMilitaryFixture,
@@ -99,6 +100,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
   const routeAttempts = { flights: 0, military: 0 };
   const otherApiPaths = new Set();
   let expectedBootstrapApiCount = 0;
+  let expectedRenderDemandApiCount = 0;
+  let expectedBlockedStaticFontCount = 0;
   let expectedBlockedMapProviderCount = 0;
   let unexpectedExternalCount = 0;
   let observedMapProviderRequestCount = 0;
@@ -122,10 +125,16 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           url: requestUrl.href,
           origin: new URL(url).origin,
           method: request?.method?.(),
+          resourceType: request?.resourceType?.(),
         });
         if (classification === 'expected-blocked-map-provider')
           expectedBlockedMapProviderCount += 1;
-        else if (requestUrl.hostname !== 'fixture-network.invalid')
+        else if (classification === 'expected-blocked-static-font')
+          expectedBlockedStaticFontCount += 1;
+        else if (
+          classification === 'unexpected-external' &&
+          requestUrl.hostname !== 'fixture-network.invalid'
+        )
           unexpectedExternalCount += 1;
         return undefined;
       }
@@ -156,6 +165,10 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         if (classification === 'expected-bootstrap-api') {
           expectedBootstrapApiCount += 1;
           return undefined;
+        }
+        if (classification === 'expected-render-demand-api') {
+          expectedRenderDemandApiCount += 1;
+          return respondToRenderDemandApiFixture(requestUrl, request, url);
         }
         unexpectedApiCount += 1;
         // Record only bounded pathnames: never query strings, URLs, or bodies.
@@ -190,10 +203,13 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
   });
 
   const observeMapProviderRequest = (request) => {
+    const requestUrl = request.url();
+    const requestOrigin = new URL(url).origin;
     const classification = classifyRenderDemandRequest({
-      url: request.url(),
-      origin: new URL(url).origin,
+      url: requestUrl,
+      origin: requestOrigin,
       method: request.method(),
+      resourceType: request.resourceType(),
     });
     if (classification !== 'expected-blocked-map-provider') return;
     observedMapProviderRequestCount += 1;
@@ -223,7 +239,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     reportState.observations.push({
       stage: 'fixture-setup',
       state: {
-        networkProbePassed: networkProbe?.passed === true,
+        networkProbePassed: networkProbe?.status === 'passed',
         pageErrorCount: errors.length,
         pageErrors: errors.slice(-4),
       },
@@ -288,6 +304,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     reportState.delivery = { routeAttempts, acknowledged: delivered };
     reportState.traffic = {
       expectedBootstrapApiCount,
+      expectedRenderDemandApiCount,
+      expectedBlockedStaticFontCount,
       expectedBlockedMapProviderCount,
       observedMapProviderRequestCount,
       pendingMapProviderRequestCount: pendingMapProviderRequests.size,
@@ -317,17 +335,22 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       let stableTileDemandCount = 0;
       while (performance.now() - startedAt < 20_000) {
         const map = app.mapStackController.getState();
-        const cartographic = window.Cesium.Cartographic.fromCartesian(
-          viewer.camera.positionWC,
-        );
-        const degrees = window.Cesium.Math.toDegrees;
+        const cartographic = viewer.camera.positionCartographic;
+        if (!cartographic)
+          throw new Error('Camera cartographic position is unavailable.');
+        const degrees = (radians) => (radians * 180) / Math.PI;
+        const angleDegrees = (radians) => {
+          const degreesValue = degrees(radians);
+          // Keep camera angular readbacks comparable across the 0/360 seam.
+          return ((((degreesValue + 180) % 360) + 360) % 360) - 180;
+        };
         const camera = {
           longitude: degrees(cartographic.longitude),
           latitude: degrees(cartographic.latitude),
           height: cartographic.height,
-          heading: degrees(viewer.camera.heading),
-          pitch: degrees(viewer.camera.pitch),
-          roll: degrees(viewer.camera.roll),
+          heading: angleDegrees(viewer.camera.heading),
+          pitch: angleDegrees(viewer.camera.pitch),
+          roll: angleDegrees(viewer.camera.roll),
         };
         const enabledLayerIds = app.dataManager
           .getAll()
@@ -377,8 +400,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         const ready =
           window.__qaApplication.getState().status === 'ready' &&
           map.status === 'ready' &&
-          ['esri-imagery', 'osm'].includes(map.activeId) &&
-          viewer.scene.mode === window.Cesium.SceneMode.SCENE3D &&
+          map.activeId === 'osm' &&
+          // Cesium.SceneMode.SCENE3D is 3 in the pinned 1.138 public enum.
+          viewer.scene.mode === 3 &&
           JSON.stringify(enabledLayerIds) === '["flights","military"]' &&
           cameraInAustinBounds &&
           typeof tileDemand.globeTilesLoaded === 'boolean' &&
@@ -433,6 +457,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     reportState.observations.push({ stage: 'scene-settle', state: settled });
     reportState.traffic = {
       expectedBootstrapApiCount,
+      expectedRenderDemandApiCount,
+      expectedBlockedStaticFontCount,
       expectedBlockedMapProviderCount,
       observedMapProviderRequestCount,
       pendingMapProviderRequestCount: pendingMapProviderRequests.size,
@@ -459,6 +485,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       const viewer = app?.viewer;
       if (!app || !viewer?.scene)
         throw new Error('Application viewer is unavailable for observation.');
+      const cartographic = viewer.camera.positionCartographic;
+      if (!cartographic)
+        throw new Error('Camera cartographic position is unavailable.');
       const stats = Object.fromEntries(
         ['flights', 'military'].map((id) => [
           id,
@@ -474,10 +503,11 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           },
         ]),
       );
-      const cartographic = window.Cesium.Cartographic.fromCartesian(
-        viewer.camera.positionWC,
-      );
-      const degrees = window.Cesium.Math.toDegrees;
+      const degrees = (radians) => (radians * 180) / Math.PI;
+      const angleDegrees = (radians) => {
+        const degreesValue = degrees(radians);
+        return ((((degreesValue + 180) % 360) + 360) % 360) - 180;
+      };
       const visual = app.styleManager.getVisualState();
       const detection = app.styleManager.services?.getDetectionTuning?.() || {};
       return {
@@ -512,9 +542,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           latitude: degrees(cartographic.latitude),
           longitude: degrees(cartographic.longitude),
           altitudeMeters: cartographic.height,
-          headingDegrees: degrees(viewer.camera.heading),
-          pitchDegrees: degrees(viewer.camera.pitch),
-          rollDegrees: degrees(viewer.camera.roll),
+          headingDegrees: angleDegrees(viewer.camera.heading),
+          pitchDegrees: angleDegrees(viewer.camera.pitch),
+          rollDegrees: angleDegrees(viewer.camera.roll),
         },
         visibilityState: document.visibilityState,
         focused: document.hasFocus(),
@@ -752,6 +782,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     };
     reportState.traffic = {
       expectedBootstrapApiCount,
+      expectedRenderDemandApiCount,
+      expectedBlockedStaticFontCount,
       expectedBlockedMapProviderCount,
       observedMapProviderRequestCount,
       pendingMapProviderRequestCount: pendingMapProviderRequests.size,
@@ -909,17 +941,21 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         })(),
         fixtureEpochMs: Date.now(),
         camera: (() => {
-          const cartographic = window.Cesium.Cartographic.fromCartesian(
-            viewer.camera.positionWC,
-          );
-          const degrees = window.Cesium.Math.toDegrees;
+          const cartographic = viewer.camera.positionCartographic;
+          if (!cartographic)
+            throw new Error('Camera cartographic position is unavailable.');
+          const degrees = (radians) => (radians * 180) / Math.PI;
+          const angleDegrees = (radians) => {
+            const degreesValue = degrees(radians);
+            return ((((degreesValue + 180) % 360) + 360) % 360) - 180;
+          };
           return {
             latitude: degrees(cartographic.latitude),
             longitude: degrees(cartographic.longitude),
             altitudeMeters: cartographic.height,
-            headingDegrees: degrees(viewer.camera.heading),
-            pitchDegrees: degrees(viewer.camera.pitch),
-            rollDegrees: degrees(viewer.camera.roll),
+            headingDegrees: angleDegrees(viewer.camera.heading),
+            pitchDegrees: angleDegrees(viewer.camera.pitch),
+            rollDegrees: angleDegrees(viewer.camera.roll),
           };
         })(),
         visibilityState: document.visibilityState,
@@ -1108,6 +1144,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         end.mapDemand.globeTilesLoaded === settled.sample?.globeTilesLoaded &&
         settled.tileQueueStableSamples >= 4 &&
         observedMapProviderRequestCount === expectedBlockedMapProviderCount &&
+        expectedBlockedStaticFontCount === 2 &&
         pendingMapProviderRequests.size === 0 &&
         !mapProviderRequestTrackingOverflow &&
         !staticObservation.eventOverflow &&
@@ -1134,12 +1171,13 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         !otherApiPathOverflow &&
         unexpectedApiCount === 0 &&
         unexpectedExternalCount === 0 &&
+        networkProbe?.status === 'passed' &&
         errors.length === 0 &&
         interceptionRelease.confirmed
           ? 'passed'
           : 'failed',
       scope:
-        'full application with enabled-empty civil and military source layers; diagnostic, not hardware qualification',
+        'full application with enabled-empty civil and military source layers and fixture-blocked OSM content; diagnostic, not content or hardware qualification',
       fixture: {
         profileId: RENDER_DEMAND_PROFILE.id,
         profileSha256: RENDER_DEMAND_PROFILE_SHA256,
@@ -1159,6 +1197,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       delivery: { routeAttempts, acknowledged: delivered },
       otherApiPaths: [...otherApiPaths].slice(0, 8),
       expectedBootstrapApiCount,
+      expectedRenderDemandApiCount,
+      expectedBlockedStaticFontCount,
       expectedBlockedMapProviderCount,
       unexpectedApiCount,
       unexpectedExternalCount,
@@ -1169,6 +1209,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       foregroundFrameMaximum: 2,
       mapDemand: {
         settled: settled.settled,
+        contentReadiness: 'blocked-by-fixture',
         meaning: settled.demandMeaning ?? null,
         globeTilesLoaded: end.mapDemand.globeTilesLoaded,
         settledGlobeTilesLoaded: settled.sample?.globeTilesLoaded ?? null,
@@ -1203,6 +1244,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     reportState.delivery ||= { routeAttempts, acknowledged: delivered };
     reportState.traffic = {
       expectedBootstrapApiCount,
+      expectedRenderDemandApiCount,
+      expectedBlockedStaticFontCount,
       expectedBlockedMapProviderCount,
       observedMapProviderRequestCount,
       pendingMapProviderRequestCount: pendingMapProviderRequests.size,

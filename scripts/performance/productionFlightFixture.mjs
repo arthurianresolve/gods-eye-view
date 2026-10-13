@@ -6,8 +6,8 @@ export const DEFAULT_FLIGHT_FIXTURE_TIME = '2026-10-08T12:00:00.000Z';
 const MAX_FIXTURE_BYTES = 4 * 1024 * 1024;
 
 export const RENDER_DEMAND_PROFILE = Object.freeze({
-  id: 'empty-sources-austin-manual-v1',
-  hash: '#v=2&lat=30.2672&lon=-97.7431&alt=800&heading=15&pitch=-30&roll=0&style=normal&bloom=0&bi=50&bv=2&sharpen=0&si=49&hud=tactical&hv=0&dm=OFF&dd=75&da=elastic&map=esri-imagery&sc=0&scf=16&l=f.m',
+  id: 'empty-sources-austin-manual-osm-v2',
+  hash: '#v=2&lat=30.2672&lon=-97.7431&alt=800&heading=15&pitch=-30&roll=0&style=normal&bloom=0&bi=50&bv=2&sharpen=0&si=49&hud=tactical&hv=0&dm=OFF&dd=75&da=elastic&map=osm&sc=0&scf=16&l=f.m',
   expected: Object.freeze({
     camera: Object.freeze({
       latitude: 30.2672,
@@ -17,7 +17,7 @@ export const RENDER_DEMAND_PROFILE = Object.freeze({
       pitchDegrees: -30,
       rollDegrees: 0,
     }),
-    mapStack: 'esri-imagery',
+    mapStack: 'osm',
     style: 'normal',
     bloom: Object.freeze({ enabled: false, intensity: 50, version: 2 }),
     sharpen: Object.freeze({ enabled: false, intensity: 49 }),
@@ -49,7 +49,24 @@ export const RENDER_DEMAND_PROFILE_SHA256 = createHash('sha256')
   )
   .digest('hex');
 
+export function normalizeRenderDemandAngleDegrees(value) {
+  if (!Number.isFinite(value)) return null;
+  return ((((value + 180) % 360) + 360) % 360) - 180;
+}
+
 const RENDER_DEMAND_BOOTSTRAP_API_ROUTES = new Set(['GET /api/setup/status']);
+const RENDER_DEMAND_CONTROLLED_API_ROUTES = new Map([
+  ['GET /api/google/tiles-token', { status: 200, body: '{}' }],
+  [
+    'GET /api/local-receivers/aircraft',
+    { status: 200, body: '{"configured":false,"feeds":[],"records":[]}' },
+  ],
+  ['POST /api/realtime/debug-log', { status: 204, body: '' }],
+]);
+const RENDER_DEMAND_BLOCKED_FONT_URLS = new Set([
+  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar',
+]);
 const RENDER_DEMAND_MAP_PROVIDER_HOSTS = new Map([
   [
     'services.arcgisonline.com',
@@ -430,6 +447,10 @@ function projectRenderDemandTerminal(terminal) {
     mapDemand: terminal.mapDemand
       ? {
           settled: terminal.mapDemand.settled === true,
+          contentReadiness:
+            terminal.mapDemand.contentReadiness === 'blocked-by-fixture'
+              ? terminal.mapDemand.contentReadiness
+              : null,
           globeTilesLoaded:
             typeof terminal.mapDemand.globeTilesLoaded === 'boolean'
               ? terminal.mapDemand.globeTilesLoaded
@@ -491,7 +512,12 @@ function projectRenderDemandTerminal(terminal) {
 }
 
 /** Classify only deterministic bootstrap/map traffic; callers still block it. */
-export function classifyRenderDemandRequest({ url, origin, method } = {}) {
+export function classifyRenderDemandRequest({
+  url,
+  origin,
+  method,
+  resourceType,
+} = {}) {
   let parsed;
   try {
     parsed = new URL(url);
@@ -509,6 +535,14 @@ export function classifyRenderDemandRequest({ url, origin, method } = {}) {
       !parsed.hash
     )
       return 'expected-bootstrap-api';
+    if (
+      RENDER_DEMAND_CONTROLLED_API_ROUTES.has(route) &&
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.search &&
+      !parsed.hash
+    )
+      return 'expected-render-demand-api';
     if (parsed.pathname.startsWith('/api/')) return 'unexpected-api';
     return 'same-origin-non-api';
   }
@@ -518,12 +552,44 @@ export function classifyRenderDemandRequest({ url, origin, method } = {}) {
   const hasCredentialQuery = [...parsed.searchParams.keys()].some((key) =>
     /(?:token|key|auth|secret|password)/i.test(key),
   );
+  if (
+    parsed.hostname.toLowerCase() === 'fonts.googleapis.com' &&
+    normalizedMethod === 'GET' &&
+    String(resourceType || '').toLowerCase() === 'stylesheet' &&
+    RENDER_DEMAND_BLOCKED_FONT_URLS.has(parsed.href)
+  )
+    return 'expected-blocked-static-font';
   return providerPath?.test(parsed.pathname) &&
     !parsed.username &&
     !parsed.password &&
     !hasCredentialQuery
     ? 'expected-blocked-map-provider'
     : 'unexpected-external';
+}
+
+/** Fulfill only exact non-live support endpoints needed by the app shell. */
+export function respondToRenderDemandApiFixture(url, request, baseUrl) {
+  const base = new URL(baseUrl);
+  if (
+    url.origin !== base.origin ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  )
+    return undefined;
+  const method =
+    typeof request?.method === 'function' ? request.method() : request?.method;
+  const fixture = RENDER_DEMAND_CONTROLLED_API_ROUTES.get(
+    `${String(method || '').toUpperCase()} ${url.pathname}`,
+  );
+  if (!fixture) return undefined;
+  return {
+    status: fixture.status,
+    contentType: 'application/json; charset=utf-8',
+    headers: { 'cache-control': 'no-store' },
+    body: fixture.body,
+  };
 }
 
 /** Bounded, URL/body-free failure envelope for the full-app diagnostic. */
@@ -666,6 +732,12 @@ export function createRenderDemandFailureReport({
         ? {
             expectedBootstrapApiCount: boundedRenderDemandCount(
               traffic.expectedBootstrapApiCount,
+            ),
+            expectedRenderDemandApiCount: boundedRenderDemandCount(
+              traffic.expectedRenderDemandApiCount,
+            ),
+            expectedBlockedStaticFontCount: boundedRenderDemandCount(
+              traffic.expectedBlockedStaticFontCount,
             ),
             expectedBlockedMapProviderCount: boundedRenderDemandCount(
               traffic.expectedBlockedMapProviderCount,

@@ -1,15 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import { readFile } from 'node:fs/promises';
 import {
   DENSE_FLIGHT_FIXTURE_COUNT,
   DEFAULT_FLIGHT_FIXTURE_TIME,
   RENDER_DEMAND_PROFILE,
   RENDER_DEMAND_PROFILE_SHA256,
+  normalizeRenderDemandAngleDegrees,
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   createProductionMilitaryFixture,
   classifyRenderDemandRequest,
+  respondToRenderDemandApiFixture,
   createRenderDemandFailureReport,
   installFixedWallClock,
   installFrozenWallClock,
@@ -22,7 +25,10 @@ import {
   respondToProductionFlightFixture,
   respondToProductionMilitaryFixture,
 } from './productionFlightFixture.mjs';
-import { interceptFixtureSession } from './fixtureInterception.mjs';
+import {
+  fixtureRequestCommand,
+  interceptFixtureSession,
+} from './fixtureInterception.mjs';
 import {
   createFlightSource,
   createMilitarySource,
@@ -54,6 +60,67 @@ test('render-demand traffic classifier distinguishes known offline bootstrap/map
     classify(`${origin}/api/realtime/oauth-status`),
     'unexpected-api',
   );
+  for (const [path, method] of [
+    ['/api/google/tiles-token', 'GET'],
+    ['/api/local-receivers/aircraft', 'GET'],
+    ['/api/realtime/debug-log', 'POST'],
+  ])
+    assert.equal(
+      classify(`${origin}${path}`, method),
+      'expected-render-demand-api',
+    );
+  assert.equal(
+    classify(`${origin}/api/google/tiles-token?key=hidden`, 'GET'),
+    'unexpected-api',
+  );
+  assert.equal(
+    classify(`${origin}/api/realtime/debug-log`, 'GET'),
+    'unexpected-api',
+  );
+  const blockedFonts = [
+    'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
+    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=adjust,arrow_drop_down,arrow_forward,arrow_left,arrow_right,bolt,chevron_left,chevron_right,close,close_fullscreen,dark_mode,draw,east,flare,flight,layers_clear,light_mode,local_fire_department,my_location,navigation,normal,on,open_in_full,public,radar,radio,right_panel_close,right_panel_open,rocket_launch,skip_next,skip_previous,view_in_ar',
+  ];
+  for (const fontUrl of blockedFonts)
+    assert.equal(
+      classifyRenderDemandRequest({
+        url: fontUrl,
+        origin,
+        method: 'GET',
+        resourceType: 'stylesheet',
+      }),
+      'expected-blocked-static-font',
+    );
+  assert.equal(
+    classifyRenderDemandRequest({
+      url: blockedFonts[0],
+      origin,
+      method: 'GET',
+      resourceType: 'image',
+    }),
+    'unexpected-external',
+  );
+  assert.equal(
+    classifyRenderDemandRequest({
+      url: blockedFonts[0],
+      origin,
+      method: 'GET',
+    }),
+    'unexpected-external',
+  );
+  assert.equal(
+    classifyRenderDemandRequest({
+      url: blockedFonts[0],
+      origin,
+      method: 'POST',
+      resourceType: 'stylesheet',
+    }),
+    'unexpected-external',
+  );
+  assert.equal(
+    classify(`${blockedFonts[0]}&key=hidden`),
+    'unexpected-external',
+  );
   assert.equal(
     classify(
       'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/1/0/0',
@@ -79,6 +146,110 @@ test('render-demand traffic classifier distinguishes known offline bootstrap/map
   assert.equal(classify('not a URL'), 'invalid-request');
 });
 
+test('render-demand camera angle normalization treats equivalent 0 and 360 values equally', () => {
+  assert.equal(normalizeRenderDemandAngleDegrees(0), 0);
+  assert.equal(normalizeRenderDemandAngleDegrees(360), 0);
+  assert.equal(normalizeRenderDemandAngleDegrees(-360), 0);
+  assert.equal(normalizeRenderDemandAngleDegrees(359), -1);
+  assert.equal(normalizeRenderDemandAngleDegrees(180), -180);
+  assert.equal(normalizeRenderDemandAngleDegrees(Number.NaN), null);
+});
+
+test('render-demand browser probe does not depend on a Cesium window global', async () => {
+  const source = await readFile(
+    new URL('../qa-application.mjs', import.meta.url),
+    'utf8',
+  );
+  assert.doesNotMatch(source, /window\.Cesium/);
+  assert.match(source, /viewer\.camera\.positionCartographic/);
+  assert.match(source, /viewer\.scene\.mode === 3/);
+});
+
+test('render-demand API fixtures answer only exact known support routes', async () => {
+  const origin = new URL(BASE).origin;
+  const request = (method) => ({ method: () => method });
+  const google = respondToRenderDemandApiFixture(
+    new URL('/api/google/tiles-token', BASE),
+    request('GET'),
+    BASE,
+  );
+  assert.deepEqual(JSON.parse(google.body), {});
+  const local = respondToRenderDemandApiFixture(
+    new URL('/api/local-receivers/aircraft', BASE),
+    request('GET'),
+    BASE,
+  );
+  assert.deepEqual(JSON.parse(local.body), {
+    configured: false,
+    feeds: [],
+    records: [],
+  });
+  const log = respondToRenderDemandApiFixture(
+    new URL('/api/realtime/debug-log', BASE),
+    request('POST'),
+    BASE,
+  );
+  assert.equal(log.status, 204);
+  assert.equal(log.body, '');
+  assert.equal(
+    respondToRenderDemandApiFixture(
+      new URL('/api/google/tiles-token?key=hidden', BASE),
+      request('GET'),
+      BASE,
+    ),
+    undefined,
+  );
+  assert.equal(
+    respondToRenderDemandApiFixture(
+      new URL('/api/realtime/debug-log', BASE),
+      request('GET'),
+      BASE,
+    ),
+    undefined,
+  );
+  assert.equal(
+    respondToRenderDemandApiFixture(
+      new URL('/api/google/tiles-token', 'https://example.invalid/'),
+      request('GET'),
+      BASE,
+    ),
+    undefined,
+  );
+  assert.equal(origin, 'http://127.0.0.1:4173');
+});
+
+test('fixture interception adapter passes paused resource type to scoped responder', async () => {
+  let observedResourceType = null;
+  const [command, params] = await fixtureRequestCommand(
+    {
+      requestId: 'stylesheet-request',
+      resourceType: 'Stylesheet',
+      request: {
+        url: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
+        method: 'GET',
+        postData: null,
+      },
+    },
+    BASE,
+    (_url, request) => {
+      observedResourceType = request.resourceType();
+      return undefined;
+    },
+  );
+  assert.equal(observedResourceType, 'Stylesheet');
+  assert.equal(
+    classifyRenderDemandRequest({
+      url: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap',
+      origin: new URL(BASE).origin,
+      method: 'GET',
+      resourceType: observedResourceType,
+    }),
+    'expected-blocked-static-font',
+  );
+  assert.equal(command, 'Fetch.failRequest');
+  assert.equal(params.errorReason, 'BlockedByClient');
+});
+
 test('render-demand failure report retains bounded stages without provider URLs, credentials or bodies', () => {
   const report = createRenderDemandFailureReport({
     stage: 'scene-settle',
@@ -101,6 +272,8 @@ test('render-demand failure report retains bounded stages without provider URLs,
     },
     traffic: {
       expectedBootstrapApiCount: 4,
+      expectedRenderDemandApiCount: 3,
+      expectedBlockedStaticFontCount: 2,
       expectedBlockedMapProviderCount: 7,
       unexpectedApiCount: 0,
       unexpectedExternalCount: 0,
@@ -252,6 +425,7 @@ test('render-demand failure projection retains controlled start/end evidence and
       },
       mapDemand: {
         settled: true,
+        contentReadiness: 'blocked-by-fixture',
         globeTilesLoaded: false,
         settledGlobeTilesLoaded: false,
         pendingTileQueueCount: 0,
@@ -270,6 +444,9 @@ test('render-demand failure projection retains controlled start/end evidence and
       },
     },
     traffic: {
+      expectedBootstrapApiCount: 1,
+      expectedRenderDemandApiCount: 3,
+      expectedBlockedStaticFontCount: 2,
       expectedBlockedMapProviderCount: 12,
       observedMapProviderRequestCount: 12,
       pendingMapProviderRequestCount: 0,
@@ -298,6 +475,10 @@ test('render-demand failure projection retains controlled start/end evidence and
   assert.equal(report.terminal.mapDemand.settledGlobeTilesLoaded, false);
   assert.equal(report.terminal.mapDemand.tileContentReady, false);
   assert.equal(report.terminal.mapDemand.queueQuiescent, true);
+  assert.equal(
+    report.terminal.mapDemand.contentReadiness,
+    'blocked-by-fixture',
+  );
   assert.equal(report.terminal.mapDemand.pendingProviderRequests, 0);
   assert.equal(
     report.terminal.fixture.profileSha256,
@@ -306,6 +487,8 @@ test('render-demand failure projection retains controlled start/end evidence and
   assert.equal(report.terminal.teardown.totalPostRenderListenersAfter, 1);
   assert.equal(report.terminal.teardown.applicationRenderOwnersReleased, true);
   assert.equal(report.traffic.mapProviderTrafficStable, true);
+  assert.equal(report.traffic.expectedRenderDemandApiCount, 3);
+  assert.equal(report.traffic.expectedBlockedStaticFontCount, 2);
   const serialized = JSON.stringify(report);
   assert.doesNotMatch(serialized, /provider response body|authorization|token/);
   assert.ok(Buffer.byteLength(serialized) < 24_000);
@@ -314,6 +497,8 @@ test('render-demand failure projection retains controlled start/end evidence and
 test('render-demand failure projection rejects forged controlled-profile identity', () => {
   assert.match(RENDER_DEMAND_PROFILE.hash, /(?:^|&)dd=75(?:&|$)/);
   assert.equal(RENDER_DEMAND_PROFILE.expected.detection.densityPct, 75);
+  assert.equal(RENDER_DEMAND_PROFILE.expected.mapStack, 'osm');
+  assert.match(RENDER_DEMAND_PROFILE.id, /-osm-v2$/);
   const report = createRenderDemandFailureReport({
     stage: 'fixture-setup',
     error: new Error('profile setup failed'),
