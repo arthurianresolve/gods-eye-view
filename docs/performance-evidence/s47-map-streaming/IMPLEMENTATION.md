@@ -191,3 +191,10 @@ records 28 passing focused tests, formatting, package boundaries and explicit
 lint of all seven new map modules. Serialized driver tests still use a page
 seam. Actual production CLI wiring, browser delivery/readiness and outer
 validation are not established by these component results.
+
+The first CLI/outer wiring `3f4cad81` is not integrated. Independent
+[wiring review](wiring-review-3f4cad81.json) reproduces the async map responder
+skipping the existing flight fallback and the outer validator accepting missing
+or wrong provenance. Source review also finds finalized map evidence omitted
+from the success envelope. Correct these integration paths and cover the real
+producer shape before spending a hosted build on the native map workload.
