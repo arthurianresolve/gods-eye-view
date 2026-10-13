@@ -1142,6 +1142,9 @@ export function validateMapStreamingCaptureReport(
   assert.ok(report.route?.finalPostRenderObserved === true);
   const routeStart = report.route?.start;
   const routeEnd = report.route?.end;
+  const expectedSurfaceDistanceM =
+    (report.route.durationMs * MAP_STREAMING_ROUTE.moveRightMetersPerSecond) /
+    1000;
   assert.ok(routeStart && routeEnd, 'Observed route endpoints are present.');
   assert.ok(
     Math.abs(routeStart.longitude - MAP_STREAMING_ROUTE.start.longitude) <
@@ -1151,12 +1154,43 @@ export function validateMapStreamingCaptureReport(
       Math.abs(routeStart.heightM - MAP_STREAMING_ROUTE.start.heightM) < 1,
     'Observed route starts at the declared native camera pose.',
   );
+  assert.deepEqual(
+    routeStart,
+    report.initialState.camera,
+    'Route start is the actual initial camera observation.',
+  );
+  assert.deepEqual(
+    routeEnd,
+    report.finalState.camera,
+    'Route end is the actual final camera observation.',
+  );
+  const angularDifference = (actual, expected) =>
+    Math.abs(
+      Math.atan2(Math.sin(actual - expected), Math.cos(actual - expected)),
+    );
   assert.ok(
-    Math.abs(routeStart.headingRadians - MAP_STREAMING_ROUTE.headingRadians) <
-      0.0001 &&
+    angularDifference(
+      routeStart.headingRadians,
+      MAP_STREAMING_ROUTE.headingRadians,
+    ) < 0.001 &&
       Math.abs(routeStart.pitchRadians - MAP_STREAMING_ROUTE.pitchRadians) <
-        0.0001,
+        0.001,
     'Observed route starts with the declared native camera orientation.',
+  );
+  assert.ok(
+    Math.abs(routeEnd.latitude - routeStart.latitude) < 0.0001 &&
+      Math.abs(routeEnd.heightM - routeStart.heightM) <=
+        Math.max(1, expectedSurfaceDistanceM * 0.001),
+    'Observed route endpoint follows the declared eastward tangent-plane route.',
+  );
+  assert.ok(
+    angularDifference(
+      routeEnd.headingRadians,
+      MAP_STREAMING_ROUTE.headingRadians,
+    ) < 0.003 &&
+      Math.abs(routeEnd.pitchRadians - MAP_STREAMING_ROUTE.pitchRadians) <
+        0.003,
+    'Observed route ends with the declared native camera orientation.',
   );
   assert.ok(
     routeEnd.longitude > routeStart.longitude,
@@ -1176,9 +1210,6 @@ export function validateMapStreamingCaptureReport(
           Math.cos(latitudeMidpoint) ** 2 * Math.sin(longitudeDelta / 2) ** 2,
       ),
     );
-  const expectedSurfaceDistanceM =
-    (report.route.durationMs * MAP_STREAMING_ROUTE.moveRightMetersPerSecond) /
-    1000;
   assert.ok(
     Math.abs(routeSurfaceDistanceM - expectedSurfaceDistanceM) <=
       Math.max(5, expectedSurfaceDistanceM * 0.01),

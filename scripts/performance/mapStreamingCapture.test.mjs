@@ -70,6 +70,58 @@ function routeViewUnion(route) {
   return result;
 }
 
+function nativeCameraRouteEndpoints(durationMs) {
+  const scene = {
+    canvas: { clientWidth: 1440, clientHeight: 900 },
+    drawingBufferWidth: 1440,
+    drawingBufferHeight: 900,
+    ellipsoid: Cesium.Ellipsoid.WGS84,
+    globe: { ellipsoid: Cesium.Ellipsoid.WGS84 },
+    mapProjection: new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84),
+    mode: Cesium.SceneMode.SCENE3D,
+  };
+  const camera = new Cesium.Camera(scene);
+  camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(
+      MAP_STREAMING_ROUTE.start.longitude,
+      MAP_STREAMING_ROUTE.start.latitude,
+      MAP_STREAMING_ROUTE.start.heightM,
+    ),
+    orientation: {
+      heading: MAP_STREAMING_ROUTE.headingRadians,
+      pitch: MAP_STREAMING_ROUTE.pitchRadians,
+      roll: 0,
+    },
+  });
+  const origin = Cesium.Cartesian3.clone(camera.positionWC);
+  const right = Cesium.Cartesian3.clone(camera.rightWC);
+  const direction = Cesium.Cartesian3.clone(camera.directionWC);
+  const up = Cesium.Cartesian3.clone(camera.upWC);
+  const start = cameraObservation(camera);
+  const destination = Cesium.Cartesian3.add(
+    origin,
+    Cesium.Cartesian3.multiplyByScalar(
+      right,
+      (durationMs * MAP_STREAMING_ROUTE.moveRightMetersPerSecond) / 1000,
+      new Cesium.Cartesian3(),
+    ),
+    new Cesium.Cartesian3(),
+  );
+  camera.setView({ destination, orientation: { direction, up } });
+  return { start, end: cameraObservation(camera) };
+}
+
+function cameraObservation(camera) {
+  const position = camera.positionCartographic;
+  return {
+    longitude: Cesium.Math.toDegrees(position.longitude),
+    latitude: Cesium.Math.toDegrees(position.latitude),
+    heightM: position.height,
+    headingRadians: camera.heading,
+    pitchRadians: camera.pitch,
+  };
+}
+
 function createFakePage({ failStack = null, scheduleAtZero = true } = {}) {
   const listeners = new Set();
   const frames = new Map();
@@ -453,6 +505,11 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     durationMs: 60_000,
     route: journeyHarness.route,
   });
+  const nativeEndpoints = nativeCameraRouteEndpoints(60_000);
+  journey.initialState.camera = nativeEndpoints.start;
+  journey.finalState.camera = nativeEndpoints.end;
+  journey.route.start = nativeEndpoints.start;
+  journey.route.end = nativeEndpoints.end;
   const report = createMapStreamingCaptureReport({
     fixture,
     fixtureDelivery,
@@ -466,6 +523,27 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     fixture.manifest.assets.length,
   );
   assert.ok(report.route.elapsedMs >= report.route.durationMs);
+
+  const zeroCacheSettings = structuredClone(report);
+  const settingsSnapshots = [
+    zeroCacheSettings.settingsBefore,
+    zeroCacheSettings.settingsAfter,
+    zeroCacheSettings.initialState.settings,
+    zeroCacheSettings.finalState.settings,
+    ...zeroCacheSettings.transitions.map(
+      (transition) => transition.state.settings,
+    ),
+  ];
+  for (const settings of settingsSnapshots) {
+    settings.tilesetCacheBytes = 0;
+    settings.tilesetMaximumCacheOverflowBytes = 0;
+  }
+  assert.equal(
+    validateMapStreamingCaptureReport(zeroCacheSettings, { fixture, profile }),
+    true,
+    'Valid observed zero cache limits remain representable.',
+  );
+
   const emptySettings = structuredClone(report);
   emptySettings.settingsBefore = {};
   emptySettings.settingsAfter = {};
