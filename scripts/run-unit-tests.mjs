@@ -72,7 +72,6 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/qa-mixed-use-soak.test.mjs',
   'scripts/review-soak-evidence.test.mjs',
   'scripts/stage-release.test.mjs',
-  'server/providers/evidenceArchive.test.mjs',
   'scripts/performance/depthPickAttribution.test.mjs',
   'scripts/performance/infrastructureWorkloadFixture.test.mjs',
   'scripts/performance/austinOperatingDocumentEvidence.test.mjs',
@@ -82,6 +81,7 @@ const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/austinOperatingComparisonContract.test.mjs',
   'scripts/performance/austinSatelliteSampledEpoch.test.mjs',
   'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
+  'scripts/run-unit-tests.test.mjs',
   'scripts/capture-scene-performance.test.mjs',
   'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
   'scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs',
@@ -112,7 +112,6 @@ export function assertNode24AllocationRuntime(version = process.versions.node) {
 
 /** Discover repository unit tests in stable path order. */
 export function discoverUnitTestFiles(root = process.cwd()) {
-  const sourceRoot = path.join(root, 'src');
   const files = [];
   const visit = (directory) => {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -123,7 +122,11 @@ export function discoverUnitTestFiles(root = process.cwd()) {
       }
     }
   };
-  visit(sourceRoot);
+  for (const sourceRoot of ['src', 'server'].map((name) =>
+    path.join(root, name),
+  )) {
+    visit(sourceRoot);
+  }
   return files.sort();
 }
 
