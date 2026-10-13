@@ -13,6 +13,7 @@ import {
   createMapStreamingFixtureDelivery,
   MAP_STREAMING_MAX_MISSING_ASSET_PATHS,
   MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
+  validateMapStreamingFaultDeliverySummary,
 } from './mapStreamingFixtureDelivery.mjs';
 
 const APP_ORIGIN = 'http://127.0.0.1:4173';
@@ -205,6 +206,221 @@ test('native map URLs resolve every manifest asset through real interception cal
     summaries.reduce((sum, summary) => sum + summary.requestedCount, 0),
     pinned.manifest.assets.length + requiredRows.length,
   );
+});
+
+test('declared Esri missing and corrupt metadata responses are isolated fault observations', async () => {
+  const pinned = await fixture();
+  const metadata = pinned.manifest.assets.find(
+    (row) => row.kind === 'arcgis-mapserver-metadata-json',
+  );
+  assert.ok(metadata);
+  const originalBytes = Buffer.from(pinned.assets.get(metadata.path));
+  for (const [scenarioId, expectedStatus, expectedBody] of [
+    ['esri-metadata-missing-v1', 404, Buffer.alloc(0)],
+    [
+      'esri-metadata-corrupt-v1',
+      200,
+      Buffer.from(originalBytes).fill(0x21, 0, 1),
+    ],
+  ]) {
+    const delivery = createMapStreamingFixtureDelivery(pinned, {
+      appOrigin: APP_ORIGIN,
+      faultScenarioId: scenarioId,
+    });
+    const result = await issueRequest(delivery, nativeUrl(metadata));
+    assert.equal(result.params.responseCode, expectedStatus);
+    assert.equal(
+      Buffer.from(result.params.body, 'base64').equals(expectedBody),
+      true,
+    );
+    assert.equal(result.acknowledged, true);
+    const summary = delivery.dispose();
+    assert.equal(
+      validateMapStreamingFaultDeliverySummary(summary, pinned, scenarioId),
+      true,
+    );
+    assert.throws(
+      () => validateMapStreamingSmokeDeliverySummary(summary, pinned),
+      /strictly equal/,
+    );
+    assert.equal(summary.requestedCount, 1);
+    assert.equal(summary.fulfilledAckCount, 0);
+    assert.equal(summary.cancelledCount, 0);
+    assert.equal(summary.assets[0].faultedCount, 1);
+    assert.equal(summary.cleanupConfirmed, true);
+    assert.equal(pinned.assets.get(metadata.path).equals(originalBytes), true);
+
+    const wrongFault = structuredClone(summary);
+    wrongFault.faultInjection.acknowledgedCount = 2;
+    assert.throws(
+      () =>
+        validateMapStreamingFaultDeliverySummary(
+          wrongFault,
+          pinned,
+          scenarioId,
+        ),
+      /deepStrictEqual|deep-equal/i,
+    );
+    const unrelatedError = structuredClone(summary);
+    unrelatedError.errorObservationCount = 1;
+    assert.throws(
+      () =>
+        validateMapStreamingFaultDeliverySummary(
+          unrelatedError,
+          pinned,
+          scenarioId,
+        ),
+      /strictly equal/,
+    );
+  }
+});
+
+test('map fault delivery rejects unknown plans and incomplete fault scenarios', async () => {
+  const pinned = await fixture();
+  assert.throws(
+    () =>
+      createMapStreamingFixtureDelivery(pinned, {
+        appOrigin: APP_ORIGIN,
+        faultScenarioId: 'esri-metadata-arbitrary-response-v1',
+      }),
+    /fault scenario is unsupported/,
+  );
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+    faultScenarioId: 'esri-metadata-missing-v1',
+  });
+  const summary = delivery.dispose();
+  assert.equal(summary.cleanupConfirmed, false);
+  assert.throws(
+    () =>
+      validateMapStreamingFaultDeliverySummary(
+        summary,
+        pinned,
+        'esri-metadata-missing-v1',
+      ),
+    /strictly equal/,
+  );
+});
+
+test('fault delivery does not accept a response that differs from its declaration', async () => {
+  const pinned = await fixture();
+  const metadata = pinned.manifest.assets.find(
+    (row) => row.kind === 'arcgis-mapserver-metadata-json',
+  );
+  const url = nativeUrl(metadata);
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+    faultScenarioId: 'esri-metadata-corrupt-v1',
+  });
+  const response = await delivery.respond(new URL(url), {
+    url: () => url,
+    method: () => 'GET',
+  });
+  assert.throws(
+    () =>
+      delivery.onFulfilled({
+        url,
+        method: 'GET',
+        status: response.status,
+        bodyBase64: Buffer.from('forged').toString('base64'),
+      }),
+    /fault-fulfillment-identity-mismatch/,
+  );
+  const summary = delivery.dispose();
+  assert.equal(summary.errorObservationCount, 1);
+  assert.equal(summary.cleanupConfirmed, false);
+  assert.equal(summary.pendingCount, 0);
+  assert.throws(
+    () =>
+      validateMapStreamingFaultDeliverySummary(
+        summary,
+        pinned,
+        'esri-metadata-corrupt-v1',
+      ),
+    /strictly equal/,
+  );
+});
+
+test('supersession fault adapter holds one owned response and releases it only on command', async () => {
+  const pinned = await fixture();
+  const metadata = pinned.manifest.assets.find(
+    (row) => row.kind === 'arcgis-mapserver-metadata-json',
+  );
+  const url = nativeUrl(metadata);
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+    faultScenarioId: 'esri-metadata-superseded-v1',
+  });
+  const pendingResponse = delivery.respond(new URL(url), {
+    url: () => url,
+    method: () => 'GET',
+    signal: new AbortController().signal,
+  });
+  assert.equal(await delivery.waitForFaultRequest({ timeoutMs: 1_000 }), true);
+  assert.equal(delivery.summary().pendingCount, 1);
+  assert.equal(delivery.summary().faultInjection.heldRequestCount, 1);
+  assert.equal(delivery.releaseFaultResponse(), true);
+  assert.equal(delivery.releaseFaultResponse(), false);
+  const response = await pendingResponse;
+  assert.equal(response.status, 200);
+  assert.equal(response.body.equals(pinned.assets.get(metadata.path)), true);
+  assert.equal(
+    delivery.onFulfilled({
+      url,
+      method: 'GET',
+      status: response.status,
+      bodyBase64: response.body.toString('base64'),
+    }),
+    true,
+  );
+  const summary = delivery.dispose();
+  assert.equal(
+    validateMapStreamingFaultDeliverySummary(
+      summary,
+      pinned,
+      'esri-metadata-superseded-v1',
+    ),
+    true,
+  );
+  assert.equal(summary.faultInjection.heldRequestCount, 1);
+  assert.equal(summary.faultInjection.releasedCount, 1);
+  assert.equal(summary.faultInjection.acknowledgedCount, 1);
+  assert.equal(summary.pendingCount, 0);
+});
+
+test('disposing a held fault request fails closed and prevents further waits', async () => {
+  const pinned = await fixture();
+  const metadata = pinned.manifest.assets.find(
+    (row) => row.kind === 'arcgis-mapserver-metadata-json',
+  );
+  const url = nativeUrl(metadata);
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+    faultScenarioId: 'esri-metadata-superseded-v1',
+  });
+  const pendingResponse = delivery.respond(new URL(url), {
+    url: () => url,
+    method: () => 'GET',
+  });
+  const observed = delivery.waitForFaultRequest({ timeoutMs: 1_000 });
+  await observed;
+  delivery.dispose();
+  await assert.rejects(pendingResponse, /request-cancelled/);
+  assert.equal(delivery.summary().pendingCount, 0);
+  assert.equal(delivery.summary().cleanupConfirmed, false);
+  assert.throws(
+    () => delivery.waitForFaultRequest({ timeoutMs: 1_000 }),
+    /fault-owner-not-active/,
+  );
+
+  const beforeRequest = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+    faultScenarioId: 'esri-metadata-superseded-v1',
+  });
+  const waiting = beforeRequest.waitForFaultRequest({ timeoutMs: 30_000 });
+  beforeRequest.cancel();
+  await assert.rejects(waiting, /request-cancelled/);
+  beforeRequest.dispose();
 });
 
 test('missing native map assets retain bounded canonical paths without URLs', async () => {

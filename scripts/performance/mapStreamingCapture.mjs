@@ -3069,6 +3069,7 @@ export function mapStreamingCaptureWorkloadFields(evidence) {
 export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
   validateDeterministicMapStreamingFixture(fixture);
   assert.equal(summary?.schema, MAP_STREAMING_DELIVERY_SCHEMA);
+  assert.equal(summary.faultInjection ?? null, null);
   assert.equal(summary.fixtureId, fixture.id);
   assert.equal(summary.manifestSha256, fixture.manifestSha256);
   assert.equal(summary.status, 'disposed');
@@ -3115,7 +3116,11 @@ export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
     assert.ok(row.fulfilledAckCount >= 0);
     assert.ok(Number.isSafeInteger(row.cancelledCount));
     assert.ok(row.cancelledCount >= 0);
-    assert.equal(row.fulfilledAckCount + row.cancelledCount, row.requests);
+    assert.equal(row.faultedCount ?? 0, 0);
+    assert.equal(
+      row.fulfilledAckCount + row.cancelledCount + (row.faultedCount ?? 0),
+      row.requests,
+    );
     acknowledgedCount += row.fulfilledAckCount;
     cancelledCount += row.cancelledCount;
     if (row.fulfilledAckCount > 0) observedKinds.add(expected.kind);

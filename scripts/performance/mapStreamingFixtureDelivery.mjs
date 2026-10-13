@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
   getMapFixtureBuildProfileGoogleApiKey,
@@ -7,6 +8,8 @@ import { validateDeterministicMapStreamingFixture } from './mapStreamingFixture.
 
 export const MAP_STREAMING_DELIVERY_SCHEMA =
   'gev-map-streaming-fixture-delivery/v1';
+export const MAP_STREAMING_FAULT_DELIVERY_SCHEMA =
+  'gev-map-streaming-fault-delivery/v1';
 export const MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT = 512;
 export const MAP_STREAMING_MAX_ABORT_SIGNALS_PER_DOCUMENT = 8;
 export const MAP_STREAMING_MAX_ERROR_RECORDS = 8;
@@ -29,6 +32,25 @@ const NATIVE_PROVIDER_ORIGINS = new Set([
   GOOGLE_CREDIT_ORIGIN,
 ]);
 const SHA256 = /^[a-f0-9]{64}$/;
+const ESRI_METADATA_ASSET_PATH =
+  'arcgis/rest/services/World_Imagery/MapServer/metadata.json';
+export const MAP_STREAMING_FAULT_SCENARIOS = Object.freeze({
+  'esri-metadata-missing-v1': Object.freeze({
+    mode: 'missing',
+    assetPath: ESRI_METADATA_ASSET_PATH,
+    status: 404,
+  }),
+  'esri-metadata-corrupt-v1': Object.freeze({
+    mode: 'corrupt-json',
+    assetPath: ESRI_METADATA_ASSET_PATH,
+    status: 200,
+  }),
+  'esri-metadata-superseded-v1': Object.freeze({
+    mode: 'superseded-valid',
+    assetPath: ESRI_METADATA_ASSET_PATH,
+    status: 200,
+  }),
+});
 
 export function isCanonicalMapStreamingAssetPath(value) {
   return (
@@ -253,6 +275,7 @@ export function createMapStreamingFixtureDelivery(
     appOrigin,
     buildProfileId = MAP_FIXTURE_BUILD_PROFILE_ID,
     maxRequests = MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT,
+    faultScenarioId = null,
   } = {},
 ) {
   validateDeterministicMapStreamingFixture(fixture);
@@ -266,6 +289,22 @@ export function createMapStreamingFixtureDelivery(
   )
     throw new RangeError('Map fixture request limit is invalid.');
 
+  const faultScenario =
+    faultScenarioId === null
+      ? null
+      : MAP_STREAMING_FAULT_SCENARIOS[faultScenarioId];
+  if (faultScenarioId !== null && !faultScenario)
+    throw new TypeError('Map fault scenario is unsupported.');
+  if (
+    faultScenario &&
+    !fixture.manifest.assets.some(
+      (asset) =>
+        asset.path === faultScenario.assetPath &&
+        asset.kind === 'arcgis-mapserver-metadata-json',
+    )
+  )
+    throw new TypeError('Map fault scenario asset is absent from the fixture.');
+
   const googleKey = getMapFixtureBuildProfileGoogleApiKey(buildProfileId);
   const assetsByPath = new Map(
     fixture.manifest.assets.map((row) => [row.path, { row }]),
@@ -275,6 +314,8 @@ export function createMapStreamingFixtureDelivery(
   const fulfilledByPath = new Map();
   const cancelledByPath = new Map();
   const pendingByUrl = new Map();
+  const expectedFaultByUrl = new Map();
+  const heldFaultByUrl = new Map();
   const signals = new Map();
   const errorCounts = new Map();
   const missingAssetPathCounts = new Map();
@@ -285,6 +326,13 @@ export function createMapStreamingFixtureDelivery(
   let fulfilledAckCount = 0;
   let cancelledCount = 0;
   let unexpectedFulfillmentCount = 0;
+  let faultInjectedCount = 0;
+  let faultAcknowledgedCount = 0;
+  let faultedByPathCount = 0;
+  let faultHeldRequestCount = 0;
+  let faultReleasedCount = 0;
+  let heldFaultRequest = null;
+  const heldFaultWaiters = new Set();
   let disposed = false;
   let cancelled = false;
 
@@ -357,6 +405,49 @@ export function createMapStreamingFixtureDelivery(
       throw deliveryError('request-url-accessor-required');
     return context.url();
   };
+  const notifyHeldFaultWaiters = () => {
+    for (const waiter of heldFaultWaiters) waiter.finish(null, true);
+    heldFaultWaiters.clear();
+  };
+  const rejectHeldFaultWaiters = (error) => {
+    for (const waiter of heldFaultWaiters) waiter.finish(error);
+    heldFaultWaiters.clear();
+  };
+  const waitForFaultRequest = ({ timeoutMs = 30_000 } = {}) => {
+    if (disposed || cancelled) throw deliveryError('fault-owner-not-active');
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000)
+      throw new RangeError('Fault request wait is outside its fixed bound.');
+    if (heldFaultRequest) return Promise.resolve(true);
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(
+        () => finish(new Error('Expected fault request was not observed.')),
+        timeoutMs,
+      );
+      const waiter = {
+        finish(error, value) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          heldFaultWaiters.delete(waiter);
+          if (error) reject(error);
+          else resolve(value);
+        },
+      };
+      const finish = waiter.finish;
+      heldFaultWaiters.add(waiter);
+      if (heldFaultRequest) waiter.finish(null, true);
+    });
+  };
+  const releaseFaultResponse = () => {
+    if (!heldFaultRequest || disposed || cancelled) return false;
+    const held = heldFaultRequest;
+    heldFaultRequest = null;
+    faultReleasedCount += 1;
+    heldFaultByUrl.set(held.rawUrl, true);
+    held.resolve(held.response);
+    return true;
+  };
   const respond = async (url, context = {}) => {
     try {
       const rawUrl = requireUrlAccessor(context);
@@ -373,18 +464,59 @@ export function createMapStreamingFixtureDelivery(
       }
       if (requestedCount >= maxRequests)
         throw deliveryError('request-limit-exceeded');
-      const bytes = fixture.assets.get(assetPath);
+      let bytes = fixture.assets.get(assetPath);
+      let status = 200;
+      const injectFault =
+        faultScenario &&
+        assetPath === faultScenario.assetPath &&
+        faultInjectedCount === 0;
+      if (injectFault) {
+        if (faultScenario.mode === 'superseded-valid') {
+          status = 200;
+        } else if (faultScenario.mode === 'missing') {
+          bytes = Buffer.alloc(0);
+          status = faultScenario.status;
+        } else {
+          bytes = Buffer.from(bytes);
+          // The pinned metadata is JSON and starts with `{`. This byte makes
+          // the response deterministically invalid JSON without changing the
+          // fixture-owned bytes.
+          if (bytes[0] !== 0x7b)
+            throw deliveryError('fault-source-json-shape-invalid');
+          bytes[0] = 0x21;
+          status = faultScenario.status;
+        }
+      }
       const contentType = contentTypeFor(asset.row);
       requestedCount += 1;
       counts.set(assetPath, (counts.get(assetPath) || 0) + 1);
       pendingByPath.set(assetPath, (pendingByPath.get(assetPath) || 0) + 1);
       pendingByUrl.set(rawUrl, (pendingByUrl.get(rawUrl) || 0) + 1);
-      return {
-        status: 200,
+      if (injectFault) {
+        faultInjectedCount += 1;
+        if (faultScenario.mode !== 'superseded-valid')
+          expectedFaultByUrl.set(rawUrl, {
+            scenarioId: faultScenarioId,
+            assetPath,
+            status,
+            bodySha256: sha256(bytes),
+            byteLength: bytes.length,
+          });
+      }
+      const response = {
+        status,
         contentType,
         headers: { 'access-control-allow-origin': normalizedOrigin },
         body: Buffer.from(bytes),
       };
+      if (injectFault && faultScenario.mode === 'superseded-valid') {
+        faultHeldRequestCount += 1;
+        return await new Promise((resolve, reject) => {
+          heldFaultRequest = { rawUrl, response, resolve, reject };
+          notifyHeldFaultWaiters();
+        });
+      }
+      return response;
     } catch (error) {
       recordError(error);
       throw error;
@@ -401,8 +533,6 @@ export function createMapStreamingFixtureDelivery(
       if (assetPath == null) return false;
       if (disposed || cancelled)
         throw deliveryError('late-fulfillment-after-cancel');
-      if (event.method !== 'GET' || event.status !== 200)
-        throw deliveryError('fulfillment-status-invalid');
       const asset = assetsByPath.get(assetPath);
       if (!asset) {
         recordMissingAssetPath(assetPath);
@@ -417,6 +547,32 @@ export function createMapStreamingFixtureDelivery(
         );
         throw deliveryError('fulfillment-without-owned-request');
       }
+      const expectedFault = expectedFaultByUrl.get(event.url);
+      if (expectedFault) {
+        if (
+          event.method !== 'GET' ||
+          event.status !== expectedFault.status ||
+          typeof event.bodyBase64 !== 'string' ||
+          event.bodyBase64.length > 16_384
+        )
+          throw deliveryError('fault-fulfillment-shape-invalid');
+        const faultBytes = Buffer.from(event.bodyBase64, 'base64');
+        if (
+          faultBytes.toString('base64') !== event.bodyBase64 ||
+          faultBytes.length !== expectedFault.byteLength ||
+          sha256(faultBytes) !== expectedFault.bodySha256
+        )
+          throw deliveryError('fault-fulfillment-identity-mismatch');
+        expectedFaultByUrl.delete(event.url);
+        pendingByPath.set(assetPath, expectedPending - 1);
+        pendingByUrl.set(event.url, pendingUrlCount - 1);
+        if (pendingUrlCount === 1) pendingByUrl.delete(event.url);
+        faultAcknowledgedCount += 1;
+        faultedByPathCount += 1;
+        return true;
+      }
+      if (event.method !== 'GET' || event.status !== 200)
+        throw deliveryError('fulfillment-status-invalid');
       if (
         typeof event.bodyBase64 !== 'string' ||
         event.bodyBase64.length > Math.ceil((asset.row.byteLength * 4) / 3) + 8
@@ -435,6 +591,7 @@ export function createMapStreamingFixtureDelivery(
       if (pendingUrlCount === 1) pendingByUrl.delete(event.url);
       fulfilledByPath.set(assetPath, (fulfilledByPath.get(assetPath) || 0) + 1);
       fulfilledAckCount += 1;
+      if (heldFaultByUrl.delete(event.url)) faultAcknowledgedCount += 1;
       return true;
     } catch (error) {
       recordError(error);
@@ -444,6 +601,12 @@ export function createMapStreamingFixtureDelivery(
   const cancel = () => {
     if (cancelled) return;
     cancelled = true;
+    rejectHeldFaultWaiters(deliveryError('request-cancelled'));
+    if (heldFaultRequest) {
+      const held = heldFaultRequest;
+      heldFaultRequest = null;
+      held.reject(deliveryError('request-cancelled'));
+    }
     for (const [path, pending] of pendingByPath) {
       cancelledCount += pending;
       cancelledByPath.set(path, (cancelledByPath.get(path) || 0) + pending);
@@ -487,6 +650,23 @@ export function createMapStreamingFixtureDelivery(
       errors: [...errorCounts.entries()]
         .slice(0, MAP_STREAMING_MAX_ERROR_RECORDS)
         .map(([code, count]) => ({ code, count })),
+      ...(faultScenario
+        ? {
+            faultInjection: {
+              schema: MAP_STREAMING_FAULT_DELIVERY_SCHEMA,
+              scenarioId: faultScenarioId,
+              mode: faultScenario.mode,
+              assetPath: faultScenario.assetPath,
+              declaredCount: 1,
+              injectedCount: faultInjectedCount,
+              heldRequestCount: faultHeldRequestCount,
+              releasedCount: faultReleasedCount,
+              acknowledgedCount: faultAcknowledgedCount,
+              observationCount: faultAcknowledgedCount,
+              performanceAcceptanceEligible: false,
+            },
+          }
+        : {}),
       assets: [...counts.entries()]
         .slice(0, fixture.manifest.assets.length)
         .map(([path, requests]) => {
@@ -498,6 +678,9 @@ export function createMapStreamingFixtureDelivery(
             requests,
             fulfilledAckCount: fulfilledByPath.get(path) || 0,
             cancelledCount: cancelledByPath.get(path) || 0,
+            ...(faultScenario && path === faultScenario.assetPath
+              ? { faultedCount: faultedByPathCount }
+              : {}),
           };
         }),
       limits: {
@@ -511,6 +694,12 @@ export function createMapStreamingFixtureDelivery(
       cleanupConfirmed:
         disposed &&
         pendingCount === 0 &&
+        expectedFaultByUrl.size === 0 &&
+        (!faultScenario ||
+          (faultInjectedCount === 1 &&
+            faultAcknowledgedCount === 1 &&
+            (faultScenario.mode !== 'superseded-valid' ||
+              (faultHeldRequestCount === 1 && faultReleasedCount === 1)))) &&
         unexpectedFulfillmentCount === 0 &&
         omittedErrorObservationCount === 0 &&
         errorCounts.size === 0,
@@ -528,5 +717,105 @@ export function createMapStreamingFixtureDelivery(
     return summary();
   };
 
-  return Object.freeze({ respond, onFulfilled, cancel, summary, dispose });
+  return Object.freeze({
+    respond,
+    onFulfilled,
+    cancel,
+    summary,
+    dispose,
+    waitForFaultRequest,
+    releaseFaultResponse,
+  });
+}
+
+/** Validate one intentionally faulted response without weakening healthy delivery checks. */
+export function validateMapStreamingFaultDeliverySummary(
+  summary,
+  fixture,
+  expectedScenarioId,
+) {
+  validateDeterministicMapStreamingFixture(fixture);
+  const scenario = MAP_STREAMING_FAULT_SCENARIOS[expectedScenarioId];
+  if (!scenario) throw new TypeError('Expected map fault scenario is unknown.');
+  assert.equal(summary?.schema, MAP_STREAMING_DELIVERY_SCHEMA);
+  assert.equal(summary.fixtureId, fixture.id);
+  assert.equal(summary.manifestSha256, fixture.manifestSha256);
+  assert.equal(summary.status, 'disposed');
+  assert.equal(summary.cleanupConfirmed, true);
+  assert.equal(summary.pendingCount, 0);
+  assert.equal(summary.unexpectedFulfillmentCount, 0);
+  assert.equal(summary.errorObservationCount, 0);
+  assert.equal(summary.omittedErrorObservationCount, 0);
+  assert.equal(summary.omittedErrorKindCount, 0);
+  assert.deepEqual(summary.missingAssetPathEvidence, {
+    observationCount: 0,
+    uniquePathCount: 0,
+    omittedPathCount: 0,
+    paths: [],
+  });
+  assert.deepEqual(summary.faultInjection, {
+    schema: MAP_STREAMING_FAULT_DELIVERY_SCHEMA,
+    scenarioId: expectedScenarioId,
+    mode: scenario.mode,
+    assetPath: scenario.assetPath,
+    declaredCount: 1,
+    injectedCount: 1,
+    heldRequestCount: scenario.mode === 'superseded-valid' ? 1 : 0,
+    releasedCount: scenario.mode === 'superseded-valid' ? 1 : 0,
+    acknowledgedCount: 1,
+    observationCount: 1,
+    performanceAcceptanceEligible: false,
+  });
+  assert.ok(Number.isSafeInteger(summary.requestedCount));
+  assert.ok(summary.requestedCount > 0);
+  assert.ok(Number.isSafeInteger(summary.fulfilledAckCount));
+  assert.ok(Number.isSafeInteger(summary.cancelledCount));
+  assert.equal(
+    summary.fulfilledAckCount +
+      summary.cancelledCount +
+      (scenario.mode === 'superseded-valid' ? 0 : 1),
+    summary.requestedCount,
+  );
+  assert.ok(Array.isArray(summary.assets));
+  let fulfilled = 0;
+  let cancelled = 0;
+  let faulted = 0;
+  let targetRows = 0;
+  const paths = new Set();
+  const knownAssets = new Map(
+    fixture.manifest.assets.map((row) => [row.path, row]),
+  );
+  for (const row of summary.assets) {
+    const expected = knownAssets.get(row.path);
+    assert.ok(expected, 'Fault delivery asset belongs to the fixture.');
+    assert.equal(paths.has(row.path), false);
+    paths.add(row.path);
+    assert.equal(row.sha256, expected.sha256);
+    assert.equal(row.byteLength, expected.byteLength);
+    assert.ok(Number.isSafeInteger(row.requests) && row.requests > 0);
+    assert.ok(Number.isSafeInteger(row.fulfilledAckCount));
+    assert.ok(Number.isSafeInteger(row.cancelledCount));
+    const rowFaulted = row.faultedCount ?? 0;
+    assert.ok(Number.isSafeInteger(rowFaulted) && rowFaulted >= 0);
+    assert.equal(
+      row.fulfilledAckCount + row.cancelledCount + rowFaulted,
+      row.requests,
+    );
+    fulfilled += row.fulfilledAckCount;
+    cancelled += row.cancelledCount;
+    faulted += rowFaulted;
+    if (row.path === scenario.assetPath) {
+      targetRows += 1;
+      assert.equal(rowFaulted, scenario.mode === 'superseded-valid' ? 0 : 1);
+    } else assert.equal(rowFaulted, 0);
+  }
+  assert.equal(targetRows, 1);
+  assert.equal(fulfilled, summary.fulfilledAckCount);
+  assert.equal(cancelled, summary.cancelledCount);
+  assert.equal(faulted, scenario.mode === 'superseded-valid' ? 0 : 1);
+  if (scenario.mode === 'superseded-valid')
+    assert.equal(summary.fulfilledAckCount, 1);
+  assert.equal(summary.browserDecodeObserved, false);
+  assert.equal(summary.renderedReadinessObserved, false);
+  return true;
 }
