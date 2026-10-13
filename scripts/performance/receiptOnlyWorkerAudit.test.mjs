@@ -396,24 +396,27 @@ test('public provenance projection keeps receipt paths available through actual 
       packageLockSha256: 'f'.repeat(64),
     },
   };
-  const captureProvenance = await beginCaptureBuildProvenance({
-    receipt,
-    expectedAppCommit: identity.appCommit,
-    expectedHarnessCommit: identity.harnessCommit,
-    checkoutRoot: 'app-checkout',
-    harnessRoot: 'harness-root',
-    actualHarnessRoot: 'harness-root',
-    buildRoot: 'build-root',
-    baseUrl: identity.baseUrl,
-    captureUrl: identity.baseUrl,
-    verifyImpl: async () => ({
-      schema: 'gev-served-assets-verification/v1',
-      status: 'served-assets-match',
-      receiptSha256: receipt.receiptSha256,
-      assetCount: receipt.assets.length,
-      totalAssetBytes: 4096,
-    }),
-  });
+  const verifiedAssets = {
+    schema: 'gev-served-assets-verification/v1',
+    status: 'served-assets-match',
+    receiptSha256: receipt.receiptSha256,
+    assetCount: receipt.assets.length,
+    totalAssetBytes: 4096,
+  };
+  const startCaptureProvenance = () =>
+    beginCaptureBuildProvenance({
+      receipt,
+      expectedAppCommit: identity.appCommit,
+      expectedHarnessCommit: identity.harnessCommit,
+      checkoutRoot: 'app-checkout',
+      harnessRoot: 'harness-root',
+      actualHarnessRoot: 'harness-root',
+      buildRoot: 'build-root',
+      baseUrl: identity.baseUrl,
+      captureUrl: identity.baseUrl,
+      verifyImpl: async () => verifiedAssets,
+    });
+  const captureProvenance = await startCaptureProvenance();
   const expectedAssetPaths = captureProvenance.source.expectedAssetPaths;
   const publicBuildProvenance = projectPublicCaptureBuildProvenance(
     captureProvenance.source,
@@ -427,37 +430,6 @@ test('public provenance projection keeps receipt paths available through actual 
   );
   assert.deepEqual(captureProvenance.source.entryPaths, ['/', '/index.html']);
 
-  const pageAssetAudit = makeEnvelope();
-  publicBuildProvenance.pageAssetAudit = pageAssetAudit;
-  const source = {
-    appCommit: identity.appCommit,
-    harnessCommit: identity.harnessCommit,
-    provenanceStatus: publicBuildProvenance.status,
-    buildProvenance: publicBuildProvenance,
-  };
-  const evidence = {
-    pageAssetAudit,
-    expectedDocuments: [
-      { documentRole: identity.documentRole, documentId: identity.documentId },
-    ],
-    expectedAssetPaths: captureProvenance.source.expectedAssetPaths,
-    bundleSha256: identity.embeddedWorkerContract.bundleSha256,
-    workerSourceSha256: identity.embeddedWorkerContract.workerSourceSha256,
-    allowedModuleCount: identity.embeddedWorkerContract.allowedModuleCount,
-  };
-  const readiness = () =>
-    getCaptureReadinessReasons({
-      workerAuditMode: 'receipt-only',
-      workerBlobAuditInstrumented: false,
-      receiptOnlyWorkerAuditEvidence: evidence,
-      source,
-      fixture: { schema: 'gev-austin-operating-fixture/v1' },
-    });
-  assert.equal(
-    readiness().includes('receipt-only-worker-audit-evidence-is-incomplete'),
-    false,
-  );
-
   await captureProvenance.verifyAfterCapture();
   const finalPublicBuildProvenance = projectPublicCaptureBuildProvenance(
     captureProvenance.source,
@@ -466,8 +438,69 @@ test('public provenance projection keeps receipt paths available through actual 
     finalPublicBuildProvenance.status,
     'verified-local-build-and-served-assets-before-and-after',
   );
+  assert.deepEqual(finalPublicBuildProvenance.before, verifiedAssets);
+  assert.deepEqual(finalPublicBuildProvenance.after, verifiedAssets);
+  assert.equal(finalPublicBuildProvenance.expectedAssetPaths, undefined);
+  assert.equal(finalPublicBuildProvenance.entryPaths, undefined);
   assert.deepEqual(
     captureProvenance.source.expectedAssetPaths,
     expectedAssetPaths,
+  );
+
+  const pageAssetAudit = makeEnvelope();
+  finalPublicBuildProvenance.pageAssetAudit = pageAssetAudit;
+  const finalSource = {
+    appCommit: identity.appCommit,
+    harnessCommit: identity.harnessCommit,
+    provenanceStatus: finalPublicBuildProvenance.status,
+    buildProvenance: finalPublicBuildProvenance,
+  };
+  const makeEvidence = (expectedPaths) => ({
+    pageAssetAudit,
+    expectedDocuments: [
+      { documentRole: identity.documentRole, documentId: identity.documentId },
+    ],
+    expectedAssetPaths: expectedPaths,
+    bundleSha256: identity.embeddedWorkerContract.bundleSha256,
+    workerSourceSha256: identity.embeddedWorkerContract.workerSourceSha256,
+    allowedModuleCount: identity.embeddedWorkerContract.allowedModuleCount,
+  });
+  const readinessReasons = getCaptureReadinessReasons({
+    workerAuditMode: 'receipt-only',
+    workerBlobAuditInstrumented: false,
+    receiptOnlyWorkerAuditEvidence: makeEvidence(
+      captureProvenance.source.expectedAssetPaths,
+    ),
+    source: finalSource,
+    fixture: { schema: 'gev-austin-operating-fixture/v1' },
+  });
+  assert.equal(
+    readinessReasons.includes(
+      'receipt-only-worker-audit-evidence-is-incomplete',
+    ),
+    false,
+  );
+
+  const legacyCaptureProvenance = await startCaptureProvenance();
+  const legacySource = {
+    appCommit: identity.appCommit,
+    harnessCommit: identity.harnessCommit,
+    buildProvenance: legacyCaptureProvenance.source,
+  };
+  legacySource.buildProvenance.pageAssetAudit = pageAssetAudit;
+  delete legacySource.buildProvenance.expectedAssetPaths;
+  delete legacySource.buildProvenance.entryPaths;
+  const legacyReasons = getCaptureReadinessReasons({
+    workerAuditMode: 'receipt-only',
+    workerBlobAuditInstrumented: false,
+    receiptOnlyWorkerAuditEvidence: makeEvidence(
+      legacyCaptureProvenance.source.expectedAssetPaths,
+    ),
+    source: legacySource,
+    fixture: { schema: 'gev-austin-operating-fixture/v1' },
+  });
+  assert.equal(
+    legacyReasons.includes('receipt-only-worker-audit-evidence-is-incomplete'),
+    true,
   );
 });
