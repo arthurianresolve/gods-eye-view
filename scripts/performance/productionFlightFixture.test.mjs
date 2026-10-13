@@ -4,6 +4,8 @@ import { EventEmitter } from 'node:events';
 import {
   DENSE_FLIGHT_FIXTURE_COUNT,
   DEFAULT_FLIGHT_FIXTURE_TIME,
+  RENDER_DEMAND_PROFILE,
+  RENDER_DEMAND_PROFILE_SHA256,
   createFlightFixtureDeliveryObserver,
   createProductionFlightFixture,
   createProductionMilitaryFixture,
@@ -126,6 +128,205 @@ test('render-demand failure report retains bounded stages without provider URLs,
   assert.equal(report.fixture.militaryBytes, 16);
   assert.equal(report.traffic.otherApiPaths[1], '[other-api-path]');
   assert.ok(Buffer.byteLength(serialized) < 24_000);
+});
+
+test('render-demand failure projection retains controlled start/end evidence and terminal tile-demand ownership', () => {
+  const sourceCommit = 'a'.repeat(40);
+  const snapshot = (frameNumber) => ({
+    applicationStatus: 'ready',
+    source: {
+      appCommit: sourceCommit,
+      expectedCommit: sourceCommit,
+      matchesHarnessHead: true,
+    },
+    browser: {
+      family: 'chromium',
+      version: '155.0.8059.39',
+      rendererClass: 'swiftshader',
+      renderer: 'ANGLE (Google, Vulkan 1.3.0, SwiftShader driver 4.1)',
+      viewport: { width: 1440, height: 1000, dpr: 1 },
+      drawingBuffer: { width: 1440, height: 1000 },
+    },
+    fixtureEpochMs: 1791900000000,
+    visibilityState: 'visible',
+    focused: true,
+    frameNumber,
+    camera: {
+      latitude: 30.2672,
+      longitude: -97.7431,
+      altitudeMeters: 800,
+      headingDegrees: 15,
+      pitchDegrees: -30,
+      rollDegrees: 0,
+    },
+    map: { status: 'ready', activeId: 'esri-imagery' },
+    enabledLayerIds: ['flights', 'military'],
+    stats: {
+      flights: {
+        enabled: true,
+        lifecycleState: 'enabled',
+        count: 0,
+        status: 200,
+      },
+      military: {
+        enabled: true,
+        lifecycleState: 'enabled',
+        count: 0,
+        status: 200,
+      },
+    },
+    mapDemand: {
+      globeTilesLoaded: false,
+      tileQueueCount: 0,
+      tileQueues: { high: 0, medium: 0, low: 0 },
+      tileQueueStableSamples: 4,
+      observedProviderRequests: 12,
+      interceptedProviderRequests: 12,
+      pendingProviderRequests: 0,
+      requestTrackingOverflow: false,
+    },
+    settings: {
+      msaaSamples: 4,
+      preserveDrawingBuffer: true,
+      antialias: true,
+      fxaaEnabled: false,
+      resolutionScale: 1,
+      canvasWidth: 1440,
+      canvasHeight: 1000,
+      style: 'normal',
+      bloomEnabled: false,
+      bloomIntensity: 50,
+      bloomVersion: 2,
+      sharpenEnabled: false,
+      sharpenIntensity: 49,
+      detectionMode: 'OFF',
+      densityPct: 75,
+      visualDensityPct: 75,
+      allocation: 'elastic',
+      qualityMode: 'manual',
+    },
+    governor: {
+      installed: true,
+      mode: 'active',
+      holds: ['application-startup'],
+      scheduledUpdates: [],
+    },
+    pageErrors: [],
+    body: 'provider response body must never be retained',
+  });
+  const report = createRenderDemandFailureReport({
+    stage: 'foreground-observation',
+    error: new Error('render count remained above target'),
+    observations: [
+      { stage: 'start-snapshot', state: snapshot(100) },
+      { stage: 'end-snapshot', state: snapshot(102) },
+    ],
+    fixture: {
+      profileId: RENDER_DEMAND_PROFILE.id,
+      profileSha256: RENDER_DEMAND_PROFILE_SHA256,
+    },
+    source: { commit: sourceCommit, dirtyAtStart: false, identityValid: true },
+    sourceFinish: { sourceChangedDuringRun: false, error: null },
+    terminal: {
+      status: 'failed',
+      foreground: {
+        durationMs: 10_000,
+        completedPostRenderCount: 7,
+        eventOverflow: false,
+        foregroundUninterrupted: true,
+      },
+      visibilityControl: {
+        mode: 'simulated-document-hidden-property',
+        loopStopped: true,
+        resumedFrameAfterPrior: true,
+      },
+      teardown: {
+        status: 'destroyed',
+        viewerDestroyed: true,
+        layers: 0,
+        productionHandlesRemoved: true,
+        applicationRenderOwnersReleased: true,
+        resourcesBefore: { postRenderListeners: 3 },
+        resourcesAfter: { postRenderListeners: 1 },
+        teardownErrors: 0,
+      },
+      mapDemand: {
+        settled: true,
+        globeTilesLoaded: false,
+        settledGlobeTilesLoaded: false,
+        pendingTileQueueCount: 0,
+        settledPendingTileQueueCount: 0,
+        tileQueueStableSamples: 4,
+        providerRequestsBefore: 12,
+        providerRequestsAfter: 12,
+        interceptedProviderRequests: 12,
+        pendingProviderRequests: 0,
+        requestTrackingOverflow: false,
+      },
+      fixture: {
+        profileId: RENDER_DEMAND_PROFILE.id,
+        profileSha256: RENDER_DEMAND_PROFILE_SHA256,
+        populations: { flights: 0, military: 0 },
+      },
+    },
+    traffic: {
+      expectedBlockedMapProviderCount: 12,
+      observedMapProviderRequestCount: 12,
+      pendingMapProviderRequestCount: 0,
+      mapProviderRequestTrackingOverflow: false,
+      mapProviderRequestsBeforeForeground: 12,
+      mapProviderRequestsAfterForeground: 12,
+      mapProviderTrafficStable: true,
+    },
+  });
+  assert.equal(report.status, 'failed');
+  assert.equal(report.fixture.profileId, RENDER_DEMAND_PROFILE.id);
+  assert.equal(report.fixture.profileSha256, RENDER_DEMAND_PROFILE_SHA256);
+  assert.equal(
+    report.observations[0].state.browser.renderer.includes('SwiftShader'),
+    true,
+  );
+  assert.equal(
+    report.observations[0].state.mapDemand.tileQueueStableSamples,
+    4,
+  );
+  assert.equal(report.observations[0].state.camera.altitudeMeters, 800);
+  assert.equal(report.observations[1].state.settings.msaaSamples, 4);
+  assert.equal(report.observations[0].state.settings.densityPct, 75);
+  assert.equal(report.observations[0].state.settings.visualDensityPct, 75);
+  assert.equal(report.terminal.mapDemand.globeTilesLoaded, false);
+  assert.equal(report.terminal.mapDemand.settledGlobeTilesLoaded, false);
+  assert.equal(report.terminal.mapDemand.tileContentReady, false);
+  assert.equal(report.terminal.mapDemand.queueQuiescent, true);
+  assert.equal(report.terminal.mapDemand.pendingProviderRequests, 0);
+  assert.equal(
+    report.terminal.fixture.profileSha256,
+    RENDER_DEMAND_PROFILE_SHA256,
+  );
+  assert.equal(report.terminal.teardown.totalPostRenderListenersAfter, 1);
+  assert.equal(report.terminal.teardown.applicationRenderOwnersReleased, true);
+  assert.equal(report.traffic.mapProviderTrafficStable, true);
+  const serialized = JSON.stringify(report);
+  assert.doesNotMatch(serialized, /provider response body|authorization|token/);
+  assert.ok(Buffer.byteLength(serialized) < 24_000);
+});
+
+test('render-demand failure projection rejects forged controlled-profile identity', () => {
+  assert.match(RENDER_DEMAND_PROFILE.hash, /(?:^|&)dd=75(?:&|$)/);
+  assert.equal(RENDER_DEMAND_PROFILE.expected.detection.densityPct, 75);
+  const report = createRenderDemandFailureReport({
+    stage: 'fixture-setup',
+    error: new Error('profile setup failed'),
+    fixture: {
+      profileId: 'other-profile',
+      profileSha256: 'c'.repeat(64),
+    },
+  });
+  assert.equal(report.fixture.profileId, null);
+  assert.equal(report.fixture.profileSha256, null);
+  assert.notEqual(report.fixture.profileId, RENDER_DEMAND_PROFILE.id);
+  assert.notEqual(report.fixture.profileSha256, RENDER_DEMAND_PROFILE_SHA256);
+  assert.equal(report.status, 'failed');
 });
 
 test('production flight fixture is deterministic, bounded OpenSky payload data', () => {

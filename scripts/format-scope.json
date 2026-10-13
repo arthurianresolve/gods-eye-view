@@ -38,6 +38,8 @@
   "src/main.js",
   "docs/APPLICATION.md",
   "scripts/qa-application.mjs",
+  "scripts/performance/productionFlightFixture.mjs",
+  "scripts/performance/productionFlightFixture.test.mjs",
   "scripts/qa-render-resolution.mjs",
   "scripts/qa-voice-auth.mjs",
   "scripts/qa-voice-auth-focus.mjs",

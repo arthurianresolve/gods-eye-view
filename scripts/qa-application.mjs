@@ -9,6 +9,8 @@ import {
 } from './qa-application-fixtures.mjs';
 import {
   DEFAULT_FLIGHT_FIXTURE_TIME,
+  RENDER_DEMAND_PROFILE,
+  RENDER_DEMAND_PROFILE_SHA256,
   classifyRenderDemandRequest,
   createRenderDemandFailureReport,
   createProductionFlightFixture,
@@ -41,6 +43,9 @@ async function runRenderDemandDiagnostic(browser) {
           delivery: reportState.delivery || null,
           traffic: reportState.traffic || null,
           fixture: reportState.fixture || null,
+          terminal: reportState.terminal || null,
+          source: reportState.source || null,
+          sourceFinish: reportState.sourceFinish || null,
         }),
         null,
         2,
@@ -65,6 +70,11 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       sourceIdentityValid: sourceStart.valid,
     },
   });
+  reportState.source = {
+    commit: sourceStart.harnessCommit,
+    dirtyAtStart: sourceStart.harnessDirtyAtStart,
+    identityValid: sourceStart.valid,
+  };
   assert.equal(
     sourceStart.valid,
     true,
@@ -75,6 +85,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
   const flights = createProductionFlightFixture({ count: 0, fixedTime });
   const military = createProductionMilitaryFixture({ fixedTime });
   reportState.fixture = {
+    profileId: RENDER_DEMAND_PROFILE.id,
+    profileSha256: RENDER_DEMAND_PROFILE_SHA256,
     fixedTime,
     flightsId: flights.id,
     flightsSha256: flights.sha256,
@@ -89,6 +101,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
   let expectedBootstrapApiCount = 0;
   let expectedBlockedMapProviderCount = 0;
   let unexpectedExternalCount = 0;
+  let observedMapProviderRequestCount = 0;
+  let mapProviderRequestTrackingOverflow = false;
+  const pendingMapProviderRequests = new Set();
   let invalidFixtureRouteCount = 0;
   let unexpectedApiCount = 0;
   let otherApiPathOverflow = false;
@@ -174,13 +189,36 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     },
   });
 
+  const observeMapProviderRequest = (request) => {
+    const classification = classifyRenderDemandRequest({
+      url: request.url(),
+      origin: new URL(url).origin,
+      method: request.method(),
+    });
+    if (classification !== 'expected-blocked-map-provider') return;
+    observedMapProviderRequestCount += 1;
+    if (pendingMapProviderRequests.size >= 4096) {
+      mapProviderRequestTrackingOverflow = true;
+      return;
+    }
+    pendingMapProviderRequests.add(request);
+  };
+  const finishMapProviderRequest = (request) => {
+    pendingMapProviderRequests.delete(request);
+  };
+  fixturePage.on('request', observeMapProviderRequest);
+  fixturePage.on('requestfinished', finishMapProviderRequest);
+  fixturePage.on('requestfailed', finishMapProviderRequest);
+
   let terminal = null;
   let networkProbe = null;
   let ownerCleanupCompleted = false;
   try {
     reportState.stage = 'fixture-setup';
     await installFixtureWallClockOnPage(fixturePage, fixedTimeMs);
-    await bootFixturePage(fixturePage, url);
+    await bootFixturePage(fixturePage, url, {
+      hash: RENDER_DEMAND_PROFILE.hash,
+    });
     networkProbe = await verifyNetwork();
     reportState.observations.push({
       stage: 'fixture-setup',
@@ -251,6 +289,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     reportState.traffic = {
       expectedBootstrapApiCount,
       expectedBlockedMapProviderCount,
+      observedMapProviderRequestCount,
+      pendingMapProviderRequestCount: pendingMapProviderRequests.size,
+      mapProviderRequestTrackingOverflow,
       unexpectedApiCount,
       unexpectedExternalCount,
     };
@@ -272,6 +313,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       let previous = null;
       let stableCount = 0;
       let latest = null;
+      let previousTileDemand = null;
+      let stableTileDemandCount = 0;
       while (performance.now() - startedAt < 20_000) {
         const map = app.mapStackController.getState();
         const cartographic = window.Cesium.Cartographic.fromCartesian(
@@ -291,6 +334,34 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           .filter((layer) => layer.enabled)
           .map((layer) => layer.id)
           .sort();
+        const globe = viewer.scene.globe;
+        // Cesium 1.138 exposes tilesLoaded publicly. Its quadtree work queues
+        // are private read-only diagnostics; never mutate them or infer that
+        // a stable empty queue means imagery content itself loaded.
+        const surface = globe?._surface;
+        const tileQueues = {
+          high: Array.isArray(surface?._tileLoadQueueHigh)
+            ? surface._tileLoadQueueHigh.length
+            : null,
+          medium: Array.isArray(surface?._tileLoadQueueMedium)
+            ? surface._tileLoadQueueMedium.length
+            : null,
+          low: Array.isArray(surface?._tileLoadQueueLow)
+            ? surface._tileLoadQueueLow.length
+            : null,
+        };
+        const tileQueueCount =
+          tileQueues.high === null ||
+          tileQueues.medium === null ||
+          tileQueues.low === null
+            ? null
+            : tileQueues.high + tileQueues.medium + tileQueues.low;
+        const tileDemand = {
+          globeTilesLoaded:
+            typeof globe?.tilesLoaded === 'boolean' ? globe.tilesLoaded : null,
+          tileQueues,
+          tileQueueCount,
+        };
         const cameraInAustinBounds =
           camera.longitude >= -98 &&
           camera.longitude <= -97 &&
@@ -309,7 +380,17 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           ['esri-imagery', 'osm'].includes(map.activeId) &&
           viewer.scene.mode === window.Cesium.SceneMode.SCENE3D &&
           JSON.stringify(enabledLayerIds) === '["flights","military"]' &&
-          cameraInAustinBounds;
+          cameraInAustinBounds &&
+          typeof tileDemand.globeTilesLoaded === 'boolean' &&
+          tileDemand.tileQueueCount === 0;
+        const sameTileDemand =
+          previousTileDemand &&
+          previousTileDemand.globeTilesLoaded === tileDemand.globeTilesLoaded &&
+          previousTileDemand.tileQueueCount === tileDemand.tileQueueCount &&
+          JSON.stringify(previousTileDemand.tileQueues) ===
+            JSON.stringify(tileDemand.tileQueues);
+        stableTileDemandCount =
+          ready && sameTileDemand ? stableTileDemandCount + 1 : ready ? 1 : 0;
         const samePose =
           previous &&
           Math.abs(previous.longitude - camera.longitude) < 0.00002 &&
@@ -324,12 +405,20 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           activeMapId: map.activeId,
           camera,
           enabledLayerIds,
+          globeTilesLoaded: tileDemand.globeTilesLoaded,
+          tileQueues: tileDemand.tileQueues,
+          tileQueueCount: tileDemand.tileQueueCount,
+          stableTileDemandCount,
         };
         previous = ready ? camera : null;
-        if (stableCount >= 4)
+        previousTileDemand = ready ? tileDemand : null;
+        if (stableCount >= 4 && stableTileDemandCount >= 4)
           return {
             settled: true,
+            demandMeaning:
+              'no queued globe tile work; tilesLoaded state and queue counts stable across consecutive samples',
             elapsedMs: performance.now() - startedAt,
+            tileQueueStableSamples: stableTileDemandCount,
             sample: latest,
           };
         await new Promise((resolve) => setTimeout(resolve, 250));
@@ -337,14 +426,31 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       return {
         settled: false,
         elapsedMs: performance.now() - startedAt,
+        tileQueueStableSamples: stableTileDemandCount,
         sample: latest,
       };
     });
     reportState.observations.push({ stage: 'scene-settle', state: settled });
+    reportState.traffic = {
+      expectedBootstrapApiCount,
+      expectedBlockedMapProviderCount,
+      observedMapProviderRequestCount,
+      pendingMapProviderRequestCount: pendingMapProviderRequests.size,
+      mapProviderRequestTrackingOverflow,
+      unexpectedApiCount,
+      unexpectedExternalCount,
+    };
     assert.equal(
       settled.settled,
       true,
       'Application scene did not settle inside the bounded startup window.',
+    );
+    assert.equal(mapProviderRequestTrackingOverflow, false);
+    assert.equal(pendingMapProviderRequests.size, 0);
+    assert.equal(
+      observedMapProviderRequestCount,
+      expectedBlockedMapProviderCount,
+      'Observed map provider requests did not match the intercepted request count.',
     );
 
     reportState.stage = 'start-snapshot';
@@ -368,6 +474,12 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           },
         ]),
       );
+      const cartographic = window.Cesium.Cartographic.fromCartesian(
+        viewer.camera.positionWC,
+      );
+      const degrees = window.Cesium.Math.toDegrees;
+      const visual = app.styleManager.getVisualState();
+      const detection = app.styleManager.services?.getDetectionTuning?.() || {};
       return {
         applicationStatus: window.__qaApplication.getState().status,
         source: {
@@ -390,11 +502,20 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
                 : renderer
                   ? 'hardware-or-unknown'
                   : 'unavailable',
+            renderer: renderer.replace(/[\u0000-\u001f]/g, '').slice(0, 240),
             viewport: environment.viewport,
             drawingBuffer: environment.drawingBuffer,
           };
         })(),
         fixtureEpochMs: Date.now(),
+        camera: {
+          latitude: degrees(cartographic.latitude),
+          longitude: degrees(cartographic.longitude),
+          altitudeMeters: cartographic.height,
+          headingDegrees: degrees(viewer.camera.heading),
+          pitchDegrees: degrees(viewer.camera.pitch),
+          rollDegrees: degrees(viewer.camera.roll),
+        },
         visibilityState: document.visibilityState,
         focused: document.hasFocus(),
         frameNumber: viewer.scene.frameState?.frameNumber ?? null,
@@ -411,9 +532,6 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         settings: (() => {
           const gl = viewer.scene.context?._gl;
           const attributes = gl?.getContextAttributes?.() || {};
-          const visual = app.styleManager.getVisualState();
-          const detection =
-            app.styleManager.services?.getDetectionTuning?.() || {};
           return {
             msaaSamples: viewer.scene.msaaSamples ?? null,
             preserveDrawingBuffer: attributes.preserveDrawingBuffer ?? null,
@@ -423,10 +541,21 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
             canvasWidth: viewer.scene.canvas?.width ?? null,
             canvasHeight: viewer.scene.canvas?.height ?? null,
             bloomIntensity: visual?.bloom?.intensity ?? null,
+            bloomEnabled: visual?.bloom?.enabled ?? null,
+            bloomVersion: visual?.bloom?.version ?? null,
             sharpenIntensity: visual?.sharpen?.intensity ?? null,
+            sharpenEnabled: visual?.sharpen?.enabled ?? null,
+            style: visual?.style ?? null,
+            hudVisible: visual?.hud?.visible ?? null,
+            hudVariant: visual?.hud?.variant ?? null,
+            detectionMode: visual?.detection?.mode ?? null,
+            allocation: visual?.detection?.allocation ?? null,
             qualityMode: app.styleManager._adaptiveQuality?.getMode?.() ?? null,
             densityPct: Number.isFinite(detection.densityPct)
               ? detection.densityPct
+              : null,
+            visualDensityPct: Number.isFinite(visual?.detection?.density)
+              ? visual.detection.density
               : null,
           };
         })(),
@@ -435,7 +564,20 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     }, expectedCommit);
     reportState.observations.push({
       stage: 'start-snapshot',
-      state: { ...start, pageErrors: errors.slice(-4) },
+      state: {
+        ...start,
+        mapDemand: {
+          globeTilesLoaded: settled.sample?.globeTilesLoaded ?? null,
+          tileQueues: settled.sample?.tileQueues ?? null,
+          tileQueueCount: settled.sample?.tileQueueCount ?? null,
+          tileQueueStableSamples: settled.tileQueueStableSamples,
+          observedProviderRequests: observedMapProviderRequestCount,
+          interceptedProviderRequests: expectedBlockedMapProviderCount,
+          pendingProviderRequests: pendingMapProviderRequests.size,
+          requestTrackingOverflow: mapProviderRequestTrackingOverflow,
+        },
+        pageErrors: errors.slice(-4),
+      },
     });
     const fixtureWallElapsedMs = start.fixtureEpochMs - fixedTimeMs;
     assert.ok(
@@ -459,17 +601,66 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     assert.deepEqual(start.enabledLayerIds, ['flights', 'military']);
     assert.equal(start.map.status, 'ready');
     assert.ok(['esri-imagery', 'osm'].includes(start.map.activeId));
-    assert.equal(start.settings.msaaSamples, 4);
-    assert.equal(start.settings.preserveDrawingBuffer, true);
-    assert.equal(start.settings.antialias, true);
-    assert.equal(start.settings.fxaaEnabled, false);
-    assert.equal(start.settings.resolutionScale, 1);
-    assert.equal(start.settings.canvasWidth, 1440);
-    assert.equal(start.settings.canvasHeight, 1000);
-    assert.equal(Number.isFinite(start.settings.bloomIntensity), true);
-    assert.equal(Number.isFinite(start.settings.sharpenIntensity), true);
-    assert.equal(typeof start.settings.qualityMode, 'string');
-    assert.equal(Number.isFinite(start.settings.densityPct), true);
+    const expected = RENDER_DEMAND_PROFILE.expected;
+    assert.deepEqual(start.enabledLayerIds, expected.enabledLayerIds);
+    assert.equal(start.map.activeId, expected.mapStack);
+    assert.deepEqual(
+      {
+        msaaSamples: start.settings.msaaSamples,
+        preserveDrawingBuffer: start.settings.preserveDrawingBuffer,
+        antialias: start.settings.antialias,
+        fxaaEnabled: start.settings.fxaaEnabled,
+        resolutionScale: start.settings.resolutionScale,
+        canvasWidth: start.settings.canvasWidth,
+        canvasHeight: start.settings.canvasHeight,
+      },
+      expected.renderer,
+    );
+    assert.equal(start.settings.style, expected.style);
+    assert.deepEqual(
+      {
+        enabled: start.settings.bloomEnabled,
+        intensity: start.settings.bloomIntensity,
+        version: start.settings.bloomVersion,
+      },
+      expected.bloom,
+    );
+    assert.deepEqual(
+      {
+        enabled: start.settings.sharpenEnabled,
+        intensity: start.settings.sharpenIntensity,
+      },
+      expected.sharpen,
+    );
+    assert.deepEqual(
+      {
+        visible: start.settings.hudVisible,
+        variant: start.settings.hudVariant,
+      },
+      expected.hud,
+    );
+    assert.equal(start.settings.detectionMode, expected.detection.mode);
+    assert.equal(start.settings.densityPct, expected.detection.densityPct);
+    assert.equal(
+      start.settings.visualDensityPct,
+      expected.detection.densityPct,
+      'The visible density control must match effective detection density.',
+    );
+    assert.equal(start.settings.allocation, expected.detection.allocation);
+    assert.equal(start.settings.qualityMode, 'manual');
+    for (const [field, expectedValue, tolerance] of [
+      ['latitude', expected.camera.latitude, 0.0002],
+      ['longitude', expected.camera.longitude, 0.0002],
+      ['altitudeMeters', expected.camera.altitudeMeters, 2],
+      ['headingDegrees', expected.camera.headingDegrees, 0.2],
+      ['pitchDegrees', expected.camera.pitchDegrees, 0.2],
+      ['rollDegrees', expected.camera.rollDegrees, 0.2],
+    ])
+      assert.ok(
+        Number.isFinite(start.camera[field]) &&
+          Math.abs(start.camera[field] - expectedValue) <= tolerance,
+        `Render-demand start camera ${field} differs from the controlled profile.`,
+      );
     assert.equal(
       delivered.flights > 0,
       true,
@@ -483,6 +674,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
 
     await fixturePage.bringToFront();
     reportState.stage = 'foreground-observation';
+    const providerRequestsBeforeForeground = observedMapProviderRequestCount;
+    const interceptedRequestsBeforeForeground = expectedBlockedMapProviderCount;
     const staticObservation = await fixturePage.evaluate(async () => {
       const viewer = window.__godsEyeView.viewer;
       const scene = viewer.scene;
@@ -541,6 +734,34 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         events,
       };
     });
+    const providerRequestsAfterForeground = observedMapProviderRequestCount;
+    const interceptedRequestsAfterForeground = expectedBlockedMapProviderCount;
+    staticObservation.mapProviderTraffic = {
+      observedBefore: providerRequestsBeforeForeground,
+      observedAfter: providerRequestsAfterForeground,
+      interceptedBefore: interceptedRequestsBeforeForeground,
+      interceptedAfter: interceptedRequestsAfterForeground,
+      pendingAfter: pendingMapProviderRequests.size,
+      trackingOverflow: mapProviderRequestTrackingOverflow,
+      stable:
+        providerRequestsBeforeForeground === providerRequestsAfterForeground &&
+        interceptedRequestsBeforeForeground ===
+          interceptedRequestsAfterForeground &&
+        pendingMapProviderRequests.size === 0 &&
+        !mapProviderRequestTrackingOverflow,
+    };
+    reportState.traffic = {
+      expectedBootstrapApiCount,
+      expectedBlockedMapProviderCount,
+      observedMapProviderRequestCount,
+      pendingMapProviderRequestCount: pendingMapProviderRequests.size,
+      mapProviderRequestTrackingOverflow,
+      mapProviderRequestsBeforeForeground: providerRequestsBeforeForeground,
+      mapProviderRequestsAfterForeground: providerRequestsAfterForeground,
+      mapProviderTrafficStable: staticObservation.mapProviderTraffic.stable,
+      unexpectedApiCount,
+      unexpectedExternalCount,
+    };
     reportState.observations.push({
       stage: 'foreground-observation',
       state: { ...staticObservation, pageErrors: errors.slice(-4) },
@@ -617,7 +838,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     });
 
     reportState.stage = 'end-snapshot';
-    const end = await fixturePage.evaluate(() => {
+    const end = await fixturePage.evaluate((expectedCommit) => {
       const app = window.__godsEyeView;
       const viewer = app.viewer;
       const gl = viewer.scene.context?._gl;
@@ -640,9 +861,70 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           ];
         }),
       );
+      const globe = viewer.scene.globe;
+      const surface = globe?._surface;
+      const tileQueues = {
+        high: Array.isArray(surface?._tileLoadQueueHigh)
+          ? surface._tileLoadQueueHigh.length
+          : null,
+        medium: Array.isArray(surface?._tileLoadQueueMedium)
+          ? surface._tileLoadQueueMedium.length
+          : null,
+        low: Array.isArray(surface?._tileLoadQueueLow)
+          ? surface._tileLoadQueueLow.length
+          : null,
+      };
+      const tileQueueCount =
+        tileQueues.high === null ||
+        tileQueues.medium === null ||
+        tileQueues.low === null
+          ? null
+          : tileQueues.high + tileQueues.medium + tileQueues.low;
       return {
         applicationStatus: window.__qaApplication.getState().status,
-        applicationCommit: app.getPerformanceEnvironment().appCommit,
+        source: {
+          appCommit: app.getPerformanceEnvironment().appCommit,
+          expectedCommit,
+          matchesHarnessHead:
+            app.getPerformanceEnvironment().appCommit === expectedCommit,
+        },
+        browser: (() => {
+          const environment = app.getPerformanceEnvironment();
+          const userAgent = navigator.userAgent;
+          const renderer = String(environment.renderer || '');
+          return {
+            family: /Chrome\//.test(userAgent) ? 'chromium' : 'other',
+            version: userAgent.match(/Chrome\/([0-9.]+)/)?.[1] || null,
+            rendererClass: /swiftshader/i.test(renderer)
+              ? 'swiftshader'
+              : /llvmpipe|softpipe/i.test(renderer)
+                ? 'software-other'
+                : renderer
+                  ? 'hardware-or-unknown'
+                  : 'unavailable',
+            renderer: renderer.replace(/[\u0000-\u001f]/g, '').slice(0, 240),
+            viewport: environment.viewport,
+            drawingBuffer: environment.drawingBuffer,
+          };
+        })(),
+        fixtureEpochMs: Date.now(),
+        camera: (() => {
+          const cartographic = window.Cesium.Cartographic.fromCartesian(
+            viewer.camera.positionWC,
+          );
+          const degrees = window.Cesium.Math.toDegrees;
+          return {
+            latitude: degrees(cartographic.latitude),
+            longitude: degrees(cartographic.longitude),
+            altitudeMeters: cartographic.height,
+            headingDegrees: degrees(viewer.camera.heading),
+            pitchDegrees: degrees(viewer.camera.pitch),
+            rollDegrees: degrees(viewer.camera.roll),
+          };
+        })(),
+        visibilityState: document.visibilityState,
+        focused: document.hasFocus(),
+        frameNumber: viewer.scene.frameState?.frameNumber ?? null,
         stats,
         enabledLayerIds: app.dataManager
           .getAll()
@@ -653,6 +935,12 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           status: app.mapStackController.getState().status,
           activeId: app.mapStackController.getActiveId(),
         },
+        mapDemand: {
+          globeTilesLoaded:
+            typeof globe?.tilesLoaded === 'boolean' ? globe.tilesLoaded : null,
+          tileQueues,
+          tileQueueCount,
+        },
         settings: {
           msaaSamples: viewer.scene.msaaSamples ?? null,
           preserveDrawingBuffer: attributes.preserveDrawingBuffer ?? null,
@@ -662,29 +950,71 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           canvasWidth: viewer.scene.canvas?.width ?? null,
           canvasHeight: viewer.scene.canvas?.height ?? null,
           bloomIntensity: visual?.bloom?.intensity ?? null,
+          bloomEnabled: visual?.bloom?.enabled ?? null,
+          bloomVersion: visual?.bloom?.version ?? null,
           sharpenIntensity: visual?.sharpen?.intensity ?? null,
+          sharpenEnabled: visual?.sharpen?.enabled ?? null,
+          style: visual?.style ?? null,
+          hudVisible: visual?.hud?.visible ?? null,
+          hudVariant: visual?.hud?.variant ?? null,
+          detectionMode: visual?.detection?.mode ?? null,
+          allocation: visual?.detection?.allocation ?? null,
           qualityMode: app.styleManager._adaptiveQuality?.getMode?.() ?? null,
           densityPct: Number.isFinite(detection.densityPct)
             ? detection.densityPct
             : null,
+          visualDensityPct: Number.isFinite(visual?.detection?.density)
+            ? visual.detection.density
+            : null,
         },
+        governor: app.getRenderGovernorDiagnostics(),
       };
-    });
+    }, expectedCommit);
     reportState.observations.push({
       stage: 'end-snapshot',
-      state: { ...end, pageErrors: errors.slice(-4) },
+      state: {
+        ...end,
+        mapDemand: {
+          ...end.mapDemand,
+          tileQueueStableSamples: settled.tileQueueStableSamples,
+          observedProviderRequests: providerRequestsAfterForeground,
+          interceptedProviderRequests: interceptedRequestsAfterForeground,
+          pendingProviderRequests: pendingMapProviderRequests.size,
+          requestTrackingOverflow: mapProviderRequestTrackingOverflow,
+        },
+        pageErrors: errors.slice(-4),
+      },
     });
     assert.deepEqual(end.enabledLayerIds, start.enabledLayerIds);
     assert.deepEqual(end.stats, start.stats);
     assert.deepEqual(end.settings, start.settings);
     assert.deepEqual(end.map, start.map);
+    assert.deepEqual(end.browser, start.browser);
+    assert.deepEqual(end.camera, start.camera);
+    assert.equal(
+      end.mapDemand.globeTilesLoaded,
+      start.mapDemand.globeTilesLoaded,
+      'Globe tile-load state changed during the static observation.',
+    );
+    assert.deepEqual(
+      end.mapDemand.tileQueues,
+      start.mapDemand.tileQueues,
+      'Globe tile work queues changed during the static observation.',
+    );
+    assert.equal(end.mapDemand.tileQueueCount, 0);
     assert.equal(end.applicationStatus, 'ready');
-    assert.equal(end.applicationCommit, start.source.appCommit);
+    assert.equal(end.source.appCommit, start.source.appCommit);
+    assert.equal(end.source.matchesHarnessHead, true);
     assert.equal(start.applicationStatus, 'ready');
     assert.equal(start.source.matchesHarnessHead, true);
     assert.match(start.source.appCommit || '', /^[a-f0-9]{40}$/);
     assert.equal(start.browser.family, 'chromium');
     assert.match(start.browser.version || '', /^\d+(?:\.\d+){3}$/);
+    assert.ok(
+      start.browser.renderer.length > 0 &&
+        start.browser.rendererClass !== 'unavailable',
+      'A browser renderer string must be retained for review.',
+    );
     assert.deepEqual(start.browser.viewport, {
       width: 1440,
       height: 1000,
@@ -698,6 +1028,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       sourceStartSnapshot,
       inspectTrackedWorktree(),
     );
+    reportState.sourceFinish = sourceFinish;
     reportState.observations.push({
       stage: 'end-snapshot',
       state: {
@@ -718,6 +1049,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         imageryLayers: app.viewer.imageryLayers.length,
         canvases: document.querySelectorAll('canvas').length,
       };
+      const postRenderEvent = app.viewer.scene.postRender;
       const teardown = await application.destroy();
       const productionHandlesRemoved =
         !window.__godsEyeView &&
@@ -739,15 +1071,17 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           canvases: document.querySelectorAll('canvas').length,
           credits: document.querySelectorAll('#cesium-credits').length,
           dataLayers: app.dataManager.layers.size,
-          postRenderListeners: (() => {
-            try {
-              return app.viewer.scene.postRender.numberOfListeners ?? null;
-            } catch {
-              return null;
-            }
-          })(),
+          postRenderListeners: postRenderEvent.numberOfListeners ?? null,
         },
         governor: app.getRenderGovernorDiagnostics(),
+        applicationRenderOwnersReleased: (() => {
+          const governor = app.getRenderGovernorDiagnostics();
+          return (
+            governor.installed === false &&
+            governor.holds.length === 0 &&
+            governor.scheduledUpdates.length === 0
+          );
+        })(),
         teardownErrors: Array.isArray(teardown?.errors)
           ? teardown.errors.length
           : 0,
@@ -767,6 +1101,15 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       schema: 'gev-application-render-demand-diagnostic/v1',
       status:
         staticObservation.foregroundUninterrupted &&
+        staticObservation.mapProviderTraffic.stable &&
+        settled.settled &&
+        settled.sample?.tileQueueCount === 0 &&
+        end.mapDemand.tileQueueCount === 0 &&
+        end.mapDemand.globeTilesLoaded === settled.sample?.globeTilesLoaded &&
+        settled.tileQueueStableSamples >= 4 &&
+        observedMapProviderRequestCount === expectedBlockedMapProviderCount &&
+        pendingMapProviderRequests.size === 0 &&
+        !mapProviderRequestTrackingOverflow &&
         !staticObservation.eventOverflow &&
         staticObservation.durationMs >= 10_000 &&
         staticObservation.completedPostRenderCount <= 2 &&
@@ -782,7 +1125,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         destroy.resourcesAfter.canvases === 0 &&
         destroy.resourcesAfter.credits === 0 &&
         destroy.resourcesAfter.dataLayers === 0 &&
-        destroy.resourcesAfter.postRenderListeners === 0 &&
+        destroy.applicationRenderOwnersReleased &&
         destroy.teardownErrors === 0 &&
         routeAttempts.flights > 0 &&
         routeAttempts.military > 0 &&
@@ -798,6 +1141,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       scope:
         'full application with enabled-empty civil and military source layers; diagnostic, not hardware qualification',
       fixture: {
+        profileId: RENDER_DEMAND_PROFILE.id,
+        profileSha256: RENDER_DEMAND_PROFILE_SHA256,
         fixedTime,
         wallElapsedAtObservationMs: fixtureWallElapsedMs,
         flightsId: flights.id,
@@ -822,6 +1167,20 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       networkProbe,
       foreground: staticObservation,
       foregroundFrameMaximum: 2,
+      mapDemand: {
+        settled: settled.settled,
+        meaning: settled.demandMeaning ?? null,
+        globeTilesLoaded: end.mapDemand.globeTilesLoaded,
+        settledGlobeTilesLoaded: settled.sample?.globeTilesLoaded ?? null,
+        pendingTileQueueCount: end.mapDemand.tileQueueCount,
+        settledPendingTileQueueCount: settled.sample?.tileQueueCount ?? null,
+        tileQueueStableSamples: settled.tileQueueStableSamples,
+        providerRequestsBefore: providerRequestsBeforeForeground,
+        providerRequestsAfter: providerRequestsAfterForeground,
+        interceptedProviderRequests: interceptedRequestsAfterForeground,
+        pendingProviderRequests: pendingMapProviderRequests.size,
+        requestTrackingOverflow: mapProviderRequestTrackingOverflow,
+      },
       visibilityControl,
       teardown: {
         ...destroy,
@@ -832,6 +1191,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       end,
       observations: reportState.observations,
     };
+    reportState.terminal = terminal;
     if (terminal.status !== 'passed')
       throw new Error(
         'Application render-demand acceptance conditions failed.',
@@ -844,6 +1204,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     reportState.traffic = {
       expectedBootstrapApiCount,
       expectedBlockedMapProviderCount,
+      observedMapProviderRequestCount,
+      pendingMapProviderRequestCount: pendingMapProviderRequests.size,
+      mapProviderRequestTrackingOverflow,
       unexpectedApiCount,
       unexpectedExternalCount,
       invalidFixtureRouteCount,
@@ -852,6 +1215,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     };
     throw error;
   } finally {
+    fixturePage.off('request', observeMapProviderRequest);
+    fixturePage.off('requestfinished', finishMapProviderRequest);
+    fixturePage.off('requestfailed', finishMapProviderRequest);
     if (!ownerCleanupCompleted) {
       const cleanupErrors = [];
       try {

@@ -5,6 +5,50 @@ export const DENSE_FLIGHT_FIXTURE_COUNT = 2500;
 export const DEFAULT_FLIGHT_FIXTURE_TIME = '2026-10-08T12:00:00.000Z';
 const MAX_FIXTURE_BYTES = 4 * 1024 * 1024;
 
+export const RENDER_DEMAND_PROFILE = Object.freeze({
+  id: 'empty-sources-austin-manual-v1',
+  hash: '#v=2&lat=30.2672&lon=-97.7431&alt=800&heading=15&pitch=-30&roll=0&style=normal&bloom=0&bi=50&bv=2&sharpen=0&si=49&hud=tactical&hv=0&dm=OFF&dd=75&da=elastic&map=esri-imagery&sc=0&scf=16&l=f.m',
+  expected: Object.freeze({
+    camera: Object.freeze({
+      latitude: 30.2672,
+      longitude: -97.7431,
+      altitudeMeters: 800,
+      headingDegrees: 15,
+      pitchDegrees: -30,
+      rollDegrees: 0,
+    }),
+    mapStack: 'esri-imagery',
+    style: 'normal',
+    bloom: Object.freeze({ enabled: false, intensity: 50, version: 2 }),
+    sharpen: Object.freeze({ enabled: false, intensity: 49 }),
+    hud: Object.freeze({ visible: false, variant: 'tactical' }),
+    detection: Object.freeze({
+      mode: 'OFF',
+      densityPct: 75,
+      allocation: 'elastic',
+    }),
+    enabledLayerIds: Object.freeze(['flights', 'military']),
+    renderer: Object.freeze({
+      msaaSamples: 4,
+      preserveDrawingBuffer: true,
+      antialias: true,
+      fxaaEnabled: false,
+      resolutionScale: 1,
+      canvasWidth: 1440,
+      canvasHeight: 1000,
+    }),
+  }),
+});
+export const RENDER_DEMAND_PROFILE_SHA256 = createHash('sha256')
+  .update(
+    JSON.stringify({
+      id: RENDER_DEMAND_PROFILE.id,
+      hash: RENDER_DEMAND_PROFILE.hash,
+      expected: RENDER_DEMAND_PROFILE.expected,
+    }),
+  )
+  .digest('hex');
+
 const RENDER_DEMAND_BOOTSTRAP_API_ROUTES = new Set(['GET /api/setup/status']);
 const RENDER_DEMAND_MAP_PROVIDER_HOSTS = new Map([
   [
@@ -19,6 +63,7 @@ const RENDER_DEMAND_STAGES = new Set([
   'application-start',
   'fixture-delivery',
   'scene-settle',
+  'map-demand',
   'start-snapshot',
   'foreground-observation',
   'visibility-control',
@@ -68,6 +113,383 @@ function projectRenderDemandValue(value, depth = 0) {
   );
 }
 
+function projectRenderDemandDimension(value) {
+  return Number.isSafeInteger(value) && value > 0 && value <= 8192
+    ? value
+    : null;
+}
+
+function projectRenderDemandCamera(camera) {
+  if (!camera || typeof camera !== 'object') return null;
+  const fields = [
+    'latitude',
+    'longitude',
+    'altitudeMeters',
+    'headingDegrees',
+    'pitchDegrees',
+    'rollDegrees',
+  ];
+  return Object.fromEntries(
+    fields.map((field) => [
+      field,
+      Number.isFinite(camera[field]) ? camera[field] : null,
+    ]),
+  );
+}
+
+function projectRenderDemandLayerStats(stats) {
+  if (!stats || typeof stats !== 'object') return null;
+  return Object.fromEntries(
+    ['flights', 'military'].map((id) => {
+      const layer = stats[id];
+      return [
+        id,
+        layer && typeof layer === 'object'
+          ? {
+              enabled:
+                typeof layer.enabled === 'boolean' ? layer.enabled : null,
+              lifecycleState:
+                typeof layer.lifecycleState === 'string'
+                  ? scrubRenderDemandText(layer.lifecycleState, 32)
+                  : null,
+              lifecycleUncertain:
+                typeof layer.lifecycleUncertain === 'boolean'
+                  ? layer.lifecycleUncertain
+                  : null,
+              count: boundedRenderDemandCount(layer.count),
+              status: boundedRenderDemandCount(layer.status),
+              stale: typeof layer.stale === 'boolean' ? layer.stale : null,
+            }
+          : null,
+      ];
+    }),
+  );
+}
+
+function projectRenderDemandSnapshot(state) {
+  if (!state || typeof state !== 'object') return null;
+  const browser =
+    state.browser && typeof state.browser === 'object' ? state.browser : {};
+  const settings =
+    state.settings && typeof state.settings === 'object' ? state.settings : {};
+  const visual =
+    state.visual && typeof state.visual === 'object' ? state.visual : {};
+  const dimensionPair = (value) =>
+    value && typeof value === 'object'
+      ? {
+          width: projectRenderDemandDimension(value.width),
+          height: projectRenderDemandDimension(value.height),
+          ...(Number.isFinite(value.dpr) ? { dpr: value.dpr } : {}),
+        }
+      : null;
+  const governor =
+    state.governor && typeof state.governor === 'object' ? state.governor : {};
+  const stateCamera = projectRenderDemandCamera(state.camera);
+  return {
+    applicationStatus:
+      typeof state.applicationStatus === 'string'
+        ? scrubRenderDemandText(state.applicationStatus, 32)
+        : null,
+    source: {
+      appCommit: /^[a-f0-9]{40}$/.test(state.source?.appCommit || '')
+        ? state.source.appCommit
+        : null,
+      expectedCommit: /^[a-f0-9]{40}$/.test(state.source?.expectedCommit || '')
+        ? state.source.expectedCommit
+        : null,
+      matchesHarnessHead:
+        typeof state.source?.matchesHarnessHead === 'boolean'
+          ? state.source.matchesHarnessHead
+          : null,
+    },
+    browser: {
+      family: ['chromium', 'other'].includes(browser.family)
+        ? browser.family
+        : null,
+      version: /^\d+(?:\.\d+){3}$/.test(browser.version || '')
+        ? browser.version
+        : null,
+      rendererClass: [
+        'swiftshader',
+        'software-other',
+        'hardware-or-unknown',
+        'unavailable',
+      ].includes(browser.rendererClass)
+        ? browser.rendererClass
+        : null,
+      renderer:
+        typeof browser.renderer === 'string'
+          ? scrubRenderDemandText(browser.renderer, 240)
+          : null,
+      viewport: dimensionPair(browser.viewport),
+      drawingBuffer: dimensionPair(browser.drawingBuffer),
+    },
+    fixtureEpochMs: Number.isFinite(state.fixtureEpochMs)
+      ? state.fixtureEpochMs
+      : null,
+    visibilityState:
+      typeof state.visibilityState === 'string'
+        ? scrubRenderDemandText(state.visibilityState, 16)
+        : null,
+    focused: typeof state.focused === 'boolean' ? state.focused : null,
+    frameNumber: boundedRenderDemandCount(state.frameNumber),
+    camera: stateCamera,
+    map: {
+      status:
+        typeof state.map?.status === 'string'
+          ? scrubRenderDemandText(state.map.status, 32)
+          : null,
+      activeId:
+        typeof state.map?.activeId === 'string'
+          ? scrubRenderDemandText(state.map.activeId, 48)
+          : null,
+    },
+    enabledLayerIds: Array.isArray(state.enabledLayerIds)
+      ? state.enabledLayerIds
+          .slice(0, 8)
+          .map((id) => (/^[a-z0-9-]{1,48}$/.test(id) ? id : '[invalid-layer]'))
+      : [],
+    stats: projectRenderDemandLayerStats(state.stats),
+    mapDemand:
+      state.mapDemand && typeof state.mapDemand === 'object'
+        ? {
+            globeTilesLoaded:
+              typeof state.mapDemand.globeTilesLoaded === 'boolean'
+                ? state.mapDemand.globeTilesLoaded
+                : null,
+            tileQueueCount: boundedRenderDemandCount(
+              state.mapDemand.tileQueueCount,
+            ),
+            tileQueues:
+              state.mapDemand.tileQueues &&
+              typeof state.mapDemand.tileQueues === 'object'
+                ? {
+                    high: boundedRenderDemandCount(
+                      state.mapDemand.tileQueues.high,
+                    ),
+                    medium: boundedRenderDemandCount(
+                      state.mapDemand.tileQueues.medium,
+                    ),
+                    low: boundedRenderDemandCount(
+                      state.mapDemand.tileQueues.low,
+                    ),
+                  }
+                : null,
+            tileQueueStableSamples: boundedRenderDemandCount(
+              state.mapDemand.tileQueueStableSamples,
+            ),
+            observedProviderRequests: boundedRenderDemandCount(
+              state.mapDemand.observedProviderRequests,
+            ),
+            interceptedProviderRequests: boundedRenderDemandCount(
+              state.mapDemand.interceptedProviderRequests,
+            ),
+            pendingProviderRequests: boundedRenderDemandCount(
+              state.mapDemand.pendingProviderRequests,
+            ),
+            requestTrackingOverflow:
+              state.mapDemand.requestTrackingOverflow === true,
+          }
+        : null,
+    settings: {
+      msaaSamples: boundedRenderDemandCount(settings.msaaSamples),
+      preserveDrawingBuffer:
+        typeof settings.preserveDrawingBuffer === 'boolean'
+          ? settings.preserveDrawingBuffer
+          : null,
+      antialias:
+        typeof settings.antialias === 'boolean' ? settings.antialias : null,
+      fxaaEnabled:
+        typeof settings.fxaaEnabled === 'boolean' ? settings.fxaaEnabled : null,
+      resolutionScale: Number.isFinite(settings.resolutionScale)
+        ? settings.resolutionScale
+        : null,
+      canvasWidth: projectRenderDemandDimension(settings.canvasWidth),
+      canvasHeight: projectRenderDemandDimension(settings.canvasHeight),
+      style:
+        typeof settings.style === 'string'
+          ? scrubRenderDemandText(settings.style, 32)
+          : null,
+      bloomEnabled:
+        typeof settings.bloomEnabled === 'boolean'
+          ? settings.bloomEnabled
+          : null,
+      bloomIntensity: Number.isFinite(settings.bloomIntensity)
+        ? settings.bloomIntensity
+        : null,
+      bloomVersion: boundedRenderDemandCount(settings.bloomVersion),
+      sharpenEnabled:
+        typeof settings.sharpenEnabled === 'boolean'
+          ? settings.sharpenEnabled
+          : null,
+      sharpenIntensity: Number.isFinite(settings.sharpenIntensity)
+        ? settings.sharpenIntensity
+        : null,
+      detectionMode:
+        typeof settings.detectionMode === 'string'
+          ? scrubRenderDemandText(settings.detectionMode, 32)
+          : null,
+      densityPct: Number.isFinite(settings.densityPct)
+        ? settings.densityPct
+        : null,
+      visualDensityPct: Number.isFinite(settings.visualDensityPct)
+        ? settings.visualDensityPct
+        : null,
+      allocation:
+        typeof settings.allocation === 'string'
+          ? scrubRenderDemandText(settings.allocation, 32)
+          : null,
+      qualityMode:
+        typeof settings.qualityMode === 'string'
+          ? scrubRenderDemandText(settings.qualityMode, 32)
+          : null,
+    },
+    governor: {
+      installed:
+        typeof governor.installed === 'boolean' ? governor.installed : null,
+      mode:
+        typeof governor.mode === 'string'
+          ? scrubRenderDemandText(governor.mode, 24)
+          : null,
+      holds: Array.isArray(governor.holds)
+        ? governor.holds
+            .slice(0, 12)
+            .map((hold) => scrubRenderDemandText(hold, 48))
+        : [],
+      holdsTruncated:
+        Array.isArray(governor.holds) && governor.holds.length > 12,
+      scheduledUpdates: Array.isArray(governor.scheduledUpdates)
+        ? governor.scheduledUpdates
+            .slice(0, 12)
+            .map((owner) => scrubRenderDemandText(owner, 48))
+        : [],
+      scheduledUpdatesTruncated:
+        Array.isArray(governor.scheduledUpdates) &&
+        governor.scheduledUpdates.length > 12,
+    },
+    pageErrorCount: boundedRenderDemandCount(state.pageErrors?.length),
+    pageErrors: Array.isArray(state.pageErrors)
+      ? state.pageErrors
+          .slice(-3)
+          .map((entry) => scrubRenderDemandText(entry, 160))
+      : [],
+  };
+}
+
+function projectRenderDemandTerminal(terminal) {
+  if (!terminal || typeof terminal !== 'object') return null;
+  return {
+    status: terminal.status === 'passed' ? 'passed' : 'failed',
+    foreground: {
+      durationMs: Number.isFinite(terminal.foreground?.durationMs)
+        ? terminal.foreground.durationMs
+        : null,
+      completedPostRenderCount: boundedRenderDemandCount(
+        terminal.foreground?.completedPostRenderCount,
+      ),
+      eventOverflow: terminal.foreground?.eventOverflow === true,
+      foregroundUninterrupted:
+        typeof terminal.foreground?.foregroundUninterrupted === 'boolean'
+          ? terminal.foreground.foregroundUninterrupted
+          : null,
+    },
+    visibility: {
+      mode:
+        typeof terminal.visibilityControl?.mode === 'string'
+          ? scrubRenderDemandText(terminal.visibilityControl.mode, 48)
+          : null,
+      loopStopped: terminal.visibilityControl?.loopStopped === true,
+      resumedFrameAfterPrior:
+        typeof terminal.visibilityControl?.resumedFrameAfterPrior === 'boolean'
+          ? terminal.visibilityControl.resumedFrameAfterPrior
+          : null,
+    },
+    teardown: {
+      status:
+        typeof terminal.teardown?.status === 'string'
+          ? scrubRenderDemandText(terminal.teardown.status, 32)
+          : null,
+      viewerDestroyed: terminal.teardown?.viewerDestroyed === true,
+      layers: boundedRenderDemandCount(terminal.teardown?.layers),
+      productionHandlesRemoved:
+        terminal.teardown?.productionHandlesRemoved === true,
+      applicationRenderOwnersReleased:
+        typeof terminal.teardown?.applicationRenderOwnersReleased === 'boolean'
+          ? terminal.teardown.applicationRenderOwnersReleased
+          : null,
+      totalPostRenderListenersBefore: boundedRenderDemandCount(
+        terminal.teardown?.resourcesBefore?.postRenderListeners,
+      ),
+      totalPostRenderListenersAfter: boundedRenderDemandCount(
+        terminal.teardown?.resourcesAfter?.postRenderListeners,
+      ),
+      teardownErrors: boundedRenderDemandCount(
+        terminal.teardown?.teardownErrors,
+      ),
+    },
+    mapDemand: terminal.mapDemand
+      ? {
+          settled: terminal.mapDemand.settled === true,
+          globeTilesLoaded:
+            typeof terminal.mapDemand.globeTilesLoaded === 'boolean'
+              ? terminal.mapDemand.globeTilesLoaded
+              : null,
+          settledGlobeTilesLoaded:
+            typeof terminal.mapDemand.settledGlobeTilesLoaded === 'boolean'
+              ? terminal.mapDemand.settledGlobeTilesLoaded
+              : null,
+          tileContentReady: terminal.mapDemand.globeTilesLoaded === true,
+          queueQuiescent:
+            terminal.mapDemand.pendingTileQueueCount === 0 &&
+            Number.isSafeInteger(terminal.mapDemand.tileQueueStableSamples) &&
+            terminal.mapDemand.tileQueueStableSamples >= 4,
+          pendingTileQueueCount: boundedRenderDemandCount(
+            terminal.mapDemand.pendingTileQueueCount,
+          ),
+          settledPendingTileQueueCount: boundedRenderDemandCount(
+            terminal.mapDemand.settledPendingTileQueueCount,
+          ),
+          tileQueueStableSamples: boundedRenderDemandCount(
+            terminal.mapDemand.tileQueueStableSamples,
+          ),
+          providerRequestsBefore: boundedRenderDemandCount(
+            terminal.mapDemand.providerRequestsBefore,
+          ),
+          providerRequestsAfter: boundedRenderDemandCount(
+            terminal.mapDemand.providerRequestsAfter,
+          ),
+          interceptedProviderRequests: boundedRenderDemandCount(
+            terminal.mapDemand.interceptedProviderRequests,
+          ),
+          pendingProviderRequests: boundedRenderDemandCount(
+            terminal.mapDemand.pendingProviderRequests,
+          ),
+          requestTrackingOverflow:
+            terminal.mapDemand.requestTrackingOverflow === true,
+        }
+      : null,
+    fixture: terminal.fixture
+      ? {
+          profileId:
+            /^[a-z0-9-]{1,64}$/.test(terminal.fixture.profileId || '') &&
+            terminal.fixture.profileId === RENDER_DEMAND_PROFILE.id
+              ? terminal.fixture.profileId
+              : null,
+          profileSha256:
+            terminal.fixture.profileSha256 === RENDER_DEMAND_PROFILE_SHA256
+              ? terminal.fixture.profileSha256
+              : null,
+          flightsCount: boundedRenderDemandCount(
+            terminal.fixture.populations?.flights,
+          ),
+          militaryCount: boundedRenderDemandCount(
+            terminal.fixture.populations?.military,
+          ),
+        }
+      : null,
+  };
+}
+
 /** Classify only deterministic bootstrap/map traffic; callers still block it. */
 export function classifyRenderDemandRequest({ url, origin, method } = {}) {
   let parsed;
@@ -112,6 +534,9 @@ export function createRenderDemandFailureReport({
   delivery = null,
   traffic = null,
   fixture = null,
+  terminal = null,
+  source = null,
+  sourceFinish = null,
 } = {}) {
   const safeMessage = scrubRenderDemandText(
     error?.message || 'Diagnostic failed',
@@ -144,6 +569,15 @@ export function createRenderDemandFailureReport({
               ? fixture.militarySha256
               : null,
             militaryBytes: boundedRenderDemandCount(fixture.militaryBytes),
+            profileId:
+              /^[a-z0-9-]{1,64}$/.test(fixture.profileId || '') &&
+              fixture.profileId === RENDER_DEMAND_PROFILE.id
+                ? fixture.profileId
+                : null,
+            profileSha256:
+              fixture.profileSha256 === RENDER_DEMAND_PROFILE_SHA256
+                ? fixture.profileSha256
+                : null,
           }
         : null,
     failure: {
@@ -154,6 +588,11 @@ export function createRenderDemandFailureReport({
     },
     observations: Array.isArray(observations)
       ? observations.slice(-12).map((entry) => {
+          if (['start-snapshot', 'end-snapshot'].includes(entry?.stage))
+            return {
+              stage: entry.stage,
+              state: projectRenderDemandSnapshot(entry?.state),
+            };
           let state = null;
           try {
             const projected = projectRenderDemandValue(entry?.state ?? null);
@@ -173,6 +612,33 @@ export function createRenderDemandFailureReport({
           };
         })
       : [],
+    terminal: projectRenderDemandTerminal(terminal),
+    source:
+      source && typeof source === 'object'
+        ? {
+            commit: /^[a-f0-9]{40}$/.test(source.commit || '')
+              ? source.commit
+              : null,
+            dirtyAtStart: source.dirtyAtStart === true,
+            identityValid:
+              typeof source.identityValid === 'boolean'
+                ? source.identityValid
+                : null,
+          }
+        : null,
+    sourceFinish:
+      sourceFinish && typeof sourceFinish === 'object'
+        ? {
+            sourceChangedDuringRun:
+              typeof sourceFinish.sourceChangedDuringRun === 'boolean'
+                ? sourceFinish.sourceChangedDuringRun
+                : null,
+            sourceIdentityError:
+              typeof sourceFinish.error === 'string'
+                ? scrubRenderDemandText(sourceFinish.error, 160)
+                : null,
+          }
+        : null,
     delivery:
       delivery && typeof delivery === 'object'
         ? {
@@ -204,6 +670,24 @@ export function createRenderDemandFailureReport({
             expectedBlockedMapProviderCount: boundedRenderDemandCount(
               traffic.expectedBlockedMapProviderCount,
             ),
+            observedMapProviderRequestCount: boundedRenderDemandCount(
+              traffic.observedMapProviderRequestCount,
+            ),
+            pendingMapProviderRequestCount: boundedRenderDemandCount(
+              traffic.pendingMapProviderRequestCount,
+            ),
+            mapProviderRequestTrackingOverflow:
+              traffic.mapProviderRequestTrackingOverflow === true,
+            mapProviderRequestsBeforeForeground: boundedRenderDemandCount(
+              traffic.mapProviderRequestsBeforeForeground,
+            ),
+            mapProviderRequestsAfterForeground: boundedRenderDemandCount(
+              traffic.mapProviderRequestsAfterForeground,
+            ),
+            mapProviderTrafficStable:
+              typeof traffic.mapProviderTrafficStable === 'boolean'
+                ? traffic.mapProviderTrafficStable
+                : null,
             unexpectedApiCount: boundedRenderDemandCount(
               traffic.unexpectedApiCount,
             ),
