@@ -690,9 +690,9 @@ test('deactivation clears the probe clamp and restores nominal frustum geometry'
   assert.equal(rewrittenRange, 210);
 });
 
-test('CCTV disable hide sweep hides record visuals and destroys viewsheds without restyling', () => {
-  const viewshedA = { id: 'viewshed-a' };
-  const viewshedB = { id: 'viewshed-b' };
+test('CCTV disable hide sweep hides and retains viewshed cohort without restyling', () => {
+  const viewshedA = { id: 'viewshed-a', show: true };
+  const viewshedB = { id: 'viewshed-b', show: true };
   const records = [
     {
       camera: { id: 'a' },
@@ -712,13 +712,13 @@ test('CCTV disable hide sweep hides record visuals and destroys viewsheds withou
       viewshedPrimitive: viewshedB,
     },
   ];
-  const destroyed = [];
+  const hidden = [];
 
   hideCctvRecordVisuals(
     records,
     (record) => {
-      destroyed.push(record.camera.id);
-      record.viewshedPrimitive = null;
+      hidden.push(record.camera.id);
+      record.viewshedPrimitive.show = false;
     },
     'a',
   );
@@ -730,9 +730,11 @@ test('CCTV disable hide sweep hides record visuals and destroys viewsheds withou
     [false, false],
   );
   assert.equal(records[0].projection.planeEntity.show, false);
-  assert.deepEqual(destroyed, ['a', 'b']);
-  assert.equal(records[0].viewshedPrimitive, null);
-  assert.equal(records[1].viewshedPrimitive, null);
+  assert.deepEqual(hidden, ['a', 'b']);
+  assert.equal(records[0].viewshedPrimitive, viewshedA);
+  assert.equal(records[1].viewshedPrimitive, viewshedB);
+  assert.equal(viewshedA.show, false);
+  assert.equal(viewshedB.show, false);
   assert.deepEqual(
     records.map((record) => record.probeClampRangeM),
     [null, null],

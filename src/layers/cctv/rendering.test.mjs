@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as Cesium from 'cesium';
+import { viewshedColors } from '../../data/cctvViewshed.js';
+import { createGeometry } from './geometry.js';
 import { createRendering } from './rendering.js';
 import {
   ACTIVE_COVERAGE_CENTER,
@@ -227,4 +229,227 @@ test('coverage refresh replaces dynamic colors and custom estimated dash paramet
   fixture.rendering.refreshCoverageStyles();
   assert.ok(fixture.geometryChangeCount() > beforeCustomDashReplacement);
   assert.equal(ray.polyline.material.dashLength, undefined);
+});
+
+test('viewshed toggles reuse the bounded current cohort and evict before admitting another', () => {
+  const records = Array.from({ length: 16 }, (_, index) => ({
+    camera: { id: `camera-${index}`, headingConfidence: 'high' },
+    coverageEntities: [],
+    frustumPositions: {},
+    viewshedColors: {},
+    viewshedPrimitive: null,
+    viewshedActiveTint: null,
+  }));
+  const state = {
+    _records: records,
+    _enabled: true,
+    _coverageMode: 'viewshed',
+    _showProjection: false,
+    _activeCameraId: records[0].camera.id,
+    _billboards: null,
+  };
+  let activeRecord = records[0];
+  let visibleIds = new Set(records.slice(0, 14).map(({ camera }) => camera.id));
+  const events = [];
+  const rendering = createRendering({
+    state,
+    services: { focus: {} },
+    parts: {
+      selection: { getActiveRecord: () => activeRecord },
+      geometry: {
+        ensureActiveCoverageEntities() {},
+        buildCoverageVisibleSet: () => visibleIds,
+        ensureVisibleCoverageEntities() {},
+        rebuildViewshedVolume(record, active) {
+          record.viewshedPrimitive = { show: true, active };
+          record.viewshedActiveTint = active;
+          events.push(['create', record.camera.id]);
+        },
+        hideViewshedVolume(record) {
+          record.viewshedPrimitive.show = false;
+        },
+        destroyViewshedVolume(record) {
+          events.push(['destroy', record.camera.id]);
+          record.viewshedPrimitive = null;
+          record.viewshedActiveTint = null;
+        },
+        updateViewshedVolumeTint(record, active) {
+          record.viewshedPrimitive.active = active;
+          record.viewshedActiveTint = active;
+          events.push(['tint', record.camera.id]);
+          return true;
+        },
+      },
+      model: { isVideoFeedType: () => false },
+      projection: {
+        ensureProjectionRuntime() {},
+        pauseInactiveProjectionFeeds() {},
+        clearProjectionOverlay() {},
+        setPlaneVisible() {},
+      },
+    },
+  });
+
+  rendering.refreshCoverageStyles();
+  const firstCohort = records
+    .slice(0, 14)
+    .map((record) => record.viewshedPrimitive);
+  assert.equal(firstCohort.filter(Boolean).length, 14);
+  assert.equal(records[14].viewshedPrimitive, null);
+  assert.equal(records[15].viewshedPrimitive, null);
+
+  rendering.hideCctvVisuals();
+  assert.deepEqual(
+    records.slice(0, 14).map((record) => record.viewshedPrimitive.show),
+    Array(14).fill(false),
+  );
+  state._enabled = true;
+  rendering.refreshCoverageStyles();
+  assert.deepEqual(
+    records.slice(0, 14).map((record) => record.viewshedPrimitive),
+    firstCohort,
+    'same-cohort re-entry reuses every hidden primitive',
+  );
+
+  state._coverageMode = 'on';
+  rendering.refreshCoverageStyles();
+  assert.deepEqual(
+    records.slice(0, 14).map((record) => record.viewshedPrimitive.show),
+    Array(14).fill(false),
+    'wireframe mode hides but retains the same bounded viewshed cohort',
+  );
+  state._coverageMode = 'off';
+  rendering.refreshCoverageStyles();
+  assert.deepEqual(
+    records.slice(0, 14).map((record) => record.viewshedPrimitive),
+    firstCohort,
+    'coverage-off mode does not discard the retained current cohort',
+  );
+  state._coverageMode = 'viewshed';
+  rendering.refreshCoverageStyles();
+  assert.deepEqual(
+    records.slice(0, 14).map((record) => record.viewshedPrimitive),
+    firstCohort,
+    'viewshed mode reuses the original primitives after mode round-trips',
+  );
+
+  events.length = 0;
+  visibleIds = new Set(records.slice(2, 16).map(({ camera }) => camera.id));
+  rendering.refreshCoverageStyles();
+  assert.equal(records.filter((record) => record.viewshedPrimitive).length, 14);
+  assert.equal(records[0].viewshedPrimitive, null);
+  assert.equal(records[1].viewshedPrimitive, null);
+  assert.ok(
+    events.findIndex(([kind, id]) => kind === 'destroy' && id === 'camera-0') <
+      events.findIndex(([kind, id]) => kind === 'create' && id === 'camera-14'),
+  );
+
+  const beforeActiveChange = events.filter(
+    ([kind]) => kind === 'create',
+  ).length;
+  activeRecord = records[3];
+  state._activeCameraId = records[3].camera.id;
+  rendering.refreshCoverageStyles();
+  assert.equal(
+    events.filter(([kind]) => kind === 'create').length,
+    beforeActiveChange,
+    'active tint changes update retained instances instead of rebuilding geometry',
+  );
+  assert.equal(records[3].viewshedPrimitive.active, true);
+  assert.equal(records[2].viewshedPrimitive.active, false);
+});
+
+test('production geometry owns retained viewshed primitives through mode changes, cohort replacement, and teardown', () => {
+  const primitives = new Cesium.PrimitiveCollection();
+  const records = Array.from({ length: 16 }, (_, index) => ({
+    camera: {
+      id: `owned-camera-${index}`,
+      headingConfidence: 'high',
+    },
+    coverageEntities: [],
+    frustumPositions: {
+      mount: Cesium.Cartesian3.fromDegrees(-97.7, 30.2, 50),
+      tl: Cesium.Cartesian3.fromDegrees(-97.699, 30.201, 60),
+      tr: Cesium.Cartesian3.fromDegrees(-97.698, 30.201, 60),
+      br: Cesium.Cartesian3.fromDegrees(-97.698, 30.201, 30),
+      bl: Cesium.Cartesian3.fromDegrees(-97.699, 30.201, 30),
+    },
+    viewshedColors: viewshedColors(index * 17),
+    viewshedPrimitive: null,
+    viewshedPrimitiveInstanceId: null,
+    viewshedActiveTint: null,
+  }));
+  const state = {
+    _records: records,
+    _coverageEntities: [],
+    _projectionEntities: [],
+    _enabled: true,
+    _coverageMode: 'viewshed',
+    _showProjection: false,
+    _activeCameraId: records[0].camera.id,
+    _billboards: null,
+    _viewer: { scene: { primitives } },
+  };
+  let visibleIds = new Set(records.slice(0, 14).map(({ camera }) => camera.id));
+  const activeRecord = records[0];
+  const parts = {
+    selection: { getActiveRecord: () => activeRecord },
+    model: { isVideoFeedType: () => false },
+    projection: {
+      clearProjectionOverlay() {},
+      pauseInactiveProjectionFeeds() {},
+      ensureProjectionRuntime() {},
+      setPlaneVisible() {},
+    },
+  };
+  const services = { ground: {}, mesh: {}, focus: {} };
+  parts.geometry = createGeometry({ state, services, parts, source: {} });
+  parts.geometry.buildCoverageVisibleSet = () => visibleIds;
+  parts.geometry.ensureActiveCoverageEntities = () => {};
+  parts.geometry.ensureVisibleCoverageEntities = () => {};
+  const rendering = createRendering({ state, services, parts, source: {} });
+
+  try {
+    rendering.refreshCoverageStyles();
+    const firstCohort = records
+      .slice(0, 14)
+      .map((record) => record.viewshedPrimitive);
+    assert.equal(primitives.length, 14);
+    assert.ok(
+      firstCohort.every((primitive) => primitive instanceof Cesium.Primitive),
+    );
+
+    state._enabled = false;
+    rendering.hideCctvVisuals();
+    assert.equal(primitives.length, 14);
+    assert.ok(firstCohort.every((primitive) => !primitive.isDestroyed()));
+    state._enabled = true;
+    for (const coverageMode of ['on', 'off', 'viewshed']) {
+      state._coverageMode = coverageMode;
+      rendering.refreshCoverageStyles();
+      assert.deepEqual(
+        records.slice(0, 14).map((record) => record.viewshedPrimitive),
+        firstCohort,
+      );
+      assert.equal(primitives.length, 14);
+    }
+
+    visibleIds = new Set(records.slice(2, 16).map(({ camera }) => camera.id));
+    rendering.refreshCoverageStyles();
+    assert.equal(primitives.length, 14);
+    assert.equal(records[0].viewshedPrimitive, null);
+    assert.equal(records[1].viewshedPrimitive, null);
+    assert.ok(firstCohort[0].isDestroyed());
+    assert.ok(firstCohort[1].isDestroyed());
+
+    const remaining = records.flatMap((record) =>
+      record.viewshedPrimitive ? [record.viewshedPrimitive] : [],
+    );
+    parts.geometry.destroyCoverageEntities();
+    assert.equal(primitives.length, 0);
+    assert.ok(remaining.every((primitive) => primitive.isDestroyed()));
+  } finally {
+    if (!primitives.isDestroyed()) primitives.destroy();
+  }
+  assert.equal(primitives.isDestroyed(), true);
 });

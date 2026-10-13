@@ -13,8 +13,8 @@
  *    synchronous build (trivially small), no picking.
  *
  * Nothing here queries the scene or persists anything: colors are
- * presentation-only and volumes are rebuilt only at the moments the frustum
- * wireframe already rewrites (pose edits / visible-set changes).
+ * presentation-only; the layer retains hidden volumes only for its bounded
+ * current cohort and rebuilds geometry when the frustum pose changes.
  */
 import * as Cesium from 'cesium';
 
@@ -94,9 +94,10 @@ export function frustumVolumeGeometryData(positions) {
  * billboard/wireframe/plane, whose pick semantics are established).
  * @param {Object} positions - frustumCartesians shape (see frustumVolumeGeometryData).
  * @param {Cesium.Color} color - Per-camera fill color (already alpha'd).
+ * @param {string} [instanceId] - Stable id for Cesium per-instance tint updates.
  * @returns {Cesium.Primitive}
  */
-export function createFrustumVolumePrimitive(positions, color) {
+export function createFrustumVolumePrimitive(positions, color, instanceId) {
   const { positions: flat, indices } = frustumVolumeGeometryData(positions);
   const geometry = new Cesium.Geometry({
     attributes: {
@@ -112,6 +113,7 @@ export function createFrustumVolumePrimitive(positions, color) {
   });
   return new Cesium.Primitive({
     geometryInstances: new Cesium.GeometryInstance({
+      id: instanceId ?? 'gev-viewshed-volume',
       geometry,
       attributes: {
         color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),

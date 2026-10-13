@@ -270,6 +270,8 @@ export function createLifecycle({
           groundSamples: {},
           frustumGeometry: null,
           frustumPositions: null,
+          frustumGeometrySurfaceRegime: null,
+          frustumGeometrySurfaceOwnerId: null,
           // §9.1 activation obstruction probe result: effective-range clamp so
           // the far-cap plane never clips into the tiles. Null = unclamped.
           // Reset + re-probed on every activation; cleared when the user takes
@@ -277,12 +279,15 @@ export function createLifecycle({
           probeClampRangeM: null,
           probeClampSource: null,
           // Viewshed (design §3a/§3b): per-camera color identity + the volume
-          // primitive handle (exists only in viewshed mode for the visible set).
+          // cached volume handle for the current coverage cohort.
           viewshedColors: viewshedColors(
             cameraHue(hueIndexById.get(camera.id) ?? 0),
           ),
           viewshedPrimitive: null,
-          viewshedActiveTint: false,
+          viewshedPrimitiveInstanceId: null,
+          viewshedActiveTint: null,
+          viewshedDesiredTint: null,
+          viewshedTintReadyUnsubscribe: null,
         };
         layerState._records.push(record);
         layerState._recordById.set(camera.id, record);

@@ -6,6 +6,7 @@ import { createModel } from './model.js';
 import { createCalibration } from './calibration.js';
 import { DEFAULT_CAMERA_CALIBRATION } from './policy.js';
 import { poseHash, SUPPORT_KEYS } from '../../data/cctvFootprint.js';
+import { viewshedColors } from '../../data/cctvViewshed.js';
 
 function fixture() {
   const state = {};
@@ -377,6 +378,218 @@ test('rounded-equal runtime DEM support is not applied to the newer pose', () =>
     false,
     'exact runtime pose ownership rejects support heights for the prior pose',
   );
+});
+
+test('hidden cached viewshed geometry is invalidated on pose or terrain changes and tint waits for Cesium readiness', () => {
+  const env = fixture();
+  const primitives = [];
+  const postRenderListeners = new Set();
+  const renderRequests = [];
+  env.state._viewer = {
+    scene: {
+      postRender: {
+        addEventListener(listener) {
+          postRenderListeners.add(listener);
+          return () => postRenderListeners.delete(listener);
+        },
+      },
+      primitives: {
+        add(primitive) {
+          primitives.push(primitive);
+          return primitive;
+        },
+        remove(primitive) {
+          const index = primitives.indexOf(primitive);
+          if (index >= 0) primitives.splice(index, 1);
+          return index >= 0;
+        },
+      },
+    },
+  };
+  env.services.render = {
+    governorRequestRender(reason) {
+      renderRequests.push(reason);
+    },
+  };
+  env.record.viewshedColors = viewshedColors(120);
+  env.geometry.applyFrustumGeometry(env.record, 12);
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  const primitive = env.record.viewshedPrimitive;
+  assert.ok(primitive);
+  const instanceId = env.record.viewshedPrimitiveInstanceId;
+  assert.equal(instanceId, 'gev-viewshed:camera-one');
+  assert.equal(primitive.geometryInstances.id, instanceId);
+  const attributes = { color: new Uint8Array([1, 2, 3, 4]) };
+  let attributeReads = 0;
+  primitive.getGeometryInstanceAttributes = (id) => {
+    assert.equal(id, instanceId);
+    attributeReads++;
+    return attributes;
+  };
+  assert.equal(env.geometry.updateViewshedVolumeTint(env.record, true), false);
+  assert.equal(
+    attributeReads,
+    0,
+    'Cesium attributes are not read before ready',
+  );
+  assert.equal(env.record.viewshedActiveTint, false);
+  assert.equal(postRenderListeners.size, 1);
+
+  env.geometry.hideViewshedVolume(env.record);
+  assert.equal(
+    postRenderListeners.size,
+    0,
+    'hide removes the readiness observer',
+  );
+  primitive.show = true;
+  assert.equal(env.geometry.updateViewshedVolumeTint(env.record, true), false);
+  assert.equal(postRenderListeners.size, 1, 're-entry rearms one observer');
+  assert.equal(env.geometry.updateViewshedVolumeTint(env.record, false), true);
+  assert.equal(
+    postRenderListeners.size,
+    0,
+    'returning to applied tint cancels retry',
+  );
+  assert.equal(env.geometry.updateViewshedVolumeTint(env.record, true), false);
+  assert.equal(postRenderListeners.size, 1);
+
+  primitive._ready = true;
+  for (const listener of [...postRenderListeners]) listener();
+  assert.equal(attributeReads, 1);
+  assert.deepEqual(
+    attributes.color,
+    Cesium.ColorGeometryInstanceAttribute.toValue(
+      env.record.viewshedColors.fillActive,
+    ),
+  );
+  assert.equal(env.record.viewshedActiveTint, true);
+  assert.equal(postRenderListeners.size, 0);
+  assert.deepEqual(renderRequests, ['cctv-viewshed-tint-ready']);
+
+  primitive.show = false;
+  env.record.camera.headingDeg += 1;
+  env.geometry.applyFrustumGeometry(env.record, 12);
+  assert.equal(env.record.viewshedPrimitive, null);
+  assert.equal(primitives.includes(primitive), false);
+
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  const terrainBoundPrimitive = env.record.viewshedPrimitive;
+  terrainBoundPrimitive.show = false;
+  env.geometry.applyFrustumGeometry(env.record, 25);
+  assert.equal(env.record.viewshedPrimitive, null);
+  assert.equal(primitives.includes(terrainBoundPrimitive), false);
+
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  const sourceBoundPrimitive = env.record.viewshedPrimitive;
+  sourceBoundPrimitive.show = false;
+  env.parts.ground.currentSurfaceRegime = () => 'google-3d';
+  env.state._googleGroundSource = {};
+  env.geometry.applyFrustumGeometry(env.record, 25);
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  const googleOwnerPrimitive = env.record.viewshedPrimitive;
+  googleOwnerPrimitive.show = false;
+  env.state._googleGroundSource = {};
+  env.geometry.applyFrustumGeometry(env.record, 25);
+  assert.equal(env.record.viewshedPrimitive, null);
+  assert.equal(primitives.includes(googleOwnerPrimitive), false);
+  assert.equal(primitives.includes(sourceBoundPrimitive), false);
+
+  env.parts.ground.currentSurfaceRegime = () => 'globe';
+  const terrainA = {};
+  env.state._viewer.terrainProvider = terrainA;
+  env.geometry.applyFrustumGeometry(env.record, 25);
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  const terrainBoundOwnerPrimitive = env.record.viewshedPrimitive;
+  terrainBoundOwnerPrimitive.show = false;
+  env.state._viewer.terrainProvider = {};
+  env.geometry.applyFrustumGeometry(env.record, 25);
+  assert.equal(env.record.viewshedPrimitive, null);
+  assert.equal(primitives.includes(terrainBoundOwnerPrimitive), false);
+});
+
+test('destroyCoverageEntities removes retained viewshed primitives and readiness listeners', () => {
+  const env = fixture();
+  const primitives = [];
+  const listeners = new Set();
+  env.state._records = [env.record];
+  env.state._coverageEntities = [];
+  env.state._projectionEntities = [];
+  env.state._viewer = {
+    scene: {
+      postRender: {
+        addEventListener(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      },
+      primitives: {
+        add(primitive) {
+          primitives.push(primitive);
+          return primitive;
+        },
+        remove(primitive) {
+          const index = primitives.indexOf(primitive);
+          if (index >= 0) primitives.splice(index, 1);
+          return index >= 0;
+        },
+      },
+    },
+  };
+  env.record.viewshedColors = viewshedColors(120);
+  env.geometry.applyFrustumGeometry(env.record, 12);
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  env.geometry.updateViewshedVolumeTint(env.record, true);
+  const primitive = env.record.viewshedPrimitive;
+  assert.equal(listeners.size, 1);
+
+  env.geometry.destroyCoverageEntities();
+
+  assert.equal(env.record.viewshedPrimitive, null);
+  assert.equal(primitives.includes(primitive), false);
+  assert.equal(listeners.size, 0);
+});
+
+test('viewshed readiness listener retires after a per-instance attribute error', () => {
+  const env = fixture();
+  const listeners = new Set();
+  const primitives = [];
+  env.state._viewer = {
+    scene: {
+      postRender: {
+        addEventListener(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      },
+      primitives: {
+        add(primitive) {
+          primitives.push(primitive);
+          return primitive;
+        },
+        remove(primitive) {
+          const index = primitives.indexOf(primitive);
+          if (index >= 0) primitives.splice(index, 1);
+          return index >= 0;
+        },
+      },
+    },
+  };
+  env.record.viewshedColors = viewshedColors(120);
+  env.geometry.applyFrustumGeometry(env.record, 12);
+  env.geometry.rebuildViewshedVolume(env.record, false);
+  const primitive = env.record.viewshedPrimitive;
+  primitive.getGeometryInstanceAttributes = () => {
+    throw new Error('attribute lookup failure');
+  };
+  assert.equal(env.geometry.updateViewshedVolumeTint(env.record, true), false);
+  assert.equal(listeners.size, 1);
+
+  primitive._ready = true;
+  const [onPostRender] = listeners;
+  assert.throws(onPostRender, /attribute lookup failure/);
+  assert.equal(listeners.size, 0);
+  env.geometry.destroyViewshedVolume(env.record);
+  assert.equal(primitives.length, 0);
 });
 
 test('settled map source refresh selects the visible tileset over an older hidden owner', () => {

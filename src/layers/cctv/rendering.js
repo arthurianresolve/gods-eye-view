@@ -161,25 +161,21 @@ export function createRendering({
   /**
    * Hides every per-record CCTV visual without recomputing coverage membership or
    * styles. Disabling makes every visibility branch false, so a direct sweep is
-   * sufficient; live viewshed primitives still require explicit destruction.
+   * sufficient; the bounded current viewshed cohort is hidden for re-entry.
    *
    * @param {Object[]} records CCTV runtime records.
-   * @param {(record: Object) => void} destroyVolume Viewshed teardown callback.
+   * @param {(record: Object) => void} hideVolume Viewshed visibility callback.
    * @param {string|null} [activeCameraId=null] Active camera whose activation probe must be re-armed.
    */
 
-  function hideCctvRecordVisuals(
-    records,
-    destroyVolume,
-    activeCameraId = null,
-  ) {
+  function hideCctvRecordVisuals(records, hideVolume, activeCameraId = null) {
     for (const record of Array.isArray(records) ? records : []) {
       if (record) {
         record.probeClampRangeM = null;
         if (record.camera?.id === activeCameraId) record.activationDone = false;
       }
       for (const entity of record?.coverageEntities || []) entity.show = false;
-      if (record?.viewshedPrimitive) destroyVolume?.(record);
+      if (record?.viewshedPrimitive) hideVolume?.(record);
       if (record?.projection?.planeEntity)
         record.projection.planeEntity.show = false;
     }
@@ -188,7 +184,7 @@ export function createRendering({
   function hideCctvVisuals() {
     hideCctvRecordVisuals(
       layerState._records,
-      parts.geometry.destroyViewshedVolume,
+      parts.geometry.hideViewshedVolume,
       layerState._activeCameraId,
     );
     parts.projection.clearProjectionOverlay();
@@ -246,6 +242,13 @@ export function createRendering({
       parts.geometry.buildCoverageVisibleSet(activeRecord);
     const coverageOn = layerState._coverageMode !== 'off';
     const viewshedOn = layerState._coverageMode === 'viewshed';
+    // The visible-set policy already caps the active cohort. Evict anything
+    // outside it before adding/reusing volumes so hidden retention never grows
+    // beyond that same bound.
+    for (const record of layerState._records) {
+      if (record?.viewshedPrimitive && !coverageVisible.has(record.camera.id))
+        parts.geometry.destroyViewshedVolume(record);
+    }
     if (coverageOn) {
       parts.geometry.ensureVisibleCoverageEntities(
         layerState._records,
@@ -346,9 +349,9 @@ export function createRendering({
         );
       }
 
-      // Viewshed volume lifecycle: exists iff enabled + viewshed mode + in the
-      // visible set. Rebuild on active-tint flips (rare); otherwise leave the
-      // primitive alone so idle refreshes never churn geometry.
+      // Viewshed volume lifecycle: render iff enabled + viewshed mode + in the
+      // visible set. Retain the current bounded cohort while hidden; tint flips
+      // update the ready primitive's per-instance color without rebuilding.
       const wantVolume = !!(
         layerState._enabled &&
         viewshedOn &&
@@ -356,14 +359,14 @@ export function createRendering({
         record.frustumPositions
       );
       if (wantVolume) {
-        if (
-          !record.viewshedPrimitive ||
-          record.viewshedActiveTint !== isActive
-        ) {
+        if (!record.viewshedPrimitive) {
           parts.geometry.rebuildViewshedVolume(record, isActive);
+        } else {
+          record.viewshedPrimitive.show = true;
+          parts.geometry.updateViewshedVolumeTint?.(record, isActive);
         }
       } else if (record.viewshedPrimitive) {
-        parts.geometry.destroyViewshedVolume(record);
+        parts.geometry.hideViewshedVolume?.(record);
       }
 
       if (record.projection) {

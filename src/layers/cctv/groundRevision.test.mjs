@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as Cesium from 'cesium';
+import { viewshedColors } from '../../data/cctvViewshed.js';
 import { createGround } from './ground.js';
 import { createCalibration } from './calibration.js';
 import { createGeometry } from './geometry.js';
@@ -205,6 +207,70 @@ test('same visible tileset keeps mesh samples and avoids geometry work', () => {
   assert.deepEqual(env.calls.queued, []);
   assert.equal(env.calls.refreshTileset, 0);
   assert.equal(env.active.groundSamples['google-3d'], 118);
+});
+
+test('settled production map-owner replacement evicts an equal-geometry hidden viewshed', () => {
+  const env = setup();
+  const primitives = new Cesium.PrimitiveCollection();
+  env.state._enabled = false;
+  env.state._viewer.scene.primitives = primitives;
+  env.active.groundPrior.ellipsoid = 118;
+  env.active.probeClampRangeM = null;
+  env.active.probeClampSource = null;
+  env.active.viewshedColors = viewshedColors(120);
+  env.parts.ground = env.ground;
+  env.services.focus = {
+    focusPassIsNeeded: () => false,
+    getFocusTarget: () => null,
+  };
+  env.parts.model = createModel({
+    state: env.state,
+    services: env.services,
+    parts: env.parts,
+    source: {},
+  });
+  env.parts.model.projectionTilesReady = () => true;
+  env.parts.model.refreshProjectionTileset = () => {};
+  env.parts.projection = { updatePlanePlacement() {} };
+  env.parts.geometry = createGeometry({
+    state: env.state,
+    services: env.services,
+    parts: env.parts,
+    source: {},
+  });
+
+  try {
+    env.parts.geometry.applyFrustumGeometry(env.active, 118);
+    env.parts.geometry.rebuildViewshedVolume(env.active, false);
+    const oldPrimitive = env.active.viewshedPrimitive;
+    const originalGeometry = env.active.frustumGeometry;
+    const originalPositions = env.active.frustumPositions;
+    oldPrimitive.show = false;
+    assert.equal(primitives.length, 1);
+
+    env.setSource(env.ownerB);
+    env.ground.handleMapStackChanged({
+      detail: {
+        status: 'ready',
+        surfaceOwnerKnown: true,
+        surfaceOwner: env.ownerB,
+      },
+    });
+
+    assert.equal(env.active.frustumGeometry, originalGeometry);
+    assert.equal(env.active.frustumPositions, originalPositions);
+    assert.equal(env.active.viewshedPrimitive, null);
+    assert.equal(oldPrimitive.isDestroyed(), true);
+    assert.equal(primitives.length, 0);
+    assert.equal(typeof env.active.frustumGeometrySurfaceOwnerId, 'string');
+    assert.equal(
+      Object.hasOwn(env.active, 'frustumGeometrySurfaceOwner'),
+      false,
+      'records retain only a non-owning identity token',
+    );
+  } finally {
+    if (!primitives.isDestroyed()) primitives.destroy();
+  }
 });
 
 test('settled owner runs an activation probe deferred during switching even when owner is unchanged', () => {
