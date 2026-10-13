@@ -32,6 +32,7 @@ import { evaluateCompletedRenderDiagnostic } from './performance/settleCompleted
 import {
   createAustinOperatingReadinessHistory,
   encodeAustinOperatingReadinessSnapshot,
+  observeAustinInstallationsReadyForRenderBoundary,
   waitForAustinOperatingReadiness,
 } from './performance/austinOperatingReadinessHistory.mjs';
 import {
@@ -1794,11 +1795,14 @@ async function settleProviderRenderAtBoundary(
   timeoutMs = 5000,
   onProgress,
   progressBinding,
-  retireViewerRenderLoop = false,
-  finalObservationFunction = null,
-  finalObservationArgs = [],
-  beforeRenderRequestFunction = null,
-  beforeRenderRequestArgs = [],
+  {
+    retireViewerRenderLoop = false,
+    finalObservationFunction = null,
+    finalObservationArgs = [],
+    beforeRenderRequestFunction = null,
+    beforeRenderRequestArgs = [],
+    postRenderConditionFunction = null,
+  } = {},
 ) {
   return observeRenderBoundary({
     label,
@@ -1813,6 +1817,7 @@ async function settleProviderRenderAtBoundary(
         finalObservationArgs,
         beforeRenderRequestFunction,
         beforeRenderRequestArgs,
+        postRenderConditionFunction,
       }),
     onProgress,
   });
@@ -4039,20 +4044,21 @@ try {
                     )
                   : undefined,
                 activeRenderBoundaryProgressBinding,
-                false,
-                depthPickAttributionEnabled
-                  ? observeDepthPickAttributionBoundary
-                  : null,
-                depthPickAttributionEnabled
-                  ? [
-                      {
-                        label: 'warmup-boundary',
-                        ownerToken: activeDepthPickAttribution?.ownerToken,
-                      },
-                    ]
-                  : [],
-                holdProviderWarmupBoundary,
-                [warmupMs, phaseRunOrdinal],
+                {
+                  finalObservationFunction: depthPickAttributionEnabled
+                    ? observeDepthPickAttributionBoundary
+                    : null,
+                  finalObservationArgs: depthPickAttributionEnabled
+                    ? [
+                        {
+                          label: 'warmup-boundary',
+                          ownerToken: activeDepthPickAttribution?.ownerToken,
+                        },
+                      ]
+                    : [],
+                  beforeRenderRequestFunction: holdProviderWarmupBoundary,
+                  beforeRenderRequestArgs: [warmupMs, phaseRunOrdinal],
+                },
               );
             } catch (error) {
               if (depthPickAttributionEnabled && activeDepthPickAttribution) {
@@ -4513,28 +4519,37 @@ try {
                 )
               : undefined,
             activeRenderBoundaryProgressBinding,
-            Boolean(productionFlightFixture || austinOperatingWorkload),
-            scenario === 'selected-aircraft-tracking'
-              ? observeTrackedEntityBoundary
-              : depthPickAttributionEnabled
-                ? observeDepthPickAttributionBoundary
+            {
+              retireViewerRenderLoop: Boolean(
+                productionFlightFixture || austinOperatingWorkload,
+              ),
+              finalObservationFunction:
+                scenario === 'selected-aircraft-tracking'
+                  ? observeTrackedEntityBoundary
+                  : depthPickAttributionEnabled
+                    ? observeDepthPickAttributionBoundary
+                    : null,
+              finalObservationArgs:
+                scenario === 'selected-aircraft-tracking'
+                  ? depthPickAttributionEnabled
+                    ? [
+                        'flights:000001',
+                        activeDepthPickAttribution?.ownerToken,
+                        'measurement-boundary',
+                      ]
+                    : ['flights:000001']
+                  : depthPickAttributionEnabled
+                    ? [
+                        {
+                          label: 'measurement-boundary',
+                          ownerToken: activeDepthPickAttribution?.ownerToken,
+                        },
+                      ]
+                    : [],
+              postRenderConditionFunction: austinOperatingWorkload
+                ? observeAustinInstallationsReadyForRenderBoundary
                 : null,
-            scenario === 'selected-aircraft-tracking'
-              ? depthPickAttributionEnabled
-                ? [
-                    'flights:000001',
-                    activeDepthPickAttribution?.ownerToken,
-                    'measurement-boundary',
-                  ]
-                : ['flights:000001']
-              : depthPickAttributionEnabled
-                ? [
-                    {
-                      label: 'measurement-boundary',
-                      ownerToken: activeDepthPickAttribution?.ownerToken,
-                    },
-                  ]
-                : [],
+            },
           );
         } catch (error) {
           const retirement =

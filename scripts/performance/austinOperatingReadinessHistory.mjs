@@ -2,6 +2,33 @@ const MAX_SELECTED_LAYERS = 8;
 const MAX_HISTORY_ENTRIES = 16;
 const MAX_TEXT = 160;
 
+/** Browser-serializable gate for the final Austin source/render boundary. */
+export function observeAustinInstallationsReadyForRenderBoundary(
+  expectedViewer,
+) {
+  const app = window.__godsEyeView;
+  const manager = app?.dataManager;
+  const layers = manager?.layers;
+  const id = 'military-installations';
+  const entry = layers?.get?.(id);
+  if (
+    !expectedViewer ||
+    app?.viewer !== expectedViewer ||
+    !manager ||
+    !entry ||
+    !entry.module?.getStats
+  )
+    throw new Error('Austin installations readiness API is unavailable.');
+  if (manager.isEnabled?.(id) !== true)
+    throw new Error('Austin installations layer is not enabled.');
+  const stats = entry.module.getStats();
+  if (!stats || typeof stats.loading !== 'boolean')
+    throw new Error('Austin installations loading state is unavailable.');
+  if (stats.error != null)
+    throw new Error('Austin installations layer reported an error.');
+  return stats.loading === false;
+}
+
 function safeText(value, maximum = MAX_TEXT) {
   return String(value ?? '')
     .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')

@@ -12,6 +12,8 @@ export function settleCompletedRenderDiagnostic(
   finalObservationArgs = [],
   beforeRenderRequestFunction = null,
   beforeRenderRequestArgs = [],
+  postRenderConditionFunction = null,
+  postRenderConditionArgs = [],
 ) {
   const acknowledge = (stage, details) => {
     if (!progressFunctionName || !invocationId) return;
@@ -68,6 +70,20 @@ export function settleCompletedRenderDiagnostic(
         finalObservationErrorName: null,
         beforeRenderRequestObservation: null,
         beforeRenderRequestErrorName: null,
+        postRenderCondition: postRenderConditionFunction
+          ? {
+              enabled: true,
+              observations: 0,
+              initialReady: null,
+              ready: null,
+              readyPostRenderCount: 0,
+              followupRenderRequested: false,
+              followupRenderRequestStarted: false,
+              followupRenderRequestCompleted: false,
+              followupRenderRequestErrorName: null,
+              acceptedAfterFollowupRender: false,
+            }
+          : null,
         pageTimerFired: false,
         cleanup: { timerCleared: false, listenerRemoved: false },
       },
@@ -107,6 +123,20 @@ export function settleCompletedRenderDiagnostic(
       finalObservationErrorName: null,
       beforeRenderRequestObservation: null,
       beforeRenderRequestErrorName: null,
+      postRenderCondition: postRenderConditionFunction
+        ? {
+            enabled: true,
+            observations: 0,
+            initialReady: null,
+            ready: null,
+            readyPostRenderCount: 0,
+            followupRenderRequested: false,
+            followupRenderRequestStarted: false,
+            followupRenderRequestCompleted: false,
+            followupRenderRequestErrorName: null,
+            acceptedAfterFollowupRender: false,
+          }
+        : null,
       pageTimerFired: false,
       pageTimerElapsedMs: null,
       cleanup: { timerCleared: false, listenerRemoved: false },
@@ -180,6 +210,66 @@ export function settleCompletedRenderDiagnostic(
     }, timeoutMs);
     try {
       listener = () => {
+        if (done) return;
+        if (typeof postRenderConditionFunction === 'function') {
+          let ready;
+          try {
+            ready = postRenderConditionFunction(
+              viewer,
+              ...(Array.isArray(postRenderConditionArgs)
+                ? postRenderConditionArgs
+                : []),
+            );
+            if (typeof ready !== 'boolean')
+              throw new TypeError(
+                'Post-render readiness condition must return a boolean.',
+              );
+          } catch (error) {
+            diagnostics.postRenderCondition.ready = null;
+            finish(error);
+            return;
+          }
+          const condition = diagnostics.postRenderCondition;
+          condition.observations = Math.min(
+            Number.MAX_SAFE_INTEGER,
+            condition.observations + 1,
+          );
+          condition.ready = ready;
+          if (!ready) {
+            condition.followupRenderRequested = false;
+            return;
+          }
+          condition.readyPostRenderCount = Math.min(
+            Number.MAX_SAFE_INTEGER,
+            condition.readyPostRenderCount + 1,
+          );
+          if (!condition.followupRenderRequested) {
+            if (!renderRequestAvailable) {
+              finish(
+                new Error(
+                  'A subsequent completed render is unavailable while waiting for source readiness.',
+                ),
+              );
+              return;
+            }
+            condition.followupRenderRequested = true;
+            condition.followupRenderRequestStarted = true;
+            try {
+              viewer.scene.requestRender();
+            } catch (error) {
+              condition.followupRenderRequestErrorName = String(
+                error?.name || 'Error',
+              ).slice(0, 80);
+              finish(error);
+              return;
+            }
+            condition.followupRenderRequestCompleted = true;
+            return;
+          } else {
+            condition.followupRenderRequested = false;
+            condition.acceptedAfterFollowupRender = true;
+          }
+        }
         diagnostics.postRenderObserved = true;
         diagnostics.postRenderElapsedMs = elapsed();
         acknowledge('post-render', {
@@ -278,6 +368,26 @@ export function settleCompletedRenderDiagnostic(
           return;
         }
       }
+      if (typeof postRenderConditionFunction === 'function') {
+        try {
+          const initialReady = postRenderConditionFunction(
+            viewer,
+            ...(Array.isArray(postRenderConditionArgs)
+              ? postRenderConditionArgs
+              : []),
+          );
+          if (typeof initialReady !== 'boolean')
+            throw new TypeError(
+              'Post-render readiness condition must return a boolean.',
+            );
+          diagnostics.postRenderCondition.initialReady = initialReady;
+          diagnostics.postRenderCondition.ready = initialReady;
+          diagnostics.postRenderCondition.observations = 1;
+        } catch (error) {
+          finish(error);
+          return;
+        }
+      }
       if (renderRequestAvailable) {
         diagnostics.renderRequestStarted = true;
         diagnostics.renderRequestStartElapsedMs = elapsed();
@@ -312,17 +422,22 @@ export function evaluateCompletedRenderDiagnostic(
     finalObservationArgs = [],
     beforeRenderRequestFunction = null,
     beforeRenderRequestArgs = [],
+    postRenderConditionFunction = null,
+    postRenderConditionArgs = [],
   },
 ) {
   const hasBrowserCallbacks =
     typeof finalObservationFunction === 'function' ||
-    typeof beforeRenderRequestFunction === 'function';
+    typeof beforeRenderRequestFunction === 'function' ||
+    typeof postRenderConditionFunction === 'function';
   const pageFunction = hasBrowserCallbacks
     ? createCompletedRenderDiagnosticWithObservation(
         finalObservationFunction,
         finalObservationArgs,
         beforeRenderRequestFunction,
         beforeRenderRequestArgs,
+        postRenderConditionFunction,
+        postRenderConditionArgs,
       )
     : settleCompletedRenderDiagnostic;
   const args = [
@@ -332,7 +447,7 @@ export function evaluateCompletedRenderDiagnostic(
     invocationId,
     retireViewerRenderLoop,
   ];
-  if (!hasBrowserCallbacks) args.push(null, [], null, []);
+  if (!hasBrowserCallbacks) args.push(null, [], null, [], null, []);
   return targetPage.evaluate(pageFunction, ...args);
 }
 
@@ -346,6 +461,8 @@ export function createCompletedRenderDiagnosticWithObservation(
   observationArgs = [],
   beforeRenderRequestFunction = null,
   beforeRenderRequestArgs = [],
+  postRenderConditionFunction = null,
+  postRenderConditionArgs = [],
 ) {
   if (
     (observationFunction !== null &&
@@ -353,16 +470,21 @@ export function createCompletedRenderDiagnosticWithObservation(
     !Array.isArray(observationArgs) ||
     (beforeRenderRequestFunction !== null &&
       typeof beforeRenderRequestFunction !== 'function') ||
-    !Array.isArray(beforeRenderRequestArgs)
+    !Array.isArray(beforeRenderRequestArgs) ||
+    (postRenderConditionFunction !== null &&
+      typeof postRenderConditionFunction !== 'function') ||
+    !Array.isArray(postRenderConditionArgs)
   )
     throw new TypeError(
       'Browser observation callbacks and argument arrays are invalid.',
     );
   const serializedFinalArgs = JSON.stringify(observationArgs);
   const serializedBeforeArgs = JSON.stringify(beforeRenderRequestArgs);
+  const serializedConditionArgs = JSON.stringify(postRenderConditionArgs);
   if (
     typeof serializedFinalArgs !== 'string' ||
-    typeof serializedBeforeArgs !== 'string'
+    typeof serializedBeforeArgs !== 'string' ||
+    typeof serializedConditionArgs !== 'string'
   )
     throw new TypeError(
       'Browser observation arguments must be JSON serializable.',
@@ -377,6 +499,7 @@ export function createCompletedRenderDiagnosticWithObservation(
     const settle = ${settleCompletedRenderDiagnostic.toString()};
     const observation = ${observationFunction ? observationFunction.toString() : 'null'};
     const beforeRenderRequest = ${beforeRenderRequestFunction ? beforeRenderRequestFunction.toString() : 'null'};
+    const postRenderCondition = ${postRenderConditionFunction ? postRenderConditionFunction.toString() : 'null'};
     return settle(
       viewerOrTimeout,
       timeoutMs,
@@ -387,6 +510,8 @@ export function createCompletedRenderDiagnosticWithObservation(
       ${serializedFinalArgs},
       beforeRenderRequest,
       ${serializedBeforeArgs},
+      postRenderCondition,
+      ${serializedConditionArgs},
     );
   }`;
   return new Function(`return (${composed});`)();
