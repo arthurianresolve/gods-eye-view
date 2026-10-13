@@ -31,6 +31,8 @@ export const MAP_STREAMING_ROUTE = Object.freeze({
   headingRadians: 0,
   pitchRadians: -Math.PI / 2,
   moveRightMetersPerSecond: 120,
+  // src/camera.js schedules its default flight 500ms after app controls start.
+  startupFlightDelayMs: 500,
   durationLimitMs: 60_000,
   declaredBounds: Object.freeze({
     west: -97.82,
@@ -206,6 +208,7 @@ function projectMapTerrainQueueAncestry(value, firstSample) {
 
 const MAP_JOURNEY_PHASES = new Set([
   'starting',
+  'camera-preparation',
   'initial-readiness',
   'transition',
   'transition-readiness',
@@ -625,6 +628,21 @@ function projectMapJourneyCheckpoint(value) {
       value.routeElapsedMs >= 0 &&
       value.routeElapsedMs <= 240_000,
   );
+  const cameraPreparationElapsedMs =
+    value.cameraPreparationElapsedMs === undefined
+      ? null
+      : value.cameraPreparationElapsedMs;
+  assert.ok(
+    cameraPreparationElapsedMs === null ||
+      (Number.isFinite(cameraPreparationElapsedMs) &&
+        cameraPreparationElapsedMs >= 0 &&
+        cameraPreparationElapsedMs <= 240_000),
+  );
+  const startupFlightCancelled =
+    value.startupFlightCancelled === undefined
+      ? false
+      : value.startupFlightCancelled;
+  assert.equal(typeof startupFlightCancelled, 'boolean');
   const historyCandidates = [];
   if (value.terrainHistory !== undefined && value.terrainHistory !== null)
     historyCandidates.push(projectMapTerrainHistory(value.terrainHistory));
@@ -888,6 +906,8 @@ function projectMapJourneyCheckpoint(value) {
     transitionCount: value.transitionCount,
     targetStack: value.targetStack,
     routeElapsedMs: value.routeElapsedMs,
+    cameraPreparationElapsedMs,
+    startupFlightCancelled,
     latestObservation,
   };
 }
@@ -1139,6 +1159,18 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
     (Number.isFinite(candidate) && Math.abs(candidate) <= 1_000_000_000);
   const route = journey.route;
   assert.ok(route && typeof route === 'object' && !Array.isArray(route));
+  const startupFlightDelayMs = Object.hasOwn(route, 'startupFlightDelayMs')
+    ? route.startupFlightDelayMs
+    : null;
+  const startupFlightPreparationElapsedMs = Object.hasOwn(
+    route,
+    'startupFlightPreparationElapsedMs',
+  )
+    ? route.startupFlightPreparationElapsedMs
+    : null;
+  const startupFlightCancelled = Object.hasOwn(route, 'startupFlightCancelled')
+    ? route.startupFlightCancelled
+    : null;
   for (const name of [
     'durationMs',
     'elapsedMs',
@@ -1147,6 +1179,12 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
     'pitchRadians',
   ])
     assert.ok(nullableFinite(route[name]));
+  assert.ok(nullableFinite(startupFlightDelayMs));
+  assert.ok(nullableFinite(startupFlightPreparationElapsedMs));
+  assert.ok(
+    startupFlightCancelled === null ||
+      typeof startupFlightCancelled === 'boolean',
+  );
   const projectTransition = (entry) => {
     assert.ok(entry && typeof entry === 'object' && !Array.isArray(entry));
     const stackId = ['photoreal', 'esri-imagery', 'osm'].includes(entry.stackId)
@@ -1181,6 +1219,9 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
         id: value.routeId,
         durationMs: route.durationMs,
         elapsedMs: route.elapsedMs,
+        startupFlightDelayMs,
+        startupFlightPreparationElapsedMs,
+        startupFlightCancelled,
         moveRightMetersPerSecond: route.moveRightMetersPerSecond,
         headingRadians: route.headingRadians,
         pitchRadians: route.pitchRadians,
@@ -1219,6 +1260,13 @@ export function createMapStreamingJourneyValidationFailureEvidence({
       route: {
         durationMs: journey?.route?.durationMs ?? null,
         elapsedMs: journey?.route?.elapsedMs ?? null,
+        startupFlightDelayMs: journey?.route?.startupFlightDelayMs ?? null,
+        startupFlightPreparationElapsedMs:
+          journey?.route?.startupFlightPreparationElapsedMs ?? null,
+        startupFlightCancelled:
+          typeof journey?.route?.startupFlightCancelled === 'boolean'
+            ? journey.route.startupFlightCancelled
+            : null,
         moveRightMetersPerSecond:
           journey?.route?.moveRightMetersPerSecond ?? null,
         headingRadians: journey?.route?.headingRadians ?? null,
@@ -1287,6 +1335,9 @@ export async function runNativeMapStreamingJourneyInPage({
         initialReadinessComplete: false,
         transitionCount: 0,
         targetStack: null,
+        routeElapsedMs: 0,
+        cameraPreparationElapsedMs: null,
+        startupFlightCancelled: false,
         latestObservation: null,
         terrainHistory: null,
       },
@@ -1414,7 +1465,8 @@ export async function runNativeMapStreamingJourneyInPage({
     !Number.isFinite(route?.start?.latitude) ||
     !Number.isFinite(route?.start?.heightM) ||
     !Array.isArray(route?.stackSchedule) ||
-    route.stackSchedule.length !== 4
+    route.stackSchedule.length !== 4 ||
+    route.startupFlightDelayMs !== 500
   )
     throw new Error('Map route contract is malformed.');
 
@@ -1965,6 +2017,8 @@ export async function runNativeMapStreamingJourneyInPage({
     globeQueueDiagnostics: state.globeQueueDiagnostics,
   });
   let currentTerrainHistory = null;
+  let cameraPreparationElapsedMs = null;
+  let startupFlightCancelled = false;
   const terrainHistoryCheckpoint = () => {
     if (!currentTerrainHistory) return null;
     return {
@@ -1997,6 +2051,8 @@ export async function runNativeMapStreamingJourneyInPage({
         routeStartedAt === null
           ? 0
           : Math.max(0, performance.now() - routeStartedAt),
+      cameraPreparationElapsedMs,
+      startupFlightCancelled,
       latestObservation: state ? progressObservation(state) : null,
       terrainHistory: terrainHistoryCheckpoint(),
     };
@@ -2328,22 +2384,79 @@ export async function runNativeMapStreamingJourneyInPage({
       `Native Google startup stack is ${initialStack}, expected photoreal.`,
     );
   const settingsBefore = projectSnapshotSettings();
-  const ellipsoid = globe.ellipsoid;
-  const radians = Math.PI / 180;
-  const startDestination = ellipsoid.cartographicToCartesian({
-    longitude: route.start.longitude * radians,
-    latitude: route.start.latitude * radians,
-    height: route.start.heightM,
-  });
-  camera.setView({
-    destination: startDestination,
-    orientation: {
-      heading: route.headingRadians,
-      pitch: route.pitchRadians,
-      roll: 0,
-    },
-  });
-  scene.requestRender?.();
+  try {
+    updateProgress('camera-preparation', 'photoreal');
+    const cameraPreparationStartedAt = performance.now();
+    // app/tools exposes the viewer after controls.js has scheduled its
+    // flyToAustin callback, so this same-delay timer is ordered after it.
+    const preparationSettledAt = await new Promise((resolve, reject) => {
+      let settled = false;
+      let timer = null;
+      let abortError = null;
+      const onAbort = () => {
+        abortError = cancellationError('Map camera preparation was cancelled.');
+        // Let the source-owned 500ms startup callback pass before cancelFlight;
+        // otherwise its pending timer could start a new flight after disposal.
+        if (timer === null) finish(abortError);
+      };
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        if (timer !== null) clearTimeout(timer);
+        journeyAbort.signal.removeEventListener('abort', onAbort);
+        if (error) reject(error);
+        else resolve(performance.now());
+      };
+      if (journeyAbort.signal.aborted) {
+        onAbort();
+        return;
+      }
+      journeyAbort.signal.addEventListener('abort', onAbort, { once: true });
+      timer = setTimeout(() => finish(abortError), route.startupFlightDelayMs);
+      if (journeyAbort.signal.aborted) onAbort();
+    });
+    cameraPreparationElapsedMs = Math.max(
+      0,
+      preparationSettledAt - cameraPreparationStartedAt,
+    );
+    updateProgress('camera-preparation', 'photoreal');
+    if (cameraPreparationElapsedMs < route.startupFlightDelayMs)
+      throw new Error(
+        'Startup camera preparation ended before its source delay.',
+      );
+    const ellipsoid = globe.ellipsoid;
+    const radians = Math.PI / 180;
+    const startDestination = ellipsoid.cartographicToCartesian({
+      longitude: route.start.longitude * radians,
+      latitude: route.start.latitude * radians,
+      height: route.start.heightM,
+    });
+    if (typeof camera.cancelFlight !== 'function')
+      throw new Error('Native camera flight cancellation is unavailable.');
+    camera.cancelFlight();
+    startupFlightCancelled = true;
+    updateProgress('camera-preparation', 'photoreal');
+    camera.setView({
+      destination: startDestination,
+      orientation: {
+        heading: route.headingRadians,
+        pitch: route.pitchRadians,
+        roll: 0,
+      },
+    });
+    scene.requestRender?.();
+  } catch (error) {
+    if (!startupFlightCancelled && typeof camera.cancelFlight === 'function') {
+      try {
+        camera.cancelFlight();
+        startupFlightCancelled = true;
+        updateProgress('camera-preparation', 'photoreal');
+      } catch {
+        // Preserve the preparation failure; the owning page is the fallback.
+      }
+    }
+    throw error;
+  }
 
   updateProgress('initial-readiness', 'photoreal');
   const initialState = await waitForReadyStack(
@@ -2505,7 +2618,9 @@ export async function runNativeMapStreamingJourneyInPage({
           if (error) reject(error);
           else resolve(value);
         };
-        journeyAbort.signal.addEventListener('abort', onAbort, { once: true });
+        journeyAbort.signal.addEventListener('abort', onAbort, {
+          once: true,
+        });
         Promise.resolve(controller.setStack(schedule.stackId)).then(
           (value) => finish(null, value),
           (error) => finish(error),
@@ -2599,6 +2714,9 @@ export async function runNativeMapStreamingJourneyInPage({
         id: route.id,
         durationMs,
         elapsedMs: routeElapsedMs,
+        startupFlightDelayMs: route.startupFlightDelayMs,
+        startupFlightPreparationElapsedMs: cameraPreparationElapsedMs,
+        startupFlightCancelled,
         moveRightMetersPerSecond: route.moveRightMetersPerSecond,
         headingRadians: route.headingRadians,
         pitchRadians: route.pitchRadians,
@@ -2616,6 +2734,15 @@ export async function runNativeMapStreamingJourneyInPage({
     };
   } finally {
     journeyAbort.abort();
+    if (!startupFlightCancelled && typeof camera.cancelFlight === 'function') {
+      try {
+        camera.cancelFlight();
+        startupFlightCancelled = true;
+        updateProgress('camera-preparation', 'photoreal');
+      } catch {
+        // Preserve the primary journey failure; target retirement follows.
+      }
+    }
     if (animationFrame !== null) cancelAnimationFrame(animationFrame);
     try {
       removeCoverageListener?.();
@@ -3426,6 +3553,22 @@ export function validateMapStreamingJourneyEvidence(journey, fixture) {
     MAP_STREAMING_ROUTE.headingRadians,
   );
   assert.equal(report.route?.pitchRadians, MAP_STREAMING_ROUTE.pitchRadians);
+  assert.equal(
+    report.route?.startupFlightDelayMs,
+    MAP_STREAMING_ROUTE.startupFlightDelayMs,
+    'Camera preparation matches the pinned startup-flight delay.',
+  );
+  assert.ok(
+    Number.isFinite(report.route?.startupFlightPreparationElapsedMs) &&
+      report.route.startupFlightPreparationElapsedMs >=
+        MAP_STREAMING_ROUTE.startupFlightDelayMs,
+    'Camera preparation waited through the pending startup flight interval.',
+  );
+  assert.equal(
+    report.route?.startupFlightCancelled,
+    true,
+    'Any active startup camera flight was cancelled before the route pose.',
+  );
   assert.ok(report.route?.elapsedMs >= report.route?.durationMs);
   assert.ok(
     report.route?.durationMs > 0 &&

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
 import * as Cesium from 'cesium';
+import TweenCollection from '../../node_modules/@cesium/engine/Source/Scene/TweenCollection.js';
+import { flyToAustin } from '../../src/camera.js';
 import {
   createFinalizedMapStreamingCaptureEvidence,
   MAP_STREAMING_ROUTE,
@@ -125,6 +127,52 @@ function nativeCameraRouteEndpoints(durationMs) {
   return { start, end: cameraObservation(camera) };
 }
 
+function nativeStartupCamera() {
+  const scene = {
+    canvas: { clientWidth: 1440, clientHeight: 900 },
+    drawingBufferWidth: 1440,
+    drawingBufferHeight: 900,
+    ellipsoid: Cesium.Ellipsoid.WGS84,
+    globe: { ellipsoid: Cesium.Ellipsoid.WGS84 },
+    mapProjection: new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84),
+    mode: Cesium.SceneMode.SCENE3D,
+    tweens: new TweenCollection(),
+    screenSpaceCameraController: {
+      minimumZoomDistance: 1,
+      maximumZoomDistance: 1_000_000_000,
+    },
+  };
+  const camera = new Cesium.Camera(scene);
+  scene.camera = camera;
+  return { scene, camera, viewer: { camera, isDestroyed: () => false } };
+}
+
+function setDeclaredRoutePose(camera) {
+  camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(
+      MAP_STREAMING_ROUTE.start.longitude,
+      MAP_STREAMING_ROUTE.start.latitude,
+      MAP_STREAMING_ROUTE.start.heightM,
+    ),
+    orientation: {
+      heading: MAP_STREAMING_ROUTE.headingRadians,
+      pitch: MAP_STREAMING_ROUTE.pitchRadians,
+      roll: 0,
+    },
+  });
+}
+
+function assertDeclaredRoutePose(camera) {
+  const observed = cameraObservation(camera);
+  assert.ok(Math.abs(observed.heightM - MAP_STREAMING_ROUTE.start.heightM) < 1);
+  assert.ok(
+    Math.abs(observed.longitude - MAP_STREAMING_ROUTE.start.longitude) < 1e-5,
+  );
+  assert.ok(
+    Math.abs(observed.latitude - MAP_STREAMING_ROUTE.start.latitude) < 1e-5,
+  );
+}
+
 function cameraObservation(camera) {
   const position = camera.positionCartographic;
   return {
@@ -150,9 +198,13 @@ function createFakePage({
   pollDelayMs = 0,
   timerOvershootMs = 0,
   advancePageClockOnRenderMs = 0,
+  holdCameraPreparation = false,
 } = {}) {
   const listeners = new Set();
   const frames = new Map();
+  const cameraEvents = [];
+  const pendingCameraPreparationTimers = new Map();
+  let cameraPreparationTimerSequence = 0;
   let nextFrame = 0;
   let pageClock = 0;
   let activeStack = 'photoreal';
@@ -190,6 +242,7 @@ function createFakePage({
     heading: 0,
     pitch: -Math.PI / 2,
     setView({ destination, orientation }) {
+      cameraEvents.push('setView');
       currentPosition = { ...destination };
       this.positionWC = currentPosition;
       this.positionCartographic = {
@@ -205,6 +258,12 @@ function createFakePage({
       if (orientation?.pitch != null) this.pitch = orientation.pitch;
       if (orientation?.direction) this.directionWC = orientation.direction;
       if (orientation?.up) this.upWC = orientation.up;
+    },
+    cancelFlight() {
+      cameraEvents.push('cancelFlight');
+    },
+    flyTo() {
+      cameraEvents.push('startupFlyTo');
     },
     computeViewRectangle() {
       const { longitude, latitude } = this.positionCartographic;
@@ -330,6 +389,20 @@ function createFakePage({
     AbortController,
     performance: { now: () => pageClock },
     setTimeout(callback, delay = 0) {
+      if (delay === MAP_STREAMING_ROUTE.startupFlightDelayMs) {
+        const timer = { cancelled: false, callback, dueAt: pageClock + delay };
+        const sequence = ++cameraPreparationTimerSequence;
+        if (holdCameraPreparation && sequence === 2) {
+          pendingCameraPreparationTimers.set(timer, callback);
+        } else {
+          queueMicrotask(() => {
+            if (timer.cancelled) return;
+            pageClock = Math.max(pageClock, timer.dueAt);
+            callback();
+          });
+        }
+        return timer;
+      }
       if (delay > 1_000) {
         const timer = { cancelled: false, real: null };
         timer.real = setTimeout(() => {
@@ -344,6 +417,7 @@ function createFakePage({
     clearTimeout(timer) {
       if (timer && typeof timer === 'object') {
         timer.cancelled = true;
+        pendingCameraPreparationTimers.delete(timer);
         clearTimeout(timer.real);
       } else clearTimeout(timer);
     },
@@ -367,6 +441,10 @@ function createFakePage({
       frames.delete(id);
     },
   });
+  context.setTimeout(
+    () => camera.flyTo(),
+    MAP_STREAMING_ROUTE.startupFlightDelayMs,
+  );
   const serializedDriver = vm.runInContext(
     `(${runNativeMapStreamingJourneyInPage.toString()})`,
     context,
@@ -415,6 +493,18 @@ function createFakePage({
     pageCalls,
     listeners,
     frames,
+    cameraEvents,
+    pendingCameraPreparationTimers,
+    fireHeldCameraPreparation() {
+      const entry = [...pendingCameraPreparationTimers.entries()][0];
+      if (!entry) return false;
+      const [timer, callback] = entry;
+      pendingCameraPreparationTimers.delete(timer);
+      if (timer.cancelled) return false;
+      pageClock = Math.max(pageClock, timer.dueAt);
+      callback();
+      return true;
+    },
     CesiumTypes,
     route: scheduleAtZero
       ? {
@@ -504,6 +594,14 @@ test('serialized native journey observes actual completed renders and returns me
     'OpenStreetMapImageryProvider',
   );
   assert.equal(result.route.finalPostRenderObserved, true);
+  assert.equal(result.route.startupFlightDelayMs, 500);
+  assert.ok(result.route.startupFlightPreparationElapsedMs >= 500);
+  assert.equal(result.route.startupFlightCancelled, true);
+  assert.deepEqual(harness.cameraEvents.slice(0, 3), [
+    'startupFlyTo',
+    'cancelFlight',
+    'setView',
+  ]);
   assert.deepEqual(result.settingsAfter, result.settingsBefore);
   assert.equal(harness.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
@@ -516,6 +614,9 @@ test('host journey polls a full 60-second page operation through short protocol 
     route: harness.route,
   });
   assert.equal(result.route.durationMs, 60_000);
+  assert.equal(result.route.startupFlightDelayMs, 500);
+  assert.ok(result.route.startupFlightPreparationElapsedMs >= 500);
+  assert.equal(result.route.startupFlightCancelled, true);
   assert.equal(result.route.finalPostRenderObserved, true);
   assert.equal(harness.pageCalls[0].command, 'start');
   assert.ok(harness.pageCalls.some((call) => call.command === 'poll'));
@@ -528,6 +629,115 @@ test('host journey polls a full 60-second page operation through short protocol 
   );
   assert.equal(harness.listeners.size, 0);
   assert.equal(harness.frames.size, 0);
+});
+
+test('camera preparation cancels a pending startup flight before the route pose', async () => {
+  const harness = createFakePage({ holdCameraPreparation: true });
+  const operationId = 'map-camera-preparation-cancel';
+  await harness.serializedDriver({
+    command: 'start',
+    operationId,
+    durationMs: 60_000,
+    route: harness.route,
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(harness.pendingCameraPreparationTimers.size, 1);
+  assert.deepEqual(harness.cameraEvents, ['startupFlyTo']);
+
+  const cancelPending = harness.serializedDriver({
+    command: 'cancel',
+    operationId,
+  });
+  assert.equal(harness.pendingCameraPreparationTimers.size, 1);
+  assert.equal(harness.fireHeldCameraPreparation(), true);
+  const cancelled = await cancelPending;
+  assert.equal(cancelled.status, 'failed');
+  assert.equal(cancelled.drainStatus, 'drained');
+  assert.equal(harness.pendingCameraPreparationTimers.size, 0);
+  assert.equal(harness.fireHeldCameraPreparation(), false);
+  assert.deepEqual(harness.cameraEvents, ['startupFlyTo', 'cancelFlight']);
+
+  const terminal = await harness.serializedDriver({
+    command: 'poll',
+    operationId,
+  });
+  assert.equal(terminal.checkpoint.phase, 'camera-preparation');
+  assert.equal(terminal.checkpoint.cameraPreparationElapsedMs, null);
+  assert.equal(terminal.checkpoint.startupFlightCancelled, true);
+  assert.equal(harness.cameraEvents.includes('setView'), false);
+  assert.equal(harness.listeners.size, 0);
+  assert.equal(harness.frames.size, 0);
+  assert.equal(harness.pendingCameraPreparationTimers.size, 0);
+  assert.equal(
+    (await harness.serializedDriver({ command: 'dispose', operationId }))
+      .status,
+    'disposed',
+  );
+});
+
+test('the pinned Cesium startup flight needs the full pending interval before route ownership', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+
+  const negative = nativeStartupCamera();
+  const disposeNegative = flyToAustin(negative.viewer);
+  negative.camera.cancelFlight();
+  setDeclaredRoutePose(negative.camera);
+  t.mock.timers.tick(MAP_STREAMING_ROUTE.startupFlightDelayMs);
+  assert.equal(negative.scene.tweens.length, 1);
+  negative.scene.tweens.update(0);
+  negative.scene.tweens.update(1_000);
+  assert.ok(
+    Math.abs(
+      cameraObservation(negative.camera).heightM -
+        MAP_STREAMING_ROUTE.start.heightM,
+    ) > 1_000,
+    'cancelFlight alone cannot cancel a startup callback that has not fired.',
+  );
+  disposeNegative();
+  assert.equal(negative.scene.tweens.length, 0);
+
+  const retired = nativeStartupCamera();
+  const disposeRetired = flyToAustin(retired.viewer);
+  disposeRetired();
+  t.mock.timers.tick(MAP_STREAMING_ROUTE.startupFlightDelayMs);
+  assert.equal(retired.scene.tweens.length, 0);
+  assert.ok(cameraObservation(retired.camera).heightM > 20_000);
+
+  const pending = nativeStartupCamera();
+  const disposePending = flyToAustin(pending.viewer);
+  const pendingPreparation = new Promise((resolve) =>
+    setTimeout(resolve, MAP_STREAMING_ROUTE.startupFlightDelayMs),
+  );
+  t.mock.timers.tick(MAP_STREAMING_ROUTE.startupFlightDelayMs);
+  await pendingPreparation;
+  assert.equal(pending.scene.tweens.length, 1);
+  pending.camera.cancelFlight();
+  setDeclaredRoutePose(pending.camera);
+  pending.scene.tweens.update(0);
+  pending.scene.tweens.update(2_000);
+  assertDeclaredRoutePose(pending.camera);
+  disposePending();
+  assert.equal(pending.scene.tweens.length, 0);
+
+  const active = nativeStartupCamera();
+  const disposeActive = flyToAustin(active.viewer);
+  t.mock.timers.tick(MAP_STREAMING_ROUTE.startupFlightDelayMs);
+  active.scene.tweens.update();
+  active.scene.tweens.update();
+  assert.equal(active.scene.tweens.length, 1);
+  const activePreparation = new Promise((resolve) =>
+    setTimeout(resolve, MAP_STREAMING_ROUTE.startupFlightDelayMs),
+  );
+  t.mock.timers.tick(MAP_STREAMING_ROUTE.startupFlightDelayMs);
+  await activePreparation;
+  active.camera.cancelFlight();
+  setDeclaredRoutePose(active.camera);
+  active.scene.tweens.update(1_000);
+  assertDeclaredRoutePose(active.camera);
+  disposeActive();
+  t.mock.timers.tick(5_000);
+  assertDeclaredRoutePose(active.camera);
+  assert.equal(active.scene.tweens.length, 0);
 });
 
 test('host protocol failure cancels and drains the page operation without losing its checkpoint', async () => {
@@ -838,6 +1048,43 @@ test('strict smoke journey rejection retains bounded observed route and transiti
     compacted.rawReport.workload.mapStreamingJourneyValidationFailure,
     envelope,
   );
+  const historicalEnvelope = structuredClone(envelope);
+  delete historicalEnvelope.journey.route.startupFlightDelayMs;
+  delete historicalEnvelope.journey.route.startupFlightPreparationElapsedMs;
+  delete historicalEnvelope.journey.route.startupFlightCancelled;
+  const projectedHistoricalEnvelope =
+    projectMapStreamingJourneyValidationFailureEvidence(historicalEnvelope);
+  assert.equal(
+    projectedHistoricalEnvelope.journey.route.startupFlightDelayMs,
+    null,
+  );
+  assert.equal(
+    projectedHistoricalEnvelope.journey.route.startupFlightPreparationElapsedMs,
+    null,
+  );
+  assert.equal(
+    projectedHistoricalEnvelope.journey.route.startupFlightCancelled,
+    null,
+  );
+  assert.deepEqual(
+    projectMapStreamingJourneyValidationFailureEvidence(
+      projectedHistoricalEnvelope,
+    ),
+    projectedHistoricalEnvelope,
+    'Historical v1 failure envelopes remain stable after additive projection.',
+  );
+  for (const [field, invalidValue] of [
+    ['startupFlightDelayMs', '500'],
+    ['startupFlightPreparationElapsedMs', Number.NaN],
+    ['startupFlightCancelled', 'true'],
+  ]) {
+    const malformed = structuredClone(projectedHistoricalEnvelope);
+    malformed.journey.route[field] = invalidValue;
+    assert.throws(
+      () => projectMapStreamingJourneyValidationFailureEvidence(malformed),
+      `Malformed supplied ${field} is rejected.`,
+    );
+  }
   const extendedEvidence = createMapStreamingJourneyValidationFailureEvidence({
     journey: {
       ...observed,
@@ -1802,7 +2049,7 @@ test('page cancellation evidence retains late timer scheduling beyond its deadli
     operationId,
   });
   assert.equal(cancelled.drainStatus, 'timed-out');
-  assert.equal(cancelled.drainWaitMs, 7_000);
+  assert.equal(cancelled.drainWaitMs, 7_500);
   const projected = projectMapStreamingJourneyFailureEvidence({
     schema: 'gev-map-streaming-journey-failure/v1',
     operationId,
@@ -1820,7 +2067,7 @@ test('page cancellation evidence retains late timer scheduling beyond its deadli
       disposeErrorKind: null,
     },
   });
-  assert.equal(projected.retirement.drainWaitMs, 7_000);
+  assert.equal(projected.retirement.drainWaitMs, 7_500);
   assert.equal(projected.retirement.drainStatus, 'timed-out');
 });
 
