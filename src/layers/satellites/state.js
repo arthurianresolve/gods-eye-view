@@ -52,6 +52,7 @@ export function createState({ services }) {
   // and visible dense points use the continuous hold because their positions
   // are evaluated by the scene preRender producer.
   state._periodicRenderDisposer = null;
+  state._periodicRenderDelayMs = null;
 
   state._lastPropagation = 0;
 

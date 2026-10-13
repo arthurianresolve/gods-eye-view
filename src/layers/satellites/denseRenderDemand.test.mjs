@@ -25,10 +25,17 @@ const TLE = [
 function createHarness(t, source) {
   const listeners = new Set();
   const primitives = new Set();
+  const focusTargetListeners = new Set();
+  const scheduledDelays = [];
+  let focusTarget = null;
+  let focusFrameActive = false;
+  let focusNowMs = Date.now();
   const viewer = {
     scene: {
       requestRenderMode: true,
-      requestRender() {},
+      requestRender() {
+        for (const listener of [...listeners]) listener(this);
+      },
       preRender: {
         addEventListener(listener) {
           listeners.add(listener);
@@ -103,17 +110,30 @@ function createHarness(t, source) {
   const services = {
     focus: {
       clearFocusTarget() {},
-      focusNowMs: (now) => now,
-      getFocusTarget: () => null,
-      focusPassIsNeeded: () => false,
+      focusNowMs: () => focusNowMs,
+      getFocusTarget: () => focusTarget,
+      onFocusTargetChange(listener) {
+        focusTargetListeners.add(listener);
+        return () => focusTargetListeners.delete(listener);
+      },
+      focusPassIsNeeded: (target, activeCount) =>
+        target !== null || activeCount > 0,
       nearFarScalarValueAtDistance: () => 1,
-      advanceSpriteFocus: () => ({ factor: 1, active: false }),
+      advanceSpriteFocus: () => ({
+        factor: 1,
+        active: focusFrameActive,
+        transitioning: focusFrameActive,
+        endpointCompleted: !focusFrameActive,
+      }),
       focusAlphaNeedsWrite: () => false,
     },
     render: {
       holdContinuousRender,
       releaseContinuousRender,
-      scheduleRenderUpdate,
+      scheduleRenderUpdate(owner, callback, delayMs) {
+        scheduledDelays.push(delayMs);
+        return scheduleRenderUpdate(owner, callback, delayMs);
+      },
     },
     picking: { registerPickOwner() {}, unregisterPickOwner() {} },
     layerState: { isExplicitLayerStateOrigin: () => false },
@@ -153,7 +173,26 @@ function createHarness(t, source) {
   });
 
   parts.lifecycle.methods.enable(viewer);
-  return { viewer, listeners, state, services, parts };
+  return {
+    viewer,
+    listeners,
+    state,
+    services,
+    parts,
+    scheduledDelays,
+    setFocusFrameActive(value) {
+      focusFrameActive = value;
+    },
+    setFocusNowMs(value) {
+      focusNowMs = value;
+    },
+    setFocusTarget(next) {
+      const previous = focusTarget;
+      focusTarget = next;
+      for (const listener of focusTargetListeners) listener(next, previous);
+    },
+    focusTargetListeners,
+  };
 }
 
 test('first accepted dense chunk switches from the 1s timer to the continuous owner before yielding', async (t) => {
@@ -249,4 +288,77 @@ test('a dense fetch that settles after disable cannot recreate render demand', a
   assert.deepEqual(state._denseIds, []);
   assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
   assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+});
+
+test('shared focus fading wakes at 80ms and returns to the static cadence when settled', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let performanceNow = 1_000;
+  t.mock.method(performance, 'now', () => performanceNow);
+  const source = { readGroup: async () => ({ ok: true, text: TLE }) };
+  const harness = createHarness(t, source);
+  const { parts, state } = harness;
+  harness.setFocusNowMs(performanceNow);
+  state._points.set(25544, {
+    id: 25544,
+    position: new Cesium.Cartesian3(1, 2, 3),
+    show: false,
+    pixelSize: 5,
+  });
+  state._catalog.set(25544, { group: 'visual' });
+  state._lastFocusUpdate = performanceNow - 50;
+
+  harness.setFocusFrameActive(true);
+  harness.setFocusTarget({ ownerLayer: 'flights', id: 'fixture-aircraft' });
+  assert.equal(harness.scheduledDelays.at(-1), 0);
+  t.mock.timers.tick(0);
+  assert.equal(
+    state._activeFocusCount,
+    0,
+    'the existing 80ms focus gate can defer the immediate wake',
+  );
+  assert.equal(harness.scheduledDelays.at(-1), 80);
+  performanceNow += 80;
+  harness.setFocusNowMs(performanceNow);
+  t.mock.timers.tick(80);
+  assert.equal(state._activeFocusCount, 1);
+  assert.equal(harness.scheduledDelays.at(-1), 80);
+  assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
+
+  harness.setFocusTarget(null);
+  assert.equal(harness.scheduledDelays.at(-1), 80);
+  assert.equal(state._activeFocusCount, 1, 'the fade tail remains owned');
+
+  harness.setFocusFrameActive(false);
+  performanceNow += 80;
+  harness.setFocusNowMs(performanceNow);
+  t.mock.timers.tick(80);
+  assert.equal(state._activeFocusCount, 0);
+  assert.equal(harness.scheduledDelays.at(-1), 1_000);
+  assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
+
+  parts.lifecycle.methods.disable(state._viewer);
+  assert.equal(harness.focusTargetListeners.size, 0);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+  const schedulesAfterDisable = harness.scheduledDelays.length;
+  harness.setFocusTarget({ ownerLayer: 'flights', id: 'late-target' });
+  assert.equal(
+    harness.scheduledDelays.length,
+    schedulesAfterDisable,
+    'a late shared focus notification cannot schedule after disable',
+  );
+
+  parts.lifecycle.methods.enable(state._viewer);
+  assert.equal(harness.focusTargetListeners.size, 1);
+  harness.setFocusTarget({ ownerLayer: 'flights', id: 'destroy-target' });
+  assert.equal(harness.scheduledDelays.at(-1), 0);
+  parts.lifecycle.methods.destroy(state._viewer);
+  assert.equal(harness.focusTargetListeners.size, 0);
+  assert.deepEqual(getRenderGovernorDiagnostics().scheduledUpdates, []);
+  const schedulesAfterDestroy = harness.scheduledDelays.length;
+  harness.setFocusTarget(null);
+  assert.equal(
+    harness.scheduledDelays.length,
+    schedulesAfterDestroy,
+    'a late shared focus notification cannot schedule after destroy',
+  );
 });

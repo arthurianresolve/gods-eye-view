@@ -30,6 +30,9 @@ export const ORBIT_PATH_STEPS = 180;
 export const POSITION_UPDATE_MS = 1000;
 // re-propagate every 1s (SGP4 is smooth at this rate)
 
+/** Shared focus easing is sampled at this cadence by active sprite consumers. */
+export const FOCUS_UPDATE_MS = 80;
+
 export const RING_ROTATION_MS = 1000;
 // re-align baked orbit rings to current GMST every 1s
 

@@ -259,6 +259,7 @@ export function createRendering({
         ).color,
     });
     layerState._activeFocusCount = result.activeCount;
+    if (result.ran) parts.lifecycle?.methods?.syncRenderDemand?.();
   }
 
   /**

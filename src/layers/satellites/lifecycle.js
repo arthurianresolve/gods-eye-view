@@ -1,5 +1,9 @@
 import * as Cesium from 'cesium';
-import { ISS_OVERLAY_SOURCE_ID, POSITION_UPDATE_MS } from './policy.js';
+import {
+  FOCUS_UPDATE_MS,
+  ISS_OVERLAY_SOURCE_ID,
+  POSITION_UPDATE_MS,
+} from './policy.js';
 
 export function createLifecycle({
   state: layerState,
@@ -14,29 +18,68 @@ export function createLifecycle({
     services.render?.releaseContinuousRender || (() => {});
   const scheduleRenderUpdate = services.render?.scheduleRenderUpdate;
   const { registerPickOwner, unregisterPickOwner } = services.picking;
+  let removeFocusTargetListener = null;
 
   function stopPeriodicRenderDemand() {
     layerState._periodicRenderDisposer?.();
     layerState._periodicRenderDisposer = null;
+    layerState._periodicRenderDelayMs = null;
   }
 
-  function schedulePeriodicRenderDemand() {
+  function schedulePeriodicRenderDemand(delayMs = POSITION_UPDATE_MS) {
     if (
       !layerState._enabled ||
       layerState._trackedNorad !== null ||
       (!layerState._params.showPoints && !layerState._params.showOrbits) ||
       typeof scheduleRenderUpdate !== 'function' ||
-      layerState._periodicRenderDisposer
+      (layerState._periodicRenderDisposer &&
+        layerState._periodicRenderDelayMs === delayMs)
     )
       return;
+    stopPeriodicRenderDemand();
+    layerState._periodicRenderDelayMs = delayMs;
     layerState._periodicRenderDisposer = scheduleRenderUpdate(
       'satellites-periodic',
       () => {
         layerState._periodicRenderDisposer = null;
-        schedulePeriodicRenderDemand();
+        layerState._periodicRenderDelayMs = null;
+        schedulePeriodicRenderDemand(
+          layerState._params.showPoints &&
+            (layerState._activeFocusCount > 0 ||
+              (layerState._points.size > 0 &&
+                services.focus?.getFocusTarget?.()))
+            ? FOCUS_UPDATE_MS
+            : POSITION_UPDATE_MS,
+        );
       },
-      POSITION_UPDATE_MS,
+      delayMs,
     );
+  }
+
+  function focusTargetChanged(nextTarget) {
+    if (
+      !layerState._enabled ||
+      !layerState._params.showPoints ||
+      layerState._points.size === 0
+    )
+      return;
+    if (layerState._trackedNorad !== null || layerState._denseIds.length > 0) {
+      syncRenderDemand();
+      return;
+    }
+    if (nextTarget) schedulePeriodicRenderDemand(0);
+    else syncRenderDemand();
+  }
+
+  function startFocusTargetListener() {
+    if (!removeFocusTargetListener)
+      removeFocusTargetListener =
+        services.focus?.onFocusTargetChange?.(focusTargetChanged) || null;
+  }
+
+  function stopFocusTargetListener() {
+    removeFocusTargetListener?.();
+    removeFocusTargetListener = null;
   }
 
   function syncRenderDemand() {
@@ -60,7 +103,11 @@ export function createLifecycle({
       stopPeriodicRenderDemand();
       return;
     }
-    schedulePeriodicRenderDemand();
+    if (layerState._params.showPoints && layerState._activeFocusCount > 0) {
+      schedulePeriodicRenderDemand(FOCUS_UPDATE_MS);
+      return;
+    }
+    schedulePeriodicRenderDemand(POSITION_UPDATE_MS);
   }
 
   const methods = {
@@ -68,6 +115,7 @@ export function createLifecycle({
 
     async init(viewer) {
       stopPeriodicRenderDemand();
+      stopFocusTargetListener();
       releaseContinuousRender('satellites');
       parts.catalog._abortActiveUpdates();
       clearFocusTarget('satellites');
@@ -117,6 +165,7 @@ export function createLifecycle({
 
     enable(viewer) {
       layerState._enabled = true;
+      startFocusTargetListener();
       if (layerState._pointCollection)
         layerState._pointCollection.show =
           parts.controls.satelliteVisualsVisible(
@@ -151,6 +200,7 @@ export function createLifecycle({
       parts.catalog._abortActiveUpdates();
       parts.tracking._cancelPendingTrackingRestore();
       layerState._enabled = false;
+      stopFocusTargetListener();
       stopPeriodicRenderDemand();
       releaseContinuousRender('satellites');
       if (layerState._pointCollection) layerState._pointCollection.show = false;
@@ -178,6 +228,7 @@ export function createLifecycle({
     destroy(viewer) {
       parts.catalog._abortActiveUpdates();
       stopPeriodicRenderDemand();
+      stopFocusTargetListener();
       releaseContinuousRender('satellites'); // direct-destroy path (perf wave 2 fix)
       layerState._enabled = false;
       parts.tracking._clearTracking();
