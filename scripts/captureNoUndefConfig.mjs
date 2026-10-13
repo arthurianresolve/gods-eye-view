@@ -50,3 +50,14 @@ export const CAPTURE_NO_UNDEF_CONFIG = Object.freeze({
     'no-undef': 'error',
   },
 });
+
+// Vite replaces this diagnostic-only identifier in the CCTV fixture build.
+// Keep it scoped to that fixture so other capture files still catch typos.
+export const CAPTURE_NO_UNDEF_FIXTURE_CONFIG = Object.freeze({
+  files: ['scripts/fixtures/cctv-calibration-demand.js'],
+  languageOptions: {
+    globals: {
+      __GEV_APP_COMMIT__: 'readonly',
+    },
+  },
+});

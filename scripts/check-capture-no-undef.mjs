@@ -1,12 +1,13 @@
 import { ESLint } from 'eslint';
 import {
   CAPTURE_NO_UNDEF_CONFIG,
+  CAPTURE_NO_UNDEF_FIXTURE_CONFIG,
   CAPTURE_NO_UNDEF_FILES,
 } from './captureNoUndefConfig.mjs';
 
 const eslint = new ESLint({
   overrideConfigFile: true,
-  overrideConfig: [CAPTURE_NO_UNDEF_CONFIG],
+  overrideConfig: [CAPTURE_NO_UNDEF_CONFIG, CAPTURE_NO_UNDEF_FIXTURE_CONFIG],
 });
 const results = await eslint.lintFiles(CAPTURE_NO_UNDEF_FILES);
 const formatter = await eslint.loadFormatter('stylish');
