@@ -1,0 +1,104 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "14472b5b58174c7755f900278962c067d3d60e61",
+  "harnessSha": "14472b5b58174c7755f900278962c067d3d60e61",
+  "captureWorkerAuditMode": "diagnostic",
+  "captureRendererBackend": "swiftshader",
+  "comparisonEligible": false,
+  "performanceAcceptanceEligible": false,
+  "sceneFrameDiagnostics": false,
+  "firstMotionCpuProfile": false,
+  "depthPickAttribution": false,
+  "shaderProgramAttribution": false,
+  "candidateCaptureProviderFixture": "austin-map-streaming-v1",
+  "startedAt": "2026-10-13T05:03:55.220Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Runtime.callFunctionOn timed out. Increase the 'protocolTimeout' setting in launch[path] calls for a higher timeout if needed.",
+      "failureDetails": {
+        "phase": "production-provider-fixture-population",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "terminalRenderLoopRetirement": null,
+        "rendererProbeCleanup": [
+          {
+            "schema": "gev-early-renderer-probe-cleanup/v1",
+            "confirmed": false,
+            "timeoutMs": 1000,
+            "elapsedMs": 1002.1847500000003,
+            "document": {
+              "status": "timeout",
+              "elapsedMs": 1001.8661550000033,
+              "pageExecutionElapsedMs": null,
+              "errorKind": "operation-timeout",
+              "errorDetail": null,
+              "lateCompletion": "error",
+              "lateHostReceiptElapsedMs": 4515.8609700000015,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": "page-evaluation-error",
+              "lateErrorDetail": "Protocol error (Runtime.callFunctionOn): Target closed",
+              "statePresent": null,
+              "hookRestoreAttempted": false,
+              "hookRestored": null,
+              "listenerCount": null,
+              "listenerRemovalAttemptedCount": 0,
+              "listenerRemovalConfirmedCount": 0,
+              "listenerRemovalFailedCount": 0,
+              "stateDeleted": null,
+              "renderLoopRetirement": {
+                "requested": true,
+                "status": "not-attempted",
+                "before": null,
+                "after": null,
+                "confirmed": false,
+                "pageExecutionElapsedMs": null
+              }
+            },
+            "scriptRegistration": {
+              "status": "not-attempted",
+              "elapsedMs": null,
+              "pageExecutionElapsedMs": null,
+              "errorKind": "document-stage-did-not-settle",
+              "errorDetail": null,
+              "lateCompletion": null,
+              "lateHostReceiptElapsedMs": null,
+              "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+              "lateOutcome": null,
+              "lateErrorKind": null,
+              "lateErrorDetail": null,
+              "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+            },
+            "phase": "smoke-document-retirement",
+            "registrationRemovalBoundary": "owned-document-retirement"
+          }
+        ],
+        "rendererProbeCleanupOmittedCount": 0,
+        "densePopulationObservations": [],
+        "cleanupErrors": [
+          "Retired smoke document render-loop and probe cleanup was not confirmed.",
+          "Cesium worker blob audit cleanup timed out."
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Runtime.callFunctionOn timed out. Increase the 'protocolTimeout' setting in launch[path] calls for a higher timeout if needed.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-13T05:05:02.192Z",
+  "durationMs": 66972
+}

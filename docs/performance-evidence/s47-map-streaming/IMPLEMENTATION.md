@@ -208,3 +208,10 @@ boundaries and formatting. Production builds and actual browser delivery are
 the next gate. The hosted smoke builds both revisions with the named profile;
 its additional native map capture currently exercises only the candidate.
 Baseline native-journey proof and M4 matched comparisons remain separate work.
+
+The [first hosted map attempt](native-38349484331/README.md) at `14472b5b`
+fails during the baseline's inherited dense-population preparation. It reaches
+neither the candidate CLI nor the native journey. No page/interception errors
+are recorded, but probe and worker cleanup are unconfirmed. Retain the raw
+failure and investigate the map-specific setup path without changing deadlines
+or treating this incomplete report as an application/GPU diagnosis.

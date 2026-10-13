@@ -58,6 +58,12 @@ keeps production build/browser validation pending. The short smoke adds the
 native journey only to the candidate; baseline native-journey proof, matched
 comparisons and hardware acceptance remain. This does not complete S47 or S57.
 
+[Native map run 38349484331](performance-evidence/s47-map-streaming/native-38349484331/README.md)
+at `14472b5b` fails in baseline dense-population preparation before the native
+journey or candidate CLI. Empty page/interception error lists do not establish
+the cause; renderer-probe and worker cleanup remain unconfirmed. Investigate
+the selected map workload's inherited dense setup before another attempt.
+
 After workload coverage, complete the remaining measured S48-S59 work and the
 S60 candidate comparisons and retention soak. Primary Windows UHD 620
 foreground hardware validation remains required. Hosted paravirtual/software
