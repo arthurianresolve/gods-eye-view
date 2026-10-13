@@ -28,3 +28,13 @@ No longer shutdown deadline, unchanged rerun or inferred GPU/OS cause is
 justified by this report. The [final integration result](ci-final.json) is
 failed: six of seven standard jobs pass, including the browser gate; only
 Windows recovery fails. No unchanged rerun was used to replace this result.
+
+The next diagnostic candidate `fd1ae054` uses the existing Puppeteer browser
+connection with an 800 ms command timeout and a one-second outer observation
+cap, plus read-only presence checks for the owned parent PID. Independent
+[actual-Connection failure controls](cdp-error-classification-review.json)
+confirm no pending protocol callbacks or probe-owned connection disposal,
+but reveal that native Puppeteer timeout, unsupported-method and connection
+errors are all labelled generically. Correct that classification before the
+next hosted run. This control uses a fake transport and launches no browser;
+it does not explain the earlier Chrome shutdown failure.
