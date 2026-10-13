@@ -43,6 +43,13 @@ Both variants share post-target-close/interception-release finalization, and
 baseline reporting receives its completed evidence after cleanup. Required
 asset kinds now need acknowledged bytes. The next gate is the real production
 browser run; these component results do not prove native rendered delivery.
+The [next native run at `495f0a71`](performance-evidence/s47-map-streaming/native-38353841324/README.md)
+reaches the baseline map journey but fails its visual-settings observer.
+Cleanup is confirmed. Source review and actual application-method replay show
+two nonexistent scalar intensity properties; the values are present in the
+existing visual snapshot. Correction `02151a21`, integrated at `aab42890`, reads
+that snapshot and passes 65 focused checks plus lint. The next browser attempt
+must verify the correction before any map-readiness claim.
 
 Next actions, in dependency order:
 

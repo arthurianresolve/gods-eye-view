@@ -236,3 +236,12 @@ required kinds, and keeps error evidence in its owning scope. The
 passing focused checks, the expanded 25-file no-undef gate, formatting and
 package boundaries. Actual native production journeys on both builds and
 rendered fault controls remain the next M3 gate.
+
+The corrected setup reaches the native journey in [run 38353841324](native-38353841324/README.md),
+but its visual observer expects scalar intensity properties absent from the
+application facade. Actual prototype-method replay proves those values exist
+in `getVisualState()`. Correction `02151a21` reads that existing snapshot in
+both common and map observers, with 65 independent focused tests passing.
+The failed raw report is retained, including confirmed interception retirement
+and the secondary unproven credit delivery. Native rendered delivery remains
+unaccepted pending a fresh run.
