@@ -7,8 +7,12 @@ at `673349bc` prevents older rollback completion from overwriting a newer worksp
 and keeps delayed layer restores with their original owner. Root passes 258
 affected checks and the original before/after reproduction. The corrected UI
 regression at `7c9f65dd` also passes its full 20-test suite and rejects a missing
-guard in a narrow negative control. Its rendered workspace journey and final
-Windows retention qualification remain pending; S49 is still partial.
+guard in a narrow negative control. Its [current rendered workspace and mixed-use
+journeys](performance-evidence/s51-render-demand/38451571754/README.md) pass at
+`7d4a52a8`; final Windows retention qualification remains pending. S49 is still
+partial. The same run's new S51 probe fails before measurement because it assumes
+a Cesium browser global that the application does not expose; its failure is
+preserved separately from the passing workspace steps.
 
 The [current representative PR matrix](performance-evidence/representative-pr-8c0b6f64/README.md)
 passes all seven standard jobs and release verification against both dev and

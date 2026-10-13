@@ -1,0 +1,116 @@
+{
+  "schema": "gev-application-render-demand-diagnostic/v1",
+  "status": "failed",
+  "failedStage": "scene-settle",
+  "scope": "full application with enabled-empty civil and military source layers; diagnostic only",
+  "fixture": {
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "flightsId": "opensky-dense-investigation-v1",
+    "flightsSha256": "1abd6482cc12eb7bfa25b08c73d3a07f4a88e5e84b3882bfaea6341ab3bd2e5f",
+    "flightsBytes": 31,
+    "militaryId": "readsb-empty-render-demand-v1",
+    "militarySha256": "51bbff9bf5050e52eacfefd729da0d098f7eb7641377a8a7932a905f32529da9",
+    "militaryBytes": 26,
+    "profileId": "empty-sources-austin-manual-v1",
+    "profileSha256": "3af26a997639e831b70eb7b0942976a0d5bd6a6cdbaf6b386087fd723af1ab6b"
+  },
+  "failure": {
+    "name": "TypeError",
+    "message": "Cannot read properties of undefined (reading 'Cartographic')"
+  },
+  "observations": [
+    {
+      "stage": "fixture-setup",
+      "state": {
+        "sourceCommit": "7d4a52a832cf80d49b7f2225e3132c6fb0d156c4",
+        "sourceDirtyAtStart": false,
+        "sourceIdentityValid": true
+      }
+    },
+    {
+      "stage": "fixture-setup",
+      "state": {
+        "networkProbePassed": false,
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "application-start",
+      "state": {
+        "applicationStartResolved": true,
+        "environment": {
+          "appCommit": "7d4a52a832cf80d49b7f2225e3132c6fb0d156c4",
+          "browser": {
+            "family": "chromium",
+            "version": "152.0.0.0",
+            "rendererClass": "swiftshader",
+            "viewport": {
+              "width": 1440,
+              "height": 1000,
+              "dpr": 1
+            },
+            "drawingBuffer": {
+              "width": 1440,
+              "height": 1000
+            }
+          }
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    },
+    {
+      "stage": "fixture-delivery",
+      "state": {
+        "routeAttempts": {
+          "flights": 1,
+          "military": 1
+        },
+        "acknowledged": {
+          "flights": 1,
+          "military": 1
+        },
+        "pageErrorCount": 0,
+        "pageErrors": []
+      }
+    }
+  ],
+  "terminal": null,
+  "source": {
+    "commit": "7d4a52a832cf80d49b7f2225e3132c6fb0d156c4",
+    "dirtyAtStart": false,
+    "identityValid": true
+  },
+  "sourceFinish": null,
+  "delivery": {
+    "routeAttempts": {
+      "flights": 1,
+      "military": 1
+    },
+    "acknowledged": {
+      "flights": 1,
+      "military": 1
+    },
+    "invalidFixtureRouteCount": null
+  },
+  "traffic": {
+    "expectedBootstrapApiCount": 1,
+    "expectedBlockedMapProviderCount": 16,
+    "observedMapProviderRequestCount": 16,
+    "pendingMapProviderRequestCount": 2,
+    "mapProviderRequestTrackingOverflow": false,
+    "mapProviderRequestsBeforeForeground": null,
+    "mapProviderRequestsAfterForeground": null,
+    "mapProviderTrafficStable": null,
+    "unexpectedApiCount": 3,
+    "unexpectedExternalCount": 2,
+    "sameOriginNonApiCount": null,
+    "otherApiPaths": [
+      "/api/google/tiles-token",
+      "/api/local-receivers/aircraft",
+      "/api/realtime/debug-log"
+    ],
+    "otherApiPathOverflow": false
+  }
+}
