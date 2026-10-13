@@ -18,7 +18,7 @@ deployed to VM105.
 | --- | --- | --- | --- |
 | Austin operating workload | Current dev contains the reviewed canonical capture/projection contract | [Exact-dev capture review](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json) and its seven standard CI jobs pass | Matched physical-hardware runs and final retention |
 | Native map corpus and build profile (M1-M2) | Deterministic 72-asset corpus, native provider adapter and receipt-bound inert fixture profile | [Parser/adapter review](performance-evidence/s47-map-streaming/native-delivery-review-263f1e2d.json), [build-profile review](performance-evidence/s47-map-streaming/build-profile-review-05eefdcb.json) and focused checks pass | Complete rendered delivery in both application revisions |
-| Native map capture (M3) | Driver/report core and corrected candidate CLI/outer wiring are in QA | [59 focused checks and wiring review](performance-evidence/s47-map-streaming/wiring-correction-review-98944a06.json); standard CI passes, but the first native browser attempt fails | Correct selected-workload preparation and final ownership evidence, then native journeys on baseline and candidate |
+| Native map capture (M3) | Driver/report core, candidate CLI/outer wiring and corrected map-specific setup/finalization are in QA | [58 focused checks and finalization review](performance-evidence/s47-map-streaming/native-smoke-correction-review-0960fef2.json); earlier standard CI passes, but the first native browser attempt fails | Validate the corrected native journeys on baseline and candidate, including rendered fault controls |
 | Full standard validation | Expanded server-test discovery and reviewed map wiring are integrated on QA | [All seven selected jobs pass at `14472b5b`](performance-evidence/windows-recovery-38349487017/README.md): Node 24/26, production builds, Windows onboarding, browser journeys and recovery on three operating systems | Separate native map workload, later changes and physical hardware remain outside this result |
 | Optional Windows Chrome-version diagnostic | Strict manual Windows selection, read-only executable metadata and runtime version binding; default unchanged | [Chrome 155 run `38350953804`](performance-evidence/windows-browser-version-diagnostic/run-38350953804/README.md) passes all five recovery stages at `2336337c`, with natural exits inside the unchanged five-second gate | Earlier intermittent Chrome 152 shutdown cause remains unresolved |
 | Final performance acceptance (M4/S60) | Exact-commit evidence and rejection contracts exist | Component and hosted results retain their documented limited scope | Five matched runs per workload, visual parity, interaction targets and the corrected 60-minute retention soak on the primary Windows machine |
@@ -37,13 +37,19 @@ baseline disposal is still early, cancelled-only required kinds can pass, and
 five actual no-undef errors would prevent final report writing. Correct these
 defects without extending deadlines, weakening cleanup or changing normal dense
 tests. Neither rejected packet has run in a browser or reached dev.
+Correction `0960fef2`, integrated at `7e7e50d2`, addresses these defects and
+passes [independent focused, lint, formatting and boundary checks](performance-evidence/s47-map-streaming/native-smoke-correction-review-0960fef2.json).
+Both variants share post-target-close/interception-release finalization, and
+baseline reporting receives its completed evidence after cleanup. Required
+asset kinds now need acknowledged bytes. The next gate is the real production
+browser run; these component results do not prove native rendered delivery.
 
 Next actions, in dependency order:
 
-1. Finish M3 with declared map-workload populations, actual post-retirement
-   delivery evidence on both exact revisions, balanced cancellation counts,
-   and negative controls for pending/late requests. Preserve native visual
-   settings, terrain detail, cache budgets and the fixture build profile.
+1. Exercise the corrected M3 map-workload setup and post-retirement evidence
+   on both exact revisions. Preserve native visual settings, terrain detail,
+   cache budgets and the fixture build profile; retain failures without
+   relaxing gates.
 2. Validate both production map journeys in a real browser, including missing
    or corrupt assets, aborted/superseded switches and recovery. Failed
    reports remain failed; a short hosted smoke cannot complete M4.

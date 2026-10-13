@@ -224,3 +224,15 @@ single-owner validator incorrectly rejects it. Cancellation counts are outcomes,
 not a required zero. Source review also finds baseline delivery finalized before
 its browser context/interception owner retires. Both variants must publish
 post-retirement evidence, with pending and late-response controls retained.
+
+The follow-up `64d86946` also remains rejected: [root review](native-smoke-review-64d86946.json)
+finds premature baseline disposal, cancelled-only kinds counted as delivered,
+and undefined main-finally references that would prevent report writing.
+Correction through `0960fef2`, integrated at `7e7e50d2`, uses shared finalization
+after target closure and interception drain/release. It attaches the baseline's
+completed setup evidence after cleanup, requires actual acknowledgements for
+required kinds, and keeps error evidence in its owning scope. The
+[correction review](native-smoke-correction-review-0960fef2.json) records 58
+passing focused checks, the expanded 25-file no-undef gate, formatting and
+package boundaries. Actual native production journeys on both builds and
+rendered fault controls remain the next M3 gate.
