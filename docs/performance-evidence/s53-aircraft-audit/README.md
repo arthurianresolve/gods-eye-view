@@ -22,6 +22,12 @@ advance by a bounded round-robin chunk with a 300-frame full-pass target
 `_propagateAll` and `_preRenderTick`, and `src/layers/satellites/catalog.js`,
 `_propagateDenseChunk`.
 
+A later S51 producer audit found that the one-second scheduler can starve this
+per-frame dense budget when no continuous owner remains. That is a separate
+known cadence regression under correction; the mutation counts below do not
+validate its wall-clock refresh rate. See the
+[S51 owner audit](../s51-render-demand/owner-audit.md).
+
 The retained mutation audit compares actual Cesium 1.138 point primitives at
 840 core / 10 passes and 10,000 dense / 300 passes. For unchanged positions,
 returned Cartesian objects fell from 8,400 to 1 (core) and 10,200 to 1 (dense),

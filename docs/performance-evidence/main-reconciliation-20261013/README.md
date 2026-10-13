@@ -6,7 +6,7 @@ The latest 13 October fetch confirms fork/main and upstream/main at
 QA already contains both through reviewed merge `8b84a2e0`. No additional merge,
 rebase or history discard is needed. Dev promotion and VM105 remain unchanged.
 
-The [current representative PR evidence](../representative-pr-8c0b6f64/README.md)
+The [earlier representative PR evidence](../representative-pr-8c0b6f64/README.md)
 passes all seven standard jobs and downloaded-release verification against both
 bases at `8c0b6f64`. Both tested merge trees equal that source. Published-token
 checks and all 30 recovery records pass. Direct REST artifact retrieval now
@@ -17,6 +17,17 @@ passes 111 checks. The [matched S51 diagnostic](../s51-render-demand/paired-6786
 passes the candidate idle/ownership gate while preserving the failed baseline.
 These scoped results do not replace full current-candidate integration or
 physical Windows qualification, which remain pending.
+The later [both-base runs at `6d84a6ee`](../representative-pr-6d84a6ee/README.md)
+finish failed: all six source suites reject one obsolete render-hold source
+assertion. Three OS recovery jobs, onboarding and Street Level pass on each
+base, including all 30 persisted-state recovery checks. The assertion is
+corrected in `0ca5a466`/`ba86a5c0`; fresh integration is still required. A
+separate full local Windows suite at `9a2517af` reports 7,802 passes, three
+failures and ten skips. Its map-fault budget, child-cleanup duration and
+concurrent key-repair failures are under investigation; this is not a pass.
+A fresh 13 October 22:25 CEST fetch still finds main `9beadbda` and dev
+`e8ccc268`; QA contains both, so no additional main merge is needed.
+
 PR #4 remains validation-only; no stable release has been published.
 
 ## Earlier checkpoints
