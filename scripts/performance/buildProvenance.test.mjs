@@ -14,8 +14,10 @@ import {
 } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { loadEnv } from 'vite';
 import {
   createLocalBuildReceipt,
+  resolveMapFixtureBuildProfile,
   verifyServedBuildAssets,
 } from './buildProvenance.mjs';
 import { beginCaptureBuildProvenance } from './captureBuildProvenance.mjs';
@@ -33,9 +35,13 @@ if (existsSync('.mutate-harness-during-build')) {
   const target = await readFile('.mutate-harness-during-build', 'utf8');
   await writeFile(target, 'changed harness during build');
 }
+if (existsSync('.write-dotenv-during-build'))
+  await writeFile('.env.production.local', 'LOCAL_BUILD_MARKER=unexpected');
 await mkdir(path.join(out, 'assets'), { recursive: true });
 await writeFile(path.join(out, 'index.html'), '<main>fixture app</main>');
 await writeFile(path.join(out, 'assets', 'app.js'), await readFile('src/app.js'));
+if (process.env.GOOGLE_MAPS_API_KEY)
+  await writeFile(path.join(out, 'assets', 'fixture-key.txt'), process.env.GOOGLE_MAPS_API_KEY);
 `;
 
 test('build command timeout override stays within its bounded range', async () => {
@@ -65,7 +71,7 @@ async function fixture(t, { staleDist = false } = {}) {
   await mkdir(path.join(checkout, 'src'));
   await writeFile(
     path.join(checkout, '.gitignore'),
-    '.fail-build\n.mutate-during-build\n.mutate-harness-during-build\nnode_modules/\n',
+    '.fail-build\n.mutate-during-build\n.mutate-harness-during-build\n.write-dotenv-during-build\n.env\n.env.*\nnode_modules/\n',
   );
   await writeFile(
     path.join(checkout, 'package.json'),
@@ -109,6 +115,7 @@ async function fixture(t, { staleDist = false } = {}) {
     path.join(harness, 'harness.txt'),
     'shared harness fixture\n',
   );
+  await writeFile(path.join(harness, '.gitignore'), '.env\n.env.*\n');
   const appCommit = await commitRepo(checkout);
   const harnessCommit = await commitRepo(harness);
   const buildRoot = path.join(tmpRoot, 'fresh output');
@@ -140,13 +147,14 @@ async function commitRepo(root) {
   }).trim();
 }
 
-async function build(fx) {
+async function build(fx, { buildProfile = null } = {}) {
   return createLocalBuildReceipt({
     checkoutRoot: fx.checkout,
     harnessRoot: fx.harness,
     buildOutDir: fx.buildRoot,
     expectedAppCommit: fx.appCommit,
     expectedHarnessCommit: fx.harnessCommit,
+    buildProfile,
   });
 }
 
@@ -209,7 +217,7 @@ function resignReceipt(receipt) {
   };
 }
 
-function servedOptions(fx, receipt, baseUrl) {
+function servedOptions(fx, receipt, baseUrl, expectedBuildProfile = null) {
   return {
     receipt,
     checkoutRoot: fx.checkout,
@@ -217,6 +225,7 @@ function servedOptions(fx, receipt, baseUrl) {
     buildRoot: fx.buildRoot,
     expectedAppCommit: fx.appCommit,
     expectedHarnessCommit: fx.harnessCommit,
+    expectedBuildProfile,
     baseUrl,
   };
 }
@@ -252,6 +261,178 @@ test('fresh build receipts bind source, harness, lockfile recipe and locally bui
       () => false,
     ),
     false,
+  );
+});
+
+test('the named map fixture build profile is fixed, public, and receipt-bound', async (t) => {
+  const profileId = 'austin-map-streaming-v1';
+  const expectedProfile = resolveMapFixtureBuildProfile(profileId);
+  assert.equal(expectedProfile.id, profileId);
+  assert.match(expectedProfile.configurationSha256, /^[a-f0-9]{64}$/);
+  assert.throws(
+    () => resolveMapFixtureBuildProfile('caller-provided-key'),
+    /Unsupported build profile/,
+  );
+
+  const previousKey = process.env.GOOGLE_MAPS_API_KEY;
+  process.env.GOOGLE_MAPS_API_KEY =
+    'ambient-value-must-not-enter-default-build';
+  try {
+    const ordinary = await fixture(t);
+    const ordinaryBuild = await build(ordinary);
+    assert.equal(
+      ordinaryBuild.receipt.buildRecipe.mapFixtureProfile,
+      undefined,
+    );
+    assert.equal(
+      ordinaryBuild.receipt.assets.some(
+        (asset) => asset.path === 'assets/fixture-key.txt',
+      ),
+      false,
+      'default receipt keeps ambient map keys out of the build environment',
+    );
+
+    const profiled = await fixture(t);
+    const { receipt, buildRoot } = await build(profiled, {
+      buildProfile: profileId,
+    });
+    assert.deepEqual(receipt.buildRecipe.mapFixtureProfile, expectedProfile);
+    const fixtureKeyAsset = receipt.assets.find(
+      (asset) => asset.path === 'assets/fixture-key.txt',
+    );
+    assert.ok(fixtureKeyAsset);
+    assert.equal(
+      await readFile(path.join(buildRoot, fixtureKeyAsset.path), 'utf8'),
+      'GEV_AUSTIN_MAP_FIXTURE_PUBLIC_INERT_V1',
+      'profile selects only the fixed inert key, not ambient input',
+    );
+
+    const baseUrl = await serve(t, buildRoot);
+    await assert.rejects(
+      verifyServedBuildAssets(servedOptions(profiled, receipt, baseUrl)),
+      /explicit expected build profile/,
+    );
+    await assert.rejects(
+      verifyServedBuildAssets(
+        servedOptions(profiled, receipt, baseUrl, 'caller-provided-key'),
+      ),
+      /Unsupported build profile/,
+    );
+    await verifyServedBuildAssets(
+      servedOptions(profiled, receipt, baseUrl, profileId),
+    );
+
+    const changedDigest = structuredClone(receipt);
+    changedDigest.buildRecipe.mapFixtureProfile.configurationSha256 =
+      'f'.repeat(64);
+    await assert.rejects(
+      verifyServedBuildAssets(
+        servedOptions(
+          profiled,
+          resignReceipt(changedDigest),
+          baseUrl,
+          profileId,
+        ),
+      ),
+      /Build profile configuration does not match/,
+    );
+  } finally {
+    if (previousKey === undefined) delete process.env.GOOGLE_MAPS_API_KEY;
+    else process.env.GOOGLE_MAPS_API_KEY = previousKey;
+  }
+});
+
+test('profiled builds reject ignored Vite dotenv inputs before, during, and after verification without deleting them', async (t) => {
+  for (const dotenvName of [
+    '.env',
+    '.env.local',
+    '.env.production',
+    '.env.production.local',
+  ]) {
+    const fx = await fixture(t);
+    const marker = `LOCAL_TEST_MARKER=${dotenvName}\n`;
+    const dotenvPath = path.join(fx.checkout, dotenvName);
+    await writeFile(dotenvPath, marker);
+    assert.equal(
+      loadEnv('production', fx.checkout, '').LOCAL_TEST_MARKER,
+      dotenvName,
+      `pinned Vite production mode reads ${dotenvName}`,
+    );
+    await assert.rejects(
+      build(fx, { buildProfile: 'austin-map-streaming-v1' }),
+      new RegExp(
+        `${dotenvName.replaceAll('.', '\\.')} is not allowed at build startup`,
+      ),
+    );
+    assert.equal(await readFile(dotenvPath, 'utf8'), marker);
+    assert.equal(
+      await lstat(fx.buildRoot).then(
+        () => true,
+        () => false,
+      ),
+      false,
+      'profile rejection occurs before creating build output',
+    );
+  }
+
+  const harnessInput = await fixture(t);
+  const harnessDotenv = path.join(harnessInput.harness, '.env.local');
+  await writeFile(harnessDotenv, 'HARNESS_LOCAL_INPUT=unexpected\n');
+  assert.equal(
+    loadEnv('production', harnessInput.harness, '').HARNESS_LOCAL_INPUT,
+    'unexpected',
+  );
+  await assert.rejects(
+    build(harnessInput, { buildProfile: 'austin-map-streaming-v1' }),
+    /\.env\.local is not allowed at build startup/,
+  );
+  assert.equal(
+    await readFile(harnessDotenv, 'utf8'),
+    'HARNESS_LOCAL_INPUT=unexpected\n',
+  );
+
+  const during = await fixture(t);
+  const duringPath = path.join(during.checkout, '.env.production.local');
+  await writeFile(
+    path.join(during.checkout, '.write-dotenv-during-build'),
+    'go',
+  );
+  await assert.rejects(
+    build(during, { buildProfile: 'austin-map-streaming-v1' }),
+    /\.env\.production\.local is not allowed at Vite build completion/,
+  );
+  assert.equal(
+    await readFile(duringPath, 'utf8'),
+    'LOCAL_BUILD_MARKER=unexpected',
+    'a file created during the build is preserved for its owner',
+  );
+
+  const verified = await fixture(t);
+  const { receipt } = await build(verified, {
+    buildProfile: 'austin-map-streaming-v1',
+  });
+  const baseUrl = await serve(t, verified.buildRoot);
+  const injectedPath = path.join(verified.harness, '.env.production');
+  const fetchImpl = async (url, options) => {
+    if (
+      !(await lstat(injectedPath).then(
+        () => true,
+        () => false,
+      ))
+    )
+      await writeFile(injectedPath, 'LATE_VERIFICATION_INPUT=unexpected\n');
+    return fetch(url, options);
+  };
+  await assert.rejects(
+    verifyServedBuildAssets({
+      ...servedOptions(verified, receipt, baseUrl, 'austin-map-streaming-v1'),
+      fetchImpl,
+    }),
+    /\.env\.production is not allowed at after served verification/,
+  );
+  assert.equal(
+    await readFile(injectedPath, 'utf8'),
+    'LATE_VERIFICATION_INPUT=unexpected\n',
   );
 });
 

@@ -27,10 +27,65 @@ const MAX_ASSET_BYTES = 32 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 512 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 3_000;
 const SERVED_TIMEOUT_MS = 120_000;
+const MAP_FIXTURE_BUILD_PROFILE_ID = 'austin-map-streaming-v1';
+const MAP_FIXTURE_BUILD_PROFILE_CONFIG = Object.freeze({
+  schema: 'gev-map-fixture-build-profile/v1',
+  id: MAP_FIXTURE_BUILD_PROFILE_ID,
+  scope:
+    'public inert key for the locally intercepted Austin map fixture; not provider authorization',
+  viteMode: 'production',
+  googleMapsApiKey: 'GEV_AUSTIN_MAP_FIXTURE_PUBLIC_INERT_V1',
+  dotenvInputPolicy: 'reject-vite-production-input-files',
+});
+const VITE_DOTENV_INPUTS = Object.freeze([
+  '.env',
+  '.env.local',
+  '.env.production',
+  '.env.production.local',
+]);
 
 const jsonDigest = (value) =>
   createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const digestBytes = (value) => createHash('sha256').update(value).digest('hex');
+const mapFixtureProfileSummary = Object.freeze({
+  id: MAP_FIXTURE_BUILD_PROFILE_ID,
+  configurationSha256: jsonDigest(MAP_FIXTURE_BUILD_PROFILE_CONFIG),
+});
+
+/** Resolve the only named public fixture profile without accepting caller values. */
+export function resolveMapFixtureBuildProfile(profileId) {
+  if (profileId == null) return null;
+  if (profileId !== MAP_FIXTURE_BUILD_PROFILE_ID)
+    throw new TypeError(`Unsupported build profile: ${profileId}`);
+  return { ...mapFixtureProfileSummary };
+}
+
+function profileEnvironment(profileId) {
+  if (profileId == null) return null;
+  resolveMapFixtureBuildProfile(profileId);
+  return {
+    GOOGLE_MAPS_API_KEY: MAP_FIXTURE_BUILD_PROFILE_CONFIG.googleMapsApiKey,
+  };
+}
+
+async function assertNoViteDotenvInputs(roots, operation) {
+  const checked = new Set();
+  for (const root of roots) {
+    if (checked.has(root)) continue;
+    checked.add(root);
+    for (const name of VITE_DOTENV_INPUTS) {
+      try {
+        await lstat(path.join(root, name));
+      } catch (error) {
+        if (error?.code === 'ENOENT') continue;
+        throw error;
+      }
+      throw new Error(
+        `Vite dotenv input ${name} is not allowed at ${operation}.`,
+      );
+    }
+  }
+}
 const text = (value, label) => {
   if (typeof value !== 'string' || !value.trim())
     throw new TypeError(`${label} is required.`);
@@ -143,7 +198,7 @@ async function readSourceIdentity(root, label, expectedCommit) {
   return { root: canonicalRoot, commit };
 }
 
-async function packageRecipe(root, npmConfig, timeoutMs) {
+async function packageRecipe(root, npmConfig, timeoutMs, buildProfile = null) {
   const packageBytes = await readFile(path.join(root, 'package.json'));
   const lockBytes = await readFile(path.join(root, 'package-lock.json'));
   const packageJson = JSON.parse(packageBytes.toString('utf8'));
@@ -159,6 +214,9 @@ async function packageRecipe(root, npmConfig, timeoutMs) {
       'npm run build -- --outDir <new-empty-task-owned-directory>',
     nodeVersion: process.version,
     npmVersion: await npmVersion(root, npmConfig, timeoutMs),
+    ...(buildProfile
+      ? { mapFixtureProfile: resolveMapFixtureBuildProfile(buildProfile) }
+      : {}),
   };
 }
 
@@ -206,7 +264,7 @@ function npmCliPath() {
   throw new Error('npm CLI could not be resolved for the clean build.');
 }
 
-function buildEnvironment(npmConfig) {
+function buildEnvironment(npmConfig, buildProfile = null) {
   const safeNames = [
     'PATH',
     'PATHEXT',
@@ -235,13 +293,19 @@ function buildEnvironment(npmConfig) {
     npm_config_update_notifier: 'false',
     npm_config_userconfig: npmConfig.userFile,
     npm_config_globalconfig: npmConfig.globalFile,
+    ...(profileEnvironment(buildProfile) || {}),
   };
 }
 
 async function runNpm(
   root,
   args,
-  { captureOutput = false, npmConfig, timeoutMs = 10 * 60 * 1000 } = {},
+  {
+    captureOutput = false,
+    npmConfig,
+    timeoutMs = 10 * 60 * 1000,
+    buildProfile = null,
+  } = {},
 ) {
   const cli = npmCliPath();
   try {
@@ -252,7 +316,7 @@ async function runNpm(
       timeout: timeoutMs,
       maxBuffer: 32 * 1024,
       windowsHide: true,
-      env: buildEnvironment(npmConfig),
+      env: buildEnvironment(npmConfig, buildProfile),
     });
     return output?.trim() ?? '';
   } catch (error) {
@@ -375,6 +439,7 @@ export async function createLocalBuildReceipt({
   buildOutDir,
   expectedAppCommit,
   expectedHarnessCommit,
+  buildProfile = null,
   commandTimeoutMs = 10 * 60 * 1000,
 } = {}) {
   text(checkoutRoot, 'Explicit build checkout');
@@ -382,6 +447,7 @@ export async function createLocalBuildReceipt({
   text(buildOutDir, 'New build output path');
   assertSha(expectedAppCommit, SHA1, 'Expected application commit');
   assertSha(expectedHarnessCommit, SHA1, 'Expected harness commit');
+  const resolvedBuildProfile = resolveMapFixtureBuildProfile(buildProfile);
   if (
     !Number.isInteger(commandTimeoutMs) ||
     commandTimeoutMs < 1000 ||
@@ -401,6 +467,11 @@ export async function createLocalBuildReceipt({
     'Harness',
     expectedHarnessCommit,
   );
+  if (resolvedBuildProfile)
+    await assertNoViteDotenvInputs(
+      [appBefore.root, harness.root],
+      'build startup',
+    );
   const dependencyPath = path.join(appBefore.root, 'node_modules');
   const dependencies = await lstat(dependencyPath).catch(() => null);
   if (dependencies?.isSymbolicLink())
@@ -439,16 +510,28 @@ export async function createLocalBuildReceipt({
       appBefore.root,
       npmConfig,
       commandTimeoutMs,
+      buildProfile,
     );
     await runNpm(appBefore.root, ['ci', '--no-audit', '--no-fund'], {
       npmConfig,
       timeoutMs: commandTimeoutMs,
     });
+    if (resolvedBuildProfile)
+      await assertNoViteDotenvInputs(
+        [appBefore.root, harness.root],
+        'Vite build start',
+      );
     const buildArg = `--outDir=${canonicalOut}`;
     await runNpm(appBefore.root, ['run', 'build', '--', buildArg], {
       npmConfig,
       timeoutMs: commandTimeoutMs,
+      buildProfile,
     });
+    if (resolvedBuildProfile)
+      await assertNoViteDotenvInputs(
+        [appBefore.root, harness.root],
+        'Vite build completion',
+      );
 
     const appAfter = await readSourceIdentity(
       appBefore.root,
@@ -468,6 +551,7 @@ export async function createLocalBuildReceipt({
       appAfter.root,
       npmConfig,
       commandTimeoutMs,
+      buildProfile,
     );
     compareRecord(afterRecipe, recipe, 'Build recipe');
     const assets = await inventory(actualOut);
@@ -497,6 +581,8 @@ async function validateReceiptLocal(
     buildRoot,
     expectedAppCommit,
     expectedHarnessCommit,
+    expectedBuildProfile = null,
+    dotenvCheckPhase = 'receipt verification',
   } = {},
 ) {
   if (receipt?.schema !== RECEIPT_SCHEMA)
@@ -508,6 +594,20 @@ async function validateReceiptLocal(
     throw new Error('Build provenance receipt scope is unsupported.');
   assertSha(expectedAppCommit, SHA1, 'Expected application commit');
   assertSha(expectedHarnessCommit, SHA1, 'Expected harness commit');
+  const resolvedBuildProfile =
+    resolveMapFixtureBuildProfile(expectedBuildProfile);
+  const receiptProfile = receipt.buildRecipe?.mapFixtureProfile;
+  if (resolvedBuildProfile) {
+    compareRecord(
+      receiptProfile,
+      resolvedBuildProfile,
+      'Build profile configuration',
+    );
+  } else if (receiptProfile !== undefined) {
+    throw new Error(
+      'Profiled build receipts require an explicit expected build profile.',
+    );
+  }
   assertSha(receipt.receiptSha256, SHA256, 'Receipt hash');
   if (receiptHash(receipt) !== receipt.receiptSha256)
     throw new Error('Build provenance receipt hash is invalid.');
@@ -527,6 +627,8 @@ async function validateReceiptLocal(
     'Harness',
     expectedHarnessCommit,
   );
+  if (resolvedBuildProfile)
+    await assertNoViteDotenvInputs([app.root, harness.root], dotenvCheckPhase);
   if (
     receipt.source?.commit !== app.commit ||
     receipt.source?.worktree !== 'clean'
@@ -539,7 +641,12 @@ async function validateReceiptLocal(
     throw new Error('Harness source does not match the build receipt.');
   const npmConfig = await createNpmConfig();
   try {
-    const recipe = await packageRecipe(app.root, npmConfig);
+    const recipe = await packageRecipe(
+      app.root,
+      npmConfig,
+      undefined,
+      expectedBuildProfile,
+    );
     compareRecord(receipt.buildRecipe, recipe, 'Build recipe');
   } finally {
     await removeNpmConfig(npmConfig);
@@ -554,6 +661,11 @@ async function validateReceiptLocal(
     receipt.totalAssetBytes !== assets.totalBytes
   )
     throw new Error('Build output summary does not match its receipt.');
+  if (resolvedBuildProfile)
+    await assertNoViteDotenvInputs(
+      [app.root, harness.root],
+      `${dotenvCheckPhase} completion`,
+    );
   return { root, assets };
 }
 
@@ -565,6 +677,7 @@ export async function verifyServedBuildAssets({
   buildRoot,
   expectedAppCommit,
   expectedHarnessCommit,
+  expectedBuildProfile = null,
   baseUrl,
   fetchImpl = globalThis.fetch,
   signal,
@@ -575,6 +688,8 @@ export async function verifyServedBuildAssets({
     buildRoot,
     expectedAppCommit,
     expectedHarnessCommit,
+    expectedBuildProfile,
+    dotenvCheckPhase: 'before served verification',
   });
   if (typeof fetchImpl !== 'function')
     throw new TypeError('A fetch implementation is required.');
@@ -627,6 +742,8 @@ export async function verifyServedBuildAssets({
     buildRoot: root,
     expectedAppCommit,
     expectedHarnessCommit,
+    expectedBuildProfile,
+    dotenvCheckPhase: 'after served verification',
   });
   return {
     schema: SERVED_SCHEMA,
@@ -751,6 +868,7 @@ function parseArgs(argv) {
         '--receipt',
         '--build-root',
         '--url',
+        '--build-profile',
       ].includes(key)
     )
       throw new TypeError(`Unknown option: ${key}`);
@@ -780,6 +898,7 @@ async function main() {
       buildOutDir: options.buildout,
       expectedAppCommit: options.expectedappsha,
       expectedHarnessCommit: options.expectedharnesssha,
+      buildProfile: options.buildprofile || null,
     });
     const receiptPath = await writeReceipt(options.out, receipt, [
       options.checkout,
@@ -811,6 +930,7 @@ async function main() {
     buildRoot: options.buildroot,
     expectedAppCommit: options.expectedappsha,
     expectedHarnessCommit: options.expectedharnesssha,
+    expectedBuildProfile: options.buildprofile || null,
     baseUrl: options.url,
   });
   process.stdout.write(
