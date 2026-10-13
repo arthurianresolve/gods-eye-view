@@ -830,3 +830,19 @@ all seven jobs passing at exact candidate 78e04172: Node 24/26, Windows
 onboarding, recovery on Windows/macOS/Linux, and browser journeys. The
 separate native capture run remains failed at its outer comparison-contract
 assertion. Fresh capture and standard validation will follow the correction.
+
+GPT-6 Luna corrected the consumer in 2ca802a0; root integrated it at a753faa7.
+The validator now compares the entire recorded contract with the canonical
+projection recomputed from observations. Equality uses a bounded assertion
+message, avoiding allocation of a giant diagnostic diff. All receipt, fixture,
+clock, readiness and cleanup predicates remain in place. The permanent
+compressed regression fixture decompresses to the exact hash-bound raw report.
+
+Root's [full-validator replay](native-38332484324-review-after.json) now passes
+and rejects eight altered/missing contract cases, a wrong commit and a wrong
+worker bundle. Its structural-only provenance limitation remains explicit.
+[All 84 focused tests](projection-focused-a753faa7.tap), [17 harness scope
+checks and formatting for 1,622 files](projection-checks-a753faa7.json) pass.
+No runtime rendering, provider data, measurement timeout or performance gate
+changed. Fresh hosted validation is still required; no slice acceptance or
+physical hardware performance claim is made.
