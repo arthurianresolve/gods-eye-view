@@ -532,6 +532,7 @@ function createFakePage({
 function createMapFaultControlHarness({
   scenarioId,
   renderDuringPreparation = false,
+  deferRequestedRender = false,
 }) {
   const listeners = new Set();
   const types = {
@@ -652,7 +653,9 @@ function createMapFaultControlHarness({
         }),
       },
     },
-    requestRender: render,
+    requestRender() {
+      if (!deferRequestedRender) render();
+    },
   };
   let qualityMode = 'auto';
   let densityPct = 50;
@@ -726,7 +729,10 @@ function createMapFaultControlHarness({
     performance: { now: () => ++now },
     setTimeout(callback, delay = 0) {
       now += delay;
-      if (renderDuringPreparation && delay === MAP_STREAMING_ROUTE.startupFlightDelayMs)
+      if (
+        renderDuringPreparation &&
+        delay === MAP_STREAMING_ROUTE.startupFlightDelayMs
+      )
         render();
       queueMicrotask(callback);
       return 1;
@@ -767,7 +773,13 @@ function createMapFaultControlHarness({
       };
     },
   };
-  return { page, delivery, listeners, context };
+  return {
+    page,
+    delivery,
+    listeners,
+    context,
+    flushRender: render,
+  };
 }
 
 function nativeFaultAssetUrl(asset, googleKey) {
@@ -1045,7 +1057,10 @@ test('map fault initial readiness discards startup-pose frames before fixed-pose
     report.initial.postRenderSequence >
       report.preparation.poseEstablishedAtRenderSequence,
   );
-  assert.equal(report.initial.camera.heightM, MAP_STREAMING_ROUTE.start.heightM);
+  assert.equal(
+    report.initial.camera.heightM,
+    MAP_STREAMING_ROUTE.start.heightM,
+  );
   assert.equal(validateMapStreamingFaultControlReport(report, fixture), true);
 
   const staleBoundary = structuredClone(report);
@@ -1055,6 +1070,71 @@ test('map fault initial readiness discards startup-pose frames before fixed-pose
     () => validateMapStreamingFaultControlReport(staleBoundary, fixture),
     /after the fixed pose/,
   );
+  assert.equal(harness.listeners.size, 0);
+});
+
+test('fault switching stays blocked until a separately delivered post-pose render', async () => {
+  const harness = createMapFaultControlHarness({
+    scenarioId: 'esri-metadata-missing-v1',
+    renderDuringPreparation: true,
+    deferRequestedRender: true,
+  });
+  const operationId = 'map-fault-post-pose-render-gate';
+  const prepared = await harness.page.evaluate(
+    runNativeMapStreamingFaultControlInPage,
+    {
+      command: 'prepare',
+      operationId,
+      route: MAP_STREAMING_ROUTE,
+    },
+  );
+  assert.equal(prepared.preparation.poseEstablishedAtRenderSequence, 1);
+  let poll = await harness.page.evaluate(
+    runNativeMapStreamingFaultControlInPage,
+    {
+      command: 'poll',
+      operationId,
+      route: MAP_STREAMING_ROUTE,
+    },
+  );
+  assert.equal(poll.renderCount, 1);
+  assert.equal(poll.latest, null);
+  await assert.rejects(
+    harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+      command: 'begin-esri',
+      operationId,
+      route: MAP_STREAMING_ROUTE,
+    }),
+    /completed render after the fixed pose/,
+  );
+  assert.equal(
+    harness.context.window.__godsEyeView.mapStackController.getSwitchGeneration(),
+    0,
+  );
+
+  harness.flushRender();
+  poll = await harness.page.evaluate(runNativeMapStreamingFaultControlInPage, {
+    command: 'poll',
+    operationId,
+    route: MAP_STREAMING_ROUTE,
+  });
+  assert.ok(
+    poll.latest.postRenderSequence >
+      prepared.preparation.poseEstablishedAtRenderSequence,
+  );
+  assert.equal(poll.latest.camera.heightM, MAP_STREAMING_ROUTE.start.heightM);
+  const started = await harness.page.evaluate(
+    runNativeMapStreamingFaultControlInPage,
+    { command: 'begin-esri', operationId, route: MAP_STREAMING_ROUTE },
+  );
+  assert.equal(started.status, 'switch-started');
+  await Promise.resolve();
+  await Promise.resolve();
+  const disposed = await harness.page.evaluate(
+    runNativeMapStreamingFaultControlInPage,
+    { command: 'dispose', operationId, route: MAP_STREAMING_ROUTE },
+  );
+  assert.equal(disposed.status, 'disposed');
   assert.equal(harness.listeners.size, 0);
 });
 

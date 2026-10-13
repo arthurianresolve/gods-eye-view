@@ -3289,8 +3289,7 @@ export async function runNativeMapStreamingFaultControlInPage({
       startupFlightDelayMs: route.startupFlightDelayMs,
       elapsedMs: Math.max(0, performance.now() - preparationStartedAt),
       startupFlightCancelled: typeof camera.cancelFlight === 'function',
-      poseEstablishedAtRenderSequence:
-        record.poseEstablishedAtRenderSequence,
+      poseEstablishedAtRenderSequence: record.poseEstablishedAtRenderSequence,
     };
     return {
       operationId,
@@ -3333,6 +3332,15 @@ export async function runNativeMapStreamingFaultControlInPage({
     command === 'begin-osm' ||
     command === 'retry-esri'
   ) {
+    if (
+      command === 'begin-esri' &&
+      (!operation.latest ||
+        operation.latest.postRenderSequence <=
+          operation.poseEstablishedAtRenderSequence)
+    )
+      throw new Error(
+        'Initial Esri switch requires a completed render after the fixed pose.',
+      );
     if (
       command === 'begin-osm' &&
       (operation.pending.initialEsri !== true ||
