@@ -110,10 +110,8 @@ import {
 } from './performance/captureComparisonContract.mjs';
 import {
   assertInfrastructureClockObservation,
-  createInfrastructureFixtureDeliveryObserver,
-  createInfrastructureWorkloadFixture,
-  resolveInfrastructureFixtureAssetRoutes,
-} from './performance/infrastructureWorkloadFixture.mjs';
+  INFRASTRUCTURE_WORKLOAD_IDS,
+} from './performance/infrastructureWorkloadContract.mjs';
 import {
   AUSTIN_OPERATING_FIXED_TIME,
   AUSTIN_OPERATING_WORKLOAD_ID,
@@ -148,6 +146,8 @@ const delayMs = Math.max(0, Number(option('--inject-delay-ms', '0')) || 0);
 const maxP95Ms = Number(option('--max-p95-ms', '0')) || 0;
 const fixtureAircraftCount = Number(option('--fixture-aircraft', '0'));
 const providerFixtureMode = option('--provider-fixture', null);
+const infrastructureWorkloadSelected =
+  INFRASTRUCTURE_WORKLOAD_IDS.includes(providerFixtureMode);
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-v1';
 const austinOperatingWorkloadSelected =
   providerFixtureMode === AUSTIN_OPERATING_WORKLOAD_ID;
@@ -174,12 +174,6 @@ const cpuProfileArtifactDirectory = option(
   '--cpu-profile-artifact-directory',
   null,
 );
-const infrastructureWorkload = providerFixtureMode?.startsWith('infrastructure')
-  ? createInfrastructureWorkloadFixture(
-      providerFixtureMode,
-      providerFixtureTime,
-    )
-  : null;
 let weatherEffectsModule = null;
 let weatherEffectsWorkload = null;
 if (providerFixtureMode === WEATHER_EFFECTS_WORKLOAD_ID) {
@@ -199,9 +193,16 @@ if (!['diagnostic', 'prewarm', 'receipt-only'].includes(workerAuditMode))
     '--worker-audit-mode must be diagnostic, prewarm or receipt-only.',
   );
 if (
+  providerFixtureMode?.startsWith('infrastructure') &&
+  !infrastructureWorkloadSelected
+)
+  throw new TypeError(
+    `Unsupported infrastructure workload: ${providerFixtureMode}`,
+  );
+if (
   providerFixtureMode &&
   providerFixtureMode !== 'dense-investigation' &&
-  !infrastructureWorkload &&
+  !infrastructureWorkloadSelected &&
   !weatherEffectsWorkload &&
   !austinOperatingWorkloadSelected
 )
@@ -217,7 +218,7 @@ if (
     'The dense provider fixture requires --mixed-layers and must not use --fixture-aircraft.',
   );
 if (
-  (infrastructureWorkload ||
+  (infrastructureWorkloadSelected ||
     weatherEffectsWorkload ||
     austinOperatingWorkloadSelected) &&
   (fixtureAircraftCount !== 0 || args.includes('--mixed-layers'))
@@ -252,11 +253,15 @@ const startupRuns = Math.max(
   Math.min(5, Number(option('--startup-runs', String(runs))) || runs),
 );
 const startupDocumentTopology = createCaptureDocumentTopology({
-  infrastructure: Boolean(infrastructureWorkload || weatherEffectsWorkload),
+  infrastructure: Boolean(
+    infrastructureWorkloadSelected || weatherEffectsWorkload,
+  ),
   startupRuns,
 });
 const mainCaptureDocumentIdentity = getMainCaptureDocumentIdentity({
-  infrastructure: Boolean(infrastructureWorkload || weatherEffectsWorkload),
+  infrastructure: Boolean(
+    infrastructureWorkloadSelected || weatherEffectsWorkload,
+  ),
   startupRuns,
 });
 const protocolTimeoutMs = Math.max(
@@ -314,7 +319,7 @@ if (
   );
 if (
   (productionFlightFixture ||
-    infrastructureWorkload ||
+    infrastructureWorkloadSelected ||
     weatherEffectsWorkload ||
     austinOperatingWorkloadSelected) &&
   !buildProvenanceEnabled
@@ -362,7 +367,7 @@ if (
   hostedFixture &&
   (!(
     productionFlightFixture ||
-    infrastructureWorkload ||
+    infrastructureWorkloadSelected ||
     weatherEffectsWorkload ||
     austinOperatingWorkloadSelected
   ) ||
@@ -378,7 +383,7 @@ if (
     !buildProvenanceEnabled ||
     !(
       productionFlightFixture ||
-      infrastructureWorkload ||
+      infrastructureWorkloadSelected ||
       weatherEffectsWorkload ||
       austinOperatingWorkloadSelected
     ))
@@ -459,6 +464,17 @@ if (buildProvenanceEnabled) {
       'The aircraft fixture uses a Vite development-only injection seam and is not comparable with a local production build receipt.',
     );
 }
+let infrastructureFixtureModule = null;
+let infrastructureWorkload = null;
+if (infrastructureWorkloadSelected) {
+  infrastructureFixtureModule =
+    await import('./performance/infrastructureWorkloadFixture.mjs');
+  infrastructureWorkload =
+    infrastructureFixtureModule.createInfrastructureWorkloadFixture(
+      providerFixtureMode,
+      providerFixtureTime,
+    );
+}
 const source = {
   harnessCommit: harnessSource.commit,
   harnessDirtyWorktree: harnessSource.dirtyWorktree,
@@ -483,7 +499,7 @@ const source = {
   reason: harnessSource.reason,
 };
 const infrastructureAssetRoutes = infrastructureWorkload
-  ? resolveInfrastructureFixtureAssetRoutes(
+  ? infrastructureFixtureModule.resolveInfrastructureFixtureAssetRoutes(
       infrastructureWorkload,
       buildReceipt?.assets,
       buildProvenanceOptions.baseUrl,
@@ -2341,10 +2357,13 @@ try {
     await auditPage.setCacheEnabled(false);
     await auditPage.setBypassServiceWorker(true);
     const documentInfrastructureDelivery = infrastructureWorkload
-      ? createInfrastructureFixtureDeliveryObserver(infrastructureWorkload, {
-          assetRoutes: infrastructureAssetRoutes,
-          baseUrl: buildProvenanceOptions.baseUrl,
-        })
+      ? infrastructureFixtureModule.createInfrastructureFixtureDeliveryObserver(
+          infrastructureWorkload,
+          {
+            assetRoutes: infrastructureAssetRoutes,
+            baseUrl: buildProvenanceOptions.baseUrl,
+          },
+        )
       : null;
     if (documentInfrastructureDelivery) {
       await installFixtureWallClockOnPage(

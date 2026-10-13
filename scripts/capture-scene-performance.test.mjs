@@ -1,19 +1,55 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'capture-scene-performance.mjs');
 
-function invoke(args) {
-  return spawnSync(process.execPath, [SCRIPT, ...args], {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: 15_000,
-    windowsHide: true,
-  });
+function invoke(args, { loaderPath = null } = {}) {
+  return spawnSync(
+    process.execPath,
+    [
+      ...(loaderPath
+        ? ['--experimental-loader', pathToFileURL(loaderPath).href]
+        : []),
+      SCRIPT,
+      ...args,
+    ],
+    {
+      cwd: ROOT,
+      encoding: 'utf8',
+      timeout: 15_000,
+      windowsHide: true,
+    },
+  );
+}
+
+async function withForbiddenCesiumLoader(run) {
+  const directory = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'gev-capture-no-cesium-'),
+  );
+  const loaderPath = path.join(directory, 'forbid-cesium-loader.mjs');
+  await fs.writeFile(
+    loaderPath,
+    `export async function resolve(specifier, context, nextResolve) {
+      if (specifier === 'cesium') throw new Error('forbidden Cesium import witness');
+      return nextResolve(specifier, context);
+    }\n`,
+  );
+  try {
+    return await run(loaderPath, directory);
+  } finally {
+    const resolvedDirectory = path.resolve(directory);
+    assert.ok(
+      resolvedDirectory.startsWith(path.resolve(os.tmpdir()) + path.sep),
+      'temporary loader directory must remain inside the OS temp directory',
+    );
+    await fs.rm(resolvedDirectory, { recursive: true, force: true });
+  }
 }
 
 function verifiedFixtureArgs() {
@@ -66,6 +102,102 @@ test('capture CLI rejects unsupported infrastructure names and mixed populations
   ]);
   assert.notEqual(mixed.status, 0);
   assert.match(mixed.stderr, /cannot use aircraft or --mixed-layers/);
+});
+
+test('invalid infrastructure CLI requests reject before importing Cesium', async () => {
+  await withForbiddenCesiumLoader(async (loaderPath, directory) => {
+    const unsupported = invoke(
+      ['--provider-fixture', 'infrastructure-unknown'],
+      { loaderPath },
+    );
+    assert.equal(unsupported.status, 1, unsupported.stderr);
+    assert.match(
+      unsupported.stderr,
+      /Unsupported infrastructure workload: infrastructure-unknown/,
+    );
+    assert.doesNotMatch(unsupported.stderr, /forbidden Cesium import witness/);
+
+    const missingProvenance = invoke(
+      ['--provider-fixture', 'infrastructure-datacenters'],
+      { loaderPath },
+    );
+    assert.equal(missingProvenance.status, 1, missingProvenance.stderr);
+    assert.match(
+      missingProvenance.stderr,
+      /Comparison fixtures require verified build provenance options/,
+    );
+    assert.doesNotMatch(
+      missingProvenance.stderr,
+      /forbidden Cesium import witness/,
+    );
+
+    const partialProvenance = invoke(
+      [
+        '--provider-fixture',
+        'infrastructure-datacenters',
+        '--build-receipt',
+        path.join(ROOT, 'package.json'),
+      ],
+      { loaderPath },
+    );
+    assert.equal(partialProvenance.status, 1, partialProvenance.stderr);
+    assert.match(
+      partialProvenance.stderr,
+      /Verified capture requires .* together/,
+    );
+    assert.doesNotMatch(
+      partialProvenance.stderr,
+      /forbidden Cesium import witness/,
+    );
+
+    const malformedReceiptPath = path.join(directory, 'malformed-receipt.json');
+    await fs.writeFile(malformedReceiptPath, '{ malformed receipt json');
+    const invalidReceipt = invoke(
+      [
+        '--provider-fixture',
+        'infrastructure-datacenters',
+        '--build-receipt',
+        malformedReceiptPath,
+        '--app-checkout',
+        ROOT,
+        '--harness-checkout',
+        ROOT,
+        '--build-root',
+        ROOT,
+        '--expected-app-sha',
+        'a'.repeat(40),
+        '--expected-harness-sha',
+        'b'.repeat(40),
+        '--served-base-url',
+        'http://127.0.0.1:4173',
+      ],
+      { loaderPath },
+    );
+    assert.equal(invalidReceipt.status, 1, invalidReceipt.stderr);
+    assert.match(invalidReceipt.stderr, /SyntaxError/);
+    assert.doesNotMatch(
+      invalidReceipt.stderr,
+      /forbidden Cesium import witness/,
+    );
+
+    const incompatiblePopulation = invoke(
+      ['--provider-fixture', 'infrastructure-dams', '--mixed-layers'],
+      { loaderPath },
+    );
+    assert.equal(
+      incompatiblePopulation.status,
+      1,
+      incompatiblePopulation.stderr,
+    );
+    assert.match(
+      incompatiblePopulation.stderr,
+      /cannot use aircraft or --mixed-layers/,
+    );
+    assert.doesNotMatch(
+      incompatiblePopulation.stderr,
+      /forbidden Cesium import witness/,
+    );
+  });
 });
 
 test('first-motion profiling rejects unsupported workload before browser startup', () => {
