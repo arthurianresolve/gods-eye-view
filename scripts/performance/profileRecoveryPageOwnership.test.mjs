@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import { performance } from 'node:perf_hooks';
+import { PassThrough } from 'node:stream';
 import { Connection } from 'puppeteer-core/internal/cdp/Connection.js';
 import {
   applyRecoveryCleanupFailure,
@@ -23,7 +25,728 @@ import {
 } from './profileRecoveryPageOwnership.mjs';
 
 const BASE = 'http://127.0.0.1:4173';
+const POWERSHELL_READY_MARKER = '__GEV_POWERSHELL_TEST_READY__';
+const POWERSHELL_TEST_SCRIPT_TIMEOUT_MS = 5_000;
+const POWERSHELL_TEST_CLEANUP_TIMEOUT_MS = 1_000;
+const POWERSHELL_TEST_OUTPUT_LIMIT_BYTES = 64 * 1024;
+const KEEP_LATE_PROCESS_ERROR = () => {};
 const page = (url) => ({ url: () => url });
+
+function runBoundedPowerShellTestScript(
+  script,
+  {
+    spawnProcess = spawn,
+    startupTimeoutMs = 5_000,
+    executionTimeoutMs = POWERSHELL_TEST_SCRIPT_TIMEOUT_MS,
+    cleanupTimeoutMs = POWERSHELL_TEST_CLEANUP_TIMEOUT_MS,
+    outputLimitBytes = POWERSHELL_TEST_OUTPUT_LIMIT_BYTES,
+    setTimerImpl = setTimeout,
+    clearTimerImpl = clearTimeout,
+    nowImpl = () => performance.now(),
+  } = {},
+) {
+  return new Promise((resolve, reject) => {
+    const startedAt = nowImpl();
+    let child;
+    let spawned = false;
+    let spawnFailed = false;
+    let ready = false;
+    let closed = false;
+    let settled = false;
+    let primaryError = null;
+    let readyAt = null;
+    let failureAt = null;
+    let stdout = '';
+    let stderrBytes = 0;
+    let stdoutBytes = 0;
+    let startupTimer;
+    let executionTimer;
+    let cleanupTimer;
+
+    const clearTimers = () => {
+      clearTimerImpl(startupTimer);
+      clearTimerImpl(executionTimer);
+      clearTimerImpl(cleanupTimer);
+    };
+    const detach = () => {
+      child?.off('spawn', onSpawn);
+      child?.off('error', onError);
+      child?.off('close', onClose);
+      child?.stdout?.off('data', onStdout);
+      child?.stdout?.off('error', onStreamError);
+      child?.stderr?.off('data', onStderr);
+      child?.stderr?.off('error', onStreamError);
+      child?.stdin?.off('error', onStreamError);
+    };
+    const guardLateErrors = () => {
+      child?.on('error', KEEP_LATE_PROCESS_ERROR);
+      for (const stream of [child?.stdin, child?.stdout, child?.stderr])
+        stream?.on('error', KEEP_LATE_PROCESS_ERROR);
+    };
+    const finish = (error, output) => {
+      if (settled) return;
+      settled = true;
+      clearTimers();
+      if (error && !closed && !spawnFailed) retireUnconfirmedChild();
+      if (error) guardLateErrors();
+      detach();
+      if (error) {
+        const endedAt = nowImpl();
+        const observedFailureAt =
+          failureAt ?? error.observedFailureAtMs ?? endedAt;
+        error.processStatus = spawnFailed
+          ? 'not-started'
+          : closed
+            ? 'closed'
+            : 'unconfirmed';
+        error.cleanupConfirmed = error.processStatus !== 'unconfirmed';
+        error.exitCode = Number.isInteger(child?.exitCode)
+          ? child.exitCode
+          : null;
+        error.startupElapsedMs = Math.max(
+          0,
+          (readyAt ?? observedFailureAt) - startedAt,
+        );
+        error.executionElapsedMs =
+          readyAt === null ? null : Math.max(0, observedFailureAt - readyAt);
+        error.cleanupElapsedMs = Math.max(0, endedAt - observedFailureAt);
+        reject(error);
+      } else {
+        const endedAt = nowImpl();
+        resolve({
+          output,
+          startupElapsedMs: Math.max(0, (readyAt ?? endedAt) - startedAt),
+          executionElapsedMs:
+            readyAt === null ? null : Math.max(0, endedAt - readyAt),
+          totalElapsedMs: Math.max(0, endedAt - startedAt),
+        });
+      }
+    };
+    const retireUnconfirmedChild = () => {
+      if (!child) return;
+      try {
+        child.kill();
+      } catch {
+        // Preserve the unconfirmed outcome while retiring owned handles.
+      }
+      try {
+        child.unref?.();
+      } catch {
+        // Unref is best-effort; process status remains unconfirmed.
+      }
+      for (const stream of [child.stdin, child.stdout, child.stderr]) {
+        if (!stream) continue;
+        stream.destroy?.();
+      }
+    };
+    const makeError = (code, stage) => {
+      const error = new Error(`PowerShell test command failed at ${stage}.`);
+      error.code = code;
+      error.stage = stage;
+      error.observedFailureAtMs = nowImpl();
+      return error;
+    };
+    const stop = (error) => {
+      if (settled || primaryError) return;
+      primaryError = error;
+      failureAt = Number.isFinite(error.observedFailureAtMs)
+        ? error.observedFailureAtMs
+        : nowImpl();
+      clearTimerImpl(startupTimer);
+      clearTimerImpl(executionTimer);
+      if (!child || closed) {
+        finish(error);
+        return;
+      }
+      cleanupTimer = setTimerImpl(() => finish(error), cleanupTimeoutMs);
+      try {
+        child.kill();
+      } catch {
+        // The bounded close wait below reports whether termination was observed.
+      }
+    };
+    const onSpawn = () => {
+      spawned = true;
+      if (primaryError) {
+        try {
+          child.kill();
+        } catch {
+          // The bounded close wait below reports whether termination was observed.
+        }
+      }
+    };
+    const onError = () => {
+      const error = makeError('POWERSHELL_SPAWN_FAILED', 'process-start');
+      if (!spawned) {
+        spawnFailed = true;
+        finish(error);
+      } else {
+        stop(error);
+      }
+    };
+    const onClose = (code) => {
+      closed = true;
+      if (primaryError) {
+        finish(primaryError);
+      } else if (!ready) {
+        finish(makeError('POWERSHELL_EXIT_BEFORE_READY', 'readiness'));
+      } else if (code !== 0) {
+        finish(makeError('POWERSHELL_EXIT_NONZERO', 'script-execution'));
+      } else {
+        const readyLine = new RegExp(
+          `(?:^|\\r?\\n)${POWERSHELL_READY_MARKER}\\r?\\n`,
+        );
+        resolveOutput(finish, readyLine, stdout);
+      }
+    };
+    const onStdout = (chunk) => {
+      if (settled || primaryError) return;
+      const text = Buffer.isBuffer(chunk)
+        ? chunk.toString('utf8')
+        : String(chunk);
+      stdoutBytes += Buffer.byteLength(text, 'utf8');
+      if (stdoutBytes > outputLimitBytes) {
+        stop(
+          makeError(
+            'POWERSHELL_OUTPUT_LIMIT',
+            ready ? 'script-execution' : 'readiness',
+          ),
+        );
+        return;
+      }
+      stdout += text;
+      if (
+        !ready &&
+        (stdout.includes(`${POWERSHELL_READY_MARKER}\r\n`) ||
+          stdout.includes(`${POWERSHELL_READY_MARKER}\n`))
+      ) {
+        ready = true;
+        readyAt = nowImpl();
+        clearTimerImpl(startupTimer);
+        executionTimer = setTimerImpl(
+          () =>
+            stop(makeError('POWERSHELL_EXECUTION_TIMEOUT', 'script-execution')),
+          executionTimeoutMs,
+        );
+        try {
+          if (!child.stdin || typeof child.stdin.write !== 'function')
+            throw new Error('stdin unavailable');
+          child.stdin.write(script);
+          child.stdin.end();
+        } catch {
+          stop(makeError('POWERSHELL_SCRIPT_SEND_FAILED', 'script-execution'));
+        }
+      }
+    };
+    const onStderr = (chunk) => {
+      if (settled || primaryError) return;
+      const text = Buffer.isBuffer(chunk)
+        ? chunk.toString('utf8')
+        : String(chunk);
+      stderrBytes += Buffer.byteLength(text, 'utf8');
+      if (stderrBytes > outputLimitBytes)
+        stop(
+          makeError(
+            'POWERSHELL_OUTPUT_LIMIT',
+            ready ? 'script-execution' : 'readiness',
+          ),
+        );
+    };
+    const onStreamError = () => {
+      stop(
+        makeError(
+          ready
+            ? 'POWERSHELL_SCRIPT_IO_FAILED'
+            : 'POWERSHELL_READINESS_IO_FAILED',
+          ready ? 'script-execution' : 'readiness',
+        ),
+      );
+    };
+    const resolveOutput = (complete, readyLine, raw) => {
+      const output = raw.replace(readyLine, '').trim();
+      complete(null, output);
+    };
+
+    startupTimer = setTimerImpl(
+      () => stop(makeError('POWERSHELL_READINESS_TIMEOUT', 'readiness')),
+      startupTimeoutMs,
+    );
+    try {
+      child = spawnProcess(
+        'powershell.exe',
+        [
+          '-NoLogo',
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          `[Console]::Out.WriteLine('${POWERSHELL_READY_MARKER}'); [Console]::Out.Flush(); $gevTestScript = [Console]::In.ReadToEnd(); Invoke-Expression $gevTestScript`,
+        ],
+        { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] },
+      );
+    } catch {
+      spawnFailed = true;
+      finish(makeError('POWERSHELL_SPAWN_FAILED', 'process-start'));
+      return;
+    }
+    child.on('spawn', onSpawn);
+    child.on('error', onError);
+    child.on('close', onClose);
+    child.stdout?.on('data', onStdout);
+    child.stdout?.on('error', onStreamError);
+    child.stderr?.on('data', onStderr);
+    child.stderr?.on('error', onStreamError);
+    child.stdin?.on('error', onStreamError);
+  });
+}
+
+function deterministicPowerShellTimers() {
+  let nextId = 0;
+  let nowMs = 0;
+  const timers = new Map();
+  return {
+    setTimeout(callback, delayMs) {
+      const id = ++nextId;
+      timers.set(id, { callback, dueAt: nowMs + delayMs });
+      return id;
+    },
+    clearTimeout(id) {
+      timers.delete(id);
+    },
+    advance(delayMs) {
+      nowMs += delayMs;
+      while (true) {
+        const entry = [...timers.entries()]
+          .filter(([, timer]) => timer.dueAt <= nowMs)
+          .sort((left, right) => left[1].dueAt - right[1].dueAt)[0];
+        if (!entry) break;
+        timers.delete(entry[0]);
+        entry[1].callback();
+      }
+    },
+    now: () => nowMs,
+    get size() {
+      return timers.size;
+    },
+  };
+}
+
+function flushProcessEvents() {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
+async function runPowerShellIntegrationScript(script, t) {
+  try {
+    const result = await runBoundedPowerShellTestScript(script);
+    t.diagnostic(
+      JSON.stringify({
+        startupElapsedMs: result.startupElapsedMs,
+        executionElapsedMs: result.executionElapsedMs,
+        totalElapsedMs: result.totalElapsedMs,
+      }),
+    );
+    return result;
+  } catch (error) {
+    t.diagnostic(
+      JSON.stringify({
+        stage: error.stage,
+        processStatus: error.processStatus,
+        cleanupConfirmed: error.cleanupConfirmed,
+        startupElapsedMs: error.startupElapsedMs,
+        executionElapsedMs: error.executionElapsedMs,
+        cleanupElapsedMs: error.cleanupElapsedMs,
+      }),
+    );
+    throw error;
+  }
+}
+
+function fakePowerShellChild({ killCloses = true, syncKillClose = true } = {}) {
+  const child = new EventEmitter();
+  child.stdout = new PassThrough();
+  child.stderr = new PassThrough();
+  child.stdin = new PassThrough();
+  child.exitCode = null;
+  child.killCalls = 0;
+  child.unrefCalls = 0;
+  child.unref = () => {
+    child.unrefCalls += 1;
+  };
+  child.kill = () => {
+    child.killCalls += 1;
+    if (killCloses) {
+      if (syncKillClose) child.emit('close', null, 'SIGTERM');
+      else queueMicrotask(() => child.emit('close', null, 'SIGTERM'));
+    }
+    return true;
+  };
+  return child;
+}
+
+function fakePowerShellSpawner(
+  child,
+  { closeOnInputEnd = true, exitCode = 0, output = 'ok\r\n' } = {},
+) {
+  let scriptInput = '';
+  let launchArguments;
+  const complete = () => {
+    child.stdout.write(output);
+    queueMicrotask(() => {
+      child.exitCode = exitCode;
+      child.emit('close', exitCode, null);
+    });
+  };
+  child.stdin.on('data', (chunk) => {
+    scriptInput += chunk.toString('utf8');
+  });
+  child.stdin.on('finish', () => {
+    if (!closeOnInputEnd) return;
+    complete();
+  });
+  const spawnProcess = (executable, args, options) => {
+    assert.equal(executable, 'powershell.exe');
+    assert.equal(args.at(-2), '-Command');
+    assert.match(args.at(-1), /ReadToEnd\(\)/);
+    launchArguments = args;
+    assert.equal(options.windowsHide, true);
+    return child;
+  };
+  return {
+    spawnProcess,
+    start: () => child.emit('spawn'),
+    ready: () => child.stdout.write(`${POWERSHELL_READY_MARKER}\r\n`),
+    complete,
+    getScriptInput: () => scriptInput,
+    getLaunchArguments: () => launchArguments,
+  };
+}
+
+test('PowerShell test harness waits for a flushed readiness marker before sending script', async () => {
+  const timers = deterministicPowerShellTimers();
+  const child = fakePowerShellChild();
+  const fake = fakePowerShellSpawner(child, {
+    closeOnInputEnd: false,
+    output: 'NO_COMMAND_LINE_QUERY\r\n',
+  });
+  const pending = runBoundedPowerShellTestScript(
+    'Write-Output "NO_COMMAND_LINE_QUERY"',
+    {
+      spawnProcess: fake.spawnProcess,
+      startupTimeoutMs: 5_000,
+      executionTimeoutMs: 5_000,
+      setTimerImpl: timers.setTimeout,
+      clearTimerImpl: timers.clearTimeout,
+      nowImpl: timers.now,
+    },
+  );
+  fake.start();
+  timers.advance(4_000);
+  await flushProcessEvents();
+  assert.equal(fake.getScriptInput(), '');
+  fake.ready();
+  await flushProcessEvents();
+  timers.advance(2_000);
+  fake.complete();
+  await flushProcessEvents();
+  const result = await pending;
+  assert.equal(fake.getScriptInput(), 'Write-Output "NO_COMMAND_LINE_QUERY"');
+  assert.equal(
+    fake.getLaunchArguments().includes('Write-Output "NO_COMMAND_LINE_QUERY"'),
+    false,
+  );
+  assert.equal(result.output, 'NO_COMMAND_LINE_QUERY');
+  assert.equal(result.startupElapsedMs, 4_000);
+  assert.equal(result.executionElapsedMs, 2_000);
+  assert.equal(result.totalElapsedMs, 6_000);
+  assert.equal(timers.size, 0);
+  assert.equal(child.listenerCount('spawn'), 0);
+  assert.equal(child.listenerCount('close'), 0);
+  assert.equal(child.stdout.listenerCount('data'), 0);
+  assert.equal(child.stderr.listenerCount('data'), 0);
+});
+
+test('PowerShell startup and hung execution have distinct bounded failures and cleanup', async () => {
+  const startupTimers = deterministicPowerShellTimers();
+  const startupChild = fakePowerShellChild();
+  const startup = fakePowerShellSpawner(startupChild);
+  const startupPending = runBoundedPowerShellTestScript(
+    'Write-Output "never sent"',
+    {
+      spawnProcess: startup.spawnProcess,
+      startupTimeoutMs: 5_000,
+      cleanupTimeoutMs: 1_000,
+      setTimerImpl: startupTimers.setTimeout,
+      clearTimerImpl: startupTimers.clearTimeout,
+      nowImpl: startupTimers.now,
+    },
+  );
+  startup.start();
+  startupTimers.advance(5_000);
+  await assert.rejects(startupPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_READINESS_TIMEOUT');
+    assert.equal(error.stage, 'readiness');
+    assert.equal(error.cleanupConfirmed, true);
+    assert.equal(error.startupElapsedMs, 5_000);
+    assert.equal(error.executionElapsedMs, null);
+    assert.equal(error.cleanupElapsedMs, 0);
+    return true;
+  });
+  assert.equal(startupChild.killCalls, 1);
+  assert.equal(startupTimers.size, 0);
+
+  const executionTimers = deterministicPowerShellTimers();
+  const hungChild = fakePowerShellChild();
+  const hung = fakePowerShellSpawner(hungChild, { closeOnInputEnd: false });
+  const executionPending = runBoundedPowerShellTestScript(
+    'Write-Output "hang"',
+    {
+      spawnProcess: hung.spawnProcess,
+      startupTimeoutMs: 5_000,
+      executionTimeoutMs: 5_000,
+      cleanupTimeoutMs: 1_000,
+      setTimerImpl: executionTimers.setTimeout,
+      clearTimerImpl: executionTimers.clearTimeout,
+      nowImpl: executionTimers.now,
+    },
+  );
+  hung.start();
+  await flushProcessEvents();
+  hung.ready();
+  await flushProcessEvents();
+  executionTimers.advance(5_000);
+  await assert.rejects(executionPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_EXECUTION_TIMEOUT');
+    assert.equal(error.stage, 'script-execution');
+    assert.equal(error.cleanupConfirmed, true);
+    assert.equal(error.startupElapsedMs, 0);
+    assert.equal(error.executionElapsedMs, 5_000);
+    assert.equal(error.cleanupElapsedMs, 0);
+    return true;
+  });
+  assert.equal(hungChild.killCalls, 1);
+  assert.equal(executionTimers.size, 0);
+  assert.equal(hungChild.listenerCount('close'), 0);
+});
+
+test('PowerShell late readiness after startup timeout never sends the script', async () => {
+  const timers = deterministicPowerShellTimers();
+  const child = fakePowerShellChild({ killCloses: false });
+  const ownedErrorObserver = () => {};
+  const ownedStreamErrorObserver = () => {};
+  child.on('error', ownedErrorObserver);
+  child.stdout.on('error', ownedStreamErrorObserver);
+  const fake = fakePowerShellSpawner(child, { closeOnInputEnd: false });
+  const pending = runBoundedPowerShellTestScript(
+    'Write-Output "must not run"',
+    {
+      spawnProcess: fake.spawnProcess,
+      startupTimeoutMs: 5_000,
+      cleanupTimeoutMs: 1_000,
+      setTimerImpl: timers.setTimeout,
+      clearTimerImpl: timers.clearTimeout,
+      nowImpl: timers.now,
+    },
+  );
+  fake.start();
+  timers.advance(5_000);
+  fake.ready();
+  await flushProcessEvents();
+  assert.equal(fake.getScriptInput(), '');
+  timers.advance(1_000);
+  await assert.rejects(pending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_READINESS_TIMEOUT');
+    assert.equal(error.cleanupConfirmed, false);
+    assert.equal(error.processStatus, 'unconfirmed');
+    return true;
+  });
+  assert.equal(fake.getScriptInput(), '');
+  assert.equal(child.killCalls, 2);
+  assert.equal(child.unrefCalls, 1);
+  assert.equal(child.stdout.listenerCount('data'), 0);
+  assert.equal(child.stderr.listenerCount('data'), 0);
+  assert.equal(child.stdout.listenerCount('error'), 2);
+  assert.equal(child.listenerCount('error'), 2);
+  assert.equal(child.listeners('error').includes(ownedErrorObserver), true);
+  assert.equal(child.stdout.listenerCount('error'), 2);
+  assert.equal(
+    child.stdout.listeners('error').includes(ownedStreamErrorObserver),
+    true,
+  );
+  fake.ready();
+  await flushProcessEvents();
+  assert.equal(fake.getScriptInput(), '');
+  assert.doesNotThrow(() => child.emit('error', new Error('late child error')));
+  assert.doesNotThrow(() =>
+    child.stdout.emit('error', new Error('late pipe error')),
+  );
+  assert.equal(timers.size, 0);
+});
+
+test('PowerShell spawn failure, synchronous close and output overflow are bounded', async () => {
+  await assert.rejects(
+    runBoundedPowerShellTestScript('Write-Output "never launched"', {
+      spawnProcess() {
+        throw new Error('private spawn detail');
+      },
+    }),
+    (error) => {
+      assert.equal(error.code, 'POWERSHELL_SPAWN_FAILED');
+      assert.equal(error.processStatus, 'not-started');
+      assert.equal(error.cleanupConfirmed, true);
+      assert.doesNotMatch(error.message, /private spawn detail/);
+      return true;
+    },
+  );
+
+  const errorChild = fakePowerShellChild();
+  await assert.rejects(
+    runBoundedPowerShellTestScript('Write-Output "spawn error"', {
+      spawnProcess: () => {
+        queueMicrotask(() =>
+          errorChild.emit('error', new Error('spawn failed')),
+        );
+        return errorChild;
+      },
+    }),
+    (error) => {
+      assert.equal(error.processStatus, 'not-started');
+      assert.equal(error.cleanupConfirmed, true);
+      return true;
+    },
+  );
+  assert.equal(errorChild.killCalls, 0);
+
+  const syncTimers = deterministicPowerShellTimers();
+  const syncChild = fakePowerShellChild({ syncKillClose: true });
+  const syncPending = runBoundedPowerShellTestScript(
+    'Write-Output "sync close"',
+    {
+      spawnProcess: () => syncChild,
+      startupTimeoutMs: 5_000,
+      cleanupTimeoutMs: 1_000,
+      setTimerImpl: syncTimers.setTimeout,
+      clearTimerImpl: syncTimers.clearTimeout,
+      nowImpl: syncTimers.now,
+    },
+  );
+  syncTimers.advance(5_000);
+  await assert.rejects(syncPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_READINESS_TIMEOUT');
+    assert.equal(error.processStatus, 'closed');
+    assert.equal(error.cleanupConfirmed, true);
+    return true;
+  });
+  assert.equal(syncTimers.size, 0);
+  assert.equal(syncChild.listenerCount('close'), 0);
+
+  const overflowTimers = deterministicPowerShellTimers();
+  const overflowChild = fakePowerShellChild();
+  const overflowFake = fakePowerShellSpawner(overflowChild);
+  const overflowPending = runBoundedPowerShellTestScript(
+    'Write-Output "overflow"',
+    {
+      spawnProcess: overflowFake.spawnProcess,
+      outputLimitBytes: 4,
+      setTimerImpl: overflowTimers.setTimeout,
+      clearTimerImpl: overflowTimers.clearTimeout,
+      nowImpl: overflowTimers.now,
+    },
+  );
+  overflowFake.start();
+  overflowChild.stdout.write('012345');
+  await assert.rejects(overflowPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_OUTPUT_LIMIT');
+    assert.equal(error.processStatus, 'closed');
+    assert.equal(error.cleanupConfirmed, true);
+    return true;
+  });
+  assert.equal(overflowTimers.size, 0);
+});
+
+test('PowerShell early exit, nonzero exit and unconfirmed kill remain failed', async () => {
+  const earlyTimers = deterministicPowerShellTimers();
+  const earlyChild = fakePowerShellChild();
+  const early = fakePowerShellSpawner(earlyChild, { closeOnInputEnd: false });
+  const earlyPending = runBoundedPowerShellTestScript(
+    'Write-Output "not reached"',
+    {
+      spawnProcess: early.spawnProcess,
+      startupTimeoutMs: 5_000,
+      setTimerImpl: earlyTimers.setTimeout,
+      clearTimerImpl: earlyTimers.clearTimeout,
+      nowImpl: earlyTimers.now,
+    },
+  );
+  early.start();
+  earlyChild.exitCode = 0;
+  earlyChild.emit('close', 0, null);
+  await assert.rejects(earlyPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_EXIT_BEFORE_READY');
+    assert.equal(error.cleanupConfirmed, true);
+    return true;
+  });
+  assert.equal(earlyTimers.size, 0);
+
+  const nonzeroTimers = deterministicPowerShellTimers();
+  const nonzeroChild = fakePowerShellChild();
+  const nonzero = fakePowerShellSpawner(nonzeroChild, { exitCode: 7 });
+  const nonzeroPending = runBoundedPowerShellTestScript(
+    'Write-Output "then fail"',
+    {
+      spawnProcess: nonzero.spawnProcess,
+      startupTimeoutMs: 5_000,
+      executionTimeoutMs: 5_000,
+      setTimerImpl: nonzeroTimers.setTimeout,
+      clearTimerImpl: nonzeroTimers.clearTimeout,
+      nowImpl: nonzeroTimers.now,
+    },
+  );
+  const nonzeroRejected = assert.rejects(nonzeroPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_EXIT_NONZERO');
+    assert.equal(error.exitCode, 7);
+    assert.equal(error.cleanupConfirmed, true);
+    return true;
+  });
+  nonzero.start();
+  await flushProcessEvents();
+  nonzero.ready();
+  await flushProcessEvents();
+  await nonzeroRejected;
+
+  const stuckTimers = deterministicPowerShellTimers();
+  const stuckChild = fakePowerShellChild({ killCloses: false });
+  const stuck = fakePowerShellSpawner(stuckChild, { closeOnInputEnd: false });
+  const stuckPending = runBoundedPowerShellTestScript(
+    'Write-Output "hung child"',
+    {
+      spawnProcess: stuck.spawnProcess,
+      startupTimeoutMs: 5_000,
+      executionTimeoutMs: 5_000,
+      cleanupTimeoutMs: 1_000,
+      setTimerImpl: stuckTimers.setTimeout,
+      clearTimerImpl: stuckTimers.clearTimeout,
+      nowImpl: stuckTimers.now,
+    },
+  );
+  stuck.start();
+  await flushProcessEvents();
+  stuck.ready();
+  await flushProcessEvents();
+  stuckTimers.advance(5_000);
+  stuckTimers.advance(1_000);
+  await assert.rejects(stuckPending, (error) => {
+    assert.equal(error.code, 'POWERSHELL_EXECUTION_TIMEOUT');
+    assert.equal(error.cleanupConfirmed, false);
+    assert.equal(error.processStatus, 'unconfirmed');
+    assert.equal(error.executionElapsedMs, 5_000);
+    assert.equal(error.cleanupElapsedMs, 1_000);
+    return true;
+  });
+  assert.equal(stuckChild.killCalls, 2);
+  assert.equal(stuckTimers.size, 0);
+  assert.equal(stuckChild.listenerCount('close'), 0);
+  assert.equal(stuckChild.stdout.listenerCount('data'), 0);
+  assert.equal(stuckChild.stderr.listenerCount('data'), 0);
+});
 
 test('each recovery launch requires exactly one initial blank page', () => {
   const blank = page('about:blank');
@@ -334,7 +1057,7 @@ test(
   {
     skip: process.platform !== 'win32',
   },
-  () => {
+  async (t) => {
     const prefix = [
       '$script:commandLineQueryCalled = $false',
       'function Get-CimInstance {',
@@ -349,11 +1072,8 @@ test(
       createOwnedProcessTreePowerShellCommand(9999, 64),
       'if ($script:commandLineQueryCalled) { "COMMAND_LINE_QUERY_RAN" } else { "NO_COMMAND_LINE_QUERY" }',
     ].join('\n');
-    const output = execFileSync(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', script],
-      { encoding: 'utf8', timeout: 5000, windowsHide: true },
-    );
+    const result = await runPowerShellIntegrationScript(script, t);
+    const { output } = result;
     assert.match(output, /NO_COMMAND_LINE_QUERY/);
     assert.doesNotMatch(output, /COMMAND_LINE_QUERY_RAN/);
   },
@@ -364,7 +1084,7 @@ test(
   {
     skip: process.platform !== 'win32',
   },
-  () => {
+  async (t) => {
     const prefix = [
       '$script:commandLineFilter = $null',
       'function Get-CimInstance {',
@@ -389,11 +1109,8 @@ test(
       createOwnedProcessTreePowerShellCommand(1234, 64),
       'if ($script:commandLineFilter -ne "ProcessId = 1234 OR ProcessId = 1235") { throw "owned PID filter mismatch" }',
     ].join('\n');
-    const output = execFileSync(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', script],
-      { encoding: 'utf8', timeout: 5000, windowsHide: true },
-    );
+    const result = await runPowerShellIntegrationScript(script, t);
+    const { output } = result;
     assert.match(output, /"category":"browser"/);
     assert.match(output, /"category":"renderer"/);
     assert.doesNotMatch(output, /C:\\\\private|user-data-dir/);
