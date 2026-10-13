@@ -21,6 +21,8 @@ const TERRAIN_LEVELS = Object.freeze(
   Array.from({ length: 11 }, (_, level) => level),
 );
 const TERRAIN_GRID_SIZE = 17;
+const TERRAIN_MINIMUM_HEIGHT = 120;
+const TERRAIN_MAXIMUM_HEIGHT = 880;
 const TILESET_DEPTH = 2;
 const TILESET_LOCAL_TEXTURE_SIZE = 16;
 const PALETTE = Object.freeze([
@@ -183,11 +185,51 @@ function encodeHighWater(indices) {
   return encoded;
 }
 
+function triangleWave(position, period) {
+  const phase = ((position % period) + period) % period;
+  return phase <= period / 2 ? phase : period - phase;
+}
+
+function syntheticTerrainHeight(longitude, latitude) {
+  const longitudeE7 = Math.round(Cesium.Math.toDegrees(longitude) * 1e7);
+  const latitudeE7 = Math.round(Cesium.Math.toDegrees(latitude) * 1e7);
+  const longitudeRelief = Math.floor(
+    (triangleWave(longitudeE7, 800_000) * 80) / 400_000,
+  );
+  const latitudeRelief = Math.floor(
+    (triangleWave(latitudeE7, 600_000) * 50) / 300_000,
+  );
+  return 280 + longitudeRelief + latitudeRelief;
+}
+
+function terrainSkirtHeight(level) {
+  const levelZeroError =
+    Cesium.TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+      Cesium.Ellipsoid.WGS84,
+      65,
+      2,
+    );
+  return (levelZeroError / 2 ** level) * 5;
+}
+
 function createTerrainTile(tile) {
   const tilingScheme = new Cesium.GeographicTilingScheme({
     ellipsoid: Cesium.Ellipsoid.WGS84,
   });
   const rectangle = tilingScheme.tileXYToRectangle(tile.x, tile.y, tile.level);
+  const coverageRectangle = {
+    west: Math.max(rectangle.west, Cesium.Math.toRadians(ROUTE.west)),
+    south: Math.max(rectangle.south, Cesium.Math.toRadians(ROUTE.south)),
+    east: Math.min(rectangle.east, Cesium.Math.toRadians(ROUTE.east)),
+    north: Math.min(rectangle.north, Cesium.Math.toRadians(ROUTE.north)),
+  };
+  if (
+    coverageRectangle.west >= coverageRectangle.east ||
+    coverageRectangle.south >= coverageRectangle.north
+  )
+    throw new Error(
+      'Terrain tile does not intersect declared Austin coverage.',
+    );
   const gridSize = TERRAIN_GRID_SIZE;
   const triangles = [];
   let nextIndex = 0;
@@ -222,16 +264,45 @@ function createTerrainTile(tile) {
   if (vertexPoints.length !== gridSize * gridSize)
     throw new Error('Quantized mesh grid is incomplete.');
 
-  const seed = seedFromId(`${tile.level}/${tile.x}/${tile.y}`);
-  const u = vertexPoints.map((point) =>
-    Math.round((point.x * 32767) / (gridSize - 1)),
-  );
-  const v = vertexPoints.map((point) =>
-    Math.round((point.y * 32767) / (gridSize - 1)),
-  );
-  const height = vertexPoints.map((point) => {
-    const ridge = (point.x * 977 + point.y * 613 + (seed % 2048)) % 8192;
-    return 12_000 + ridge * 2;
+  const u = vertexPoints.map((point) => {
+    const longitude = Cesium.Math.lerp(
+      coverageRectangle.west,
+      coverageRectangle.east,
+      point.x / (gridSize - 1),
+    );
+    return Math.round(
+      ((longitude - rectangle.west) / (rectangle.east - rectangle.west)) *
+        32767,
+    );
+  });
+  const v = vertexPoints.map((point) => {
+    const latitude = Cesium.Math.lerp(
+      coverageRectangle.south,
+      coverageRectangle.north,
+      point.y / (gridSize - 1),
+    );
+    return Math.round(
+      ((latitude - rectangle.south) / (rectangle.north - rectangle.south)) *
+        32767,
+    );
+  });
+  const height = vertexPoints.map((_, index) => {
+    const longitude = Cesium.Math.lerp(
+      rectangle.west,
+      rectangle.east,
+      u[index] / 32767,
+    );
+    const latitude = Cesium.Math.lerp(
+      rectangle.south,
+      rectangle.north,
+      v[index] / 32767,
+    );
+    const meters = syntheticTerrainHeight(longitude, latitude);
+    return Math.round(
+      ((meters - TERRAIN_MINIMUM_HEIGHT) /
+        (TERRAIN_MAXIMUM_HEIGHT - TERRAIN_MINIMUM_HEIGHT)) *
+        32767,
+    );
   });
   const vertexBytes = Buffer.allocUnsafe(vertexPoints.length * 6);
   const encodedChannels = [u, v, height].map(encodeZigZagDelta);
@@ -244,60 +315,126 @@ function createTerrainTile(tile) {
 
   const encodedIndices = encodeHighWater(triangles);
   const edgeIndices = {
-    west: Array.from({ length: gridSize }, (_, index) =>
-      indexByPoint.get(`0:${index}`),
-    ),
-    south: Array.from({ length: gridSize }, (_, index) =>
-      indexByPoint.get(`${index}:0`),
-    ),
-    east: Array.from({ length: gridSize }, (_, index) =>
-      indexByPoint.get(`${gridSize - 1}:${index}`),
-    ),
-    north: Array.from({ length: gridSize }, (_, index) =>
-      indexByPoint.get(`${index}:${gridSize - 1}`),
-    ),
+    west:
+      coverageRectangle.west === rectangle.west
+        ? Array.from({ length: gridSize }, (_, index) =>
+            indexByPoint.get(`0:${index}`),
+          )
+        : [],
+    south:
+      coverageRectangle.south === rectangle.south
+        ? Array.from({ length: gridSize }, (_, index) =>
+            indexByPoint.get(`${index}:0`),
+          )
+        : [],
+    east:
+      coverageRectangle.east === rectangle.east
+        ? Array.from({ length: gridSize }, (_, index) =>
+            indexByPoint.get(`${gridSize - 1}:${index}`),
+          )
+        : [],
+    north:
+      coverageRectangle.north === rectangle.north
+        ? Array.from({ length: gridSize }, (_, index) =>
+            indexByPoint.get(`${index}:${gridSize - 1}`),
+          )
+        : [],
   };
-  const centerHeight = 320;
+  const minimumHeight = TERRAIN_MINIMUM_HEIGHT;
+  const maximumHeight = TERRAIN_MAXIMUM_HEIGHT;
+  const skirtHeight = terrainSkirtHeight(tile.level);
+  const centerHeight = (minimumHeight + maximumHeight) / 2;
   const center = Cesium.Cartesian3.fromRadians(
-    (rectangle.west + rectangle.east) / 2,
-    (rectangle.south + rectangle.north) / 2,
+    (coverageRectangle.west + coverageRectangle.east) / 2,
+    (coverageRectangle.south + coverageRectangle.north) / 2,
     centerHeight,
     Cesium.Ellipsoid.WGS84,
   );
-  const positions = [];
-  for (const longitude of [rectangle.west, rectangle.east])
-    for (const latitude of [rectangle.south, rectangle.north])
-      for (const altitude of [120, 880])
-        positions.push(
-          Cesium.Cartesian3.fromRadians(
-            longitude,
-            latitude,
-            altitude,
-            Cesium.Ellipsoid.WGS84,
-          ),
-        );
-  const boundingSphere = Cesium.BoundingSphere.fromPoints(positions);
-  const horizonOcclusionPoint =
-    new Cesium.EllipsoidalOccluder(
+  const positions = vertexPoints.map((point, index) => {
+    const longitude = Cesium.Math.lerp(
+      rectangle.west,
+      rectangle.east,
+      u[index] / 32767,
+    );
+    const latitude = Cesium.Math.lerp(
+      rectangle.south,
+      rectangle.north,
+      v[index] / 32767,
+    );
+    const altitude =
+      minimumHeight + (height[index] / 32767) * (maximumHeight - minimumHeight);
+    return Cesium.Cartesian3.fromRadians(
+      longitude,
+      latitude,
+      altitude,
       Cesium.Ellipsoid.WGS84,
-      Cesium.Cartesian3.ZERO,
-    ).computeHorizonCullingPointFromVertices(
-      boundingSphere.center,
-      positions.flatMap((position) => [position.x, position.y, position.z]),
-      3,
-      Cesium.Cartesian3.ZERO,
-    ) ?? Cesium.Cartesian3.ZERO;
+    );
+  });
+  const skirtPositions = new Set([
+    ...edgeIndices.west,
+    ...edgeIndices.south,
+    ...edgeIndices.east,
+    ...edgeIndices.north,
+  ]);
+  const boundingPositions = [...positions];
+  for (const index of skirtPositions) {
+    const longitude = Cesium.Math.lerp(
+      rectangle.west,
+      rectangle.east,
+      u[index] / 32767,
+    );
+    const latitude = Cesium.Math.lerp(
+      rectangle.south,
+      rectangle.north,
+      v[index] / 32767,
+    );
+    const altitude =
+      minimumHeight +
+      (height[index] / 32767) * (maximumHeight - minimumHeight) -
+      skirtHeight;
+    boundingPositions.push(
+      Cesium.Cartesian3.fromRadians(
+        longitude,
+        latitude,
+        altitude,
+        Cesium.Ellipsoid.WGS84,
+      ),
+    );
+  }
+  const boundingSphere = Cesium.BoundingSphere.fromPoints(boundingPositions);
+  boundingSphere.radius += 0.1;
+  const occluder = new Cesium.EllipsoidalOccluder(Cesium.Ellipsoid.WGS84);
+  const horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(
+    boundingSphere.center,
+    positions.flatMap((position) => [position.x, position.y, position.z]),
+    3,
+    Cesium.Cartesian3.ZERO,
+  );
+  if (!horizonOcclusionPoint)
+    throw new Error(
+      `Terrain route geometry at ${tile.level}/${tile.x}/${tile.y} has no conservative horizon culling point.`,
+    );
+  const edges = [
+    edgeIndices.west,
+    edgeIndices.south,
+    edgeIndices.east,
+    edgeIndices.north,
+  ];
+  const edgeBytesLength = edges.reduce(
+    (sum, edge) => sum + 4 + edge.length * 2,
+    0,
+  );
   const output = Buffer.allocUnsafe(
-    92 + vertexBytes.length + 4 + encodedIndices.length * 2 + 16 + gridSize * 8,
+    92 + vertexBytes.length + 4 + encodedIndices.length * 2 + edgeBytesLength,
   );
   let offset = 0;
   for (const value of [center.x, center.y, center.z]) {
     output.writeDoubleLE(value, offset);
     offset += 8;
   }
-  output.writeFloatLE(120, offset);
+  output.writeFloatLE(minimumHeight, offset);
   offset += 4;
-  output.writeFloatLE(880, offset);
+  output.writeFloatLE(maximumHeight, offset);
   offset += 4;
   for (const value of [
     boundingSphere.center.x,
@@ -322,12 +459,7 @@ function createTerrainTile(tile) {
     output.writeUInt16LE(value, offset);
     offset += 2;
   }
-  for (const edge of [
-    edgeIndices.west,
-    edgeIndices.south,
-    edgeIndices.east,
-    edgeIndices.north,
-  ]) {
+  for (const edge of edges) {
     output.writeUInt32LE(edge.length, offset);
     offset += 4;
     for (const value of edge) {
@@ -337,7 +469,25 @@ function createTerrainTile(tile) {
   }
   if (offset !== output.length)
     throw new Error('Quantized mesh encoded length does not match its header.');
-  return output;
+  const meshBoundsDegrees = {
+    west: Cesium.Math.toDegrees(
+      rectangle.west +
+        (Math.min(...u) / 32767) * (rectangle.east - rectangle.west),
+    ),
+    south: Cesium.Math.toDegrees(
+      rectangle.south +
+        (Math.min(...v) / 32767) * (rectangle.north - rectangle.south),
+    ),
+    east: Cesium.Math.toDegrees(
+      rectangle.west +
+        (Math.max(...u) / 32767) * (rectangle.east - rectangle.west),
+    ),
+    north: Cesium.Math.toDegrees(
+      rectangle.south +
+        (Math.max(...v) / 32767) * (rectangle.north - rectangle.south),
+    ),
+  };
+  return { bytes: output, meshBoundsDegrees };
 }
 
 function createGlb(tile, bounds) {
@@ -659,11 +809,12 @@ export async function createDeterministicMapStreamingFixture() {
     for (const tile of tiles) {
       const tmsY = yTileCount - tile.y - 1;
       const path = `terrain/${tile.level}/${tile.x}/${tmsY}.terrain`;
-      const bytes = createTerrainTile(tile);
+      const { bytes, meshBoundsDegrees } = createTerrainTile(tile);
       assetRows.push(
         addAsset(assets, path, 'quantized-mesh-1.0', bytes, {
           ...tile,
           tmsY,
+          meshBoundsDegrees,
         }),
       );
     }
@@ -780,6 +931,23 @@ export async function createDeterministicMapStreamingFixture() {
     throw new RangeError(
       `Generated map fixture exceeds ${MAP_STREAMING_MAX_BYTES} bytes.`,
     );
+  const terrainAssetRows = assetRows.filter(
+    (row) => row.kind === 'quantized-mesh-1.0',
+  );
+  const terrainMeshBoundsDegrees = {
+    west: Math.min(
+      ...terrainAssetRows.map((row) => row.identity.meshBoundsDegrees.west),
+    ),
+    south: Math.min(
+      ...terrainAssetRows.map((row) => row.identity.meshBoundsDegrees.south),
+    ),
+    east: Math.max(
+      ...terrainAssetRows.map((row) => row.identity.meshBoundsDegrees.east),
+    ),
+    north: Math.max(
+      ...terrainAssetRows.map((row) => row.identity.meshBoundsDegrees.north),
+    ),
+  };
   const descriptor = {
     id: MAP_STREAMING_FIXTURE_ID,
     schema: MAP_STREAMING_FIXTURE_SCHEMA,
@@ -793,6 +961,9 @@ export async function createDeterministicMapStreamingFixture() {
       terrainTilingScheme: 'EPSG:4326 geographic with Cesium TMS URL y',
       terrainGridSize: TERRAIN_GRID_SIZE,
       terrainLevels: TERRAIN_LEVELS,
+      terrainMeshBoundsDegrees,
+      terrainCoverageKind:
+        'route-clipped quantized mesh within available tiles',
       imageryFormat: 'PNG indexed-color 256x256',
       imageryTilingScheme: 'WebMercator XYZ',
       imageryLevels: IMAGERY_LEVELS,

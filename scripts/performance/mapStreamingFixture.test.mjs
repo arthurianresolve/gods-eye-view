@@ -215,6 +215,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       (row) => row.kind === 'quantized-mesh-1.0',
     );
     const requestedTerrain = new Set();
+    const terrainDataByTile = new Map();
     for (const terminal of fixture.manifest.coverage.terrain.at(-1).tiles)
       for (let level = 0; level <= terminal.level; level += 1) {
         const scale = 2 ** (terminal.level - level);
@@ -244,27 +245,274 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
           ancestorData instanceof Cesium.QuantizedMeshTerrainData,
           `Cesium must parse terrain ancestor ${key}`,
         );
+        terrainDataByTile.set(key, ancestorData);
       }
     assert.equal(requestedTerrain.size, terrainRows.length);
+
+    const routeCameraPositions = [
+      [-97.7, 30.27, 25_000],
+      [-97.82, 30.2, 25_000],
+      [-97.58, 30.34, 25_000],
+      [-97.7, 30.27, 12_000],
+    ].map((degrees) => Cesium.Cartesian3.fromDegrees(...degrees));
+    let sameLevelSeams = 0;
+    let commonLodVertices = 0;
+    for (const row of terrainRows) {
+      const { level, x, y } = row.identity;
+      const key = `${level}/${x}/${y}`;
+      const data = terrainDataByTile.get(key);
+      assert.ok(data, `parsed terrain data must exist for ${key}`);
+      const rectangle = terrain.tilingScheme.tileXYToRectangle(x, y, level);
+      const sphere = data._boundingSphere;
+      const quantized = {
+        u: data._uValues,
+        v: data._vValues,
+        height: data._heightValues,
+      };
+      assert.equal(quantized.u.length, quantized.v.length);
+      assert.equal(quantized.u.length, quantized.height.length);
+      const cartesianForVertex = (index, skirtDepth = 0) =>
+        Cesium.Cartesian3.fromRadians(
+          Cesium.Math.lerp(
+            rectangle.west,
+            rectangle.east,
+            quantized.u[index] / 32767,
+          ),
+          Cesium.Math.lerp(
+            rectangle.south,
+            rectangle.north,
+            quantized.v[index] / 32767,
+          ),
+          data._minimumHeight +
+            (quantized.height[index] / 32767) *
+              (data._maximumHeight - data._minimumHeight) -
+            skirtDepth,
+          Cesium.Ellipsoid.WGS84,
+        );
+      for (let index = 0; index < quantized.u.length; index += 1) {
+        const distance = Cesium.Cartesian3.distance(
+          sphere.center,
+          cartesianForVertex(index),
+        );
+        assert.ok(
+          distance <= sphere.radius + 0.05,
+          `${key} bounding sphere must include quantized vertex ${index}: excess=${distance - sphere.radius}`,
+        );
+      }
+      if (level === 0) {
+        const legacyCornerPositions = [];
+        for (const longitude of [rectangle.west, rectangle.east])
+          for (const latitude of [rectangle.south, rectangle.north])
+            for (const height of [data._minimumHeight, data._maximumHeight])
+              legacyCornerPositions.push(
+                Cesium.Cartesian3.fromRadians(longitude, latitude, height),
+              );
+        const legacySphere = Cesium.BoundingSphere.fromPoints(
+          legacyCornerPositions,
+        );
+        const legacyOverflow = quantized.u.reduce((count, _, index) => {
+          const point = cartesianForVertex(index);
+          return (
+            count +
+            Number(
+              Cesium.Cartesian3.distance(legacySphere.center, point) >
+                legacySphere.radius + 0.05,
+            )
+          );
+        }, 0);
+        assert.ok(
+          legacyOverflow > 0,
+          'legacy eight-corner terrain sphere must fail the root-vertex negative control',
+        );
+      }
+      for (const [indices, skirtHeight] of [
+        [data._westIndices, data._westSkirtHeight],
+        [data._southIndices, data._southSkirtHeight],
+        [data._eastIndices, data._eastSkirtHeight],
+        [data._northIndices, data._northSkirtHeight],
+      ])
+        for (const index of indices) {
+          const distance = Cesium.Cartesian3.distance(
+            sphere.center,
+            cartesianForVertex(index, skirtHeight),
+          );
+          assert.ok(
+            distance <= sphere.radius + 0.05,
+            `${key} bounding sphere must include skirt vertex ${index}: excess=${distance - sphere.radius}`,
+          );
+        }
+
+      const horizon = data._horizonOcclusionPoint;
+      assert.ok(
+        Cesium.Cartesian3.magnitude(horizon) > 0.5,
+        `${key} must have a finite Cesium horizon point rather than the zero sentinel`,
+      );
+      for (const cameraPosition of routeCameraPositions) {
+        const occluder = new Cesium.EllipsoidalOccluder(
+          Cesium.Ellipsoid.WGS84,
+          cameraPosition,
+        );
+        assert.equal(
+          occluder.isScaledSpacePointVisiblePossiblyUnderEllipsoid(
+            horizon,
+            data._minimumHeight,
+          ),
+          true,
+          `${key} horizon point must keep Austin route camera from culling the available terrain tile`,
+        );
+      }
+      if (level === 0) {
+        const routeCamera = new Cesium.EllipsoidalOccluder(
+          Cesium.Ellipsoid.WGS84,
+          Cesium.Cartesian3.fromDegrees(-97.7, 30.27, 25_000),
+        );
+        assert.equal(
+          routeCamera.isScaledSpacePointVisiblePossiblyUnderEllipsoid(
+            Cesium.Cartesian3.ZERO,
+            data._minimumHeight,
+          ),
+          false,
+          'zero horizon fallback must fail the root-tile culling negative control',
+        );
+      }
+    }
+
+    const getTerrainData = (row) =>
+      terrainDataByTile.get(
+        `${row.identity.level}/${row.identity.x}/${row.identity.y}`,
+      );
+    for (const row of terrainRows) {
+      const { level, x, y } = row.identity;
+      const data = getTerrainData(row);
+      const rect = terrain.tilingScheme.tileXYToRectangle(x, y, level);
+      const coordinateForVertex = (terrainData, rectangle, index) => ({
+        longitude: Cesium.Math.lerp(
+          rectangle.west,
+          rectangle.east,
+          terrainData._uValues[index] / 32767,
+        ),
+        latitude: Cesium.Math.lerp(
+          rectangle.south,
+          rectangle.north,
+          terrainData._vValues[index] / 32767,
+        ),
+        quantizedHeight: terrainData._heightValues[index],
+      });
+      const actualVertexBounds = {
+        west: Cesium.Math.toDegrees(
+          rect.west +
+            (Math.min(...data._uValues) / 32767) * (rect.east - rect.west),
+        ),
+        east: Cesium.Math.toDegrees(
+          rect.west +
+            (Math.max(...data._uValues) / 32767) * (rect.east - rect.west),
+        ),
+        south: Cesium.Math.toDegrees(
+          rect.south +
+            (Math.min(...data._vValues) / 32767) * (rect.north - rect.south),
+        ),
+        north: Cesium.Math.toDegrees(
+          rect.south +
+            (Math.max(...data._vValues) / 32767) * (rect.north - rect.south),
+        ),
+      };
+      for (const side of ['west', 'south', 'east', 'north'])
+        assert.ok(
+          Math.abs(
+            actualVertexBounds[side] - row.identity.meshBoundsDegrees[side],
+          ) < 1e-9,
+          `${row.path} manifest must bind actual quantized mesh ${side} bound`,
+        );
+      const eastNeighbor = terrainRows.find(
+        (candidate) =>
+          candidate.identity.level === level &&
+          candidate.identity.x === x + 1 &&
+          candidate.identity.y === y,
+      );
+      const southNeighbor = terrainRows.find(
+        (candidate) =>
+          candidate.identity.level === level &&
+          candidate.identity.x === x &&
+          candidate.identity.y === y + 1,
+      );
+      for (const [neighbor, direction] of [
+        [eastNeighbor, 'east'],
+        [southNeighbor, 'south'],
+      ]) {
+        if (!neighbor) continue;
+        const neighborData = getTerrainData(neighbor);
+        const [edgeA, edgeB] =
+          direction === 'east'
+            ? [data._eastIndices, neighborData._westIndices]
+            : [data._southIndices, neighborData._northIndices];
+        if (edgeA.length === 0 && edgeB.length === 0) continue;
+        assert.equal(
+          edgeA.length,
+          edgeB.length,
+          `same-level terrain seam edge inventory must match for ${row.path} and ${neighbor.path}`,
+        );
+        assert.ok(edgeA.length > 0, 'shared route edge must contain samples');
+        sameLevelSeams += 1;
+        for (let index = 0; index < edgeA.length; index += 1)
+          assert.equal(
+            data._heightValues[edgeA[index]],
+            neighborData._heightValues[edgeB[index]],
+            `same-level terrain seam quantized heights must match for ${row.path} and ${neighbor.path}`,
+          );
+      }
+
+      if (level === 0) continue;
+      const parent = terrainRows.find(
+        (candidate) =>
+          candidate.identity.level === level - 1 &&
+          candidate.identity.x === Math.floor(x / 2) &&
+          candidate.identity.y === Math.floor(y / 2),
+      );
+      assert.ok(parent, `terrain ancestor must exist for ${row.path}`);
+      const parentData = getTerrainData(parent);
+      const parentRect = terrain.tilingScheme.tileXYToRectangle(
+        parent.identity.x,
+        parent.identity.y,
+        parent.identity.level,
+      );
+      const parentCoordinates = [];
+      for (let index = 0; index < data._uValues.length; index += 1) {
+        const childPoint = coordinateForVertex(data, rect, index);
+        const parentPointIndex = parentData._uValues.findIndex(
+          (parentU, parentIndex) => {
+            const parentLongitude = Cesium.Math.lerp(
+              parentRect.west,
+              parentRect.east,
+              parentU / 32767,
+            );
+            const parentLatitude = Cesium.Math.lerp(
+              parentRect.south,
+              parentRect.north,
+              parentData._vValues[parentIndex] / 32767,
+            );
+            return (
+              Math.abs(parentLongitude - childPoint.longitude) < 1e-12 &&
+              Math.abs(parentLatitude - childPoint.latitude) < 1e-12
+            );
+          },
+        );
+        if (parentPointIndex < 0) continue;
+        assert.equal(
+          childPoint.quantizedHeight,
+          parentData._heightValues[parentPointIndex],
+          `coarse/fine identical geographic vertex must agree for ${row.path}`,
+        );
+        commonLodVertices += 1;
+      }
+    }
+    assert.ok(sameLevelSeams > 0, 'all route levels must check sibling seams');
+    assert.ok(
+      commonLodVertices > 0,
+      'coarse/fine encoded shared vertices must be checked',
+    );
     const tile = fixture.manifest.coverage.terrain[8].tiles[0];
     const data = await terrain.requestTileGeometry(tile.x, tile.y, tile.level);
-    const tilingScheme = terrain.tilingScheme;
-    const rectangle = tilingScheme.tileXYToRectangle(
-      tile.x,
-      tile.y,
-      tile.level,
-    );
-    const sampleHeights = [
-      [0.25, 0.25],
-      [0.5, 0.5],
-      [0.75, 0.75],
-    ].map(([x, y]) =>
-      data.interpolateHeight(
-        rectangle,
-        Cesium.Math.lerp(rectangle.west, rectangle.east, x),
-        Cesium.Math.lerp(rectangle.south, rectangle.north, y),
-      ),
-    );
+    const sampleHeights = data._heightValues;
     assert.ok(sampleHeights.every(Number.isFinite));
     assert.ok(
       new Set(sampleHeights).size > 1,
