@@ -1,8 +1,8 @@
 # Engineering closure audit under the amended criteria
 
-S50 and S52 are **engineering closed**, with scoped component checks passed and
+S50, S52 and S57 are **engineering closed**, with scoped component checks passed and
 primary Windows qualification pending. Other S47-S60 rows remain partial until
-their own audit. Counts are **2/14 engineering closed (14.3%)**, **12/14 partial**
+their own audit. Counts are **3/14 engineering closed (21.4%)**, **11/14 partial**
 and **0/14 fully qualified**. This is a count of completed slice requirements,
 not an estimate of code written. No historical failure is changed to a pass.
 
@@ -64,3 +64,37 @@ the 20% objective, primary Windows visual qualification or the final retention
 soak. Those shared final-candidate gates remain pending. Earlier records saying
 S52 was incomplete remain accurate under their combined completion definition;
 this dated audit applies the newly separated engineering definition only.
+
+## S57 map resources and streaming
+
+The [S57 review](s57-review.json) records current source hashes and all 50 passing
+map controller, factory, token, imagery-host and terrain-retry tests. The
+[focused log](s57-focused.log) has no failed or skipped cases. Source review
+confirms generation checks, abort ownership, cache reuse, deduplicated disposal,
+caller-owned versus factory-owned tilesets, and comparison-lease restoration
+that preserves intervening operator choices.
+
+Thirty equivalent unit switch cycles retain two imagery providers and one
+terrain provider, with no pending jobs or growing listener counts. Destruction
+empties cache and scene ownership. Other tests cover held/failed/late creation,
+superseding sources, comparison release during acquisition, stale tile errors
+and cancellation during throttled retry. The inherited construction-fallback
+alias defect is fixed: explicit source selection can retry without losing the
+fallback provider's legitimate cache ownership.
+
+The [current production map evidence](../s47-map-streaming/native-fault-38439382587/README.md)
+passes both immutable revision journeys and complete missing, corrupt and
+superseded metadata controls using native fixture coverage. Its source settings,
+actual renderer, worker assets and cleanup remain strictly checked. Root replayed
+those validators and retains the unmodified reports.
+
+The earlier [streamed-tile component](../s57-flat-readiness-owner-38236552746/README.md)
+separately establishes cancellation/recovery, warm-cache reuse, measured tiny-tile
+memory and owner teardown at its original revision. Its raw hash was reverified;
+its result is not relabeled as a new-candidate hardware test. Tile memory remains
+unavailable where Cesium does not expose it, and no Google cache/detail limit is
+reduced.
+
+These reviewed implementations and component checks close S57 engineering.
+Final physical Windows routes, equivalent-detail captures, timing regression
+checks and the full retention soak remain pending. No map speedup is claimed.

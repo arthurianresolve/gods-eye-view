@@ -76,10 +76,11 @@ All 183 affected root checks pass. The engineering audit now closes S50;
 primary Windows and final-candidate qualification remain pending.
 
 The [engineering closure audit](performance-evidence/closure-audit-20261013/README.md)
-closes S50 and S52 engineering. S52 retains its unchanged accepted renderer, 13
+closes S50, S52 and S57 engineering. S52 retains its unchanged accepted renderer, 13
 artifact hashes and 90 focused tests, and the supported paint-cache
 rejection. S50 adds the strict rendered retention and workspace-restore evidence
-above. Counts: **2/14 engineering closed (14.3%)**, **12/14 partial**, and
+above. S57 adds the native map/fault journeys and fifty passing ownership,
+factory, host and retry tests. Counts: **3/14 engineering closed (21.4%)**, **11/14 partial**, and
 **0/14 fully qualified**. The remaining rows still require their own audits;
 the amendment alone grants no pass. Historical failures remain failed.
 
