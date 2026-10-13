@@ -142,6 +142,42 @@ function projectRenderDemandDimension(value) {
     : null;
 }
 
+function projectRenderDemandCanvasInventory(inventory) {
+  if (!inventory || typeof inventory !== 'object') return null;
+  const entries = Array.isArray(inventory.entries) ? inventory.entries : [];
+  const count = boundedRenderDemandCount(inventory.count);
+  const roles = new Set([
+    'viewer-scene',
+    'world-overlay-host',
+    'cctv-template-host',
+    'other',
+  ]);
+  return {
+    count,
+    truncated:
+      inventory.truncated === true ||
+      entries.length > 8 ||
+      count === null ||
+      count !== entries.length,
+    entries: entries.slice(0, 8).map((entry) => ({
+      role: roles.has(entry?.role) ? entry.role : 'other',
+      width:
+        Number.isSafeInteger(entry?.width) &&
+        entry.width >= 0 &&
+        entry.width <= 8192
+          ? entry.width
+          : null,
+      height:
+        Number.isSafeInteger(entry?.height) &&
+        entry.height >= 0 &&
+        entry.height <= 8192
+          ? entry.height
+          : null,
+      hidden: typeof entry?.hidden === 'boolean' ? entry.hidden : null,
+    })),
+  };
+}
+
 function projectRenderDemandCamera(camera) {
   if (!camera || typeof camera !== 'object') return null;
   const fields = [
@@ -549,6 +585,34 @@ function projectRenderDemandTerminal(terminal) {
       totalPostRenderListenersAfter: boundedRenderDemandCount(
         terminal.teardown?.resourcesAfter?.postRenderListeners,
       ),
+      canvasOwnership: {
+        before: projectRenderDemandCanvasInventory(
+          terminal.teardown?.resourcesBefore?.canvasInventory,
+        ),
+        after: projectRenderDemandCanvasInventory(
+          terminal.teardown?.resourcesAfter?.canvasInventory,
+        ),
+        viewerCanvasPresentBefore:
+          terminal.teardown?.resourcesBefore?.viewerCanvasPresent === true,
+        worldOverlayCanvasPresentBefore:
+          terminal.teardown?.resourcesBefore?.worldOverlayCanvasPresent ===
+          true,
+        hostCctvMarkupMatchesBefore:
+          terminal.teardown?.resourcesBefore?.hostCctvMarkupMatches === true,
+        viewerCanvasRemoved:
+          terminal.teardown?.resourcesAfter?.viewerCanvasRemoved === true,
+        worldOverlayCanvasRemoved:
+          terminal.teardown?.resourcesAfter?.worldOverlayCanvasRemoved === true,
+        hostCctvMarkupMatches:
+          terminal.teardown?.resourcesAfter?.hostCctvMarkupMatches === true,
+        hostCctvReferenceRetained:
+          terminal.teardown?.resourcesAfter?.hostCctvReferenceRetained === true,
+        hostCctvDimensionsUnchanged:
+          terminal.teardown?.resourcesAfter?.hostCctvDimensionsUnchanged ===
+          true,
+        onlyHostCctvCanvasRemains:
+          terminal.teardown?.resourcesAfter?.onlyHostCctvCanvasRemains === true,
+      },
       teardownErrors: boundedRenderDemandCount(
         terminal.teardown?.teardownErrors,
       ),
@@ -557,7 +621,8 @@ function projectRenderDemandTerminal(terminal) {
       ? {
           settled: terminal.mapDemand.settled === true,
           contentReadiness:
-            terminal.mapDemand.contentReadiness === 'blocked-by-fixture'
+            terminal.mapDemand.contentReadiness === 'blocked-by-fixture' ||
+            terminal.mapDemand.contentReadiness === 'content-ready'
               ? terminal.mapDemand.contentReadiness
               : null,
           globeTilesLoaded:
@@ -568,7 +633,9 @@ function projectRenderDemandTerminal(terminal) {
             typeof terminal.mapDemand.settledGlobeTilesLoaded === 'boolean'
               ? terminal.mapDemand.settledGlobeTilesLoaded
               : null,
-          tileContentReady: terminal.mapDemand.globeTilesLoaded === true,
+          tileContentReady:
+            terminal.mapDemand.contentReadiness === 'content-ready' &&
+            terminal.mapDemand.globeTilesLoaded === true,
           queueQuiescent:
             terminal.mapDemand.pendingTileQueueCount === 0 &&
             Number.isSafeInteger(terminal.mapDemand.tileQueueStableSamples) &&

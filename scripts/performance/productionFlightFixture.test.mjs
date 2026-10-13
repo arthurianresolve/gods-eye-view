@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import { readFileSync } from 'node:fs';
 import {
   DENSE_FLIGHT_FIXTURE_COUNT,
   DEFAULT_FLIGHT_FIXTURE_TIME,
@@ -432,15 +433,70 @@ test('render-demand failure projection retains controlled start/end evidence and
         layers: 0,
         productionHandlesRemoved: true,
         applicationRenderOwnersReleased: true,
-        resourcesBefore: { postRenderListeners: 3 },
-        resourcesAfter: { postRenderListeners: 1 },
+        resourcesBefore: {
+          postRenderListeners: 3,
+          viewerCanvasPresent: true,
+          worldOverlayCanvasPresent: true,
+          hostCctvMarkupMatches: true,
+          canvasInventory: {
+            count: 8,
+            truncated: false,
+            entries: [
+              {
+                role: 'viewer-scene',
+                width: 1440,
+                height: 1000,
+                hidden: false,
+              },
+              {
+                role: 'world-overlay-host',
+                width: 1440,
+                height: 1000,
+                hidden: false,
+              },
+              {
+                role: 'cctv-template-host',
+                width: 300,
+                height: 150,
+                hidden: true,
+              },
+              ...Array.from({ length: 5 }, () => ({
+                role: 'other',
+                width: 300,
+                height: 150,
+                hidden: false,
+              })),
+            ],
+          },
+        },
+        resourcesAfter: {
+          postRenderListeners: 1,
+          canvasInventory: {
+            count: 1,
+            truncated: false,
+            entries: [
+              {
+                role: 'cctv-template-host',
+                width: 300,
+                height: 150,
+                hidden: true,
+              },
+            ],
+          },
+          viewerCanvasRemoved: true,
+          worldOverlayCanvasRemoved: true,
+          hostCctvMarkupMatches: true,
+          hostCctvReferenceRetained: true,
+          hostCctvDimensionsUnchanged: true,
+          onlyHostCctvCanvasRemains: true,
+        },
         teardownErrors: 0,
       },
       mapDemand: {
         settled: true,
         contentReadiness: 'blocked-by-fixture',
-        globeTilesLoaded: false,
-        settledGlobeTilesLoaded: false,
+        globeTilesLoaded: true,
+        settledGlobeTilesLoaded: true,
         pendingTileQueueCount: 0,
         settledPendingTileQueueCount: 0,
         tileQueueStableSamples: 4,
@@ -484,8 +540,8 @@ test('render-demand failure projection retains controlled start/end evidence and
   assert.equal(report.observations[1].state.settings.msaaSamples, 4);
   assert.equal(report.observations[0].state.settings.densityPct, 75);
   assert.equal(report.observations[0].state.settings.visualDensityPct, 75);
-  assert.equal(report.terminal.mapDemand.globeTilesLoaded, false);
-  assert.equal(report.terminal.mapDemand.settledGlobeTilesLoaded, false);
+  assert.equal(report.terminal.mapDemand.globeTilesLoaded, true);
+  assert.equal(report.terminal.mapDemand.settledGlobeTilesLoaded, true);
   assert.equal(report.terminal.mapDemand.tileContentReady, false);
   assert.equal(report.terminal.mapDemand.queueQuiescent, true);
   assert.equal(
@@ -499,12 +555,69 @@ test('render-demand failure projection retains controlled start/end evidence and
   );
   assert.equal(report.terminal.teardown.totalPostRenderListenersAfter, 1);
   assert.equal(report.terminal.teardown.applicationRenderOwnersReleased, true);
+  assert.deepEqual(
+    report.terminal.teardown.canvasOwnership.before.entries.map(
+      ({ role }) => role,
+    ),
+    [
+      'viewer-scene',
+      'world-overlay-host',
+      'cctv-template-host',
+      'other',
+      'other',
+      'other',
+      'other',
+      'other',
+    ],
+  );
+  assert.equal(report.terminal.teardown.canvasOwnership.after.count, 1);
+  assert.deepEqual(report.terminal.teardown.canvasOwnership.after.entries[0], {
+    role: 'cctv-template-host',
+    width: 300,
+    height: 150,
+    hidden: true,
+  });
+  assert.equal(
+    report.terminal.teardown.canvasOwnership.onlyHostCctvCanvasRemains,
+    true,
+  );
+  assert.equal(
+    report.terminal.teardown.canvasOwnership.hostCctvMarkupMatches,
+    true,
+  );
+  assert.equal(
+    report.terminal.teardown.canvasOwnership.viewerCanvasPresentBefore,
+    true,
+  );
+  assert.equal(
+    report.terminal.teardown.canvasOwnership.worldOverlayCanvasPresentBefore,
+    true,
+  );
+  assert.equal(
+    report.terminal.teardown.canvasOwnership.hostCctvMarkupMatchesBefore,
+    true,
+  );
+  assert.equal(
+    report.terminal.teardown.canvasOwnership.hostCctvDimensionsUnchanged,
+    true,
+  );
   assert.equal(report.traffic.mapProviderTrafficStable, true);
   assert.equal(report.traffic.expectedRenderDemandApiCount, 3);
   assert.equal(report.traffic.expectedBlockedStaticFontCount, 2);
   const serialized = JSON.stringify(report);
   assert.doesNotMatch(serialized, /provider response body|authorization|token/);
   assert.ok(Buffer.byteLength(serialized) < 24_000);
+});
+
+test('retained canvas classification matches the static CCTV host template', () => {
+  const markup = readFileSync(
+    new URL('../../src/ui/templates/layer-panels.html', import.meta.url),
+    'utf8',
+  );
+  assert.match(
+    markup,
+    /<canvas id="cctv-video" class="cctv-frame" hidden><\/canvas>/,
+  );
 });
 
 test('render-demand snapshots allow only bounded receipt-time movement while health and population stay fixed', () => {

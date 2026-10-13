@@ -1133,15 +1133,60 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     const destroy = await fixturePage.evaluate(async () => {
       const app = window.__godsEyeView;
       const application = window.__qaApplication;
+      const viewerCanvas = app.viewer.scene.canvas;
+      const worldOverlayCanvas = document.getElementById(
+        'world-overlay-canvas',
+      );
+      const hostCctvCanvas = document.getElementById('cctv-video');
+      const hostCctvMarkupMatches =
+        hostCctvCanvas?.matches(
+          '#cctv-panel #cctv-frame-wrap > canvas#cctv-video.cctv-frame[hidden]',
+        ) === true;
+      const hostCctvDimensionsBefore = hostCctvCanvas
+        ? { width: hostCctvCanvas.width, height: hostCctvCanvas.height }
+        : null;
+      const describeCanvases = () => {
+        const canvases = Array.from(document.querySelectorAll('canvas'));
+        return {
+          count: canvases.length,
+          truncated: canvases.length > 8,
+          entries: canvases.slice(0, 8).map((canvas) => ({
+            role:
+              canvas === viewerCanvas
+                ? 'viewer-scene'
+                : canvas === worldOverlayCanvas
+                  ? 'world-overlay-host'
+                  : canvas === hostCctvCanvas
+                    ? 'cctv-template-host'
+                    : 'other',
+            width:
+              Number.isSafeInteger(canvas.width) && canvas.width >= 0
+                ? canvas.width
+                : null,
+            height:
+              Number.isSafeInteger(canvas.height) && canvas.height >= 0
+                ? canvas.height
+                : null,
+            hidden: canvas.hidden === true,
+          })),
+        };
+      };
       const resourcesBefore = {
         postRenderListeners:
           app.viewer.scene.postRender.numberOfListeners ?? null,
         primitives: app.viewer.scene.primitives.length,
         imageryLayers: app.viewer.imageryLayers.length,
-        canvases: document.querySelectorAll('canvas').length,
+        viewerCanvasPresent: Boolean(viewerCanvas?.isConnected),
+        worldOverlayCanvasPresent: Boolean(worldOverlayCanvas?.isConnected),
+        hostCctvMarkupMatches: hostCctvMarkupMatches,
+        canvasInventory: describeCanvases(),
       };
       const postRenderEvent = app.viewer.scene.postRender;
       const teardown = await application.destroy();
+      const hostCctvMarkupMatchesAfter =
+        hostCctvCanvas?.matches(
+          '#cctv-panel #cctv-frame-wrap > canvas#cctv-video.cctv-frame[hidden]',
+        ) === true;
       const productionHandlesRemoved =
         !window.__godsEyeView &&
         !window.__gevVoiceCommands &&
@@ -1159,7 +1204,33 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         testAliasRemoved: !window.__qaApplication,
         resourcesBefore,
         resourcesAfter: {
-          canvases: document.querySelectorAll('canvas').length,
+          canvasInventory: describeCanvases(),
+          viewerCanvasRemoved: !Array.from(
+            document.querySelectorAll('canvas'),
+          ).includes(viewerCanvas),
+          worldOverlayCanvasRemoved:
+            worldOverlayCanvas === null ||
+            !Array.from(document.querySelectorAll('canvas')).includes(
+              worldOverlayCanvas,
+            ),
+          hostCctvMarkupMatches: hostCctvMarkupMatchesAfter,
+          hostCctvReferenceRetained:
+            hostCctvMarkupMatchesAfter &&
+            document.getElementById('cctv-video') === hostCctvCanvas &&
+            hostCctvCanvas.isConnected,
+          hostCctvDimensionsUnchanged:
+            hostCctvCanvas !== null &&
+            hostCctvCanvas.width === hostCctvDimensionsBefore?.width &&
+            hostCctvCanvas.height === hostCctvDimensionsBefore?.height &&
+            hostCctvCanvas.hidden,
+          onlyHostCctvCanvasRemains: (() => {
+            const canvases = Array.from(document.querySelectorAll('canvas'));
+            return (
+              canvases.length === 1 &&
+              canvases[0] === hostCctvCanvas &&
+              hostCctvMarkupMatchesAfter
+            );
+          })(),
           credits: document.querySelectorAll('#cesium-credits').length,
           dataLayers: app.dataManager.layers.size,
           postRenderListeners: postRenderEvent.numberOfListeners ?? null,
@@ -1216,7 +1287,29 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         destroy.governor.holds.length === 0 &&
         destroy.productionHandlesRemoved &&
         destroy.testAliasRemoved &&
-        destroy.resourcesAfter.canvases === 0 &&
+        destroy.resourcesAfter.onlyHostCctvCanvasRemains &&
+        destroy.resourcesAfter.viewerCanvasRemoved &&
+        destroy.resourcesAfter.worldOverlayCanvasRemoved &&
+        destroy.resourcesAfter.hostCctvReferenceRetained &&
+        destroy.resourcesAfter.hostCctvDimensionsUnchanged &&
+        destroy.resourcesBefore.viewerCanvasPresent &&
+        destroy.resourcesBefore.worldOverlayCanvasPresent &&
+        destroy.resourcesBefore.hostCctvMarkupMatches &&
+        destroy.resourcesBefore.canvasInventory.count ===
+          destroy.resourcesBefore.canvasInventory.entries.length &&
+        destroy.resourcesBefore.canvasInventory.entries.filter(
+          ({ role }) => role === 'viewer-scene',
+        ).length === 1 &&
+        destroy.resourcesBefore.canvasInventory.entries.filter(
+          ({ role }) => role === 'world-overlay-host',
+        ).length === 1 &&
+        destroy.resourcesBefore.canvasInventory.entries.filter(
+          ({ role }) => role === 'cctv-template-host',
+        ).length === 1 &&
+        !destroy.resourcesBefore.canvasInventory.truncated &&
+        !destroy.resourcesAfter.canvasInventory.truncated &&
+        destroy.resourcesAfter.canvasInventory.count ===
+          destroy.resourcesAfter.canvasInventory.entries.length &&
         destroy.resourcesAfter.credits === 0 &&
         destroy.resourcesAfter.dataLayers === 0 &&
         destroy.applicationRenderOwnersReleased &&
