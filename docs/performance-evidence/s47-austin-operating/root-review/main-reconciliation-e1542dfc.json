@@ -1,0 +1,19 @@
+{
+  "schema": "gev-main-reconciliation/v1",
+  "checkedAt": "2026-10-13T01:44:24.226Z",
+  "forkMain": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+  "upstreamMain": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+  "localDev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+  "remoteDev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+  "qa": "e1542dfcec217cd6757f57a75e0002b7799a4905",
+  "devAheadBehindMain": [
+    608,
+    0
+  ],
+  "qaAheadBehindMain": [
+    692,
+    0
+  ],
+  "devWorkingTree": "",
+  "recommendation": "No new merge, rebase, or discard: dev and QA already contain both latest main refs."
+}

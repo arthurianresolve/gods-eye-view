@@ -806,3 +806,21 @@ are both in progress against that exact SHA, verified in the
 [run receipt](cleanup-candidate-78e04172-runs.json). No final result or dev
 promotion is implied. A [fresh remote comparison](main-reconciliation-78e04172.json)
 still finds dev 608 ahead/zero behind main and local/remote dev equal.
+
+## Whole Austin comparison-contract validation
+
+[Native run 38332484324](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38332484324)
+remains failed at candidate 78e04172. Its [capture child](hosted-native-38332484324-cli-completed.json)
+completed all four samples; the exact retirement and interception release
+checks now pass. The [outer smoke](hosted-native-38332484324-smoke-failed.json)
+compared compact comparison-summary documents against raw sample documents
+that also contain delivery records. Root independently recomputed the complete
+comparison contract and found an exact match, then reproduced that final
+assertion through the full outer validator. The [structural replay](native-38332484324-review-before.json)
+records the distinction: fixture and worker bytes were checked independently;
+the historical receipt hash and app asset names do not establish fresh served
+application provenance. This failed run is not promoted to a pass.
+
+[Fresh main reconciliation](main-reconciliation-e1542dfc.json) again confirms
+fork and upstream main at 8b8ccc9a, local/remote dev equal at 726e404b,
+and no main commits missing from dev or the QA branch.
