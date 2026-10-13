@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import * as Cesium from 'cesium';
 import { fixtureRequestCommand } from './fixtureInterception.mjs';
@@ -110,6 +111,14 @@ test('native map URLs resolve every manifest asset through real interception cal
       Buffer.from(result.params.body, 'base64').length,
       row.byteLength,
     );
+    const deliveredBytes = Buffer.from(result.params.body, 'base64');
+    assert.deepEqual(deliveredBytes, pinned.assets.get(row.path));
+    if (row.kind === 'textured-glb' || row.kind === '3d-tiles-1.1')
+      assert.equal(
+        createHash('sha256').update(deliveredBytes).digest('hex'),
+        row.sha256,
+        `${row.path} serves the pinned canonical digest`,
+      );
     assert.equal(result.params.responseCode, 200);
     const headers = Object.fromEntries(
       result.params.responseHeaders.map(({ name, value }) => [

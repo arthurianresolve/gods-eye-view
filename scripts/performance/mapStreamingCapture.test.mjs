@@ -1073,6 +1073,83 @@ test('strict smoke journey rejection retains bounded observed route and transiti
     projectedHistoricalEnvelope,
     'Historical v1 failure envelopes remain stable after additive projection.',
   );
+  for (const historicalManifestSha256 of [
+    '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
+    '798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4',
+  ]) {
+    const v1Failure = structuredClone(projectedHistoricalEnvelope);
+    v1Failure.fixtureId = 'austin-map-streaming-synthetic-v1';
+    v1Failure.manifestSha256 = historicalManifestSha256;
+    const projectedV1Failure =
+      projectMapStreamingJourneyValidationFailureEvidence(v1Failure);
+    assert.equal(
+      projectedV1Failure.fixtureId,
+      'austin-map-streaming-synthetic-v1',
+    );
+    assert.equal(projectedV1Failure.manifestSha256, historicalManifestSha256);
+    assert.equal(projectedV1Failure.status, 'failed');
+    assert.equal(projectedV1Failure.performanceAcceptanceEligible, false);
+    assert.deepEqual(
+      projectMapStreamingJourneyValidationFailureEvidence(projectedV1Failure),
+      projectedV1Failure,
+      'Known v1 failure evidence preserves its identity through reprojection.',
+    );
+    const v1FailureReport = createCaptureFailureReport({
+      source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+      phase: 'historical-v1-map-journey-validation',
+      error: rejection,
+      workload: { mapStreamingJourneyValidationFailure: v1Failure },
+    });
+    const v1Compacted = compactCaptureCliFailure(v1FailureReport);
+    const v1Outer = projectMapStreamingJourneyValidationFailureForSmoke(
+      { captureCliFailure: v1Compacted },
+      mapStreamingCaptureModule,
+    );
+    assert.deepEqual(v1Outer, projectedV1Failure);
+    assert.equal(
+      v1Compacted.rawReport.workload.mapStreamingJourneyValidationFailure
+        .fixtureId,
+      'austin-map-streaming-synthetic-v1',
+    );
+  }
+  const unknownHistoricalFixture = structuredClone(projectedHistoricalEnvelope);
+  unknownHistoricalFixture.fixtureId = 'austin-map-streaming-synthetic-v999';
+  assert.throws(
+    () =>
+      projectMapStreamingJourneyValidationFailureEvidence(
+        unknownHistoricalFixture,
+      ),
+    /known fixture version/,
+  );
+  const malformedHistoricalDigest = structuredClone(
+    projectedHistoricalEnvelope,
+  );
+  malformedHistoricalDigest.fixtureId = 'austin-map-streaming-synthetic-v1';
+  malformedHistoricalDigest.manifestSha256 = 'z'.repeat(64);
+  assert.throws(
+    () =>
+      projectMapStreamingJourneyValidationFailureEvidence(
+        malformedHistoricalDigest,
+      ),
+    /64-character hexadecimal SHA-256/,
+    'Known historical IDs still require a well-formed digest.',
+  );
+  await assert.rejects(
+    runNativeMapJourneyForSmoke({
+      page: { revision: 'a'.repeat(40) },
+      revision: 'a'.repeat(40),
+      fixture: {
+        ...fixture,
+        id: 'austin-map-streaming-synthetic-v1',
+        manifestSha256:
+          '798411accb8f7f52c8f58562ec6263f1bebd48cdbcda97527b57c1a4ef5fe0d4',
+      },
+      buildProfile: profile,
+      mapStreamingCaptureModule,
+    }),
+    /austin-map-streaming-synthetic-v2/,
+    'The live smoke runner does not accept historical v1 as a passing fixture.',
+  );
   for (const [field, invalidValue] of [
     ['startupFlightDelayMs', '500'],
     ['startupFlightPreparationElapsedMs', Number.NaN],

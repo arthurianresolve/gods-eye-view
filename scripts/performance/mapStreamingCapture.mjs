@@ -11,6 +11,8 @@ import {
 import { MAP_FIXTURE_BUILD_PROFILE_ID } from './buildProvenance.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+const HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID =
+  'austin-map-streaming-synthetic-v1';
 
 export const MAP_STREAMING_STACK_SEQUENCE = Object.freeze([
   'photoreal',
@@ -1134,8 +1136,18 @@ export function projectMapStreamingJourneyValidationFailureEvidence(value) {
   assert.equal(value.performanceAcceptanceEligible, false);
   assert.equal(value.failureCode, 'strict-journey-validation-rejected');
   assert.match(value.revision || '', /^[a-f0-9]{40}$/);
-  assert.equal(value.fixtureId, MAP_STREAMING_FIXTURE_ID);
-  assert.match(value.manifestSha256 || '', SHA256);
+  assert.match(
+    value.manifestSha256 || '',
+    SHA256,
+    'Failure evidence requires a 64-character hexadecimal SHA-256 digest.',
+  );
+  if (value.fixtureId === MAP_STREAMING_FIXTURE_ID) {
+    assert.match(value.manifestSha256, SHA256);
+  } else if (value.fixtureId === HISTORICAL_MAP_STREAMING_FAILURE_FIXTURE_ID) {
+    assert.match(value.manifestSha256, SHA256);
+  } else {
+    assert.fail('Failure projection requires a known fixture version.');
+  }
   assert.equal(value.buildProfileId, MAP_FIXTURE_BUILD_PROFILE_ID);
   assert.match(value.buildConfigurationSha256 || '', SHA256);
   assert.equal(value.routeId, MAP_STREAMING_ROUTE.id);

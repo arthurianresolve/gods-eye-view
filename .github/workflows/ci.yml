@@ -367,6 +367,9 @@ jobs:
       - name: Clean install
         run: node scripts/pinokio-install.mjs
 
+      - name: Verify canonical map fixture assets and native parser compatibility
+        run: node --test scripts/performance/mapStreamingFixture.test.mjs
+
       - name: Exercise real Git update paths with disposable repositories
         run: node --test src/pinokioUpdatePreview.test.mjs
 

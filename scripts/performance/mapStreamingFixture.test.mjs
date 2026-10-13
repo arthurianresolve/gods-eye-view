@@ -7,8 +7,11 @@ import sharp from 'sharp';
 import * as Cesium from 'cesium';
 import {
   createDeterministicMapStreamingFixture,
+  loadPinnedMapTilesetAssets,
+  MAP_STREAMING_CANONICAL_TILE_ORIGIN,
   MAP_STREAMING_FIXTURE_ID,
   MAP_STREAMING_MAX_BYTES,
+  validatePinnedMapTileRows,
   validateDeterministicMapStreamingFixture,
 } from './mapStreamingFixture.mjs';
 
@@ -260,6 +263,114 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
     ),
   );
   assert.equal(validateDeterministicMapStreamingFixture(first), true);
+});
+
+test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const rows = fixture.manifest.assets.filter((row) =>
+    ['textured-glb', '3d-tiles-1.1'].includes(row.kind),
+  );
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v2');
+  assert.equal(fixture.manifest.schema, 'gev-map-streaming-fixture/v2');
+  assert.equal(fixture.manifest.generatorVersion, '2.0.0');
+  assert.equal(
+    MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceManifestSha256,
+    '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
+  );
+  assert.equal(MAP_STREAMING_CANONICAL_TILE_ORIGIN.assetBytes, 66_887);
+  assert.equal(rows.length, 22);
+  assert.equal(
+    rows.reduce((sum, row) => sum + row.byteLength, 0),
+    MAP_STREAMING_CANONICAL_TILE_ORIGIN.assetBytes,
+  );
+  assert.equal(
+    fixture.manifestSha256,
+    '31f63be4f0d20864e909134f44a319c2af72e2e1f724ab4996bbd8f5a12fae7c',
+  );
+  assert.equal(validatePinnedMapTileRows(rows), true);
+
+  const loaded = await loadPinnedMapTilesetAssets();
+  assert.equal(loaded.size, rows.length);
+  for (const row of rows) {
+    const bytes = loaded.get(row.path);
+    assert.ok(Buffer.isBuffer(bytes), `${row.path} is loaded as owned bytes`);
+    assert.equal(bytes.length, row.byteLength, `${row.path} length is pinned`);
+    assert.equal(digest(bytes), row.sha256, `${row.path} digest is pinned`);
+    assert.deepEqual(bytes, fixture.assets.get(row.path));
+  }
+
+  await assert.rejects(
+    loadPinnedMapTilesetAssets({
+      readAsset(path) {
+        if (path === rows[0].path)
+          throw new Error('fixture intentionally absent');
+        return fixture.assets.get(path);
+      },
+    }),
+    /Pinned map tile is missing/,
+  );
+  await assert.rejects(
+    loadPinnedMapTilesetAssets({
+      readAsset(path) {
+        const bytes = Buffer.from(fixture.assets.get(path));
+        if (path === rows[0].path) bytes[0] ^= 0xff;
+        return bytes;
+      },
+    }),
+    /length\/SHA validation/,
+  );
+  await assert.rejects(
+    loadPinnedMapTilesetAssets({
+      readAsset(path) {
+        if (path === 'tileset/tileset.json') return Buffer.from('{broken');
+        return fixture.assets.get(path);
+      },
+    }),
+    /length\/SHA validation/,
+  );
+
+  const recomputedHashIsNotAuthority = {
+    ...fixture,
+    assets: new Map(fixture.assets),
+    manifest: structuredClone(fixture.manifest),
+  };
+  const canonicalGlb = recomputedHashIsNotAuthority.manifest.assets.find(
+    (row) => row.kind === 'textured-glb',
+  );
+  const alteredGlb = Buffer.from(
+    recomputedHashIsNotAuthority.assets.get(canonicalGlb.path),
+  );
+  alteredGlb[alteredGlb.length - 1] ^= 0xff;
+  recomputedHashIsNotAuthority.assets.set(canonicalGlb.path, alteredGlb);
+  canonicalGlb.sha256 = digest(alteredGlb);
+  assert.throws(
+    () =>
+      validateDeterministicMapStreamingFixture(recomputedHashIsNotAuthority),
+    /identity or metadata mismatch/,
+  );
+
+  const wrongIdentity = structuredClone(rows);
+  wrongIdentity[0].identity.x += 1;
+  assert.throws(
+    () => validatePinnedMapTileRows(wrongIdentity),
+    /identity or metadata mismatch/,
+  );
+  const duplicate = [...rows.slice(0, -1), rows[0]];
+  assert.throws(
+    () => validatePinnedMapTileRows(duplicate),
+    /duplicate or invalid identity/,
+  );
+  const unexpected = rows.map((row) => ({ ...row }));
+  unexpected[0].path = 'tiles/level-9/999-999.glb';
+  assert.throws(
+    () => validatePinnedMapTileRows(unexpected),
+    /identity or metadata mismatch/,
+  );
+  assert.throws(
+    () => validatePinnedMapTileRows(rows.slice(1)),
+    /row count or inventory/,
+  );
+  assert.equal(validateDeterministicMapStreamingFixture(fixture), true);
 });
 
 test('map streaming fixture rejects truncated, modified, missing, and unbounded assets', async () => {

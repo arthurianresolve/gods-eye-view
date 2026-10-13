@@ -22,4 +22,5 @@ docs/performance-evidence/s59-42d4be6-reproduction.mjs -text whitespace=cr-at-eo
 *.glb binary
 *.wav binary
 *.pbf binary
+scripts/performance/fixtures/austin-map-streaming-v1/** -text whitespace=cr-at-eol
 src/data/fixtures/austin-operating-v1/tle/*.tle -text whitespace=cr-at-eol,-blank-at-eol

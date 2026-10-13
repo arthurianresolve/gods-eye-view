@@ -938,7 +938,7 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
   );
 
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v1',
+    id: 'austin-map-streaming-synthetic-v2',
     manifestSha256: 'a'.repeat(64),
   };
   const buildProfile = {

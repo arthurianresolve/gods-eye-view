@@ -3,10 +3,252 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 
-export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v1';
-export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v1';
-export const MAP_STREAMING_GENERATOR_VERSION = '1.0.0';
+export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v2';
+export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v2';
+export const MAP_STREAMING_GENERATOR_VERSION = '2.0.0';
 export const MAP_STREAMING_MAX_BYTES = 5 * 1024 * 1024;
+
+export const MAP_STREAMING_CANONICAL_TILE_ORIGIN = Object.freeze({
+  sourceRevision: '7fbbf1fa56fe3d9c746827be0b501b7b31cfb87e',
+  sourceManifestSha256:
+    '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
+  assetVersion: '1.0.0',
+  assetBytes: 66_887,
+});
+
+const CANONICAL_TILE_ROWS = Object.freeze(
+  [
+    [
+      'tiles/level-0/0-0.glb',
+      2704,
+      '3a1d34fff6b48c3fb1c122a829d093a403550c92af71956a6deedb43d7a3fe79',
+    ],
+    [
+      'tiles/level-1/0-0.glb',
+      2700,
+      '8a3bb382461c15f20aa065dddcb6e75382f4ccdb7bebb19ec92ecef52f455bf8',
+    ],
+    [
+      'tiles/level-1/0-1.glb',
+      2708,
+      '918be284118c732b321768463278525739433a482b6e21840cb729b14239305d',
+    ],
+    [
+      'tiles/level-1/1-0.glb',
+      2684,
+      'e1be7aea931442097c41c248e6ec8395e249a67c89ef2a2fb3406b534cd97b53',
+    ],
+    [
+      'tiles/level-1/1-1.glb',
+      2688,
+      'da283d89e2113a4ce32063fe70ab99d486d7a4adb580bd7ce7b4d3bbebbd267b',
+    ],
+    [
+      'tiles/level-2/0-0.glb',
+      2692,
+      'e909ddae1e553822cc466a1a56950330e06e30d0d6f3581f5b07261295db1c71',
+    ],
+    [
+      'tiles/level-2/0-1.glb',
+      2712,
+      '9efb0a2d0a5143b523ea8e4e4aebe9035677177a1a1a7facd58f6d0b9e743fc4',
+    ],
+    [
+      'tiles/level-2/0-2.glb',
+      2712,
+      'b1eea4d9282aa01b37ae9422a3cdf109c946f0c80f47cba67197af7703788272',
+    ],
+    [
+      'tiles/level-2/0-3.glb',
+      2712,
+      '3e7d3ed541afb8cd626d7ffcdc0016230558cfb6915a715aea58a454ff8cb78d',
+    ],
+    [
+      'tiles/level-2/1-0.glb',
+      2708,
+      'dff279c8f25c89e83e810d6c98e68eef868553bbf3e421bbbb50aefb3eadfe67',
+    ],
+    [
+      'tiles/level-2/1-1.glb',
+      2704,
+      '78c5405707acb73bbf949e9dd41f824b8ec4be05517c66be6ab8f94a70aceb6d',
+    ],
+    [
+      'tiles/level-2/1-2.glb',
+      2712,
+      '7d72843f0fa283e04c2dedd8c6ff0f70a5ebe32c030e5e9f70d71b50959040c0',
+    ],
+    [
+      'tiles/level-2/1-3.glb',
+      2708,
+      '9da90181324f4e832d0e7157b8f65630dbee5a42c39629ea82e3cf21aa4b3e43',
+    ],
+    [
+      'tiles/level-2/2-0.glb',
+      2712,
+      '08c903f747e4da2a090f7e877429e59a2d31408ff13ccdebc4aeabadcf54fc51',
+    ],
+    [
+      'tiles/level-2/2-1.glb',
+      2712,
+      '7ab2f3bcea396379999dcfce70b57446df53cc4fa290966a9040cad6ab1a0982',
+    ],
+    [
+      'tiles/level-2/2-2.glb',
+      2708,
+      '8c260ebbdbd1fcbf8ce0dd05c8ce5fb07a60c4cc4189a99e26f6df26c94dcd06',
+    ],
+    [
+      'tiles/level-2/2-3.glb',
+      2688,
+      '3a6ddd3f35f8bc75a74bf0073478c13eeaafde55eb94825c0cb85d55474f5f6a',
+    ],
+    [
+      'tiles/level-2/3-0.glb',
+      2692,
+      '916709e52d2d52e2800bba519893e12d4eb7e5a28e544f8e33d958c76375f20f',
+    ],
+    [
+      'tiles/level-2/3-1.glb',
+      2712,
+      '7c289f712c508f343855c3adc2a44b6fe397c568813f9bda0d479d0def707eff',
+    ],
+    [
+      'tiles/level-2/3-2.glb',
+      2712,
+      'd51791cfb7f850ca34eee9c531117b3c27c278b31e2a2daf4492d61c45217dbe',
+    ],
+    [
+      'tiles/level-2/3-3.glb',
+      2712,
+      '13d5392d0a5bdc27864315f28d7e6e1f3b5d0064606ae73c59283652cdddf908',
+    ],
+    [
+      'tileset/tileset.json',
+      10095,
+      '7a33437b19f17f4512a9c8f9865699c7452e9ef21eebf2a514a50b5b7f04ad19',
+    ],
+  ].map(([path, byteLength, sha256]) => {
+    const match = path.match(/^tiles\/level-(\d+)\/(\d+)-(\d+)\.glb$/);
+    return Object.freeze({
+      path,
+      byteLength,
+      sha256,
+      kind: match ? 'textured-glb' : '3d-tiles-1.1',
+      identity: match
+        ? Object.freeze({
+            level: Number(match[1]),
+            x: Number(match[2]),
+            y: Number(match[3]),
+          })
+        : Object.freeze({ rootChildren: 4, tileCount: 21 }),
+    });
+  }),
+);
+
+const CANONICAL_TILES_ROOT = new URL(
+  './fixtures/austin-map-streaming-v1/',
+  import.meta.url,
+);
+
+function validatePinnedTileBytes(record, bytes) {
+  if (
+    !Buffer.isBuffer(bytes) ||
+    bytes.length !== record.byteLength ||
+    sha256(bytes) !== record.sha256
+  )
+    throw new Error(
+      `Pinned map tile bytes failed length/SHA validation: ${record.path}`,
+    );
+  if (record.kind === 'textured-glb') {
+    if (
+      bytes.length < 20 ||
+      bytes.toString('ascii', 0, 4) !== 'glTF' ||
+      bytes.readUInt32LE(4) !== 2 ||
+      bytes.readUInt32LE(8) !== bytes.length ||
+      bytes.readUInt32LE(12) + 20 > bytes.length
+    )
+      throw new Error(`Pinned GLB structure is malformed: ${record.path}`);
+  } else {
+    let document;
+    try {
+      document = JSON.parse(bytes.toString('utf8'));
+    } catch {
+      throw new Error(`Pinned tileset JSON is malformed: ${record.path}`);
+    }
+    if (
+      document?.asset?.version !== '1.1' ||
+      !document.root ||
+      document.root.children?.length !== 4
+    )
+      throw new Error(`Pinned tileset identity is malformed: ${record.path}`);
+  }
+  return Buffer.from(bytes);
+}
+
+export async function loadPinnedMapTilesetAssets({ readAsset } = {}) {
+  const read =
+    readAsset ??
+    ((path) => readFile(fileURLToPath(new URL(path, CANONICAL_TILES_ROOT))));
+  if (typeof read !== 'function')
+    throw new TypeError('Pinned map asset reader must be a function.');
+  const assets = new Map();
+  for (const record of CANONICAL_TILE_ROWS) {
+    let bytes;
+    try {
+      bytes = await read(record.path);
+    } catch {
+      throw new Error(`Pinned map tile is missing: ${record.path}`);
+    }
+    if (assets.has(record.path))
+      throw new Error(`Pinned map tile identity is duplicated: ${record.path}`);
+    assets.set(record.path, validatePinnedTileBytes(record, bytes));
+  }
+  if (
+    assets.size !== CANONICAL_TILE_ROWS.length ||
+    [...assets.keys()].some(
+      (path, index) => path !== CANONICAL_TILE_ROWS[index].path,
+    )
+  )
+    throw new Error(
+      'Pinned map tile inventory contains an unexpected identity.',
+    );
+  return assets;
+}
+
+export function validatePinnedMapTileRows(rows) {
+  if (!Array.isArray(rows) || rows.length !== CANONICAL_TILE_ROWS.length)
+    throw new Error('Pinned map tile row count or inventory is invalid.');
+  const seen = new Set();
+  const rowsByPath = new Map();
+  for (const row of rows) {
+    if (!row || typeof row.path !== 'string' || seen.has(row.path))
+      throw new Error(
+        'Pinned map tile rows contain a duplicate or invalid identity.',
+      );
+    seen.add(row.path);
+    rowsByPath.set(row.path, row);
+  }
+  for (const expected of CANONICAL_TILE_ROWS) {
+    const actual = rowsByPath.get(expected.path);
+    if (
+      !actual ||
+      actual.kind !== expected.kind ||
+      actual.byteLength !== expected.byteLength ||
+      actual.sha256 !== expected.sha256 ||
+      !actual.identity ||
+      Object.keys(actual.identity).length !==
+        Object.keys(expected.identity).length ||
+      Object.entries(expected.identity).some(
+        ([key, value]) => actual.identity[key] !== value,
+      )
+    )
+      throw new Error(
+        `Pinned map tile identity or metadata mismatch: ${expected.path}`,
+      );
+  }
+  return true;
+}
 
 const ROUTE = Object.freeze({
   west: -97.82,
@@ -808,6 +1050,7 @@ function addAsset(assets, path, kind, bytes, identity) {
 export async function createDeterministicMapStreamingFixture() {
   const assets = new Map();
   const assetRows = [];
+  const pinnedTiles = await loadPinnedMapTilesetAssets();
   const imageryScheme = new Cesium.WebMercatorTilingScheme();
   const terrainScheme = new Cesium.GeographicTilingScheme({
     ellipsoid: Cesium.Ellipsoid.WGS84,
@@ -1022,11 +1265,14 @@ export async function createDeterministicMapStreamingFixture() {
     for (const child of parent.children) appendChildren(child);
   };
   appendChildren(rootNode);
-  assignRelativeTransforms(rootNode);
   for (const node of tileNodes) {
     const id = `${node.level}/${node.x}/${node.y}`;
     const path = `tiles/level-${node.level}/${node.x}-${node.y}.glb`;
-    const glb = createGlb(node, node.bounds);
+    const glb = pinnedTiles.get(path);
+    if (!glb)
+      throw new Error(
+        `Pinned map tile inventory lacks generated identity ${id}.`,
+      );
     node.content = { uri: `../${path}` };
     node.boundingVolume = { region: regionForBounds(node.bounds) };
     assetRows.push(
@@ -1038,30 +1284,23 @@ export async function createDeterministicMapStreamingFixture() {
     );
     delete node.bounds;
   }
-  const toTilesetJson = (node) => ({
-    boundingVolume: node.boundingVolume,
-    geometricError: node.geometricError,
-    refine: 'REPLACE',
-    transform: node.transform,
-    ...(node.content ? { content: node.content } : {}),
-    ...(node.children?.length
-      ? { children: node.children.map(toTilesetJson) }
-      : {}),
-  });
-  const tilesetJson = {
-    asset: { version: '1.1', gltfUpAxis: 'Z' },
-    geometricError: rootNode.geometricError,
-    root: toTilesetJson(rootNode),
-  };
+  const tilesetBytes = pinnedTiles.get('tileset/tileset.json');
+  if (!tilesetBytes)
+    throw new Error('Pinned map tile inventory lacks the canonical tileset.');
   assetRows.push(
-    addAsset(
-      assets,
-      'tileset/tileset.json',
-      '3d-tiles-1.1',
-      stableJson(tilesetJson),
-      { rootChildren: rootNode.children.length, tileCount: tileNodes.length },
-    ),
+    addAsset(assets, 'tileset/tileset.json', '3d-tiles-1.1', tilesetBytes, {
+      rootChildren: rootNode.children.length,
+      tileCount: tileNodes.length,
+    }),
   );
+
+  const pinnedRows = assetRows.filter((row) =>
+    ['textured-glb', '3d-tiles-1.1'].includes(row.kind),
+  );
+  pinnedRows.sort((left, right) =>
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+  );
+  validatePinnedMapTileRows(pinnedRows);
 
   assetRows.sort((left, right) =>
     left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
@@ -1098,6 +1337,22 @@ export async function createDeterministicMapStreamingFixture() {
     seed: 0x47a57,
     scope:
       'deterministic synthetic Austin route fixture; no live provider or credential inputs',
+    canonicalTiles: {
+      version: MAP_STREAMING_CANONICAL_TILE_ORIGIN.assetVersion,
+      sourceRevision: MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceRevision,
+      sourceManifestSha256:
+        MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceManifestSha256,
+      byteLength: MAP_STREAMING_CANONICAL_TILE_ORIGIN.assetBytes,
+      assets: pinnedRows.map(
+        ({ path, kind, identity, byteLength, sha256 }) => ({
+          path,
+          kind,
+          identity,
+          byteLength,
+          sha256,
+        }),
+      ),
+    },
     routeBoundsDegrees: ROUTE,
     geometry: {
       terrainFormat: 'quantized-mesh-1.0',
@@ -1163,6 +1418,35 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     throw new TypeError(
       `Map streaming fixture manifest or asset inventory is invalid: ${JSON.stringify({ id: fixture?.id, schema: fixture?.manifest?.schema, generatorVersion: fixture?.manifest?.generatorVersion, assetRows: fixture?.manifest?.assets?.length ?? null, assetMapSize: fixture?.assets instanceof Map ? fixture.assets.size : null })}`,
     );
+  validatePinnedMapTileRows(
+    fixture.manifest.assets.filter((row) =>
+      ['textured-glb', '3d-tiles-1.1'].includes(row.kind),
+    ),
+  );
+  if (
+    fixture.manifest.canonicalTiles?.version !==
+      MAP_STREAMING_CANONICAL_TILE_ORIGIN.assetVersion ||
+    fixture.manifest.canonicalTiles?.sourceRevision !==
+      MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceRevision ||
+    fixture.manifest.canonicalTiles?.sourceManifestSha256 !==
+      MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceManifestSha256 ||
+    fixture.manifest.canonicalTiles?.byteLength !==
+      MAP_STREAMING_CANONICAL_TILE_ORIGIN.assetBytes ||
+    !stableJson(fixture.manifest.canonicalTiles.assets).equals(
+      stableJson(
+        fixture.manifest.assets
+          .filter((row) => ['textured-glb', '3d-tiles-1.1'].includes(row.kind))
+          .map(({ path, kind, identity, byteLength, sha256 }) => ({
+            path,
+            kind,
+            identity,
+            byteLength,
+            sha256,
+          })),
+      ),
+    )
+  )
+    throw new Error('Map streaming canonical tile descriptor is invalid.');
   if (
     !Number.isSafeInteger(fixture.manifest.totalBytes) ||
     fixture.manifest.totalBytes < 1 ||
