@@ -12,6 +12,7 @@ import {
   projectMapStreamingJourneyFailureEvidence,
 } from './mapStreamingCapture.mjs';
 import { createCaptureFailureReport } from './captureFailureReport.mjs';
+import { attachMapStreamingJourneyFailureEvidence } from '../qa-performance-build-smoke.mjs';
 import { createMapStreamingFixtureDelivery } from './mapStreamingFixtureDelivery.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
 import {
@@ -128,6 +129,7 @@ function cameraObservation(camera) {
 
 function createFakePage({
   failStack = null,
+  notReadyGlobeStack = null,
   scheduleAtZero = true,
   failPollCount = 0,
   failStartResponse = false,
@@ -138,6 +140,7 @@ function createFakePage({
   blockFrames = false,
   pollDelayMs = 0,
   timerOvershootMs = 0,
+  advancePageClockOnRenderMs = 0,
 } = {}) {
   const listeners = new Set();
   const frames = new Map();
@@ -235,6 +238,12 @@ function createFakePage({
       tilesLoaded: true,
       terrainProvider,
       maximumScreenSpaceError: 2,
+      _surface: {
+        _tileLoadQueueHigh: [],
+        _tileLoadQueueMedium: [],
+        _tileLoadQueueLow: [],
+        _tilesToRender: [],
+      },
       getHeight(point) {
         return 400 + ((point.longitude * 10) % 250);
       },
@@ -245,6 +254,7 @@ function createFakePage({
     canvas: { clientWidth: 1440, clientHeight: 900 },
     context: { drawingBufferWidth: 1440, drawingBufferHeight: 900 },
     requestRender() {
+      pageClock += advancePageClockOnRenderMs;
       for (const listener of [...listeners]) listener();
     },
   };
@@ -261,6 +271,7 @@ function createFakePage({
         throw new Error(`controlled ${stackId} failure`);
       activeStack = stackId;
       scene.globe.show = stackId !== 'photoreal';
+      scene.globe.tilesLoaded = stackId !== notReadyGlobeStack;
       return { activeId: stackId, lastError: null, switchOrigin: 'manual' };
     },
   };
@@ -711,6 +722,169 @@ test('host failure report retains terminal state when disposal is unconfirmed', 
         error.mapStreamingJourneyFailure.retirement.disposeErrorKind,
         'evaluation-failed',
       );
+      return true;
+    },
+  );
+});
+
+test('native map failure report retains bounded Cesium terrain queue diagnostics', async () => {
+  const harness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 5_000,
+  });
+  const surface =
+    harness.context.window.__godsEyeView.viewer.scene.globe._surface;
+  const makeTile = (queueIndex, imageryCount) => ({
+    _x: queueIndex,
+    _y: queueIndex + 1,
+    _level: 10,
+    state: 1,
+    data: {
+      terrainState: queueIndex % 7,
+      mesh: queueIndex % 2 ? null : {},
+      imagery: Array.from({ length: imageryCount }, (_, index) => ({
+        loadingImagery: { state: index % 8 },
+      })),
+    },
+  });
+  surface._tileLoadQueueHigh = Array.from({ length: 5 }, (_, index) =>
+    makeTile(index, index === 0 ? 40 : 2),
+  );
+  surface._tileLoadQueueMedium = Array.from({ length: 5 }, (_, index) =>
+    makeTile(index + 5, 2),
+  );
+  surface._tileLoadQueueLow = Array.from({ length: 5 }, (_, index) =>
+    makeTile(index + 10, 0),
+  );
+  surface._tilesToRender = Array.from({ length: 3 }, (_, index) =>
+    makeTile(index + 20, 0),
+  );
+
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const original = error.mapStreamingJourneyFailure;
+      assert.ok(error.actual?.latestObservation, JSON.stringify(original));
+      const queue = original.checkpointGlobeQueueDiagnostics;
+      assert.equal(queue.available, true);
+      assert.deepEqual(JSON.parse(JSON.stringify(queue.queueCounts)), {
+        high: 5,
+        medium: 5,
+        low: 5,
+        total: 15,
+      });
+      assert.equal(queue.renderedTileCount, 3);
+      assert.equal(queue.sampledTiles.length, 8);
+      assert.equal(queue.omittedSampledTileCount, 7);
+      assert.equal(queue.sampledTiles[0].queue, 'high');
+      assert.equal(queue.sampledTiles[0].x, 0);
+      assert.equal(queue.sampledTiles[0].tileState, 1);
+      assert.equal(queue.sampledTiles[0].terrainState, 0);
+      assert.equal(queue.sampledTiles[0].meshPresent, true);
+      assert.equal(queue.sampledTiles[1].meshPresent, false);
+      assert.equal(queue.sampledTiles[0].imageryEntryCount, 40);
+      assert.equal(queue.sampledTiles[0].imageryEntriesSampled, 32);
+      assert.equal(queue.sampledTiles[0].omittedImageryEntryCount, 8);
+      assert.deepEqual(
+        JSON.parse(
+          JSON.stringify(queue.sampledTiles[0].loadingImageryStateCounts),
+        ),
+        Array.from({ length: 8 }, () => 4),
+      );
+
+      const report = createCaptureFailureReport({
+        source: { appCommit: 'a'.repeat(40), harnessCommit: 'b'.repeat(40) },
+        phase: 'native-map-initial-readiness',
+        error,
+        errorActual: error.actual,
+        errorExpected: error.expected,
+        workload: { mapStreamingJourneyFailure: original },
+      });
+      const serialized = JSON.stringify(report);
+      assert.ok(Buffer.byteLength(serialized, 'utf8') <= 256 * 1024);
+      const replay = JSON.parse(serialized);
+      const retained =
+        replay.workload.mapStreamingJourneyFailure
+          .checkpointGlobeQueueDiagnostics;
+      assert.equal(retained.queueCounts.total, 15);
+      assert.equal(retained.renderedTileCount, 3);
+      assert.equal(retained.sampledTiles.length, 8);
+      assert.deepEqual(
+        retained.sampledTiles[0].loadingImageryStateCounts,
+        Array.from({ length: 8 }, () => 4),
+      );
+      assert.equal(
+        replay.workload.mapStreamingJourneyFailure.checkpoint.latestObservation
+          .globeQueueDiagnostics,
+        undefined,
+      );
+
+      const smokeFailure = new Error('controlled map readiness failure');
+      smokeFailure.smokeDiagnostics = { phase: 'native-map-transition' };
+      attachMapStreamingJourneyFailureEvidence(smokeFailure, original);
+      const outerFailureJson = JSON.stringify(smokeFailure.smokeDiagnostics);
+      const outerFailure = JSON.parse(outerFailureJson);
+      assert.equal(
+        outerFailure.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .queueCounts.total,
+        15,
+      );
+      assert.equal(
+        outerFailure.mapStreamingJourneyFailure.checkpointGlobeQueueDiagnostics
+          .sampledTiles.length,
+        8,
+      );
+
+      const oversized = structuredClone(original);
+      oversized.checkpointGlobeQueueDiagnostics.sampledTiles.push(
+        structuredClone(queue.sampledTiles[0]),
+      );
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(oversized),
+        /sampledTiles.length/,
+      );
+      const malformed = structuredClone(original);
+      malformed.checkpointGlobeQueueDiagnostics.sampledTiles[0].loadingImageryStateCounts.pop();
+      assert.throws(
+        () => projectMapStreamingJourneyFailureEvidence(malformed),
+        /8/,
+      );
+      const inconsistentQueueCount = structuredClone(original);
+      inconsistentQueueCount.checkpointGlobeQueueDiagnostics.sampledTiles[0].queue =
+        'low';
+      inconsistentQueueCount.checkpointGlobeQueueDiagnostics.queueCounts.low = 0;
+      assert.throws(() =>
+        projectMapStreamingJourneyFailureEvidence(inconsistentQueueCount),
+      );
+      return true;
+    },
+  );
+});
+
+test('Cesium queue diagnostic is explicitly unavailable when Globe surface internals are absent', async () => {
+  const harness = createFakePage({
+    notReadyGlobeStack: 'esri-imagery',
+    advancePageClockOnRenderMs: 5_000,
+  });
+  harness.context.window.__godsEyeView.viewer.scene.globe._surface = null;
+  await assert.rejects(
+    runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+    }),
+    (error) => {
+      const queue = error.actual.latestObservation.globeQueueDiagnostics;
+      assert.deepEqual(JSON.parse(JSON.stringify(queue)), {
+        available: false,
+        unavailableReason: 'surface-unavailable',
+        queueCounts: null,
+        renderedTileCount: null,
+        sampledTiles: [],
+        omittedSampledTileCount: null,
+      });
       return true;
     },
   );

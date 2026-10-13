@@ -373,6 +373,132 @@ export async function finalizeMapSmokeFixtureDocument({
   };
 }
 
+function projectMapStreamingFailureDeliveryEvidence(summary, fixture) {
+  if (!summary || typeof summary !== 'object' || Array.isArray(summary))
+    return null;
+  const expectedAssets = new Map(
+    fixture.manifest.assets.map((asset) => [asset.path, asset]),
+  );
+  assert.equal(summary.schema, 'gev-map-streaming-fixture-delivery/v1');
+  assert.equal(summary.fixtureId, fixture.id);
+  assert.equal(summary.manifestSha256, fixture.manifestSha256);
+  assert.ok(['active', 'cancelled', 'disposed'].includes(summary.status));
+  const countNames = [
+    'requestedCount',
+    'fulfilledAckCount',
+    'cancelledCount',
+    'pendingCount',
+    'unexpectedFulfillmentCount',
+    'errorObservationCount',
+    'omittedErrorObservationCount',
+    'omittedErrorKindCount',
+  ];
+  for (const name of countNames)
+    assert.ok(
+      Number.isSafeInteger(summary[name]) &&
+        summary[name] >= 0 &&
+        summary[name] <= 512,
+    );
+  assert.equal(
+    summary.requestedCount,
+    summary.fulfilledAckCount + summary.cancelledCount + summary.pendingCount,
+  );
+  assert.equal(typeof summary.cleanupConfirmed, 'boolean');
+  assert.equal(summary.browserDecodeObserved, false);
+  assert.equal(summary.renderedReadinessObserved, false);
+  assert.ok(Array.isArray(summary.assets));
+  assert.ok(summary.assets.length <= fixture.manifest.assets.length);
+  const seen = new Set();
+  let requests = 0;
+  let acknowledgements = 0;
+  let cancellations = 0;
+  const assets = summary.assets.map((asset) => {
+    const expected = expectedAssets.get(asset.path);
+    assert.ok(expected);
+    assert.equal(seen.has(asset.path), false);
+    seen.add(asset.path);
+    assert.equal(asset.sha256, expected.sha256);
+    assert.equal(asset.byteLength, expected.byteLength);
+    for (const name of ['requests', 'fulfilledAckCount', 'cancelledCount'])
+      assert.ok(Number.isSafeInteger(asset[name]) && asset[name] >= 0);
+    assert.ok(asset.requests <= 512);
+    assert.ok(asset.fulfilledAckCount + asset.cancelledCount <= asset.requests);
+    requests += asset.requests;
+    acknowledgements += asset.fulfilledAckCount;
+    cancellations += asset.cancelledCount;
+    return {
+      path: asset.path,
+      sha256: asset.sha256,
+      byteLength: asset.byteLength,
+      requests: asset.requests,
+      fulfilledAckCount: asset.fulfilledAckCount,
+      cancelledCount: asset.cancelledCount,
+      pendingCount:
+        asset.requests - asset.fulfilledAckCount - asset.cancelledCount,
+    };
+  });
+  assert.equal(requests, summary.requestedCount);
+  assert.equal(acknowledgements, summary.fulfilledAckCount);
+  assert.equal(cancellations, summary.cancelledCount);
+  const errors = summary.errors;
+  assert.ok(Array.isArray(errors) && errors.length <= 8);
+  const projectedErrors = errors.map((entry) => {
+    assert.ok(
+      typeof entry.code === 'string' && /^[a-z0-9-]{1,80}$/.test(entry.code),
+    );
+    assert.ok(Number.isSafeInteger(entry.count) && entry.count > 0);
+    return { code: entry.code, count: entry.count };
+  });
+  return {
+    schema: summary.schema,
+    fixtureId: summary.fixtureId,
+    manifestSha256: summary.manifestSha256,
+    status: summary.status,
+    requestedCount: summary.requestedCount,
+    fulfilledAckCount: summary.fulfilledAckCount,
+    cancelledCount: summary.cancelledCount,
+    pendingCount: summary.pendingCount,
+    unexpectedFulfillmentCount: summary.unexpectedFulfillmentCount,
+    errorObservationCount: summary.errorObservationCount,
+    omittedErrorObservationCount: summary.omittedErrorObservationCount,
+    omittedErrorKindCount: summary.omittedErrorKindCount,
+    cleanupConfirmed: summary.cleanupConfirmed,
+    errors: projectedErrors,
+    assets,
+    browserDecodeObserved: false,
+    renderedReadinessObserved: false,
+  };
+}
+
+/** Attach a bounded map delivery diagnostic without implying success. */
+export function attachFinalizedMapStreamingFailureEvidence(
+  failure,
+  { fixture, deliveryEvidence, interceptionRelease },
+) {
+  assert.ok(failure && typeof failure === 'object');
+  const diagnostics = failure.smokeDiagnostics || {};
+  if (deliveryEvidence) {
+    try {
+      const delivery = projectMapStreamingFailureDeliveryEvidence(
+        deliveryEvidence,
+        fixture,
+      );
+      diagnostics.mapStreamingFixtureSetup = {
+        fixtureId: fixture.id,
+        manifestSha256: fixture.manifestSha256,
+        delivery,
+        comparisonEligible: false,
+      };
+    } catch {
+      diagnostics.mapStreamingFixtureSetupStatus = 'invalid-finalized-evidence';
+    }
+  }
+  if (interceptionRelease)
+    diagnostics.mapStreamingInterceptionRelease = interceptionRelease;
+  failure.smokeDiagnostics = diagnostics;
+  return failure;
+}
+
 const SHA1 = /^[a-f0-9]{40}$/;
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -3205,6 +3331,17 @@ export function projectMapStreamingJourneyFailureForSmoke(
   }
 }
 
+export function attachMapStreamingJourneyFailureEvidence(
+  failure,
+  projectedFailure,
+) {
+  if (!projectedFailure) return failure;
+  const diagnostics = failure.smokeDiagnostics || {};
+  diagnostics.mapStreamingJourneyFailure = projectedFailure;
+  failure.smokeDiagnostics = diagnostics;
+  return failure;
+}
+
 export async function preserveCaptureCliReportArtifact(
   sourcePath,
   artifactPath,
@@ -4931,7 +5068,6 @@ async function runRevision({
       ...(error.captureCliFailure
         ? { captureCliFailure: error.captureCliFailure }
         : {}),
-      ...(mapStreamingJourneyFailure ? { mapStreamingJourneyFailure } : {}),
       ...(mapStreamingNativeJourney ? { mapStreamingNativeJourney } : {}),
       terminalRenderLoopRetirement,
       rendererProbeCleanup,
@@ -4939,6 +5075,7 @@ async function runRevision({
       densePopulationObservations,
       ...(nativeRendererEvidence ? { nativeRendererEvidence } : {}),
     };
+    attachMapStreamingJourneyFailureEvidence(error, mapStreamingJourneyFailure);
     failure = error;
   } finally {
     if (page) {
@@ -5071,11 +5208,12 @@ async function runRevision({
       comparisonEligible: false,
     };
   }
-  if (failure && mapStreamingInterceptionRelease) {
-    failure.smokeDiagnostics ||= {};
-    failure.smokeDiagnostics.mapStreamingInterceptionRelease =
-      mapStreamingInterceptionRelease;
-  }
+  if (failure)
+    attachFinalizedMapStreamingFailureEvidence(failure, {
+      fixture: mapStreamingCaptureFixture,
+      deliveryEvidence: mapStreamingSmokeEvidence,
+      interceptionRelease: mapStreamingInterceptionRelease,
+    });
   if (failure) throw failure;
   return result;
 }
