@@ -200,6 +200,24 @@ test('invalid infrastructure CLI requests reject before importing Cesium', async
   });
 });
 
+test('an explicit build-profile flag without a value rejects before browser startup', async () => {
+  await withForbiddenCesiumLoader(async (loaderPath) => {
+    for (const args of [
+      ['--build-profile'],
+      ['--build-profile', '--headless'],
+    ]) {
+      const result = invoke(args, { loaderPath });
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(result.stderr, /--build-profile requires a value/);
+      assert.doesNotMatch(result.stderr, /forbidden Cesium import witness/);
+      assert.doesNotMatch(
+        result.stderr,
+        /Browser was not found|Could not find Chrome/,
+      );
+    }
+  });
+});
+
 test('first-motion profiling rejects unsupported workload before browser startup', () => {
   const wrongFixture = invoke([
     ...verifiedFixtureArgs(),

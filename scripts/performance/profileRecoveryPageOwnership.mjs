@@ -26,9 +26,190 @@ const PROCESS_ROLES = new Set([
 const MAX_PROCESS_TREE_ROWS = 64;
 const MAX_PROCESS_TREE_OUTPUT_BYTES = 12_000;
 const PROCESS_TREE_TIMEOUT_MS = 1_500;
+const MAX_CDP_PROCESS_ROWS = 64;
+const MAX_CDP_PROCESS_INFO_ROWS = 512;
+const SYSTEM_INFO_PROCESS_TIMEOUT_MS = 1_000;
+const SYSTEM_INFO_SESSION_TIMEOUT_MS = 800;
 
 function unavailableSnapshot(reason) {
   return { status: 'unavailable', reason };
+}
+
+function classifyProcessInfoError(error) {
+  const code = error?.code;
+  const message = typeof error?.message === 'string' ? error.message : '';
+  const originalMessage =
+    typeof error?.originalMessage === 'string' ? error.originalMessage : '';
+  if (
+    code === -32601 ||
+    code === 'METHOD_NOT_FOUND' ||
+    originalMessage.startsWith("'SystemInfo.getProcessInfo' wasn't found")
+  )
+    return 'process-info-unsupported';
+  if (
+    code === 'ETIMEDOUT' ||
+    message.includes('SystemInfo.getProcessInfo timed out.')
+  )
+    return 'process-info-timeout';
+  if (code === 'EPERM') return 'process-info-permission-denied';
+  if (
+    code === 'ESRCH' ||
+    error?.name === 'ConnectionClosedError' ||
+    error?.name === 'TargetCloseError'
+  )
+    return 'process-info-connection-lost';
+  if (code === 'GEV_CDP_CONNECTION_UNAVAILABLE')
+    return 'process-info-connection-unavailable';
+  if (code === 'GEV_CDP_LIMITS_INVALID')
+    return 'process-info-timeout-limit-invalid';
+  return 'process-info-query-failed';
+}
+
+function processRole(type) {
+  const normalized = type.toLowerCase();
+  if (normalized === 'browser') return 'browser';
+  if (normalized === 'renderer') return 'renderer';
+  if (normalized === 'gpu' || normalized === 'gpu-process') return 'gpu';
+  if (normalized === 'utility') return 'utility';
+  if (normalized.includes('crashpad')) return 'crashpad';
+  return 'other';
+}
+
+/** Keep only bounded process roles and IDs returned by the owned browser CDP target. */
+export function summarizeBrowserProcessInfo(
+  response,
+  maxRows = MAX_CDP_PROCESS_ROWS,
+) {
+  if (
+    !Number.isSafeInteger(maxRows) ||
+    maxRows < 1 ||
+    maxRows > MAX_CDP_PROCESS_ROWS
+  )
+    return unavailableSnapshot('process-info-limit-invalid');
+  const processInfo = response?.processInfo;
+  if (!Array.isArray(processInfo))
+    return unavailableSnapshot('process-info-list-invalid');
+  if (processInfo.length > MAX_CDP_PROCESS_INFO_ROWS)
+    return unavailableSnapshot('process-info-overflow');
+  const seen = new Set();
+  const rows = [];
+  for (const item of processInfo) {
+    if (
+      !Number.isSafeInteger(item?.id) ||
+      item.id < 1 ||
+      typeof item.type !== 'string' ||
+      item.type.length < 1 ||
+      item.type.length > 80 ||
+      seen.has(item.id)
+    )
+      return unavailableSnapshot('process-info-list-invalid');
+    seen.add(item.id);
+    rows.push({ id: item.id, role: processRole(item.type) });
+  }
+  rows.sort((left, right) => left.id - right.id);
+  return {
+    status: 'available',
+    source: 'SystemInfo.getProcessInfo',
+    processCount: rows.length,
+    rows: rows.slice(0, maxRows),
+    truncated: rows.length > maxRows,
+    retainedFields: ['id', 'role'],
+  };
+}
+
+/** Read SystemInfo on Puppeteer's already-owned browser connection. */
+export async function readRecoveryBrowserProcessInfo(
+  browser,
+  { timeoutMs = SYSTEM_INFO_SESSION_TIMEOUT_MS } = {},
+) {
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > SYSTEM_INFO_SESSION_TIMEOUT_MS
+  ) {
+    const error = new Error('Browser process inventory limits are invalid.');
+    error.code = 'GEV_CDP_LIMITS_INVALID';
+    throw error;
+  }
+  const connection = browser?._connection;
+  if (typeof connection?.send !== 'function') {
+    const error = new Error('Owned browser CDP connection is unavailable.');
+    error.code = 'GEV_CDP_CONNECTION_UNAVAILABLE';
+    throw error;
+  }
+  // Puppeteer 25.10.0's Connection.send accepts a per-command timeout and
+  // retires the callback when it expires. This avoids creating a target
+  // session whose attach/detach could outlive the shutdown observation.
+  return connection.send(
+    'SystemInfo.getProcessInfo',
+    {},
+    { timeout: timeoutMs },
+  );
+}
+
+/** Observe only the owned browser PID; PID presence does not prove identity. */
+export function observeOwnedBrowserPidPresence(
+  child,
+  { platform = process.platform, killProcess = process.kill } = {},
+) {
+  if (platform !== 'win32') return unavailableSnapshot('unsupported-platform');
+  const pid = child?.pid;
+  if (!Number.isSafeInteger(pid) || pid < 1)
+    return unavailableSnapshot('owned-browser-pid-unavailable');
+  if (child.exitCode != null || child.signalCode != null)
+    return { status: 'exited', pid, source: 'child-exit-observed' };
+  try {
+    killProcess(pid, 0);
+    return {
+      status: 'present',
+      pid,
+      source: 'owned-pid-presence-only',
+      identityConfirmed: false,
+      pidReusePossible: true,
+    };
+  } catch (error) {
+    if (error?.code === 'ESRCH')
+      return { status: 'absent', pid, source: 'owned-pid-presence-only' };
+    return unavailableSnapshot(
+      error?.code === 'EPERM'
+        ? 'owned-pid-presence-permission-denied'
+        : 'owned-pid-presence-check-failed',
+    );
+  }
+}
+
+async function captureBrowserProcessInfo(snapshot, timeoutMs) {
+  if (
+    !Number.isSafeInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > SYSTEM_INFO_PROCESS_TIMEOUT_MS
+  )
+    return unavailableSnapshot('process-info-timeout-limit-invalid');
+  if (typeof snapshot !== 'function')
+    return unavailableSnapshot('process-info-probe-not-configured');
+  let timer;
+  const pending = Promise.resolve()
+    .then(snapshot)
+    .then(
+      (value) => ({ kind: 'resolved', value }),
+      (error) => ({ kind: 'rejected', error }),
+    );
+  let result;
+  try {
+    result = await Promise.race([
+      pending,
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve({ kind: 'timeout' }), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+  if (result.kind === 'timeout')
+    return unavailableSnapshot('process-info-timeout');
+  if (result.kind === 'rejected')
+    return unavailableSnapshot(classifyProcessInfoError(result.error));
+  return summarizeBrowserProcessInfo(result.value);
 }
 
 function targetTypeSnapshot(browser) {
@@ -70,11 +251,20 @@ function targetTypeSnapshot(browser) {
 }
 
 /** Validate and reduce a process listing to the owned Chrome process tree only. */
-export function summarizeOwnedProcessTree(rawRows, rootPid, maxRows = MAX_PROCESS_TREE_ROWS) {
+export function summarizeOwnedProcessTree(
+  rawRows,
+  rootPid,
+  maxRows = MAX_PROCESS_TREE_ROWS,
+) {
   if (!Number.isSafeInteger(rootPid) || rootPid < 1)
     return unavailableSnapshot('owned-browser-pid-unavailable');
-  if (!Array.isArray(rawRows)) return unavailableSnapshot('process-list-invalid');
-  if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > MAX_PROCESS_TREE_ROWS)
+  if (!Array.isArray(rawRows))
+    return unavailableSnapshot('process-list-invalid');
+  if (
+    !Number.isSafeInteger(maxRows) ||
+    maxRows < 1 ||
+    maxRows > MAX_PROCESS_TREE_ROWS
+  )
     return unavailableSnapshot('process-limit-invalid');
 
   const rows = [];
@@ -107,7 +297,8 @@ export function summarizeOwnedProcessTree(rawRows, rootPid, maxRows = MAX_PROCES
     byPid.set(pid, row);
     rows.push(row);
   }
-  if (!byPid.has(rootPid)) return unavailableSnapshot('owned-browser-not-in-process-list');
+  if (!byPid.has(rootPid))
+    return unavailableSnapshot('owned-browser-not-in-process-list');
 
   const included = new Set([rootPid]);
   const owned = [byPid.get(rootPid)];
@@ -135,7 +326,8 @@ export function summarizeOwnedProcessTree(rawRows, rootPid, maxRows = MAX_PROCES
 }
 
 export function createOwnedProcessTreePowerShellCommand(rootPid, maxRows) {
-  return `$rootPid = ${rootPid}\n` +
+  return (
+    `$rootPid = ${rootPid}\n` +
     `$limit = ${maxRows}\n` +
     '$all = @(Get-CimInstance Win32_Process -Property ProcessId,ParentProcessId,Name -ErrorAction Stop | Select-Object ProcessId,ParentProcessId,Name)\n' +
     '$root = $all | Where-Object { [int]$_.ProcessId -eq $rootPid } | Select-Object -First 1\n' +
@@ -189,7 +381,8 @@ export function createOwnedProcessTreePowerShellCommand(rootPid, maxRows) {
     '    else { $row | Add-Member -NotePropertyName category -NotePropertyValue "unavailable" }\n' +
     '  }\n' +
     '}\n' +
-    '[pscustomobject]@{ rows=@($result); truncated=$truncated } | ConvertTo-Json -Compress -Depth 3';
+    '[pscustomobject]@{ rows=@($result); truncated=$truncated } | ConvertTo-Json -Compress -Depth 3'
+  );
 }
 
 /** Bounded Windows snapshot; arguments are queried only for owned PIDs and never retained or emitted. */
@@ -218,7 +411,12 @@ export function captureOwnedBrowserProcessTree(
   try {
     const output = execFile(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', createOwnedProcessTreePowerShellCommand(rootPid, maxRows)],
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        createOwnedProcessTreePowerShellCommand(rootPid, maxRows),
+      ],
       {
         encoding: 'utf8',
         timeout: timeoutMs,
@@ -226,14 +424,24 @@ export function captureOwnedBrowserProcessTree(
         windowsHide: true,
       },
     );
-    if (typeof output !== 'string' || Buffer.byteLength(output, 'utf8') > MAX_PROCESS_TREE_OUTPUT_BYTES)
+    if (
+      typeof output !== 'string' ||
+      Buffer.byteLength(output, 'utf8') > MAX_PROCESS_TREE_OUTPUT_BYTES
+    )
       return unavailableSnapshot('process-list-overflow');
     const parsed = JSON.parse(output);
     if (typeof parsed?.truncated !== 'boolean')
       return unavailableSnapshot('process-list-invalid');
-    const summarized = summarizeOwnedProcessTree(parsed?.rows, rootPid, maxRows);
+    const summarized = summarizeOwnedProcessTree(
+      parsed?.rows,
+      rootPid,
+      maxRows,
+    );
     if (summarized.status !== 'available') return summarized;
-    return { ...summarized, truncated: parsed.truncated === true || summarized.truncated };
+    return {
+      ...summarized,
+      truncated: parsed.truncated === true || summarized.truncated,
+    };
   } catch (error) {
     return unavailableSnapshot(
       error?.code === 'ETIMEDOUT'
@@ -550,6 +758,9 @@ export async function closeRecoveryBrowser(
     now = () => performance.now(),
     closeTrace = null,
     shutdownDiagnostics = null,
+    platform = process.platform,
+    killProcess = process.kill,
+    processInfoTimeoutMs = SYSTEM_INFO_PROCESS_TIMEOUT_MS,
   } = {},
 ) {
   const child = browser.process?.() ?? null;
@@ -572,7 +783,10 @@ export async function closeRecoveryBrowser(
   };
   if (!processExit) child?.once?.('exit', onExit);
   const targetTypeCounts = {};
+  const ownedPidPresence = {};
   let diagnosticProcessTree = null;
+  let browserProcessInfoBeforeClose = null;
+  let preCloseDiagnosticsElapsedMs = null;
   let disconnected = false;
   const diagnosticsEnabled = Boolean(shutdownDiagnostics);
   const unavailable = (reason) => unavailableSnapshot(reason);
@@ -591,6 +805,18 @@ export async function closeRecoveryBrowser(
     closeTrace?.recordDisconnected?.();
     if (diagnosticsEnabled)
       targetTypeCounts.atDisconnect = unavailable('browser-disconnected');
+  };
+
+  const captureOwnedPidPresence = (phase) => {
+    if (!diagnosticsEnabled) return;
+    try {
+      ownedPidPresence[phase] = observeOwnedBrowserPidPresence(child, {
+        platform,
+        killProcess,
+      });
+    } catch {
+      ownedPidPresence[phase] = unavailable('owned-pid-presence-check-failed');
+    }
   };
 
   const settleWithin = async (operation) => {
@@ -620,6 +846,14 @@ export async function closeRecoveryBrowser(
   try {
     browser.on?.('disconnected', onDisconnected);
     captureTargets('beforeClose');
+    if (diagnosticsEnabled) {
+      const diagnosticsStartedAt = now();
+      browserProcessInfoBeforeClose = await captureBrowserProcessInfo(
+        shutdownDiagnostics?.systemInfoSnapshot,
+        processInfoTimeoutMs,
+      );
+      preCloseDiagnosticsElapsedMs = Math.max(0, now() - diagnosticsStartedAt);
+    }
     const closeStartedAt = now();
     closeTrace?.begin?.();
     const closeResult = await settleWithin(() => browser.close());
@@ -647,6 +881,9 @@ export async function closeRecoveryBrowser(
         closeResult.kind === 'timeout' ? 'atTimeout' : 'atCloseFailure',
       );
       if (diagnosticsEnabled) {
+        captureOwnedPidPresence(
+          closeResult.kind === 'timeout' ? 'atTimeout' : 'atCloseFailure',
+        );
         try {
           diagnosticProcessTree =
             typeof shutdownDiagnostics?.processTreeSnapshot === 'function'
@@ -691,6 +928,8 @@ export async function closeRecoveryBrowser(
       }
     }
 
+    if (!closeCompleted) captureOwnedPidPresence('afterForceCheckpoint');
+
     processExit ||= initialExit();
     const protocolCloseTrace = closeTrace?.finish?.(timeoutMs) ?? null;
     return {
@@ -705,6 +944,12 @@ export async function closeRecoveryBrowser(
         timingOrigins: {
           closeElapsedMs: 'browser.close invocation',
           processExitElapsedMs: 'closeRecoveryBrowser entry',
+          ...(diagnosticsEnabled
+            ? {
+                preCloseDiagnosticsElapsedMs:
+                  'bounded shutdown diagnostics before Browser.close invocation',
+              }
+            : {}),
         },
         closeRejectionName,
         processExitedBeforeClose,
@@ -714,6 +959,10 @@ export async function closeRecoveryBrowser(
           ? {
               shutdownDiagnostics: {
                 targetTypeCounts,
+                browserProcessInfoBeforeClose:
+                  browserProcessInfoBeforeClose || unavailable('not-captured'),
+                preCloseDiagnosticsElapsedMs,
+                ownedPidPresence,
                 processTreeBeforeForce: diagnosticProcessTree,
               },
             }
