@@ -19,6 +19,12 @@ rejection. Counts: **1/14 engineering closed (7.1%)**, **13/14 partial**, and
 **0/14 fully qualified**. The remaining rows still require their own audits;
 the amendment alone grants no pass. Historical failures remain failed.
 
+The [S53 collection mutation audit](performance-evidence/s53-collection-audit/README.md)
+confirms scratch-object reuse and fewer attempted setters at identical positions.
+Actual Cesium dirty notifications are unchanged in both static and moving cases;
+this is not measured GPU upload reduction. Aircraft/membership work, allocation
+and upload comparisons, and the blending disposition remain open. S53 stays partial.
+
 [Fresh main reconciliation](performance-evidence/main-reconciliation-20261013/README.md)
 finds both fork and upstream main at `9beadbda`. Local and remote dev still match
 `e8ccc268` (697 ahead of main, fourteen behind). Reviewed QA merge `8b84a2e0`
