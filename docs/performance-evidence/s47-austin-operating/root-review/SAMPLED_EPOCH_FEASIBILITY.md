@@ -738,3 +738,31 @@ The combined report-contract candidate is frozen at
 and [standard CI 38330063486](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38330063486)
 are verified against that exact head and were still running at the dispatch
 checkpoint. This records pending validation, not acceptance.
+
+## Report-contract candidate at 5368d54a
+
+[Hosted run 38330061064](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38330061064)
+remains failed. Its capture child completed all four short Austin samples and
+verified served assets before/after, but the outer cleanup validator expected
+one render-loop retirement and received five: startup plus the four measured
+documents. The unchanged private validator reproduces this exact assertion.
+The [raw capture](hosted-native-38330061064-cli-completed.json),
+[failed smoke](hosted-native-38330061064-smoke-failed.json), and
+[root review](native-38330061064-review.json) preserve that distinction.
+
+Root recomputed the canonical fixture, comparison contract, satellite epochs,
+readiness-history envelope and hosted native renderer classification. These
+checks passed; they do not turn the failed hosted run into acceptance. The
+previous missing-timeout/global-sequence and private-provenance-path failures
+are absent from this report.
+
+[Standard CI 38330063486](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38330063486)
+exposed two CLI lifecycle tests whose provenance test double omitted the newly
+imported public-projection export. Both Node versions report 7,515 passed, two
+failed and three skipped tests. [Failure excerpts](node-failures-38330063486.json)
+are retained; full integration must be rerun after correcting the test double.
+
+A [fresh main reconciliation](main-reconciliation-20261013-0111.json) confirms
+remote fork/main equals upstream/main at 8b8ccc9a and dev has zero missing main
+commits. Local and remote dev remain 726e404b; no rebase, merge or discard is
+needed. None of these diagnostic results changes a slice to fully accepted.
