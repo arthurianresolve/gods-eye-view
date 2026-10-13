@@ -20,6 +20,17 @@ rejected. Hosted integration and fresh native execution of this change remain
 pending. The prior Metal camera-pose failure still needs completed-journey failure
 evidence and bounded missing-asset identities before another native attempt.
 
+The [standard run at `d93f95b6`](performance-evidence/windows-recovery-38395686888/README.md)
+fails its Windows prerequisite test when a mocked PowerShell subprocess exceeds
+five seconds, before browser installation. The same ownership test file passes
+all 41 checks locally; the hosted delay's cause remains unproven. This is separate
+from the older Chrome shutdown failure. Root also [reproduces startup camera
+ownership interference](performance-evidence/s47-map-startup-flight/README.md)
+with actual Cesium camera/tween code: both an active startup flight and a delayed
+startup callback can overwrite the map driver's declared route pose. The source
+is identical in baseline and dev. The past Metal endpoint was not retained, so
+the reproduction establishes a defect without identifying that run's exact cause.
+
 Local and remote `dev` match `e8ccc268` and contain current fork/upstream
 `main` at `8b8ccc9a` (697 commits ahead, zero behind). The active
 `qa/s47-austin-receipt-only` branch also contains main. No reconciliation or
