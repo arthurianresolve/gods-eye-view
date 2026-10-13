@@ -5767,6 +5767,27 @@ try {
     process.exitCode = 1;
 } catch (error) {
   captureFailure = error;
+  if (mapStreamingWorkloadSelected && mapStreamingModule) {
+    try {
+      if (error?.mapStreamingJourneyFailure) {
+        failureProgress.workload.mapStreamingJourneyFailure =
+          mapStreamingModule.projectMapStreamingJourneyFailureEvidence(
+            error.mapStreamingJourneyFailure,
+          );
+        if (failureProgress.workload.mapStreamingCapture?.status === 'running')
+          failureProgress.workload.mapStreamingCapture = {
+            ...failureProgress.workload.mapStreamingCapture,
+            status: 'journey-failed',
+          };
+      }
+    } catch {
+      failureProgress.workload.mapStreamingJourneyFailure = {
+        schema: 'gev-map-streaming-journey-failure/v1',
+        status: 'invalid',
+        reasonCode: 'invalid-envelope',
+      };
+    }
+  }
   await stopProviderSampleCpuProfile('capture-failed');
   await stopSceneFrameAttribution(
     'capture-failed',
