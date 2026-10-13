@@ -656,3 +656,41 @@ The corrected boundary candidate is frozen at
 [native Austin capture](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38328456260)
 and [standard CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38328459005)
 have verified that exact head revision. They are newly dispatched, not passes.
+
+# Four captures complete; aggregate report validation still fails
+
+Native [run 38328456260](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38328456260)
+at `25d5d60ef8fdb937a5585238b1e0ea83116cc324` completes both idle and both
+scripted-motion samples. All before/after installation observations are
+non-loading, error-free, with 357 records. Completed-render boundary waits are
+41.1-52.7 ms. The actual CLI reports four passing integrity samples and verified
+served assets before and after capture, but the outer workflow remains failed.
+
+Root's [independent review](native-38328456260-review.json) rebuilds the pinned
+fixture descriptor from checked-in bytes, recomputes the complete comparison
+contract and satellite sampled epochs, revalidates Apple paravirtual Metal, and
+recomputes all six document releases. Those components pass. The unmodified
+[complete CLI report](hosted-native-38328456260-cli-completed.json) is 3,676,129
+bytes with SHA-256
+`4b4e4e058e8013a0dc0355ab17b4f587594ef5d7623b13df5808c33b6f76c2b2`.
+The [outer failure](hosted-native-38328456260-smoke-failed.json) and
+[terminal workflow metadata](native-38328456260-run.json) remain separate.
+
+Replaying the original exported validator reproduces its failure at the
+required `attachTimeoutMs` field. The capture's history aggregation omits
+both helper timeout fields. It also preserves each document's sample numbers,
+whereas the consumer incorrectly expects one globally increasing sequence.
+The raw history contains provider-sample-3 numbers 5-11 followed by
+provider-sample-4 numbers 1-9. The correction must publish actual configuration
+bounds and validate numbering by document identity while retaining global host
+time ordering and bounded history. It must exercise the real producer and
+aggregation path, without filling missing historical fields or relabeling this run.
+
+A separate source inspection identifies why readiness additionally reports
+receipt-only evidence incomplete after the CLI's earlier strict receipt check:
+`source.buildProvenance` aliases `captureProvenance.source`; deleting private
+receipt paths from the exported object therefore deletes inputs used by the
+later readiness validator. The next packet must separate public projection from
+private validation state, with the strict worker validator unchanged. Neither
+this reporting diagnosis nor the four short samples establishes physical
+hardware coverage, matched performance acceptance, or full S47 completion.
