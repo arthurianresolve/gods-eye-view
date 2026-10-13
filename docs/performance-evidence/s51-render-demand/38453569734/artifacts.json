@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 11841503574,
+      "node_id": "MDg6QXJ0aWZhY3QxMTg0MTUwMzU3NA==",
+      "name": "mixed-use-smoke-38453569734",
+      "size_in_bytes": 10471,
+      "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11841503574",
+      "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11841503574/zip",
+      "expired": false,
+      "digest": "sha256:ee391a51d275470c67c0b30acdde8b3b7dfba768167952e78d5a503f0ee86c9c",
+      "created_at": "2026-10-13T19:21:00Z",
+      "updated_at": "2026-10-13T19:21:00Z",
+      "expires_at": "2026-10-16T19:21:00Z",
+      "workflow_run": {
+        "id": 38453569734,
+        "repository_id": 1362432886,
+        "head_repository_id": 1362432886,
+        "head_branch": "qa/s51-render-demand-v2-20261013",
+        "head_sha": "c4a4e97cbc354c0b6911c0e971b30c09c6ca07fd"
+      }
+    }
+  ]
+}

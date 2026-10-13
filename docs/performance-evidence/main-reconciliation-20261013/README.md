@@ -11,7 +11,9 @@ passes all seven standard jobs and downloaded-release verification against both
 bases at `8c0b6f64`. Both tested merge trees equal that source. Published-token
 checks and all 30 recovery records pass. Direct REST artifact retrieval now
 passes with exact source/merge binding; the earlier discovery failure remains
-historical. Later S49 rollback changes need their own browser validation.
+historical. Later S49 rollback changes pass the scoped mixed-use and durable workspace
+browser journeys at `7d4a52a8` and `c4a4e97c`; their subsequent S51 diagnostic
+failures remain recorded separately. Final candidate qualification is pending.
 PR #4 remains validation-only; no stable release has been published.
 
 ## Earlier checkpoints
