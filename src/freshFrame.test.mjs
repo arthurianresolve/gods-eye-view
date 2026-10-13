@@ -140,21 +140,20 @@ test('viewer destruction settles concurrent copies and pixel-free waits together
   assert.equal(await captureFreshCesiumFrame(env.viewer), null);
 });
 
-test('missing or zero-sized source canvases cancel the completed-frame copy cleanly', async (t) => {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
-  for (const source of [
-    null,
-    { width: 0, height: 4 },
-    { width: 6, height: 0 },
-  ]) {
-    const env = fixture(t, { source, enableMockTimers: false });
+for (const [label, source] of [
+  ['missing', null],
+  ['zero width', { width: 0, height: 4 }],
+  ['zero height', { width: 6, height: 0 }],
+]) {
+  test(`${label} source canvas cancels the completed-frame copy cleanly`, async (t) => {
+    const env = fixture(t, { source });
     const capture = captureFreshCesiumFrame(env.viewer);
     env.fire();
     assert.equal(await capture, null);
     env.assertClean();
     assert.equal(env.copies.length, 0);
-  }
-});
+  });
+}
 
 test('a null copy context returns no pixels and releases the temporary surface', async (t) => {
   const env = fixture(t, { copyContext: false });

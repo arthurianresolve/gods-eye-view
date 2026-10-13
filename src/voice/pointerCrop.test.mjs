@@ -13,7 +13,9 @@ function installCaptureSurface(
   {
     source = { width: 1200, height: 900, clientWidth: 600, clientHeight: 450 },
     nullContextAt = null,
+    sampleContext = true,
     samplePixels = [32, 64, 96, 255],
+    sampleReadError = false,
     encoded = 'data:image/jpeg;base64,AA==',
     encodeError = false,
     drawErrorAt = null,
@@ -41,6 +43,7 @@ function installCaptureSurface(
       draws: [],
       getContext(_kind, options) {
         const isSample = options?.willReadFrequently === true;
+        if (isSample && !sampleContext) return null;
         if (!isSample && canvasIndex === nullContextAt) return null;
         const context = {
           canvas,
@@ -50,6 +53,7 @@ function installCaptureSurface(
             canvas.draws.push(args);
           },
           getImageData() {
+            if (sampleReadError) throw new Error('sample read failed');
             const pixels = new Uint8ClampedArray(
               canvas.width * canvas.height * 4,
             );
@@ -101,6 +105,15 @@ function installCaptureSurface(
   return { viewer, doc, canvases, listeners, source };
 }
 
+function assertCaptureCanvasesReleased(env) {
+  for (const [index, canvas] of env.canvases.entries())
+    assert.equal(
+      canvas.width * canvas.height,
+      0,
+      `temporary canvas ${index + 1} was released`,
+    );
+}
+
 const actualCaptureCallers = [
   ['viewport', captureViewportImage],
   ['pointer', () => capturePointerCrop({ x: 150, y: 100 })],
@@ -121,8 +134,7 @@ for (const [name, capture] of actualCaptureCallers) {
       3,
       'fresh copy, encoded output and black-frame probe',
     );
-    assert.equal(env.canvases[0].width * env.canvases[0].height, 0);
-    assert.equal(env.canvases[1].width * env.canvases[1].height, 0);
+    assertCaptureCanvasesReleased(env);
   });
 
   for (const [mode, options] of [
@@ -139,9 +151,31 @@ for (const [name, capture] of actualCaptureCallers) {
       const env = installCaptureSurface(t, options);
       assert.equal(await capture(), null);
       assert.equal(env.listeners.size, 0);
-      assert.equal(env.canvases[0].width * env.canvases[0].height, 0);
-      if (env.canvases[1])
-        assert.equal(env.canvases[1].width * env.canvases[1].height, 0);
+      assertCaptureCanvasesReleased(env);
+    });
+  }
+
+  test(`${name} capture preserves the existing non-black result when sample context is unavailable and releases it`, async (t) => {
+    const env = installCaptureSurface(t, { sampleContext: false });
+    const result = await capture();
+    assert.ok(
+      name === 'viewport'
+        ? typeof result === 'string'
+        : typeof result?.dataUrl === 'string',
+    );
+    assert.equal(env.canvases.length, 3);
+    assertCaptureCanvasesReleased(env);
+  });
+
+  for (const [mode, options] of [
+    ['sample draw exception', { drawErrorAt: 3 }],
+    ['sample readback exception', { sampleReadError: true }],
+  ]) {
+    test(`${name} capture rejects ${mode} and releases the sample canvas`, async (t) => {
+      const env = installCaptureSurface(t, options);
+      assert.equal(await capture(), null);
+      assert.equal(env.canvases.length, 3);
+      assertCaptureCanvasesReleased(env);
     });
   }
 }
