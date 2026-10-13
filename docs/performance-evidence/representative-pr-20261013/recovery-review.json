@@ -1,0 +1,47 @@
+[
+  {
+    "job": 115451274560,
+    "candidateCommit": "9f71970d042bce935986a97366ca49677f423530",
+    "platform": "linux",
+    "status": "passed",
+    "checks": 5,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "hardwareRenderingValidated": false
+  },
+  {
+    "job": 115451274700,
+    "candidateCommit": "9f71970d042bce935986a97366ca49677f423530",
+    "platform": "darwin",
+    "status": "passed",
+    "checks": 5,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "hardwareRenderingValidated": false
+  },
+  {
+    "job": 115451305333,
+    "candidateCommit": "59e2267beabd3120b6360303d5eb9792646b8be4",
+    "platform": "linux",
+    "status": "passed",
+    "checks": 5,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "hardwareRenderingValidated": false
+  },
+  {
+    "job": 115451305399,
+    "candidateCommit": "59e2267beabd3120b6360303d5eb9792646b8be4",
+    "platform": "darwin",
+    "status": "passed",
+    "checks": 5,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "hardwareRenderingValidated": false
+  },
+  {
+    "job": 115451305323,
+    "candidateCommit": "59e2267beabd3120b6360303d5eb9792646b8be4",
+    "platform": "win32",
+    "status": "passed",
+    "checks": 5,
+    "browserVersion": "Chrome/152.0.7977.75",
+    "hardwareRenderingValidated": false
+  }
+]

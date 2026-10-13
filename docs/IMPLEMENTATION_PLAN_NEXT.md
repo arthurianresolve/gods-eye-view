@@ -1,5 +1,15 @@
 # Next-stage implementation plan for `dev`: S32-S46
 
+13 October representative PR refresh: [the retained matrix](performance-evidence/representative-pr-20261013/README.md)
+tests QA head `44c6532d` on both dev and main, with exact synthetic merge revisions.
+Both bases pass published layer-token checks. Main-targeted CI and downloaded
+release/attestation verification pass; dev-targeted CI fails a pre-browser
+Windows readiness prerequisite and its release job fails artifact discovery
+following successful upload. Reviewed artifact-ID handoff changes pass nine
+local release tests and require fresh workflow validation. These scoped checks
+supply current S32/S34/S45 evidence; they do not grant final candidate acceptance
+or stable publication. Historical checkpoints below retain their original scope.
+
 13 October QA audit: the unit runner previously discovered `src` tests and
 explicitly listed only the archive server test. It omitted the CCTV-health and
 transit-history server suites. Correction `13d4a0ee`, integrated at `a2d35817`,
@@ -59,7 +69,7 @@ a new provider dependency.
 
 | Slice | Code status | Automated status | External status |
 | --- | --- | --- | --- |
-| S32 integration baseline | implemented; ledger reconciled | representative PRs to dev/main passed for `91a6076`, including layer-token checks; all CI gates pass at `3cdd5cb` | refresh PR matrix for final candidate |
+| S32 integration baseline | implemented; ledger reconciled | current head `44c6532d`: both PR bases pass layer-token checks; main-targeted matrix passes, dev-targeted Windows prerequisite fails; see current representative packet | refresh for final frozen candidate |
 | S33 candidate evidence | implemented | focused tests passed | pending |
 | S34 install/update recovery | implemented, Windows path/renderer failures corrected | `167ba62`: Windows, macOS and Linux real profile recovery and Windows onboarding pass; historical intermittent shutdown cause remains unproven | rerun for final candidate |
 | S35 accessibility/first use | implemented | automated keyboard, focus, AX-name, status, and 200%-equivalent reflow report | NVDA, VoiceOver, contrast/zoom and five users pending |
@@ -72,7 +82,7 @@ a new provider dependency.
 | S42 camera selection | selection and exact-byte matcher implemented; production artwork recognition pending | selection and provider fingerprint fixture tests | [current examples reviewed](performance-evidence/cctv-placeholder-review-20261013/README.md); timestamped artwork needs a validated matching contract |
 | S43 camera evidence | implemented | focused tests passed | pending |
 | S44 soak/performance | corrected fixture worker interception and status observer | `3cdd5cb`: full 60-minute soak passes, 169 cycles, 632 listeners and zero pending workers at all checkpoints; retention-window heap growth 2.03% | matched Windows/macOS real-GPU evidence pending |
-| S45 release provenance | gates implemented | artifact/attestation verification passed for `91a6076`; later `9df13c5` archive locally checksum-verified; neither validates current candidate | final-candidate attestation/download checks and post-publication verification pending |
+| S45 release provenance | gates implemented; artifact-ID handoff reviewed | main-targeted `59e2267b` archive/checksum/attestation verification passes; dev-targeted `9f71970d` upload succeeds but name discovery fails; handoff correction passes nine focused tests, fresh workflow pending | final-candidate and post-publication verification pending |
 | S46 final candidate | pending | historical candidate report exists for `91a6076`; no completed final-candidate report for current dev | pending manual/hardware acceptance; stable publication not established |
 
 ## Decisions and compatibility

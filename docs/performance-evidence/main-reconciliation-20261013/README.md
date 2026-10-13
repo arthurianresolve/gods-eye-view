@@ -1,5 +1,23 @@
 # Current main reconciliation
 
+The latest 13 October fetch confirms fork/main and upstream/main at
+`9beadbda6333b83f79aa03047e2d851830f01f6b`; remote dev is still
+`e8ccc268608fbece8b6d87a0b6db86e1800ddf90`, fourteen commits behind main.
+QA already contains both through reviewed merge `8b84a2e0`. No additional merge,
+rebase or history discard is needed. Dev promotion and VM105 remain unchanged.
+
+The [new representative PR evidence](../representative-pr-20261013/README.md)
+tests frozen head `44c6532d` against both bases. Both synthetic merge trees are
+identical to that head and pass published layer-token checks. PR #4 to main
+passes all seven standard jobs and downloaded-artifact/attestation verification.
+PR #3 to dev passes six standard jobs but fails the pre-browser PowerShell
+readiness check; its release job also fails artifact discovery after upload.
+Both failures are retained. The reviewed artifact-ID handoff correction passes
+nine local release tests and needs fresh workflow validation. No stable release
+has been published; PR #4 is validation-only.
+
+## Earlier checkpoints
+
 The 13 October 19:31 CEST fetch again confirms both main refs at `9beadbda`
 and remote dev at `e8ccc268`. Reviewed QA `e0710bd5` contains both (853 commits
 ahead of main, zero behind). Remote dev remains fourteen commits behind main;
