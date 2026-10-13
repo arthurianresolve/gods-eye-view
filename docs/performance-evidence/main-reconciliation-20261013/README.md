@@ -9,8 +9,11 @@ pass. There is no additional main change to merge or rebase. Promotion to dev
 still awaits current validation: the [later standard run](../integration-dddef9eb/README.md)
 has another Windows prerequisite readiness failure. The independently corrected
 [map terrain-stage validator](../s47-map-streaming/native-fault-38432631061/README.md)
-is now on QA `e701e0ff`; a fresh native run is in progress. No dev history has
-been discarded or rewritten, and VM105 has not changed.
+is on QA `e701e0ff`; its next run passes the missing-metadata case and exposes a
+[separate stale preparation frame](../s47-map-streaming/native-fault-38434748788/README.md).
+The reviewed freshness correction at `fe28df76` passes 100 affected root checks
+and is under fresh rendered validation. No dev history has been discarded or
+rewritten, and VM105 has not changed.
 
 [Fresh standard integration at `c7c47245`](../integration-c7c47245/README.md)
 now passes all seven selected jobs, including Windows recovery. This validates

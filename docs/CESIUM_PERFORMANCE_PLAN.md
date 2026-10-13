@@ -14,8 +14,11 @@ The [native missing-metadata control](performance-evidence/s47-map-streaming/nat
 now reaches automatic OSM fallback and explicit Esri retry. Its validator had
 incorrectly required tiled terrain before the hidden globe first loads it.
 Stage-specific correction `e701e0ff` passes 98 root checks, original-report replay
-and three wrong-provider controls; fresh all-scenario native validation is in
-progress. These are harness corrections, not new hardware qualification.
+and three wrong-provider controls. Its [fresh native run](performance-evidence/s47-map-streaming/native-fault-38434748788/README.md)
+passes complete missing-metadata validation, then correctly rejects a stale
+startup-camera frame in the corrupt-metadata control. The reviewed post-positioning
+frame boundary at `fe28df76` passes 100 affected root checks and is under fresh
+rendered validation. These are harness corrections, not new hardware qualification.
 
 The [13 October acceptance amendment](CESIUM_ACCEPTANCE.md) is authoritative for
 remaining S47-S60 work. It separates engineering closure, automatic validation,
