@@ -853,3 +853,12 @@ and [standard CI 38334290706](https://github.com/arthurianresolve/gods-eye-view/
 were dispatched and their exact head SHAs verified in the
 [run receipt](projection-candidate-e8ccc268-runs.json). Both remain pending at
 this checkpoint. This does not revise the previous failed capture result.
+
+[Native run 38334288585](native-38334288585-review.json) now passes at exact
+candidate e8ccc268, including both immutable builds, all four Austin samples
+and final outer validation. Root independently recomputed the fixture, full
+validator, satellite epochs and pinned worker contract. The parent preserves
+the exact child report. Raw artifacts are retained byte-for-byte in compressed
+form with both raw and compressed hashes. Standard CI is still running at this
+checkpoint; hosted paravirtual Metal diagnostic success is not physical GPU or
+matched performance acceptance.

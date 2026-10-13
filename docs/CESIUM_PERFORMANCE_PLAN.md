@@ -1,5 +1,35 @@
 # Cesium performance plan
 
+## Current execution checkpoint - 13 October 2026
+
+S47-S60 remain partial: subcomponent implementation and diagnostic passes are
+recorded separately from full workload and physical hardware acceptance. The
+existing slice ledger below remains the requirement inventory; historical
+reports retain their original failures. No performance target is claimed.
+
+Local and remote dev are synchronized at 726e404b and already contain current
+fork/upstream main at 8b8ccc9a. No new rebase, merge or diff discard is needed.
+The Austin QA candidate e8ccc268 has passed its complete hosted build/capture
+smoke, including four short samples and final outer validation. Root
+[recomputed the report and retained hash-bound artifacts](performance-evidence/s47-austin-operating/root-review/native-38334288585-review.json).
+All 84 focused checks pass; exact-candidate standard CI is still running.
+Promotion to dev waits for all seven standard jobs. The previous failed
+reports remain failed.
+
+The next independent delivery is the [production map-streaming workload](performance-evidence/s47-map-streaming/IMPLEMENTATION.md):
+M1 deterministic fixture corpus, M2 receipt-bound fixture build configuration,
+M3 actual application capture/validation, then M4 matched baseline/candidate
+runs. M1 is in progress; the later packets are not implemented. Preserve
+current resolution, effects, feature populations and detail settings.
+
+After workload coverage, complete the remaining measured S48-S59 work and the
+S60 candidate comparisons and retention soak. Primary Windows UHD 620
+foreground hardware validation remains required. Hosted paravirtual/software
+results, Linux VM checks and unavailable additional physical GPUs remain
+separate evidence categories. Do not turn a missing check into a pass.
+
+## Earlier integration evidence
+
 Integrated S48 shader-program diagnostic: the opt-in owned-context observer
 is implemented with bounded program/query rows, exact cleanup ownership and
 CLI/workflow/report validation. Root passes 151 focused checks with unchanged
@@ -98,7 +128,7 @@ cleanup releases shared camera ownership before viewer destruction. All seven st
 `68aff52b`; whole-application retention and S49/S55/S60 remain
 partial. See [exact evidence](performance-evidence/s49-camera-verbs-ownership/README.md).
 
-## Current status - 12 October 2026
+## Historical checkpoint - 12 October 2026
 
 Latest S48 follow-up at `5441b038` fixes the demonstrated cleanup scope error
 and passes 175 focused tests. Its [hosted failure artifact is preserved and independently hash-verified](performance-evidence/s48-capture-ownership-38257168750/README.md),
