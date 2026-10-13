@@ -3,6 +3,7 @@ import globals from 'globals';
 export const CAPTURE_NO_UNDEF_FILES = Object.freeze([
   'scripts/capture-scene-performance.mjs',
   'scripts/qa-performance-build-smoke.mjs',
+  'scripts/qa-performance-build-smoke.test.mjs',
   'scripts/performance/austinOperatingComparisonContract.test.mjs',
   'scripts/performance/austinOperatingDocumentEvidence.mjs',
   'scripts/performance/austinOperatingDocumentEvidence.test.mjs',

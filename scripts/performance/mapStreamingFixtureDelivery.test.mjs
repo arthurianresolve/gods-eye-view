@@ -143,8 +143,44 @@ test('smoke summary accepts observed cancellations but rejects unbalanced counts
   const delivery = createMapStreamingFixtureDelivery(pinned, {
     appOrigin: APP_ORIGIN,
   });
-  const [cancelledAsset, ...fulfilledAssets] = pinned.manifest.assets;
-  for (const row of fulfilledAssets) {
+  for (const row of pinned.manifest.assets) {
+    const result = await issueRequest(delivery, nativeUrl(row));
+    assert.equal(result.acknowledged, true);
+  }
+  const cancelledAsset = pinned.manifest.assets[0];
+  const cancelledUrl = nativeUrl(cancelledAsset);
+  const abort = new AbortController();
+  await delivery.respond(new URL(cancelledUrl), {
+    url: () => cancelledUrl,
+    method: () => 'GET',
+    signal: abort.signal,
+  });
+  abort.abort();
+  const summary = delivery.dispose();
+  assert.equal(summary.requestedCount, pinned.manifest.assets.length + 1);
+  assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length);
+  assert.equal(summary.cancelledCount, 1);
+  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
+
+  const unbalanced = structuredClone(summary);
+  unbalanced.cancelledCount -= 1;
+  assert.throws(
+    () => validateMapStreamingSmokeDeliverySummary(unbalanced, pinned),
+    /strictly equal/,
+  );
+});
+
+test('cancelled-only required map kinds do not count as delivered', async () => {
+  const pinned = await fixture();
+  const cancelledAsset = pinned.manifest.assets.find(
+    (row) => row.kind === 'arcgis-missing-tile-probe-png',
+  );
+  assert.ok(cancelledAsset);
+  const delivery = createMapStreamingFixtureDelivery(pinned, {
+    appOrigin: APP_ORIGIN,
+  });
+  for (const row of pinned.manifest.assets) {
+    if (row === cancelledAsset) continue;
     const result = await issueRequest(delivery, nativeUrl(row));
     assert.equal(result.acknowledged, true);
   }
@@ -157,16 +193,9 @@ test('smoke summary accepts observed cancellations but rejects unbalanced counts
   });
   abort.abort();
   const summary = delivery.dispose();
-  assert.equal(summary.requestedCount, pinned.manifest.assets.length);
-  assert.equal(summary.fulfilledAckCount, pinned.manifest.assets.length - 1);
-  assert.equal(summary.cancelledCount, 1);
-  assert.equal(validateMapStreamingSmokeDeliverySummary(summary, pinned), true);
-
-  const unbalanced = structuredClone(summary);
-  unbalanced.cancelledCount -= 1;
   assert.throws(
-    () => validateMapStreamingSmokeDeliverySummary(unbalanced, pinned),
-    /strictly equal/,
+    () => validateMapStreamingSmokeDeliverySummary(summary, pinned),
+    /acknowledged required map asset kind arcgis-missing-tile-probe-png/,
   );
 });
 

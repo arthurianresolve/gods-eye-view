@@ -785,7 +785,7 @@ export function validateMapStreamingSmokeDeliverySummary(summary, fixture) {
     assert.equal(row.fulfilledAckCount + row.cancelledCount, row.requests);
     acknowledgedCount += row.fulfilledAckCount;
     cancelledCount += row.cancelledCount;
-    observedKinds.add(expected.kind);
+    if (row.fulfilledAckCount > 0) observedKinds.add(expected.kind);
   }
   assert.equal(acknowledgedCount, summary.fulfilledAckCount);
   assert.equal(cancelledCount, summary.cancelledCount);

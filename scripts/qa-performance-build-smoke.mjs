@@ -323,6 +323,56 @@ export async function closeMapSmokeFixtureOwner({
   };
 }
 
+/** Shared map-document finalization used by baseline and candidate runs. */
+export async function finalizeMapSmokeFixtureDocument({
+  context,
+  page,
+  fixturePage,
+  delivery,
+  fixture,
+  captureModule,
+  documentRole,
+  documentId,
+}) {
+  const interceptionRelease = await closeMapSmokeFixtureOwner({
+    context,
+    page,
+    fixturePage,
+    documentRole,
+    documentId,
+  });
+  const errors = [];
+  try {
+    validateMapSmokeInterceptionRelease(interceptionRelease, {
+      documentRole,
+      documentId,
+    });
+  } catch (error) {
+    errors.push(sanitizeError(error));
+  }
+
+  let deliveryEvidence = null;
+  if (delivery) {
+    try {
+      deliveryEvidence = delivery.dispose();
+      if (deliveryEvidence.cleanupConfirmed !== true)
+        errors.push('Map fixture delivery cleanup was not confirmed.');
+      captureModule.validateMapStreamingSmokeDeliverySummary(
+        deliveryEvidence,
+        fixture,
+      );
+    } catch (error) {
+      errors.push(sanitizeError(error));
+    }
+  }
+  return {
+    interceptionRelease,
+    deliveryEvidence,
+    errors,
+    confirmed: errors.length === 0,
+  };
+}
+
 const SHA1 = /^[a-f0-9]{40}$/;
 const MIME_TYPES = {
   '.css': 'text/css; charset=utf-8',
@@ -4189,6 +4239,7 @@ async function runRevision({
   let mapStreamingSmokeEvidence = null;
   let mapStreamingNativeJourney = null;
   let mapStreamingInterceptionRelease = null;
+  let mapStreamingRendering = null;
   let mapLayerPopulationBefore = null;
   try {
     const captureUrl = served.baseUrl;
@@ -4462,6 +4513,11 @@ async function runRevision({
           await page.evaluate(observeSmokeLayerPopulationInPage),
         );
       after = await page.evaluate(observeCommonScene, { appCommit: commit });
+      mapStreamingRendering = {
+        observedRenderer: after.environment.renderer,
+        observedVendor: after.environment.vendor,
+        nativeRendererDiagnostic: nativeRendererEvidence,
+      };
       route = mapStreamingNativeJourney.journey.route;
       fixtureClockEnd = await page.evaluate(() => ({
         clock: window.__gevHeldMonotonicWallClockV1?.snapshot?.() ?? null,
@@ -4672,26 +4728,33 @@ async function runRevision({
       if (
         smokeProviderPreparationMode(providerFixture) === 'native-map-streaming'
       ) {
-        mapStreamingInterceptionRelease = await closeMapSmokeFixtureOwner({
+        const finalized = await finalizeMapSmokeFixtureDocument({
           context,
           page,
           fixturePage,
+          delivery: mapStreamingSmokeDelivery,
+          fixture: mapStreamingCaptureFixture,
+          captureModule: mapStreamingCaptureModule,
           documentRole: 'smoke-variant',
           documentId: `${label}-${commit}`,
         });
+        mapStreamingInterceptionRelease = finalized.interceptionRelease;
+        mapStreamingSmokeEvidence = finalized.deliveryEvidence;
+        mapStreamingSmokeDelivery = null;
         if (mapStreamingInterceptionRelease.targetClosed) {
           context = null;
           page = null;
           fixturePage = null;
         }
-        if (mapStreamingInterceptionRelease.confirmed !== true)
+        if (mapStreamingNativeJourney) {
+          mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
+          mapStreamingNativeJourney.interceptionRelease =
+            mapStreamingInterceptionRelease;
+        }
+        if (finalized.confirmed !== true)
           throw new Error(
-            'Map smoke target/interception retirement was not confirmed before fixture disposal.',
+            `Map smoke target, interception, or delivery finalization failed: ${finalized.errors.join('; ')}`,
           );
-        validateMapSmokeInterceptionRelease(mapStreamingInterceptionRelease, {
-          documentRole: 'smoke-variant',
-          documentId: `${label}-${commit}`,
-        });
       } else {
         await withTimeout(
           context.close(),
@@ -4702,31 +4765,11 @@ async function runRevision({
         page = null;
         fixturePage = null;
       }
-      if (mapStreamingSmokeDelivery) {
-        mapStreamingSmokeEvidence = mapStreamingSmokeDelivery.dispose();
-        mapStreamingSmokeDelivery = null;
-        if (mapStreamingSmokeEvidence.cleanupConfirmed !== true)
-          throw new Error(
-            'Map fixture setup interception cleanup was not confirmed.',
-          );
-        mapStreamingCaptureModule.validateMapStreamingSmokeDeliverySummary(
-          mapStreamingSmokeEvidence,
-          mapStreamingCaptureFixture,
-        );
-        if (mapStreamingNativeJourney) {
-          mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
-          mapStreamingNativeJourney.interceptionRelease =
-            mapStreamingInterceptionRelease;
-          mapStreamingNativeJourney.rendering = {
-            observedRenderer: after.environment.renderer,
-            observedVendor: after.environment.vendor,
-            nativeRendererDiagnostic: nativeRendererEvidence,
-          };
-          mapStreamingNativeJourney.renderLoopRetirement =
-            terminalRenderLoopRetirement;
-          mapStreamingNativeJourney.terminalObservation =
-            terminalMapObservation;
-        }
+      if (mapStreamingNativeJourney) {
+        mapStreamingNativeJourney.rendering = mapStreamingRendering;
+        mapStreamingNativeJourney.renderLoopRetirement =
+          terminalRenderLoopRetirement;
+        mapStreamingNativeJourney.terminalObservation = terminalMapObservation;
       }
       phase = 'candidate-capture-cli-integration';
       captureCliDiagnostic = await runCandidateCaptureCli({
@@ -4756,29 +4799,6 @@ async function runRevision({
         startedAt,
         budgetMs,
       });
-    }
-    if (mapStreamingSmokeDelivery) {
-      mapStreamingSmokeEvidence = mapStreamingSmokeDelivery.dispose();
-      mapStreamingSmokeDelivery = null;
-      if (mapStreamingSmokeEvidence.cleanupConfirmed !== true)
-        throw new Error(
-          'Map fixture setup interception cleanup was not confirmed.',
-        );
-      mapStreamingCaptureModule.validateMapStreamingSmokeDeliverySummary(
-        mapStreamingSmokeEvidence,
-        mapStreamingCaptureFixture,
-      );
-      if (mapStreamingNativeJourney) {
-        mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
-        mapStreamingNativeJourney.rendering = {
-          observedRenderer: after.environment.renderer,
-          observedVendor: after.environment.vendor,
-          nativeRendererDiagnostic: nativeRendererEvidence,
-        };
-        mapStreamingNativeJourney.renderLoopRetirement =
-          terminalRenderLoopRetirement;
-        mapStreamingNativeJourney.terminalObservation = terminalMapObservation;
-      }
     }
     result = {
       revision: commit,
@@ -4931,41 +4951,45 @@ async function runRevision({
         cleanupErrors.push(sanitizeError(error));
       }
     }
-    if (context) {
-      if (
-        smokeProviderPreparationMode(providerFixture) ===
-          'native-map-streaming' &&
-        fixturePage?.interception
-      ) {
-        mapStreamingInterceptionRelease = await closeMapSmokeFixtureOwner({
-          context,
-          page,
-          fixturePage,
-          documentRole: 'smoke-variant',
-          documentId: `${label}-${commit}`,
-        });
-        if (mapStreamingInterceptionRelease.targetClosed) {
-          context = null;
-          page = null;
-          fixturePage = null;
-        }
-        try {
-          validateMapSmokeInterceptionRelease(mapStreamingInterceptionRelease, {
-            documentRole: 'smoke-variant',
-            documentId: `${label}-${commit}`,
-          });
-        } catch (error) {
-          cleanupErrors.push(sanitizeError(error));
-        }
-        if (mapStreamingNativeJourney)
-          mapStreamingNativeJourney.interceptionRelease =
-            mapStreamingInterceptionRelease;
-      } else {
-        try {
-          await withTimeout(context.close(), 5000, 'Browser context cleanup');
-        } catch (error) {
-          cleanupErrors.push(sanitizeError(error));
-        }
+    if (
+      context &&
+      smokeProviderPreparationMode(providerFixture) ===
+        'native-map-streaming' &&
+      !mapStreamingInterceptionRelease
+    ) {
+      const finalized = await finalizeMapSmokeFixtureDocument({
+        context,
+        page,
+        fixturePage,
+        delivery: mapStreamingSmokeDelivery,
+        fixture: mapStreamingCaptureFixture,
+        captureModule: mapStreamingCaptureModule,
+        documentRole: 'smoke-variant',
+        documentId: `${label}-${commit}`,
+      });
+      mapStreamingInterceptionRelease = finalized.interceptionRelease;
+      mapStreamingSmokeEvidence = finalized.deliveryEvidence;
+      mapStreamingSmokeDelivery = null;
+      if (mapStreamingInterceptionRelease.targetClosed) {
+        context = null;
+        page = null;
+        fixturePage = null;
+      }
+      if (!finalized.confirmed) cleanupErrors.push(...finalized.errors);
+      if (mapStreamingNativeJourney) {
+        mapStreamingNativeJourney.delivery = mapStreamingSmokeEvidence;
+        mapStreamingNativeJourney.interceptionRelease =
+          mapStreamingInterceptionRelease;
+        mapStreamingNativeJourney.rendering = mapStreamingRendering;
+        mapStreamingNativeJourney.renderLoopRetirement =
+          terminalRenderLoopRetirement;
+        mapStreamingNativeJourney.terminalObservation = terminalMapObservation;
+      }
+    } else if (context) {
+      try {
+        await withTimeout(context.close(), 5000, 'Browser context cleanup');
+      } catch (error) {
+        cleanupErrors.push(sanitizeError(error));
       }
     }
     if (mapStreamingSmokeDelivery) {
@@ -5001,6 +5025,19 @@ async function runRevision({
     failure.smokeDiagnostics.rendererProbeCleanup = rendererProbeCleanup;
     failure.smokeDiagnostics.rendererProbeCleanupOmittedCount =
       rendererProbeCleanupOmittedCount;
+  }
+  if (result && mapStreamingSmokeEvidence) {
+    result.mapStreamingFixtureSetup = {
+      fixtureId: mapStreamingCaptureFixture?.id || null,
+      manifestSha256: mapStreamingCaptureFixture?.manifestSha256 || null,
+      delivery: mapStreamingSmokeEvidence,
+      comparisonEligible: false,
+    };
+  }
+  if (failure && mapStreamingInterceptionRelease) {
+    failure.smokeDiagnostics ||= {};
+    failure.smokeDiagnostics.mapStreamingInterceptionRelease =
+      mapStreamingInterceptionRelease;
   }
   if (failure) throw failure;
   return result;
@@ -5270,11 +5307,6 @@ async function main() {
       } catch (error) {
         cleanupErrors.push(sanitizeError(error));
       }
-    }
-    if (failure && mapStreamingInterceptionRelease) {
-      failure.smokeDiagnostics ||= {};
-      failure.smokeDiagnostics.mapStreamingInterceptionRelease =
-        mapStreamingInterceptionRelease;
     }
     if (temporary) {
       try {
