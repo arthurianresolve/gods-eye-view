@@ -70,6 +70,7 @@ on:
             infrastructure,
             austin-weather-effects-v1,
             austin-operating-v1,
+            austin-map-streaming-v1,
           ]
         default: dense-investigation
       capture_renderer_backend:

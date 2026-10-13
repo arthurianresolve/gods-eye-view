@@ -704,6 +704,41 @@ export function createMapStreamingCaptureReport({
   return report;
 }
 
+/** Build the final, post-cleanup map evidence consumed by both CLI and smoke reports. */
+export function createFinalizedMapStreamingCaptureEvidence({
+  fixture,
+  journey,
+  profile,
+  documentDeliveries,
+}) {
+  const fixtureDelivery = aggregateMapStreamingDocumentDeliveries(
+    fixture,
+    documentDeliveries,
+  );
+  const mapStreamingCapture = createMapStreamingCaptureReport({
+    fixture,
+    fixtureDelivery,
+    journey,
+    profile,
+    documentDeliveries,
+  });
+  return {
+    fixtureDelivery,
+    mapStreamingCapture,
+    mapStreamingFixtureDocuments: documentDeliveries,
+    performanceAcceptanceEligible: false,
+  };
+}
+
+export function mapStreamingCaptureWorkloadFields(evidence) {
+  assert.ok(evidence && typeof evidence === 'object');
+  return {
+    mapStreamingCapture: evidence.mapStreamingCapture,
+    mapStreamingFixtureDocuments: evidence.mapStreamingFixtureDocuments,
+    performanceAcceptanceEligible: false,
+  };
+}
+
 /** Aggregate only acknowledged native requests after every owner is retired. */
 export function aggregateMapStreamingDocumentDeliveries(
   fixture,
