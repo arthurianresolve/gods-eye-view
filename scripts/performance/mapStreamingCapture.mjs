@@ -3242,6 +3242,7 @@ export async function runNativeMapStreamingFaultControlInPage({
       listener: null,
       preparationTimer: null,
       preparationResolve: null,
+      poseEstablishedAtRenderSequence: null,
       disposed: false,
     };
     record.listener = () => {
@@ -3279,11 +3280,17 @@ export async function runNativeMapStreamingFaultControlInPage({
         roll: 0,
       },
     });
+    // Any postRender captured while the startup flight was being retired
+    // describes the old pose. Require a new completed frame after setView.
+    record.poseEstablishedAtRenderSequence = record.renderCount;
+    record.latest = null;
     scene.requestRender?.();
     record.preparation = {
       startupFlightDelayMs: route.startupFlightDelayMs,
       elapsedMs: Math.max(0, performance.now() - preparationStartedAt),
       startupFlightCancelled: typeof camera.cancelFlight === 'function',
+      poseEstablishedAtRenderSequence:
+        record.poseEstablishedAtRenderSequence,
     };
     return {
       operationId,
@@ -3524,7 +3531,9 @@ export async function runNativeMapStreamingFaultControl(
         Number.isSafeInteger(value.latest.photorealReadyContentTiles) &&
         value.latest.photorealReadyContentTiles > 0 &&
         Number.isSafeInteger(value.latest.photorealSelectedTiles) &&
-        value.latest.photorealSelectedTiles > 0,
+        value.latest.photorealSelectedTiles > 0 &&
+        value.latest.postRenderSequence >
+          prepared.preparation.poseEstablishedAtRenderSequence,
       'initial-photoreal-readiness',
     );
     report.initial = initialObservation.latest;
@@ -3702,6 +3711,16 @@ export function validateMapStreamingFaultControlReport(report, fixture) {
     MAP_STREAMING_ROUTE.startupFlightDelayMs,
   );
   assert.equal(report.preparation?.startupFlightCancelled, true);
+  assert.ok(
+    Number.isSafeInteger(report.preparation?.poseEstablishedAtRenderSequence) &&
+      report.preparation.poseEstablishedAtRenderSequence >= 0,
+    'Map fault preparation records the postRender boundary for its fixed pose.',
+  );
+  assert.ok(
+    report.initial?.postRenderSequence >
+      report.preparation.poseEstablishedAtRenderSequence,
+    'Initial readiness uses a completed render after the fixed pose was established.',
+  );
   const validObservation = (
     row,
     expectedStack,

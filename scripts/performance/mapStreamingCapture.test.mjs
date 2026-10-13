@@ -529,7 +529,10 @@ function createFakePage({
   };
 }
 
-function createMapFaultControlHarness({ scenarioId }) {
+function createMapFaultControlHarness({
+  scenarioId,
+  renderDuringPreparation = false,
+}) {
   const listeners = new Set();
   const types = {
     Cartesian3: {
@@ -612,7 +615,7 @@ function createMapFaultControlHarness({ scenarioId }) {
     positionCartographic: {
       longitude: (-97.72 * Math.PI) / 180,
       latitude: (30.27 * Math.PI) / 180,
-      height: 6_000,
+      height: renderDuringPreparation ? 24_000 : 6_000,
     },
     heading: 0,
     pitch: -Math.PI / 2,
@@ -723,6 +726,8 @@ function createMapFaultControlHarness({ scenarioId }) {
     performance: { now: () => ++now },
     setTimeout(callback, delay = 0) {
       now += delay;
+      if (renderDuringPreparation && delay === MAP_STREAMING_ROUTE.startupFlightDelayMs)
+        render();
       queueMicrotask(callback);
       return 1;
     },
@@ -1017,6 +1022,40 @@ test('serialized map fault owner observes explicit retry recovery and supersessi
       );
     }
   }
+});
+
+test('map fault initial readiness discards startup-pose frames before fixed-pose boundary', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  const harness = createMapFaultControlHarness({
+    scenarioId: 'esri-metadata-missing-v1',
+    renderDuringPreparation: true,
+  });
+  const report = await runNativeMapStreamingFaultControl(harness.page, {
+    scenarioId: 'esri-metadata-missing-v1',
+    route: MAP_STREAMING_ROUTE,
+    delivery: harness.delivery,
+    operationTimeoutMs: 15_000,
+  });
+  report.delivery = await buildValidFaultDeliverySummary(
+    fixture,
+    'esri-metadata-missing-v1',
+  );
+  assert.equal(report.preparation.poseEstablishedAtRenderSequence, 1);
+  assert.ok(
+    report.initial.postRenderSequence >
+      report.preparation.poseEstablishedAtRenderSequence,
+  );
+  assert.equal(report.initial.camera.heightM, MAP_STREAMING_ROUTE.start.heightM);
+  assert.equal(validateMapStreamingFaultControlReport(report, fixture), true);
+
+  const staleBoundary = structuredClone(report);
+  staleBoundary.initial.postRenderSequence =
+    staleBoundary.preparation.poseEstablishedAtRenderSequence;
+  assert.throws(
+    () => validateMapStreamingFaultControlReport(staleBoundary, fixture),
+    /after the fixed pose/,
+  );
+  assert.equal(harness.listeners.size, 0);
 });
 
 test('map supersession can start only while the initial Esri switch is still pending', async () => {
